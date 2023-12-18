@@ -24,12 +24,13 @@ describe('inspect', () => {
     let publishInterval: NodeJS.Timeout
 
     const initiateNode = async (peerDescriptor: PeerDescriptor, simulator: Simulator): Promise<NetworkStack> => {
-        const transportLayer = new SimulatorTransport(peerDescriptor, simulator)
+        const transport = new SimulatorTransport(peerDescriptor, simulator)
+        await transport.start()
         const node = new NetworkStack({
             layer0: {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor,
-                transportLayer
+                transport
             }
         })
         await node.start()
@@ -37,8 +38,7 @@ describe('inspect', () => {
     }
 
     beforeEach(async () => {
-        Simulator.useFakeTimers()
-        simulator = new Simulator(LatencyType.RANDOM)
+        simulator = new Simulator(LatencyType.REAL)
 
         publisherNode = await initiateNode(publisherDescriptor, simulator)
         inspectorNode = await initiateNode(inspectorPeerDescriptor, simulator)
@@ -50,9 +50,9 @@ describe('inspect', () => {
             inspectedNodes.push(node)
         }))
         await Promise.all([
-            publisherNode.getStreamrNode().waitForJoinAndSubscribe(streamPartId, 5000, 4),
-            inspectorNode.getStreamrNode().waitForJoinAndSubscribe(streamPartId, 5000, 4),
-            ...inspectedNodes.map((node) => node.getStreamrNode().waitForJoinAndSubscribe(streamPartId, 5000, 4))
+            publisherNode.joinStreamPart(streamPartId, { minCount: 4, timeout: 15000 }),
+            inspectorNode.joinStreamPart(streamPartId, { minCount: 4, timeout: 15000 }),
+            ...inspectedNodes.map((node) => node.joinStreamPart(streamPartId, { minCount: 4, timeout: 15000 }))
         ])
         sequenceNumber = 0
     }, 30000)
@@ -64,7 +64,6 @@ describe('inspect', () => {
             inspectorNode.stop(),
             ...inspectedNodes.map((node) => node.stop())
         ])
-        Simulator.useFakeTimers(false)
     })
 
     it('gets successful inspections from all suspects', async () => {
@@ -76,12 +75,12 @@ describe('inspect', () => {
                 123123,
                 sequenceNumber
             )
-            publisherNode.getStreamrNode().publishToStream(msg)
+            publisherNode.getStreamrNode().broadcast(msg)
             sequenceNumber += 1
         }, 200)
 
         for (const node of inspectedNodes) {
-            const result = await inspectorNode.getStreamrNode().inspect(node.getLayer0DhtNode().getPeerDescriptor(), streamPartId)
+            const result = await inspectorNode.getStreamrNode().inspect(node.getLayer0Node().getLocalPeerDescriptor(), streamPartId)
             expect(result).toEqual(true)
         }
     }, 25000)

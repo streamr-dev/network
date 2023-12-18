@@ -1,25 +1,9 @@
-import { PeerID } from '../../helpers/PeerID'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { NodeID } from '../../helpers/nodeId'
 
-export class ContactState<TContact> {
-    public contacted = false
-    public active = false
-    public contact: TContact
+export class Contact {
 
-    constructor(contact: TContact) {
-        this.contact = contact
-    }
-}
-
-export interface IContact { getPeerId: () => PeerID, getPeerDescriptor: () => PeerDescriptor }
-
-export interface Events {
-    contactRemoved: (removedDescriptor: PeerDescriptor, closestDescriptors: PeerDescriptor[]) => void
-    newContact: (newDescriptor: PeerDescriptor, closestDescriptors: PeerDescriptor[]) => void
-}
-
-export class Contact implements IContact {
     private peerDescriptor: PeerDescriptor
 
     constructor(peerDescriptor: PeerDescriptor) {
@@ -30,7 +14,7 @@ export class Contact implements IContact {
         return this.peerDescriptor
     }
 
-    public getPeerId(): PeerID {
-        return peerIdFromPeerDescriptor(this.peerDescriptor)
+    public getNodeId(): NodeID {
+        return getNodeIdFromPeerDescriptor(this.peerDescriptor)
     }
 }

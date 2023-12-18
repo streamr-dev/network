@@ -1,18 +1,21 @@
-import { NodeList } from '../../src/logic/NodeList'
-import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import {
-    PeerDescriptor,
     ListeningRpcCommunicator,
+    NodeType,
+    PeerDescriptor,
     Simulator,
     SimulatorTransport,
-    NodeType,
 } from '@streamr/dht'
-import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
+import { StreamPartIDUtils } from '@streamr/protocol'
+import { binaryToHex } from '@streamr/utils'
 import { expect } from 'expect'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
-import { createRandomNodeId } from '../utils/utils'
-import { binaryToHex } from '@streamr/utils'
+import { DeliveryRpcRemote } from '../../src/logic/DeliveryRpcRemote'
+import { NodeList } from '../../src/logic/NodeList'
+import { formStreamPartDeliveryServiceId } from '../../src/logic/formStreamPartDeliveryServiceId'
+import { DeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { createMockPeerDescriptor, createRandomNodeId } from '../utils/utils'
+
+const streamPartId = StreamPartIDUtils.parse('stream#0')
 
 describe('NodeList', () => {
 
@@ -24,34 +27,38 @@ describe('NodeList', () => {
         new Uint8Array([1, 1, 5])
     ]
     const ownId = createRandomNodeId()
-    const graphId = 'test'
     let nodeList: NodeList
     let simulator: Simulator
     let mockTransports: SimulatorTransport[]
 
-    const createRemoteGraphNode = (peerDescriptor: PeerDescriptor) => {
+    const createRemoteGraphNode = async (peerDescriptor: PeerDescriptor) => {
         const mockTransport = new SimulatorTransport(peerDescriptor, simulator)
-        const mockCommunicator = new ListeningRpcCommunicator(`layer2-${ graphId }`, mockTransport)
-        const mockClient = mockCommunicator.getRpcClientTransport()
-        
+        await mockTransport.start()
+        const mockCommunicator = new ListeningRpcCommunicator(formStreamPartDeliveryServiceId(streamPartId), mockTransport)
         mockTransports.push(mockTransport)
-        return new RemoteRandomGraphNode(peerDescriptor, graphId, toProtoRpcClient(new NetworkRpcClient(mockClient)))
+        return new DeliveryRpcRemote(
+            createMockPeerDescriptor(),
+            peerDescriptor,
+            streamPartId,
+            mockCommunicator,
+            DeliveryRpcClient
+        )
     }
 
-    beforeEach(() => {
+    beforeEach(async () => {
         simulator = new Simulator()
         mockTransports = []
         nodeList = new NodeList(ownId, 6)
-        ids.forEach((id) => {
+        for (const id of ids) {
             const peerDescriptor: PeerDescriptor = {
-                kademliaId: id,
+                nodeId: id,
                 type: NodeType.NODEJS
             }
-            nodeList.add(createRemoteGraphNode(peerDescriptor))
-        })
+            nodeList.add(await createRemoteGraphNode(peerDescriptor))
+        }
     })
 
-    afterEach(async ()=> {
+    afterEach(async () => {
         // eslint-disable-next-line @typescript-eslint/prefer-for-of
         for (let i = 0; i < mockTransports.length; i++) {
             await mockTransports[i].stop()
@@ -59,20 +66,20 @@ describe('NodeList', () => {
         simulator.stop()
     })
 
-    it('add', () => {
+    it('add', async () => {
         const newDescriptor = {
-            kademliaId: new Uint8Array([1, 2, 3]),
+            nodeId: new Uint8Array([1, 2, 3]),
             type: NodeType.NODEJS
         }
-        const newNode = createRemoteGraphNode(newDescriptor)
+        const newNode = await createRemoteGraphNode(newDescriptor)
         nodeList.add(newNode)
         expect(nodeList.hasNode(newDescriptor)).toEqual(true)
 
         const newDescriptor2 = {
-            kademliaId: new Uint8Array([1, 2, 4]),
+            nodeId: new Uint8Array([1, 2, 4]),
             type: NodeType.NODEJS
         }
-        const newNode2 = createRemoteGraphNode(newDescriptor2)
+        const newNode2 = await createRemoteGraphNode(newDescriptor2)
         nodeList.add(newNode2)
         expect(nodeList.hasNode(newDescriptor2)).toEqual(false)
     })

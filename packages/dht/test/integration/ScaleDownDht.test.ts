@@ -1,37 +1,39 @@
-import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
+import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
-import { isSamePeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { Logger } from '@streamr/utils'
+import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { Logger, hexToBinary } from '@streamr/utils'
+import { getRandomRegion } from '../../src/connection/simulator/pings'
+import { createRandomNodeId } from '../../src/helpers/nodeId'
 
 const logger = new Logger(module)
 
+const NUM_NODES = 80
+const MAX_CONNECTIONS = 15
+const K = 2
+
 describe('Scaling down a Dht network', () => {
+
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
-    const simulator = new Simulator(LatencyType.RANDOM)
-    const NUM_NODES = 80
-    const MAX_CONNECTIONS = 15
-    const K = 2
+    const simulator = new Simulator(LatencyType.REAL)
 
     beforeEach(async () => {
         nodes = []
-        const entryPointId = '0'
-        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
-            undefined, K, entryPointId, MAX_CONNECTIONS)
+        entryPoint = await createMockConnectionDhtNode(simulator,
+            createRandomNodeId(), K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
 
         entrypointDescriptor = {
-            kademliaId: entryPoint.getNodeId().value,
+            nodeId: hexToBinary(entryPoint.getNodeId()),
             type: NodeType.NODEJS,
-            nodeName: entryPointId
+            region: getRandomRegion()
         }
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const nodeId = `${i}`
-            const node = await createMockConnectionDhtNode(nodeId, simulator, undefined, K, nodeId, MAX_CONNECTIONS)
+            const node = await createMockConnectionDhtNode(simulator, undefined, K, MAX_CONNECTIONS)
             nodes.push(node)
         }
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
@@ -50,14 +52,15 @@ describe('Scaling down a Dht network', () => {
             const index = Math.floor(Math.random() * randomIndices.length)
             const nodeIndex = randomIndices[index]
             randomIndices.splice(index, 1)
-            const stoppingPeerDescriptor = nodes[nodeIndex].getPeerDescriptor()
+            const stoppingPeerDescriptor = nodes[nodeIndex].getLocalPeerDescriptor()
             await nodes[nodeIndex].stop()
             const nodeIsCleaned = nodes.every((node) =>
                 node.getAllConnectionPeerDescriptors().every((peer) => {
-                    if (isSamePeerDescriptor(peer, stoppingPeerDescriptor)) {
-                        logger.error(' ' + node.getPeerDescriptor().nodeName + ', ' + stoppingPeerDescriptor.nodeName + ' cleaning up failed')
+                    if (areEqualPeerDescriptors(peer, stoppingPeerDescriptor)) {
+                        logger.error(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + ', ' 
+                            + getNodeIdFromPeerDescriptor(stoppingPeerDescriptor) + ' cleaning up failed')
                     }
-                    return !isSamePeerDescriptor(peer, stoppingPeerDescriptor)
+                    return !areEqualPeerDescriptors(peer, stoppingPeerDescriptor)
                 })
             )
             expect(nodeIsCleaned).toEqual(true)

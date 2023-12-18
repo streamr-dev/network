@@ -57,14 +57,15 @@ export class Propagation {
      * Node should invoke this when it learns about a new node stream assignment
      */
     onNeighborJoined(neighborId: NodeID): void {
-        const tasksOfStream = this.activeTaskStore.get()
-        for (const task of tasksOfStream) {
+        const tasks = this.activeTaskStore.get()
+        for (const task of tasks) {
             this.sendAndAwaitThenMark(task, neighborId)
         }
     }
 
     private sendAndAwaitThenMark({ message, source, handledNeighbors }: PropagationTask, neighborId: NodeID): void {
         if (!handledNeighbors.has(neighborId) && neighborId !== source) {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             (async () => {
                 try {
                     await this.sendToNeighbor(neighborId, message)

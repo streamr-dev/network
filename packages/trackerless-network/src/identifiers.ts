@@ -1,8 +1,8 @@
-import { PeerDescriptor, keyFromPeerDescriptor } from '@streamr/dht'
-import { BrandedString } from '@streamr/utils'
+import { PeerDescriptor } from '@streamr/dht'
+import { BrandedString, binaryToHex } from '@streamr/utils'
 
 export type NodeID = BrandedString<'NodeID'>
 
 export const getNodeIdFromPeerDescriptor = (peerDescriptor: PeerDescriptor): NodeID => {
-    return keyFromPeerDescriptor(peerDescriptor) as unknown as NodeID
+    return binaryToHex(peerDescriptor.nodeId) as unknown as NodeID
 }

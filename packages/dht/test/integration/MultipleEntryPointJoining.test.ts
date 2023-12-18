@@ -1,4 +1,4 @@
-import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
+import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
@@ -14,16 +14,16 @@ describe('multiple entry point joining', () => {
         let entryPoints: PeerDescriptor[]
         
         beforeEach(async () => {
-            simulator = new Simulator(LatencyType.RANDOM)
+            simulator = new Simulator(LatencyType.REAL)
 
-            node1 = await createMockConnectionDhtNode('node1', simulator)
-            node2 = await createMockConnectionDhtNode('node2', simulator)
-            node3 = await createMockConnectionDhtNode('node3', simulator)
+            node1 = await createMockConnectionDhtNode(simulator)
+            node2 = await createMockConnectionDhtNode(simulator)
+            node3 = await createMockConnectionDhtNode(simulator)
 
             entryPoints = [
-                node1.getPeerDescriptor(),
-                node2.getPeerDescriptor(),
-                node3.getPeerDescriptor()
+                node1.getLocalPeerDescriptor(),
+                node2.getLocalPeerDescriptor(),
+                node3.getLocalPeerDescriptor()
             ]
         })
 
@@ -42,9 +42,9 @@ describe('multiple entry point joining', () => {
                 node2.joinDht(entryPoints),
                 node3.joinDht(entryPoints)
             ])
-            expect(node1.getBucketSize()).toEqual(2)
-            expect(node2.getBucketSize()).toEqual(2)
-            expect(node3.getBucketSize()).toEqual(2)
+            expect(node1.getNumberOfNeighbors()).toEqual(2)
+            expect(node2.getNumberOfNeighbors()).toEqual(2)
+            expect(node3.getNumberOfNeighbors()).toEqual(2)
         })
 
         it('can join even if a node is offline', async () => {
@@ -53,8 +53,8 @@ describe('multiple entry point joining', () => {
                 node1.joinDht(entryPoints),
                 node2.joinDht(entryPoints)
             ])
-            expect(node1.getBucketSize()).toEqual(1)
-            expect(node2.getBucketSize()).toEqual(1)
+            expect(node1.getNumberOfNeighbors()).toEqual(1)
+            expect(node2.getNumberOfNeighbors()).toEqual(1)
         }, 10000)
     })
 
@@ -67,17 +67,17 @@ describe('multiple entry point joining', () => {
         let entryPoints: PeerDescriptor[]
         
         beforeEach(async () => {
-            simulator = new Simulator(LatencyType.RANDOM)
+            simulator = new Simulator(LatencyType.REAL)
             
-            entryPoint1 = await createMockConnectionDhtNode('entryPoint1', simulator)
-            entryPoint2 = await createMockConnectionDhtNode('entryPoint2', simulator)
+            entryPoint1 = await createMockConnectionDhtNode(simulator)
+            entryPoint2 = await createMockConnectionDhtNode(simulator)
             
-            node1 = await createMockConnectionDhtNode('node1', simulator)
-            node2 = await createMockConnectionDhtNode('node2', simulator)
+            node1 = await createMockConnectionDhtNode(simulator)
+            node2 = await createMockConnectionDhtNode(simulator)
 
             entryPoints = [
-                entryPoint1.getPeerDescriptor(),
-                entryPoint2.getPeerDescriptor(),
+                entryPoint1.getLocalPeerDescriptor(),
+                entryPoint2.getLocalPeerDescriptor(),
             ]
 
             await entryPoint1.joinDht(entryPoints)
@@ -96,9 +96,9 @@ describe('multiple entry point joining', () => {
 
         it('non-entry point nodes can join', async () => {
             await node1.joinDht(entryPoints)
-            expect(node1.getBucketSize()).toEqual(2)
+            expect(node1.getNumberOfNeighbors()).toEqual(2)
             await node2.joinDht(entryPoints)
-            expect(node2.getBucketSize()).toEqual(3)
+            expect(node2.getNumberOfNeighbors()).toEqual(3)
         })
 
     })

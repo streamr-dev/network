@@ -5,6 +5,15 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
+        "environment": {
+            "type": "string",
+            "enum": [
+                "polygon",
+                "mumbai",
+                "dev2"
+            ],
+            "description": "applies all environment-specific defaults for the given environment"
+        },
         "id": {
             "type": "string"
         },
@@ -79,16 +88,31 @@
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/peerDescriptor"
-                            },
-                            "default": [{
-                                "id": "aaaaaaaaaa",
-                                "type": "nodejs",
-                                "websocket": {
-                                    "host": "127.0.0.1",
-                                    "port": 40401,
-                                    "tls": true
+                            }
+                        },
+                        "entryPointDiscovery": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "enabled": {
+                                    "type": "boolean"
+                                },
+                                "maxEntryPoints": {
+                                    "type": "number"
+                                },
+                                "maxQueryResults": {
+                                    "type": "number"
+                                },
+                                "maxHeartbeatAgeHours": {
+                                    "type": "number"
                                 }
-                            }]
+                            },
+                            "default": {
+                                "enabled": false,
+                                "maxEntryPoints": 5,
+                                "maxQueryResults": 50,
+                                "maxHeartbeatAgeHours": 24
+                            }
                         },
                         "websocketPortRange": {
                             "$ref": "#/definitions/portRange",
@@ -103,6 +127,10 @@
                         },
                         "peerDescriptor": {
                             "$ref": "#/definitions/peerDescriptor"
+                        },
+                        "maxConnections": {
+                            "type": "number",
+                            "default": 80
                         },
                         "tlsCertificate": {
                             "description": "Files to use for TLS",
@@ -186,6 +214,10 @@
                             "type": "number",
                             "default": 131072
                         },
+                        "maxMessageSize": {
+                            "type": "number",
+                            "default": 1048576
+                        },
                         "externalIp": {
                             "type": "string",
                             "format": "ipv4"
@@ -196,6 +228,22 @@
                                 "min": 50000,
                                 "max": 64000
                             }
+                        },
+                        "networkConnectivityTimeout": {
+                            "type": "number",
+                            "default": 10000
+                        },
+                        "websocketServerEnableTls": {
+                            "type": "boolean",
+                            "default": true
+                        },
+                        "autoCertifierUrl": {
+                            "type": "string",
+                            "default": "https://ns1.streamr-nodes.xyz:59833"
+                        },
+                        "autoCertifierConfigFile": {
+                            "type": "string",
+                            "default": "~/.streamr/certificate.json"
                         }
                     },
                     "default": {}
@@ -215,10 +263,6 @@
                             "type": "number",
                             "default": 2
                         },
-                        "firstConnectionTimeout": {
-                            "type": "number",
-                            "default": 10000
-                        }, 
                         "acceptProxyConnections": {
                             "type": "boolean",
                             "default": false
@@ -235,75 +279,35 @@
             "properties": {
                 "streamRegistryChainAddress": {
                     "type": "string",
-                    "format": "ethereum-address",
-                    "default": "0x0D483E10612F327FC11965Fc82E90dC19b141641"
+                    "format": "ethereum-address"
                 },
                 "streamStorageRegistryChainAddress": {
                     "type": "string",
-                    "format": "ethereum-address",
-                    "default": "0xe8e2660CeDf2a59C917a5ED05B72df4146b58399"
+                    "format": "ethereum-address"
                 },
                 "storageNodeRegistryChainAddress": {
                     "type": "string",
-                    "format": "ethereum-address",
-                    "default": "0x080F34fec2bc33928999Ea9e39ADc798bEF3E0d6"
-                },
-                "mainChainRPCs": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/definitions/chainConnectionInfoList"
-                        },
-                        {
-                            "type": "string",
-                            "format": "uri"
-                        }
-                    ],
-                    "default": {
-                        "name": "ethereum",
-                        "chainId": 1,
-                        "rpcs": [
-                            {
-                                "url": "https://eth-rpc.gateway.pokt.network",
-                                "timeout": 120000
-                            },
-                            {
-                                "url": "https://ethereum.publicnode.com",
-                                "timeout": 120000
-                            },
-                            {
-                                "url": "https://rpc.ankr.com/eth",
-                                "timeout": 120000
-                            }
-                        ]
-                    }
+                    "format": "ethereum-address"
                 },
                 "streamRegistryChainRPCs": {
-                    "$ref": "#/definitions/chainConnectionInfoList",
-                    "default": {
-                        "name": "polygon",
-                        "chainId": 137,
-                        "rpcs": [{
-                            "url": "https://polygon-rpc.com",
-                            "timeout": 120000
-                        }, {
-                            "url": "https://poly-rpc.gateway.pokt.network/",
-                            "timeout": 120000
-                        }]
-                    }
+                    "$ref": "#/definitions/chainConnectionInfoList"
                 },
-                "ethereumNetworks": {
+                "ethereumNetwork": {
                     "type": "object",
-                    "default": {
-                        "polygon": {
-                            "chainId": 137,
-                            "highGasPriceStrategy": true
+                    "additionalProperties": false,
+                    "properties": {
+                        "overrides": {
+                            "type": "object"
+                        },
+                        "highGasPriceStrategy": {
+                            "type": "boolean"
                         }
-                    }
+                    },
+                    "default": {}
                 },
                 "theGraphUrl": {
                     "type": "string",
-                    "format": "uri",
-                    "default": "https://api.thegraph.com/subgraphs/name/streamr-dev/streams"
+                    "format": "uri"
                 },
                 "maxConcurrentCalls": {
                     "type": "number",
@@ -504,12 +508,13 @@
         "peerDescriptor": {
             "type": "object",
             "additionalProperties": false,
-            "required": [
-                "id"
-            ],
             "properties": {
-                "id": {
+                "nodeId": {
                     "type": "string"
+                },
+                "id": {
+                    "type": "string",
+                    "description": "legacy: remove this property and make nodeId required"
                 },
                 "type": {
                     "$ref": "#/definitions/nodeType"

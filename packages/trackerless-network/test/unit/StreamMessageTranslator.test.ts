@@ -1,15 +1,16 @@
-import { createStreamMessage } from '../utils/utils'
-import { StreamMessageType } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { StreamMessageTranslator } from '../../src/logic/protocol-integration/stream-message/StreamMessageTranslator'
 import {
     EncryptionType,
     MessageID,
-    StreamID,
     StreamMessage as OldStreamMessage,
     StreamMessageType as OldStreamMessageType,
     StreamPartIDUtils
 } from '@streamr/protocol'
 import { binaryToHex, binaryToUtf8, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { StreamMessageTranslator } from '../../src/logic/protocol-integration/stream-message/StreamMessageTranslator'
+import { StreamMessageType } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { createStreamMessage } from '../utils/utils'
+
+const STREAM_PART_ID = StreamPartIDUtils.parse('TEST#0')
 
 describe('StreamMessageTranslator', () => {
 
@@ -17,12 +18,12 @@ describe('StreamMessageTranslator', () => {
     const signature = hexToBinary('0x1234')
     const protobufMsg = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
-        StreamPartIDUtils.parse('TEST#0'),
+        STREAM_PART_ID,
         publisherId
     )
     const messageId = new MessageID(
-        'TEST' as StreamID,
-        0,
+        StreamPartIDUtils.getStreamID(STREAM_PART_ID),
+        StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
         Date.now(),
         0,
         publisherId,
@@ -39,10 +40,10 @@ describe('StreamMessageTranslator', () => {
 
     it('translates old protocol to protobuf', () => {
         const translated = StreamMessageTranslator.toProtobuf(oldProtocolMsg)
+        expect(translated.messageId!.streamId).toEqual(StreamPartIDUtils.getStreamID(STREAM_PART_ID))
+        expect(translated.messageId!.streamPartition).toEqual(StreamPartIDUtils.getStreamPartition(STREAM_PART_ID))
         expect(translated.messageId!.timestamp).toBeGreaterThanOrEqual(0)
         expect(translated.messageId!.sequenceNumber).toEqual(0)
-        expect(translated.messageId!.streamId).toEqual('TEST')
-        expect(translated.messageId!.streamPartition).toEqual(0)
         expect(binaryToHex(translated.messageId!.publisherId, true)).toEqual('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
         expect(translated.previousMessageRef).toEqual(undefined)
         expect(translated.messageType).toEqual(StreamMessageType.MESSAGE)
@@ -53,10 +54,10 @@ describe('StreamMessageTranslator', () => {
 
     it('translates protobuf to old protocol', () => {
         const translated = StreamMessageTranslator.toClientProtocol(protobufMsg)
+        expect(translated.messageId.streamId).toEqual(StreamPartIDUtils.getStreamID(STREAM_PART_ID))
+        expect(translated.messageId.streamPartition).toEqual(StreamPartIDUtils.getStreamPartition(STREAM_PART_ID))
         expect(translated.messageId.timestamp).toBeGreaterThanOrEqual(0)
         expect(translated.messageId.sequenceNumber).toEqual(0)
-        expect(translated.messageId.streamId).toEqual('TEST')
-        expect(translated.messageId.streamPartition).toEqual(0)
         expect(translated.getPublisherId()).toEqual('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
         expect(translated.prevMsgRef).toEqual(null)
         expect(translated.messageType).toEqual(OldStreamMessageType.MESSAGE)

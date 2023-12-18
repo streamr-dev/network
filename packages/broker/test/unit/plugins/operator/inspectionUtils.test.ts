@@ -1,12 +1,12 @@
 import { mock, MockProxy } from 'jest-mock-extended'
-import { MessageListener, NetworkPeerDescriptor, StreamrClient, Subscription } from 'streamr-client'
-import { createHeartbeatMessage } from '../../../../src/plugins/operator/heartbeatUtils'
+import { NetworkPeerDescriptor, NodeID, StreamrClient, Subscription } from 'streamr-client'
 import { StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { findNodesForTarget, findTarget, inspectTarget } from '../../../../src/plugins/operator/inspectionUtils'
-import { InspectRandomNodeHelper } from '../../../../src/plugins/operator/InspectRandomNodeHelper'
-import { StreamAssignmentLoadBalancer } from '../../../../src/plugins/operator/StreamAssignmentLoadBalancer'
-import { EthereumAddress } from '@streamr/utils'
+import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
+import { EthereumAddress, Logger, wait } from '@streamr/utils'
+import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
+import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 
 const MY_OPERATOR_ADDRESS = randomEthereumAddress()
 const OTHER_OPERATOR_ADDRESS = randomEthereumAddress()
@@ -19,16 +19,18 @@ const target = Object.freeze({
     streamPart: toStreamPartID(STREAM_ID, 4),
 })
 
-const PEER_DESCRIPTOR_ONE = { id: '0x1111' }
-const PEER_DESCRIPTOR_TWO = { id: '0x2222' }
-const PEER_DESCRIPTOR_THREE = { id: '0x3333' }
+const PEER_DESCRIPTOR_ONE = { nodeId: '0x1111' }
+const PEER_DESCRIPTOR_TWO = { nodeId: '0x2222' }
+const PEER_DESCRIPTOR_THREE = { nodeId: '0x3333' }
+
+const logger = new Logger(module)
 
 describe(findTarget, () => {
-    let helper: MockProxy<InspectRandomNodeHelper>
-    let loadBalancer: MockProxy<StreamAssignmentLoadBalancer>
+    let contractFacade: MockProxy<ContractFacade>
+    let assignments: MockProxy<StreamPartAssignments>
 
     function setupEnv(sponsorships: Array<{ address: EthereumAddress, operators: EthereumAddress[], streamId: StreamID }>) {
-        helper.getSponsorshipsOfOperator.mockImplementation(async (operatorAddress) => {
+        contractFacade.getSponsorshipsOfOperator.mockImplementation(async (operatorAddress) => {
             return sponsorships
                 .filter(({ operators }) => operators.includes(operatorAddress))
                 .map(({ address, operators, streamId }) => ({
@@ -37,23 +39,23 @@ describe(findTarget, () => {
                     streamId,
                 }))
         })
-        helper.getOperatorsInSponsorship.mockImplementation(async (sponsorshipAddress) => {
+        contractFacade.getOperatorsInSponsorship.mockImplementation(async (sponsorshipAddress) => {
             return sponsorships.find(({ address }) => address === sponsorshipAddress)!.operators
         })
     }
 
     function setStreamPartsAssignedToMe(streamParts: StreamPartID[]): void {
-        loadBalancer.getMyStreamParts.mockReturnValue(streamParts)
+        assignments.getMyStreamParts.mockReturnValue(streamParts)
     }
 
     beforeEach(() => {
-        helper = mock<InspectRandomNodeHelper>()
-        loadBalancer = mock<StreamAssignmentLoadBalancer>()
+        contractFacade = mock<ContractFacade>()
+        assignments = mock<StreamPartAssignments>()
     })
 
     it('returns undefined if no sponsorships are found', async () => {
         setupEnv([])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, helper, loadBalancer)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, contractFacade, assignments, logger)
         expect(result).toBeUndefined()
     })
 
@@ -63,7 +65,7 @@ describe(findTarget, () => {
             operators: [MY_OPERATOR_ADDRESS],
             streamId: STREAM_ID,
         }])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, helper, loadBalancer)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, contractFacade, assignments, logger)
         expect(result).toBeUndefined()
     })
 
@@ -74,7 +76,7 @@ describe(findTarget, () => {
             streamId: STREAM_ID,
         }])
         setStreamPartsAssignedToMe([])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, helper, loadBalancer)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, contractFacade, assignments, logger)
         expect(result).toBeUndefined()
     })
 
@@ -90,7 +92,7 @@ describe(findTarget, () => {
             toStreamPartID(STREAM_ID, 2),
         ])
 
-        const result = await findTarget(MY_OPERATOR_ADDRESS, helper, loadBalancer)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, contractFacade, assignments, logger)
         expect(result).toMatchObject({
             sponsorshipAddress: SPONSORSHIP_ADDRESS,
             operatorAddress: OTHER_OPERATOR_ADDRESS,
@@ -102,29 +104,39 @@ describe(findTarget, () => {
 })
 
 describe(findNodesForTarget, () => {
-    let streamrClient: MockProxy<StreamrClient>
     let getRedundancyFactorFn: jest.MockedFn<(operatorContractAddress: EthereumAddress) => Promise<number | undefined>>
+    let operatorFleetState: MockProxy<OperatorFleetState>
     let abortController: AbortController
-    let capturedMessageHandler: MessageListener
     let resultPromise: Promise<NetworkPeerDescriptor[]>
+    let onlineNodes: NodeID[]
 
     beforeEach(() => {
-        streamrClient = mock<StreamrClient>()
-        streamrClient.subscribe.mockImplementation(async (_options, callback) => {
-            capturedMessageHandler = callback!
-            return mock<Subscription>()
-        })
         getRedundancyFactorFn = jest.fn()
+        onlineNodes = []
+        operatorFleetState = mock<OperatorFleetState>()
+        operatorFleetState.start.mockImplementation(() => wait(0))
+        operatorFleetState.getNodeIds.mockImplementation(() => onlineNodes)
+        operatorFleetState.getPeerDescriptor.mockImplementation((nodeId) => {
+            if (nodeId === PEER_DESCRIPTOR_ONE.nodeId) {
+                return PEER_DESCRIPTOR_ONE
+            } else if (nodeId === PEER_DESCRIPTOR_TWO.nodeId) {
+                return PEER_DESCRIPTOR_TWO
+            } else if (nodeId === PEER_DESCRIPTOR_THREE.nodeId) {
+                return PEER_DESCRIPTOR_THREE
+            } else {
+                return undefined
+            }
+        })
         abortController = new AbortController()
-        resultPromise = findNodesForTarget(target, streamrClient, getRedundancyFactorFn, 100, abortController.signal)
+        resultPromise = findNodesForTarget(target, getRedundancyFactorFn, () => operatorFleetState, 100, abortController.signal, logger)
     })
 
     afterEach(() => {
         abortController.abort()
     })
 
-    function comeOnline(peerDescriptor: NetworkPeerDescriptor): void {
-        capturedMessageHandler(createHeartbeatMessage(peerDescriptor), undefined as any)
+    function comeOnline(peerDescriptors: NetworkPeerDescriptor[]): void {
+        onlineNodes = peerDescriptors.map(({ nodeId }) => nodeId as NodeID)
     }
 
     it('returns empty array if no nodes found', async () => {
@@ -134,24 +146,20 @@ describe(findNodesForTarget, () => {
 
     it('returns empty array if redundancy factor is undefined', async () => {
         getRedundancyFactorFn.mockResolvedValueOnce(undefined)
-        comeOnline(PEER_DESCRIPTOR_ONE)
-        comeOnline(PEER_DESCRIPTOR_TWO)
         const result = await resultPromise
         expect(result).toEqual([])
     })
 
     it('returns the single node if single node found', async () => {
         getRedundancyFactorFn.mockResolvedValueOnce(1)
-        comeOnline(PEER_DESCRIPTOR_ONE)
+        comeOnline([PEER_DESCRIPTOR_ONE])
         const result = await resultPromise
         expect(result).toEqual([PEER_DESCRIPTOR_ONE])
     })
 
     it('returns one of the nodes if multiple nodes found (replicationFactor=1)', async () => {
         getRedundancyFactorFn.mockResolvedValueOnce(1)
-        comeOnline(PEER_DESCRIPTOR_ONE)
-        comeOnline(PEER_DESCRIPTOR_TWO)
-        comeOnline(PEER_DESCRIPTOR_THREE)
+        comeOnline([PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO, PEER_DESCRIPTOR_THREE])
         const result = await resultPromise
         expect(result.length).toEqual(1)
         expect(result).toIncludeAnyMembers([PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO, PEER_DESCRIPTOR_THREE])
@@ -159,9 +167,7 @@ describe(findNodesForTarget, () => {
 
     it('returns two of the nodes if multiple nodes found (replicationFactor=2)', async () => {
         getRedundancyFactorFn.mockResolvedValueOnce(2)
-        comeOnline(PEER_DESCRIPTOR_ONE)
-        comeOnline(PEER_DESCRIPTOR_TWO)
-        comeOnline(PEER_DESCRIPTOR_THREE)
+        comeOnline([PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO, PEER_DESCRIPTOR_THREE])
         const result = await resultPromise
         expect(result.length).toEqual(2)
         expect(result).toIncludeAnyMembers([PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO, PEER_DESCRIPTOR_THREE])
@@ -175,6 +181,7 @@ describe(inspectTarget, () => {
 
     beforeEach(() => {
         streamrClient = mock<StreamrClient>()
+        streamrClient.subscribe.mockResolvedValue(mock<Subscription>()) // TODO: test sub/unsub interaction
         abortController = new AbortController()
     })
 
@@ -187,7 +194,8 @@ describe(inspectTarget, () => {
             target,
             targetPeerDescriptors: [],
             streamrClient,
-            abortSignal: abortController.signal
+            abortSignal: abortController.signal,
+            logger
         })
         expect(result).toEqual(false)
     })
@@ -199,6 +207,7 @@ describe(inspectTarget, () => {
             targetPeerDescriptors: [PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO, PEER_DESCRIPTOR_THREE],
             streamrClient,
             abortSignal: abortController.signal,
+            logger
         })
         expect(result).toEqual(false)
         expect(streamrClient.inspect).toHaveBeenCalledTimes(3)
@@ -214,7 +223,8 @@ describe(inspectTarget, () => {
             target,
             targetPeerDescriptors: [PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO, PEER_DESCRIPTOR_THREE],
             streamrClient,
-            abortSignal: abortController.signal
+            abortSignal: abortController.signal,
+            logger
         })
         expect(result).toEqual(true)
         expect(streamrClient.inspect).toHaveBeenCalledTimes(2)

@@ -2,19 +2,19 @@ import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFle
 import { mock, MockProxy } from 'jest-mock-extended'
 import { StreamrClient, MessageListener, Subscription } from 'streamr-client'
 import { wait, waitForCondition, waitForEvent } from '@streamr/utils'
-import { toStreamID } from '@streamr/protocol'
 import { eventsWithArgsToArray, randomEthereumAddress } from '@streamr/test-utils'
 import { createHeartbeatMessage } from '../../../../src/plugins/operator/heartbeatUtils'
 import { NodeID } from '@streamr/trackerless-network'
+import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
 
 const ADDRESS = randomEthereumAddress()
-const coordinationStreamId = toStreamID('/operator/coordination', ADDRESS)
+const coordinationStreamId = formCoordinationStreamId(ADDRESS)
 
 const READY_WAIT_MS = 500
 const JITTER = 100
 
-function createHeartbeatMsg(id: string): Record<string, unknown> {
-    return createHeartbeatMessage({ id })
+function createHeartbeatMsg(nodeId: string): Record<string, unknown> {
+    return createHeartbeatMessage({ nodeId })
 }
 
 describe(OperatorFleetState, () => {
@@ -38,7 +38,16 @@ describe(OperatorFleetState, () => {
             return subscription
         })
         currentTime = 0
-        state = new OperatorFleetState(streamrClient, coordinationStreamId, () => currentTime, 10, 100, READY_WAIT_MS, 0)
+        const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
+            streamrClient,
+            READY_WAIT_MS,
+            10,
+            100,
+            0,
+            0,
+            () => currentTime
+        )
+        state = createOperatorFleetState(coordinationStreamId)
     })
 
     afterEach(() => {
@@ -154,7 +163,7 @@ describe(OperatorFleetState, () => {
         await state.start()
         await setTimeAndPublishMessage(10, createHeartbeatMsg('a'))
 
-        expect(state.getPeerDescriptor('a' as NodeID)).toEqual({ id: 'a' })
+        expect(state.getPeerDescriptor('a' as NodeID)).toEqual({ nodeId: 'a' })
         expect(state.getPeerDescriptor('unknown' as NodeID)).toBeUndefined()
 
         currentTime = 30

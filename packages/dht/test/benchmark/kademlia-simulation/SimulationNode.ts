@@ -1,7 +1,8 @@
 import KBucket from 'k-bucket'
 import { Contact } from './Contact'
 import { SortedContactList } from '../../../src/dht/contact/SortedContactList'
-import { PeerID } from '../../../src/helpers/PeerID'
+import { NodeID, areEqualNodeIds } from '../../../src/helpers/nodeId'
+import { hexToBinary } from '@streamr/utils'
 
 export class SimulationNode {
 
@@ -16,17 +17,22 @@ export class SimulationNode {
     private numberOfOutgoingRpcCalls = 0
 
     private neighborList: SortedContactList<Contact>
-    private ownId: PeerID
+    private ownId: NodeID
 
-    constructor(ownId: PeerID) {
+    constructor(ownId: NodeID) {
         this.ownId = ownId
         this.ownContact = new Contact(this.ownId, this)
         this.bucket = new KBucket({
-            localNodeId: this.ownId.value,
+            localNodeId: hexToBinary(this.ownId),
             numberOfNodesPerKBucket: this.numberOfNodesPerKBucket
         })
 
-        this.neighborList = new SortedContactList(this.ownId, 1000)
+        this.neighborList = new SortedContactList({ 
+            referenceId: this.ownId,
+            maxSize: 1000,
+            allowToContainReferenceId: false,
+            emitEvents: false
+        })
     }
 
     // For simulation use
@@ -52,23 +58,22 @@ export class SimulationNode {
 
     // RPC call
 
-    public getClosestNodesTo(id: PeerID, caller: SimulationNode): Contact[] {
+    public getClosestNodesTo(id: NodeID, caller: SimulationNode): Contact[] {
         this.numberOfIncomingRpcCalls++
-        const ret = this.bucket.closest(id.value)
-
-        if (!this.bucket.get(id.value)) {
-            const contact = new Contact(PeerID.fromValue(id.value), caller)
+        const idValue = hexToBinary(id)
+        const ret = this.bucket.closest(idValue)
+        if (!this.bucket.get(idValue)) {
+            const contact = new Contact(id, caller)
             this.bucket.add(contact)
             this.neighborList.addContact(contact)
         }
-
         return ret
     }
 
     private findMoreContacts(contactList: Contact[], shortlist: SortedContactList<Contact>) {
         contactList.forEach((contact) => {
-            shortlist.setContacted(contact.peerId)
-            shortlist.setActive(contact.peerId)
+            shortlist.setContacted(contact.getNodeId())
+            shortlist.setActive(contact.getNodeId())
             this.numberOfOutgoingRpcCalls++
             const returnedContacts = contact.dhtNode!.getClosestNodesTo(this.ownId, this)
             shortlist.addContacts(returnedContacts)
@@ -81,12 +86,12 @@ export class SimulationNode {
     }
 
     public joinDht(entryPoint: SimulationNode): void {
-        if (entryPoint.getContact().peerId.equals(this.ownId)) {
+        if (areEqualNodeIds(entryPoint.getContact().getNodeId(), this.ownId)) {
             return
         }
 
         this.bucket.add(entryPoint.getContact())
-        const closest = this.bucket.closest(this.ownId.value, this.ALPHA)
+        const closest = this.bucket.closest(hexToBinary(this.ownId), this.ALPHA)
 
         this.neighborList.addContacts(closest)
 
@@ -94,15 +99,15 @@ export class SimulationNode {
         while (true) {
             let oldClosestContactId = this.neighborList.getClosestContactId()
             let uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
-            if (uncontacted.length < 1) {
+            if (uncontacted.length === 0) {
                 return
             }
 
             this.findMoreContacts(uncontacted, this.neighborList)
 
-            if (oldClosestContactId.equals(this.neighborList.getClosestContactId())) {
+            if (areEqualNodeIds(oldClosestContactId, this.neighborList.getClosestContactId())) {
                 uncontacted = this.neighborList.getUncontactedContacts(this.K)
-                if (uncontacted.length < 1) {
+                if (uncontacted.length === 0) {
                     return
                 }
 
@@ -111,11 +116,11 @@ export class SimulationNode {
                     this.findMoreContacts(uncontacted, this.neighborList)
 
                     if (this.neighborList.getActiveContacts().length >= this.K ||
-                        oldClosestContactId.equals(this.neighborList.getClosestContactId())) {
+                        areEqualNodeIds(oldClosestContactId, this.neighborList.getClosestContactId())) {
                         return
                     }
                     uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
-                    if (uncontacted.length < 1) {
+                    if (uncontacted.length === 0) {
                         return
                     }
                 }

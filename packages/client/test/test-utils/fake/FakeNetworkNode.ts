@@ -1,6 +1,6 @@
 import { PeerDescriptor } from '@streamr/dht'
 import { ProxyDirection, StreamMessage, StreamPartID } from '@streamr/protocol'
-import { NodeID } from '@streamr/trackerless-network'
+import { NodeID, NetworkOptions } from '@streamr/trackerless-network'
 import { EthereumAddress, MetricsContext, binaryToHex } from '@streamr/utils'
 import crypto from 'crypto'
 import pull from 'lodash/pull'
@@ -13,12 +13,15 @@ type MessageListener = (msg: StreamMessage) => void
 export class FakeNetworkNode implements NetworkNodeStub {
 
     private readonly id: NodeID
+    private readonly options: NetworkOptions
     readonly subscriptions: Set<StreamPartID> = new Set()
+    readonly proxiedStreamParts: Set<StreamPartID> = new Set()
     readonly messageListeners: MessageListener[] = []
     private readonly network: FakeNetwork
 
-    constructor(network: FakeNetwork) {
+    constructor(network: FakeNetwork, options: NetworkOptions = {}) {
         this.id = binaryToHex(crypto.randomBytes(10)) as NodeID
+        this.options = options
         this.network = network
     }
 
@@ -34,27 +37,18 @@ export class FakeNetworkNode implements NetworkNodeStub {
         pull(this.messageListeners, listener)
     }
 
-    async subscribe(streamPartId: StreamPartID): Promise<void> {
+    async join(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout?: number }): Promise<void> {
+        if (neighborRequirement !== undefined) {
+            throw new Error('not implemented')
+        }
         this.subscriptions.add(streamPartId)
     }
 
-    unsubscribe(streamPartId: StreamPartID): void {
+    async leave(streamPartId: StreamPartID): Promise<void> {
         this.subscriptions.delete(streamPartId)
     }
 
-    async subscribeAndWaitForJoin(streamPartId: StreamPartID, _timeout?: number): Promise<number> {
-        this.subscriptions.add(streamPartId)
-        return this.getNeighborsForStreamPart(streamPartId).length
-    }
-
-    async waitForJoinAndPublish(msg: StreamMessage, _timeout?: number): Promise<number> {
-        const streamPartId = msg.getStreamPartID()
-        this.subscriptions.add(streamPartId)
-        await this.publish(msg)
-        return this.getNeighborsForStreamPart(streamPartId).length
-    }
-
-    async publish(msg: StreamMessage): Promise<void> {
+    async broadcast(msg: StreamMessage): Promise<void> {
         // by adding a subscription we emulate the functionality of real network node, which subscribes to 
         // the stream topology when it publishes a message to a stream
         this.subscriptions.add(msg.getStreamPartID())
@@ -66,12 +60,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         throw new Error('not implemented')
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    getNeighbors(): string[] {
-        throw new Error('not implemented')
-    }
-
-    getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeID> {
+    getNeighbors(streamPartId: StreamPartID): ReadonlyArray<NodeID> {
         const allNodes = this.network.getNodes()
         return allNodes
             .filter((node) => (node.id !== this.id))
@@ -93,6 +82,11 @@ export class FakeNetworkNode implements NetworkNodeStub {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
+    getOptions(): NetworkOptions {
+        return this.options
+    }
+
     hasStreamPart(streamPartId: StreamPartID): boolean {
         return this.subscriptions.has(streamPartId)
     }
@@ -106,19 +100,27 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async inspect(_node: PeerDescriptor, _streamPartId: StreamPartID): Promise<boolean> {
+    async inspect(): Promise<boolean> {
         return true
     }
 
-    // eslint-disable-next-line class-methods-use-this
     async setProxies(
-        _streamPartId: StreamPartID,
-        _peerDescriptors: PeerDescriptor[],
+        streamPartId: StreamPartID,
+        nodes: PeerDescriptor[],
         _direction: ProxyDirection,
         _userId: EthereumAddress,
-        _targetCount?: number
+        connectionCount?: number
     ): Promise<void> {
-        throw new Error('not implemented')
+        const enable = (nodes.length > 0) && ((connectionCount === undefined) || (connectionCount > 0))
+        if (enable) {
+            this.proxiedStreamParts.add(streamPartId)
+        } else {
+            this.proxiedStreamParts.delete(streamPartId)
+        }
+    }
+
+    isProxiedStreamPart(streamPartId: StreamPartID): boolean {
+        return this.proxiedStreamParts.has(streamPartId)
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -136,7 +138,7 @@ export class FakeNetworkNodeFactory implements NetworkNodeFactory {
         this.network = network
     }
 
-    createNetworkNode(): FakeNetworkNode {
-        return new FakeNetworkNode(this.network)
+    createNetworkNode(opts: NetworkOptions): FakeNetworkNode {
+        return new FakeNetworkNode(this.network, opts)
     }
 }

@@ -1,8 +1,10 @@
-import { MessageID, MessageRef, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
+import { MessageID, MessageRef, StreamMessage, StreamMessageType, StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { createMockPeerDescriptor } from '../utils/utils'
+
+const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 
 describe('inspect', () => {
 
@@ -30,8 +32,6 @@ describe('inspect', () => {
         }
     })
 
-    const streamPartId = toStreamPartID(toStreamID('stream'), 0)
-
     let publisherNode: NetworkNode
 
     let inspectedNode: NetworkNode
@@ -40,8 +40,8 @@ describe('inspect', () => {
 
     const message = new StreamMessage({ 
         messageId: new MessageID(
-            toStreamID('stream'),
-            0,
+            StreamPartIDUtils.getStreamID(STREAM_PART_ID),
+            StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
             666,
             0,
             randomEthereumAddress(),
@@ -59,38 +59,39 @@ describe('inspect', () => {
         publisherNode = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
-                peerDescriptor: publisherDescriptor
+                peerDescriptor: publisherDescriptor,
+                websocketServerEnableTls: false
             }
         })
 
         inspectedNode = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
-                peerDescriptor: inspectedDescriptor
+                peerDescriptor: inspectedDescriptor,
+                websocketServerEnableTls: false
             }
         })
 
         inspectorNode = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
-                peerDescriptor: inspectorDescriptor
+                peerDescriptor: inspectorDescriptor,
+                websocketServerEnableTls: false
             }
         })
 
         await publisherNode.start()
         await inspectedNode.start()
-        await inspectorNode.start()    
+        await inspectorNode.start()
 
-        await Promise.all([
-            publisherNode.stack.getStreamrNode()!.joinStream(streamPartId),
-            inspectedNode.stack.getStreamrNode()!.joinStream(streamPartId),
-            inspectorNode.stack.getStreamrNode()!.joinStream(streamPartId)
-        ])
+        publisherNode.stack.getStreamrNode()!.joinStreamPart(STREAM_PART_ID)
+        inspectedNode.stack.getStreamrNode()!.joinStreamPart(STREAM_PART_ID)
+        inspectorNode.stack.getStreamrNode()!.joinStreamPart(STREAM_PART_ID)
 
         await waitForCondition(() => 
-            publisherNode.getNeighbors().length === 2 
-            && inspectedNode.getNeighbors().length === 2 
-            && inspectorNode.getNeighbors().length === 2
+            publisherNode.stack.getStreamrNode().getNeighbors(STREAM_PART_ID).length === 2 
+            && inspectedNode.stack.getStreamrNode().getNeighbors(STREAM_PART_ID).length === 2 
+            && inspectorNode.stack.getStreamrNode().getNeighbors(STREAM_PART_ID).length === 2
         )
     }, 30000)
 
@@ -104,9 +105,9 @@ describe('inspect', () => {
 
     it('should inspect succesfully', async () => {
         setTimeout(async () => {
-            await publisherNode.publish(message)
+            await publisherNode.broadcast(message)
         }, 250)
-        const success = await inspectorNode.inspect(inspectedDescriptor, streamPartId)
+        const success = await inspectorNode.inspect(inspectedDescriptor, STREAM_PART_ID)
         expect(success).toBe(true)
     })
 

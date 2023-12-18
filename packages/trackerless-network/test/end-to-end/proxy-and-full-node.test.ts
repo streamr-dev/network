@@ -1,18 +1,17 @@
-import { MessageID, MessageRef, StreamID, StreamMessage, StreamMessageType, toStreamID, toStreamPartID } from '@streamr/protocol'
+import { MessageID, MessageRef, StreamMessage, StreamMessageType, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { StreamNodeType } from '../../src/logic/StreamrNode'
 import { StreamMessage as InternalStreamMessage, ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const PROXIED_NODE_USER_ID = randomEthereumAddress()
 
-const createMessage = (streamId: StreamID): StreamMessage => {
+const createMessage = (streamPartId: StreamPartID): StreamMessage => {
     return new StreamMessage({ 
         messageId: new MessageID(
-            streamId,
-            0,
+            StreamPartIDUtils.getStreamID(streamPartId),
+            StreamPartIDUtils.getStreamPartition(streamPartId),
             666,
             0,
             randomEthereumAddress(),
@@ -30,23 +29,14 @@ const createMessage = (streamId: StreamID): StreamMessage => {
 describe('proxy and full node', () => {
 
     const proxyNodeDescriptor = createMockPeerDescriptor({
-        nodeName: 'proxyNode',
         websocket: { host: '127.0.0.1', port: 23135, tls: false }
     })
     const proxiedNodeDescriptor = createMockPeerDescriptor()
-
-    const proxyStreamId = toStreamPartID(toStreamID('proxy-stream'), 0)
-    const regularStreamId1 = toStreamPartID(toStreamID('regular-stream1'), 0)
-    const regularStreamId2 = toStreamPartID(toStreamID('regular-stream2'), 0)
-    const regularStreamId3 = toStreamPartID(toStreamID('regular-stream3'), 0)
-    const regularStreamId4 = toStreamPartID(toStreamID('regular-stream4'), 0)
-
-    const proxiedMessage = createMessage(toStreamID('proxy-stream'))
-    const regularMessage1 = createMessage(toStreamID('regular-stream1'))
-    const regularMessage2 = createMessage(toStreamID('regular-stream2'))
-    const regularMessage3 = createMessage(toStreamID('regular-stream3'))
-    const regularMessage4 = createMessage(toStreamID('regular-stream4'))
-
+    const proxiedStreamPart = StreamPartIDUtils.parse('proxy-stream#0')
+    const regularStreamPart1 = StreamPartIDUtils.parse('regular-stream1#0')
+    const regularStreamPart2 = StreamPartIDUtils.parse('regular-stream2#0')
+    const regularStreamPart3 = StreamPartIDUtils.parse('regular-stream3#0')
+    const regularStreamPart4 = StreamPartIDUtils.parse('regular-stream4#0')
     let proxyNode: NetworkNode
     let proxiedNode: NetworkNode
 
@@ -55,17 +45,18 @@ describe('proxy and full node', () => {
             layer0: {
                 entryPoints: [proxyNodeDescriptor],
                 peerDescriptor: proxyNodeDescriptor,
+                websocketServerEnableTls: false
             },
             networkNode: {
                 acceptProxyConnections: true
             }
         })
         await proxyNode.start()
-        await proxyNode.stack.getStreamrNode()!.joinStream(proxyStreamId)
-        await proxyNode.stack.getStreamrNode()!.joinStream(regularStreamId1)
-        await proxyNode.stack.getStreamrNode()!.joinStream(regularStreamId2)
-        await proxyNode.stack.getStreamrNode()!.joinStream(regularStreamId3)
-        await proxyNode.stack.getStreamrNode()!.joinStream(regularStreamId4)
+        proxyNode.stack.getStreamrNode()!.joinStreamPart(proxiedStreamPart)
+        proxyNode.stack.getStreamrNode()!.joinStreamPart(regularStreamPart1)
+        proxyNode.stack.getStreamrNode()!.joinStreamPart(regularStreamPart2)
+        proxyNode.stack.getStreamrNode()!.joinStreamPart(regularStreamPart3)
+        proxyNode.stack.getStreamrNode()!.joinStreamPart(regularStreamPart4)
 
         proxiedNode = createNetworkNode({
             layer0: {
@@ -81,57 +72,57 @@ describe('proxy and full node', () => {
         await proxiedNode.stop()
     })
 
-    it('proxied node can act as full node on another stream', async () => {
-        await proxiedNode.setProxies(proxyStreamId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 1)
-        expect(proxiedNode.stack.getLayer0DhtNode().hasJoined()).toBe(false)
+    it('proxied node can act as full node on another stream part', async () => {
+        await proxiedNode.setProxies(proxiedStreamPart, [proxyNodeDescriptor], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 1)
+        expect(proxiedNode.stack.getLayer0Node().hasJoined()).toBe(false)
 
         await Promise.all([
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage'),
-            proxiedNode.publish(regularMessage1)
+            proxiedNode.broadcast(createMessage(regularStreamPart1))
         ])
 
-        expect(proxiedNode.stack.getLayer0DhtNode().hasJoined()).toBe(true)
+        expect(proxiedNode.stack.getLayer0Node().hasJoined()).toBe(true)
 
         await Promise.all([
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage'),
-            proxiedNode.publish(proxiedMessage)
+            proxiedNode.broadcast(createMessage(proxiedStreamPart))
         ])
 
-        expect(proxiedNode.stack.getStreamrNode().getStream(proxyStreamId)!.type).toBe(StreamNodeType.PROXY)
-        expect(proxiedNode.stack.getStreamrNode().getStream(regularStreamId1)!.type).toBe(StreamNodeType.RANDOM_GRAPH)
+        expect(proxiedNode.stack.getStreamrNode().getStreamPartDelivery(proxiedStreamPart)!.proxied).toBe(true)
+        expect(proxiedNode.stack.getStreamrNode().getStreamPartDelivery(regularStreamPart1)!.proxied).toBe(false)
     })
 
-    it('proxied node can act as full node on multiple streams', async () => {
-        await proxiedNode.setProxies(proxyStreamId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 1)
-        expect(proxiedNode.stack.getLayer0DhtNode().hasJoined()).toBe(false)
+    it('proxied node can act as full node on multiple stream parts', async () => {
+        await proxiedNode.setProxies(proxiedStreamPart, [proxyNodeDescriptor], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 1)
+        expect(proxiedNode.stack.getLayer0Node().hasJoined()).toBe(false)
 
         await Promise.all([
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage', 5000, 
-                (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === 'regular-stream1'),
+                (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart1)),
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage', 5000, 
-                (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === 'regular-stream2'),
+                (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart2)),
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage', 5000, 
-                (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === 'regular-stream3'),
+                (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart3)),
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage', 5000, 
-                (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === 'regular-stream4'),
-            proxiedNode.publish(regularMessage1),
-            proxiedNode.publish(regularMessage2),
-            proxiedNode.publish(regularMessage3),
-            proxiedNode.publish(regularMessage4)
+                (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart4)),
+            proxiedNode.broadcast(createMessage(regularStreamPart1)),
+            proxiedNode.broadcast(createMessage(regularStreamPart2)),
+            proxiedNode.broadcast(createMessage(regularStreamPart3)),
+            proxiedNode.broadcast(createMessage(regularStreamPart4))
         ])
 
-        expect(proxiedNode.stack.getLayer0DhtNode().hasJoined()).toBe(true)
+        expect(proxiedNode.stack.getLayer0Node().hasJoined()).toBe(true)
 
         await Promise.all([
             waitForEvent3(proxyNode.stack.getStreamrNode()! as any, 'newMessage'),
-            proxiedNode.publish(proxiedMessage)
+            proxiedNode.broadcast(createMessage(proxiedStreamPart))
         ])
 
-        expect(proxiedNode.stack.getStreamrNode().getStream(proxyStreamId)!.type).toBe(StreamNodeType.PROXY)
-        expect(proxiedNode.stack.getStreamrNode().getStream(regularStreamId1)!.type).toBe(StreamNodeType.RANDOM_GRAPH)
-        expect(proxiedNode.stack.getStreamrNode().getStream(regularStreamId2)!.type).toBe(StreamNodeType.RANDOM_GRAPH)
-        expect(proxiedNode.stack.getStreamrNode().getStream(regularStreamId3)!.type).toBe(StreamNodeType.RANDOM_GRAPH)
-        expect(proxiedNode.stack.getStreamrNode().getStream(regularStreamId4)!.type).toBe(StreamNodeType.RANDOM_GRAPH)
+        expect(proxiedNode.stack.getStreamrNode().getStreamPartDelivery(proxiedStreamPart)!.proxied).toBe(true)
+        expect(proxiedNode.stack.getStreamrNode().getStreamPartDelivery(regularStreamPart1)!.proxied).toBe(false)
+        expect(proxiedNode.stack.getStreamrNode().getStreamPartDelivery(regularStreamPart2)!.proxied).toBe(false)
+        expect(proxiedNode.stack.getStreamrNode().getStreamPartDelivery(regularStreamPart3)!.proxied).toBe(false)
+        expect(proxiedNode.stack.getStreamrNode().getStreamPartDelivery(regularStreamPart4)!.proxied).toBe(false)
     })
 
 })

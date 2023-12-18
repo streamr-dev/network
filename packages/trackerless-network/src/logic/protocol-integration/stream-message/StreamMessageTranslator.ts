@@ -113,10 +113,20 @@ export class StreamMessageTranslator {
             content = msg.content
         } else if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
             messageType = OldStreamMessageType.GROUP_KEY_REQUEST
-            content = utf8ToBinary(GroupKeyRequestTranslator.toClientProtocol(GroupKeyRequest.fromBinary(msg.content)).serialize())
+            try {
+                const parsedRequest = GroupKeyRequest.fromBinary(msg.content)
+                content = utf8ToBinary(GroupKeyRequestTranslator.toClientProtocol(parsedRequest).serialize())
+            } catch (err) {
+                throw new Error(`invalid group key request: ${err}`)
+            }
         } else if (msg.messageType === StreamMessageType.GROUP_KEY_RESPONSE) {
             messageType = OldStreamMessageType.GROUP_KEY_RESPONSE
-            content = utf8ToBinary(GroupKeyResponseTranslator.toClientProtocol(GroupKeyResponse.fromBinary(msg.content)).serialize())
+            try {
+                const parsedResponse = GroupKeyResponse.fromBinary(msg.content)
+                content = utf8ToBinary(GroupKeyResponseTranslator.toClientProtocol(parsedResponse).serialize())
+            } catch (err) {
+                throw new Error(`invalid group key response: ${err}`)
+            }
         } else {
             throw new Error('invalid message type')
         }

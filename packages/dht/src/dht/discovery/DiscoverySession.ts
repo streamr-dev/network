@@ -1,14 +1,11 @@
-import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
-import KBucket from 'k-bucket'
 import { v4 } from 'uuid'
-import { PeerID } from '../../helpers/PeerID'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { DhtRpcServiceClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { SortedContactList } from '../contact/SortedContactList'
-import { DhtPeer } from '../DhtPeer'
-import { peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { PeerManager, getDistance } from '../PeerManager'
+import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
+import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { NodeID, getNodeIdFromBinary } from '../../helpers/nodeId'
 
 const logger = new Logger(module)
 
@@ -17,97 +14,79 @@ interface DiscoverySessionEvents {
 }
 
 interface DiscoverySessionConfig {
-    bucket: KBucket<DhtPeer>
-    neighborList: SortedContactList<DhtPeer>
     targetId: Uint8Array
-    ownPeerDescriptor: PeerDescriptor
-    serviceId: string
-    rpcCommunicator: RpcCommunicator
     parallelism: number
     noProgressLimit: number
-    newContactListener?: (dhtPeer: DhtPeer) => void
-    nodeName?: string
+    peerManager: PeerManager
 }
 
 export class DiscoverySession {
-    public readonly sessionId = v4()
-
+    
+    public readonly id = v4()
     private stopped = false
     private emitter = new EventEmitter<DiscoverySessionEvents>()
-    private outgoingClosestPeersRequestsCounter = 0
     private noProgressCounter = 0
-    private ongoingClosestPeersRequests: Set<string> = new Set()
+    private ongoingClosestPeersRequests: Set<NodeID> = new Set()
+    private contactedPeers: Set<NodeID> = new Set()
     private readonly config: DiscoverySessionConfig
-    private readonly ownPeerId: PeerID
 
     constructor(config: DiscoverySessionConfig) {
         this.config = config
-        this.ownPeerId = peerIdFromPeerDescriptor(config.ownPeerDescriptor)
     }
 
     private addNewContacts(contacts: PeerDescriptor[]): void {
         if (this.stopped) {
             return
         }
-        contacts.forEach((contact) => {
-            const dhtPeer = new DhtPeer(
-                this.config.ownPeerDescriptor,
-                contact,
-                toProtoRpcClient(new DhtRpcServiceClient(this.config.rpcCommunicator.getRpcClientTransport())),
-                this.config.serviceId
-            )
-            if (!dhtPeer.getPeerId().equals(this.ownPeerId)) {
-                if (this.config.newContactListener) {
-                    this.config.newContactListener(dhtPeer)
-                }
-                if (!this.config.neighborList.getContact(dhtPeer.getPeerId())) {
-                    this.config.neighborList.addContact(dhtPeer)
-                }
-            }
-        })
+        this.config.peerManager.handleNewPeers(contacts)
     }
 
-    private async getClosestPeersFromContact(contact: DhtPeer): Promise<PeerDescriptor[]> {
+    private async getClosestPeersFromContact(contact: DhtNodeRpcRemote): Promise<PeerDescriptor[]> {
         if (this.stopped) {
             return []
         }
-        logger.trace(`Getting closest peers from contact: ${contact.getPeerId().toKey()}`)
-        this.outgoingClosestPeersRequestsCounter++
-        this.config.neighborList.setContacted(contact.getPeerId())
+        logger.trace(`Getting closest peers from contact: ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
+        this.contactedPeers.add(contact.getNodeId())
         const returnedContacts = await contact.getClosestPeers(this.config.targetId)
-        this.config.neighborList.setActive(contact.getPeerId())
+        this.config.peerManager.handlePeerActive(contact.getNodeId())
         return returnedContacts
     }
 
-    private onClosestPeersRequestSucceeded(peerId: PeerID, contacts: PeerDescriptor[]) {
-        if (!this.ongoingClosestPeersRequests.has(peerId.toKey())) {
+    private onClosestPeersRequestSucceeded(nodeId: NodeID, contacts: PeerDescriptor[]) {
+        if (!this.ongoingClosestPeersRequests.has(nodeId)) {
             return
         }
-        this.ongoingClosestPeersRequests.delete(peerId.toKey())
-        const oldClosestContact = this.config.neighborList.getClosestContactId()
+        this.ongoingClosestPeersRequests.delete(nodeId)
+        const oldClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(getNodeIdFromBinary(this.config.targetId), 1)[0]
+        const oldClosestDistance = getDistance(getNodeIdFromBinary(this.config.targetId), oldClosestNeighbor.getNodeId())
         this.addNewContacts(contacts)
-        if (this.config.neighborList.getClosestContactId().equals(oldClosestContact)) {
+        const newClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(getNodeIdFromBinary(this.config.targetId), 1)[0]
+        const newClosestDistance = getDistance(getNodeIdFromBinary(this.config.targetId), newClosestNeighbor.getNodeId())
+        if (newClosestDistance >= oldClosestDistance) {
             this.noProgressCounter++
         } else {
             this.noProgressCounter = 0
         }
     }
 
-    private onClosestPeersRequestFailed(peer: DhtPeer, _exception: Error) {
-        if (!this.ongoingClosestPeersRequests.has(peer.getPeerId().toKey())) {
+    private onClosestPeersRequestFailed(peer: DhtNodeRpcRemote) {
+        if (!this.ongoingClosestPeersRequests.has(peer.getNodeId())) {
             return
         }
-        this.ongoingClosestPeersRequests.delete(peer.getPeerId().toKey())
-        this.config.bucket.remove(peer.getPeerId().value)
-        this.config.neighborList.removeContact(peer.getPeerId())
+        this.ongoingClosestPeersRequests.delete(peer.getNodeId())
+        this.config.peerManager.handlePeerUnresponsive(peer.getNodeId())
     }
 
     private findMoreContacts(): void {
         if (this.stopped) {
             return
         }
-        const uncontacted = this.config.neighborList.getUncontactedContacts(this.config.parallelism)
-        if (uncontacted.length < 1 || this.noProgressCounter >= this.config.noProgressLimit) {
+        const uncontacted = this.config.peerManager.getClosestContactsTo(
+            getNodeIdFromBinary(this.config.targetId),
+            this.config.parallelism,
+            this.contactedPeers
+        )
+        if (uncontacted.length === 0 || this.noProgressCounter >= this.config.noProgressLimit) {
             this.emitter.emit('discoveryCompleted')
             this.stopped = true
             return
@@ -116,30 +95,27 @@ export class DiscoverySession {
             if (this.ongoingClosestPeersRequests.size >= this.config.parallelism) {
                 break
             }
-            this.ongoingClosestPeersRequests.add(nextPeer.getPeerId().toKey())
+            this.ongoingClosestPeersRequests.add(nextPeer.getNodeId())
             // eslint-disable-next-line promise/catch-or-return
             this.getClosestPeersFromContact(nextPeer)
-                .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer.getPeerId(), contacts))
-                .catch((err) => this.onClosestPeersRequestFailed(nextPeer, err))
+                .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer.getNodeId(), contacts))
+                .catch(() => this.onClosestPeersRequestFailed(nextPeer))
                 .finally(() => {
-                    this.outgoingClosestPeersRequestsCounter--
                     this.findMoreContacts()
                 })
         }
     }
 
-    public async findClosestNodes(timeout: number): Promise<SortedContactList<DhtPeer>> {
-        if (this.config.neighborList.getUncontactedContacts(this.config.parallelism).length < 1) {
-            logger.trace('getUncontactedContacts length was 0 in beginning of discovery, this.neighborList.size: '
-                + this.config.neighborList.getSize())
-            return this.config.neighborList
+    public async findClosestNodes(timeout: number): Promise<void> {
+        if (this.config.peerManager.getNumberOfContacts(this.contactedPeers) === 0) {
+            return
         }
+        // TODO add abortController and signal it in stop()
         await runAndWaitForEvents3<DiscoverySessionEvents>(
             [this.findMoreContacts.bind(this)],
             [[this.emitter, 'discoveryCompleted']],
             timeout
         )
-        return this.config.neighborList
     }
 
     public stop(): void {

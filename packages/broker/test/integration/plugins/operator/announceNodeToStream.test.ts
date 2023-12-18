@@ -1,11 +1,11 @@
-import { toStreamID } from '@streamr/protocol'
 import { fastPrivateKey } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { announceNodeToStream } from '../../../../src/plugins/operator/announceNodeToStream'
 import { createClient } from '../../../utils'
 import { setupOperatorContract } from './contractUtils'
+import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
 
-const TIMEOUT = 10 * 1000
+const TIMEOUT = 20 * 1000
 
 describe('announceNodeToStream', () => {
 
@@ -16,7 +16,7 @@ describe('announceNodeToStream', () => {
         const operatorContractAddress = operatorServiceConfig.operatorContractAddress
         const nodeWallet = nodeWallets[0]
         const client = createClient(nodeWallet.privateKey)
-        const streamId = toStreamID('/operator/coordination', operatorContractAddress)
+        const streamId = formCoordinationStreamId(operatorContractAddress)
         const anonymousClient = createClient(fastPrivateKey())
         const subscription = await anonymousClient.subscribe(streamId)
 
