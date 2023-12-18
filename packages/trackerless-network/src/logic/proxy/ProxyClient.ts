@@ -261,7 +261,7 @@ export class ProxyClient extends EventEmitter<Events> {
     }
 
     stop(): void {
-        this.targetNeighbors.getAll().map((remote) => {
+        this.targetNeighbors.getAll().forEach((remote) => {
             this.config.connectionLocker.unlockConnection(remote.getPeerDescriptor(), SERVICE_ID)
             remote.leaveStreamPartNotice(this.config.streamPartId, false)
         })
