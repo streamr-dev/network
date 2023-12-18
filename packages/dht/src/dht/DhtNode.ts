@@ -155,7 +155,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             joinParallelism: 3,
             maxNeighborListSize: 200,
             numberOfNodesPerKBucket: 8,
-            joinNoProgressLimit: 5,
+            joinNoProgressLimit: 10,
             dhtJoinTimeout: 60000,
             peerDiscoveryQueryBatchSize: 5,
             maxConnections: 80,
