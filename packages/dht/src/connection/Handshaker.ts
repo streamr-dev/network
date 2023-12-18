@@ -4,7 +4,9 @@ import { v4 } from 'uuid'
 import { Message, HandshakeRequest, HandshakeResponse, MessageType, PeerDescriptor, HandshakeError } from '../proto/packages/dht/protos/DhtRpc'
 import { IConnection } from './IConnection'
 import { version } from '../../package.json'
+import { isCompatibleVersion } from '../helpers/versionCompatibility'
 
+// Used for backwards compatibility with older versions of the protocol that do not send version in handshakes
 const BEFORE_TESTNET_TWO_VERSION = '100.0.0-before-testnet-two.0'
 
 const logger = new Logger(module)
@@ -47,8 +49,10 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
             if (message.body.oneofKind === 'handshakeResponse') {
                 logger.trace('handshake response received')
                 const handshake = message.body.handshakeResponse
-                if (handshake.error !== undefined) {
-                    this.emit('handshakeFailed', handshake.error)
+                const error = handshake.error 
+                    ?? !isCompatibleVersion(handshake.version ?? BEFORE_TESTNET_TWO_VERSION, version) ? HandshakeError.UNSUPPORTED_VERSION : undefined
+                if (error) {
+                    this.emit('handshakeFailed', error)
                 } else {
                     this.emit('handshakeCompleted', handshake.sourcePeerDescriptor!)
                 }
@@ -81,7 +85,8 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
     public sendHandshakeResponse(error?: HandshakeError): void {
         const outgoingHandshakeResponse: HandshakeResponse = {
             sourcePeerDescriptor: this.localPeerDescriptor,
-            error
+            error,
+            version
         }
         const msg: Message = {
             serviceId: Handshaker.HANDSHAKER_SERVICE_ID,

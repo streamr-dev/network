@@ -351,6 +351,10 @@ export interface HandshakeResponse {
      * @generated from protobuf field: optional dht.HandshakeError error = 2;
      */
     error?: HandshakeError;
+    /**
+     * @generated from protobuf field: string version = 3;
+     */
+    version: string;
 }
 /**
  * @generated from protobuf message dht.Message
@@ -950,7 +954,8 @@ class HandshakeResponse$Type extends MessageType$<HandshakeResponse> {
     constructor() {
         super("dht.HandshakeResponse", [
             { no: 1, name: "sourcePeerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "error", kind: "enum", opt: true, T: () => ["dht.HandshakeError", HandshakeError] }
+            { no: 2, name: "error", kind: "enum", opt: true, T: () => ["dht.HandshakeError", HandshakeError] },
+            { no: 3, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }

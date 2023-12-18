@@ -204,6 +204,7 @@ message HandshakeRequest {
 message HandshakeResponse {
   PeerDescriptor sourcePeerDescriptor = 1;
   optional HandshakeError error = 2;
+  string version = 3;
 }
 
 enum HandshakeError {
