@@ -47,7 +47,7 @@ export class NeighborUpdateManager {
         logger.trace(`Updating neighbor info to nodes`)
         const neighborDescriptors = this.config.targetNeighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor())
         await Promise.allSettled(this.config.targetNeighbors.getAll().map(async (neighbor) => {
-            const res = await this.createRemote(neighbor.getPeerDescriptor()).updateNeighbors(neighborDescriptors)
+            const res = await this.createRemote(neighbor.getPeerDescriptor()).updateNeighbors(this.config.streamPartId, neighborDescriptors)
             if (res.removeMe) {
                 this.config.targetNeighbors.remove(neighbor.getPeerDescriptor())
                 this.config.neighborFinder.start([getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor())])
@@ -59,7 +59,6 @@ export class NeighborUpdateManager {
         return new NeighborUpdateRpcRemote(
             this.config.localPeerDescriptor,
             targetPeerDescriptor,
-            this.config.streamPartId,
             this.config.rpcCommunicator,
             NeighborUpdateRpcClient
         )

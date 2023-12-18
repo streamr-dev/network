@@ -65,7 +65,6 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
             const remoteConnector = new WebrtcConnectorRpcRemote(
                 this.config.getLocalPeerDescriptor(),
                 remotePeer,
-                'DUMMY', 
                 this.config.rpcCommunicator,
                 WebrtcConnectorRpcClient
             )

@@ -283,7 +283,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 return new StoreRpcRemote(
                     this.localPeerDescriptor!,
                     contact,
-                    this.config.serviceId,
                     this.rpcCommunicator!,
                     StoreRpcClient,
                     this.config.rpcRequestTimeout
@@ -466,7 +465,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         const rpcRemote = new ExternalApiRpcRemote(
             this.localPeerDescriptor!,
             peer,
-            this.config.serviceId,
             this.rpcCommunicator!,
             ExternalApiRpcClient
         )
@@ -491,7 +489,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         const rpcRemote = new ExternalApiRpcRemote(
             this.localPeerDescriptor!,
             peer,
-            this.config.serviceId,
             this.rpcCommunicator!,
             ExternalApiRpcClient
         )

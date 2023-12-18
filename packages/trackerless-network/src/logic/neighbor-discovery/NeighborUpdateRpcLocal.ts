@@ -41,7 +41,6 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
                 new DeliveryRpcRemote(
                     this.config.localPeerDescriptor,
                     peerDescriptor,
-                    this.config.streamPartId,
                     this.config.rpcCommunicator,
                     DeliveryRpcClient
                 ))

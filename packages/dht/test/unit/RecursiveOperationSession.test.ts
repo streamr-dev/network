@@ -21,7 +21,6 @@ describe('RecursiveOperationSession', () => {
         return new RecursiveOperationSessionRpcRemote(
             createMockPeerDescriptor(),
             localPeerDescriptor,
-            serviceId,
             new RoutingRpcCommunicator(serviceId, send),
             RecursiveOperationSessionRpcClient
         )
