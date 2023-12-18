@@ -1,4 +1,4 @@
-import { IceServer } from './WebrtcConnectorRpcLocal'
+import { IceServer } from './WebrtcConnector'
 
 export function iceServerAsString({ url, port, username, password, tcp }: IceServer): string {
     const [protocol, hostname] = url.split(':')
@@ -9,7 +9,7 @@ export function iceServerAsString({ url, port, username, password, tcp }: IceSer
         return `${protocol}:${hostname}:${port}`
     }
     if (username !== undefined && password !== undefined) {
-        return `${protocol}:${username}:${password}@${hostname}:${port}${tcp ? '?transport=tcp' : ''}`
+        return `${protocol}:${username}:${password}@${hostname}:${port}${(tcp !== undefined) ? '?transport=tcp' : ''}`
     }
     throw new Error(`username (${username}) and password (${password}) must be supplied together`)
 }

@@ -1,14 +1,12 @@
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { CountMetric, LevelMetric, Logger, Metric, MetricsContext, MetricsDefinition, RateMetric, waitForEvent3 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { Contact } from '../dht/contact/Contact'
 import { SortedContactList } from '../dht/contact/SortedContactList'
 import { DuplicateDetector } from '../dht/routing/DuplicateDetector'
-import { PeerIDKey } from '../helpers/PeerID'
 import * as Err from '../helpers/errors'
 import {
     areEqualPeerDescriptors,
-    keyFromPeerDescriptor,
+    getNodeIdFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../helpers/peerIdFromPeerDescriptor'
 import { protoToString } from '../helpers/protoToString'
@@ -24,7 +22,7 @@ import {
     UnlockRequest
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ConnectionLockRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
-import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
+import { DEFAULT_SEND_OPTIONS, ITransport, SendOptions, TransportEvents } from '../transport/ITransport'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { ConnectionLockHandler, LockID } from './ConnectionLockHandler'
 import { ConnectorFacade } from './ConnectorFacade'
@@ -33,6 +31,7 @@ import { ConnectionLockRpcRemote } from './ConnectionLockRpcRemote'
 import { WEBRTC_CLEANUP } from './webrtc/NodeWebrtcConnection'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ConnectionLockRpcLocal } from './ConnectionLockRpcLocal'
+import { NodeID } from '../helpers/nodeId'
 
 export interface ConnectionManagerConfig {
     maxConnections?: number
@@ -54,9 +53,6 @@ interface ConnectionManagerMetrics extends MetricsDefinition {
     connectionTotalFailureCount: Metric
 }
 
-// TODO move this type identifiers.ts and use also in other classes (and rename to ServiceID)
-type ServiceId = string
-
 const logger = new Logger(module)
 
 enum ConnectionManagerState {
@@ -66,13 +62,9 @@ enum ConnectionManagerState {
     STOPPED = 'stopped'
 }
 
-interface ConnectionManagerEvents {
-    newConnection: (connection: ManagedConnection) => void
-}
-
 export interface ConnectionLocker {
-    lockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void
-    unlockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void
+    lockConnection(targetDescriptor: PeerDescriptor, lockId: LockID): void
+    unlockConnection(targetDescriptor: PeerDescriptor, lockId: LockID): void
     weakLockConnection(targetDescriptor: PeerDescriptor): void
     weakUnlockConnection(targetDescriptor: PeerDescriptor): void
 }
@@ -87,8 +79,6 @@ export interface TlsCertificate {
     certFileName: string
 }
 
-export type Events = TransportEvents & ConnectionManagerEvents
-
 const INTERNAL_SERVICE_ID = 'system/connection-manager'
 
 // Form an string representation from a peer description which can be undefined. This output 
@@ -100,22 +90,23 @@ const INTERNAL_SERVICE_ID = 'system/connection-manager'
 // - if we create stricter types for incoming messages (message.sourceDescriptor or
 //   disconnectNotice.peerDescriptor)
 // - if ManagedConnection#peerDescriptor is never undefined
-export const keyOrUnknownFromPeerDescriptor = (peerDescriptor: PeerDescriptor | undefined): string => { 
+export const getNodeIdOrUnknownFromPeerDescriptor = (peerDescriptor: PeerDescriptor | undefined): string => {
     if (peerDescriptor !== undefined) {
-        return keyFromPeerDescriptor(peerDescriptor)
+        return getNodeIdFromPeerDescriptor(peerDescriptor)
     } else {
         return 'unknown'
     }
 }
 
-export class ConnectionManager extends EventEmitter<Events> implements ITransport, ConnectionLocker {
+export class ConnectionManager extends EventEmitter<TransportEvents> implements ITransport, ConnectionLocker {
 
     private config: ConnectionManagerConfig
     private readonly metricsContext: MetricsContext
+    // TODO use config option or named constant?
     private readonly duplicateMessageDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
     private readonly metrics: ConnectionManagerMetrics
     private locks = new ConnectionLockHandler()
-    private connections: Map<PeerIDKey, ManagedConnection> = new Map()
+    private connections: Map<NodeID, ManagedConnection> = new Map()
     private readonly connectorFacade: ConnectorFacade
     private rpcCommunicator?: RoutingRpcCommunicator
     private disconnectorIntervalRef?: NodeJS.Timeout
@@ -125,7 +116,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         super()
         this.config = config
         this.onData = this.onData.bind(this)
-        this.onIncomingConnection = this.onIncomingConnection.bind(this)
+        this.send = this.send.bind(this)
+        this.onNewConnection = this.onNewConnection.bind(this)
         this.metricsContext = this.config.metricsContext ?? new MetricsContext()
         this.metrics = {
             sendMessagesPerSecond: new RateMetric(),
@@ -139,13 +131,14 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.connectorFacade = this.config.createConnectorFacade()
         this.send = this.send.bind(this)
         this.rpcCommunicator = new RoutingRpcCommunicator(INTERNAL_SERVICE_ID, this.send, {
-            rpcRequestTimeout: 10000
+            rpcRequestTimeout: 10000  // TODO use config option or named constant?
         })
         const lockRpcLocal = new ConnectionLockRpcLocal({
-            addRemoteLocked: (id: PeerIDKey, serviceId: string) => this.locks.addRemoteLocked(id, serviceId),
-            removeRemoteLocked: (id: PeerIDKey, serviceId: string) => this.locks.removeRemoteLocked(id, serviceId),
-            closeConnection: (peerDescriptor: PeerDescriptor, disconnectionType: DisconnectionType, reason?: string) => {
-                this.closeConnection(peerDescriptor, disconnectionType, reason)
+            addRemoteLocked: (id: NodeID, lockId: LockID) => this.locks.addRemoteLocked(id, lockId),
+            removeRemoteLocked: (id: NodeID, lockId: LockID) => this.locks.removeRemoteLocked(id, lockId),
+            closeConnection: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string) => {
+                // TODO should we have some handling for this floating promise?
+                this.closeConnection(peerDescriptor, gracefulLeave, reason)
             },
             getLocalPeerDescriptor: () => this.getLocalPeerDescriptor()
         })
@@ -161,17 +154,22 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (this.connections.size <= maxConnections) {
             return
         }
-        const disconnectionCandidates = new SortedContactList<Contact>(peerIdFromPeerDescriptor(this.getLocalPeerDescriptor()), 100000)
+        const disconnectionCandidates = new SortedContactList<Contact>({
+            referenceId: getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor()), 
+            maxSize: 100000,  // TODO use config option or named constant?
+            allowToContainReferenceId: false,
+            emitEvents: false
+        })
         this.connections.forEach((connection) => {
-            if (!this.locks.isLocked(connection.peerIdKey) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
-                logger.trace('disconnecting in timeout interval: ' + keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()))
+            if (!this.locks.isLocked(connection.getNodeId()) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
+                logger.trace('disconnecting in timeout interval: ' + getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()))
                 disconnectionCandidates.addContact(new Contact(connection.getPeerDescriptor()!))
             }
         })
         const sortedCandidates = disconnectionCandidates.getAllContacts()
         const targetNum = this.connections.size - maxConnections
         for (let i = 0; i < sortedCandidates.length && i < targetNum; i++) {
-            logger.trace('garbageCollecting ' + keyFromPeerDescriptor(sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor()))
+            logger.trace('garbageCollecting ' + getNodeIdFromPeerDescriptor(sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor()))
             this.gracefullyDisconnectAsync(sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor(),
                 DisconnectMode.NORMAL).catch((_e) => { })
         }
@@ -184,15 +182,16 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.state = ConnectionManagerState.RUNNING
         logger.trace(`Starting ConnectionManager...`)
         await this.connectorFacade.start(
-            (connection: ManagedConnection) => this.onIncomingConnection(connection),
-            (peerDescriptor: PeerDescriptor) => this.canConnect(peerDescriptor)
+            (connection: ManagedConnection) => this.onNewConnection(connection),
+            (peerDescriptor: PeerDescriptor) => this.hasConnection(peerDescriptor),
+            this
         )
         // Garbage collection of connections
         this.disconnectorIntervalRef = setInterval(() => {
             logger.trace('disconnectorInterval')
             const LAST_USED_LIMIT = 20000
             this.garbageCollectConnections(this.config.maxConnections ?? 80, LAST_USED_LIMIT)
-        }, 5000)
+        }, 5000)  // TODO use config option or named constant?
     }
 
     public async stop(): Promise<void> {
@@ -215,8 +214,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 }
             } else {
                 logger.trace('handshake of connection not completed, force-closing')
+                // TODO use config option or named constant?
                 const eventReceived = waitForEvent3<ManagedConnectionEvents>(peer, 'disconnected', 2000)
-                peer.close('OTHER')
+                // TODO should we have some handling for this floating promise?
+                peer.close(true)
                 try {
                     await eventReceived
                     logger.trace('resolving after receiving disconnected event from non-handshaked connection')
@@ -249,41 +250,41 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         return this.locks.getNumberOfWeakLockedConnections()
     }
 
-    public async send(message: Message, doNotConnect = false, doNotMindStopped = false): Promise<void> {
-        if (this.state === ConnectionManagerState.STOPPED && !doNotMindStopped) {
+    public async send(message: Message, opts: SendOptions = DEFAULT_SEND_OPTIONS): Promise<void> {
+        if (this.state === ConnectionManagerState.STOPPED && !opts.sendIfStopped) {
             return
         }
         const peerDescriptor = message.targetDescriptor!
         if (this.isConnectionToSelf(peerDescriptor)) {
             throw new Err.CannotConnectToSelf('Cannot send to self')
         }
-        logger.trace(`Sending message to: ${keyFromPeerDescriptor(peerDescriptor)}`)
+        logger.trace(`Sending message to: ${getNodeIdFromPeerDescriptor(peerDescriptor)}`)
         message = {
             ...message,
             sourceDescriptor: this.getLocalPeerDescriptor()
         }
-        const peerIdKey = keyFromPeerDescriptor(peerDescriptor)
-        let connection = this.connections.get(peerIdKey)
-        if (!connection && !doNotConnect) {
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        let connection = this.connections.get(nodeId)
+        if (!connection && opts.connect) {
             connection = this.connectorFacade.createConnection(peerDescriptor)
-            this.onIncomingConnection(connection)
+            this.onNewConnection(connection)
         } else if (!connection) {
-            throw new Err.SendFailed('No connection to target, doNotConnect flag is true')
+            throw new Err.SendFailed('No connection to target, connect flag is false')
         }
         const binary = Message.toBinary(message)
         this.metrics.sendBytesPerSecond.record(binary.byteLength)
         this.metrics.sendMessagesPerSecond.record(1)
-        return connection.send(binary, doNotConnect)
+        return connection.send(binary, opts.connect)
     }
 
-    private isConnectionToSelf(peerDescriptor: PeerDescriptor): boolean { 
+    private isConnectionToSelf(peerDescriptor: PeerDescriptor): boolean {
         return areEqualPeerDescriptors(peerDescriptor, this.getLocalPeerDescriptor()) || this.isOwnWebsocketServer(peerDescriptor)
     }
 
     private isOwnWebsocketServer(peerDescriptor: PeerDescriptor): boolean {
         const localPeerDescriptor = this.getLocalPeerDescriptor()
         if ((peerDescriptor.websocket !== undefined) && (localPeerDescriptor.websocket !== undefined)) {
-            return ((peerDescriptor.websocket.port === localPeerDescriptor.websocket.port) 
+            return ((peerDescriptor.websocket.port === localPeerDescriptor.websocket.port)
                 && (peerDescriptor.websocket.host === localPeerDescriptor.websocket.host))
         } else {
             return false
@@ -291,8 +292,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public getConnection(peerDescriptor: PeerDescriptor): ManagedConnection | undefined {
-        const peerIdKey = keyFromPeerDescriptor(peerDescriptor)
-        return this.connections.get(peerIdKey)
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        return this.connections.get(nodeId)
     }
 
     public getLocalPeerDescriptor(): PeerDescriptor {
@@ -300,23 +301,18 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public hasConnection(peerDescriptor: PeerDescriptor): boolean {
-        const peerIdKey = keyFromPeerDescriptor(peerDescriptor)
-        return this.connections.has(peerIdKey)
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        return this.connections.has(nodeId)
     }
 
     public hasLocalLockedConnection(peerDescriptor: PeerDescriptor): boolean {
-        const peerIdKey = keyFromPeerDescriptor(peerDescriptor)
-        return this.locks.isLocalLocked(peerIdKey)
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        return this.locks.isLocalLocked(nodeId)
     }
 
     public hasRemoteLockedConnection(peerDescriptor: PeerDescriptor): boolean {
-        const peerIdKey = keyFromPeerDescriptor(peerDescriptor)
-        return this.locks.isRemoteLocked(peerIdKey)
-    }
-
-    private canConnect(peerDescriptor: PeerDescriptor): boolean {
-        // Perhaps the connection's state should be checked here
-        return !this.hasConnection(peerDescriptor) // TODO: Add port range check
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        return this.locks.isRemoteLocked(nodeId)
     }
 
     public handleMessage(message: Message): void {
@@ -326,7 +322,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
         if (this.duplicateMessageDetector.isMostLikelyDuplicate(message.messageId)) {
-            logger.trace('handleMessage filtered duplicate ' + keyFromPeerDescriptor(message.sourceDescriptor!) 
+            logger.trace('handleMessage filtered duplicate ' + getNodeIdFromPeerDescriptor(message.sourceDescriptor!)
                 + ' ' + message.serviceId + ' ' + message.messageId)
             return
         }
@@ -334,7 +330,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (message.serviceId === INTERNAL_SERVICE_ID) {
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {
-            logger.trace('emit "message" ' + keyFromPeerDescriptor(message.sourceDescriptor!) + ' ' + message.serviceId + ' ' + message.messageId)
+            logger.trace('emit "message" ' + getNodeIdFromPeerDescriptor(message.sourceDescriptor!)
+                + ' ' + message.serviceId + ' ' + message.messageId)
             this.emit('message', message)
         }
     }
@@ -364,47 +361,45 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private onConnected(connection: ManagedConnection) {
         const peerDescriptor = connection.getPeerDescriptor()!
         this.emit('connected', peerDescriptor)
-        logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' onConnected() ' + connection.connectionType)
+        logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' onConnected() ' + connection.connectionType)
         this.onConnectionCountChange()
     }
 
-    private onDisconnected(connection: ManagedConnection, disconnectionType: DisconnectionType) {
-        logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) + ' onDisconnected() ' + disconnectionType)
+    private onDisconnected(connection: ManagedConnection, gracefulLeave: boolean) {
+        logger.trace(getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) + ' onDisconnected() gracefulLeave: ' + gracefulLeave)
 
-        const peerIdKey = keyFromPeerDescriptor(connection.getPeerDescriptor()!)
-        const storedConnection = this.connections.get(peerIdKey)
+        const nodeId = getNodeIdFromPeerDescriptor(connection.getPeerDescriptor()!)
+        const storedConnection = this.connections.get(nodeId)
         if (storedConnection && storedConnection.connectionId.equals(connection.connectionId)) {
-            this.locks.clearAllLocks(peerIdKey)
-            this.connections.delete(peerIdKey)
-            logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) 
-                + ' deleted connection in onDisconnected() ' + disconnectionType)
-            this.emit('disconnected', connection.getPeerDescriptor()!, disconnectionType)
+            this.locks.clearAllLocks(nodeId)
+            this.connections.delete(nodeId)
+            logger.trace(getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())
+                + ' deleted connection in onDisconnected() gracefulLeave: ' + gracefulLeave)
+            this.emit('disconnected', connection.getPeerDescriptor()!, gracefulLeave)
             this.onConnectionCountChange()
         } else {
-            logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) 
+            logger.trace(getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())
                 + ' onDisconnected() did nothing, no such connection in connectionManager')
             if (storedConnection) {
-                logger.trace(keyOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())
-                + ' connectionIds do not match ' + storedConnection.connectionId + ' ' + connection.connectionId)
+                logger.trace(getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())
+                    + ' connectionIds do not match ' + storedConnection.connectionId.toString() + ' ' + connection.connectionId.toString())
             }
         }
 
     }
 
-    private onIncomingConnection(connection: ManagedConnection): boolean {
+    private onNewConnection(connection: ManagedConnection): boolean {
         if (this.state === ConnectionManagerState.STOPPED) {
             return false
         }
-        logger.trace('onIncomingConnection()')
-        connection.offeredAsIncoming = true
-        if (!this.acceptIncomingConnection(connection)) {
+        logger.trace('onNewConnection()')
+        if (!this.acceptNewConnection(connection)) {
             return false
         }
         connection.on('managedData', this.onData)
-        connection.on('disconnected', (disconnectionType: DisconnectionType) => {
-            this.onDisconnected(connection, disconnectionType)
+        connection.on('disconnected', (gracefulLeave: boolean) => {
+            this.onDisconnected(connection, gracefulLeave)
         })
-        this.emit('newConnection', connection)
         if (connection.isHandshakeCompleted()) {
             this.onConnected(connection)
         } else {
@@ -415,48 +410,47 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         return true
     }
 
-    private acceptIncomingConnection(newConnection: ManagedConnection): boolean {
-        logger.trace(keyFromPeerDescriptor(newConnection.getPeerDescriptor()!) + ' acceptIncomingConnection()')
+    private acceptNewConnection(newConnection: ManagedConnection): boolean {
+        logger.trace(getNodeIdFromPeerDescriptor(newConnection.getPeerDescriptor()!) + ' acceptIncomingConnection()')
         const newPeerID = peerIdFromPeerDescriptor(newConnection.getPeerDescriptor()!)
-        const peerIdKey = keyFromPeerDescriptor(newConnection.getPeerDescriptor()!)
-        if (this.connections.has(peerIdKey)) {
+        const nodeId = getNodeIdFromPeerDescriptor(newConnection.getPeerDescriptor()!)
+        if (this.connections.has(nodeId)) {
             if (newPeerID.hasSmallerHashThan(peerIdFromPeerDescriptor(this.getLocalPeerDescriptor()))) {
-                logger.trace(keyOrUnknownFromPeerDescriptor(newConnection.getPeerDescriptor())
+                logger.trace(getNodeIdOrUnknownFromPeerDescriptor(newConnection.getPeerDescriptor())
                     + ' acceptIncomingConnection() replace current connection')
                 // replace the current connection
-                const oldConnection = this.connections.get(newPeerID.toKey())!
-                logger.trace('replaced: ' + keyFromPeerDescriptor(newConnection.getPeerDescriptor()!))
+                const oldConnection = this.connections.get(nodeId)!
+                logger.trace('replaced: ' + getNodeIdFromPeerDescriptor(newConnection.getPeerDescriptor()!))
                 const buffer = oldConnection.stealOutputBuffer()
-                
+
                 for (const data of buffer) {
                     newConnection.sendNoWait(data)
                 }
-                
+
                 oldConnection.reportBufferSentByOtherConnection()
                 oldConnection.replacedByOtherConnection = true
             } else {
-                newConnection.rejectedAsIncoming = true
                 return false
             }
         }
 
-        logger.trace(keyFromPeerDescriptor(newConnection.getPeerDescriptor()!) + ' added to connections at acceptIncomingConnection')
-        this.connections.set(peerIdKey, newConnection)
+        logger.trace(getNodeIdFromPeerDescriptor(newConnection.getPeerDescriptor()!) + ' added to connections at acceptIncomingConnection')
+        this.connections.set(nodeId, newConnection)
 
         return true
     }
 
-    private async closeConnection(peerDescriptor: PeerDescriptor, disconnectionType: DisconnectionType, reason?: string): Promise<void> {
-        logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'closeConnection() ' + reason)
-        const id = keyFromPeerDescriptor(peerDescriptor)
+    private async closeConnection(peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string): Promise<void> {
+        logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + 'closeConnection() ' + reason)
+        const id = getNodeIdFromPeerDescriptor(peerDescriptor)
         this.locks.clearAllLocks(id)
         if (this.connections.has(id)) {
             const connectionToClose = this.connections.get(id)!
-            await connectionToClose.close(disconnectionType)
+            await connectionToClose.close(gracefulLeave)
 
         } else {
-            logger.trace(keyFromPeerDescriptor(peerDescriptor) + ' ' + 'closeConnection() this.connections did not have the id')
-            this.emit('disconnected', peerDescriptor, 'OTHER')
+            logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + 'closeConnection() this.connections did not have the id')
+            this.emit('disconnected', peerDescriptor, false)
         }
     }
 
@@ -464,13 +458,15 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (this.state === ConnectionManagerState.STOPPED || areEqualPeerDescriptors(targetDescriptor, this.getLocalPeerDescriptor())) {
             return
         }
-        const peerIdKey = keyFromPeerDescriptor(targetDescriptor)
+        const nodeId = getNodeIdFromPeerDescriptor(targetDescriptor)
         const rpcRemote = new ConnectionLockRpcRemote(
             this.getLocalPeerDescriptor(),
             targetDescriptor,
-            toProtoRpcClient(new ConnectionLockRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+            'DUMMY',
+            this.rpcCommunicator!,
+            ConnectionLockRpcClient
         )
-        this.locks.addLocalLocked(peerIdKey, lockId)
+        this.locks.addLocalLocked(nodeId, lockId)
         rpcRemote.lockRequest(lockId)
             .then((_accepted) => logger.trace('LockRequest successful'))
             .catch((err) => { logger.debug(err) })
@@ -480,14 +476,16 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (this.state === ConnectionManagerState.STOPPED || areEqualPeerDescriptors(targetDescriptor, this.getLocalPeerDescriptor())) {
             return
         }
-        const peerIdKey = keyFromPeerDescriptor(targetDescriptor)
-        this.locks.removeLocalLocked(peerIdKey, lockId)
+        const nodeId = getNodeIdFromPeerDescriptor(targetDescriptor)
+        this.locks.removeLocalLocked(nodeId, lockId)
         const rpcRemote = new ConnectionLockRpcRemote(
             this.getLocalPeerDescriptor(),
             targetDescriptor,
-            toProtoRpcClient(new ConnectionLockRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+            'DUMMY',
+            this.rpcCommunicator!,
+            ConnectionLockRpcClient
         )
-        if (this.connections.has(peerIdKey)) {
+        if (this.connections.has(nodeId)) {
             rpcRemote.unlockRequest(lockId)
         }
     }
@@ -496,22 +494,21 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (this.state === ConnectionManagerState.STOPPED || areEqualPeerDescriptors(targetDescriptor, this.getLocalPeerDescriptor())) {
             return
         }
-        const peerIdKey = keyFromPeerDescriptor(targetDescriptor)
-        this.locks.addWeakLocked(peerIdKey)
+        const nodeId = getNodeIdFromPeerDescriptor(targetDescriptor)
+        this.locks.addWeakLocked(nodeId)
     }
 
     public weakUnlockConnection(targetDescriptor: PeerDescriptor): void {
         if (this.state === ConnectionManagerState.STOPPED || areEqualPeerDescriptors(targetDescriptor, this.getLocalPeerDescriptor())) {
             return
         }
-        const peerIdKey = keyFromPeerDescriptor(targetDescriptor)
-        this.locks.removeWeakLocked(peerIdKey)
-
+        const nodeId = getNodeIdFromPeerDescriptor(targetDescriptor)
+        this.locks.removeWeakLocked(nodeId)
     }
 
     private async gracefullyDisconnectAsync(targetDescriptor: PeerDescriptor, disconnectMode: DisconnectMode): Promise<void> {
 
-        const connection = this.connections.get(peerIdFromPeerDescriptor(targetDescriptor).toKey())
+        const connection = this.connections.get(getNodeIdFromPeerDescriptor(targetDescriptor))
 
         if (!connection) {
             logger.debug('gracefullyDisconnectedAsync() tried on a non-existing connection')
@@ -519,6 +516,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
 
         const promise = new Promise<void>((resolve, _reject) => {
+            // TODO use config option or named constant?
             // eslint-disable-next-line promise/catch-or-return
             waitForEvent3<ManagedConnectionEvents>(connection, 'disconnected', 2000).then(() => {
                 logger.trace('disconnected event received in gracefullyDisconnectAsync()')
@@ -526,7 +524,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             })
                 .catch((e) => {
                     logger.trace('force-closing connection after timeout ' + e)
-                    connection.close('OTHER')
+                    // TODO should we have some handling for this floating promise?
+                    connection.close(true)
                 })
                 .finally(() => {
                     logger.trace('resolving after receiving disconnected event')
@@ -544,16 +543,18 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     private async doGracefullyDisconnectAsync(targetDescriptor: PeerDescriptor, disconnectMode: DisconnectMode): Promise<void> {
-        logger.trace(keyFromPeerDescriptor(targetDescriptor) + ' gracefullyDisconnectAsync()')
+        logger.trace(getNodeIdFromPeerDescriptor(targetDescriptor) + ' gracefullyDisconnectAsync()')
         const rpcRemote = new ConnectionLockRpcRemote(
             this.getLocalPeerDescriptor(),
             targetDescriptor,
-            toProtoRpcClient(new ConnectionLockRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+            'DUMMY',
+            this.rpcCommunicator!,
+            ConnectionLockRpcClient
         )
         try {
             await rpcRemote.gracefulDisconnect(disconnectMode)
         } catch (ex) {
-            logger.trace(keyFromPeerDescriptor(targetDescriptor) + ' remote.gracefulDisconnect() failed' + ex)
+            logger.trace(getNodeIdFromPeerDescriptor(targetDescriptor) + ' remote.gracefulDisconnect() failed' + ex)
         }
     }
 

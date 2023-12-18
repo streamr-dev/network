@@ -1,19 +1,19 @@
 import { ConnectionLocker, PeerDescriptor } from '@streamr/dht'
 import { NodeList } from '../NodeList'
 import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
-import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
+import { RpcCommunicator } from '@streamr/proto-rpc'
 import {
-    HandshakeRpcClient,
-    IHandshakeRpcClient, DeliveryRpcClient
+    DeliveryRpcClient, HandshakeRpcClient
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import {
-    InterleaveNotice,
+    InterleaveRequest,
+    InterleaveResponse,
     StreamPartHandshakeRequest,
     StreamPartHandshakeResponse
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Logger } from '@streamr/utils'
 import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
-import { HandshakeRpcRemote } from './HandshakeRpcRemote'
+import { HandshakeRpcRemote, INTERLEAVE_REQUEST_TIMEOUT } from './HandshakeRpcRemote'
 import { HandshakeRpcLocal } from './HandshakeRpcLocal'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { StreamPartID } from '@streamr/protocol'
@@ -27,44 +27,40 @@ interface HandshakerConfig {
     randomNodeView: NodeList
     rpcCommunicator: RpcCommunicator
     maxNeighborCount: number
+    rpcRequestTimeout?: number
 }
 
 const logger = new Logger(module)
 
 const PARALLEL_HANDSHAKE_COUNT = 2
 
-export interface IHandshaker {
-    attemptHandshakesOnContacts(excludedIds: NodeID[]): Promise<NodeID[]>
-    getOngoingHandshakes(): Set<NodeID>
-}
-
-export class Handshaker implements IHandshaker {
+export class Handshaker {
 
     private readonly ongoingHandshakes: Set<NodeID> = new Set()
     private config: HandshakerConfig
-    private readonly client: ProtoRpcClient<IHandshakeRpcClient>
     private readonly rpcLocal: IHandshakeRpc
 
     constructor(config: HandshakerConfig) {
         this.config = config
-        this.client = toProtoRpcClient(new HandshakeRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
         this.rpcLocal = new HandshakeRpcLocal({
             streamPartId: this.config.streamPartId,
             targetNeighbors: this.config.targetNeighbors,
             connectionLocker: this.config.connectionLocker,
             ongoingHandshakes: this.ongoingHandshakes,
+            ongoingInterleaves: new Set(),
             maxNeighborCount: this.config.maxNeighborCount,
             handshakeWithInterleaving: (target: PeerDescriptor, senderId: NodeID) => this.handshakeWithInterleaving(target, senderId),
             createRpcRemote: (target: PeerDescriptor) => this.createRpcRemote(target),
             createDeliveryRpcRemote: (target: PeerDescriptor) => this.createDeliveryRpcRemote(target)
         })
-        this.config.rpcCommunicator.registerRpcNotification(InterleaveNotice, 'interleaveNotice',
-            (req: InterleaveNotice, context) => this.rpcLocal.interleaveNotice(req, context))
+        this.config.rpcCommunicator.registerRpcMethod(InterleaveRequest, InterleaveResponse, 'interleaveRequest',
+            (req: InterleaveRequest, context) => this.rpcLocal.interleaveRequest(req, context), { timeout: INTERLEAVE_REQUEST_TIMEOUT })
         this.config.rpcCommunicator.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake',
             (req: StreamPartHandshakeRequest, context) => this.rpcLocal.handshake(req, context))
     }
 
     async attemptHandshakesOnContacts(excludedIds: NodeID[]): Promise<NodeID[]> {
+        // TODO use config option or named constant? or why the value 2?
         if (this.config.targetNeighbors.size() + this.ongoingHandshakes.size < this.config.maxNeighborCount - 2) {
             logger.trace(`Attempting parallel handshakes with ${PARALLEL_HANDSHAKE_COUNT} targets`)
             return this.selectParallelTargetsAndHandshake(excludedIds)
@@ -97,6 +93,7 @@ export class Handshaker implements IHandshaker {
         const results = await Promise.allSettled(
             Array.from(targets.values()).map(async (target: HandshakeRpcRemote, i) => {
                 const otherNode = i === 0 ? targets[1] : targets[0]
+                // TODO better check (currently this condition is always true)
                 const otherNodeId = otherNode ? getNodeIdFromPeerDescriptor(otherNode.getPeerDescriptor()) : undefined
                 return this.handshakeWithTarget(target, otherNodeId)
             })
@@ -140,12 +137,7 @@ export class Handshaker implements IHandshaker {
     }
 
     private async handshakeWithInterleaving(target: PeerDescriptor, interleaveSourceId: NodeID): Promise<boolean> {
-        const targetNeighbor = new HandshakeRpcRemote(
-            this.config.localPeerDescriptor,
-            target,
-            this.config.streamPartId,
-            this.client
-        )
+        const targetNeighbor = this.createRpcRemote(target)
         const targetNodeId = getNodeIdFromPeerDescriptor(targetNeighbor.getPeerDescriptor())
         this.ongoingHandshakes.add(targetNodeId)
         const result = await targetNeighbor.handshake(
@@ -162,7 +154,14 @@ export class Handshaker implements IHandshaker {
     }
 
     private createRpcRemote(targetPeerDescriptor: PeerDescriptor): HandshakeRpcRemote {
-        return new HandshakeRpcRemote(this.config.localPeerDescriptor, targetPeerDescriptor, this.config.streamPartId, this.client)
+        return new HandshakeRpcRemote(
+            this.config.localPeerDescriptor,
+            targetPeerDescriptor,
+            this.config.streamPartId,
+            this.config.rpcCommunicator,
+            HandshakeRpcClient,
+            this.config.rpcRequestTimeout
+        )
     }
 
     private createDeliveryRpcRemote(targetPeerDescriptor: PeerDescriptor): DeliveryRpcRemote {
@@ -170,7 +169,9 @@ export class Handshaker implements IHandshaker {
             this.config.localPeerDescriptor,
             targetPeerDescriptor,
             this.config.streamPartId,
-            toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+            this.config.rpcCommunicator,
+            DeliveryRpcClient,
+            this.config.rpcRequestTimeout
         )
     }
 

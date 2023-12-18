@@ -4,7 +4,7 @@ import { StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/pro
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { findNodesForTarget, findTarget, inspectTarget } from '../../../../src/plugins/operator/inspectionUtils'
 import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
-import { EthereumAddress, wait } from '@streamr/utils'
+import { EthereumAddress, Logger, wait } from '@streamr/utils'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 
@@ -19,9 +19,11 @@ const target = Object.freeze({
     streamPart: toStreamPartID(STREAM_ID, 4),
 })
 
-const PEER_DESCRIPTOR_ONE = { id: '0x1111' }
-const PEER_DESCRIPTOR_TWO = { id: '0x2222' }
-const PEER_DESCRIPTOR_THREE = { id: '0x3333' }
+const PEER_DESCRIPTOR_ONE = { nodeId: '0x1111' }
+const PEER_DESCRIPTOR_TWO = { nodeId: '0x2222' }
+const PEER_DESCRIPTOR_THREE = { nodeId: '0x3333' }
+
+const logger = new Logger(module)
 
 describe(findTarget, () => {
     let contractFacade: MockProxy<ContractFacade>
@@ -53,7 +55,7 @@ describe(findTarget, () => {
 
     it('returns undefined if no sponsorships are found', async () => {
         setupEnv([])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, contractFacade, assignments)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, contractFacade, assignments, logger)
         expect(result).toBeUndefined()
     })
 
@@ -63,7 +65,7 @@ describe(findTarget, () => {
             operators: [MY_OPERATOR_ADDRESS],
             streamId: STREAM_ID,
         }])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, contractFacade, assignments)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, contractFacade, assignments, logger)
         expect(result).toBeUndefined()
     })
 
@@ -74,7 +76,7 @@ describe(findTarget, () => {
             streamId: STREAM_ID,
         }])
         setStreamPartsAssignedToMe([])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, contractFacade, assignments)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, contractFacade, assignments, logger)
         expect(result).toBeUndefined()
     })
 
@@ -90,7 +92,7 @@ describe(findTarget, () => {
             toStreamPartID(STREAM_ID, 2),
         ])
 
-        const result = await findTarget(MY_OPERATOR_ADDRESS, contractFacade, assignments)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, contractFacade, assignments, logger)
         expect(result).toMatchObject({
             sponsorshipAddress: SPONSORSHIP_ADDRESS,
             operatorAddress: OTHER_OPERATOR_ADDRESS,
@@ -115,18 +117,18 @@ describe(findNodesForTarget, () => {
         operatorFleetState.start.mockImplementation(() => wait(0))
         operatorFleetState.getNodeIds.mockImplementation(() => onlineNodes)
         operatorFleetState.getPeerDescriptor.mockImplementation((nodeId) => {
-            if (nodeId === PEER_DESCRIPTOR_ONE.id) {
+            if (nodeId === PEER_DESCRIPTOR_ONE.nodeId) {
                 return PEER_DESCRIPTOR_ONE
-            } else if (nodeId === PEER_DESCRIPTOR_TWO.id) {
+            } else if (nodeId === PEER_DESCRIPTOR_TWO.nodeId) {
                 return PEER_DESCRIPTOR_TWO
-            } else if (nodeId === PEER_DESCRIPTOR_THREE.id) {
+            } else if (nodeId === PEER_DESCRIPTOR_THREE.nodeId) {
                 return PEER_DESCRIPTOR_THREE
             } else {
                 return undefined
             }
         })
         abortController = new AbortController()
-        resultPromise = findNodesForTarget(target, getRedundancyFactorFn, () => operatorFleetState, 100, abortController.signal)
+        resultPromise = findNodesForTarget(target, getRedundancyFactorFn, () => operatorFleetState, 100, abortController.signal, logger)
     })
 
     afterEach(() => {
@@ -134,7 +136,7 @@ describe(findNodesForTarget, () => {
     })
 
     function comeOnline(peerDescriptors: NetworkPeerDescriptor[]): void {
-        onlineNodes = peerDescriptors.map(({ id }) => id as NodeID)
+        onlineNodes = peerDescriptors.map(({ nodeId }) => nodeId as NodeID)
     }
 
     it('returns empty array if no nodes found', async () => {
@@ -192,7 +194,8 @@ describe(inspectTarget, () => {
             target,
             targetPeerDescriptors: [],
             streamrClient,
-            abortSignal: abortController.signal
+            abortSignal: abortController.signal,
+            logger
         })
         expect(result).toEqual(false)
     })
@@ -204,6 +207,7 @@ describe(inspectTarget, () => {
             targetPeerDescriptors: [PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO, PEER_DESCRIPTOR_THREE],
             streamrClient,
             abortSignal: abortController.signal,
+            logger
         })
         expect(result).toEqual(false)
         expect(streamrClient.inspect).toHaveBeenCalledTimes(3)
@@ -219,7 +223,8 @@ describe(inspectTarget, () => {
             target,
             targetPeerDescriptors: [PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO, PEER_DESCRIPTOR_THREE],
             streamrClient,
-            abortSignal: abortController.signal
+            abortSignal: abortController.signal,
+            logger
         })
         expect(result).toEqual(true)
         expect(streamrClient.inspect).toHaveBeenCalledTimes(2)

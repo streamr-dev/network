@@ -80,6 +80,10 @@ jobs:
             type=match,pattern=broker/(v.*),group=1,value=${{ env.broker_head_tag }}
             type=raw,value=dev,enable=${{ inputs.branch == 'main' }}
             type=raw,value=dev-tatum,enable=${{ inputs.branch == 'streamr-1.0' }}
+            type=raw,value=pretestnet,enable=${{ inputs.branch == 'pretestnet' }}
+            type=raw,value=testnet-one,enable=${{ inputs.branch == 'testnet-one' }}
+            type=raw,value=testnet-two,enable=${{ inputs.branch == 'testnet-two' }}
+            type=raw,value=testnet-three,enable=${{ inputs.branch == 'testnet-three' }}
 
       - name: Build
         if: ${{!inputs.push_image}}

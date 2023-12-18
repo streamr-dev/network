@@ -38,8 +38,7 @@ describe('inspect', () => {
     }
 
     beforeEach(async () => {
-        Simulator.useFakeTimers()
-        simulator = new Simulator(LatencyType.RANDOM)
+        simulator = new Simulator(LatencyType.REAL)
 
         publisherNode = await initiateNode(publisherDescriptor, simulator)
         inspectorNode = await initiateNode(inspectorPeerDescriptor, simulator)
@@ -65,7 +64,6 @@ describe('inspect', () => {
             inspectorNode.stop(),
             ...inspectedNodes.map((node) => node.stop())
         ])
-        Simulator.useFakeTimers(false)
     })
 
     it('gets successful inspections from all suspects', async () => {

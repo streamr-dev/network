@@ -1,10 +1,11 @@
 name: release
 on:
   workflow_run:
-    branches: [main, streamr-1.0]
+    branches: [main, streamr-1.0, pretestnet, testnet-one, testnet-two, testnet-three]
     workflows: [validate]
     types:
       - completed
+  workflow_dispatch:
 jobs:
   broker-docker-image:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}

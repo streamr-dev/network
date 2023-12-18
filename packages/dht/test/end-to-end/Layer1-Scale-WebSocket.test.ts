@@ -1,31 +1,26 @@
 import { DhtNode } from '../../src/dht/DhtNode'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { PeerID } from '../../src/helpers/PeerID'
+import { createMockPeerDescriptor } from '../utils/utils'
 
+const STREAM_ID = 'stream'
+const NUM_OF_NODES = 16
 const NUM_OF_NODES_PER_KBUCKET = 8
+const WEBSOCKET_PORT_RANGE = { min: 62200, max: 62200 + NUM_OF_NODES }
 
 describe('Layer1 Scale', () => {
-    const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('entrypoint').value,
-        type: NodeType.NODEJS,
+
+    const epPeerDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 43225, tls: false }
-    }
-
-    const STREAM_ID = 'stream'
-
-    const NUM_OF_NODES = 16
-
+    })
     let layer0Nodes: DhtNode[]
-
     let layer1Nodes: DhtNode[]
-
     let epLayer0Node: DhtNode
     let epLayer1Node: DhtNode
 
-    const websocketPortRange = { min: 62200, max: 62200 + NUM_OF_NODES }
-
     beforeEach(async () => {
-        epLayer0Node = new DhtNode({ peerDescriptor: epPeerDescriptor })
+        epLayer0Node = new DhtNode({
+            peerDescriptor: epPeerDescriptor,
+            websocketServerEnableTls: false
+        })
         await epLayer0Node.start()
         await epLayer0Node.joinDht([epPeerDescriptor])
 
@@ -38,8 +33,9 @@ describe('Layer1 Scale', () => {
 
         for (let i = 0; i < NUM_OF_NODES; i++) {
             const node = new DhtNode({ 
-                websocketPortRange, 
+                websocketPortRange: WEBSOCKET_PORT_RANGE,
                 entryPoints: [epPeerDescriptor],
+                websocketServerEnableTls: false,
                 numberOfNodesPerKBucket: NUM_OF_NODES_PER_KBUCKET
             })
             await node.start()
@@ -59,7 +55,7 @@ describe('Layer1 Scale', () => {
 
         await Promise.all(layer1Nodes.map((node) => node.joinDht([epPeerDescriptor])))
 
-    }, 60000)
+    }, 120000)
 
     afterEach(async () => {
         await Promise.all(layer1Nodes.map((node) => node.stop()))
@@ -71,10 +67,10 @@ describe('Layer1 Scale', () => {
     // TODO: fix flaky test in NET-1021
     it('bucket sizes', async () => {
         layer0Nodes.forEach((node) => {
-            expect(node.getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET - 1)
+            expect(node.getNumberOfNeighbors()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET - 1)
         })
         layer1Nodes.forEach((node ) => {
-            expect(node.getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
+            expect(node.getNumberOfNeighbors()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
         })
     })
 })

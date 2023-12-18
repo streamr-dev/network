@@ -22,11 +22,11 @@ describe('StreamrNode', () => {
     let node2: StreamrNode
 
     const peerDescriptor1: PeerDescriptor = {
-        kademliaId: new Uint8Array([1, 2, 3]),
+        nodeId: new Uint8Array([1, 2, 3]),
         type: NodeType.NODEJS
     }
     const peerDescriptor2: PeerDescriptor = {
-        kademliaId: new Uint8Array([1, 1, 1]),
+        nodeId: new Uint8Array([1, 1, 1]),
         type: NodeType.NODEJS
     }
     const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
@@ -136,7 +136,7 @@ describe('StreamrNode', () => {
             waitForCondition(() => node1.getNeighbors(STREAM_PART_ID).length === 1),
             waitForCondition(() => node2.getNeighbors(STREAM_PART_ID).length === 1)
         ])
-        node2.leaveStreamPart(STREAM_PART_ID)
+        await node2.leaveStreamPart(STREAM_PART_ID)
         await waitForCondition(() => node1.getNeighbors(STREAM_PART_ID).length === 0)
     })
 

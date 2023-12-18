@@ -22,6 +22,7 @@ interface Heartbeat {
 
 export type CreateOperatorFleetStateFn = (coordinationStreamId: StreamID) => OperatorFleetState
 
+// TODO: add abortSignal support
 export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly streamrClient: StreamrClient
     private readonly coordinationStreamId: StreamID
@@ -101,7 +102,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
                 return
             }
             if (message.msgType === 'heartbeat') {
-                const nodeId = message.peerDescriptor.id as NodeID
+                const nodeId = message.peerDescriptor.nodeId as NodeID
                 const exists = this.latestHeartbeats.has(nodeId)
                 this.latestHeartbeats.set(nodeId, {
                     timestamp: this.timeProvider(),

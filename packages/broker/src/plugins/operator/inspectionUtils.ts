@@ -11,7 +11,10 @@ import without from 'lodash/without'
 import { formCoordinationStreamId } from './formCoordinationStreamId'
 import { ContractFacade } from './ContractFacade'
 
-const logger = new Logger(module)
+export type FindTargetFn = typeof findTarget
+export type FindNodesForTargetFn = typeof findNodesForTarget
+export type FindNodesForTargetGivenFleetStateFn = typeof findNodesForTargetGivenFleetState
+export type InspectTargetFn = typeof inspectTarget
 
 export interface Target {
     sponsorshipAddress: EthereumAddress
@@ -42,7 +45,8 @@ function getPartitionsOfStreamAssignedToMe(
 export async function findTarget(
     myOperatorContractAddress: EthereumAddress,
     contractFacade: ContractFacade,
-    assignments: StreamPartAssignments
+    assignments: StreamPartAssignments,
+    logger: Logger
 ): Promise<Target | undefined> {
     // choose sponsorship
     const sponsorships = await contractFacade.getSponsorshipsOfOperator(myOperatorContractAddress)
@@ -76,6 +80,12 @@ export async function findTarget(
         return undefined
     }
 
+    const flagAlreadyRaised = await contractFacade.hasOpenFlag(targetOperatorAddress, targetSponsorship.sponsorshipAddress)
+    if (flagAlreadyRaised) {
+        logger.info('Skip inspection (target already has open flag)', { targetSponsorship, targetOperatorAddress })
+        return undefined
+    }
+
     return {
         sponsorshipAddress: targetSponsorship.sponsorshipAddress,
         operatorAddress: targetOperatorAddress,
@@ -88,7 +98,8 @@ export async function findNodesForTarget(
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>,
     createOperatorFleetState: CreateOperatorFleetStateFn,
     timeout: number,
-    abortSignal: AbortSignal
+    abortSignal: AbortSignal,
+    logger: Logger
 ): Promise<NetworkPeerDescriptor[]> {
     logger.debug('Waiting for node heartbeats', {
         targetOperator: target.operatorAddress,
@@ -105,7 +116,7 @@ export async function findNodesForTarget(
             targetOperator: target.operatorAddress,
             onlineNodes: targetOperatorFleetState.getNodeIds().length,
         })
-        return await findNodesForTargetGivenFleetState(target, targetOperatorFleetState, getRedundancyFactor)
+        return await findNodesForTargetGivenFleetState(target, targetOperatorFleetState, getRedundancyFactor, logger)
     } finally {
         await targetOperatorFleetState.destroy()
     }
@@ -115,6 +126,7 @@ export async function findNodesForTargetGivenFleetState(
     target: Target,
     targetOperatorFleetState: OperatorFleetState,
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>,
+    logger: Logger
 ): Promise<NetworkPeerDescriptor[]> {
     const replicationFactor = await getRedundancyFactor(target.operatorAddress)
     if (replicationFactor === undefined) {
@@ -134,18 +146,20 @@ export async function inspectTarget({
     target,
     targetPeerDescriptors,
     streamrClient,
-    abortSignal
+    abortSignal,
+    logger
 }: {
     target: Target
     targetPeerDescriptors: NetworkPeerDescriptor[]
     streamrClient: StreamrClient
     abortSignal: AbortSignal
+    logger: Logger
 }): Promise<boolean> {
 
     logger.info('Inspecting nodes of operator', {
         targetOperator: target.operatorAddress,
         targetStreamPart: target.streamPart,
-        targetNodes: targetPeerDescriptors.map(({ id }) => id),
+        targetNodes: targetPeerDescriptors.map(({ nodeId }) => nodeId),
         targetSponsorship: target.sponsorshipAddress
     })
 
@@ -164,7 +178,7 @@ export async function inspectTarget({
                 logger.info('Inspection done (no issue detected)', {
                     targetOperator: target.operatorAddress,
                     targetStreamPart: target.streamPart,
-                    targetNode: descriptor.id,
+                    targetNode: descriptor.nodeId,
                     targetSponsorship: target.sponsorshipAddress
                 })
                 return true
@@ -174,7 +188,7 @@ export async function inspectTarget({
         logger.info('Inspection done (issue detected)', {
             targetOperator: target.operatorAddress,
             targetStreamPart: target.streamPart,
-            targetNodes: targetPeerDescriptors.map(({ id }) => id),
+            targetNodes: targetPeerDescriptors.map(({ nodeId }) => nodeId),
             targetSponsorship: target.sponsorshipAddress
         })
         return false

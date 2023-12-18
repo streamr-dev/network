@@ -1,4 +1,4 @@
-import { NodeType, PeerDescriptor, Simulator, SimulatorTransport, LatencyType } from '@streamr/dht'
+import { NodeType, PeerDescriptor, Simulator, SimulatorTransport, LatencyType, getRandomRegion } from '@streamr/dht'
 import { NetworkStack } from '../../src/NetworkStack'
 import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
 import { StreamPartIDUtils } from '@streamr/protocol'
@@ -12,28 +12,33 @@ const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 describe('Joining stream parts on offline nodes', () => {
 
     const entryPointPeerDescriptor: PeerDescriptor = {
-        kademliaId: new Uint8Array([1, 2, 3]),
-        type: NodeType.NODEJS
+        nodeId: new Uint8Array([1, 2, 3]),
+        type: NodeType.NODEJS,
+        region: getRandomRegion()
     }
 
     const node1PeerDescriptor: PeerDescriptor = {
-        kademliaId: new Uint8Array([1, 1, 1]),
-        type: NodeType.NODEJS
+        nodeId: new Uint8Array([1, 1, 1]),
+        type: NodeType.NODEJS,
+        region: getRandomRegion()
     }
 
     const node2PeerDescriptor: PeerDescriptor = {
-        kademliaId: new Uint8Array([2, 2, 2]),
-        type: NodeType.NODEJS
+        nodeId: new Uint8Array([2, 2, 2]),
+        type: NodeType.NODEJS,
+        region: getRandomRegion()
     }
 
     const offlineDescriptor1: PeerDescriptor = {
-        kademliaId: new Uint8Array([3, 3, 3]),
-        type: NodeType.NODEJS
+        nodeId: new Uint8Array([3, 3, 3]),
+        type: NodeType.NODEJS,
+        region: getRandomRegion()
     }
 
     const offlineDescriptor2: PeerDescriptor = {
-        kademliaId: new Uint8Array([4, 4, 4]),
-        type: NodeType.NODEJS
+        nodeId: new Uint8Array([4, 4, 4]),
+        type: NodeType.NODEJS,
+        region: getRandomRegion()
     }
 
     let entryPoint: NetworkStack
@@ -42,7 +47,7 @@ describe('Joining stream parts on offline nodes', () => {
     let simulator: Simulator
 
     beforeEach(async () => {
-        simulator = new Simulator(LatencyType.RANDOM)
+        simulator = new Simulator(LatencyType.REAL)
         const entryPointTransport = new SimulatorTransport(entryPointPeerDescriptor, simulator)
         entryPoint = new NetworkStack({
             layer0: {

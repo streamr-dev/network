@@ -10,6 +10,7 @@ import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { ConfigInjectionToken, NetworkPeerDescriptor, StrictStreamrClientConfig } from './Config'
 import { DestroySignal } from './DestroySignal'
+import { OperatorRegistry } from './registry/OperatorRegistry'
 import { pOnce } from './utils/promises'
 import { peerDescriptorTranslator } from './utils/utils'
 
@@ -20,11 +21,12 @@ export interface NetworkNodeStub {
     addMessageListener: (listener: (msg: StreamMessage) => void) => void
     removeMessageListener: (listener: (msg: StreamMessage) => void) => void
     join: (streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }) => Promise<void>
-    leave: (streamPartId: StreamPartID) => void
+    leave: (streamPartId: StreamPartID) => Promise<void>
     broadcast: (streamMessage: StreamMessage) => Promise<void>
     getStreamParts: () => StreamPartID[]
     getNeighbors: (streamPartId: StreamPartID) => ReadonlyArray<NodeID>
     getPeerDescriptor: () => PeerDescriptor
+    getOptions: () => NetworkOptions
     getMetricsContext: () => MetricsContext
     getDiagnosticInfo: () => Record<string, unknown>
     hasStreamPart: (streamPartId: StreamPartID) => boolean
@@ -71,6 +73,7 @@ export class NetworkNodeFacade {
     private startNodeCalled = false
     private startNodeComplete = false
     private readonly networkNodeFactory: NetworkNodeFactory
+    private readonly operatorRegistry: OperatorRegistry
     private readonly config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>
     private readonly authentication: Authentication
     private readonly eventEmitter: EventEmitter<Events>
@@ -78,11 +81,13 @@ export class NetworkNodeFacade {
 
     constructor(
         networkNodeFactory: NetworkNodeFactory,
+        operatorRegistry: OperatorRegistry,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         destroySignal: DestroySignal
     ) {
         this.networkNodeFactory = networkNodeFactory
+        this.operatorRegistry = operatorRegistry
         this.config = config
         this.authentication = authentication
         this.eventEmitter = new EventEmitter<Events>()
@@ -95,13 +100,13 @@ export class NetworkNodeFacade {
     }
 
     private async getNetworkOptions(): Promise<NetworkOptions> {
-        const entryPoints = this.getEntryPoints()
+        const entryPoints = await this.getEntryPoints()
         const localPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer.peerDescriptor ? 
             peerDescriptorTranslator(this.config.network.controlLayer.peerDescriptor) : undefined
         return {
             layer0: {
                 ...this.config.network.controlLayer,
-                entryPoints,
+                entryPoints: entryPoints.map(peerDescriptorTranslator),
                 peerDescriptor: localPeerDescriptor
             },
             networkNode: this.config.network.node,
@@ -236,7 +241,15 @@ export class NetworkNodeFacade {
         this.eventEmitter.once(eventName, listener as any)
     }
 
-    getEntryPoints(): PeerDescriptor[] {
-        return this.config.network.controlLayer.entryPoints!.map(peerDescriptorTranslator)
+    private async getEntryPoints(): Promise<NetworkPeerDescriptor[]> {
+        const discoveryConfig = this.config.network.controlLayer.entryPointDiscovery
+        const discoveredEntryPoints = (discoveryConfig?.enabled)
+            ? await this.operatorRegistry.findRandomNetworkEntrypoints(
+                discoveryConfig.maxEntryPoints!,
+                discoveryConfig.maxQueryResults!,
+                discoveryConfig.maxHeartbeatAgeHours!,
+            )
+            : []
+        return [...this.config.network.controlLayer.entryPoints!, ...discoveredEntryPoints]
     }
 }

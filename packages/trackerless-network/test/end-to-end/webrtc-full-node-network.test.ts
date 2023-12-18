@@ -29,7 +29,8 @@ describe('Full node network with WebRTC connections', () => {
         entryPoint = new NetworkStack({
             layer0: {
                 entryPoints: [epPeerDescriptor],
-                peerDescriptor: epPeerDescriptor
+                peerDescriptor: epPeerDescriptor,
+                websocketServerEnableTls: false
             }
         })
         await entryPoint.start()
@@ -64,7 +65,7 @@ describe('Full node network with WebRTC connections', () => {
             waitForCondition(() => {
                 return node.getStreamrNode()!.getNeighbors(streamPartId).length >= 3
             }
-            , 120000)
+            , 30000)
         ))
         let numOfMessagesReceived = 0
         const successIds: string[] = []

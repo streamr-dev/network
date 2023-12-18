@@ -20,19 +20,19 @@ describe('EntryPointDiscovery', () => {
     const deletedPeerDescriptor = createMockPeerDescriptor()
 
     const fakeData: DataEntry = {
+        key: Uint8Array.from([1, 2, 3]),
         data: Any.pack(peerDescriptor, PeerDescriptor),
+        creator: peerDescriptor.nodeId,
         ttl: 1000,
-        storer: peerDescriptor,
-        kademliaId: Uint8Array.from([1, 2, 3]),
         stale: false,
         deleted: false
     }
 
     const fakeDeletedData: DataEntry = {
+        key: Uint8Array.from([1, 2, 3]),
         data: Any.pack(deletedPeerDescriptor, PeerDescriptor),
+        creator: deletedPeerDescriptor.nodeId,
         ttl: 1000,
-        storer: deletedPeerDescriptor,
-        kademliaId: Uint8Array.from([1, 2, 3]),
         stale: false,
         deleted: true
     }
@@ -112,17 +112,20 @@ describe('EntryPointDiscovery', () => {
     it('store on empty stream', async () => {
         await entryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(0)
         expect(storeCalled).toEqual(1)
+        expect(entryPointDiscoveryWithData.isLocalNodeEntryPoint()).toEqual(true)
     })
 
     it('store on stream without saturated entrypoint count', async () => {
         addNodesToStreamPart(layer1Node, 4)
         await entryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(0)
         expect(storeCalled).toEqual(1)
+        expect(entryPointDiscoveryWithData.isLocalNodeEntryPoint()).toEqual(true)
     })
 
     it('will keep stored until destroyed', async () => {
         await entryPointDiscoveryWithData.storeSelfAsEntryPointIfNecessary(0)
         expect(storeCalled).toEqual(1)
+        expect(entryPointDiscoveryWithData.isLocalNodeEntryPoint()).toEqual(true)
         await wait(4500)
         await entryPointDiscoveryWithData.destroy()
         // we have configured storeInterval to 2 seconds, i.e. after 4.5 seconds it should have been called 2 more items 

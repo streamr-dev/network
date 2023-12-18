@@ -81,11 +81,11 @@ export class NetworkNode {
         pull(this.messageListeners, cb)
     }
 
-    leave(streamPartId: StreamPartID): void {
+    async leave(streamPartId: StreamPartID): Promise<void> {
         if (this.stopped) {
             return
         }
-        this.stack.getStreamrNode().leaveStreamPart(streamPartId)
+        await this.stack.getStreamrNode().leaveStreamPart(streamPartId)
     }
 
     getNeighbors(streamPartId: StreamPartID): ReadonlyArray<NodeID> {
@@ -111,6 +111,10 @@ export class NetworkNode {
 
     getNodeId(): NodeID {
         return this.stack.getStreamrNode().getNodeId()
+    }
+
+    getOptions(): NetworkOptions {
+        return this.stack.getOptions()
     }
 
     getStreamParts(): StreamPartID[] {

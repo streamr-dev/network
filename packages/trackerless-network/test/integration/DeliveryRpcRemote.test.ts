@@ -13,7 +13,6 @@ import {
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { waitForCondition } from '@streamr/utils'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { createStreamMessage } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
@@ -26,11 +25,11 @@ describe('DeliveryRpcRemote', () => {
     let rpcRemote: DeliveryRpcRemote
 
     const clientNode: PeerDescriptor = {
-        kademliaId: new Uint8Array([1, 1, 1]),
+        nodeId: new Uint8Array([1, 1, 1]),
         type: NodeType.NODEJS
     }
     const serverNode: PeerDescriptor = {
-        kademliaId: new Uint8Array([2, 2, 2]),
+        nodeId: new Uint8Array([2, 2, 2]),
         type: NodeType.NODEJS
     }
 
@@ -73,7 +72,8 @@ describe('DeliveryRpcRemote', () => {
             clientNode,
             serverNode,
             STREAM_PART_ID,
-            toProtoRpcClient(new DeliveryRpcClient(clientRpc.getRpcClientTransport()))
+            clientRpc,
+            DeliveryRpcClient
         )
     })
 
@@ -97,7 +97,7 @@ describe('DeliveryRpcRemote', () => {
     })
 
     it('leaveNotice', async () => {
-        rpcRemote.leaveStreamPartNotice()
+        rpcRemote.leaveStreamPartNotice(false)
         await waitForCondition(() => recvCounter === 1)
     })
 

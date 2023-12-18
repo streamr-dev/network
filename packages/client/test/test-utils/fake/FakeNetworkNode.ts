@@ -1,6 +1,6 @@
 import { PeerDescriptor } from '@streamr/dht'
 import { ProxyDirection, StreamMessage, StreamPartID } from '@streamr/protocol'
-import { NodeID } from '@streamr/trackerless-network'
+import { NodeID, NetworkOptions } from '@streamr/trackerless-network'
 import { EthereumAddress, MetricsContext, binaryToHex } from '@streamr/utils'
 import crypto from 'crypto'
 import pull from 'lodash/pull'
@@ -13,13 +13,15 @@ type MessageListener = (msg: StreamMessage) => void
 export class FakeNetworkNode implements NetworkNodeStub {
 
     private readonly id: NodeID
+    private readonly options: NetworkOptions
     readonly subscriptions: Set<StreamPartID> = new Set()
     readonly proxiedStreamParts: Set<StreamPartID> = new Set()
     readonly messageListeners: MessageListener[] = []
     private readonly network: FakeNetwork
 
-    constructor(network: FakeNetwork) {
+    constructor(network: FakeNetwork, options: NetworkOptions = {}) {
         this.id = binaryToHex(crypto.randomBytes(10)) as NodeID
+        this.options = options
         this.network = network
     }
 
@@ -42,7 +44,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         this.subscriptions.add(streamPartId)
     }
 
-    leave(streamPartId: StreamPartID): void {
+    async leave(streamPartId: StreamPartID): Promise<void> {
         this.subscriptions.delete(streamPartId)
     }
 
@@ -78,6 +80,11 @@ export class FakeNetworkNode implements NetworkNodeStub {
     // eslint-disable-next-line class-methods-use-this
     getPeerDescriptor(): PeerDescriptor {
         throw new Error('not implemented')
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    getOptions(): NetworkOptions {
+        return this.options
     }
 
     hasStreamPart(streamPartId: StreamPartID): boolean {
@@ -131,7 +138,7 @@ export class FakeNetworkNodeFactory implements NetworkNodeFactory {
         this.network = network
     }
 
-    createNetworkNode(): FakeNetworkNode {
-        return new FakeNetworkNode(this.network)
+    createNetworkNode(opts: NetworkOptions): FakeNetworkNode {
+        return new FakeNetworkNode(this.network, opts)
     }
 }

@@ -184,19 +184,24 @@ export interface StreamPartHandshakeResponse {
     interleaveTargetDescriptor?: PeerDescriptor;
 }
 /**
- * @generated from protobuf message InterleaveNotice
+ * @generated from protobuf message InterleaveRequest
  */
-export interface InterleaveNotice {
-    /**
-     * @generated from protobuf field: string streamPartId = 1;
-     */
-    streamPartId: string;
+export interface InterleaveRequest {
     /**
      * this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
      *
-     * @generated from protobuf field: dht.PeerDescriptor interleaveTargetDescriptor = 2;
+     * @generated from protobuf field: dht.PeerDescriptor interleaveTargetDescriptor = 1;
      */
     interleaveTargetDescriptor?: PeerDescriptor;
+}
+/**
+ * @generated from protobuf message InterleaveResponse
+ */
+export interface InterleaveResponse {
+    /**
+     * @generated from protobuf field: bool accepted = 1;
+     */
+    accepted: boolean;
 }
 /**
  * @generated from protobuf message LeaveStreamPartNotice
@@ -206,6 +211,10 @@ export interface LeaveStreamPartNotice {
      * @generated from protobuf field: string streamPartId = 1;
      */
     streamPartId: string;
+    /**
+     * @generated from protobuf field: bool isEntryPoint = 2;
+     */
+    isEntryPoint: boolean;
 }
 /**
  * @generated from protobuf message NeighborUpdate
@@ -439,23 +448,35 @@ class StreamPartHandshakeResponse$Type extends MessageType<StreamPartHandshakeRe
  */
 export const StreamPartHandshakeResponse = new StreamPartHandshakeResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class InterleaveNotice$Type extends MessageType<InterleaveNotice> {
+class InterleaveRequest$Type extends MessageType<InterleaveRequest> {
     constructor() {
-        super("InterleaveNotice", [
-            { no: 1, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "interleaveTargetDescriptor", kind: "message", T: () => PeerDescriptor }
+        super("InterleaveRequest", [
+            { no: 1, name: "interleaveTargetDescriptor", kind: "message", T: () => PeerDescriptor }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message InterleaveNotice
+ * @generated MessageType for protobuf message InterleaveRequest
  */
-export const InterleaveNotice = new InterleaveNotice$Type();
+export const InterleaveRequest = new InterleaveRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class InterleaveResponse$Type extends MessageType<InterleaveResponse> {
+    constructor() {
+        super("InterleaveResponse", [
+            { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message InterleaveResponse
+ */
+export const InterleaveResponse = new InterleaveResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class LeaveStreamPartNotice$Type extends MessageType<LeaveStreamPartNotice> {
     constructor() {
         super("LeaveStreamPartNotice", [
-            { no: 1, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "isEntryPoint", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }
@@ -542,7 +563,7 @@ export const ProxyConnectionRpc = new ServiceType("ProxyConnectionRpc", [
  */
 export const HandshakeRpc = new ServiceType("HandshakeRpc", [
     { name: "handshake", options: {}, I: StreamPartHandshakeRequest, O: StreamPartHandshakeResponse },
-    { name: "interleaveNotice", options: {}, I: InterleaveNotice, O: Empty }
+    { name: "interleaveRequest", options: {}, I: InterleaveRequest, O: InterleaveResponse }
 ]);
 /**
  * @generated ServiceType for protobuf service NeighborUpdateRpc

@@ -36,7 +36,9 @@ export {
     NetworkPeerDescriptor,
     ConnectivityMethod,
     NetworkNodeType,
-    StrictStreamrClientConfig
+    StrictStreamrClientConfig,
+    EnvironmentId,
+    EntryPointDiscovery
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
@@ -70,3 +72,4 @@ export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht'
 export type { ConnectionInfo } from '@ethersproject/web'
 export type { Signer } from '@ethersproject/abstract-signer'
 export type { ExternalProvider, Provider } from '@ethersproject/providers'
+export type { Overrides } from '@ethersproject/contracts'

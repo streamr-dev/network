@@ -1,16 +1,17 @@
-import { IDhtNodeRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { RpcCommunicator } from '@streamr/proto-rpc'
+import { Logger } from '@streamr/utils'
+import { v4 } from 'uuid'
+import { NodeID } from '../helpers/nodeId'
+import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import {
     ClosestPeersRequest,
+    LeaveNotice,
     PeerDescriptor,
     PingRequest
 } from '../proto/packages/dht/protos/DhtRpc'
-import { v4 } from 'uuid'
-import { Logger } from '@streamr/utils'
-import { ProtoRpcClient } from '@streamr/proto-rpc'
-import { Remote } from './contact/Remote'
-import { PeerID } from '../helpers/PeerID'
-import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { DhtNodeRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import { ServiceID } from '../types/ServiceID'
+import { RpcRemote } from './contact/RpcRemote'
 
 const logger = new Logger(module)
 
@@ -20,7 +21,7 @@ export interface KBucketContact {
     vectorClock: number
 }
 
-export class DhtNodeRpcRemote extends Remote<IDhtNodeRpcClient> implements KBucketContact {
+export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBucketContact {
 
     private static counter = 0
     public vectorClock: number
@@ -29,18 +30,19 @@ export class DhtNodeRpcRemote extends Remote<IDhtNodeRpcClient> implements KBuck
     constructor(
         localPeerDescriptor: PeerDescriptor,
         peerDescriptor: PeerDescriptor,
-        client: ProtoRpcClient<IDhtNodeRpcClient>,
-        serviceId: ServiceID
+        serviceId: ServiceID,
+        rpcCommunicator: RpcCommunicator,
+        rpcRequestTimeout?: number
     ) {
-        super(localPeerDescriptor, peerDescriptor, serviceId, client)
-        this.id = this.getPeerId().value
+        super(localPeerDescriptor, peerDescriptor, serviceId, rpcCommunicator, DhtNodeRpcClient, rpcRequestTimeout)
+        this.id = this.getPeerDescriptor().nodeId
         this.vectorClock = DhtNodeRpcRemote.counter++
     }
 
-    async getClosestPeers(kademliaId: Uint8Array): Promise<PeerDescriptor[]> {
-        logger.trace(`Requesting getClosestPeers on ${this.getServiceId()} from ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
+    async getClosestPeers(nodeId: Uint8Array): Promise<PeerDescriptor[]> {
+        logger.trace(`Requesting getClosestPeers on ${this.getServiceId()} from ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: ClosestPeersRequest = {
-            kademliaId,
+            nodeId,
             requestId: v4()
         }
         try {
@@ -53,28 +55,24 @@ export class DhtNodeRpcRemote extends Remote<IDhtNodeRpcClient> implements KBuck
     }
 
     async ping(): Promise<boolean> {
-        logger.trace(`Requesting ping on ${this.getServiceId()} from ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
+        logger.trace(`Requesting ping on ${this.getServiceId()} from ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: PingRequest = {
             requestId: v4()
         }
-        const options = this.formDhtRpcOptions({
-            timeout: 10000
-        })
+        const options = this.formDhtRpcOptions()
         try {
             const pong = await this.getClient().ping(request, options)
             if (pong.requestId === request.requestId) {
                 return true
             }
         } catch (err) {
-            logger.trace(`ping failed on ${this.getServiceId()} to ${keyFromPeerDescriptor(this.getPeerDescriptor())}: ${err}`)
+            logger.trace(`ping failed on ${this.getServiceId()} to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}: ${err}`)
         }
         return false
     }
 
-    /*
-    TODO remove or start using this method in NET-1131 
     leaveNotice(): void {
-        logger.trace(`Sending leaveNotice on ${this.getServiceId()} from ${keyFromPeerDescriptor(this.getPeerDescriptor())}`)
+        logger.trace(`Sending leaveNotice on ${this.getServiceId()} from ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: LeaveNotice = {
             serviceId: this.getServiceId()
         }
@@ -84,9 +82,9 @@ export class DhtNodeRpcRemote extends Remote<IDhtNodeRpcClient> implements KBuck
         this.getClient().leaveNotice(request, options).catch((e) => {
             logger.trace('Failed to send leaveNotice' + e)
         })
-    }*/
+    }
 
-    getPeerId(): PeerID {
-        return peerIdFromPeerDescriptor(this.getPeerDescriptor())
+    getNodeId(): NodeID {
+        return getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
     }
 }

@@ -48,7 +48,7 @@ describe('StreamrNode', () => {
         it('can leave stream part', async () => {
             node.joinStreamPart(streamPartId)
             expect(node.hasStreamPart(streamPartId)).toEqual(true)
-            node.leaveStreamPart(streamPartId)
+            await node.leaveStreamPart(streamPartId)
             expect(node.hasStreamPart(streamPartId)).toEqual(false)
         })
 

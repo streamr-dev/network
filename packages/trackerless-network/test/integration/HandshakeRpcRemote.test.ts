@@ -9,7 +9,6 @@ import {
     Simulator,
     SimulatorTransport
 } from '@streamr/dht'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
     HandshakeRpcClient,
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -21,11 +20,11 @@ describe('HandshakeRpcRemote', () => {
     let rpcRemote: HandshakeRpcRemote
 
     const clientNode: PeerDescriptor = {
-        kademliaId: new Uint8Array([1, 1, 1]),
+        nodeId: new Uint8Array([1, 1, 1]),
         type: NodeType.NODEJS
     }
     const serverNode: PeerDescriptor = {
-        kademliaId: new Uint8Array([2, 2, 2]),
+        nodeId: new Uint8Array([2, 2, 2]),
         type: NodeType.NODEJS
     }
 
@@ -34,7 +33,6 @@ describe('HandshakeRpcRemote', () => {
     let mockConnectionManager2: SimulatorTransport
 
     beforeEach(async () => {
-        Simulator.useFakeTimers()
         simulator = new Simulator()
         mockConnectionManager1 = new SimulatorTransport(serverNode, simulator)
         await mockConnectionManager1.start()
@@ -61,7 +59,8 @@ describe('HandshakeRpcRemote', () => {
             clientNode,
             serverNode,
             'test-stream-part',
-            toProtoRpcClient(new HandshakeRpcClient(clientRpc.getRpcClientTransport()))
+            clientRpc,
+            HandshakeRpcClient
         )
     })
 
@@ -71,7 +70,6 @@ describe('HandshakeRpcRemote', () => {
         await mockConnectionManager1.stop()
         await mockConnectionManager2.stop()
         simulator.stop()
-        Simulator.useFakeTimers(false)
     })
 
     it('handshake', async () => {

@@ -1,20 +1,19 @@
-import { NodeList } from '../../src/logic/NodeList'
-import { DeliveryRpcRemote } from '../../src/logic/DeliveryRpcRemote'
 import {
-    PeerDescriptor,
     ListeningRpcCommunicator,
+    NodeType,
+    PeerDescriptor,
     Simulator,
     SimulatorTransport,
-    NodeType,
 } from '@streamr/dht'
-import { DeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
+import { StreamPartIDUtils } from '@streamr/protocol'
+import { binaryToHex } from '@streamr/utils'
 import { expect } from 'expect'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
-import { createMockPeerDescriptor, createRandomNodeId } from '../utils/utils'
-import { binaryToHex } from '@streamr/utils'
-import { StreamPartIDUtils } from '@streamr/protocol'
+import { DeliveryRpcRemote } from '../../src/logic/DeliveryRpcRemote'
+import { NodeList } from '../../src/logic/NodeList'
 import { formStreamPartDeliveryServiceId } from '../../src/logic/formStreamPartDeliveryServiceId'
+import { DeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { createMockPeerDescriptor, createRandomNodeId } from '../utils/utils'
 
 const streamPartId = StreamPartIDUtils.parse('stream#0')
 
@@ -36,14 +35,13 @@ describe('NodeList', () => {
         const mockTransport = new SimulatorTransport(peerDescriptor, simulator)
         await mockTransport.start()
         const mockCommunicator = new ListeningRpcCommunicator(formStreamPartDeliveryServiceId(streamPartId), mockTransport)
-        const mockClient = mockCommunicator.getRpcClientTransport()
-        
         mockTransports.push(mockTransport)
         return new DeliveryRpcRemote(
             createMockPeerDescriptor(),
             peerDescriptor,
             streamPartId,
-            toProtoRpcClient(new DeliveryRpcClient(mockClient))
+            mockCommunicator,
+            DeliveryRpcClient
         )
     }
 
@@ -53,7 +51,7 @@ describe('NodeList', () => {
         nodeList = new NodeList(ownId, 6)
         for (const id of ids) {
             const peerDescriptor: PeerDescriptor = {
-                kademliaId: id,
+                nodeId: id,
                 type: NodeType.NODEJS
             }
             nodeList.add(await createRemoteGraphNode(peerDescriptor))
@@ -70,7 +68,7 @@ describe('NodeList', () => {
 
     it('add', async () => {
         const newDescriptor = {
-            kademliaId: new Uint8Array([1, 2, 3]),
+            nodeId: new Uint8Array([1, 2, 3]),
             type: NodeType.NODEJS
         }
         const newNode = await createRemoteGraphNode(newDescriptor)
@@ -78,7 +76,7 @@ describe('NodeList', () => {
         expect(nodeList.hasNode(newDescriptor)).toEqual(true)
 
         const newDescriptor2 = {
-            kademliaId: new Uint8Array([1, 2, 4]),
+            nodeId: new Uint8Array([1, 2, 4]),
             type: NodeType.NODEJS
         }
         const newNode2 = await createRemoteGraphNode(newDescriptor2)

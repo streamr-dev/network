@@ -138,7 +138,7 @@ describe('BatchManager', () => {
         expect(batch.retries).toEqual(0)
 
         const mockBatch = jest.fn().mockImplementation(() => {
-            throw Error('Throw not inserted')
+            throw new Error('Throw not inserted')
         })
         batchManager.cassandraClient.batch = mockBatch
 
@@ -159,7 +159,7 @@ describe('BatchManager', () => {
         const batch = batchManager.batches[bucketId]
 
         const mockBatch = jest.fn().mockImplementation(() => {
-            throw Error('Throw not inserted')
+            throw new Error('Throw not inserted')
         })
         batchManager.cassandraClient.batch = mockBatch
 

@@ -1,29 +1,36 @@
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { PeerID } from '../../src/helpers/PeerID'
 import { waitForCondition } from '@streamr/utils'
 import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('Websocket IConnection Requests', () => {
-    const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('3').value,
-        type: NodeType.NODEJS,
+
+    const epPeerDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 10021, tls: false }
-    }
+    })
     let epDhtNode: DhtNode
     let node1: DhtNode
     let node2: DhtNode
 
     beforeEach(async () => {
 
-        epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor })
+        epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor, websocketServerEnableTls: false })
         await epDhtNode.start()
 
         await epDhtNode.joinDht([epPeerDescriptor])
 
-        node1 = new DhtNode({ websocketPortRange: { min: 10022, max: 10022 }, entryPoints: [epPeerDescriptor] })
-        node2 = new DhtNode({ entryPoints: [epPeerDescriptor] })
+        node1 = new DhtNode({ 
+            websocketPortRange: { min: 10022, max: 10022 },
+            entryPoints: [epPeerDescriptor],
+            websocketServerEnableTls: false
+        })
+        node2 = new DhtNode({ 
+            entryPoints: [epPeerDescriptor],
+            websocketServerEnableTls: false
+        })
+
         await node1.start()
         await node2.start()
     })

@@ -71,7 +71,8 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         nearbyNodeView,
         randomNodeView,
         targetNeighbors,
-        maxNeighborCount: numOfTargetNeighbors
+        maxNeighborCount: numOfTargetNeighbors,
+        rpcRequestTimeout: config.rpcRequestTimeout
     })
     const neighborFinder = config.neighborFinder ?? new NeighborFinder({
         targetNeighbors,

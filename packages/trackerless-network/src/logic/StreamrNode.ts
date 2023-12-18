@@ -2,7 +2,8 @@ import {
     ConnectionLocker,
     DhtNode,
     ITransport,
-    PeerDescriptor
+    PeerDescriptor,
+    EXISTING_CONNECTION_TIMEOUT
 } from '@streamr/dht'
 import { StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
 import {
@@ -26,7 +27,7 @@ import { ProxyClient } from './proxy/ProxyClient'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void
-    stop: () => void
+    stop: () => Promise<void>
 } & ({ 
     proxied: false
     layer1Node: Layer1Node
@@ -43,8 +44,6 @@ export interface Events {
 
 const logger = new Logger(module)
 
-let cleanUp: () => Promise<void> = async () => { }
-
 interface Metrics extends MetricsDefinition {
     broadcastMessagesPerSecond: Metric
     broadcastBytesPerSecond: Metric
@@ -55,6 +54,7 @@ export interface StreamrNodeConfig {
     streamPartitionNumOfNeighbors?: number
     streamPartitionMinPropagationTargets?: number
     acceptProxyConnections?: boolean
+    rpcRequestTimeout?: number
 }
 
 // TODO rename class?
@@ -91,7 +91,6 @@ export class StreamrNode extends EventEmitter<Events> {
         this.layer0Node = startedAndJoinedLayer0Node
         this.transport = transport
         this.connectionLocker = connectionLocker
-        cleanUp = () => this.destroy()
     }
 
     async destroy(): Promise<void> {
@@ -100,12 +99,9 @@ export class StreamrNode extends EventEmitter<Events> {
         }
         logger.trace('Destroying StreamrNode...')
         this.destroyed = true
-        this.streamParts.forEach((streamPart) => streamPart.stop())
+        await Promise.all(Array.from(this.streamParts.values()).map((streamPart) => streamPart.stop()))
         this.streamParts.clear()
         this.removeAllListeners()
-        // TODO stopping should be in NetworkStack#stop?
-        await this.layer0Node!.stop()
-        await this.transport!.stop()
         this.layer0Node = undefined
         this.transport = undefined
         this.connectionLocker = undefined
@@ -119,10 +115,10 @@ export class StreamrNode extends EventEmitter<Events> {
         this.metrics.broadcastBytesPerSecond.record(msg.content.length)
     }
 
-    leaveStreamPart(streamPartId: StreamPartID): void {
+    async leaveStreamPart(streamPartId: StreamPartID): Promise<void> {
         const streamPart = this.streamParts.get(streamPartId)
         if (streamPart) {
-            streamPart.stop()
+            await streamPart.stop()
             this.streamParts.delete(streamPartId)
         }
     }
@@ -134,36 +130,43 @@ export class StreamrNode extends EventEmitter<Events> {
             return
         }
         const layer1Node = this.createLayer1Node(streamPartId, this.knownStreamPartEntryPoints.get(streamPartId) ?? [])
-        const node = this.createRandomGraphNode(streamPartId, layer1Node)
         const entryPointDiscovery = new EntryPointDiscovery({
             streamPartId,
             localPeerDescriptor: this.getPeerDescriptor(),
             layer1Node,
             getEntryPointData: (key) => this.layer0Node!.getDataFromDht(key),
             storeEntryPointData: (key, data) => this.layer0Node!.storeDataToDht(key, data),
-            deleteEntryPointData: async (key) => {
-                if (this.destroyed) {
-                    return 
-                }
-                return this.layer0Node!.deleteDataFromDht(key)
-            }
+            deleteEntryPointData: async (key: Uint8Array) => this.layer0Node!.deleteDataFromDht(key, false)
         })
+        const node = this.createRandomGraphNode(
+            streamPartId,
+            layer1Node, 
+            () => entryPointDiscovery.isLocalNodeEntryPoint()
+        )
         streamPart = {
             proxied: false,
             layer1Node,
             node,
             entryPointDiscovery,
             broadcast: (msg: StreamMessage) => node.broadcast(msg),
-            stop: () => {
-                entryPointDiscovery.destroy()
+            stop: async () => {
+                await entryPointDiscovery.destroy()
                 node.stop()
-                layer1Node.stop()
+                await layer1Node.stop()
             }
         }
         this.streamParts.set(streamPartId, streamPart)
         node.on('message', (message: StreamMessage) => {
             this.emit('newMessage', message)
         })
+        const handleEntryPointLeave = async () => {
+            if (this.destroyed || entryPointDiscovery.isLocalNodeEntryPoint() || this.knownStreamPartEntryPoints.has(streamPartId)) {
+                return
+            }
+            const entryPoints = await entryPointDiscovery.discoverEntryPointsFromDht(0)
+            await entryPointDiscovery.storeSelfAsEntryPointIfNecessary(entryPoints.discoveredEntryPoints.length)
+        }
+        node.on('entryPointLeaveDetected', () => handleEntryPointLeave())
         setImmediate(async () => {
             try {
                 await this.startLayersAndJoinDht(streamPartId, entryPointDiscovery)
@@ -199,13 +202,17 @@ export class StreamrNode extends EventEmitter<Events> {
             serviceId: 'layer1::' + streamPartId,
             peerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
             entryPoints,
-            numberOfNodesPerKBucket: 4,
-            rpcRequestTimeout: 5000,
-            dhtJoinTimeout: 20000
+            numberOfNodesPerKBucket: 4,  // TODO use config option or named constant?
+            rpcRequestTimeout: EXISTING_CONNECTION_TIMEOUT,
+            dhtJoinTimeout: 20000  // TODO use config option or named constant?
         })
     }
 
-    private createRandomGraphNode(streamPartId: StreamPartID, layer1Node: Layer1Node) {
+    private createRandomGraphNode(
+        streamPartId: StreamPartID,
+        layer1Node: Layer1Node,
+        isLocalNodeEntryPoint: () => boolean
+    ) {
         return createRandomGraphNode({
             streamPartId,
             transport: this.transport!,
@@ -214,7 +221,9 @@ export class StreamrNode extends EventEmitter<Events> {
             localPeerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
             minPropagationTargets: this.config.streamPartitionMinPropagationTargets,
             numOfTargetNeighbors: this.config.streamPartitionNumOfNeighbors,
-            acceptProxyConnections: this.config.acceptProxyConnections
+            acceptProxyConnections: this.config.acceptProxyConnections,
+            rpcRequestTimeout: this.config.rpcRequestTimeout,
+            isLocalNodeEntryPoint
         })
     }
 
@@ -225,6 +234,7 @@ export class StreamrNode extends EventEmitter<Events> {
         userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
+        // TODO explicit default value for "acceptProxyConnections" or make it required
         if (this.config.acceptProxyConnections) {
             throw new Error('cannot set proxies when acceptProxyConnections=true')
         }
@@ -240,7 +250,7 @@ export class StreamrNode extends EventEmitter<Events> {
                     proxied: true,
                     client,
                     broadcast: (msg: StreamMessage) => client.broadcast(msg),
-                    stop: () => client.stop()
+                    stop: async () => client.stop()
                 })
                 client.on('message', (message: StreamMessage) => {
                     this.emit('newMessage', message)
@@ -249,7 +259,7 @@ export class StreamrNode extends EventEmitter<Events> {
             }
             await client.setProxies(nodes, direction, userId, connectionCount)
         } else {
-            this.streamParts.get(streamPartId)?.stop()
+            await this.streamParts.get(streamPartId)?.stop()
             this.streamParts.delete(streamPartId)
         }
     }
@@ -310,10 +320,3 @@ export class StreamrNode extends EventEmitter<Events> {
         return Array.from(this.streamParts.keys()).map((id) => StreamPartIDUtils.parse(id))
     }
 }
-
-[`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`].forEach((term) => {
-    process.on(term, async () => {
-        await cleanUp()
-        process.exit()
-    })
-})

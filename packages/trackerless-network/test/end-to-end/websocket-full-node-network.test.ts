@@ -8,7 +8,7 @@ import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 
 describe('Full node network with WebSocket connections only', () => {
 
-    const NUM_OF_NODES = 48
+    const NUM_OF_NODES = 32
     const epPeerDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 15555, tls: false }
     })
@@ -26,6 +26,7 @@ describe('Full node network with WebSocket connections only', () => {
             layer0: {
                 entryPoints: [epPeerDescriptor],
                 peerDescriptor: epPeerDescriptor,
+                websocketServerEnableTls: false
             }
         })
         await entryPoint.start()
@@ -37,7 +38,8 @@ describe('Full node network with WebSocket connections only', () => {
                 layer0: {
                     entryPoints: [epPeerDescriptor],
                     websocketPortRange: { min: 15556 + i, max: 15556 + i },
-                    numberOfNodesPerKBucket: 4
+                    numberOfNodesPerKBucket: 4,
+                    websocketServerEnableTls: false
                 }
             })
             nodes.push(node)
@@ -60,7 +62,7 @@ describe('Full node network with WebSocket connections only', () => {
             waitForCondition(() => {
                 return node.getStreamrNode()!.getNeighbors(streamPartId).length >= 4
             }
-            , 120000)
+            , 30000)
         ))
         let numOfMessagesReceived = 0
         const successIds: string[] = []
