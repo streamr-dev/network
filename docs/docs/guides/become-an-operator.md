@@ -6,14 +6,13 @@ sidebar_position: 6
 **TL;DR 👨‍💻 Do these things to become an earning Streamr node Operator:**
 - Deploy an Operator smart contract. 
 - Run Streamr node(s) and pair them with your Operator.
-- Stake `DATA` tokens on your Operator 
-- Give your node address a few `MATIC`
+- Stake `DATA` tokens on your Operator and give your node address a few `MATIC`
 - Join Sponsorships through your Operator that will earn you DATA tokens.
 
 ### Testnet schedule
 Checkout the official [Streamr Testnets page](../streamr-testnets/testnets.md) for the latest news and updates related to the incentivized three testnets running over December 2023 and January 2024.
 
-### Migrating from an older network
+### Migrating from a older network
 See these helpful FAQs advice on:
 - [Migrating from Brubeck to Streamr 1.0](../streamr-testnets/testnet-faq.md#migrating-from-brubeck-to-streamr-10).
 - [Migrating from the Mumbai testing environment to Streamr 1.0](../streamr-testnets/testnet-faq.md#migrating-from-the-mumbai-testing-environment-to-stream-10).
@@ -35,21 +34,37 @@ Spin up a Streamr node using the **[How to run a Streamr node guide](./how-to-ru
 
 During this node setup process you'll be generating a **node address** that will be needed for [Step 3](#step-3-pair-your-operator-to-your-streamr-node). 
 
-### Step 3: Pair your Operator to your Streamr Node
-Your Operator smart contract (that you created in [Step 1](#step-1-deploy-your-operator)) needs to be made aware of your Streamr node address (created in [Step 2](#step-2-run-a-streamr-node)). If you plan to run several nodes, they can all share the same node address.
+#### **Streamr node hardware recommendations**
+Nodes will consume resources, mainly bandwidth and CPU. RAM usage is moderate and disk usage in negligible. While there are no strict hardware recommendations, 4-8GB of RAM, 3-4 virtual cores, and ideally 1Gbps bandwidth would be a safe bet for participating in most [stream Sponsorships](../streamr-network/incentives/stream-sponsorships.md).
 
-Visit your [Operator page](https://streamr.network/hub/network/operators) and find the "Operator's node addresses" section (towards the bottom of the Operator page). Click the ***Add node address*** button, paste in your **node address** (the Ethereum public address, not its private key!), click the button in the dialog and remember to click the ***Save*** button.
+- A public IP is necessary.
+- A TCP port for [WebSocket connectivity](./how-to-run-streamr-node#websocket-connectivity) must be open. The port is configurable and the default is `32200`.
+
+### Step 3: Pair your Operator to your Streamr Node
+Your Operator smart contract (that you created in [Step 1](#step-1-deploy-your-operator)) needs to be made aware of your Streamr node address. If you plan to run several nodes, they can all share the same node address.
+
+You should have a node address after following the **[How to run a Streamr node guide](./how-to-run-streamr-node.md)**. We will now add it to your Operator smart contract. 
+
+Firstly, visit your [Operator page](https://streamr.network/hub/network/operators) and find the "Operator's node addresses" section (towards the bottom of the page). Click the ***Add node address*** button, paste in your **node address** (the Ethereum public address, not its private key!), click the button in the dialog and remember to click the ***Save*** button.
 
 ![image](@site/static/img/node-addresses.png)
 
-If you had no issues, you can now start (or restart) your Streamr node and move on to [Step 4](#step-4-fund-your-node-address). 
+[If you had no issues, you can now start (or restart) your Streamr node and move on to Step 4](#step-4-fund-your-node-address). 
 
-If you have setup your Streamr node in some other way, you may need to [manually edit the node's config file](./how-to-run-streamr-node.md#manually-updating-the-node-config-file) to include your **Operator address** (found near the top of your Operator page in the Streamr Hub).
+If you have setup your Streamr node in some other way, you may need to manually edit the node's Config file to include your **Operator address** (found near the top of your Operator page in the Streamr Hub).
+
+![image](@site/static/img/operator-address.png)
+
+The format of your node config file should match [this template](#testnet-node-config).
+- Replace `"YOUR_OPERATOR_CONTRACT_ADDRESS"` with your **Operator address** (keep the quotes).
+- Replace `"NODE_PRIVATE_KEY"` with the **private key** of your **node wallet** (keep the quotes).
 
 **Reminder:** Your node private key is not your node address (the address is the public address that matches with the private key). You should not hold significant value on this address.
 
-### Step 4: Fund your node address
-You’ll need some `MATIC` (the gas token of Polygon) in your node address since the node(s) will periodically make transactions. Approximately 10 `MATIC` is recommended since the nodes will be making a few transactions per day.
+After any config file change you should restart your node. If you're building your Operator in Mumbai (for testing purposes), copy and paste [this config snippet](#mumbai-node-config) instead.
+
+### Step 4: Fund your Node address
+You’ll need a some `MATIC` (the gas token of Polygon) in your node address since the node(s) will periodically make transactions. 5 to 10 `MATIC` is recommended since the nodes will be making a few transactions per day. 
 
 If the node runs out of gas while they’re a part of an active Sponsorship, then a penalty may be applied to your unclaimed earnings. See [Operator value maintenance](../streamr-network/network-roles/operators.md#operator-maintenance).
 
@@ -65,7 +80,10 @@ All the checkmarks in the Operator status section on your Operator page should n
 
 ![image](@site/static/img/operator-status-green.png)
 
-Be patient, this check may take more than 30 seconds. If you're observing issues, [see this FAQ](../streamr-testnets/testnet-faq.md#my-node-appears-to-not-be-running-andor-are-not-reachable-on-the-streamr-hub).
+Be patient, if you're observing issues, [see this FAQ](../streamr-testnets/testnet-faq.md#my-node-appears-to-not-be-running-andor-are-not-reachable-on-the-streamr-hub).
+
+#### WebSocket connectivity
+If you're running the node with Docker, then the above guided tutorial will handle the port mapping (`-p 32200:32200`). However, you must also remember to open port `32200` for **external** TCP traffic. Opening ports is environment specific, if you're in a Linux based system, [this guide may be helpful](https://www.digitalocean.com/community/tutorials/opening-a-port-on-linux).
 
 ### Step 7: Join sponsorships
 Visit the [Sponsorships page](https://streamr.network/hub/network/sponsorships) and find a Sponsorship you want your Operator to start working on. Click the **"Join as Operator"** button and select your stake. Note there is a minimum stake of 5000 `DATA` tokens for each Sponsorship that you join. Joining Sponsorships may lock your tokens for a period of time, defined in the Sponsorship contract.
@@ -81,8 +99,28 @@ A typical node fleet may have 2 - 10 nodes and use a node [Redundancy Factor](..
 
 Checkout the [Testnet FAQ](../streamr-testnets/testnet-faq#what-is-the-advantage-of-operators-running-multiple-nodes) for more commentary on running multiple nodes.
 
+<div id="testnet-configuration-node-config"></div>
+
+## Testnet node config
+Below is the template you can use to override and replace the contents of your config file with. You can copy this snippet or download the [JSON file](../../static/assets/default.json). 
+
+```json
+{
+    "client": {
+        "auth": {
+            "privateKey": "NODE_PRIVATE_KEY"
+        }
+    },
+    "plugins": {
+        "operator": {
+            "operatorContractAddress": "OPERATOR_CONTRACT_ADDRESS"
+        }
+    }
+}
+```
+
 ## The Mumbai test environment
-The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your Operator before creating it on Polygon with real tokens. You'll need to use the [Mumbai node config](./how-to-run-streamr-node.md#mumbai-node-config).
+The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your Operator before creating it on Polygon with real tokens.
 
 You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
@@ -112,6 +150,24 @@ Below is the template you can use to override and replace the contents of your c
 
 ## Troubleshooting
 Checkout the [testnet FAQ](../streamr-testnets/testnet-faq.md) it covers all the technical and token questions you have been wondering about. 
+
+## Choosing a different WebSocket port
+While entirely optional, if the default port is not suitable for you then you can change it by adding a `controlLayer` entry to your node config like so:
+
+```json
+"client": {
+    ...
+    "network": {
+        "controlLayer": {
+            "websocketPortRange": {
+                "min": 16100,
+                "max": 16100
+            }
+        }
+    },
+    ...
+}
+```
 
 ## Safety
 **Please be aware of some important safety tips during the testnets:**

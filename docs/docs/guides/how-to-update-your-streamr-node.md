@@ -5,16 +5,12 @@ sidebar_position: 5
 # How to update your Streamr node
 Keeping your node up to date is very important as new releases contain bug fixes and performance improvements. The exact update instructions may vary based on the environment that the node has been installed in.
 
-:::caution
-If you are only running one node your stake you are vulnerable to a slashing event (albeit unlikely) while your node is offline during the upgrade process. The best defence against this is to run at least a second node and have a [Redundancy Factor](../streamr-network/network-roles/operators#node-redundancy-factor) of 2 or more.
-:::
-
 ## Docker update guide
 :::info
 This guide is meant for Linux and MacOS. Windows Powershell commands will be slightly different.
 :::
 
-To update your Streamr node from `v100.0.0-testnet-one.3` to `v100.0.0-testnet-two.1` (for example), run:
+To update your Streamr node from `v100.0.0-testnet-one.3` to `v100.0.0-testnet-one.4` (for example), run:
 
 ```
 sudo docker stop streamr && sudo docker rm streamr && sudo docker container prune --force
@@ -34,7 +30,7 @@ sudo docker rmi IMAGE_ID
 Run your updated node with the new node version,
 
 ```
-sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-two.1
+sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-one.4
 ```
 
 Your updated node will now be running. As usual, you can checkup on it with 
@@ -56,7 +52,7 @@ pm2 stop streamr
 
 Next, globally install the node upgrade:
 ```
-npm install -g streamr-broker@100.0.0-testnet-two.1
+npm install -g streamr-broker@100.0.0-testnet-one.4
 ```
 
 And then you can run the node:
