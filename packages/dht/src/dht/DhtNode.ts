@@ -432,8 +432,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started || this.abortController.signal.aborted) {
             return
         }
-        const reachableThrough = this.peerDiscovery!.isJoinOngoing() ? this.config.entryPoints ?? [] : []
+        const reachableThrough = this.peerDiscovery!.isJoinOngoing() ? this.getConnectedEntryPoints() : []
         this.router!.send(msg, reachableThrough)
+    }
+
+    private getConnectedEntryPoints(): PeerDescriptor[] {
+        return this.config.entryPoints !== undefined ? this.config.entryPoints.filter((entryPoint) =>
+            this.peerManager!.connections.has(getNodeIdFromPeerDescriptor(entryPoint))
+        ) : []
     }
 
     public async joinDht(entryPointDescriptors: PeerDescriptor[], doAdditionalRandomPeerDiscovery?: boolean, retry?: boolean): Promise<void> {
@@ -456,8 +462,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async storeDataToDht(key: Uint8Array, data: Any, creator?: NodeID): Promise<PeerDescriptor[]> {
-        if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
-            return this.storeDataViaPeer(key, data, sample(this.config.entryPoints)!)
+        const connectedEntryPoints = this.getConnectedEntryPoints()
+        if (this.peerDiscovery!.isJoinOngoing() && connectedEntryPoints.length > 0) {
+            return this.storeDataViaPeer(key, data, sample(connectedEntryPoints)!)
         }
         return this.storeManager!.storeDataToDht(key, data, creator ?? getNodeIdFromPeerDescriptor(this.localPeerDescriptor!))
     }
@@ -474,8 +481,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async getDataFromDht(key: Uint8Array): Promise<DataEntry[]> {
-        if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
-            return this.findDataViaPeer(key, sample(this.config.entryPoints)!)
+        const connectedEntryPoints = this.getConnectedEntryPoints()
+        if (this.peerDiscovery!.isJoinOngoing() && connectedEntryPoints.length > 0) {
+            return this.findDataViaPeer(key, sample(connectedEntryPoints)!)
         }
         const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FETCH_DATA)
         return result.dataEntries ?? []  // TODO is this fallback needed?
