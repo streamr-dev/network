@@ -3,7 +3,7 @@ import { randomString } from '@streamr/utils'
 import { Timestamp } from '../../../src/proto/google/protobuf/timestamp'
 import { Any } from '../../../src/proto/google/protobuf/any'
 import { DataEntry } from '../../../src/proto/packages/dht/protos/DhtRpc'
-import { DataKey, NodeID, createRandomDataKey, createRandomNodeId, getRawFromDataKey, getRawFromNodeId } from '../../../src/identifiers'
+import { DhtAddress, createRandomDhtAddress, getRawFromDhtAddress } from '../../../src/identifiers'
 import { omit } from 'lodash'
 
 const MockData = new class extends MessageType$<{ foo: string }> {
@@ -14,11 +14,13 @@ const MockData = new class extends MessageType$<{ foo: string }> {
     }
 }
 
-export const createMockDataEntry = (entry: Partial<Omit<DataEntry, 'key' | 'creator'> & { key: DataKey, creator: NodeID }> = {}): DataEntry => {
+export const createMockDataEntry = (
+    entry: Partial<Omit<DataEntry, 'key' | 'creator'> & { key: DhtAddress, creator: DhtAddress }> = {}
+): DataEntry => {
     return { 
-        key: getRawFromDataKey(entry.key ?? createRandomDataKey()),
+        key: getRawFromDhtAddress(entry.key ?? createRandomDhtAddress()),
         data: Any.pack({ foo: randomString(5) }, MockData),
-        creator: getRawFromNodeId(entry.creator ?? createRandomNodeId()),
+        creator: getRawFromDhtAddress(entry.creator ?? createRandomDhtAddress()),
         ttl: 10000,
         stale: false,
         deleted: false,

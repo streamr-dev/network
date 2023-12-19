@@ -5,13 +5,13 @@ import { createMockPeerDescriptor, createWrappedClosestPeersRequest } from '../u
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { NodeID } from '../../src/identifiers'
+import { DhtAddress } from '../../src/identifiers'
 import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 
 describe('RoutingSession', () => {
 
     let session: RoutingSession
-    let connections: Map<NodeID, DhtNodeRpcRemote>
+    let connections: Map<DhtAddress, DhtNodeRpcRemote>
     let rpcCommunicator: RoutingRpcCommunicator
     const mockPeerDescriptor1 = createMockPeerDescriptor()
     const mockPeerDescriptor2 = createMockPeerDescriptor()

@@ -11,20 +11,20 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'
 import { Any } from '../proto/google/protobuf/any'
-import { NodeID } from '../identifiers'
+import { DhtAddress } from '../identifiers'
 import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
-import { DataKey, getDataKeyFromRaw } from '../identifiers'
+import { getDhtAddressFromRaw } from '../identifiers'
 
 interface ExternalApiRpcLocalConfig {
     executeRecursiveOperation: (
-        targetId: DataKey,
+        targetId: DhtAddress,
         operation: RecursiveOperation,
         excludedPeer: PeerDescriptor
     ) => Promise<RecursiveOperationResult>
     storeDataToDht: (
-        key: DataKey,
+        key: DhtAddress,
         data: Any,
-        creator: NodeID
+        creator: DhtAddress
     ) => Promise<PeerDescriptor[]>
 }
 
@@ -39,7 +39,7 @@ export class ExternalApiRpcLocal implements IExternalApiRpc {
     async externalFindData(findDataRequest: ExternalFindDataRequest, context: ServerCallContext): Promise<ExternalFindDataResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const result = await this.config.executeRecursiveOperation(
-            getDataKeyFromRaw(findDataRequest.key),
+            getDhtAddressFromRaw(findDataRequest.key),
             RecursiveOperation.FETCH_DATA,
             senderPeerDescriptor
         )
@@ -49,7 +49,7 @@ export class ExternalApiRpcLocal implements IExternalApiRpc {
     async externalStoreData(request: ExternalStoreDataRequest, context: ServerCallContext): Promise<ExternalStoreDataResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const result = await this.config.storeDataToDht(
-            getDataKeyFromRaw(request.key),
+            getDhtAddressFromRaw(request.key),
             request.data!,
             getNodeIdFromPeerDescriptor(senderPeerDescriptor)
         )

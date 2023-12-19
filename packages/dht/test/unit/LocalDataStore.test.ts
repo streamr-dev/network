@@ -5,14 +5,13 @@ import {
 } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
-import { DataKey, createRandomDataKey, createRandomNodeId } from '../../src/identifiers'
-import { getDataKeyFromRaw } from '../../src/identifiers'
+import { DhtAddress, createRandomDhtAddress, getDhtAddressFromRaw } from '../../src/identifiers'
 
 describe('LocalDataStore', () => {
 
     let localDataStore: LocalDataStore
 
-    const getEntryArray = (key: DataKey) => {
+    const getEntryArray = (key: DhtAddress) => {
         return Array.from(localDataStore.getEntries(key).values())
     }
     
@@ -27,15 +26,15 @@ describe('LocalDataStore', () => {
     it('can store', () => {
         const storedEntry = createMockDataEntry()
         localDataStore.storeEntry(storedEntry)
-        const fetchedEntries = getEntryArray(getDataKeyFromRaw(storedEntry.key))
+        const fetchedEntries = getEntryArray(getDhtAddressFromRaw(storedEntry.key))
         expect(fetchedEntries).toHaveLength(1)
         expectEqualData(fetchedEntries[0], storedEntry)
     })
 
     it('multiple storers behind one key', () => {
-        const creator1 = createRandomNodeId()
-        const creator2 = createRandomNodeId()
-        const key = createRandomDataKey()
+        const creator1 = createRandomDhtAddress()
+        const creator2 = createRandomDhtAddress()
+        const key = createRandomDhtAddress()
         const storedEntry1 = createMockDataEntry({ key, creator: creator1 })
         const storedEntry2 = createMockDataEntry({ key, creator: creator2 })
         localDataStore.storeEntry(storedEntry1)
@@ -47,9 +46,9 @@ describe('LocalDataStore', () => {
     })
 
     it('can remove data entries', () => {
-        const creator1 = createRandomNodeId()
-        const creator2 = createRandomNodeId()
-        const key = createRandomDataKey()
+        const creator1 = createRandomDhtAddress()
+        const creator2 = createRandomDhtAddress()
+        const key = createRandomDhtAddress()
         const storedEntry1 = createMockDataEntry({ key, creator: creator1 })
         const storedEntry2 = createMockDataEntry({ key, creator: creator2 })
         localDataStore.storeEntry(storedEntry1)
@@ -61,9 +60,9 @@ describe('LocalDataStore', () => {
     })
 
     it('can remove all data entries', () => {
-        const creator1 = createRandomNodeId()
-        const creator2 = createRandomNodeId()
-        const key = createRandomDataKey()
+        const creator1 = createRandomDhtAddress()
+        const creator2 = createRandomDhtAddress()
+        const key = createRandomDhtAddress()
         const storedEntry1 = createMockDataEntry({ key, creator: creator1 })
         const storedEntry2 = createMockDataEntry({ key, creator: creator2 })
         localDataStore.storeEntry(storedEntry1)
@@ -76,30 +75,30 @@ describe('LocalDataStore', () => {
     it('data is deleted after TTL', async () => {
         const storedEntry = createMockDataEntry({ ttl: 1000 })
         localDataStore.storeEntry(storedEntry)
-        expect(getEntryArray(getDataKeyFromRaw(storedEntry.key))).toHaveLength(1)
+        expect(getEntryArray(getDhtAddressFromRaw(storedEntry.key))).toHaveLength(1)
         await wait(1100)
-        expect(getEntryArray(getDataKeyFromRaw(storedEntry.key))).toHaveLength(0)
+        expect(getEntryArray(getDhtAddressFromRaw(storedEntry.key))).toHaveLength(0)
     })
 
     describe('mark data as deleted', () => {
 
         it('happy path', () => {
-            const creator1 = createRandomNodeId()
+            const creator1 = createRandomDhtAddress()
             const storedEntry = createMockDataEntry({ creator: creator1 })
             localDataStore.storeEntry(storedEntry)
-            const notDeletedData = localDataStore.getEntries(getDataKeyFromRaw(storedEntry.key))
+            const notDeletedData = localDataStore.getEntries(getDhtAddressFromRaw(storedEntry.key))
             expect(notDeletedData.get(creator1)!.deleted).toBeFalse()
             const returnValue = localDataStore.markAsDeleted(
-                getDataKeyFromRaw(storedEntry.key),
+                getDhtAddressFromRaw(storedEntry.key),
                 creator1
             )
             expect(returnValue).toBe(true)
-            const deletedData = localDataStore.getEntries(getDataKeyFromRaw(storedEntry.key))
+            const deletedData = localDataStore.getEntries(getDhtAddressFromRaw(storedEntry.key))
             expect(deletedData.get(creator1)!.deleted).toBeTrue()
         })
 
         it('data not stored', () => {
-            const key = createRandomDataKey()
+            const key = createRandomDhtAddress()
             const returnValue = localDataStore.markAsDeleted(
                 key,
                 getNodeIdFromPeerDescriptor(createMockPeerDescriptor())
@@ -111,7 +110,7 @@ describe('LocalDataStore', () => {
             const storedEntry = createMockDataEntry()
             localDataStore.storeEntry(storedEntry)
             const returnValue = localDataStore.markAsDeleted(
-                getDataKeyFromRaw(storedEntry.key),
+                getDhtAddressFromRaw(storedEntry.key),
                 getNodeIdFromPeerDescriptor(createMockPeerDescriptor())
             )
             expect(returnValue).toBe(false)

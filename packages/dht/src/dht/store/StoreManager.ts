@@ -15,7 +15,7 @@ import { SortedContactList } from '../contact/SortedContactList'
 import { Contact } from '../contact/Contact'
 import { ServiceID } from '../../types/ServiceID'
 import { findIndex } from 'lodash'
-import { NodeID, getNodeIdFromRaw, getDataKeyFromRaw, DataKey, getRawFromDataKey, getRawFromNodeId } from '../../identifiers'
+import { DhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress } from '../../identifiers'
 import { StoreRpcLocal } from './StoreRpcLocal'
 import { getDistance } from '../PeerManager'
 
@@ -27,7 +27,7 @@ interface StoreManagerConfig {
     serviceId: ServiceID
     highestTtl: number
     redundancyFactor: number
-    getClosestNeighborsTo: (dataKey: DataKey, n?: number) => PeerDescriptor[]
+    getClosestNeighborsTo: (dataKey: DhtAddress, n?: number) => PeerDescriptor[]
     createRpcRemote: (contact: PeerDescriptor) => StoreRpcRemote
 }
 
@@ -46,7 +46,7 @@ export class StoreManager {
         const rpcLocal = new StoreRpcLocal({
             localDataStore: this.config.localDataStore,
             replicateDataToNeighbors: (incomingPeer: PeerDescriptor, dataEntry: DataEntry) => this.replicateDataToNeighbors(incomingPeer, dataEntry),
-            selfIsWithinRedundancyFactor: (key: DataKey): boolean => this.selfIsWithinRedundancyFactor(key)
+            selfIsWithinRedundancyFactor: (key: DhtAddress): boolean => this.selfIsWithinRedundancyFactor(key)
         })
         this.config.rpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
             (request: StoreDataRequest) => rpcLocal.storeData(request))
@@ -63,9 +63,9 @@ export class StoreManager {
     private replicateAndUpdateStaleState(dataEntry: DataEntry, newNode: PeerDescriptor): void {
         const newNodeId = getNodeIdFromPeerDescriptor(newNode)
         // TODO use config option or named constant?
-        const closestToData = this.config.getClosestNeighborsTo(getDataKeyFromRaw(dataEntry.key), 10)
+        const closestToData = this.config.getClosestNeighborsTo(getDhtAddressFromRaw(dataEntry.key), 10)
         const sortedList = new SortedContactList<Contact>({
-            referenceId: getDataKeyFromRaw(dataEntry.key), 
+            referenceId: getDhtAddressFromRaw(dataEntry.key), 
             maxSize: 20,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             emitEvents: false
@@ -89,8 +89,8 @@ export class StoreManager {
                     await this.replicateDataToContact(dataEntry, newNode)
                 })
             }
-        } else if (!this.selfIsWithinRedundancyFactor(getDataKeyFromRaw(dataEntry.key))) {
-            this.config.localDataStore.setStale(getDataKeyFromRaw(dataEntry.key), getNodeIdFromRaw(dataEntry.creator), true)
+        } else if (!this.selfIsWithinRedundancyFactor(getDhtAddressFromRaw(dataEntry.key))) {
+            this.config.localDataStore.setStale(getDhtAddressFromRaw(dataEntry.key), getDhtAddressFromRaw(dataEntry.creator), true)
         }
     }
 
@@ -103,7 +103,7 @@ export class StoreManager {
         }
     }
 
-    public async storeDataToDht(key: DataKey, data: Any, creator: NodeID): Promise<PeerDescriptor[]> {
+    public async storeDataToDht(key: DhtAddress, data: Any, creator: DhtAddress): Promise<PeerDescriptor[]> {
         logger.debug(`Storing data to DHT ${this.config.serviceId}`)
         const result = await this.config.recursiveOperationManager.execute(key, RecursiveOperation.FIND_NODE)
         const closestNodes = result.closestNodes
@@ -113,9 +113,9 @@ export class StoreManager {
         for (let i = 0; i < closestNodes.length && successfulNodes.length < this.config.redundancyFactor; i++) {
             if (areEqualPeerDescriptors(this.config.localPeerDescriptor, closestNodes[i])) {
                 this.config.localDataStore.storeEntry({
-                    key: getRawFromDataKey(key),
+                    key: getRawFromDhtAddress(key),
                     data,
-                    creator: getRawFromNodeId(creator),
+                    creator: getRawFromDhtAddress(creator),
                     createdAt,
                     storedAt: Timestamp.now(), 
                     ttl, 
@@ -128,9 +128,9 @@ export class StoreManager {
             const rpcRemote = this.config.createRpcRemote(closestNodes[i])
             try {
                 await rpcRemote.storeData({
-                    key: getRawFromDataKey(key),
+                    key: getRawFromDhtAddress(key),
                     data,
-                    creator: getRawFromNodeId(creator),
+                    creator: getRawFromDhtAddress(creator),
                     createdAt,
                     ttl
                 })
@@ -143,13 +143,13 @@ export class StoreManager {
         return successfulNodes
     }
 
-    private selfIsWithinRedundancyFactor(dataKey: DataKey): boolean {
+    private selfIsWithinRedundancyFactor(dataKey: DhtAddress): boolean {
         const closestNeighbors = this.config.getClosestNeighborsTo(dataKey, this.config.redundancyFactor)
         if (closestNeighbors.length < this.config.redundancyFactor) {
             return true
         } else {
             const furthestCloseNeighbor = closestNeighbors[closestNeighbors.length - 1]
-            const dataKeyRaw = getRawFromDataKey(dataKey)
+            const dataKeyRaw = getRawFromDhtAddress(dataKey)
             return getDistance(dataKeyRaw, this.config.localPeerDescriptor.nodeId) < getDistance(dataKeyRaw, furthestCloseNeighbor.nodeId)
         }
     }
@@ -157,7 +157,7 @@ export class StoreManager {
     private async replicateDataToClosestNodes(): Promise<void> {
         const dataEntries = Array.from(this.config.localDataStore.values())
         await Promise.all(dataEntries.map(async (dataEntry) => {
-            const neighbors = this.config.getClosestNeighborsTo(getDataKeyFromRaw(dataEntry.key), this.config.redundancyFactor)
+            const neighbors = this.config.getClosestNeighborsTo(getDhtAddressFromRaw(dataEntry.key), this.config.redundancyFactor)
             await Promise.all(neighbors.map(async (neighbor) => {
                 const rpcRemote = this.config.createRpcRemote(neighbor)
                 try {
@@ -174,9 +174,9 @@ export class StoreManager {
         const localNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
         const incomingNodeId = getNodeIdFromPeerDescriptor(incomingPeer)
         // TODO use config option or named constant?
-        const closestToData = this.config.getClosestNeighborsTo(getDataKeyFromRaw(dataEntry.key), 10)
+        const closestToData = this.config.getClosestNeighborsTo(getDhtAddressFromRaw(dataEntry.key), 10)
         const sortedList = new SortedContactList<Contact>({
-            referenceId: getDataKeyFromRaw(dataEntry.key), 
+            referenceId: getDhtAddressFromRaw(dataEntry.key), 
             maxSize: this.config.redundancyFactor, 
             allowToContainReferenceId: true, 
             emitEvents: false

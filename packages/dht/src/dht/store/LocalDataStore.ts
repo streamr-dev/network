@@ -1,7 +1,6 @@
 import { DataEntry } from '../../proto/packages/dht/protos/DhtRpc'
 import { MapWithTtl } from '../../helpers/MapWithTtl'
-import { NodeID, getNodeIdFromRaw } from '../../identifiers'
-import { DataKey, getDataKeyFromRaw } from '../../identifiers'
+import { DhtAddress, getDhtAddressFromRaw } from '../../identifiers'
 
 export class LocalDataStore {
 
@@ -13,12 +12,12 @@ export class LocalDataStore {
 
     // A map into which each node can store one value per data key
     // The first key is the key of the data, the second key is the
-    // NodeID of the creator of the data
-    private store: Map<DataKey, MapWithTtl<NodeID, DataEntry>> = new Map()
+    // DhtAddress of the creator of the data
+    private store: Map<DhtAddress, MapWithTtl<DhtAddress, DataEntry>> = new Map()
 
     public storeEntry(dataEntry: DataEntry): boolean {
-        const key = getDataKeyFromRaw(dataEntry.key)
-        const creatorNodeId = getNodeIdFromRaw(dataEntry.creator)
+        const key = getDhtAddressFromRaw(dataEntry.key)
+        const creatorNodeId = getDhtAddressFromRaw(dataEntry.creator)
         if (!this.store.has(key)) {
             this.store.set(key, new MapWithTtl((e) => Math.min(e.ttl, this.maxTtl)))
         }
@@ -35,7 +34,7 @@ export class LocalDataStore {
         return true
     }
 
-    public markAsDeleted(key: DataKey, creator: NodeID): boolean {
+    public markAsDeleted(key: DhtAddress, creator: DhtAddress): boolean {
         const item = this.store.get(key)
         if ((item === undefined) || !item.has(creator)) {
             return false
@@ -51,28 +50,28 @@ export class LocalDataStore {
         }
     }
 
-    public getEntries(key: DataKey): Map<NodeID, DataEntry> {
-        const dataEntries = new Map<NodeID, DataEntry>
+    public getEntries(key: DhtAddress): Map<DhtAddress, DataEntry> {
+        const dataEntries = new Map<DhtAddress, DataEntry>
         this.store.get(key)?.forEach((value, creator) => {
             dataEntries.set(creator, value)
         })
         return dataEntries
     }
 
-    public setStale(key: DataKey, creator: NodeID, stale: boolean): void {
+    public setStale(key: DhtAddress, creator: DhtAddress, stale: boolean): void {
         const storedEntry = this.store.get(key)?.get(creator)
         if (storedEntry) {
             storedEntry.stale = stale
         }
     }
 
-    public setAllEntriesAsStale(key: DataKey): void {
+    public setAllEntriesAsStale(key: DhtAddress): void {
         this.store.get(key)?.forEach((value) => {
             value.stale = true
         })
     }
 
-    public deleteEntry(key: DataKey, creator: NodeID): void {
+    public deleteEntry(key: DhtAddress, creator: DhtAddress): void {
         const storedEntry = this.store.get(key)?.get(creator)
         if (storedEntry) {
             this.store.get(key)?.delete(creator)

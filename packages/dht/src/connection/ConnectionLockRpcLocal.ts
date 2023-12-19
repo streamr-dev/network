@@ -17,11 +17,11 @@ import { IConnectionLockRpc } from '../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
 import { LockID } from './ConnectionLockHandler'
-import { NodeID } from '../identifiers'
+import { DhtAddress } from '../identifiers'
 
 interface ConnectionLockRpcLocalConfig {
-    addRemoteLocked: (id: NodeID, lockId: LockID) => void
-    removeRemoteLocked: (id: NodeID, lockId: LockID) => void
+    addRemoteLocked: (id: DhtAddress, lockId: LockID) => void
+    removeRemoteLocked: (id: DhtAddress, lockId: LockID) => void
     closeConnection: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string) => void
     getLocalPeerDescriptor: () => PeerDescriptor
 }

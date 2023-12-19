@@ -9,7 +9,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Logger, wait } from '@streamr/utils'
 import { debugVars } from '../../src/helpers/debugHelpers'
-import { getNodeIdFromRaw } from '../../src/identifiers'
+import { getDhtAddressFromRaw } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
@@ -29,10 +29,10 @@ describe('Find correctness', () => {
     beforeEach(async () => {
 
         nodes = []
-        entryPoint = await createMockConnectionDhtNode(simulator, getNodeIdFromRaw(Uint8Array.from(dhtIds[0].data)), undefined)
+        entryPoint = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[0].data)), undefined)
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator, getNodeIdFromRaw(Uint8Array.from(dhtIds[i].data)), undefined)
+            const node = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[i].data)), undefined)
             nodes.push(node)
         }
     })
@@ -66,7 +66,7 @@ describe('Find correctness', () => {
 
         logger.info('starting find')
         const targetId = Uint8Array.from(dhtIds[9].data)
-        const results = await nodes[159].executeRecursiveOperation(getNodeIdFromRaw(targetId), RecursiveOperation.FIND_NODE)
+        const results = await nodes[159].executeRecursiveOperation(getDhtAddressFromRaw(targetId), RecursiveOperation.FIND_NODE)
         logger.info('find over')
         expect(results.closestNodes).toBeGreaterThanOrEqual(5)
         expect(PeerID.fromValue(targetId).equals(peerIdFromPeerDescriptor(results.closestNodes[0])))

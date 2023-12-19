@@ -1,7 +1,7 @@
 import KBucket from 'k-bucket'
 import { Contact } from './Contact'
 import { SortedContactList } from '../../../src/dht/contact/SortedContactList'
-import { NodeID, getRawFromNodeId } from '../../../src/identifiers'
+import { DhtAddress, getRawFromDhtAddress } from '../../../src/identifiers'
 
 export class SimulationNode {
 
@@ -16,13 +16,13 @@ export class SimulationNode {
     private numberOfOutgoingRpcCalls = 0
 
     private neighborList: SortedContactList<Contact>
-    private ownId: NodeID
+    private ownId: DhtAddress
 
-    constructor(ownId: NodeID) {
+    constructor(ownId: DhtAddress) {
         this.ownId = ownId
         this.ownContact = new Contact(this.ownId, this)
         this.bucket = new KBucket({
-            localNodeId: getRawFromNodeId(this.ownId),
+            localNodeId: getRawFromDhtAddress(this.ownId),
             numberOfNodesPerKBucket: this.numberOfNodesPerKBucket
         })
 
@@ -57,9 +57,9 @@ export class SimulationNode {
 
     // RPC call
 
-    public getClosestNodesTo(id: NodeID, caller: SimulationNode): Contact[] {
+    public getClosestNodesTo(id: DhtAddress, caller: SimulationNode): Contact[] {
         this.numberOfIncomingRpcCalls++
-        const idValue = getRawFromNodeId(id)
+        const idValue = getRawFromDhtAddress(id)
         const ret = this.bucket.closest(idValue)
         if (!this.bucket.get(idValue)) {
             const contact = new Contact(id, caller)
@@ -90,7 +90,7 @@ export class SimulationNode {
         }
 
         this.bucket.add(entryPoint.getContact())
-        const closest = this.bucket.closest(getRawFromNodeId(this.ownId), this.ALPHA)
+        const closest = this.bucket.closest(getRawFromDhtAddress(this.ownId), this.ALPHA)
 
         this.neighborList.addContacts(closest)
 

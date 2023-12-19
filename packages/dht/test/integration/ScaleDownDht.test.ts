@@ -5,7 +5,7 @@ import { createMockConnectionDhtNode } from '../utils/utils'
 import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
-import { createRandomNodeId, getRawFromNodeId } from '../../src/identifiers'
+import { createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
@@ -23,11 +23,11 @@ describe('Scaling down a Dht network', () => {
     beforeEach(async () => {
         nodes = []
         entryPoint = await createMockConnectionDhtNode(simulator,
-            createRandomNodeId(), K, MAX_CONNECTIONS)
+            createRandomDhtAddress(), K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
 
         entrypointDescriptor = {
-            nodeId: getRawFromNodeId(entryPoint.getNodeId()),
+            nodeId: getRawFromDhtAddress(entryPoint.getNodeId()),
             type: NodeType.NODEJS,
             region: getRandomRegion()
         }

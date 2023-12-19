@@ -3,19 +3,19 @@
 import KBucket from 'k-bucket'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import crypto from 'crypto'
-import { NodeID, getNodeIdFromRaw } from '../../src/identifiers'
+import { DhtAddress, getDhtAddressFromRaw } from '../../src/identifiers'
 
 const NUM_ADDS = 1000
 interface Item {
     id: Uint8Array
     vectorClock: number
-    getNodeId: () => NodeID
+    getNodeId: () => DhtAddress
 }
 
 const createRandomItem = (index: number): Item => {
     const rand = new Uint8Array(crypto.randomBytes(20))
     return {
-        getNodeId: () => getNodeIdFromRaw(rand),
+        getNodeId: () => getDhtAddressFromRaw(rand),
         id: rand,
         vectorClock: index
     }
@@ -37,7 +37,7 @@ describe('SortedContactListBenchmark', () => {
             randomIds.push(createRandomItem(i))
         }
         const list = new SortedContactList({
-            referenceId: getNodeIdFromRaw(crypto.randomBytes(20)),
+            referenceId: getDhtAddressFromRaw(crypto.randomBytes(20)),
             allowToContainReferenceId: true,
             emitEvents: true
         })
@@ -49,7 +49,7 @@ describe('SortedContactListBenchmark', () => {
         console.timeEnd('SortedContactList.addContact() with emitEvents=true')
 
         const list2 = new SortedContactList({
-            referenceId: getNodeIdFromRaw(crypto.randomBytes(20)),
+            referenceId: getDhtAddressFromRaw(crypto.randomBytes(20)),
             allowToContainReferenceId: true,
             emitEvents: false
         })
@@ -83,7 +83,7 @@ describe('SortedContactListBenchmark', () => {
         console.time('SortedContactList.getClosestContacts() with emitEvents=true')
         for (let i = 0; i < NUM_ADDS; i++) {
             const closest = new SortedContactList<Item>({
-                referenceId: getNodeIdFromRaw(crypto.randomBytes(20)),
+                referenceId: getDhtAddressFromRaw(crypto.randomBytes(20)),
                 allowToContainReferenceId: true,
                 emitEvents: true
             })
@@ -97,7 +97,7 @@ describe('SortedContactListBenchmark', () => {
         console.time('SortedContactList.getClosestContacts() with emitEvents=false')
         for (let i = 0; i < NUM_ADDS; i++) {
             const closest = new SortedContactList<Item>({
-                referenceId: getNodeIdFromRaw(crypto.randomBytes(20)),
+                referenceId: getDhtAddressFromRaw(crypto.randomBytes(20)),
                 allowToContainReferenceId: true,
                 emitEvents: false
             })
@@ -111,7 +111,7 @@ describe('SortedContactListBenchmark', () => {
         console.time('SortedContactList.getClosestContacts() with emitEvents=false and lodash')
         for (let i = 0; i < NUM_ADDS; i++) {
             const closest = new SortedContactList<Item>({
-                referenceId: getNodeIdFromRaw(crypto.randomBytes(20)),
+                referenceId: getDhtAddressFromRaw(crypto.randomBytes(20)),
                 allowToContainReferenceId: true,
                 emitEvents: false
             })
@@ -125,7 +125,7 @@ describe('SortedContactListBenchmark', () => {
         console.time('SortedContactList.getClosestContacts() with emitEvents=false and addContacts()')
         for (let i = 0; i < NUM_ADDS; i++) {
             const closest = new SortedContactList<Item>({
-                referenceId: getNodeIdFromRaw(crypto.randomBytes(20)),
+                referenceId: getDhtAddressFromRaw(crypto.randomBytes(20)),
                 allowToContainReferenceId: true,
                 emitEvents: false
             })

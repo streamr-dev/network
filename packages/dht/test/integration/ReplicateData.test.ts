@@ -10,9 +10,8 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { getNodeIdFromPeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
-import { NodeID, getNodeIdFromRaw, getRawFromNodeId } from '../../src/identifiers'
+import { DhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress } from '../../src/identifiers'
 import { createMockDataEntry } from '../utils/mock/mockDataEntry'
-import { getDataKeyFromRaw } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
@@ -28,7 +27,7 @@ describe('Replicate data from node to node in DHT', () => {
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
     const simulator = new Simulator(LatencyType.FIXED, 20)
-    const nodesById: Map<NodeID, DhtNode> = new Map()
+    const nodesById: Map<DhtAddress, DhtNode> = new Map()
 
     if (!fs.existsSync('test/data/nodeids.json')) {
         console.log('ground truth data does not exist yet, generating..')
@@ -44,12 +43,12 @@ describe('Replicate data from node to node in DHT', () => {
     beforeEach(async () => {
         nodes = []
         entryPoint = await createMockConnectionDhtNode(simulator,
-            getNodeIdFromRaw(Uint8Array.from(dhtIds[0].data)), K, MAX_CONNECTIONS)
+            getDhtAddressFromRaw(Uint8Array.from(dhtIds[0].data)), K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         nodesById.set(entryPoint.getNodeId(), entryPoint)
 
         entrypointDescriptor = {
-            nodeId: getRawFromNodeId(entryPoint.getNodeId()),
+            nodeId: getRawFromDhtAddress(entryPoint.getNodeId()),
             type: NodeType.NODEJS
         }
 
@@ -57,7 +56,7 @@ describe('Replicate data from node to node in DHT', () => {
 
         for (let i = 1; i < NUM_NODES; i++) {
             const node = await createMockConnectionDhtNode(simulator,
-                getNodeIdFromRaw(Uint8Array.from(dhtIds[i].data)), K, MAX_CONNECTIONS)
+                getDhtAddressFromRaw(Uint8Array.from(dhtIds[i].data)), K, MAX_CONNECTIONS)
             nodesById.set(node.getNodeId(), node)
             nodes.push(node)
         }
@@ -75,7 +74,7 @@ describe('Replicate data from node to node in DHT', () => {
     })
 
     it('Data replicates to the closest node no matter where it is stored', async () => {
-        const dataKey = getDataKeyFromRaw(PeerID.fromString('3232323e12r31r3').value)
+        const dataKey = getDhtAddressFromRaw(PeerID.fromString('3232323e12r31r3').value)
         const data = createMockDataEntry({ key: dataKey })
 
         // calculate offline which node is closest to the data
@@ -160,7 +159,7 @@ describe('Replicate data from node to node in DHT', () => {
     }, 180000)
 
     it('Data replicates to the last remaining node if all other nodes leave gracefully', async () => {
-        const dataKey = getDataKeyFromRaw(PeerID.fromString('3232323e12r31r3').value)
+        const dataKey = getDhtAddressFromRaw(PeerID.fromString('3232323e12r31r3').value)
         const data = createMockDataEntry({ key: dataKey })
 
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')

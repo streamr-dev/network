@@ -11,12 +11,12 @@ import {
 import { IStoreRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { LocalDataStore } from './LocalDataStore'
-import { DataKey, getDataKeyFromRaw } from '../../identifiers'
+import { DhtAddress, getDhtAddressFromRaw } from '../../identifiers'
 
 interface StoreRpcLocalConfig {
     localDataStore: LocalDataStore
     replicateDataToNeighbors: (incomingPeer: PeerDescriptor, dataEntry: DataEntry) => void
-    selfIsWithinRedundancyFactor: (key: DataKey) => boolean
+    selfIsWithinRedundancyFactor: (key: DhtAddress) => boolean
 }
 
 const logger = new Logger(module)
@@ -31,7 +31,7 @@ export class StoreRpcLocal implements IStoreRpc {
 
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
         logger.trace('storeData()')
-        const key = getDataKeyFromRaw(request.key)
+        const key = getDhtAddressFromRaw(request.key)
         const selfIsOneOfClosestPeers = this.config.selfIsWithinRedundancyFactor(key)
         this.config.localDataStore.storeEntry({ 
             key: request.key,
@@ -56,7 +56,7 @@ export class StoreRpcLocal implements IStoreRpc {
         if (wasStored) {
             this.config.replicateDataToNeighbors((context as DhtCallContext).incomingSourceDescriptor!, request.entry!)
         }
-        const key = getDataKeyFromRaw(dataEntry.key)
+        const key = getDhtAddressFromRaw(dataEntry.key)
         if (!this.config.selfIsWithinRedundancyFactor(key)) {
             this.config.localDataStore.setAllEntriesAsStale(key)
         }

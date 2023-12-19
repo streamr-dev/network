@@ -11,11 +11,11 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import { IDhtNodeRpc } from '../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
-import { NodeID, getNodeIdFromRaw } from '../identifiers'
+import { DhtAddress, getDhtAddressFromRaw } from '../identifiers'
 
 interface DhtNodeRpcLocalConfig {
     peerDiscoveryQueryBatchSize: number
-    getClosestPeersTo: (nodeId: NodeID, limit: number) => PeerDescriptor[]
+    getClosestPeersTo: (nodeId: DhtAddress, limit: number) => PeerDescriptor[]
     addNewContact: (contact: PeerDescriptor) => void
     removeContact: (contact: PeerDescriptor) => void
 }
@@ -33,7 +33,7 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
     async getClosestPeers(request: ClosestPeersRequest, context: ServerCallContext): Promise<ClosestPeersResponse> {
         this.config.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
         const response = {
-            peers: this.config.getClosestPeersTo(getNodeIdFromRaw(request.nodeId), this.config.peerDiscoveryQueryBatchSize),
+            peers: this.config.getClosestPeersTo(getDhtAddressFromRaw(request.nodeId), this.config.peerDiscoveryQueryBatchSize),
             requestId: request.requestId
         }
         return response

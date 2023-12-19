@@ -29,7 +29,7 @@ import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
 import { attachConnectivityRequestHandler } from '../connectivityRequestHandler'
 import * as Err from '../../helpers/errors'
 import { Empty } from '../../proto/google/protobuf/empty'
-import { NodeID } from '../../identifiers'
+import { DhtAddress } from '../../identifiers'
 import { version } from '../../../package.json'
 import { isCompatibleVersion } from '../../helpers/versionCompatibility'
 
@@ -63,12 +63,12 @@ export class WebsocketConnector {
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly websocketServer?: WebsocketServer
-    private readonly ongoingConnectRequests: Map<NodeID, ManagedConnection> = new Map()
+    private readonly ongoingConnectRequests: Map<DhtAddress, ManagedConnection> = new Map()
     private host?: string
     private autoCertifierClient?: AutoCertifierClientFacade
     private selectedPort?: number
     private localPeerDescriptor?: PeerDescriptor
-    private connectingConnections: Map<NodeID, ManagedConnection> = new Map()
+    private connectingConnections: Map<DhtAddress, ManagedConnection> = new Map()
     private abortController = new AbortController()
     private readonly config: WebsocketConnectorConfig
 

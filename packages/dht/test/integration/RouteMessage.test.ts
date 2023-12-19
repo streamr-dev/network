@@ -8,13 +8,13 @@ import { Simulator } from '../../src/connection/simulator/Simulator'
 import { v4 } from 'uuid'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { RoutingMode } from '../../src/dht/routing/RoutingSession'
-import { createRandomNodeId, getNodeIdFromRaw, getRawFromNodeId } from '../../src/identifiers'
+import { createRandomDhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
 // TODO refactor the test to not to use PeerID
 const getPeerId = (node: DhtNode) => {
-    return PeerID.fromValue(getRawFromNodeId(node.getNodeId()))
+    return PeerID.fromValue(getRawFromDhtAddress(node.getNodeId()))
 }
 
 const NUM_NODES = 30
@@ -32,18 +32,18 @@ describe('Route Message With Mock Connections', () => {
     beforeEach(async () => {
         routerNodes = []
         simulator = new Simulator()
-        entryPoint = await createMockConnectionDhtNode(simulator, createRandomNodeId())
+        entryPoint = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
 
         entryPointDescriptor = {
-            nodeId: getRawFromNodeId(entryPoint.getNodeId()),
+            nodeId: getRawFromDhtAddress(entryPoint.getNodeId()),
             type: NodeType.NODEJS
         }
 
-        sourceNode = await createMockConnectionDhtNode(simulator, createRandomNodeId())
-        destinationNode = await createMockConnectionDhtNode(simulator, createRandomNodeId())
+        sourceNode = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
+        destinationNode = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator, getNodeIdFromRaw(PeerID.fromString(`${i}`).value))
+            const node = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(PeerID.fromString(`${i}`).value))
             routerNodes.push(node)
         }
 

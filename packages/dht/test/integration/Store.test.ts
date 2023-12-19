@@ -1,6 +1,6 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { getDataKeyFromRaw, getNodeIdFromRaw } from '../../src/identifiers'
+import { getDhtAddressFromRaw } from '../../src/identifiers'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
@@ -45,7 +45,7 @@ describe('Storing data in DHT', () => {
         const storingNodeIndex = 34
         const entry = createMockDataEntry()
         const successfulStorers = await nodes[storingNodeIndex].storeDataToDht(
-            getDataKeyFromRaw(entry.key),
+            getDhtAddressFromRaw(entry.key),
             entry.data!
         )
         expect(successfulStorers.length).toBeGreaterThan(4)
@@ -55,12 +55,12 @@ describe('Storing data in DHT', () => {
         const storingNode = getRandomNode()
         const entry = createMockDataEntry()
         const successfulStorers = await storingNode.storeDataToDht(
-            getDataKeyFromRaw(entry.key),
+            getDhtAddressFromRaw(entry.key),
             entry.data!
         )
         expect(successfulStorers.length).toBeGreaterThan(4)
         const fetchingNode = getRandomNode()
-        const results = await fetchingNode.getDataFromDht(getDataKeyFromRaw(entry.key))
+        const results = await fetchingNode.getDataFromDht(getDhtAddressFromRaw(entry.key))
         results.forEach((result) => {
             expectEqualData(result, entry)
         })
@@ -71,16 +71,16 @@ describe('Storing data in DHT', () => {
         const entry = createMockDataEntry()
         const requestor = createMockPeerDescriptor()
         const successfulStorers = await storingNode.storeDataToDht(
-            getDataKeyFromRaw(entry.key),
+            getDhtAddressFromRaw(entry.key),
             entry.data!,
-            getNodeIdFromRaw(requestor.nodeId)
+            getDhtAddressFromRaw(requestor.nodeId)
         )
         expect(successfulStorers.length).toBeGreaterThan(4)
         const fetchingNode = getRandomNode()
-        const results = await fetchingNode.getDataFromDht(getDataKeyFromRaw(entry.key))
+        const results = await fetchingNode.getDataFromDht(getDhtAddressFromRaw(entry.key))
         results.forEach((result) => {
             expectEqualData(result, entry)
-            expect(getNodeIdFromRaw(result.creator)).toEqual(getNodeIdFromPeerDescriptor(requestor))
+            expect(getDhtAddressFromRaw(result.creator)).toEqual(getNodeIdFromPeerDescriptor(requestor))
         })
     }, 30000)
 })

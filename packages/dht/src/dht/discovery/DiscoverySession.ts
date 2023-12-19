@@ -5,7 +5,7 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerManager, getDistance } from '../PeerManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { NodeID, getRawFromNodeId } from '../../identifiers'
+import { DhtAddress, getRawFromDhtAddress } from '../../identifiers'
 
 const logger = new Logger(module)
 
@@ -14,7 +14,7 @@ interface DiscoverySessionEvents {
 }
 
 interface DiscoverySessionConfig {
-    targetId: NodeID
+    targetId: DhtAddress
     parallelism: number
     noProgressLimit: number
     peerManager: PeerManager
@@ -26,8 +26,8 @@ export class DiscoverySession {
     private stopped = false
     private emitter = new EventEmitter<DiscoverySessionEvents>()
     private noProgressCounter = 0
-    private ongoingClosestPeersRequests: Set<NodeID> = new Set()
-    private contactedPeers: Set<NodeID> = new Set()
+    private ongoingClosestPeersRequests: Set<DhtAddress> = new Set()
+    private contactedPeers: Set<DhtAddress> = new Set()
     private readonly config: DiscoverySessionConfig
 
     constructor(config: DiscoverySessionConfig) {
@@ -52,17 +52,17 @@ export class DiscoverySession {
         return returnedContacts
     }
 
-    private onClosestPeersRequestSucceeded(nodeId: NodeID, contacts: PeerDescriptor[]) {
+    private onClosestPeersRequestSucceeded(nodeId: DhtAddress, contacts: PeerDescriptor[]) {
         if (!this.ongoingClosestPeersRequests.has(nodeId)) {
             return
         }
         this.ongoingClosestPeersRequests.delete(nodeId)
-        const targetId = getRawFromNodeId(this.config.targetId)
+        const targetId = getRawFromDhtAddress(this.config.targetId)
         const oldClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
-        const oldClosestDistance = getDistance(targetId, getRawFromNodeId(oldClosestNeighbor.getNodeId()))
+        const oldClosestDistance = getDistance(targetId, getRawFromDhtAddress(oldClosestNeighbor.getNodeId()))
         this.addNewContacts(contacts)
         const newClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
-        const newClosestDistance = getDistance(targetId, getRawFromNodeId(newClosestNeighbor.getNodeId()))
+        const newClosestDistance = getDistance(targetId, getRawFromDhtAddress(newClosestNeighbor.getNodeId()))
         if (newClosestDistance >= oldClosestDistance) {
             this.noProgressCounter++
         }

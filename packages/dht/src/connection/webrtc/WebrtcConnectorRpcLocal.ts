@@ -18,7 +18,7 @@ import { ManagedConnection } from '../ManagedConnection'
 import { ManagedWebrtcConnection } from '../ManagedWebrtcConnection'
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'
 import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
-import { NodeID } from '../../identifiers'
+import { DhtAddress } from '../../identifiers'
 import { version } from '../../../package.json'
 import { isCompatibleVersion } from '../../helpers/versionCompatibility'
 
@@ -28,7 +28,7 @@ interface WebrtcConnectorRpcLocalConfig {
     connect: (targetPeerDescriptor: PeerDescriptor) => ManagedConnection 
     onNewConnection: (connection: ManagedConnection) => boolean
     // TODO pass accessor methods instead of passing a mutable entity
-    ongoingConnectAttempts: Map<NodeID, ManagedWebrtcConnection>
+    ongoingConnectAttempts: Map<DhtAddress, ManagedWebrtcConnection>
     rpcCommunicator: ListeningRpcCommunicator
     getLocalPeerDescriptor: () => PeerDescriptor
     allowPrivateAddresses: boolean

@@ -10,7 +10,7 @@ import { getRegionDelayMatrix } from './pings'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import Heap from 'heap'
 import { debugVars } from '../../helpers/debugHelpers'
-import { NodeID } from '../../identifiers'
+import { DhtAddress } from '../../identifiers'
 
 const logger = new Logger(module)
 
@@ -92,7 +92,7 @@ class CloseOperation extends SimulatorOperation {
 
 export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private stopped = false
-    private connectors: Map<NodeID, SimulatorConnector> = new Map()
+    private connectors: Map<DhtAddress, SimulatorConnector> = new Map()
     private latencyTable?: Array<Array<number>>
     private associations: Map<ConnectionID, Association> = new Map()
 

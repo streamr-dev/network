@@ -2,26 +2,26 @@ import { ContactState, Events } from './ContactList'
 import { sortedIndexBy } from 'lodash'
 import EventEmitter from 'eventemitter3'
 import { getDistance } from '../PeerManager'
-import { DataKey, NodeID, getRawFromNodeId, getRawFromNodeIdOrDataKey } from '../../identifiers'
+import { DhtAddress, getRawFromDhtAddress } from '../../identifiers'
 
 export interface SortedContactListConfig {
-    referenceId: NodeID | DataKey  // all contacts in this list are in sorted by the distance to this ID
+    referenceId: DhtAddress  // all contacts in this list are in sorted by the distance to this ID
     allowToContainReferenceId: boolean
     // TODO could maybe optimize this by removing the flag and then we'd check whether we have 
     // any listeners before we emit the event
     emitEvents: boolean
     maxSize?: number
     // if set, the list can't contain any contacts which are futher away than this limit
-    nodeIdDistanceLimit?: NodeID
+    nodeIdDistanceLimit?: DhtAddress
     // if set, the list can't contain contacts with these ids
-    excludedNodeIds?: Set<NodeID>
+    excludedNodeIds?: Set<DhtAddress>
 }
 
-export class SortedContactList<C extends { getNodeId: () => NodeID }> extends EventEmitter<Events<C>> {
+export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extends EventEmitter<Events<C>> {
 
     private config: SortedContactListConfig
-    private contactsById: Map<NodeID, ContactState<C>> = new Map()
-    private contactIds: NodeID[] = []
+    private contactsById: Map<DhtAddress, ContactState<C>> = new Map()
+    private contactIds: DhtAddress[] = []
 
     constructor(
         config: SortedContactListConfig
@@ -31,11 +31,11 @@ export class SortedContactList<C extends { getNodeId: () => NodeID }> extends Ev
         this.compareIds = this.compareIds.bind(this)
     }
 
-    public getClosestContactId(): NodeID {
+    public getClosestContactId(): DhtAddress {
         return this.contactIds[0]
     }
 
-    public getContactIds(): NodeID[] {
+    public getContactIds(): DhtAddress[] {
         return this.contactIds
     }
 
@@ -53,7 +53,7 @@ export class SortedContactList<C extends { getNodeId: () => NodeID }> extends Ev
                 this.contactsById.set(contact.getNodeId(), new ContactState(contact))
 
                 // eslint-disable-next-line max-len
-                const index = sortedIndexBy(this.contactIds, contact.getNodeId(), (id: NodeID) => { return this.distanceToReferenceId(id) })
+                const index = sortedIndexBy(this.contactIds, contact.getNodeId(), (id: DhtAddress) => { return this.distanceToReferenceId(id) })
                 this.contactIds.splice(index, 0, contact.getNodeId())
             } else if (this.compareIds(this.contactIds[this.config.maxSize - 1], contact.getNodeId()) > 0) {
                 const removedId = this.contactIds.pop()
@@ -62,7 +62,7 @@ export class SortedContactList<C extends { getNodeId: () => NodeID }> extends Ev
                 this.contactsById.set(contact.getNodeId(), new ContactState(contact))
 
                 // eslint-disable-next-line max-len
-                const index = sortedIndexBy(this.contactIds, contact.getNodeId(), (id: NodeID) => { return this.distanceToReferenceId(id) })
+                const index = sortedIndexBy(this.contactIds, contact.getNodeId(), (id: DhtAddress) => { return this.distanceToReferenceId(id) })
                 this.contactIds.splice(index, 0, contact.getNodeId())
                 if (this.config.emitEvents) {
                     this.emit(
@@ -86,17 +86,17 @@ export class SortedContactList<C extends { getNodeId: () => NodeID }> extends Ev
         contacts.forEach((contact) => this.addContact(contact))
     }
 
-    public getContact(id: NodeID): ContactState<C> | undefined {
+    public getContact(id: DhtAddress): ContactState<C> | undefined {
         return this.contactsById.get(id)
     }
 
-    public setContacted(contactId: NodeID): void {
+    public setContacted(contactId: DhtAddress): void {
         if (this.contactsById.has(contactId)) {
             this.contactsById.get(contactId)!.contacted = true
         }
     }
 
-    public setActive(contactId: NodeID): void {
+    public setActive(contactId: DhtAddress): void {
         if (this.contactsById.has(contactId)) {
             this.contactsById.get(contactId)!.active = true
         }
@@ -146,19 +146,19 @@ export class SortedContactList<C extends { getNodeId: () => NodeID }> extends Ev
         }
     }
 
-    public compareIds(id1: NodeID, id2: NodeID): number {
+    public compareIds(id1: DhtAddress, id2: DhtAddress): number {
         const distance1 = this.distanceToReferenceId(id1)
         const distance2 = this.distanceToReferenceId(id2)
         return distance1 - distance2
     }
 
     // TODO inline this method?
-    private distanceToReferenceId(id: NodeID): number {
+    private distanceToReferenceId(id: DhtAddress): number {
         // TODO maybe this class should store the referenceId also as UInt8Array so that we don't need to convert it here?
-        return getDistance(getRawFromNodeIdOrDataKey(this.config.referenceId), getRawFromNodeId(id))
+        return getDistance(getRawFromDhtAddress(this.config.referenceId), getRawFromDhtAddress(id))
     }
 
-    public removeContact(id: NodeID): boolean {
+    public removeContact(id: DhtAddress): boolean {
         if (this.contactsById.has(id)) {
             const removed = this.contactsById.get(id)!.contact
             // TODO use sortedIndexBy?
@@ -177,7 +177,7 @@ export class SortedContactList<C extends { getNodeId: () => NodeID }> extends Ev
         return false
     }
 
-    public isActive(id: NodeID): boolean {
+    public isActive(id: DhtAddress): boolean {
         return this.contactsById.has(id) ? this.contactsById.get(id)!.active : false
     }
 

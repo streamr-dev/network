@@ -1,4 +1,4 @@
-import { DataKey, getRawFromDataKey } from '../identifiers'
+import { DhtAddress, getRawFromDhtAddress } from '../identifiers'
 import { Any } from '../proto/google/protobuf/any'
 import { DataEntry, ExternalFindDataRequest, ExternalStoreDataRequest, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { ExternalApiRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
@@ -6,9 +6,9 @@ import { RpcRemote } from './contact/RpcRemote'
 
 export class ExternalApiRpcRemote extends RpcRemote<ExternalApiRpcClient> {
 
-    async externalFindData(key: DataKey): Promise<DataEntry[]> {
+    async externalFindData(key: DhtAddress): Promise<DataEntry[]> {
         const request: ExternalFindDataRequest = {
-            key: getRawFromDataKey(key)
+            key: getRawFromDhtAddress(key)
         }
         const options = this.formDhtRpcOptions({
             // TODO use config option or named constant?
@@ -22,9 +22,9 @@ export class ExternalApiRpcRemote extends RpcRemote<ExternalApiRpcClient> {
         }
     }
 
-    async storeData(key: DataKey, data: Any): Promise<PeerDescriptor[]> {
+    async storeData(key: DhtAddress, data: Any): Promise<PeerDescriptor[]> {
         const request: ExternalStoreDataRequest = {
-            key: getRawFromDataKey(key),
+            key: getRawFromDhtAddress(key),
             data
         }
         const options = this.formDhtRpcOptions({

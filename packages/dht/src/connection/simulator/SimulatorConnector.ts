@@ -9,13 +9,13 @@ import { ManagedConnection } from '../ManagedConnection'
 import { Simulator } from './Simulator'
 import { SimulatorConnection } from './SimulatorConnection'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { NodeID } from '../../identifiers'
+import { DhtAddress } from '../../identifiers'
 
 const logger = new Logger(module)
 
 export class SimulatorConnector {
 
-    private connectingConnections: Map<NodeID, ManagedConnection> = new Map()
+    private connectingConnections: Map<DhtAddress, ManagedConnection> = new Map()
     private stopped = false
     private localPeerDescriptor: PeerDescriptor
     private simulator: Simulator

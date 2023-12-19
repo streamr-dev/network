@@ -49,7 +49,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
 import { PeerManager } from './PeerManager'
 import { ServiceID } from '../types/ServiceID'
-import { DataKey, NodeID, getRawFromNodeId } from '../identifiers'
+import { DhtAddress, getRawFromDhtAddress } from '../identifiers'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
 
 export interface DhtNodeEvents {
@@ -119,9 +119,9 @@ export type Events = TransportEvents & DhtNodeEvents
 export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string): PeerDescriptor => {
     let nodeId: Uint8Array
     if (msg) {
-        nodeId = (peerId !== undefined) ? getRawFromNodeId(peerId as NodeID) : PeerID.fromIp(msg.host).value
+        nodeId = (peerId !== undefined) ? getRawFromDhtAddress(peerId as DhtAddress) : PeerID.fromIp(msg.host).value
     } else {
-        nodeId = getRawFromNodeId(peerId! as NodeID)
+        nodeId = getRawFromDhtAddress(peerId! as DhtAddress)
     }
     const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS
     const ret: PeerDescriptor = { nodeId, type: nodeType }
@@ -275,7 +275,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             highestTtl: this.config.storeHighestTtl,
             redundancyFactor: this.config.storageRedundancyFactor,
             localDataStore: this.localDataStore,
-            getClosestNeighborsTo: (key: DataKey, n?: number) => {
+            getClosestNeighborsTo: (key: DhtAddress, n?: number) => {
                 return this.peerManager!.getClosestNeighborsTo(key, n).map((n) => n.getPeerDescriptor())
             },
             createRpcRemote: (contact: PeerDescriptor) => {
@@ -349,7 +349,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         const dhtNodeRpcLocal = new DhtNodeRpcLocal({
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
-            getClosestPeersTo: (nodeId: NodeID, limit: number) => {
+            getClosestPeersTo: (nodeId: DhtAddress, limit: number) => {
                 return this.peerManager!.getClosestNeighborsTo(nodeId, limit)
                     .map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor())
             },
@@ -363,10 +363,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice',
             (_req: LeaveNotice, context) => dhtNodeRpcLocal.leaveNotice(context))
         const externalApiRpcLocal = new ExternalApiRpcLocal({
-            executeRecursiveOperation: (key: DataKey, operation: RecursiveOperation, excludedPeer: PeerDescriptor) => {
+            executeRecursiveOperation: (key: DhtAddress, operation: RecursiveOperation, excludedPeer: PeerDescriptor) => {
                 return this.executeRecursiveOperation(key, operation, excludedPeer)
             },
-            storeDataToDht: (key: DataKey, data: Any, creator?: NodeID) => this.storeDataToDht(key, data, creator)
+            storeDataToDht: (key: DhtAddress, data: Any, creator?: DhtAddress) => this.storeDataToDht(key, data, creator)
         })
         this.rpcCommunicator!.registerRpcMethod(
             ExternalFindDataRequest,
@@ -412,7 +412,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         )
     }
     
-    public getNodeId(): NodeID {
+    public getNodeId(): DhtAddress {
         return getNodeIdFromPeerDescriptor(this.localPeerDescriptor!)
     }
 
@@ -447,21 +447,21 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     // TODO make this private and unify the public API of find/fetch/store/delete methods
     // (we already have storeDataToDht etc. here)
     public async executeRecursiveOperation(
-        key: NodeID | DataKey,
+        key: DhtAddress,
         operation: RecursiveOperation,
         excludedPeer?: PeerDescriptor
     ): Promise<RecursiveOperationResult> {
         return this.recursiveOperationManager!.execute(key, operation, excludedPeer)
     }
 
-    public async storeDataToDht(key: DataKey, data: Any, creator?: NodeID): Promise<PeerDescriptor[]> {
+    public async storeDataToDht(key: DhtAddress, data: Any, creator?: DhtAddress): Promise<PeerDescriptor[]> {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.storeDataViaPeer(key, data, sample(this.config.entryPoints)!)
         }
         return this.storeManager!.storeDataToDht(key, data, creator ?? getNodeIdFromPeerDescriptor(this.localPeerDescriptor!))
     }
 
-    public async storeDataViaPeer(key: DataKey, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
+    public async storeDataViaPeer(key: DhtAddress, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
         const rpcRemote = new ExternalApiRpcRemote(
             this.localPeerDescriptor!,
             peer,
@@ -472,7 +472,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return await rpcRemote.storeData(key, data)
     }
 
-    public async getDataFromDht(key: DataKey): Promise<DataEntry[]> {
+    public async getDataFromDht(key: DhtAddress): Promise<DataEntry[]> {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.findDataViaPeer(key, sample(this.config.entryPoints)!)
         }
@@ -480,13 +480,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return result.dataEntries ?? []  // TODO is this fallback needed?
     }
 
-    public async deleteDataFromDht(key: DataKey, waitForCompletion: boolean): Promise<void> {
+    public async deleteDataFromDht(key: DhtAddress, waitForCompletion: boolean): Promise<void> {
         if (!this.abortController.signal.aborted) {
             await this.recursiveOperationManager!.execute(key, RecursiveOperation.DELETE_DATA, undefined, waitForCompletion)
         }
     }
 
-    public async findDataViaPeer(key: DataKey, peer: PeerDescriptor): Promise<DataEntry[]> {
+    public async findDataViaPeer(key: DhtAddress, peer: PeerDescriptor): Promise<DataEntry[]> {
         const rpcRemote = new ExternalApiRpcRemote(
             this.localPeerDescriptor!,
             peer,
