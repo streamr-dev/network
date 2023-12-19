@@ -13,7 +13,7 @@ import { RandomContactList } from './contact/RandomContactList'
 import { SortedContactList } from './contact/SortedContactList'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import EventEmitter from 'eventemitter3'
-import { DataKey, NodeID, NodeIDOrDataKeyRaw, areEqualNodeIds } from '../identifiers'
+import { DataKey, NodeID, NodeIDOrDataKeyRaw } from '../identifiers'
 
 const logger = new Logger(module)
 
@@ -128,7 +128,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         if (this.stopped) {
             return
         }
-        if (!areEqualNodeIds(contact.getNodeId(), this.config.localNodeId)) {
+        if (contact.getNodeId() !== this.config.localNodeId) {
             // Important to lock here, before the ping result is known
             this.config.connectionManager?.weakLockConnection(contact.getPeerDescriptor())
             if (this.connections.has(contact.getNodeId())) {
@@ -175,7 +175,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
 
     handleConnected(peerDescriptor: PeerDescriptor): void {
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
-        if (areEqualNodeIds(nodeId, this.config.localNodeId)) {
+        if (nodeId === this.config.localNodeId) {
             logger.error('handleConnected() to self')
         }
         const rpcRemote = this.config.createDhtNodeRpcRemote(peerDescriptor)
@@ -290,7 +290,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         }
         peerDescriptors.forEach((contact) => {
             const nodeId = getNodeIdFromPeerDescriptor(contact)
-            if (!areEqualNodeIds(nodeId, this.config.localNodeId)) {
+            if (nodeId !== this.config.localNodeId) {
                 logger.trace(`Adding new contact ${nodeId}`)
                 const remote = this.config.createDhtNodeRpcRemote(contact)
                 const isInBucket = (this.bucket.get(contact.nodeId) !== null)

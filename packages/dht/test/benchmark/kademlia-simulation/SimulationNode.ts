@@ -1,7 +1,7 @@
 import KBucket from 'k-bucket'
 import { Contact } from './Contact'
 import { SortedContactList } from '../../../src/dht/contact/SortedContactList'
-import { NodeID, areEqualNodeIds } from '../../../src/identifiers'
+import { NodeID } from '../../../src/identifiers'
 import { hexToBinary } from '@streamr/utils'
 
 export class SimulationNode {
@@ -86,7 +86,7 @@ export class SimulationNode {
     }
 
     public joinDht(entryPoint: SimulationNode): void {
-        if (areEqualNodeIds(entryPoint.getContact().getNodeId(), this.ownId)) {
+        if (entryPoint.getContact().getNodeId() === this.ownId) {
             return
         }
 
@@ -105,7 +105,7 @@ export class SimulationNode {
 
             this.findMoreContacts(uncontacted, this.neighborList)
 
-            if (areEqualNodeIds(oldClosestContactId, this.neighborList.getClosestContactId())) {
+            if (oldClosestContactId === this.neighborList.getClosestContactId()) {
                 uncontacted = this.neighborList.getUncontactedContacts(this.K)
                 if (uncontacted.length === 0) {
                     return
@@ -116,7 +116,7 @@ export class SimulationNode {
                     this.findMoreContacts(uncontacted, this.neighborList)
 
                     if (this.neighborList.getActiveContacts().length >= this.K ||
-                        areEqualNodeIds(oldClosestContactId, this.neighborList.getClosestContactId())) {
+                        (oldClosestContactId === this.neighborList.getClosestContactId())) {
                         return
                     }
                     uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)

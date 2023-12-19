@@ -19,7 +19,7 @@ import { RecursiveOperationResult } from './RecursiveOperationManager'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationSessionRpcLocal } from './RecursiveOperationSessionRpcLocal'
-import { DataKey, NodeID, areEqualNodeIds, getNodeIdFromRaw } from '../../identifiers'
+import { DataKey, NodeID, getNodeIdFromRaw } from '../../identifiers'
 import { hexToBinary } from '@streamr/utils'
 
 export interface RecursiveOperationSessionEvents {
@@ -147,7 +147,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         const localNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
         routingPath.forEach((desc) => {
             const newNodeId = getNodeIdFromPeerDescriptor(desc)
-            if (!areEqualNodeIds(localNodeId, newNodeId)) {
+            if (localNodeId !== newNodeId) {
                 this.allKnownHops.add(newNodeId)
             }
         })
@@ -156,7 +156,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     private setHopAsReported(desc: PeerDescriptor) {
         const localNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
         const newNodeId = getNodeIdFromPeerDescriptor(desc)
-        if (!areEqualNodeIds(localNodeId, newNodeId)) {
+        if (localNodeId !== newNodeId) {
             this.reportedHops.add(newNodeId)
         }
         if (this.isCompleted()) {

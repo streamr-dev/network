@@ -15,7 +15,7 @@ import { SortedContactList } from '../contact/SortedContactList'
 import { Contact } from '../contact/Contact'
 import { ServiceID } from '../../types/ServiceID'
 import { findIndex } from 'lodash'
-import { NodeID, areEqualNodeIds, getNodeIdFromRaw, getDataKeyFromRaw, DataKey } from '../../identifiers'
+import { NodeID, getNodeIdFromRaw, getDataKeyFromRaw, DataKey } from '../../identifiers'
 import { StoreRpcLocal } from './StoreRpcLocal'
 import { getDistance } from '../PeerManager'
 
@@ -72,19 +72,16 @@ export class StoreManager {
         })
         sortedList.addContact(new Contact(this.config.localPeerDescriptor))
         closestToData.forEach((neighbor) => {
-            if (!areEqualNodeIds(newNodeId, getNodeIdFromPeerDescriptor(neighbor))) {
+            if (newNodeId !== getNodeIdFromPeerDescriptor(neighbor)) {
                 sortedList.addContact(new Contact(neighbor))
             }
         })
-        const selfIsPrimaryStorer = areEqualNodeIds(
-            sortedList.getClosestContactId(),
-            getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
-        )
+        const selfIsPrimaryStorer = (sortedList.getClosestContactId() === getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor))
         if (selfIsPrimaryStorer) {
             sortedList.addContact(new Contact(newNode))
             const sorted = sortedList.getContactIds()
             // findIndex should never return -1 here because we just added the new node to the list
-            const index = findIndex(sorted, (nodeId) => areEqualNodeIds(nodeId, newNodeId))
+            const index = findIndex(sorted, (nodeId) => (nodeId === newNodeId))
             // if new node is within the storageRedundancyFactor closest nodes to the data
             // do replicate data to it
             if (index < this.config.redundancyFactor) {
@@ -188,7 +185,7 @@ export class StoreManager {
         closestToData.forEach((neighbor) => {
             sortedList.addContact(new Contact(neighbor))
         })
-        const selfIsPrimaryStorer = areEqualNodeIds(sortedList.getClosestContactId(), localNodeId)
+        const selfIsPrimaryStorer = (sortedList.getClosestContactId() === localNodeId)
         const targets = selfIsPrimaryStorer
             // if we are the closest to the data, replicate to all storageRedundancyFactor nearest
             ? sortedList.getAllContacts()
@@ -196,7 +193,7 @@ export class StoreManager {
             : [sortedList.getAllContacts()[0]]
         targets.forEach((contact) => {
             const contactNodeId = getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())
-            if (!areEqualNodeIds(incomingNodeId, contactNodeId) && !areEqualNodeIds(localNodeId, contactNodeId)) {
+            if ((incomingNodeId !== contactNodeId) && (localNodeId !== contactNodeId)) {
                 setImmediate(() => {
                     executeSafePromise(async () => {
                         await this.replicateDataToContact(dataEntry, contact.getPeerDescriptor())

@@ -2,7 +2,7 @@ import { ContactState, Events } from './ContactList'
 import { sortedIndexBy } from 'lodash'
 import EventEmitter from 'eventemitter3'
 import { getDistance } from '../PeerManager'
-import { DataKey, NodeID, areEqualNodeIdOrDataKeys, areEqualNodeIds, getRawFromNodeId, getRawFromNodeIdOrDataKey } from '../../identifiers'
+import { DataKey, NodeID, getRawFromNodeId, getRawFromNodeIdOrDataKey } from '../../identifiers'
 
 export interface SortedContactListConfig {
     referenceId: NodeID | DataKey  // all contacts in this list are in sorted by the distance to this ID
@@ -44,7 +44,7 @@ export class SortedContactList<C extends { getNodeId: () => NodeID }> extends Ev
             return
         }
 
-        if ((!this.config.allowToContainReferenceId && areEqualNodeIdOrDataKeys(this.config.referenceId, contact.getNodeId())) ||
+        if ((!this.config.allowToContainReferenceId && (this.config.referenceId === contact.getNodeId())) ||
             (this.config.nodeIdDistanceLimit !== undefined && this.compareIds(this.config.nodeIdDistanceLimit, contact.getNodeId()) < 0)) {
             return
         }
@@ -162,7 +162,7 @@ export class SortedContactList<C extends { getNodeId: () => NodeID }> extends Ev
         if (this.contactsById.has(id)) {
             const removed = this.contactsById.get(id)!.contact
             // TODO use sortedIndexBy?
-            const index = this.contactIds.findIndex((nodeId) => areEqualNodeIds(nodeId, id))
+            const index = this.contactIds.findIndex((nodeId) => (nodeId === id))
             this.contactIds.splice(index, 1)
             this.contactsById.delete(id)
             if (this.config.emitEvents) {

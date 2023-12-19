@@ -8,7 +8,6 @@ import { Simulator } from '../../src/connection/simulator/Simulator'
 import { v4 } from 'uuid'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { RoutingMode } from '../../src/dht/routing/RoutingSession'
-import { areEqualNodeIds } from '../../src/identifiers'
 import { createRandomNodeId } from '../../src/identifiers'
 
 const logger = new Logger(module)
@@ -157,7 +156,7 @@ describe('Route Message With Mock Connections', () => {
         await Promise.all(
             routerNodes.map(async (node) =>
                 Promise.all(routerNodes.map(async (receiver) => {
-                    if (!areEqualNodeIds(node.getNodeId(), receiver.getNodeId())) {
+                    if (node.getNodeId() !== receiver.getNodeId()) {
                         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getLocalPeerDescriptor())
                         const message: Message = {
                             serviceId: 'nonexisting_service',

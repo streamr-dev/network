@@ -1,4 +1,4 @@
-import { NodeID, areEqualNodeIds } from '../../identifiers'
+import { NodeID } from '../../identifiers'
 import { ContactList, ContactState } from './ContactList'
 
 export class RandomContactList<C extends { getNodeId: () => NodeID }> extends ContactList<C> {
@@ -16,7 +16,7 @@ export class RandomContactList<C extends { getNodeId: () => NodeID }> extends Co
     }
 
     addContact(contact: C): void {
-        if (areEqualNodeIds(this.localNodeId, contact.getNodeId())) {
+        if (this.localNodeId === contact.getNodeId()) {
             return
         }
         if (!this.contactsById.has(contact.getNodeId())) {
@@ -40,7 +40,7 @@ export class RandomContactList<C extends { getNodeId: () => NodeID }> extends Co
     removeContact(id: NodeID): boolean {
         if (this.contactsById.has(id)) {
             const removed = this.contactsById.get(id)!.contact
-            const index = this.contactIds.findIndex((nodeId) => areEqualNodeIds(nodeId, id))
+            const index = this.contactIds.findIndex((nodeId) => (nodeId === id))
             this.contactIds.splice(index, 1)
             this.contactsById.delete(id)
             this.emit('contactRemoved', removed, this.getContacts())

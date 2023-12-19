@@ -34,16 +34,6 @@ export const getRawFromDataKey = (dataKey: DataKey): NodeIDOrDataKeyRaw => {
     return getRawFromNodeIdOrDataKey(dataKey)
 }
 
-// TODO inline this or add support for UInt8Array parameters
-export const areEqualNodeIds = (nodeId1: NodeID, nodeId2: NodeID): boolean => {
-    return nodeId1 === nodeId2
-}
-
-// TODO inline this if possible?
-export const areEqualNodeIdOrDataKeys = (nodeIdOrDataKey1: NodeID | DataKey, nodeIdOrDataKey2: NodeID | DataKey): boolean => {
-    return nodeIdOrDataKey1 === nodeIdOrDataKey2
-}
-
 // TODO this should return NodeID (or NodeID | DataKey)
 // TODO maybe rename this to createRandomNodeIdOrDataKey?
 export const createRandomNodeId = (): Uint8Array => {

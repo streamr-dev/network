@@ -1,7 +1,6 @@
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node, createMockPeerDescriptor } from '../utils/utils'
-import { areEqualNodeIds } from '../../src/identifiers'
 
 const NODE_COUNT = 48
 const NUM_OF_NODES_PER_KBUCKET = 8
@@ -62,7 +61,7 @@ describe('Layer1', () => {
         for (let i = 0; i < NODE_COUNT; i++) {
             const layer0Node = nodes[i]
             const layer1Node = layer1Nodes[i]
-            expect(areEqualNodeIds(layer1Node.getNodeId(), layer0Node.getNodeId())).toEqual(true)
+            expect(layer1Node.getNodeId()).toEqual(layer0Node.getNodeId())
             expect(layer1Node.getNumberOfConnections()).toEqual(layer0Node.getNumberOfConnections())
             expect(layer1Node.getNumberOfNeighbors()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
             expect(layer1Node.getAllConnectionPeerDescriptors()).toEqual(layer0Node.getAllConnectionPeerDescriptors())
