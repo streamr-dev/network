@@ -5,12 +5,12 @@ import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/Dh
 import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
-import { Logger, hexToBinary } from '@streamr/utils'
+import { Logger } from '@streamr/utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { getNodeIdFromPeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
-import { NodeID, getNodeIdFromRaw } from '../../src/identifiers'
+import { NodeID, getNodeIdFromRaw, getRawFromNodeId } from '../../src/identifiers'
 import { createMockDataEntry } from '../utils/mock/mockDataEntry'
 import { getDataKeyFromRaw } from '../../src/identifiers'
 
@@ -49,7 +49,7 @@ describe('Replicate data from node to node in DHT', () => {
         nodesById.set(entryPoint.getNodeId(), entryPoint)
 
         entrypointDescriptor = {
-            nodeId: hexToBinary(entryPoint.getNodeId()),
+            nodeId: getRawFromNodeId(entryPoint.getNodeId()),
             type: NodeType.NODEJS
         }
 

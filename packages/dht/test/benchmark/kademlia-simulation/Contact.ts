@@ -1,7 +1,6 @@
 import type { SimulationNode } from './SimulationNode'
 import { NodeType, PeerDescriptor } from '../../../src/proto/packages/dht/protos/DhtRpc'
-import { NodeID } from '../../../src/identifiers'
-import { hexToBinary } from '@streamr/utils'
+import { NodeID, getRawFromNodeId } from '../../../src/identifiers'
 
 export class Contact {
     private static counter = 0
@@ -15,12 +14,12 @@ export class Contact {
         this.ownId = ownId
         this.vectorClock = Contact.counter++
         this.dhtNode = dhtNode
-        this.id = hexToBinary(ownId)
+        this.id = getRawFromNodeId(ownId)
     }
 
     getPeerDescriptor(): PeerDescriptor {
         const peerDescriptor: PeerDescriptor = {
-            nodeId: hexToBinary(this.ownId),
+            nodeId: getRawFromNodeId(this.ownId),
             type: NodeType.NODEJS
         }
         return peerDescriptor

@@ -19,8 +19,7 @@ import { RecursiveOperationResult } from './RecursiveOperationManager'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationSessionRpcLocal } from './RecursiveOperationSessionRpcLocal'
-import { DataKey, NodeID, getNodeIdFromRaw } from '../../identifiers'
-import { hexToBinary } from '@streamr/utils'
+import { DataKey, NodeID, getNodeIdFromRaw, getRawFromNodeIdOrDataKey } from '../../identifiers'
 
 export interface RecursiveOperationSessionEvents {
     completed: () => void
@@ -95,7 +94,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         const routeMessage: RouteMessageWrapper = {
             message: msg,
             requestId: v4(),
-            target: hexToBinary(this.config.targetId),
+            target: getRawFromNodeIdOrDataKey(this.config.targetId),
             sourcePeer: this.config.localPeerDescriptor,
             reachableThrough: [],
             routingPath: []

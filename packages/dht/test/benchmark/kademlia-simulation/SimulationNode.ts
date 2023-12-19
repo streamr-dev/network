@@ -1,8 +1,7 @@
 import KBucket from 'k-bucket'
 import { Contact } from './Contact'
 import { SortedContactList } from '../../../src/dht/contact/SortedContactList'
-import { NodeID } from '../../../src/identifiers'
-import { hexToBinary } from '@streamr/utils'
+import { NodeID, getRawFromNodeId } from '../../../src/identifiers'
 
 export class SimulationNode {
 
@@ -23,7 +22,7 @@ export class SimulationNode {
         this.ownId = ownId
         this.ownContact = new Contact(this.ownId, this)
         this.bucket = new KBucket({
-            localNodeId: hexToBinary(this.ownId),
+            localNodeId: getRawFromNodeId(this.ownId),
             numberOfNodesPerKBucket: this.numberOfNodesPerKBucket
         })
 
@@ -60,7 +59,7 @@ export class SimulationNode {
 
     public getClosestNodesTo(id: NodeID, caller: SimulationNode): Contact[] {
         this.numberOfIncomingRpcCalls++
-        const idValue = hexToBinary(id)
+        const idValue = getRawFromNodeId(id)
         const ret = this.bucket.closest(idValue)
         if (!this.bucket.get(idValue)) {
             const contact = new Contact(id, caller)
@@ -91,7 +90,7 @@ export class SimulationNode {
         }
 
         this.bucket.add(entryPoint.getContact())
-        const closest = this.bucket.closest(hexToBinary(this.ownId), this.ALPHA)
+        const closest = this.bucket.closest(getRawFromNodeId(this.ownId), this.ALPHA)
 
         this.neighborList.addContacts(closest)
 

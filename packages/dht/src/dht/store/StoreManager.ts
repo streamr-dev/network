@@ -7,7 +7,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RecursiveOperationManager } from '../recursive-operation/RecursiveOperationManager'
 import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { Logger, executeSafePromise, hexToBinary } from '@streamr/utils'
+import { Logger, executeSafePromise } from '@streamr/utils'
 import { LocalDataStore } from './LocalDataStore'
 import { StoreRpcRemote } from './StoreRpcRemote'
 import { Timestamp } from '../../proto/google/protobuf/timestamp'
@@ -15,7 +15,7 @@ import { SortedContactList } from '../contact/SortedContactList'
 import { Contact } from '../contact/Contact'
 import { ServiceID } from '../../types/ServiceID'
 import { findIndex } from 'lodash'
-import { NodeID, getNodeIdFromRaw, getDataKeyFromRaw, DataKey } from '../../identifiers'
+import { NodeID, getNodeIdFromRaw, getDataKeyFromRaw, DataKey, getRawFromDataKey, getRawFromNodeId } from '../../identifiers'
 import { StoreRpcLocal } from './StoreRpcLocal'
 import { getDistance } from '../PeerManager'
 
@@ -113,9 +113,9 @@ export class StoreManager {
         for (let i = 0; i < closestNodes.length && successfulNodes.length < this.config.redundancyFactor; i++) {
             if (areEqualPeerDescriptors(this.config.localPeerDescriptor, closestNodes[i])) {
                 this.config.localDataStore.storeEntry({
-                    key: hexToBinary(key),
+                    key: getRawFromDataKey(key),
                     data,
-                    creator: hexToBinary(creator),
+                    creator: getRawFromNodeId(creator),
                     createdAt,
                     storedAt: Timestamp.now(), 
                     ttl, 
@@ -128,9 +128,9 @@ export class StoreManager {
             const rpcRemote = this.config.createRpcRemote(closestNodes[i])
             try {
                 await rpcRemote.storeData({
-                    key: hexToBinary(key),
+                    key: getRawFromDataKey(key),
                     data,
-                    creator: hexToBinary(creator),
+                    creator: getRawFromNodeId(creator),
                     createdAt,
                     ttl
                 })
@@ -149,7 +149,7 @@ export class StoreManager {
             return true
         } else {
             const furthestCloseNeighbor = closestNeighbors[closestNeighbors.length - 1]
-            const dataKeyRaw = hexToBinary(dataKey)
+            const dataKeyRaw = getRawFromDataKey(dataKey)
             return getDistance(dataKeyRaw, this.config.localPeerDescriptor.nodeId) < getDistance(dataKeyRaw, furthestCloseNeighbor.nodeId)
         }
     }

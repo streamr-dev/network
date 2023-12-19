@@ -25,7 +25,6 @@ import { ExternalApiRpcClient, StoreRpcClient } from '../proto/packages/dht/prot
 import {
     Logger,
     MetricsContext,
-    hexToBinary,
     merge,
     waitForCondition
 } from '@streamr/utils'
@@ -50,7 +49,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
 import { PeerManager } from './PeerManager'
 import { ServiceID } from '../types/ServiceID'
-import { DataKey, NodeID } from '../identifiers'
+import { DataKey, NodeID, getRawFromNodeId } from '../identifiers'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
 
 export interface DhtNodeEvents {
@@ -120,9 +119,9 @@ export type Events = TransportEvents & DhtNodeEvents
 export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string): PeerDescriptor => {
     let nodeId: Uint8Array
     if (msg) {
-        nodeId = (peerId !== undefined) ? hexToBinary(peerId) : PeerID.fromIp(msg.host).value
+        nodeId = (peerId !== undefined) ? getRawFromNodeId(peerId as NodeID) : PeerID.fromIp(msg.host).value
     } else {
-        nodeId = hexToBinary(peerId!)
+        nodeId = getRawFromNodeId(peerId! as NodeID)
     }
     const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS
     const ret: PeerDescriptor = { nodeId, type: nodeType }

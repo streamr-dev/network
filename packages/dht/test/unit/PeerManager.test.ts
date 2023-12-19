@@ -1,4 +1,3 @@
-import { hexToBinary } from '@streamr/utils'
 import { PeerManager, getDistance } from '../../src/dht/PeerManager'
 import { NodeID, createRandomNodeId, getRawFromNodeId } from '../../src/identifiers'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
@@ -16,7 +15,7 @@ describe('PeerManager', () => {
                 return new DhtNodeRpcRemote(undefined as any, peerDescriptor, undefined as any, new MockRpcCommunicator())
             }
         } as any)
-        manager.handleNewPeers(nodeIds.map((n) => ({ nodeId: hexToBinary(n), type: NodeType.NODEJS })))
+        manager.handleNewPeers(nodeIds.map((n) => ({ nodeId: getRawFromNodeId(n), type: NodeType.NODEJS })))
 
         const referenceId = createRandomNodeId()
         const excluded = new Set<NodeID>(sampleSize(nodeIds, 2)!)

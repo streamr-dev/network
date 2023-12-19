@@ -1,20 +1,20 @@
 import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
 import { Message, MessageType, NodeType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { Logger, hexToBinary, runAndWaitForEvents3, waitForCondition } from '@streamr/utils'
+import { Logger, runAndWaitForEvents3, waitForCondition } from '@streamr/utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils/utils'
 import { PeerID, PeerIDKey } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { v4 } from 'uuid'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { RoutingMode } from '../../src/dht/routing/RoutingSession'
-import { createRandomNodeId, getNodeIdFromRaw } from '../../src/identifiers'
+import { createRandomNodeId, getNodeIdFromRaw, getRawFromNodeId } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
 // TODO refactor the test to not to use PeerID
 const getPeerId = (node: DhtNode) => {
-    return PeerID.fromValue(hexToBinary(node.getNodeId()))
+    return PeerID.fromValue(getRawFromNodeId(node.getNodeId()))
 }
 
 const NUM_NODES = 30
@@ -35,7 +35,7 @@ describe('Route Message With Mock Connections', () => {
         entryPoint = await createMockConnectionDhtNode(simulator, createRandomNodeId())
 
         entryPointDescriptor = {
-            nodeId: hexToBinary(entryPoint.getNodeId()),
+            nodeId: getRawFromNodeId(entryPoint.getNodeId()),
             type: NodeType.NODEJS
         }
 

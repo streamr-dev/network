@@ -1,5 +1,4 @@
-import { hexToBinary } from '@streamr/utils'
-import { DataKey } from '../identifiers'
+import { DataKey, getRawFromDataKey } from '../identifiers'
 import { Any } from '../proto/google/protobuf/any'
 import { DataEntry, ExternalFindDataRequest, ExternalStoreDataRequest, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { ExternalApiRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
@@ -9,7 +8,7 @@ export class ExternalApiRpcRemote extends RpcRemote<ExternalApiRpcClient> {
 
     async externalFindData(key: DataKey): Promise<DataEntry[]> {
         const request: ExternalFindDataRequest = {
-            key: hexToBinary(key)
+            key: getRawFromDataKey(key)
         }
         const options = this.formDhtRpcOptions({
             // TODO use config option or named constant?
@@ -25,7 +24,7 @@ export class ExternalApiRpcRemote extends RpcRemote<ExternalApiRpcClient> {
 
     async storeData(key: DataKey, data: Any): Promise<PeerDescriptor[]> {
         const request: ExternalStoreDataRequest = {
-            key: hexToBinary(key),
+            key: getRawFromDataKey(key),
             data
         }
         const options = this.formDhtRpcOptions({
