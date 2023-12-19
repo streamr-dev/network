@@ -3,7 +3,9 @@ import {
     DhtNode,
     ITransport,
     PeerDescriptor,
-    EXISTING_CONNECTION_TIMEOUT
+    EXISTING_CONNECTION_TIMEOUT,
+    DhtAddress,
+    getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
 import { StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
 import {
@@ -16,7 +18,6 @@ import {
 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { ProxyDirection, StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Layer0Node } from './Layer0Node'
 import { Layer1Node } from './Layer1Node'
@@ -305,11 +306,11 @@ export class StreamrNode extends EventEmitter<Events> {
         return this.layer0Node!.getLocalPeerDescriptor()
     }
 
-    getNodeId(): NodeID {
+    getNodeId(): DhtAddress {
         return getNodeIdFromPeerDescriptor(this.layer0Node!.getLocalPeerDescriptor())
     }
 
-    getNeighbors(streamPartId: StreamPartID): NodeID[] {
+    getNeighbors(streamPartId: StreamPartID): DhtAddress[] {
         const streamPart = this.streamParts.get(streamPartId)
         return (streamPart !== undefined) && (streamPart.proxied === false)
             ? streamPart.node.getTargetNeighborIds()

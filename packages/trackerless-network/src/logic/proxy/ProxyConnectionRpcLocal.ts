@@ -9,12 +9,11 @@ import {
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IProxyConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
-import { DhtCallContext, ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
+import { DhtAddress, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { DeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { EventEmitter } from 'eventemitter3'
 import { EthereumAddress, Logger, binaryToHex, toEthereumAddress } from '@streamr/utils'
 import { StreamPartID } from '@streamr/protocol'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 const logger = new Logger(module)
 
@@ -31,13 +30,13 @@ interface ProxyConnectionRpcLocalConfig {
 }
 
 export interface Events {
-    newConnection: (nodeId: NodeID) => void
+    newConnection: (nodeId: DhtAddress) => void
 }
 
 export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IProxyConnectionRpc {
 
     private readonly config: ProxyConnectionRpcLocalConfig
-    private readonly connections: Map<NodeID, ProxyConnection> = new Map()
+    private readonly connections: Map<DhtAddress, ProxyConnection> = new Map()
 
     constructor(config: ProxyConnectionRpcLocalConfig) {
         super()
@@ -46,15 +45,15 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
             (msg: ProxyConnectionRequest, context) => this.requestConnection(msg, context))
     }
 
-    getConnection(nodeId: NodeID): ProxyConnection | undefined {
+    getConnection(nodeId: DhtAddress): ProxyConnection | undefined {
         return this.connections.get(nodeId)
     }
 
-    hasConnection(nodeId: NodeID): boolean {
+    hasConnection(nodeId: DhtAddress): boolean {
         return this.connections.has(nodeId)
     }
 
-    removeConnection(nodeId: NodeID): void {
+    removeConnection(nodeId: DhtAddress): void {
         this.connections.delete(nodeId)
     }
 
@@ -64,7 +63,7 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
         this.removeAllListeners()
     }
 
-    getPropagationTargets(msg: StreamMessage): NodeID[] {
+    getPropagationTargets(msg: StreamMessage): DhtAddress[] {
         if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
             try {
                 const recipientId = GroupKeyRequest.fromBinary(msg.content).recipientId
@@ -78,11 +77,11 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
         }
     }
 
-    private getNodeIdsForUserId(userId: EthereumAddress): NodeID[] {
+    private getNodeIdsForUserId(userId: EthereumAddress): DhtAddress[] {
         return Array.from(this.connections.keys()).filter((nodeId) => this.connections.get(nodeId)!.userId === userId)
     }
 
-    private getSubscribers(): NodeID[] {
+    private getSubscribers(): DhtAddress[] {
         return Array.from(this.connections.keys()).filter((key) => this.connections.get(key)!.direction === ProxyDirection.SUBSCRIBE)
     }
 

@@ -4,7 +4,8 @@ import {
     PeerDescriptor,
     ListeningRpcCommunicator,
     Simulator,
-    SimulatorTransport
+    SimulatorTransport,
+    getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
 import {
     HandshakeRpcClient
@@ -13,7 +14,6 @@ import { NodeList } from '../../src/logic/NodeList'
 import { mockConnectionLocker } from '../utils/utils'
 import { StreamPartHandshakeRequest, StreamPartHandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('Handshakes', () => {

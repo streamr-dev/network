@@ -1,6 +1,5 @@
-import { PeerDescriptor, RpcRemote } from '@streamr/dht'
+import { PeerDescriptor, RpcRemote, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { Logger } from '@streamr/utils'
-import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { NeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 

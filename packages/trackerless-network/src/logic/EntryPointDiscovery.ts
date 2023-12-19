@@ -3,12 +3,12 @@ import {
     DhtAddress,
     PeerDescriptor,
     areEqualPeerDescriptors,
-    getDhtAddressFromRaw
+    getDhtAddressFromRaw,
+    getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
 import { StreamPartID } from '@streamr/protocol'
 import { Logger, scheduleAtInterval, wait } from '@streamr/utils'
 import { createHash } from 'crypto'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { Any } from '../proto/google/protobuf/any'
 import { Layer1Node } from './Layer1Node'
 
@@ -70,7 +70,7 @@ export class EntryPointDiscovery {
     private readonly abortController: AbortController
     private readonly config: EntryPointDiscoveryConfig
     private readonly storeInterval: number
-    private readonly networkSplitAvoidedNodes: Set<NodeID> = new Set()
+    private readonly networkSplitAvoidedNodes: Set<DhtAddress> = new Set()
     private isLocalNodeStoredAsEntryPoint = false
     constructor(config: EntryPointDiscoveryConfig) {
         this.config = config
