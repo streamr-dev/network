@@ -1,10 +1,9 @@
 import { wait, waitForCondition } from '@streamr/utils'
 import crypto from 'crypto'
 import { range, sortBy } from 'lodash'
-import { Key } from 'readline'
 import { getDistance } from '../../src/dht/PeerManager'
 import { StoreManager } from '../../src/dht/store/StoreManager'
-import { NodeID, createRandomNodeId, getNodeIdFromRaw } from '../../src/identifiers'
+import { DataKey, NodeID, createRandomNodeId, getNodeIdFromRaw } from '../../src/identifiers'
 import { NodeType, ReplicateDataRequest } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { getDataKeyFromRaw } from '../../src/identifiers'
 
@@ -25,7 +24,7 @@ describe('StoreManager', () => {
             localNodeId: Uint8Array,
             closestNeighbors: Uint8Array[],
             replicateData: (request: ReplicateDataRequest) => unknown,
-            setStale: (key: Key, creator: NodeID, stale: boolean) => unknown
+            setStale: (key: DataKey, creator: NodeID, stale: boolean) => unknown
         ): StoreManager => {
             const getClosestNeighborsTo = () => {
                 return closestNeighbors.map((nodeId) => ({ nodeId, type: NodeType.NODEJS }))
@@ -50,7 +49,7 @@ describe('StoreManager', () => {
 
             it('new node is within redundancy factor', async () => {
                 const replicateData = jest.fn<undefined, [ReplicateDataRequest]>()
-                const setStale = jest.fn<undefined, [Key, NodeID]>()
+                const setStale = jest.fn<undefined, [DataKey, NodeID]>()
                 const manager = createStoreManager(
                     NODES_CLOSEST_TO_DATA[0],
                     [NODES_CLOSEST_TO_DATA[1], NODES_CLOSEST_TO_DATA[3], NODES_CLOSEST_TO_DATA[4]],
@@ -67,7 +66,7 @@ describe('StoreManager', () => {
     
             it('new node is not within redundancy factor', async () => {
                 const replicateData = jest.fn<undefined, [ReplicateDataRequest]>()
-                const setStale = jest.fn<undefined, [Key, NodeID]>()
+                const setStale = jest.fn<undefined, [DataKey, NodeID]>()
                 const manager = createStoreManager(
                     NODES_CLOSEST_TO_DATA[0],
                     [NODES_CLOSEST_TO_DATA[1], NODES_CLOSEST_TO_DATA[2], NODES_CLOSEST_TO_DATA[3]],
@@ -85,7 +84,7 @@ describe('StoreManager', () => {
 
             it('this node is within redundancy factor', async () => {
                 const replicateData = jest.fn<undefined, [ReplicateDataRequest]>()
-                const setStale = jest.fn<undefined, [Key, NodeID]>()
+                const setStale = jest.fn<undefined, [DataKey, NodeID]>()
                 const manager = createStoreManager(
                     NODES_CLOSEST_TO_DATA[1],
                     [NODES_CLOSEST_TO_DATA[0], NODES_CLOSEST_TO_DATA[2], NODES_CLOSEST_TO_DATA[3]],
@@ -100,7 +99,7 @@ describe('StoreManager', () => {
 
             it('this node is not within redundancy factor', async () => {
                 const replicateData = jest.fn<undefined, [ReplicateDataRequest]>()
-                const setStale = jest.fn<undefined, [Key, NodeID]>()
+                const setStale = jest.fn<undefined, [DataKey, NodeID]>()
                 const manager = createStoreManager(
                     NODES_CLOSEST_TO_DATA[3],
                     [NODES_CLOSEST_TO_DATA[0], NODES_CLOSEST_TO_DATA[1], NODES_CLOSEST_TO_DATA[2]],
@@ -116,7 +115,7 @@ describe('StoreManager', () => {
 
             it('this node has less than redundancyFactor neighbors', async () => {
                 const replicateData = jest.fn<undefined, [ReplicateDataRequest]>()
-                const setStale = jest.fn<undefined, [Key, NodeID]>()
+                const setStale = jest.fn<undefined, [DataKey, NodeID]>()
                 const manager = createStoreManager(
                     NODES_CLOSEST_TO_DATA[3],
                     [NODES_CLOSEST_TO_DATA[0], NODES_CLOSEST_TO_DATA[1]],
