@@ -19,7 +19,8 @@ import { RecursiveOperationResult } from './RecursiveOperationManager'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationSessionRpcLocal } from './RecursiveOperationSessionRpcLocal'
-import { NodeID, areEqualNodeIds, getNodeIdFromRaw } from '../../identifiers'
+import { DataKey, NodeID, areEqualNodeIds, getNodeIdFromRaw } from '../../identifiers'
+import { hexToBinary } from '@streamr/utils'
 
 export interface RecursiveOperationSessionEvents {
     completed: () => void
@@ -27,7 +28,7 @@ export interface RecursiveOperationSessionEvents {
 
 export interface RecursiveOperationSessionConfig {
     transport: ITransport
-    targetId: Uint8Array
+    targetId: NodeID | DataKey
     localPeerDescriptor: PeerDescriptor
     waitedRoutingPathCompletions: number
     operation: RecursiveOperation
@@ -51,7 +52,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         super()
         this.config = config
         this.results = new SortedContactList({
-            referenceId: getNodeIdFromRaw(config.targetId), 
+            referenceId: config.targetId, 
             maxSize: 10,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             emitEvents: false
@@ -94,7 +95,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         const routeMessage: RouteMessageWrapper = {
             message: msg,
             requestId: v4(),
-            target: this.config.targetId,
+            target: hexToBinary(this.config.targetId),
             sourcePeer: this.config.localPeerDescriptor,
             reachableThrough: [],
             routingPath: []

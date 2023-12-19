@@ -15,7 +15,7 @@ import { SortedContactList } from '../contact/SortedContactList'
 import { Contact } from '../contact/Contact'
 import { ServiceID } from '../../types/ServiceID'
 import { findIndex } from 'lodash'
-import { NodeID, areEqualNodeIds, getNodeIdFromRaw, getDataKeyFromRaw, DataKey, getRawFromDataKey } from '../../identifiers'
+import { NodeID, areEqualNodeIds, getNodeIdFromRaw, getDataKeyFromRaw, DataKey } from '../../identifiers'
 import { StoreRpcLocal } from './StoreRpcLocal'
 import { getDistance } from '../PeerManager'
 
@@ -108,7 +108,7 @@ export class StoreManager {
 
     public async storeDataToDht(key: DataKey, data: Any, creator: NodeID): Promise<PeerDescriptor[]> {
         logger.debug(`Storing data to DHT ${this.config.serviceId}`)
-        const result = await this.config.recursiveOperationManager.execute(getRawFromDataKey(key), RecursiveOperation.FIND_NODE)
+        const result = await this.config.recursiveOperationManager.execute(key, RecursiveOperation.FIND_NODE)
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
         const ttl = this.config.highestTtl // ToDo: make TTL decrease according to some nice curve
