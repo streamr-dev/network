@@ -437,13 +437,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     private getConnectedEntryPoints(): PeerDescriptor[] {
-        if (!this.config.entryPoints) {
-            return []
-        } else {
-            return this.config.entryPoints.filter((entryPoint) =>
-                this.peerManager!.connections.has(getNodeIdFromPeerDescriptor(entryPoint))
-            )
-        }
+        return this.config.entryPoints !== undefined ? this.config.entryPoints.filter((entryPoint) =>
+            this.peerManager!.connections.has(getNodeIdFromPeerDescriptor(entryPoint))
+        ) : []
     }
 
     public async joinDht(entryPointDescriptors: PeerDescriptor[], doAdditionalRandomPeerDiscovery?: boolean, retry?: boolean): Promise<void> {
