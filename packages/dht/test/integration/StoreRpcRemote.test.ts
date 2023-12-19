@@ -11,8 +11,6 @@ import { createMockDataEntry } from '../utils/mock/mockDataEntry'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
 
-const SERVICE_ID = 'test'
-
 describe('StoreRpcRemote', () => {
 
     let rpcRemote: StoreRpcRemote
@@ -38,7 +36,7 @@ describe('StoreRpcRemote', () => {
         serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
-        rpcRemote = new StoreRpcRemote(clientPeerDescriptor, serverPeerDescriptor, SERVICE_ID, clientRpcCommunicator, StoreRpcClient)
+        rpcRemote = new StoreRpcRemote(clientPeerDescriptor, serverPeerDescriptor, clientRpcCommunicator, StoreRpcClient)
     })
 
     it('storeData happy path', async () => {

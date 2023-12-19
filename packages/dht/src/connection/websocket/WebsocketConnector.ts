@@ -264,7 +264,6 @@ export class WebsocketConnector {
             const remoteConnector = new WebsocketConnectorRpcRemote(
                 localPeerDescriptor,
                 targetPeerDescriptor,
-                'DUMMY',
                 this.rpcCommunicator,
                 WebsocketConnectorRpcClient
             )

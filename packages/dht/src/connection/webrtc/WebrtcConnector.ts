@@ -170,7 +170,6 @@ export class WebrtcConnector {
         const remoteConnector = new WebrtcConnectorRpcRemote(
             this.localPeerDescriptor!,
             targetPeerDescriptor,
-            'DUMMY',
             this.rpcCommunicator,
             WebrtcConnectorRpcClient
         )

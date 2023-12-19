@@ -39,7 +39,6 @@ describe('NodeList', () => {
         return new DeliveryRpcRemote(
             createMockPeerDescriptor(),
             peerDescriptor,
-            streamPartId,
             mockCommunicator,
             DeliveryRpcClient
         )

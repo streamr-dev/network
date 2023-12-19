@@ -97,7 +97,7 @@ export class Handshaker {
                 return this.handshakeWithTarget(target, otherNodeId)
             })
         )
-        results.map((res, i) => {
+        results.forEach((res, i) => {
             if (res.status !== 'fulfilled' || !res.value) {
                 excludedIds.push(getNodeIdFromPeerDescriptor(targets[i].getPeerDescriptor()))
             }
@@ -121,6 +121,7 @@ export class Handshaker {
         const targetNodeId = getNodeIdFromPeerDescriptor(targetNeighbor.getPeerDescriptor())
         this.ongoingHandshakes.add(targetNodeId)
         const result = await targetNeighbor.handshake(
+            this.config.streamPartId,
             this.config.targetNeighbors.getIds(),
             concurrentNodeId
         )
@@ -140,6 +141,7 @@ export class Handshaker {
         const targetNodeId = getNodeIdFromPeerDescriptor(targetNeighbor.getPeerDescriptor())
         this.ongoingHandshakes.add(targetNodeId)
         const result = await targetNeighbor.handshake(
+            this.config.streamPartId,
             this.config.targetNeighbors.getIds(),
             undefined,
             interleaveSourceId
@@ -156,7 +158,6 @@ export class Handshaker {
         return new HandshakeRpcRemote(
             this.config.localPeerDescriptor,
             targetPeerDescriptor,
-            this.config.streamPartId,
             this.config.rpcCommunicator,
             HandshakeRpcClient,
             this.config.rpcRequestTimeout
@@ -167,7 +168,6 @@ export class Handshaker {
         return new DeliveryRpcRemote(
             this.config.localPeerDescriptor,
             targetPeerDescriptor,
-            this.config.streamPartId,
             this.config.rpcCommunicator,
             DeliveryRpcClient,
             this.config.rpcRequestTimeout

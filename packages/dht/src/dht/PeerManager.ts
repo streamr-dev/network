@@ -236,7 +236,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             emitEvents: false,
             excludedNodeIds
         }) 
-        this.bucket.toArray().map((contact) => closest.addContact(contact))
+        this.bucket.toArray().forEach((contact) => closest.addContact(contact))
         return closest.getClosestContacts(limit)
     }
 
