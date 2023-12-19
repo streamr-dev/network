@@ -6,6 +6,7 @@ import { getDistance } from '../../src/dht/PeerManager'
 import { StoreManager } from '../../src/dht/store/StoreManager'
 import { NodeID, createRandomNodeId, getNodeIdFromRaw } from '../../src/identifiers'
 import { NodeType, ReplicateDataRequest } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { getDataKeyFromRaw } from '../../src/identifiers'
 
 const DATA_ENTRY = {
     key: createRandomNodeId(),
@@ -110,7 +111,7 @@ describe('StoreManager', () => {
                 await wait(50)
                 expect(replicateData).not.toHaveBeenCalled()
                 expect(setStale).toHaveBeenCalledTimes(1)
-                expect(setStale).toHaveBeenCalledWith(DATA_ENTRY.key, getNodeIdFromRaw(DATA_ENTRY.creator), true)
+                expect(setStale).toHaveBeenCalledWith(getDataKeyFromRaw(DATA_ENTRY.key), getNodeIdFromRaw(DATA_ENTRY.creator), true)
             })
 
             it('this node has less than redundancyFactor neighbors', async () => {

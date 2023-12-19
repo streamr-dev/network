@@ -10,7 +10,7 @@ import {
 import { Router } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
 import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { Logger, areEqualBinaries, hexToBinary, runAndWaitForEvents3, wait } from '@streamr/utils'
+import { Logger, areEqualBinaries, runAndWaitForEvents3, wait } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RecursiveOperationSessionRpcRemote } from './RecursiveOperationSessionRpcRemote'
 import { RecursiveOperationSession, RecursiveOperationSessionEvents } from './RecursiveOperationSession'
@@ -24,7 +24,7 @@ import { getPreviousPeer } from '../routing/getPreviousPeer'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationRpcLocal } from './RecursiveOperationRpcLocal'
-import { NodeID, getNodeIdFromRaw, getRawFromNodeId } from '../../identifiers'
+import { NodeID, getDataKeyFromRaw, getNodeIdFromRaw, getRawFromNodeId } from '../../identifiers'
 import { getDistance } from '../PeerManager'
 
 interface RecursiveOperationManagerConfig {
@@ -96,7 +96,7 @@ export class RecursiveOperationManager {
             }
         })
         if (this.config.connections.size === 0) {
-            const data = this.config.localDataStore.getEntries(targetId)
+            const data = this.config.localDataStore.getEntries(getDataKeyFromRaw(targetId))
             session.onResponseReceived(
                 [this.config.localPeerDescriptor],
                 [this.config.localPeerDescriptor],
@@ -124,12 +124,12 @@ export class RecursiveOperationManager {
             await wait(50)
         }
         if (operation === RecursiveOperation.FETCH_DATA) {
-            const dataEntries = Array.from(this.config.localDataStore.getEntries(targetId).values())
+            const dataEntries = Array.from(this.config.localDataStore.getEntries(getDataKeyFromRaw(targetId)).values())
             if (dataEntries.length > 0) {
                 this.sendResponse([], this.config.localPeerDescriptor, session.getId(), [], dataEntries, true)
             }
         } else if (operation === RecursiveOperation.DELETE_DATA) {
-            this.config.localDataStore.markAsDeleted(targetId, getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor))
+            this.config.localDataStore.markAsDeleted(getDataKeyFromRaw(targetId), getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor))
         }
         this.ongoingSessions.delete(session.getId())
         session.stop()
@@ -169,15 +169,14 @@ export class RecursiveOperationManager {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
-        const targetId = getNodeIdFromRaw(routedMessage.target)
         const request = (routedMessage.message!.body as { recursiveOperationRequest: RecursiveOperationRequest }).recursiveOperationRequest
         // TODO use config option or named constant?
         const closestPeersToDestination = this.getClosestConnections(routedMessage.target, 5)
         const dataEntries = (request.operation === RecursiveOperation.FETCH_DATA) 
-            ? Array.from(this.config.localDataStore.getEntries(hexToBinary(targetId)).values())
+            ? Array.from(this.config.localDataStore.getEntries(getDataKeyFromRaw(routedMessage.target)).values())
             : []
         if (request.operation === RecursiveOperation.DELETE_DATA) {
-            this.config.localDataStore.markAsDeleted(hexToBinary(targetId), getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!))
+            this.config.localDataStore.markAsDeleted(getDataKeyFromRaw(routedMessage.target), getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!))
         }
         if (areEqualBinaries(this.config.localPeerDescriptor.nodeId, routedMessage.target)) {
             // TODO this is also very similar case to what we do at line 255, could simplify the code paths?
@@ -197,7 +196,7 @@ export class RecursiveOperationManager {
                     (
                         closestPeersToDestination.length > 0 
                         && getPreviousPeer(routedMessage) 
-                        && !this.isPeerCloserToIdThanSelf(closestPeersToDestination[0], targetId)
+                        && !this.isPeerCloserToIdThanSelf(closestPeersToDestination[0], getNodeIdFromRaw(routedMessage.target))
                     )
                 this.sendResponse(
                     routedMessage.routingPath,

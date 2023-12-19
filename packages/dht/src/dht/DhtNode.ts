@@ -50,7 +50,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
 import { PeerManager } from './PeerManager'
 import { ServiceID } from '../types/ServiceID'
-import { NodeID, getNodeIdFromRaw } from '../identifiers'
+import { DataKey, NodeID, getDataKeyFromRaw, getNodeIdFromRaw } from '../identifiers'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
 
 export interface DhtNodeEvents {
@@ -276,8 +276,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             highestTtl: this.config.storeHighestTtl,
             redundancyFactor: this.config.storageRedundancyFactor,
             localDataStore: this.localDataStore,
-            getClosestNeighborsTo: (id: Uint8Array, n?: number) => {
-                return this.peerManager!.getClosestNeighborsTo(getNodeIdFromRaw(id), n).map((n) => n.getPeerDescriptor())
+            getClosestNeighborsTo: (key: DataKey, n?: number) => {
+                return this.peerManager!.getClosestNeighborsTo(key, n).map((n) => n.getPeerDescriptor())
             },
             createRpcRemote: (contact: PeerDescriptor) => {
                 return new StoreRpcRemote(
@@ -459,7 +459,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.storeDataViaPeer(key, data, sample(this.config.entryPoints)!)
         }
-        return this.storeManager!.storeDataToDht(key, data, creator ?? getNodeIdFromPeerDescriptor(this.localPeerDescriptor!))
+        return this.storeManager!.storeDataToDht(getDataKeyFromRaw(key), data, creator ?? getNodeIdFromPeerDescriptor(this.localPeerDescriptor!))
     }
 
     public async storeDataViaPeer(key: Uint8Array, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {

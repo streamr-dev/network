@@ -10,8 +10,9 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { getNodeIdFromPeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
-import { NodeID } from '../../src/identifiers'
+import { NodeID, getRawFromDataKey } from '../../src/identifiers'
 import { createMockDataEntry } from '../utils/mock/mockDataEntry'
+import { getDataKeyFromRaw } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
@@ -74,13 +75,13 @@ describe('Replicate data from node to node in DHT', () => {
     })
 
     it('Data replicates to the closest node no matter where it is stored', async () => {
-        const dataKey = PeerID.fromString('3232323e12r31r3')
-        const data = createMockDataEntry({ key: dataKey.value })
+        const dataKey = getDataKeyFromRaw(PeerID.fromString('3232323e12r31r3').value)
+        const data = createMockDataEntry({ key: hexToBinary(dataKey) })
 
         // calculate offline which node is closest to the data
 
         const sortedList = new SortedContactList<Contact>({ 
-            referenceId: dataKey.toNodeId(),
+            referenceId: dataKey,
             maxSize: 10000, 
             allowToContainReferenceId: true, 
             emitEvents: false 
@@ -103,7 +104,7 @@ describe('Replicate data from node to node in DHT', () => {
         await nodes[0].joinDht([entrypointDescriptor])
 
         logger.info('storing data to node 0')
-        const successfulStorers = await nodes[0].storeDataToDht(dataKey.value, data.data!)
+        const successfulStorers = await nodes[0].storeDataToDht(getRawFromDataKey(dataKey), data.data!)
         expect(successfulStorers.length).toBe(1)
         logger.info('data successfully stored to node 0')
 
@@ -114,7 +115,8 @@ describe('Replicate data from node to node in DHT', () => {
             let hasDataMarker = ''
             
             // @ts-expect-error private field
-            if (node.localDataStore.getEntries(dataKey.value)) {
+            const store = node.localDataStore
+            if (store.getEntries(dataKey)) {
                 hasDataMarker = '<-'
             }
 
@@ -142,7 +144,8 @@ describe('Replicate data from node to node in DHT', () => {
             let hasDataMarker = ''
 
             // @ts-expect-error private field
-            if (node.localDataStore.getEntries(dataKey.value)) {
+            const store = node.localDataStore
+            if (store.getEntries(dataKey)) {
                 hasDataMarker = '<-'
             }
 
@@ -152,12 +155,13 @@ describe('Replicate data from node to node in DHT', () => {
         const closestNode = nodesById.get(getNodeIdFromPeerDescriptor(closest[0].getPeerDescriptor()))!
 
         // @ts-expect-error private field
-        expect(closestNode.localDataStore.getEntries(dataKey.value).size).toBeGreaterThanOrEqual(1)
+        const store = closestNode.localDataStore
+        expect(store.getEntries(dataKey).size).toBeGreaterThanOrEqual(1)
     }, 180000)
 
     it('Data replicates to the last remaining node if all other nodes leave gracefully', async () => {
-        const dataKey = PeerID.fromString('3232323e12r31r3')
-        const data = createMockDataEntry({ key: dataKey.value })
+        const dataKey = getDataKeyFromRaw(PeerID.fromString('3232323e12r31r3').value)
+        const data = createMockDataEntry({ key: hexToBinary(dataKey) })
 
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
         await Promise.all(
@@ -173,7 +177,7 @@ describe('Replicate data from node to node in DHT', () => {
         const randomIndex = Math.floor(Math.random() * nodes.length)
         logger.info('storing data to a random node: ' + randomIndex)
 
-        const successfulStorers = await nodes[randomIndex].storeDataToDht(dataKey.value, data.data!)
+        const successfulStorers = await nodes[randomIndex].storeDataToDht(getRawFromDataKey(dataKey), data.data!)
 
         logger.info('data successfully stored to ' + successfulStorers + ' nodes')
 
@@ -187,10 +191,10 @@ describe('Replicate data from node to node in DHT', () => {
             const index = Math.floor(Math.random() * randomIndices.length)
             const nodeIndex = randomIndices[index]
             randomIndices.splice(index, 1)
-
+            // @ts-expect-error private field
+            const store = nodes[nodeIndex].localDataStore
             logger.info('Stopping node ' + nodeIndex + ' ' +
-                // @ts-expect-error private field
-                (nodes[nodeIndex].localDataStore.getEntries(dataKey.value) ? ', has data' : ' does not have data'))
+                (store.getEntries(dataKey) ? ', has data' : ' does not have data'))
 
             await nodes[nodeIndex].stop()
         }
@@ -198,10 +202,9 @@ describe('Replicate data from node to node in DHT', () => {
         logger.info('after random graceful leaving, node ' + randomIndices[0] + ' is left')
 
         // @ts-expect-error private field
-        logger.info('data of ' + randomIndices[0] + ' was ' + nodes[randomIndices[0]].localDataStore.getEntries(dataKey.value))
-
-        // @ts-expect-error private field
-        expect(nodes[randomIndices[0]].localDataStore.getEntries(dataKey.value).size).toBeGreaterThanOrEqual(1)
+        const firstStore = nodes[randomIndices[0]].localDataStore
+        logger.info('data of ' + randomIndices[0] + ' was ' + firstStore.getEntries(dataKey))
+        expect(firstStore.getEntries(dataKey).size).toBeGreaterThanOrEqual(1)
 
     }, 180000)
 })
