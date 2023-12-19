@@ -1,11 +1,11 @@
 import { DiscoverySession } from './DiscoverySession'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
-import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import { ConnectionManager } from '../../connection/ConnectionManager'
 import { PeerManager } from '../PeerManager'
-import { createRandomNodeId } from '../../identifiers'
+import { NodeID, createRandomNodeId, getNodeIdFromRaw } from '../../identifiers'
 import { ServiceID } from '../../types/ServiceID'
 
 interface PeerDiscoveryConfig {
@@ -49,17 +49,17 @@ export class PeerDiscovery {
         }
         this.config.connectionManager?.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
         this.config.peerManager.handleNewPeers([entryPointDescriptor])
-        const targetId = peerIdFromPeerDescriptor(this.config.localPeerDescriptor).value
+        const targetId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
         const sessions = [this.createSession(targetId)]
         if (doAdditionalRandomPeerDiscovery) {
-            sessions.push(this.createSession(createRandomNodeId()))
+            sessions.push(this.createSession(getNodeIdFromRaw(createRandomNodeId())))
         }
         await this.runSessions(sessions, entryPointDescriptor, retry)
         this.config.connectionManager?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
 
     }
 
-    private createSession(targetId: Uint8Array): DiscoverySession {
+    private createSession(targetId: NodeID): DiscoverySession {
         const sessionOptions = {
             targetId,
             parallelism: this.config.parallelism,
@@ -132,8 +132,8 @@ export class PeerDiscovery {
         )
         await Promise.allSettled(
             nodes.map(async (peer: DhtNodeRpcRemote) => {
-                const contacts = await peer.getClosestPeers(this.config.localPeerDescriptor.nodeId!)
-                this.config.peerManager.handleNewPeers(contacts)    
+                const contacts = await peer.getClosestPeers(getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor))
+                this.config.peerManager.handleNewPeers(contacts)
             })
         )
     }

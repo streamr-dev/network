@@ -5,7 +5,7 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerManager, getDistance } from '../PeerManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { NodeID, NodeIDOrDataKeyRaw, getNodeIdFromRaw, getRawFromNodeId } from '../../identifiers'
+import { NodeID, getRawFromNodeId } from '../../identifiers'
 
 const logger = new Logger(module)
 
@@ -14,7 +14,7 @@ interface DiscoverySessionEvents {
 }
 
 interface DiscoverySessionConfig {
-    targetId: NodeIDOrDataKeyRaw
+    targetId: NodeID
     parallelism: number
     noProgressLimit: number
     peerManager: PeerManager
@@ -57,11 +57,12 @@ export class DiscoverySession {
             return
         }
         this.ongoingClosestPeersRequests.delete(nodeId)
-        const oldClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(getNodeIdFromRaw(this.config.targetId), 1)[0]
-        const oldClosestDistance = getDistance(this.config.targetId, getRawFromNodeId(oldClosestNeighbor.getNodeId()))
+        const targetId = getRawFromNodeId(this.config.targetId)
+        const oldClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
+        const oldClosestDistance = getDistance(targetId, getRawFromNodeId(oldClosestNeighbor.getNodeId()))
         this.addNewContacts(contacts)
-        const newClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(getNodeIdFromRaw(this.config.targetId), 1)[0]
-        const newClosestDistance = getDistance(this.config.targetId, getRawFromNodeId(newClosestNeighbor.getNodeId()))
+        const newClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
+        const newClosestDistance = getDistance(targetId, getRawFromNodeId(newClosestNeighbor.getNodeId()))
         if (newClosestDistance >= oldClosestDistance) {
             this.noProgressCounter++
         }
@@ -80,7 +81,7 @@ export class DiscoverySession {
             return
         }
         const uncontacted = this.config.peerManager.getClosestContactsTo(
-            getNodeIdFromRaw(this.config.targetId),
+            this.config.targetId,
             this.config.parallelism,
             this.contactedPeers
         )
