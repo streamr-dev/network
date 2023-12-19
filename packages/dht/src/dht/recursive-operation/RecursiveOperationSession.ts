@@ -19,7 +19,7 @@ import { RecursiveOperationResult } from './RecursiveOperationManager'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationSessionRpcLocal } from './RecursiveOperationSessionRpcLocal'
-import { NodeID, areEqualNodeIds, getNodeIdFromBinary } from '../../identifiers'
+import { NodeID, areEqualNodeIds, getNodeIdFromRaw } from '../../identifiers'
 
 export interface RecursiveOperationSessionEvents {
     completed: () => void
@@ -51,7 +51,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         super()
         this.config = config
         this.results = new SortedContactList({
-            referenceId: getNodeIdFromBinary(config.targetId), 
+            referenceId: getNodeIdFromRaw(config.targetId), 
             maxSize: 10,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             emitEvents: false
@@ -172,7 +172,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
 
     private processFoundData(dataEntries: DataEntry[]): void {
         dataEntries.forEach((entry) => {
-            const creatorNodeId = getNodeIdFromBinary(entry.creator)
+            const creatorNodeId = getNodeIdFromRaw(entry.creator)
             const existingEntry = this.foundData.get(creatorNodeId)
             if (!existingEntry || existingEntry.createdAt! < entry.createdAt! 
                 || (existingEntry.createdAt! <= entry.createdAt! && entry.deleted)) {

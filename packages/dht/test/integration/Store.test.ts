@@ -1,6 +1,6 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { getNodeIdFromBinary } from '../../src/identifiers'
+import { getNodeIdFromRaw } from '../../src/identifiers'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
@@ -64,13 +64,13 @@ describe('Storing data in DHT', () => {
         const storingNode = getRandomNode()
         const entry = createMockDataEntry()
         const requestor = createMockPeerDescriptor()
-        const successfulStorers = await storingNode.storeDataToDht(entry.key, entry.data!, getNodeIdFromBinary(requestor.nodeId))
+        const successfulStorers = await storingNode.storeDataToDht(entry.key, entry.data!, getNodeIdFromRaw(requestor.nodeId))
         expect(successfulStorers.length).toBeGreaterThan(4)
         const fetchingNode = getRandomNode()
         const results = await fetchingNode.getDataFromDht(entry.key)
         results.forEach((result) => {
             expectEqualData(result, entry)
-            expect(getNodeIdFromBinary(result.creator)).toEqual(getNodeIdFromPeerDescriptor(requestor))
+            expect(getNodeIdFromRaw(result.creator)).toEqual(getNodeIdFromPeerDescriptor(requestor))
         })
     }, 30000)
 })

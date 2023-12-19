@@ -16,12 +16,12 @@ export const areEqualNodeIds = (nodeId1: NodeID, nodeId2: NodeID): boolean => {
     return nodeId1 === nodeId2
 }
 
-// TODO maybe this is not needed and we can use just getNodeIdFromBinary?
+// TODO maybe this is not needed and we can use just getNodeIdFromRaw?
 export const getNodeIdFromDataKey = (key: Uint8Array): NodeID => {
-    return getNodeIdFromBinary(key)
+    return getNodeIdFromRaw(key)
 }
 
 // TODO should we have similar method to convert nodeId to bucketId (which is just hexToBinary)
-export const getNodeIdFromBinary = (id: Uint8Array): NodeID => {
+export const getNodeIdFromRaw = (id: Uint8Array): NodeID => {
     return binaryToHex(id) as unknown as NodeID
 }

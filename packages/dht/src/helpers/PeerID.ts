@@ -2,7 +2,7 @@ import { BrandedString, binaryToHex } from '@streamr/utils'
 import { UUID } from './UUID'
 import { IllegalArguments } from './errors'
 import crypto from 'crypto'
-import { NodeID, getNodeIdFromBinary } from '../identifiers'
+import { NodeID, getNodeIdFromRaw } from '../identifiers'
 
 export type PeerIDKey = BrandedString<'PeerIDKey'>
 
@@ -77,7 +77,7 @@ export class PeerID {
     }
 
     toNodeId(): NodeID {
-        return getNodeIdFromBinary(this.data)
+        return getNodeIdFromRaw(this.data)
     }
 
     get value(): Uint8Array {

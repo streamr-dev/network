@@ -4,7 +4,7 @@ import { range, sortBy } from 'lodash'
 import { Key } from 'readline'
 import { getDistance } from '../../src/dht/PeerManager'
 import { StoreManager } from '../../src/dht/store/StoreManager'
-import { NodeID, createRandomNodeId, getNodeIdFromBinary } from '../../src/identifiers'
+import { NodeID, createRandomNodeId, getNodeIdFromRaw } from '../../src/identifiers'
 import { NodeType, ReplicateDataRequest } from '../../src/proto/packages/dht/protos/DhtRpc'
 
 const DATA_ENTRY = {
@@ -13,7 +13,7 @@ const DATA_ENTRY = {
 }
 const NODES_CLOSEST_TO_DATA = sortBy(
     range(5).map(() => createRandomNodeId()),
-    (id: Uint8Array) => getDistance(getNodeIdFromBinary(id), getNodeIdFromBinary(DATA_ENTRY.key))
+    (id: Uint8Array) => getDistance(getNodeIdFromRaw(id), getNodeIdFromRaw(DATA_ENTRY.key))
 )
 
 describe('StoreManager', () => {
@@ -110,7 +110,7 @@ describe('StoreManager', () => {
                 await wait(50)
                 expect(replicateData).not.toHaveBeenCalled()
                 expect(setStale).toHaveBeenCalledTimes(1)
-                expect(setStale).toHaveBeenCalledWith(DATA_ENTRY.key, getNodeIdFromBinary(DATA_ENTRY.creator), true)
+                expect(setStale).toHaveBeenCalledWith(DATA_ENTRY.key, getNodeIdFromRaw(DATA_ENTRY.creator), true)
             })
 
             it('this node has less than redundancyFactor neighbors', async () => {

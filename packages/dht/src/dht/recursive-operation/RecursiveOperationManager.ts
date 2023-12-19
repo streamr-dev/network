@@ -24,7 +24,7 @@ import { getPreviousPeer } from '../routing/getPreviousPeer'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationRpcLocal } from './RecursiveOperationRpcLocal'
-import { NodeID, getNodeIdFromBinary } from '../../identifiers'
+import { NodeID, getNodeIdFromRaw } from '../../identifiers'
 import { getDistance } from '../PeerManager'
 
 interface RecursiveOperationManagerConfig {
@@ -169,7 +169,7 @@ export class RecursiveOperationManager {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
-        const targetId = getNodeIdFromBinary(routedMessage.target)
+        const targetId = getNodeIdFromRaw(routedMessage.target)
         const request = (routedMessage.message!.body as { recursiveOperationRequest: RecursiveOperationRequest }).recursiveOperationRequest
         // TODO use config option or named constant?
         const closestPeersToDestination = this.getClosestConnections(routedMessage.target, 5)
@@ -215,7 +215,7 @@ export class RecursiveOperationManager {
     private getClosestConnections(nodeId: Uint8Array, limit: number): PeerDescriptor[] {
         const connectedPeers = Array.from(this.config.connections.values())
         const closestPeers = new SortedContactList<DhtNodeRpcRemote>({
-            referenceId: getNodeIdFromBinary(nodeId),
+            referenceId: getNodeIdFromRaw(nodeId),
             maxSize: limit,
             allowToContainReferenceId: true,
             emitEvents: false

@@ -5,7 +5,7 @@ import { PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper
 import { IRouterRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { DuplicateDetector } from './DuplicateDetector'
 import { RoutingMode } from './RoutingSession'
-import { getNodeIdFromBinary } from '../../identifiers'
+import { getNodeIdFromRaw } from '../../identifiers'
 
 interface RouterRpcLocalConfig {
     doRouteMessage: (routedMessage: RouteMessageWrapper, mode?: RoutingMode) => RouteMessageAck
@@ -37,7 +37,7 @@ export class RouterRpcLocal implements IRouterRpc {
     async routeMessage(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
         if (this.config.duplicateRequestDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
             logger.trace(`Routing message ${routedMessage.requestId} from ${getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!)} `
-                + `to ${getNodeIdFromBinary(routedMessage.target)} is likely a duplicate`)
+                + `to ${getNodeIdFromRaw(routedMessage.target)} is likely a duplicate`)
             return createRouteMessageAck(routedMessage, RouteMessageError.DUPLICATE)
         }
         logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
@@ -56,7 +56,7 @@ export class RouterRpcLocal implements IRouterRpc {
     async forwardMessage(forwardMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
         if (this.config.duplicateRequestDetector.isMostLikelyDuplicate(forwardMessage.requestId)) {
             logger.trace(`Forwarding message ${forwardMessage.requestId} from ${getNodeIdFromPeerDescriptor(forwardMessage.sourcePeer!)} `
-                + `to ${getNodeIdFromBinary(forwardMessage.target)} is likely a duplicate`)
+                + `to ${getNodeIdFromRaw(forwardMessage.target)} is likely a duplicate`)
             return createRouteMessageAck(forwardMessage, RouteMessageError.DUPLICATE)
         }
         logger.trace(`Processing received forward routeMessage ${forwardMessage.requestId}`)

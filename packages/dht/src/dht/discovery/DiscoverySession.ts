@@ -5,7 +5,7 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerManager, getDistance } from '../PeerManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { NodeID, getNodeIdFromBinary } from '../../identifiers'
+import { NodeID, getNodeIdFromRaw } from '../../identifiers'
 
 const logger = new Logger(module)
 
@@ -57,11 +57,11 @@ export class DiscoverySession {
             return
         }
         this.ongoingClosestPeersRequests.delete(nodeId)
-        const oldClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(getNodeIdFromBinary(this.config.targetId), 1)[0]
-        const oldClosestDistance = getDistance(getNodeIdFromBinary(this.config.targetId), oldClosestNeighbor.getNodeId())
+        const oldClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(getNodeIdFromRaw(this.config.targetId), 1)[0]
+        const oldClosestDistance = getDistance(getNodeIdFromRaw(this.config.targetId), oldClosestNeighbor.getNodeId())
         this.addNewContacts(contacts)
-        const newClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(getNodeIdFromBinary(this.config.targetId), 1)[0]
-        const newClosestDistance = getDistance(getNodeIdFromBinary(this.config.targetId), newClosestNeighbor.getNodeId())
+        const newClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(getNodeIdFromRaw(this.config.targetId), 1)[0]
+        const newClosestDistance = getDistance(getNodeIdFromRaw(this.config.targetId), newClosestNeighbor.getNodeId())
         if (newClosestDistance >= oldClosestDistance) {
             this.noProgressCounter++
         }
@@ -80,7 +80,7 @@ export class DiscoverySession {
             return
         }
         const uncontacted = this.config.peerManager.getClosestContactsTo(
-            getNodeIdFromBinary(this.config.targetId),
+            getNodeIdFromRaw(this.config.targetId),
             this.config.parallelism,
             this.contactedPeers
         )

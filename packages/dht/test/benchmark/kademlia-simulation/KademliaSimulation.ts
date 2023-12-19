@@ -2,7 +2,7 @@
 
 import { SimulationNode } from './SimulationNode'
 import fs from 'fs'
-import { getNodeIdFromBinary } from '../../../src/identifiers'
+import { getNodeIdFromRaw } from '../../../src/identifiers'
 
 export class KademliaSimulation {
     
@@ -25,7 +25,7 @@ export class KademliaSimulation {
 
     public run(): void {
         for (let i = 0; i < KademliaSimulation.NUM_NODES; i++) {
-            const node = new SimulationNode(getNodeIdFromBinary(Buffer.from(this.dhtIds[i].data.slice(0, KademliaSimulation.ID_LENGTH))))
+            const node = new SimulationNode(getNodeIdFromRaw(Buffer.from(this.dhtIds[i].data.slice(0, KademliaSimulation.ID_LENGTH))))
             this.nodeNamesById[JSON.stringify(node.getContact().id)] = i
             this.nodes.push(node)
             node.joinDht(this.nodes[0])
