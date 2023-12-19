@@ -49,7 +49,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
 import { PeerManager } from './PeerManager'
 import { ServiceID } from '../types/ServiceID'
-import { DhtAddress, getRawFromDhtAddress } from '../identifiers'
+import { DhtAddress, DhtAddressRaw, getRawFromDhtAddress } from '../identifiers'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
 
 export interface DhtNodeEvents {
@@ -117,7 +117,7 @@ const logger = new Logger(module)
 export type Events = TransportEvents & DhtNodeEvents
 
 export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string): PeerDescriptor => {
-    let nodeId: Uint8Array
+    let nodeId: DhtAddressRaw
     if (msg) {
         nodeId = (peerId !== undefined) ? getRawFromDhtAddress(peerId as DhtAddress) : PeerID.fromIp(msg.host).value
     } else {

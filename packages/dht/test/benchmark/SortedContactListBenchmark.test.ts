@@ -3,11 +3,11 @@
 import KBucket from 'k-bucket'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import crypto from 'crypto'
-import { DhtAddress, getDhtAddressFromRaw } from '../../src/identifiers'
+import { DhtAddress, DhtAddressRaw, getDhtAddressFromRaw } from '../../src/identifiers'
 
 const NUM_ADDS = 1000
 interface Item {
-    id: Uint8Array
+    id: DhtAddressRaw
     vectorClock: number
     getNodeId: () => DhtAddress
 }

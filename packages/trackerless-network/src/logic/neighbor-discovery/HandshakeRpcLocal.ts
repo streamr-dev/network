@@ -6,7 +6,7 @@ import {
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { NodeList } from '../NodeList'
-import { ConnectionLocker, DhtCallContext, PeerDescriptor } from '@streamr/dht'
+import { ConnectionLocker, DhtAddressRaw, DhtCallContext, PeerDescriptor } from '@streamr/dht'
 import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { HandshakeRpcRemote } from './HandshakeRpcRemote'
 import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
@@ -81,7 +81,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
 
     private acceptHandshakeWithInterleaving(request: StreamPartHandshakeRequest, requester: PeerDescriptor): StreamPartHandshakeResponse {
         const exclude: NodeID[] = []
-        request.neighborIds.forEach((id: Uint8Array) => exclude.push(binaryToHex(id) as NodeID))
+        request.neighborIds.forEach((id: DhtAddressRaw) => exclude.push(binaryToHex(id) as NodeID))
         this.config.ongoingInterleaves.forEach((id) => exclude.push(id))
         exclude.push(getNodeIdFromPeerDescriptor(requester))
         if (request.interleaveSourceId !== undefined) {

@@ -1,12 +1,12 @@
 import type { SimulationNode } from './SimulationNode'
 import { NodeType, PeerDescriptor } from '../../../src/proto/packages/dht/protos/DhtRpc'
-import { DhtAddress, getRawFromDhtAddress } from '../../../src/identifiers'
+import { DhtAddress, DhtAddressRaw, getRawFromDhtAddress } from '../../../src/identifiers'
 
 export class Contact {
     private static counter = 0
 
     public ownId: DhtAddress
-    public id: Uint8Array
+    public id: DhtAddressRaw
     public vectorClock = 0
     public dhtNode: SimulationNode | undefined
 

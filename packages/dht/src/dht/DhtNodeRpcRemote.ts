@@ -1,7 +1,7 @@
 import { RpcCommunicator } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
-import { DhtAddress, getRawFromDhtAddress } from '../identifiers'
+import { DhtAddress, DhtAddressRaw, getRawFromDhtAddress } from '../identifiers'
 import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import {
     ClosestPeersRequest,
@@ -16,7 +16,7 @@ const logger = new Logger(module)
 
 // Fields required by objects stored in the k-bucket library
 export interface KBucketContact {
-    id: Uint8Array
+    id: DhtAddressRaw
     vectorClock: number
 }
 
@@ -24,7 +24,7 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
 
     private static counter = 0
     public vectorClock: number
-    public readonly id: Uint8Array
+    public readonly id: DhtAddressRaw
 
     constructor(
         localPeerDescriptor: PeerDescriptor,

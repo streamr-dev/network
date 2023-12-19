@@ -154,7 +154,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
 
     // TODO inline this method?
     private distanceToReferenceId(id: DhtAddress): number {
-        // TODO maybe this class should store the referenceId also as UInt8Array so that we don't need to convert it here?
+        // TODO maybe this class should store the referenceId also as DhtAddressRaw so that we don't need to convert it here?
         return getDistance(getRawFromDhtAddress(this.config.referenceId), getRawFromDhtAddress(id))
     }
 
