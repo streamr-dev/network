@@ -164,6 +164,7 @@ message RouteMessageWrapper {
   Message message = 4;
   repeated PeerDescriptor reachableThrough = 5;
   repeated PeerDescriptor routingPath = 6;
+  repeated string parallelRoots = 7;
 }
 
 message RouteMessageAck {

@@ -87,7 +87,8 @@ export class Router {
                 target: forwardingEntry.peerDescriptors[0].nodeId,
                 sourcePeer: this.config.localPeerDescriptor,
                 reachableThrough,
-                routingPath: []
+                routingPath: [],
+                parallelRoots: []
             }
             const ack = this.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
             if (ack.error !== undefined) {
@@ -102,7 +103,8 @@ export class Router {
                 target: targetPeerDescriptor.nodeId,
                 sourcePeer: this.config.localPeerDescriptor,
                 reachableThrough,
-                routingPath: []
+                routingPath: [],
+                parallelRoots: []
             }
             const ack = this.doRouteMessage(routedMessage, RoutingMode.ROUTE)
             if (ack.error !== undefined) {
@@ -158,6 +160,9 @@ export class Router {
         if (excludedNode) {
             excludedNodeIds.add(getNodeIdFromPeerDescriptor(excludedNode))
         }
+        routedMessage.parallelRoots.forEach((nodeId) => {
+            excludedNodeIds.add(nodeId as NodeID)
+        })
         logger.trace('routing session created with connections: ' + this.config.connections.size)
         return new RoutingSession({
             rpcCommunicator: this.config.rpcCommunicator,

@@ -38,7 +38,8 @@ describe('Router', () => {
         routingPath: [],
         reachableThrough: [],
         target: peerDescriptor1.nodeId,
-        sourcePeer: peerDescriptor2
+        sourcePeer: peerDescriptor2,
+        parallelRoots: []
     }
     let connections: Map<NodeID, DhtNodeRpcRemote>
     const rpcCommunicator = new FakeRpcCommunicator()
@@ -68,7 +69,8 @@ describe('Router', () => {
             requestId: v4(),
             sourcePeer: peerDescriptor1,
             reachableThrough: [],
-            routingPath: []
+            routingPath: [],
+            parallelRoots: []
         }) as RouteMessageAck
         expect(ack.error).toEqual(RouteMessageError.NO_TARGETS)
     })
@@ -81,7 +83,8 @@ describe('Router', () => {
             requestId: v4(),
             sourcePeer: peerDescriptor1,
             reachableThrough: [],
-            routingPath: []
+            routingPath: [],
+            parallelRoots: []
         }) as RouteMessageAck
         expect(ack.error).toBeUndefined()
     })
