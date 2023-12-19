@@ -474,12 +474,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public async getDataFromDht(key: Uint8Array): Promise<DataEntry[]> {
-        const started = Date.now()
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.findDataViaPeer(key, sample(this.config.entryPoints)!)
         }
         const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FETCH_DATA)
-        console.log(Date.now() - started, 'ms to fetch data from DHT')
         return result.dataEntries ?? []  // TODO is this fallback needed?
     }
 

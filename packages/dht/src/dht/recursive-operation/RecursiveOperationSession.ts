@@ -66,7 +66,13 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
 
     private registerLocalRpcMethods() {
         const rpcLocal = new RecursiveOperationSessionRpcLocal({
-            onResponseReceived: (sourceId: NodeID, routingPath: PeerDescriptor[], nodes: PeerDescriptor[], dataEntries: DataEntry[], noCloserNodesFound: boolean) => {
+            onResponseReceived: (
+                sourceId: NodeID,
+                routingPath: PeerDescriptor[],
+                nodes: PeerDescriptor[],
+                dataEntries: DataEntry[],
+                noCloserNodesFound: boolean
+            ) => {
                 this.onResponseReceived(sourceId, routingPath, nodes, dataEntries, noCloserNodesFound)
             }
         })
@@ -99,7 +105,8 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             target: this.config.targetId,
             sourcePeer: this.config.localPeerDescriptor,
             reachableThrough: [],
-            routingPath: []
+            routingPath: [],
+            parallelRoots: []
         }
         return routeMessage
     }
@@ -113,7 +120,6 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             if (this.config.operation === RecursiveOperation.FETCH_DATA
                 && (
                     this.hasNonStaleData() 
-                    // || this.foundData.size === 0 
                     || this.noCloserNodesReceivedCounter >= this.config.waitedRoutingPathCompletions)
             ) {
                 return true
@@ -144,7 +150,8 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             this.results.addContact(new Contact(descriptor))
         })
         this.processFoundData(dataEntries)
-        if (noCloserNodesFound) {
+        const closestFoundNode = this.getClosestFoundNodeId(nodes)
+        if (noCloserNodesFound || this.noCloserNodesReceivedFrom.has(closestFoundNode)) {
             this.onNoCloserPeersFound(sourceId)
         }
     }
@@ -208,6 +215,19 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
                 }, 4000)  // TODO use config option or named constant?
             }
         }
+    }
+
+    private getClosestFoundNodeId(nodes: PeerDescriptor[]): NodeID {
+        const closestFoundNodes = new SortedContactList({
+            referenceId: getNodeIdFromBinary(this.config.targetId), 
+            maxSize: 5,  // TODO use config option or named constant?
+            allowToContainReferenceId: true,
+            emitEvents: false
+        })
+        nodes.forEach((descriptor: PeerDescriptor) => {
+            closestFoundNodes.addContact(new Contact(descriptor))
+        })
+        return closestFoundNodes.getClosestContactId()
     }
 
     public getResults(): RecursiveOperationResult {

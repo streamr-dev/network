@@ -147,7 +147,6 @@ export class RecursiveOperationManager {
     ): void {
         const isOwnNode = areEqualPeerDescriptors(this.config.localPeerDescriptor, targetPeerDescriptor)
         if (isOwnNode && this.ongoingSessions.has(serviceId)) {
-            console.log(routingPath)
             this.ongoingSessions.get(serviceId)!
                 .onResponseReceived(
                     getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor),

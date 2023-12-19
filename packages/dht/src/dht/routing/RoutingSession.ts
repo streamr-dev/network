@@ -1,6 +1,6 @@
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { SortedContactList } from '../contact/SortedContactList'
-import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
@@ -13,6 +13,7 @@ import { RecursiveOperationRpcRemote } from '../recursive-operation/RecursiveOpe
 import { EXISTING_CONNECTION_TIMEOUT } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
 import { NodeID, getNodeIdFromBinary } from '../../helpers/nodeId'
+import { pull } from 'lodash'
 
 const logger = new Logger(module)
 
@@ -108,6 +109,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         if (this.ongoingRequests.has(nodeId)) {
             this.ongoingRequests.delete(nodeId)
         }
+        this.deleteParallelRootIfSource(nodeId)
         const contacts = this.updateAndGetRoutablePeers()
         if (contacts.length === 0 && this.ongoingRequests.size === 0) {
             logger.trace('routing failed, emitting routingFailed sessionId: ' + this.sessionId)
@@ -196,6 +198,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             logger.trace(`Sending routeMessage request to contact: ${getNodeIdFromPeerDescriptor(nextPeer!.getPeerDescriptor())} (sessionId=${this.sessionId})`)
             this.contactList.setContacted(nextPeer!.getNodeId())
             this.ongoingRequests.add(nextPeer!.getNodeId())
+            this.addParallelRootIfSource(nextPeer!.getNodeId())
             setImmediate(async () => {
                 try {
                     const succeeded = await this.sendRouteMessageRequest(nextPeer!)
@@ -210,6 +213,18 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                     logger.trace('sendRouteMessageRequest returned')
                 }
             })
+        }
+    }
+
+    private addParallelRootIfSource(nodeId: NodeID) {
+        if (areEqualPeerDescriptors(this.config.localPeerDescriptor, this.config.routedMessage.sourcePeer!)) {
+            this.config.routedMessage.parallelRoots.push(nodeId)
+        }
+    }
+
+    private deleteParallelRootIfSource(nodeId: NodeID) {
+        if (areEqualPeerDescriptors(this.config.localPeerDescriptor, this.config.routedMessage.sourcePeer!)) {
+            pull(this.config.routedMessage.parallelRoots, nodeId)
         }
     }
 

@@ -52,5 +52,5 @@ describe('Storing data in DHT with two peers', () => {
         expectEqualData(foundData2[0], storedData1)
         expectEqualData(foundData2[1], storedData1)
         expectEqualData(foundData3[0], storedData2)
-    }, 30000)
+    })
 })
