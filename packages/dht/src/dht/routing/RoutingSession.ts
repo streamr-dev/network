@@ -215,13 +215,19 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     }
 
     private addParallelRootIfSource(nodeId: NodeID) {
-        if (areEqualPeerDescriptors(this.config.localPeerDescriptor, this.config.routedMessage.sourcePeer!)) {
+        if (
+            this.config.mode === RoutingMode.RECURSIVE
+            && areEqualPeerDescriptors(this.config.localPeerDescriptor, this.config.routedMessage.sourcePeer!)
+        ) {
             this.config.routedMessage.parallelRoots.push(nodeId)
         }
     }
 
     private deleteParallelRootIfSource(nodeId: NodeID) {
-        if (areEqualPeerDescriptors(this.config.localPeerDescriptor, this.config.routedMessage.sourcePeer!)) {
+        if (
+            this.config.mode === RoutingMode.RECURSIVE
+            && areEqualPeerDescriptors(this.config.localPeerDescriptor, this.config.routedMessage.sourcePeer!)
+        ) {
             pull(this.config.routedMessage.parallelRoots, nodeId)
         }
     }
