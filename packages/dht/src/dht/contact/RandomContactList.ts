@@ -1,4 +1,4 @@
-import { NodeID, areEqualNodeIds } from '../../helpers/nodeId'
+import { NodeID, areEqualNodeIds } from '../../identifiers'
 import { ContactList, ContactState } from './ContactList'
 
 export class RandomContactList<C extends { getNodeId: () => NodeID }> extends ContactList<C> {

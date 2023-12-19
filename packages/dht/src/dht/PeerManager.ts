@@ -13,7 +13,7 @@ import { RandomContactList } from './contact/RandomContactList'
 import { SortedContactList } from './contact/SortedContactList'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import EventEmitter from 'eventemitter3'
-import { NodeID, areEqualNodeIds } from '../helpers/nodeId'
+import { NodeID, areEqualNodeIds } from '../identifiers'
 
 const logger = new Logger(module)
 

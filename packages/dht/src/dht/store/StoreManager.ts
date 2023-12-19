@@ -15,7 +15,7 @@ import { SortedContactList } from '../contact/SortedContactList'
 import { Contact } from '../contact/Contact'
 import { ServiceID } from '../../types/ServiceID'
 import { findIndex } from 'lodash'
-import { NodeID, areEqualNodeIds, getNodeIdFromBinary, getNodeIdFromDataKey } from '../../helpers/nodeId'
+import { NodeID, areEqualNodeIds, getNodeIdFromBinary, getNodeIdFromDataKey } from '../../identifiers'
 import { StoreRpcLocal } from './StoreRpcLocal'
 import { getDistance } from '../PeerManager'
 

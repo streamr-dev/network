@@ -5,7 +5,7 @@ import { createMockConnectionDhtNode } from '../utils/utils'
 import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Logger, hexToBinary } from '@streamr/utils'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
-import { createRandomNodeId } from '../../src/helpers/nodeId'
+import { createRandomNodeId } from '../../src/identifiers'
 
 const logger = new Logger(module)
 

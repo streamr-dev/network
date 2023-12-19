@@ -12,7 +12,7 @@ import {
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockPeerDescriptor, createWrappedClosestPeersRequest } from '../utils/utils'
 import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
-import { NodeID } from '../../src/helpers/nodeId'
+import { NodeID } from '../../src/identifiers'
 import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 
 describe('Router', () => {

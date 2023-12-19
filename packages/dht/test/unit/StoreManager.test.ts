@@ -4,7 +4,7 @@ import { range, sortBy } from 'lodash'
 import { Key } from 'readline'
 import { getDistance } from '../../src/dht/PeerManager'
 import { StoreManager } from '../../src/dht/store/StoreManager'
-import { NodeID, createRandomNodeId, getNodeIdFromBinary } from '../../src/helpers/nodeId'
+import { NodeID, createRandomNodeId, getNodeIdFromBinary } from '../../src/identifiers'
 import { NodeType, ReplicateDataRequest } from '../../src/proto/packages/dht/protos/DhtRpc'
 
 const DATA_ENTRY = {

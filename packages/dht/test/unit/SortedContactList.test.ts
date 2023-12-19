@@ -1,6 +1,6 @@
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { PeerID } from '../../src/helpers/PeerID'
-import { NodeID, createRandomNodeId, getNodeIdFromBinary } from '../../src/helpers/nodeId'
+import { NodeID, createRandomNodeId, getNodeIdFromBinary } from '../../src/identifiers'
 
 const createItem = (nodeId: Uint8Array): { getNodeId: () => NodeID, getPeerId: () => PeerID } => {
     return { 

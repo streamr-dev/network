@@ -6,7 +6,7 @@ import {
 } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
-import { createRandomNodeId, getNodeIdFromBinary } from '../../src/helpers/nodeId'
+import { createRandomNodeId, getNodeIdFromBinary } from '../../src/identifiers'
 
 describe('LocalDataStore', () => {
 

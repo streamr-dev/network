@@ -5,7 +5,7 @@ import { PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper
 import { IRouterRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { DuplicateDetector } from './DuplicateDetector'
 import { RoutingMode } from './RoutingSession'
-import { getNodeIdFromBinary } from '../../helpers/nodeId'
+import { getNodeIdFromBinary } from '../../identifiers'
 
 interface RouterRpcLocalConfig {
     doRouteMessage: (routedMessage: RouteMessageWrapper, mode?: RoutingMode) => RouteMessageAck

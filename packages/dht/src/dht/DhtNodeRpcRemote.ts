@@ -1,7 +1,7 @@
 import { RpcCommunicator } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
-import { NodeID } from '../helpers/nodeId'
+import { NodeID } from '../identifiers'
 import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import {
     ClosestPeersRequest,

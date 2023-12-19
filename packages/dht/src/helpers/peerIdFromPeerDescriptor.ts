@@ -1,7 +1,7 @@
 import { areEqualBinaries, binaryToHex } from '@streamr/utils'
 import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey, createPeerIDKey } from './PeerID'
-import { NodeID } from './nodeId'
+import { NodeID } from '../identifiers'
 
 export const peerIdFromPeerDescriptor = (peerDescriptor: PeerDescriptor): PeerID => {
     return PeerID.fromValue(peerDescriptor.nodeId)

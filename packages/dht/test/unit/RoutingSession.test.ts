@@ -5,7 +5,7 @@ import { createMockPeerDescriptor, createWrappedClosestPeersRequest } from '../u
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { NodeID } from '../../src/helpers/nodeId'
+import { NodeID } from '../../src/identifiers'
 import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 
 describe('RoutingSession', () => {

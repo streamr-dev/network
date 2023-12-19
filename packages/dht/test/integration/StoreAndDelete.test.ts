@@ -2,7 +2,7 @@ import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils/utils'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
-import { createRandomNodeId } from '../../src/helpers/nodeId'
+import { createRandomNodeId } from '../../src/identifiers'
 
 const NUM_NODES = 5
 const MAX_CONNECTIONS = 5

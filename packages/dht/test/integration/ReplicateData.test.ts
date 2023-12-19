@@ -10,7 +10,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { getNodeIdFromPeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
-import { NodeID } from '../../src/helpers/nodeId'
+import { NodeID } from '../../src/identifiers'
 import { createMockDataEntry } from '../utils/mock/mockDataEntry'
 
 const logger = new Logger(module)

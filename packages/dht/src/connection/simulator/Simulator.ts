@@ -10,7 +10,7 @@ import { getRegionDelayMatrix } from './pings'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import Heap from 'heap'
 import { debugVars } from '../../helpers/debugHelpers'
-import { NodeID } from '../../helpers/nodeId'
+import { NodeID } from '../../identifiers'
 
 const logger = new Logger(module)
 

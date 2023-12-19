@@ -18,7 +18,7 @@ import { ManagedConnection } from '../ManagedConnection'
 import { ManagedWebrtcConnection } from '../ManagedWebrtcConnection'
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'
 import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
-import { NodeID } from '../../helpers/nodeId'
+import { NodeID } from '../../identifiers'
 import { version } from '../../../package.json'
 import { isCompatibleVersion } from '../../helpers/versionCompatibility'
 

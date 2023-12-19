@@ -2,7 +2,7 @@
 
 import { SimulationNode } from './SimulationNode'
 import fs from 'fs'
-import { getNodeIdFromBinary } from '../../../src/helpers/nodeId'
+import { getNodeIdFromBinary } from '../../../src/identifiers'
 
 export class KademliaSimulation {
     

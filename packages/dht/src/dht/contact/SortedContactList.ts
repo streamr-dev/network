@@ -2,7 +2,7 @@ import { ContactState, Events } from './ContactList'
 import { sortedIndexBy } from 'lodash'
 import EventEmitter from 'eventemitter3'
 import { getDistance } from '../PeerManager'
-import { NodeID, areEqualNodeIds } from '../../helpers/nodeId'
+import { NodeID, areEqualNodeIds } from '../../identifiers'
 
 export interface SortedContactListConfig {
     referenceId: NodeID  // all contacts in this list are in sorted by the distance to this ID

@@ -31,7 +31,7 @@ import { ConnectionLockRpcRemote } from './ConnectionLockRpcRemote'
 import { WEBRTC_CLEANUP } from './webrtc/NodeWebrtcConnection'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ConnectionLockRpcLocal } from './ConnectionLockRpcLocal'
-import { NodeID } from '../helpers/nodeId'
+import { NodeID } from '../identifiers'
 
 export interface ConnectionManagerConfig {
     maxConnections?: number

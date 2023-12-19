@@ -1,7 +1,7 @@
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { DataEntry } from '../../proto/packages/dht/protos/DhtRpc'
 import { MapWithTtl } from '../../helpers/MapWithTtl'
-import { NodeID, getNodeIdFromBinary } from '../../helpers/nodeId'
+import { NodeID, getNodeIdFromBinary } from '../../identifiers'
 
 type Key = Uint8Array
 

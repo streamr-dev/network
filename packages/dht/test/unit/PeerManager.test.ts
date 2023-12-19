@@ -1,6 +1,6 @@
 import { hexToBinary } from '@streamr/utils'
 import { PeerManager, getDistance } from '../../src/dht/PeerManager'
-import { NodeID, createRandomNodeId, getNodeIdFromBinary } from '../../src/helpers/nodeId'
+import { NodeID, createRandomNodeId, getNodeIdFromBinary } from '../../src/identifiers'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { range, sampleSize, sortBy, without } from 'lodash'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'

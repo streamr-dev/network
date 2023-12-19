@@ -3,7 +3,7 @@
 import KBucket from 'k-bucket'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import crypto from 'crypto'
-import { NodeID, getNodeIdFromBinary } from '../../src/helpers/nodeId'
+import { NodeID, getNodeIdFromBinary } from '../../src/identifiers'
 
 const NUM_ADDS = 1000
 interface Item {

@@ -7,7 +7,7 @@ import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
-import { createRandomNodeId } from '../../src/helpers/nodeId'
+import { createRandomNodeId } from '../../src/identifiers'
 import { MockTransport } from '../utils/mock/Transport'
 
 const BASE_MESSAGE: Message = {

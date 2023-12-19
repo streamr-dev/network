@@ -4,7 +4,7 @@ import crypto from 'crypto'
 import { Timestamp } from '../../../src/proto/google/protobuf/timestamp'
 import { Any } from '../../../src/proto/google/protobuf/any'
 import { DataEntry } from '../../../src/proto/packages/dht/protos/DhtRpc'
-import { createRandomNodeId } from '../../../src/helpers/nodeId'
+import { createRandomNodeId } from '../../../src/identifiers'
 
 const MockData = new class extends MessageType$<{ foo: string }> {
     constructor() {

@@ -9,7 +9,7 @@ import { StoreRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.clien
 import { StoreRpcRemote } from '../../src/dht/store/StoreRpcRemote'
 import { createMockDataEntry } from '../utils/mock/mockDataEntry'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { createRandomNodeId } from '../../src/helpers/nodeId'
+import { createRandomNodeId } from '../../src/identifiers'
 
 const SERVICE_ID = 'test'
 

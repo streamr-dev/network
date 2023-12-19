@@ -8,8 +8,8 @@ import { Simulator } from '../../src/connection/simulator/Simulator'
 import { v4 } from 'uuid'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { RoutingMode } from '../../src/dht/routing/RoutingSession'
-import { areEqualNodeIds } from '../../src/helpers/nodeId'
-import { createRandomNodeId } from '../../src/helpers/nodeId'
+import { areEqualNodeIds } from '../../src/identifiers'
+import { createRandomNodeId } from '../../src/identifiers'
 
 const logger = new Logger(module)
 

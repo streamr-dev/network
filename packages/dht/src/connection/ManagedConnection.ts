@@ -6,7 +6,7 @@ import { Logger, runAndRaceEvents3, RunAndRaceEventsReturnType } from '@streamr/
 import EventEmitter from 'eventemitter3'
 import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
-import { NodeID } from '../helpers/nodeId'
+import { NodeID } from '../identifiers'
 
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void

@@ -5,7 +5,7 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerManager, getDistance } from '../PeerManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { NodeID, getNodeIdFromBinary } from '../../helpers/nodeId'
+import { NodeID, getNodeIdFromBinary } from '../../identifiers'
 
 const logger = new Logger(module)
 

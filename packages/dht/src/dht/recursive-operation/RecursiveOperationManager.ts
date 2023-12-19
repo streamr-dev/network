@@ -24,7 +24,7 @@ import { getPreviousPeer } from '../routing/getPreviousPeer'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationRpcLocal } from './RecursiveOperationRpcLocal'
-import { NodeID, getNodeIdFromBinary } from '../../helpers/nodeId'
+import { NodeID, getNodeIdFromBinary } from '../../identifiers'
 import { getDistance } from '../PeerManager'
 
 interface RecursiveOperationManagerConfig {

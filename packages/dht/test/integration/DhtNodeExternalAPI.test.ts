@@ -1,6 +1,6 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { createRandomNodeId, getNodeIdFromBinary } from '../../src/helpers/nodeId'
+import { createRandomNodeId, getNodeIdFromBinary } from '../../src/identifiers'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
 import { createMockConnectionDhtNode } from '../utils/utils'

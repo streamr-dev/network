@@ -28,7 +28,7 @@ import { Empty } from '../../src/proto/google/protobuf/empty'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { wait, waitForCondition } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
-import { createRandomNodeId } from '../../src/helpers/nodeId'
+import { createRandomNodeId } from '../../src/identifiers'
 
 export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'nodeId'>>): PeerDescriptor => {
     return {

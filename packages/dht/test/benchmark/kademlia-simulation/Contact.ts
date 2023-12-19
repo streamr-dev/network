@@ -1,6 +1,6 @@
 import type { SimulationNode } from './SimulationNode'
 import { NodeType, PeerDescriptor } from '../../../src/proto/packages/dht/protos/DhtRpc'
-import { NodeID } from '../../../src/helpers/nodeId'
+import { NodeID } from '../../../src/identifiers'
 import { hexToBinary } from '@streamr/utils'
 
 export class Contact {

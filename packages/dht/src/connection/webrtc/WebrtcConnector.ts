@@ -21,7 +21,7 @@ import {
 import { PortRange } from '../ConnectionManager'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { WebrtcConnectorRpcLocal } from './WebrtcConnectorRpcLocal'
-import { NodeID } from '../../helpers/nodeId'
+import { NodeID } from '../../identifiers'
 
 const logger = new Logger(module)
 

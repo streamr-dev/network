@@ -1,7 +1,7 @@
 import KBucket from 'k-bucket'
 import { Contact } from './Contact'
 import { SortedContactList } from '../../../src/dht/contact/SortedContactList'
-import { NodeID, areEqualNodeIds } from '../../../src/helpers/nodeId'
+import { NodeID, areEqualNodeIds } from '../../../src/identifiers'
 import { hexToBinary } from '@streamr/utils'
 
 export class SimulationNode {

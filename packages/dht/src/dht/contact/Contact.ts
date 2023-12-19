@@ -1,6 +1,6 @@
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { NodeID } from '../../helpers/nodeId'
+import { NodeID } from '../../identifiers'
 
 export class Contact {
 

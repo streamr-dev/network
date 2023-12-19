@@ -50,7 +50,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
 import { PeerManager } from './PeerManager'
 import { ServiceID } from '../types/ServiceID'
-import { NodeID, getNodeIdFromBinary } from '../helpers/nodeId'
+import { NodeID, getNodeIdFromBinary } from '../identifiers'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
 
 export interface DhtNodeEvents {

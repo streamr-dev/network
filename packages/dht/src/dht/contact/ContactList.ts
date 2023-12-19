@@ -1,5 +1,5 @@
 import EventEmitter from 'eventemitter3'
-import { NodeID } from '../../helpers/nodeId'
+import { NodeID } from '../../identifiers'
 
 export class ContactState<C> {
     public contacted = false

@@ -29,7 +29,7 @@ import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
 import { attachConnectivityRequestHandler } from '../connectivityRequestHandler'
 import * as Err from '../../helpers/errors'
 import { Empty } from '../../proto/google/protobuf/empty'
-import { NodeID } from '../../helpers/nodeId'
+import { NodeID } from '../../identifiers'
 import { version } from '../../../package.json'
 import { isCompatibleVersion } from '../../helpers/versionCompatibility'
 

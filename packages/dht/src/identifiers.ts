@@ -9,7 +9,6 @@ export const createRandomNodeId = (): Uint8Array => {
     return crypto.randomBytes(KADEMLIA_ID_LENGTH_IN_BYTES)
 }
 
-// TODO rename the file to be "NodeID.ts" instead of "nodeId.ts"
 export type NodeID = BrandedString<'NodeID'>
 
 // TODO remove this or add support for UInt8Array parameters

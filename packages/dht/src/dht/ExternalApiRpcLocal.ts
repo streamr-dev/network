@@ -11,7 +11,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'
 import { Any } from '../proto/google/protobuf/any'
-import { NodeID } from '../helpers/nodeId'
+import { NodeID } from '../identifiers'
 import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 
 interface ExternalApiRpcLocalConfig {

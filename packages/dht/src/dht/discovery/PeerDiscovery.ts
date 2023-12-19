@@ -5,7 +5,7 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import { ConnectionManager } from '../../connection/ConnectionManager'
 import { PeerManager } from '../PeerManager'
-import { createRandomNodeId } from '../../helpers/nodeId'
+import { createRandomNodeId } from '../../identifiers'
 import { ServiceID } from '../../types/ServiceID'
 
 interface PeerDiscoveryConfig {

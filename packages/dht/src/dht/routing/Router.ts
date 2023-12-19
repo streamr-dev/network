@@ -11,7 +11,7 @@ import { ConnectionManager } from '../../connection/ConnectionManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { v4 } from 'uuid'
 import { RouterRpcLocal, createRouteMessageAck } from './RouterRpcLocal'
-import { NodeID, getNodeIdFromBinary } from '../../helpers/nodeId'
+import { NodeID, getNodeIdFromBinary } from '../../identifiers'
 
 export interface RouterConfig {
     rpcCommunicator: RoutingRpcCommunicator

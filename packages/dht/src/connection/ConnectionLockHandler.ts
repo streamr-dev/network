@@ -1,7 +1,7 @@
 // Connection locks are independent of the existence of connections
 // that is why this class is needed
 
-import { NodeID } from '../helpers/nodeId'
+import { NodeID } from '../identifiers'
 
 export type LockID = string
 

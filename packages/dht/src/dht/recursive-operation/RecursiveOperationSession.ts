@@ -19,7 +19,7 @@ import { RecursiveOperationResult } from './RecursiveOperationManager'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationSessionRpcLocal } from './RecursiveOperationSessionRpcLocal'
-import { NodeID, areEqualNodeIds, getNodeIdFromBinary } from '../../helpers/nodeId'
+import { NodeID, areEqualNodeIds, getNodeIdFromBinary } from '../../identifiers'
 
 export interface RecursiveOperationSessionEvents {
     completed: () => void

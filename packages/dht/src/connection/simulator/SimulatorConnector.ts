@@ -9,7 +9,7 @@ import { ManagedConnection } from '../ManagedConnection'
 import { Simulator } from './Simulator'
 import { SimulatorConnection } from './SimulatorConnection'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { NodeID } from '../../helpers/nodeId'
+import { NodeID } from '../../identifiers'
 
 const logger = new Logger(module)
 

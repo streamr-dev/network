@@ -5,7 +5,7 @@ import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDes
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
-import { NodeID } from '../../src/helpers/nodeId'
+import { NodeID } from '../../src/identifiers'
 
 describe('Kademlia correctness', () => {
     let entryPoint: DhtNode

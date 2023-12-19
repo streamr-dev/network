@@ -12,7 +12,7 @@ import { Contact } from '../contact/Contact'
 import { RecursiveOperationRpcRemote } from '../recursive-operation/RecursiveOperationRpcRemote'
 import { EXISTING_CONNECTION_TIMEOUT } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
-import { NodeID, getNodeIdFromBinary } from '../../helpers/nodeId'
+import { NodeID, getNodeIdFromBinary } from '../../identifiers'
 
 const logger = new Logger(module)
 

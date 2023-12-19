@@ -1,7 +1,7 @@
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node, createMockPeerDescriptor } from '../utils/utils'
-import { areEqualNodeIds } from '../../src/helpers/nodeId'
+import { areEqualNodeIds } from '../../src/identifiers'
 
 const NODE_COUNT = 48
 const NUM_OF_NODES_PER_KBUCKET = 8

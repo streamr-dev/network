@@ -9,7 +9,7 @@ import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/
 import { MarkOptional } from 'ts-essentials'
 import { TransportEvents } from '../../src/transport/ITransport'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { createRandomNodeId } from '../../src/helpers/nodeId'
+import { createRandomNodeId } from '../../src/identifiers'
 
 const SERVICE_ID = 'demo'
 
