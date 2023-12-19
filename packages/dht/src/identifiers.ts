@@ -16,7 +16,7 @@ export const getDataKeyFromRaw = (key: NodeIDOrDataKeyRaw): DataKey => {
     return binaryToHex(key) as unknown as DataKey
 }
 
-export const getRawFromNodeIdOrDataKey = (nodeIdOrDataKey: NodeID | DataKey): NodeIDOrDataKeyRaw => {
+const getRawFromNodeIdOrDataKey = (nodeIdOrDataKey: NodeID | DataKey): NodeIDOrDataKeyRaw => {
     return hexToBinary(nodeIdOrDataKey)
 }
 

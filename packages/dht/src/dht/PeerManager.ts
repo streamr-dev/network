@@ -13,7 +13,7 @@ import { RandomContactList } from './contact/RandomContactList'
 import { SortedContactList } from './contact/SortedContactList'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import EventEmitter from 'eventemitter3'
-import { NodeID, areEqualNodeIds } from '../identifiers'
+import { NodeID, NodeIDOrDataKeyRaw, areEqualNodeIds } from '../identifiers'
 
 const logger = new Logger(module)
 
@@ -35,8 +35,8 @@ export interface PeerManagerEvents {
     kBucketEmpty: () => void
 }
 
-export const getDistance = (nodeId1: NodeID, nodeId2: NodeID): number => {
-    return KBucket.distance(hexToBinary(nodeId1), hexToBinary(nodeId2))
+export const getDistance = (nodeIdOrDataKeyRaw1: NodeIDOrDataKeyRaw, nodeIdOrDataKeyRaw2: NodeIDOrDataKeyRaw): number => {
+    return KBucket.distance(nodeIdOrDataKeyRaw1, nodeIdOrDataKeyRaw2)
 }
 
 export class PeerManager extends EventEmitter<PeerManagerEvents> {

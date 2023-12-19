@@ -5,7 +5,7 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerManager, getDistance } from '../PeerManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { NodeID, getNodeIdFromRaw } from '../../identifiers'
+import { NodeID, NodeIDOrDataKeyRaw, getNodeIdFromRaw, getRawFromNodeId } from '../../identifiers'
 
 const logger = new Logger(module)
 
@@ -14,7 +14,7 @@ interface DiscoverySessionEvents {
 }
 
 interface DiscoverySessionConfig {
-    targetId: Uint8Array
+    targetId: NodeIDOrDataKeyRaw
     parallelism: number
     noProgressLimit: number
     peerManager: PeerManager
@@ -58,10 +58,10 @@ export class DiscoverySession {
         }
         this.ongoingClosestPeersRequests.delete(nodeId)
         const oldClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(getNodeIdFromRaw(this.config.targetId), 1)[0]
-        const oldClosestDistance = getDistance(getNodeIdFromRaw(this.config.targetId), oldClosestNeighbor.getNodeId())
+        const oldClosestDistance = getDistance(this.config.targetId, getRawFromNodeId(oldClosestNeighbor.getNodeId()))
         this.addNewContacts(contacts)
         const newClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(getNodeIdFromRaw(this.config.targetId), 1)[0]
-        const newClosestDistance = getDistance(getNodeIdFromRaw(this.config.targetId), newClosestNeighbor.getNodeId())
+        const newClosestDistance = getDistance(this.config.targetId, getRawFromNodeId(newClosestNeighbor.getNodeId()))
         if (newClosestDistance >= oldClosestDistance) {
             this.noProgressCounter++
         }

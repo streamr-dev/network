@@ -146,15 +146,14 @@ export class StoreManager {
         return successfulNodes
     }
 
-    private selfIsWithinRedundancyFactor(dataKey: Uint8Array): boolean {
-        const closestNeighbors = this.config.getClosestNeighborsTo(dataKey, this.config.redundancyFactor)
+    private selfIsWithinRedundancyFactor(dataKeyRaw: Uint8Array): boolean {
+        const closestNeighbors = this.config.getClosestNeighborsTo(dataKeyRaw, this.config.redundancyFactor)
         if (closestNeighbors.length < this.config.redundancyFactor) {
             return true
         } else {
-            const localNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
-            const furthestCloseNeighbor = getNodeIdFromPeerDescriptor(closestNeighbors[closestNeighbors.length - 1])
-            const dataId = getNodeIdFromDataKey(dataKey)
-            return getDistance(dataId, localNodeId) < getDistance(dataId, furthestCloseNeighbor)
+            const localNodeId = this.config.localPeerDescriptor.nodeId
+            const furthestCloseNeighbor = closestNeighbors[closestNeighbors.length - 1].nodeId
+            return getDistance(dataKeyRaw, localNodeId) < getDistance(dataKeyRaw, furthestCloseNeighbor)
         }
     }
 

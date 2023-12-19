@@ -2,7 +2,7 @@ import { ContactState, Events } from './ContactList'
 import { sortedIndexBy } from 'lodash'
 import EventEmitter from 'eventemitter3'
 import { getDistance } from '../PeerManager'
-import { NodeID, areEqualNodeIds } from '../../identifiers'
+import { NodeID, areEqualNodeIds, getRawFromNodeId } from '../../identifiers'
 
 export interface SortedContactListConfig {
     referenceId: NodeID  // all contacts in this list are in sorted by the distance to this ID
@@ -155,7 +155,7 @@ export class SortedContactList<C extends { getNodeId: () => NodeID }> extends Ev
     // TODO inline this method?
     private distanceToReferenceId(id: NodeID): number {
         // TODO maybe this class should store the referenceId also as UInt8Array so that we don't need to convert it here?
-        return getDistance(this.config.referenceId, id)
+        return getDistance(getRawFromNodeId(this.config.referenceId), getRawFromNodeId(id))
     }
 
     public removeContact(id: NodeID): boolean {

@@ -24,7 +24,7 @@ import { getPreviousPeer } from '../routing/getPreviousPeer'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationRpcLocal } from './RecursiveOperationRpcLocal'
-import { NodeID, getNodeIdFromRaw } from '../../identifiers'
+import { NodeID, getNodeIdFromRaw, getRawFromNodeId } from '../../identifiers'
 import { getDistance } from '../PeerManager'
 
 interface RecursiveOperationManagerConfig {
@@ -225,8 +225,9 @@ export class RecursiveOperationManager {
     }
 
     private isPeerCloserToIdThanSelf(peer: PeerDescriptor, compareToId: NodeID): boolean {
-        const distance1 = getDistance(getNodeIdFromPeerDescriptor(peer), compareToId)
-        const distance2 = getDistance(getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor), compareToId)
+        const raw = getRawFromNodeId(compareToId)
+        const distance1 = getDistance(peer.nodeId, raw)
+        const distance2 = getDistance(this.config.localPeerDescriptor.nodeId, raw)
         return distance1 < distance2
     }
 

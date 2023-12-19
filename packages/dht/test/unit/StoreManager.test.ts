@@ -13,7 +13,7 @@ const DATA_ENTRY = {
 }
 const NODES_CLOSEST_TO_DATA = sortBy(
     range(5).map(() => createRandomNodeId()),
-    (id: Uint8Array) => getDistance(getNodeIdFromRaw(id), getNodeIdFromRaw(DATA_ENTRY.key))
+    (id: Uint8Array) => getDistance(id, DATA_ENTRY.key)
 )
 
 describe('StoreManager', () => {
