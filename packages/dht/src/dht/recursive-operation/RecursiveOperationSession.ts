@@ -109,7 +109,11 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         })
         if (this.noCloserNodesReceivedCounter >= 1 && unreportedHops.size === 0) {
             if (this.config.operation === RecursiveOperation.FETCH_DATA
-                && (this.hasNonStaleData() || this.noCloserNodesReceivedCounter >= this.config.waitedRoutingPathCompletions)) {
+                && (
+                    this.hasNonStaleData() 
+                    || this.foundData.size === 0 
+                    || this.noCloserNodesReceivedCounter >= this.config.waitedRoutingPathCompletions)
+            ) {
                 return true
             } else if (this.config.operation === RecursiveOperation.FETCH_DATA) {
                 return false
