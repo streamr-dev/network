@@ -1,7 +1,7 @@
-import { areEqualBinaries, binaryToHex } from '@streamr/utils'
+import { areEqualBinaries } from '@streamr/utils'
 import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { PeerID, PeerIDKey, createPeerIDKey } from './PeerID'
-import { NodeID } from '../identifiers'
+import { NodeID, getNodeIdFromRaw } from '../identifiers'
 
 export const peerIdFromPeerDescriptor = (peerDescriptor: PeerDescriptor): PeerID => {
     return PeerID.fromValue(peerDescriptor.nodeId)
@@ -10,7 +10,7 @@ export const peerIdFromPeerDescriptor = (peerDescriptor: PeerDescriptor): PeerID
 // TODO could use this in trackerless-network (instead of copy-pasted same implementation)
 // and move this to nodeId.ts
 export const getNodeIdFromPeerDescriptor = (peerDescriptor: PeerDescriptor): NodeID => {
-    return binaryToHex(peerDescriptor.nodeId) as unknown as NodeID
+    return getNodeIdFromRaw(peerDescriptor.nodeId)
 }
 
 export const keyFromPeerDescriptor = (peerDescriptor: PeerDescriptor): PeerIDKey => {
