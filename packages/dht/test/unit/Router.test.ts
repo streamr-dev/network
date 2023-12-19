@@ -14,6 +14,7 @@ import { createMockPeerDescriptor, createWrappedClosestPeersRequest } from '../u
 import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
 import { NodeID } from '../../src/helpers/nodeId'
 import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
+import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 
 describe('Router', () => {
 
@@ -87,6 +88,21 @@ describe('Router', () => {
             parallelRoots: []
         }) as RouteMessageAck
         expect(ack.error).toBeUndefined()
+    })
+
+    it('doRouteMessage with parallelRoots', async () => {
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor2)
+        connections.set(nodeId, createMockDhtNodeRpcRemote(peerDescriptor2))
+        const ack = await rpcCommunicator.callRpcMethod('routeMessage', {
+            message,
+            target: peerDescriptor2.nodeId,
+            requestId: v4(),
+            sourcePeer: peerDescriptor1,
+            reachableThrough: [],
+            routingPath: [],
+            parallelRoots: [nodeId]
+        }) as RouteMessageAck
+        expect(ack.error).toEqual(RouteMessageError.NO_TARGETS)
     })
 
     it('route server is destination without connections', async () => {
