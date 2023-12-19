@@ -98,7 +98,7 @@ export class Handshaker {
                 return this.handshakeWithTarget(target, otherNodeId)
             })
         )
-        results.map((res, i) => {
+        results.forEach((res, i) => {
             if (res.status !== 'fulfilled' || !res.value) {
                 excludedIds.push(getNodeIdFromPeerDescriptor(targets[i].getPeerDescriptor()))
             }
