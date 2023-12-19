@@ -13,7 +13,7 @@ import { RandomContactList } from './contact/RandomContactList'
 import { SortedContactList } from './contact/SortedContactList'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import EventEmitter from 'eventemitter3'
-import { NodeID, NodeIDOrDataKeyRaw, areEqualNodeIds } from '../identifiers'
+import { DataKey, NodeID, NodeIDOrDataKeyRaw, areEqualNodeIds } from '../identifiers'
 
 const logger = new Logger(module)
 
@@ -229,7 +229,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.connections.clear()
     }
 
-    getClosestNeighborsTo(referenceId: NodeID, limit?: number, excludedNodeIds?: Set<NodeID>): DhtNodeRpcRemote[] {
+    getClosestNeighborsTo(referenceId: NodeID | DataKey, limit?: number, excludedNodeIds?: Set<NodeID>): DhtNodeRpcRemote[] {
         const closest = new SortedContactList<DhtNodeRpcRemote>({
             referenceId,
             allowToContainReferenceId: true,
