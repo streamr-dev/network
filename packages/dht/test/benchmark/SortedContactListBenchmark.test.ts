@@ -6,6 +6,7 @@ import crypto from 'crypto'
 import { DhtAddress, DhtAddressRaw, getDhtAddressFromRaw } from '../../src/identifiers'
 
 const NUM_ADDS = 1000
+
 interface Item {
     id: DhtAddressRaw
     vectorClock: number
