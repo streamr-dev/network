@@ -23,7 +23,6 @@ export class RecursiveOperationSessionRpcRemote extends RpcRemote<RecursiveOpera
             dataEntries,
             noCloserNodesFound
         }
-        console.log(noCloserNodesFound)
         this.getClient().sendResponse(report, this.formDhtRpcOptions()).catch((_e) => {
             logger.trace('Failed to send RecursiveOperationResponse')
         })

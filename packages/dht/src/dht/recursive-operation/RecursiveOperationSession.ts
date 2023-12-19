@@ -66,7 +66,13 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
 
     private registerLocalRpcMethods() {
         const rpcLocal = new RecursiveOperationSessionRpcLocal({
-            onResponseReceived: (sourceId: NodeID, routingPath: PeerDescriptor[], nodes: PeerDescriptor[], dataEntries: DataEntry[], noCloserNodesFound: boolean) => {
+            onResponseReceived: (
+                sourceId: NodeID,
+                routingPath: PeerDescriptor[],
+                nodes: PeerDescriptor[],
+                dataEntries: DataEntry[],
+                noCloserNodesFound: boolean
+            ) => {
                 this.onResponseReceived(sourceId, routingPath, nodes, dataEntries, noCloserNodesFound)
             }
         })

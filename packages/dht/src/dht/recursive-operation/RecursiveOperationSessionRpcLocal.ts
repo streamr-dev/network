@@ -10,7 +10,13 @@ import { NodeID } from '../../helpers/nodeId'
 const logger = new Logger(module)
 
 interface RecursiveOperationSessionRpcLocalConfig {
-    onResponseReceived: (sourceId: NodeID, routingPath: PeerDescriptor[], nodes: PeerDescriptor[], dataEntries: DataEntry[], noCloserNodesFound: boolean) => void
+    onResponseReceived: (
+        sourceId: NodeID,
+        routingPath: PeerDescriptor[],
+        nodes: PeerDescriptor[],
+        dataEntries: DataEntry[],
+        noCloserNodesFound: boolean
+    ) => void
 }
 
 export class RecursiveOperationSessionRpcLocal implements IRecursiveOperationSessionRpc {
