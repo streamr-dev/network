@@ -16,10 +16,11 @@ describe('RecursiveOperationSession', () => {
     let localPeerDescriptor: PeerDescriptor
 
     const createRpcRemote = (serviceId: ServiceID) => {
-        const transport = environment.createTransport()
+        const mockPeerDescriptor = createMockPeerDescriptor()
+        const transport = environment.createTransport(mockPeerDescriptor)
         const send = (msg: Message) => transport.send(msg)
         return new RecursiveOperationSessionRpcRemote(
-            createMockPeerDescriptor(),
+            mockPeerDescriptor,
             localPeerDescriptor,
             new RoutingRpcCommunicator(serviceId, send),
             RecursiveOperationSessionRpcClient
@@ -34,7 +35,7 @@ describe('RecursiveOperationSession', () => {
     it('happy path', async () => {
         const doRouteRequest = jest.fn()
         const session = new RecursiveOperationSession({
-            transport: environment.createTransport(),
+            transport: environment.createTransport(localPeerDescriptor),
             targetId: createRandomNodeId(),
             localPeerDescriptor,
             waitedRoutingPathCompletions: 3,

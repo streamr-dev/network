@@ -20,6 +20,7 @@ import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescrip
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationSessionRpcLocal } from './RecursiveOperationSessionRpcLocal'
 import { NodeID, areEqualNodeIds, getNodeIdFromBinary } from '../../helpers/nodeId'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 export interface RecursiveOperationSessionEvents {
     completed: () => void
@@ -45,6 +46,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     private timeoutTask?: NodeJS.Timeout 
     private completionEventEmitted = false
     private noCloserNodesReceivedCounter = 0
+    private noCloserNodesReceivedFrom: Set<NodeID> = new Set()
     private readonly config: RecursiveOperationSessionConfig
 
     constructor(config: RecursiveOperationSessionConfig) {
@@ -64,12 +66,12 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
 
     private registerLocalRpcMethods() {
         const rpcLocal = new RecursiveOperationSessionRpcLocal({
-            onResponseReceived: (routingPath: PeerDescriptor[], nodes: PeerDescriptor[], dataEntries: DataEntry[], noCloserNodesFound: boolean) => {
-                this.onResponseReceived(routingPath, nodes, dataEntries, noCloserNodesFound)
+            onResponseReceived: (sourceId: NodeID, routingPath: PeerDescriptor[], nodes: PeerDescriptor[], dataEntries: DataEntry[], noCloserNodesFound: boolean) => {
+                this.onResponseReceived(sourceId, routingPath, nodes, dataEntries, noCloserNodesFound)
             }
         })
         this.rpcCommunicator.registerRpcNotification(RecursiveOperationResponse, 'sendResponse',
-            (req: RecursiveOperationResponse) => rpcLocal.sendResponse(req))
+            (req: RecursiveOperationResponse, context: ServerCallContext) => rpcLocal.sendResponse(req, context))
     }
 
     public start(serviceId: ServiceID): void {
@@ -124,6 +126,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     }
 
     public onResponseReceived(
+        sourceId: NodeID,
         routingPath: PeerDescriptor[],
         nodes: PeerDescriptor[],
         dataEntries: DataEntry[],
@@ -138,7 +141,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         })
         this.processFoundData(dataEntries)
         if (noCloserNodesFound) {
-            this.onNoCloserPeersFound()
+            this.onNoCloserPeersFound(sourceId)
         }
     }
 
@@ -181,8 +184,9 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         })
     }
 
-    private onNoCloserPeersFound(): void {
+    private onNoCloserPeersFound(sourceId: NodeID): void {
         this.noCloserNodesReceivedCounter += 1
+        this.noCloserNodesReceivedFrom.add(sourceId)
         if (this.isCompleted()) {
             this.emit('completed')
             this.completionEventEmitted = true
