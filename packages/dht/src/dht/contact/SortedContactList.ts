@@ -2,10 +2,10 @@ import { ContactState, Events } from './ContactList'
 import { sortedIndexBy } from 'lodash'
 import EventEmitter from 'eventemitter3'
 import { getDistance } from '../PeerManager'
-import { NodeID, areEqualNodeIds, getRawFromNodeId } from '../../identifiers'
+import { DataKey, NodeID, areEqualNodeIdOrDataKeys, areEqualNodeIds, getRawFromNodeId, getRawFromNodeIdOrDataKey } from '../../identifiers'
 
 export interface SortedContactListConfig {
-    referenceId: NodeID  // all contacts in this list are in sorted by the distance to this ID
+    referenceId: NodeID | DataKey  // all contacts in this list are in sorted by the distance to this ID
     allowToContainReferenceId: boolean
     // TODO could maybe optimize this by removing the flag and then we'd check whether we have 
     // any listeners before we emit the event
@@ -44,7 +44,7 @@ export class SortedContactList<C extends { getNodeId: () => NodeID }> extends Ev
             return
         }
 
-        if ((!this.config.allowToContainReferenceId && areEqualNodeIds(this.config.referenceId, contact.getNodeId())) ||
+        if ((!this.config.allowToContainReferenceId && areEqualNodeIdOrDataKeys(this.config.referenceId, contact.getNodeId())) ||
             (this.config.nodeIdDistanceLimit !== undefined && this.compareIds(this.config.nodeIdDistanceLimit, contact.getNodeId()) < 0)) {
             return
         }
@@ -155,7 +155,7 @@ export class SortedContactList<C extends { getNodeId: () => NodeID }> extends Ev
     // TODO inline this method?
     private distanceToReferenceId(id: NodeID): number {
         // TODO maybe this class should store the referenceId also as UInt8Array so that we don't need to convert it here?
-        return getDistance(getRawFromNodeId(this.config.referenceId), getRawFromNodeId(id))
+        return getDistance(getRawFromNodeIdOrDataKey(this.config.referenceId), getRawFromNodeId(id))
     }
 
     public removeContact(id: NodeID): boolean {
