@@ -49,8 +49,3 @@ export const areEqualNodeIdOrDataKeys = (nodeIdOrDataKey1: NodeID | DataKey, nod
 export const createRandomNodeId = (): Uint8Array => {
     return crypto.randomBytes(KADEMLIA_ID_LENGTH_IN_BYTES)
 }
-
-// TODO maybe this is not needed and we can use just getNodeIdFromRaw?
-export const getNodeIdFromDataKey = (key: Uint8Array): NodeID => {
-    return getNodeIdFromRaw(key)
-}
