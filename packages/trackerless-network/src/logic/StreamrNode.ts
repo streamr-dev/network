@@ -136,7 +136,7 @@ export class StreamrNode extends EventEmitter<Events> {
             layer1Node,
             getEntryPointData: (key) => this.layer0Node!.getDataFromDht(key),
             storeEntryPointData: (key, data) => this.layer0Node!.storeDataToDht(key, data),
-            deleteEntryPointData: async (key: Uint8Array) => this.layer0Node!.deleteDataFromDht(key, false)
+            deleteEntryPointData: async (key) => this.layer0Node!.deleteDataFromDht(key, false)
         })
         const node = this.createRandomGraphNode(
             streamPartId,

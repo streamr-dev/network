@@ -5,6 +5,7 @@ import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } fr
 import { PeerID } from '../../src/helpers/PeerID'
 import { peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { hexToBinary } from '@streamr/utils'
+import { getNodeIdFromRaw } from '../../src/identifiers'
 
 const NUM_NODES = 100
 const K = 2
@@ -39,7 +40,7 @@ describe('Find correctness', () => {
 
     it('Entrypoint can find a node from the network (exact match)', async () => {
         const targetId = hexToBinary(nodes[45].getNodeId())
-        const results = await entryPoint.executeRecursiveOperation(targetId, RecursiveOperation.FIND_NODE)
+        const results = await entryPoint.executeRecursiveOperation(getNodeIdFromRaw(targetId), RecursiveOperation.FIND_NODE)
         expect(results.closestNodes.length).toBeGreaterThanOrEqual(5)
         expect(PeerID.fromValue(targetId).equals(peerIdFromPeerDescriptor(results.closestNodes[0])))
     }, 30000)

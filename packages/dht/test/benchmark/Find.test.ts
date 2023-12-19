@@ -9,6 +9,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Logger, wait } from '@streamr/utils'
 import { debugVars } from '../../src/helpers/debugHelpers'
+import { getNodeIdFromRaw } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
@@ -65,7 +66,7 @@ describe('Find correctness', () => {
 
         logger.info('starting find')
         const targetId = Uint8Array.from(dhtIds[9].data)
-        const results = await nodes[159].executeRecursiveOperation(targetId, RecursiveOperation.FIND_NODE)
+        const results = await nodes[159].executeRecursiveOperation(getNodeIdFromRaw(targetId), RecursiveOperation.FIND_NODE)
         logger.info('find over')
         expect(results.closestNodes).toBeGreaterThanOrEqual(5)
         expect(PeerID.fromValue(targetId).equals(peerIdFromPeerDescriptor(results.closestNodes[0])))

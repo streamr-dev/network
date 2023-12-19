@@ -50,7 +50,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
 import { PeerManager } from './PeerManager'
 import { ServiceID } from '../types/ServiceID'
-import { DataKey, NodeID, getDataKeyFromRaw, getNodeIdFromRaw, getRawFromDataKey } from '../identifiers'
+import { DataKey, NodeID, getNodeIdFromRaw } from '../identifiers'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
 
 export interface DhtNodeEvents {
@@ -365,9 +365,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             (_req: LeaveNotice, context) => dhtNodeRpcLocal.leaveNotice(context))
         const externalApiRpcLocal = new ExternalApiRpcLocal({
             executeRecursiveOperation: (key: DataKey, operation: RecursiveOperation, excludedPeer: PeerDescriptor) => {
-                return this.executeRecursiveOperation(getRawFromDataKey(key), operation, excludedPeer)
+                return this.executeRecursiveOperation(key, operation, excludedPeer)
             },
-            storeDataToDht: (key: DataKey, data: Any, creator?: NodeID) => this.storeDataToDht(getRawFromDataKey(key), data, creator)
+            storeDataToDht: (key: DataKey, data: Any, creator?: NodeID) => this.storeDataToDht(key, data, creator)
         })
         this.rpcCommunicator!.registerRpcMethod(
             ExternalFindDataRequest,
@@ -448,22 +448,21 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     // TODO make this private and unify the public API of find/fetch/store/delete methods
     // (we already have storeDataToDht etc. here)
     public async executeRecursiveOperation(
-        key: Uint8Array,
+        key: NodeID | DataKey,
         operation: RecursiveOperation,
         excludedPeer?: PeerDescriptor
     ): Promise<RecursiveOperationResult> {
-        // this can also be DataKey
-        return this.recursiveOperationManager!.execute(getNodeIdFromRaw(key), operation, excludedPeer)
+        return this.recursiveOperationManager!.execute(key, operation, excludedPeer)
     }
 
-    public async storeDataToDht(key: Uint8Array, data: Any, creator?: NodeID): Promise<PeerDescriptor[]> {
+    public async storeDataToDht(key: DataKey, data: Any, creator?: NodeID): Promise<PeerDescriptor[]> {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.storeDataViaPeer(key, data, sample(this.config.entryPoints)!)
         }
-        return this.storeManager!.storeDataToDht(getDataKeyFromRaw(key), data, creator ?? getNodeIdFromPeerDescriptor(this.localPeerDescriptor!))
+        return this.storeManager!.storeDataToDht(key, data, creator ?? getNodeIdFromPeerDescriptor(this.localPeerDescriptor!))
     }
 
-    public async storeDataViaPeer(key: Uint8Array, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
+    public async storeDataViaPeer(key: DataKey, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
         const rpcRemote = new ExternalApiRpcRemote(
             this.localPeerDescriptor!,
             peer,
@@ -471,24 +470,24 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.rpcCommunicator!,
             ExternalApiRpcClient
         )
-        return await rpcRemote.storeData(getDataKeyFromRaw(key), data)
+        return await rpcRemote.storeData(key, data)
     }
 
-    public async getDataFromDht(key: Uint8Array): Promise<DataEntry[]> {
+    public async getDataFromDht(key: DataKey): Promise<DataEntry[]> {
         if (this.peerDiscovery!.isJoinOngoing() && this.config.entryPoints && this.config.entryPoints.length > 0) {
             return this.findDataViaPeer(key, sample(this.config.entryPoints)!)
         }
-        const result = await this.recursiveOperationManager!.execute(getDataKeyFromRaw(key), RecursiveOperation.FETCH_DATA)
+        const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FETCH_DATA)
         return result.dataEntries ?? []  // TODO is this fallback needed?
     }
 
-    public async deleteDataFromDht(key: Uint8Array, waitForCompletion: boolean): Promise<void> {
+    public async deleteDataFromDht(key: DataKey, waitForCompletion: boolean): Promise<void> {
         if (!this.abortController.signal.aborted) {
-            await this.recursiveOperationManager!.execute(getDataKeyFromRaw(key), RecursiveOperation.DELETE_DATA, undefined, waitForCompletion)
+            await this.recursiveOperationManager!.execute(key, RecursiveOperation.DELETE_DATA, undefined, waitForCompletion)
         }
     }
 
-    public async findDataViaPeer(key: Uint8Array, peer: PeerDescriptor): Promise<DataEntry[]> {
+    public async findDataViaPeer(key: DataKey, peer: PeerDescriptor): Promise<DataEntry[]> {
         const rpcRemote = new ExternalApiRpcRemote(
             this.localPeerDescriptor!,
             peer,
@@ -496,7 +495,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.rpcCommunicator!,
             ExternalApiRpcClient
         )
-        return await rpcRemote.externalFindData(getDataKeyFromRaw(key))
+        return await rpcRemote.externalFindData(key)
     }
 
     public getTransport(): ITransport {

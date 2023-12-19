@@ -1,7 +1,9 @@
 import {
     DataEntry,
+    DataKey,
     PeerDescriptor,
-    areEqualPeerDescriptors
+    areEqualPeerDescriptors,
+    getDataKeyFromRaw
 } from '@streamr/dht'
 import { StreamPartID } from '@streamr/protocol'
 import { Logger, scheduleAtInterval, wait } from '@streamr/utils'
@@ -10,8 +12,8 @@ import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { Any } from '../proto/google/protobuf/any'
 import { Layer1Node } from './Layer1Node'
 
-export const streamPartIdToDataKey = (streamPartId: StreamPartID): Uint8Array => {
-    return new Uint8Array(createHash('md5').update(streamPartId).digest())
+export const streamPartIdToDataKey = (streamPartId: StreamPartID): DataKey => {
+    return getDataKeyFromRaw(new Uint8Array(createHash('md5').update(streamPartId).digest()))
 }
 
 const parseEntryPointData = (dataEntries: DataEntry[]): PeerDescriptor[] => {
@@ -58,9 +60,9 @@ interface EntryPointDiscoveryConfig {
     streamPartId: StreamPartID
     localPeerDescriptor: PeerDescriptor
     layer1Node: Layer1Node
-    getEntryPointData: (key: Uint8Array) => Promise<DataEntry[]>
-    storeEntryPointData: (key: Uint8Array, data: Any) => Promise<PeerDescriptor[]>
-    deleteEntryPointData: (key: Uint8Array) => Promise<void>
+    getEntryPointData: (key: DataKey) => Promise<DataEntry[]>
+    storeEntryPointData: (key: DataKey, data: Any) => Promise<PeerDescriptor[]>
+    deleteEntryPointData: (key: DataKey) => Promise<void>
     storeInterval?: number
 }
 
@@ -106,7 +108,7 @@ export class EntryPointDiscovery {
         }
     }
 
-    private async queryEntrypoints(key: Uint8Array): Promise<PeerDescriptor[]> {
+    private async queryEntrypoints(key: DataKey): Promise<PeerDescriptor[]> {
         logger.trace(`Finding data from dht node ${getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)}`)
         try {
             const result = await this.config.getEntryPointData(key)

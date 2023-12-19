@@ -10,7 +10,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { getNodeIdFromPeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
-import { NodeID, getRawFromDataKey } from '../../src/identifiers'
+import { NodeID } from '../../src/identifiers'
 import { createMockDataEntry } from '../utils/mock/mockDataEntry'
 import { getDataKeyFromRaw } from '../../src/identifiers'
 
@@ -104,7 +104,7 @@ describe('Replicate data from node to node in DHT', () => {
         await nodes[0].joinDht([entrypointDescriptor])
 
         logger.info('storing data to node 0')
-        const successfulStorers = await nodes[0].storeDataToDht(getRawFromDataKey(dataKey), data.data!)
+        const successfulStorers = await nodes[0].storeDataToDht(dataKey, data.data!)
         expect(successfulStorers.length).toBe(1)
         logger.info('data successfully stored to node 0')
 
@@ -177,7 +177,7 @@ describe('Replicate data from node to node in DHT', () => {
         const randomIndex = Math.floor(Math.random() * nodes.length)
         logger.info('storing data to a random node: ' + randomIndex)
 
-        const successfulStorers = await nodes[randomIndex].storeDataToDht(getRawFromDataKey(dataKey), data.data!)
+        const successfulStorers = await nodes[randomIndex].storeDataToDht(dataKey, data.data!)
 
         logger.info('data successfully stored to ' + successfulStorers + ' nodes')
 
