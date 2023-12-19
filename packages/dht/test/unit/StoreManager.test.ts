@@ -1,19 +1,26 @@
 import { wait, waitForCondition } from '@streamr/utils'
-import crypto from 'crypto'
 import { range, sortBy } from 'lodash'
 import { getDistance } from '../../src/dht/PeerManager'
 import { StoreManager } from '../../src/dht/store/StoreManager'
-import { DataKey, NodeID, createRandomNodeId, getNodeIdFromRaw } from '../../src/identifiers'
+import {
+    DataKey,
+    NodeID,
+    createRandomDataKey,
+    createRandomNodeId,
+    getNodeIdFromRaw,
+    getRawFromDataKey,
+    getRawFromNodeId
+} from '../../src/identifiers'
 import { NodeType, ReplicateDataRequest } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { getDataKeyFromRaw } from '../../src/identifiers'
 
 const DATA_ENTRY = {
-    key: createRandomNodeId(),
-    creator: crypto.randomBytes(20)
+    key: getRawFromDataKey(createRandomDataKey()),
+    creator: getRawFromNodeId(createRandomNodeId())
 }
 const NODES_CLOSEST_TO_DATA = sortBy(
     range(5).map(() => createRandomNodeId()),
-    (id: Uint8Array) => getDistance(id, DATA_ENTRY.key)
+    (id: NodeID) => getDistance(getRawFromNodeId(id), DATA_ENTRY.key)
 )
 
 describe('StoreManager', () => {
@@ -21,13 +28,13 @@ describe('StoreManager', () => {
     describe('new contact', () => {
 
         const createStoreManager = (
-            localNodeId: Uint8Array,
-            closestNeighbors: Uint8Array[],
+            localNodeId: NodeID,
+            closestNeighbors: NodeID[],
             replicateData: (request: ReplicateDataRequest) => unknown,
             setStale: (key: DataKey, creator: NodeID, stale: boolean) => unknown
         ): StoreManager => {
             const getClosestNeighborsTo = () => {
-                return closestNeighbors.map((nodeId) => ({ nodeId, type: NodeType.NODEJS }))
+                return closestNeighbors.map((nodeId) => ({ nodeId: getRawFromNodeId(nodeId), type: NodeType.NODEJS }))
             }
             return new StoreManager({
                 rpcCommunicator: {
@@ -35,7 +42,7 @@ describe('StoreManager', () => {
                     registerRpcNotification: () => {}
                 } as any,
                 recursiveOperationManager: undefined as any,
-                localPeerDescriptor: { nodeId: localNodeId, type: NodeType.NODEJS },
+                localPeerDescriptor: { nodeId: getRawFromNodeId(localNodeId), type: NodeType.NODEJS },
                 localDataStore: { values: () => [DATA_ENTRY], setStale } as any,
                 serviceId: undefined as any,
                 highestTtl: undefined as any,
@@ -56,7 +63,7 @@ describe('StoreManager', () => {
                     replicateData,
                     setStale
                 )
-                manager.onNewContact({ nodeId: NODES_CLOSEST_TO_DATA[2], type: NodeType.NODEJS })
+                manager.onNewContact({ nodeId: getRawFromNodeId(NODES_CLOSEST_TO_DATA[2]), type: NodeType.NODEJS })
                 await waitForCondition(() => replicateData.mock.calls.length === 1)
                 expect(replicateData).toHaveBeenCalledWith({
                     entry: DATA_ENTRY
@@ -73,7 +80,7 @@ describe('StoreManager', () => {
                     replicateData,
                     setStale
                 )
-                manager.onNewContact({ nodeId: NODES_CLOSEST_TO_DATA[4], type: NodeType.NODEJS })
+                manager.onNewContact({ nodeId: getRawFromNodeId(NODES_CLOSEST_TO_DATA[4]), type: NodeType.NODEJS })
                 await wait(50)
                 expect(replicateData).not.toHaveBeenCalled()
                 expect(setStale).not.toHaveBeenCalled()
@@ -91,7 +98,7 @@ describe('StoreManager', () => {
                     replicateData,
                     setStale
                 )
-                manager.onNewContact({ nodeId: NODES_CLOSEST_TO_DATA[4], type: NodeType.NODEJS })
+                manager.onNewContact({ nodeId: getRawFromNodeId(NODES_CLOSEST_TO_DATA[4]), type: NodeType.NODEJS })
                 await wait(50)
                 expect(replicateData).not.toHaveBeenCalled()
                 expect(setStale).not.toHaveBeenCalled()
@@ -106,7 +113,7 @@ describe('StoreManager', () => {
                     replicateData,
                     setStale
                 )
-                manager.onNewContact({ nodeId: NODES_CLOSEST_TO_DATA[4], type: NodeType.NODEJS })
+                manager.onNewContact({ nodeId: getRawFromNodeId(NODES_CLOSEST_TO_DATA[4]), type: NodeType.NODEJS })
                 await wait(50)
                 expect(replicateData).not.toHaveBeenCalled()
                 expect(setStale).toHaveBeenCalledTimes(1)
@@ -122,7 +129,7 @@ describe('StoreManager', () => {
                     replicateData,
                     setStale
                 )
-                manager.onNewContact({ nodeId: NODES_CLOSEST_TO_DATA[4], type: NodeType.NODEJS })
+                manager.onNewContact({ nodeId: getRawFromNodeId(NODES_CLOSEST_TO_DATA[4]), type: NodeType.NODEJS })
                 await wait(50)
                 expect(replicateData).not.toHaveBeenCalled()
                 expect(setStale).toHaveBeenCalledTimes(0)

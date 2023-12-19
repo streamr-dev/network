@@ -1,7 +1,6 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { getDataKeyFromRaw } from '../../src/identifiers'
-import { createRandomNodeId, getNodeIdFromRaw } from '../../src/identifiers'
+import { createRandomDataKey, getDataKeyFromRaw, getNodeIdFromRaw } from '../../src/identifiers'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
 import { createMockConnectionDhtNode } from '../utils/utils'
@@ -35,7 +34,7 @@ describe('DhtNodeExternalApi', () => {
     })
     
     it('findData returns empty array if no data found', async () => {
-        const foundData = await remote.findDataViaPeer(getDataKeyFromRaw(createRandomNodeId()), dhtNode1.getLocalPeerDescriptor())
+        const foundData = await remote.findDataViaPeer(createRandomDataKey(), dhtNode1.getLocalPeerDescriptor())
         expect(foundData).toEqual([])
     })
 

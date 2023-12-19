@@ -3,11 +3,10 @@ import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
-import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message, MessageType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
-import { createRandomNodeId } from '../../src/identifiers'
 import { MockTransport } from '../utils/mock/Transport'
 
 const BASE_MESSAGE: Message = {
@@ -88,27 +87,23 @@ describe('SimultaneousConnections', () => {
         let connectionManager1: ConnectionManager
         let connectionManager2: ConnectionManager
         
-        const wsPeerDescriptor1: PeerDescriptor = {
-            nodeId: createRandomNodeId(),
-            type: NodeType.NODEJS,
+        const wsPeerDescriptor1 = createMockPeerDescriptor({
             websocket: {
                 host: '127.0.0.1',
                 port: 43432,
                 tls: false
             },
             region: getRandomRegion()
-        }
+        })
 
-        const wsPeerDescriptor2: PeerDescriptor = {
-            nodeId: createRandomNodeId(),
-            type: NodeType.NODEJS,
+        const wsPeerDescriptor2 = createMockPeerDescriptor({
             websocket: {
                 host: '127.0.0.1',
                 port: 43433,
                 tls: false
             },
             region: getRandomRegion()
-        }
+        })
 
         beforeEach(async () => {
 
@@ -176,16 +171,14 @@ describe('SimultaneousConnections', () => {
         let connectionManager1: ConnectionManager
         let connectionManager2: ConnectionManager
 
-        const wsPeerDescriptor1: PeerDescriptor = {
-            nodeId: createRandomNodeId(),
-            type: NodeType.NODEJS,
+        const wsPeerDescriptor1 = createMockPeerDescriptor({
             websocket: {
                 host: '127.0.0.1',
                 port: 43432,
                 tls: false
             },
             region: getRandomRegion()
-        }
+        })
 
         const wsPeerDescriptor2 = createMockPeerDescriptor({ region: getRandomRegion() })
 

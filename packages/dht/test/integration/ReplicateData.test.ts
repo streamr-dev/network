@@ -10,7 +10,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { getNodeIdFromPeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
-import { NodeID } from '../../src/identifiers'
+import { NodeID, getNodeIdFromRaw } from '../../src/identifiers'
 import { createMockDataEntry } from '../utils/mock/mockDataEntry'
 import { getDataKeyFromRaw } from '../../src/identifiers'
 
@@ -44,7 +44,7 @@ describe('Replicate data from node to node in DHT', () => {
     beforeEach(async () => {
         nodes = []
         entryPoint = await createMockConnectionDhtNode(simulator,
-            Uint8Array.from(dhtIds[0].data), K, MAX_CONNECTIONS)
+            getNodeIdFromRaw(Uint8Array.from(dhtIds[0].data)), K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         nodesById.set(entryPoint.getNodeId(), entryPoint)
 
@@ -57,7 +57,7 @@ describe('Replicate data from node to node in DHT', () => {
 
         for (let i = 1; i < NUM_NODES; i++) {
             const node = await createMockConnectionDhtNode(simulator,
-                Uint8Array.from(dhtIds[i].data), K, MAX_CONNECTIONS)
+                getNodeIdFromRaw(Uint8Array.from(dhtIds[i].data)), K, MAX_CONNECTIONS)
             nodesById.set(node.getNodeId(), node)
             nodes.push(node)
         }
@@ -76,7 +76,7 @@ describe('Replicate data from node to node in DHT', () => {
 
     it('Data replicates to the closest node no matter where it is stored', async () => {
         const dataKey = getDataKeyFromRaw(PeerID.fromString('3232323e12r31r3').value)
-        const data = createMockDataEntry({ key: hexToBinary(dataKey) })
+        const data = createMockDataEntry({ key: dataKey })
 
         // calculate offline which node is closest to the data
 
@@ -161,7 +161,7 @@ describe('Replicate data from node to node in DHT', () => {
 
     it('Data replicates to the last remaining node if all other nodes leave gracefully', async () => {
         const dataKey = getDataKeyFromRaw(PeerID.fromString('3232323e12r31r3').value)
-        const data = createMockDataEntry({ key: hexToBinary(dataKey) })
+        const data = createMockDataEntry({ key: dataKey })
 
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
         await Promise.all(

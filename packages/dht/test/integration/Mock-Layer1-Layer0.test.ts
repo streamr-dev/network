@@ -3,6 +3,7 @@ import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils/utils'
 import { PeerID } from '../../src/exports'
+import { getNodeIdFromRaw } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
@@ -24,11 +25,11 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
 
     beforeEach(async () => {
 
-        layer0EntryPoint = await createMockConnectionDhtNode(simulator, PeerID.fromString('layer0entrypoint').value)
-        layer0Node1 = await createMockConnectionDhtNode(simulator, PeerID.fromString('node1').value)
-        layer0Node2 = await createMockConnectionDhtNode(simulator, PeerID.fromString('node2').value)
-        layer0Node3 = await createMockConnectionDhtNode(simulator, PeerID.fromString('node3').value)
-        layer0Node4 = await createMockConnectionDhtNode(simulator, PeerID.fromString('node4').value)
+        layer0EntryPoint = await createMockConnectionDhtNode(simulator, getNodeIdFromRaw(PeerID.fromString('layer0entrypoint').value))
+        layer0Node1 = await createMockConnectionDhtNode(simulator, getNodeIdFromRaw(PeerID.fromString('node1').value))
+        layer0Node2 = await createMockConnectionDhtNode(simulator, getNodeIdFromRaw(PeerID.fromString('node2').value))
+        layer0Node3 = await createMockConnectionDhtNode(simulator, getNodeIdFromRaw(PeerID.fromString('node3').value))
+        layer0Node4 = await createMockConnectionDhtNode(simulator, getNodeIdFromRaw(PeerID.fromString('node4').value))
 
         layer1EntryPoint = await createMockConnectionLayer1Node(layer0EntryPoint)
 

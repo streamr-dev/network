@@ -1,6 +1,6 @@
 import { hexToBinary } from '@streamr/utils'
 import { PeerManager, getDistance } from '../../src/dht/PeerManager'
-import { NodeID, createRandomNodeId, getNodeIdFromRaw, getRawFromNodeId } from '../../src/identifiers'
+import { NodeID, createRandomNodeId, getRawFromNodeId } from '../../src/identifiers'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { range, sampleSize, sortBy, without } from 'lodash'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
@@ -9,16 +9,16 @@ import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 describe('PeerManager', () => {
 
     it('getClosestContactsTo', () => {
-        const nodeIds = range(10).map(() => getNodeIdFromRaw(createRandomNodeId()))
+        const nodeIds = range(10).map(() => createRandomNodeId())
         const manager = new PeerManager({
-            localNodeId: getNodeIdFromRaw(createRandomNodeId()),
+            localNodeId: createRandomNodeId(),
             createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => {
                 return new DhtNodeRpcRemote(undefined as any, peerDescriptor, undefined as any, new MockRpcCommunicator())
             }
         } as any)
         manager.handleNewPeers(nodeIds.map((n) => ({ nodeId: hexToBinary(n), type: NodeType.NODEJS })))
 
-        const referenceId = getNodeIdFromRaw(createRandomNodeId())
+        const referenceId = createRandomNodeId()
         const excluded = new Set<NodeID>(sampleSize(nodeIds, 2)!)
         const actual = manager.getClosestContactsTo(referenceId, 5, excluded)
 

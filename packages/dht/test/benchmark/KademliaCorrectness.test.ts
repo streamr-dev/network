@@ -5,7 +5,7 @@ import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDes
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
-import { NodeID } from '../../src/identifiers'
+import { NodeID, getNodeIdFromRaw } from '../../src/identifiers'
 
 describe('Kademlia correctness', () => {
     let entryPoint: DhtNode
@@ -27,12 +27,12 @@ describe('Kademlia correctness', () => {
     beforeEach(async () => {
 
         nodes = []
-        entryPoint = await createMockConnectionDhtNode(simulator, Uint8Array.from(dhtIds[0].data), 8)
+        entryPoint = await createMockConnectionDhtNode(simulator, getNodeIdFromRaw(Uint8Array.from(dhtIds[0].data)), 8)
         nodes.push(entryPoint)
         nodeIndicesById[entryPoint.getNodeId()] = 0
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator, Uint8Array.from(dhtIds[i].data))
+            const node = await createMockConnectionDhtNode(simulator, getNodeIdFromRaw(Uint8Array.from(dhtIds[i].data)))
             nodeIndicesById[node.getNodeId()] = i
             nodes.push(node)
         }

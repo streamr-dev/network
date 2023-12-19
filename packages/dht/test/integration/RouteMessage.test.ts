@@ -8,7 +8,7 @@ import { Simulator } from '../../src/connection/simulator/Simulator'
 import { v4 } from 'uuid'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { RoutingMode } from '../../src/dht/routing/RoutingSession'
-import { createRandomNodeId } from '../../src/identifiers'
+import { createRandomNodeId, getNodeIdFromRaw } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
@@ -43,7 +43,7 @@ describe('Route Message With Mock Connections', () => {
         destinationNode = await createMockConnectionDhtNode(simulator, createRandomNodeId())
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator, PeerID.fromString(`${i}`).value)
+            const node = await createMockConnectionDhtNode(simulator, getNodeIdFromRaw(PeerID.fromString(`${i}`).value))
             routerNodes.push(node)
         }
 

@@ -34,8 +34,10 @@ export const getRawFromDataKey = (dataKey: DataKey): NodeIDOrDataKeyRaw => {
     return getRawFromNodeIdOrDataKey(dataKey)
 }
 
-// TODO this should return NodeID (or NodeID | DataKey)
-// TODO maybe rename this to createRandomNodeIdOrDataKey?
-export const createRandomNodeId = (): Uint8Array => {
-    return crypto.randomBytes(KADEMLIA_ID_LENGTH_IN_BYTES)
+export const createRandomNodeId = (): NodeID => {
+    return getNodeIdFromRaw(crypto.randomBytes(KADEMLIA_ID_LENGTH_IN_BYTES))
+}
+
+export const createRandomDataKey = (): DataKey => {
+    return getDataKeyFromRaw(crypto.randomBytes(KADEMLIA_ID_LENGTH_IN_BYTES))
 }

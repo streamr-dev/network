@@ -9,7 +9,7 @@ import { StoreRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.clien
 import { StoreRpcRemote } from '../../src/dht/store/StoreRpcRemote'
 import { createMockDataEntry } from '../utils/mock/mockDataEntry'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { createRandomNodeId } from '../../src/identifiers'
+import { createRandomDataKey, getRawFromDataKey } from '../../src/identifiers'
 
 const SERVICE_ID = 'test'
 
@@ -24,7 +24,7 @@ describe('StoreRpcRemote', () => {
     const request: StoreDataRequest = {
         key: data.key,
         data: data.data,
-        creator: createRandomNodeId(),
+        creator: getRawFromDataKey(createRandomDataKey()),
         ttl: 10
     }
 

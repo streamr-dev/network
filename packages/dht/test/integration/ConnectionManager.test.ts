@@ -9,7 +9,7 @@ import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/
 import { MarkOptional } from 'ts-essentials'
 import { TransportEvents } from '../../src/transport/ITransport'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { createRandomNodeId } from '../../src/identifiers'
+import { createRandomNodeId, getRawFromNodeId } from '../../src/identifiers'
 
 const SERVICE_ID = 'demo'
 
@@ -363,7 +363,7 @@ describe('ConnectionManager', () => {
             messageId: '1',
             targetDescriptor: {
                 // This is not the correct nodeId of peerDescriptor2
-                nodeId: createRandomNodeId(),
+                nodeId: getRawFromNodeId(createRandomNodeId()),
                 type: NodeType.NODEJS,
                 websocket: peerDescriptor2.websocket
             },

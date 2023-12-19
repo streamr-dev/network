@@ -5,7 +5,7 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import { ConnectionManager } from '../../connection/ConnectionManager'
 import { PeerManager } from '../PeerManager'
-import { NodeID, createRandomNodeId, getNodeIdFromRaw } from '../../identifiers'
+import { NodeID, createRandomNodeId } from '../../identifiers'
 import { ServiceID } from '../../types/ServiceID'
 
 interface PeerDiscoveryConfig {
@@ -52,7 +52,7 @@ export class PeerDiscovery {
         const targetId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
         const sessions = [this.createSession(targetId)]
         if (doAdditionalRandomPeerDiscovery) {
-            sessions.push(this.createSession(getNodeIdFromRaw(createRandomNodeId())))
+            sessions.push(this.createSession(createRandomNodeId()))
         }
         await this.runSessions(sessions, entryPointDescriptor, retry)
         this.config.connectionManager?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
