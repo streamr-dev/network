@@ -8,7 +8,8 @@ import {
     Simulator,
     SimulatorTransport,
     getDhtAddressFromRaw,
-    getRandomRegion
+    getRandomRegion,
+    getRawFromDhtAddress
 } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import {
@@ -95,7 +96,7 @@ export const createRandomNodeId = (): DhtAddress => {
 export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'nodeId' | 'type'>): PeerDescriptor => {
     return {
         ...opts,
-        nodeId: hexToBinary(createRandomNodeId()),
+        nodeId: getRawFromDhtAddress(createRandomNodeId()),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }

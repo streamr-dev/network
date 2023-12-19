@@ -1,7 +1,7 @@
-import { DhtAddress, PeerDescriptor } from '@streamr/dht'
+import { DhtAddress, PeerDescriptor, getDhtAddressFromRaw } from '@streamr/dht'
 import { ProxyDirection, StreamMessage, StreamPartID } from '@streamr/protocol'
 import { NetworkOptions } from '@streamr/trackerless-network'
-import { EthereumAddress, MetricsContext, binaryToHex } from '@streamr/utils'
+import { EthereumAddress, MetricsContext } from '@streamr/utils'
 import crypto from 'crypto'
 import pull from 'lodash/pull'
 import { Lifecycle, scoped } from 'tsyringe'
@@ -20,7 +20,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
     private readonly network: FakeNetwork
 
     constructor(network: FakeNetwork, options: NetworkOptions = {}) {
-        this.id = binaryToHex(crypto.randomBytes(10)) as DhtAddress
+        this.id = getDhtAddressFromRaw(crypto.randomBytes(10))
         this.options = options
         this.network = network
     }

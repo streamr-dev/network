@@ -12,7 +12,7 @@ import {
     WebsocketConnectionRequest
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { WebsocketConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { Logger, binaryToHex, wait } from '@streamr/utils'
+import { Logger, wait } from '@streamr/utils'
 import { ManagedConnection } from '../ManagedConnection'
 import { WebsocketServer } from './WebsocketServer'
 import { sendConnectivityRequest } from '../connectivityChecker'
@@ -203,7 +203,7 @@ export class WebsocketConnector {
                 }
             } catch (err) {
                 if (reattempt < ENTRY_POINT_CONNECTION_ATTEMPTS) {
-                    const error = `Failed to connect to entrypoint with id ${binaryToHex(entryPoint.nodeId)} `
+                    const error = `Failed to connect to entrypoint with id ${getNodeIdFromPeerDescriptor(entryPoint)} `
                         + `and URL ${connectivityMethodToWebsocketUrl(entryPoint.websocket!)}`
                     logger.error(error, { error: err })
                     await wait(2000)

@@ -1,5 +1,4 @@
-import { DhtAddress, NodeType, getNodeIdFromPeerDescriptor } from '@streamr/dht'
-import { hexToBinary } from '@streamr/utils'
+import { DhtAddress, NodeType, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '@streamr/dht'
 import { NodeList } from '../../src/logic/NodeList'
 import { HandshakeRpcLocal } from '../../src/logic/neighbor-discovery/HandshakeRpcLocal'
 import { InterleaveRequest, StreamPartHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
@@ -88,7 +87,7 @@ describe('HandshakeRpcLocal', () => {
     it('handshakeWithInterleaving success', async () => {
         const req: InterleaveRequest = {
             interleaveTargetDescriptor: {
-                nodeId: hexToBinary('0x2222'),
+                nodeId: getRawFromDhtAddress('0x2222' as DhtAddress),
                 type: NodeType.NODEJS
             }
         }
@@ -101,7 +100,7 @@ describe('HandshakeRpcLocal', () => {
     it('handshakeWithInterleaving success', async () => {
         const req: InterleaveRequest = {
             interleaveTargetDescriptor: {
-                nodeId: hexToBinary('0x2222'),
+                nodeId: getRawFromDhtAddress('0x2222' as DhtAddress),
                 type: NodeType.NODEJS
             }
         }
