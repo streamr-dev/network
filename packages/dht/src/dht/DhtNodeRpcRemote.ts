@@ -5,7 +5,6 @@ import { NodeID } from '../helpers/nodeId'
 import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import {
     ClosestPeersRequest,
-    LeaveNotice,
     PeerDescriptor,
     PingRequest
 } from '../proto/packages/dht/protos/DhtRpc'
@@ -75,13 +74,10 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
 
     leaveNotice(): void {
         logger.trace(`Sending leaveNotice on ${this.serviceId} from ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
-        const request: LeaveNotice = {
-            serviceId: this.serviceId
-        }
         const options = this.formDhtRpcOptions({
             notification: true
         })
-        this.getClient().leaveNotice(request, options).catch((e) => {
+        this.getClient().leaveNotice({}, options).catch((e) => {
             logger.trace('Failed to send leaveNotice' + e)
         })
     }
