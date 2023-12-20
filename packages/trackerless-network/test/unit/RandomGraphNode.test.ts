@@ -1,5 +1,4 @@
 import { waitForCondition } from '@streamr/utils'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { NodeList } from '../../src/logic/NodeList'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
@@ -10,6 +9,7 @@ import { MockNeighborUpdateManager } from '../utils/mock/MockNeighborUpdateManag
 import { MockTransport } from '../utils/mock/Transport'
 import { createMockPeerDescriptor, createMockDeliveryRpcRemote, mockConnectionLocker } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { getNodeIdFromPeerDescriptor } from '@streamr/dht'
 
 describe('RandomGraphNode', () => {
 

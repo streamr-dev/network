@@ -17,8 +17,6 @@ import { createStreamMessage } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 
-const STREAM_PART_ID = StreamPartIDUtils.parse('test-stream#0')
-
 describe('DeliveryRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator
     let clientRpc: ListeningRpcCommunicator
@@ -71,7 +69,6 @@ describe('DeliveryRpcRemote', () => {
         rpcRemote = new DeliveryRpcRemote(
             clientNode,
             serverNode,
-            STREAM_PART_ID,
             clientRpc,
             DeliveryRpcClient
         )
@@ -88,7 +85,7 @@ describe('DeliveryRpcRemote', () => {
     it('sendStreamMessage', async () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
-            STREAM_PART_ID,
+            StreamPartIDUtils.parse('test-stream#0'),
             randomEthereumAddress()
         )
 
@@ -97,7 +94,7 @@ describe('DeliveryRpcRemote', () => {
     })
 
     it('leaveNotice', async () => {
-        rpcRemote.leaveStreamPartNotice(false)
+        rpcRemote.leaveStreamPartNotice(StreamPartIDUtils.parse('test#0'), false)
         await waitForCondition(() => recvCounter === 1)
     })
 

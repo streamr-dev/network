@@ -1,7 +1,7 @@
-import { PeerDescriptor } from '@streamr/dht'
+import { DhtAddress, PeerDescriptor, getDhtAddressFromRaw } from '@streamr/dht'
 import { ProxyDirection, StreamMessage, StreamPartID } from '@streamr/protocol'
-import { NodeID, NetworkOptions } from '@streamr/trackerless-network'
-import { EthereumAddress, MetricsContext, binaryToHex } from '@streamr/utils'
+import { NetworkOptions } from '@streamr/trackerless-network'
+import { EthereumAddress, MetricsContext } from '@streamr/utils'
 import crypto from 'crypto'
 import pull from 'lodash/pull'
 import { Lifecycle, scoped } from 'tsyringe'
@@ -12,7 +12,7 @@ type MessageListener = (msg: StreamMessage) => void
 
 export class FakeNetworkNode implements NetworkNodeStub {
 
-    private readonly id: NodeID
+    private readonly id: DhtAddress
     private readonly options: NetworkOptions
     readonly subscriptions: Set<StreamPartID> = new Set()
     readonly proxiedStreamParts: Set<StreamPartID> = new Set()
@@ -20,12 +20,12 @@ export class FakeNetworkNode implements NetworkNodeStub {
     private readonly network: FakeNetwork
 
     constructor(network: FakeNetwork, options: NetworkOptions = {}) {
-        this.id = binaryToHex(crypto.randomBytes(10)) as NodeID
+        this.id = getDhtAddressFromRaw(crypto.randomBytes(10))
         this.options = options
         this.network = network
     }
 
-    getNodeId(): NodeID {
+    getNodeId(): DhtAddress {
         return this.id
     }
 
@@ -60,7 +60,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         throw new Error('not implemented')
     }
 
-    getNeighbors(streamPartId: StreamPartID): ReadonlyArray<NodeID> {
+    getNeighbors(streamPartId: StreamPartID): ReadonlyArray<DhtAddress> {
         const allNodes = this.network.getNodes()
         return allNodes
             .filter((node) => (node.id !== this.id))

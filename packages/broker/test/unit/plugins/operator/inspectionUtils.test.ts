@@ -1,5 +1,5 @@
 import { mock, MockProxy } from 'jest-mock-extended'
-import { NetworkPeerDescriptor, NodeID, StreamrClient, Subscription } from 'streamr-client'
+import { NetworkPeerDescriptor, StreamrClient, Subscription } from 'streamr-client'
 import { StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { findNodesForTarget, findTarget, inspectTarget } from '../../../../src/plugins/operator/inspectionUtils'
@@ -7,6 +7,7 @@ import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPa
 import { EthereumAddress, Logger, wait } from '@streamr/utils'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
+import { DhtAddress } from '@streamr/dht'
 
 const MY_OPERATOR_ADDRESS = randomEthereumAddress()
 const OTHER_OPERATOR_ADDRESS = randomEthereumAddress()
@@ -108,7 +109,7 @@ describe(findNodesForTarget, () => {
     let operatorFleetState: MockProxy<OperatorFleetState>
     let abortController: AbortController
     let resultPromise: Promise<NetworkPeerDescriptor[]>
-    let onlineNodes: NodeID[]
+    let onlineNodes: DhtAddress[]
 
     beforeEach(() => {
         getRedundancyFactorFn = jest.fn()
@@ -136,7 +137,7 @@ describe(findNodesForTarget, () => {
     })
 
     function comeOnline(peerDescriptors: NetworkPeerDescriptor[]): void {
-        onlineNodes = peerDescriptors.map(({ nodeId }) => nodeId as NodeID)
+        onlineNodes = peerDescriptors.map(({ nodeId }) => nodeId as DhtAddress)
     }
 
     it('returns empty array if no nodes found', async () => {

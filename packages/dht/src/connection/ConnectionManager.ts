@@ -31,7 +31,7 @@ import { ConnectionLockRpcRemote } from './ConnectionLockRpcRemote'
 import { WEBRTC_CLEANUP } from './webrtc/NodeWebrtcConnection'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ConnectionLockRpcLocal } from './ConnectionLockRpcLocal'
-import { NodeID } from '../helpers/nodeId'
+import { DhtAddress } from '../identifiers'
 
 export interface ConnectionManagerConfig {
     maxConnections?: number
@@ -106,7 +106,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     private readonly duplicateMessageDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
     private readonly metrics: ConnectionManagerMetrics
     private locks = new ConnectionLockHandler()
-    private connections: Map<NodeID, ManagedConnection> = new Map()
+    private connections: Map<DhtAddress, ManagedConnection> = new Map()
     private readonly connectorFacade: ConnectorFacade
     private rpcCommunicator?: RoutingRpcCommunicator
     private disconnectorIntervalRef?: NodeJS.Timeout
@@ -134,8 +134,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             rpcRequestTimeout: 10000  // TODO use config option or named constant?
         })
         const lockRpcLocal = new ConnectionLockRpcLocal({
-            addRemoteLocked: (id: NodeID, lockId: LockID) => this.locks.addRemoteLocked(id, lockId),
-            removeRemoteLocked: (id: NodeID, lockId: LockID) => this.locks.removeRemoteLocked(id, lockId),
+            addRemoteLocked: (id: DhtAddress, lockId: LockID) => this.locks.addRemoteLocked(id, lockId),
+            removeRemoteLocked: (id: DhtAddress, lockId: LockID) => this.locks.removeRemoteLocked(id, lockId),
             closeConnection: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string) => {
                 // TODO should we have some handling for this floating promise?
                 this.closeConnection(peerDescriptor, gracefulLeave, reason)
@@ -462,7 +462,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const rpcRemote = new ConnectionLockRpcRemote(
             this.getLocalPeerDescriptor(),
             targetDescriptor,
-            'DUMMY',
             this.rpcCommunicator!,
             ConnectionLockRpcClient
         )
@@ -481,7 +480,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const rpcRemote = new ConnectionLockRpcRemote(
             this.getLocalPeerDescriptor(),
             targetDescriptor,
-            'DUMMY',
             this.rpcCommunicator!,
             ConnectionLockRpcClient
         )
@@ -547,7 +545,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const rpcRemote = new ConnectionLockRpcRemote(
             this.getLocalPeerDescriptor(),
             targetDescriptor,
-            'DUMMY',
             this.rpcCommunicator!,
             ConnectionLockRpcClient
         )

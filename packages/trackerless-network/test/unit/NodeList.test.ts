@@ -4,11 +4,11 @@ import {
     PeerDescriptor,
     Simulator,
     SimulatorTransport,
+    getDhtAddressFromRaw,
+    getNodeIdFromPeerDescriptor,
 } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { binaryToHex } from '@streamr/utils'
 import { expect } from 'expect'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { DeliveryRpcRemote } from '../../src/logic/DeliveryRpcRemote'
 import { NodeList } from '../../src/logic/NodeList'
 import { formStreamPartDeliveryServiceId } from '../../src/logic/formStreamPartDeliveryServiceId'
@@ -39,7 +39,6 @@ describe('NodeList', () => {
         return new DeliveryRpcRemote(
             createMockPeerDescriptor(),
             peerDescriptor,
-            streamPartId,
             mockCommunicator,
             DeliveryRpcClient
         )
@@ -100,25 +99,25 @@ describe('NodeList', () => {
     it('getClosest', () => {
         const closest = nodeList.getClosest([])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
-            .toEqual(binaryToHex(new Uint8Array([1, 1, 1])))
+            .toEqual(getDhtAddressFromRaw(new Uint8Array([1, 1, 1])))
     })
 
     it('getClosest with exclude', () => {
-        const closest = nodeList.getClosest([binaryToHex(new Uint8Array([1, 1, 1])) as unknown as NodeID])
+        const closest = nodeList.getClosest([getDhtAddressFromRaw(new Uint8Array([1, 1, 1]))])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
-            .toEqual(binaryToHex(new Uint8Array([1, 1, 2])))
+            .toEqual(getDhtAddressFromRaw(new Uint8Array([1, 1, 2])))
     })
 
     it('getFurthest', () => {
         const closest = nodeList.getFurthest([])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
-            .toEqual(binaryToHex(new Uint8Array([1, 1, 5])))
+            .toEqual(getDhtAddressFromRaw(new Uint8Array([1, 1, 5])))
     })
 
     it('getFurthest with exclude', () => {
-        const closest = nodeList.getFurthest([binaryToHex(new Uint8Array([1, 1, 5])) as unknown as NodeID])
+        const closest = nodeList.getFurthest([getDhtAddressFromRaw(new Uint8Array([1, 1, 5]))])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
-            .toEqual(binaryToHex(new Uint8Array([1, 1, 4])))
+            .toEqual(getDhtAddressFromRaw(new Uint8Array([1, 1, 4])))
     })
 
     it('getClosestAndFurthest', () => {
@@ -148,12 +147,12 @@ describe('NodeList', () => {
 
     it('getClosestAndFurthest with exclude', () => {
         const results = nodeList.getClosestAndFurthest([
-            binaryToHex(new Uint8Array([1, 1, 1])) as unknown as NodeID,
-            binaryToHex(new Uint8Array([1, 1, 5])) as unknown as NodeID
+            getDhtAddressFromRaw(new Uint8Array([1, 1, 1])),
+            getDhtAddressFromRaw(new Uint8Array([1, 1, 5]))
         ])
         expect(results).toEqual([
-            nodeList.getClosest([binaryToHex(new Uint8Array([1, 1, 1])) as unknown as NodeID]),
-            nodeList.getFurthest([binaryToHex(new Uint8Array([1, 1, 5])) as unknown as NodeID])
+            nodeList.getClosest([getDhtAddressFromRaw(new Uint8Array([1, 1, 1]))]),
+            nodeList.getFurthest([getDhtAddressFromRaw(new Uint8Array([1, 1, 5]))])
         ])
     })
 })
