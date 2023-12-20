@@ -219,7 +219,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             this.config.mode === RoutingMode.RECURSIVE
             && areEqualPeerDescriptors(this.config.localPeerDescriptor, this.config.routedMessage.sourcePeer!)
         ) {
-            this.config.routedMessage.parallelRoots.push(nodeId)
+            this.config.routedMessage.parallelRootNodeIds.push(nodeId)
         }
     }
 
@@ -228,7 +228,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             this.config.mode === RoutingMode.RECURSIVE
             && areEqualPeerDescriptors(this.config.localPeerDescriptor, this.config.routedMessage.sourcePeer!)
         ) {
-            pull(this.config.routedMessage.parallelRoots, nodeId)
+            pull(this.config.routedMessage.parallelRootNodeIds, nodeId)
         }
     }
 

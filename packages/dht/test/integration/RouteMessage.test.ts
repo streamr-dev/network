@@ -89,7 +89,7 @@ describe('Route Message With Mock Connections', () => {
                 sourcePeer: sourceNode.getLocalPeerDescriptor(),
                 reachableThrough: [],
                 routingPath: [],
-                parallelRoots: []
+                parallelRootNodeIds: []
             })
         }], [[destinationNode, 'message']], 20000)
     }, 30000)
@@ -121,7 +121,7 @@ describe('Route Message With Mock Connections', () => {
                 sourcePeer: sourceNode.getLocalPeerDescriptor(),
                 reachableThrough: [],
                 routingPath: [],
-                parallelRoots: []
+                parallelRootNodeIds: []
             })
         }
         await waitForCondition(() => receivedMessages === numOfMessages)
@@ -178,7 +178,7 @@ describe('Route Message With Mock Connections', () => {
                             requestId: v4(),
                             reachableThrough: [],
                             routingPath: [],
-                            parallelRoots: []
+                            parallelRootNodeIds: []
                         })
                     }
                 }))
@@ -215,7 +215,7 @@ describe('Route Message With Mock Connections', () => {
             sourcePeer: sourceNode.getLocalPeerDescriptor(),
             reachableThrough: [entryPointDescriptor],
             routingPath: [],
-            parallelRoots: []
+            parallelRootNodeIds: []
         }
 
         const rpcMessage: RpcMessage = {
@@ -246,7 +246,7 @@ describe('Route Message With Mock Connections', () => {
             target: entryPoint.getLocalPeerDescriptor()!.nodeId,
             reachableThrough: [],
             routingPath: [],
-            parallelRoots: [],
+            parallelRootNodeIds: [],
         }
 
         await runAndWaitForEvents3<DhtNodeEvents>([() => {

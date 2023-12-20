@@ -106,7 +106,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             sourcePeer: this.config.localPeerDescriptor,
             reachableThrough: [],
             routingPath: [],
-            parallelRoots: []
+            parallelRootNodeIds: []
         }
         return routeMessage
     }

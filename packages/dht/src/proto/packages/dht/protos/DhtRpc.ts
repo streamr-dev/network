@@ -265,9 +265,9 @@ export interface RouteMessageWrapper {
      */
     routingPath: PeerDescriptor[];
     /**
-     * @generated from protobuf field: repeated string parallelRoots = 7;
+     * @generated from protobuf field: repeated string parallelRootNodeIds = 7;
      */
-    parallelRoots: string[];
+    parallelRootNodeIds: string[];
 }
 /**
  * @generated from protobuf message dht.RouteMessageAck
@@ -884,7 +884,7 @@ class RouteMessageWrapper$Type extends MessageType$<RouteMessageWrapper> {
             { no: 4, name: "message", kind: "message", T: () => Message },
             { no: 5, name: "reachableThrough", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
             { no: 6, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
-            { no: 7, name: "parallelRoots", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+            { no: 7, name: "parallelRootNodeIds", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }

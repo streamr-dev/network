@@ -34,7 +34,7 @@ describe('RoutingSession', () => {
         reachableThrough: [],
         target: mockPeerDescriptor1.nodeId,
         sourcePeer: mockPeerDescriptor2,
-        parallelRoots: []
+        parallelRootNodeIds: []
     }
 
     const createMockDhtNodeRpcRemote = (destination: PeerDescriptor): DhtNodeRpcRemote => {

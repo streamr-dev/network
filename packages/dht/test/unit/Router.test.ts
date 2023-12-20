@@ -40,7 +40,7 @@ describe('Router', () => {
         reachableThrough: [],
         target: peerDescriptor1.nodeId,
         sourcePeer: peerDescriptor2,
-        parallelRoots: []
+        parallelRootNodeIds: []
     }
     let connections: Map<NodeID, DhtNodeRpcRemote>
     const rpcCommunicator = new FakeRpcCommunicator()
@@ -71,7 +71,7 @@ describe('Router', () => {
             sourcePeer: peerDescriptor1,
             reachableThrough: [],
             routingPath: [],
-            parallelRoots: []
+            parallelRootNodeIds: []
         }) as RouteMessageAck
         expect(ack.error).toEqual(RouteMessageError.NO_TARGETS)
     })
@@ -85,12 +85,12 @@ describe('Router', () => {
             sourcePeer: peerDescriptor1,
             reachableThrough: [],
             routingPath: [],
-            parallelRoots: []
+            parallelRootNodeIds: []
         }) as RouteMessageAck
         expect(ack.error).toBeUndefined()
     })
 
-    it('doRouteMessage with parallelRoots', async () => {
+    it('doRouteMessage with parallelRootNodeIds', async () => {
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor2)
         connections.set(nodeId, createMockDhtNodeRpcRemote(peerDescriptor2))
         const ack = await rpcCommunicator.callRpcMethod('routeMessage', {
@@ -100,7 +100,7 @@ describe('Router', () => {
             sourcePeer: peerDescriptor1,
             reachableThrough: [],
             routingPath: [],
-            parallelRoots: [nodeId]
+            parallelRootNodeIds: [nodeId]
         }) as RouteMessageAck
         expect(ack.error).toEqual(RouteMessageError.NO_TARGETS)
     })

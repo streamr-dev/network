@@ -18,7 +18,7 @@ export class RecursiveOperationRpcRemote extends RpcRemote<RecursiveOperationRpc
             requestId: params.requestId ?? v4(),
             reachableThrough: params.reachableThrough ?? [],
             routingPath: params.routingPath,
-            parallelRoots: params.parallelRoots
+            parallelRootNodeIds: params.parallelRootNodeIds
         }
         const options = this.formDhtRpcOptions({
             connect: false
