@@ -11,7 +11,7 @@ import {
     SimulatorTransport
 } from '@streamr/dht'
 import path from 'path'
-import { MetricsContext } from '@streamr/utils'
+import { MetricsContext, waitForCondition } from '@streamr/utils'
 
 describe('StreamrChallenger', () => {
 
@@ -66,6 +66,7 @@ describe('StreamrChallenger', () => {
 
     it('Happy path', async () => {
         await runStreamrChallenge('127.0.0.1', '12323', sessionId)
+        await waitForCondition(() => challengedClientTransport.getAllConnectionPeerDescriptors().length === 0)
     })
 
 })

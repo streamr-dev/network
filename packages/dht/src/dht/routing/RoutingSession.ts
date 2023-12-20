@@ -28,7 +28,6 @@ class RemoteContact extends Contact {
         this.routerRpcRemote = new RouterRpcRemote(
             localPeerDescriptor,
             peer.getPeerDescriptor(),
-            peer.getServiceId(),
             rpcCommunicator,
             RouterRpcClient,
             EXISTING_CONNECTION_TIMEOUT
@@ -36,7 +35,6 @@ class RemoteContact extends Contact {
         this.recursiveOperationRpcRemote = new RecursiveOperationRpcRemote(
             localPeerDescriptor,
             peer.getPeerDescriptor(),
-            peer.getServiceId(),
             rpcCommunicator,
             RecursiveOperationRpcClient,
             EXISTING_CONNECTION_TIMEOUT

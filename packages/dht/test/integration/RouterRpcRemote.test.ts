@@ -25,7 +25,7 @@ describe('RemoteRouter', () => {
         serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
-        remoteRouter = new RouterRpcRemote(clientPeerDescriptor, serverPeerDescriptor, SERVICE_ID, clientRpcCommunicator, RouterRpcClient)
+        remoteRouter = new RouterRpcRemote(clientPeerDescriptor, serverPeerDescriptor, clientRpcCommunicator, RouterRpcClient)
     })
 
     it('routeMessage happy path', async () => {

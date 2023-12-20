@@ -4,6 +4,7 @@ import { v4 } from 'uuid'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { InterleaveRequest, InterleaveResponse, StreamPartHandshakeRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { HandshakeRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { StreamPartID } from '@streamr/protocol'
 
 const logger = new Logger(module)
 
@@ -17,12 +18,13 @@ export const INTERLEAVE_REQUEST_TIMEOUT = 15000
 export class HandshakeRpcRemote extends RpcRemote<HandshakeRpcClient> {
 
     async handshake(
+        streamPartId: StreamPartID,
         neighborIds: NodeID[],
         concurrentHandshakeTargetId?: NodeID,
         interleaveSourceId?: NodeID
     ): Promise<HandshakeResponse> {
         const request: StreamPartHandshakeRequest = {
-            streamPartId: this.getServiceId(),
+            streamPartId,
             requestId: v4(),
             neighborIds: neighborIds.map((id) => hexToBinary(id)),
             concurrentHandshakeTargetId: (concurrentHandshakeTargetId !== undefined) ? hexToBinary(concurrentHandshakeTargetId) : undefined,
