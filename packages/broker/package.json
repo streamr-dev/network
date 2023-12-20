@@ -54,7 +54,8 @@
     "streamr-client": "100.0.0-testnet-two.1",
     "uuid": "^9.0.1",
     "ws": "^8.14.2",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "@eyevinn/srt": "^0.8.3"
   },
   "devDependencies": {
     "@inquirer/testing": "^2.1.9",
