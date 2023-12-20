@@ -30,7 +30,7 @@ You'll need to decide on your [owner's cut](../streamr-network/network-roles/ope
 You can also practice your Operator deployment in the Mumbai environment with the [Mumbai Streamr Hub](https://mumbai.streamr.network/hub) (rather than switching networks on the Streamr Hub). You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
 ### Step 2: Run a Streamr node
-Spin up a Streamr node using the **[How to run a Streamr node guide](./how-to-run-streamr-node.md)**. 
+Spin up a Streamr node using the **[How to run a Streamr node guide](./how-to-run-streamr-node.md#streamr-node-hardware-recommendations)**. 
 
 During this node setup process you'll be generating a **node address** that will be needed for [Step 3](#step-3-pair-your-operator-to-your-streamr-node). 
 

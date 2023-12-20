@@ -11,18 +11,18 @@ If you’ve been running a Streamr node in the past you might be familiar with a
 - You can run ~~up to 5 nodes per IP address~~ any number of nodes from the same IP address, although one node per machine is recommended
 - Rewards are ~~automatically paid out at the beginning of the following month~~ claimed from active Sponsorships at any time
 - You can stake ~~up to 20K DATA per node~~ as much as you want. Note that at least 5% of Operator stake must come from the owner, and therefore delegations can not exceed 95%.
-- To participate in the testnets, use specific versions/tags of the Streamr node software, such as `v100.0.0-testnet-two.1`. The `latest` tag still points to the previous milestone (Brubeck) software.
+- To participate in the testnets, use specific versions/tags of the Streamr node software, such as `v100.0.0-testnet-two.2`. The `latest` tag still points to the previous milestone (Brubeck) software.
 - There is no need for a "beneficiary address" in Streamr 1.0. Instead, the node configuration contains the Operator contract address.
 :::
 
 #### Migrating from the Mumbai testing environment to Stream 1.0
 If you've created your node in the Mumbai testing environment and you want to participate in the incentivized testnets with real token rewards and risks, then you'll need to recreate your Operator using the Streamr Network [Hub](https://streamr.network/hub/network/operators). The same funding and pairing steps that you did for your Mumbai Operator need to be repeated here too. The testnets and the future 1.0 mainnet will run on the Polygon Blockchain.
 
-- **Node version:** The `pretestnet` tagged releases shouldn't be used anymore, instead use `v100.0.0-testnet-two.1`. 
+- **Node version:** The `pretestnet` tagged releases shouldn't be used anymore, instead use `v100.0.0-testnet-two.2`. 
 - **Node config:** Your node config should resemble the [Testnet 1 config template](../guides/become-an-operator.md#testnet-node-config).
 
 #### What are the differences between the "pretestnet" and Testnet 1?
-This `v100.0.0-testnet-two.1` version can be used to connect to Testnet 1 **or** the Mumbai testing environment. 
+This `v100.0.0-testnet-two.2` version can be used to connect to Testnet 1 **or** the Mumbai testing environment. 
 
 The active network depends on the node config. The [Mumbai node config](../guides/become-an-operator.md#the-mumbai-test-environment) is unchanged. The [Testnet 1 config](../guides/become-an-operator.md#testnet-node-config) is a much shorter version.
 
@@ -153,7 +153,7 @@ Add given nodes public key to operator node addresses.
 I’m receiving the following warning message.
 
 ```JSON
-INFO [2023-11-10T10:52:30.450] (broker              ): Start broker version v100.0.0-testnet-two.1
+INFO [2023-11-10T10:52:30.450] (broker              ): Start broker version v100.0.0-testnet-two.2
 Error: call revert exception [ See: https://links.ethers.org/v5-errors-CALL_EXCEPTION ] (method="metadata()", data="0x", errorArgs=null, errorName=null, errorSignature=null, reason=null, code=CALL_EXCEPTION, version=abi/5.7.0)
 ```
 
