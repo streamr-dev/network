@@ -1,18 +1,15 @@
 import { shuffle } from 'lodash'
 import { NetworkPeerDescriptor, StreamrClient } from 'streamr-client'
-import { CreateOperatorFleetStateFn, OperatorFleetState } from './OperatorFleetState'
+import { OperatorFleetState } from './OperatorFleetState'
 import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { EthereumAddress, Logger, wait } from '@streamr/utils'
+import { EthereumAddress, Logger } from '@streamr/utils'
 import { ConsistentHashRing } from './ConsistentHashRing'
 import { StreamPartAssignments } from './StreamPartAssignments'
 import { weightedSample } from '../../helpers/weightedSample'
 import sample from 'lodash/sample'
 import without from 'lodash/without'
-import { formCoordinationStreamId } from './formCoordinationStreamId'
 import { ContractFacade } from './ContractFacade'
 
-export type FindTargetFn = typeof findTarget
-export type FindNodesForTargetFn = typeof findNodesForTarget
 export type FindNodesForTargetGivenFleetStateFn = typeof findNodesForTargetGivenFleetState
 export type InspectTargetFn = typeof inspectTarget
 
@@ -90,35 +87,6 @@ export async function findTarget(
         sponsorshipAddress: targetSponsorship.sponsorshipAddress,
         operatorAddress: targetOperatorAddress,
         streamPart: targetStreamPart
-    }
-}
-
-export async function findNodesForTarget(
-    target: Target,
-    getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>,
-    createOperatorFleetState: CreateOperatorFleetStateFn,
-    timeout: number,
-    abortSignal: AbortSignal,
-    logger: Logger
-): Promise<NetworkPeerDescriptor[]> {
-    logger.debug('Waiting for node heartbeats', {
-        targetOperator: target.operatorAddress,
-        timeout
-    })
-    const targetOperatorFleetState = createOperatorFleetState(formCoordinationStreamId(target.operatorAddress))
-    try {
-        await targetOperatorFleetState.start()
-        await Promise.race([
-            targetOperatorFleetState.waitUntilReady(),
-            wait(timeout, abortSignal)
-        ])
-        logger.debug('Finished waiting for heartbeats', {
-            targetOperator: target.operatorAddress,
-            onlineNodes: targetOperatorFleetState.getNodeIds().length,
-        })
-        return await findNodesForTargetGivenFleetState(target, targetOperatorFleetState, getRedundancyFactor, logger)
-    } finally {
-        await targetOperatorFleetState.destroy()
     }
 }
 
