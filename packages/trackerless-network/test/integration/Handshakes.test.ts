@@ -114,7 +114,6 @@ describe('Handshakes', () => {
             new HandshakeRpcRemote(
                 peerDescriptor2,
                 peerDescriptor1,
-                streamPartId,
                 rpcCommunicator2,
                 HandshakeRpcClient
             )
@@ -130,7 +129,6 @@ describe('Handshakes', () => {
             new HandshakeRpcRemote(
                 peerDescriptor2,
                 peerDescriptor1,
-                streamPartId,
                 rpcCommunicator2,
                 HandshakeRpcClient
             )
@@ -146,7 +144,6 @@ describe('Handshakes', () => {
             new HandshakeRpcRemote(
                 peerDescriptor2,
                 peerDescriptor1,
-                streamPartId,
                 rpcCommunicator2,
                 HandshakeRpcClient
             )
@@ -163,7 +160,6 @@ describe('Handshakes', () => {
             new HandshakeRpcRemote(
                 peerDescriptor2,
                 peerDescriptor1,
-                streamPartId,
                 rpcCommunicator2,
                 HandshakeRpcClient
             )

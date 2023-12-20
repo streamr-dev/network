@@ -194,10 +194,6 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
             logger.warn(`dc.onError: ${err}`)
         }
 
-        dataChannel.onbufferedamountlow = () => {
-            //this.emitLowBackpressure()
-        }
-
         dataChannel.onmessage = (msg) => {
             logger.trace('dc.onmessage')
             this.emit('data', new Uint8Array(msg.data))

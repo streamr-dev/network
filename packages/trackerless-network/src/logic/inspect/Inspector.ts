@@ -43,7 +43,6 @@ export class Inspector {
         const rpcRemote = new TemporaryConnectionRpcRemote(
             this.localPeerDescriptor,
             peerDescriptor,
-            this.streamPartId,
             this.rpcCommunicator,
             TemporaryConnectionRpcClient
         )

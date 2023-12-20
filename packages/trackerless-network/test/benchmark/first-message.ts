@@ -61,7 +61,7 @@ const prepareStream = async (streamId: string) => {
 }
 
 const shutdownNetwork = async () => {
-    publishIntervals.map((interval) => clearInterval(interval))
+    publishIntervals.forEach((interval) => clearInterval(interval))
     await Promise.all([
         ...nodes.map((node) => node.stop())
     ])
