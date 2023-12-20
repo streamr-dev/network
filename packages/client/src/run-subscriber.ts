@@ -31,6 +31,8 @@ const main = async () => {
         console.log('total stream neighbors on eth-watch.eth/ethereum/blocks: ' + node.getNeighbors(stream2).length)
         const stream3 = StreamPartIDUtils.parse('streamr.eth/demos/helsinki-trams#0')
         console.log('total stream neighbors on streamr.eth/demos/helsinki-trams: ' + node.getNeighbors(stream3).length)
+        const stream4 = StreamPartIDUtils.parse('0xbafb06e3d7546742c6b1f2945b74ce0b3edc201a/nodle#0')
+        console.log('total stream neighbors on 0xbafb06e3d7546742c6b1f2945b74ce0b3edc201a/nodle: ' + node.getNeighbors(stream4).length)
     }, 10000)
 
     await client.subscribe({
