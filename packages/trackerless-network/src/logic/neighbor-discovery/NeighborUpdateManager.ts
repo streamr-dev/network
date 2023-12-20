@@ -1,12 +1,11 @@
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
+import { ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { NeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { Logger, scheduleAtInterval } from '@streamr/utils'
 import { NeighborFinder } from './NeighborFinder'
 import { NodeList } from '../NodeList'
 import { NeighborUpdateRpcRemote } from './NeighborUpdateRpcRemote'
 import { NeighborUpdateRpcLocal } from './NeighborUpdateRpcLocal'
-import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { StreamPartID } from '@streamr/protocol'
 
 interface NeighborUpdateManagerConfig {
