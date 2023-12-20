@@ -5,7 +5,7 @@ const main = async () => {
     let numOfMessagesPerTenSeconds = 0
     let numOfMessagesPerMinute = 0
     const client = new StreamrClient({
-        environment: "mumbai",
+        // environment: "mumbai",
         metrics: false
     })
 
@@ -25,70 +25,72 @@ const main = async () => {
         console.log('total connections (CM): ' + (node.stack.getLayer0Node().getTransport() as ConnectionManager).getAllConnectionPeerDescriptors().length)
         // @ts-expect-error private
         console.log('total connections: (DHTNODE)' + (node.stack.getLayer0Node() as DhtNode).getNumberOfConnections())
-        const stream1 = StreamPartIDUtils.parse('0x80da975ba0978d8df26b5ab3c2758a00d7ee298a/operator/coordination#0')
-        console.log('total stream neighbors on 0x80da975ba0978d8df26b5ab3c2758a00d7ee298a/operator/coordination: ' + node.getNeighbors(stream1).length)
-        const stream2 = StreamPartIDUtils.parse('0x6ee2d67541640f62ff44d5b1b417255437ed36cd/operator/coordination#0')
-        console.log('total stream neighbors on 0x6ee2d67541640f62ff44d5b1b417255437ed36cd/operator/coordination: ' + node.getNeighbors(stream2).length)
+        const stream1 = StreamPartIDUtils.parse('streams.dimo.eth/firehose/weather#0')
+        console.log('total stream neighbors on streams.dimo.eth/firehose/weather: ' + node.getNeighbors(stream1).length)
+        const stream2 = StreamPartIDUtils.parse('eth-watch.eth/ethereum/blocks#0')
+        console.log('total stream neighbors on eth-watch.eth/ethereum/blocks: ' + node.getNeighbors(stream2).length)
+        const stream3 = StreamPartIDUtils.parse('streamr.eth/demos/helsinki-trams#0')
+        console.log('total stream neighbors on streamr.eth/demos/helsinki-trams: ' + node.getNeighbors(stream3).length)
     }, 10000)
 
-    // await client.subscribe({
-    //     streamId: "streams.dimo.eth/firehose/weather",
-    //     partition: 0
-    // }, () => {
-    //     numOfMessagesPerTenSeconds += 1
-    //     numOfMessagesPerMinute += 1
-    // })
-    // await client.subscribe({
-    //     streamId: "streams.dimo.eth/firehose/weather",
-    //     partition: 1
-    // }, () => {
-    //     numOfMessagesPerTenSeconds += 1
-    //     numOfMessagesPerMinute += 1
-    // })
-    // await client.subscribe({
-    //     streamId: "streams.dimo.eth/firehose/weather",
-    //     partition: 2
-    // }, () => {
-    //     numOfMessagesPerTenSeconds += 1
-    //     numOfMessagesPerMinute += 1
-    // })
-    // await client.subscribe({
-    //     streamId: "eth-watch.eth/ethereum/blocks",
-    //     partition: 0
-    // }, () => {
-    //     numOfMessagesPerTenSeconds += 1
-    //     numOfMessagesPerMinute += 1
-    // })
-    // await client.subscribe({
-    //     streamId: "0xbafb06e3d7546742c6b1f2945b74ce0b3edc201a/nodle",
-    //     partition: 0
-    // }, () => {
-    //     numOfMessagesPerTenSeconds += 1
-    //     numOfMessagesPerMinute += 1
-    // })
-    // await client.subscribe({
-    //     streamId: "streamr.eth/demos/helsinki-trams",
-    //     partition: 0
-    // }, () => {
-    //     numOfMessagesPerTenSeconds += 1
-    //     numOfMessagesPerMinute += 1
-    // })
-
     await client.subscribe({
-        streamId: "0x80da975ba0978d8df26b5ab3c2758a00d7ee298a/operator/coordination",
+        streamId: "streams.dimo.eth/firehose/weather",
+        partition: 0
+    }, () => {
+        numOfMessagesPerTenSeconds += 1
+        numOfMessagesPerMinute += 1
+    })
+    await client.subscribe({
+        streamId: "streams.dimo.eth/firehose/weather",
+        partition: 1
+    }, () => {
+        numOfMessagesPerTenSeconds += 1
+        numOfMessagesPerMinute += 1
+    })
+    await client.subscribe({
+        streamId: "streams.dimo.eth/firehose/weather",
+        partition: 2
+    }, () => {
+        numOfMessagesPerTenSeconds += 1
+        numOfMessagesPerMinute += 1
+    })
+    await client.subscribe({
+        streamId: "eth-watch.eth/ethereum/blocks",
+        partition: 0
+    }, () => {
+        numOfMessagesPerTenSeconds += 1
+        numOfMessagesPerMinute += 1
+    })
+    await client.subscribe({
+        streamId: "0xbafb06e3d7546742c6b1f2945b74ce0b3edc201a/nodle",
+        partition: 0
+    }, () => {
+        numOfMessagesPerTenSeconds += 1
+        numOfMessagesPerMinute += 1
+    })
+    await client.subscribe({
+        streamId: "streamr.eth/demos/helsinki-trams",
         partition: 0
     }, () => {
         numOfMessagesPerTenSeconds += 1
         numOfMessagesPerMinute += 1
     })
 
-    await client.subscribe({
-        streamId: "0x6ee2d67541640f62ff44d5b1b417255437ed36cd/operator/coordination",
-        partition: 0
-    }, () => {
-        numOfMessagesPerTenSeconds += 1
-        numOfMessagesPerMinute += 1
-    })
+    // await client.subscribe({
+    //     streamId: "0x80da975ba0978d8df26b5ab3c2758a00d7ee298a/operator/coordination",
+    //     partition: 0
+    // }, () => {
+    //     numOfMessagesPerTenSeconds += 1
+    //     numOfMessagesPerMinute += 1
+    // })
+
+    // await client.subscribe({
+    //     streamId: "0x6ee2d67541640f62ff44d5b1b417255437ed36cd/operator/coordination",
+    //     partition: 0
+    // }, () => {
+    //     numOfMessagesPerTenSeconds += 1
+    //     numOfMessagesPerMinute += 1
+    // })
 }
 
 main().catch((err) => console.error(err))
