@@ -89,7 +89,7 @@ describe('SortedContactListBenchmark', () => {
             })
 
             const arrayFromBucket = kBucket.toArray()
-            arrayFromBucket.map((contact) => closest.addContact(contact))
+            arrayFromBucket.forEach((contact) => closest.addContact(contact))
             closest.getClosestContacts(20)
         }
         console.timeEnd('SortedContactList.getClosestContacts() with emitEvents=true')
@@ -103,7 +103,7 @@ describe('SortedContactListBenchmark', () => {
             })
 
             const arrayFromBucket = kBucket.toArray()
-            arrayFromBucket.map((contact) => closest.addContact(contact))
+            arrayFromBucket.forEach((contact) => closest.addContact(contact))
             closest.getClosestContacts(20)
         }
         console.timeEnd('SortedContactList.getClosestContacts() with emitEvents=false')
@@ -117,7 +117,7 @@ describe('SortedContactListBenchmark', () => {
             })
 
             const arrayFromBucket = kBucket.toArray()
-            arrayFromBucket.map((contact) => closest.addContact(contact))
+            arrayFromBucket.forEach((contact) => closest.addContact(contact))
             closest.getClosestContacts(20)
         }
         console.timeEnd('SortedContactList.getClosestContacts() with emitEvents=false and lodash')
@@ -141,7 +141,7 @@ describe('SortedContactListBenchmark', () => {
         for (let i = 0; i < NUM_ADDS; i++) {
             const bucket2 = new KBucket<Item>({ localNodeId: crypto.randomBytes(20) })
 
-            shuffled.map((contact) => bucket2.add(contact))
+            shuffled.forEach((contact) => bucket2.add(contact))
             bucket2.closest(crypto.randomBytes(20), 20)
         }
         console.timeEnd('kbucket add and closest')

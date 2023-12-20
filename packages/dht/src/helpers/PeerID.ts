@@ -69,7 +69,7 @@ export class PeerID {
     }
 
     toString(): string {
-        return PeerID.textDecoder.decode(this.data) //utf8ArrayToString(this.data)
+        return PeerID.textDecoder.decode(this.data)
     }
 
     toKey(): PeerIDKey {
