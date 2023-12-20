@@ -11,7 +11,7 @@ describe('RestServer', () => {
     let server: RestServer
 
     const certifiedSubdomain: CertifiedSubdomain = {
-        fqdn: 'localhost',
+        fqdn: '127.0.0.1',
         authenticationToken: 'token',
         certificate: 'certificate',
         privateKey: 'key'
@@ -20,7 +20,7 @@ describe('RestServer', () => {
 
     beforeAll(async () => {
         server = new RestServer(
-            'localhost',
+            '127.0.0.1',
             9877,
             path.join(__dirname, '../utils/self-signed-certs/certificate.pem'),
             path.join(__dirname, '../utils/self-signed-certs/key.pem'),
@@ -49,7 +49,7 @@ describe('RestServer', () => {
     describe('POST /sessions', () => {
         it('should return session with sessionId', (done) => {
             const options = {
-                url: 'https://localhost:9877/sessions',
+                url: 'https://127.0.0.1:9877/sessions',
                 method: 'POST',
                 json: true,
                 rejectUnauthorized: false
@@ -67,7 +67,7 @@ describe('RestServer', () => {
     describe('PATCH /certificates', () => {
         it('should return a certified subdomain', (done) => {
             const options = {
-                url: 'https://localhost:9877/certificates',
+                url: 'https://127.0.0.1:9877/certificates',
                 method: 'PATCH',
                 json: {
                     streamrWebSocketPort: '1234'
@@ -85,7 +85,7 @@ describe('RestServer', () => {
 
         it('should return an error if streamrWebSocketPort is missing', (done) => {
             const options = {
-                url: 'https://localhost:9877/certificates',
+                url: 'https://127.0.0.1:9877/certificates',
                 method: 'PATCH',
                 json: true,
                 rejectUnauthorized: false
@@ -104,7 +104,7 @@ describe('RestServer', () => {
     describe('PUT /certificates/:subdomain/ip', () => {
         it('should update the subdomain IP and port', (done) => {
             const options = {
-                url: 'https://localhost:9877/certificates/test/ip',
+                url: 'https://127.0.0.1:9877/certificates/test/ip',
                 method: 'PUT',
                 json: {
                     streamrWebSocketPort: '1234',
@@ -123,7 +123,7 @@ describe('RestServer', () => {
 
         it('should return an error if streamrWebSocketPort is missing', (done) => {
             const options = {
-                url: 'https://localhost:9877/certificates/test/ip',
+                url: 'https://127.0.0.1:9877/certificates/test/ip',
                 method: 'PUT',
                 json: {
                     token: 'token'
@@ -142,7 +142,7 @@ describe('RestServer', () => {
 
         it('should return an error if token is missing', (done) => {
             const options = {
-                url: 'https://localhost:9877/certificates/test/ip',
+                url: 'https://127.0.0.1:9877/certificates/test/ip',
                 method: 'PUT',
                 json: {
                     streamrWebSocketPort: '1234'
