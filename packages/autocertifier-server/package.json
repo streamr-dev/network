@@ -1,6 +1,6 @@
 {
   "name": "@streamr/autocertifier-server",
-  "version": "100.0.0-testnet-two.2",
+  "version": "100.0.0-testnet-two.3",
   "description": "Server for providing TLS Certificates",
   "repository": {
     "type": "git",
@@ -27,9 +27,9 @@
   },
   "dependencies": {
     "@aws-sdk/client-route-53": "^3.454.0",
-    "@streamr/autocertifier-client": "100.0.0-testnet-two.2",
-    "@streamr/dht": "100.0.0-testnet-two.2",
-    "@streamr/utils": "100.0.0-testnet-two.2",
+    "@streamr/autocertifier-client": "100.0.0-testnet-two.3",
+    "@streamr/dht": "100.0.0-testnet-two.3",
+    "@streamr/utils": "100.0.0-testnet-two.3",
     "acme-client": "^5.0.0",
     "body-parser": "^1.20.2",
     "dns2": "^2.1.0",
@@ -41,7 +41,7 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@streamr/test-utils": "100.0.0-testnet-two.2",
+    "@streamr/test-utils": "100.0.0-testnet-two.3",
     "@types/dns2": "^2.0.3",
     "@types/express": "^4.17.21",
     "@types/request": "^2.48.8",
