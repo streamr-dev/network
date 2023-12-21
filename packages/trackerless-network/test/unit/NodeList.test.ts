@@ -2,8 +2,6 @@ import {
     ListeningRpcCommunicator,
     NodeType,
     PeerDescriptor,
-    Simulator,
-    SimulatorTransport,
     getDhtAddressFromRaw,
     getNodeIdFromPeerDescriptor,
 } from '@streamr/dht'
@@ -14,6 +12,7 @@ import { NodeList } from '../../src/logic/NodeList'
 import { formStreamPartDeliveryServiceId } from '../../src/logic/formStreamPartDeliveryServiceId'
 import { DeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { createMockPeerDescriptor, createRandomNodeId } from '../utils/utils'
+import { MockTransport } from '../utils/mock/Transport'
 
 const streamPartId = StreamPartIDUtils.parse('stream#0')
 
@@ -28,14 +27,9 @@ describe('NodeList', () => {
     ]
     const ownId = createRandomNodeId()
     let nodeList: NodeList
-    let simulator: Simulator
-    let mockTransports: SimulatorTransport[]
 
-    const createRemoteGraphNode = async (peerDescriptor: PeerDescriptor) => {
-        const mockTransport = new SimulatorTransport(peerDescriptor, simulator)
-        await mockTransport.start()
-        const mockCommunicator = new ListeningRpcCommunicator(formStreamPartDeliveryServiceId(streamPartId), mockTransport)
-        mockTransports.push(mockTransport)
+    const createRemoteGraphNode = (peerDescriptor: PeerDescriptor) => {
+        const mockCommunicator = new ListeningRpcCommunicator(formStreamPartDeliveryServiceId(streamPartId), new MockTransport())
         return new DeliveryRpcRemote(
             createMockPeerDescriptor(),
             peerDescriptor,
@@ -44,33 +38,23 @@ describe('NodeList', () => {
         )
     }
 
-    beforeEach(async () => {
-        simulator = new Simulator()
-        mockTransports = []
+    beforeEach(() => {
         nodeList = new NodeList(ownId, 6)
         for (const id of ids) {
             const peerDescriptor: PeerDescriptor = {
                 nodeId: id,
                 type: NodeType.NODEJS
             }
-            nodeList.add(await createRemoteGraphNode(peerDescriptor))
+            nodeList.add(createRemoteGraphNode(peerDescriptor))
         }
     })
 
-    afterEach(async () => {
-        // eslint-disable-next-line @typescript-eslint/prefer-for-of
-        for (let i = 0; i < mockTransports.length; i++) {
-            await mockTransports[i].stop()
-        }
-        simulator.stop()
-    })
-
-    it('add', async () => {
+    it('add', () => {
         const newDescriptor = {
             nodeId: new Uint8Array([1, 2, 3]),
             type: NodeType.NODEJS
         }
-        const newNode = await createRemoteGraphNode(newDescriptor)
+        const newNode = createRemoteGraphNode(newDescriptor)
         nodeList.add(newNode)
         expect(nodeList.hasNode(newDescriptor)).toEqual(true)
 
@@ -78,7 +62,7 @@ describe('NodeList', () => {
             nodeId: new Uint8Array([1, 2, 4]),
             type: NodeType.NODEJS
         }
-        const newNode2 = await createRemoteGraphNode(newDescriptor2)
+        const newNode2 = createRemoteGraphNode(newDescriptor2)
         nodeList.add(newNode2)
         expect(nodeList.hasNode(newDescriptor2)).toEqual(false)
     })
