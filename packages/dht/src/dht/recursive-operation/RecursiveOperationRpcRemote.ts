@@ -33,8 +33,8 @@ export class RecursiveOperationRpcRemote extends RpcRemote<RecursiveOperationRpc
             const fromNode = previousPeer
                 ? getNodeIdFromPeerDescriptor(previousPeer)
                 : getNodeIdFromPeerDescriptor(params.sourcePeer!)
-            // eslint-disable-next-line max-len
-            logger.debug(`Failed to send routeRequest message from ${fromNode} to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`)
+            const toNode = getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
+            logger.debug(`Failed to send routeRequest message from ${fromNode} to ${toNode} with: ${err}`)
             return false
         }
         return true
