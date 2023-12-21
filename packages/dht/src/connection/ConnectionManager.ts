@@ -65,8 +65,8 @@ enum ConnectionManagerState {
 export interface ConnectionLocker {
     lockConnection(targetDescriptor: PeerDescriptor, lockId: LockID): void
     unlockConnection(targetDescriptor: PeerDescriptor, lockId: LockID): void
-    weakLockConnection(targetDescriptor: PeerDescriptor): void
-    weakUnlockConnection(targetDescriptor: PeerDescriptor): void
+    weakLockConnection(nodeId: DhtAddress): void
+    weakUnlockConnection(nodeId: DhtAddress): void
 }
 
 export interface PortRange {
@@ -483,19 +483,17 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         }
     }
 
-    public weakLockConnection(targetDescriptor: PeerDescriptor): void {
-        if (this.state === ConnectionManagerState.STOPPED || areEqualPeerDescriptors(targetDescriptor, this.getLocalPeerDescriptor())) {
+    public weakLockConnection(nodeId: DhtAddress): void {
+        if (this.state === ConnectionManagerState.STOPPED || (nodeId === getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor()))) {
             return
         }
-        const nodeId = getNodeIdFromPeerDescriptor(targetDescriptor)
         this.locks.addWeakLocked(nodeId)
     }
 
-    public weakUnlockConnection(targetDescriptor: PeerDescriptor): void {
-        if (this.state === ConnectionManagerState.STOPPED || areEqualPeerDescriptors(targetDescriptor, this.getLocalPeerDescriptor())) {
+    public weakUnlockConnection(nodeId: DhtAddress): void {
+        if (this.state === ConnectionManagerState.STOPPED || (nodeId === getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor()))) {
             return
         }
-        const nodeId = getNodeIdFromPeerDescriptor(targetDescriptor)
         this.locks.removeWeakLocked(nodeId)
     }
 

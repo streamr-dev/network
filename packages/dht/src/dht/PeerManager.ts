@@ -108,8 +108,9 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         })
         sortingList.addContacts(oldContacts)
         const sortedContacts = sortingList.getAllContacts()
-        this.config.connectionManager?.weakUnlockConnection(sortedContacts[sortedContacts.length - 1].getPeerDescriptor())
-        this.bucket.remove(getRawFromDhtAddress(sortedContacts[sortedContacts.length - 1].getNodeId()))
+        const removableNodeId = sortedContacts[sortedContacts.length - 1].getNodeId()
+        this.config.connectionManager?.weakUnlockConnection(removableNodeId)
+        this.bucket.remove(getRawFromDhtAddress(removableNodeId))
         this.bucket.add(newContact)
     }
 
@@ -117,8 +118,9 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         if (this.stopped) {
             return
         }
-        this.config.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
-        logger.trace(`Removed contact ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
+        const nodeId = getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())
+        this.config.connectionManager?.weakUnlockConnection(nodeId)
+        logger.trace(`Removed contact ${nodeId}`)
         if (this.bucket.count() === 0) {
             this.emit('kBucketEmpty')
         }
@@ -132,7 +134,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             const peerDescriptor = contact.getPeerDescriptor()
             const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
             // Important to lock here, before the ping result is known
-            this.config.connectionManager?.weakLockConnection(peerDescriptor)
+            this.config.connectionManager?.weakLockConnection(nodeId)
             if (this.connections.has(contact.getNodeId())) {
                 logger.trace(`Added new contact ${nodeId}`)
             } else {    // open connection by pinging
@@ -142,13 +144,13 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
                         logger.trace(`Added new contact ${nodeId}`)
                     } else {
                         logger.trace('ping failed ' + nodeId)
-                        this.config.connectionManager?.weakUnlockConnection(peerDescriptor)
+                        this.config.connectionManager?.weakUnlockConnection(nodeId)
                         this.removeContact(peerDescriptor)
                         this.addClosestContactToBucket()
                     }
                     return
                 }).catch((_e) => {
-                    this.config.connectionManager?.weakUnlockConnection(peerDescriptor)
+                    this.config.connectionManager?.weakUnlockConnection(nodeId)
                     this.removeContact(peerDescriptor)
                     this.addClosestContactToBucket()
                 })
