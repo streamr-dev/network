@@ -386,7 +386,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private handleMessage(message: Message): void {
         const nodeId = getNodeIdFromPeerDescriptor(message.sourceDescriptor!)
         if (message.serviceId === this.config.serviceId) {
-            logger.trace('callig this.handleMessageFromPeer ' + nodeId + ' ' + message.serviceId + ' ' + message.messageId)
+            logger.trace('calling this.handleMessageFromPeer ' + nodeId + ' ' + message.serviceId + ' ' + message.messageId)
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {
             logger.trace('emit "message" ' + nodeId + ' ' + message.serviceId + ' ' + message.messageId)
