@@ -366,26 +366,22 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     }
 
     private onDisconnected(connection: ManagedConnection, gracefulLeave: boolean) {
-        logger.trace(getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()) + ' onDisconnected() gracefulLeave: ' + gracefulLeave)
-
         const nodeId = getNodeIdFromPeerDescriptor(connection.getPeerDescriptor()!)
+        logger.trace(nodeId + ' onDisconnected() gracefulLeave: ' + gracefulLeave)
         const storedConnection = this.connections.get(nodeId)
         if (storedConnection && storedConnection.connectionId.equals(connection.connectionId)) {
             this.locks.clearAllLocks(nodeId)
             this.connections.delete(nodeId)
-            logger.trace(getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())
-                + ' deleted connection in onDisconnected() gracefulLeave: ' + gracefulLeave)
+            logger.trace(nodeId + ' deleted connection in onDisconnected() gracefulLeave: ' + gracefulLeave)
             this.emit('disconnected', connection.getPeerDescriptor()!, gracefulLeave)
             this.onConnectionCountChange()
         } else {
-            logger.trace(getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())
-                + ' onDisconnected() did nothing, no such connection in connectionManager')
+            logger.trace(nodeId + ' onDisconnected() did nothing, no such connection in connectionManager')
             if (storedConnection) {
-                logger.trace(getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor())
-                    + ' connectionIds do not match ' + storedConnection.connectionId.toString() + ' ' + connection.connectionId.toString())
+                const connectionId = storedConnection.connectionId.toString()
+                logger.trace(nodeId + ' connectionIds do not match ' + connectionId + ' ' + connection.connectionId.toString())
             }
         }
-
     }
 
     private onNewConnection(connection: ManagedConnection): boolean {
@@ -416,8 +412,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         if (this.connections.has(nodeId)) {
             const newPeerID = peerIdFromPeerDescriptor(newConnection.getPeerDescriptor()!)
             if (newPeerID.hasSmallerHashThan(peerIdFromPeerDescriptor(this.getLocalPeerDescriptor()))) {
-                logger.trace(getNodeIdOrUnknownFromPeerDescriptor(newConnection.getPeerDescriptor())
-                    + ' acceptIncomingConnection() replace current connection')
+                logger.trace(nodeId + ' acceptIncomingConnection() replace current connection')
                 // replace the current connection
                 const oldConnection = this.connections.get(nodeId)!
                 logger.trace('replaced: ' + nodeId)
