@@ -134,6 +134,5 @@ export class SimulatorConnection extends Connection implements IConnection {
         logger.trace(localNodeId + ', ' + targetNodeId + ' doDisconnect emitting')
 
         this.emit('disconnected', gracefulLeave)
-
     }
 }
