@@ -94,21 +94,21 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
         if (request.interleaveSourceId !== undefined) {
             exclude.push(getDhtAddressFromRaw(request.interleaveSourceId))
         }
-        const furthest = this.config.targetNeighbors.getFurthest(exclude)
-        const furthestPeerDescriptor = furthest ? furthest.getPeerDescriptor() : undefined
-        if (furthest) {
-            const nodeId = getNodeIdFromPeerDescriptor(furthest.getPeerDescriptor())
-            const remote = this.config.createRpcRemote(furthest.getPeerDescriptor())
+        const last = this.config.targetNeighbors.getLast(exclude)
+        const lastPeerDescriptor = last ? last.getPeerDescriptor() : undefined
+        if (last) {
+            const nodeId = getNodeIdFromPeerDescriptor(last.getPeerDescriptor())
+            const remote = this.config.createRpcRemote(last.getPeerDescriptor())
             this.config.ongoingInterleaves.add(nodeId)
             // Run this with then catch instead of setImmediate to avoid changes in state
             // eslint-disable-next-line promise/catch-or-return
             remote.interleaveRequest(requester).then((response) => {
-                // If response is accepted, remove the furthest node from the target neighbors
+                // If response is accepted, remove the last node from the target neighbors
                 // and unlock the connection
-                // If response is not accepted, keep the furthest node as a neighbor
+                // If response is not accepted, keep the last node as a neighbor
                 if (response.accepted) {
-                    this.config.targetNeighbors.remove(furthest.getPeerDescriptor())
-                    this.config.connectionLocker.unlockConnection(furthestPeerDescriptor!, this.config.streamPartId)
+                    this.config.targetNeighbors.remove(last.getPeerDescriptor())
+                    this.config.connectionLocker.unlockConnection(lastPeerDescriptor!, this.config.streamPartId)
                 }
                 return
             }).catch(() => {
@@ -122,7 +122,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
         return {
             requestId: request.requestId,
             accepted: true,
-            interleaveTargetDescriptor: furthestPeerDescriptor
+            interleaveTargetDescriptor: lastPeerDescriptor
         }
     }
 

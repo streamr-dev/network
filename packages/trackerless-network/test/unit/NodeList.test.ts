@@ -84,55 +84,55 @@ describe('NodeList', () => {
     })
 
     it('remove', () => {
-        const toRemove = nodeList.getClosest([])
+        const toRemove = nodeList.getFirst([])
         nodeList.remove(toRemove!.getPeerDescriptor())
         expect(nodeList.hasNode(toRemove!.getPeerDescriptor())).toEqual(false)
     })
 
     it('removeById', () => {
-        const toRemove = nodeList.getClosest([])
+        const toRemove = nodeList.getFirst([])
         const nodeId = getNodeIdFromPeerDescriptor(toRemove!.getPeerDescriptor())
         nodeList.removeById(nodeId)
         expect(nodeList.hasNode(toRemove!.getPeerDescriptor())).toEqual(false)
     })
 
-    it('getClosest', () => {
-        const closest = nodeList.getClosest([])
+    it('getFirst', () => {
+        const closest = nodeList.getFirst([])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
             .toEqual(getDhtAddressFromRaw(new Uint8Array([1, 1, 1])))
     })
 
-    it('getClosest with exclude', () => {
-        const closest = nodeList.getClosest([getDhtAddressFromRaw(new Uint8Array([1, 1, 1]))])
+    it('getFirst with exclude', () => {
+        const closest = nodeList.getFirst([getDhtAddressFromRaw(new Uint8Array([1, 1, 1]))])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
             .toEqual(getDhtAddressFromRaw(new Uint8Array([1, 1, 2])))
     })
 
-    it('getFurthest', () => {
-        const closest = nodeList.getFurthest([])
+    it('getLast', () => {
+        const closest = nodeList.getLast([])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
             .toEqual(getDhtAddressFromRaw(new Uint8Array([1, 1, 5])))
     })
 
-    it('getFurthest with exclude', () => {
-        const closest = nodeList.getFurthest([getDhtAddressFromRaw(new Uint8Array([1, 1, 5]))])
+    it('getLast with exclude', () => {
+        const closest = nodeList.getLast([getDhtAddressFromRaw(new Uint8Array([1, 1, 5]))])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
             .toEqual(getDhtAddressFromRaw(new Uint8Array([1, 1, 4])))
     })
 
-    it('getClosestAndFurthest', () => {
-        const results = nodeList.getClosestAndFurthest([])
-        expect(results).toEqual([nodeList.getClosest([]), nodeList.getFurthest([])])
+    it('getFirstAndLast', () => {
+        const results = nodeList.getFirstAndLast([])
+        expect(results).toEqual([nodeList.getFirst([]), nodeList.getLast([])])
     })
 
-    it('getClosest empty', () => {
+    it('getFirst empty', () => {
         const emptyList = new NodeList(ownId, 2)
-        expect(emptyList.getClosest([])).toBeUndefined()
+        expect(emptyList.getFirst([])).toBeUndefined()
     })
 
-    it('getFurthest empty', () => {
+    it('getLast empty', () => {
         const emptyList = new NodeList(ownId, 2)
-        expect(emptyList.getFurthest([])).toBeUndefined()
+        expect(emptyList.getLast([])).toBeUndefined()
     })
 
     it('getRandom empty', () => {
@@ -140,19 +140,19 @@ describe('NodeList', () => {
         expect(emptyList.getRandom([])).toBeUndefined()
     })
 
-    it('getClosestAndFurthest empty', () => {
+    it('getFirstAndLast empty', () => {
         const emptyList = new NodeList(ownId, 2)
-        expect(emptyList.getClosestAndFurthest([])).toEqual([])
+        expect(emptyList.getFirstAndLast([])).toEqual([])
     })
 
-    it('getClosestAndFurthest with exclude', () => {
-        const results = nodeList.getClosestAndFurthest([
+    it('getFirstAndLast with exclude', () => {
+        const results = nodeList.getFirstAndLast([
             getDhtAddressFromRaw(new Uint8Array([1, 1, 1])),
             getDhtAddressFromRaw(new Uint8Array([1, 1, 5]))
         ])
         expect(results).toEqual([
-            nodeList.getClosest([getDhtAddressFromRaw(new Uint8Array([1, 1, 1]))]),
-            nodeList.getFurthest([getDhtAddressFromRaw(new Uint8Array([1, 1, 5]))])
+            nodeList.getFirst([getDhtAddressFromRaw(new Uint8Array([1, 1, 1]))]),
+            nodeList.getLast([getDhtAddressFromRaw(new Uint8Array([1, 1, 5]))])
         ])
     })
 })
