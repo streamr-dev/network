@@ -112,11 +112,13 @@ export class StoreManager {
         const ttl = this.config.highestTtl // ToDo: make TTL decrease according to some nice curve
         const createdAt = Timestamp.now()
         for (let i = 0; i < closestNodes.length && successfulNodes.length < this.config.redundancyFactor; i++) {
+            const keyRaw = getRawFromDhtAddress(key)
+            const creatorRaw = getRawFromDhtAddress(creator)
             if (areEqualPeerDescriptors(this.config.localPeerDescriptor, closestNodes[i])) {
                 this.config.localDataStore.storeEntry({
-                    key: getRawFromDhtAddress(key),
+                    key: keyRaw,
                     data,
-                    creator: getRawFromDhtAddress(creator),
+                    creator: creatorRaw,
                     createdAt,
                     storedAt: Timestamp.now(), 
                     ttl, 
@@ -129,9 +131,9 @@ export class StoreManager {
             const rpcRemote = this.config.createRpcRemote(closestNodes[i])
             try {
                 await rpcRemote.storeData({
-                    key: getRawFromDhtAddress(key),
+                    key: keyRaw,
                     data,
-                    creator: getRawFromDhtAddress(creator),
+                    creator: creatorRaw,
                     createdAt,
                     ttl
                 })
