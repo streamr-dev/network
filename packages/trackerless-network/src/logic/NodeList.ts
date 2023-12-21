@@ -13,6 +13,8 @@ const getValuesOfIncludedKeys = (nodes: Map<DhtAddress, DeliveryRpcRemote>, excl
         .map(([_id, node]) => node)
 }
 
+// The items in the list are in the insertion order
+
 export class NodeList extends EventEmitter<Events> {
     private readonly nodes: Map<DhtAddress, DeliveryRpcRemote>
     private readonly limit: number
