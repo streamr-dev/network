@@ -46,7 +46,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     private timeoutTask?: NodeJS.Timeout 
     private completionEventEmitted = false
     private noCloserNodesReceivedCounter = 0
-    private noCloserNodesReceivedFrom: Set<NodeID> = new Set()
+    private readonly noCloserNodesReceivedFrom: Set<NodeID> = new Set()
     private readonly config: RecursiveOperationSessionConfig
 
     constructor(config: RecursiveOperationSessionConfig) {
