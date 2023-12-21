@@ -1,23 +1,35 @@
+/* eslint-disable no-underscore-dangle */
+
 import { ClosestPeersRequest, ClosestPeersResponse, PingRequest, PingResponse, RouteMessageAck, RouteMessageWrapper } from './proto/TestProtos'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { NodeType, PeerDescriptor } from './proto/TestProtos'
-import { IDhtRpcService } from './proto/TestProtos.server'
 
-interface IDhtRpcWithError extends IDhtRpcService {
-    throwPingError: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse>
-    respondPingWithTimeout: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse>
-    throwGetClosestPeersError: (request: ClosestPeersRequest, _context: ServerCallContext) => Promise<ClosestPeersResponse>
-    throwRouteMessageError: (request: RouteMessageWrapper, _context: ServerCallContext) => Promise<RouteMessageAck>
+export class HumanReadablePingRequestDecorator {
+    _parent: PingRequest
+    constructor(request: PingRequest) {
+        this._parent = request
+    }
+    public getRequestId(): string {
+        return 'decorated:' + this._parent.requestId
+    }
 }
+
+export interface HumanReadablePingRequest extends PingRequest, HumanReadablePingRequestDecorator { }
 
 let timeoutCounter = 0
 const timeouts: Record<string, any> = {}
-export const MockDhtRpc: IDhtRpcWithError = {
+export const MockDhtRpc = {
     async getClosestPeers(_request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
         const neighbors = getMockPeers()
         const response: ClosestPeersResponse = {
             peers: neighbors,
             requestId: 'why am i still here'
+        }
+        return response
+    },
+    async decoratedPing(request: HumanReadablePingRequest, _context: ServerCallContext): Promise<PingResponse> {
+        const response: PingResponse = {
+            requestId: request.getRequestId()
         }
         return response
     },
