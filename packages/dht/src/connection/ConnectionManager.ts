@@ -1,6 +1,5 @@
 import { CountMetric, LevelMetric, Logger, Metric, MetricsContext, MetricsDefinition, RateMetric, waitForEvent3 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
-import { Contact } from '../dht/contact/Contact'
 import { SortedContactList } from '../dht/contact/SortedContactList'
 import { DuplicateDetector } from '../dht/routing/DuplicateDetector'
 import * as Err from '../helpers/errors'
@@ -154,7 +153,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         if (this.connections.size <= maxConnections) {
             return
         }
-        const disconnectionCandidates = new SortedContactList<Contact>({
+        const disconnectionCandidates = new SortedContactList<ManagedConnection>({
             referenceId: getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor()), 
             maxSize: 100000,  // TODO use config option or named constant?
             allowToContainReferenceId: false,
@@ -163,13 +162,13 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         this.connections.forEach((connection) => {
             if (!this.locks.isLocked(connection.getNodeId()) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
                 logger.trace('disconnecting in timeout interval: ' + getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()))
-                disconnectionCandidates.addContact(new Contact(connection.getPeerDescriptor()!))
+                disconnectionCandidates.addContact(connection)
             }
         })
         const sortedCandidates = disconnectionCandidates.getAllContacts()
         const targetNum = this.connections.size - maxConnections
         for (let i = 0; i < sortedCandidates.length && i < targetNum; i++) {
-            const peerDescriptor = sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor()
+            const peerDescriptor = sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor()!
             logger.trace('garbageCollecting ' + getNodeIdFromPeerDescriptor(peerDescriptor))
             this.gracefullyDisconnectAsync(peerDescriptor, DisconnectMode.NORMAL).catch((_e) => { })
         }
