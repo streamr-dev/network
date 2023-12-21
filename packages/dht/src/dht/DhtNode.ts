@@ -384,13 +384,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     private handleMessage(message: Message): void {
+        const nodeId = getNodeIdFromPeerDescriptor(message.sourceDescriptor!)
         if (message.serviceId === this.config.serviceId) {
-            logger.trace('callig this.handleMessageFromPeer ' + getNodeIdFromPeerDescriptor(message.sourceDescriptor!)
-                + ' ' + message.serviceId + ' ' + message.messageId)
+            logger.trace('calling this.handleMessageFromPeer ' + nodeId + ' ' + message.serviceId + ' ' + message.messageId)
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {
-            logger.trace('emit "message" ' + getNodeIdFromPeerDescriptor(message.sourceDescriptor!)
-                + ' ' + message.serviceId + ' ' + message.messageId)
+            logger.trace('emit "message" ' + nodeId + ' ' + message.serviceId + ' ' + message.messageId)
             this.emit('message', message)
         }
     }
@@ -406,7 +405,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public getClosestContacts(limit?: number): PeerDescriptor[] {
         return this.peerManager!.getClosestContactsTo(
-            getNodeIdFromPeerDescriptor(this.localPeerDescriptor!),
+            this.getNodeId(),
             limit).map((peer) => peer.getPeerDescriptor()
         )
     }
@@ -462,7 +461,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.peerDiscovery!.isJoinOngoing() && connectedEntryPoints.length > 0) {
             return this.storeDataViaPeer(key, data, sample(connectedEntryPoints)!)
         }
-        return this.storeManager!.storeDataToDht(key, data, creator ?? getNodeIdFromPeerDescriptor(this.localPeerDescriptor!))
+        return this.storeManager!.storeDataToDht(key, data, creator ?? this.getNodeId())
     }
 
     public async storeDataViaPeer(key: DhtAddress, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {

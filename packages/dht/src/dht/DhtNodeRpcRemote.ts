@@ -41,7 +41,7 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
     }
 
     async getClosestPeers(nodeId: DhtAddress): Promise<PeerDescriptor[]> {
-        logger.trace(`Requesting getClosestPeers on ${this.serviceId} from ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
+        logger.trace(`Requesting getClosestPeers on ${this.serviceId} from ${this.getNodeId()}`)
         const request: ClosestPeersRequest = {
             nodeId: getRawFromDhtAddress(nodeId),
             requestId: v4()
@@ -56,7 +56,7 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
     }
 
     async ping(): Promise<boolean> {
-        logger.trace(`Requesting ping on ${this.serviceId} from ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
+        logger.trace(`Requesting ping on ${this.serviceId} from ${this.getNodeId()}`)
         const request: PingRequest = {
             requestId: v4()
         }
@@ -67,13 +67,13 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
                 return true
             }
         } catch (err) {
-            logger.trace(`ping failed on ${this.serviceId} to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}: ${err}`)
+            logger.trace(`ping failed on ${this.serviceId} to ${this.getNodeId()}: ${err}`)
         }
         return false
     }
 
     leaveNotice(): void {
-        logger.trace(`Sending leaveNotice on ${this.serviceId} from ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
+        logger.trace(`Sending leaveNotice on ${this.serviceId} from ${this.getNodeId()}`)
         const options = this.formDhtRpcOptions({
             notification: true
         })

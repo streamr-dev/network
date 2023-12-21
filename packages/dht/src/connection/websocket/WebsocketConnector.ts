@@ -241,7 +241,7 @@ export class WebsocketConnector {
             )
             managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
 
-            this.connectingConnections.set(getNodeIdFromPeerDescriptor(targetPeerDescriptor), managedConnection)
+            this.connectingConnections.set(nodeId, managedConnection)
 
             const delFunc = () => {
                 if (this.connectingConnections.has(nodeId)) {
@@ -283,9 +283,10 @@ export class WebsocketConnector {
             undefined,
             targetPeerDescriptor
         )
-        managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(getNodeIdFromPeerDescriptor(targetPeerDescriptor)))
+        const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
+        managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(nodeId))
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
-        this.ongoingConnectRequests.set(getNodeIdFromPeerDescriptor(targetPeerDescriptor), managedConnection)
+        this.ongoingConnectRequests.set(nodeId, managedConnection)
         return managedConnection
     }
 
