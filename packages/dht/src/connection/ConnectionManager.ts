@@ -258,12 +258,12 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         if (this.isConnectionToSelf(peerDescriptor)) {
             throw new Err.CannotConnectToSelf('Cannot send to self')
         }
-        logger.trace(`Sending message to: ${getNodeIdFromPeerDescriptor(peerDescriptor)}`)
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        logger.trace(`Sending message to: ${nodeId}`)
         message = {
             ...message,
             sourceDescriptor: this.getLocalPeerDescriptor()
         }
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
         let connection = this.connections.get(nodeId)
         if (!connection && opts.connect) {
             connection = this.connectorFacade.createConnection(peerDescriptor)
@@ -411,16 +411,16 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     }
 
     private acceptNewConnection(newConnection: ManagedConnection): boolean {
-        logger.trace(getNodeIdFromPeerDescriptor(newConnection.getPeerDescriptor()!) + ' acceptIncomingConnection()')
-        const newPeerID = peerIdFromPeerDescriptor(newConnection.getPeerDescriptor()!)
         const nodeId = getNodeIdFromPeerDescriptor(newConnection.getPeerDescriptor()!)
+        logger.trace(nodeId + ' acceptIncomingConnection()')
         if (this.connections.has(nodeId)) {
+            const newPeerID = peerIdFromPeerDescriptor(newConnection.getPeerDescriptor()!)
             if (newPeerID.hasSmallerHashThan(peerIdFromPeerDescriptor(this.getLocalPeerDescriptor()))) {
                 logger.trace(getNodeIdOrUnknownFromPeerDescriptor(newConnection.getPeerDescriptor())
                     + ' acceptIncomingConnection() replace current connection')
                 // replace the current connection
                 const oldConnection = this.connections.get(nodeId)!
-                logger.trace('replaced: ' + getNodeIdFromPeerDescriptor(newConnection.getPeerDescriptor()!))
+                logger.trace('replaced: ' + nodeId)
                 const buffer = oldConnection.stealOutputBuffer()
 
                 for (const data of buffer) {
@@ -434,22 +434,22 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             }
         }
 
-        logger.trace(getNodeIdFromPeerDescriptor(newConnection.getPeerDescriptor()!) + ' added to connections at acceptIncomingConnection')
+        logger.trace(nodeId + ' added to connections at acceptIncomingConnection')
         this.connections.set(nodeId, newConnection)
 
         return true
     }
 
     private async closeConnection(peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string): Promise<void> {
-        logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + 'closeConnection() ' + reason)
-        const id = getNodeIdFromPeerDescriptor(peerDescriptor)
-        this.locks.clearAllLocks(id)
-        if (this.connections.has(id)) {
-            const connectionToClose = this.connections.get(id)!
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        logger.trace(nodeId + ' ' + 'closeConnection() ' + reason)
+        this.locks.clearAllLocks(nodeId)
+        if (this.connections.has(nodeId)) {
+            const connectionToClose = this.connections.get(nodeId)!
             await connectionToClose.close(gracefulLeave)
 
         } else {
-            logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + 'closeConnection() this.connections did not have the id')
+            logger.trace(nodeId + ' ' + 'closeConnection() this.connections did not have the id')
             this.emit('disconnected', peerDescriptor, false)
         }
     }
@@ -541,7 +541,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     }
 
     private async doGracefullyDisconnectAsync(targetDescriptor: PeerDescriptor, disconnectMode: DisconnectMode): Promise<void> {
-        logger.trace(getNodeIdFromPeerDescriptor(targetDescriptor) + ' gracefullyDisconnectAsync()')
+        const nodeId = getNodeIdFromPeerDescriptor(targetDescriptor)
+        logger.trace(nodeId + ' gracefullyDisconnectAsync()')
         const rpcRemote = new ConnectionLockRpcRemote(
             this.getLocalPeerDescriptor(),
             targetDescriptor,
@@ -551,7 +552,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         try {
             await rpcRemote.gracefulDisconnect(disconnectMode)
         } catch (ex) {
-            logger.trace(getNodeIdFromPeerDescriptor(targetDescriptor) + ' remote.gracefulDisconnect() failed' + ex)
+            logger.trace(nodeId + ' remote.gracefulDisconnect() failed' + ex)
         }
     }
 

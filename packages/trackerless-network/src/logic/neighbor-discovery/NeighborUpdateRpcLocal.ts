@@ -30,12 +30,11 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
         if (this.config.targetNeighbors.hasNodeById(senderId)) {
-            const newPeerDescriptors = message.neighborDescriptors
-                .filter((peerDescriptor) => {
-                    const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
-                    const ownNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
-                    return nodeId !== ownNodeId && !this.config.targetNeighbors.getIds().includes(nodeId)
-                })
+            const ownNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
+            const newPeerDescriptors = message.neighborDescriptors.filter((peerDescriptor) => {
+                const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+                return nodeId !== ownNodeId && !this.config.targetNeighbors.getIds().includes(nodeId)
+            })
             newPeerDescriptors.forEach((peerDescriptor) => this.config.nearbyNodeView.add(
                 new DeliveryRpcRemote(
                     this.config.localPeerDescriptor,

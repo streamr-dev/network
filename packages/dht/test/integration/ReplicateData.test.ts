@@ -7,7 +7,7 @@ import { execSync } from 'child_process'
 import fs from 'fs'
 import { Logger } from '@streamr/utils'
 import { PeerID } from '../../src/helpers/PeerID'
-import { getNodeIdFromPeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
 import { DhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress } from '../../src/identifiers'
@@ -95,7 +95,7 @@ describe('Replicate data from node to node in DHT', () => {
 
         logger.info('Nodes sorted according to distance to data are: ')
         closest.forEach((contact) => {
-            logger.info(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))
+            logger.info(contact.getNodeId())
         })
 
         logger.info('node 0 joining to the DHT')
@@ -110,7 +110,7 @@ describe('Replicate data from node to node in DHT', () => {
         logger.info('Nodes sorted according to distance to data with storing nodes marked are: ')
 
         closest.forEach((contact) => {
-            const node = nodesById.get(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))!
+            const node = nodesById.get(contact.getNodeId())!
             let hasDataMarker = ''
             
             // @ts-expect-error private field
@@ -120,7 +120,7 @@ describe('Replicate data from node to node in DHT', () => {
             }
 
             // eslint-disable-next-line max-len
-            logger.info(peerIdFromPeerDescriptor(contact.getPeerDescriptor()) + ' ' + getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
+            logger.info(peerIdFromPeerDescriptor(contact.getPeerDescriptor()) + ' ' + node.getNodeId() + hasDataMarker)
         })
 
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
@@ -139,7 +139,7 @@ describe('Replicate data from node to node in DHT', () => {
         logger.info('After join of 99 nodes: nodes sorted according to distance to data with storing nodes marked are: ')
 
         closest.forEach((contact) => {
-            const node = nodesById.get(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))!
+            const node = nodesById.get(contact.getNodeId())!
             let hasDataMarker = ''
 
             // @ts-expect-error private field
@@ -148,10 +148,10 @@ describe('Replicate data from node to node in DHT', () => {
                 hasDataMarker = '<-'
             }
 
-            logger.info(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
+            logger.info(node.getNodeId() + hasDataMarker)
         })
 
-        const closestNode = nodesById.get(getNodeIdFromPeerDescriptor(closest[0].getPeerDescriptor()))!
+        const closestNode = nodesById.get(closest[0].getNodeId())!
 
         // @ts-expect-error private field
         const store = closestNode.localDataStore

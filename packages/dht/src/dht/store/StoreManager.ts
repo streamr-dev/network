@@ -192,13 +192,13 @@ export class StoreManager {
             // if we are not the closest node to the data, replicate only to the closest one to the data
             : [sortedList.getAllContacts()[0]]
         targets.forEach((contact) => {
-            const contactNodeId = getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())
+            const contactNodeId = contact.getNodeId()
             if ((incomingNodeId !== contactNodeId) && (localNodeId !== contactNodeId)) {
                 setImmediate(() => {
                     executeSafePromise(async () => {
                         await this.replicateDataToContact(dataEntry, contact.getPeerDescriptor())
                         logger.trace('replicateDataToContact() returned', { 
-                            node: getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()),
+                            node: contactNodeId,
                             replicateOnlyToClosest: !selfIsPrimaryStorer
                         })
                     })
