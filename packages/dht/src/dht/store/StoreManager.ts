@@ -62,10 +62,11 @@ export class StoreManager {
 
     private replicateAndUpdateStaleState(dataEntry: DataEntry, newNode: PeerDescriptor): void {
         const newNodeId = getNodeIdFromPeerDescriptor(newNode)
+        const key = getDhtAddressFromRaw(dataEntry.key)
         // TODO use config option or named constant?
-        const closestToData = this.config.getClosestNeighborsTo(getDhtAddressFromRaw(dataEntry.key), 10)
+        const closestToData = this.config.getClosestNeighborsTo(key, 10)
         const sortedList = new SortedContactList<Contact>({
-            referenceId: getDhtAddressFromRaw(dataEntry.key), 
+            referenceId: key, 
             maxSize: 20,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             emitEvents: false
@@ -89,8 +90,8 @@ export class StoreManager {
                     await this.replicateDataToContact(dataEntry, newNode)
                 })
             }
-        } else if (!this.selfIsWithinRedundancyFactor(getDhtAddressFromRaw(dataEntry.key))) {
-            this.config.localDataStore.setStale(getDhtAddressFromRaw(dataEntry.key), getDhtAddressFromRaw(dataEntry.creator), true)
+        } else if (!this.selfIsWithinRedundancyFactor(key)) {
+            this.config.localDataStore.setStale(key, getDhtAddressFromRaw(dataEntry.creator), true)
         }
     }
 
@@ -173,10 +174,11 @@ export class StoreManager {
         // sort own contact list according to data id
         const localNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
         const incomingNodeId = getNodeIdFromPeerDescriptor(incomingPeer)
+        const key = getDhtAddressFromRaw(dataEntry.key)
         // TODO use config option or named constant?
-        const closestToData = this.config.getClosestNeighborsTo(getDhtAddressFromRaw(dataEntry.key), 10)
+        const closestToData = this.config.getClosestNeighborsTo(key, 10)
         const sortedList = new SortedContactList<Contact>({
-            referenceId: getDhtAddressFromRaw(dataEntry.key), 
+            referenceId: key, 
             maxSize: this.config.redundancyFactor, 
             allowToContainReferenceId: true, 
             emitEvents: false
