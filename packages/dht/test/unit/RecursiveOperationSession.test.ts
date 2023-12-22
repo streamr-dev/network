@@ -1,4 +1,3 @@
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { RecursiveOperationSession } from '../../src/dht/recursive-operation/RecursiveOperationSession'
@@ -22,8 +21,8 @@ describe('RecursiveOperationSession', () => {
         return new RecursiveOperationSessionRpcRemote(
             createMockPeerDescriptor(),
             localPeerDescriptor,
-            serviceId,
-            toProtoRpcClient(new RecursiveOperationSessionRpcClient(new RoutingRpcCommunicator(serviceId, send).getRpcClientTransport()))
+            new RoutingRpcCommunicator(serviceId, send),
+            RecursiveOperationSessionRpcClient
         )
     }
 

@@ -8,12 +8,11 @@ import { PeerDescriptor, RouteMessageWrapper } from '../../proto/packages/dht/pr
 import { RouterRpcRemote } from './RouterRpcRemote'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RecursiveOperationRpcClient, RouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Contact } from '../contact/Contact'
 import { RecursiveOperationRpcRemote } from '../recursive-operation/RecursiveOperationRpcRemote'
 import { EXISTING_CONNECTION_TIMEOUT } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
-import { NodeID } from '../../helpers/nodeId'
+import { NodeID, getNodeIdFromBinary } from '../../helpers/nodeId'
 
 const logger = new Logger(module)
 
@@ -29,15 +28,15 @@ class RemoteContact extends Contact {
         this.routerRpcRemote = new RouterRpcRemote(
             localPeerDescriptor,
             peer.getPeerDescriptor(),
-            peer.getServiceId(),
-            toProtoRpcClient(new RouterRpcClient(rpcCommunicator.getRpcClientTransport())),
+            rpcCommunicator,
+            RouterRpcClient,
             EXISTING_CONNECTION_TIMEOUT
         )
         this.recursiveOperationRpcRemote = new RecursiveOperationRpcRemote(
             localPeerDescriptor,
             peer.getPeerDescriptor(),
-            peer.getServiceId(),
-            toProtoRpcClient(new RecursiveOperationRpcClient(rpcCommunicator.getRpcClientTransport())),
+            rpcCommunicator,
+            RecursiveOperationRpcClient,
             EXISTING_CONNECTION_TIMEOUT
         )
     }
@@ -54,56 +53,47 @@ class RemoteContact extends Contact {
 export interface RoutingSessionEvents {
     // This event is emitted when a peer responds with a success ack
     // to routeMessage call
-    routingSucceeded: (sessionId: string) => void
-    partialSuccess: (sessionId: string) => void
-
+    routingSucceeded: () => void
+    partialSuccess: () => void
     // This event is emitted when all the candidates have been gone
     // through, and none of them responds with a success ack
-    routingFailed: (sessionId: string) => void
-    stopped: (sessionId: string) => void
+    routingFailed: () => void
+    stopped: () => void
 }
 
 export enum RoutingMode { ROUTE, FORWARD, RECURSIVE }
 
+interface RoutingSessionConfig {
+    rpcCommunicator: RoutingRpcCommunicator
+    localPeerDescriptor: PeerDescriptor
+    routedMessage: RouteMessageWrapper
+    connections: Map<NodeID, DhtNodeRpcRemote>
+    parallelism: number
+    mode: RoutingMode
+    excludedNodeIds?: Set<NodeID>
+}
+
 export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
     public readonly sessionId = v4()
-    private readonly rpcCommunicator: RoutingRpcCommunicator
     private ongoingRequests: Set<NodeID> = new Set()
     private contactList: SortedContactList<RemoteContact>
-    private readonly localPeerDescriptor: PeerDescriptor
-    private readonly messageToRoute: RouteMessageWrapper
-    private connections: Map<NodeID, DhtNodeRpcRemote>
-    private readonly parallelism: number
     private failedHopCounter = 0
     private successfulHopCounter = 0
-    private readonly mode: RoutingMode = RoutingMode.ROUTE
     private stopped = false
+    private readonly config: RoutingSessionConfig
 
-    constructor(
-        rpcCommunicator: RoutingRpcCommunicator,
-        localPeerDescriptor: PeerDescriptor,
-        messageToRoute: RouteMessageWrapper,
-        connections: Map<NodeID, DhtNodeRpcRemote>,
-        parallelism: number,
-        mode: RoutingMode = RoutingMode.ROUTE,
-        excludedNodeIDs?: Set<NodeID>
-    ) {
+    constructor(config: RoutingSessionConfig) {
         super()
-        this.rpcCommunicator = rpcCommunicator
-        this.localPeerDescriptor = localPeerDescriptor
-        this.messageToRoute = messageToRoute
-        this.connections = connections
-        this.parallelism = parallelism
-        this.mode = mode
-        const previousPeer = getPreviousPeer(messageToRoute)
+        this.config = config
+        const previousPeer = getPreviousPeer(config.routedMessage)
         const previousId = previousPeer ? getNodeIdFromPeerDescriptor(previousPeer) : undefined
         this.contactList = new SortedContactList({
-            referenceId: getNodeIdFromPeerDescriptor(this.messageToRoute.destinationPeer!),
+            referenceId: getNodeIdFromBinary(config.routedMessage.target),
             maxSize: 10000,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             nodeIdDistanceLimit: previousId,
-            excludedNodeIDs,
+            excludedNodeIds: config.excludedNodeIds,
             emitEvents: false
         })
     }
@@ -131,9 +121,9 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
     private emitFailure() {
         if (this.successfulHopCounter >= 1) {
-            this.emit('partialSuccess', this.sessionId)
+            this.emit('partialSuccess')
         } else {
-            this.emit('routingFailed', this.sessionId)
+            this.emit('routingFailed')
         }
     }
 
@@ -144,10 +134,10 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
         this.successfulHopCounter += 1
         const contacts = this.updateAndGetRoutablePeers()
-        if (this.successfulHopCounter >= this.parallelism || contacts.length === 0) {
+        if (this.successfulHopCounter >= this.config.parallelism || contacts.length === 0) {
             // TODO should call this.stop() so that we do cleanup? (after the routingSucceeded call)
             this.stopped = true
-            this.emit('routingSucceeded', this.sessionId)
+            this.emit('routingSucceeded')
         } else if (contacts.length > 0 && this.ongoingRequests.size === 0) {
             this.sendMoreRequests(contacts)
         }
@@ -158,12 +148,12 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             return false
         }
         const msg = {
-            ...this.messageToRoute,
-            routingPath: this.messageToRoute.routingPath.concat([this.localPeerDescriptor])
+            ...this.config.routedMessage,
+            routingPath: this.config.routedMessage.routingPath.concat([this.config.localPeerDescriptor])
         }
-        if (this.mode === RoutingMode.FORWARD) {
+        if (this.config.mode === RoutingMode.FORWARD) {
             return contact.getRouterRpcRemote().forwardMessage(msg)
-        } else if (this.mode === RoutingMode.RECURSIVE) {
+        } else if (this.config.mode === RoutingMode.RECURSIVE) {
             return contact.getRecursiveOperationRpcRemote().routeRequest(msg)
         } else {
             return contact.getRouterRpcRemote().routeMessage(msg)
@@ -174,14 +164,14 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         logger.trace('getRoutablePeers() sessionId: ' + this.sessionId)
         // Remove stale contacts that may have been removed from connections
         this.contactList.getContactIds().forEach((nodeId) => {
-            if (!this.connections.has(nodeId)) {
+            if (!this.config.connections.has(nodeId)) {
                 this.contactList.removeContact(nodeId)
             }
         })
-        const contacts = Array.from(this.connections.values())
-            .map((peer) => new RemoteContact(peer, this.localPeerDescriptor, this.rpcCommunicator))
+        const contacts = Array.from(this.config.connections.values())
+            .map((peer) => new RemoteContact(peer, this.config.localPeerDescriptor, this.config.rpcCommunicator))
         this.contactList.addContacts(contacts)
-        return this.contactList.getUncontactedContacts(this.parallelism)
+        return this.contactList.getUncontactedContacts(this.config.parallelism)
     }
 
     sendMoreRequests(uncontacted: RemoteContact[]): void {
@@ -198,7 +188,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             this.emitFailure()
             return
         }
-        while ((this.ongoingRequests.size < this.parallelism) && (uncontacted.length > 0) && !this.stopped) {
+        while ((this.ongoingRequests.size < this.config.parallelism) && (uncontacted.length > 0) && !this.stopped) {
             const nextPeer = uncontacted.shift()
             // eslint-disable-next-line max-len
             logger.trace(`Sending routeMessage request to contact: ${getNodeIdFromPeerDescriptor(nextPeer!.getPeerDescriptor())} (sessionId=${this.sessionId})`)
@@ -224,7 +214,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     public stop(): void {
         this.stopped = true
         this.contactList.stop()
-        this.emit('stopped', this.sessionId)
+        this.emit('stopped')
         this.removeAllListeners()
     }
 }

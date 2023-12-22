@@ -1,4 +1,3 @@
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { CountMetric, LevelMetric, Logger, Metric, MetricsContext, MetricsDefinition, RateMetric, waitForEvent3 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { Contact } from '../dht/contact/Contact'
@@ -23,7 +22,7 @@ import {
     UnlockRequest
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ConnectionLockRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
-import { ITransport, SendOptions, TransportEvents } from '../transport/ITransport'
+import { DEFAULT_SEND_OPTIONS, ITransport, SendOptions, TransportEvents } from '../transport/ITransport'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { ConnectionLockHandler, LockID } from './ConnectionLockHandler'
 import { ConnectorFacade } from './ConnectorFacade'
@@ -184,6 +183,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         logger.trace(`Starting ConnectionManager...`)
         await this.connectorFacade.start(
             (connection: ManagedConnection) => this.onNewConnection(connection),
+            (peerDescriptor: PeerDescriptor) => this.hasConnection(peerDescriptor),
             this
         )
         // Garbage collection of connections
@@ -250,9 +250,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         return this.locks.getNumberOfWeakLockedConnections()
     }
 
-    public async send(message: Message, opts?: SendOptions): Promise<void> {
-        const doNotMindStopped = opts?.doNotMindStopped ?? false
-        if (this.state === ConnectionManagerState.STOPPED && !doNotMindStopped) {
+    public async send(message: Message, opts: SendOptions = DEFAULT_SEND_OPTIONS): Promise<void> {
+        if (this.state === ConnectionManagerState.STOPPED && !opts.sendIfStopped) {
             return
         }
         const peerDescriptor = message.targetDescriptor!
@@ -266,17 +265,16 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         }
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
         let connection = this.connections.get(nodeId)
-        const doNotConnect = opts?.doNotConnect ?? false
-        if (!connection && !doNotConnect) {
+        if (!connection && opts.connect) {
             connection = this.connectorFacade.createConnection(peerDescriptor)
             this.onNewConnection(connection)
         } else if (!connection) {
-            throw new Err.SendFailed('No connection to target, doNotConnect flag is true')
+            throw new Err.SendFailed('No connection to target, connect flag is false')
         }
         const binary = Message.toBinary(message)
         this.metrics.sendBytesPerSecond.record(binary.byteLength)
         this.metrics.sendMessagesPerSecond.record(1)
-        return connection.send(binary, doNotConnect)
+        return connection.send(binary, opts.connect)
     }
 
     private isConnectionToSelf(peerDescriptor: PeerDescriptor): boolean {
@@ -395,7 +393,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             return false
         }
         logger.trace('onNewConnection()')
-        connection.offeredAsIncoming = true
         if (!this.acceptNewConnection(connection)) {
             return false
         }
@@ -465,7 +462,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const rpcRemote = new ConnectionLockRpcRemote(
             this.getLocalPeerDescriptor(),
             targetDescriptor,
-            toProtoRpcClient(new ConnectionLockRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+            this.rpcCommunicator!,
+            ConnectionLockRpcClient
         )
         this.locks.addLocalLocked(nodeId, lockId)
         rpcRemote.lockRequest(lockId)
@@ -482,7 +480,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const rpcRemote = new ConnectionLockRpcRemote(
             this.getLocalPeerDescriptor(),
             targetDescriptor,
-            toProtoRpcClient(new ConnectionLockRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+            this.rpcCommunicator!,
+            ConnectionLockRpcClient
         )
         if (this.connections.has(nodeId)) {
             rpcRemote.unlockRequest(lockId)
@@ -546,7 +545,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const rpcRemote = new ConnectionLockRpcRemote(
             this.getLocalPeerDescriptor(),
             targetDescriptor,
-            toProtoRpcClient(new ConnectionLockRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+            this.rpcCommunicator!,
+            ConnectionLockRpcClient
         )
         try {
             await rpcRemote.gracefulDisconnect(disconnectMode)

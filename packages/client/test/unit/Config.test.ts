@@ -184,5 +184,62 @@ describe('Config', () => {
                 }
             })
         })
+
+        describe('highGasPrice', () => {
+
+            it('without ethereum network config', () => {
+                const config: any = {
+                    environment: 'polygon'
+                }
+                expect(createStrictConfig(config)).toMatchObject({
+                    contracts: {
+                        ethereumNetwork: {
+                            highGasPriceStrategy: true
+                        }
+                    }
+                })
+            })
+
+            it('with ethereum network config', () => {
+                const config: any = {
+                    environment: 'polygon',
+                    contracts: {
+                        ethereumNetwork: {
+                            overrides: {
+                                gasLimit: 123
+                            }
+                        }
+                    }
+                }
+                expect(createStrictConfig(config)).toMatchObject({
+                    contracts: {
+                        ethereumNetwork: {
+                            highGasPriceStrategy: true,
+                            overrides: {
+                                gasLimit: 123
+                            }
+                        }
+                    }
+                })
+            })
+
+            it('explicit config value is not overriden', () => {
+                const config: any = {
+                    environment: 'polygon',
+                    contracts: {
+                        ethereumNetwork: {
+                            highGasPriceStrategy: false
+                        }
+                    }
+                }
+                expect(createStrictConfig(config)).toMatchObject({
+                    contracts: {
+                        ethereumNetwork: {
+                            highGasPriceStrategy: false
+                        }
+                    }
+                })
+            })
+        })
     })
 })

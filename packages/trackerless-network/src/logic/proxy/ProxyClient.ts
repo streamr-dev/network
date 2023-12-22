@@ -4,7 +4,6 @@ import {
     ListeningRpcCommunicator,
     PeerDescriptor
 } from '@streamr/dht'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StreamPartID } from '@streamr/protocol'
 import { EthereumAddress, Logger, addManagedEventListener, wait } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
@@ -58,11 +57,15 @@ interface ProxyDefinition {
     userId: EthereumAddress
 }
 
+interface Events {
+    message: (message: StreamMessage) => void
+}
+
 const logger = new Logger(module)
 
 const SERVICE_ID = 'system/proxy-client'
 
-export class ProxyClient extends EventEmitter {
+export class ProxyClient extends EventEmitter<Events> {
 
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly deliveryRpcLocal: DeliveryRpcLocal
@@ -170,8 +173,12 @@ export class ProxyClient extends EventEmitter {
 
     private async attemptConnection(nodeId: NodeID, direction: ProxyDirection, userId: EthereumAddress): Promise<void> {
         const peerDescriptor = this.definition!.nodes.get(nodeId)!
-        const client = toProtoRpcClient(new ProxyConnectionRpcClient(this.rpcCommunicator.getRpcClientTransport()))
-        const rpcRemote = new ProxyConnectionRpcRemote(this.config.localPeerDescriptor, peerDescriptor, this.config.streamPartId, client)
+        const rpcRemote = new ProxyConnectionRpcRemote(
+            this.config.localPeerDescriptor,
+            peerDescriptor,
+            this.rpcCommunicator,
+            ProxyConnectionRpcClient
+        )
         const accepted = await rpcRemote.requestConnection(direction, userId)
         if (accepted) {
             this.config.connectionLocker.lockConnection(peerDescriptor, SERVICE_ID)
@@ -179,8 +186,8 @@ export class ProxyClient extends EventEmitter {
             const remote = new DeliveryRpcRemote(
                 this.config.localPeerDescriptor,
                 peerDescriptor,
-                this.config.streamPartId,
-                toProtoRpcClient(new DeliveryRpcClient(this.rpcCommunicator.getRpcClientTransport()))
+                this.rpcCommunicator,
+                DeliveryRpcClient
             )
             this.targetNeighbors.add(remote)
             this.propagation.onNeighborJoined(nodeId)
@@ -207,7 +214,7 @@ export class ProxyClient extends EventEmitter {
                 nodeId
             })
             const server = this.targetNeighbors.get(nodeId)
-            server?.leaveStreamPartNotice()
+            server?.leaveStreamPartNotice(this.config.streamPartId, false)
             this.removeConnection(nodeId)
         }
     }
@@ -254,9 +261,9 @@ export class ProxyClient extends EventEmitter {
     }
 
     stop(): void {
-        this.targetNeighbors.getAll().map((remote) => {
+        this.targetNeighbors.getAll().forEach((remote) => {
             this.config.connectionLocker.unlockConnection(remote.getPeerDescriptor(), SERVICE_ID)
-            remote.leaveStreamPartNotice()
+            remote.leaveStreamPartNotice(this.config.streamPartId, false)
         })
         this.targetNeighbors.stop()
         this.rpcCommunicator.destroy()

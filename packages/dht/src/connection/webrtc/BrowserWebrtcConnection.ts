@@ -22,12 +22,9 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
 
     public connectionId: ConnectionID
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
-
     // We need to keep track of connection state ourselves because
     // RTCPeerConnection.connectionState is not supported on Firefox
-
     private lastState: RTCPeerConnectionState = 'connecting'
-
     private readonly iceServers: IceServer[]
     private peerConnection?: RTCPeerConnection
     private dataChannel?: RTCDataChannel
@@ -195,10 +192,6 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
 
         dataChannel.onerror = (err) => {
             logger.warn(`dc.onError: ${err}`)
-        }
-
-        dataChannel.onbufferedamountlow = () => {
-            //this.emitLowBackpressure()
         }
 
         dataChannel.onmessage = (msg) => {

@@ -1,4 +1,4 @@
-import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
+import { RpcCommunicator } from '@streamr/proto-rpc'
 import {
     StoreDataRequest,
     StoreDataResponse
@@ -9,8 +9,7 @@ import { StoreRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.clien
 import { StoreRpcRemote } from '../../src/dht/store/StoreRpcRemote'
 import { createMockDataEntry } from '../utils/mock/mockDataEntry'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-
-const SERVICE_ID = 'test'
+import { createRandomNodeId } from '../../src/helpers/nodeId'
 
 describe('StoreRpcRemote', () => {
 
@@ -23,6 +22,7 @@ describe('StoreRpcRemote', () => {
     const request: StoreDataRequest = {
         key: data.key,
         data: data.data,
+        creator: createRandomNodeId(),
         ttl: 10
     }
 
@@ -36,13 +36,11 @@ describe('StoreRpcRemote', () => {
         serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
-        const client = toProtoRpcClient(new StoreRpcClient(clientRpcCommunicator.getRpcClientTransport()))
-        rpcRemote = new StoreRpcRemote(clientPeerDescriptor, serverPeerDescriptor, SERVICE_ID, client)
+        rpcRemote = new StoreRpcRemote(clientPeerDescriptor, serverPeerDescriptor, clientRpcCommunicator, StoreRpcClient)
     })
 
     it('storeData happy path', async () => {
-        const response = await rpcRemote.storeData(request)
-        expect(response.error).toBeEmpty()
+        await expect(rpcRemote.storeData(request)).toResolve()
     })
 
     it('storeData rejects', async () => {
@@ -53,11 +51,4 @@ describe('StoreRpcRemote', () => {
             + ' Error: Mock'
         )
     })
-
-    it('storeData response error', async () => {
-        serverRpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', mockStoreRpc.storeDataErrorString)
-        const response = await rpcRemote.storeData(request)
-        expect(response.error).toEqual('Mock')
-    })
-
 })

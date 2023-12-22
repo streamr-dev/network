@@ -4,14 +4,11 @@ import { ITemporaryConnectionRpc } from '../../proto/packages/trackerless-networ
 import { DhtCallContext, ListeningRpcCommunicator } from '@streamr/dht'
 import { DeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { NodeList } from '../NodeList'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { StreamPartID } from '@streamr/protocol'
 
 interface TemporaryConnectionRpcLocalConfig {
-    streamPartId: StreamPartID
     rpcCommunicator: ListeningRpcCommunicator
     localPeerDescriptor: PeerDescriptor
 } 
@@ -43,8 +40,8 @@ export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
         const remote = new DeliveryRpcRemote(
             this.config.localPeerDescriptor,
             sender,
-            this.config.streamPartId,
-            toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+            this.config.rpcCommunicator,
+            DeliveryRpcClient
         )
         this.temporaryNodes.add(remote)
         return {

@@ -21,15 +21,14 @@ interface DiscoverySessionConfig {
 }
 
 export class DiscoverySession {
-    public readonly sessionId = v4()
-
+    
+    public readonly id = v4()
     private stopped = false
     private emitter = new EventEmitter<DiscoverySessionEvents>()
-    private outgoingClosestPeersRequestsCounter = 0
     private noProgressCounter = 0
     private ongoingClosestPeersRequests: Set<NodeID> = new Set()
-    private readonly config: DiscoverySessionConfig
     private contactedPeers: Set<NodeID> = new Set()
+    private readonly config: DiscoverySessionConfig
 
     constructor(config: DiscoverySessionConfig) {
         this.config = config
@@ -47,7 +46,6 @@ export class DiscoverySession {
             return []
         }
         logger.trace(`Getting closest peers from contact: ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
-        this.outgoingClosestPeersRequestsCounter++
         this.contactedPeers.add(contact.getNodeId())
         const returnedContacts = await contact.getClosestPeers(this.config.targetId)
         this.config.peerManager.handlePeerActive(contact.getNodeId())
@@ -66,8 +64,6 @@ export class DiscoverySession {
         const newClosestDistance = getDistance(getNodeIdFromBinary(this.config.targetId), newClosestNeighbor.getNodeId())
         if (newClosestDistance >= oldClosestDistance) {
             this.noProgressCounter++
-        } else {
-            this.noProgressCounter = 0
         }
     }
 
@@ -103,7 +99,6 @@ export class DiscoverySession {
                 .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer.getNodeId(), contacts))
                 .catch(() => this.onClosestPeersRequestFailed(nextPeer))
                 .finally(() => {
-                    this.outgoingClosestPeersRequestsCounter--
                     this.findMoreContacts()
                 })
         }

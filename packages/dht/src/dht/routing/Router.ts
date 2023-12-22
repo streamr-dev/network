@@ -11,7 +11,7 @@ import { ConnectionManager } from '../../connection/ConnectionManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { v4 } from 'uuid'
 import { RouterRpcLocal, createRouteMessageAck } from './RouterRpcLocal'
-import { NodeID } from '../../helpers/nodeId'
+import { NodeID, getNodeIdFromBinary } from '../../helpers/nodeId'
 
 export interface RouterConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -19,8 +19,6 @@ export interface RouterConfig {
     connections: Map<NodeID, DhtNodeRpcRemote>
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     connectionManager?: ConnectionManager
-    rpcRequestTimeout?: number
-
 }
 
 interface ForwardingTableEntry {
@@ -28,45 +26,32 @@ interface ForwardingTableEntry {
     peerDescriptors: PeerDescriptor[]
 }
 
-export interface IRouter {
-    doRouteMessage(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedPeer?: PeerDescriptor): RouteMessageAck
-    send(msg: Message, reachableThrough: PeerDescriptor[]): void
-    isMostLikelyDuplicate(requestId: string): boolean
-    addToDuplicateDetector(requestId: string): void
-    addRoutingSession(session: RoutingSession): void
-    removeRoutingSession(sessionId: string): void
-    stop(): void
-}
-
 const logger = new Logger(module)
 
-export class Router implements IRouter {
-    private readonly rpcCommunicator: RoutingRpcCommunicator
-    private readonly localPeerDescriptor: PeerDescriptor
-    private readonly connections: Map<NodeID, DhtNodeRpcRemote>
+export class Router {
+
     private readonly forwardingTable: Map<NodeID, ForwardingTableEntry> = new Map()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
     // TODO use config option or named constant?
     private readonly duplicateRequestDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
     private stopped = false
+    private readonly config: RouterConfig
 
     constructor(config: RouterConfig) {
-        this.rpcCommunicator = config.rpcCommunicator
-        this.localPeerDescriptor = config.localPeerDescriptor
-        this.connections = config.connections
-        this.registerLocalRpcMethods(config)
+        this.config = config
+        this.registerLocalRpcMethods()
     }
 
-    private registerLocalRpcMethods(config: RouterConfig) {
+    private registerLocalRpcMethods() {
         const rpcLocal = new RouterRpcLocal({
             doRouteMessage: (routedMessage: RouteMessageWrapper, mode?: RoutingMode) => this.doRouteMessage(routedMessage, mode),
-            addContact: (contact: PeerDescriptor, setActive: boolean) => config.addContact(contact, setActive),
+            addContact: (contact: PeerDescriptor, setActive: boolean) => this.config.addContact(contact, setActive),
             setForwardingEntries: (routedMessage: RouteMessageWrapper) => this.setForwardingEntries(routedMessage),
             duplicateRequestDetector: this.duplicateRequestDetector,
-            localPeerDescriptor: this.localPeerDescriptor,
-            connectionManager: config.connectionManager
+            localPeerDescriptor: this.config.localPeerDescriptor,
+            connectionManager: this.config.connectionManager
         })
-        this.rpcCommunicator.registerRpcMethod(
+        this.config.rpcCommunicator.registerRpcMethod(
             RouteMessageWrapper,
             RouteMessageAck,
             'routeMessage',
@@ -77,7 +62,7 @@ export class Router implements IRouter {
                 return rpcLocal.routeMessage(routedMessage)
             }
         )
-        this.rpcCommunicator.registerRpcMethod(
+        this.config.rpcCommunicator.registerRpcMethod(
             RouteMessageWrapper,
             RouteMessageAck,
             'forwardMessage',
@@ -92,16 +77,15 @@ export class Router implements IRouter {
     }
 
     public send(msg: Message, reachableThrough: PeerDescriptor[]): void {
-        msg.sourceDescriptor = this.localPeerDescriptor
+        msg.sourceDescriptor = this.config.localPeerDescriptor
         const targetPeerDescriptor = msg.targetDescriptor!
         const forwardingEntry = this.forwardingTable.get(getNodeIdFromPeerDescriptor(targetPeerDescriptor))
         if (forwardingEntry && forwardingEntry.peerDescriptors.length > 0) {
-            const forwardingPeer = forwardingEntry.peerDescriptors[0]
             const forwardedMessage: RouteMessageWrapper = {
                 message: msg,
                 requestId: v4(),
-                destinationPeer: forwardingPeer,
-                sourcePeer: this.localPeerDescriptor,
+                target: forwardingEntry.peerDescriptors[0].nodeId,
+                sourcePeer: this.config.localPeerDescriptor,
                 reachableThrough,
                 routingPath: []
             }
@@ -115,8 +99,8 @@ export class Router implements IRouter {
             const routedMessage: RouteMessageWrapper = {
                 message: msg,
                 requestId: v4(),
-                destinationPeer: targetPeerDescriptor,
-                sourcePeer: this.localPeerDescriptor,
+                target: targetPeerDescriptor.nodeId,
+                sourcePeer: this.config.localPeerDescriptor,
                 reachableThrough,
                 routingPath: []
             }
@@ -134,7 +118,7 @@ export class Router implements IRouter {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
         logger.trace(`Routing message ${routedMessage.requestId} from ${getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!)} `
-            + `to ${getNodeIdFromPeerDescriptor(routedMessage.destinationPeer!)}`)
+            + `to ${getNodeIdFromBinary(routedMessage.target)}`)
         const session = this.createRoutingSession(routedMessage, mode, excludedPeer)
         const contacts = session.updateAndGetRoutablePeers()
         if (contacts.length > 0) {
@@ -170,21 +154,21 @@ export class Router implements IRouter {
     }
 
     private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedNode?: PeerDescriptor): RoutingSession {
-        const excludedPeers = new Set<NodeID>(routedMessage.routingPath.map((descriptor) => getNodeIdFromPeerDescriptor(descriptor)))
+        const excludedNodeIds = new Set<NodeID>(routedMessage.routingPath.map((descriptor) => getNodeIdFromPeerDescriptor(descriptor)))
         if (excludedNode) {
-            excludedPeers.add(getNodeIdFromPeerDescriptor(excludedNode))
+            excludedNodeIds.add(getNodeIdFromPeerDescriptor(excludedNode))
         }
-        logger.trace('routing session created with connections: ' + this.connections.size)
-        return new RoutingSession(
-            this.rpcCommunicator,
-            this.localPeerDescriptor,
+        logger.trace('routing session created with connections: ' + this.config.connections.size)
+        return new RoutingSession({
+            rpcCommunicator: this.config.rpcCommunicator,
+            localPeerDescriptor: this.config.localPeerDescriptor,
             routedMessage,
-            this.connections,
+            connections: this.config.connections,
             // TODO use config option or named constant?
-            areEqualPeerDescriptors(this.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
+            parallelism: areEqualPeerDescriptors(this.config.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
             mode,
-            excludedPeers
-        )
+            excludedNodeIds
+        })
     }
 
     public isMostLikelyDuplicate(requestId: string): boolean {
@@ -218,7 +202,7 @@ export class Router implements IRouter {
 
     private setForwardingEntries(routedMessage: RouteMessageWrapper): void {
         const reachableThroughWithoutSelf = routedMessage.reachableThrough.filter((peer) => {
-            return !areEqualPeerDescriptors(peer, this.localPeerDescriptor)
+            return !areEqualPeerDescriptors(peer, this.config.localPeerDescriptor)
         })
         
         if (reachableThroughWithoutSelf.length > 0) {

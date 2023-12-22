@@ -38,10 +38,12 @@ describe('RandomGraphNode', () => {
             localPeerDescriptor: peerDescriptor,
             layer1Node,
             connectionLocker: mockConnectionLocker,
-            handshaker: new MockHandshaker(),
-            neighborUpdateManager: new MockNeighborUpdateManager(),
-            neighborFinder: new MockNeighborFinder(),
-            streamPartId: StreamPartIDUtils.parse('stream#0')
+            handshaker: new MockHandshaker() as any,
+            neighborUpdateManager: new MockNeighborUpdateManager() as any,
+            neighborFinder: new MockNeighborFinder() as any,
+            streamPartId: StreamPartIDUtils.parse('stream#0'),
+            isLocalNodeEntryPoint: () => false
+
         })
         await randomGraphNode.start()
     })

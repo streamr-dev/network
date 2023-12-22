@@ -8,7 +8,7 @@ interface Indexable {
     [key: string]: any
 }
 
-type ClassType = Record<any | symbol | number, (...args: any) => any> & object | Indexable
+export type ClassType = Record<any | symbol | number, (...args: any) => any> & object | Indexable
 type ProtoRpcRealApi<T extends ClassType> = {
     [k in keyof T as T[k] extends Function ? k : never]:
     (...args: Parameters<T[k]>) => (

@@ -2,7 +2,8 @@ import { PeerDescriptor, RpcRemote } from '@streamr/dht'
 import { Logger } from '@streamr/utils'
 import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { INeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { NeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { StreamPartID } from '@streamr/protocol'
 
 const logger = new Logger(module)
 
@@ -11,11 +12,11 @@ interface UpdateNeighborsResponse {
     removeMe: boolean
 }
 
-export class NeighborUpdateRpcRemote extends RpcRemote<INeighborUpdateRpcClient> {
+export class NeighborUpdateRpcRemote extends RpcRemote<NeighborUpdateRpcClient> {
 
-    async updateNeighbors(neighbors: PeerDescriptor[]): Promise<UpdateNeighborsResponse> {
+    async updateNeighbors(streamPartId: StreamPartID, neighbors: PeerDescriptor[]): Promise<UpdateNeighborsResponse> {
         const request: NeighborUpdate = {
-            streamPartId: this.getServiceId(),
+            streamPartId,
             neighborDescriptors: neighbors,
             removeMe: false
         }

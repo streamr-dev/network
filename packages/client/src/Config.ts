@@ -31,6 +31,13 @@ export interface ControlLayerConfig {
     entryPoints?: NetworkPeerDescriptor[]
 
     /**
+     * The maximum number of connections before unwanted connections are clean up.
+     * This is a soft limit, meaning that the number of connections may exceed the count temporarily.
+     * Locked connections such as the ones used for stream operations are not counted towards this limit.
+    */
+    maxConnections?: number
+
+    /**
      * If true, an attempt is made to discover additional network entrypoint nodes
      * by querying them from The Graph. If false, only the nodes
      * listed in entryPoints are used.
@@ -216,7 +223,6 @@ export interface ChainConnectionInfo {
 
 // these should come from ETH-184 config package when it's ready
 export interface EthereumNetworkConfig {
-    chainId: number
     overrides?: Overrides
     highGasPriceStrategy?: boolean
 }
@@ -376,7 +382,7 @@ export interface StreamrClientConfig {
         storageNodeRegistryChainAddress?: string
         streamRegistryChainRPCs?: ChainConnectionInfo
         // most of the above should go into ethereumNetworks configs once ETH-184 is ready
-        ethereumNetworks?: Record<string, EthereumNetworkConfig>
+        ethereumNetwork?: EthereumNetworkConfig
         /** Some TheGraph instance, that indexes the streamr registries */
         theGraphUrl?: string
         maxConcurrentCalls?: number
@@ -467,6 +473,12 @@ const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrCli
             ...data.contracts,
         } as any
     }) as any
+    if (environmentId === 'polygon') {
+        config.contracts.ethereumNetwork = { 
+            highGasPriceStrategy: true,
+            ...config.contracts.ethereumNetwork
+        }
+    }
     if (environmentId === 'dev2') {
         // TODO config the 30s default for "dev2 in" @streamr/config and remove this explicit timeout
         const toNumber = (value: any): number | undefined => {
