@@ -12,21 +12,22 @@ import { StrictStreamrClientConfig } from '../Config'
 import { DestroySignal } from '../DestroySignal'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
 import { decrypt } from '../encryption/decrypt'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { StreamRegistry } from '../registry/StreamRegistry'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { PushPipeline } from '../utils/PushPipeline'
 import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { MsgChainUtil } from './MsgChainUtil'
-import { OrderMessages } from './OrderMessages'
 import { Resends } from './Resends'
+import { OrderMessages } from './ordering/OrderMessages'
 
 export interface MessagePipelineOptions {
     streamPartId: StreamPartID
-    getStorageNodes?: (streamId: StreamID) => Promise<EthereumAddress[]>
+    getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
     resends: Resends
-    streamRegistryCached: StreamRegistryCached
+    streamRegistry: StreamRegistry
     groupKeyManager: GroupKeyManager
-    config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill'>
+    // eslint-disable-next-line max-len
+    config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
     destroySignal: DestroySignal
     loggerFactory: LoggerFactory
 }
@@ -51,7 +52,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
 
     const messageStream = new PushPipeline<StreamMessage, StreamMessage>
     const msgChainUtil = new MsgChainUtil(async (msg) => {
-        await validateStreamMessage(msg, opts.streamRegistryCached)
+        await validateStreamMessage(msg, opts.streamRegistry)
         let decrypted
         if (StreamMessage.isAESEncrypted(msg)) {
             try {
@@ -60,7 +61,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
                 // TODO log this in onError? if we want to log all errors?
                 logger.debug('Failed to decrypt', { messageId: msg.getMessageID(), err })
                 // clear cached permissions if cannot decrypt, likely permissions need updating
-                opts.streamRegistryCached.clearStream(msg.getStreamId())
+                opts.streamRegistry.clearStreamCache(msg.getStreamId())
                 throw err
             }
         } else {
@@ -78,15 +79,20 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
     if (opts.config.orderMessages) {
         // order messages and fill gaps
         const orderMessages = new OrderMessages(
-            opts.config,
-            opts.resends,
             opts.streamPartId,
-            opts.loggerFactory,
-            opts.getStorageNodes
+            opts.getStorageNodes,
+            () => {}, // TODO send some error to messageStream (NET-987)
+            opts.resends,
+            opts.config
         )
-        messageStream.pipe(orderMessages.transform())
+        messageStream.pipe(async function* (src: AsyncGenerator<StreamMessage>) {
+            setImmediate(() => {
+                orderMessages.addMessages(src)
+            })
+            yield* orderMessages
+        })
         messageStream.onBeforeFinally.listen(() => {
-            orderMessages.stop()
+            orderMessages.destroy()
         })
     }
     messageStream

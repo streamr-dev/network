@@ -3,7 +3,7 @@ import 'reflect-metadata'
 import { Wallet } from '@ethersproject/wallet'
 import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
-import { collect, toEthereumAddress } from '@streamr/utils'
+import { collect, toEthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { StrictStreamrClientConfig } from '../../src/Config'
@@ -16,7 +16,7 @@ import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
-import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
+import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { createMessagePipeline } from '../../src/subscribe/messagePipeline'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { mockLoggerFactory } from '../test-utils/utils'
@@ -28,12 +28,12 @@ const CONTENT = {
 describe('messagePipeline', () => {
 
     let pipeline: PushPipeline<StreamMessage, StreamMessage>
-    let streamRegistryCached: Partial<StreamRegistryCached>
+    let streamRegistry: Partial<StreamRegistry>
     let streamPartId: StreamPartID
     let publisher: Wallet
 
     const createMessage = async (opts: {
-        serializedContent?: string
+        serializedContent?: Uint8Array
         encryptionType?: EncryptionType
         groupKeyId?: string
     } = {}): Promise<StreamMessage> => {
@@ -47,7 +47,7 @@ describe('messagePipeline', () => {
                 toEthereumAddress(publisher.address),
                 'mock-msgChainId'
             ),
-            serializedContent: JSON.stringify(CONTENT),
+            serializedContent: utf8ToBinary(JSON.stringify(CONTENT)),
             authentication: createPrivateKeyAuthentication(publisher.privateKey, undefined as any),
             ...opts
         })
@@ -61,7 +61,6 @@ describe('messagePipeline', () => {
             {
                 partitions: 1,
             },
-            undefined as any,
             undefined as any,
             undefined as any,
             undefined as any,
@@ -83,16 +82,16 @@ describe('messagePipeline', () => {
                 maxKeyRequestsPerSecond: 0
             } as any
         }
-        streamRegistryCached = {
+        streamRegistry = {
             getStream: async () => stream,
             isStreamPublisher: async () => true,
-            clearStream: jest.fn()
+            clearStreamCache: jest.fn()
         }
         pipeline = createMessagePipeline({
             streamPartId,
             getStorageNodes: undefined as any,
             resends: undefined as any,
-            streamRegistryCached: streamRegistryCached as any,
+            streamRegistry: streamRegistry as any,
             groupKeyManager: new GroupKeyManager(
                 mock<SubscriberKeyExchange>(),
                 mock<LitProtocolFacade>(),
@@ -119,7 +118,7 @@ describe('messagePipeline', () => {
 
     it('error: invalid signature', async () => {
         const msg = await createMessage()
-        msg.signature = 'invalid-signature'
+        msg.signature = hexToBinary('0x111111')
         await pipeline.push(msg)
         pipeline.endWrite()
         const onError = jest.fn()
@@ -133,7 +132,7 @@ describe('messagePipeline', () => {
 
     it('error: invalid content', async () => {
         const msg = await createMessage({
-            serializedContent: '{ invalid-json',
+            serializedContent: utf8ToBinary('{ invalid-json'),
         })
         await pipeline.push(msg)
         pipeline.endWrite()
@@ -163,8 +162,8 @@ describe('messagePipeline', () => {
         expect(error).toBeInstanceOf(DecryptError)
         expect(error.message).toMatch(/timed out/)
         expect(output).toEqual([])
-        expect(streamRegistryCached.clearStream).toBeCalledTimes(1)
-        expect(streamRegistryCached.clearStream).toBeCalledWith(StreamPartIDUtils.getStreamID(streamPartId))
+        expect(streamRegistry.clearStreamCache).toBeCalledTimes(1)
+        expect(streamRegistry.clearStreamCache).toBeCalledWith(StreamPartIDUtils.getStreamID(streamPartId))
     })
 
     it('error: exception', async () => {

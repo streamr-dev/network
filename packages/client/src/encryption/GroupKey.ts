@@ -2,7 +2,6 @@ import crypto from 'crypto'
 import { EncryptedGroupKey } from '@streamr/protocol'
 import { uuid } from '../utils/uuid'
 import { EncryptionUtil } from './EncryptionUtil'
-
 export class GroupKeyError extends Error {
 
     public groupKey?: GroupKey
@@ -75,7 +74,7 @@ export class GroupKey {
     decryptNextGroupKey(nextGroupKey: EncryptedGroupKey): GroupKey {
         return new GroupKey(
             nextGroupKey.groupKeyId,
-            EncryptionUtil.decryptWithAES(nextGroupKey.encryptedGroupKeyHex, this.data)
+            EncryptionUtil.decryptWithAES(nextGroupKey.data, this.data)
         )
     }
 
@@ -83,7 +82,7 @@ export class GroupKey {
     static decryptRSAEncrypted(encryptedKey: EncryptedGroupKey, rsaPrivateKey: string): GroupKey {
         return new GroupKey(
             encryptedKey.groupKeyId,
-            EncryptionUtil.decryptWithRSAPrivateKey(encryptedKey.encryptedGroupKeyHex, rsaPrivateKey, true)
+            EncryptionUtil.decryptWithRSAPrivateKey(encryptedKey.data, rsaPrivateKey)
         )
     }
 }

@@ -1,10 +1,10 @@
 import 'reflect-metadata'
 
-import { wait } from '@streamr/utils'
 import { StreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { StreamPermission } from '../../src/permission'
+import { wait } from '@streamr/utils'
 import { StreamrClient } from '../../src/StreamrClient'
+import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createMockMessage, createTestStream } from '../test-utils/utils'
 
@@ -54,8 +54,8 @@ describe('client behaviour on invalid message', () => {
             streamPartId: toStreamPartID(streamId, 0),
             publisher: publisherWallet
         })
-        const networkNode = environment.startNode(publisherWallet.address)
-        networkNode.publish(msg)
+        const networkNode = environment.startNode()
+        await networkNode.broadcast(msg)
         await wait(PROPAGATION_WAIT_TIME)
         expect(true).toEqual(true) // we never get here if subscriberClient crashes
     })

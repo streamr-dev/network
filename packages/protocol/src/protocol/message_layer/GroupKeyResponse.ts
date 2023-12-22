@@ -57,7 +57,7 @@ export default class GroupKeyResponse extends GroupKeyMessage {
         })
     }
 
-    static is(streamMessage: StreamMessage): streamMessage is StreamMessage<GroupKeyResponseSerialized> {
+    static is(streamMessage: StreamMessage): streamMessage is StreamMessage {
         return streamMessage.messageType === StreamMessageType.GROUP_KEY_RESPONSE
     }
 }

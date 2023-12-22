@@ -5,13 +5,11 @@ import { randomEthereumAddress, startTestServer } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import range from 'lodash/range'
 import { Resends } from '../../src/subscribe/Resends'
-import { mockLoggerFactory } from '../test-utils/utils'
+import { mockLoggerFactory, MOCK_CONTENT } from '../test-utils/utils'
+import { hexToBinary } from '@streamr/utils'
 
 const createResends = (serverUrl: string) => {
     return new Resends(
-        {
-            getStorageNodes: async () => [randomEthereumAddress()]
-        } as any,
         {
             getStorageNodeMetadata: async () => ({ http: serverUrl })
         } as any,
@@ -32,7 +30,7 @@ describe('Resends', () => {
         const resends = createResends(server.url)
         const requestUrl = `${server.url}/streams/stream/data/partitions/0/last?count=1&format=raw`
         await expect(async () => {
-            const messages = await resends.resend(StreamPartIDUtils.parse('stream#0'), { last: 1, raw: true })
+            const messages = await resends.resend(StreamPartIDUtils.parse('stream#0'), { last: 1, raw: true }, async () => [randomEthereumAddress()])
             await collect(messages)
         }).rejects.toThrowStreamrError({
             message: `Storage node fetch failed: Mock error, httpStatus=400, url=${requestUrl}`,
@@ -44,7 +42,7 @@ describe('Resends', () => {
     it('invalid server url', async () => {
         const resends = createResends('http://mock.test')
         await expect(async () => {
-            const messages = await resends.resend(StreamPartIDUtils.parse('stream#0'), { last: 1, raw: true })
+            const messages = await resends.resend(StreamPartIDUtils.parse('stream#0'), { last: 1, raw: true }, async () => [randomEthereumAddress()])
             await collect(messages)
         }).rejects.toThrowStreamrError({
             // eslint-disable-next-line max-len
@@ -62,15 +60,15 @@ describe('Resends', () => {
             for (const _ of range(MESSAGE_COUNT)) {
                 const msg = new StreamMessage({
                     messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisherId, ''),
-                    content: {},
-                    signature: 'signature'
+                    content: MOCK_CONTENT,
+                    signature: hexToBinary('0x1234')
                 })
                 res.write(`${msg.serialize()}\n`)
             }
             res.end()
         })
         const resends = createResends(server.url)
-        const response = await resends.resend(streamPartId, { last: MESSAGE_COUNT, raw: true })
+        const response = await resends.resend(streamPartId, { last: MESSAGE_COUNT, raw: true }, async () => [randomEthereumAddress()])
         const messages = await collect(response)
         expect(messages.length).toBe(MESSAGE_COUNT)
         await server.stop()

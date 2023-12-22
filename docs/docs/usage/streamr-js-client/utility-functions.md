@@ -3,7 +3,7 @@ sidebar_position: 2
 ---
 
 # Utility functions
-The Streamr client contains a handful of extra convenience functions to make developing on Streamr a little easier!
+The Streamr SDK contains a handful of extra convenience functions to make developing on Streamr a little easier!
 
 ## Authentication
 The static function `StreamrClient.generateEthereumAccount()` generates a new Ethereum account, returning an object with fields address and privateKey.
@@ -12,7 +12,7 @@ The static function `StreamrClient.generateEthereumAccount()` generates a new Et
 const { address, privateKey } = StreamrClient.generateEthereumAccount()
 ```
 
-Retrieve the client's address with the async call,
+Retrieve the address with the async call,
 
 ```ts
 const address = await streamr.getAddress()
@@ -24,6 +24,18 @@ You can search for streams by specifying a search term:
 ```ts
 const streams = await streamr.searchStreams('foo');
 ```
+
+:::caution Important:
+Stream searches return an iterable AsyncIterable object that you must iterate over. For example, 
+
+```ts
+const streams = await searchStreams...
+
+    for await (stream of streams) {
+        console.log(stream)
+    }
+```
+:::
 
 Alternatively or additionally to the search term, you can search for streams based on permissions.
 

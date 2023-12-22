@@ -2,12 +2,12 @@ import { Wallet } from '@ethersproject/wallet'
 import { EthereumAddress, toEthereumAddress, waitForCondition, waitForEvent } from '@streamr/utils'
 import cors from 'cors'
 import crypto from 'crypto'
-import { EventEmitter, once } from "events"
+import { EventEmitter, once } from 'events'
 import express, { Request, Response } from 'express'
 import http from 'http'
 import { AddressInfo } from 'net'
 import fetch from 'node-fetch'
-import { Readable } from "stream"
+import { Readable } from 'stream'
 
 export type Event = string
 
@@ -189,6 +189,13 @@ export function randomEthereumAddress(): EthereumAddress {
     return toEthereumAddress('0x' + crypto.randomBytes(20).toString('hex'))
 }
 
+// eslint-disable-next-line no-underscore-dangle
+declare let _streamr_electron_test: any
+export function isRunningInElectron(): boolean {
+    // eslint-disable-next-line no-underscore-dangle
+    return typeof _streamr_electron_test !== 'undefined'
+}
+
 /**
  * Used to spin up an HTTP server used by integration tests to fetch private keys having non-zero ERC-20 token
  * balances in streamr-docker-dev environment.
@@ -269,7 +276,7 @@ export class KeyServer {
 export async function fetchPrivateKeyWithGas(): Promise<string> {
     let response
     try {
-        response = await fetch(`http://localhost:${KeyServer.KEY_SERVER_PORT}/key`, {
+        response = await fetch(`http://127.0.0.1:${KeyServer.KEY_SERVER_PORT}/key`, {
             timeout: 5 * 1000
         })
     } catch (_e) {
@@ -278,14 +285,14 @@ export async function fetchPrivateKeyWithGas(): Promise<string> {
         } catch (_e2) {
             // no-op
         } finally {
-            response = await fetch(`http://localhost:${KeyServer.KEY_SERVER_PORT}/key`, {
+            response = await fetch(`http://127.0.0.1:${KeyServer.KEY_SERVER_PORT}/key`, {
                 timeout: 5 * 1000
             })
         }
     }
 
     if (!response.ok) {
-        throw new Error(`fetchPrivateKeyWithGas failed ${response.status} ${response.statusText}: ${response.text()}`)
+        throw new Error(`fetchPrivateKeyWithGas failed ${response.status} ${response.statusText}: ${await response.text()}`)
     }
 
     return response.text()
@@ -329,10 +336,21 @@ export const startTestServer = async (
     await once(server, 'listening')
     const port = (server.address() as AddressInfo).port
     return {
-        url: `http://localhost:${port}`,
+        url: `http://127.0.0.1:${port}`,
         stop: async () => {
             server.close()
             await once(server, 'close')
         }
     }
 }
+
+// Get property names which have a Function-typed value i.e. a method
+type MethodNames<T> = {
+    // undefined extends T[K] to handle optional properties
+    [K in keyof T]: (
+        (undefined extends T[K] ? never : T[K]) extends (...args: any[]) => any ? K : never
+    )
+}[keyof T]
+
+// Pick only methods of T
+export type Methods<T> = Pick<T, MethodNames<T>>

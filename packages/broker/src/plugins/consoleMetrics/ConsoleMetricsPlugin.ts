@@ -1,8 +1,9 @@
+import { Logger, MetricsReport } from '@streamr/utils'
 import { Schema } from 'ajv'
+import omit from 'lodash/omit'
+import { StreamrClient } from 'streamr-client'
 import { Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { Logger, MetricsReport } from '@streamr/utils'
-import omit from 'lodash/omit'
 
 const logger = new Logger(module)
 
@@ -15,10 +16,11 @@ export interface ConsoleMetricsPluginConfig {
 }
 
 export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
+
     private readonly abortController = new AbortController()
 
-    async start(): Promise<void> {
-        const metricsContext = (await (this.streamrClient.getNode())).getMetricsContext()
+    async start(streamrClient: StreamrClient): Promise<void> {
+        const metricsContext = (await (streamrClient.getNode())).getMetricsContext()
         metricsContext.createReportProducer((report: MetricsReport) => {
             // omit timestamp info as that is printed by the logger
             const data = omit(report, 'period')

@@ -58,12 +58,12 @@ describe('PublisherKeyExchange', () => {
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.RSA,
-            signature: expect.any(String)
+            signature: expect.any(Uint8Array)
         })
         const encryptedGroupKeys = (GroupKeyResponse.fromStreamMessage(actualResponse) as GroupKeyResponse).encryptedGroupKeys
         expect(encryptedGroupKeys).toMatchObject([{
             groupKeyId: expectedGroupKey.id,
-            encryptedGroupKeyHex: expect.stringMatching(/^[0-9a-f]+$/i)
+            data: expect.any(Uint8Array)
         }])
     }
 

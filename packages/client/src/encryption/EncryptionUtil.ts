@@ -1,5 +1,4 @@
 import crypto, { CipherKey } from 'crypto'
-import { arrayify, hexlify } from '@ethersproject/bytes'
 import { EncryptionType, StreamMessage, StreamMessageError } from '@streamr/protocol'
 import { GroupKey } from './GroupKey'
 
@@ -8,6 +7,8 @@ export class DecryptError extends StreamMessageError {
         super(`Decrypt error: ${message}`, streamMessage)
     }
 }
+
+export const INITIALIZATION_VECTOR_LENGTH = 16
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class EncryptionUtil {
@@ -19,44 +20,32 @@ export class EncryptionUtil {
         }
     }
 
-    /**
-     * Returns a Buffer or a hex String
-     */
-    static encryptWithRSAPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex: true): string
-    // These overrides tell ts outputInHex returns string
-    static encryptWithRSAPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike): string
-    static encryptWithRSAPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex: false): Buffer
-    static encryptWithRSAPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex: boolean = false): string | Buffer {
+    static encryptWithRSAPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike): Buffer {
         this.validateRSAPublicKey(publicKey)
         const ciphertextBuffer = crypto.publicEncrypt(publicKey, plaintextBuffer)
-        if (outputInHex) {
-            return hexlify(ciphertextBuffer).slice(2)
-        }
         return ciphertextBuffer
     }
 
-    // Returns a Buffer
-    static decryptWithRSAPrivateKey(ciphertext: string | Uint8Array, privateKey: crypto.KeyLike, isHexString = false): Buffer {
-        const ciphertextBuffer = isHexString ? arrayify(`0x${ciphertext}`) : ciphertext as Uint8Array
-        return crypto.privateDecrypt(privateKey, ciphertextBuffer)
+    static decryptWithRSAPrivateKey(ciphertext: Uint8Array, privateKey: crypto.KeyLike): Buffer {
+        return crypto.privateDecrypt(privateKey, ciphertext)
     }
 
     /*
      * Returns a hex string without the '0x' prefix.
      */
-    static encryptWithAES(data: Uint8Array, cipherKey: CipherKey): string {
-        const iv = crypto.randomBytes(16) // always need a fresh IV when using CTR mode
+    static encryptWithAES(data: Uint8Array, cipherKey: CipherKey): Uint8Array {
+        const iv = crypto.randomBytes(INITIALIZATION_VECTOR_LENGTH) // always need a fresh IV when using CTR mode
         const cipher = crypto.createCipheriv('aes-256-ctr', cipherKey, iv)
-        return hexlify(iv).slice(2) + cipher.update(data, undefined, 'hex') + cipher.final('hex')
+        return Buffer.concat([iv, cipher.update(data), cipher.final()])
     }
 
     /*
      * 'ciphertext' must be a hex string (without '0x' prefix), 'groupKey' must be a GroupKey. Returns a Buffer.
      */
-    static decryptWithAES(ciphertext: string, cipherKey: CipherKey): Buffer {
-        const iv = arrayify(`0x${ciphertext.slice(0, 32)}`)
+    static decryptWithAES(cipher: Uint8Array, cipherKey: CipherKey): Buffer {
+        const iv = cipher.slice(0, INITIALIZATION_VECTOR_LENGTH)
         const decipher = crypto.createDecipheriv('aes-256-ctr', cipherKey, iv)
-        return Buffer.concat([decipher.update(ciphertext.slice(32), 'hex'), decipher.final()])
+        return Buffer.concat([decipher.update(cipher.slice(INITIALIZATION_VECTOR_LENGTH)), decipher.final()])
     }
 
     static decryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey): void | never {
@@ -66,8 +55,7 @@ export class EncryptionUtil {
 
         try {
             streamMessage.encryptionType = EncryptionType.NONE
-            const serializedContent = this.decryptWithAES(streamMessage.getSerializedContent(), groupKey.data).toString()
-            streamMessage.parsedContent = JSON.parse(serializedContent)
+            const serializedContent = this.decryptWithAES(streamMessage.getSerializedContent(), groupKey.data)
             streamMessage.serializedContent = serializedContent
         } catch (err) {
             streamMessage.encryptionType = EncryptionType.AES

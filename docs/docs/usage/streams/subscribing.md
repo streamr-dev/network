@@ -8,21 +8,22 @@ import TabItem from '@theme/TabItem';
 # Subscribing
 Subscribing to a stream means to read/consume data/messages from a stream. 
 
-Applications publish and subscribe to streams via Streamr nodes. In other words, nodes are the access points to the Streamr Network. You can either run a light node which is imported as a library and runs locally as part of your application (Streamr JS client) or you can interface your app with a Streamr Broker node. The Broker node runs separately, and your application connects to it remotely using one of the supported protocols, WebSockets, HTTP or MQTT.
+Applications publish and subscribe to streams via Streamr nodes. In other words, nodes are the access points to the Streamr Network. You can either run a light node which is imported as a library and runs locally as part of your application (Streamr SDK) or you can interface your app with a Streamr node. The Streamr node runs separately, and your application connects to it remotely using one of the supported protocols, WebSockets, HTTP or MQTT.
 
 ### Subscribe code snippets
 <Tabs groupId="environment">
   
-  <TabItem value="js-client" label="JS client">
+  <TabItem value="js-client" label="Streamr SDK">
 
 ```ts
 // Run a Streamr node right inside your JS app
-const StreamrClient = require('streamr-client');
+const Streamr = require('streamr-client')
+const { StreamrClient } = require('streamr-client')
 
-// Initialize the Client with an Ethereum account
+// Initialize the Streamr SDK with an Ethereum account
 // If the stream is private then this account will need
 // the subscribe permission on this stream to subscribe
-const streamr = new StreamrClient({
+const streamr = new Streamr({
   auth: {
     // If this stream is publicly subscribable you can skip this part
     // or use a throwaway accounts with:
@@ -41,7 +42,7 @@ streamr.subscribe(
 ```
 
 </TabItem>
-<TabItem value="bn-websocket" label="Broker node WebSocket">
+<TabItem value="bn-websocket" label="Streamr node WebSocket">
 
 ```ts
 // Use your favourite language and Websocket library!
@@ -52,11 +53,11 @@ const streamId = encodeURIComponent(
   streamId
 );
 
-// Connect to the Websocket interface on your Streamr Broker node
+// Connect to the Websocket interface on your Streamr node
 const sub = ws.connect(`ws://127.0.0.1:7170/streams/${streamId}/subscribe`);
 
-// Use the Broker node to subscribe to the stream.
-// If this stream is private then make sure that your Broker node
+// Use the Streamr node to subscribe to the stream.
+// If this stream is private then make sure that your Streamr node
 // has subscribe permission to subscribe to this stream
 sub.onmessage = (msg) => {
   // Handle incoming messages
@@ -65,7 +66,7 @@ sub.onmessage = (msg) => {
 
 </TabItem>
 
-<TabItem value="bn-http" label="Broker node HTTP">
+<TabItem value="bn-http" label="Streamr node HTTP">
 
 ```ts
 N / A;
@@ -73,17 +74,17 @@ N / A;
 
 </TabItem>
 
-<TabItem value="bn-mqtt" label="Broker node MQTT">
+<TabItem value="bn-mqtt" label="Streamr node MQTT">
 
 ```ts
 // Use your favourite language and MQTT library!
 // https://github.com/streamr-dev/network/blob/main/packages/broker/plugins.md
 
-// Connect to MQTT interface on your Streamr Broker node
+// Connect to MQTT interface on your Streamr node
 mqtt.connect('mqtt://127.0.0.1:1883');
 
-// Use the Broker node to subscribe to the stream.
-// If this stream is private then make sure that your Broker node
+// Use the Streamr node to subscribe to the stream.
+// If this stream is private then make sure that your Streamr node
 // has subscribe permission to subscribe to this stream
 mqtt.subscribe(
   streamId,

@@ -13,7 +13,11 @@ on:
       docker-services:
         required: false
         type: string
-      run-brokers-and-trackers:
+      run-brokers:
+        required: false
+        type: boolean
+        default: false
+      run-entry-point:
         required: false
         type: boolean
         default: false
@@ -22,7 +26,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.5.2
+      - uses: actions/checkout@v4
       - name: build (cached)
         uses: ./.github/workflows/reusable/cached-build
       - name: start docker services
@@ -30,14 +34,17 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.2
         with:
           services-to-start: ${{ inputs.docker-services }}
-      - name: run brokers and trackers
-        if: ${{ inputs.run-brokers-and-trackers }}
-        uses: ./.github/workflows/reusable/run-brokers-and-trackers
+      - name: run entry point
+        if: ${{ inputs.run-entry-point }}
+        uses: ./.github/workflows/reusable/run-entry-point
+      - name: run brokers
+        if: ${{ inputs.run-brokers }}
+        uses: ./.github/workflows/reusable/run-brokers
       - name: test
         working-directory: 'packages/${{ inputs.package }}'
         run: ${{ inputs.command }}
       - name: upload logs
-        if: ${{ inputs.docker-services != '' || inputs.run-brokers-and-trackers }}
+        if: success() || failure()
         uses: ./.github/workflows/reusable/collect-and-upload-logs
         with:
           artifact_prefix: ${{ inputs.package }}

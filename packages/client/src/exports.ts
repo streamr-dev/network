@@ -9,6 +9,7 @@ export { PublishMetadata } from './publish/Publisher'
 export { Subscription, SubscriptionEvents, } from './subscribe/Subscription'
 export type { MessageStream, MessageListener } from './subscribe/MessageStream'
 export { ResendOptions, ResendLastOptions, ResendFromOptions, ResendRangeOptions, ResendRef } from './subscribe/Resends'
+export { GapFillStrategy } from './subscribe/ordering/GapFiller'
 export {
     StreamPermission,
     PermissionQuery,
@@ -24,25 +25,33 @@ export { StorageNodeMetadata } from './registry/StorageNodeRegistry'
 export { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './registry/searchStreams'
 export {
     StreamrClientConfig,
-    TrackerRegistryContract,
     ChainConnectionInfo,
     EthereumNetworkConfig,
     ProviderAuthConfig,
     PrivateKeyAuthConfig,
     STREAMR_STORAGE_NODE_GERMANY,
+    NetworkConfig,
+    ControlLayerConfig,
+    NetworkNodeConfig,
+    NetworkPeerDescriptor,
+    ConnectivityMethod,
+    NetworkNodeType,
+    StrictStreamrClientConfig,
+    EnvironmentId,
+    EntryPointDiscovery
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
-
 export { CONFIG_TEST } from './ConfigTest'
 export { NetworkNodeStub } from './NetworkNodeFacade'
 export { StreamDefinition } from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/utils'
+export { SignerWithProvider } from './Authentication'
 
-export type { StreamID, StreamPartID, TrackerRegistryRecord } from '@streamr/protocol'
-export { ProxyDirection } from '@streamr/protocol'
+export type { StreamID, StreamPartID } from '@streamr/protocol'
+export { DhtAddress } from '@streamr/dht'
+export { ProxyDirection } from '@streamr/trackerless-network'
 export type { BrandedString, EthereumAddress, LogLevel, Metric, MetricsContext, MetricsDefinition, MetricsReport } from '@streamr/utils'
-export type { IceServer, Location, WebRtcPortRange } from '@streamr/network-node'
 
 // These are currently exported because NetworkNodeStub uses methods which operate on StreamMessage.
 // If we remove that semi-public class we can maybe remove these exports.
@@ -60,5 +69,8 @@ export {
     StreamMessageType
 } from '@streamr/protocol'
 
+export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht' 
 export type { ConnectionInfo } from '@ethersproject/web'
-export type { ExternalProvider } from '@ethersproject/providers'
+export type { Signer } from '@ethersproject/abstract-signer'
+export type { ExternalProvider, Provider } from '@ethersproject/providers'
+export type { Overrides } from '@ethersproject/contracts'

@@ -3,11 +3,11 @@ import { ContractTransaction } from '@ethersproject/contracts'
 import { Provider } from '@ethersproject/providers'
 import { StreamID, StreamIDUtils, toStreamID } from '@streamr/protocol'
 import { EthereumAddress, GraphQLQuery, Logger, TheGraphClient, collect, isENSName, toEthereumAddress } from '@streamr/utils'
-import { Lifecycle, delay, inject, scoped } from 'tsyringe'
+import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { ContractFactory } from '../ContractFactory'
-import { getStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
+import { getStreamRegistryChainProviders, getEthersOverrides } from '../Ethereum'
 import { Stream, StreamMetadata } from '../Stream'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamrClientError } from '../StreamrClientError'
@@ -32,8 +32,8 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { ObservableContract, initContractEventGateway, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 import { until } from '../utils/promises'
 import { StreamFactory } from './../StreamFactory'
-import { StreamRegistryCached } from './StreamRegistryCached'
 import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, searchStreams as _searchStreams } from './searchStreams'
+import { CacheAsyncFn, CacheAsyncFnType } from '../utils/caches'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -65,35 +65,38 @@ const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: st
     }
 }
 
+const CACHE_KEY_SEPARATOR = '|'
+
 @scoped(Lifecycle.ContainerScoped)
 export class StreamRegistry {
 
     private streamRegistryContract?: ObservableContract<StreamRegistryContract>
     private streamRegistryContractsReadonly: ObservableContract<StreamRegistryContract>[]
-    private readonly streamRegistryCached: StreamRegistryCached
     private readonly streamFactory: StreamFactory
     private readonly contractFactory: ContractFactory
     private readonly theGraphClient: TheGraphClient
     private readonly streamIdBuilder: StreamIDBuilder
     /** @internal */
-    private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
+    private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>
     private readonly authentication: Authentication
     private readonly logger: Logger
+    private readonly getStream_cached: CacheAsyncFnType<[StreamID], Stream, string>
+    private readonly isStreamPublisher_cached: CacheAsyncFnType<[StreamID, EthereumAddress], boolean, string>
+    private readonly isStreamSubscriber_cached: CacheAsyncFnType<[StreamID, EthereumAddress], boolean, string>
+    private readonly hasPublicSubscribePermission_cached: CacheAsyncFnType<[StreamID], boolean, string>
     
     /* eslint-disable indent */
     /** @internal */
     constructor(
-        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         streamFactory: StreamFactory,
         contractFactory: ContractFactory,
         theGraphClient: TheGraphClient,
         streamIdBuilder: StreamIDBuilder,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         eventEmitter: StreamrClientEventEmitter,
         loggerFactory: LoggerFactory
     ) {
-        this.streamRegistryCached = streamRegistryCached
         this.streamFactory = streamFactory
         this.contractFactory = contractFactory
         this.theGraphClient = theGraphClient
@@ -122,6 +125,42 @@ export class StreamRegistry {
             }),
             loggerFactory
         })
+        this.getStream_cached = CacheAsyncFn((streamId: StreamID) => {
+            return this.getStream_nonCached(streamId)
+        }, {
+            ...config.cache,
+            cacheKey: ([streamId]): string => {
+                return `${streamId}${CACHE_KEY_SEPARATOR}`
+            }
+        })
+        this.isStreamPublisher_cached = CacheAsyncFn((streamId: StreamID, ethAddress: EthereumAddress) => {
+            return this.isStreamPublisher_nonCached(streamId, ethAddress)
+        }, {
+            ...config.cache,
+            cacheKey([streamId, ethAddress]): string {
+                return [streamId, ethAddress].join(CACHE_KEY_SEPARATOR)
+            }
+        })
+        this.isStreamSubscriber_cached = CacheAsyncFn((streamId: StreamID, ethAddress: EthereumAddress) => {
+            return this.isStreamSubscriber_nonCached(streamId, ethAddress)
+        }, {
+            ...config.cache,
+            cacheKey([streamId, ethAddress]): string {
+                return [streamId, ethAddress].join(CACHE_KEY_SEPARATOR)
+            }
+        })
+        this.hasPublicSubscribePermission_cached = CacheAsyncFn((streamId: StreamID) => {
+            return this.hasPermission({
+                streamId,
+                public: true,
+                permission: StreamPermission.SUBSCRIBE
+            })
+        }, {
+            ...config.cache,
+            cacheKey([streamId]): string {
+                return ['PublicSubscribe', streamId].join(CACHE_KEY_SEPARATOR)
+            }
+        })
     }
 
     private parseStream(id: StreamID, metadata: string): Stream {
@@ -142,7 +181,7 @@ export class StreamRegistry {
     }
 
     async createStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
-        const ethersOverrides = getStreamRegistryOverrides(this.config)
+        const ethersOverrides = getEthersOverrides(this.config)
 
         const domainAndPath = StreamIDUtils.getDomainAndPath(streamId)
         if (domainAndPath === undefined) {
@@ -189,7 +228,7 @@ export class StreamRegistry {
     // Most likely the contract doesn't make any merging (like we do in Stream#update)?
     async updateStream(streamId: StreamID, metadata: Partial<StreamMetadata>): Promise<Stream> {
         await this.connectToContract()
-        const ethersOverrides = getStreamRegistryOverrides(this.config)
+        const ethersOverrides = getEthersOverrides(this.config)
         await waitForTx(this.streamRegistryContract!.updateStreamMetadata(
             streamId,
             JSON.stringify(metadata),
@@ -201,7 +240,7 @@ export class StreamRegistry {
     async deleteStream(streamIdOrPath: string): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         await this.connectToContract()
-        const ethersOverrides = getStreamRegistryOverrides(this.config)
+        const ethersOverrides = getEthersOverrides(this.config)
         await waitForTx(this.streamRegistryContract!.deleteStream(
             streamId,
             ethersOverrides
@@ -216,8 +255,7 @@ export class StreamRegistry {
         }, this.streamRegistryContractsReadonly)
     }
 
-    async getStream(streamIdOrPath: string): Promise<Stream> {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+    private async getStream_nonCached(streamId: StreamID): Promise<Stream> {
         let metadata
         try {
             metadata = await queryAllReadonlyContracts((contract: StreamRegistryContract) => {
@@ -278,7 +316,7 @@ export class StreamRegistry {
     ): GraphQLQuery {
         const query = `
         {
-            permissions (
+            streamPermissions (
                 first: ${pageSize}
                 orderBy: "id"
                 where: {
@@ -374,16 +412,16 @@ export class StreamRegistry {
     async grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
         return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: EthereumAddress | undefined, solidityType: BigNumber) => {
             return (user === undefined)
-                ? this.streamRegistryContract!.grantPublicPermission(streamId, solidityType, getStreamRegistryOverrides(this.config))
-                : this.streamRegistryContract!.grantPermission(streamId, user, solidityType, getStreamRegistryOverrides(this.config))
+                ? this.streamRegistryContract!.grantPublicPermission(streamId, solidityType, getEthersOverrides(this.config))
+                : this.streamRegistryContract!.grantPermission(streamId, user, solidityType, getEthersOverrides(this.config))
         }, ...assignments)
     }
 
     async revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
         return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: EthereumAddress | undefined, solidityType: BigNumber) => {
             return (user === undefined)
-                ? this.streamRegistryContract!.revokePublicPermission(streamId, solidityType, getStreamRegistryOverrides(this.config))
-                : this.streamRegistryContract!.revokePermission(streamId, user, solidityType, getStreamRegistryOverrides(this.config))
+                ? this.streamRegistryContract!.revokePublicPermission(streamId, solidityType, getEthersOverrides(this.config))
+                : this.streamRegistryContract!.revokePermission(streamId, user, solidityType, getEthersOverrides(this.config))
         }, ...assignments)
     }
 
@@ -393,7 +431,7 @@ export class StreamRegistry {
         ...assignments: PermissionAssignment[]
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.streamRegistryCached.clearStream(streamId)
+        this.clearStreamCache(streamId)
         await this.connectToContract()
         for (const assignment of assignments) {
             for (const permission of assignment.permissions) {
@@ -416,7 +454,7 @@ export class StreamRegistry {
         for (const item of items) {
             // eslint-disable-next-line no-await-in-loop
             const streamId = await this.streamIdBuilder.toStreamID(item.streamId)
-            this.streamRegistryCached.clearStream(streamId)
+            this.clearStreamCache(streamId)
             streamIds.push(streamId)
             targets.push(item.assignments.map((assignment) => {
                 return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_ADDRESS : assignment.user
@@ -426,7 +464,7 @@ export class StreamRegistry {
             }))
         }
         await this.connectToContract()
-        const ethersOverrides = getStreamRegistryOverrides(this.config)
+        const ethersOverrides = getEthersOverrides(this.config)
         const txToSubmit = this.streamRegistryContract!.setPermissionsMultipleStreams(
             streamIds,
             targets,
@@ -436,8 +474,7 @@ export class StreamRegistry {
         await waitForTx(txToSubmit)
     }
 
-    async isStreamPublisher(streamIdOrPath: string, userAddress: EthereumAddress): Promise<boolean> {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+    private async isStreamPublisher_nonCached(streamId: StreamID, userAddress: EthereumAddress): Promise<boolean> {
         try {
             return await queryAllReadonlyContracts((contract) => {
                 return contract.hasPermission(streamId, userAddress, streamPermissionToSolidityType(StreamPermission.PUBLISH))
@@ -447,8 +484,7 @@ export class StreamRegistry {
         }
     }
 
-    async isStreamSubscriber(streamIdOrPath: string, userAddress: EthereumAddress): Promise<boolean> {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+    private async isStreamSubscriber_nonCached(streamId: StreamID, userAddress: EthereumAddress): Promise<boolean> {
         try {
             return await queryAllReadonlyContracts((contract) => {
                 return contract.hasPermission(streamId, userAddress, streamPermissionToSolidityType(StreamPermission.SUBSCRIBE))
@@ -456,5 +492,48 @@ export class StreamRegistry {
         } catch (err) {
             return streamContractErrorProcessor(err, streamId, 'StreamPermission')
         }
+    }
+
+    // --------------------------------------------------------------------------------------------
+    // Caching
+    // --------------------------------------------------------------------------------------------
+
+    getStream(streamId: StreamID, useCache = true): Promise<Stream> {
+        if (useCache) {
+            return this.getStream_cached(streamId)
+        } else {
+            return this.getStream_nonCached(streamId)
+        }
+    }
+
+    isStreamPublisher(streamId: StreamID, ethAddress: EthereumAddress, useCache = true): Promise<boolean> {
+        if (useCache) {
+            return this.isStreamPublisher_cached(streamId, ethAddress)
+        } else {
+            return this.isStreamPublisher_nonCached(streamId, ethAddress)
+        }
+    }
+
+    isStreamSubscriber(streamId: StreamID, ethAddress: EthereumAddress, useCache = true): Promise<boolean> {
+        if (useCache) {
+            return this.isStreamSubscriber_cached(streamId, ethAddress)
+        } else {
+            return this.isStreamSubscriber_nonCached(streamId, ethAddress)
+        }
+    }
+
+    hasPublicSubscribePermission(streamId: StreamID): Promise<boolean> {
+        return this.hasPublicSubscribePermission_cached(streamId)
+    }
+    
+    clearStreamCache(streamId: StreamID): void {
+        this.logger.debug('Clear caches matching stream', { streamId })
+        // include separator so startsWith(streamid) doesn't match streamid-something
+        const target = `${streamId}${CACHE_KEY_SEPARATOR}`
+        const matchTarget = (s: string) => s.startsWith(target)
+        this.getStream_cached.clearMatching(matchTarget)
+        this.isStreamPublisher_cached.clearMatching(matchTarget)
+        this.isStreamSubscriber_cached.clearMatching(matchTarget)
+        // TODO should also clear cache for hasPublicSubscribePermission?
     }
 }

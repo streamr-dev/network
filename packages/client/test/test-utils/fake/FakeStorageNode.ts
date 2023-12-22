@@ -67,11 +67,13 @@ export class FakeStorageNode extends FakeNetworkNode {
     private readonly chain: FakeChain
 
     constructor(wallet: Wallet, network: FakeNetwork, chain: FakeChain) {
-        super({
-            id: toEthereumAddress(wallet.address)
-        } as any, network)
+        super(network)
         this.wallet = wallet
         this.chain = chain
+    }
+
+    getAddress(): EthereumAddress {
+        return toEthereumAddress(this.wallet.address)
     }
 
     override async start(): Promise<void> {
@@ -104,13 +106,12 @@ export class FakeStorageNode extends FakeNetworkNode {
             }
         })
         const port = (this.server.address() as AddressInfo).port
-        const address = toEthereumAddress(this.wallet.address)
-        this.chain.storageNodeMetadatas.set(address, {
-            http: `http://localhost:${port}`
+        this.chain.storageNodeMetadatas.set(this.getAddress(), {
+            http: `http://127.0.0.1:${port}`
         })
         const storageNodeAssignmentStreamPermissions = new Multimap<EthereumAddress, StreamPermission>()
-        storageNodeAssignmentStreamPermissions.add(address, StreamPermission.PUBLISH)
-        this.chain.streams.set(formStorageNodeAssignmentStreamId(address), {
+        storageNodeAssignmentStreamPermissions.add(this.getAddress(), StreamPermission.PUBLISH)
+        this.chain.streams.set(formStorageNodeAssignmentStreamId(this.getAddress()), {
             metadata: {
                 partitions: 1
             },
@@ -134,15 +135,15 @@ export class FakeStorageNode extends FakeNetworkNode {
                         this.storeMessage(msg)
                     }
                 })
-                this.subscribe(streamPartId)
+                this.join(streamPartId)
                 const assignmentMessage = await createMockMessage({
-                    streamPartId: toStreamPartID(formStorageNodeAssignmentStreamId(this.id), DEFAULT_PARTITION),
+                    streamPartId: toStreamPartID(formStorageNodeAssignmentStreamId(this.getAddress()), DEFAULT_PARTITION),
                     publisher: this.wallet,
                     content: {
                         streamPart: streamPartId,
                     }
                 })
-                this.publish(assignmentMessage)
+                await this.broadcast(assignmentMessage)
             }
         })
     }

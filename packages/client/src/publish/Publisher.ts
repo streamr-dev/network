@@ -7,7 +7,7 @@ import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamrClientError } from '../StreamrClientError'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { StreamRegistry } from '../registry/StreamRegistry'
 import { StreamDefinition } from '../types'
 import { Mapping } from '../utils/Mapping'
 import { GroupKeyQueue } from './GroupKeyQueue'
@@ -38,19 +38,19 @@ export class Publisher {
     private readonly groupKeyQueues: Mapping<[streamId: StreamID], GroupKeyQueue>
     private readonly concurrencyLimit = pLimit(1)
     private readonly node: NetworkNodeFacade
-    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly streamRegistry: StreamRegistry
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
 
     constructor(
         node: NetworkNodeFacade,
-        streamRegistryCached: StreamRegistryCached,
+        streamRegistry: StreamRegistry,
         groupKeyManager: GroupKeyManager,
         streamIdBuilder: StreamIDBuilder,
         @inject(AuthenticationInjectionToken) authentication: Authentication
     ) {
         this.node = node
-        this.streamRegistryCached = streamRegistryCached
+        this.streamRegistry = streamRegistry
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
         this.messageFactories = new Mapping(async (streamId: StreamID) => {
@@ -61,11 +61,11 @@ export class Publisher {
         })
     }
 
-    async publish<T>(
+    async publish(
         streamDefinition: StreamDefinition,
-        content: T,
+        content: unknown,
         metadata?: PublishMetadata
-    ): Promise<StreamMessage<T>> {
+    ): Promise<StreamMessage> {
         const timestamp = parseTimestamp(metadata)
         /*
          * There are some steps in the publish process which need to be done sequentially:
@@ -112,7 +112,7 @@ export class Publisher {
         return new MessageFactory({
             streamId,
             authentication: this.authentication,
-            streamRegistry: this.streamRegistryCached,
+            streamRegistry: this.streamRegistry,
             groupKeyQueue: await this.groupKeyQueues.get(streamId)
         })
     }

@@ -3,7 +3,7 @@ import 'reflect-metadata'
 import { Wallet } from '@ethersproject/wallet'
 import { MAX_PARTITION_COUNT, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { fastPrivateKey, fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { EthereumAddress, Logger, merge, wait, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, Logger, merge, wait, waitForCondition, utf8ToBinary } from '@streamr/utils'
 import crypto from 'crypto'
 import { once } from 'events'
 import express, { Request, Response } from 'express'
@@ -25,7 +25,7 @@ import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchang
 import { StreamrClientEventEmitter } from '../../src/events'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { MessageFactory } from '../../src/publish/MessageFactory'
-import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
+import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { LoggerFactory } from '../../src/utils/LoggerFactory'
 import { counterId } from '../../src/utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
@@ -118,7 +118,7 @@ export const createMockMessage = async (
     const factory = new MessageFactory({
         authentication,
         streamId,
-        streamRegistry: createStreamRegistryCached({
+        streamRegistry: createStreamRegistry({
             partitionCount: MAX_PARTITION_COUNT,
             isPublicStream: (opts.encryptionKey === undefined),
             isStreamPublisher: true
@@ -132,6 +132,9 @@ export const createMockMessage = async (
         msgChainId: opts.msgChainId
     }, partition)
 }
+
+// When binary contents are supported we don't need this anymore.
+export const MOCK_CONTENT = utf8ToBinary(JSON.stringify({}))
 
 export const getLocalGroupKeyStore = (userAddress: EthereumAddress): LocalGroupKeyStore => {
     const authentication = {
@@ -153,26 +156,26 @@ export const startPublisherKeyExchangeSubscription = async (
     publisherClient: StreamrClient,
     streamPartId: StreamPartID): Promise<void> => {
     const node = await publisherClient.getNode()
-    node.subscribe(streamPartId)
+    await node.join(streamPartId)
 }
 
 export const createRandomAuthentication = (): Authentication => {
     return createPrivateKeyAuthentication(`0x${fastPrivateKey()}`, undefined as any)
 }
 
-export const createStreamRegistryCached = (opts?: {
+export const createStreamRegistry = (opts?: {
     partitionCount?: number
     isPublicStream?: boolean
     isStreamPublisher?: boolean
     isStreamSubscriber?: boolean
-}): StreamRegistryCached => {
+}): StreamRegistry => {
     return {
         getStream: async () => ({
             getMetadata: () => ({
                 partitions: opts?.partitionCount ?? 1
             })
         }),
-        isPublic: async () => {
+        hasPublicSubscribePermission: async () => {
             return opts?.isPublicStream ?? false
         },
         isStreamPublisher: async () => {
@@ -181,6 +184,7 @@ export const createStreamRegistryCached = (opts?: {
         isStreamSubscriber: async () => {
             return opts?.isStreamSubscriber ?? true
         },
+        clearStreamCache: () => {}
     } as any
 }
 
@@ -229,6 +233,24 @@ export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Pro
     })
 }
 
+export const createTestClient = (privateKey: string, wsPort?: number, acceptProxyConnections = false): StreamrClient => {
+    return new StreamrClient({
+        ...CONFIG_TEST,
+        auth: {
+            privateKey
+        },
+        network: {
+            controlLayer: {
+                ...CONFIG_TEST.network!.controlLayer,
+                websocketPortRange: wsPort !== undefined ? { min: wsPort, max: wsPort } : undefined
+            },
+            node: {
+                acceptProxyConnections
+            }
+        }
+    })
+}
+
 export const startTestServer = async (
     endpoint: string,
     onRequest: (req: Request, res: Response) => Promise<void>
@@ -241,7 +263,7 @@ export const startTestServer = async (
     await once(server, 'listening')
     const port = (server.address() as AddressInfo).port
     return {
-        url: `http://localhost:${port}`,
+        url: `http://127.0.0.1:${port}`,
         stop: async () => {
             server.close()
             await once(server, 'close')

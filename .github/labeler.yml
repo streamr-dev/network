@@ -14,11 +14,8 @@ browser-test-runner:
   - 'package/browser-test-runner/*'
   - 'package/browser-test-runner/**/*'
 network:
-  - 'packages/network/*'
-  - 'packages/network/**/*'
-tracker:
-  - 'packages/network-tracker/*'
-  - 'packages/network-tracker/**/*'
+  - 'packages/trackerless-network/*'
+  - 'packages/trackerless-network/**/*'
 dht:
   - 'packages/dht/*'
   - 'packages/dht/**/*'

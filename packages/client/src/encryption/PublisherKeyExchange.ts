@@ -3,21 +3,20 @@ import {
     EncryptionType,
     GroupKeyRequest,
     GroupKeyResponse,
-    GroupKeyResponseSerialized,
     MessageID,
     StreamMessage,
     StreamMessageType,
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { EthereumAddress, Logger } from '@streamr/utils'
+import { EthereumAddress, Logger, utf8ToBinary } from '@streamr/utils'
 import without from 'lodash/without'
-import { Lifecycle, delay, inject, scoped } from 'tsyringe'
+import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { createSignedMessage } from '../publish/MessageFactory'
 import { createRandomMsgChainId } from '../publish/messageChain'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { StreamRegistry } from '../registry/StreamRegistry'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { EncryptionUtil } from './EncryptionUtil'
@@ -32,20 +31,20 @@ import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 export class PublisherKeyExchange {
 
     private readonly networkNodeFacade: NetworkNodeFacade
-    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly streamRegistry: StreamRegistry
     private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
     private readonly logger: Logger
 
     constructor(
         networkNodeFacade: NetworkNodeFacade,
-        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        streamRegistry: StreamRegistry,
         store: LocalGroupKeyStore,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         loggerFactory: LoggerFactory
     ) {
         this.networkNodeFacade = networkNodeFacade
-        this.streamRegistryCached = streamRegistryCached
+        this.streamRegistry = streamRegistry
         this.store = store
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
@@ -63,7 +62,7 @@ export class PublisherKeyExchange {
                 const { recipient, requestId, rsaPublicKey, groupKeyIds } = GroupKeyRequest.fromStreamMessage(request) as GroupKeyRequest
                 if (recipient === authenticatedUser) {
                     this.logger.debug('Handling group key request', { requestId })
-                    await validateStreamMessage(request, this.streamRegistryCached)
+                    await validateStreamMessage(request, this.streamRegistry)
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
                         undefined) as GroupKey[]
@@ -75,7 +74,7 @@ export class PublisherKeyExchange {
                             request.getPublisherId(),
                             requestId)
                         const node = await this.networkNodeFacade.getNode()
-                        node.publish(response)
+                        await node.broadcast(response)
                         this.logger.debug('Handled group key request (found keys)', {
                             groupKeyIds: keys.map((k) => k.id).join(),
                             recipient: request.getPublisherId()
@@ -99,17 +98,17 @@ export class PublisherKeyExchange {
         rsaPublicKey: string,
         recipient: EthereumAddress,
         requestId: string
-    ): Promise<StreamMessage<GroupKeyResponseSerialized>> {
+    ): Promise<StreamMessage> {
         const encryptedGroupKeys = await Promise.all(keys.map((key) => {
-            const encryptedGroupKeyHex = EncryptionUtil.encryptWithRSAPublicKey(key.data, rsaPublicKey, true)
-            return new EncryptedGroupKey(key.id, encryptedGroupKeyHex)
+            const encryptedGroupKey = EncryptionUtil.encryptWithRSAPublicKey(key.data, rsaPublicKey)
+            return new EncryptedGroupKey(key.id, encryptedGroupKey)
         }))
         const responseContent = new GroupKeyResponse({
             recipient,
             requestId,
             encryptedGroupKeys
         })
-        const response = createSignedMessage<GroupKeyResponseSerialized>({
+        const response = createSignedMessage({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(streamPartId),
                 StreamPartIDUtils.getStreamPartition(streamPartId),
@@ -118,7 +117,7 @@ export class PublisherKeyExchange {
                 await this.authentication.getAddress(),
                 createRandomMsgChainId()
             ),
-            serializedContent: JSON.stringify(responseContent.toArray()),
+            serializedContent: utf8ToBinary(JSON.stringify(responseContent.toArray())),
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             encryptionType: EncryptionType.RSA,
             authentication: this.authentication

@@ -9,7 +9,7 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { MessageFactory } from '../../src/publish/MessageFactory'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { createGroupKeyQueue, createStreamRegistryCached } from '../test-utils/utils'
+import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
 
 describe('Resends', () => {
 
@@ -40,7 +40,7 @@ describe('Resends', () => {
         messageFactory = new MessageFactory({
             authentication,
             streamId: stream.id,
-            streamRegistry: createStreamRegistryCached(),
+            streamRegistry: createStreamRegistry(),
             groupKeyQueue: await createGroupKeyQueue(authentication, groupKey)
         })
         // store the encryption key publisher's local group key store
@@ -64,7 +64,7 @@ describe('Resends', () => {
             await messageFactory.createMessage({ foo: 3 }, { timestamp: 3000 })
         ]
         const storageNode = await environment.startStorageNode()
-        await stream.addToStorageNode(storageNode.id)
+        await stream.addToStorageNode(storageNode.getAddress())
         storageNode.storeMessage(allMessages[0])
         storageNode.storeMessage(allMessages[2])
         const messageStream = await subscriber.resend(stream.id, { last: 2 })
@@ -83,12 +83,12 @@ describe('Resends', () => {
             await messageFactory.createMessage({ foo: 4 }, { timestamp: 4000 })
         ]
         const storageNode1 = await environment.startStorageNode()
-        await stream.addToStorageNode(storageNode1.id)
+        await stream.addToStorageNode(storageNode1.getAddress())
         storageNode1.storeMessage(allMessages[0])
         storageNode1.storeMessage(allMessages[2])
         storageNode1.storeMessage(allMessages[3])
         const storageNode2 = await environment.startStorageNode()
-        await stream.addToStorageNode(storageNode2.id)
+        await stream.addToStorageNode(storageNode2.getAddress())
         storageNode2.storeMessage(allMessages[0])
         storageNode2.storeMessage(allMessages[1])
         storageNode2.storeMessage(allMessages[3])
