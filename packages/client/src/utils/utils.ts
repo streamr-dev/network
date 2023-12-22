@@ -1,9 +1,8 @@
 import { ContractReceipt } from '@ethersproject/contracts'
+import { DhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress } from '@streamr/dht'
 import { StreamID, toStreamID } from '@streamr/protocol'
 import {
-    binaryToHex,
     composeAbortSignals,
-    hexToBinary,
     Logger,
     merge,
     randomString,
@@ -21,7 +20,6 @@ import { StreamrClientEventEmitter } from '../events'
 import { WebStreamToNodeStream } from './WebStreamToNodeStream'
 import { SEPARATOR } from './uuid'
 import { NodeType, PeerDescriptor } from '@streamr/dht'
-import omit from 'lodash/omit'
 
 const logger = new Logger(module)
 
@@ -135,12 +133,11 @@ export class MaxSizedSet<T> {
 // - remove "temporary compatibility" test case from Broker's config.test.ts 
 // - remove "id" property from config.schema.json (line 536) and make "nodeId" property required
 // - remove "id" property handling from this method
-// - (not strictly related to this, but could also rename id -> nodeId for each entry point in '@streamr/config')
 export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescriptor {
     const type = json.type === NetworkNodeType.BROWSER ? NodeType.BROWSER : NodeType.NODEJS
     const peerDescriptor: PeerDescriptor = {
         ...json,
-        nodeId: hexToBinary(json.nodeId ?? (json as any).id),
+        nodeId: getRawFromDhtAddress((json.nodeId ?? (json as any).id) as DhtAddress),
         type,
         websocket: json.websocket
     }
@@ -151,12 +148,9 @@ export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescr
 }
 
 export function convertPeerDescriptorToNetworkPeerDescriptor(descriptor: PeerDescriptor): NetworkPeerDescriptor {
-    if (descriptor.type === NodeType.VIRTUAL) {
-        throw new Error('nodeType "virtual" not supported')
-    }
     return {
-        ...omit(descriptor, 'nodeId'),
-        nodeId: binaryToHex(descriptor.nodeId),
+        ...descriptor,
+        nodeId: getDhtAddressFromRaw(descriptor.nodeId),
         type: descriptor.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER
     }
 }

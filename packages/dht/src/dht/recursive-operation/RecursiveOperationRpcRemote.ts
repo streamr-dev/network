@@ -1,18 +1,18 @@
-import { RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { RecursiveOperationRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RpcRemote } from '../contact/RpcRemote'
-import { Logger } from '@streamr/utils'
-import { IFindRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { getPreviousPeer } from './getPreviousPeer'
+import { getPreviousPeer } from '../routing/getPreviousPeer'
 
 const logger = new Logger(module)
 
-export class FindRpcRemote extends RpcRemote<IFindRpcClient> {
+export class RecursiveOperationRpcRemote extends RpcRemote<RecursiveOperationRpcClient> {
 
-    async routeFindRequest(params: RouteMessageWrapper): Promise<boolean> {
+    async routeRequest(params: RouteMessageWrapper): Promise<boolean> {
         const message: RouteMessageWrapper = {
-            destinationPeer: params.destinationPeer,
+            target: params.target,
             sourcePeer: params.sourcePeer,
             message: params.message,
             requestId: params.requestId ?? v4(),
@@ -20,10 +20,10 @@ export class FindRpcRemote extends RpcRemote<IFindRpcClient> {
             routingPath: params.routingPath
         }
         const options = this.formDhtRpcOptions({
-            doNotConnect: true
+            connect: false
         })
         try {
-            const ack = await this.getClient().routeFindRequest(message, options)
+            const ack = await this.getClient().routeRequest(message, options)
             if (ack.error !== undefined) {
                 logger.trace('Next hop responded with error ' + ack.error)
                 return false
@@ -33,8 +33,8 @@ export class FindRpcRemote extends RpcRemote<IFindRpcClient> {
             const fromNode = previousPeer
                 ? getNodeIdFromPeerDescriptor(previousPeer)
                 : getNodeIdFromPeerDescriptor(params.sourcePeer!)
-            // eslint-disable-next-line max-len
-            logger.debug(`Failed to send routeFindRequest message from ${fromNode} to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`)
+            const toNode = getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
+            logger.debug(`Failed to send routeRequest message from ${fromNode} to ${toNode} with: ${err}`)
             return false
         }
         return true

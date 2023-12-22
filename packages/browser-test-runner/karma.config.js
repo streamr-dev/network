@@ -1,7 +1,16 @@
+const fs = require('fs')
+
 const DEBUG_MODE = process.env.BROWSER_TEST_DEBUG_MODE ?? false
 
-module.exports = function(testPaths, webpackConfig) {
-    const karmaSetupJs = __dirname + '/karma-setup.js'
+module.exports = function(testPaths, webpackConfig, localDirectory) {
+    const setupFiles = [__dirname + '/karma-setup.js']
+    const localSetupFile = localDirectory + '/karma-setup.js'
+    if (fs.existsSync(localSetupFile)) {
+        setupFiles.push(localSetupFile)
+    }
+    const preprocessors = {}
+    setupFiles.forEach((f) => preprocessors[f] = ['webpack'])
+    testPaths.forEach((f) => preprocessors[f] = ['webpack', 'sourcemap'])
     return (config) => {
         config.set({
             plugins: [
@@ -15,12 +24,10 @@ module.exports = function(testPaths, webpackConfig) {
             frameworks: ['jasmine'],
             reporters: ['spec'],
             files: [
-                karmaSetupJs,
+                ...setupFiles,
                 ...testPaths
             ],
-            preprocessors: testPaths.reduce((mem, el) => { mem[el] = ['webpack', 'sourcemap']; return mem }, {
-                [karmaSetupJs]: ['webpack']
-            }),
+            preprocessors,
             customLaunchers: {
                 CustomElectron: {
                     base: 'Electron',

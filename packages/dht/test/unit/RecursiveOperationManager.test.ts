@@ -1,9 +1,7 @@
 import {
-    FindAction,
+    RecursiveOperation,
     Message,
     MessageType,
-    NodeType,
-    PeerDescriptor,
     RouteMessageAck,
     RouteMessageError,
     RouteMessageWrapper
@@ -11,19 +9,21 @@ import {
 import { PeerID } from '../../src/helpers/PeerID'
 import {
     createWrappedClosestPeersRequest,
-    createFindRequest
+    createFindRequest,
+    createMockPeerDescriptor
 } from '../utils/utils'
-import { Finder } from '../../src/dht/find/Finder'
+import { RecursiveOperationManager } from '../../src/dht/recursive-operation/RecursiveOperationManager'
 import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
 import { v4 } from 'uuid'
 import { MockRouter } from '../utils/mock/Router'
 import { MockTransport } from '../utils/mock/Transport'
 import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
-import { IRouter } from '../../src/dht/routing/Router'
+import { Router } from '../../src/dht/routing/Router'
 import { ITransport } from '../../src/exports'
+import { getDhtAddressFromRaw } from '../../src/identifiers'
 
-const createMockRouter = (error?: RouteMessageError): Partial<IRouter> => {
+const createMockRouter = (error?: RouteMessageError): Partial<Router> => {
     return {
         doRouteMessage: (routedMessage: RouteMessageWrapper) => {
             return {
@@ -35,24 +35,18 @@ const createMockRouter = (error?: RouteMessageError): Partial<IRouter> => {
         addToDuplicateDetector: () => {}
     }
 }
-describe('Finder', () => {
+describe('RecursiveOperationManager', () => {
 
-    const peerDescriptor1: PeerDescriptor = {
-        nodeId: PeerID.fromString('peerid').value,
-        type: NodeType.NODEJS
-    }
-    const peerDescriptor2: PeerDescriptor = {
-        nodeId: PeerID.fromString('destination').value,
-        type: NodeType.NODEJS
-    }
-    const findRequest = createFindRequest(FindAction.NODE)
+    const peerDescriptor1 = createMockPeerDescriptor()
+    const peerDescriptor2 = createMockPeerDescriptor()
+    const recursiveOperationRequest = createFindRequest()
     const message: Message = {
         serviceId: 'unknown',
         messageId: v4(),
         messageType: MessageType.RPC,
         body: {
-            oneofKind: 'findRequest',
-            findRequest
+            oneofKind: 'recursiveOperationRequest',
+            recursiveOperationRequest
         },
         sourceDescriptor: peerDescriptor1,
         targetDescriptor: peerDescriptor2
@@ -63,40 +57,42 @@ describe('Finder', () => {
         routingPath: [],
         reachableThrough: [],
         sourcePeer: peerDescriptor1,
-        destinationPeer: peerDescriptor2
+        target: peerDescriptor2.nodeId
     }
     const rpcCommunicator = new FakeRpcCommunicator()
 
-    const createFinder = (router: IRouter = new MockRouter(), transport: ITransport = new MockTransport()): Finder => {
-        return new Finder({
+    const createRecursiveOperationManager = (
+        router: Router = new MockRouter() as any,
+        transport: ITransport = new MockTransport()
+    ): RecursiveOperationManager => {
+        return new RecursiveOperationManager({
             localPeerDescriptor: peerDescriptor1,
             router,
             connections: new Map(),
-            serviceId: 'Finder',
-            localDataStore: new LocalDataStore(),
+            serviceId: 'RecursiveOperationManager',
+            localDataStore: new LocalDataStore(30 * 100),
             sessionTransport: transport,
             addContact: () => {},
-            isPeerCloserToIdThanSelf: (_peer1, _compareToId) => true,
             rpcCommunicator: rpcCommunicator as any
         })
     }
 
-    it('Finder server', async () => {
-        const finder = createFinder()
-        const res = await rpcCommunicator.callRpcMethod('routeFindRequest', routedMessage) as RouteMessageAck
+    it('RecursiveOperationManager server', async () => {
+        const recursiveOperationManager = createRecursiveOperationManager()
+        const res = await rpcCommunicator.callRpcMethod('routeRequest', routedMessage) as RouteMessageAck
         expect(res.error).toBeUndefined()
-        finder.stop()
+        recursiveOperationManager.stop()
     })
 
     it('startFind with mode Node returns self if no peers', async () => {
-        const finder = createFinder()
-        const res = await finder.startFind(PeerID.fromString('find').value)
+        const recursiveOperationManager = createRecursiveOperationManager()
+        const res = await recursiveOperationManager.execute(getDhtAddressFromRaw(PeerID.fromString('find').value), RecursiveOperation.FIND_NODE)
         expect(areEqualPeerDescriptors(res.closestNodes[0], peerDescriptor1)).toEqual(true)
-        finder.stop()
+        recursiveOperationManager.stop()
     })
 
-    it('Finder server throws if payload is not FindRequest', async () => {
-        const finder = createFinder(new MockRouter())
+    it('RecursiveOperationManager server throws if payload is not RecursiveOperationRequest', async () => {
+        const manager = createRecursiveOperationManager(new MockRouter() as any)
         const rpcWrapper = createWrappedClosestPeersRequest(peerDescriptor1)
         const badMessage: Message = {
             serviceId: 'unknown',
@@ -109,15 +105,15 @@ describe('Finder', () => {
             sourceDescriptor: peerDescriptor1,
             targetDescriptor: peerDescriptor2
         }
-        await expect(() => rpcCommunicator.callRpcMethod('routeFindRequest', {
+        await expect(() => rpcCommunicator.callRpcMethod('routeRequest', {
             message: badMessage,
             requestId: 'REQ',
             routingPath: [],
             reachableThrough: [],
-            destinationPeer: peerDescriptor1,
+            target: peerDescriptor1.nodeId,
             sourcePeer: peerDescriptor2
         })).rejects.toThrow()
-        finder.stop()
+        manager.stop()
     })
 
     it('no targets', async () => {
@@ -128,14 +124,14 @@ describe('Finder', () => {
             on: () => {},
             off: () => {}
         }
-        const finder = createFinder(router as any, transport as any)
-        const ack = await rpcCommunicator.callRpcMethod('routeFindRequest', routedMessage)
+        const recursiveOperationManager = createRecursiveOperationManager(router as any, transport as any)
+        const ack = await rpcCommunicator.callRpcMethod('routeRequest', routedMessage)
         expect(ack).toEqual({
             requestId: routedMessage.requestId,
             error: RouteMessageError.NO_TARGETS
         })
         expect(send).toHaveBeenCalledTimes(1)
-        finder.stop()
+        recursiveOperationManager.stop()
     })
 
     it('error', async () => {
@@ -144,13 +140,13 @@ describe('Finder', () => {
         const transport = { 
             send
         }
-        const finder = createFinder(router as any, transport as any)
-        const ack = await rpcCommunicator.callRpcMethod('routeFindRequest', routedMessage)
+        const recursiveOperationManager = createRecursiveOperationManager(router as any, transport as any)
+        const ack = await rpcCommunicator.callRpcMethod('routeRequest', routedMessage)
         expect(ack).toEqual({
             requestId: routedMessage.requestId,
             error: RouteMessageError.DUPLICATE
         })
         expect(send).not.toHaveBeenCalled()
-        finder.stop()
+        recursiveOperationManager.stop()
     })
 })

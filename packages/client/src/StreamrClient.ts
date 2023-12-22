@@ -1,8 +1,10 @@
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
+import type { Overrides } from '@ethersproject/contracts'
+import { DhtAddress } from '@streamr/dht'
 import { StreamID } from '@streamr/protocol'
-import { NodeID, ProxyDirection } from '@streamr/trackerless-network'
+import { ProxyDirection } from '@streamr/trackerless-network'
 import { EthereumAddress, TheGraphClient, toEthereumAddress } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
@@ -19,7 +21,7 @@ import {
     redactConfig
 } from './Config'
 import { DestroySignal } from './DestroySignal'
-import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
+import { generateEthereumAccount as _generateEthereumAccount, getEthersOverrides as _getEthersOverrides } from './Ethereum'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { MetricsPublisher } from './MetricsPublisher'
 import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
@@ -32,6 +34,7 @@ import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
 import { PermissionAssignment, PermissionQuery } from './permission'
 import { Publisher } from './publish/Publisher'
+import { OperatorRegistry } from './registry/OperatorRegistry'
 import { StorageNodeMetadata, StorageNodeRegistry } from './registry/StorageNodeRegistry'
 import { StreamRegistry } from './registry/StreamRegistry'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
@@ -77,6 +80,7 @@ export class StreamrClient {
     private readonly streamRegistry: StreamRegistry
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
+    private readonly operatorRegistry: OperatorRegistry
     private readonly localGroupKeyStore: LocalGroupKeyStore
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly config: StrictStreamrClientConfig
@@ -108,6 +112,7 @@ export class StreamrClient {
         this.streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
         this.streamStorageRegistry = container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
         this.storageNodeRegistry = container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
+        this.operatorRegistry = container.resolve<OperatorRegistry>(OperatorRegistry)
         this.localGroupKeyStore = container.resolve<LocalGroupKeyStore>(LocalGroupKeyStore)
         this.streamIdBuilder = container.resolve<StreamIDBuilder>(StreamIDBuilder)
         this.eventEmitter = container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
@@ -647,7 +652,7 @@ export class StreamrClient {
     /**
      * Get the network-level node id of the client.
      */
-    async getNodeId(): Promise<NodeID> {
+    async getNodeId(): Promise<DhtAddress> {
         return this.node.getNodeId()
     }
 
@@ -665,6 +670,14 @@ export class StreamrClient {
      */
     getConfig(): StrictStreamrClientConfig {
         return this.config
+    }
+
+    /**
+     * Get overrides for transaction options. Use as a parameter when submitting
+     * transactions via ethers library.
+     */
+    getEthersOverrides(): Overrides {
+        return _getEthersOverrides(this.config)
     }
 
     // --------------------------------------------------------------------------------------------

@@ -9,20 +9,17 @@ import {
     ConnectivityResponse,
     HandshakeError,
     PeerDescriptor,
-    WebsocketConnectionRequest,
-    WebsocketConnectionResponse
+    WebsocketConnectionRequest
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { WebsocketConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { Logger, binaryToHex, wait } from '@streamr/utils'
+import { Logger, wait } from '@streamr/utils'
 import { ManagedConnection } from '../ManagedConnection'
 import { WebsocketServer } from './WebsocketServer'
 import { sendConnectivityRequest } from '../connectivityChecker'
 import { NatType, PortRange, TlsCertificate } from '../ConnectionManager'
-import { PeerIDKey } from '../../helpers/PeerID'
 import { ServerWebsocket } from './ServerWebsocket'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Handshaker } from '../Handshaker'
-import { areEqualPeerDescriptors, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ParsedUrlQuery } from 'querystring'
 import { range, sample } from 'lodash'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
@@ -31,6 +28,10 @@ import { WebsocketServerStartError } from '../../helpers/errors'
 import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
 import { attachConnectivityRequestHandler } from '../connectivityRequestHandler'
 import * as Err from '../../helpers/errors'
+import { Empty } from '../../proto/google/protobuf/empty'
+import { DhtAddress } from '../../identifiers'
+import { version } from '../../../package.json'
+import { isCompatibleVersion } from '../../helpers/versionCompatibility'
 
 const logger = new Logger(module)
 
@@ -44,8 +45,8 @@ const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
 
 export interface WebsocketConnectorConfig {
     transport: ITransport
-    canConnect: (peerDescriptor: PeerDescriptor) => boolean
     onNewConnection: (connection: ManagedConnection) => boolean
+    hasConnection: (peerDescriptor: PeerDescriptor) => boolean
     portRange?: PortRange
     maxMessageSize?: number
     host?: string
@@ -62,58 +63,56 @@ export class WebsocketConnector {
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly websocketServer?: WebsocketServer
-    private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
-    private onNewConnection: (connection: ManagedConnection) => boolean
+    private readonly ongoingConnectRequests: Map<DhtAddress, ManagedConnection> = new Map()
     private host?: string
-    private readonly entrypoints?: PeerDescriptor[]
-    private readonly tlsCertificate?: TlsCertificate
-    private readonly autoCertifierTransport: ITransport
-    private readonly autoCertifierUrl: string
-    private readonly autoCertifierConfigFile: string
-    private readonly serverEnableTls: boolean
     private autoCertifierClient?: AutoCertifierClientFacade
     private selectedPort?: number
     private localPeerDescriptor?: PeerDescriptor
-    private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
+    private connectingConnections: Map<DhtAddress, ManagedConnection> = new Map()
     private abortController = new AbortController()
+    private readonly config: WebsocketConnectorConfig
 
     constructor(config: WebsocketConnectorConfig) {
+        this.config = config
         this.websocketServer = config.portRange ? new WebsocketServer({
             portRange: config.portRange,
             tlsCertificate: config.tlsCertificate,
             maxMessageSize: config.maxMessageSize,
             enableTls: config.serverEnableTls
         }) : undefined
-        this.onNewConnection = config.onNewConnection
         this.host = config.host
-        this.entrypoints = config.entrypoints
-        this.tlsCertificate = config.tlsCertificate
-        this.autoCertifierTransport = config.autoCertifierTransport
-        this.autoCertifierUrl = config.autoCertifierUrl
-        this.autoCertifierConfigFile = config.autoCertifierConfigFile
-        this.serverEnableTls = config.serverEnableTls
         this.rpcCommunicator = new ListeningRpcCommunicator(WebsocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, config.transport, {
-            rpcRequestTimeout: 15000
+            rpcRequestTimeout: 15000  // TODO use config option or named constant?
         })
         this.registerLocalRpcMethods(config)
     }
 
     private registerLocalRpcMethods(config: WebsocketConnectorConfig) {
         const rpcLocal = new WebsocketConnectorRpcLocal({
-            canConnect: (peerDescriptor: PeerDescriptor) => config.canConnect(peerDescriptor),
             connect: (targetPeerDescriptor: PeerDescriptor) => this.connect(targetPeerDescriptor),
+            hasConnection: (targetPeerDescriptor: PeerDescriptor): boolean => {
+                const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
+                if (this.connectingConnections.has(nodeId)
+                    || this.connectingConnections.has(nodeId)
+                    || this.ongoingConnectRequests.has(nodeId)
+                    || config.hasConnection(targetPeerDescriptor)
+                ) {
+                    return true
+                } else {
+                    return false
+                }
+            },
             onNewConnection: (connection: ManagedConnection) => config.onNewConnection(connection),
             abortSignal: this.abortController.signal
         })
-        this.rpcCommunicator.registerRpcMethod(
+        this.rpcCommunicator.registerRpcNotification(
             WebsocketConnectionRequest,
-            WebsocketConnectionResponse,
             'requestConnection',
-            async (req: WebsocketConnectionRequest, context: ServerCallContext) => {
+            async (req: WebsocketConnectionRequest, context: ServerCallContext): Promise<Empty> => {
                 if (!this.abortController.signal.aborted) {
                     return rpcLocal.requestConnection(req, context)
                 } else {
-                    return { accepted: false }
+                    return {}
                 }
             }
         )
@@ -121,16 +120,16 @@ export class WebsocketConnector {
 
     private attachHandshaker(connection: IConnection) {
         const handshaker = new Handshaker(this.localPeerDescriptor!, connection)
-        handshaker.once('handshakeRequest', (localPeerDescriptor: PeerDescriptor, remotePeerDescriptor?: PeerDescriptor) => {
-            this.onServerSocketHandshakeRequest(localPeerDescriptor, connection, remotePeerDescriptor)
+        handshaker.once('handshakeRequest', (localPeerDescriptor: PeerDescriptor, sourceVersion: string, remotePeerDescriptor?: PeerDescriptor) => {
+            this.onServerSocketHandshakeRequest(localPeerDescriptor, connection, sourceVersion, remotePeerDescriptor)
         })
     }
 
     public async autoCertify(): Promise<void> {
         this.autoCertifierClient = new AutoCertifierClientFacade({
-            configFile: this.autoCertifierConfigFile,
-            transport: this.autoCertifierTransport,
-            url: this.autoCertifierUrl,
+            configFile: this.config.autoCertifierConfigFile,
+            transport: this.config.autoCertifierTransport,
+            url: this.config.autoCertifierUrl,
             wsServerPort: this.selectedPort!,
             setHost: (hostName: string) => this.setHost(hostName),
             updateCertificate: (certificate: string, privateKey: string) => this.websocketServer!.updateCertificate(certificate, privateKey)
@@ -174,25 +173,25 @@ export class WebsocketConnector {
             return noServerConnectivityResponse
         }
         for (const reattempt of range(ENTRY_POINT_CONNECTION_ATTEMPTS)) {
-            const entryPoint = sample(this.entrypoints)!
+            const entryPoint = sample(this.config.entrypoints)!
             try {
                 if (!this.websocketServer) {
                     return noServerConnectivityResponse
                 } else {
-                    if (!this.entrypoints || this.entrypoints.length === 0) {
+                    if (!this.config.entrypoints || this.config.entrypoints.length === 0) {
                         // return connectivity info given in config
                         const preconfiguredConnectivityResponse: ConnectivityResponse = {
                             host: this.host!,
                             natType: NatType.OPEN_INTERNET,
-                            websocket: { host: this.host!, port: this.selectedPort!, tls: this.tlsCertificate !== undefined }
+                            websocket: { host: this.host!, port: this.selectedPort!, tls: this.config.tlsCertificate !== undefined }
                         }
                         return preconfiguredConnectivityResponse
                     } else {
                         // Do real connectivity checking
                         const connectivityRequest = {
                             port: this.selectedPort!,
-                            host: this.host, 
-                            tls: this.serverEnableTls,
+                            host: this.host,
+                            tls: this.config.serverEnableTls,
                             selfSigned
                         }
                         if (!this.abortController.signal.aborted) {
@@ -204,7 +203,7 @@ export class WebsocketConnector {
                 }
             } catch (err) {
                 if (reattempt < ENTRY_POINT_CONNECTION_ATTEMPTS) {
-                    const error = `Failed to connect to entrypoint with id ${binaryToHex(entryPoint.nodeId)} `
+                    const error = `Failed to connect to entrypoint with id ${getNodeIdFromPeerDescriptor(entryPoint)} `
                         + `and URL ${connectivityMethodToWebsocketUrl(entryPoint.websocket!)}`
                     logger.error(error, { error: err })
                     await wait(2000)
@@ -220,8 +219,8 @@ export class WebsocketConnector {
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
-        const peerKey = keyFromPeerDescriptor(targetPeerDescriptor)
-        const existingConnection = this.connectingConnections.get(peerKey)
+        const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
+        const existingConnection = this.connectingConnections.get(nodeId)
         if (existingConnection) {
             return existingConnection
         }
@@ -242,11 +241,11 @@ export class WebsocketConnector {
             )
             managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
 
-            this.connectingConnections.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
+            this.connectingConnections.set(nodeId, managedConnection)
 
             const delFunc = () => {
-                if (this.connectingConnections.has(peerKey)) {
-                    this.connectingConnections.delete(peerKey)
+                if (this.connectingConnections.has(nodeId)) {
+                    this.connectingConnections.delete(nodeId)
                 }
                 socket.off('disconnected', delFunc)
                 managedConnection.off('handshakeCompleted', delFunc)
@@ -265,10 +264,17 @@ export class WebsocketConnector {
             const remoteConnector = new WebsocketConnectorRpcRemote(
                 localPeerDescriptor,
                 targetPeerDescriptor,
-                toProtoRpcClient(new WebsocketConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
+                this.rpcCommunicator,
+                WebsocketConnectorRpcClient
             )
-            // TODO should we have some handling for this floating promise?
-            remoteConnector.requestConnection(localPeerDescriptor.websocket!.host, localPeerDescriptor.websocket!.port)
+            remoteConnector.requestConnection().then(() => {
+                logger.trace('Sent WebsocketConnectionRequest notification to peer', { targetPeerDescriptor })
+                return
+            }, (err) => {
+                logger.debug('Failed to send WebsocketConnectionRequest notification to peer ', {
+                    error: err, targetPeerDescriptor
+                })
+            })
         })
         const managedConnection = new ManagedConnection(
             this.localPeerDescriptor!,
@@ -277,28 +283,29 @@ export class WebsocketConnector {
             undefined,
             targetPeerDescriptor
         )
-        managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(keyFromPeerDescriptor(targetPeerDescriptor)))
+        const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
+        managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(nodeId))
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
-        this.ongoingConnectRequests.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
+        this.ongoingConnectRequests.set(nodeId, managedConnection)
         return managedConnection
     }
 
     private onServerSocketHandshakeRequest(
         sourcePeerDescriptor: PeerDescriptor,
         serverWebsocket: IConnection,
+        sourceVersion: string,
         targetPeerDescriptor?: PeerDescriptor
     ) {
-        const peerId = peerIdFromPeerDescriptor(sourcePeerDescriptor)
-
-        if (this.ongoingConnectRequests.has(peerId.toKey())) {
-            const ongoingConnectRequest = this.ongoingConnectRequests.get(peerId.toKey())!
-            ongoingConnectRequest.attachImplementation(serverWebsocket)
-            if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
-                ongoingConnectRequest.rejectHandshake(HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
+        const nodeId = getNodeIdFromPeerDescriptor(sourcePeerDescriptor)
+        if (this.ongoingConnectRequests.has(nodeId)) {
+            const ongoingConnectRequest = this.ongoingConnectRequests.get(nodeId)!
+            if (!isCompatibleVersion(sourceVersion, version)) {
+                ongoingConnectRequest.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
             } else {
+                ongoingConnectRequest.attachImplementation(serverWebsocket)
                 ongoingConnectRequest.acceptHandshake()
-                this.ongoingConnectRequests.delete(peerId.toKey())
             }
+            this.ongoingConnectRequests.delete(nodeId)
         } else {
             const managedConnection = new ManagedConnection(
                 this.localPeerDescriptor!,
@@ -307,12 +314,12 @@ export class WebsocketConnector {
                 serverWebsocket,
                 targetPeerDescriptor
             )
-
             managedConnection.setRemotePeerDescriptor(sourcePeerDescriptor)
-
-            if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
+            if (!isCompatibleVersion(sourceVersion, version)) {
+                managedConnection.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
+            } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 managedConnection.rejectHandshake(HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
-            } else if (this.onNewConnection(managedConnection)) {
+            } else if (this.config.onNewConnection(managedConnection)) {
                 managedConnection.acceptHandshake()
             } else {
                 managedConnection.rejectHandshake(HandshakeError.DUPLICATE_CONNECTION)

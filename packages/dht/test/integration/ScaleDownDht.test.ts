@@ -5,34 +5,35 @@ import { createMockConnectionDhtNode } from '../utils/utils'
 import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
+import { createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
+const NUM_NODES = 80
+const MAX_CONNECTIONS = 15
+const K = 2
+
 describe('Scaling down a Dht network', () => {
+
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
     const simulator = new Simulator(LatencyType.REAL)
-    const NUM_NODES = 80
-    const MAX_CONNECTIONS = 15
-    const K = 2
 
     beforeEach(async () => {
         nodes = []
-        const entryPointId = '0'
-        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
-            undefined, K, MAX_CONNECTIONS)
+        entryPoint = await createMockConnectionDhtNode(simulator,
+            createRandomDhtAddress(), K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
 
         entrypointDescriptor = {
-            nodeId: entryPoint.getNodeId().value,
+            nodeId: getRawFromDhtAddress(entryPoint.getNodeId()),
             type: NodeType.NODEJS,
             region: getRandomRegion()
         }
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const nodeId = `${i}`
-            const node = await createMockConnectionDhtNode(nodeId, simulator, undefined, K, MAX_CONNECTIONS)
+            const node = await createMockConnectionDhtNode(simulator, undefined, K, MAX_CONNECTIONS)
             nodes.push(node)
         }
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))

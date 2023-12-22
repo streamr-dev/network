@@ -9,21 +9,19 @@ import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicat
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'
 import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
 import { WebrtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { PeerIDKey } from '../../helpers/PeerID'
 import { ManagedWebrtcConnection } from '../ManagedWebrtcConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
 import { ManagedConnection } from '../ManagedConnection'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
     areEqualPeerDescriptors,
     getNodeIdFromPeerDescriptor,
-    keyFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
 import { PortRange } from '../ConnectionManager'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { WebrtcConnectorRpcLocal } from './WebrtcConnectorRpcLocal'
+import { DhtAddress } from '../../identifiers'
 
 const logger = new Logger(module)
 
@@ -60,10 +58,9 @@ export class WebrtcConnector {
 
     private static readonly WEBRTC_CONNECTOR_SERVICE_ID = 'system/webrtc-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
-    private readonly ongoingConnectAttempts: Map<PeerIDKey, ManagedWebrtcConnection> = new Map()
+    private readonly ongoingConnectAttempts: Map<DhtAddress, ManagedWebrtcConnection> = new Map()
     private localPeerDescriptor?: PeerDescriptor
     private stopped = false
-    private iceServers: IceServer[]
     private config: WebrtcConnectorConfig
 
     constructor(
@@ -71,9 +68,8 @@ export class WebrtcConnector {
         onNewConnection: (connection: ManagedConnection) => boolean
     ) {
         this.config = config
-        this.iceServers = config.iceServers ?? []
         this.rpcCommunicator = new ListeningRpcCommunicator(WebrtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, config.transport, {
-            rpcRequestTimeout: 15000
+            rpcRequestTimeout: 15000  // TODO use config option or named constant?
         })
         this.registerLocalRpcMethods(config, onNewConnection)
     }
@@ -135,15 +131,15 @@ export class WebrtcConnector {
 
         logger.trace(`Opening WebRTC connection to ${getNodeIdFromPeerDescriptor(targetPeerDescriptor)}`)
 
-        const peerKey = keyFromPeerDescriptor(targetPeerDescriptor)
-        const existingConnection = this.ongoingConnectAttempts.get(peerKey)
+        const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
+        const existingConnection = this.ongoingConnectAttempts.get(nodeId)
         if (existingConnection) {
             return existingConnection
         }
 
         const connection = new NodeWebrtcConnection({
             remotePeerDescriptor: targetPeerDescriptor,
-            iceServers: this.iceServers,
+            iceServers: this.config.iceServers,
             bufferThresholdLow: this.config.bufferThresholdLow,
             bufferThresholdHigh: this.config.bufferThresholdHigh,
             connectingTimeout: this.config.connectionTimeout,
@@ -161,10 +157,10 @@ export class WebrtcConnector {
 
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
 
-        this.ongoingConnectAttempts.set(keyFromPeerDescriptor(targetPeerDescriptor), managedConnection)
+        this.ongoingConnectAttempts.set(getNodeIdFromPeerDescriptor(targetPeerDescriptor), managedConnection)
 
         const delFunc = () => {
-            this.ongoingConnectAttempts.delete(peerKey)
+            this.ongoingConnectAttempts.delete(nodeId)
             connection.off('disconnected', delFunc)
             managedConnection.off('handshakeCompleted', delFunc)
         }
@@ -174,7 +170,8 @@ export class WebrtcConnector {
         const remoteConnector = new WebrtcConnectorRpcRemote(
             this.localPeerDescriptor!,
             targetPeerDescriptor,
-            toProtoRpcClient(new WebrtcConnectorRpcClient(this.rpcCommunicator.getRpcClientTransport()))
+            this.rpcCommunicator,
+            WebrtcConnectorRpcClient
         )
 
         connection.on('localCandidate', (candidate: string, mid: string) => {
