@@ -1,5 +1,5 @@
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
-import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
+import { RpcCommunicator } from '@streamr/proto-rpc'
 import { createMockDhtRpc, createMockPeerDescriptor, createMockPeers } from '../utils/utils'
 import {
     ClosestPeersRequest,
@@ -8,7 +8,6 @@ import {
     PingResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { DhtNodeRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 
 const SERVICE_ID = 'test'
 
@@ -32,8 +31,7 @@ describe('DhtNodeRpcRemote', () => {
         serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
-        const client = toProtoRpcClient(new DhtNodeRpcClient(clientRpcCommunicator.getRpcClientTransport()))
-        rpcRemote = new DhtNodeRpcRemote(clientPeerDescriptor, serverPeerDescriptor, client, SERVICE_ID)
+        rpcRemote = new DhtNodeRpcRemote(clientPeerDescriptor, serverPeerDescriptor, SERVICE_ID, clientRpcCommunicator)
     })
 
     afterEach(() => {

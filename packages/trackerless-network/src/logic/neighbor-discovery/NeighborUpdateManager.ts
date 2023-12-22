@@ -1,6 +1,5 @@
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
-import { ProtoRpcClient, toProtoRpcClient } from '@streamr/proto-rpc'
 import { NeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { Logger, scheduleAtInterval } from '@streamr/utils'
 import { NeighborFinder } from './NeighborFinder'
@@ -26,12 +25,10 @@ export class NeighborUpdateManager {
 
     private readonly abortController: AbortController
     private readonly config: NeighborUpdateManagerConfig
-    private readonly client: ProtoRpcClient<NeighborUpdateRpcClient>
     private readonly rpcLocal: NeighborUpdateRpcLocal
 
     constructor(config: NeighborUpdateManagerConfig) {
         this.abortController = new AbortController()
-        this.client = toProtoRpcClient(new NeighborUpdateRpcClient(config.rpcCommunicator.getRpcClientTransport()))
         this.rpcLocal = new NeighborUpdateRpcLocal(config)
         this.config = config
         this.config.rpcCommunicator.registerRpcMethod(NeighborUpdate, NeighborUpdate, 'neighborUpdate',
@@ -59,6 +56,12 @@ export class NeighborUpdateManager {
     }
 
     private createRemote(targetPeerDescriptor: PeerDescriptor): NeighborUpdateRpcRemote {
-        return new NeighborUpdateRpcRemote(this.config.localPeerDescriptor, targetPeerDescriptor, this.config.streamPartId, this.client)
+        return new NeighborUpdateRpcRemote(
+            this.config.localPeerDescriptor,
+            targetPeerDescriptor,
+            this.config.streamPartId,
+            this.config.rpcCommunicator,
+            NeighborUpdateRpcClient
+        )
     }
 }

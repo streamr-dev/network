@@ -1,4 +1,4 @@
-import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
+import { RpcCommunicator } from '@streamr/proto-rpc'
 import { RouterRpcRemote } from '../../src/dht/routing/RouterRpcRemote'
 import { Message, MessageType, RouteMessageAck, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RouterRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
@@ -25,8 +25,7 @@ describe('RemoteRouter', () => {
         serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
-        const client = toProtoRpcClient(new RouterRpcClient(clientRpcCommunicator.getRpcClientTransport()))
-        remoteRouter = new RouterRpcRemote(clientPeerDescriptor, serverPeerDescriptor, SERVICE_ID, client)
+        remoteRouter = new RouterRpcRemote(clientPeerDescriptor, serverPeerDescriptor, SERVICE_ID, clientRpcCommunicator, RouterRpcClient)
     })
 
     it('routeMessage happy path', async () => {
@@ -44,7 +43,7 @@ describe('RemoteRouter', () => {
             requestId: 'routed',
             message: routed,
             sourcePeer: clientPeerDescriptor,
-            destinationPeer: serverPeerDescriptor,
+            target: serverPeerDescriptor.nodeId,
             reachableThrough: [],
             routingPath: []
         })
@@ -67,7 +66,7 @@ describe('RemoteRouter', () => {
             requestId: 'routed',
             message: routed,
             sourcePeer: clientPeerDescriptor,
-            destinationPeer: serverPeerDescriptor,
+            target: serverPeerDescriptor.nodeId,
             reachableThrough: [],
             routingPath: []
         })

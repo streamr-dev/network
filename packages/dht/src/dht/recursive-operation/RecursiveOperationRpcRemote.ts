@@ -1,18 +1,18 @@
-import { RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { RecursiveOperationRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RpcRemote } from '../contact/RpcRemote'
-import { Logger } from '@streamr/utils'
-import { IRecursiveOperationRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { getPreviousPeer } from '../routing/getPreviousPeer'
 
 const logger = new Logger(module)
 
-export class RecursiveOperationRpcRemote extends RpcRemote<IRecursiveOperationRpcClient> {
+export class RecursiveOperationRpcRemote extends RpcRemote<RecursiveOperationRpcClient> {
 
     async routeRequest(params: RouteMessageWrapper): Promise<boolean> {
         const message: RouteMessageWrapper = {
-            destinationPeer: params.destinationPeer,
+            target: params.target,
             sourcePeer: params.sourcePeer,
             message: params.message,
             requestId: params.requestId ?? v4(),

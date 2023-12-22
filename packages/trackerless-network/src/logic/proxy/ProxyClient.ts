@@ -4,7 +4,6 @@ import {
     ListeningRpcCommunicator,
     PeerDescriptor
 } from '@streamr/dht'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { StreamPartID } from '@streamr/protocol'
 import { EthereumAddress, Logger, addManagedEventListener, wait } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
@@ -174,8 +173,13 @@ export class ProxyClient extends EventEmitter<Events> {
 
     private async attemptConnection(nodeId: NodeID, direction: ProxyDirection, userId: EthereumAddress): Promise<void> {
         const peerDescriptor = this.definition!.nodes.get(nodeId)!
-        const client = toProtoRpcClient(new ProxyConnectionRpcClient(this.rpcCommunicator.getRpcClientTransport()))
-        const rpcRemote = new ProxyConnectionRpcRemote(this.config.localPeerDescriptor, peerDescriptor, this.config.streamPartId, client)
+        const rpcRemote = new ProxyConnectionRpcRemote(
+            this.config.localPeerDescriptor,
+            peerDescriptor,
+            this.config.streamPartId,
+            this.rpcCommunicator,
+            ProxyConnectionRpcClient
+        )
         const accepted = await rpcRemote.requestConnection(direction, userId)
         if (accepted) {
             this.config.connectionLocker.lockConnection(peerDescriptor, SERVICE_ID)
@@ -184,7 +188,8 @@ export class ProxyClient extends EventEmitter<Events> {
                 this.config.localPeerDescriptor,
                 peerDescriptor,
                 this.config.streamPartId,
-                toProtoRpcClient(new DeliveryRpcClient(this.rpcCommunicator.getRpcClientTransport()))
+                this.rpcCommunicator,
+                DeliveryRpcClient
             )
             this.targetNeighbors.add(remote)
             this.propagation.onNeighborJoined(nodeId)

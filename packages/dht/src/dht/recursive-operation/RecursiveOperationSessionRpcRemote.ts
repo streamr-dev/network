@@ -1,15 +1,15 @@
+import { Logger } from '@streamr/utils'
 import {
     DataEntry,
     PeerDescriptor,
     RecursiveOperationResponse
 } from '../../proto/packages/dht/protos/DhtRpc'
-import { IRecursiveOperationSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { Logger } from '@streamr/utils'
+import { RecursiveOperationSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RpcRemote } from '../contact/RpcRemote'
 
 const logger = new Logger(module)
 
-export class RecursiveOperationSessionRpcRemote extends RpcRemote<IRecursiveOperationSessionRpcClient> {
+export class RecursiveOperationSessionRpcRemote extends RpcRemote<RecursiveOperationSessionRpcClient> {
 
     sendResponse(
         routingPath: PeerDescriptor[],
