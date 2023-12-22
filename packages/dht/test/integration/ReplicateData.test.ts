@@ -23,7 +23,7 @@ const K = 8
 const getDataValues = (node: DhtNode): { foo: string }[] => {
     // @ts-expect-error private field
     const store = node.localDataStore
-    const entries = Array.from(store.getEntries(DATA_KEY).values())
+    const entries = Array.from(store.values(DATA_KEY))
     return entries.map((e) => unpackData(e))
 }
 
