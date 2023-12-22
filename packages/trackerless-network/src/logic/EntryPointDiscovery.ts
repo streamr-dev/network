@@ -51,7 +51,7 @@ const exponentialRunOff = async (
 
 const logger = new Logger(module)
 
-const ENTRYPOINT_STORE_LIMIT = 8
+export const ENTRYPOINT_STORE_LIMIT = 8
 export const NETWORK_SPLIT_AVOIDANCE_LIMIT = 4
 
 interface EntryPointDiscoveryConfig {
@@ -69,16 +69,14 @@ export class EntryPointDiscovery {
     private readonly config: EntryPointDiscoveryConfig
     private readonly storeInterval: number
     private readonly networkSplitAvoidedNodes: Set<NodeID> = new Set()
-
+    private isLocalNodeStoredAsEntryPoint = false
     constructor(config: EntryPointDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
         this.storeInterval = this.config.storeInterval ?? 60000
     }
 
-    async discoverEntryPointsFromDht(
-        knownEntryPointCount: number
-    ): Promise<FindEntryPointsResult> {
+    async discoverEntryPointsFromDht(knownEntryPointCount: number): Promise<FindEntryPointsResult> {
         if (knownEntryPointCount > 0) {
             return {
                 entryPointsFromDht: false,
@@ -124,6 +122,7 @@ export class EntryPointDiscovery {
         }
         const possibleNetworkSplitDetected = this.config.layer1Node.getNumberOfNeighbors() < NETWORK_SPLIT_AVOIDANCE_LIMIT
         if ((currentEntrypointCount < ENTRYPOINT_STORE_LIMIT) || possibleNetworkSplitDetected) {
+            this.isLocalNodeStoredAsEntryPoint = true
             await this.storeSelfAsEntryPoint()
             await this.keepSelfAsEntryPoint()
         }
@@ -174,6 +173,10 @@ export class EntryPointDiscovery {
         }, 'avoid network split', this.abortController.signal)
         this.networkSplitAvoidedNodes.clear()
         logger.trace(`Network split avoided`)
+    }
+
+    public isLocalNodeEntryPoint(): boolean {
+        return this.isLocalNodeStoredAsEntryPoint
     }
 
     async destroy(): Promise<void> {

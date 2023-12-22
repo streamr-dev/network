@@ -75,7 +75,8 @@ describe('MaintainTopologyService', () => {
         const serviceHelperConfig = {
             signer: operatorWallet,
             operatorContractAddress: toEthereumAddress(operatorContract.address),
-            theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl
+            theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl,
+            getEthersOverrides: () => ({})
         }
 
         const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(

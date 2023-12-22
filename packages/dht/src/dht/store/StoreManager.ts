@@ -46,7 +46,7 @@ export class StoreManager {
         const rpcLocal = new StoreRpcLocal({
             localDataStore: this.config.localDataStore,
             replicateDataToNeighbors: (incomingPeer: PeerDescriptor, dataEntry: DataEntry) => this.replicateDataToNeighbors(incomingPeer, dataEntry),
-            selfIsOneOfClosestPeers: (key: Uint8Array): boolean => this.selfIsOneOfClosestPeers(key)
+            selfIsWithinRedundancyFactor: (key: Uint8Array): boolean => this.selfIsWithinRedundancyFactor(key)
         })
         this.config.rpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
             (request: StoreDataRequest) => rpcLocal.storeData(request))
@@ -92,7 +92,7 @@ export class StoreManager {
                     await this.replicateDataToContact(dataEntry, newNode)
                 })
             }
-        } else if (!this.selfIsOneOfClosestPeers(dataEntry.key)) {
+        } else if (!this.selfIsWithinRedundancyFactor(dataEntry.key)) {
             this.config.localDataStore.setStale(dataEntry.key, getNodeIdFromBinary(dataEntry.creator), true)
         }
     }
@@ -146,10 +146,9 @@ export class StoreManager {
         return successfulNodes
     }
 
-    // TODO rename to selfIsWithinRedundancyFactor
-    private selfIsOneOfClosestPeers(dataKey: Uint8Array): boolean {
+    private selfIsWithinRedundancyFactor(dataKey: Uint8Array): boolean {
         const closestNeighbors = this.config.getClosestNeighborsTo(dataKey, this.config.redundancyFactor)
-        if (closestNeighbors.length === 0) {
+        if (closestNeighbors.length < this.config.redundancyFactor) {
             return true
         } else {
             const localNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)

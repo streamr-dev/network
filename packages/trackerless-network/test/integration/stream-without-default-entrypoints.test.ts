@@ -105,14 +105,13 @@ describe('stream without default entrypoints', () => {
         const numOfSubscribers = 8
         await Promise.all(range(numOfSubscribers).map(async (i) => {
             await nodes[i].join(STREAM_PART_ID, { minCount: 4, timeout: 15000 })
-            nodes[i].addMessageListener((_msg) => {
+            nodes[i].addMessageListener(() => {
                 numOfReceivedMessages += 1
             })
         }))
-        await Promise.all([
-            waitForCondition(() => numOfReceivedMessages === numOfSubscribers, 15000),
-            nodes[9].broadcast(streamMessage)
-        ])
+        const nonjoinedNode = nodes[numOfSubscribers]
+        await nonjoinedNode.broadcast(streamMessage)
+        await waitForCondition(() => numOfReceivedMessages === numOfSubscribers, 15000)
     }, 45000)
 
     it('nodes store themselves as entrypoints on streamPart if number of entrypoints is low', async () => {
