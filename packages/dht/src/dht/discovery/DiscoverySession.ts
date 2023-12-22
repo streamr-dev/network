@@ -18,16 +18,17 @@ interface DiscoverySessionConfig {
     parallelism: number
     noProgressLimit: number
     peerManager: PeerManager
+    // Note that contacted peers will be mutated by the DiscoverySession or other parallel sessions
+    contactedPeers: Set<DhtAddress>
 }
 
 export class DiscoverySession {
-    
+
     public readonly id = v4()
     private stopped = false
     private emitter = new EventEmitter<DiscoverySessionEvents>()
     private noProgressCounter = 0
     private ongoingClosestPeersRequests: Set<DhtAddress> = new Set()
-    private contactedPeers: Set<DhtAddress> = new Set()
     private readonly config: DiscoverySessionConfig
 
     constructor(config: DiscoverySessionConfig) {
@@ -46,7 +47,7 @@ export class DiscoverySession {
             return []
         }
         logger.trace(`Getting closest peers from contact: ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
-        this.contactedPeers.add(contact.getNodeId())
+        this.config.contactedPeers.add(contact.getNodeId())
         const returnedContacts = await contact.getClosestPeers(this.config.targetId)
         this.config.peerManager.handlePeerActive(contact.getNodeId())
         return returnedContacts
@@ -83,7 +84,7 @@ export class DiscoverySession {
         const uncontacted = this.config.peerManager.getClosestContactsTo(
             this.config.targetId,
             this.config.parallelism,
-            this.contactedPeers
+            this.config.contactedPeers
         )
         if (uncontacted.length === 0 || this.noProgressCounter >= this.config.noProgressLimit) {
             this.emitter.emit('discoveryCompleted')
@@ -106,7 +107,7 @@ export class DiscoverySession {
     }
 
     public async findClosestNodes(timeout: number): Promise<void> {
-        if (this.config.peerManager.getNumberOfContacts(this.contactedPeers) === 0) {
+        if (this.config.peerManager.getNumberOfContacts(this.config.contactedPeers) === 0) {
             return
         }
         // TODO add abortController and signal it in stop()

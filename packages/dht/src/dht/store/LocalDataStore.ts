@@ -44,18 +44,17 @@ export class LocalDataStore {
         return true
     }
 
-    public* values(): IterableIterator<DataEntry> {
-        for (const v of this.store.values()) {
-            yield* v.values()
+    public* values(key?: DhtAddress): IterableIterator<DataEntry> {
+        if (key !== undefined) {
+            const map = this.store.get(key)
+            if (map !== undefined) {
+                yield* map.values()
+            }
+        } else {
+            for (const v of this.store.values()) {
+                yield* v.values()
+            }
         }
-    }
-
-    public getEntries(key: DhtAddress): Map<DhtAddress, DataEntry> {
-        const dataEntries = new Map<DhtAddress, DataEntry>
-        this.store.get(key)?.forEach((value, creator) => {
-            dataEntries.set(creator, value)
-        })
-        return dataEntries
     }
 
     public setStale(key: DhtAddress, creator: DhtAddress, stale: boolean): void {

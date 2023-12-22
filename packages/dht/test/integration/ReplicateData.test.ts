@@ -12,6 +12,7 @@ import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
 import { DhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress } from '../../src/identifiers'
 import { createMockDataEntry } from '../utils/mock/mockDataEntry'
+import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
 
 const logger = new Logger(module)
 
@@ -40,6 +41,11 @@ describe('Replicate data from node to node in DHT', () => {
         return nodes[Math.floor(Math.random() * nodes.length)]
     }
     */
+
+    const getEntries = (key: DhtAddress, localDataStore: LocalDataStore) => {
+        return Array.from(localDataStore.values(key))
+    }
+
     beforeEach(async () => {
         nodes = []
         entryPoint = await createMockConnectionDhtNode(simulator,
@@ -115,7 +121,7 @@ describe('Replicate data from node to node in DHT', () => {
             
             // @ts-expect-error private field
             const store = node.localDataStore
-            if (store.getEntries(dataKey)) {
+            if (getEntries(dataKey, store).length > 0) {
                 hasDataMarker = '<-'
             }
 
@@ -144,7 +150,7 @@ describe('Replicate data from node to node in DHT', () => {
 
             // @ts-expect-error private field
             const store = node.localDataStore
-            if (store.getEntries(dataKey)) {
+            if (getEntries(dataKey, store).length > 0) {
                 hasDataMarker = '<-'
             }
 
@@ -155,7 +161,7 @@ describe('Replicate data from node to node in DHT', () => {
 
         // @ts-expect-error private field
         const store = closestNode.localDataStore
-        expect(store.getEntries(dataKey).size).toBeGreaterThanOrEqual(1)
+        expect(getEntries(dataKey, store).length).toBeGreaterThanOrEqual(1)
     }, 180000)
 
     it('Data replicates to the last remaining node if all other nodes leave gracefully', async () => {
@@ -193,7 +199,7 @@ describe('Replicate data from node to node in DHT', () => {
             // @ts-expect-error private field
             const store = nodes[nodeIndex].localDataStore
             logger.info('Stopping node ' + nodeIndex + ' ' +
-                (store.getEntries(dataKey) ? ', has data' : ' does not have data'))
+                ((getEntries(dataKey, store).length > 0) ? ', has data' : ' does not have data'))
 
             await nodes[nodeIndex].stop()
         }
@@ -202,8 +208,8 @@ describe('Replicate data from node to node in DHT', () => {
 
         // @ts-expect-error private field
         const firstStore = nodes[randomIndices[0]].localDataStore
-        logger.info('data of ' + randomIndices[0] + ' was ' + firstStore.getEntries(dataKey))
-        expect(firstStore.getEntries(dataKey).size).toBeGreaterThanOrEqual(1)
+        logger.info('data of ' + randomIndices[0] + ' was ' + getEntries(dataKey, firstStore))
+        expect(getEntries(dataKey, firstStore).length).toBeGreaterThanOrEqual(1)
 
     }, 180000)
 })
