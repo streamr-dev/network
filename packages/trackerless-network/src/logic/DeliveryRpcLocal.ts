@@ -1,4 +1,4 @@
-import { ListeningRpcCommunicator, PeerDescriptor, DhtCallContext } from '@streamr/dht'
+import { ListeningRpcCommunicator, PeerDescriptor, DhtCallContext, DhtAddress, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { Empty } from '../proto/google/protobuf/empty'
 import {
     LeaveStreamPartNotice,
@@ -8,16 +8,15 @@ import {
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IDeliveryRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { StreamPartID } from '@streamr/protocol'
 
 export interface DeliveryRpcLocalConfig {
     localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     markAndCheckDuplicate: (messageId: MessageID, previousMessageRef?: MessageRef) => boolean
-    broadcast: (message: StreamMessage, previousNode?: NodeID) => void
-    onLeaveNotice(senderId: NodeID): void
-    markForInspection(senderId: NodeID, messageId: MessageID): void
+    broadcast: (message: StreamMessage, previousNode?: DhtAddress) => void
+    onLeaveNotice(senderId: DhtAddress, isLocalNodeEntryPoint: boolean): void
+    markForInspection(senderId: DhtAddress, messageId: MessageID): void
     rpcCommunicator: ListeningRpcCommunicator
 }
 
@@ -40,9 +39,9 @@ export class DeliveryRpcLocal implements IDeliveryRpc {
 
     async leaveStreamPartNotice(message: LeaveStreamPartNotice, context: ServerCallContext): Promise<Empty> {
         if (message.streamPartId === this.config.streamPartId) {
-            const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-            const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
-            this.config.onLeaveNotice(senderId)
+            const sourcePeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+            const sourceId = getNodeIdFromPeerDescriptor(sourcePeerDescriptor)
+            this.config.onLeaveNotice(sourceId, message.isEntryPoint)
         }
         return Empty
     }

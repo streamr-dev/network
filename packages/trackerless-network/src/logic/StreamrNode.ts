@@ -3,7 +3,9 @@ import {
     DhtNode,
     ITransport,
     PeerDescriptor,
-    EXISTING_CONNECTION_TIMEOUT
+    EXISTING_CONNECTION_TIMEOUT,
+    DhtAddress,
+    getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
 import { StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
 import {
@@ -16,7 +18,6 @@ import {
 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { ProxyDirection, StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Layer0Node } from './Layer0Node'
 import { Layer1Node } from './Layer1Node'
@@ -43,8 +44,6 @@ export interface Events {
 }
 
 const logger = new Logger(module)
-
-let cleanUp: () => Promise<void> = async () => { }
 
 interface Metrics extends MetricsDefinition {
     broadcastMessagesPerSecond: Metric
@@ -93,7 +92,6 @@ export class StreamrNode extends EventEmitter<Events> {
         this.layer0Node = startedAndJoinedLayer0Node
         this.transport = transport
         this.connectionLocker = connectionLocker
-        cleanUp = () => this.destroy()
     }
 
     async destroy(): Promise<void> {
@@ -112,6 +110,7 @@ export class StreamrNode extends EventEmitter<Events> {
 
     broadcast(msg: StreamMessage): void {
         const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
+        logger.debug(`Broadcasting to stream part ${streamPartId}`)
         this.joinStreamPart(streamPartId)
         this.streamParts.get(streamPartId)!.broadcast(msg)
         this.metrics.broadcastMessagesPerSecond.record(1)
@@ -127,26 +126,25 @@ export class StreamrNode extends EventEmitter<Events> {
     }
 
     joinStreamPart(streamPartId: StreamPartID): void {
-        logger.debug(`Join stream part ${streamPartId}`)
         let streamPart = this.streamParts.get(streamPartId)
         if (streamPart !== undefined) {
             return
         }
+        logger.debug(`Join stream part ${streamPartId}`)
         const layer1Node = this.createLayer1Node(streamPartId, this.knownStreamPartEntryPoints.get(streamPartId) ?? [])
-        const node = this.createRandomGraphNode(streamPartId, layer1Node)
         const entryPointDiscovery = new EntryPointDiscovery({
             streamPartId,
             localPeerDescriptor: this.getPeerDescriptor(),
             layer1Node,
             getEntryPointData: (key) => this.layer0Node!.getDataFromDht(key),
             storeEntryPointData: (key, data) => this.layer0Node!.storeDataToDht(key, data),
-            deleteEntryPointData: async (key) => {
-                if (this.destroyed) {
-                    return 
-                }
-                return this.layer0Node!.deleteDataFromDht(key)
-            }
+            deleteEntryPointData: async (key) => this.layer0Node!.deleteDataFromDht(key, false)
         })
+        const node = this.createRandomGraphNode(
+            streamPartId,
+            layer1Node, 
+            () => entryPointDiscovery.isLocalNodeEntryPoint()
+        )
         streamPart = {
             proxied: false,
             layer1Node,
@@ -163,6 +161,14 @@ export class StreamrNode extends EventEmitter<Events> {
         node.on('message', (message: StreamMessage) => {
             this.emit('newMessage', message)
         })
+        const handleEntryPointLeave = async () => {
+            if (this.destroyed || entryPointDiscovery.isLocalNodeEntryPoint() || this.knownStreamPartEntryPoints.has(streamPartId)) {
+                return
+            }
+            const entryPoints = await entryPointDiscovery.discoverEntryPointsFromDht(0)
+            await entryPointDiscovery.storeSelfAsEntryPointIfNecessary(entryPoints.discoveredEntryPoints.length)
+        }
+        node.on('entryPointLeaveDetected', () => handleEntryPointLeave())
         setImmediate(async () => {
             try {
                 await this.startLayersAndJoinDht(streamPartId, entryPointDiscovery)
@@ -198,13 +204,17 @@ export class StreamrNode extends EventEmitter<Events> {
             serviceId: 'layer1::' + streamPartId,
             peerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
             entryPoints,
-            numberOfNodesPerKBucket: 4,
+            numberOfNodesPerKBucket: 4,  // TODO use config option or named constant?
             rpcRequestTimeout: EXISTING_CONNECTION_TIMEOUT,
-            dhtJoinTimeout: 20000
+            dhtJoinTimeout: 20000  // TODO use config option or named constant?
         })
     }
 
-    private createRandomGraphNode(streamPartId: StreamPartID, layer1Node: Layer1Node) {
+    private createRandomGraphNode(
+        streamPartId: StreamPartID,
+        layer1Node: Layer1Node,
+        isLocalNodeEntryPoint: () => boolean
+    ) {
         return createRandomGraphNode({
             streamPartId,
             transport: this.transport!,
@@ -214,7 +224,8 @@ export class StreamrNode extends EventEmitter<Events> {
             minPropagationTargets: this.config.streamPartitionMinPropagationTargets,
             numOfTargetNeighbors: this.config.streamPartitionNumOfNeighbors,
             acceptProxyConnections: this.config.acceptProxyConnections,
-            rpcRequestTimeout: this.config.rpcRequestTimeout
+            rpcRequestTimeout: this.config.rpcRequestTimeout,
+            isLocalNodeEntryPoint
         })
     }
 
@@ -296,11 +307,11 @@ export class StreamrNode extends EventEmitter<Events> {
         return this.layer0Node!.getLocalPeerDescriptor()
     }
 
-    getNodeId(): NodeID {
+    getNodeId(): DhtAddress {
         return getNodeIdFromPeerDescriptor(this.layer0Node!.getLocalPeerDescriptor())
     }
 
-    getNeighbors(streamPartId: StreamPartID): NodeID[] {
+    getNeighbors(streamPartId: StreamPartID): DhtAddress[] {
         const streamPart = this.streamParts.get(streamPartId)
         return (streamPart !== undefined) && (streamPart.proxied === false)
             ? streamPart.node.getTargetNeighborIds()
@@ -310,18 +321,4 @@ export class StreamrNode extends EventEmitter<Events> {
     getStreamParts(): StreamPartID[] {
         return Array.from(this.streamParts.keys()).map((id) => StreamPartIDUtils.parse(id))
     }
-}
-
-[`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`].forEach((term) => {
-    process.on(term, async () => {
-        await cleanUp()
-        process.exit()
-    })
-})
-
-declare let window: any
-if (typeof window === 'object') {
-    window.addEventListener('unload', async () => {
-        await cleanUp()
-    })
 }

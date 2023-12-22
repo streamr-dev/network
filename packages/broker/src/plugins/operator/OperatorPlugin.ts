@@ -1,5 +1,6 @@
 import { EthereumAddress, Logger, scheduleAtInterval, setAbortableInterval, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
+import { Overrides } from 'ethers'
 import { StreamrClient, SignerWithProvider } from 'streamr-client'
 import { Plugin } from '../../Plugin'
 import { maintainOperatorValue } from './maintainOperatorValue'
@@ -17,6 +18,7 @@ import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import { inspectRandomNode } from './inspectRandomNode'
 import { ContractFacade } from './ContractFacade'
 import { reviewSuspectNode } from './reviewSuspectNode'
+import { closeExpiredFlags } from './closeExpiredFlags'
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
@@ -42,12 +44,17 @@ export interface OperatorPluginConfig {
     inspectRandomNode: {
         intervalInMs: number
     }
+    closeExpiredFlags: {
+        intervalInMs: number
+        maxAgeInMs: number
+    }
 }
 
 export interface OperatorServiceConfig {
     signer: SignerWithProvider
     operatorContractAddress: EthereumAddress
     theGraphUrl: string
+    getEthersOverrides: () => Overrides
 }
 
 const logger = new Logger(module)
@@ -62,7 +69,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         const serviceConfig = {
             signer,
             operatorContractAddress,
-            theGraphUrl: streamrClient.getConfig().contracts.theGraphUrl
+            theGraphUrl: streamrClient.getConfig().contracts.theGraphUrl,
+            getEthersOverrides: () => streamrClient.getEthersOverrides()
         }
 
         const redundancyFactor = await fetchRedundancyFactor(serviceConfig)
@@ -182,6 +190,18 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                     logger.error('Encountered error while inspecting random node', { err })
                 }
             }, this.pluginConfig.inspectRandomNode.intervalInMs, false, this.abortController.signal)
+
+            await scheduleAtInterval(async () => {
+                try {
+                    await closeExpiredFlags(
+                        this.pluginConfig.closeExpiredFlags.maxAgeInMs,
+                        serviceConfig.operatorContractAddress,
+                        contractFacade
+                    )
+                } catch (err) {
+                    logger.error('Encountered error while closing expired flags', { err })
+                }
+            }, this.pluginConfig.closeExpiredFlags.intervalInMs, false, this.abortController.signal)
 
             contractFacade.addReviewRequestListener(async (
                 sponsorshipAddress,

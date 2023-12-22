@@ -70,7 +70,7 @@ jobs:
 
       - name: Docker meta
         id: docker_meta_success
-        uses: docker/metadata-action@v5.0.0
+        uses: docker/metadata-action@v5.3.0
         if: ${{inputs.push_image}}
         with:
           images: ${{inputs.image_name}}
@@ -81,6 +81,9 @@ jobs:
             type=raw,value=dev,enable=${{ inputs.branch == 'main' }}
             type=raw,value=dev-tatum,enable=${{ inputs.branch == 'streamr-1.0' }}
             type=raw,value=pretestnet,enable=${{ inputs.branch == 'pretestnet' }}
+            type=raw,value=testnet-one,enable=${{ inputs.branch == 'testnet-one' }}
+            type=raw,value=testnet-two,enable=${{ inputs.branch == 'testnet-two' }}
+            type=raw,value=testnet-three,enable=${{ inputs.branch == 'testnet-three' }}
 
       - name: Build
         if: ${{!inputs.push_image}}

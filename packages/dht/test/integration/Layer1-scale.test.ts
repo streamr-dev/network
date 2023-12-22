@@ -1,32 +1,22 @@
 import { Simulator } from '../../src/connection/simulator/Simulator'
-import { PeerID } from '../../src/helpers/PeerID'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils/utils'
-import { UUID } from '../../src/helpers/UUID'
-import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { getDhtAddressFromRaw } from '../../src/identifiers'
+import { createMockConnectionDhtNode, createMockConnectionLayer1Node, createMockPeerDescriptor } from '../utils/utils'
 
+const NODE_COUNT = 48
 const NUM_OF_NODES_PER_KBUCKET = 8
 
 describe('Layer1', () => {
 
     let simulator: Simulator
-    const layer0EntryPointId = new UUID().toString()
-
-    const entryPoint0Descriptor = {
-        kademliaId: PeerID.fromString(layer0EntryPointId).value,
-        type: NodeType.NODEJS
-    }
-
+    const entryPoint0Descriptor = createMockPeerDescriptor()
     let layer0EntryPoint: DhtNode
-
-    const NODE_COUNT = 48
     let nodes: DhtNode[]
-
     let layer1CleanUp: DhtNode[]
 
     beforeEach(async () => {
         simulator = new Simulator()
-        layer0EntryPoint = await createMockConnectionDhtNode(layer0EntryPointId, simulator)
+        layer0EntryPoint = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(entryPoint0Descriptor.nodeId))
         await layer0EntryPoint.joinDht([entryPoint0Descriptor])
 
         nodes = []
@@ -34,7 +24,6 @@ describe('Layer1', () => {
 
         for (let i = 0; i < NODE_COUNT; i++) {
             const node = await createMockConnectionDhtNode(
-                new UUID().toString(),
                 simulator,
                 undefined,
                 undefined,
@@ -56,14 +45,14 @@ describe('Layer1', () => {
     })
 
     it('single layer1 dht', async () => {
-        const layer1EntryPoint = await createMockConnectionLayer1Node(layer0EntryPoint.getNodeId().toString(), layer0EntryPoint)
+        const layer1EntryPoint = await createMockConnectionLayer1Node(layer0EntryPoint)
         await layer1EntryPoint.joinDht([entryPoint0Descriptor])
         layer1CleanUp.push(layer1EntryPoint)
 
         const layer1Nodes: DhtNode[] = []
         for (let i = 0; i < NODE_COUNT; i++) {
             const layer0 = nodes[i]
-            const layer1 = await createMockConnectionLayer1Node(layer0.getNodeId().toString(), layer0, undefined, NUM_OF_NODES_PER_KBUCKET)
+            const layer1 = await createMockConnectionLayer1Node(layer0, undefined, NUM_OF_NODES_PER_KBUCKET)
             layer1Nodes.push(layer1)
             layer1CleanUp.push(layer1)
         }
@@ -73,24 +62,24 @@ describe('Layer1', () => {
         for (let i = 0; i < NODE_COUNT; i++) {
             const layer0Node = nodes[i]
             const layer1Node = layer1Nodes[i]
-            expect(layer1Node.getNodeId().equals(layer0Node.getNodeId())).toEqual(true)
+            expect(layer1Node.getNodeId()).toEqual(layer0Node.getNodeId())
             expect(layer1Node.getNumberOfConnections()).toEqual(layer0Node.getNumberOfConnections())
-            expect(layer1Node.getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
+            expect(layer1Node.getNumberOfNeighbors()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
             expect(layer1Node.getAllConnectionPeerDescriptors()).toEqual(layer0Node.getAllConnectionPeerDescriptors())
         }
     }, 120000)
 
     it('multiple layer1 dht', async () => {
-        const stream1EntryPoint = await createMockConnectionLayer1Node(layer0EntryPoint.getNodeId().toString(), layer0EntryPoint, 'one')
+        const stream1EntryPoint = await createMockConnectionLayer1Node(layer0EntryPoint, 'one')
         await stream1EntryPoint.joinDht([entryPoint0Descriptor])
 
-        const stream2EntryPoint = await createMockConnectionLayer1Node(layer0EntryPoint.getNodeId().toString(), layer0EntryPoint, 'two')
+        const stream2EntryPoint = await createMockConnectionLayer1Node(layer0EntryPoint, 'two')
         await stream2EntryPoint.joinDht([entryPoint0Descriptor])
 
-        const stream3EntryPoint = await createMockConnectionLayer1Node(layer0EntryPoint.getNodeId().toString(), layer0EntryPoint, 'three')
+        const stream3EntryPoint = await createMockConnectionLayer1Node(layer0EntryPoint, 'three')
         await stream3EntryPoint.joinDht([entryPoint0Descriptor])
 
-        const stream4EntryPoint = await createMockConnectionLayer1Node(layer0EntryPoint.getNodeId().toString(), layer0EntryPoint, 'four')
+        const stream4EntryPoint = await createMockConnectionLayer1Node(layer0EntryPoint, 'four')
         await stream4EntryPoint.joinDht([entryPoint0Descriptor])
 
         layer1CleanUp.push(stream1EntryPoint)
@@ -105,10 +94,10 @@ describe('Layer1', () => {
 
         for (let i = 0; i < NODE_COUNT; i++) {
             const layer0 = nodes[i]
-            const one = await createMockConnectionLayer1Node(layer0.getNodeId().toString(), layer0, 'one')
-            const two = await createMockConnectionLayer1Node(layer0.getNodeId().toString(), layer0, 'two')
-            const three = await createMockConnectionLayer1Node(layer0.getNodeId().toString(), layer0, 'three')
-            const four = await createMockConnectionLayer1Node(layer0.getNodeId().toString(), layer0, 'four')
+            const one = await createMockConnectionLayer1Node(layer0, 'one')
+            const two = await createMockConnectionLayer1Node(layer0, 'two')
+            const three = await createMockConnectionLayer1Node(layer0, 'three')
+            const four = await createMockConnectionLayer1Node(layer0, 'four')
 
             stream1.push(one)
             stream2.push(two)
@@ -155,7 +144,7 @@ describe('Layer1', () => {
     //             layer1CleanUp.push(layer1)
     //             receivedMessages.set(layer0.getNodeId().toKey(), new Set())
     //             layer1.on('message', (msg: Message) => {
-    //                 const peerId = PeerID.fromValue(msg.sourceDescriptor!.kademliaId)
+    //                 const peerId = PeerID.fromValue(msg.sourceDescriptor!.nodeId)
     //                 receivedMessages.get(layer0.getNodeId().toKey())!.add(peerId.toKey())
     //             })
     //         }
@@ -180,7 +169,7 @@ describe('Layer1', () => {
     //                 }
     //                 await sender.doRouteMessage({
     //                     message,
-    //                     destinationPeer: receiver.getPeerDescriptor(),
+    //                     target: receiver.getPeerDescriptor().nodeId,
     //                     sourcePeer: sender.getPeerDescriptor(),
     //                     requestId: v4(),
     //                     reachableThrough: [],

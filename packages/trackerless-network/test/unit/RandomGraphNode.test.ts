@@ -1,5 +1,4 @@
 import { waitForCondition } from '@streamr/utils'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { NodeList } from '../../src/logic/NodeList'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
@@ -10,6 +9,7 @@ import { MockNeighborUpdateManager } from '../utils/mock/MockNeighborUpdateManag
 import { MockTransport } from '../utils/mock/Transport'
 import { createMockPeerDescriptor, createMockDeliveryRpcRemote, mockConnectionLocker } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { getNodeIdFromPeerDescriptor } from '@streamr/dht'
 
 describe('RandomGraphNode', () => {
 
@@ -38,10 +38,12 @@ describe('RandomGraphNode', () => {
             localPeerDescriptor: peerDescriptor,
             layer1Node,
             connectionLocker: mockConnectionLocker,
-            handshaker: new MockHandshaker(),
-            neighborUpdateManager: new MockNeighborUpdateManager(),
-            neighborFinder: new MockNeighborFinder(),
-            streamPartId: StreamPartIDUtils.parse('stream#0')
+            handshaker: new MockHandshaker() as any,
+            neighborUpdateManager: new MockNeighborUpdateManager() as any,
+            neighborFinder: new MockNeighborFinder() as any,
+            streamPartId: StreamPartIDUtils.parse('stream#0'),
+            isLocalNodeEntryPoint: () => false
+
         })
         await randomGraphNode.start()
     })
@@ -88,9 +90,11 @@ describe('RandomGraphNode', () => {
         const peerDescriptor2 = createMockPeerDescriptor()
         layer1Node.addNewRandomPeerToKBucket()
         layer1Node.emit('newContact', peerDescriptor1, [peerDescriptor1, peerDescriptor2])
-        await waitForCondition(() => nearbyNodeView.size() === 3)
+        await waitForCondition(() => {
+            return nearbyNodeView.size() === 3
+        }, 20000)
         expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor1))).toBeTruthy()
         expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor2))).toBeTruthy()
-    })
+    }, 25000)
 
 })

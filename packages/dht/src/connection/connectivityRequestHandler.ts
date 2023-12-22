@@ -5,7 +5,7 @@ import {
     Message, MessageType
 } from '../proto/packages/dht/protos/DhtRpc'
 import { NatType } from './ConnectionManager'
-import { ConnectivityChecker, connectAsync } from './ConnectivityChecker'
+import { CONNECTIVITY_CHECKER_SERVICE_ID, connectAsync } from './connectivityChecker'
 import { IConnection } from './IConnection'
 import { ServerWebsocket } from './websocket/ServerWebsocket'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
@@ -56,6 +56,7 @@ const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, co
         }
     }
     if (outgoingConnection) {
+        // TODO should we have some handling for this floating promise?
         outgoingConnection.close(false)
         logger.trace('Connectivity test produced positive result, communicating reply to the requester ' + host + ':' + connectivityRequest.port)
         connectivityResponseMessage = {
@@ -65,7 +66,7 @@ const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, co
         }
     }
     const msg: Message = {
-        serviceId: ConnectivityChecker.CONNECTIVITY_CHECKER_SERVICE_ID,
+        serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
         messageType: MessageType.CONNECTIVITY_RESPONSE,
         messageId: v4(),
         body: {

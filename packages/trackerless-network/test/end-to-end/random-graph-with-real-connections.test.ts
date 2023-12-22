@@ -11,7 +11,7 @@ import { Layer1Node } from '../../src/logic/Layer1Node'
 describe('random graph with real connections', () => {
 
     const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: Uint8Array.from([1, 2, 3]),
+        nodeId: Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
         websocket: { host: '127.0.0.1', port: 12221, tls: false }
     }
@@ -50,7 +50,8 @@ describe('random graph with real connections', () => {
                 layer1Node: epDhtNode,
                 transport: epDhtNode.getTransport(),
                 connectionLocker: epDhtNode.getTransport() as ConnectionManager,
-                localPeerDescriptor: epPeerDescriptor
+                localPeerDescriptor: epPeerDescriptor,
+                isLocalNodeEntryPoint: () => false
             }
         )
         randomGraphNode2 = createRandomGraphNode({
@@ -58,28 +59,32 @@ describe('random graph with real connections', () => {
             layer1Node: dhtNode1,
             transport: dhtNode1.getTransport(),
             connectionLocker: dhtNode1.getTransport() as ConnectionManager,
-            localPeerDescriptor: dhtNode1.getLocalPeerDescriptor()
+            localPeerDescriptor: dhtNode1.getLocalPeerDescriptor(),
+            isLocalNodeEntryPoint: () => false
         })
         randomGraphNode3 = createRandomGraphNode({
             streamPartId,
             layer1Node: dhtNode2,
             transport: dhtNode2.getTransport(),
             connectionLocker: dhtNode2.getTransport() as ConnectionManager,
-            localPeerDescriptor: dhtNode2.getLocalPeerDescriptor()
+            localPeerDescriptor: dhtNode2.getLocalPeerDescriptor(),
+            isLocalNodeEntryPoint: () => false
         })
         randomGraphNode4 = createRandomGraphNode({
             streamPartId,
             layer1Node: dhtNode3,
             transport: dhtNode3.getTransport(),
             connectionLocker: dhtNode3.getTransport() as ConnectionManager,
-            localPeerDescriptor: dhtNode3.getLocalPeerDescriptor()
+            localPeerDescriptor: dhtNode3.getLocalPeerDescriptor(),
+            isLocalNodeEntryPoint: () => false
         })
         randomGraphNode5 = createRandomGraphNode({
             streamPartId,
             layer1Node: dhtNode4,
             transport: dhtNode4.getTransport(),
             connectionLocker: dhtNode4.getTransport() as ConnectionManager,
-            localPeerDescriptor: dhtNode4.getLocalPeerDescriptor()
+            localPeerDescriptor: dhtNode4.getLocalPeerDescriptor(),
+            isLocalNodeEntryPoint: () => false
         })
         await epDhtNode.joinDht([epPeerDescriptor])
         await Promise.all([

@@ -67,7 +67,7 @@ export class ClientTransport extends EventEmitter<ClientTransportEvents> impleme
             // eslint-disable-next-line max-len
             throw new Error('ProtoRpc ClientTransport can only be used with ProtoRpcClients. Please convert your protobuf-ts generated client to a ProtoRpcClient by calling toProtoRpcclient(yourClient).')
         }
-        const requestBody = Any.pack(input, method.I) // method.I.toBinary(input)
+        const requestBody = Any.pack(input, method.I)
 
         const request: RpcMessage = {
             header: ClientTransport.createRequestHeaders(method, options.notification),
