@@ -6,7 +6,8 @@
     },
     "include": [
         "src/**/*",
-        "test/**/*"
+        "test/**/*",
+        "package.json"
     ],
     "exclude": [
         "src/connection/webrtc/BrowserWebrtcConnection.ts"

@@ -189,10 +189,6 @@ export interface PingResponse {
  * @generated from protobuf message dht.LeaveNotice
  */
 export interface LeaveNotice {
-    /**
-     * @generated from protobuf field: string serviceId = 1;
-     */
-    serviceId: string;
 }
 /**
  * @generated from protobuf message dht.PeerDescriptor
@@ -334,6 +330,10 @@ export interface HandshakeRequest {
      * @generated from protobuf field: optional dht.PeerDescriptor targetPeerDescriptor = 2;
      */
     targetPeerDescriptor?: PeerDescriptor;
+    /**
+     * @generated from protobuf field: string version = 3;
+     */
+    version: string;
 }
 /**
  * @generated from protobuf message dht.HandshakeResponse
@@ -347,6 +347,10 @@ export interface HandshakeResponse {
      * @generated from protobuf field: optional dht.HandshakeError error = 2;
      */
     error?: HandshakeError;
+    /**
+     * @generated from protobuf field: string version = 3;
+     */
+    version: string;
 }
 /**
  * @generated from protobuf message dht.Message
@@ -610,7 +614,11 @@ export enum HandshakeError {
     /**
      * @generated from protobuf enum value: INVALID_TARGET_PEER_DESCRIPTOR = 1;
      */
-    INVALID_TARGET_PEER_DESCRIPTOR = 1
+    INVALID_TARGET_PEER_DESCRIPTOR = 1,
+    /**
+     * @generated from protobuf enum value: UNSUPPORTED_VERSION = 2;
+     */
+    UNSUPPORTED_VERSION = 2
 }
 // Wraps all messages
 
@@ -819,9 +827,7 @@ export const PingResponse = new PingResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class LeaveNotice$Type extends MessageType$<LeaveNotice> {
     constructor() {
-        super("dht.LeaveNotice", [
-            { no: 1, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
+        super("dht.LeaveNotice", []);
     }
 }
 /**
@@ -923,7 +929,8 @@ class HandshakeRequest$Type extends MessageType$<HandshakeRequest> {
     constructor() {
         super("dht.HandshakeRequest", [
             { no: 1, name: "sourcePeerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "targetPeerDescriptor", kind: "message", T: () => PeerDescriptor }
+            { no: 2, name: "targetPeerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 3, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -936,7 +943,8 @@ class HandshakeResponse$Type extends MessageType$<HandshakeResponse> {
     constructor() {
         super("dht.HandshakeResponse", [
             { no: 1, name: "sourcePeerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "error", kind: "enum", opt: true, T: () => ["dht.HandshakeError", HandshakeError] }
+            { no: 2, name: "error", kind: "enum", opt: true, T: () => ["dht.HandshakeError", HandshakeError] },
+            { no: 3, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
