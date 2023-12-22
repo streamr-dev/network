@@ -1,8 +1,7 @@
 import { v4 } from 'uuid'
 import { RoutingSession } from '../../src/dht/routing/RoutingSession'
-import { Message, MessageType, NodeType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { createWrappedClosestPeersRequest } from '../utils/utils'
-import { hexToBinary } from '@streamr/utils'
+import { Message, MessageType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { createMockPeerDescriptor, createWrappedClosestPeersRequest } from '../utils/utils'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
@@ -13,17 +12,8 @@ describe('RoutingSession', () => {
     let session: RoutingSession
     let connections: Map<NodeID, DhtNodeRpcRemote>
     let rpcCommunicator: RoutingRpcCommunicator
-
-    const mockPeerDescriptor1: PeerDescriptor = {
-        nodeId: hexToBinary('eee1'),
-        type: NodeType.NODEJS
-    }
-
-    const mockPeerDescriptor2 = {
-        nodeId: hexToBinary('eee2'),
-        type: NodeType.NODEJS
-    }
-
+    const mockPeerDescriptor1 = createMockPeerDescriptor()
+    const mockPeerDescriptor2 = createMockPeerDescriptor()
     const rpcWrapper = createWrappedClosestPeersRequest(mockPeerDescriptor1)
     const message: Message = {
         serviceId: 'unknown',

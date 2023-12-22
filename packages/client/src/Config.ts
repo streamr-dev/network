@@ -445,25 +445,25 @@ export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStrea
 }
 
 const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrClientConfig): StreamrClientConfig => {
-    const defauls = CHAIN_CONFIG[environmentId]
+    const defaults = CHAIN_CONFIG[environmentId]
     const config = merge(data, {
         network: {
             ...data.network,
             controlLayer: {
-                entryPoints: defauls.entryPoints,
+                entryPoints: defaults.entryPoints,
                 ...data.network?.controlLayer,
             }
         } as any,
         contracts: {
-            streamRegistryChainAddress: defauls.contracts.StreamRegistry,
-            streamStorageRegistryChainAddress: defauls.contracts.StreamStorageRegistry,
-            storageNodeRegistryChainAddress: defauls.contracts.StorageNodeRegistry,
+            streamRegistryChainAddress: defaults.contracts.StreamRegistry,
+            streamStorageRegistryChainAddress: defaults.contracts.StreamStorageRegistry,
+            storageNodeRegistryChainAddress: defaults.contracts.StorageNodeRegistry,
             streamRegistryChainRPCs: {
-                name: defauls.name,
-                chainId: defauls.id,
-                rpcs: defauls.rpcEndpoints
+                name: defaults.name,
+                chainId: defaults.id,
+                rpcs: defaults.rpcEndpoints
             },
-            theGraphUrl: defauls.theGraphUrl,
+            theGraphUrl: defaults.theGraphUrl,
             ...data.contracts,
         } as any
     }) as any

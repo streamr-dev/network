@@ -3,7 +3,7 @@ import { ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
 import { ProtoRpcClient, toProtoRpcClient } from '@streamr/proto-rpc'
 import { NeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { Logger, scheduleAtInterval } from '@streamr/utils'
-import { INeighborFinder } from './NeighborFinder'
+import { NeighborFinder } from './NeighborFinder'
 import { NodeList } from '../NodeList'
 import { NeighborUpdateRpcRemote } from './NeighborUpdateRpcRemote'
 import { NeighborUpdateRpcLocal } from './NeighborUpdateRpcLocal'
@@ -14,7 +14,7 @@ interface NeighborUpdateManagerConfig {
     localPeerDescriptor: PeerDescriptor
     targetNeighbors: NodeList
     nearbyNodeView: NodeList
-    neighborFinder: INeighborFinder
+    neighborFinder: NeighborFinder
     streamPartId: StreamPartID
     rpcCommunicator: ListeningRpcCommunicator
     neighborUpdateInterval: number
@@ -22,12 +22,7 @@ interface NeighborUpdateManagerConfig {
 
 const logger = new Logger(module)
 
-export interface INeighborUpdateManager {
-    start(): Promise<void>
-    stop(): void
-}
-
-export class NeighborUpdateManager implements INeighborUpdateManager {
+export class NeighborUpdateManager {
 
     private readonly abortController: AbortController
     private readonly config: NeighborUpdateManagerConfig

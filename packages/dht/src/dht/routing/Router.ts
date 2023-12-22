@@ -28,19 +28,9 @@ interface ForwardingTableEntry {
     peerDescriptors: PeerDescriptor[]
 }
 
-export interface IRouter {
-    doRouteMessage(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedPeer?: PeerDescriptor): RouteMessageAck
-    send(msg: Message, reachableThrough: PeerDescriptor[]): void
-    isMostLikelyDuplicate(requestId: string): boolean
-    addToDuplicateDetector(requestId: string): void
-    addRoutingSession(session: RoutingSession): void
-    removeRoutingSession(sessionId: string): void
-    stop(): void
-}
-
 const logger = new Logger(module)
 
-export class Router implements IRouter {
+export class Router {
     private readonly rpcCommunicator: RoutingRpcCommunicator
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly connections: Map<NodeID, DhtNodeRpcRemote>

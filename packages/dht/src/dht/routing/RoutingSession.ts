@@ -1,6 +1,6 @@
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { SortedContactList } from '../contact/SortedContactList'
-import { getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
@@ -54,13 +54,12 @@ class RemoteContact extends Contact {
 export interface RoutingSessionEvents {
     // This event is emitted when a peer responds with a success ack
     // to routeMessage call
-    routingSucceeded: (sessionId: string) => void
-    partialSuccess: (sessionId: string) => void
-
+    routingSucceeded: () => void
+    partialSuccess: () => void
     // This event is emitted when all the candidates have been gone
     // through, and none of them responds with a success ack
-    routingFailed: (sessionId: string) => void
-    stopped: (sessionId: string) => void
+    routingFailed: () => void
+    stopped: () => void
 }
 
 export enum RoutingMode { ROUTE, FORWARD, RECURSIVE }
@@ -87,7 +86,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         connections: Map<NodeID, DhtNodeRpcRemote>,
         parallelism: number,
         mode: RoutingMode = RoutingMode.ROUTE,
-        excludedNodeIDs?: Set<NodeID>
+        excludedNodeIds?: Set<NodeID>
     ) {
         super()
         this.rpcCommunicator = rpcCommunicator
@@ -103,7 +102,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             maxSize: 10000,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             nodeIdDistanceLimit: previousId,
-            excludedNodeIDs,
+            excludedNodeIds,
             emitEvents: false
         })
     }
@@ -131,9 +130,9 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
     private emitFailure() {
         if (this.successfulHopCounter >= 1) {
-            this.emit('partialSuccess', this.sessionId)
+            this.emit('partialSuccess')
         } else {
-            this.emit('routingFailed', this.sessionId)
+            this.emit('routingFailed')
         }
     }
 
@@ -147,7 +146,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         if (this.successfulHopCounter >= this.parallelism || contacts.length === 0) {
             // TODO should call this.stop() so that we do cleanup? (after the routingSucceeded call)
             this.stopped = true
-            this.emit('routingSucceeded', this.sessionId)
+            this.emit('routingSucceeded')
         } else if (contacts.length > 0 && this.ongoingRequests.size === 0) {
             this.sendMoreRequests(contacts)
         }
@@ -173,10 +172,9 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     updateAndGetRoutablePeers(): RemoteContact[] {
         logger.trace('getRoutablePeers() sessionId: ' + this.sessionId)
         // Remove stale contacts that may have been removed from connections
-        this.contactList.getAllContacts().forEach((contact) => {
-            const peerId = peerIdFromPeerDescriptor(contact.getPeerDescriptor())
-            if (this.connections.has(peerId.toNodeId()) === false) {
-                this.contactList.removeContact(peerId.toNodeId())
+        this.contactList.getContactIds().forEach((nodeId) => {
+            if (!this.connections.has(nodeId)) {
+                this.contactList.removeContact(nodeId)
             }
         })
         const contacts = Array.from(this.connections.values())
@@ -225,7 +223,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     public stop(): void {
         this.stopped = true
         this.contactList.stop()
-        this.emit('stopped', this.sessionId)
+        this.emit('stopped')
         this.removeAllListeners()
     }
 }

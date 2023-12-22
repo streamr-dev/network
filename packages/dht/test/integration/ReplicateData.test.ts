@@ -8,24 +8,25 @@ import fs from 'fs'
 import { Logger, hexToBinary } from '@streamr/utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { getNodeIdFromPeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { Any } from '../../src/proto/google/protobuf/any'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
 import { NodeID } from '../../src/helpers/nodeId'
+import { createMockDataEntry } from '../utils/mock/mockDataEntry'
 
 const logger = new Logger(module)
 
 jest.setTimeout(60000)
 
+const NUM_NODES = 100
+const MAX_CONNECTIONS = 80
+const K = 8
+
 describe('Replicate data from node to node in DHT', () => {
+
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
     const simulator = new Simulator(LatencyType.FIXED, 20)
-    const NUM_NODES = 100
-    const MAX_CONNECTIONS = 80
-    const K = 8
-
     const nodesById: Map<NodeID, DhtNode> = new Map()
 
     if (!fs.existsSync('test/data/nodeids.json')) {
@@ -41,8 +42,7 @@ describe('Replicate data from node to node in DHT', () => {
     */
     beforeEach(async () => {
         nodes = []
-        const entryPointId = '0'
-        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
+        entryPoint = await createMockConnectionDhtNode(simulator,
             Uint8Array.from(dhtIds[0].data), K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         nodesById.set(entryPoint.getNodeId(), entryPoint)
@@ -55,9 +55,7 @@ describe('Replicate data from node to node in DHT', () => {
         nodes.push(entryPoint)
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const nodeId = `${i}`
-
-            const node = await createMockConnectionDhtNode(nodeId, simulator,
+            const node = await createMockConnectionDhtNode(simulator,
                 Uint8Array.from(dhtIds[i].data), K, MAX_CONNECTIONS)
             nodesById.set(node.getNodeId(), node)
             nodes.push(node)
@@ -77,7 +75,7 @@ describe('Replicate data from node to node in DHT', () => {
 
     it('Data replicates to the closest node no matter where it is stored', async () => {
         const dataKey = PeerID.fromString('3232323e12r31r3')
-        const data = Any.pack(entrypointDescriptor, PeerDescriptor)
+        const data = createMockDataEntry({ key: dataKey.value })
 
         // calculate offline which node is closest to the data
 
@@ -105,7 +103,7 @@ describe('Replicate data from node to node in DHT', () => {
         await nodes[0].joinDht([entrypointDescriptor])
 
         logger.info('storing data to node 0')
-        const successfulStorers = await nodes[0].storeDataToDht(dataKey.value, data)
+        const successfulStorers = await nodes[0].storeDataToDht(dataKey.value, data.data!)
         expect(successfulStorers.length).toBe(1)
         logger.info('data successfully stored to node 0')
 
@@ -159,7 +157,7 @@ describe('Replicate data from node to node in DHT', () => {
 
     it('Data replicates to the last remaining node if all other nodes leave gracefully', async () => {
         const dataKey = PeerID.fromString('3232323e12r31r3')
-        const data = Any.pack(entrypointDescriptor, PeerDescriptor)
+        const data = createMockDataEntry({ key: dataKey.value })
 
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
         await Promise.all(
@@ -175,7 +173,7 @@ describe('Replicate data from node to node in DHT', () => {
         const randomIndex = Math.floor(Math.random() * nodes.length)
         logger.info('storing data to a random node: ' + randomIndex)
 
-        const successfulStorers = await nodes[randomIndex].storeDataToDht(dataKey.value, data)
+        const successfulStorers = await nodes[randomIndex].storeDataToDht(dataKey.value, data.data!)
 
         logger.info('data successfully stored to ' + successfulStorers + ' nodes')
 

@@ -1,7 +1,6 @@
 import { ConnectionManager, DhtNode, DhtNodeOptions, areEqualPeerDescriptors } from '@streamr/dht'
 import { DeliveryLayer, DeliveryLayerConfig } from './logic/DeliveryLayer'
 import { Logger, MetricsContext, waitForCondition } from '@streamr/utils'
-import { EventEmitter } from 'eventemitter3'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
 import { Layer0Node } from './logic/Layer0Node'
@@ -12,10 +11,6 @@ export interface NetworkOptions {
     layer0?: DhtNodeOptions
     networkNode?: DeliveryLayerConfig
     metricsContext?: MetricsContext
-}
-
-export interface NetworkStackEvents {
-    stopped: () => void
 }
 
 const instances: NetworkStack[] = []
@@ -41,7 +36,7 @@ if (typeof window === 'object') {
 
 const logger = new Logger(module)
 
-export class NetworkStack extends EventEmitter<NetworkStackEvents> {
+export class NetworkStack {
 
     private layer0Node?: Layer0Node
     private deliveryLayer?: DeliveryLayer
@@ -50,7 +45,6 @@ export class NetworkStack extends EventEmitter<NetworkStackEvents> {
     private readonly options: NetworkOptions
 
     constructor(options: NetworkOptions) {
-        super()
         this.options = options
         this.metricsContext = options.metricsContext ?? new MetricsContext()
         this.layer0Node = new DhtNode({

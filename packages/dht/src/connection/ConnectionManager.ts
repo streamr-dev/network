@@ -23,7 +23,7 @@ import {
     UnlockRequest
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ConnectionLockRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
-import { ITransport, TransportEvents } from '../transport/ITransport'
+import { ITransport, SendOptions, TransportEvents } from '../transport/ITransport'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { ConnectionLockHandler, LockID } from './ConnectionLockHandler'
 import { ConnectorFacade } from './ConnectorFacade'
@@ -250,7 +250,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         return this.locks.getNumberOfWeakLockedConnections()
     }
 
-    public async send(message: Message, doNotConnect = false, doNotMindStopped = false): Promise<void> {
+    public async send(message: Message, opts?: SendOptions): Promise<void> {
+        const doNotMindStopped = opts?.doNotMindStopped ?? false
         if (this.state === ConnectionManagerState.STOPPED && !doNotMindStopped) {
             return
         }
@@ -265,6 +266,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         }
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
         let connection = this.connections.get(nodeId)
+        const doNotConnect = opts?.doNotConnect ?? false
         if (!connection && !doNotConnect) {
             connection = this.connectorFacade.createConnection(peerDescriptor)
             this.onNewConnection(connection)
