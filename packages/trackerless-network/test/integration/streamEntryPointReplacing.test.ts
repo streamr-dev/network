@@ -81,7 +81,9 @@ describe('Stream Entry Points are replaced when known entry points leave streams
         }
 
         await Promise.all(initialNodesOnStream.map((node) => node.getDeliveryLayer().leaveStreamPart(STREAM_PART_ID)))
-        await waitForCondition(() => laterNodesOnStream.every((node) => node.getDeliveryLayer().getNeighbors(STREAM_PART_ID).length >= 4), 30000, 1000)
+        await waitForCondition(() => 
+            laterNodesOnStream.every((node) => node.getDeliveryLayer().getNeighbors(STREAM_PART_ID).length >= 4), 30000, 1000
+        )
 
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
