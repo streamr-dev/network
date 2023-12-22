@@ -461,7 +461,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const rpcRemote = new ConnectionLockRpcRemote(
             this.getLocalPeerDescriptor(),
             targetDescriptor,
-            'DUMMY',
             this.rpcCommunicator!,
             ConnectionLockRpcClient
         )
@@ -480,7 +479,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const rpcRemote = new ConnectionLockRpcRemote(
             this.getLocalPeerDescriptor(),
             targetDescriptor,
-            'DUMMY',
             this.rpcCommunicator!,
             ConnectionLockRpcClient
         )
@@ -546,7 +544,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const rpcRemote = new ConnectionLockRpcRemote(
             this.getLocalPeerDescriptor(),
             targetDescriptor,
-            'DUMMY',
             this.rpcCommunicator!,
             ConnectionLockRpcClient
         )

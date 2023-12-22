@@ -199,7 +199,6 @@ export class RandomGraphNode extends EventEmitter<Events> {
             new DeliveryRpcRemote(
                 this.config.localPeerDescriptor,
                 descriptor,
-                this.config.streamPartId,
                 this.config.rpcCommunicator,
                 DeliveryRpcClient,
                 this.config.rpcRequestTimeout
@@ -213,7 +212,6 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 new DeliveryRpcRemote(
                     this.config.localPeerDescriptor,
                     descriptor,
-                    this.config.streamPartId,
                     this.config.rpcCommunicator,
                     DeliveryRpcClient,
                     this.config.rpcRequestTimeout
@@ -231,7 +229,6 @@ export class RandomGraphNode extends EventEmitter<Events> {
             new DeliveryRpcRemote(
                 this.config.localPeerDescriptor,
                 descriptor,
-                this.config.streamPartId,
                 this.config.rpcCommunicator,
                 DeliveryRpcClient,
                 this.config.rpcRequestTimeout
@@ -251,7 +248,6 @@ export class RandomGraphNode extends EventEmitter<Events> {
             new DeliveryRpcRemote(
                 this.config.localPeerDescriptor,
                 descriptor,
-                this.config.streamPartId,
                 this.config.rpcCommunicator,
                 DeliveryRpcClient,
                 this.config.rpcRequestTimeout
@@ -292,7 +288,9 @@ export class RandomGraphNode extends EventEmitter<Events> {
         }
         this.abortController.abort()
         this.config.proxyConnectionRpcLocal?.stop()
-        this.config.targetNeighbors.getAll().map((remote) => remote.leaveStreamPartNotice(this.config.isLocalNodeEntryPoint()))
+        this.config.targetNeighbors.getAll().map(
+            (remote) => remote.leaveStreamPartNotice(this.config.streamPartId, this.config.isLocalNodeEntryPoint())
+        )
         this.config.rpcCommunicator.destroy()
         this.removeAllListeners()
         this.config.nearbyNodeView.stop()

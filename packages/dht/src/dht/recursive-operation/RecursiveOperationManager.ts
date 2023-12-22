@@ -154,7 +154,6 @@ export class RecursiveOperationManager {
             const rpcRemote = new RecursiveOperationSessionRpcRemote(
                 this.config.localPeerDescriptor,
                 targetPeerDescriptor,
-                serviceId,
                 remoteCommunicator,
                 RecursiveOperationSessionRpcClient,
                 // TODO use config option or named constant?

@@ -97,7 +97,6 @@ export const createMockDeliveryRpcRemote = (remotePeerDescriptor?: PeerDescripto
     return new DeliveryRpcRemote(
         createMockPeerDescriptor(),
         remotePeerDescriptor ?? createMockPeerDescriptor(),
-        'mock',
         new RpcCommunicator(),
         DeliveryRpcClient
     )
@@ -107,7 +106,6 @@ export const createMockHandshakeRpcRemote = (): HandshakeRpcRemote => {
     return new HandshakeRpcRemote(
         createMockPeerDescriptor(),
         createMockPeerDescriptor(), 
-        'mock',
         new RpcCommunicator(),
         HandshakeRpcClient
     )

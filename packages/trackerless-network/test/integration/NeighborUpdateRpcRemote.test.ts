@@ -62,7 +62,6 @@ describe('NeighborUpdateRpcRemote', () => {
         rpcRemote = new NeighborUpdateRpcRemote(
             clientNode,
             serverNode,
-            'test-stream-part',
             clientRpc,
             NeighborUpdateRpcClient
         )
@@ -77,7 +76,7 @@ describe('NeighborUpdateRpcRemote', () => {
     })
 
     it('updateNeighbors', async () => {
-        const res = await rpcRemote.updateNeighbors([])
+        const res = await rpcRemote.updateNeighbors(StreamPartIDUtils.parse('test#0'), [])
         expect(res.peerDescriptors.length).toEqual(1)
     })
 })
