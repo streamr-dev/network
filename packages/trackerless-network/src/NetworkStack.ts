@@ -1,11 +1,10 @@
-import { ConnectionManager, DhtNode, DhtNodeOptions, areEqualPeerDescriptors } from '@streamr/dht'
+import { ConnectionManager, DhtNode, DhtNodeOptions, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { DeliveryLayer, DeliveryLayerConfig } from './logic/DeliveryLayer'
 import { Logger, MetricsContext, waitForCondition } from '@streamr/utils'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
 import { Layer0Node } from './logic/Layer0Node'
 import { pull } from 'lodash'
-import { getNodeIdFromPeerDescriptor } from './identifiers'
 
 export interface NetworkOptions {
     layer0?: DhtNodeOptions

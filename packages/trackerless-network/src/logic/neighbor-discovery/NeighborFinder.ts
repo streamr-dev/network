@@ -1,11 +1,11 @@
 import { setAbortableTimeout } from '@streamr/utils'
 import { NodeList } from '../NodeList'
-import { NodeID } from '../../identifiers'
+import { DhtAddress } from '@streamr/dht'
 
 interface FindNeighborsSessionConfig {
     targetNeighbors: NodeList
     nearbyNodeView: NodeList
-    doFindNeighbors: (excludedNodes: NodeID[]) => Promise<NodeID[]>
+    doFindNeighbors: (excludedNodes: DhtAddress[]) => Promise<DhtAddress[]>
     minCount: number
 }
 
@@ -22,7 +22,7 @@ export class NeighborFinder {
         this.abortController = new AbortController()
     }
 
-    private async findNeighbors(excluded: NodeID[]): Promise<void> {
+    private async findNeighbors(excluded: DhtAddress[]): Promise<void> {
         if (!this.running) {
             return
         }
@@ -39,7 +39,7 @@ export class NeighborFinder {
         return this.running
     }
 
-    start(excluded: NodeID[] = []): void {
+    start(excluded: DhtAddress[] = []): void {
         if (this.running) {
             return
         }

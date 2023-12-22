@@ -2,11 +2,11 @@ import { MessageID, MessageRef, StreamMessage, StreamMessageType, StreamPartIDUt
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { hexToBinary, utf8ToBinary, wait, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { NodeID } from '../../src/identifiers'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { ProxyClient } from '../../src/logic/proxy/ProxyClient'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
+import { DhtAddress } from '@streamr/dht'
 
 const PROXIED_NODE_USER_ID = randomEthereumAddress()
 const STREAM_PART_ID = StreamPartIDUtils.parse('proxy-test#0')
@@ -40,7 +40,7 @@ describe('Proxy connections', () => {
             : false
     }
     
-    const hasConnectionToProxy = (proxyNodeId: NodeID, direction: ProxyDirection): boolean => {
+    const hasConnectionToProxy = (proxyNodeId: DhtAddress, direction: ProxyDirection): boolean => {
         const client = (proxiedNode.stack.getDeliveryLayer()!.getStreamPartDelivery(STREAM_PART_ID) as { client: ProxyClient }).client
         return client.hasConnection(proxyNodeId, direction)
     }

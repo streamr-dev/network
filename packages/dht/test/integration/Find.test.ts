@@ -4,7 +4,7 @@ import { PeerDescriptor, RecursiveOperation } from '../../src/proto/packages/dht
 import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils/utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { hexToBinary } from '@streamr/utils'
+import { getDhtAddressFromRaw, getRawFromDhtAddress } from '../../src/identifiers'
 
 const NUM_NODES = 100
 const K = 2
@@ -38,8 +38,8 @@ describe('Find correctness', () => {
     })
 
     it('Entrypoint can find a node from the network (exact match)', async () => {
-        const targetId = hexToBinary(nodes[45].getNodeId())
-        const results = await entryPoint.executeRecursiveOperation(targetId, RecursiveOperation.FIND_NODE)
+        const targetId = getRawFromDhtAddress(nodes[45].getNodeId())
+        const results = await entryPoint.executeRecursiveOperation(getDhtAddressFromRaw(targetId), RecursiveOperation.FIND_NODE)
         expect(results.closestNodes.length).toBeGreaterThanOrEqual(5)
         expect(PeerID.fromValue(targetId).equals(peerIdFromPeerDescriptor(results.closestNodes[0])))
     }, 30000)

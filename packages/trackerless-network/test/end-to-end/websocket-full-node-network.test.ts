@@ -3,8 +3,8 @@ import { randomEthereumAddress } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkStack } from '../../src/NetworkStack'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import { getNodeIdFromPeerDescriptor } from '@streamr/dht'
 
 describe('Full node network with WebSocket connections only', () => {
 

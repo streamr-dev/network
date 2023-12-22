@@ -1,10 +1,10 @@
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { PeerID } from '../../src/helpers/PeerID'
-import { NodeID, createRandomNodeId, getNodeIdFromBinary } from '../../src/helpers/nodeId'
+import { DhtAddress, DhtAddressRaw, createRandomDhtAddress, getDhtAddressFromRaw } from '../../src/identifiers'
 
-const createItem = (nodeId: Uint8Array): { getNodeId: () => NodeID, getPeerId: () => PeerID } => {
+const createItem = (nodeId: DhtAddressRaw): { getNodeId: () => DhtAddress, getPeerId: () => PeerID } => {
     return { 
-        getNodeId: () => getNodeIdFromBinary(nodeId),
+        getNodeId: () => getDhtAddressFromRaw(nodeId),
         getPeerId: () => PeerID.fromValue(nodeId)
     }
 }
@@ -72,7 +72,7 @@ describe('SortedContactList', () => {
         const list = new SortedContactList({ referenceId: item0.getNodeId(), maxSize: 8, allowToContainReferenceId: false, emitEvents: true })
         const onContactRemoved = jest.fn()
         list.on('contactRemoved', onContactRemoved)
-        list.removeContact(getNodeIdFromBinary(createRandomNodeId()))
+        list.removeContact(createRandomDhtAddress())
         list.addContact(item3)
         list.removeContact(item3.getNodeId())
         list.addContact(item4)
@@ -84,10 +84,10 @@ describe('SortedContactList', () => {
         expect(list.getContact(item2.getNodeId())).toBeFalsy()
         expect(list.getContactIds()).toEqual(list.getContactIds().sort(list.compareIds))
         expect(list.getAllContacts()).toEqual([item1, item3, item4])
-        const ret = list.removeContact(getNodeIdFromBinary(Buffer.from([0, 0, 0, 6])))
+        const ret = list.removeContact(getDhtAddressFromRaw(Buffer.from([0, 0, 0, 6])))
         expect(ret).toEqual(false)
         list.removeContact(item3.getNodeId())
-        list.removeContact(getNodeIdFromBinary(createRandomNodeId()))
+        list.removeContact(createRandomDhtAddress())
         expect(list.getAllContacts()).toEqual([item1, item4])
         expect(onContactRemoved).toHaveBeenNthCalledWith(1, item3, [])
         expect(onContactRemoved).toHaveBeenNthCalledWith(2, item2, [item1, item3, item4])
