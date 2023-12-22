@@ -24,7 +24,7 @@ describe('StoreManager', () => {
         const createStoreManager = (
             localNodeId: Uint8Array,
             closestNeighbors: Uint8Array[],
-            replicateData: (request: ReplicateDataRequest, doNotConnect: boolean) => unknown,
+            replicateData: (request: ReplicateDataRequest) => unknown,
             setStale: (key: Key, creator: NodeID, stale: boolean) => unknown
         ): StoreManager => {
             const getClosestNeighborsTo = () => {
@@ -49,7 +49,7 @@ describe('StoreManager', () => {
         describe('this node is primary storer', () => {
 
             it('new node is within redundancy factor', async () => {
-                const replicateData = jest.fn<undefined, [ReplicateDataRequest, boolean]>()
+                const replicateData = jest.fn<undefined, [ReplicateDataRequest]>()
                 const setStale = jest.fn<undefined, [Key, NodeID]>()
                 const manager = createStoreManager(
                     NODES_CLOSEST_TO_DATA[0],
@@ -66,7 +66,7 @@ describe('StoreManager', () => {
             })
     
             it('new node is not within redundancy factor', async () => {
-                const replicateData = jest.fn<undefined, [ReplicateDataRequest, boolean]>()
+                const replicateData = jest.fn<undefined, [ReplicateDataRequest]>()
                 const setStale = jest.fn<undefined, [Key, NodeID]>()
                 const manager = createStoreManager(
                     NODES_CLOSEST_TO_DATA[0],
@@ -84,7 +84,7 @@ describe('StoreManager', () => {
         describe('this node is not primary storer', () => {
 
             it('this node is within redundancy factor', async () => {
-                const replicateData = jest.fn<undefined, [ReplicateDataRequest, boolean]>()
+                const replicateData = jest.fn<undefined, [ReplicateDataRequest]>()
                 const setStale = jest.fn<undefined, [Key, NodeID]>()
                 const manager = createStoreManager(
                     NODES_CLOSEST_TO_DATA[1],
@@ -99,7 +99,7 @@ describe('StoreManager', () => {
             })
 
             it('this node is not within redundancy factor', async () => {
-                const replicateData = jest.fn<undefined, [ReplicateDataRequest, boolean]>()
+                const replicateData = jest.fn<undefined, [ReplicateDataRequest]>()
                 const setStale = jest.fn<undefined, [Key, NodeID]>()
                 const manager = createStoreManager(
                     NODES_CLOSEST_TO_DATA[3],

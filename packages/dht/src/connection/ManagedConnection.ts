@@ -226,7 +226,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.emit('disconnected', gracefulLeave)
     }
 
-    async send(data: Uint8Array, doNotConnect = false): Promise<void> {
+    async send(data: Uint8Array, connect: boolean): Promise<void> {
         if (this.stopped) {
             throw new Err.SendFailed('ManagedConnection is stopped')
         }
@@ -235,8 +235,8 @@ export class ManagedConnection extends EventEmitter<Events> {
         }
         this.lastUsed = Date.now()
 
-        if (doNotConnect && !this.implementation) {
-            throw new Err.ConnectionNotOpen('Connection not open when calling send() with doNotConnect flag')
+        if (!connect && !this.implementation) {
+            throw new Err.ConnectionNotOpen('Connection not open when calling send() with connect flag as false')
         } else if (this.implementation) {
             this.implementation.send(data)
         } else {
