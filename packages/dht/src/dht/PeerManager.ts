@@ -108,8 +108,9 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         })
         sortingList.addContacts(oldContacts)
         const sortedContacts = sortingList.getAllContacts()
-        this.config.connectionManager?.weakUnlockConnection(sortedContacts[sortedContacts.length - 1].getPeerDescriptor())
-        this.bucket.remove(getRawFromDhtAddress(sortedContacts[sortedContacts.length - 1].getNodeId()))
+        const removableNodeId = sortedContacts[sortedContacts.length - 1].getNodeId()
+        this.config.connectionManager?.weakUnlockConnection(removableNodeId)
+        this.bucket.remove(getRawFromDhtAddress(removableNodeId))
         this.bucket.add(newContact)
     }
 
@@ -117,8 +118,9 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         if (this.stopped) {
             return
         }
-        this.config.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
-        logger.trace(`Removed contact ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
+        const nodeId = getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())
+        this.config.connectionManager?.weakUnlockConnection(nodeId)
+        logger.trace(`Removed contact ${nodeId}`)
         if (this.bucket.count() === 0) {
             this.emit('kBucketEmpty')
         }
@@ -129,25 +131,27 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             return
         }
         if (contact.getNodeId() !== this.config.localNodeId) {
+            const peerDescriptor = contact.getPeerDescriptor()
+            const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
             // Important to lock here, before the ping result is known
-            this.config.connectionManager?.weakLockConnection(contact.getPeerDescriptor())
+            this.config.connectionManager?.weakLockConnection(nodeId)
             if (this.connections.has(contact.getNodeId())) {
-                logger.trace(`Added new contact ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
+                logger.trace(`Added new contact ${nodeId}`)
             } else {    // open connection by pinging
-                logger.trace('starting ping ' + getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))
+                logger.trace('starting ping ' + nodeId)
                 contact.ping().then((result) => {
                     if (result) {
-                        logger.trace(`Added new contact ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
+                        logger.trace(`Added new contact ${nodeId}`)
                     } else {
-                        logger.trace('ping failed ' + getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))
-                        this.config.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
-                        this.removeContact(contact.getPeerDescriptor())
+                        logger.trace('ping failed ' + nodeId)
+                        this.config.connectionManager?.weakUnlockConnection(nodeId)
+                        this.removeContact(peerDescriptor)
                         this.addClosestContactToBucket()
                     }
                     return
                 }).catch((_e) => {
-                    this.config.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
-                    this.removeContact(contact.getPeerDescriptor())
+                    this.config.connectionManager?.weakUnlockConnection(nodeId)
+                    this.removeContact(peerDescriptor)
                     this.addClosestContactToBucket()
                 })
             }
@@ -185,19 +189,20 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         } else {
             logger.trace('new connection not set to connections, there is already a connection with the peer ID')
         }
-        logger.trace('connected: ' + getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + this.connections.size)
+        logger.trace('connected: ' + nodeId + ' ' + this.connections.size)
     }
 
     handleDisconnected(peerDescriptor: PeerDescriptor, gracefulLeave: boolean): void {
-        logger.trace('disconnected: ' + getNodeIdFromPeerDescriptor(peerDescriptor))
-        this.connections.delete(getNodeIdFromPeerDescriptor(peerDescriptor))
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        logger.trace('disconnected: ' + nodeId)
+        this.connections.delete(nodeId)
         if (this.config.isLayer0) {
             this.bucket.remove(peerDescriptor.nodeId)
             if (gracefulLeave === true) {
-                logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
+                logger.trace(nodeId + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
                 this.removeContact(peerDescriptor)
             } else {
-                logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
+                logger.trace(nodeId + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
             }
         }
     }
@@ -210,8 +215,8 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         if (this.stopped) {
             return
         }
-        logger.trace(`Removing contact ${getNodeIdFromPeerDescriptor(contact)}`)
         const nodeId = getNodeIdFromPeerDescriptor(contact)
+        logger.trace(`Removing contact ${nodeId}`)
         this.bucket.remove(getRawFromDhtAddress(nodeId))
         this.contacts.removeContact(nodeId)
         this.randomPeers.removeContact(nodeId)

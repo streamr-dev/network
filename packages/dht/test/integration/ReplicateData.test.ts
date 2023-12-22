@@ -85,7 +85,7 @@ describe('Replicate data from node to node in DHT', () => {
 
         logger.info('Nodes sorted according to distance to data are: ')
         closest.forEach((contact) => {
-            logger.info(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))
+            logger.info(contact.getNodeId())
         })
 
         logger.info('storing data to node 0')
@@ -96,15 +96,14 @@ describe('Replicate data from node to node in DHT', () => {
         logger.info('Nodes sorted according to distance to data with storing nodes marked are: ')
 
         closest.forEach((contact) => {
-            const node = nodesById.get(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))!
+            const node = nodesById.get(contact.getNodeId())!
             let hasDataMarker = ''
             
             if (hasData(node)) {
                 hasDataMarker = '<-'
             }
 
-            // eslint-disable-next-line max-len
-            logger.info(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()) + ' ' + getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
+            logger.info(contact.getNodeId() + ' ' + node.getNodeId() + hasDataMarker)
         })
 
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
@@ -123,15 +122,15 @@ describe('Replicate data from node to node in DHT', () => {
         logger.info('After join of 99 nodes: nodes sorted according to distance to data with storing nodes marked are: ')
 
         closest.forEach((contact) => {
-            const node = nodesById.get(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))!
+            const node = nodesById.get(contact.getNodeId())!
             let hasDataMarker = ''
             if (hasData(node)) {
                 hasDataMarker = ' <-'
             }
-            logger.info(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
+            logger.info(node.getNodeId() + hasDataMarker)
         })
 
-        const closestNode = nodesById.get(getNodeIdFromPeerDescriptor(closest[0].getPeerDescriptor()))!
+        const closestNode = nodesById.get(closest[0].getNodeId())!
 
         // TODO assert the content?
         expect(hasData(closestNode)).toBe(true)
