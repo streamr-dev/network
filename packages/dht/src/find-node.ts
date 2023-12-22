@@ -1,6 +1,7 @@
 import { hexToBinary, binaryToHex } from "@streamr/utils"
 import { DhtNode } from "./dht/DhtNode"
 import { NodeType, RecursiveOperation } from "./proto/packages/dht/protos/DhtRpc"
+import { DhtAddress } from "./identifiers"
 
 const findNode = async () => {
     const nodeId = 'fe4dd97dcf7c4eb98f443da42bbd2a77'
@@ -27,7 +28,7 @@ const findNode = async () => {
     })
     await node.start()
     await node.joinDht(entryPoints) 
-    const result = await node.executeRecursiveOperation(hexToBinary(nodeId), RecursiveOperation.FIND_NODE)
+    const result = await node.executeRecursiveOperation(nodeId as DhtAddress, RecursiveOperation.FIND_NODE)
     console.log("FOUND NODES:", result.closestNodes)
     const wasFound = result.closestNodes.some((node) => binaryToHex(node.nodeId) === nodeId)
     console.log("Searched node with id", nodeId, `${wasFound ? 'was found' : 'was not found'}`)

@@ -77,7 +77,20 @@ const main = async () => {
         numOfMessagesPerTenSeconds += 1
         numOfMessagesPerMinute += 1
     })
-
+    await client.subscribe({
+        streamId: "0x7277c78c02a4192ef8c48f5f4c529278d0e447fc/kyve/kyve-1/0",
+        partition: 0
+    }, () => {
+        numOfMessagesPerTenSeconds += 1
+        numOfMessagesPerMinute += 1
+    })
+    await client.subscribe({
+        streamId: "streamr.eth/demos/video",
+        partition: 0
+    }, () => {
+        numOfMessagesPerTenSeconds += 1
+        numOfMessagesPerMinute += 1
+    })
     // await client.subscribe({
     //     streamId: "0x80da975ba0978d8df26b5ab3c2758a00d7ee298a/operator/coordination",
     //     partition: 0
