@@ -7,8 +7,6 @@ export const peerIdFromPeerDescriptor = (peerDescriptor: PeerDescriptor): PeerID
     return PeerID.fromValue(peerDescriptor.nodeId)
 }
 
-// TODO could use this in trackerless-network (instead of copy-pasted same implementation)
-// and move this to nodeId.ts
 export const getNodeIdFromPeerDescriptor = (peerDescriptor: PeerDescriptor): DhtAddress => {
     return getDhtAddressFromRaw(peerDescriptor.nodeId)
 }

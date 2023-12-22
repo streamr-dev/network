@@ -65,7 +65,8 @@ export class SimulatorConnector {
     }
 
     public handleIncomingConnection(sourceConnection: SimulatorConnection): void {
-        logger.trace(getNodeIdFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' incoming connection, stopped: ' + this.stopped)
+        const localNodeId = getNodeIdFromPeerDescriptor(sourceConnection.localPeerDescriptor)
+        logger.trace(localNodeId + ' incoming connection, stopped: ' + this.stopped)
         if (this.stopped) {
             return
         }
@@ -77,10 +78,10 @@ export class SimulatorConnector {
         logger.trace('connected')
 
         managedConnection.once('handshakeRequest', () => {
-            logger.trace(getNodeIdFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' incoming handshake request')
+            logger.trace(localNodeId + ' incoming handshake request')
 
             if (this.onNewConnection(managedConnection)) {
-                logger.trace(getNodeIdFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' calling acceptHandshake')
+                logger.trace(localNodeId + ' calling acceptHandshake')
                 managedConnection.acceptHandshake()
             } else {
                 managedConnection.rejectHandshake(HandshakeError.DUPLICATE_CONNECTION)

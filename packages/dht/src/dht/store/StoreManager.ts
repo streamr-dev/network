@@ -62,10 +62,11 @@ export class StoreManager {
 
     private replicateAndUpdateStaleState(dataEntry: DataEntry, newNode: PeerDescriptor): void {
         const newNodeId = getNodeIdFromPeerDescriptor(newNode)
+        const key = getDhtAddressFromRaw(dataEntry.key)
         // TODO use config option or named constant?
-        const closestToData = this.config.getClosestNeighborsTo(getDhtAddressFromRaw(dataEntry.key), 10)
+        const closestToData = this.config.getClosestNeighborsTo(key, 10)
         const sortedList = new SortedContactList<Contact>({
-            referenceId: getDhtAddressFromRaw(dataEntry.key), 
+            referenceId: key, 
             maxSize: 20,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             emitEvents: false
@@ -89,8 +90,8 @@ export class StoreManager {
                     await this.replicateDataToContact(dataEntry, newNode)
                 })
             }
-        } else if (!this.selfIsWithinRedundancyFactor(getDhtAddressFromRaw(dataEntry.key))) {
-            this.config.localDataStore.setStale(getDhtAddressFromRaw(dataEntry.key), getDhtAddressFromRaw(dataEntry.creator), true)
+        } else if (!this.selfIsWithinRedundancyFactor(key)) {
+            this.config.localDataStore.setStale(key, getDhtAddressFromRaw(dataEntry.creator), true)
         }
     }
 
@@ -111,11 +112,13 @@ export class StoreManager {
         const ttl = this.config.highestTtl // ToDo: make TTL decrease according to some nice curve
         const createdAt = Timestamp.now()
         for (let i = 0; i < closestNodes.length && successfulNodes.length < this.config.redundancyFactor; i++) {
+            const keyRaw = getRawFromDhtAddress(key)
+            const creatorRaw = getRawFromDhtAddress(creator)
             if (areEqualPeerDescriptors(this.config.localPeerDescriptor, closestNodes[i])) {
                 this.config.localDataStore.storeEntry({
-                    key: getRawFromDhtAddress(key),
+                    key: keyRaw,
                     data,
-                    creator: getRawFromDhtAddress(creator),
+                    creator: creatorRaw,
                     createdAt,
                     storedAt: Timestamp.now(), 
                     ttl, 
@@ -128,9 +131,9 @@ export class StoreManager {
             const rpcRemote = this.config.createRpcRemote(closestNodes[i])
             try {
                 await rpcRemote.storeData({
-                    key: getRawFromDhtAddress(key),
+                    key: keyRaw,
                     data,
-                    creator: getRawFromDhtAddress(creator),
+                    creator: creatorRaw,
                     createdAt,
                     ttl
                 })
@@ -173,10 +176,11 @@ export class StoreManager {
         // sort own contact list according to data id
         const localNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
         const incomingNodeId = getNodeIdFromPeerDescriptor(incomingPeer)
+        const key = getDhtAddressFromRaw(dataEntry.key)
         // TODO use config option or named constant?
-        const closestToData = this.config.getClosestNeighborsTo(getDhtAddressFromRaw(dataEntry.key), 10)
+        const closestToData = this.config.getClosestNeighborsTo(key, 10)
         const sortedList = new SortedContactList<Contact>({
-            referenceId: getDhtAddressFromRaw(dataEntry.key), 
+            referenceId: key, 
             maxSize: this.config.redundancyFactor, 
             allowToContainReferenceId: true, 
             emitEvents: false
@@ -192,13 +196,13 @@ export class StoreManager {
             // if we are not the closest node to the data, replicate only to the closest one to the data
             : [sortedList.getAllContacts()[0]]
         targets.forEach((contact) => {
-            const contactNodeId = getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())
+            const contactNodeId = contact.getNodeId()
             if ((incomingNodeId !== contactNodeId) && (localNodeId !== contactNodeId)) {
                 setImmediate(() => {
                     executeSafePromise(async () => {
                         await this.replicateDataToContact(dataEntry, contact.getPeerDescriptor())
                         logger.trace('replicateDataToContact() returned', { 
-                            node: getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()),
+                            node: contactNodeId,
                             replicateOnlyToClosest: !selfIsPrimaryStorer
                         })
                     })
