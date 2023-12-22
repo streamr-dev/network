@@ -2,8 +2,7 @@ import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor, RecursiveOperation } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils/utils'
-import { PeerID } from '../../src/helpers/PeerID'
-import { peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { getDhtAddressFromRaw, getRawFromDhtAddress } from '../../src/identifiers'
 
 const NUM_NODES = 100
@@ -41,7 +40,7 @@ describe('Find correctness', () => {
         const targetId = getRawFromDhtAddress(nodes[45].getNodeId())
         const results = await entryPoint.executeRecursiveOperation(getDhtAddressFromRaw(targetId), RecursiveOperation.FIND_NODE)
         expect(results.closestNodes.length).toBeGreaterThanOrEqual(5)
-        expect(PeerID.fromValue(targetId).equals(peerIdFromPeerDescriptor(results.closestNodes[0])))
+        expect(getDhtAddressFromRaw(targetId)).toEqual(getNodeIdFromPeerDescriptor(results.closestNodes[0]))
     }, 30000)
 
 })
