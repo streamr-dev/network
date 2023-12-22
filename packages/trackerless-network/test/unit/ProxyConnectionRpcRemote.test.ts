@@ -1,5 +1,4 @@
 import { RpcCommunicator } from '@streamr/proto-rpc'
-import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { hexToBinary } from '@streamr/utils'
 import { ProxyConnectionRpcRemote } from '../../src/logic/proxy/ProxyConnectionRpcRemote'
@@ -18,7 +17,6 @@ describe('ProxyConnectionRpcRemote', () => {
         const rpcRemote = new ProxyConnectionRpcRemote(
             clientPeerDescriptor,
             serverPeerDescriptor,
-            StreamPartIDUtils.parse('stream#0'),
             rpcCommunicator,
             ProxyConnectionRpcClient
         )
