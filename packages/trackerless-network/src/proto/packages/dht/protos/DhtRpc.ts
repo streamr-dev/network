@@ -22,9 +22,9 @@ export interface StoreDataRequest {
      */
     data?: Any;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor creator = 3;
+     * @generated from protobuf field: bytes creator = 3;
      */
-    creator?: PeerDescriptor;
+    creator: Uint8Array;
     /**
      * @generated from protobuf field: google.protobuf.Timestamp createdAt = 4;
      */
@@ -38,10 +38,6 @@ export interface StoreDataRequest {
  * @generated from protobuf message dht.StoreDataResponse
  */
 export interface StoreDataResponse {
-    /**
-     * @generated from protobuf field: string error = 1;
-     */
-    error: string;
 }
 /**
  * @generated from protobuf message dht.ExternalStoreDataRequest
@@ -87,9 +83,9 @@ export interface DataEntry {
      */
     data?: Any;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor creator = 3;
+     * @generated from protobuf field: bytes creator = 3;
      */
-    creator?: PeerDescriptor;
+    creator: Uint8Array;
     /**
      * @generated from protobuf field: google.protobuf.Timestamp createdAt = 4;
      */
@@ -249,17 +245,17 @@ export interface ConnectivityMethod {
  */
 export interface RouteMessageWrapper {
     /**
-     * @generated from protobuf field: dht.PeerDescriptor sourcePeer = 1;
-     */
-    sourcePeer?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: string requestId = 2;
+     * @generated from protobuf field: string requestId = 1;
      */
     requestId: string;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor destinationPeer = 3;
+     * @generated from protobuf field: dht.PeerDescriptor sourcePeer = 2;
      */
-    destinationPeer?: PeerDescriptor;
+    sourcePeer?: PeerDescriptor;
+    /**
+     * @generated from protobuf field: bytes target = 3;
+     */
+    target: Uint8Array;
     /**
      * @generated from protobuf field: dht.Message message = 4;
      */
@@ -565,11 +561,7 @@ export enum NodeType {
     /**
      * @generated from protobuf enum value: BROWSER = 1;
      */
-    BROWSER = 1,
-    /**
-     * @generated from protobuf enum value: VIRTUAL = 3;
-     */
-    VIRTUAL = 3
+    BROWSER = 1
 }
 /**
  * @generated from protobuf enum dht.RpcResponseError
@@ -675,7 +667,7 @@ class StoreDataRequest$Type extends MessageType$<StoreDataRequest> {
         super("dht.StoreDataRequest", [
             { no: 1, name: "key", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "data", kind: "message", T: () => Any },
-            { no: 3, name: "creator", kind: "message", T: () => PeerDescriptor },
+            { no: 3, name: "creator", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 4, name: "createdAt", kind: "message", T: () => Timestamp },
             { no: 5, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
         ]);
@@ -688,9 +680,7 @@ export const StoreDataRequest = new StoreDataRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class StoreDataResponse$Type extends MessageType$<StoreDataResponse> {
     constructor() {
-        super("dht.StoreDataResponse", [
-            { no: 1, name: "error", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
+        super("dht.StoreDataResponse", []);
     }
 }
 /**
@@ -740,7 +730,7 @@ class DataEntry$Type extends MessageType$<DataEntry> {
         super("dht.DataEntry", [
             { no: 1, name: "key", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "data", kind: "message", T: () => Any },
-            { no: 3, name: "creator", kind: "message", T: () => PeerDescriptor },
+            { no: 3, name: "creator", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 4, name: "createdAt", kind: "message", T: () => Timestamp },
             { no: 5, name: "storedAt", kind: "message", T: () => Timestamp },
             { no: 6, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
@@ -878,9 +868,9 @@ export const ConnectivityMethod = new ConnectivityMethod$Type();
 class RouteMessageWrapper$Type extends MessageType$<RouteMessageWrapper> {
     constructor() {
         super("dht.RouteMessageWrapper", [
-            { no: 1, name: "sourcePeer", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "destinationPeer", kind: "message", T: () => PeerDescriptor },
+            { no: 1, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "sourcePeer", kind: "message", T: () => PeerDescriptor },
+            { no: 3, name: "target", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 4, name: "message", kind: "message", T: () => Message },
             { no: 5, name: "reachableThrough", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
             { no: 6, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }

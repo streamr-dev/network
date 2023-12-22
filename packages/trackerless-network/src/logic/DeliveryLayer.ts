@@ -129,7 +129,6 @@ export class DeliveryLayer extends EventEmitter<Events> {
             return
         }
         const layer1Node = this.createLayer1Node(streamPartId, this.knownStreamPartEntryPoints.get(streamPartId) ?? [])
-        const node = this.createRandomGraphNode(streamPartId, layer1Node)
         const entryPointDiscovery = new EntryPointDiscovery({
             streamPartId,
             localPeerDescriptor: this.getPeerDescriptor(),
@@ -138,6 +137,11 @@ export class DeliveryLayer extends EventEmitter<Events> {
             storeEntryPointData: (key, data) => this.layer0Node!.storeDataToDht(key, data),
             deleteEntryPointData: async (key: Uint8Array) => this.layer0Node!.deleteDataFromDht(key, false)
         })
+        const node = this.createRandomGraphNode(
+            streamPartId,
+            layer1Node, 
+            () => entryPointDiscovery.isLocalNodeEntryPoint()
+        )
         streamPart = {
             proxied: false,
             layer1Node,
@@ -154,6 +158,14 @@ export class DeliveryLayer extends EventEmitter<Events> {
         node.on('message', (message: StreamMessage) => {
             this.emit('newMessage', message)
         })
+        const handleEntryPointLeave = async () => {
+            if (this.destroyed || entryPointDiscovery.isLocalNodeEntryPoint() || this.knownStreamPartEntryPoints.has(streamPartId)) {
+                return
+            }
+            const entryPoints = await entryPointDiscovery.discoverEntryPointsFromDht(0)
+            await entryPointDiscovery.storeSelfAsEntryPointIfNecessary(entryPoints.discoveredEntryPoints.length)
+        }
+        node.on('entryPointLeaveDetected', () => handleEntryPointLeave())
         setImmediate(async () => {
             try {
                 await this.startLayersAndJoinDht(streamPartId, entryPointDiscovery)
@@ -195,7 +207,11 @@ export class DeliveryLayer extends EventEmitter<Events> {
         })
     }
 
-    private createRandomGraphNode(streamPartId: StreamPartID, layer1Node: Layer1Node) {
+    private createRandomGraphNode(
+        streamPartId: StreamPartID,
+        layer1Node: Layer1Node,
+        isLocalNodeEntryPoint: () => boolean
+    ) {
         return createRandomGraphNode({
             streamPartId,
             transport: this.transport!,
@@ -205,7 +221,8 @@ export class DeliveryLayer extends EventEmitter<Events> {
             minPropagationTargets: this.config.streamPartitionMinPropagationTargets,
             numOfTargetNeighbors: this.config.streamPartitionNumOfNeighbors,
             acceptProxyConnections: this.config.acceptProxyConnections,
-            rpcRequestTimeout: this.config.rpcRequestTimeout
+            rpcRequestTimeout: this.config.rpcRequestTimeout,
+            isLocalNodeEntryPoint
         })
     }
 

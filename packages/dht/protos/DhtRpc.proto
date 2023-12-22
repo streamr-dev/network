@@ -59,13 +59,12 @@ service ExternalApiRpc {
 message StoreDataRequest {
   bytes key = 1;
   google.protobuf.Any data = 2;
-  PeerDescriptor creator = 3;
+  bytes creator = 3;
   google.protobuf.Timestamp createdAt = 4;
   uint32 ttl = 5;
 }
 
 message StoreDataResponse {
-  string error = 1;
 }
 
 message ExternalStoreDataRequest {
@@ -84,7 +83,7 @@ message ReplicateDataRequest {
 message DataEntry {
   bytes key = 1;
   google.protobuf.Any data = 2;
-  PeerDescriptor creator = 3;
+  bytes creator = 3;
   google.protobuf.Timestamp createdAt = 4;
   google.protobuf.Timestamp storedAt = 5; 
   uint32 ttl = 6;   // milliseconds
@@ -150,7 +149,6 @@ message ConnectivityMethod {
 enum NodeType {
   NODEJS = 0;
   BROWSER = 1;
-  VIRTUAL = 3;
 }
 
 enum RpcResponseError {
@@ -161,9 +159,9 @@ enum RpcResponseError {
 }
 
 message RouteMessageWrapper {
-  PeerDescriptor sourcePeer = 1;
-  string requestId = 2;
-  PeerDescriptor destinationPeer = 3;
+  string requestId = 1;
+  PeerDescriptor sourcePeer = 2;
+  bytes target = 3;
   Message message = 4;
   repeated PeerDescriptor reachableThrough = 5;
   repeated PeerDescriptor routingPath = 6;

@@ -54,8 +54,8 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     // All nodes that we know about
     private contacts: SortedContactList<DhtNodeRpcRemote>
     private randomPeers: RandomContactList<DhtNodeRpcRemote>
-    private readonly config: PeerManagerConfig
     private stopped: boolean = false
+    private readonly config: PeerManagerConfig
 
     constructor(config: PeerManagerConfig) {
         super()

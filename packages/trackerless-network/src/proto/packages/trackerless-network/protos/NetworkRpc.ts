@@ -211,6 +211,10 @@ export interface LeaveStreamPartNotice {
      * @generated from protobuf field: string streamPartId = 1;
      */
     streamPartId: string;
+    /**
+     * @generated from protobuf field: bool isEntryPoint = 2;
+     */
+    isEntryPoint: boolean;
 }
 /**
  * @generated from protobuf message NeighborUpdate
@@ -471,7 +475,8 @@ export const InterleaveResponse = new InterleaveResponse$Type();
 class LeaveStreamPartNotice$Type extends MessageType<LeaveStreamPartNotice> {
     constructor() {
         super("LeaveStreamPartNotice", [
-            { no: 1, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "isEntryPoint", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }

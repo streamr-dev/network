@@ -44,7 +44,7 @@ describe('RemoteRouter', () => {
             requestId: 'routed',
             message: routed,
             sourcePeer: clientPeerDescriptor,
-            destinationPeer: serverPeerDescriptor,
+            target: serverPeerDescriptor.nodeId,
             reachableThrough: [],
             routingPath: []
         })
@@ -67,7 +67,7 @@ describe('RemoteRouter', () => {
             requestId: 'routed',
             message: routed,
             sourcePeer: clientPeerDescriptor,
-            destinationPeer: serverPeerDescriptor,
+            target: serverPeerDescriptor.nodeId,
             reachableThrough: [],
             routingPath: []
         })

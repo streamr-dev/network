@@ -27,7 +27,7 @@ const toEqualPeerDescriptor = (
         messages.push(formErrorMessage('nodeId', binaryToHex(expected.nodeId), binaryToHex(actual.nodeId)))
     }
     if (!isEqual(expected.type, actual.type)) {
-        const typeNames = { [NodeType.NODEJS]: 'NODEJS', [NodeType.BROWSER]: 'BROWSER', [NodeType.VIRTUAL]: 'VIRTUAL' }
+        const typeNames = { [NodeType.NODEJS]: 'NODEJS', [NodeType.BROWSER]: 'BROWSER' }
         messages.push(formErrorMessage('type', typeNames[expected.type], typeNames[actual.type]))
     }
     expectEqualConnectivityMethod('udp', expected.udp, actual.udp, messages)

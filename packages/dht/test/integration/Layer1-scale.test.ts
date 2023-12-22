@@ -169,7 +169,7 @@ describe('Layer1', () => {
     //                 }
     //                 await sender.doRouteMessage({
     //                     message,
-    //                     destinationPeer: receiver.getPeerDescriptor(),
+    //                     target: receiver.getPeerDescriptor().nodeId,
     //                     sourcePeer: sender.getPeerDescriptor(),
     //                     requestId: v4(),
     //                     reachableThrough: [],

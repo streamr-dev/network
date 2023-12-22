@@ -1,12 +1,11 @@
 import { RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { v4 } from 'uuid'
 import {
-    areEqualPeerDescriptors,
     getNodeIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
 import { IRouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RpcRemote } from '../contact/RpcRemote'
-import { Logger } from '@streamr/utils'
+import { Logger, areEqualBinaries } from '@streamr/utils'
 import { getPreviousPeer } from './getPreviousPeer'
 
 const logger = new Logger(module)
@@ -15,7 +14,7 @@ export class RouterRpcRemote extends RpcRemote<IRouterRpcClient> {
 
     async routeMessage(params: RouteMessageWrapper): Promise<boolean> {
         const message: RouteMessageWrapper = {
-            destinationPeer: params.destinationPeer,
+            target: params.target,
             sourcePeer: params.sourcePeer,
             message: params.message,
             requestId: params.requestId ?? v4(),
@@ -23,13 +22,13 @@ export class RouterRpcRemote extends RpcRemote<IRouterRpcClient> {
             routingPath: params.routingPath
         }
         const options = this.formDhtRpcOptions({
-            doNotConnect: true
+            connect: false
         })
         try {
             const ack = await this.getClient().routeMessage(message, options)
             // Success signal if sent to destination and error includes duplicate
             if (ack.error === RouteMessageError.DUPLICATE
-                && areEqualPeerDescriptors(params.destinationPeer!, this.getPeerDescriptor())
+                && areEqualBinaries(params.target, this.getPeerDescriptor().nodeId)
             ) {
                 return true
             } else if (ack.error !== undefined) {
@@ -48,7 +47,7 @@ export class RouterRpcRemote extends RpcRemote<IRouterRpcClient> {
 
     async forwardMessage(params: RouteMessageWrapper): Promise<boolean> {
         const message: RouteMessageWrapper = {
-            destinationPeer: params.destinationPeer,
+            target: params.target,
             sourcePeer: params.sourcePeer,
             message: params.message,
             requestId: params.requestId ?? v4(),
@@ -56,7 +55,7 @@ export class RouterRpcRemote extends RpcRemote<IRouterRpcClient> {
             routingPath: params.routingPath
         }
         const options = this.formDhtRpcOptions({
-            doNotConnect: true
+            connect: false
         })
         try {
             const ack = await this.getClient().forwardMessage(message, options)

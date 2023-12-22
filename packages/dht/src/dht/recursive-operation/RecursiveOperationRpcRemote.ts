@@ -12,7 +12,7 @@ export class RecursiveOperationRpcRemote extends RpcRemote<IRecursiveOperationRp
 
     async routeRequest(params: RouteMessageWrapper): Promise<boolean> {
         const message: RouteMessageWrapper = {
-            destinationPeer: params.destinationPeer,
+            target: params.target,
             sourcePeer: params.sourcePeer,
             message: params.message,
             requestId: params.requestId ?? v4(),
@@ -20,7 +20,7 @@ export class RecursiveOperationRpcRemote extends RpcRemote<IRecursiveOperationRp
             routingPath: params.routingPath
         }
         const options = this.formDhtRpcOptions({
-            doNotConnect: true
+            connect: false
         })
         try {
             const ack = await this.getClient().routeRequest(message, options)

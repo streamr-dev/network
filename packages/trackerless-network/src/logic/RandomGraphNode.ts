@@ -32,10 +32,12 @@ import { markAndCheckDuplicate } from './utils'
 import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { Layer1Node } from './Layer1Node'
 import { StreamPartID } from '@streamr/protocol'
+import { uniqBy } from 'lodash'
 
 export interface Events {
     message: (message: StreamMessage) => void
     targetNeighborConnected: (nodeId: NodeID) => void
+    entryPointLeaveDetected: () => void
 }
 
 export interface StrictRandomGraphNodeConfig {
@@ -56,6 +58,8 @@ export interface StrictRandomGraphNodeConfig {
     numOfTargetNeighbors: number
     inspector: Inspector
     temporaryConnectionRpcLocal: TemporaryConnectionRpcLocal
+    isLocalNodeEntryPoint: () => boolean
+
     proxyConnectionRpcLocal?: ProxyConnectionRpcLocal
     rpcRequestTimeout?: number
 }
@@ -80,19 +84,25 @@ export class RandomGraphNode extends EventEmitter<Events> {
             rpcCommunicator: this.config.rpcCommunicator,
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
-            onLeaveNotice: (senderId: NodeID) => {
-                const contact = this.config.nearbyNodeView.get(senderId)
-                || this.config.randomNodeView.get(senderId)
-                || this.config.targetNeighbors.get(senderId)
-                || this.config.proxyConnectionRpcLocal?.getConnection(senderId )?.remote
+            onLeaveNotice: (sourceId: NodeID, sourceIsStreamEntryPoint: boolean) => {
+                if (this.abortController.signal.aborted) {
+                    return
+                }
+                const contact = this.config.nearbyNodeView.get(sourceId)
+                || this.config.randomNodeView.get(sourceId)
+                || this.config.targetNeighbors.get(sourceId)
+                || this.config.proxyConnectionRpcLocal?.getConnection(sourceId )?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
                     this.config.layer1Node.removeContact(contact.getPeerDescriptor())
                     this.config.targetNeighbors.remove(contact.getPeerDescriptor())
                     this.config.nearbyNodeView.remove(contact.getPeerDescriptor())
                     this.config.connectionLocker.unlockConnection(contact.getPeerDescriptor(), this.config.streamPartId)
-                    this.config.neighborFinder.start([senderId])
-                    this.config.proxyConnectionRpcLocal?.removeConnection(senderId)
+                    this.config.neighborFinder.start([sourceId])
+                    this.config.proxyConnectionRpcLocal?.removeConnection(sourceId)
+                }
+                if (sourceIsStreamEntryPoint) {
+                    this.emit('entryPointLeaveDetected')
                 }
             },
             markForInspection: (senderId: NodeID, messageId: MessageID) => this.config.inspector.markMessage(senderId, messageId)
@@ -256,14 +266,14 @@ export class RandomGraphNode extends EventEmitter<Events> {
     }
 
     private getNeighborCandidatesFromLayer1(): PeerDescriptor[] {
-        const uniqueNodes = new Set<PeerDescriptor>()
+        const nodes: PeerDescriptor[] = []
         this.config.layer1Node.getClosestContacts(this.config.nodeViewSize).forEach((peer: PeerDescriptor) => {
-            uniqueNodes.add(peer)
+            nodes.push(peer)
         })
         this.config.layer1Node.getAllNeighborPeerDescriptors().forEach((peer: PeerDescriptor) => {
-            uniqueNodes.add(peer)
+            nodes.push(peer)
         })
-        return Array.from(uniqueNodes)
+        return uniqBy(nodes, (p) => getNodeIdFromPeerDescriptor(p))
     }
 
     hasProxyConnection(nodeId: NodeID): boolean {
@@ -279,7 +289,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         }
         this.abortController.abort()
         this.config.proxyConnectionRpcLocal?.stop()
-        this.config.targetNeighbors.getAll().map((remote) => remote.leaveStreamPartNotice())
+        this.config.targetNeighbors.getAll().map((remote) => remote.leaveStreamPartNotice(this.config.isLocalNodeEntryPoint()))
         this.config.rpcCommunicator.destroy()
         this.removeAllListeners()
         this.config.nearbyNodeView.stop()

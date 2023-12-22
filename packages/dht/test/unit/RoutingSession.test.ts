@@ -1,5 +1,5 @@
 import { v4 } from 'uuid'
-import { RoutingSession } from '../../src/dht/routing/RoutingSession'
+import { RoutingMode, RoutingSession } from '../../src/dht/routing/RoutingSession'
 import { Message, MessageType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockPeerDescriptor, createWrappedClosestPeersRequest } from '../utils/utils'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
@@ -31,7 +31,7 @@ describe('RoutingSession', () => {
         requestId: 'REQ',
         routingPath: [],
         reachableThrough: [],
-        destinationPeer: mockPeerDescriptor1,
+        target: mockPeerDescriptor1.nodeId,
         sourcePeer: mockPeerDescriptor2
     }
 
@@ -42,7 +42,14 @@ describe('RoutingSession', () => {
     beforeEach(() => {
         rpcCommunicator = new RoutingRpcCommunicator('mock', async () => {})
         connections = new Map()
-        session = new RoutingSession(rpcCommunicator, mockPeerDescriptor1, routedMessage, connections, 2)
+        session = new RoutingSession({
+            rpcCommunicator: rpcCommunicator,
+            localPeerDescriptor: mockPeerDescriptor1,
+            routedMessage,
+            connections, 
+            parallelism: 2,
+            mode: RoutingMode.ROUTE
+        })
     })
 
     afterEach(() => {
