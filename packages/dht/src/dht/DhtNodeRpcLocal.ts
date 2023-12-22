@@ -5,17 +5,17 @@ import { Empty } from '../proto/google/protobuf/empty'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
-    LeaveNotice,
     PeerDescriptor,
     PingRequest,
     PingResponse
 } from '../proto/packages/dht/protos/DhtRpc'
 import { IDhtNodeRpc } from '../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
+import { DhtAddress, getDhtAddressFromRaw } from '../identifiers'
 
 interface DhtNodeRpcLocalConfig {
     peerDiscoveryQueryBatchSize: number
-    getClosestPeersTo: (nodeId: Uint8Array, limit: number) => PeerDescriptor[]
+    getClosestPeersTo: (nodeId: DhtAddress, limit: number) => PeerDescriptor[]
     addNewContact: (contact: PeerDescriptor) => void
     removeContact: (contact: PeerDescriptor) => void
 }
@@ -33,7 +33,7 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
     async getClosestPeers(request: ClosestPeersRequest, context: ServerCallContext): Promise<ClosestPeersResponse> {
         this.config.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
         const response = {
-            peers: this.config.getClosestPeersTo(request.nodeId, this.config.peerDiscoveryQueryBatchSize),
+            peers: this.config.getClosestPeersTo(getDhtAddressFromRaw(request.nodeId), this.config.peerDiscoveryQueryBatchSize),
             requestId: request.requestId
         }
         return response
@@ -50,7 +50,7 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
         return response
     }
 
-    async leaveNotice(_request: LeaveNotice, context: ServerCallContext): Promise<Empty> {
+    async leaveNotice(context: ServerCallContext): Promise<Empty> {
         // TODO check signature??
         const sender = (context as DhtCallContext).incomingSourceDescriptor!
         logger.trace('received leave notice: ' + getNodeIdFromPeerDescriptor(sender))

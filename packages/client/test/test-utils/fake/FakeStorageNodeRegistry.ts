@@ -1,7 +1,7 @@
 import { EthereumAddress } from '@streamr/utils'
+import { Methods } from '@streamr/test-utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { StorageNodeMetadata, StorageNodeRegistry } from '../../../src/registry/StorageNodeRegistry'
-import { Methods } from '../types'
 import { FakeChain } from './FakeChain'
 
 @scoped(Lifecycle.ContainerScoped)

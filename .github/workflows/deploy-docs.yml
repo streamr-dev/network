@@ -2,12 +2,12 @@ name: Production Documentation
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - '*'
-      - '!**beta**'
-      - '!**alpha**'
-      - '!**tatum**'
+  #push:
+  #  tags:
+  #    - '*'
+  #    - '!**beta**'
+  #    - '!**alpha**'
+  #    - '!**tatum**'
 
 jobs:  
   deploy:

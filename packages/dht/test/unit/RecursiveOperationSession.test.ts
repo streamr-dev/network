@@ -1,10 +1,9 @@
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { RecursiveOperationSession } from '../../src/dht/recursive-operation/RecursiveOperationSession'
 import { RecursiveOperationSessionRpcRemote } from '../../src/dht/recursive-operation/RecursiveOperationSessionRpcRemote'
 import { ServiceID } from '../../src/exports'
-import { createRandomNodeId } from '../../src/helpers/nodeId'
+import { createRandomDhtAddress } from '../../src/identifiers'
 import { Message, PeerDescriptor, RecursiveOperation } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RecursiveOperationSessionRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
@@ -22,8 +21,8 @@ describe('RecursiveOperationSession', () => {
         return new RecursiveOperationSessionRpcRemote(
             createMockPeerDescriptor(),
             localPeerDescriptor,
-            serviceId,
-            toProtoRpcClient(new RecursiveOperationSessionRpcClient(new RoutingRpcCommunicator(serviceId, send).getRpcClientTransport()))
+            new RoutingRpcCommunicator(serviceId, send),
+            RecursiveOperationSessionRpcClient
         )
     }
 
@@ -36,7 +35,7 @@ describe('RecursiveOperationSession', () => {
         const doRouteRequest = jest.fn()
         const session = new RecursiveOperationSession({
             transport: environment.createTransport(),
-            targetId: createRandomNodeId(),
+            targetId: createRandomDhtAddress(),
             localPeerDescriptor,
             waitedRoutingPathCompletions: 3,
             operation: RecursiveOperation.FIND_NODE,

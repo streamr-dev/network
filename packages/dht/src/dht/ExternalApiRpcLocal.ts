@@ -11,17 +11,20 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'
 import { Any } from '../proto/google/protobuf/any'
+import { DhtAddress } from '../identifiers'
+import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { getDhtAddressFromRaw } from '../identifiers'
 
 interface ExternalApiRpcLocalConfig {
     executeRecursiveOperation: (
-        targetId: Uint8Array,
+        targetId: DhtAddress,
         operation: RecursiveOperation,
         excludedPeer: PeerDescriptor
     ) => Promise<RecursiveOperationResult>
     storeDataToDht: (
-        key: Uint8Array,
+        key: DhtAddress,
         data: Any,
-        creator: PeerDescriptor
+        creator: DhtAddress
     ) => Promise<PeerDescriptor[]>
 }
 
@@ -35,13 +38,21 @@ export class ExternalApiRpcLocal implements IExternalApiRpc {
 
     async externalFindData(findDataRequest: ExternalFindDataRequest, context: ServerCallContext): Promise<ExternalFindDataResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const result = await this.config.executeRecursiveOperation(findDataRequest.key, RecursiveOperation.FETCH_DATA, senderPeerDescriptor)
+        const result = await this.config.executeRecursiveOperation(
+            getDhtAddressFromRaw(findDataRequest.key),
+            RecursiveOperation.FETCH_DATA,
+            senderPeerDescriptor
+        )
         return ExternalFindDataResponse.create({ entries: result.dataEntries ?? [] })
     }
 
     async externalStoreData(request: ExternalStoreDataRequest, context: ServerCallContext): Promise<ExternalStoreDataResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const result = await this.config.storeDataToDht(request.key, request.data!, senderPeerDescriptor)
+        const result = await this.config.storeDataToDht(
+            getDhtAddressFromRaw(request.key),
+            request.data!,
+            getNodeIdFromPeerDescriptor(senderPeerDescriptor)
+        )
         return ExternalStoreDataResponse.create({
             storers: result
         })

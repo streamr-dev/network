@@ -16,9 +16,9 @@ describe('multiple entry point joining', () => {
         beforeEach(async () => {
             simulator = new Simulator(LatencyType.REAL)
 
-            node1 = await createMockConnectionDhtNode('node1', simulator)
-            node2 = await createMockConnectionDhtNode('node2', simulator)
-            node3 = await createMockConnectionDhtNode('node3', simulator)
+            node1 = await createMockConnectionDhtNode(simulator)
+            node2 = await createMockConnectionDhtNode(simulator)
+            node3 = await createMockConnectionDhtNode(simulator)
 
             entryPoints = [
                 node1.getLocalPeerDescriptor(),
@@ -69,11 +69,11 @@ describe('multiple entry point joining', () => {
         beforeEach(async () => {
             simulator = new Simulator(LatencyType.REAL)
             
-            entryPoint1 = await createMockConnectionDhtNode('entryPoint1', simulator)
-            entryPoint2 = await createMockConnectionDhtNode('entryPoint2', simulator)
+            entryPoint1 = await createMockConnectionDhtNode(simulator)
+            entryPoint2 = await createMockConnectionDhtNode(simulator)
             
-            node1 = await createMockConnectionDhtNode('node1', simulator)
-            node2 = await createMockConnectionDhtNode('node2', simulator)
+            node1 = await createMockConnectionDhtNode(simulator)
+            node2 = await createMockConnectionDhtNode(simulator)
 
             entryPoints = [
                 entryPoint1.getLocalPeerDescriptor(),

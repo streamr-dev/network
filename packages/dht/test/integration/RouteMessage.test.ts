@@ -1,53 +1,49 @@
 import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
 import { Message, MessageType, NodeType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { Logger, hexToBinary, runAndWaitForEvents3, waitForCondition } from '@streamr/utils'
+import { Logger, runAndWaitForEvents3, waitForCondition } from '@streamr/utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils/utils'
 import { PeerID, PeerIDKey } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { v4 } from 'uuid'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { RoutingMode } from '../../src/dht/routing/RoutingSession'
-import { areEqualNodeIds } from '../../src/helpers/nodeId'
+import { createRandomDhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
 // TODO refactor the test to not to use PeerID
 const getPeerId = (node: DhtNode) => {
-    return PeerID.fromValue(hexToBinary(node.getNodeId()))
+    return PeerID.fromValue(getRawFromDhtAddress(node.getNodeId()))
 }
 
+const NUM_NODES = 30
+
 describe('Route Message With Mock Connections', () => {
+
     let entryPoint: DhtNode
     let sourceNode: DhtNode
     let destinationNode: DhtNode
     let routerNodes: DhtNode[]
     let simulator: Simulator
     let entryPointDescriptor: PeerDescriptor
-
-    const entryPointId = '0'
-    const sourceId = 'eeeeeeeee'
-    const destinationId = '000000000'
-    const NUM_NODES = 30
-
     const receiveMatrix: Array<Array<number>> = []
 
     beforeEach(async () => {
         routerNodes = []
         simulator = new Simulator()
-        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator)
+        entryPoint = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
 
         entryPointDescriptor = {
-            nodeId: hexToBinary(entryPoint.getNodeId()),
+            nodeId: getRawFromDhtAddress(entryPoint.getNodeId()),
             type: NodeType.NODEJS
         }
 
-        sourceNode = await createMockConnectionDhtNode(sourceId, simulator)
-        destinationNode = await createMockConnectionDhtNode(destinationId, simulator)
+        sourceNode = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
+        destinationNode = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const nodeId = `${i}`
-            const node = await createMockConnectionDhtNode(nodeId, simulator)
+            const node = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(PeerID.fromString(`${i}`).value))
             routerNodes.push(node)
         }
 
@@ -87,7 +83,7 @@ describe('Route Message With Mock Connections', () => {
         await runAndWaitForEvents3<DhtNodeEvents>([() => {
             sourceNode.router!.doRouteMessage({
                 message,
-                destinationPeer: destinationNode.getLocalPeerDescriptor(),
+                target: destinationNode.getLocalPeerDescriptor().nodeId,
                 requestId: v4(),
                 sourcePeer: sourceNode.getLocalPeerDescriptor(),
                 reachableThrough: [],
@@ -119,7 +115,7 @@ describe('Route Message With Mock Connections', () => {
             }
             sourceNode.router!.doRouteMessage({
                 message,
-                destinationPeer: destinationNode.getLocalPeerDescriptor(),
+                target: destinationNode.getLocalPeerDescriptor().nodeId,
                 requestId: v4(),
                 sourcePeer: sourceNode.getLocalPeerDescriptor(),
                 reachableThrough: [],
@@ -160,7 +156,7 @@ describe('Route Message With Mock Connections', () => {
         await Promise.all(
             routerNodes.map(async (node) =>
                 Promise.all(routerNodes.map(async (receiver) => {
-                    if (!areEqualNodeIds(node.getNodeId(), receiver.getNodeId())) {
+                    if (node.getNodeId() !== receiver.getNodeId()) {
                         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getLocalPeerDescriptor())
                         const message: Message = {
                             serviceId: 'nonexisting_service',
@@ -175,7 +171,7 @@ describe('Route Message With Mock Connections', () => {
                         }
                         node.router!.doRouteMessage({
                             message,
-                            destinationPeer: receiver.getLocalPeerDescriptor(),
+                            target: receiver.getLocalPeerDescriptor().nodeId,
                             sourcePeer: node.getLocalPeerDescriptor(),
                             requestId: v4(),
                             reachableThrough: [],
@@ -211,7 +207,7 @@ describe('Route Message With Mock Connections', () => {
 
         const routeMessageWrapper: RouteMessageWrapper = {
             message: closestPeersRequestMessage,
-            destinationPeer: destinationNode.getLocalPeerDescriptor(),
+            target: destinationNode.getLocalPeerDescriptor().nodeId,
             requestId: v4(),
             sourcePeer: sourceNode.getLocalPeerDescriptor(),
             reachableThrough: [entryPointDescriptor],
@@ -243,7 +239,7 @@ describe('Route Message With Mock Connections', () => {
             message: requestMessage,
             requestId: v4(),
             sourcePeer: sourceNode.getLocalPeerDescriptor(),
-            destinationPeer: entryPoint.getLocalPeerDescriptor()!,
+            target: entryPoint.getLocalPeerDescriptor()!.nodeId,
             reachableThrough: [],
             routingPath: []
         }

@@ -6,6 +6,16 @@ export interface TransportEvents {
     connected: (peerDescriptor: PeerDescriptor) => void
 }
 
+export interface SendOptions {
+    connect: boolean
+    sendIfStopped: boolean
+}
+
+export const DEFAULT_SEND_OPTIONS = {
+    connect: true,
+    sendIfStopped: false
+}
+
 export interface ITransport {
     on<T extends keyof TransportEvents>(eventName: T, listener: (message: Message) => void): void
     on<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
@@ -20,7 +30,7 @@ export interface ITransport {
     off<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
     off<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => void): void
 
-    send(msg: Message, doNotConnect?: boolean): Promise<void>
+    send(msg: Message, opts?: SendOptions): Promise<void>
     getLocalPeerDescriptor(): PeerDescriptor
     getAllConnectionPeerDescriptors(): PeerDescriptor[]
     stop(): void | Promise<void>
