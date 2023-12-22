@@ -1,26 +1,21 @@
-import { getMockPeers, MockDhtRpc } from '../utils/utils'
+import { createMockDhtRpc, createMockPeerDescriptor, createMockPeers } from '../utils/utils'
 import { ProtoRpcClient, RpcCommunicator, RpcError, toProtoRpcClient } from '@streamr/proto-rpc'
 import { DhtNodeRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
-import { generateId } from '../utils/utils'
-import { ClosestPeersRequest, ClosestPeersResponse, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { ClosestPeersRequest, ClosestPeersResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { wait } from '@streamr/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 
 describe('DhtRpc', () => {
+
     let rpcCommunicator1: RpcCommunicator
     let rpcCommunicator2: RpcCommunicator
     let client1: ProtoRpcClient<DhtNodeRpcClient>
     let client2: ProtoRpcClient<DhtNodeRpcClient>
-
-    const peerDescriptor1: PeerDescriptor = {
-        nodeId: generateId('peer1'),
-        type: NodeType.NODEJS
-    }
-
-    const peerDescriptor2: PeerDescriptor = {
-        nodeId: generateId('peer2'),
-        type: NodeType.NODEJS
-    }
+    const peerDescriptor1 = createMockPeerDescriptor()
+    const peerDescriptor2 = createMockPeerDescriptor()
+    const neighbors = createMockPeers()
+    const mockDhtRpc = createMockDhtRpc(neighbors)
 
     const outgoingListener2 = (message: RpcMessage) => {
         rpcCommunicator1.handleIncomingMessage(message)
@@ -28,10 +23,10 @@ describe('DhtRpc', () => {
 
     beforeEach(() => {
         rpcCommunicator1 = new RpcCommunicator()
-        rpcCommunicator1.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', MockDhtRpc.getClosestPeers)
+        rpcCommunicator1.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', mockDhtRpc.getClosestPeers)
 
         rpcCommunicator2 = new RpcCommunicator()
-        rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', MockDhtRpc.getClosestPeers)
+        rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', mockDhtRpc.getClosestPeers)
 
         rpcCommunicator1.on('outgoingMessage', (message: RpcMessage) => {
             rpcCommunicator2.handleIncomingMessage(message)
@@ -57,7 +52,7 @@ describe('DhtRpc', () => {
             }
         )
         const res1 = await response1
-        expect(res1.peers).toEqual(getMockPeers())
+        expect(res1.peers.map((p) => getNodeIdFromPeerDescriptor(p))).toEqual(neighbors.map((n) => getNodeIdFromPeerDescriptor(n)))
 
         const response2 = client2.getClosestPeers(
             { nodeId: peerDescriptor2.nodeId, requestId: '1' },
@@ -67,7 +62,7 @@ describe('DhtRpc', () => {
             }
         )
         const res2 = await response2
-        expect(res2.peers).toEqual(getMockPeers())
+        expect(res2.peers.map((p) => getNodeIdFromPeerDescriptor(p))).toEqual(neighbors.map((n) => getNodeIdFromPeerDescriptor(n)))
     })
 
     it('Default RPC timeout, client side', async () => {
@@ -91,7 +86,7 @@ describe('DhtRpc', () => {
         let timeout: NodeJS.Timeout
 
         async function respondGetClosestPeersWithTimeout(): Promise<ClosestPeersResponse> {
-            const neighbors = getMockPeers()
+            const neighbors = createMockPeers()
             const response: ClosestPeersResponse = {
                 peers: neighbors,
                 requestId: 'why am i still here'

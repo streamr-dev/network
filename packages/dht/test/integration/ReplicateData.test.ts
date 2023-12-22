@@ -19,6 +19,9 @@ jest.setTimeout(60000)
 
 const DATA_KEY = PeerID.fromString('3232323e12r31r3')
 const DATA_VALUE = Any.pack({ nodeId: crypto.randomBytes(10), type: NodeType.NODEJS, }, PeerDescriptor)
+const NUM_NODES = 100
+const MAX_CONNECTIONS = 80
+const K = 8
 
 const getDataValues = (node: DhtNode): PeerDescriptor[] => {
     // @ts-expect-error private field
@@ -32,23 +35,20 @@ const hasData = (node: DhtNode): boolean => {
 }
 
 describe('Replicate data from node to node in DHT', () => {
+
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     const nodesById: Map<NodeID, DhtNode> = new Map()
     const simulator = new Simulator(LatencyType.FIXED, 20)
-    const NUM_NODES = 100
-    const MAX_CONNECTIONS = 80
-    const K = 8
 
     beforeEach(async () => {
-        entryPoint = await createMockConnectionDhtNode('dummy', simulator, createRandomNodeId(), K, MAX_CONNECTIONS)
+        entryPoint = await createMockConnectionDhtNode(simulator, createRandomNodeId(), K, MAX_CONNECTIONS)
         await entryPoint.joinDht([entryPoint.getLocalPeerDescriptor()])
 
         nodes = []
         nodesById.clear()
         for (let i = 0; i < NUM_NODES; i++) {
             const node = await createMockConnectionDhtNode(
-                'dummy',
                 simulator,
                 createRandomNodeId(),
                 K,

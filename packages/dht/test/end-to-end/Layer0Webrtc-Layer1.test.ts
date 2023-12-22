@@ -1,30 +1,24 @@
 import { binaryToHex } from '@streamr/utils'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('Layer 1 on Layer 0 with mocked connections', () => {
-    const entrypointDescriptor: PeerDescriptor = {
-        nodeId: new Uint8Array([0]),
-        type: NodeType.NODEJS,
+
+    const entrypointDescriptor = createMockPeerDescriptor({
         websocket: {
             host: '127.0.0.1',
             port: 23232,
             tls: false
         }
-    }
-
+    })
     let layer0EntryPoint: DhtNode
     let layer1Node1: DhtNode
-
     let layer0Node1: DhtNode
     let layer1EntryPoint: DhtNode
-
     let layer0Node2: DhtNode
     let layer1Node2: DhtNode
-
     let layer0Node3: DhtNode
     let layer1Node3: DhtNode
-
     let layer0Node4: DhtNode
     let layer1Node4: DhtNode
 
