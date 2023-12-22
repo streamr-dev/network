@@ -1,7 +1,7 @@
 import { RpcCommunicator } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
-import { NodeID } from '../helpers/nodeId'
+import { DhtAddress, DhtAddressRaw, getRawFromDhtAddress } from '../identifiers'
 import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import {
     ClosestPeersRequest,
@@ -16,7 +16,7 @@ const logger = new Logger(module)
 
 // Fields required by objects stored in the k-bucket library
 export interface KBucketContact {
-    id: Uint8Array
+    id: DhtAddressRaw
     vectorClock: number
 }
 
@@ -24,7 +24,7 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
 
     private static counter = 0
     public vectorClock: number
-    public readonly id: Uint8Array
+    public readonly id: DhtAddressRaw
     private readonly serviceId: ServiceID
 
     constructor(
@@ -40,10 +40,10 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
         this.serviceId = serviceId
     }
 
-    async getClosestPeers(nodeId: Uint8Array): Promise<PeerDescriptor[]> {
+    async getClosestPeers(nodeId: DhtAddress): Promise<PeerDescriptor[]> {
         logger.trace(`Requesting getClosestPeers on ${this.serviceId} from ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
         const request: ClosestPeersRequest = {
-            nodeId,
+            nodeId: getRawFromDhtAddress(nodeId),
             requestId: v4()
         }
         try {
@@ -82,7 +82,7 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
         })
     }
 
-    getNodeId(): NodeID {
+    getNodeId(): DhtAddress {
         return getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
     }
 }

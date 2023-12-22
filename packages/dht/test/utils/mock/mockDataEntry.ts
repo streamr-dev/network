@@ -1,10 +1,10 @@
 import { MessageType as MessageType$, ScalarType } from '@protobuf-ts/runtime'
 import { randomString } from '@streamr/utils'
-import crypto from 'crypto'
 import { Timestamp } from '../../../src/proto/google/protobuf/timestamp'
 import { Any } from '../../../src/proto/google/protobuf/any'
 import { DataEntry } from '../../../src/proto/packages/dht/protos/DhtRpc'
-import { createRandomNodeId } from '../../../src/helpers/nodeId'
+import { DhtAddress, createRandomDhtAddress, getRawFromDhtAddress } from '../../../src/identifiers'
+import { omit } from 'lodash'
 
 const MockData = new class extends MessageType$<{ foo: string }> {
     constructor() {
@@ -14,16 +14,18 @@ const MockData = new class extends MessageType$<{ foo: string }> {
     }
 }
 
-export const createMockDataEntry = (entry: Partial<DataEntry> = {}): DataEntry => {
+export const createMockDataEntry = (
+    entry: Partial<Omit<DataEntry, 'key' | 'creator'> & { key: DhtAddress, creator: DhtAddress }> = {}
+): DataEntry => {
     return { 
-        key: crypto.randomBytes(10),
+        key: getRawFromDhtAddress(entry.key ?? createRandomDhtAddress()),
         data: Any.pack({ foo: randomString(5) }, MockData),
-        creator: entry.creator ?? createRandomNodeId(),
+        creator: getRawFromDhtAddress(entry.creator ?? createRandomDhtAddress()),
         ttl: 10000,
         stale: false,
         deleted: false,
         createdAt: Timestamp.now(),
-        ...entry
+        ...omit(entry, 'key', 'creator')
     }
 }
 
