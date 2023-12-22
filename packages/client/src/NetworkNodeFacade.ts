@@ -1,40 +1,36 @@
 /**
  * Wrap a network node.
  */
-import { PeerDescriptor } from '@streamr/dht'
+import { DhtAddress, PeerDescriptor } from '@streamr/dht'
 import { StreamMessage, StreamPartID } from '@streamr/protocol'
-import { createNetworkNode as createNetworkNode_, NetworkOptions, NodeID, ProxyDirection } from '@streamr/trackerless-network'
+import { NetworkOptions, ProxyDirection, createNetworkNode as createNetworkNode_ } from '@streamr/trackerless-network'
 import { EthereumAddress, MetricsContext } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { ConfigInjectionToken, NetworkPeerDescriptor, StrictStreamrClientConfig } from './Config'
 import { DestroySignal } from './DestroySignal'
+import { OperatorRegistry } from './registry/OperatorRegistry'
 import { pOnce } from './utils/promises'
 import { peerDescriptorTranslator } from './utils/utils'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 /** @deprecated This in an internal interface */
 export interface NetworkNodeStub {
-    getNodeId: () => NodeID
+    getNodeId: () => DhtAddress
     addMessageListener: (listener: (msg: StreamMessage) => void) => void
     removeMessageListener: (listener: (msg: StreamMessage) => void) => void
-    subscribe: (streamPartId: StreamPartID) => Promise<void>
-    subscribeAndWaitForJoin: (streamPart: StreamPartID, timeout?: number) => Promise<number>
-    waitForJoinAndPublish: (msg: StreamMessage, timeout?: number) => Promise<number>
-    unsubscribe: (streamPartId: StreamPartID) => void
-    publish: (streamMessage: StreamMessage) => Promise<void>
+    join: (streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }) => Promise<void>
+    leave: (streamPartId: StreamPartID) => Promise<void>
+    broadcast: (streamMessage: StreamMessage) => Promise<void>
     getStreamParts: () => StreamPartID[]
-    getNeighbors: () => string[]
-    getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<NodeID>
-    setExtraMetadata: (metadata: Record<string, unknown>) => void
+    getNeighbors: (streamPartId: StreamPartID) => ReadonlyArray<DhtAddress>
     getPeerDescriptor: () => PeerDescriptor
+    getOptions: () => NetworkOptions
     getMetricsContext: () => MetricsContext
     getDiagnosticInfo: () => Record<string, unknown>
     hasStreamPart: (streamPartId: StreamPartID) => boolean
     inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean>
-    /** @internal */
-    hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: NodeID, direction: ProxyDirection) => boolean
     /** @internal */
     start: (doJoin?: boolean) => Promise<void>
     /** @internal */
@@ -42,11 +38,12 @@ export interface NetworkNodeStub {
     /** @internal */
     setProxies: (
         streamPartId: StreamPartID,
-        peerDescriptors: PeerDescriptor[],
+        nodes: PeerDescriptor[],
         direction: ProxyDirection,
         userId: EthereumAddress,
         connectionCount?: number
     ) => Promise<void>
+    isProxiedStreamPart(streamPartId: StreamPartID): boolean
     setStreamPartEntryPoints: (streamPartId: StreamPartID, peerDescriptors: PeerDescriptor[]) => void
 }
 
@@ -76,6 +73,7 @@ export class NetworkNodeFacade {
     private startNodeCalled = false
     private startNodeComplete = false
     private readonly networkNodeFactory: NetworkNodeFactory
+    private readonly operatorRegistry: OperatorRegistry
     private readonly config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>
     private readonly authentication: Authentication
     private readonly eventEmitter: EventEmitter<Events>
@@ -83,11 +81,13 @@ export class NetworkNodeFacade {
 
     constructor(
         networkNodeFactory: NetworkNodeFactory,
+        operatorRegistry: OperatorRegistry,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         destroySignal: DestroySignal
     ) {
         this.networkNodeFactory = networkNodeFactory
+        this.operatorRegistry = operatorRegistry
         this.config = config
         this.authentication = authentication
         this.eventEmitter = new EventEmitter<Events>()
@@ -100,14 +100,14 @@ export class NetworkNodeFacade {
     }
 
     private async getNetworkOptions(): Promise<NetworkOptions> {
-        const entryPoints = this.getEntryPoints()
-        const ownPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer.peerDescriptor ? 
+        const entryPoints = await this.getEntryPoints()
+        const localPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer.peerDescriptor ? 
             peerDescriptorTranslator(this.config.network.controlLayer.peerDescriptor) : undefined
         return {
             layer0: {
                 ...this.config.network.controlLayer,
-                entryPoints,
-                peerDescriptor: ownPeerDescriptor
+                entryPoints: entryPoints.map(peerDescriptorTranslator),
+                peerDescriptor: localPeerDescriptor
             },
             networkNode: this.config.network.node,
             metricsContext: new MetricsContext()
@@ -172,7 +172,7 @@ export class NetworkNodeFacade {
 
     getNode: () => Promise<NetworkNodeStub> = this.startNodeTask
 
-    async getNodeId(): Promise<NodeID> {
+    async getNodeId(): Promise<DhtAddress> {
         const node = await this.getNode()
         return node.getNodeId()
     }
@@ -192,10 +192,10 @@ export class NetworkNodeFacade {
             // use .then instead of async/await so
             // this.cachedNode.publish call can be sync
             return this.startNodeTask().then((node) =>
-                node.publish(streamMessage)
+                node.broadcast(streamMessage)
             )
         }
-        return this.cachedNode!.publish(streamMessage)
+        return this.cachedNode!.broadcast(streamMessage)
     }
 
     async inspect(node: NetworkPeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
@@ -208,14 +208,14 @@ export class NetworkNodeFacade {
 
     async setProxies(
         streamPartId: StreamPartID,
-        proxyNodes: NetworkPeerDescriptor[],
+        nodes: NetworkPeerDescriptor[],
         direction: ProxyDirection,
         connectionCount?: number
     ): Promise<void> {
         if (this.isStarting()) {
             await this.startNodeTask(false)
         }
-        const peerDescriptors = proxyNodes.map(peerDescriptorTranslator)
+        const peerDescriptors = nodes.map(peerDescriptorTranslator)
         await this.cachedNode!.setProxies(
             streamPartId,
             peerDescriptors,
@@ -241,7 +241,15 @@ export class NetworkNodeFacade {
         this.eventEmitter.once(eventName, listener as any)
     }
 
-    getEntryPoints(): PeerDescriptor[] {
-        return this.config.network.controlLayer.entryPoints!.map(peerDescriptorTranslator)
+    private async getEntryPoints(): Promise<NetworkPeerDescriptor[]> {
+        const discoveryConfig = this.config.network.controlLayer.entryPointDiscovery
+        const discoveredEntryPoints = (discoveryConfig?.enabled)
+            ? await this.operatorRegistry.findRandomNetworkEntrypoints(
+                discoveryConfig.maxEntryPoints!,
+                discoveryConfig.maxQueryResults!,
+                discoveryConfig.maxHeartbeatAgeHours!,
+            )
+            : []
+        return [...this.config.network.controlLayer.entryPoints!, ...discoveredEntryPoints]
     }
 }

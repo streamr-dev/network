@@ -1,24 +1,23 @@
-import { StreamMessage, StreamPartID, StreamMessageType } from '@streamr/protocol'
-import { PeerDescriptor } from '@streamr/dht'
+import { StreamMessage, StreamPartID } from '@streamr/protocol'
+import { DhtAddress, PeerDescriptor } from '@streamr/dht'
 import { StreamMessageTranslator } from './logic/protocol-integration/stream-message/StreamMessageTranslator'
 import { NetworkOptions, NetworkStack } from './NetworkStack'
-import { EthereumAddress, MetricsContext } from '@streamr/utils'
+import { EthereumAddress, Logger, MetricsContext } from '@streamr/utils'
 import { ProxyDirection } from './proto/packages/trackerless-network/protos/NetworkRpc'
-import { NodeID } from './identifiers'
 import { pull } from 'lodash'
 
 export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
     return new NetworkNode(new NetworkStack(opts))
 }
 
+const logger = new Logger(module)
 /**
  * Convenience wrapper for building client-facing functionality. Used by client.
  */
-
 export class NetworkNode {
 
     readonly stack: NetworkStack
-    private readonly messageListeners: ((msg: StreamMessage<any>) => void)[] = []
+    private readonly messageListeners: ((msg: StreamMessage) => void)[] = []
     private stopped = false
 
     /** @internal */
@@ -26,9 +25,13 @@ export class NetworkNode {
         this.stack = stack
         this.stack.getStreamrNode().on('newMessage', (msg) => {
             if (this.messageListeners.length > 0) {
-                const translated = StreamMessageTranslator.toClientProtocol<any>(msg)
-                for (const listener of this.messageListeners) {
-                    listener(translated)
+                try {
+                    const translated = StreamMessageTranslator.toClientProtocol(msg)
+                    for (const listener of this.messageListeners) {
+                        listener(translated)
+                    }
+                } catch (err) {
+                    logger.trace(`Could not translate message: ${err}`)
                 }
             }
         })
@@ -38,45 +41,34 @@ export class NetworkNode {
         await this.stack.start(doJoin)
     }
 
-    setExtraMetadata(metadata: Record<string, unknown>): void {
-        this.stack.getStreamrNode().setExtraMetadata(metadata)
-    }
-
     async inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
         return this.stack.getStreamrNode().inspect(node, streamPartId)
     }
 
-    async publish(streamMessage: StreamMessage): Promise<void> {
-        const streamPartId = streamMessage.getStreamPartID()
-        if (this.stack.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) 
-            && streamMessage.messageType === StreamMessageType.MESSAGE) {
-            throw new Error(`Cannot publish content data to ${streamPartId} as proxy subscribe connections have been set`)
-        }
-
-        await this.stack.joinLayer0IfRequired(streamPartId)
+    async broadcast(streamMessage: StreamMessage): Promise<void> {
         const msg = StreamMessageTranslator.toProtobuf(streamMessage)
-        this.stack.getStreamrNode().publishToStream(streamPartId, msg)
+        await this.stack.broadcast(msg)
     }
 
-    async subscribe(streamPartId: StreamPartID): Promise<void> {
-        if (this.stack.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
-            throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
-        }
-        await this.stack.joinLayer0IfRequired(streamPartId)
-        this.stack.getStreamrNode().subscribeToStream(streamPartId)
+    async join(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }): Promise<void> {
+        await this.stack.joinStreamPart(streamPartId, neighborRequirement)
     }
 
     async setProxies(
         streamPartId: StreamPartID,
-        contactPeerDescriptors: PeerDescriptor[],
+        nodes: PeerDescriptor[],
         direction: ProxyDirection,
         userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
-        await this.stack.getStreamrNode().setProxies(streamPartId, contactPeerDescriptors, direction, userId, connectionCount)
+        await this.stack.getStreamrNode().setProxies(streamPartId, nodes, direction, userId, connectionCount)
     }
 
-    addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
+    isProxiedStreamPart(streamPartId: StreamPartID): boolean {
+        return this.stack.getStreamrNode().isProxiedStreamPart(streamPartId)
+    }
+
+    addMessageListener(cb: (msg: StreamMessage) => void): void {
         this.messageListeners.push(cb)
     }
 
@@ -84,59 +76,23 @@ export class NetworkNode {
         this.stack.getStreamrNode()!.setStreamPartEntryPoints(streamPartId, contactPeerDescriptors)
     }
 
-    removeMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
-        if (this.stopped) {
-            return
-        }
+    removeMessageListener(cb: (msg: StreamMessage) => void): void {
         pull(this.messageListeners, cb)
     }
 
-    async subscribeAndWaitForJoin(
-        streamPartId: StreamPartID,
-        timeout?: number,
-        expectedNeighbors?: number
-    ): Promise<number> {
-        if (this.stack.getStreamrNode()!.isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
-            throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
-        }
-        return this.stack.getStreamrNode().waitForJoinAndSubscribe(streamPartId, timeout, expectedNeighbors)
-    }
-
-    async waitForJoinAndPublish(streamMessage: StreamMessage, timeout?: number): Promise<number> {
-        const streamPartId = streamMessage.getStreamPartID()
-        const msg = StreamMessageTranslator.toProtobuf(streamMessage)
-
-        if (this.stack.getStreamrNode()!.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE)) {
-            throw new Error(`Cannot publish to ${streamPartId} as proxy subscribe connections have been set`)
-        }
-
-        return this.stack.getStreamrNode().waitForJoinAndPublish(streamPartId, msg, timeout)
-    }
-
-    unsubscribe(streamPartId: StreamPartID): void {
+    async leave(streamPartId: StreamPartID): Promise<void> {
         if (this.stopped) {
             return
         }
-        this.stack.getStreamrNode().unsubscribeFromStream(streamPartId)
+        await this.stack.getStreamrNode().leaveStreamPart(streamPartId)
     }
 
-    getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeID> {
-        return this.hasStreamPart(streamPartId)
-            ? this.stack.getStreamrNode().getStream(streamPartId)!.layer2.getTargetNeighborIds()
-            : []
+    getNeighbors(streamPartId: StreamPartID): ReadonlyArray<DhtAddress> {
+        return this.stack.getStreamrNode().getNeighbors(streamPartId)
     }
 
     hasStreamPart(streamPartId: StreamPartID): boolean {
-        return this.stack.getStreamrNode().hasStream(streamPartId)
-    }
-
-    hasProxyConnection(streamPartId: StreamPartID, contactNodeId: NodeID, direction: ProxyDirection): boolean {
-        return this.stack.getStreamrNode()!.hasProxyConnection(streamPartId, contactNodeId, direction)
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    getRtt(_nodeId: NodeID): number | undefined {
-        throw new Error('Not implemented')
+        return this.stack.getStreamrNode().hasStreamPart(streamPartId)
     }
 
     async stop(): Promise<void> {
@@ -145,23 +101,23 @@ export class NetworkNode {
     }
 
     getPeerDescriptor(): PeerDescriptor {
-        return this.stack.getLayer0DhtNode().getPeerDescriptor()
+        return this.stack.getLayer0Node().getLocalPeerDescriptor()
     }
 
     getMetricsContext(): MetricsContext {
         return this.stack.getMetricsContext()
     }
 
-    getNodeId(): NodeID {
+    getNodeId(): DhtAddress {
         return this.stack.getStreamrNode().getNodeId()
+    }
+
+    getOptions(): NetworkOptions {
+        return this.stack.getOptions()
     }
 
     getStreamParts(): StreamPartID[] {
         return this.stack.getStreamrNode().getStreamParts()
-    }
-
-    getNeighbors(): NodeID[] {
-        return this.stack.getStreamrNode().getNeighbors()
     }
 
     // eslint-disable-next-line class-methods-use-this

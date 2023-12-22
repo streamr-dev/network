@@ -76,7 +76,6 @@ export class Gate {
             return
         }
 
-        // this.debug('error', err)
         this.clearPending(err)
     }
 
@@ -92,7 +91,6 @@ export class Gate {
         }
 
         if (!this.pending) {
-            // this.debug('close')
             this.pending = new Defer<undefined>()
         }
     }

@@ -14,112 +14,107 @@ import { Any } from "../../../google/protobuf/any";
  */
 export interface StoreDataRequest {
     /**
-     * @generated from protobuf field: bytes kademliaId = 1;
+     * @generated from protobuf field: bytes key = 1;
      */
-    kademliaId: Uint8Array;
+    key: Uint8Array;
     /**
      * @generated from protobuf field: google.protobuf.Any data = 2;
      */
     data?: Any;
     /**
-     * @generated from protobuf field: uint32 ttl = 3;
+     * @generated from protobuf field: bytes creator = 3;
+     */
+    creator: Uint8Array;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp createdAt = 4;
+     */
+    createdAt?: Timestamp;
+    /**
+     * @generated from protobuf field: uint32 ttl = 5;
      */
     ttl: number;
-    /**
-     * @generated from protobuf field: google.protobuf.Timestamp storerTime = 4;
-     */
-    storerTime?: Timestamp;
 }
 /**
  * @generated from protobuf message dht.StoreDataResponse
  */
 export interface StoreDataResponse {
-    /**
-     * @generated from protobuf field: string error = 1;
-     */
-    error: string;
 }
 /**
- * @generated from protobuf message dht.MigrateDataRequest
+ * @generated from protobuf message dht.ExternalStoreDataRequest
  */
-export interface MigrateDataRequest {
+export interface ExternalStoreDataRequest {
     /**
-     * @generated from protobuf field: dht.DataEntry dataEntry = 1;
+     * @generated from protobuf field: bytes key = 1;
      */
-    dataEntry?: DataEntry;
+    key: Uint8Array;
+    /**
+     * @generated from protobuf field: google.protobuf.Any data = 2;
+     */
+    data?: Any;
 }
 /**
- * @generated from protobuf message dht.MigrateDataResponse
+ * @generated from protobuf message dht.ExternalStoreDataResponse
  */
-export interface MigrateDataResponse {
+export interface ExternalStoreDataResponse {
     /**
-     * @generated from protobuf field: string error = 1;
+     * @generated from protobuf field: repeated dht.PeerDescriptor storers = 1;
      */
-    error: string;
+    storers: PeerDescriptor[];
 }
 /**
- * @generated from protobuf message dht.DeleteDataRequest
+ * @generated from protobuf message dht.ReplicateDataRequest
  */
-export interface DeleteDataRequest {
+export interface ReplicateDataRequest {
     /**
-     * @generated from protobuf field: bytes kademliaId = 1;
+     * @generated from protobuf field: dht.DataEntry entry = 1;
      */
-    kademliaId: Uint8Array;
-}
-/**
- * @generated from protobuf message dht.DeleteDataResponse
- */
-export interface DeleteDataResponse {
-    /**
-     * @generated from protobuf field: bool deleted = 1;
-     */
-    deleted: boolean;
+    entry?: DataEntry;
 }
 /**
  * @generated from protobuf message dht.DataEntry
  */
 export interface DataEntry {
     /**
-     * @generated from protobuf field: dht.PeerDescriptor storer = 1;
+     * @generated from protobuf field: bytes key = 1;
      */
-    storer?: PeerDescriptor;
+    key: Uint8Array;
     /**
-     * @generated from protobuf field: bytes kademliaId = 2;
-     */
-    kademliaId: Uint8Array;
-    /**
-     * @generated from protobuf field: google.protobuf.Any data = 3;
+     * @generated from protobuf field: google.protobuf.Any data = 2;
      */
     data?: Any;
     /**
-     * @generated from protobuf field: google.protobuf.Timestamp storedAt = 4;
+     * @generated from protobuf field: bytes creator = 3;
+     */
+    creator: Uint8Array;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp createdAt = 4;
+     */
+    createdAt?: Timestamp;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp storedAt = 5;
      */
     storedAt?: Timestamp;
     /**
-     * @generated from protobuf field: uint32 ttl = 5;
+     * @generated from protobuf field: uint32 ttl = 6;
      */
     ttl: number; // milliseconds
     /**
-     * @generated from protobuf field: bool stale = 6;
+     * @generated from protobuf field: bool stale = 7;
      */
     stale: boolean;
     /**
-     * @generated from protobuf field: bool deleted = 7;
+     * @generated from protobuf field: bool deleted = 8;
      */
     deleted: boolean;
-    /**
-     * @generated from protobuf field: google.protobuf.Timestamp storerTime = 8;
-     */
-    storerTime?: Timestamp;
 }
 /**
  * @generated from protobuf message dht.ClosestPeersRequest
  */
 export interface ClosestPeersRequest {
     /**
-     * @generated from protobuf field: bytes kademliaId = 1;
+     * @generated from protobuf field: bytes nodeId = 1;
      */
-    kademliaId: Uint8Array;
+    nodeId: Uint8Array;
     /**
      * @generated from protobuf field: string requestId = 2;
      */
@@ -139,34 +134,34 @@ export interface ClosestPeersResponse {
     requestId: string;
 }
 /**
- * @generated from protobuf message dht.RecursiveFindRequest
+ * @generated from protobuf message dht.RecursiveOperationRequest
  */
-export interface RecursiveFindRequest {
+export interface RecursiveOperationRequest {
     /**
-     * @generated from protobuf field: string recursiveFindSessionId = 1;
+     * @generated from protobuf field: string sessionId = 1;
      */
-    recursiveFindSessionId: string;
+    sessionId: string;
     /**
-     * @generated from protobuf field: dht.FindMode findMode = 2;
+     * @generated from protobuf field: dht.RecursiveOperation operation = 2;
      */
-    findMode: FindMode;
+    operation: RecursiveOperation;
 }
 /**
- * @generated from protobuf message dht.RecursiveFindReport
+ * @generated from protobuf message dht.RecursiveOperationResponse
  */
-export interface RecursiveFindReport {
+export interface RecursiveOperationResponse {
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor nodes = 1;
+     * @generated from protobuf field: repeated dht.PeerDescriptor closestConnectedPeers = 1;
      */
-    nodes: PeerDescriptor[];
+    closestConnectedPeers: PeerDescriptor[];
     /**
      * @generated from protobuf field: repeated dht.DataEntry dataEntries = 2;
      */
     dataEntries: DataEntry[];
     /**
-     * @generated from protobuf field: optional bool noCloserNodesFound = 3;
+     * @generated from protobuf field: bool noCloserNodesFound = 3;
      */
-    noCloserNodesFound?: boolean;
+    noCloserNodesFound: boolean;
     /**
      * @generated from protobuf field: repeated dht.PeerDescriptor routingPath = 4;
      */
@@ -194,19 +189,15 @@ export interface PingResponse {
  * @generated from protobuf message dht.LeaveNotice
  */
 export interface LeaveNotice {
-    /**
-     * @generated from protobuf field: string serviceId = 1;
-     */
-    serviceId: string;
 }
 /**
  * @generated from protobuf message dht.PeerDescriptor
  */
 export interface PeerDescriptor {
     /**
-     * @generated from protobuf field: bytes kademliaId = 1;
+     * @generated from protobuf field: bytes nodeId = 1;
      */
-    kademliaId: Uint8Array;
+    nodeId: Uint8Array;
     /**
      * @generated from protobuf field: dht.NodeType type = 2;
      */
@@ -224,95 +215,53 @@ export interface PeerDescriptor {
      */
     websocket?: ConnectivityMethod;
     /**
-     * @generated from protobuf field: optional bool openInternet = 6;
-     */
-    openInternet?: boolean;
-    /**
-     * @generated from protobuf field: optional uint32 region = 7;
+     * @generated from protobuf field: optional uint32 region = 6;
      */
     region?: number;
-    /**
-     * @generated from protobuf field: optional string nodeName = 8;
-     */
-    nodeName?: string;
 }
 /**
  * @generated from protobuf message dht.ConnectivityMethod
  */
 export interface ConnectivityMethod {
     /**
-     * @generated from protobuf field: uint32 port = 2;
-     */
-    port: number;
-    /**
-     * @generated from protobuf field: string ip = 3;
-     */
-    ip: string;
-}
-/**
- * @generated from protobuf message dht.ConnectivityReportRequest
- */
-export interface ConnectivityReportRequest {
-    /**
      * @generated from protobuf field: uint32 port = 1;
      */
     port: number;
     /**
-     * @generated from protobuf field: string requestId = 2;
+     * @generated from protobuf field: string host = 2;
      */
-    requestId: string;
-}
-/**
- * @generated from protobuf message dht.ConnectivityReportResponse
- */
-export interface ConnectivityReportResponse {
+    host: string;
     /**
-     * @generated from protobuf field: string open_internet = 1;
+     * @generated from protobuf field: bool tls = 3;
      */
-    openInternet: string;
-    /**
-     * @generated from protobuf field: string ip = 2;
-     */
-    ip: string;
-    /**
-     * @generated from protobuf field: string natType = 3;
-     */
-    natType: string;
-    /**
-     * @generated from protobuf field: string requestId = 4;
-     */
-    requestId: string;
+    tls: boolean;
 }
 /**
  * @generated from protobuf message dht.RouteMessageWrapper
  */
 export interface RouteMessageWrapper {
     /**
-     * @generated from protobuf field: dht.PeerDescriptor sourcePeer = 1;
-     */
-    sourcePeer?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: string requestId = 2;
+     * @generated from protobuf field: string requestId = 1;
      */
     requestId: string;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor destinationPeer = 3;
+     * @generated from protobuf field: dht.PeerDescriptor sourcePeer = 2;
      */
-    destinationPeer?: PeerDescriptor;
+    sourcePeer?: PeerDescriptor;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor previousPeer = 4;
+     * @generated from protobuf field: bytes target = 3;
      */
-    previousPeer?: PeerDescriptor;
+    target: Uint8Array;
     /**
-     * @generated from protobuf field: dht.Message message = 5;
+     * @generated from protobuf field: dht.Message message = 4;
      */
     message?: Message;
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor reachableThrough = 6;
+     * @generated from protobuf field: repeated dht.PeerDescriptor reachableThrough = 5;
      */
     reachableThrough: PeerDescriptor[];
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor routingPath = 7;
+     * @generated from protobuf field: repeated dht.PeerDescriptor routingPath = 6;
      */
     routingPath: PeerDescriptor[];
 }
@@ -321,21 +270,13 @@ export interface RouteMessageWrapper {
  */
 export interface RouteMessageAck {
     /**
-     * @generated from protobuf field: dht.PeerDescriptor sourcePeer = 1;
-     */
-    sourcePeer?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: string requestId = 2;
+     * @generated from protobuf field: string requestId = 1;
      */
     requestId: string;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor destinationPeer = 3;
+     * @generated from protobuf field: optional dht.RouteMessageError error = 2;
      */
-    destinationPeer?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: string error = 4;
-     */
-    error: string;
+    error?: RouteMessageError;
 }
 // Correspond to the MessageType Enum
 
@@ -347,25 +288,33 @@ export interface ConnectivityRequest {
      * @generated from protobuf field: uint32 port = 1;
      */
     port: number;
+    /**
+     * @generated from protobuf field: bool tls = 2;
+     */
+    tls: boolean;
+    /**
+     * @generated from protobuf field: optional string host = 3;
+     */
+    host?: string;
+    /**
+     * @generated from protobuf field: bool selfSigned = 4;
+     */
+    selfSigned: boolean;
 }
 /**
  * @generated from protobuf message dht.ConnectivityResponse
  */
 export interface ConnectivityResponse {
     /**
-     * @generated from protobuf field: bool open_internet = 1;
+     * @generated from protobuf field: string host = 1;
      */
-    openInternet: boolean;
+    host: string;
     /**
-     * @generated from protobuf field: string ip = 2;
-     */
-    ip: string;
-    /**
-     * @generated from protobuf field: string natType = 3;
+     * @generated from protobuf field: string natType = 2;
      */
     natType: string;
     /**
-     * @generated from protobuf field: dht.ConnectivityMethod websocket = 4;
+     * @generated from protobuf field: dht.ConnectivityMethod websocket = 3;
      */
     websocket?: ConnectivityMethod;
 }
@@ -374,38 +323,34 @@ export interface ConnectivityResponse {
  */
 export interface HandshakeRequest {
     /**
-     * @generated from protobuf field: bytes sourceId = 1;
+     * @generated from protobuf field: dht.PeerDescriptor sourcePeerDescriptor = 1;
      */
-    sourceId: Uint8Array;
+    sourcePeerDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: string protocolVersion = 2;
+     * @generated from protobuf field: optional dht.PeerDescriptor targetPeerDescriptor = 2;
      */
-    protocolVersion: string;
+    targetPeerDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 3;
+     * @generated from protobuf field: string version = 3;
      */
-    peerDescriptor?: PeerDescriptor;
+    version: string;
 }
 /**
  * @generated from protobuf message dht.HandshakeResponse
  */
 export interface HandshakeResponse {
     /**
-     * @generated from protobuf field: bytes sourceId = 1;
+     * @generated from protobuf field: dht.PeerDescriptor sourcePeerDescriptor = 1;
      */
-    sourceId: Uint8Array;
+    sourcePeerDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: string protocolVersion = 2;
+     * @generated from protobuf field: optional dht.HandshakeError error = 2;
      */
-    protocolVersion: string;
+    error?: HandshakeError;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 3;
+     * @generated from protobuf field: string version = 3;
      */
-    peerDescriptor?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: optional string responseError = 4;
-     */
-    responseError?: string;
+    version: string;
 }
 /**
  * @generated from protobuf message dht.Message
@@ -465,11 +410,11 @@ export interface Message {
          */
         rpcMessage: RpcMessage;
     } | {
-        oneofKind: "recursiveFindRequest";
+        oneofKind: "recursiveOperationRequest";
         /**
-         * @generated from protobuf field: dht.RecursiveFindRequest RecursiveFindRequest = 11 [json_name = "RecursiveFindRequest"];
+         * @generated from protobuf field: dht.RecursiveOperationRequest recursiveOperationRequest = 11;
          */
-        recursiveFindRequest: RecursiveFindRequest;
+        recursiveOperationRequest: RecursiveOperationRequest;
     } | {
         oneofKind: undefined;
     };
@@ -479,84 +424,27 @@ export interface Message {
 /**
  * WebSocket
  *
- * @generated from protobuf message dht.WebSocketConnectionRequest
+ * @generated from protobuf message dht.WebsocketConnectionRequest
  */
-export interface WebSocketConnectionRequest {
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor requester = 1;
-     */
-    requester?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor target = 2;
-     */
-    target?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: string ip = 3;
-     */
-    ip: string;
-    /**
-     * @generated from protobuf field: uint32 port = 4;
-     */
-    port: number;
-}
-/**
- * @generated from protobuf message dht.WebSocketConnectionResponse
- */
-export interface WebSocketConnectionResponse {
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor requester = 1;
-     */
-    requester?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor target = 2;
-     */
-    target?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: bool accepted = 3;
-     */
-    accepted: boolean;
-    /**
-     * @generated from protobuf field: optional string reason = 4;
-     */
-    reason?: string;
+export interface WebsocketConnectionRequest {
 }
 /**
  * WebRTC
  *
- * @generated from protobuf message dht.WebRtcConnectionRequest
+ * @generated from protobuf message dht.WebrtcConnectionRequest
  */
-export interface WebRtcConnectionRequest {
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor requester = 1;
-     */
-    requester?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor target = 2;
-     */
-    target?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: string connectionId = 3;
-     */
-    connectionId: string;
+export interface WebrtcConnectionRequest {
 }
 /**
  * @generated from protobuf message dht.RtcOffer
  */
 export interface RtcOffer {
     /**
-     * @generated from protobuf field: dht.PeerDescriptor requester = 1;
-     */
-    requester?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor target = 2;
-     */
-    target?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: string description = 3;
+     * @generated from protobuf field: string description = 1;
      */
     description: string;
     /**
-     * @generated from protobuf field: string connectionId = 4;
+     * @generated from protobuf field: string connectionId = 2;
      */
     connectionId: string;
 }
@@ -565,19 +453,11 @@ export interface RtcOffer {
  */
 export interface RtcAnswer {
     /**
-     * @generated from protobuf field: dht.PeerDescriptor requester = 1;
-     */
-    requester?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor target = 2;
-     */
-    target?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: string description = 3;
+     * @generated from protobuf field: string description = 1;
      */
     description: string;
     /**
-     * @generated from protobuf field: string connectionId = 4;
+     * @generated from protobuf field: string connectionId = 2;
      */
     connectionId: string;
 }
@@ -597,48 +477,24 @@ export interface IceCandidate {
      * @generated from protobuf field: string connectionId = 3;
      */
     connectionId: string;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor requester = 4;
-     */
-    requester?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor target = 5;
-     */
-    target?: PeerDescriptor;
 }
 /**
  * @generated from protobuf message dht.LockRequest
  */
 export interface LockRequest {
     /**
-     * @generated from protobuf field: string protocolVersion = 1;
+     * @generated from protobuf field: string lockId = 1;
      */
-    protocolVersion: string;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 2;
-     */
-    peerDescriptor?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: string serviceId = 3;
-     */
-    serviceId: string;
+    lockId: string;
 }
 /**
  * @generated from protobuf message dht.UnlockRequest
  */
 export interface UnlockRequest {
     /**
-     * @generated from protobuf field: string protocolVersion = 1;
+     * @generated from protobuf field: string lockId = 1;
      */
-    protocolVersion: string;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 2;
-     */
-    peerDescriptor?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: string serviceId = 3;
-     */
-    serviceId: string;
+    lockId: string;
 }
 /**
  * @generated from protobuf message dht.LockResponse
@@ -648,75 +504,55 @@ export interface LockResponse {
      * @generated from protobuf field: bool accepted = 1;
      */
     accepted: boolean;
-    /**
-     * @generated from protobuf field: optional bool reason = 2;
-     */
-    reason?: boolean;
 }
 /**
  * @generated from protobuf message dht.DisconnectNotice
  */
 export interface DisconnectNotice {
     /**
-     * @generated from protobuf field: string protocolVersion = 1;
+     * @generated from protobuf field: dht.DisconnectMode disconnectMode = 1;
      */
-    protocolVersion: string;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 2;
-     */
-    peerDescriptor?: PeerDescriptor;
-    /**
-     * @generated from protobuf field: dht.DisconnectMode disconnecMode = 3;
-     */
-    disconnecMode: DisconnectMode;
+    disconnectMode: DisconnectMode;
 }
 /**
  * @generated from protobuf message dht.DisconnectNoticeResponse
  */
 export interface DisconnectNoticeResponse {
-    /**
-     * @generated from protobuf field: string protocolVersion = 1;
-     */
-    protocolVersion: string;
 }
 /**
- * @generated from protobuf message dht.FindDataRequest
+ * @generated from protobuf message dht.ExternalFindDataRequest
  */
-export interface FindDataRequest {
+export interface ExternalFindDataRequest {
     /**
-     * @generated from protobuf field: bytes kademliaId = 1;
+     * @generated from protobuf field: bytes key = 1;
      */
-    kademliaId: Uint8Array;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor requestor = 2;
-     */
-    requestor?: PeerDescriptor;
+    key: Uint8Array;
 }
 /**
- * @generated from protobuf message dht.FindDataResponse
+ * @generated from protobuf message dht.ExternalFindDataResponse
  */
-export interface FindDataResponse {
+export interface ExternalFindDataResponse {
     /**
-     * @generated from protobuf field: repeated dht.DataEntry dataEntries = 1;
+     * @generated from protobuf field: repeated dht.DataEntry entries = 1;
      */
-    dataEntries: DataEntry[];
-    /**
-     * @generated from protobuf field: optional string error = 2;
-     */
-    error?: string;
+    entries: DataEntry[];
 }
 /**
- * @generated from protobuf enum dht.FindMode
+ * @generated from protobuf enum dht.RecursiveOperation
  */
-export enum FindMode {
+export enum RecursiveOperation {
     /**
-     * @generated from protobuf enum value: NODE = 0;
+     * @generated from protobuf enum value: FIND_NODE = 0;
      */
-    NODE = 0,
+    FIND_NODE = 0,
     /**
-     * @generated from protobuf enum value: DATA = 1;
+     * @generated from protobuf enum value: FETCH_DATA = 1;
      */
-    DATA = 1
+    FETCH_DATA = 1,
+    /**
+     * @generated from protobuf enum value: DELETE_DATA = 2;
+     */
+    DELETE_DATA = 2
 }
 /**
  * @generated from protobuf enum dht.NodeType
@@ -729,11 +565,7 @@ export enum NodeType {
     /**
      * @generated from protobuf enum value: BROWSER = 1;
      */
-    BROWSER = 1,
-    /**
-     * @generated from protobuf enum value: VIRTUAL = 3;
-     */
-    VIRTUAL = 3
+    BROWSER = 1
 }
 /**
  * @generated from protobuf enum dht.RpcResponseError
@@ -756,6 +588,43 @@ export enum RpcResponseError {
      */
     UNKNOWN_RPC_METHOD = 3
 }
+/**
+ * @generated from protobuf enum dht.RouteMessageError
+ */
+export enum RouteMessageError {
+    /**
+     * @generated from protobuf enum value: NO_TARGETS = 0;
+     */
+    NO_TARGETS = 0,
+    /**
+     * @generated from protobuf enum value: DUPLICATE = 1;
+     */
+    DUPLICATE = 1,
+    /**
+     * TODO: can this be removed? If DhtNode is already stopped the server side requests
+     * should not be processed
+     *
+     * @generated from protobuf enum value: STOPPED = 2;
+     */
+    STOPPED = 2
+}
+/**
+ * @generated from protobuf enum dht.HandshakeError
+ */
+export enum HandshakeError {
+    /**
+     * @generated from protobuf enum value: DUPLICATE_CONNECTION = 0;
+     */
+    DUPLICATE_CONNECTION = 0,
+    /**
+     * @generated from protobuf enum value: INVALID_TARGET_PEER_DESCRIPTOR = 1;
+     */
+    INVALID_TARGET_PEER_DESCRIPTOR = 1,
+    /**
+     * @generated from protobuf enum value: UNSUPPORTED_VERSION = 2;
+     */
+    UNSUPPORTED_VERSION = 2
+}
 // Wraps all messages
 
 /**
@@ -763,29 +632,29 @@ export enum RpcResponseError {
  */
 export enum MessageType {
     /**
-     * @generated from protobuf enum value: CONNECTIVITY_REQUEST = 0;
+     * @generated from protobuf enum value: RPC = 0;
      */
-    CONNECTIVITY_REQUEST = 0,
+    RPC = 0,
     /**
-     * @generated from protobuf enum value: CONNECTIVITY_RESPONSE = 1;
+     * @generated from protobuf enum value: CONNECTIVITY_REQUEST = 1;
      */
-    CONNECTIVITY_RESPONSE = 1,
+    CONNECTIVITY_REQUEST = 1,
     /**
-     * @generated from protobuf enum value: HANDSHAKE_REQUEST = 2;
+     * @generated from protobuf enum value: CONNECTIVITY_RESPONSE = 2;
      */
-    HANDSHAKE_REQUEST = 2,
+    CONNECTIVITY_RESPONSE = 2,
     /**
-     * @generated from protobuf enum value: HANDSHAKE_RESPONSE = 3;
+     * @generated from protobuf enum value: HANDSHAKE_REQUEST = 3;
      */
-    HANDSHAKE_RESPONSE = 3,
+    HANDSHAKE_REQUEST = 3,
     /**
-     * @generated from protobuf enum value: RPC = 4;
+     * @generated from protobuf enum value: HANDSHAKE_RESPONSE = 4;
      */
-    RPC = 4,
+    HANDSHAKE_RESPONSE = 4,
     /**
-     * @generated from protobuf enum value: RECURSIVE_FIND_REQUEST = 5;
+     * @generated from protobuf enum value: RECURSIVE_OPERATION_REQUEST = 5;
      */
-    RECURSIVE_FIND_REQUEST = 5
+    RECURSIVE_OPERATION_REQUEST = 5
 }
 /**
  * @generated from protobuf enum dht.DisconnectMode
@@ -804,10 +673,11 @@ export enum DisconnectMode {
 class StoreDataRequest$Type extends MessageType$<StoreDataRequest> {
     constructor() {
         super("dht.StoreDataRequest", [
-            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 1, name: "key", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "data", kind: "message", T: () => Any },
-            { no: 3, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 4, name: "storerTime", kind: "message", T: () => Timestamp }
+            { no: 3, name: "creator", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 4, name: "createdAt", kind: "message", T: () => Timestamp },
+            { no: 5, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
         ]);
     }
 }
@@ -818,9 +688,7 @@ export const StoreDataRequest = new StoreDataRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class StoreDataResponse$Type extends MessageType$<StoreDataResponse> {
     constructor() {
-        super("dht.StoreDataResponse", [
-            { no: 1, name: "error", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
+        super("dht.StoreDataResponse", []);
     }
 }
 /**
@@ -828,65 +696,54 @@ class StoreDataResponse$Type extends MessageType$<StoreDataResponse> {
  */
 export const StoreDataResponse = new StoreDataResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class MigrateDataRequest$Type extends MessageType$<MigrateDataRequest> {
+class ExternalStoreDataRequest$Type extends MessageType$<ExternalStoreDataRequest> {
     constructor() {
-        super("dht.MigrateDataRequest", [
-            { no: 1, name: "dataEntry", kind: "message", T: () => DataEntry }
+        super("dht.ExternalStoreDataRequest", [
+            { no: 1, name: "key", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 2, name: "data", kind: "message", T: () => Any }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.MigrateDataRequest
+ * @generated MessageType for protobuf message dht.ExternalStoreDataRequest
  */
-export const MigrateDataRequest = new MigrateDataRequest$Type();
+export const ExternalStoreDataRequest = new ExternalStoreDataRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class MigrateDataResponse$Type extends MessageType$<MigrateDataResponse> {
+class ExternalStoreDataResponse$Type extends MessageType$<ExternalStoreDataResponse> {
     constructor() {
-        super("dht.MigrateDataResponse", [
-            { no: 1, name: "error", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        super("dht.ExternalStoreDataResponse", [
+            { no: 1, name: "storers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.MigrateDataResponse
+ * @generated MessageType for protobuf message dht.ExternalStoreDataResponse
  */
-export const MigrateDataResponse = new MigrateDataResponse$Type();
+export const ExternalStoreDataResponse = new ExternalStoreDataResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class DeleteDataRequest$Type extends MessageType$<DeleteDataRequest> {
+class ReplicateDataRequest$Type extends MessageType$<ReplicateDataRequest> {
     constructor() {
-        super("dht.DeleteDataRequest", [
-            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+        super("dht.ReplicateDataRequest", [
+            { no: 1, name: "entry", kind: "message", T: () => DataEntry }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.DeleteDataRequest
+ * @generated MessageType for protobuf message dht.ReplicateDataRequest
  */
-export const DeleteDataRequest = new DeleteDataRequest$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class DeleteDataResponse$Type extends MessageType$<DeleteDataResponse> {
-    constructor() {
-        super("dht.DeleteDataResponse", [
-            { no: 1, name: "deleted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message dht.DeleteDataResponse
- */
-export const DeleteDataResponse = new DeleteDataResponse$Type();
+export const ReplicateDataRequest = new ReplicateDataRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class DataEntry$Type extends MessageType$<DataEntry> {
     constructor() {
         super("dht.DataEntry", [
-            { no: 1, name: "storer", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 3, name: "data", kind: "message", T: () => Any },
-            { no: 4, name: "storedAt", kind: "message", T: () => Timestamp },
-            { no: 5, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 6, name: "stale", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 7, name: "deleted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 8, name: "storerTime", kind: "message", T: () => Timestamp }
+            { no: 1, name: "key", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 2, name: "data", kind: "message", T: () => Any },
+            { no: 3, name: "creator", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 4, name: "createdAt", kind: "message", T: () => Timestamp },
+            { no: 5, name: "storedAt", kind: "message", T: () => Timestamp },
+            { no: 6, name: "ttl", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 7, name: "stale", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 8, name: "deleted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }
@@ -898,7 +755,7 @@ export const DataEntry = new DataEntry$Type();
 class ClosestPeersRequest$Type extends MessageType$<ClosestPeersRequest> {
     constructor() {
         super("dht.ClosestPeersRequest", [
-            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 1, name: "nodeId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
@@ -921,33 +778,33 @@ class ClosestPeersResponse$Type extends MessageType$<ClosestPeersResponse> {
  */
 export const ClosestPeersResponse = new ClosestPeersResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class RecursiveFindRequest$Type extends MessageType$<RecursiveFindRequest> {
+class RecursiveOperationRequest$Type extends MessageType$<RecursiveOperationRequest> {
     constructor() {
-        super("dht.RecursiveFindRequest", [
-            { no: 1, name: "recursiveFindSessionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "findMode", kind: "enum", T: () => ["dht.FindMode", FindMode] }
+        super("dht.RecursiveOperationRequest", [
+            { no: 1, name: "sessionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "operation", kind: "enum", T: () => ["dht.RecursiveOperation", RecursiveOperation] }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.RecursiveFindRequest
+ * @generated MessageType for protobuf message dht.RecursiveOperationRequest
  */
-export const RecursiveFindRequest = new RecursiveFindRequest$Type();
+export const RecursiveOperationRequest = new RecursiveOperationRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class RecursiveFindReport$Type extends MessageType$<RecursiveFindReport> {
+class RecursiveOperationResponse$Type extends MessageType$<RecursiveOperationResponse> {
     constructor() {
-        super("dht.RecursiveFindReport", [
-            { no: 1, name: "nodes", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+        super("dht.RecursiveOperationResponse", [
+            { no: 1, name: "closestConnectedPeers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
             { no: 2, name: "dataEntries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry },
-            { no: 3, name: "noCloserNodesFound", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "noCloserNodesFound", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 4, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.RecursiveFindReport
+ * @generated MessageType for protobuf message dht.RecursiveOperationResponse
  */
-export const RecursiveFindReport = new RecursiveFindReport$Type();
+export const RecursiveOperationResponse = new RecursiveOperationResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class PingRequest$Type extends MessageType$<PingRequest> {
     constructor() {
@@ -975,9 +832,7 @@ export const PingResponse = new PingResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class LeaveNotice$Type extends MessageType$<LeaveNotice> {
     constructor() {
-        super("dht.LeaveNotice", [
-            { no: 1, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
+        super("dht.LeaveNotice", []);
     }
 }
 /**
@@ -988,14 +843,12 @@ export const LeaveNotice = new LeaveNotice$Type();
 class PeerDescriptor$Type extends MessageType$<PeerDescriptor> {
     constructor() {
         super("dht.PeerDescriptor", [
-            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 1, name: "nodeId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 2, name: "type", kind: "enum", T: () => ["dht.NodeType", NodeType] },
             { no: 3, name: "udp", kind: "message", T: () => ConnectivityMethod },
             { no: 4, name: "tcp", kind: "message", T: () => ConnectivityMethod },
             { no: 5, name: "websocket", kind: "message", T: () => ConnectivityMethod },
-            { no: 6, name: "openInternet", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ },
-            { no: 7, name: "region", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ },
-            { no: 8, name: "nodeName", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 6, name: "region", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ }
         ]);
     }
 }
@@ -1007,8 +860,9 @@ export const PeerDescriptor = new PeerDescriptor$Type();
 class ConnectivityMethod$Type extends MessageType$<ConnectivityMethod> {
     constructor() {
         super("dht.ConnectivityMethod", [
-            { no: 2, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 3, name: "ip", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 2, name: "host", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "tls", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }
@@ -1017,44 +871,15 @@ class ConnectivityMethod$Type extends MessageType$<ConnectivityMethod> {
  */
 export const ConnectivityMethod = new ConnectivityMethod$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class ConnectivityReportRequest$Type extends MessageType$<ConnectivityReportRequest> {
-    constructor() {
-        super("dht.ConnectivityReportRequest", [
-            { no: 1, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message dht.ConnectivityReportRequest
- */
-export const ConnectivityReportRequest = new ConnectivityReportRequest$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class ConnectivityReportResponse$Type extends MessageType$<ConnectivityReportResponse> {
-    constructor() {
-        super("dht.ConnectivityReportResponse", [
-            { no: 1, name: "open_internet", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "ip", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "natType", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message dht.ConnectivityReportResponse
- */
-export const ConnectivityReportResponse = new ConnectivityReportResponse$Type();
-// @generated message type with reflection information, may provide speed optimized methods
 class RouteMessageWrapper$Type extends MessageType$<RouteMessageWrapper> {
     constructor() {
         super("dht.RouteMessageWrapper", [
-            { no: 1, name: "sourcePeer", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "destinationPeer", kind: "message", T: () => PeerDescriptor },
-            { no: 4, name: "previousPeer", kind: "message", T: () => PeerDescriptor },
-            { no: 5, name: "message", kind: "message", T: () => Message },
-            { no: 6, name: "reachableThrough", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
-            { no: 7, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+            { no: 1, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "sourcePeer", kind: "message", T: () => PeerDescriptor },
+            { no: 3, name: "target", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 4, name: "message", kind: "message", T: () => Message },
+            { no: 5, name: "reachableThrough", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 6, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
     }
 }
@@ -1066,10 +891,8 @@ export const RouteMessageWrapper = new RouteMessageWrapper$Type();
 class RouteMessageAck$Type extends MessageType$<RouteMessageAck> {
     constructor() {
         super("dht.RouteMessageAck", [
-            { no: 1, name: "sourcePeer", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "destinationPeer", kind: "message", T: () => PeerDescriptor },
-            { no: 4, name: "error", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "error", kind: "enum", opt: true, T: () => ["dht.RouteMessageError", RouteMessageError] }
         ]);
     }
 }
@@ -1081,7 +904,10 @@ export const RouteMessageAck = new RouteMessageAck$Type();
 class ConnectivityRequest$Type extends MessageType$<ConnectivityRequest> {
     constructor() {
         super("dht.ConnectivityRequest", [
-            { no: 1, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
+            { no: 1, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 2, name: "tls", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "host", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "selfSigned", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }
@@ -1093,10 +919,9 @@ export const ConnectivityRequest = new ConnectivityRequest$Type();
 class ConnectivityResponse$Type extends MessageType$<ConnectivityResponse> {
     constructor() {
         super("dht.ConnectivityResponse", [
-            { no: 1, name: "open_internet", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 2, name: "ip", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "natType", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "websocket", kind: "message", T: () => ConnectivityMethod }
+            { no: 1, name: "host", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "natType", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "websocket", kind: "message", T: () => ConnectivityMethod }
         ]);
     }
 }
@@ -1108,9 +933,9 @@ export const ConnectivityResponse = new ConnectivityResponse$Type();
 class HandshakeRequest$Type extends MessageType$<HandshakeRequest> {
     constructor() {
         super("dht.HandshakeRequest", [
-            { no: 1, name: "sourceId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 2, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor }
+            { no: 1, name: "sourcePeerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 2, name: "targetPeerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 3, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1122,10 +947,9 @@ export const HandshakeRequest = new HandshakeRequest$Type();
 class HandshakeResponse$Type extends MessageType$<HandshakeResponse> {
     constructor() {
         super("dht.HandshakeResponse", [
-            { no: 1, name: "sourceId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 2, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 4, name: "responseError", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "sourcePeerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 2, name: "error", kind: "enum", opt: true, T: () => ["dht.HandshakeError", HandshakeError] },
+            { no: 3, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1147,7 +971,7 @@ class Message$Type extends MessageType$<Message> {
             { no: 8, name: "handshakeRequest", kind: "message", oneof: "body", T: () => HandshakeRequest },
             { no: 9, name: "handshakeResponse", kind: "message", oneof: "body", T: () => HandshakeResponse },
             { no: 10, name: "rpcMessage", kind: "message", oneof: "body", T: () => RpcMessage },
-            { no: 11, name: "RecursiveFindRequest", kind: "message", jsonName: "RecursiveFindRequest", oneof: "body", T: () => RecursiveFindRequest }
+            { no: 11, name: "recursiveOperationRequest", kind: "message", oneof: "body", T: () => RecursiveOperationRequest }
         ]);
     }
 }
@@ -1156,57 +980,31 @@ class Message$Type extends MessageType$<Message> {
  */
 export const Message = new Message$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class WebSocketConnectionRequest$Type extends MessageType$<WebSocketConnectionRequest> {
+class WebsocketConnectionRequest$Type extends MessageType$<WebsocketConnectionRequest> {
     constructor() {
-        super("dht.WebSocketConnectionRequest", [
-            { no: 1, name: "requester", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "target", kind: "message", T: () => PeerDescriptor },
-            { no: 3, name: "ip", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ }
-        ]);
+        super("dht.WebsocketConnectionRequest", []);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.WebSocketConnectionRequest
+ * @generated MessageType for protobuf message dht.WebsocketConnectionRequest
  */
-export const WebSocketConnectionRequest = new WebSocketConnectionRequest$Type();
+export const WebsocketConnectionRequest = new WebsocketConnectionRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class WebSocketConnectionResponse$Type extends MessageType$<WebSocketConnectionResponse> {
+class WebrtcConnectionRequest$Type extends MessageType$<WebrtcConnectionRequest> {
     constructor() {
-        super("dht.WebSocketConnectionResponse", [
-            { no: 1, name: "requester", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "target", kind: "message", T: () => PeerDescriptor },
-            { no: 3, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 4, name: "reason", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
-        ]);
+        super("dht.WebrtcConnectionRequest", []);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.WebSocketConnectionResponse
+ * @generated MessageType for protobuf message dht.WebrtcConnectionRequest
  */
-export const WebSocketConnectionResponse = new WebSocketConnectionResponse$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class WebRtcConnectionRequest$Type extends MessageType$<WebRtcConnectionRequest> {
-    constructor() {
-        super("dht.WebRtcConnectionRequest", [
-            { no: 1, name: "requester", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "target", kind: "message", T: () => PeerDescriptor },
-            { no: 3, name: "connectionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message dht.WebRtcConnectionRequest
- */
-export const WebRtcConnectionRequest = new WebRtcConnectionRequest$Type();
+export const WebrtcConnectionRequest = new WebrtcConnectionRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class RtcOffer$Type extends MessageType$<RtcOffer> {
     constructor() {
         super("dht.RtcOffer", [
-            { no: 1, name: "requester", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "target", kind: "message", T: () => PeerDescriptor },
-            { no: 3, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "connectionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "connectionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1218,10 +1016,8 @@ export const RtcOffer = new RtcOffer$Type();
 class RtcAnswer$Type extends MessageType$<RtcAnswer> {
     constructor() {
         super("dht.RtcAnswer", [
-            { no: 1, name: "requester", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "target", kind: "message", T: () => PeerDescriptor },
-            { no: 3, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "connectionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "connectionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1235,9 +1031,7 @@ class IceCandidate$Type extends MessageType$<IceCandidate> {
         super("dht.IceCandidate", [
             { no: 1, name: "candidate", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "mid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "connectionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "requester", kind: "message", T: () => PeerDescriptor },
-            { no: 5, name: "target", kind: "message", T: () => PeerDescriptor }
+            { no: 3, name: "connectionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1249,9 +1043,7 @@ export const IceCandidate = new IceCandidate$Type();
 class LockRequest$Type extends MessageType$<LockRequest> {
     constructor() {
         super("dht.LockRequest", [
-            { no: 1, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 3, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "lockId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1263,9 +1055,7 @@ export const LockRequest = new LockRequest$Type();
 class UnlockRequest$Type extends MessageType$<UnlockRequest> {
     constructor() {
         super("dht.UnlockRequest", [
-            { no: 1, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 3, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "lockId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1277,8 +1067,7 @@ export const UnlockRequest = new UnlockRequest$Type();
 class LockResponse$Type extends MessageType$<LockResponse> {
     constructor() {
         super("dht.LockResponse", [
-            { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 2, name: "reason", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ }
+            { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }
@@ -1290,9 +1079,7 @@ export const LockResponse = new LockResponse$Type();
 class DisconnectNotice$Type extends MessageType$<DisconnectNotice> {
     constructor() {
         super("dht.DisconnectNotice", [
-            { no: 1, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 3, name: "disconnecMode", kind: "enum", T: () => ["dht.DisconnectMode", DisconnectMode] }
+            { no: 1, name: "disconnectMode", kind: "enum", T: () => ["dht.DisconnectMode", DisconnectMode] }
         ]);
     }
 }
@@ -1303,9 +1090,7 @@ export const DisconnectNotice = new DisconnectNotice$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class DisconnectNoticeResponse$Type extends MessageType$<DisconnectNoticeResponse> {
     constructor() {
-        super("dht.DisconnectNoticeResponse", [
-            { no: 1, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
+        super("dht.DisconnectNoticeResponse", []);
     }
 }
 /**
@@ -1313,87 +1098,90 @@ class DisconnectNoticeResponse$Type extends MessageType$<DisconnectNoticeRespons
  */
 export const DisconnectNoticeResponse = new DisconnectNoticeResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class FindDataRequest$Type extends MessageType$<FindDataRequest> {
+class ExternalFindDataRequest$Type extends MessageType$<ExternalFindDataRequest> {
     constructor() {
-        super("dht.FindDataRequest", [
-            { no: 1, name: "kademliaId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 2, name: "requestor", kind: "message", T: () => PeerDescriptor }
+        super("dht.ExternalFindDataRequest", [
+            { no: 1, name: "key", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.FindDataRequest
+ * @generated MessageType for protobuf message dht.ExternalFindDataRequest
  */
-export const FindDataRequest = new FindDataRequest$Type();
+export const ExternalFindDataRequest = new ExternalFindDataRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class FindDataResponse$Type extends MessageType$<FindDataResponse> {
+class ExternalFindDataResponse$Type extends MessageType$<ExternalFindDataResponse> {
     constructor() {
-        super("dht.FindDataResponse", [
-            { no: 1, name: "dataEntries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry },
-            { no: 2, name: "error", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ }
+        super("dht.ExternalFindDataResponse", [
+            { no: 1, name: "entries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.FindDataResponse
+ * @generated MessageType for protobuf message dht.ExternalFindDataResponse
  */
-export const FindDataResponse = new FindDataResponse$Type();
+export const ExternalFindDataResponse = new ExternalFindDataResponse$Type();
 /**
- * @generated ServiceType for protobuf service dht.DhtRpcService
+ * @generated ServiceType for protobuf service dht.DhtNodeRpc
  */
-export const DhtRpcService = new ServiceType("dht.DhtRpcService", [
+export const DhtNodeRpc = new ServiceType("dht.DhtNodeRpc", [
     { name: "getClosestPeers", options: {}, I: ClosestPeersRequest, O: ClosestPeersResponse },
     { name: "ping", options: {}, I: PingRequest, O: PingResponse },
     { name: "leaveNotice", options: {}, I: LeaveNotice, O: Empty }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.RoutingService
+ * @generated ServiceType for protobuf service dht.RouterRpc
  */
-export const RoutingService = new ServiceType("dht.RoutingService", [
+export const RouterRpc = new ServiceType("dht.RouterRpc", [
     { name: "routeMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
-    { name: "forwardMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck },
-    { name: "findRecursively", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
+    { name: "forwardMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.StoreService
+ * @generated ServiceType for protobuf service dht.RecursiveOperationRpc
  */
-export const StoreService = new ServiceType("dht.StoreService", [
+export const RecursiveOperationRpc = new ServiceType("dht.RecursiveOperationRpc", [
+    { name: "routeRequest", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
+]);
+/**
+ * @generated ServiceType for protobuf service dht.StoreRpc
+ */
+export const StoreRpc = new ServiceType("dht.StoreRpc", [
     { name: "storeData", options: {}, I: StoreDataRequest, O: StoreDataResponse },
-    { name: "migrateData", options: {}, I: MigrateDataRequest, O: MigrateDataResponse },
-    { name: "deleteData", options: {}, I: DeleteDataRequest, O: DeleteDataResponse }
+    { name: "replicateData", options: {}, I: ReplicateDataRequest, O: Empty }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.RecursiveFindSessionService
+ * @generated ServiceType for protobuf service dht.RecursiveOperationSessionRpc
  */
-export const RecursiveFindSessionService = new ServiceType("dht.RecursiveFindSessionService", [
-    { name: "reportRecursiveFindResult", options: {}, I: RecursiveFindReport, O: Empty }
+export const RecursiveOperationSessionRpc = new ServiceType("dht.RecursiveOperationSessionRpc", [
+    { name: "sendResponse", options: {}, I: RecursiveOperationResponse, O: Empty }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.WebSocketConnectorService
+ * @generated ServiceType for protobuf service dht.WebsocketConnectorRpc
  */
-export const WebSocketConnectorService = new ServiceType("dht.WebSocketConnectorService", [
-    { name: "requestConnection", options: {}, I: WebSocketConnectionRequest, O: WebSocketConnectionResponse }
+export const WebsocketConnectorRpc = new ServiceType("dht.WebsocketConnectorRpc", [
+    { name: "requestConnection", options: {}, I: WebsocketConnectionRequest, O: Empty }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.WebRtcConnectorService
+ * @generated ServiceType for protobuf service dht.WebrtcConnectorRpc
  */
-export const WebRtcConnectorService = new ServiceType("dht.WebRtcConnectorService", [
-    { name: "requestConnection", options: {}, I: WebRtcConnectionRequest, O: Empty },
+export const WebrtcConnectorRpc = new ServiceType("dht.WebrtcConnectorRpc", [
+    { name: "requestConnection", options: {}, I: WebrtcConnectionRequest, O: Empty },
     { name: "rtcOffer", options: {}, I: RtcOffer, O: Empty },
     { name: "rtcAnswer", options: {}, I: RtcAnswer, O: Empty },
     { name: "iceCandidate", options: {}, I: IceCandidate, O: Empty }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.ConnectionLocker
+ * @generated ServiceType for protobuf service dht.ConnectionLockRpc
  */
-export const ConnectionLocker = new ServiceType("dht.ConnectionLocker", [
+export const ConnectionLockRpc = new ServiceType("dht.ConnectionLockRpc", [
     { name: "lockRequest", options: {}, I: LockRequest, O: LockResponse },
     { name: "unlockRequest", options: {}, I: UnlockRequest, O: Empty },
     { name: "gracefulDisconnect", options: {}, I: DisconnectNotice, O: DisconnectNoticeResponse }
 ]);
 /**
- * @generated ServiceType for protobuf service dht.ExternalApiService
+ * @generated ServiceType for protobuf service dht.ExternalApiRpc
  */
-export const ExternalApiService = new ServiceType("dht.ExternalApiService", [
-    { name: "findData", options: {}, I: FindDataRequest, O: FindDataResponse }
+export const ExternalApiRpc = new ServiceType("dht.ExternalApiRpc", [
+    { name: "externalFindData", options: {}, I: ExternalFindDataRequest, O: ExternalFindDataResponse },
+    { name: "externalStoreData", options: {}, I: ExternalStoreDataRequest, O: ExternalStoreDataResponse }
 ]);

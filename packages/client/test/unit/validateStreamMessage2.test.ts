@@ -9,13 +9,13 @@ import {
     ValidationError,
     toStreamID
 } from '@streamr/protocol'
-import { EthereumAddress, hexToBinary } from '@streamr/utils'
+import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
 import { Authentication } from '../../src/Authentication'
 import { Stream } from '../../src/Stream'
 import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
-import { createRandomAuthentication } from '../test-utils/utils'
+import { createRandomAuthentication, MOCK_CONTENT } from '../test-utils/utils'
 
 const groupKeyMessageToStreamMessage = async (
     groupKeyMessage: GroupKeyMessage,
@@ -26,7 +26,7 @@ const groupKeyMessageToStreamMessage = async (
     return createSignedMessage({
         messageId,
         prevMsgRef,
-        serializedContent: groupKeyMessage.serialize(),
+        serializedContent: utf8ToBinary(groupKeyMessage.serialize()),
         messageType: groupKeyMessage.messageType,
         authentication
     })
@@ -75,13 +75,13 @@ describe('Validator2', () => {
 
         msg = await createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
-            serializedContent: JSON.stringify({}),
+            serializedContent: MOCK_CONTENT,
             authentication: publisherAuthentication
         })
 
         msgWithNewGroupKey = await createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
-            serializedContent: JSON.stringify({}),
+            serializedContent: MOCK_CONTENT,
             newGroupKey: new EncryptedGroupKey('groupKeyId', hexToBinary('0x1111')),
             authentication: publisherAuthentication
         })
@@ -89,7 +89,7 @@ describe('Validator2', () => {
 
         msgWithPrevMsgRef = await createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 2000, 0, publisher, 'msgChainId'),
-            serializedContent: JSON.stringify({}),
+            serializedContent: MOCK_CONTENT,
             prevMsgRef: new MessageRef(1000, 0),
             authentication: publisherAuthentication
         })
@@ -145,7 +145,7 @@ describe('Validator2', () => {
         })
 
         it('rejects tampered content', async () => {
-            msg.serializedContent = '{"attack":true}'
+            msg.serializedContent = utf8ToBinary('{"attack":true}')
 
             await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)

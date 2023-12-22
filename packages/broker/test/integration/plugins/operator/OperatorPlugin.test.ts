@@ -1,6 +1,6 @@
 import type { Operator } from '@streamr/network-contracts'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { collect } from '@streamr/utils'
+import { collect, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { ProxyDirection, StreamPermission } from 'streamr-client'
 import { Broker, createBroker } from '../../../../src/broker'
@@ -33,9 +33,9 @@ describe('OperatorPlugin', () => {
 
         const sponsorer = await generateWalletWithGasAndTokens()
         const sponsorship1 = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
-        await sponsor(sponsorer, sponsorship1.address, 100)
-        await delegate(operatorWallet, operatorContract.address, 100)
-        await stake(operatorContract, sponsorship1.address, 100)
+        await sponsor(sponsorer, sponsorship1.address, 10000)
+        await delegate(operatorWallet, operatorContract.address, 10000)
+        await stake(operatorContract, sponsorship1.address, 10000)
 
         const publisher = createClient(fastPrivateKey())
         await stream.grantPermissions({
@@ -53,13 +53,16 @@ describe('OperatorPlugin', () => {
                 }
             }
         })
+        // wait for MaintainTopologyService to handle addStakedStreams
+        // events emitted during Broker start
+        await waitForCondition(async () => (await broker.getStreamrClient().getSubscriptions(stream.id)).length > 0)
         const brokerDescriptor = await broker.getStreamrClient().getPeerDescriptor()
         await subscriber.setProxies({ id: stream.id }, [brokerDescriptor], ProxyDirection.SUBSCRIBE)
         const subscription = await subscriber.subscribe(stream.id)
         const receivedMessages = await collect(subscription, 1)
         clearInterval(publishTimer)
 
-        expect(receivedMessages![0].content).toEqual({ foo: 'bar' })
+        expect(receivedMessages[0].content).toEqual({ foo: 'bar' })
         await subscriber.destroy()
         await publisher.destroy()
     }, 30 * 1000)

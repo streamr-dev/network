@@ -1,23 +1,16 @@
-import { ListeningRpcCommunicator, NodeType, PeerDescriptor } from '@streamr/dht'
+import { ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { utf8ToBinary } from '@streamr/utils'
 import { Inspector } from '../../src/logic/inspect/Inspector'
-import { createRandomNodeId, mockConnectionLocker } from '../utils/utils'
 import { MockTransport } from '../utils/mock/Transport'
-import { hexToBinary, utf8ToBinary } from '@streamr/utils'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { createMockPeerDescriptor, createRandomNodeId, mockConnectionLocker } from '../utils/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('Inspector', () => {
     
     let inspector: Inspector
-    const inspectorNodeId = createRandomNodeId()
-    const inspectorDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(inspectorNodeId),
-        type: NodeType.NODEJS
-    }
+    const inspectorDescriptor = createMockPeerDescriptor()
 
-    const inspectedDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS
-    }
+    const inspectedDescriptor = createMockPeerDescriptor()
 
     const nodeId = createRandomNodeId()
     let mockConnect: jest.Mock
@@ -34,11 +27,11 @@ describe('Inspector', () => {
     beforeEach(() => {
         mockConnect = jest.fn(() => {})
         inspector = new Inspector({
-            ownPeerDescriptor: inspectorDescriptor,
-            graphId: 'test',
+            localPeerDescriptor: inspectorDescriptor,
+            streamPartId: StreamPartIDUtils.parse('stream#0'),
             rpcCommunicator: new ListeningRpcCommunicator('inspector', new MockTransport()),
             connectionLocker: mockConnectionLocker,
-            openInspectConnection: async (_peerDescriptor: PeerDescriptor, _lockId: string) => mockConnect()
+            openInspectConnection: async () => mockConnect()
         })
     })
 

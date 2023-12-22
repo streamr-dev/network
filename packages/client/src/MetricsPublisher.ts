@@ -73,7 +73,7 @@ export class MetricsPublisher {
             const node = await this.node.getNode()
             const metricsContext = node.getMetricsContext()
             const partitionKey = await authentication.getAddress()
-            this.config.periods.map((config) => {
+            this.config.periods.forEach((config) => {
                 return metricsContext.createReportProducer(async (report: MetricsReport) => {
                     await this.publish(report, config.streamId, partitionKey)
                 }, config.duration, this.destroySignal.abortSignal)

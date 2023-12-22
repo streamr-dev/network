@@ -107,7 +107,7 @@ export class FakeStorageNode extends FakeNetworkNode {
         })
         const port = (this.server.address() as AddressInfo).port
         this.chain.storageNodeMetadatas.set(this.getAddress(), {
-            http: `http://localhost:${port}`
+            http: `http://127.0.0.1:${port}`
         })
         const storageNodeAssignmentStreamPermissions = new Multimap<EthereumAddress, StreamPermission>()
         storageNodeAssignmentStreamPermissions.add(this.getAddress(), StreamPermission.PUBLISH)
@@ -135,7 +135,7 @@ export class FakeStorageNode extends FakeNetworkNode {
                         this.storeMessage(msg)
                     }
                 })
-                this.subscribe(streamPartId)
+                this.join(streamPartId)
                 const assignmentMessage = await createMockMessage({
                     streamPartId: toStreamPartID(formStorageNodeAssignmentStreamId(this.getAddress()), DEFAULT_PARTITION),
                     publisher: this.wallet,
@@ -143,7 +143,7 @@ export class FakeStorageNode extends FakeNetworkNode {
                         streamPart: streamPartId,
                     }
                 })
-                await this.publish(assignmentMessage)
+                await this.broadcast(assignmentMessage)
             }
         })
     }

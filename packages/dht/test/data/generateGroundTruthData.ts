@@ -1,16 +1,17 @@
 import fs from 'fs'
 import crypto from 'crypto'
 import KBucket from 'k-bucket'
+import { DhtAddressRaw } from '../../src/identifiers'
 
 const ID_LENGTH = 8
 const NUM_NODES = 2000
 const NUM_NEAREST = 10
 
-const generateId = function(): Uint8Array {
+const generateId = function(): DhtAddressRaw {
     return crypto.randomBytes(ID_LENGTH)
 }
 
-const findNNearestNeighbors = function(ownIndex: number, ownId: Uint8Array, nodes: Array<Uint8Array>, n: number): Array<number> {
+const findNNearestNeighbors = function(ownIndex: number, ownId: DhtAddressRaw, nodes: Array<DhtAddressRaw>, n: number): Array<number> {
     const retIndex: Array<number> = []
 
     for (let i = 0; i < n; i++) {
@@ -37,7 +38,7 @@ const neighborWriter = fs.createWriteStream('orderedneighbors.json', {})
 
 neighborWriter.write('{\n')
 
-const nodes: Array<Uint8Array> = []
+const nodes: Array<DhtAddressRaw> = []
 
 // generate nodeIds
 
@@ -53,7 +54,7 @@ for (let i = 0; i < NUM_NODES; i++) {
 
     const neighborIds = findNNearestNeighbors(i, nodes[i], nodes, NUM_NEAREST)
 
-    const neighborNames: Array<{ name: number, distance: number, id: Uint8Array }> = []
+    const neighborNames: Array<{ name: number, distance: number, id: DhtAddressRaw }> = []
     // eslint-disable-next-line @typescript-eslint/prefer-for-of
     for (let j = 0; j < neighborIds.length; j++) {
         neighborNames.push({ name: neighborIds[j], distance: KBucket.distance(nodes[i], nodes[neighborIds[j]]), id: nodes[neighborIds[j]] })

@@ -1,24 +1,18 @@
 import { setAbortableTimeout } from '@streamr/utils'
 import { NodeList } from '../NodeList'
-import { NodeID } from '../../identifiers'
+import { DhtAddress } from '@streamr/dht'
 
 interface FindNeighborsSessionConfig {
     targetNeighbors: NodeList
     nearbyNodeView: NodeList
-    doFindNeighbors: (excludedNodes: NodeID[]) => Promise<NodeID[]>
-    N: number
+    doFindNeighbors: (excludedNodes: DhtAddress[]) => Promise<DhtAddress[]>
+    minCount: number
 }
 
-const INITIAL_TIMEOUT = 100
-const INTERVAL_TIMEOUT = 250
+const INITIAL_WAIT = 100
+const INTERVAL = 250
 
-export interface INeighborFinder {
-    start(excluded?: NodeID[]): void
-    stop(): void
-    isRunning(): boolean
-}
-
-export class NeighborFinder implements INeighborFinder {
+export class NeighborFinder {
     private readonly abortController: AbortController
     private readonly config: FindNeighborsSessionConfig
     private running = false
@@ -28,13 +22,14 @@ export class NeighborFinder implements INeighborFinder {
         this.abortController = new AbortController()
     }
 
-    private async findNeighbors(excluded: NodeID[]): Promise<void> {
+    private async findNeighbors(excluded: DhtAddress[]): Promise<void> {
         if (!this.running) {
             return
         }
         const newExcludes = await this.config.doFindNeighbors(excluded)
-        if (this.config.targetNeighbors.size() < this.config.N && newExcludes.length < this.config.nearbyNodeView.size()) {
-            setAbortableTimeout(() => this.findNeighbors(newExcludes), INTERVAL_TIMEOUT, this.abortController.signal)
+        if (this.config.targetNeighbors.size() < this.config.minCount && newExcludes.length < this.config.nearbyNodeView.size()) {
+            // TODO should we catch possible promise rejection?
+            setAbortableTimeout(() => this.findNeighbors(newExcludes), INTERVAL, this.abortController.signal)
         } else {
             this.running = false
         }
@@ -44,12 +39,13 @@ export class NeighborFinder implements INeighborFinder {
         return this.running
     }
 
-    start(excluded: NodeID[] = []): void {
+    start(excluded: DhtAddress[] = []): void {
         if (this.running) {
             return
         }
         this.running = true
-        setAbortableTimeout(() => this.findNeighbors(excluded), INITIAL_TIMEOUT, this.abortController.signal)
+        // TODO should we catch possible promise rejection?
+        setAbortableTimeout(() => this.findNeighbors(excluded), INITIAL_WAIT, this.abortController.signal)
     }
 
     stop(): void {
