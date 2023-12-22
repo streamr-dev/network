@@ -4,9 +4,9 @@ import { Handshaker } from './Handshaker'
 import { HandshakeError, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { Logger, runAndRaceEvents3, RunAndRaceEventsReturnType } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
-import { PeerIDKey } from '../helpers/PeerID'
-import { keyFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
+import { NodeID } from '../helpers/nodeId'
 
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
@@ -166,8 +166,8 @@ export class ManagedConnection extends EventEmitter<Events> {
         return this
     }
 
-    public get peerIdKey(): PeerIDKey {
-        return keyFromPeerDescriptor(this.remotePeerDescriptor!)
+    public getNodeId(): NodeID {
+        return getNodeIdFromPeerDescriptor(this.remotePeerDescriptor!)
     }
 
     public getLastUsed(): number {

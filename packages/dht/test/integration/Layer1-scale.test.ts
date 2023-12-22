@@ -4,6 +4,7 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils/utils'
 import { UUID } from '../../src/helpers/UUID'
 import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { areEqualNodeIds } from '../../src/helpers/nodeId'
 
 const NUM_OF_NODES_PER_KBUCKET = 8
 
@@ -73,7 +74,7 @@ describe('Layer1', () => {
         for (let i = 0; i < NODE_COUNT; i++) {
             const layer0Node = nodes[i]
             const layer1Node = layer1Nodes[i]
-            expect(layer1Node.getNodeId().equals(layer0Node.getNodeId())).toEqual(true)
+            expect(areEqualNodeIds(layer1Node.getNodeId(), layer0Node.getNodeId())).toEqual(true)
             expect(layer1Node.getNumberOfConnections()).toEqual(layer0Node.getNumberOfConnections())
             expect(layer1Node.getNumberOfNeighbors()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
             expect(layer1Node.getAllConnectionPeerDescriptors()).toEqual(layer0Node.getAllConnectionPeerDescriptors())
