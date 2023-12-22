@@ -107,8 +107,8 @@ export class NetworkStack {
                     await this.layer0Node?.joinDht(this.options.layer0.entryPoints)
                 }
             })
+            await this.layer0Node!.waitForNetworkConnectivity()
         }
-        await this.layer0Node!.waitForNetworkConnectivity()
     }
 
     getStreamrNode(): StreamrNode {
