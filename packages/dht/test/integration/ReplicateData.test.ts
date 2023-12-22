@@ -1,33 +1,31 @@
 /* eslint-disable no-console */
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils/utils'
 import { Logger } from '@streamr/utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { Any } from '../../src/proto/google/protobuf/any'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
 import { NodeID } from '../../src/helpers/nodeId'
-import crypto from 'crypto'
 import { createRandomNodeId } from '../../src/helpers/nodeId'
+import { createMockDataEntry, unpackData } from '../utils/mock/mockDataEntry'
 
 const logger = new Logger(module)
 
 jest.setTimeout(60000)
 
 const DATA_KEY = PeerID.fromString('3232323e12r31r3')
-const DATA_VALUE = Any.pack({ nodeId: crypto.randomBytes(10), type: NodeType.NODEJS, }, PeerDescriptor)
+const DATA_VALUE = createMockDataEntry({ key: DATA_KEY.value })
 const NUM_NODES = 100
 const MAX_CONNECTIONS = 80
 const K = 8
 
-const getDataValues = (node: DhtNode): PeerDescriptor[] => {
+const getDataValues = (node: DhtNode): { foo: string }[] => {
     // @ts-expect-error private field
     const store = node.localDataStore
-    return Array.from(store.getEntries(DATA_KEY.value).values())
-        .map((value) => Any.unpack(value.data!, PeerDescriptor))
+    const entries = Array.from(store.getEntries(DATA_KEY.value).values())
+    return entries.map((e) => unpackData(e))
 }
 
 const hasData = (node: DhtNode): boolean => {
@@ -92,7 +90,7 @@ describe('Replicate data from node to node in DHT', () => {
         })
 
         logger.info('storing data to node 0')
-        const successfulStorers = await nodes[0].storeDataToDht(DATA_KEY.value, DATA_VALUE)
+        const successfulStorers = await nodes[0].storeDataToDht(DATA_KEY.value, DATA_VALUE.data!)
         expect(successfulStorers.length).toBe(1)
         logger.info('data successfully stored to node 0')
 
@@ -151,7 +149,7 @@ describe('Replicate data from node to node in DHT', () => {
         const randomIndex = Math.floor(Math.random() * nodes.length)
         logger.info('storing data to a random node: ' + randomIndex)
 
-        const successfulStorers = await nodes[randomIndex].storeDataToDht(DATA_KEY.value, DATA_VALUE)
+        const successfulStorers = await nodes[randomIndex].storeDataToDht(DATA_KEY.value, DATA_VALUE.data!)
 
         logger.info('data successfully stored to ' 
             + successfulStorers.map((peerDescriptor) => getNodeIdFromPeerDescriptor(peerDescriptor)).join() + ' nodes')
