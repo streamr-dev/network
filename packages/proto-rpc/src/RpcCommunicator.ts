@@ -147,7 +147,6 @@ export class RpcCommunicator<T extends ProtoCallContext> extends EventEmitter<Rp
         if (this.stopped) {
             return
         }
-        //const rpcCall = RpcMessage.fromBinary(message)
         return this.onIncomingMessage(message, callContext)
     }
 
@@ -356,7 +355,6 @@ export class RpcCommunicator<T extends ProtoCallContext> extends EventEmitter<Rp
         const ongoingRequest = this.ongoingRequests.get(requestId)
 
         if (ongoingRequest) {
-            //error = new Err.RpcClientError('Rpc client error', error)
             ongoingRequest.rejectRequest(error, StatusCode.SERVER_ERROR)
             this.ongoingRequests.delete(requestId)
         }

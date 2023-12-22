@@ -2,7 +2,8 @@ import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils/utils'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
-import { createRandomNodeId } from '../../src/helpers/nodeId'
+import { createRandomDhtAddress } from '../../src/identifiers'
+import { getDhtAddressFromRaw } from '../../src/identifiers'
 
 const NUM_NODES = 5
 const MAX_CONNECTIONS = 5
@@ -20,7 +21,7 @@ describe('Storing data in DHT', () => {
     beforeEach(async () => {
         nodes = []
         const entryPoint = await createMockConnectionDhtNode(simulator,
-            createRandomNodeId(), K, MAX_CONNECTIONS)
+            createRandomDhtAddress(), K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
         for (let i = 1; i < NUM_NODES; i++) {
             const node = await createMockConnectionDhtNode(simulator, 
@@ -38,11 +39,11 @@ describe('Storing data in DHT', () => {
     it('Data can be deleted', async () => {
         const storingNode = getRandomNode()
         const entry = createMockDataEntry()
-        const successfulStorers = await storingNode.storeDataToDht(entry.key, entry.data!)
+        const successfulStorers = await storingNode.storeDataToDht(getDhtAddressFromRaw(entry.key), entry.data!)
         expect(successfulStorers.length).toBeGreaterThan(4)
-        await storingNode.deleteDataFromDht(entry.key, true)
+        await storingNode.deleteDataFromDht(getDhtAddressFromRaw(entry.key), true)
         const fetchingNode = getRandomNode()
-        const results = await fetchingNode.getDataFromDht(entry.key)
+        const results = await fetchingNode.getDataFromDht(getDhtAddressFromRaw(entry.key))
         results.forEach((result) => {
             expect(result.deleted).toBeTrue()
             expectEqualData(result, entry)
@@ -52,18 +53,18 @@ describe('Storing data in DHT', () => {
     it('Data can be deleted and re-stored', async () => {
         const storingNode = getRandomNode()
         const entry = createMockDataEntry()
-        const successfulStorers1 = await storingNode.storeDataToDht(entry.key, entry.data!)
+        const successfulStorers1 = await storingNode.storeDataToDht(getDhtAddressFromRaw(entry.key), entry.data!)
         expect(successfulStorers1.length).toBeGreaterThan(4)
-        await storingNode.deleteDataFromDht(entry.key, true)
+        await storingNode.deleteDataFromDht(getDhtAddressFromRaw(entry.key), true)
         const fetchingNode = getRandomNode()
-        const results1 = await fetchingNode.getDataFromDht(entry.key)
+        const results1 = await fetchingNode.getDataFromDht(getDhtAddressFromRaw(entry.key))
         results1.forEach((result) => {
             expect(result.deleted).toBeTrue()
             expectEqualData(result, entry)
         })
-        const successfulStorers2 = await storingNode.storeDataToDht(entry.key, entry.data!)
+        const successfulStorers2 = await storingNode.storeDataToDht(getDhtAddressFromRaw(entry.key), entry.data!)
         expect(successfulStorers2.length).toBeGreaterThan(4)
-        const results2 = await fetchingNode.getDataFromDht(entry.key)
+        const results2 = await fetchingNode.getDataFromDht(getDhtAddressFromRaw(entry.key))
         results2.forEach((result) => {
             expect(result.deleted).toBeFalse()
             expectEqualData(result, entry)

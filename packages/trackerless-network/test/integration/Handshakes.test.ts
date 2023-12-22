@@ -4,9 +4,9 @@ import {
     PeerDescriptor,
     ListeningRpcCommunicator,
     Simulator,
-    SimulatorTransport
+    SimulatorTransport,
+    getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
     HandshakeRpcClient
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -14,7 +14,6 @@ import { NodeList } from '../../src/logic/NodeList'
 import { mockConnectionLocker } from '../utils/utils'
 import { StreamPartHandshakeRequest, StreamPartHandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('Handshakes', () => {
@@ -115,8 +114,8 @@ describe('Handshakes', () => {
             new HandshakeRpcRemote(
                 peerDescriptor2,
                 peerDescriptor1,
-                streamPartId,
-                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport()))
+                rpcCommunicator2,
+                HandshakeRpcClient
             )
         )
         expect(res).toEqual(true)
@@ -130,8 +129,8 @@ describe('Handshakes', () => {
             new HandshakeRpcRemote(
                 peerDescriptor2,
                 peerDescriptor1,
-                streamPartId,
-                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport()))
+                rpcCommunicator2,
+                HandshakeRpcClient
             )
         )
         expect(res).toEqual(true)
@@ -145,8 +144,8 @@ describe('Handshakes', () => {
             new HandshakeRpcRemote(
                 peerDescriptor2,
                 peerDescriptor1,
-                streamPartId,
-                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport()))
+                rpcCommunicator2,
+                HandshakeRpcClient
             )
         )
         expect(res).toEqual(false)
@@ -161,8 +160,8 @@ describe('Handshakes', () => {
             new HandshakeRpcRemote(
                 peerDescriptor2,
                 peerDescriptor1,
-                streamPartId,
-                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport()))
+                rpcCommunicator2,
+                HandshakeRpcClient
             )
         )
         expect(res).toEqual(true)

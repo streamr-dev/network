@@ -1,7 +1,5 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { DhtCallContext, ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { DeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { INeighborUpdateRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
@@ -32,18 +30,17 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
         if (this.config.targetNeighbors.hasNodeById(senderId)) {
-            const newPeerDescriptors = message.neighborDescriptors
-                .filter((peerDescriptor) => {
-                    const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
-                    const ownNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
-                    return nodeId !== ownNodeId && !this.config.targetNeighbors.getIds().includes(nodeId)
-                })
+            const ownNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
+            const newPeerDescriptors = message.neighborDescriptors.filter((peerDescriptor) => {
+                const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+                return nodeId !== ownNodeId && !this.config.targetNeighbors.getIds().includes(nodeId)
+            })
             newPeerDescriptors.forEach((peerDescriptor) => this.config.nearbyNodeView.add(
                 new DeliveryRpcRemote(
                     this.config.localPeerDescriptor,
                     peerDescriptor,
-                    this.config.streamPartId,
-                    toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                    this.config.rpcCommunicator,
+                    DeliveryRpcClient
                 ))
             )
             this.config.neighborFinder.start()

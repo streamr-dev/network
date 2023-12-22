@@ -11,16 +11,14 @@ import { ConnectionManager } from '../../connection/ConnectionManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { v4 } from 'uuid'
 import { RouterRpcLocal, createRouteMessageAck } from './RouterRpcLocal'
-import { NodeID } from '../../helpers/nodeId'
+import { DhtAddress, getDhtAddressFromRaw } from '../../identifiers'
 
 export interface RouterConfig {
     rpcCommunicator: RoutingRpcCommunicator
     localPeerDescriptor: PeerDescriptor
-    connections: Map<NodeID, DhtNodeRpcRemote>
+    connections: Map<DhtAddress, DhtNodeRpcRemote>
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     connectionManager?: ConnectionManager
-    // TODO use this or remove the config option?
-    rpcRequestTimeout?: number
 }
 
 interface ForwardingTableEntry {
@@ -32,7 +30,7 @@ const logger = new Logger(module)
 
 export class Router {
 
-    private readonly forwardingTable: Map<NodeID, ForwardingTableEntry> = new Map()
+    private readonly forwardingTable: Map<DhtAddress, ForwardingTableEntry> = new Map()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
     // TODO use config option or named constant?
     private readonly duplicateRequestDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
@@ -83,11 +81,10 @@ export class Router {
         const targetPeerDescriptor = msg.targetDescriptor!
         const forwardingEntry = this.forwardingTable.get(getNodeIdFromPeerDescriptor(targetPeerDescriptor))
         if (forwardingEntry && forwardingEntry.peerDescriptors.length > 0) {
-            const forwardingPeer = forwardingEntry.peerDescriptors[0]
             const forwardedMessage: RouteMessageWrapper = {
                 message: msg,
                 requestId: v4(),
-                destinationPeer: forwardingPeer,
+                target: forwardingEntry.peerDescriptors[0].nodeId,
                 sourcePeer: this.config.localPeerDescriptor,
                 reachableThrough,
                 routingPath: []
@@ -102,7 +99,7 @@ export class Router {
             const routedMessage: RouteMessageWrapper = {
                 message: msg,
                 requestId: v4(),
-                destinationPeer: targetPeerDescriptor,
+                target: targetPeerDescriptor.nodeId,
                 sourcePeer: this.config.localPeerDescriptor,
                 reachableThrough,
                 routingPath: []
@@ -121,7 +118,7 @@ export class Router {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
         logger.trace(`Routing message ${routedMessage.requestId} from ${getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!)} `
-            + `to ${getNodeIdFromPeerDescriptor(routedMessage.destinationPeer!)}`)
+            + `to ${getDhtAddressFromRaw(routedMessage.target)}`)
         const session = this.createRoutingSession(routedMessage, mode, excludedPeer)
         const contacts = session.updateAndGetRoutablePeers()
         if (contacts.length > 0) {
@@ -157,7 +154,7 @@ export class Router {
     }
 
     private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedNode?: PeerDescriptor): RoutingSession {
-        const excludedNodeIds = new Set<NodeID>(routedMessage.routingPath.map((descriptor) => getNodeIdFromPeerDescriptor(descriptor)))
+        const excludedNodeIds = new Set<DhtAddress>(routedMessage.routingPath.map((descriptor) => getNodeIdFromPeerDescriptor(descriptor)))
         if (excludedNode) {
             excludedNodeIds.add(getNodeIdFromPeerDescriptor(excludedNode))
         }

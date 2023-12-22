@@ -5,12 +5,13 @@ import { createMockPeerDescriptor, createWrappedClosestPeersRequest } from '../u
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { NodeID } from '../../src/helpers/nodeId'
+import { DhtAddress } from '../../src/identifiers'
+import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 
 describe('RoutingSession', () => {
 
     let session: RoutingSession
-    let connections: Map<NodeID, DhtNodeRpcRemote>
+    let connections: Map<DhtAddress, DhtNodeRpcRemote>
     let rpcCommunicator: RoutingRpcCommunicator
     const mockPeerDescriptor1 = createMockPeerDescriptor()
     const mockPeerDescriptor2 = createMockPeerDescriptor()
@@ -31,16 +32,16 @@ describe('RoutingSession', () => {
         requestId: 'REQ',
         routingPath: [],
         reachableThrough: [],
-        destinationPeer: mockPeerDescriptor1,
+        target: mockPeerDescriptor1.nodeId,
         sourcePeer: mockPeerDescriptor2
     }
 
     const createMockDhtNodeRpcRemote = (destination: PeerDescriptor): DhtNodeRpcRemote => {
-        return new DhtNodeRpcRemote(mockPeerDescriptor1, destination, {} as any, 'router')
+        return new DhtNodeRpcRemote(mockPeerDescriptor1, destination, undefined as any, rpcCommunicator)
     }
 
     beforeEach(() => {
-        rpcCommunicator = new RoutingRpcCommunicator('mock', async () => {})
+        rpcCommunicator = new MockRpcCommunicator()
         connections = new Map()
         session = new RoutingSession({
             rpcCommunicator: rpcCommunicator,

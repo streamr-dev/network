@@ -11,11 +11,12 @@ import {
 import { IStoreRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { LocalDataStore } from './LocalDataStore'
+import { DhtAddress, getDhtAddressFromRaw } from '../../identifiers'
 
 interface StoreRpcLocalConfig {
     localDataStore: LocalDataStore
     replicateDataToNeighbors: (incomingPeer: PeerDescriptor, dataEntry: DataEntry) => void
-    selfIsOneOfClosestPeers: (key: Uint8Array) => boolean
+    selfIsWithinRedundancyFactor: (key: DhtAddress) => boolean
 }
 
 const logger = new Logger(module)
@@ -29,23 +30,23 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
-        const { key, data, creator, createdAt, ttl } = request
-        const selfIsOneOfClosestPeers = this.config.selfIsOneOfClosestPeers(key)
+        logger.trace('storeData()')
+        const key = getDhtAddressFromRaw(request.key)
+        const selfIsOneOfClosestPeers = this.config.selfIsWithinRedundancyFactor(key)
         this.config.localDataStore.storeEntry({ 
-            key, 
-            data,
-            creator, 
-            createdAt,
+            key: request.key,
+            data: request.data,
+            creator: request.creator,
+            createdAt: request.createdAt,
             storedAt: Timestamp.now(),
-            ttl,
+            ttl: request.ttl,
             stale: !selfIsOneOfClosestPeers,
             deleted: false
         })
         if (!selfIsOneOfClosestPeers) {
             this.config.localDataStore.setAllEntriesAsStale(key)
         }
-        logger.trace('storeData()')
-        return StoreDataResponse.create()
+        return {}
     }
 
     public async replicateData(request: ReplicateDataRequest, context: ServerCallContext): Promise<Empty> {
@@ -55,8 +56,9 @@ export class StoreRpcLocal implements IStoreRpc {
         if (wasStored) {
             this.config.replicateDataToNeighbors((context as DhtCallContext).incomingSourceDescriptor!, request.entry!)
         }
-        if (!this.config.selfIsOneOfClosestPeers(dataEntry.key)) {
-            this.config.localDataStore.setAllEntriesAsStale(dataEntry.key)
+        const key = getDhtAddressFromRaw(dataEntry.key)
+        if (!this.config.selfIsWithinRedundancyFactor(key)) {
+            this.config.localDataStore.setAllEntriesAsStale(key)
         }
         logger.trace('server-side replicateData() at end')
         return {}

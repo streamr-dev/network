@@ -1,6 +1,6 @@
-import { binaryToHex } from '@streamr/utils'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockPeerDescriptor } from '../utils/utils'
+import { getNodeIdFromPeerDescriptor } from '../../src/exports'
 
 describe('Layer 1 on Layer 0 with mocked connections', () => {
 
@@ -47,7 +47,7 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
         })
 
         layer1EntryPoint = new DhtNode({
-            peerId: binaryToHex(entrypointDescriptor.nodeId),
+            peerId: getNodeIdFromPeerDescriptor(entrypointDescriptor),
             transport: layer0EntryPoint,
             serviceId: 'layer1'
         })

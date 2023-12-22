@@ -1,5 +1,5 @@
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
-import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
+import { RpcCommunicator } from '@streamr/proto-rpc'
 import { createMockDhtRpc, createMockPeerDescriptor, createMockPeers } from '../utils/utils'
 import {
     ClosestPeersRequest,
@@ -8,8 +8,8 @@ import {
     PingResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { DhtNodeRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
+import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 
 const SERVICE_ID = 'test'
 
@@ -33,8 +33,7 @@ describe('DhtNodeRpcRemote', () => {
         serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
-        const client = toProtoRpcClient(new DhtNodeRpcClient(clientRpcCommunicator.getRpcClientTransport()))
-        rpcRemote = new DhtNodeRpcRemote(clientPeerDescriptor, serverPeerDescriptor, client, SERVICE_ID)
+        rpcRemote = new DhtNodeRpcRemote(clientPeerDescriptor, serverPeerDescriptor, SERVICE_ID, clientRpcCommunicator)
     })
 
     afterEach(() => {
@@ -48,7 +47,7 @@ describe('DhtNodeRpcRemote', () => {
     })
 
     it('getClosestPeers happy path', async () => {
-        const neighbors = await rpcRemote.getClosestPeers(clientPeerDescriptor.nodeId)
+        const neighbors = await rpcRemote.getClosestPeers(getNodeIdFromPeerDescriptor(clientPeerDescriptor))
         expect(neighbors.length).toEqual(createMockPeers().length)
     })
 
@@ -60,7 +59,7 @@ describe('DhtNodeRpcRemote', () => {
 
     it('getClosestPeers error path', async () => {
         serverRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', mockDhtRpc.throwGetClosestPeersError)
-        await expect(rpcRemote.getClosestPeers(clientPeerDescriptor.nodeId))
+        await expect(rpcRemote.getClosestPeers(getNodeIdFromPeerDescriptor(clientPeerDescriptor)))
             .rejects.toThrow('Closest peers error')
     })
 

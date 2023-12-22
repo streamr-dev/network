@@ -1,9 +1,10 @@
-import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { ProtoRpcClient } from '@streamr/proto-rpc'
-import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
-import { ServiceID } from '../../types/ServiceID'
+import type { ServiceInfo } from '@protobuf-ts/runtime-rpc'
+import { ClassType, ClientTransport, ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import { ConnectionType } from '../../connection/IConnection'
 import { expectedConnectionType } from '../../helpers/Connectivity'
+import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
+import { DhtCallContext } from '../../rpc-protocol/DhtCallContext' 
 
 // Should connect directly to the server, timeout can be low
 const WEBSOCKET_CLIENT_TIMEOUT = 5000
@@ -27,25 +28,24 @@ const getTimeout = (localPeerDescriptor: PeerDescriptor, remotePeerDescriptor: P
     return WEBRTC_TIMEOUT
 }
 
-export abstract class RpcRemote<T> {
+export abstract class RpcRemote<T extends ServiceInfo & ClassType> {
 
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly remotePeerDescriptor: PeerDescriptor
-    private readonly serviceId: ServiceID
     private readonly client: ProtoRpcClient<T>
     private readonly timeout?: number
 
     constructor(
         localPeerDescriptor: PeerDescriptor,
         remotePeerDescriptor: PeerDescriptor,
-        serviceId: ServiceID,
-        client: ProtoRpcClient<T>,
+        rpcCommunicator: RpcCommunicator<DhtCallContext>,
+        // eslint-disable-next-line @typescript-eslint/prefer-function-type
+        clientClass: { new (clientTransport: ClientTransport): T },
         timeout?: number
     ) {
         this.localPeerDescriptor = localPeerDescriptor
         this.remotePeerDescriptor = remotePeerDescriptor
-        this.client = client
-        this.serviceId = serviceId
+        this.client = toProtoRpcClient(new clientClass(rpcCommunicator.getRpcClientTransport()))
         this.timeout = timeout
     }
 
@@ -55,10 +55,6 @@ export abstract class RpcRemote<T> {
 
     getLocalPeerDescriptor(): PeerDescriptor {
         return this.localPeerDescriptor
-    }
-
-    getServiceId(): ServiceID {
-        return this.serviceId
     }
 
     getClient(): ProtoRpcClient<T> {

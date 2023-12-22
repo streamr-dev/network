@@ -8,12 +8,11 @@ import { PeerDescriptor, RouteMessageWrapper } from '../../proto/packages/dht/pr
 import { RouterRpcRemote } from './RouterRpcRemote'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RecursiveOperationRpcClient, RouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Contact } from '../contact/Contact'
 import { RecursiveOperationRpcRemote } from '../recursive-operation/RecursiveOperationRpcRemote'
 import { EXISTING_CONNECTION_TIMEOUT } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
-import { NodeID } from '../../helpers/nodeId'
+import { DhtAddress, getDhtAddressFromRaw } from '../../identifiers'
 
 const logger = new Logger(module)
 
@@ -29,15 +28,15 @@ class RemoteContact extends Contact {
         this.routerRpcRemote = new RouterRpcRemote(
             localPeerDescriptor,
             peer.getPeerDescriptor(),
-            peer.getServiceId(),
-            toProtoRpcClient(new RouterRpcClient(rpcCommunicator.getRpcClientTransport())),
+            rpcCommunicator,
+            RouterRpcClient,
             EXISTING_CONNECTION_TIMEOUT
         )
         this.recursiveOperationRpcRemote = new RecursiveOperationRpcRemote(
             localPeerDescriptor,
             peer.getPeerDescriptor(),
-            peer.getServiceId(),
-            toProtoRpcClient(new RecursiveOperationRpcClient(rpcCommunicator.getRpcClientTransport())),
+            rpcCommunicator,
+            RecursiveOperationRpcClient,
             EXISTING_CONNECTION_TIMEOUT
         )
     }
@@ -68,16 +67,16 @@ interface RoutingSessionConfig {
     rpcCommunicator: RoutingRpcCommunicator
     localPeerDescriptor: PeerDescriptor
     routedMessage: RouteMessageWrapper
-    connections: Map<NodeID, DhtNodeRpcRemote>
+    connections: Map<DhtAddress, DhtNodeRpcRemote>
     parallelism: number
     mode: RoutingMode
-    excludedNodeIds?: Set<NodeID>
+    excludedNodeIds?: Set<DhtAddress>
 }
 
 export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
     public readonly sessionId = v4()
-    private ongoingRequests: Set<NodeID> = new Set()
+    private ongoingRequests: Set<DhtAddress> = new Set()
     private contactList: SortedContactList<RemoteContact>
     private failedHopCounter = 0
     private successfulHopCounter = 0
@@ -90,7 +89,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         const previousPeer = getPreviousPeer(config.routedMessage)
         const previousId = previousPeer ? getNodeIdFromPeerDescriptor(previousPeer) : undefined
         this.contactList = new SortedContactList({
-            referenceId: getNodeIdFromPeerDescriptor(config.routedMessage.destinationPeer!),
+            referenceId: getDhtAddressFromRaw(config.routedMessage.target),
             maxSize: 10000,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             nodeIdDistanceLimit: previousId,
@@ -99,7 +98,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         })
     }
 
-    private onRequestFailed(nodeId: NodeID) {
+    private onRequestFailed(nodeId: DhtAddress) {
         logger.trace('onRequestFailed() sessionId: ' + this.sessionId)
         if (this.stopped) {
             return
