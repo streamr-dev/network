@@ -33,6 +33,10 @@ const main = async () => {
         console.log('total stream neighbors on streamr.eth/demos/helsinki-trams: ' + node.getNeighbors(stream3).length)
         const stream4 = StreamPartIDUtils.parse('0xbafb06e3d7546742c6b1f2945b74ce0b3edc201a/nodle#0')
         console.log('total stream neighbors on 0xbafb06e3d7546742c6b1f2945b74ce0b3edc201a/nodle: ' + node.getNeighbors(stream4).length)
+        const stream5 = StreamPartIDUtils.parse('0x7277c78c02a4192ef8c48f5f4c529278d0e447fc/kyve/kyve-1/0#0')
+        console.log('total stream neighbors on 0x7277c78c02a4192ef8c48f5f4c529278d0e447fc/kyve/kyve-1/0: ' + node.getNeighbors(stream5).length)
+        const stream6 = StreamPartIDUtils.parse('streamr.eth/demos/video#0')
+        console.log('total stream neighbors on streamr.eth/demos/video: ' + node.getNeighbors(stream6).length)
     }, 10000)
 
     await client.subscribe({
