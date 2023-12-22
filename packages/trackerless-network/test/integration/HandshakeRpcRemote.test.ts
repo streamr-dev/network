@@ -9,11 +9,11 @@ import {
     Simulator,
     SimulatorTransport
 } from '@streamr/dht'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
     HandshakeRpcClient,
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('HandshakeRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator
@@ -34,7 +34,6 @@ describe('HandshakeRpcRemote', () => {
     let mockConnectionManager2: SimulatorTransport
 
     beforeEach(async () => {
-        Simulator.useFakeTimers()
         simulator = new Simulator()
         mockConnectionManager1 = new SimulatorTransport(serverNode, simulator)
         await mockConnectionManager1.start()
@@ -60,8 +59,8 @@ describe('HandshakeRpcRemote', () => {
         rpcRemote = new HandshakeRpcRemote(
             clientNode,
             serverNode,
-            'test-stream-part',
-            toProtoRpcClient(new HandshakeRpcClient(clientRpc.getRpcClientTransport()))
+            clientRpc,
+            HandshakeRpcClient
         )
     })
 
@@ -71,11 +70,10 @@ describe('HandshakeRpcRemote', () => {
         await mockConnectionManager1.stop()
         await mockConnectionManager2.stop()
         simulator.stop()
-        Simulator.useFakeTimers(false)
     })
 
     it('handshake', async () => {
-        const result = await rpcRemote.handshake([])
+        const result = await rpcRemote.handshake(StreamPartIDUtils.parse('test#0'), [])
         expect(result.accepted).toEqual(true)
     })
 })

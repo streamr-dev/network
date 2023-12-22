@@ -13,12 +13,9 @@ import {
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { waitForCondition } from '@streamr/utils'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { createStreamMessage } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-
-const STREAM_PART_ID = StreamPartIDUtils.parse('test-stream#0')
 
 describe('DeliveryRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator
@@ -72,8 +69,8 @@ describe('DeliveryRpcRemote', () => {
         rpcRemote = new DeliveryRpcRemote(
             clientNode,
             serverNode,
-            STREAM_PART_ID,
-            toProtoRpcClient(new DeliveryRpcClient(clientRpc.getRpcClientTransport()))
+            clientRpc,
+            DeliveryRpcClient
         )
     })
 
@@ -88,7 +85,7 @@ describe('DeliveryRpcRemote', () => {
     it('sendStreamMessage', async () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
-            STREAM_PART_ID,
+            StreamPartIDUtils.parse('test-stream#0'),
             randomEthereumAddress()
         )
 
@@ -97,7 +94,7 @@ describe('DeliveryRpcRemote', () => {
     })
 
     it('leaveNotice', async () => {
-        rpcRemote.leaveStreamPartNotice()
+        rpcRemote.leaveStreamPartNotice(StreamPartIDUtils.parse('test#0'), false)
         await waitForCondition(() => recvCounter === 1)
     })
 

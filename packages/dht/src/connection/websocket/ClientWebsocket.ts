@@ -15,6 +15,7 @@ export const CUSTOM_GOING_AWAY = 3001
 const BINARY_TYPE = 'arraybuffer'
 
 export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements IConnection {
+
     public readonly connectionId: ConnectionID
     private socket?: Websocket
 

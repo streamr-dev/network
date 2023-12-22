@@ -3,12 +3,12 @@ import { randomEthereumAddress } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkStack } from '../../src/NetworkStack'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import { getNodeIdFromPeerDescriptor } from '@streamr/dht'
 
 describe('Full node network with WebSocket connections only', () => {
 
-    const NUM_OF_NODES = 48
+    const NUM_OF_NODES = 32
     const epPeerDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 15555, tls: false }
     })
@@ -62,7 +62,7 @@ describe('Full node network with WebSocket connections only', () => {
             waitForCondition(() => {
                 return node.getStreamrNode()!.getNeighbors(streamPartId).length >= 4
             }
-            , 120000)
+            , 30000)
         ))
         let numOfMessagesReceived = 0
         const successIds: string[] = []

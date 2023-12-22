@@ -43,38 +43,34 @@ export class SimulatorConnection extends Connection implements IConnection {
             this.simulator.send(this, data)
 
         } else {
-            logger.error(getNodeIdFromPeerDescriptor(this.localPeerDescriptor) + ', ' + getNodeIdFromPeerDescriptor(this.targetPeerDescriptor) +
-                'tried to send() on a stopped connection')
+            const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor)
+            const targetNodeId = getNodeIdFromPeerDescriptor(this.targetPeerDescriptor)
+            logger.error(localNodeId + ', ' + targetNodeId + 'tried to send() on a stopped connection')
         }
     }
 
     public async close(gracefulLeave: boolean): Promise<void> {
-        logger.trace(getNodeIdFromPeerDescriptor(this.localPeerDescriptor)
-            + ', ' + getNodeIdFromPeerDescriptor(this.targetPeerDescriptor) + ' close()')
+        const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor)
+        const targetNodeId = getNodeIdFromPeerDescriptor(this.targetPeerDescriptor)
 
+        logger.trace(localNodeId + ', ' + targetNodeId + ' close()')
         if (!this.stopped) {
-            logger.trace(getNodeIdFromPeerDescriptor(this.localPeerDescriptor) + ', '
-                + getNodeIdFromPeerDescriptor(this.targetPeerDescriptor) + ' close() not stopped')
+            logger.trace(localNodeId + ', ' + targetNodeId + ' close() not stopped')
             this.stopped = true
 
             try {
-                logger.trace(getNodeIdFromPeerDescriptor(this.localPeerDescriptor) + ', ' + getNodeIdFromPeerDescriptor(this.targetPeerDescriptor) +
-                    ' close() calling simulator.disconnect()')
+                logger.trace(localNodeId + ', ' + targetNodeId + ' close() calling simulator.disconnect()')
                 this.simulator.close(this)
-                logger.trace(getNodeIdFromPeerDescriptor(this.localPeerDescriptor) + ', ' + getNodeIdFromPeerDescriptor(this.targetPeerDescriptor) +
-                    ' close() simulator.disconnect returned')
+                logger.trace(localNodeId + ', ' + targetNodeId + ' close() simulator.disconnect returned')
             } catch (e) {
-                logger.trace(getNodeIdFromPeerDescriptor(this.localPeerDescriptor) + ', ' + getNodeIdFromPeerDescriptor(this.targetPeerDescriptor) +
-                    'close aborted' + e)
+                logger.trace(localNodeId + ', ' + targetNodeId + 'close aborted' + e)
             } finally {
-                logger.trace(getNodeIdFromPeerDescriptor(this.localPeerDescriptor) + ', ' + getNodeIdFromPeerDescriptor(this.targetPeerDescriptor) +
-                    ' calling this.doDisconnect')
+                logger.trace(localNodeId + ', ' + targetNodeId + ' calling this.doDisconnect')
                 this.doDisconnect(gracefulLeave)
             }
 
         } else {
-            logger.trace(getNodeIdFromPeerDescriptor(this.localPeerDescriptor) + ', ' + getNodeIdFromPeerDescriptor(this.targetPeerDescriptor) +
-                ' close() tried to close a stopped connection')
+            logger.trace(localNodeId + ', ' + targetNodeId + ' close() tried to close a stopped connection')
         }
     }
 
@@ -107,7 +103,8 @@ export class SimulatorConnection extends Connection implements IConnection {
 
     public handleIncomingDisconnection(): void {
         if (!this.stopped) {
-            logger.trace(getNodeIdFromPeerDescriptor(this.localPeerDescriptor) + ' handleIncomingDisconnection()')
+            const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor)
+            logger.trace(localNodeId + ' handleIncomingDisconnection()')
             this.stopped = true
             this.doDisconnect(false)
         } else {
@@ -116,23 +113,24 @@ export class SimulatorConnection extends Connection implements IConnection {
     }
 
     public destroy(): void {
+        const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor)
         if (!this.stopped) {
-            logger.trace(getNodeIdFromPeerDescriptor(this.localPeerDescriptor) + ' destroy()')
+            logger.trace(localNodeId + ' destroy()')
             this.removeAllListeners()
             this.close(false).catch((_e) => { })
         } else {
-            logger.trace(getNodeIdFromPeerDescriptor(this.localPeerDescriptor) + ' tried to call destroy() a stopped connection')
+            logger.trace(localNodeId + ' tried to call destroy() a stopped connection')
         }
     }
 
     private doDisconnect(gracefulLeave: boolean) {
-        logger.trace(getNodeIdFromPeerDescriptor(this.localPeerDescriptor) + ' doDisconnect()')
+        const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor)
+        const targetNodeId = getNodeIdFromPeerDescriptor(this.targetPeerDescriptor)
+        logger.trace(localNodeId + ' doDisconnect()')
         this.stopped = true
 
-        logger.trace(getNodeIdFromPeerDescriptor(this.localPeerDescriptor) + ', '
-            + getNodeIdFromPeerDescriptor(this.targetPeerDescriptor) + ' doDisconnect emitting')
+        logger.trace(localNodeId + ', ' + targetNodeId + ' doDisconnect emitting')
 
         this.emit('disconnected', gracefulLeave)
-
     }
 }

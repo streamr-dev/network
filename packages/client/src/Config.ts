@@ -31,6 +31,13 @@ export interface ControlLayerConfig {
     entryPoints?: NetworkPeerDescriptor[]
 
     /**
+     * The maximum number of connections before unwanted connections are clean up.
+     * This is a soft limit, meaning that the number of connections may exceed the count temporarily.
+     * Locked connections such as the ones used for stream operations are not counted towards this limit.
+    */
+    maxConnections?: number
+
+    /**
      * If true, an attempt is made to discover additional network entrypoint nodes
      * by querying them from The Graph. If false, only the nodes
      * listed in entryPoints are used.
@@ -216,7 +223,6 @@ export interface ChainConnectionInfo {
 
 // these should come from ETH-184 config package when it's ready
 export interface EthereumNetworkConfig {
-    chainId: number
     overrides?: Overrides
     highGasPriceStrategy?: boolean
 }
@@ -229,6 +235,8 @@ export interface EthereumNetworkConfig {
 //   from @streamr/config as the intention is to use system-defaults (e.g. Metamask defaults)
 //   in Ethereum network
 export type EnvironmentId = 'polygon' | 'mumbai' | 'dev2'
+
+export const DEFAULT_ENVIRONMENT: EnvironmentId = 'polygon'
 
 /**
  * @category Important
@@ -374,7 +382,7 @@ export interface StreamrClientConfig {
         storageNodeRegistryChainAddress?: string
         streamRegistryChainRPCs?: ChainConnectionInfo
         // most of the above should go into ethereumNetworks configs once ETH-184 is ready
-        ethereumNetworks?: Record<string, EthereumNetworkConfig>
+        ethereumNetwork?: EthereumNetworkConfig
         /** Some TheGraph instance, that indexes the streamr registries */
         theGraphUrl?: string
         maxConcurrentCalls?: number
@@ -435,7 +443,7 @@ export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc3
 export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStreamrClientConfig => {
     // TODO is it good to cloneDeep the input object as it may have object references (e.g. auth.ethereum)?
     let config = cloneDeep(input)
-    const environment = config.environment ?? 'polygon'
+    const environment = config.environment ?? DEFAULT_ENVIRONMENT
     config = applyEnvironmentDefaults(environment, config)
     const strictConfig = validateConfig(config)
     strictConfig.id ??= generateClientId()
@@ -443,28 +451,34 @@ export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStrea
 }
 
 const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrClientConfig): StreamrClientConfig => {
-    const defauls = CHAIN_CONFIG[environmentId]
+    const defaults = CHAIN_CONFIG[environmentId]
     const config = merge(data, {
         network: {
             ...data.network,
             controlLayer: {
-                entryPoints: defauls.entryPoints,
+                entryPoints: defaults.entryPoints,
                 ...data.network?.controlLayer,
             }
         } as any,
         contracts: {
-            streamRegistryChainAddress: defauls.contracts.StreamRegistry,
-            streamStorageRegistryChainAddress: defauls.contracts.StreamStorageRegistry,
-            storageNodeRegistryChainAddress: defauls.contracts.StorageNodeRegistry,
+            streamRegistryChainAddress: defaults.contracts.StreamRegistry,
+            streamStorageRegistryChainAddress: defaults.contracts.StreamStorageRegistry,
+            storageNodeRegistryChainAddress: defaults.contracts.StorageNodeRegistry,
             streamRegistryChainRPCs: {
-                name: defauls.name,
-                chainId: defauls.id,
-                rpcs: defauls.rpcEndpoints
+                name: defaults.name,
+                chainId: defaults.id,
+                rpcs: defaults.rpcEndpoints
             },
-            theGraphUrl: defauls.theGraphUrl,
+            theGraphUrl: defaults.theGraphUrl,
             ...data.contracts,
         } as any
     }) as any
+    if (environmentId === 'polygon') {
+        config.contracts.ethereumNetwork = { 
+            highGasPriceStrategy: true,
+            ...config.contracts.ethereumNetwork
+        }
+    }
     if (environmentId === 'dev2') {
         // TODO config the 30s default for "dev2 in" @streamr/config and remove this explicit timeout
         const toNumber = (value: any): number | undefined => {

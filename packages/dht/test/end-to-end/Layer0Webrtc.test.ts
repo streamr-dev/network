@@ -1,15 +1,14 @@
 import { areEqualBinaries, waitForEvent3 } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerID } from '../../src/helpers/PeerID'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('Layer0 with WebRTC connections', () => {
-    const epPeerDescriptor: PeerDescriptor = {
-        nodeId: PeerID.fromString('entrypoint').value,
-        type: NodeType.NODEJS,
+
+    const epPeerDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 10029, tls: false }
-    }
+    })
     let epDhtNode: DhtNode
     let node1: DhtNode
     let node2: DhtNode

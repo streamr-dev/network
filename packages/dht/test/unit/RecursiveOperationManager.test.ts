@@ -2,8 +2,6 @@ import {
     RecursiveOperation,
     Message,
     MessageType,
-    NodeType,
-    PeerDescriptor,
     RouteMessageAck,
     RouteMessageError,
     RouteMessageWrapper
@@ -11,7 +9,8 @@ import {
 import { PeerID } from '../../src/helpers/PeerID'
 import {
     createWrappedClosestPeersRequest,
-    createFindRequest
+    createFindRequest,
+    createMockPeerDescriptor
 } from '../utils/utils'
 import { RecursiveOperationManager } from '../../src/dht/recursive-operation/RecursiveOperationManager'
 import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
@@ -20,10 +19,11 @@ import { MockRouter } from '../utils/mock/Router'
 import { MockTransport } from '../utils/mock/Transport'
 import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
-import { IRouter } from '../../src/dht/routing/Router'
+import { Router } from '../../src/dht/routing/Router'
 import { ITransport } from '../../src/exports'
+import { getDhtAddressFromRaw } from '../../src/identifiers'
 
-const createMockRouter = (error?: RouteMessageError): Partial<IRouter> => {
+const createMockRouter = (error?: RouteMessageError): Partial<Router> => {
     return {
         doRouteMessage: (routedMessage: RouteMessageWrapper) => {
             return {
@@ -37,14 +37,8 @@ const createMockRouter = (error?: RouteMessageError): Partial<IRouter> => {
 }
 describe('RecursiveOperationManager', () => {
 
-    const peerDescriptor1: PeerDescriptor = {
-        nodeId: PeerID.fromString('peerid').value,
-        type: NodeType.NODEJS
-    }
-    const peerDescriptor2: PeerDescriptor = {
-        nodeId: PeerID.fromString('destination').value,
-        type: NodeType.NODEJS
-    }
+    const peerDescriptor1 = createMockPeerDescriptor()
+    const peerDescriptor2 = createMockPeerDescriptor()
     const recursiveOperationRequest = createFindRequest()
     const message: Message = {
         serviceId: 'unknown',
@@ -63,12 +57,12 @@ describe('RecursiveOperationManager', () => {
         routingPath: [],
         reachableThrough: [],
         sourcePeer: peerDescriptor1,
-        destinationPeer: peerDescriptor2
+        target: peerDescriptor2.nodeId
     }
     const rpcCommunicator = new FakeRpcCommunicator()
 
     const createRecursiveOperationManager = (
-        router: IRouter = new MockRouter(),
+        router: Router = new MockRouter() as any,
         transport: ITransport = new MockTransport()
     ): RecursiveOperationManager => {
         return new RecursiveOperationManager({
@@ -79,7 +73,6 @@ describe('RecursiveOperationManager', () => {
             localDataStore: new LocalDataStore(30 * 100),
             sessionTransport: transport,
             addContact: () => {},
-            isPeerCloserToIdThanSelf: (_peer1, _compareToId) => true,
             rpcCommunicator: rpcCommunicator as any
         })
     }
@@ -93,13 +86,13 @@ describe('RecursiveOperationManager', () => {
 
     it('startFind with mode Node returns self if no peers', async () => {
         const recursiveOperationManager = createRecursiveOperationManager()
-        const res = await recursiveOperationManager.execute(PeerID.fromString('find').value, RecursiveOperation.FIND_NODE)
+        const res = await recursiveOperationManager.execute(getDhtAddressFromRaw(PeerID.fromString('find').value), RecursiveOperation.FIND_NODE)
         expect(areEqualPeerDescriptors(res.closestNodes[0], peerDescriptor1)).toEqual(true)
         recursiveOperationManager.stop()
     })
 
     it('RecursiveOperationManager server throws if payload is not RecursiveOperationRequest', async () => {
-        const manager = createRecursiveOperationManager(new MockRouter())
+        const manager = createRecursiveOperationManager(new MockRouter() as any)
         const rpcWrapper = createWrappedClosestPeersRequest(peerDescriptor1)
         const badMessage: Message = {
             serviceId: 'unknown',
@@ -117,7 +110,7 @@ describe('RecursiveOperationManager', () => {
             requestId: 'REQ',
             routingPath: [],
             reachableThrough: [],
-            destinationPeer: peerDescriptor1,
+            target: peerDescriptor1.nodeId,
             sourcePeer: peerDescriptor2
         })).rejects.toThrow()
         manager.stop()

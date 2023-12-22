@@ -21,12 +21,9 @@ interface Params {
 export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrtcConnection, IConnection {
 
     public connectionId: ConnectionID
-
     // We need to keep track of connection state ourselves because
     // RTCPeerConnection.connectionState is not supported on Firefox
-
     private lastState: RTCPeerConnectionState = 'connecting'
-
     private readonly iceServers: IceServer[]
     private peerConnection?: RTCPeerConnection
     private dataChannel?: RTCDataChannel
@@ -85,8 +82,6 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         } else {
             this.peerConnection.ondatachannel = (event) => {
                 this.setupDataChannel(event.channel)
-                logger.trace('connection.onDataChannel')
-                this.openDataChannel(event.channel)
             }
         }
     }
@@ -183,9 +178,10 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     }
 
     private setupDataChannel(dataChannel: RTCDataChannel): void {
+        this.dataChannel = dataChannel
         dataChannel.onopen = () => {
             logger.trace('dc.onOpen')
-            this.openDataChannel(dataChannel)
+            this.onDataChannelOpen()
         }
 
         dataChannel.onclose = () => {
@@ -195,10 +191,6 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
 
         dataChannel.onerror = (err) => {
             logger.warn(`dc.onError: ${err}`)
-        }
-
-        dataChannel.onbufferedamountlow = () => {
-            //this.emitLowBackpressure()
         }
 
         dataChannel.onmessage = (msg) => {
@@ -224,8 +216,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         }
     }
 
-    private openDataChannel(dataChannel: RTCDataChannel): void {
-        this.dataChannel = dataChannel
+    private onDataChannelOpen(): void {
         this.lastState = 'connected'
         this.emit('connected')
     }

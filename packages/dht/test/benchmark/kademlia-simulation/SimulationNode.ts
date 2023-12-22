@@ -1,7 +1,7 @@
 import KBucket from 'k-bucket'
 import { Contact } from './Contact'
 import { SortedContactList } from '../../../src/dht/contact/SortedContactList'
-import { PeerID } from '../../../src/helpers/PeerID'
+import { DhtAddress, getRawFromDhtAddress } from '../../../src/identifiers'
 
 export class SimulationNode {
 
@@ -16,18 +16,18 @@ export class SimulationNode {
     private numberOfOutgoingRpcCalls = 0
 
     private neighborList: SortedContactList<Contact>
-    private ownId: PeerID
+    private ownId: DhtAddress
 
-    constructor(ownId: PeerID) {
+    constructor(ownId: DhtAddress) {
         this.ownId = ownId
         this.ownContact = new Contact(this.ownId, this)
         this.bucket = new KBucket({
-            localNodeId: this.ownId.value,
+            localNodeId: getRawFromDhtAddress(this.ownId),
             numberOfNodesPerKBucket: this.numberOfNodesPerKBucket
         })
 
         this.neighborList = new SortedContactList({ 
-            referenceId: this.ownId, 
+            referenceId: this.ownId,
             maxSize: 1000,
             allowToContainReferenceId: false,
             emitEvents: false
@@ -57,23 +57,22 @@ export class SimulationNode {
 
     // RPC call
 
-    public getClosestNodesTo(id: PeerID, caller: SimulationNode): Contact[] {
+    public getClosestNodesTo(id: DhtAddress, caller: SimulationNode): Contact[] {
         this.numberOfIncomingRpcCalls++
-        const ret = this.bucket.closest(id.value)
-
-        if (!this.bucket.get(id.value)) {
-            const contact = new Contact(PeerID.fromValue(id.value), caller)
+        const idValue = getRawFromDhtAddress(id)
+        const ret = this.bucket.closest(idValue)
+        if (!this.bucket.get(idValue)) {
+            const contact = new Contact(id, caller)
             this.bucket.add(contact)
             this.neighborList.addContact(contact)
         }
-
         return ret
     }
 
     private findMoreContacts(contactList: Contact[], shortlist: SortedContactList<Contact>) {
         contactList.forEach((contact) => {
-            shortlist.setContacted(contact.peerId)
-            shortlist.setActive(contact.peerId)
+            shortlist.setContacted(contact.getNodeId())
+            shortlist.setActive(contact.getNodeId())
             this.numberOfOutgoingRpcCalls++
             const returnedContacts = contact.dhtNode!.getClosestNodesTo(this.ownId, this)
             shortlist.addContacts(returnedContacts)
@@ -86,12 +85,12 @@ export class SimulationNode {
     }
 
     public joinDht(entryPoint: SimulationNode): void {
-        if (entryPoint.getContact().peerId.equals(this.ownId)) {
+        if (entryPoint.getContact().getNodeId() === this.ownId) {
             return
         }
 
         this.bucket.add(entryPoint.getContact())
-        const closest = this.bucket.closest(this.ownId.value, this.ALPHA)
+        const closest = this.bucket.closest(getRawFromDhtAddress(this.ownId), this.ALPHA)
 
         this.neighborList.addContacts(closest)
 
@@ -105,7 +104,7 @@ export class SimulationNode {
 
             this.findMoreContacts(uncontacted, this.neighborList)
 
-            if (oldClosestContactId.equals(this.neighborList.getClosestContactId())) {
+            if (oldClosestContactId === this.neighborList.getClosestContactId()) {
                 uncontacted = this.neighborList.getUncontactedContacts(this.K)
                 if (uncontacted.length === 0) {
                     return
@@ -116,7 +115,7 @@ export class SimulationNode {
                     this.findMoreContacts(uncontacted, this.neighborList)
 
                     if (this.neighborList.getActiveContacts().length >= this.K ||
-                        oldClosestContactId.equals(this.neighborList.getClosestContactId())) {
+                        (oldClosestContactId === this.neighborList.getClosestContactId())) {
                         return
                     }
                     uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)

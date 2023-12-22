@@ -4,16 +4,16 @@ import {
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger } from '@streamr/utils'
 import { ManagedConnection } from '../ManagedConnection'
-import { PeerIDKey } from '../../helpers/PeerID'
 import { Simulator } from './Simulator'
 import { SimulatorConnection } from './SimulatorConnection'
-import { getNodeIdFromPeerDescriptor, keyFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { DhtAddress } from '../../identifiers'
 
 const logger = new Logger(module)
 
 export class SimulatorConnector {
 
-    private connectingConnections: Map<PeerIDKey, ManagedConnection> = new Map()
+    private connectingConnections: Map<DhtAddress, ManagedConnection> = new Map()
     private stopped = false
     private localPeerDescriptor: PeerDescriptor
     private simulator: Simulator
@@ -31,8 +31,8 @@ export class SimulatorConnector {
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
         logger.trace('connect() ' + getNodeIdFromPeerDescriptor(targetPeerDescriptor))
-        const peerKey = keyFromPeerDescriptor(targetPeerDescriptor)
-        const existingConnection = this.connectingConnections.get(peerKey)
+        const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
+        const existingConnection = this.connectingConnections.get(nodeId)
         if (existingConnection) {
             return existingConnection
         }
@@ -42,12 +42,12 @@ export class SimulatorConnector {
         const managedConnection = new ManagedConnection(this.localPeerDescriptor, connection, undefined)
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
 
-        this.connectingConnections.set(peerKey, managedConnection)
+        this.connectingConnections.set(nodeId, managedConnection)
         connection.once('disconnected', () => {
-            this.connectingConnections.delete(peerKey)
+            this.connectingConnections.delete(nodeId)
         })
         connection.once('connected', () => {
-            this.connectingConnections.delete(peerKey)
+            this.connectingConnections.delete(nodeId)
         })
 
         connection.connect()
@@ -60,7 +60,8 @@ export class SimulatorConnector {
     }
 
     public handleIncomingConnection(sourceConnection: SimulatorConnection): void {
-        logger.trace(getNodeIdFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' incoming connection, stopped: ' + this.stopped)
+        const localNodeId = getNodeIdFromPeerDescriptor(sourceConnection.localPeerDescriptor)
+        logger.trace(localNodeId + ' incoming connection, stopped: ' + this.stopped)
         if (this.stopped) {
             return
         }
@@ -72,10 +73,10 @@ export class SimulatorConnector {
         logger.trace('connected')
 
         managedConnection.once('handshakeRequest', () => {
-            logger.trace(getNodeIdFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' incoming handshake request')
+            logger.trace(localNodeId + ' incoming handshake request')
 
             if (this.onNewConnection(managedConnection)) {
-                logger.trace(getNodeIdFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' calling acceptHandshake')
+                logger.trace(localNodeId + ' calling acceptHandshake')
                 managedConnection.acceptHandshake()
             } else {
                 managedConnection.rejectHandshake(HandshakeError.DUPLICATE_CONNECTION)

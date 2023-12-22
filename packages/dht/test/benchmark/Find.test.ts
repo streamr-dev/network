@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { NodeType, PeerDescriptor, RecursiveOperation } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { RecursiveOperation } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
@@ -9,17 +9,15 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Logger, wait } from '@streamr/utils'
 import { debugVars } from '../../src/helpers/debugHelpers'
+import { getDhtAddressFromRaw } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
 describe('Find correctness', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
-    let entrypointDescriptor: PeerDescriptor
     const simulator = new Simulator(LatencyType.NONE)
     const NUM_NODES = 1000
-
-    const nodeIndicesById: Record<string, number> = {}
 
     if (!fs.existsSync('test/data/nodeids.json')) {
         console.log('ground truth data does not exist yet, generating..')
@@ -31,20 +29,10 @@ describe('Find correctness', () => {
     beforeEach(async () => {
 
         nodes = []
-        const entryPointId = '0'
-        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, Uint8Array.from(dhtIds[0].data), undefined)
-        nodes.push(entryPoint)
-        nodeIndicesById[entryPoint.getNodeId().toKey()] = 0
-        entrypointDescriptor = {
-            nodeId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS
-        }
+        entryPoint = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[0].data)), undefined)
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const nodeId = `${i}`
-
-            const node = await createMockConnectionDhtNode(nodeId, simulator, Uint8Array.from(dhtIds[i].data), undefined)
-            nodeIndicesById[node.getNodeId().toKey()] = i
+            const node = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[i].data)), undefined)
             nodes.push(node)
         }
     })
@@ -57,10 +45,10 @@ describe('Find correctness', () => {
     })
 
     it('Entrypoint can find a node from the network (exact match)', async () => {
-        await entryPoint.joinDht([entrypointDescriptor])
+        await entryPoint.joinDht([entryPoint.getLocalPeerDescriptor()])
 
         await Promise.all(
-            nodes.map((node) => node.joinDht([entrypointDescriptor]))
+            nodes.map((node) => node.joinDht([entryPoint.getLocalPeerDescriptor()]))
         )
 
         logger.info('waiting 120s')
@@ -78,7 +66,7 @@ describe('Find correctness', () => {
 
         logger.info('starting find')
         const targetId = Uint8Array.from(dhtIds[9].data)
-        const results = await nodes[159].executeRecursiveOperation(targetId, RecursiveOperation.FIND_NODE)
+        const results = await nodes[159].executeRecursiveOperation(getDhtAddressFromRaw(targetId), RecursiveOperation.FIND_NODE)
         logger.info('find over')
         expect(results.closestNodes).toBeGreaterThanOrEqual(5)
         expect(PeerID.fromValue(targetId).equals(peerIdFromPeerDescriptor(results.closestNodes[0])))

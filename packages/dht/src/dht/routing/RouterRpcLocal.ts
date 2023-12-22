@@ -1,10 +1,11 @@
-import { Logger } from '@streamr/utils'
+import { Logger, areEqualBinaries } from '@streamr/utils'
 import { ConnectionManager } from '../../connection/ConnectionManager'
 import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { IRouterRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { DuplicateDetector } from './DuplicateDetector'
 import { RoutingMode } from './RoutingSession'
+import { getDhtAddressFromRaw } from '../../identifiers'
 
 interface RouterRpcLocalConfig {
     doRouteMessage: (routedMessage: RouteMessageWrapper, mode?: RoutingMode) => RouteMessageAck
@@ -36,13 +37,13 @@ export class RouterRpcLocal implements IRouterRpc {
     async routeMessage(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
         if (this.config.duplicateRequestDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
             logger.trace(`Routing message ${routedMessage.requestId} from ${getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!)} `
-                + `to ${getNodeIdFromPeerDescriptor(routedMessage.destinationPeer!)} is likely a duplicate`)
+                + `to ${getDhtAddressFromRaw(routedMessage.target)} is likely a duplicate`)
             return createRouteMessageAck(routedMessage, RouteMessageError.DUPLICATE)
         }
         logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
         this.config.addContact(routedMessage.sourcePeer!, true)
         this.config.duplicateRequestDetector.add(routedMessage.requestId)
-        if (areEqualPeerDescriptors(this.config.localPeerDescriptor, routedMessage.destinationPeer!)) {
+        if (areEqualBinaries(this.config.localPeerDescriptor.nodeId, routedMessage.target)) {
             logger.trace(`routing message targeted to self ${routedMessage.requestId}`)
             this.config.setForwardingEntries(routedMessage)
             this.config.connectionManager?.handleMessage(routedMessage.message!)
@@ -55,13 +56,13 @@ export class RouterRpcLocal implements IRouterRpc {
     async forwardMessage(forwardMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
         if (this.config.duplicateRequestDetector.isMostLikelyDuplicate(forwardMessage.requestId)) {
             logger.trace(`Forwarding message ${forwardMessage.requestId} from ${getNodeIdFromPeerDescriptor(forwardMessage.sourcePeer!)} `
-                + `to ${getNodeIdFromPeerDescriptor(forwardMessage.destinationPeer!)} is likely a duplicate`)
+                + `to ${getDhtAddressFromRaw(forwardMessage.target)} is likely a duplicate`)
             return createRouteMessageAck(forwardMessage, RouteMessageError.DUPLICATE)
         }
         logger.trace(`Processing received forward routeMessage ${forwardMessage.requestId}`)
         this.config.addContact(forwardMessage.sourcePeer!, true)
         this.config.duplicateRequestDetector.add(forwardMessage.requestId)
-        if (areEqualPeerDescriptors(this.config.localPeerDescriptor, forwardMessage.destinationPeer!)) {
+        if (areEqualBinaries(this.config.localPeerDescriptor.nodeId, forwardMessage.target)) {
             return this.forwardToDestination(forwardMessage)
         } else {
             return this.config.doRouteMessage(forwardMessage, RoutingMode.FORWARD)
@@ -75,7 +76,7 @@ export class RouterRpcLocal implements IRouterRpc {
             this.config.connectionManager?.handleMessage(forwardedMessage)
             return createRouteMessageAck(routedMessage)
         }
-        return this.config.doRouteMessage({ ...routedMessage, destinationPeer: forwardedMessage.targetDescriptor })
+        return this.config.doRouteMessage({ ...routedMessage, target: forwardedMessage.targetDescriptor!.nodeId })
     }
 
 }
