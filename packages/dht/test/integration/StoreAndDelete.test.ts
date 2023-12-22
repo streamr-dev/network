@@ -1,9 +1,7 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { createMockConnectionDhtNode, createMockPeerDescriptor, waitConnectionManagersReadyForTesting } from '../utils/utils'
-import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { Any } from '../../src/proto/google/protobuf/any'
+import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils/utils'
+import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
 import { createRandomNodeId } from '../../src/helpers/nodeId'
 
 const NUM_NODES = 5
@@ -41,47 +39,36 @@ describe('Storing data in DHT', () => {
 
     it('Data can be deleted', async () => {
         const storingNode = getRandomNode()
-        const dataKey = createRandomNodeId()
-        const storedData = createMockPeerDescriptor()
-        const data = Any.pack(storedData, PeerDescriptor)
-        const successfulStorers = await storingNode.storeDataToDht(dataKey, data)
+        const entry = createMockDataEntry()
+        const successfulStorers = await storingNode.storeDataToDht(entry.key, entry.data!)
         expect(successfulStorers.length).toBeGreaterThan(4)
-        await storingNode.deleteDataFromDht(dataKey, true)
-
+        await storingNode.deleteDataFromDht(entry.key, true)
         const fetchingNode = getRandomNode()
-        const results = await fetchingNode.getDataFromDht(dataKey)
-        results.forEach((entry) => {
-            const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
-            expect(entry.deleted).toBeTrue()
-            expect(areEqualPeerDescriptors(fetchedDescriptor, storedData)).toBeTrue()
+        const results = await fetchingNode.getDataFromDht(entry.key)
+        results.forEach((result) => {
+            expect(result.deleted).toBeTrue()
+            expectEqualData(result, entry)
         })
     }, 90000)
 
     it('Data can be deleted and re-stored', async () => {
         const storingNode = getRandomNode()
-        const dataKey = createRandomNodeId()
-        const storedData = createMockPeerDescriptor()
-        const data = Any.pack(storedData, PeerDescriptor)
-        const successfulStorers1 = await storingNode.storeDataToDht(dataKey, data)
+        const entry = createMockDataEntry()
+        const successfulStorers1 = await storingNode.storeDataToDht(entry.key, entry.data!)
         expect(successfulStorers1.length).toBeGreaterThan(4)
-        await storingNode.deleteDataFromDht(dataKey, true)
-
+        await storingNode.deleteDataFromDht(entry.key, true)
         const fetchingNode = getRandomNode()
-        const results1 = await fetchingNode.getDataFromDht(dataKey)
-        results1.forEach((entry) => {
-            const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
-            expect(entry.deleted).toBeTrue()
-            expect(areEqualPeerDescriptors(fetchedDescriptor, storedData)).toBeTrue()
+        const results1 = await fetchingNode.getDataFromDht(entry.key)
+        results1.forEach((result) => {
+            expect(result.deleted).toBeTrue()
+            expectEqualData(result, entry)
         })
-
-        const successfulStorers2 = await storingNode.storeDataToDht(dataKey, data)
+        const successfulStorers2 = await storingNode.storeDataToDht(entry.key, entry.data!)
         expect(successfulStorers2.length).toBeGreaterThan(4)
-
-        const results2 = await fetchingNode.getDataFromDht(dataKey)
-        results2.forEach((entry) => {
-            const fetchedDescriptor = Any.unpack(entry.data!, PeerDescriptor)
-            expect(entry.deleted).toBeFalse()
-            expect(areEqualPeerDescriptors(fetchedDescriptor, storedData)).toBeTrue()
+        const results2 = await fetchingNode.getDataFromDht(entry.key)
+        results2.forEach((result) => {
+            expect(result.deleted).toBeFalse()
+            expectEqualData(result, entry)
         })
     }, 90000)
 })
