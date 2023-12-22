@@ -109,6 +109,7 @@ export class DeliveryLayer extends EventEmitter<Events> {
 
     broadcast(msg: StreamMessage): void {
         const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
+        logger.debug(`Broadcasting to stream part ${streamPartId}`)
         this.joinStreamPart(streamPartId)
         this.streamParts.get(streamPartId)!.broadcast(msg)
         this.metrics.broadcastMessagesPerSecond.record(1)
@@ -124,11 +125,11 @@ export class DeliveryLayer extends EventEmitter<Events> {
     }
 
     joinStreamPart(streamPartId: StreamPartID): void {
-        logger.debug(`Join stream part ${streamPartId}`)
         let streamPart = this.streamParts.get(streamPartId)
         if (streamPart !== undefined) {
             return
         }
+        logger.debug(`Join stream part ${streamPartId}`)
         const layer1Node = this.createLayer1Node(streamPartId, this.knownStreamPartEntryPoints.get(streamPartId) ?? [])
         const entryPointDiscovery = new EntryPointDiscovery({
             streamPartId,

@@ -96,11 +96,11 @@ export class RecursiveOperationManager {
             }
         })
         if (this.config.connections.size === 0) {
-            const data = this.config.localDataStore.getEntries(targetId)
+            const dataEntries = Array.from(this.config.localDataStore.values(targetId))
             session.onResponseReceived(
                 [this.config.localPeerDescriptor],
                 [this.config.localPeerDescriptor],
-                Array.from(data.values()),
+                dataEntries,
                 true
             )
             return session.getResults()
@@ -124,7 +124,7 @@ export class RecursiveOperationManager {
             await wait(50)
         }
         if (operation === RecursiveOperation.FETCH_DATA) {
-            const dataEntries = Array.from(this.config.localDataStore.getEntries(targetId).values())
+            const dataEntries = Array.from(this.config.localDataStore.values(targetId))
             if (dataEntries.length > 0) {
                 this.sendResponse([], this.config.localPeerDescriptor, session.getId(), [], dataEntries, true)
             }
@@ -173,7 +173,7 @@ export class RecursiveOperationManager {
         // TODO use config option or named constant?
         const closestPeersToDestination = this.getClosestConnections(targetId, 5)
         const dataEntries = (request.operation === RecursiveOperation.FETCH_DATA) 
-            ? Array.from(this.config.localDataStore.getEntries(targetId).values())
+            ? Array.from(this.config.localDataStore.values(targetId))
             : []
         if (request.operation === RecursiveOperation.DELETE_DATA) {
             this.config.localDataStore.markAsDeleted(targetId, getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!))

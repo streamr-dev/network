@@ -50,10 +50,11 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
     private handleRequest(request: StreamPartHandshakeRequest, context: ServerCallContext): StreamPartHandshakeResponse {
         const senderDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const getInterleaveSourceIds = () => (request.interleaveSourceId !== undefined) ? [getDhtAddressFromRaw(request.interleaveSourceId)] : []
-        if (this.config.ongoingInterleaves.has(getNodeIdFromPeerDescriptor(senderDescriptor))) {
+        const senderNodeId = getNodeIdFromPeerDescriptor(senderDescriptor)
+        if (this.config.ongoingInterleaves.has(senderNodeId)) {
             return this.rejectHandshake(request)
         } else if (this.config.targetNeighbors.hasNode(senderDescriptor)
-            || this.config.ongoingHandshakes.has(getNodeIdFromPeerDescriptor(senderDescriptor))
+            || this.config.ongoingHandshakes.has(senderNodeId)
         ) {
             return this.acceptHandshake(request, senderDescriptor)
         } else if (this.config.targetNeighbors.size() + this.config.ongoingHandshakes.size < this.config.maxNeighborCount) {
