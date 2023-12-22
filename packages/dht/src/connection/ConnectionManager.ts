@@ -8,7 +8,6 @@ import {
     getNodeIdFromPeerDescriptor,
     peerIdFromPeerDescriptor
 } from '../helpers/peerIdFromPeerDescriptor'
-import { protoToString } from '../helpers/protoToString'
 import {
     DisconnectMode,
     DisconnectNotice,
@@ -343,7 +342,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         let message: Message | undefined
         try {
             message = Message.fromBinary(data)
-            logger.trace(`received protojson: ${protoToString(message, Message)}`)
         } catch (e) {
             logger.debug(`Parsing incoming data into Message failed: ${e}`)
             return
