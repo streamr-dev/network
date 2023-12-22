@@ -1,6 +1,5 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext, ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { DeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -43,7 +42,8 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
                     this.config.localPeerDescriptor,
                     peerDescriptor,
                     this.config.streamPartId,
-                    toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                    this.config.rpcCommunicator,
+                    DeliveryRpcClient
                 ))
             )
             this.config.neighborFinder.start()

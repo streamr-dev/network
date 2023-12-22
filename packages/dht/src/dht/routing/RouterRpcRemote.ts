@@ -1,16 +1,16 @@
-import { RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { Logger, areEqualBinaries } from '@streamr/utils'
 import { v4 } from 'uuid'
 import {
     getNodeIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
-import { IRouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { RouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RpcRemote } from '../contact/RpcRemote'
-import { Logger, areEqualBinaries } from '@streamr/utils'
 import { getPreviousPeer } from './getPreviousPeer'
 
 const logger = new Logger(module)
 
-export class RouterRpcRemote extends RpcRemote<IRouterRpcClient> {
+export class RouterRpcRemote extends RpcRemote<RouterRpcClient> {
 
     async routeMessage(params: RouteMessageWrapper): Promise<boolean> {
         const message: RouteMessageWrapper = {

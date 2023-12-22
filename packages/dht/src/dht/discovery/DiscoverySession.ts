@@ -64,8 +64,6 @@ export class DiscoverySession {
         const newClosestDistance = getDistance(getNodeIdFromBinary(this.config.targetId), newClosestNeighbor.getNodeId())
         if (newClosestDistance >= oldClosestDistance) {
             this.noProgressCounter++
-        } else {
-            this.noProgressCounter = 0
         }
     }
 

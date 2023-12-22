@@ -8,7 +8,6 @@ import { PeerDescriptor, RouteMessageWrapper } from '../../proto/packages/dht/pr
 import { RouterRpcRemote } from './RouterRpcRemote'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RecursiveOperationRpcClient, RouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Contact } from '../contact/Contact'
 import { RecursiveOperationRpcRemote } from '../recursive-operation/RecursiveOperationRpcRemote'
 import { EXISTING_CONNECTION_TIMEOUT } from '../contact/RpcRemote'
@@ -30,14 +29,16 @@ class RemoteContact extends Contact {
             localPeerDescriptor,
             peer.getPeerDescriptor(),
             peer.getServiceId(),
-            toProtoRpcClient(new RouterRpcClient(rpcCommunicator.getRpcClientTransport())),
+            rpcCommunicator,
+            RouterRpcClient,
             EXISTING_CONNECTION_TIMEOUT
         )
         this.recursiveOperationRpcRemote = new RecursiveOperationRpcRemote(
             localPeerDescriptor,
             peer.getPeerDescriptor(),
             peer.getServiceId(),
-            toProtoRpcClient(new RecursiveOperationRpcClient(rpcCommunicator.getRpcClientTransport())),
+            rpcCommunicator,
+            RecursiveOperationRpcClient,
             EXISTING_CONNECTION_TIMEOUT
         )
     }

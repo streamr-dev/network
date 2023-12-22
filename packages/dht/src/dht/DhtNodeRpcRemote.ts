@@ -1,17 +1,16 @@
-import { IDhtNodeRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { RpcCommunicator } from '@streamr/proto-rpc'
+import { Logger } from '@streamr/utils'
+import { v4 } from 'uuid'
+import { NodeID } from '../helpers/nodeId'
+import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import {
     ClosestPeersRequest,
-    LeaveNotice,
     PeerDescriptor,
     PingRequest
 } from '../proto/packages/dht/protos/DhtRpc'
-import { v4 } from 'uuid'
-import { Logger } from '@streamr/utils'
-import { ProtoRpcClient } from '@streamr/proto-rpc'
-import { RpcRemote } from './contact/RpcRemote'
-import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { DhtNodeRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import { ServiceID } from '../types/ServiceID'
-import { NodeID } from '../helpers/nodeId'
+import { RpcRemote } from './contact/RpcRemote'
 
 const logger = new Logger(module)
 
@@ -21,7 +20,7 @@ export interface KBucketContact {
     vectorClock: number
 }
 
-export class DhtNodeRpcRemote extends RpcRemote<IDhtNodeRpcClient> implements KBucketContact {
+export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBucketContact {
 
     private static counter = 0
     public vectorClock: number
@@ -30,11 +29,11 @@ export class DhtNodeRpcRemote extends RpcRemote<IDhtNodeRpcClient> implements KB
     constructor(
         localPeerDescriptor: PeerDescriptor,
         peerDescriptor: PeerDescriptor,
-        client: ProtoRpcClient<IDhtNodeRpcClient>,
         serviceId: ServiceID,
+        rpcCommunicator: RpcCommunicator,
         rpcRequestTimeout?: number
     ) {
-        super(localPeerDescriptor, peerDescriptor, serviceId, client, rpcRequestTimeout)
+        super(localPeerDescriptor, peerDescriptor, serviceId, rpcCommunicator, DhtNodeRpcClient, rpcRequestTimeout)
         this.id = this.getPeerDescriptor().nodeId
         this.vectorClock = DhtNodeRpcRemote.counter++
     }
@@ -73,13 +72,10 @@ export class DhtNodeRpcRemote extends RpcRemote<IDhtNodeRpcClient> implements KB
 
     leaveNotice(): void {
         logger.trace(`Sending leaveNotice on ${this.getServiceId()} from ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
-        const request: LeaveNotice = {
-            serviceId: this.getServiceId()
-        }
         const options = this.formDhtRpcOptions({
             notification: true
         })
-        this.getClient().leaveNotice(request, options).catch((e) => {
+        this.getClient().leaveNotice({}, options).catch((e) => {
             logger.trace('Failed to send leaveNotice' + e)
         })
     }

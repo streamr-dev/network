@@ -189,10 +189,6 @@ export interface PingResponse {
  * @generated from protobuf message dht.LeaveNotice
  */
 export interface LeaveNotice {
-    /**
-     * @generated from protobuf field: string serviceId = 1;
-     */
-    serviceId: string;
 }
 /**
  * @generated from protobuf message dht.PeerDescriptor
@@ -824,9 +820,7 @@ export const PingResponse = new PingResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class LeaveNotice$Type extends MessageType$<LeaveNotice> {
     constructor() {
-        super("dht.LeaveNotice", [
-            { no: 1, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
+        super("dht.LeaveNotice", []);
     }
 }
 /**

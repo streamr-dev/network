@@ -1,4 +1,3 @@
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { CountMetric, LevelMetric, Logger, Metric, MetricsContext, MetricsDefinition, RateMetric, waitForEvent3 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { Contact } from '../dht/contact/Contact'
@@ -463,7 +462,9 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const rpcRemote = new ConnectionLockRpcRemote(
             this.getLocalPeerDescriptor(),
             targetDescriptor,
-            toProtoRpcClient(new ConnectionLockRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+            'DUMMY',
+            this.rpcCommunicator!,
+            ConnectionLockRpcClient
         )
         this.locks.addLocalLocked(nodeId, lockId)
         rpcRemote.lockRequest(lockId)
@@ -480,7 +481,9 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const rpcRemote = new ConnectionLockRpcRemote(
             this.getLocalPeerDescriptor(),
             targetDescriptor,
-            toProtoRpcClient(new ConnectionLockRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+            'DUMMY',
+            this.rpcCommunicator!,
+            ConnectionLockRpcClient
         )
         if (this.connections.has(nodeId)) {
             rpcRemote.unlockRequest(lockId)
@@ -544,7 +547,9 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const rpcRemote = new ConnectionLockRpcRemote(
             this.getLocalPeerDescriptor(),
             targetDescriptor,
-            toProtoRpcClient(new ConnectionLockRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+            'DUMMY',
+            this.rpcCommunicator!,
+            ConnectionLockRpcClient
         )
         try {
             await rpcRemote.gracefulDisconnect(disconnectMode)
