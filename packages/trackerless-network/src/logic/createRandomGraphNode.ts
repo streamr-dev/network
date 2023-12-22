@@ -1,4 +1,4 @@
-import { ListeningRpcCommunicator } from '@streamr/dht'
+import { DhtAddress, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { Handshaker } from './neighbor-discovery/Handshaker'
 import { NeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
@@ -10,7 +10,6 @@ import { MarkOptional } from 'ts-essentials'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { Inspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { formStreamPartDeliveryServiceId } from './formStreamPartDeliveryServiceId'
 
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
@@ -50,7 +49,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     }) : undefined
     const propagation = config.propagation ?? new Propagation({
         minPropagationTargets,
-        sendToNeighbor: async (neighborId: NodeID, msg: StreamMessage): Promise<void> => {
+        sendToNeighbor: async (neighborId: DhtAddress, msg: StreamMessage): Promise<void> => {
             const remote = targetNeighbors.get(neighborId) ?? temporaryConnectionRpcLocal.getNodes().get(neighborId)
             const proxyConnection = proxyConnectionRpcLocal?.getConnection(neighborId)
             if (remote) {

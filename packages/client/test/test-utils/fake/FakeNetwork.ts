@@ -1,12 +1,12 @@
+import { DhtAddress } from '@streamr/dht'
 import { StreamMessage, StreamMessageType } from '@streamr/protocol'
-import { NodeID } from '@streamr/trackerless-network'
-import { FakeNetworkNode } from './FakeNetworkNode'
 import { waitForCondition } from '@streamr/utils'
+import { FakeNetworkNode } from './FakeNetworkNode'
 
 interface Send {
     message: StreamMessage
-    sender: NodeID
-    recipients: NodeID[]
+    sender: DhtAddress
+    recipients: DhtAddress[]
 }
 
 interface SentMessagesFilter {
@@ -16,7 +16,7 @@ interface SentMessagesFilter {
 
 export class FakeNetwork {
 
-    private readonly nodes: Map<NodeID, FakeNetworkNode> = new Map()
+    private readonly nodes: Map<DhtAddress, FakeNetworkNode> = new Map()
     private sends: Send[] = []
 
     addNode(node: FakeNetworkNode): void {
@@ -27,11 +27,11 @@ export class FakeNetwork {
         }
     }
 
-    removeNode(id: NodeID): void {
+    removeNode(id: DhtAddress): void {
         this.nodes.delete(id)
     }
 
-    getNode(id: NodeID): FakeNetworkNode | undefined {
+    getNode(id: DhtAddress): FakeNetworkNode | undefined {
         return this.nodes.get(id)
     }
 
@@ -39,7 +39,7 @@ export class FakeNetwork {
         return Array.from(this.nodes.values())
     }
 
-    send(msg: StreamMessage, sender: NodeID, isRecipient: (networkNode: FakeNetworkNode) => boolean): void {
+    send(msg: StreamMessage, sender: DhtAddress, isRecipient: (networkNode: FakeNetworkNode) => boolean): void {
         const recipients = this.getNodes().filter((n) => isRecipient(n))
         recipients.forEach((n) => {
             n.messageListeners.forEach((listener) => listener(msg))

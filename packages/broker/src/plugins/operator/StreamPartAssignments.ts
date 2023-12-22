@@ -1,11 +1,11 @@
-import { OperatorFleetStateEvents } from './OperatorFleetState'
-import { MaintainTopologyHelperEvents } from './MaintainTopologyHelper'
+import { DhtAddress } from '@streamr/dht'
 import { StreamID, StreamPartID } from '@streamr/protocol'
 import { Logger } from '@streamr/utils'
-import pLimit from 'p-limit'
 import EventEmitter3 from 'eventemitter3'
+import pLimit from 'p-limit'
 import { ConsistentHashRing } from './ConsistentHashRing'
-import { NodeID } from '@streamr/trackerless-network'
+import { MaintainTopologyHelperEvents } from './MaintainTopologyHelper'
+import { OperatorFleetStateEvents } from './OperatorFleetState'
 
 const logger = new Logger(module)
 
@@ -19,13 +19,13 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
     private readonly myStreamParts = new Set<StreamPartID>()
     private readonly concurrencyLimit = pLimit(1)
     private readonly consistentHashRing: ConsistentHashRing
-    private readonly myNodeId: NodeID
+    private readonly myNodeId: DhtAddress
     private readonly getStreamParts: (streamId: StreamID) => Promise<StreamPartID[]>
     private readonly operatorFleetState: EventEmitter3<OperatorFleetStateEvents>
     private readonly maintainTopologyHelper: EventEmitter3<MaintainTopologyHelperEvents>
 
     constructor(
-        myNodeId: NodeID,
+        myNodeId: DhtAddress,
         redundancyFactor: number,
         getStreamParts: (streamId: StreamID) => Promise<StreamPartID[]>,
         operatorFleetState: EventEmitter3<OperatorFleetStateEvents>,
@@ -48,7 +48,7 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
         return Array.from(this.myStreamParts)
     }
 
-    private nodeAdded = this.concurrencyLimiter(async (nodeId: NodeID): Promise<void> => {
+    private nodeAdded = this.concurrencyLimiter(async (nodeId: DhtAddress): Promise<void> => {
         if (nodeId === this.myNodeId) {
             return
         }
@@ -56,7 +56,7 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
         this.recalculateAssignments(`nodeAdded:${nodeId}`)
     })
 
-    private nodeRemoved = this.concurrencyLimiter(async (nodeId: NodeID): Promise<void> => {
+    private nodeRemoved = this.concurrencyLimiter(async (nodeId: DhtAddress): Promise<void> => {
         if (nodeId === this.myNodeId) {
             return
         }

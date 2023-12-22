@@ -28,11 +28,11 @@ import { Empty } from '../../src/proto/google/protobuf/empty'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { wait, waitForCondition } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
-import { createRandomNodeId } from '../../src/helpers/nodeId'
+import { DhtAddress, createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
 
 export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'nodeId'>>): PeerDescriptor => {
     return {
-        nodeId: createRandomNodeId(),
+        nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
         type: NodeType.NODEJS,
         ...opts
     }
@@ -40,14 +40,14 @@ export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'no
 
 export const createMockConnectionDhtNode = async (
     simulator: Simulator,
-    nodeId?: Uint8Array,
+    nodeId?: DhtAddress,
     numberOfNodesPerKBucket?: number,
     maxConnections = 80,
     dhtJoinTimeout = 45000,
     entryPoints: PeerDescriptor[] = []
 ): Promise<DhtNode> => {
     const peerDescriptor: PeerDescriptor = {
-        nodeId: nodeId ?? createRandomNodeId(),
+        nodeId: getRawFromDhtAddress(nodeId ?? createRandomDhtAddress()),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }

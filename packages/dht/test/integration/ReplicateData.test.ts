@@ -7,16 +7,15 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
-import { NodeID } from '../../src/helpers/nodeId'
-import { createRandomNodeId } from '../../src/helpers/nodeId'
 import { createMockDataEntry, unpackData } from '../utils/mock/mockDataEntry'
+import { DhtAddress, createRandomDhtAddress } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
 jest.setTimeout(60000)
 
-const DATA_KEY = PeerID.fromString('3232323e12r31r3')
-const DATA_VALUE = createMockDataEntry({ key: DATA_KEY.value })
+const DATA_KEY = PeerID.fromString('3232323e12r31r3').toNodeId()
+const DATA_VALUE = createMockDataEntry({ key: DATA_KEY })
 const NUM_NODES = 100
 const MAX_CONNECTIONS = 80
 const K = 8
@@ -24,7 +23,7 @@ const K = 8
 const getDataValues = (node: DhtNode): { foo: string }[] => {
     // @ts-expect-error private field
     const store = node.localDataStore
-    const entries = Array.from(store.getEntries(DATA_KEY.value).values())
+    const entries = Array.from(store.getEntries(DATA_KEY).values())
     return entries.map((e) => unpackData(e))
 }
 
@@ -36,11 +35,11 @@ describe('Replicate data from node to node in DHT', () => {
 
     let entryPoint: DhtNode
     let nodes: DhtNode[]
-    const nodesById: Map<NodeID, DhtNode> = new Map()
+    const nodesById: Map<DhtAddress, DhtNode> = new Map()
     const simulator = new Simulator(LatencyType.FIXED, 20)
 
     beforeEach(async () => {
-        entryPoint = await createMockConnectionDhtNode(simulator, createRandomNodeId(), K, MAX_CONNECTIONS)
+        entryPoint = await createMockConnectionDhtNode(simulator, createRandomDhtAddress(), K, MAX_CONNECTIONS)
         await entryPoint.joinDht([entryPoint.getLocalPeerDescriptor()])
 
         nodes = []
@@ -48,7 +47,7 @@ describe('Replicate data from node to node in DHT', () => {
         for (let i = 0; i < NUM_NODES; i++) {
             const node = await createMockConnectionDhtNode(
                 simulator,
-                createRandomNodeId(),
+                createRandomDhtAddress(),
                 K,
                 MAX_CONNECTIONS,
                 undefined,
@@ -74,7 +73,7 @@ describe('Replicate data from node to node in DHT', () => {
     it('Data replicates to the closest node no matter where it is stored', async () => {
         // calculate offline which node is closest to the data
         const sortedList = new SortedContactList<Contact>({ 
-            referenceId: DATA_KEY.toNodeId(),
+            referenceId: DATA_KEY,
             maxSize: 10000, 
             allowToContainReferenceId: true, 
             emitEvents: false 
@@ -90,7 +89,7 @@ describe('Replicate data from node to node in DHT', () => {
         })
 
         logger.info('storing data to node 0')
-        const successfulStorers = await nodes[0].storeDataToDht(DATA_KEY.value, DATA_VALUE.data!)
+        const successfulStorers = await nodes[0].storeDataToDht(DATA_KEY, DATA_VALUE.data!)
         expect(successfulStorers.length).toBe(1)
         logger.info('data successfully stored to node 0')
 
@@ -149,7 +148,7 @@ describe('Replicate data from node to node in DHT', () => {
         const randomIndex = Math.floor(Math.random() * nodes.length)
         logger.info('storing data to a random node: ' + randomIndex)
 
-        const successfulStorers = await nodes[randomIndex].storeDataToDht(DATA_KEY.value, DATA_VALUE.data!)
+        const successfulStorers = await nodes[randomIndex].storeDataToDht(DATA_KEY, DATA_VALUE.data!)
 
         logger.info('data successfully stored to ' 
             + successfulStorers.map((peerDescriptor) => getNodeIdFromPeerDescriptor(peerDescriptor)).join() + ' nodes')

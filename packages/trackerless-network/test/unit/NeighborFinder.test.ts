@@ -4,7 +4,7 @@ import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { expect } from 'expect'
 import { createMockDeliveryRpcRemote, createRandomNodeId } from '../utils/utils'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { DhtAddress, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 
 describe('NeighborFinder', () => {
 
@@ -19,7 +19,7 @@ describe('NeighborFinder', () => {
         targetNeighbors = new NodeList(nodeId, 15)
         nearbyNodeView = new NodeList(nodeId, 30)
         range(30).forEach(() => nearbyNodeView.add(createMockDeliveryRpcRemote()))
-        const mockDoFindNeighbors = async (excluded: NodeID[]) => {
+        const mockDoFindNeighbors = async (excluded: DhtAddress[]) => {
             const target = nearbyNodeView.getRandom(excluded)
             if (Math.random() < 0.5) {
                 targetNeighbors.add(target!)

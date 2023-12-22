@@ -1,9 +1,8 @@
 import { ContractReceipt } from '@ethersproject/contracts'
+import { DhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress } from '@streamr/dht'
 import { StreamID, toStreamID } from '@streamr/protocol'
 import {
-    binaryToHex,
     composeAbortSignals,
-    hexToBinary,
     Logger,
     merge,
     randomString,
@@ -138,7 +137,7 @@ export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescr
     const type = json.type === NetworkNodeType.BROWSER ? NodeType.BROWSER : NodeType.NODEJS
     const peerDescriptor: PeerDescriptor = {
         ...json,
-        nodeId: hexToBinary(json.nodeId ?? (json as any).id),
+        nodeId: getRawFromDhtAddress((json.nodeId ?? (json as any).id) as DhtAddress),
         type,
         websocket: json.websocket
     }
@@ -151,7 +150,7 @@ export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescr
 export function convertPeerDescriptorToNetworkPeerDescriptor(descriptor: PeerDescriptor): NetworkPeerDescriptor {
     return {
         ...descriptor,
-        nodeId: binaryToHex(descriptor.nodeId),
+        nodeId: getDhtAddressFromRaw(descriptor.nodeId),
         type: descriptor.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER
     }
 }
