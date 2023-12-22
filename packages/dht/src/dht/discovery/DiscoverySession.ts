@@ -21,15 +21,15 @@ interface DiscoverySessionConfig {
 }
 
 export class DiscoverySession {
+    
     public readonly sessionId = v4()
-
     private stopped = false
     private emitter = new EventEmitter<DiscoverySessionEvents>()
     private outgoingClosestPeersRequestsCounter = 0
     private noProgressCounter = 0
     private ongoingClosestPeersRequests: Set<NodeID> = new Set()
-    private readonly config: DiscoverySessionConfig
     private contactedPeers: Set<NodeID> = new Set()
+    private readonly config: DiscoverySessionConfig
 
     constructor(config: DiscoverySessionConfig) {
         this.config = config

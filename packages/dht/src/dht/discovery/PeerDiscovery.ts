@@ -23,13 +23,13 @@ const logger = new Logger(module)
 
 export class PeerDiscovery {
 
-    private readonly config: PeerDiscoveryConfig
     private ongoingDiscoverySessions: Map<string, DiscoverySession> = new Map()
     private rejoinOngoing = false
     private joinCalled = false
     private rejoinTimeoutRef?: NodeJS.Timeout
     private readonly abortController: AbortController
     private recoveryIntervalStarted = false
+    private readonly config: PeerDiscoveryConfig
 
     constructor(config: PeerDiscoveryConfig) {
         this.config = config

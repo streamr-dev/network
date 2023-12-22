@@ -54,13 +54,11 @@ export class AutoCertifierClientFacade {
 
     private autoCertifierClient: IAutoCertifierClient
     private readonly rpcCommunicator: ListeningRpcCommunicator
-    private readonly setHost: (host: string) => void
-    private readonly updateCertificate: (certificate: string, privateKey: string) => void
+    private readonly config: AutoCertifierClientFacadeConfig
     private abortController = new AbortController()
 
     constructor(config: AutoCertifierClientFacadeConfig) {
-        this.setHost = config.setHost
-        this.updateCertificate = config.updateCertificate
+        this.config = config
         this.rpcCommunicator = new ListeningRpcCommunicator(AUTO_CERTIFIER_SERVICE_ID, config.transport)
         this.autoCertifierClient = config.createClientFactory ? config.createClientFactory()
             : defaultAutoCertifierClientFactory(
@@ -73,8 +71,8 @@ export class AutoCertifierClientFacade {
 
     async start(): Promise<void> {
         this.autoCertifierClient.on('updatedCertificate', (subdomain: CertifiedSubdomain) => {
-            this.setHost(subdomain.fqdn)
-            this.updateCertificate(subdomain.certificate, subdomain.privateKey)
+            this.config.setHost(subdomain.fqdn)
+            this.config.updateCertificate(subdomain.certificate, subdomain.privateKey)
             logger.trace(`Updated certificate`)
         })
 
