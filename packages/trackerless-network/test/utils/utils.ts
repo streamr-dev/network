@@ -1,5 +1,16 @@
 import { randomBytes } from 'crypto'
-import { ConnectionLocker, DhtNode, NodeType, PeerDescriptor, Simulator, SimulatorTransport, getRandomRegion } from '@streamr/dht'
+import { 
+    ConnectionLocker,
+    DhtAddress,
+    DhtNode,
+    NodeType,
+    PeerDescriptor,
+    Simulator,
+    SimulatorTransport,
+    getDhtAddressFromRaw,
+    getRandomRegion,
+    getRawFromDhtAddress
+} from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import {
     ContentType,
@@ -14,7 +25,6 @@ import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/Handshake
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { NodeID } from '../../src/identifiers'
 import { Layer1Node } from '../../src/logic/Layer1Node'
 import { DeliveryRpcClient, HandshakeRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RpcCommunicator } from '@streamr/proto-rpc'
@@ -79,14 +89,14 @@ export const createStreamMessage = (
     return msg
 }
 
-export const createRandomNodeId = (): NodeID => {
-    return randomBytes(10).toString('hex') as NodeID
+export const createRandomNodeId = (): DhtAddress => {
+    return getDhtAddressFromRaw(randomBytes(10))
 }
 
 export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'nodeId' | 'type'>): PeerDescriptor => {
     return {
         ...opts,
-        nodeId: hexToBinary(createRandomNodeId()),
+        nodeId: getRawFromDhtAddress(createRandomNodeId()),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }
@@ -96,7 +106,6 @@ export const createMockDeliveryRpcRemote = (remotePeerDescriptor?: PeerDescripto
     return new DeliveryRpcRemote(
         createMockPeerDescriptor(),
         remotePeerDescriptor ?? createMockPeerDescriptor(),
-        'mock',
         new RpcCommunicator(),
         DeliveryRpcClient
     )
@@ -106,7 +115,6 @@ export const createMockHandshakeRpcRemote = (): HandshakeRpcRemote => {
     return new HandshakeRpcRemote(
         createMockPeerDescriptor(),
         createMockPeerDescriptor(), 
-        'mock',
         new RpcCommunicator(),
         HandshakeRpcClient
     )

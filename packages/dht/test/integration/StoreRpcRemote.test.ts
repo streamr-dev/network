@@ -9,9 +9,7 @@ import { StoreRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.clien
 import { StoreRpcRemote } from '../../src/dht/store/StoreRpcRemote'
 import { createMockDataEntry } from '../utils/mock/mockDataEntry'
 import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { createRandomNodeId } from '../../src/helpers/nodeId'
-
-const SERVICE_ID = 'test'
+import { createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
 
 describe('StoreRpcRemote', () => {
 
@@ -24,7 +22,7 @@ describe('StoreRpcRemote', () => {
     const request: StoreDataRequest = {
         key: data.key,
         data: data.data,
-        creator: createRandomNodeId(),
+        creator: getRawFromDhtAddress(createRandomDhtAddress()),
         ttl: 10
     }
 
@@ -38,7 +36,7 @@ describe('StoreRpcRemote', () => {
         serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
-        rpcRemote = new StoreRpcRemote(clientPeerDescriptor, serverPeerDescriptor, SERVICE_ID, clientRpcCommunicator, StoreRpcClient)
+        rpcRemote = new StoreRpcRemote(clientPeerDescriptor, serverPeerDescriptor, clientRpcCommunicator, StoreRpcClient)
     })
 
     it('storeData happy path', async () => {

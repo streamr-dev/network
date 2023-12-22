@@ -2,13 +2,14 @@
 
 import KBucket from 'k-bucket'
 import { range } from 'lodash'
+import { DhtAddressRaw } from '../src/identifiers'
 
-const compareIds = (id1: Uint8Array, id2: Uint8Array) => {
+const compareIds = (id1: DhtAddressRaw, id2: DhtAddressRaw) => {
     const sorted = [id1, id2].sort()
     return KBucket.distance(sorted[0], sorted[1])
 }
 
-const generateIDs = (count: number): Uint8Array[] => {
+const generateIDs = (count: number): DhtAddressRaw[] => {
     return range(count).map((i) => new Uint8Array([i, 1, 1]))
 }
 
