@@ -16,6 +16,7 @@ export interface ConnectorFacade {
     getLocalPeerDescriptor: () => PeerDescriptor | undefined
     start: (
         onNewConnection: (connection: ManagedConnection) => boolean,
+        hasConnection: (peerDescriptor: PeerDescriptor) => boolean,
         autoCertifierTransport: ITransport
     ) => Promise<void>
     stop: () => Promise<void>
@@ -58,6 +59,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
 
     async start(
         onNewConnection: (connection: ManagedConnection) => boolean,
+        hasConnection: (peerDescriptor: PeerDescriptor) => boolean,
         autoCertifierTransport: ITransport
     ): Promise<void> {
         logger.trace(`Creating WebsocketConnectorRpcLocal`)
@@ -65,6 +67,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             transport: this.config.transport,
             // TODO should we use canConnect also for WebrtcConnector? (NET-1142)
             onNewConnection,
+            hasConnection,
             portRange: this.config.websocketPortRange,
             host: this.config.websocketHost,
             entrypoints: this.config.entryPoints,

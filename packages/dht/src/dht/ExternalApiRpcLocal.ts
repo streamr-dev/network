@@ -11,6 +11,8 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'
 import { Any } from '../proto/google/protobuf/any'
+import { NodeID } from '../helpers/nodeId'
+import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 
 interface ExternalApiRpcLocalConfig {
     executeRecursiveOperation: (
@@ -21,7 +23,7 @@ interface ExternalApiRpcLocalConfig {
     storeDataToDht: (
         key: Uint8Array,
         data: Any,
-        creator: PeerDescriptor
+        creator: NodeID
     ) => Promise<PeerDescriptor[]>
 }
 
@@ -41,7 +43,7 @@ export class ExternalApiRpcLocal implements IExternalApiRpc {
 
     async externalStoreData(request: ExternalStoreDataRequest, context: ServerCallContext): Promise<ExternalStoreDataResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const result = await this.config.storeDataToDht(request.key, request.data!, senderPeerDescriptor)
+        const result = await this.config.storeDataToDht(request.key, request.data!, getNodeIdFromPeerDescriptor(senderPeerDescriptor))
         return ExternalStoreDataResponse.create({
             storers: result
         })

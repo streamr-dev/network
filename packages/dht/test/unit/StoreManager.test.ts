@@ -1,16 +1,15 @@
 import { wait, waitForCondition } from '@streamr/utils'
+import crypto from 'crypto'
 import { range, sortBy } from 'lodash'
 import { Key } from 'readline'
 import { getDistance } from '../../src/dht/PeerManager'
 import { StoreManager } from '../../src/dht/store/StoreManager'
 import { NodeID, createRandomNodeId, getNodeIdFromBinary } from '../../src/helpers/nodeId'
-import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { NodeType, ReplicateDataRequest } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { createMockPeerDescriptor } from '../utils/utils'
 
 const DATA_ENTRY = {
     key: createRandomNodeId(),
-    creator: createMockPeerDescriptor()
+    creator: crypto.randomBytes(20)
 }
 const NODES_CLOSEST_TO_DATA = sortBy(
     range(5).map(() => createRandomNodeId()),
@@ -111,7 +110,7 @@ describe('StoreManager', () => {
                 await wait(50)
                 expect(replicateData).not.toHaveBeenCalled()
                 expect(setStale).toHaveBeenCalledTimes(1)
-                expect(setStale).toHaveBeenCalledWith(DATA_ENTRY.key, getNodeIdFromPeerDescriptor(DATA_ENTRY.creator), true)
+                expect(setStale).toHaveBeenCalledWith(DATA_ENTRY.key, getNodeIdFromBinary(DATA_ENTRY.creator), true)
             })
         })
     })

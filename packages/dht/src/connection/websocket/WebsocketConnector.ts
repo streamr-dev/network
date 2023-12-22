@@ -45,6 +45,7 @@ const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
 export interface WebsocketConnectorConfig {
     transport: ITransport
     onNewConnection: (connection: ManagedConnection) => boolean
+    hasConnection: (peerDescriptor: PeerDescriptor) => boolean
     portRange?: PortRange
     maxMessageSize?: number
     host?: string
@@ -93,6 +94,7 @@ export class WebsocketConnector {
                 if (this.connectingConnections.has(nodeId)
                     || this.connectingConnections.has(nodeId)
                     || this.ongoingConnectRequests.has(nodeId)
+                    || config.hasConnection(targetPeerDescriptor)
                 ) {
                     return true
                 } else {

@@ -183,6 +183,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         logger.trace(`Starting ConnectionManager...`)
         await this.connectorFacade.start(
             (connection: ManagedConnection) => this.onNewConnection(connection),
+            (peerDescriptor: PeerDescriptor) => this.hasConnection(peerDescriptor),
             this
         )
         // Garbage collection of connections
@@ -392,7 +393,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             return false
         }
         logger.trace('onNewConnection()')
-        connection.offeredAsIncoming = true
         if (!this.acceptNewConnection(connection)) {
             return false
         }

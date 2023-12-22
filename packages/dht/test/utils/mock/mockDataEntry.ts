@@ -4,7 +4,7 @@ import crypto from 'crypto'
 import { Timestamp } from '../../../src/proto/google/protobuf/timestamp'
 import { Any } from '../../../src/proto/google/protobuf/any'
 import { DataEntry } from '../../../src/proto/packages/dht/protos/DhtRpc'
-import { createMockPeerDescriptor } from '../utils'
+import { createRandomNodeId } from '../../../src/helpers/nodeId'
 
 const MockData = new class extends MessageType$<{ foo: string }> {
     constructor() {
@@ -18,7 +18,7 @@ export const createMockDataEntry = (entry: Partial<DataEntry> = {}): DataEntry =
     return { 
         key: crypto.randomBytes(10),
         data: Any.pack({ foo: randomString(5) }, MockData),
-        creator: entry.creator ?? createMockPeerDescriptor(),
+        creator: entry.creator ?? createRandomNodeId(),
         ttl: 10000,
         stale: false,
         deleted: false,
