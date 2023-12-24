@@ -1,3 +1,5 @@
+/* eslint-disable no-underscore-dangle */
+
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import EventEmitter from 'eventemitter3'
 import { RpcCommunicator } from '../../src/RpcCommunicator'
@@ -11,6 +13,16 @@ import { WakeUpRequest } from '../proto/WakeUpRpc'
 import { WakeUpRpcServiceClient } from '../proto/WakeUpRpc.client'
 import { IWakeUpRpcService } from '../proto/WakeUpRpc.server'
 import { RpcMessage } from '../../src/proto/ProtoRpc'
+
+export class HelloResponseDecorator {
+    _parent: HelloResponse
+    constructor(request: HelloResponse) {
+        this._parent = request
+    }
+    public getDecoratedGreeting(): string {
+        return 'decorated:' + this._parent.greeting
+    }
+}
 
 // Rpc call service
 /* eslint-disable class-methods-use-this */
@@ -53,6 +65,33 @@ describe('toProtoRpcClient', () => {
 
         const { greeting } = await helloClient.sayHello({ myName: 'Alice' })
         expect(greeting).toBe('Hello Alice!')
+
+        communicator1.stop()
+        communicator2.stop()
+    })
+
+    it('can make a rpc call with decorated response', async () => {
+        // Setup server
+        const communicator1 = new RpcCommunicator()
+        const helloService = new HelloService()
+        communicator1.registerRpcMethod(HelloRequest, HelloResponse, 'sayHello', helloService.sayHello)
+
+        // Setup client
+        const communicator2 = new RpcCommunicator()
+        const helloClient = toProtoRpcClient(new HelloRpcServiceClient(communicator2.getRpcClientTransport()), 
+            { 'sayHello': HelloResponseDecorator })
+
+        // Simulate a network connection, in real life the message blobs would be transferred over a network
+        communicator1.on('outgoingMessage', (msg: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
+            communicator2.handleIncomingMessage(msg)
+        })
+        communicator2.on('outgoingMessage', (msg: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
+            communicator1.handleIncomingMessage(msg)
+        })
+
+        const result = await helloClient.sayHello({ myName: 'Alice' })
+        
+        expect(result.getDecoratedGreeting()).toBe('decorated:Hello Alice!')
 
         communicator1.stop()
         communicator2.stop()

@@ -1,10 +1,14 @@
-/* eslint-disable no-underscore-dangle */
+/* eslint-disable no-underscore-dangle, class-methods-use-this */
 
-import { ClosestPeersRequest, ClosestPeersResponse, PingRequest, PingResponse, RouteMessageAck, RouteMessageWrapper } from './proto/TestProtos'
+import {
+    ClosestPeersRequest, ClosestPeersResponse, PingRequest,
+    PingResponse, RouteMessageAck, RouteMessageWrapper
+} from './proto/TestProtos'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { NodeType, PeerDescriptor } from './proto/TestProtos'
+import { IDhtRpcService } from './proto/TestProtos.server'
 
-export class HumanReadablePingRequestDecorator {
+export class PingRequestDecorator {
     _parent: PingRequest
     constructor(request: PingRequest) {
         this._parent = request
@@ -14,11 +18,41 @@ export class HumanReadablePingRequestDecorator {
     }
 }
 
-export interface HumanReadablePingRequest extends PingRequest, HumanReadablePingRequestDecorator { }
+//export interface HumanReadablePingRequest extends PingRequest, HumanReadablePingRequestDecorator { }
 
-let timeoutCounter = 0
-const timeouts: Record<string, any> = {}
-export const MockDhtRpc = {
+export class MockDhtRpc implements IDhtRpcService {
+
+    static timeoutCounter = 0
+    static timeouts: Record<string, any> = {}
+
+    async decoratedPing(request: PingRequestDecorator & PingRequest, _context: ServerCallContext): Promise<PingResponse> {
+        const response: PingResponse = {
+            requestId: request.getRequestId()
+        }
+        return response
+    }
+    
+    static respondPingWithTimeout(request: PingRequest, _context: ServerCallContext): Promise<PingResponse> {
+        return new Promise((resolve, _reject) => {
+            const response: PingResponse = {
+                requestId: request.requestId
+            }
+            MockDhtRpc.timeoutCounter++
+            const timeoutId = '' + MockDhtRpc.timeoutCounter
+            MockDhtRpc.timeouts[timeoutId] = setTimeout(() => {
+                delete MockDhtRpc.timeouts[timeoutId]
+                resolve(response)
+            }, 2000)
+        })
+    }
+    
+    static clearMockTimeouts(): void {
+        for (const [k, v] of Object.entries(MockDhtRpc.timeouts)) {
+            clearTimeout(v)
+            delete MockDhtRpc.timeouts[k]
+        }
+    }
+
     async getClosestPeers(_request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
         const neighbors = getMockPeers()
         const response: ClosestPeersResponse = {
@@ -26,19 +60,15 @@ export const MockDhtRpc = {
             requestId: 'why am i still here'
         }
         return response
-    },
-    async decoratedPing(request: HumanReadablePingRequest, _context: ServerCallContext): Promise<PingResponse> {
-        const response: PingResponse = {
-            requestId: request.getRequestId()
-        }
-        return response
-    },
+    }
+    
     async ping(request: PingRequest, _context: ServerCallContext): Promise<PingResponse> {
         const response: PingResponse = {
             requestId: request.requestId
         }
         return response
-    },
+    }
+    
     async routeMessage(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
             requestId: routed.requestId,
@@ -47,35 +77,18 @@ export const MockDhtRpc = {
             error: ''
         }
         return response
-    },
+    }
+    
     async throwPingError(_urequest: PingRequest, _context: ServerCallContext): Promise<PingResponse> {
         throw new Error()
-    },
-    respondPingWithTimeout(request: PingRequest, _context: ServerCallContext): Promise<PingResponse> {
-        return new Promise((resolve, _reject) => {
-            const response: PingResponse = {
-                requestId: request.requestId
-            }
-            timeoutCounter++
-            const timeoutId = '' + timeoutCounter
-            timeouts[timeoutId] = setTimeout(() => {
-                delete timeouts[timeoutId]
-                resolve(response)
-            }, 2000)
-        })
-    },
+    }
+
     async throwGetClosestPeersError(_urequest: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
         throw new Error()
-    },
+    }
+
     async throwRouteMessageError(_urequest: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
         throw new Error()
-    }
-}
-
-export function clearMockTimeouts(): void {
-    for (const [k, v] of Object.entries(timeouts)) {
-        clearTimeout(v)
-        delete timeouts[k]
     }
 }
 
