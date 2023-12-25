@@ -31,7 +31,7 @@
     "@streamr/network-tracker": "8.5.5",
     "@streamr/protocol": "8.5.5",
     "@streamr/utils": "8.5.5",
-    "aedes": "^0.50.0",
+    "aedes": "^0.50.1",
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
     "cassandra-driver": "^4.7.2",
@@ -50,7 +50,7 @@
     "qs": "^6.10.1",
     "streamr-client": "8.5.5",
     "uuid": "^9.0.1",
-    "ws": "^8.14.2"
+    "ws": "^8.15.1"
   },
   "devDependencies": {
     "@streamr/test-utils": "8.5.5",
@@ -61,9 +61,9 @@
     "@types/lodash": "^4.14.202",
     "@types/merge2": "^1.4.4",
     "@types/node-fetch": "^2.6.4",
-    "@types/qs": "^6.9.10",
+    "@types/qs": "^6.9.11",
     "@types/stream-to-array": "^2.3.3",
-    "@types/supertest": "^2.0.16",
+    "@types/supertest": "^6.0.1",
     "@types/uuid": "^9.0.7",
     "@types/ws": "^8.5.10",
     "async-mqtt": "^2.6.1",
