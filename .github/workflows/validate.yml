@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - brubeck
   pull_request:
     branches:
       - '*'
