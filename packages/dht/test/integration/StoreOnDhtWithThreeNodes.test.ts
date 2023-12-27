@@ -40,8 +40,10 @@ describe('Storing data in DHT with two peers', () => {
     it('Node can store on three peer DHT', async () => {
         const storedData1 = createMockDataEntry()
         const storedData2 = createMockDataEntry()
+        // Here we effectively test that fetching "null" data doesn't take too long. A test timeout here indicates an issue. 
         await node1.getDataFromDht(getDhtAddressFromRaw(storedData1.key))
         await node2.getDataFromDht(getDhtAddressFromRaw(storedData1.key))
+        
         await node1.storeDataToDht(getDhtAddressFromRaw(storedData1.key), storedData1.data!)
         await node2.storeDataToDht(getDhtAddressFromRaw(storedData1.key), storedData1.data!)
         await entryPoint.storeDataToDht(getDhtAddressFromRaw(storedData2.key), storedData2.data!)

@@ -7,7 +7,7 @@ describe('Duplicate Detector', () => {
     let detector: DuplicateDetector
 
     beforeEach(async () => {
-        detector = new DuplicateDetector(MAX_VALUE_COUNT, 100)
+        detector = new DuplicateDetector(MAX_VALUE_COUNT)
     })
 
     it('detects duplicates', async () => {
@@ -16,7 +16,7 @@ describe('Duplicate Detector', () => {
         expect(detector.isMostLikelyDuplicate('test')).toEqual(true)
     })
 
-    it('resets on resetLimit', () => {
+    it('removes from tail when full', () => {
         for (let i = 0; i < MAX_VALUE_COUNT; i++) {
             detector.add(`test${i}`)
         }
