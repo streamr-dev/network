@@ -1,7 +1,6 @@
-import { ConnectionLocker, DhtAddress, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { ConnectionLocker, DhtAddress, PeerDescriptor, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { NodeList } from '../NodeList'
 import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
-import { RpcCommunicator } from '@streamr/proto-rpc'
 import {
     DeliveryRpcClient, HandshakeRpcClient
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -24,7 +23,7 @@ interface HandshakerConfig {
     targetNeighbors: NodeList
     nearbyNodeView: NodeList
     randomNodeView: NodeList
-    rpcCommunicator: RpcCommunicator
+    rpcCommunicator: ListeningRpcCommunicator
     maxNeighborCount: number
     rpcRequestTimeout?: number
 }

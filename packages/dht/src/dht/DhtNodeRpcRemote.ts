@@ -11,6 +11,7 @@ import {
 import { DhtNodeRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import { ServiceID } from '../types/ServiceID'
 import { RpcRemote } from './contact/RpcRemote'
+import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 
 const logger = new Logger(module)
 
@@ -31,7 +32,7 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
         localPeerDescriptor: PeerDescriptor,
         peerDescriptor: PeerDescriptor,
         serviceId: ServiceID,
-        rpcCommunicator: RpcCommunicator,
+        rpcCommunicator: RpcCommunicator<DhtCallContext>,
         rpcRequestTimeout?: number
     ) {
         super(localPeerDescriptor, peerDescriptor, rpcCommunicator, DhtNodeRpcClient, rpcRequestTimeout)
