@@ -86,8 +86,8 @@ describe('Route Message With Mock Connections', () => {
                 requestId: v4(),
                 sourcePeer: sourceNode.getLocalPeerDescriptor(),
                 reachableThrough: [],
-                routingPath: []
-
+                routingPath: [],
+                parallelRootNodeIds: []
             })
         }], [[destinationNode, 'message']], 20000)
     }, 30000)
@@ -118,7 +118,8 @@ describe('Route Message With Mock Connections', () => {
                 requestId: v4(),
                 sourcePeer: sourceNode.getLocalPeerDescriptor(),
                 reachableThrough: [],
-                routingPath: []
+                routingPath: [],
+                parallelRootNodeIds: []
             })
         }
         await waitForCondition(() => receivedMessages === numOfMessages)
@@ -154,7 +155,8 @@ describe('Route Message With Mock Connections', () => {
                             sourcePeer: node.getLocalPeerDescriptor(),
                             requestId: v4(),
                             reachableThrough: [],
-                            routingPath: []
+                            routingPath: [],
+                            parallelRootNodeIds: []
                         })
                     }
                 }))
@@ -190,7 +192,8 @@ describe('Route Message With Mock Connections', () => {
             requestId: v4(),
             sourcePeer: sourceNode.getLocalPeerDescriptor(),
             reachableThrough: [entryPointDescriptor],
-            routingPath: []
+            routingPath: [],
+            parallelRootNodeIds: []
         }
 
         const rpcMessage: RpcMessage = {
@@ -220,7 +223,8 @@ describe('Route Message With Mock Connections', () => {
             sourcePeer: sourceNode.getLocalPeerDescriptor(),
             target: entryPoint.getLocalPeerDescriptor()!.nodeId,
             reachableThrough: [],
-            routingPath: []
+            routingPath: [],
+            parallelRootNodeIds: [],
         }
 
         await runAndWaitForEvents3<DhtNodeEvents>([() => {

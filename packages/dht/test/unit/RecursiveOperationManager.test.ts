@@ -57,7 +57,8 @@ describe('RecursiveOperationManager', () => {
         routingPath: [],
         reachableThrough: [],
         sourcePeer: peerDescriptor1,
-        target: peerDescriptor2.nodeId
+        target: peerDescriptor2.nodeId,
+        parallelRootNodeIds: []
     }
     const rpcCommunicator = new FakeRpcCommunicator()
 

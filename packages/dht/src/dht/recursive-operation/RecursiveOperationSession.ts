@@ -105,7 +105,8 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             target: getRawFromDhtAddress(this.config.targetId),
             sourcePeer: this.config.localPeerDescriptor,
             reachableThrough: [],
-            routingPath: []
+            routingPath: [],
+            parallelRootNodeIds: []
         }
         return routeMessage
     }
