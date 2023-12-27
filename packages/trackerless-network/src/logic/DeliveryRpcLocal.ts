@@ -1,4 +1,4 @@
-import { ListeningRpcCommunicator, PeerDescriptor, DhtCallContext } from '@streamr/dht'
+import { ListeningRpcCommunicator, PeerDescriptor, DhtCallContext, DhtAddress, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { Empty } from '../proto/google/protobuf/empty'
 import {
     LeaveStreamPartNotice,
@@ -8,16 +8,15 @@ import {
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IDeliveryRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { StreamPartID } from '@streamr/protocol'
 
 export interface DeliveryRpcLocalConfig {
     localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     markAndCheckDuplicate: (messageId: MessageID, previousMessageRef?: MessageRef) => boolean
-    broadcast: (message: StreamMessage, previousNode?: NodeID) => void
-    onLeaveNotice(senderId: NodeID, isLocalNodeEntryPoint: boolean): void
-    markForInspection(senderId: NodeID, messageId: MessageID): void
+    broadcast: (message: StreamMessage, previousNode?: DhtAddress) => void
+    onLeaveNotice(senderId: DhtAddress, isLocalNodeEntryPoint: boolean): void
+    markForInspection(senderId: DhtAddress, messageId: MessageID): void
     rpcCommunicator: ListeningRpcCommunicator
 }
 

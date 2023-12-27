@@ -2,8 +2,9 @@ import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
 import type { Overrides } from '@ethersproject/contracts'
+import { DhtAddress } from '@streamr/dht'
 import { StreamID } from '@streamr/protocol'
-import { NodeID, ProxyDirection } from '@streamr/trackerless-network'
+import { ProxyDirection } from '@streamr/trackerless-network'
 import { EthereumAddress, TheGraphClient, toEthereumAddress } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
@@ -651,7 +652,7 @@ export class StreamrClient {
     /**
      * Get the network-level node id of the client.
      */
-    async getNodeId(): Promise<NodeID> {
+    async getNodeId(): Promise<DhtAddress> {
         return this.node.getNodeId()
     }
 
