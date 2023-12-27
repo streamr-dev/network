@@ -2,7 +2,7 @@ name: Test Building Documentation
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ main, brubeck ]
 
 jobs:  
   deploy:
