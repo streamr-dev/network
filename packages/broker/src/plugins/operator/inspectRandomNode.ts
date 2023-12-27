@@ -1,56 +1,63 @@
-import { EthereumAddress, Logger } from '@streamr/utils'
-import { InspectRandomNodeHelper } from './InspectRandomNodeHelper'
+import { EthereumAddress, Logger, randomString } from '@streamr/utils'
 import { StreamPartAssignments } from './StreamPartAssignments'
 import { StreamrClient } from 'streamr-client'
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { findNodesForTarget, findTarget, inspectTarget } from './inspectionUtils'
-
-const logger = new Logger(module)
-
-export type FindTargetFn = typeof findTarget
-export type FindNodesForTargetFn = typeof findNodesForTarget
-export type InspectTargetFn = typeof inspectTarget
+import { findTarget } from './inspectionUtils'
+import { ContractFacade } from './ContractFacade'
+import { CreateOperatorFleetStateFn } from './OperatorFleetState'
+import { inspectOverTime } from './inspectOverTime'
 
 export async function inspectRandomNode(
     operatorContractAddress: EthereumAddress,
-    helper: InspectRandomNodeHelper,
+    contractFacade: ContractFacade,
     assignments: StreamPartAssignments,
     streamrClient: StreamrClient,
     heartbeatTimeoutInMs: number,
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>,
+    createOperatorFleetState: CreateOperatorFleetStateFn,
     abortSignal: AbortSignal,
     findTargetFn = findTarget,
-    findNodesForTargetFn = findNodesForTarget,
-    inspectTargetFn = inspectTarget
 ): Promise<void> {
+    const traceId = randomString(6)
+    const logger = new Logger(module, { traceId })
     logger.info('Select a random operator to inspect')
 
-    const target = await findTargetFn(operatorContractAddress, helper, assignments)
+    const target = await findTargetFn(operatorContractAddress, contractFacade, assignments, logger)
     if (target === undefined) {
         return
     }
+    logger.debug('Target established', { target })
 
-    const onlineNodeDescriptors = await findNodesForTargetFn(
+    const consumeResults = inspectOverTime({
         target,
         streamrClient,
+        createOperatorFleetState,
         getRedundancyFactor,
+        sleepTimeInMsBeforeFirstInspection: 0,
         heartbeatTimeoutInMs,
-        abortSignal
-    )
-
-    const pass = await inspectTargetFn({
-        target,
-        targetPeerDescriptors: onlineNodeDescriptors,
-        streamrClient,
-        abortSignal
+        inspectionIntervalInMs: 8 * 60 * 1000,
+        maxInspections: 10,
+        waitUntilPassOrDone: true,
+        abortSignal,
+        traceId
     })
 
-    if (!pass) {
-        logger.info('Raise flag', { target })
-        await helper.flag(
-            target.sponsorshipAddress,
-            target.operatorAddress,
-            StreamPartIDUtils.getStreamPartition(target.streamPart)
-        )
+    const results = await consumeResults()
+    if (results.some((pass) => pass)) {
+        logger.info('Not raising flag', { target })
+        return
     }
+
+    const flagAlreadyRaised = await contractFacade.hasOpenFlag(target.operatorAddress, target.sponsorshipAddress)
+    if (flagAlreadyRaised) {
+        logger.info('Not raising flag (target already has open flag)', { target })
+        return
+    }
+
+    logger.info('Raise flag', { target })
+    await contractFacade.flag(
+        target.sponsorshipAddress,
+        target.operatorAddress,
+        StreamPartIDUtils.getStreamPartition(target.streamPart)
+    )
 }

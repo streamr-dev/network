@@ -1,8 +1,8 @@
-import { INeighborUpdateManager } from '../../../src/logic/neighbor-discovery/NeighborUpdateManager'
+import { Methods } from '@streamr/test-utils'
+import { NeighborUpdateManager } from '../../../src/logic/neighbor-discovery/NeighborUpdateManager'
 import { NeighborUpdate } from '../../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
-export class MockNeighborUpdateManager implements INeighborUpdateManager {
+export class MockNeighborUpdateManager implements Methods<NeighborUpdateManager> {
 
     // eslint-disable-next-line class-methods-use-this
     async start(): Promise<void> {
@@ -15,7 +15,7 @@ export class MockNeighborUpdateManager implements INeighborUpdateManager {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async neighborUpdate(_request: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> {
+    async neighborUpdate(): Promise<NeighborUpdate> {
         return NeighborUpdate.create()
     }
 }

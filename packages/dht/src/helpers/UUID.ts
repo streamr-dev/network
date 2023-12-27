@@ -5,7 +5,7 @@ export class UUID {
     private buf: Uint8Array
 
     constructor(other?: (UUID | Uint8Array | string)) {
-        if (!other) {
+        if (other === undefined) {
             this.buf = new Uint8Array(16)
             v4(null, this.buf)
         } else if (other.constructor === UUID) {

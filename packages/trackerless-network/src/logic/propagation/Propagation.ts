@@ -1,8 +1,8 @@
-import { NodeID } from '../../identifiers'
+import { DhtAddress } from '@streamr/dht'
 import { StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { PropagationTask, PropagationTaskStore } from './PropagationTaskStore'
 
-type SendToNeighborFn = (neighborId: NodeID, msg: StreamMessage) => Promise<void>
+type SendToNeighborFn = (neighborId: DhtAddress, msg: StreamMessage) => Promise<void>
 
 interface ConstructorOptions {
     sendToNeighbor: SendToNeighborFn
@@ -41,11 +41,11 @@ export class Propagation {
     /**
      * Node should invoke this when it learns about a new message
      */
-    feedUnseenMessage(message: StreamMessage, targets: NodeID[], source: NodeID | null): void {
+    feedUnseenMessage(message: StreamMessage, targets: DhtAddress[], source: DhtAddress | null): void {
         const task = {
             message,
             source,
-            handledNeighbors: new Set<NodeID>()
+            handledNeighbors: new Set<DhtAddress>()
         }
         this.activeTaskStore.add(task)
         for (const target of targets) {
@@ -56,15 +56,16 @@ export class Propagation {
     /**
      * Node should invoke this when it learns about a new node stream assignment
      */
-    onNeighborJoined(neighborId: NodeID): void {
-        const tasksOfStream = this.activeTaskStore.get()
-        for (const task of tasksOfStream) {
+    onNeighborJoined(neighborId: DhtAddress): void {
+        const tasks = this.activeTaskStore.get()
+        for (const task of tasks) {
             this.sendAndAwaitThenMark(task, neighborId)
         }
     }
 
-    private sendAndAwaitThenMark({ message, source, handledNeighbors }: PropagationTask, neighborId: NodeID): void {
+    private sendAndAwaitThenMark({ message, source, handledNeighbors }: PropagationTask, neighborId: DhtAddress): void {
         if (!handledNeighbors.has(neighborId) && neighborId !== source) {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             (async () => {
                 try {
                     await this.sendToNeighbor(neighborId, message)

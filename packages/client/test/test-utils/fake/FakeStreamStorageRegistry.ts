@@ -1,10 +1,10 @@
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
+import { Methods } from '@streamr/test-utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { Stream } from '../../../src/Stream'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegistry'
-import { Methods } from '../types'
 import { FakeChain } from './FakeChain'
 import { FakeNetwork } from './FakeNetwork'
 import { FakeStorageNode } from './FakeStorageNode'
@@ -86,7 +86,7 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStoredStreams(_nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
+    getStoredStreams(): Promise<{ streams: Stream[], blockNumber: number }> {
         throw new Error('not implemented')
     }
 }

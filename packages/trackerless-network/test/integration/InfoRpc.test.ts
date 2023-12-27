@@ -1,4 +1,4 @@
-import { Simulator, PeerDescriptor, NodeType, SimulatorTransport, ListeningRpcCommunicator, isSamePeerDescriptor } from '@streamr/dht'
+import { Simulator, PeerDescriptor, NodeType, SimulatorTransport, ListeningRpcCommunicator, areEqualPeerDescriptors } from '@streamr/dht'
 import { NetworkStack } from '../../src/NetworkStack'
 import { hexToBinary } from '../../../utils/dist/src/binaryUtils'
 import { createRandomNodeId } from '../utils/utils'
@@ -19,17 +19,17 @@ describe('NetworkStack InfoRpc', () => {
     let simulator: Simulator
 
     const stack1PeerDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
+        nodeId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS
     }
 
     const stack2PeerDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
+        nodeId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS
     }
 
     const stack3PeerDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
+        nodeId: hexToBinary(createRandomNodeId()),
         type: NodeType.NODEJS
     }
 
@@ -38,16 +38,19 @@ describe('NetworkStack InfoRpc', () => {
         transport1 = new SimulatorTransport(stack1PeerDescriptor, simulator)
         transport2 = new SimulatorTransport(stack2PeerDescriptor, simulator)
         transport3 = new SimulatorTransport(stack3PeerDescriptor, simulator)
+        await transport1.start()
+        await transport2.start()
+        await transport3.start()
         stack1 = new NetworkStack({
             layer0: {
-                transportLayer: transport1,
+                transport: transport1,
                 peerDescriptor: stack1PeerDescriptor,
                 entryPoints: [stack1PeerDescriptor]
             }
         })
         stack2 = new NetworkStack({
             layer0: {
-                transportLayer: transport2,
+                transport: transport2,
                 peerDescriptor: stack2PeerDescriptor,
                 entryPoints: [stack1PeerDescriptor]
             }
@@ -60,6 +63,8 @@ describe('NetworkStack InfoRpc', () => {
     afterEach(async () => {
         await stack1.stop()
         await stack2.stop()
+        await transport1.stop()
+        await transport2.stop()
         await transport3.stop()
     })
 
@@ -71,24 +76,24 @@ describe('NetworkStack InfoRpc', () => {
 
     it('InfoClient can query streams', async () => {
         const streamPartId = StreamPartIDUtils.parse('stream1#0')
-        await stack1.getStreamrNode().joinStream(streamPartId)
-        await stack2.getStreamrNode().joinStream(streamPartId)
+        await stack1.getStreamrNode().joinStreamPart(streamPartId)
+        await stack2.getStreamrNode().joinStreamPart(streamPartId)
         await waitForCondition(() => stack1.getStreamrNode().getNeighbors(streamPartId).length === 1 
             && stack2.getStreamrNode().getNeighbors(streamPartId).length === 1)
         const result = await infoClient.getInfo(stack1PeerDescriptor, false, [streamPartId])
-        expect(isSamePeerDescriptor(result.peerDescriptor!, stack1PeerDescriptor)).toEqual(true)
+        expect(areEqualPeerDescriptors(result.peerDescriptor!, stack1PeerDescriptor)).toEqual(true)
         expect(result.streamInfo!.streamPartitions[0].id).toEqual(streamPartId)
         expect(result.streamInfo!.streamPartitions[0].neighbors[0]).toEqual(stack2.getStreamrNode().getNodeId())
-        expect(isSamePeerDescriptor(result.streamInfo!.streamPartitions[0].kBucket[0], stack2PeerDescriptor)).toEqual(true)
+        expect(areEqualPeerDescriptors(result.streamInfo!.streamPartitions[0].kBucket[0], stack2PeerDescriptor)).toEqual(true)
     })
 
     it('InfoClient can query all streams', async () => {
         const streamPartId1 = StreamPartIDUtils.parse('stream1#0')
         const streamPartId2 = StreamPartIDUtils.parse('stream1#1')
-        await stack1.getStreamrNode().joinStream(streamPartId1)
-        await stack2.getStreamrNode().joinStream(streamPartId1)
-        await stack1.getStreamrNode().joinStream(streamPartId2)
-        await stack2.getStreamrNode().joinStream(streamPartId2)
+        await stack1.getStreamrNode().joinStreamPart(streamPartId1)
+        await stack2.getStreamrNode().joinStreamPart(streamPartId1)
+        await stack1.getStreamrNode().joinStreamPart(streamPartId2)
+        await stack2.getStreamrNode().joinStreamPart(streamPartId2)
         await waitForCondition(() => 
             stack1.getStreamrNode().getNeighbors(streamPartId1).length === 1 
             && stack2.getStreamrNode().getNeighbors(streamPartId1).length === 1

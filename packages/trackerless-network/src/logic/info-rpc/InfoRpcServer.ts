@@ -5,7 +5,7 @@ import { NetworkStack } from '../../NetworkStack'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { ListeningRpcCommunicator } from '@streamr/dht'
 
-export const INFO_RPC_SERVICE_ID = 'InfoRpc'
+export const INFO_RPC_SERVICE_ID = 'system/info-rpc'
 export class InfoRpcServer implements IInfoRpc {
     
     private readonly stack: NetworkStack
@@ -23,8 +23,8 @@ export class InfoRpcServer implements IInfoRpc {
 
     async getInfo(request: InfoRequest, _context: ServerCallContext): Promise<InfoResponse> {
         return {
-            peerDescriptor: this.stack.getLayer0DhtNode().getPeerDescriptor(),
-            controlLayerInfo: request.getControlLayerInfo ? this.stack.getLayer0DhtNode().getInfo() : undefined,
+            peerDescriptor: this.stack.getLayer0Node().getLocalPeerDescriptor(),
+            controlLayerInfo: request.getControlLayerInfo ? this.stack.getLayer0Node().getInfo() : undefined,
             streamInfo: request.getStreamInfo ? this.stack.getStreamrNode().getInfo(
                 request.getStreamInfo.streamPartIds.map((id) => StreamPartIDUtils.parse(id))
             ) : undefined

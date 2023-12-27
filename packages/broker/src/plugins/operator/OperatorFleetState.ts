@@ -1,26 +1,17 @@
-import { StreamrClient, Subscription } from 'streamr-client'
-import { Gate, Logger, setAbortableInterval, setAbortableTimeout } from '@streamr/utils'
+import { DhtAddress } from '@streamr/dht'
 import { StreamID } from '@streamr/protocol'
+import { Gate, Logger, setAbortableInterval, setAbortableTimeout } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
-import { NodeID } from '@streamr/trackerless-network'
 import min from 'lodash/min'
 import once from 'lodash/once'
-import { NetworkPeerDescriptor } from 'streamr-client'
+import { NetworkPeerDescriptor, StreamrClient, Subscription } from 'streamr-client'
 import { HeartbeatMessage, HeartbeatMessageSchema } from './heartbeatUtils'
 
 const logger = new Logger(module)
 
-export const DEFAULT_UPDATE_INTERVAL_IN_MS = 1000 * 10
-
-const DEFAULT_PRUNE_AGE_IN_MS = 5 * 60 * 1000
-
-const DEFAULT_PRUNE_INTERVAL_IN_MS = 30 * 1000
-
-const DEFAULT_LATENCY_EXTRA_MS = 2000
-
 export interface OperatorFleetStateEvents {
-    added: (nodeId: NodeID) => void
-    removed: (nodeId: NodeID) => void
+    added: (nodeId: DhtAddress) => void
+    removed: (nodeId: DhtAddress) => void
 }
 
 interface Heartbeat {
@@ -28,6 +19,9 @@ interface Heartbeat {
     peerDescriptor: NetworkPeerDescriptor
 }
 
+export type CreateOperatorFleetStateFn = (coordinationStreamId: StreamID) => OperatorFleetState
+
+// TODO: add abortSignal support
 export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly streamrClient: StreamrClient
     private readonly coordinationStreamId: StreamID
@@ -36,19 +30,42 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
     private readonly pruneIntervalInMs: number
     private readonly heartbeatIntervalInMs: number
     private readonly latencyExtraInMs: number
-    private readonly latestHeartbeats = new Map<NodeID, Heartbeat>()
+    private readonly warmupPeriodInMs: number
+    private readonly latestHeartbeats = new Map<DhtAddress, Heartbeat>()
     private readonly abortController = new AbortController()
     private readonly ready = new Gate(false)
     private subscription?: Subscription
 
-    constructor(
+    static createOperatorFleetStateBuilder(
+        streamrClient: StreamrClient,
+        heartbeatIntervalInMs: number,
+        pruneAgeInMs: number,
+        pruneIntervalInMs: number,
+        latencyExtraInMs: number,
+        warmupPeriodInMs: number,
+        timeProvider = Date.now
+    ): CreateOperatorFleetStateFn {
+        return (coordinationStreamId) => new OperatorFleetState(
+            streamrClient,
+            coordinationStreamId,
+            heartbeatIntervalInMs,
+            pruneAgeInMs,
+            pruneIntervalInMs,
+            latencyExtraInMs,
+            warmupPeriodInMs,
+            timeProvider
+        )
+    }
+
+    private constructor(
         streamrClient: StreamrClient,
         coordinationStreamId: StreamID,
-        timeProvider = Date.now,
-        pruneAgeInMs = DEFAULT_PRUNE_AGE_IN_MS,
-        pruneIntervalInMs = DEFAULT_PRUNE_INTERVAL_IN_MS,
-        heartbeatIntervalInMs = DEFAULT_UPDATE_INTERVAL_IN_MS,
-        latencyExtraInMs = DEFAULT_LATENCY_EXTRA_MS
+        heartbeatIntervalInMs: number,
+        pruneAgeInMs: number,
+        pruneIntervalInMs: number,
+        latencyExtraInMs: number,
+        warmupPeriodInMs: number,
+        timeProvider = Date.now
     ) {
         super()
         this.streamrClient = streamrClient
@@ -58,13 +75,21 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         this.pruneIntervalInMs = pruneIntervalInMs
         this.heartbeatIntervalInMs = heartbeatIntervalInMs
         this.latencyExtraInMs = latencyExtraInMs
+        this.warmupPeriodInMs = warmupPeriodInMs
     }
 
     async start(): Promise<void> {
         if (this.subscription !== undefined) {
             throw new Error('already started')
         }
+        const startTime = this.timeProvider()
         this.subscription = await this.streamrClient.subscribe(this.coordinationStreamId, (rawContent) => {
+            // Ignore messages during warmup period. This is needed because network nodes may propagate old stream messages
+            // from cache.
+            if ((this.timeProvider() - startTime) < this.warmupPeriodInMs) { // TODO: write test
+                return
+            }
+
             let message: HeartbeatMessage
             try {
                 message = HeartbeatMessageSchema.parse(rawContent)
@@ -76,7 +101,7 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
                 return
             }
             if (message.msgType === 'heartbeat') {
-                const nodeId = message.peerDescriptor.id as NodeID
+                const nodeId = message.peerDescriptor.nodeId as DhtAddress
                 const exists = this.latestHeartbeats.has(nodeId)
                 this.latestHeartbeats.set(nodeId, {
                     timestamp: this.timeProvider(),
@@ -102,15 +127,15 @@ export class OperatorFleetState extends EventEmitter<OperatorFleetStateEvents> {
         await this.subscription?.unsubscribe()
     }
 
-    getLeaderNodeId(): NodeID | undefined {
+    getLeaderNodeId(): DhtAddress | undefined {
         return min(this.getNodeIds()) // we just need the leader to be consistent
     }
 
-    getNodeIds(): NodeID[] {
+    getNodeIds(): DhtAddress[] {
         return [...this.latestHeartbeats.keys()]
     }
 
-    getPeerDescriptor(nodeId: NodeID): NetworkPeerDescriptor | undefined {
+    getPeerDescriptor(nodeId: DhtAddress): NetworkPeerDescriptor | undefined {
         return this.latestHeartbeats.get(nodeId)?.peerDescriptor
     }
 

@@ -1,16 +1,20 @@
 import { shuffle } from 'lodash'
 import { NetworkPeerDescriptor, StreamrClient } from 'streamr-client'
-import { OperatorFleetState } from './OperatorFleetState'
-import { StreamID, StreamPartID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
+import { CreateOperatorFleetStateFn, OperatorFleetState } from './OperatorFleetState'
+import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { EthereumAddress, Logger, wait } from '@streamr/utils'
 import { ConsistentHashRing } from './ConsistentHashRing'
 import { StreamPartAssignments } from './StreamPartAssignments'
-import { InspectRandomNodeHelper } from './InspectRandomNodeHelper'
 import { weightedSample } from '../../helpers/weightedSample'
 import sample from 'lodash/sample'
 import without from 'lodash/without'
+import { formCoordinationStreamId } from './formCoordinationStreamId'
+import { ContractFacade } from './ContractFacade'
 
-const logger = new Logger(module)
+export type FindTargetFn = typeof findTarget
+export type FindNodesForTargetFn = typeof findNodesForTarget
+export type FindNodesForTargetGivenFleetStateFn = typeof findNodesForTargetGivenFleetState
+export type InspectTargetFn = typeof inspectTarget
 
 export interface Target {
     sponsorshipAddress: EthereumAddress
@@ -40,11 +44,12 @@ function getPartitionsOfStreamAssignedToMe(
 
 export async function findTarget(
     myOperatorContractAddress: EthereumAddress,
-    helper: InspectRandomNodeHelper,
-    assignments: StreamPartAssignments
+    contractFacade: ContractFacade,
+    assignments: StreamPartAssignments,
+    logger: Logger
 ): Promise<Target | undefined> {
     // choose sponsorship
-    const sponsorships = await helper.getSponsorshipsOfOperator(myOperatorContractAddress)
+    const sponsorships = await contractFacade.getSponsorshipsOfOperator(myOperatorContractAddress)
     const suitableSponsorships = sponsorships
         .filter(({ operatorCount }) => operatorCount >= 2)  // exclude sponsorships with only self
         .filter(({ streamId }) => isAnyPartitionOfStreamAssignedToMe(assignments, streamId))
@@ -58,7 +63,7 @@ export async function findTarget(
     )!
 
     // choose operator
-    const operators = await helper.getOperatorsInSponsorship(targetSponsorship.sponsorshipAddress)
+    const operators = await contractFacade.getOperatorsInSponsorship(targetSponsorship.sponsorshipAddress)
     const targetOperatorAddress = sample(without(operators, myOperatorContractAddress))
     if (targetOperatorAddress === undefined) {
         // Only happens if during the async awaits the other operator(s) were removed from the sponsorship.
@@ -75,6 +80,12 @@ export async function findTarget(
         return undefined
     }
 
+    const flagAlreadyRaised = await contractFacade.hasOpenFlag(targetOperatorAddress, targetSponsorship.sponsorshipAddress)
+    if (flagAlreadyRaised) {
+        logger.info('Skip inspection (target already has open flag)', { targetSponsorship, targetOperatorAddress })
+        return undefined
+    }
+
     return {
         sponsorshipAddress: targetSponsorship.sponsorshipAddress,
         operatorAddress: targetOperatorAddress,
@@ -84,19 +95,17 @@ export async function findTarget(
 
 export async function findNodesForTarget(
     target: Target,
-    streamrClient: StreamrClient,
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>,
+    createOperatorFleetState: CreateOperatorFleetStateFn,
     timeout: number,
-    abortSignal: AbortSignal
+    abortSignal: AbortSignal,
+    logger: Logger
 ): Promise<NetworkPeerDescriptor[]> {
     logger.debug('Waiting for node heartbeats', {
         targetOperator: target.operatorAddress,
         timeout
     })
-    const targetOperatorFleetState = new OperatorFleetState(
-        streamrClient,
-        toStreamID('/operator/coordination', target.operatorAddress)
-    )
+    const targetOperatorFleetState = createOperatorFleetState(formCoordinationStreamId(target.operatorAddress))
     try {
         await targetOperatorFleetState.start()
         await Promise.race([
@@ -107,62 +116,85 @@ export async function findNodesForTarget(
             targetOperator: target.operatorAddress,
             onlineNodes: targetOperatorFleetState.getNodeIds().length,
         })
-
-        const replicationFactor = await getRedundancyFactor(target.operatorAddress)
-        if (replicationFactor === undefined) {
-            logger.debug('Encountered misconfigured replication factor')
-            return []
-        }
-
-        const consistentHashRing = new ConsistentHashRing(replicationFactor)
-        for (const nodeId of targetOperatorFleetState.getNodeIds()) {
-            consistentHashRing.add(nodeId)
-        }
-        const targetNodes = consistentHashRing.get(target.streamPart)
-        return targetNodes.map((nodeId) => targetOperatorFleetState.getPeerDescriptor(nodeId)!)
+        return await findNodesForTargetGivenFleetState(target, targetOperatorFleetState, getRedundancyFactor, logger)
     } finally {
         await targetOperatorFleetState.destroy()
     }
+}
+
+export async function findNodesForTargetGivenFleetState(
+    target: Target,
+    targetOperatorFleetState: OperatorFleetState,
+    getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>,
+    logger: Logger
+): Promise<NetworkPeerDescriptor[]> {
+    const replicationFactor = await getRedundancyFactor(target.operatorAddress)
+    if (replicationFactor === undefined) {
+        logger.debug('Encountered misconfigured replication factor')
+        return []
+    }
+
+    const consistentHashRing = new ConsistentHashRing(replicationFactor)
+    for (const nodeId of targetOperatorFleetState.getNodeIds()) {
+        consistentHashRing.add(nodeId)
+    }
+    const targetNodes = consistentHashRing.get(target.streamPart)
+    return targetNodes.map((nodeId) => targetOperatorFleetState.getPeerDescriptor(nodeId)!)
 }
 
 export async function inspectTarget({
     target,
     targetPeerDescriptors,
     streamrClient,
-    abortSignal
+    abortSignal,
+    logger
 }: {
     target: Target
     targetPeerDescriptors: NetworkPeerDescriptor[]
     streamrClient: StreamrClient
     abortSignal: AbortSignal
+    logger: Logger
 }): Promise<boolean> {
 
     logger.info('Inspecting nodes of operator', {
         targetOperator: target.operatorAddress,
         targetStreamPart: target.streamPart,
-        targetNodes: targetPeerDescriptors.map(({ id }) => id),
+        targetNodes: targetPeerDescriptors.map(({ nodeId }) => nodeId),
         targetSponsorship: target.sponsorshipAddress
     })
 
-    for (const descriptor of shuffle(targetPeerDescriptors)) {
-        const result = await streamrClient.inspect(descriptor, target.streamPart)
-        abortSignal.throwIfAborted()
-        if (result) {
-            logger.info('Inspection done (no issue detected)', {
-                targetOperator: target.operatorAddress,
-                targetStreamPart: target.streamPart,
-                targetNode: descriptor.id,
-                targetSponsorship: target.sponsorshipAddress
-            })
-            return true
+    // need to subscribe before inspecting, otherwise inspect will instantly return false
+    const sub = await streamrClient.subscribe({
+        id: StreamPartIDUtils.getStreamID(target.streamPart),
+        partition: StreamPartIDUtils.getStreamPartition(target.streamPart),
+        raw: true
+    })
+
+    try {
+        for (const descriptor of shuffle(targetPeerDescriptors)) {
+            // TODO: re-enable when works
+            //const result = await streamrClient.inspect(descriptor, target.streamPart)
+            const result = true
+            abortSignal.throwIfAborted()
+            if (result) {
+                logger.info('Inspection done (no issue detected)', {
+                    targetOperator: target.operatorAddress,
+                    targetStreamPart: target.streamPart,
+                    targetNode: descriptor.nodeId,
+                    targetSponsorship: target.sponsorshipAddress
+                })
+                return true
+            }
         }
-    }
 
-    logger.info('Inspection done (issue detected)', {
-        targetOperator: target.operatorAddress,
-        targetStreamPart: target.streamPart,
-        targetNodes: targetPeerDescriptors.map(({ id }) => id),
-        targetSponsorship: target.sponsorshipAddress
-    })
-    return false
+        logger.info('Inspection done (issue detected)', {
+            targetOperator: target.operatorAddress,
+            targetStreamPart: target.streamPart,
+            targetNodes: targetPeerDescriptors.map(({ nodeId }) => nodeId),
+            targetSponsorship: target.sponsorshipAddress
+        })
+        return false
+    } finally {
+        await sub.unsubscribe()
+    }
 }

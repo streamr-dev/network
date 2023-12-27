@@ -6,9 +6,9 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
 import "packages/dht/protos/DhtRpc.proto";
 
-service NetworkRpc {
-  rpc sendData (StreamMessage) returns (google.protobuf.Empty);
-  rpc leaveStreamNotice (LeaveStreamNotice) returns (google.protobuf.Empty);
+service DeliveryRpc {
+  rpc sendStreamMessage (StreamMessage) returns (google.protobuf.Empty);
+  rpc leaveStreamPartNotice (LeaveStreamPartNotice) returns (google.protobuf.Empty);
 }
 
 service ProxyConnectionRpc {
@@ -16,8 +16,8 @@ service ProxyConnectionRpc {
 }
 
 service HandshakeRpc {
-  rpc handshake (StreamHandshakeRequest) returns (StreamHandshakeResponse);
-  rpc interleaveNotice (InterleaveNotice) returns (google.protobuf.Empty);
+  rpc handshake (StreamPartHandshakeRequest) returns (StreamPartHandshakeResponse);
+  rpc interleaveRequest (InterleaveRequest) returns (InterleaveResponse);
 }
 
 service NeighborUpdateRpc {
@@ -93,32 +93,36 @@ message GroupKey {
   bytes data = 2;
 }
 
-message StreamHandshakeRequest {
-  string randomGraphId = 1;
+message StreamPartHandshakeRequest {
+  string streamPartId = 1;
   string requestId = 2;
   optional bytes concurrentHandshakeTargetId = 3;
   repeated bytes neighborIds = 4;
   optional bytes interleaveSourceId = 5;
 }
 
-message StreamHandshakeResponse {
+message StreamPartHandshakeResponse {
   bool accepted = 1;
   string requestId = 2;
   optional dht.PeerDescriptor interleaveTargetDescriptor = 3;
 }
 
-message InterleaveNotice {
-  string randomGraphId = 1;
+message InterleaveRequest {
   // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
-  dht.PeerDescriptor interleaveTargetDescriptor = 2;
+  dht.PeerDescriptor interleaveTargetDescriptor = 1;
 }
 
-message LeaveStreamNotice {
-  string randomGraphId = 1;
+message InterleaveResponse {
+  bool accepted = 1;
+}
+
+message LeaveStreamPartNotice {
+  string streamPartId = 1;
+  bool isEntryPoint = 2;
 }
 
 message NeighborUpdate {
-  string randomGraphId = 1;
+  string streamPartId = 1;
   bool removeMe = 2;
   repeated dht.PeerDescriptor neighborDescriptors = 3;
 }

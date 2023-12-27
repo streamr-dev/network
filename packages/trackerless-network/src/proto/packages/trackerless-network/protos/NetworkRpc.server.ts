@@ -6,27 +6,28 @@ import { InfoRequest } from "./NetworkRpc";
 import { TemporaryConnectionResponse } from "./NetworkRpc";
 import { TemporaryConnectionRequest } from "./NetworkRpc";
 import { NeighborUpdate } from "./NetworkRpc";
-import { InterleaveNotice } from "./NetworkRpc";
-import { StreamHandshakeResponse } from "./NetworkRpc";
-import { StreamHandshakeRequest } from "./NetworkRpc";
+import { InterleaveResponse } from "./NetworkRpc";
+import { InterleaveRequest } from "./NetworkRpc";
+import { StreamPartHandshakeResponse } from "./NetworkRpc";
+import { StreamPartHandshakeRequest } from "./NetworkRpc";
 import { ProxyConnectionResponse } from "./NetworkRpc";
 import { ProxyConnectionRequest } from "./NetworkRpc";
-import { LeaveStreamNotice } from "./NetworkRpc";
+import { LeaveStreamPartNotice } from "./NetworkRpc";
 import { Empty } from "../../../google/protobuf/empty";
 import { StreamMessage } from "./NetworkRpc";
 import { ServerCallContext } from "@protobuf-ts/runtime-rpc";
 /**
- * @generated from protobuf service NetworkRpc
+ * @generated from protobuf service DeliveryRpc
  */
-export interface INetworkRpc<T = ServerCallContext> {
+export interface IDeliveryRpc<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: sendData(StreamMessage) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: sendStreamMessage(StreamMessage) returns (google.protobuf.Empty);
      */
-    sendData(request: StreamMessage, context: T): Promise<Empty>;
+    sendStreamMessage(request: StreamMessage, context: T): Promise<Empty>;
     /**
-     * @generated from protobuf rpc: leaveStreamNotice(LeaveStreamNotice) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: leaveStreamPartNotice(LeaveStreamPartNotice) returns (google.protobuf.Empty);
      */
-    leaveStreamNotice(request: LeaveStreamNotice, context: T): Promise<Empty>;
+    leaveStreamPartNotice(request: LeaveStreamPartNotice, context: T): Promise<Empty>;
 }
 /**
  * @generated from protobuf service ProxyConnectionRpc
@@ -42,13 +43,13 @@ export interface IProxyConnectionRpc<T = ServerCallContext> {
  */
 export interface IHandshakeRpc<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: handshake(StreamHandshakeRequest) returns (StreamHandshakeResponse);
+     * @generated from protobuf rpc: handshake(StreamPartHandshakeRequest) returns (StreamPartHandshakeResponse);
      */
-    handshake(request: StreamHandshakeRequest, context: T): Promise<StreamHandshakeResponse>;
+    handshake(request: StreamPartHandshakeRequest, context: T): Promise<StreamPartHandshakeResponse>;
     /**
-     * @generated from protobuf rpc: interleaveNotice(InterleaveNotice) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: interleaveRequest(InterleaveRequest) returns (InterleaveResponse);
      */
-    interleaveNotice(request: InterleaveNotice, context: T): Promise<Empty>;
+    interleaveRequest(request: InterleaveRequest, context: T): Promise<InterleaveResponse>;
 }
 /**
  * @generated from protobuf service NeighborUpdateRpc

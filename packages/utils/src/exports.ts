@@ -39,6 +39,8 @@ import { TheGraphClient, GraphQLQuery, FetchResponse } from './TheGraphClient'
 import { Heap } from './Heap'
 import { executeSafePromise } from './executeSafePromise'
 import { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary, areEqualBinaries } from './binaryUtils'
+import { filePathToNodeFormat } from './filePathToNodeFormat'
+import { retry } from './retry'
 
 export {
     BrandedString,
@@ -90,7 +92,9 @@ export {
     binaryToUtf8,
     hexToBinary,
     utf8ToBinary,
-    areEqualBinaries
+    areEqualBinaries,
+    filePathToNodeFormat,
+    retry
 }
 
 export {

@@ -5,18 +5,17 @@ import {
     MessageID,
     StreamMessage,
     StreamMessageType,
-    StreamPartIDUtils,
-    toStreamID,
-    toStreamPartID
+    StreamPartIDUtils
 } from '@streamr/protocol'
-import { hexToBinary, utf8ToBinary, toEthereumAddress, waitForEvent3 } from '@streamr/utils'
+import { hexToBinary, toEthereumAddress, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
+const STREAM_PART_ID = StreamPartIDUtils.parse('proxy-test#0')
+
 describe('proxy group key exchange', () => {
     const proxyNodeDescriptor = createMockPeerDescriptor({
-        nodeName: 'proxyNode',
         websocket: { host: '127.0.0.1', port: 23134, tls: false }
     })
     const publisherDescriptor = createMockPeerDescriptor()
@@ -24,8 +23,6 @@ describe('proxy group key exchange', () => {
 
     const publisherUserId = toEthereumAddress('0x823A026e226EB47980c88616e01E1D3305Ef8Ecb')
     const subscriberUserId = toEthereumAddress('0x73E6183bf9b79D30533bEC7B28e982e9Af649B23')
-
-    const streamPartId = toStreamPartID(toStreamID('proxy-test'), 0)
 
     let proxyNode: NetworkNode
     let publisher: NetworkNode
@@ -36,14 +33,15 @@ describe('proxy group key exchange', () => {
             layer0: {
                 entryPoints: [proxyNodeDescriptor],
                 peerDescriptor: proxyNodeDescriptor,
+                websocketServerEnableTls: false
             },
             networkNode: {
                 acceptProxyConnections: true
             }
         })
         await proxyNode.start()
-        proxyNode.setStreamPartEntryPoints(streamPartId, [proxyNodeDescriptor])
-        await proxyNode.stack.getStreamrNode()!.joinStream(streamPartId)
+        proxyNode.setStreamPartEntryPoints(STREAM_PART_ID, [proxyNodeDescriptor])
+        proxyNode.stack.getStreamrNode()!.joinStreamPart(STREAM_PART_ID)
         publisher = createNetworkNode({
             layer0: {
                 entryPoints: [publisherDescriptor],
@@ -68,8 +66,8 @@ describe('proxy group key exchange', () => {
     })
     
     it('happy path request', async () => {
-        await publisher.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, publisherUserId)
-        await subscriber.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, subscriberUserId)
+        await publisher.setProxies(STREAM_PART_ID, [proxyNodeDescriptor], ProxyDirection.PUBLISH, publisherUserId)
+        await subscriber.setProxies(STREAM_PART_ID, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, subscriberUserId)
 
         const requestContent = utf8ToBinary(new GroupKeyRequest({
             recipient: publisherUserId,
@@ -81,8 +79,8 @@ describe('proxy group key exchange', () => {
         }).serialize())
         const request = new StreamMessage({
             messageId: new MessageID(
-                StreamPartIDUtils.getStreamID(streamPartId),
-                StreamPartIDUtils.getStreamPartition(streamPartId),
+                StreamPartIDUtils.getStreamID(STREAM_PART_ID),
+                StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
                 Date.now(),
                 0,
                 subscriberUserId,
@@ -101,8 +99,8 @@ describe('proxy group key exchange', () => {
     })
 
     it('happy path response', async () => {
-        await publisher.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.PUBLISH, publisherUserId)
-        await subscriber.setProxies(streamPartId, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, subscriberUserId)
+        await publisher.setProxies(STREAM_PART_ID, [proxyNodeDescriptor], ProxyDirection.PUBLISH, publisherUserId)
+        await subscriber.setProxies(STREAM_PART_ID, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, subscriberUserId)
 
         const responseContent = utf8ToBinary(new GroupKeyResponse({
             recipient: publisherUserId,
@@ -111,8 +109,8 @@ describe('proxy group key exchange', () => {
         }).serialize())
         const response = new StreamMessage({
             messageId: new MessageID(
-                StreamPartIDUtils.getStreamID(streamPartId),
-                StreamPartIDUtils.getStreamPartition(streamPartId),
+                StreamPartIDUtils.getStreamID(STREAM_PART_ID),
+                StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
                 Date.now(),
                 0,
                 publisherUserId,

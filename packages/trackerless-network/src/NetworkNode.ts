@@ -1,10 +1,9 @@
 import { StreamMessage, StreamPartID } from '@streamr/protocol'
-import { PeerDescriptor } from '@streamr/dht'
+import { DhtAddress, PeerDescriptor } from '@streamr/dht'
 import { StreamMessageTranslator } from './logic/protocol-integration/stream-message/StreamMessageTranslator'
 import { NetworkOptions, NetworkStack } from './NetworkStack'
 import { EthereumAddress, Logger, MetricsContext } from '@streamr/utils'
 import { InfoResponse, ProxyDirection } from './proto/packages/trackerless-network/protos/NetworkRpc'
-import { NodeID } from './identifiers'
 import { pull } from 'lodash'
 
 export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
@@ -81,19 +80,19 @@ export class NetworkNode {
         pull(this.messageListeners, cb)
     }
 
-    leave(streamPartId: StreamPartID): void {
+    async leave(streamPartId: StreamPartID): Promise<void> {
         if (this.stopped) {
             return
         }
-        this.stack.getStreamrNode().leaveStream(streamPartId)
+        await this.stack.getStreamrNode().leaveStreamPart(streamPartId)
     }
 
-    getNeighbors(streamPartId: StreamPartID): ReadonlyArray<NodeID> {
+    getNeighbors(streamPartId: StreamPartID): ReadonlyArray<DhtAddress> {
         return this.stack.getStreamrNode().getNeighbors(streamPartId)
     }
 
     hasStreamPart(streamPartId: StreamPartID): boolean {
-        return this.stack.getStreamrNode().hasStream(streamPartId)
+        return this.stack.getStreamrNode().hasStreamPart(streamPartId)
     }
 
     async stop(): Promise<void> {
@@ -102,15 +101,19 @@ export class NetworkNode {
     }
 
     getPeerDescriptor(): PeerDescriptor {
-        return this.stack.getLayer0DhtNode().getPeerDescriptor()
+        return this.stack.getLayer0Node().getLocalPeerDescriptor()
     }
 
     getMetricsContext(): MetricsContext {
         return this.stack.getMetricsContext()
     }
 
-    getNodeId(): NodeID {
+    getNodeId(): DhtAddress {
         return this.stack.getStreamrNode().getNodeId()
+    }
+
+    getOptions(): NetworkOptions {
+        return this.stack.getOptions()
     }
 
     getStreamParts(): StreamPartID[] {

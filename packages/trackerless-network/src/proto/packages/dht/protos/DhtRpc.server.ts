@@ -3,8 +3,8 @@
 // tslint:disable
 import { ExternalStoreDataResponse } from "./DhtRpc";
 import { ExternalStoreDataRequest } from "./DhtRpc";
-import { FindDataResponse } from "./DhtRpc";
-import { FindDataRequest } from "./DhtRpc";
+import { ExternalFindDataResponse } from "./DhtRpc";
+import { ExternalFindDataRequest } from "./DhtRpc";
 import { DisconnectNoticeResponse } from "./DhtRpc";
 import { DisconnectNotice } from "./DhtRpc";
 import { UnlockRequest } from "./DhtRpc";
@@ -13,14 +13,10 @@ import { LockRequest } from "./DhtRpc";
 import { IceCandidate } from "./DhtRpc";
 import { RtcAnswer } from "./DhtRpc";
 import { RtcOffer } from "./DhtRpc";
-import { WebRtcConnectionRequest } from "./DhtRpc";
-import { WebSocketConnectionResponse } from "./DhtRpc";
-import { WebSocketConnectionRequest } from "./DhtRpc";
-import { RecursiveFindReport } from "./DhtRpc";
-import { DeleteDataResponse } from "./DhtRpc";
-import { DeleteDataRequest } from "./DhtRpc";
-import { MigrateDataResponse } from "./DhtRpc";
-import { MigrateDataRequest } from "./DhtRpc";
+import { WebrtcConnectionRequest } from "./DhtRpc";
+import { WebsocketConnectionRequest } from "./DhtRpc";
+import { RecursiveOperationResponse } from "./DhtRpc";
+import { ReplicateDataRequest } from "./DhtRpc";
 import { StoreDataResponse } from "./DhtRpc";
 import { StoreDataRequest } from "./DhtRpc";
 import { RouteMessageAck } from "./DhtRpc";
@@ -33,9 +29,9 @@ import { ClosestPeersResponse } from "./DhtRpc";
 import { ClosestPeersRequest } from "./DhtRpc";
 import { ServerCallContext } from "@protobuf-ts/runtime-rpc";
 /**
- * @generated from protobuf service dht.DhtRpcService
+ * @generated from protobuf service dht.DhtNodeRpc
  */
-export interface IDhtRpcService<T = ServerCallContext> {
+export interface IDhtNodeRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: getClosestPeers(dht.ClosestPeersRequest) returns (dht.ClosestPeersResponse);
      */
@@ -50,9 +46,9 @@ export interface IDhtRpcService<T = ServerCallContext> {
     leaveNotice(request: LeaveNotice, context: T): Promise<Empty>;
 }
 /**
- * @generated from protobuf service dht.RoutingService
+ * @generated from protobuf service dht.RouterRpc
  */
-export interface IRoutingService<T = ServerCallContext> {
+export interface IRouterRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: routeMessage(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */
@@ -61,54 +57,55 @@ export interface IRoutingService<T = ServerCallContext> {
      * @generated from protobuf rpc: forwardMessage(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */
     forwardMessage(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
-    /**
-     * @generated from protobuf rpc: findRecursively(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
-     */
-    findRecursively(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
 }
 /**
- * @generated from protobuf service dht.StoreService
+ * @generated from protobuf service dht.RecursiveOperationRpc
  */
-export interface IStoreService<T = ServerCallContext> {
+export interface IRecursiveOperationRpc<T = ServerCallContext> {
+    /**
+     * @generated from protobuf rpc: routeRequest(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
+     */
+    routeRequest(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
+}
+/**
+ * @generated from protobuf service dht.StoreRpc
+ */
+export interface IStoreRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: storeData(dht.StoreDataRequest) returns (dht.StoreDataResponse);
      */
     storeData(request: StoreDataRequest, context: T): Promise<StoreDataResponse>;
     /**
-     * @generated from protobuf rpc: migrateData(dht.MigrateDataRequest) returns (dht.MigrateDataResponse);
+     * @generated from protobuf rpc: replicateData(dht.ReplicateDataRequest) returns (google.protobuf.Empty);
      */
-    migrateData(request: MigrateDataRequest, context: T): Promise<MigrateDataResponse>;
-    /**
-     * @generated from protobuf rpc: deleteData(dht.DeleteDataRequest) returns (dht.DeleteDataResponse);
-     */
-    deleteData(request: DeleteDataRequest, context: T): Promise<DeleteDataResponse>;
+    replicateData(request: ReplicateDataRequest, context: T): Promise<Empty>;
 }
 /**
- * @generated from protobuf service dht.RecursiveFindSessionService
+ * @generated from protobuf service dht.RecursiveOperationSessionRpc
  */
-export interface IRecursiveFindSessionService<T = ServerCallContext> {
+export interface IRecursiveOperationSessionRpc<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: reportRecursiveFindResult(dht.RecursiveFindReport) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: sendResponse(dht.RecursiveOperationResponse) returns (google.protobuf.Empty);
      */
-    reportRecursiveFindResult(request: RecursiveFindReport, context: T): Promise<Empty>;
+    sendResponse(request: RecursiveOperationResponse, context: T): Promise<Empty>;
 }
 /**
- * @generated from protobuf service dht.WebSocketConnectorService
+ * @generated from protobuf service dht.WebsocketConnectorRpc
  */
-export interface IWebSocketConnectorService<T = ServerCallContext> {
+export interface IWebsocketConnectorRpc<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: requestConnection(dht.WebSocketConnectionRequest) returns (dht.WebSocketConnectionResponse);
+     * @generated from protobuf rpc: requestConnection(dht.WebsocketConnectionRequest) returns (google.protobuf.Empty);
      */
-    requestConnection(request: WebSocketConnectionRequest, context: T): Promise<WebSocketConnectionResponse>;
+    requestConnection(request: WebsocketConnectionRequest, context: T): Promise<Empty>;
 }
 /**
- * @generated from protobuf service dht.WebRtcConnectorService
+ * @generated from protobuf service dht.WebrtcConnectorRpc
  */
-export interface IWebRtcConnectorService<T = ServerCallContext> {
+export interface IWebrtcConnectorRpc<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: requestConnection(dht.WebRtcConnectionRequest) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: requestConnection(dht.WebrtcConnectionRequest) returns (google.protobuf.Empty);
      */
-    requestConnection(request: WebRtcConnectionRequest, context: T): Promise<Empty>;
+    requestConnection(request: WebrtcConnectionRequest, context: T): Promise<Empty>;
     /**
      * @generated from protobuf rpc: rtcOffer(dht.RtcOffer) returns (google.protobuf.Empty);
      */
@@ -123,9 +120,9 @@ export interface IWebRtcConnectorService<T = ServerCallContext> {
     iceCandidate(request: IceCandidate, context: T): Promise<Empty>;
 }
 /**
- * @generated from protobuf service dht.ConnectionLocker
+ * @generated from protobuf service dht.ConnectionLockRpc
  */
-export interface IConnectionLocker<T = ServerCallContext> {
+export interface IConnectionLockRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: lockRequest(dht.LockRequest) returns (dht.LockResponse);
      */
@@ -140,13 +137,13 @@ export interface IConnectionLocker<T = ServerCallContext> {
     gracefulDisconnect(request: DisconnectNotice, context: T): Promise<DisconnectNoticeResponse>;
 }
 /**
- * @generated from protobuf service dht.ExternalApiService
+ * @generated from protobuf service dht.ExternalApiRpc
  */
-export interface IExternalApiService<T = ServerCallContext> {
+export interface IExternalApiRpc<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: findData(dht.FindDataRequest) returns (dht.FindDataResponse);
+     * @generated from protobuf rpc: externalFindData(dht.ExternalFindDataRequest) returns (dht.ExternalFindDataResponse);
      */
-    findData(request: FindDataRequest, context: T): Promise<FindDataResponse>;
+    externalFindData(request: ExternalFindDataRequest, context: T): Promise<ExternalFindDataResponse>;
     /**
      * @generated from protobuf rpc: externalStoreData(dht.ExternalStoreDataRequest) returns (dht.ExternalStoreDataResponse);
      */

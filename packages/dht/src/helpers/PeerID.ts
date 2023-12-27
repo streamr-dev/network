@@ -1,9 +1,14 @@
-import { BrandedString } from '@streamr/utils'
+import { BrandedString, binaryToHex } from '@streamr/utils'
 import { UUID } from './UUID'
 import { IllegalArguments } from './errors'
 import crypto from 'crypto'
+import { DhtAddress, getDhtAddressFromRaw } from '../identifiers'
 
 export type PeerIDKey = BrandedString<'PeerIDKey'>
+
+export const createPeerIDKey = (nodeId: Uint8Array): PeerIDKey => {
+    return binaryToHex(nodeId) as PeerIDKey
+}
 
 export class PeerID {
     // avoid creating a new instance for every operation
@@ -14,7 +19,7 @@ export class PeerID {
     private readonly key: PeerIDKey  // precompute often-used form of data
 
     protected constructor({ ip, value, stringValue }: { ip?: string, value?: Uint8Array, stringValue?: string } = {}) {
-        if (ip) {
+        if (ip !== undefined) {
             this.data = new Uint8Array(20)
             const ipNum = this.ip2Int(ip)
             const view = new DataView(this.data.buffer)
@@ -23,14 +28,14 @@ export class PeerID {
             this.data.set((new UUID()).value, 4)
         } else if (value) {
             this.data = new Uint8Array(value.slice(0))
-        } else if (stringValue) {
+        } else if (stringValue !== undefined) {
             const ab = PeerID.textEncoder.encode(stringValue) //toUTF8Array(stringValue)
             this.data = ab
         } else {
             throw new IllegalArguments('Constructor of PeerID must be given either ip, value or stringValue')
         }
 
-        this.key = Buffer.from(this.data).toString('hex') as PeerIDKey
+        this.key = createPeerIDKey(this.data)
     }
 
     static fromIp(ip: string): PeerID {
@@ -49,13 +54,6 @@ export class PeerID {
         return new PeerID({ stringValue })
     }
 
-    static generateRandom(): PeerID {
-        // generate 160 bit random Uint8array
-        const value = new Uint8Array(20)
-        crypto.randomFillSync(value)
-        return new PeerID({ value })
-    }
-
     // TODO convert to static method?
     // eslint-disable-next-line class-methods-use-this
     private ip2Int(ip: string): number {
@@ -71,11 +69,15 @@ export class PeerID {
     }
 
     toString(): string {
-        return PeerID.textDecoder.decode(this.data) //utf8ArrayToString(this.data)
+        return PeerID.textDecoder.decode(this.data)
     }
 
     toKey(): PeerIDKey {
         return this.key
+    }
+
+    toNodeId(): DhtAddress {
+        return getDhtAddressFromRaw(this.data)
     }
 
     get value(): Uint8Array {

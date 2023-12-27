@@ -1,4 +1,4 @@
-import { ListeningRpcCommunicator } from '@streamr/dht'
+import { DhtAddress, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { Handshaker } from './neighbor-discovery/Handshaker'
 import { NeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
@@ -7,22 +7,28 @@ import { NodeList } from './NodeList'
 import { Propagation } from './propagation/Propagation'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { MarkOptional } from 'ts-essentials'
-import { ProxyStreamConnectionServer } from './proxy/ProxyStreamConnectionServer'
+import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { Inspector } from './inspect/Inspector'
-import { TemporaryConnectionRpcServer } from './temporary-connection/TemporaryConnectionRpcServer'
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
+import { formStreamPartDeliveryServiceId } from './formStreamPartDeliveryServiceId'
 
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
     'nearbyNodeView' | 'randomNodeView' | 'targetNeighbors' | 'propagation'
-    | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'name' | 'numOfTargetNeighbors'
-    | 'maxNumberOfContacts' | 'minPropagationTargets' | 'rpcCommunicator' | 'nodeViewSize' | 'acceptProxyConnections'
-    | 'neighborUpdateInterval' | 'inspector' | 'temporaryConnectionServer'>
+    | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'numOfTargetNeighbors'
+    | 'rpcCommunicator' | 'nodeViewSize'
+    | 'inspector' | 'temporaryConnectionRpcLocal'> & {
+        maxNumberOfContacts?: number
+        minPropagationTargets?: number
+        acceptProxyConnections?: boolean
+        neighborUpdateInterval?: number
+    }
 
 const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGraphNodeConfig => {
-    const ownNodeId = getNodeIdFromPeerDescriptor(config.ownPeerDescriptor)
-    const rpcCommunicator = config.rpcCommunicator ?? new ListeningRpcCommunicator(`layer2-${config.randomGraphId}`, config.P2PTransport)
-    const name = config.name ?? ownNodeId
+    const ownNodeId = getNodeIdFromPeerDescriptor(config.localPeerDescriptor)
+    const rpcCommunicator = config.rpcCommunicator ?? new ListeningRpcCommunicator(
+        formStreamPartDeliveryServiceId(config.streamPartId),
+        config.transport
+    )
     const numOfTargetNeighbors = config.numOfTargetNeighbors ?? 4
     const maxNumberOfContacts = config.maxNumberOfContacts ?? 20
     const minPropagationTargets = config.minPropagationTargets ?? 2
@@ -32,59 +38,59 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const randomNodeView = config.randomNodeView ?? new NodeList(ownNodeId, maxNumberOfContacts)
     const targetNeighbors = config.targetNeighbors ?? new NodeList(ownNodeId, maxNumberOfContacts)
 
-    const temporaryConnectionServer = new TemporaryConnectionRpcServer({
-        randomGraphId: config.randomGraphId,
+    const temporaryConnectionRpcLocal = new TemporaryConnectionRpcLocal({
         rpcCommunicator,
-        ownPeerDescriptor: config.ownPeerDescriptor
+        localPeerDescriptor: config.localPeerDescriptor
     })
-    const proxyConnectionServer = acceptProxyConnections ? new ProxyStreamConnectionServer({
-        ownPeerDescriptor: config.ownPeerDescriptor,
-        streamPartId: StreamPartIDUtils.parse(config.randomGraphId),
+    const proxyConnectionRpcLocal = acceptProxyConnections ? new ProxyConnectionRpcLocal({
+        localPeerDescriptor: config.localPeerDescriptor,
+        streamPartId: config.streamPartId,
         rpcCommunicator
     }) : undefined
     const propagation = config.propagation ?? new Propagation({
         minPropagationTargets,
-        sendToNeighbor: async (neighborId: NodeID, msg: StreamMessage): Promise<void> => {
-            const remote = targetNeighbors.getNeighborById(neighborId) ?? temporaryConnectionServer.getNodes().getNeighborById(neighborId)
-            const proxyConnection = proxyConnectionServer?.getConnection(neighborId)
+        sendToNeighbor: async (neighborId: DhtAddress, msg: StreamMessage): Promise<void> => {
+            const remote = targetNeighbors.get(neighborId) ?? temporaryConnectionRpcLocal.getNodes().get(neighborId)
+            const proxyConnection = proxyConnectionRpcLocal?.getConnection(neighborId)
             if (remote) {
-                await remote.sendData(msg)
+                await remote.sendStreamMessage(msg)
             } else if (proxyConnection) {
-                await proxyConnection.remote.sendData(msg)
+                await proxyConnection.remote.sendStreamMessage(msg)
             } else {
                 throw new Error('Propagation target not found')
             }
         }
     })
     const handshaker = config.handshaker ?? new Handshaker({
-        ownPeerDescriptor: config.ownPeerDescriptor,
-        randomGraphId: config.randomGraphId,
+        localPeerDescriptor: config.localPeerDescriptor,
+        streamPartId: config.streamPartId,
         connectionLocker: config.connectionLocker,
         rpcCommunicator,
         nearbyNodeView,
         randomNodeView,
         targetNeighbors,
-        N: numOfTargetNeighbors
+        maxNeighborCount: numOfTargetNeighbors,
+        rpcRequestTimeout: config.rpcRequestTimeout
     })
     const neighborFinder = config.neighborFinder ?? new NeighborFinder({
         targetNeighbors,
         nearbyNodeView,
         doFindNeighbors: (excludedIds) => handshaker.attemptHandshakesOnContacts(excludedIds),
-        N: numOfTargetNeighbors
+        minCount: numOfTargetNeighbors
     })
     const neighborUpdateManager = config.neighborUpdateManager ?? new NeighborUpdateManager({
         targetNeighbors,
         nearbyNodeView,
-        ownPeerDescriptor: config.ownPeerDescriptor,
+        localPeerDescriptor: config.localPeerDescriptor,
         neighborFinder,
-        randomGraphId: config.randomGraphId,
+        streamPartId: config.streamPartId,
         rpcCommunicator,
         neighborUpdateInterval
     })
     const inspector = config.inspector ?? new Inspector({
-        ownPeerDescriptor: config.ownPeerDescriptor,
+        localPeerDescriptor: config.localPeerDescriptor,
         rpcCommunicator,
-        graphId: config.randomGraphId,
+        streamPartId: config.streamPartId,
         connectionLocker: config.connectionLocker
     })
     return {
@@ -98,15 +104,10 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         neighborUpdateManager,
         propagation,
         numOfTargetNeighbors,
-        minPropagationTargets,
-        maxNumberOfContacts,
-        name,
         nodeViewSize: maxNumberOfContacts,
-        acceptProxyConnections,
-        proxyConnectionServer,
-        neighborUpdateInterval,
+        proxyConnectionRpcLocal,
         inspector,
-        temporaryConnectionServer
+        temporaryConnectionRpcLocal
     }
 }
 
