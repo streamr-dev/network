@@ -25,8 +25,8 @@ describe('DhtNode getInfo', () => {
     it('getInfo returns correct info', () => {
         const info1 = dhtNode.getInfo()
         const info2 = entryPoint.getInfo()
-        expect(info1.kBucket[0]).toEqual(entryPoint.getLocalPeerDescriptor())
-        expect(info2.kBucket[0]).toEqual(dhtNode.getLocalPeerDescriptor())
+        expect(info1.neighbors[0]).toEqual(entryPoint.getLocalPeerDescriptor())
+        expect(info2.neighbors[0]).toEqual(dhtNode.getLocalPeerDescriptor())
         expect(info1.connections[0]).toEqual(entryPoint.getLocalPeerDescriptor())
         expect(info2.connections[0]).toEqual(dhtNode.getLocalPeerDescriptor())    
     })

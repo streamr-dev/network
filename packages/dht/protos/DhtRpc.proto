@@ -298,6 +298,6 @@ message ExternalFindDataResponse {
 }
 
 message ControlLayerInfo {
-  repeated PeerDescriptor kBucket = 1;
+  repeated PeerDescriptor neighbors = 1;
   repeated PeerDescriptor connections = 2;
 }

@@ -542,9 +542,9 @@ export interface ExternalFindDataResponse {
  */
 export interface ControlLayerInfo {
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor kBucket = 1;
+     * @generated from protobuf field: repeated dht.PeerDescriptor neighbors = 1;
      */
-    kBucket: PeerDescriptor[];
+    neighbors: PeerDescriptor[];
     /**
      * @generated from protobuf field: repeated dht.PeerDescriptor connections = 2;
      */
@@ -1138,7 +1138,7 @@ export const ExternalFindDataResponse = new ExternalFindDataResponse$Type();
 class ControlLayerInfo$Type extends MessageType$<ControlLayerInfo> {
     constructor() {
         super("dht.ControlLayerInfo", [
-            { no: 1, name: "kBucket", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 1, name: "neighbors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
             { no: 2, name: "connections", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
     }

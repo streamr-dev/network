@@ -293,9 +293,9 @@ export class StreamrNode extends EventEmitter<Events> {
             streamPartitions: onStreamAsFullNode.map(([streamPartId, stream]) => ({
                 id: streamPartId,
                 // @ts-expect-error private
-                neighbors: stream.node.getTargetNeighborIds(),
+                layer1Neighbors: stream.layer1Node.getAllNeighborPeerDescriptors(),
                 // @ts-expect-error private
-                kBucket: stream.layer1Node?.getAllNeighborPeerDescriptors() ?? []
+                layer2Neighbors: stream.node.getTargetNeighborIds()
             }))
         }
     }

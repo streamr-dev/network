@@ -550,7 +550,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     public getInfo(): ControlLayerInfo {
         return {
             connections: Array.from(this.peerManager!.connections.values()).map((peer) => peer.getPeerDescriptor()),
-            kBucket: this.peerManager!.getNeighbors(),
+            neighbors: this.peerManager!.getNeighbors(),
         }
     }
 

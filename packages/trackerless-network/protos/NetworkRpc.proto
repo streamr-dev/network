@@ -154,8 +154,8 @@ message StreamInfo {
 
 message StreamPartitionInfo {
   string id = 1;
-  repeated string neighbors = 2;
-  repeated dht.PeerDescriptor kBucket = 3;
+  repeated dht.PeerDescriptor layer1Neighbors = 2;
+  repeated string layer2Neighbors = 3;
 }
 
 message GetStreamInfo {

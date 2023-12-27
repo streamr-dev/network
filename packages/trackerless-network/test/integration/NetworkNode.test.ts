@@ -102,8 +102,8 @@ describe('NetworkNode', () => {
         expect(result2.streamInfo!.streamPartitions.length).toEqual(1)
         expect(result1.controlLayerInfo!.connections.length).toEqual(1)
         expect(result2.controlLayerInfo!.connections.length).toEqual(1)
-        expect(result1.controlLayerInfo!.kBucket.length).toEqual(1)
-        expect(result2.controlLayerInfo!.kBucket.length).toEqual(1)
+        expect(result1.controlLayerInfo!.neighbors.length).toEqual(1)
+        expect(result2.controlLayerInfo!.neighbors.length).toEqual(1)
     })
 
 })
