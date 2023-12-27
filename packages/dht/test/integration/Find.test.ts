@@ -6,7 +6,7 @@ import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDes
 import { getDhtAddressFromRaw, getRawFromDhtAddress } from '../../src/identifiers'
 
 const NUM_NODES = 100
-const K = 2
+const K = 4
 
 describe('Find correctness', () => {
 
@@ -21,7 +21,7 @@ describe('Find correctness', () => {
         nodes.push(entryPoint)
         entrypointDescriptor = entryPoint.getLocalPeerDescriptor()
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator, undefined, K, 20, 60000)
+            const node = await createMockConnectionDhtNode(simulator, undefined, K, 40, 60000)
             nodes.push(node)
         }
         await entryPoint.joinDht([entrypointDescriptor])
