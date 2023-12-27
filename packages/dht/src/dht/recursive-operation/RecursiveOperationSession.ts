@@ -146,7 +146,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             this.results.addContact(new Contact(descriptor))
         })
         this.processFoundData(dataEntries)
-        if (noCloserNodesFound) {
+        if (noCloserNodesFound || this.noCloserNodesReceivedFrom.has(sourceId)) {
             this.onNoCloserPeersFound(sourceId)
         }
     }
