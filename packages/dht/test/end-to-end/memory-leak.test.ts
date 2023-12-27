@@ -1,9 +1,10 @@
 import LeakDetector from 'jest-leak-detector'
-import { binaryToHex, waitForCondition } from '@streamr/utils'
+import { waitForCondition } from '@streamr/utils'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { Message, MessageType } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
+import { getNodeIdFromPeerDescriptor } from '../../src/exports'
 
 const MESSAGE_ID = 'mock-message-id'
 
@@ -18,7 +19,7 @@ describe('memory leak', () => {
             }
         })
         let entryPoint: DhtNode | undefined = new DhtNode({
-            peerId: binaryToHex(entryPointDescriptor.nodeId),
+            peerId: getNodeIdFromPeerDescriptor(entryPointDescriptor),
             websocketHost: entryPointDescriptor.websocket!.host,
             websocketPortRange: {
                 min: entryPointDescriptor.websocket!.port,

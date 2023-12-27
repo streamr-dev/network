@@ -12,7 +12,7 @@ import { Contact } from '../contact/Contact'
 import { RecursiveOperationRpcRemote } from '../recursive-operation/RecursiveOperationRpcRemote'
 import { EXISTING_CONNECTION_TIMEOUT } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
-import { NodeID, getNodeIdFromBinary } from '../../helpers/nodeId'
+import { DhtAddress, getDhtAddressFromRaw } from '../../identifiers'
 import { pull } from 'lodash'
 
 const logger = new Logger(module)
@@ -68,16 +68,16 @@ interface RoutingSessionConfig {
     rpcCommunicator: RoutingRpcCommunicator
     localPeerDescriptor: PeerDescriptor
     routedMessage: RouteMessageWrapper
-    connections: Map<NodeID, DhtNodeRpcRemote>
+    connections: Map<DhtAddress, DhtNodeRpcRemote>
     parallelism: number
     mode: RoutingMode
-    excludedNodeIds?: Set<NodeID>
+    excludedNodeIds?: Set<DhtAddress>
 }
 
 export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
     public readonly sessionId = v4()
-    private ongoingRequests: Set<NodeID> = new Set()
+    private ongoingRequests: Set<DhtAddress> = new Set()
     private contactList: SortedContactList<RemoteContact>
     private failedHopCounter = 0
     private successfulHopCounter = 0
@@ -90,7 +90,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         const previousPeer = getPreviousPeer(config.routedMessage)
         const previousId = previousPeer ? getNodeIdFromPeerDescriptor(previousPeer) : undefined
         this.contactList = new SortedContactList({
-            referenceId: getNodeIdFromBinary(config.routedMessage.target),
+            referenceId: getDhtAddressFromRaw(config.routedMessage.target),
             maxSize: 10000,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             nodeIdDistanceLimit: previousId,
@@ -99,7 +99,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         })
     }
 
-    private onRequestFailed(nodeId: NodeID) {
+    private onRequestFailed(nodeId: DhtAddress) {
         logger.trace('onRequestFailed() sessionId: ' + this.sessionId)
         if (this.stopped) {
             return
@@ -214,7 +214,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
     }
 
-    private addParallelRootIfSource(nodeId: NodeID) {
+    private addParallelRootIfSource(nodeId: DhtAddress) {
         if (
             this.config.mode === RoutingMode.RECURSIVE
             && areEqualPeerDescriptors(this.config.localPeerDescriptor, this.config.routedMessage.sourcePeer!)
@@ -223,7 +223,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
     }
 
-    private deleteParallelRootIfSource(nodeId: NodeID) {
+    private deleteParallelRootIfSource(nodeId: DhtAddress) {
         if (
             this.config.mode === RoutingMode.RECURSIVE
             && areEqualPeerDescriptors(this.config.localPeerDescriptor, this.config.routedMessage.sourcePeer!)

@@ -3,15 +3,15 @@ import { Empty } from '../../proto/google/protobuf/empty'
 import { DataEntry, RecursiveOperationResponse, PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger } from '@streamr/utils'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { DhtCallContext } from '../../exports'
+import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { NodeID } from '../../helpers/nodeId'
+import { DhtAddress } from '../../identifiers'
 
 const logger = new Logger(module)
 
 interface RecursiveOperationSessionRpcLocalConfig {
     onResponseReceived: (
-        sourceId: NodeID,
+        sourceId: DhtAddress,
         routingPath: PeerDescriptor[],
         nodes: PeerDescriptor[],
         dataEntries: DataEntry[],
