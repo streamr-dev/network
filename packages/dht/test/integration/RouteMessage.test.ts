@@ -27,7 +27,6 @@ describe('Route Message With Mock Connections', () => {
     let routerNodes: DhtNode[]
     let simulator: Simulator
     let entryPointDescriptor: PeerDescriptor
-    const receiveMatrix: Array<Array<number>> = []
 
     beforeEach(async () => {
         routerNodes = []
@@ -126,33 +125,13 @@ describe('Route Message With Mock Connections', () => {
     })
 
     it('From all to all', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        for (const i in routerNodes) {
-            const arr: Array<number> = []
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            for (const j in routerNodes) {
-                arr.push(0)
-            }
-            receiveMatrix.push(arr)
-        }
-
         const numsOfReceivedMessages: Record<PeerIDKey, number> = {}
         routerNodes.forEach((node) => {
             numsOfReceivedMessages[getPeerId(node).toKey()] = 0
-            node.on('message', (msg: Message) => {
+            node.on('message', () => {
                 numsOfReceivedMessages[getPeerId(node).toKey()] = numsOfReceivedMessages[getPeerId(node).toKey()] + 1
-                try {
-                    const target = receiveMatrix[parseInt(getPeerId(node).toString()) - 1]
-                    target[parseInt(PeerID.fromValue(msg.sourceDescriptor!.nodeId).toString()) - 1]++
-                } catch (e) {
-                    console.error(e)
-                }
-                if (parseInt(getPeerId(node).toString()) > routerNodes.length || parseInt(getPeerId(node).toString()) === 0) {
-                    console.error(getPeerId(node).toString())
-                }
             })
-        }
-        )
+        })
         await Promise.all(
             routerNodes.map(async (node) =>
                 Promise.all(routerNodes.map(async (receiver) => {
