@@ -33,7 +33,7 @@ export class Router {
     private readonly forwardingTable: Map<DhtAddress, ForwardingTableEntry> = new Map()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
     // TODO use config option or named constant?
-    private readonly duplicateRequestDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
+    private readonly duplicateRequestDetector: DuplicateDetector = new DuplicateDetector(100000)
     private stopped = false
     private readonly config: RouterConfig
 
