@@ -1,0 +1,16 @@
+{
+    "extends": "../../tsconfig.jest.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "noImplicitOverride": false
+    },
+    "include": [
+        "src/**/*",
+        "test/**/*"
+    ],
+    "exclude": [
+    ],
+    "references": [
+        { "path": "tsconfig.node.json" }
+    ]
+}

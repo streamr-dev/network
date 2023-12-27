@@ -1,25 +1,22 @@
 import { Stream, StreamrClient } from 'streamr-client'
-import { Tracker } from '@streamr/network-tracker'
 import mqtt from 'async-mqtt'
 import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
 import { Broker } from '../../../../src/broker'
-import { createClient, startBroker, createTestStream, startTestTracker } from '../../../utils'
+import { createClient, startBroker, createTestStream } from '../../../utils'
 import { wait } from '@streamr/utils'
 import { Wallet } from '@ethersproject/wallet'
 
 const MQTT_PLUGIN_PORT = 12470
-const TRACKER_PORT = 12471
 
 jest.setTimeout(30000)
 
 const createMqttClient = () => {
-    return mqtt.connectAsync(`mqtt://localhost:${MQTT_PLUGIN_PORT}`)
+    return mqtt.connectAsync(`mqtt://127.0.0.1:${MQTT_PLUGIN_PORT}`)
 }
 
 describe('MQTT Bridge', () => {
     let stream: Stream
     let streamrClient: StreamrClient
-    let tracker: Tracker
     let broker: Broker
     let brokerUser: Wallet
 
@@ -32,10 +29,8 @@ describe('MQTT Bridge', () => {
 
     beforeAll(async () => {
         brokerUser = new Wallet(await fetchPrivateKeyWithGas())
-        tracker = await startTestTracker(TRACKER_PORT)
         broker = await startBroker({
             privateKey: brokerUser.privateKey,
-            trackerPort: TRACKER_PORT,
             extraPlugins: {
                 mqtt: {
                     port: MQTT_PLUGIN_PORT
@@ -46,13 +41,12 @@ describe('MQTT Bridge', () => {
 
     afterAll(async () => {
         await Promise.allSettled([
-            broker.stop(),
-            tracker.stop()
+            broker.stop()
         ])
     })
 
     beforeEach(async () => {
-        streamrClient = await createClient(tracker, brokerUser.privateKey)
+        streamrClient = createClient(brokerUser.privateKey)
         stream = await createTestStream(streamrClient, module)
     })
 
@@ -61,17 +55,15 @@ describe('MQTT Bridge', () => {
     })
 
     test('message published by a MQTT client is delivered only once', async () => {
-        const message = {
+        const expected = {
             foo: Date.now()
         }
         const messageQueue = new Queue<any>()
         const subscriber = await createSubscriber(messageQueue)
-
         const publisher = await createMqttClient()
-        publisher.publish(stream.id, JSON.stringify(message))
-        await wait(1000)
+        publisher.publish(stream.id, JSON.stringify(expected))
 
-        expect(messageQueue.values()).toEqual([message])
+        expect(await messageQueue.pop()).toEqual(expected)
 
         await Promise.allSettled([
             subscriber.end(true),
@@ -85,10 +77,9 @@ describe('MQTT Bridge', () => {
         }
         const messageQueue = new Queue<any>()
         const subscriber = await createSubscriber(messageQueue)
-        streamrClient.publish(stream.id, expected)
+        await streamrClient.publish(stream.id, expected)
 
-        const actual = await messageQueue.pop()
-        expect(actual).toEqual(expected)
+        expect(await messageQueue.pop()).toEqual(expected)
 
         await subscriber.end(true)
     })
@@ -101,11 +92,10 @@ describe('MQTT Bridge', () => {
         const messageQueue2 = new Queue<any>()
         const subscriber1 = await createSubscriber(messageQueue1)
         const subscriber2 = await createSubscriber(messageQueue2)
-        streamrClient.publish(stream.id, expected)
+        await streamrClient.publish(stream.id, expected)
 
-        await wait(2000)
-        expect(messageQueue1.values()).toEqual([expected])
-        expect(messageQueue2.values()).toEqual([expected])
+        expect(await messageQueue1.pop()).toEqual(expected)
+        expect(await messageQueue2.pop()).toEqual(expected)
 
         await Promise.allSettled([
             subscriber1.end(true),
@@ -121,10 +111,9 @@ describe('MQTT Bridge', () => {
         const subscriber1 = await createSubscriber(messageQueue)
         const subscriber2 = await createMqttClient()
         subscriber2.unsubscribe(stream.id)
-        streamrClient.publish(stream.id, expected)
+        await streamrClient.publish(stream.id, expected)
 
-        await wait(2000)
-        expect(messageQueue.values()).toEqual([expected])
+        expect(await messageQueue.pop()).toEqual(expected)
 
         await Promise.allSettled([
             subscriber1.end(true),
@@ -141,10 +130,10 @@ describe('MQTT Bridge', () => {
         const subscriber1 = await createSubscriber(messageQueue1)
         const subscriber2 = await createSubscriber(messageQueue2)
         subscriber2.unsubscribe(stream.id)
-        streamrClient.publish(stream.id, expected)
+        await streamrClient.publish(stream.id, expected)
 
-        await wait(2000)
-        expect(messageQueue1.values()).toEqual([expected])
+        expect(await messageQueue1.pop()).toEqual(expected)
+        await wait(100)  // wait for a while so that the message would have been delivered also to messageQueue2
         expect(messageQueue2.values()).toEqual([])
 
         await Promise.allSettled([

@@ -11,12 +11,11 @@ sidebar_position: 5
 - Join Sponsorships through your Operator that will earn you DATA tokens.
 
 ## Migrating from Brubeck
-
-If you’ve been running a Streamr node in the past you might be familiar with a two step process– run some software and stake some tokens, i.e. a software step and a blockchain step. Behind the scenes, the Streamr core team would validate user’s stake and transfer tokens to node runner wallets at the end of each month. This has worked, but it's been highly centralized. With the introduction of stream Sponsorships, Operators, Sponsors and Delegators we now have everything we need for a peer to peer decentralized and market based incentivization on Streamr. The most important role is the Operator, so let's learn how to become one.
+If you’ve been running a Streamr node in the past you might be familiar with a two step process– run some software and stake some tokens, i.e. a software step and a blockchain step. Behind the scenes, the Streamr core team would validate user’s stake and transfer tokens to node runner wallets at the end of each month. This has worked, but its been highly centralized. With the introduction of stream Sponsorships, Operators, Sponsors and Delegators we now have everything we need for a peer to peer decentralized and market based incentivization on Streamr. The most important role is the Operator, so let's learn how to become one.
 
 :::tip Streamr 1.0 network versus the Brubeck (older) network
 - You can run ~~up to 5 nodes per IP address~~ any number of nodes from the same IP address, although one node per machine is recommended
-- Rewards are ~~automatically paid out at the beginning of the following month~~ claimed from active Sponsorships at any time
+- Rewards are ~~automatically paid out at the beginning of the following month~~ claimed from active Sponsorships periodically
 - You can stake ~~up to 20K DATA per node~~ as much as you want. Note that at least 5% of Operator stake must come from the owner, and therefore delegations can not exceed 95%.
 - To participate in the testnets, use specific versions/tags of the Streamr node software, such as `100.0.0-pretestnet.0`. The `latest` tag still points to the previous milestone (Brubeck) software.
 - There is no need for a "beneficiary address" in Streamr 1.0. Instead, the node configuration contains the Operator contract address.
@@ -26,8 +25,7 @@ If you’ve been running a Streamr node in the past you might be familiar with a
 Follow these steps below to setup your Operator so that you can participate in the protocol and collect rewards. 
 
 ### Step 1: Deploy your Operator Contract
-Currently you can practice your Operator deployment in the Mumbai pre-testnet. Go the the [Mumbai Streamr Hub](https://mumbai.streamr.network/hub), connect your wallet (top-right corner), navigate to Network -> Operators, then click "Become an Operator" and complete the dialog. The [Operator contract](../streamr-network/network-roles/operators#the-operator-contract) is deployed on the Polygon Mumbai blockchain.
-
+Currently you can practice your Operator deployment in the Mumbai pre-testnet. Go the the [Mumbai Streamr Hub](https://mumbai.streamr.network/hub), Navigate to Network -> Operators, then click "Become an Operator" and complete the dialog. The [Operator contract](../streamr-network/network-roles/operators#the-operator-contract) is deployed on the Polygon Mumbai blockchain.
 
 The wallet/account that you use to make the Operator creation transaction will be known as the **Owner wallet**. It's the wallet you'll use to control your Operator business. The owner wallet controls the Operator and is able to stake and unstake on Sponsorships, update the Operator settings, and withdraw the owner's share of the Operator's stake and earnings. This should be a very secure wallet as it controls the whole Operator. A hardware wallet (Ledger, etc) is recommended, although a software wallet (Metamask) will work too - just be sure to keep the account private and never share your private key or seed phrase with anyone.
 
@@ -91,7 +89,7 @@ The only information they will need from you is your address. Please do not enga
             "controlLayer": {
                 "entryPoints": [
                     {
-                        "id": "e1",
+                        "nodeId": "e1",
                         "websocket": {
                             "host": "entrypoint-1.streamr.network",
                             "port": 40401,
@@ -99,7 +97,7 @@ The only information they will need from you is your address. Please do not enga
                         }
                     },
                     {
-                        "id": "e2",
+                        "nodeId": "e2",
                         "websocket": {
                             "host": "entrypoint-2.streamr.network",
                             "port": 40401,
@@ -113,15 +111,6 @@ The only information they will need from you is your address. Please do not enga
             "streamRegistryChainAddress": "0x4F0779292bd0aB33B9EBC1DBE8e0868f3940E3F2",
             "streamStorageRegistryChainAddress": "0xA5a2298c9b48C08DaBF5D76727620d898FD2BEc1",
             "storageNodeRegistryChainAddress": "0xE6D449A7Ef200C0e50418c56F84079B9fe625199",
-            "mainChainRPCs": {
-                "name": "mumbai",
-                "chainId": 80001,
-                "rpcs": [
-                    {
-                        "url": "https://rpc-mumbai.maticvigil.com"
-                    }
-                ]
-            },
             "streamRegistryChainRPCs": {
                 "name": "mumbai",
                 "chainId": 80001,

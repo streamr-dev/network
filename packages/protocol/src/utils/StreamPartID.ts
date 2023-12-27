@@ -16,7 +16,7 @@ export class StreamPartIDUtils {
     static parse(streamPartIdAsStr: string): StreamPartID | never {
         const [streamId, streamPartition] = StreamPartIDUtils.parseRawElements(streamPartIdAsStr)
         if (streamPartition === undefined) {
-            throw new Error(`invalid streamPartID string: ${streamPartIdAsStr}`)
+            throw new Error(`invalid streamPartId string: ${streamPartIdAsStr}`)
         }
         toStreamID(streamId) // throws if not valid
         ensureValidStreamPartitionIndex(streamPartition)

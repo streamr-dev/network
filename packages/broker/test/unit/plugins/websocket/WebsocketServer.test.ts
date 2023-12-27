@@ -1,6 +1,6 @@
 import WebSocket from 'ws'
 import qs from 'qs'
-import StreamrClient, { Subscription } from 'streamr-client'
+import { StreamrClient, Subscription } from 'streamr-client'
 import { waitForEvent, waitForCondition } from '@streamr/utils'
 import { WebsocketServer } from '../../../../src/plugins/websocket/WebsocketServer'
 import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'
@@ -25,7 +25,7 @@ const createTestClient = (path: string, queryParams?: any): WebSocket => {
             queryParams
         )
     )
-    return new WebSocket(`ws://localhost:${PORT}${path}?${queryParamsSuffix}`)
+    return new WebSocket(`ws://127.0.0.1:${PORT}${path}?${queryParamsSuffix}`)
 }
 
 describe('WebsocketServer', () => {

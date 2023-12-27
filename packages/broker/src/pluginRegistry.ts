@@ -1,31 +1,32 @@
-import { Plugin, PluginOptions } from './Plugin'
-import { HttpPlugin } from './plugins/http/HttpPlugin'
+import { Plugin } from './Plugin'
+import { StrictConfig } from './config/config'
 import { ConsoleMetricsPlugin } from './plugins/consoleMetrics/ConsoleMetricsPlugin'
-import { WebsocketPlugin } from './plugins/websocket/WebsocketPlugin'
-import { MqttPlugin } from './plugins/mqtt/MqttPlugin'
-import { StoragePlugin } from './plugins/storage/StoragePlugin'
-import { BrubeckMinerPlugin } from './plugins/brubeckMiner/BrubeckMinerPlugin'
-import { SubscriberPlugin } from './plugins/subscriber/SubscriberPlugin'
+import { HttpPlugin } from './plugins/http/HttpPlugin'
 import { InfoPlugin } from './plugins/info/InfoPlugin'
+import { MqttPlugin } from './plugins/mqtt/MqttPlugin'
+import { OperatorPlugin } from './plugins/operator/OperatorPlugin'
+import { StoragePlugin } from './plugins/storage/StoragePlugin'
+import { SubscriberPlugin } from './plugins/subscriber/SubscriberPlugin'
+import { WebsocketPlugin } from './plugins/websocket/WebsocketPlugin'
 
-export const createPlugin = (name: string, pluginOptions: PluginOptions): Plugin<any> | never => {
+export const createPlugin = (name: string, brokerConfig: StrictConfig): Plugin<any> | never => {
     switch (name) {
         case 'http':
-            return new HttpPlugin(pluginOptions)
+            return new HttpPlugin(name, brokerConfig)
         case 'consoleMetrics':
-            return new ConsoleMetricsPlugin(pluginOptions)
+            return new ConsoleMetricsPlugin(name, brokerConfig)
         case 'websocket':
-            return new WebsocketPlugin(pluginOptions)
+            return new WebsocketPlugin(name, brokerConfig)
         case 'mqtt':
-            return new MqttPlugin(pluginOptions)
+            return new MqttPlugin(name, brokerConfig)
         case 'storage':
-            return new StoragePlugin(pluginOptions)
-        case 'brubeckMiner':
-            return new BrubeckMinerPlugin(pluginOptions)
+            return new StoragePlugin(name, brokerConfig)
+        case 'operator':
+            return new OperatorPlugin(name, brokerConfig)
         case 'subscriber':
-            return new SubscriberPlugin(pluginOptions)
+            return new SubscriberPlugin(name, brokerConfig)
         case 'info':
-            return new InfoPlugin(pluginOptions)
+            return new InfoPlugin(name, brokerConfig)
         default:
             throw new Error(`Unknown plugin: ${name}`)
     }

@@ -14,11 +14,14 @@ browser-test-runner:
   - 'package/browser-test-runner/*'
   - 'package/browser-test-runner/**/*'
 network:
-  - 'packages/network/*'
-  - 'packages/network/**/*'
-tracker:
-  - 'packages/network-tracker/*'
-  - 'packages/network-tracker/**/*'
+  - 'packages/trackerless-network/*'
+  - 'packages/trackerless-network/**/*'
+dht:
+  - 'packages/dht/*'
+  - 'packages/dht/**/*'
+proto-rpc:
+  - 'packages/proto-rpc/*'
+  - 'packages/proto-rpc/**/*'
 client:
   - 'packages/client/*'
   - 'packages/client/**/*'

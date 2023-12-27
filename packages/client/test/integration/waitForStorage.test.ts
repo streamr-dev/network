@@ -10,7 +10,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { StreamrClientError } from '../../src/StreamrClientError'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
-import { createRandomAuthentication, createRelativeTestStreamId } from '../test-utils/utils'
+import { createRandomAuthentication, createRelativeTestStreamId, MOCK_CONTENT } from '../test-utils/utils'
 import { convertStreamMessageToMessage } from '../../src/Message'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
@@ -39,7 +39,7 @@ describe('waitForStorage', () => {
     })
 
     it('happy path', async () => {
-        await stream.addToStorageNode(storageNode.id)
+        await stream.addToStorageNode(storageNode.getAddress())
         const content = {
             foo: Date.now()
         }
@@ -48,7 +48,7 @@ describe('waitForStorage', () => {
     })
 
     it('no match', async () => {
-        await stream.addToStorageNode(storageNode.id)
+        await stream.addToStorageNode(storageNode.getAddress())
         const content = {
             foo: Date.now()
         }
@@ -66,10 +66,10 @@ describe('waitForStorage', () => {
     })
 
     it('no message', async () => {
-        await stream.addToStorageNode(storageNode.id)
+        await stream.addToStorageNode(storageNode.getAddress())
         const msg = convertStreamMessageToMessage(await createSignedMessage({
             messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
-            serializedContent: JSON.stringify({}),
+            serializedContent: MOCK_CONTENT,
             authentication
         }))
         await expect(() => client.waitForStorage(msg, {
@@ -85,7 +85,7 @@ describe('waitForStorage', () => {
     it('no storage assigned', async () => {
         const msg = convertStreamMessageToMessage(await createSignedMessage({
             messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
-            serializedContent: JSON.stringify({}),
+            serializedContent: MOCK_CONTENT,
             authentication
         }))
         await expect(() => client.waitForStorage(msg, {

@@ -41,7 +41,7 @@ describe('SubscriberKeyExchange', () => {
 
     const triggerGroupKeyRequest = async (key: GroupKey, publisher: StreamrClient): Promise<void> => {
         const publisherNode = await publisher.getNode()
-        publisherNode.publish(await createMockMessage({
+        await publisherNode.broadcast(await createMockMessage({
             streamPartId,
             publisher: publisherWallet,
             encryptionKey: key
@@ -58,7 +58,7 @@ describe('SubscriberKeyExchange', () => {
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-            signature: expect.any(String)
+            signature: expect.any(Uint8Array)
         })
         expect(request.getParsedContent()).toEqual([
             expect.any(String),

@@ -18,15 +18,13 @@ export const MAX_SEQUENCE_NUMBER_VALUE = 2147483647
 class ResponseTransform extends Transform {
 
     format: Format
-    version: number | undefined
     firstMessage = true
 
-    constructor(format: Format, version: number | undefined) {
+    constructor(format: Format) {
         super({
             writableObjectMode: true
         })
         this.format = format
-        this.version = version
     }
 
     override _transform(input: StreamMessage, _encoding: string, done: () => void) {
@@ -36,7 +34,7 @@ class ResponseTransform extends Transform {
         } else {
             this.push(this.format.delimiter)
         }
-        this.push(this.format.getMessageAsString(input, this.version))
+        this.push(this.format.getMessageAsString(input))
         done()
     }
 
@@ -53,7 +51,7 @@ function parseIntIfExists(x: string | undefined): number | undefined {
     return x === undefined ? undefined : parseInt(x)
 }
 
-const sendSuccess = (data: Readable, format: Format, version: number | undefined, streamId: string, res: Response) => {
+const sendSuccess = (data: Readable, format: Format, streamId: string, res: Response) => {
     data.once('data', () => {
         res.writeHead(200, {
             'Content-Type': format.contentType
@@ -68,7 +66,7 @@ const sendSuccess = (data: Readable, format: Format, version: number | undefined
     })
     pipeline(
         data,
-        new ResponseTransform(format, version),
+        new ResponseTransform(format),
         res,
         (err) => {
             if ((err !== undefined) && (err !== null)) {
@@ -115,7 +113,6 @@ const handleLast = (
     streamId: string,
     partition: number,
     format: Format,
-    version: number | undefined,
     res: Response,
     storage: Storage,
     metrics: MetricsDefinition
@@ -131,7 +128,7 @@ const handleLast = (
         partition,
         count!,
     )
-    sendSuccess(data, format, version, streamId, res)
+    sendSuccess(data, format, streamId, res)
 }
 
 const handleFrom = (
@@ -139,7 +136,6 @@ const handleFrom = (
     streamId: string,
     partition: number,
     format: Format,
-    version: number | undefined,
     res: Response,
     storage: Storage,
     metrics: MetricsDefinition
@@ -163,7 +159,7 @@ const handleFrom = (
         fromSequenceNumber,
         publisherId
     )
-    sendSuccess(data, format, version, streamId, res)
+    sendSuccess(data, format, streamId, res)
 }
 
 const handleRange = (
@@ -171,7 +167,6 @@ const handleRange = (
     streamId: string,
     partition: number,
     format: Format,
-    version: number | undefined,
     res: Response,
     storage: Storage,
     metrics: MetricsDefinition
@@ -217,7 +212,7 @@ const handleRange = (
         publisherId,
         msgChainId
     )
-    sendSuccess(data, format, version, streamId, res)
+    sendSuccess(data, format, streamId, res)
 }
 
 const createHandler = (storage: Storage, metrics: MetricsDefinition): RequestHandler => {
@@ -233,16 +228,15 @@ const createHandler = (storage: Storage, metrics: MetricsDefinition): RequestHan
         }
         const streamId = req.params.id
         const partition = parseInt(req.params.partition)
-        const version = parseIntIfExists(req.query.version as string)
         switch (req.params.resendType) {
             case 'last':
-                handleLast(req, streamId, partition, format, version, res, storage, metrics)
+                handleLast(req, streamId, partition, format, res, storage, metrics)
                 break
             case 'from':
-                handleFrom(req, streamId, partition, format, version, res, storage, metrics)
+                handleFrom(req, streamId, partition, format, res, storage, metrics)
                 break
             case 'range':
-                handleRange(req, streamId, partition, format, version, res, storage, metrics)
+                handleRange(req, streamId, partition, format, res, storage, metrics)
                 break
             default: 
                 sendError('Unknown resend type', res)

@@ -1,5 +1,5 @@
-import { TrackerRegistryRecord } from '@streamr/protocol'
-import { createStrictConfig, redactConfig } from '../../src/Config'
+import { config as CHAIN_CONFIG } from '@streamr/config'
+import { NetworkNodeType, NetworkPeerDescriptor, createStrictConfig, redactConfig, DEFAULT_ENVIRONMENT } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -17,30 +17,17 @@ describe('Config', () => {
             }).toThrow('/network must NOT have additional properties: foo')
         })
 
-        it('missing property', () => {
-            expect(() => {
-                return createStrictConfig({
-                    network: {
-                        trackers: [{
-                            id: '0x1234567890123456789012345678901234567890',
-                            ws: 'http://foo.bar'
-                        }]
-                    }
-                } as any)
-            }).toThrow('/network/trackers/0 must have required property \'http\'')
-        })
-
         it('empty array', () => {
             expect(() => {
                 return createStrictConfig({
                     contracts: {
-                        mainChainRPCs: {
+                        streamRegistryChainRPCs: {
                             chainId: 123,
                             rpcs: []
                         }
                     }
                 } as any)
-            }).toThrow('/contracts/mainChainRPCs/rpcs must NOT have fewer than 1 items')
+            }).toThrow('/contracts/streamRegistryChainRPCs/rpcs must NOT have fewer than 1 items')
         })
 
         describe('invalid property format', () => {
@@ -48,10 +35,15 @@ describe('Config', () => {
                 expect(() => {
                     return createStrictConfig({
                         network: {
-                            acceptProxyConnections: 123
+                            controlLayer: {
+                                websocketPortRange: {
+                                    min: 'aaa',
+                                    max: 1111
+                                }
+                            }
                         }
                     } as any)
-                }).toThrow('/network/acceptProxyConnections must be boolean')
+                }).toThrow('/network/controlLayer/websocketPortRange/min must be number')
             })
 
             it('ajv-format', () => {
@@ -100,11 +92,11 @@ describe('Config', () => {
             expect(new StreamrClient()).toBeInstanceOf(StreamrClient)
         })
 
-        it('can override network.trackers arrays', () => {
+        it('can override network.entryPoints arrays', () => {
             const clientDefaults = createStrictConfig()
             const clientOverrides = createStrictConfig(CONFIG_TEST)
-            expect(clientOverrides.network.trackers).not.toEqual(clientDefaults.network.trackers)
-            expect(clientOverrides.network.trackers).toEqual(CONFIG_TEST.network!.trackers)
+            expect(clientOverrides.network.controlLayer.entryPoints).not.toEqual(clientDefaults.network.controlLayer.entryPoints)
+            expect(clientOverrides.network.controlLayer.entryPoints).toEqual(CHAIN_CONFIG.dev2.entryPoints)
         })
 
         it('network can be empty', () => {
@@ -113,27 +105,29 @@ describe('Config', () => {
                 network: {}
             })
             expect(clientOverrides.network).toEqual(clientDefaults.network)
-            expect(clientOverrides.network.trackers).toEqual({
-                contractAddress: '0xab9BEb0e8B106078c953CcAB4D6bF9142BeF854d'
-            })
+            expect(clientOverrides.network.controlLayer.entryPoints![0].nodeId).toEqual(CHAIN_CONFIG[DEFAULT_ENVIRONMENT].entryPoints[0].nodeId)
         })
 
-        it('can override trackers', () => {
-            const trackers = [
-                {
-                    id: '0xFBB6066c44bc8132bA794C73f58F391273E3bdA1',
-                    ws: 'wss://brubeck3.streamr.network:30401',
-                    http: 'https://brubeck3.streamr.network:30401'
-                },
-            ]
+        it('can override entryPoints', () => {
+            const entryPoints = [{
+                nodeId: '0xFBB6066c44bc8132bA794C73f58F391273E3bdA1',
+                type: NetworkNodeType.NODEJS,
+                websocket: {
+                    host: 'brubeck3.streamr.network',
+                    port: 30401,
+                    tls: false
+                }
+            }]
             const clientOverrides = createStrictConfig({
                 network: {
-                    trackers,
+                    controlLayer: {
+                        entryPoints
+                    }
                 }
             })
-            expect(clientOverrides.network.trackers).toEqual(trackers)
-            expect(clientOverrides.network.trackers).not.toBe(trackers)
-            expect((clientOverrides.network.trackers as TrackerRegistryRecord[])[0]).not.toBe(trackers[0])
+            expect(clientOverrides.network.controlLayer.entryPoints!).toEqual(entryPoints)
+            expect(clientOverrides.network.controlLayer.entryPoints!).not.toBe(entryPoints)
+            expect((clientOverrides.network.controlLayer as NetworkPeerDescriptor[])[0]).not.toBe(entryPoints[0])
         })
     })
 
@@ -145,5 +139,107 @@ describe('Config', () => {
         }
         redactConfig(config)
         expect(config.auth.privateKey).toBe('(redacted)')
+    })
+
+    describe('environment defaults', () => {
+
+        it('happy path', () => {
+            const environmentId = 'mumbai'  // some environment id
+            const config: any = {
+                environment: environmentId
+            }
+            expect(createStrictConfig(config)).toMatchObject({
+                network: {
+                    controlLayer: {
+                        entryPoints: CHAIN_CONFIG[environmentId].entryPoints
+                    }
+                },
+                contracts: {
+                    streamRegistryChainAddress: CHAIN_CONFIG[environmentId].contracts.StreamRegistry,
+                    streamStorageRegistryChainAddress: CHAIN_CONFIG[environmentId].contracts.StreamStorageRegistry,
+                    storageNodeRegistryChainAddress: CHAIN_CONFIG[environmentId].contracts.StorageNodeRegistry,
+                    streamRegistryChainRPCs: {
+                        name: CHAIN_CONFIG[environmentId].name,
+                        chainId: CHAIN_CONFIG[environmentId].id,
+                        rpcs: CHAIN_CONFIG[environmentId].rpcEndpoints
+                    },
+                    theGraphUrl: CHAIN_CONFIG[environmentId].theGraphUrl
+                }
+            })
+        })
+
+        it('override', () => {
+            const environmentId = 'mumbai'  // some environment id
+            const config: any = {
+                environment: environmentId,
+                contracts: {
+                    streamStorageRegistryChainAddress: '0x1234567890123456789012345678901234567890'
+                }
+            }
+            expect(createStrictConfig(config)).toMatchObject({
+                contracts: {
+                    streamRegistryChainAddress: CHAIN_CONFIG[environmentId].contracts.StreamRegistry,
+                    streamStorageRegistryChainAddress: '0x1234567890123456789012345678901234567890',
+                    storageNodeRegistryChainAddress: CHAIN_CONFIG[environmentId].contracts.StorageNodeRegistry
+                }
+            })
+        })
+
+        describe('highGasPrice', () => {
+
+            it('without ethereum network config', () => {
+                const config: any = {
+                    environment: 'polygon'
+                }
+                expect(createStrictConfig(config)).toMatchObject({
+                    contracts: {
+                        ethereumNetwork: {
+                            highGasPriceStrategy: true
+                        }
+                    }
+                })
+            })
+
+            it('with ethereum network config', () => {
+                const config: any = {
+                    environment: 'polygon',
+                    contracts: {
+                        ethereumNetwork: {
+                            overrides: {
+                                gasLimit: 123
+                            }
+                        }
+                    }
+                }
+                expect(createStrictConfig(config)).toMatchObject({
+                    contracts: {
+                        ethereumNetwork: {
+                            highGasPriceStrategy: true,
+                            overrides: {
+                                gasLimit: 123
+                            }
+                        }
+                    }
+                })
+            })
+
+            it('explicit config value is not overriden', () => {
+                const config: any = {
+                    environment: 'polygon',
+                    contracts: {
+                        ethereumNetwork: {
+                            highGasPriceStrategy: false
+                        }
+                    }
+                }
+                expect(createStrictConfig(config)).toMatchObject({
+                    contracts: {
+                        ethereumNetwork: {
+                            highGasPriceStrategy: false
+                        }
+                    }
+                })
+            })
+        })
     })
 })

@@ -1,0 +1,18 @@
+{
+    "extends": "../../tsconfig.node.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "noImplicitOverride": false
+    },
+    "include": [
+        "src/**/*",
+        "package.json",
+        "test/benchmark/first-message.ts",
+        "test/utils/utils.ts"
+    ],
+    "references": [
+        { "path": "../protocol/tsconfig.node.json" },
+        { "path": "../proto-rpc/tsconfig.node.json" },
+        { "path": "../dht/tsconfig.node.json" }
+    ]
+}
