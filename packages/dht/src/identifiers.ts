@@ -18,3 +18,4 @@ export const getRawFromDhtAddress = (address: DhtAddress): DhtAddressRaw => {
 export const createRandomDhtAddress = (): DhtAddress => {
     return getDhtAddressFromRaw(crypto.randomBytes(KADEMLIA_ID_LENGTH_IN_BYTES))
 }
+

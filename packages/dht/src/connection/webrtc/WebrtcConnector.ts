@@ -15,13 +15,13 @@ import * as Err from '../../helpers/errors'
 import { ManagedConnection } from '../ManagedConnection'
 import {
     areEqualPeerDescriptors,
-    getNodeIdFromPeerDescriptor,
-    peerIdFromPeerDescriptor
+    getNodeIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
 import { PortRange } from '../ConnectionManager'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { WebrtcConnectorRpcLocal } from './WebrtcConnectorRpcLocal'
 import { DhtAddress } from '../../identifiers'
+import { hasSmallerOfferingHashThan } from '../../helpers/offering'
 
 const logger = new Logger(module)
 
@@ -216,8 +216,8 @@ export class WebrtcConnector {
     }
 
     public isOffering(targetPeerDescriptor: PeerDescriptor): boolean {
-        const myId = peerIdFromPeerDescriptor(this.localPeerDescriptor!)
-        const theirId = peerIdFromPeerDescriptor(targetPeerDescriptor)
-        return myId.hasSmallerHashThan(theirId)
+        const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor!)
+        const remoteNodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
+        return hasSmallerOfferingHashThan(localNodeId, remoteNodeId)
     }
 }
