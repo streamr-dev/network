@@ -19,7 +19,8 @@ export class RouterRpcRemote extends RpcRemote<RouterRpcClient> {
             message: params.message,
             requestId: params.requestId ?? v4(),
             reachableThrough: params.reachableThrough ?? [],
-            routingPath: params.routingPath
+            routingPath: params.routingPath,
+            parallelRootNodeIds: params.parallelRootNodeIds
         }
         const options = this.formDhtRpcOptions({
             connect: false
@@ -53,7 +54,8 @@ export class RouterRpcRemote extends RpcRemote<RouterRpcClient> {
             message: params.message,
             requestId: params.requestId ?? v4(),
             reachableThrough: params.reachableThrough ?? [],
-            routingPath: params.routingPath
+            routingPath: params.routingPath,
+            parallelRootNodeIds: params.parallelRootNodeIds
         }
         const options = this.formDhtRpcOptions({
             connect: false

@@ -33,7 +33,7 @@ export class Router {
     private readonly forwardingTable: Map<DhtAddress, ForwardingTableEntry> = new Map()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
     // TODO use config option or named constant?
-    private readonly duplicateRequestDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
+    private readonly duplicateRequestDetector: DuplicateDetector = new DuplicateDetector(100000)
     private stopped = false
     private readonly config: RouterConfig
 
@@ -87,7 +87,8 @@ export class Router {
                 target: forwardingEntry.peerDescriptors[0].nodeId,
                 sourcePeer: this.config.localPeerDescriptor,
                 reachableThrough,
-                routingPath: []
+                routingPath: [],
+                parallelRootNodeIds: []
             }
             const ack = this.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
             if (ack.error !== undefined) {
@@ -102,7 +103,8 @@ export class Router {
                 target: targetPeerDescriptor.nodeId,
                 sourcePeer: this.config.localPeerDescriptor,
                 reachableThrough,
-                routingPath: []
+                routingPath: [],
+                parallelRootNodeIds: []
             }
             const ack = this.doRouteMessage(routedMessage, RoutingMode.ROUTE)
             if (ack.error !== undefined) {
@@ -158,6 +160,9 @@ export class Router {
         if (excludedNode) {
             excludedNodeIds.add(getNodeIdFromPeerDescriptor(excludedNode))
         }
+        routedMessage.parallelRootNodeIds.forEach((nodeId) => {
+            excludedNodeIds.add(nodeId as DhtAddress)
+        })
         logger.trace('routing session created with connections: ' + this.config.connections.size)
         return new RoutingSession({
             rpcCommunicator: this.config.rpcCommunicator,

@@ -101,7 +101,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     private config: ConnectionManagerConfig
     private readonly metricsContext: MetricsContext
     // TODO use config option or named constant?
-    private readonly duplicateMessageDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
+    private readonly duplicateMessageDetector: DuplicateDetector = new DuplicateDetector(100000)
     private readonly metrics: ConnectionManagerMetrics
     private locks = new ConnectionLockHandler()
     private connections: Map<DhtAddress, ManagedConnection> = new Map()

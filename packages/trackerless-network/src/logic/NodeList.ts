@@ -13,6 +13,8 @@ const getValuesOfIncludedKeys = (nodes: Map<DhtAddress, DeliveryRpcRemote>, excl
         .map(([_id, node]) => node)
 }
 
+// The items in the list are in the insertion order
+
 export class NodeList extends EventEmitter<Events> {
     private readonly nodes: Map<DhtAddress, DeliveryRpcRemote>
     private readonly limit: number
@@ -77,20 +79,20 @@ export class NodeList extends EventEmitter<Events> {
         return sample(getValuesOfIncludedKeys(this.nodes, exclude))
     }
 
-    getClosest(exclude: DhtAddress[]): DeliveryRpcRemote | undefined {
+    getFirst(exclude: DhtAddress[]): DeliveryRpcRemote | undefined {
         const included = getValuesOfIncludedKeys(this.nodes, exclude)
         return included[0]
     }
 
-    getClosestAndFurthest(exclude: DhtAddress[]): DeliveryRpcRemote[] {
+    getFirstAndLast(exclude: DhtAddress[]): DeliveryRpcRemote[] {
         const included = getValuesOfIncludedKeys(this.nodes, exclude)
         if (included.length === 0) {
             return []
         }
-        return included.length > 1 ? [this.getClosest(exclude)!, this.getFurthest(exclude)!] : [this.getClosest(exclude)!]
+        return included.length > 1 ? [this.getFirst(exclude)!, this.getLast(exclude)!] : [this.getFirst(exclude)!]
     }
 
-    getFurthest(exclude: DhtAddress[]): DeliveryRpcRemote | undefined {
+    getLast(exclude: DhtAddress[]): DeliveryRpcRemote | undefined {
         const included = getValuesOfIncludedKeys(this.nodes, exclude)
         return included[included.length - 1]
     }

@@ -46,7 +46,8 @@ describe('RemoteRouter', () => {
             sourcePeer: clientPeerDescriptor,
             target: serverPeerDescriptor.nodeId,
             reachableThrough: [],
-            routingPath: []
+            routingPath: [],
+            parallelRootNodeIds: []
         })
         expect(routable).toEqual(true)
     })
@@ -69,7 +70,8 @@ describe('RemoteRouter', () => {
             sourcePeer: clientPeerDescriptor,
             target: serverPeerDescriptor.nodeId,
             reachableThrough: [],
-            routingPath: []
+            routingPath: [],
+            parallelRootNodeIds: []
         })
         expect(routable).toEqual(false)
     })
