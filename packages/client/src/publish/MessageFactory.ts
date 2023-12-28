@@ -104,7 +104,15 @@ export class MessageFactory {
         const encryptionType = (await this.streamRegistry.hasPublicSubscribePermission(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
         let groupKeyId: string | undefined
         let newGroupKey: EncryptedGroupKey | undefined
-        let serializedContent = utf8ToBinary(JSON.stringify(content))
+        let serializedContent: Uint8Array
+        let contentType: ContentType
+        if (content instanceof Uint8Array) {
+            contentType = ContentType.BINARY
+            serializedContent = content
+        } else {
+            contentType = ContentType.JSON        
+            serializedContent = utf8ToBinary(JSON.stringify(content))
+        }
         if (encryptionType === EncryptionType.AES) {
             const keySequence = await this.groupKeyQueue.useGroupKey()
             serializedContent = EncryptionUtil.encryptWithAES(serializedContent, keySequence.current.data)
@@ -122,7 +130,7 @@ export class MessageFactory {
             groupKeyId,
             newGroupKey,
             authentication: this.authentication,
-            contentType: ContentType.JSON
+            contentType
         })
     }
 

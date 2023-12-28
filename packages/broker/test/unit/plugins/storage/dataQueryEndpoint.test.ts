@@ -9,7 +9,7 @@ import {
 import { toObject } from '../../../../src/plugins/storage/DataQueryFormat'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { PassThrough } from 'stream'
-import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
+import { ContentType, MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
 import { MetricsContext, toEthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 
 const createEmptyStream = () => {
@@ -40,7 +40,8 @@ describe('dataQueryEndpoint', () => {
                 'msgChainId'
             ),
             content: utf8ToBinary(JSON.stringify(content)),
-            signature: hexToBinary('0x1234')
+            signature: hexToBinary('0x1234'),
+            contentType: ContentType.JSON
         })
     }
 

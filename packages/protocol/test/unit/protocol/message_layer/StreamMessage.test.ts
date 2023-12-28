@@ -23,6 +23,7 @@ const msg = ({ timestamp = 1564046332168, sequenceNumber = 10, ...overrides } = 
                 messageId: new MessageID(toStreamID('streamId'), 0, timestamp, sequenceNumber, PUBLISHER_ID, 'msgChainId'),
                 prevMsgRef: new MessageRef(timestamp, 5),
                 content: utf8ToBinary(JSON.stringify(content)),
+                contentType: ContentType.JSON,
                 messageType: StreamMessageType.MESSAGE,
                 encryptionType: EncryptionType.NONE,
                 signature,
@@ -61,6 +62,7 @@ describe('StreamMessage', () => {
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: utf8ToBinary(JSON.stringify(content)),
+                contentType: ContentType.JSON,
                 signature
             })
             assert.strictEqual(streamMessage.getStreamId(), 'streamId')
@@ -80,16 +82,42 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.signature, signature)
         })
 
+        it('create StreamMessage binary content', () => {
+            const streamMessage = new StreamMessage({
+                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
+                content: new Uint8Array([1, 2, 3]),
+                contentType: ContentType.BINARY,
+                signature
+            })
+            assert.strictEqual(streamMessage.getStreamId(), 'streamId')
+            assert.strictEqual(streamMessage.getStreamPartition(), 0)
+            assert.strictEqual(streamMessage.getTimestamp(), 1564046332168)
+            assert.strictEqual(streamMessage.getSequenceNumber(), 10)
+            assert.strictEqual(streamMessage.getPublisherId(), PUBLISHER_ID)
+            assert.strictEqual(streamMessage.getMsgChainId(), 'msgChainId')
+            assert.deepStrictEqual(streamMessage.prevMsgRef, null)
+            assert.strictEqual(streamMessage.messageType, StreamMessageType.MESSAGE)
+            assert.strictEqual(streamMessage.contentType, ContentType.BINARY)
+            assert.strictEqual(streamMessage.encryptionType, EncryptionType.NONE)
+            assert.strictEqual(streamMessage.groupKeyId, null)
+            assert.deepStrictEqual(streamMessage.getContent(), new Uint8Array([1, 2, 3]))
+            expect(streamMessage.getSerializedContent()).toEqual(new Uint8Array([1, 2, 3]))
+            assert.strictEqual(streamMessage.getNewGroupKey(), null)
+            assert.strictEqual(streamMessage.signature, signature)
+        })
+
         it('can detect encrypted', () => {
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: utf8ToBinary(JSON.stringify(content)),
+                contentType: ContentType.JSON,
                 signature
             })
             expect(StreamMessage.isAESEncrypted(streamMessage)).toBe(false)
             const encryptedMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: utf8ToBinary(JSON.stringify(content)),
+                contentType: ContentType.JSON,
                 signature,
                 encryptionType: EncryptionType.AES,
                 groupKeyId: 'mock-id'
@@ -219,6 +247,7 @@ describe('StreamMessage', () => {
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: utf8ToBinary(JSON.stringify(content)),
+                contentType: ContentType.JSON,
                 signature
             })
             const streamMessageClone = streamMessage.clone()
@@ -230,6 +259,7 @@ describe('StreamMessage', () => {
             const encryptedMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: utf8ToBinary(JSON.stringify(content)),
+                contentType: ContentType.JSON,
                 signature,
                 encryptionType: EncryptionType.RSA,
                 prevMsgRef: new MessageRef(1564046332168, 5),

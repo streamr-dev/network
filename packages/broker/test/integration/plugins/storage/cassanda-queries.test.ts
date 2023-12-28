@@ -5,7 +5,7 @@ import { Readable, PassThrough } from 'stream'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
+import { ContentType, MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
@@ -20,7 +20,8 @@ const createMockMessage = (i: number) => {
         content: utf8ToBinary(JSON.stringify({
             value: i
         })),
-        signature: hexToBinary('0x1234')
+        signature: hexToBinary('0x1234'),
+        contentType: ContentType.JSON
     })
 }
 const MOCK_MESSAGES = [1, 2, 3].map((contentValue: number) => createMockMessage(contentValue))

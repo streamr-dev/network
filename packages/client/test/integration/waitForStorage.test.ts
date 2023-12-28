@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { toEthereumAddress } from '@streamr/utils'
-import { MessageID } from '@streamr/protocol'
+import { MessageID, ContentType } from '@streamr/protocol'
 import { Authentication } from '../../src/Authentication'
 import { StreamPermission } from '../../src/permission'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
@@ -70,7 +70,8 @@ describe('waitForStorage', () => {
         const msg = convertStreamMessageToMessage(await createSignedMessage({
             messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
             serializedContent: MOCK_CONTENT,
-            authentication
+            authentication,
+            contentType: ContentType.JSON
         }))
         await expect(() => client.waitForStorage(msg, {
             interval: 50,
@@ -86,7 +87,8 @@ describe('waitForStorage', () => {
         const msg = convertStreamMessageToMessage(await createSignedMessage({
             messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
             serializedContent: MOCK_CONTENT,
-            authentication
+            authentication,
+            contentType: ContentType.JSON
         }))
         await expect(() => client.waitForStorage(msg, {
             messageMatchFn: () => {

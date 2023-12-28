@@ -42,9 +42,10 @@ const createMessageFactory = async (opts?: {
 
 const createMessage = async (
     opts: Omit<PublishMetadata, 'timestamp'> & { timestamp?: number, explicitPartition?: number },
-    messageFactory: MessageFactory
+    messageFactory: MessageFactory,
+    content: unknown | Uint8Array = CONTENT
 ): Promise<StreamMessage> => {
-    return messageFactory.createMessage(CONTENT, merge(
+    return messageFactory.createMessage(content, merge(
         {
             timestamp: TIMESTAMP
         },
@@ -130,6 +131,14 @@ describe('MessageFactory', () => {
         return expect(() =>
             createMessage({}, messageFactory)
         ).rejects.toThrow(/You don't have permission to publish to this stream/)
+    })
+
+    it('detects binary content', async () => {
+        const messageFactory = await createMessageFactory()
+        const msg = await createMessage({}, messageFactory, utf8ToBinary('mock-content'))
+        expect(msg).toMatchObject({
+            contentType: ContentType.BINARY,
+        })
     })
 
     describe('partitions', () => {
