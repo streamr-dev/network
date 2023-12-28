@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-import { DhtNode, LatencyType, Simulator, getRandomRegion } from '@streamr/dht'
+import { DhtNode, LatencyType, Simulator, getNodeIdFromPeerDescriptor, getRandomRegion } from '@streamr/dht'
 import { 
     ContentType,
     MessageID,
@@ -15,7 +15,6 @@ import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import fs from 'fs'
 import { PeerDescriptor } from '@streamr/dht'
 import { NetworkNode } from '../../src/NetworkNode'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
 import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
 import { Layer1Node } from '../../src/logic/Layer1Node'

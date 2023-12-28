@@ -12,8 +12,9 @@ import {
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockPeerDescriptor, createWrappedClosestPeersRequest } from '../utils/utils'
 import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
-import { NodeID } from '../../src/helpers/nodeId'
+import { DhtAddress } from '../../src/identifiers'
 import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
+import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 
 describe('Router', () => {
 
@@ -38,9 +39,10 @@ describe('Router', () => {
         routingPath: [],
         reachableThrough: [],
         target: peerDescriptor1.nodeId,
-        sourcePeer: peerDescriptor2
+        sourcePeer: peerDescriptor2,
+        parallelRootNodeIds: []
     }
-    let connections: Map<NodeID, DhtNodeRpcRemote>
+    let connections: Map<DhtAddress, DhtNodeRpcRemote>
     const rpcCommunicator = new FakeRpcCommunicator()
 
     const createMockDhtNodeRpcRemote = (destination: PeerDescriptor): DhtNodeRpcRemote => {
@@ -68,7 +70,8 @@ describe('Router', () => {
             requestId: v4(),
             sourcePeer: peerDescriptor1,
             reachableThrough: [],
-            routingPath: []
+            routingPath: [],
+            parallelRootNodeIds: []
         }) as RouteMessageAck
         expect(ack.error).toEqual(RouteMessageError.NO_TARGETS)
     })
@@ -81,9 +84,25 @@ describe('Router', () => {
             requestId: v4(),
             sourcePeer: peerDescriptor1,
             reachableThrough: [],
-            routingPath: []
+            routingPath: [],
+            parallelRootNodeIds: []
         }) as RouteMessageAck
         expect(ack.error).toBeUndefined()
+    })
+
+    it('doRouteMessage with parallelRootNodeIds', async () => {
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor2)
+        connections.set(nodeId, createMockDhtNodeRpcRemote(peerDescriptor2))
+        const ack = await rpcCommunicator.callRpcMethod('routeMessage', {
+            message,
+            target: peerDescriptor2.nodeId,
+            requestId: v4(),
+            sourcePeer: peerDescriptor1,
+            reachableThrough: [],
+            routingPath: [],
+            parallelRootNodeIds: [nodeId]
+        }) as RouteMessageAck
+        expect(ack.error).toEqual(RouteMessageError.NO_TARGETS)
     })
 
     it('route server is destination without connections', async () => {

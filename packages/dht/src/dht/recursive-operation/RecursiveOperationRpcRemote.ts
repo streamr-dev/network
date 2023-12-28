@@ -17,7 +17,8 @@ export class RecursiveOperationRpcRemote extends RpcRemote<RecursiveOperationRpc
             message: params.message,
             requestId: params.requestId ?? v4(),
             reachableThrough: params.reachableThrough ?? [],
-            routingPath: params.routingPath
+            routingPath: params.routingPath,
+            parallelRootNodeIds: params.parallelRootNodeIds
         }
         const options = this.formDhtRpcOptions({
             connect: false
@@ -33,8 +34,8 @@ export class RecursiveOperationRpcRemote extends RpcRemote<RecursiveOperationRpc
             const fromNode = previousPeer
                 ? getNodeIdFromPeerDescriptor(previousPeer)
                 : getNodeIdFromPeerDescriptor(params.sourcePeer!)
-            // eslint-disable-next-line max-len
-            logger.debug(`Failed to send routeRequest message from ${fromNode} to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`)
+            const toNode = getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
+            logger.debug(`Failed to send routeRequest message from ${fromNode} to ${toNode} with: ${err}`)
             return false
         }
         return true

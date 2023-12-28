@@ -21,6 +21,7 @@ import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescrip
 import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
 import { Router } from '../../src/dht/routing/Router'
 import { ITransport } from '../../src/exports'
+import { getDhtAddressFromRaw } from '../../src/identifiers'
 
 const createMockRouter = (error?: RouteMessageError): Partial<Router> => {
     return {
@@ -56,7 +57,8 @@ describe('RecursiveOperationManager', () => {
         routingPath: [],
         reachableThrough: [],
         sourcePeer: peerDescriptor1,
-        target: peerDescriptor2.nodeId
+        target: peerDescriptor2.nodeId,
+        parallelRootNodeIds: []
     }
     const rpcCommunicator = new FakeRpcCommunicator()
 
@@ -85,7 +87,7 @@ describe('RecursiveOperationManager', () => {
 
     it('startFind with mode Node returns self if no peers', async () => {
         const recursiveOperationManager = createRecursiveOperationManager()
-        const res = await recursiveOperationManager.execute(PeerID.fromString('find').value, RecursiveOperation.FIND_NODE)
+        const res = await recursiveOperationManager.execute(getDhtAddressFromRaw(PeerID.fromString('find').value), RecursiveOperation.FIND_NODE)
         expect(areEqualPeerDescriptors(res.closestNodes[0], peerDescriptor1)).toEqual(true)
         recursiveOperationManager.stop()
     })
