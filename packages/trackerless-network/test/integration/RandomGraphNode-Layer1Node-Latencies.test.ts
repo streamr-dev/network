@@ -84,11 +84,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         await Promise.all(range(4).map(async (i) => {
             await layer1Nodes[i].joinDht([entrypointDescriptor])
         }))
-        await Promise.all(range(4).map((i) => {
-            return waitForCondition(() => {
-                return graphNodes[i].getTargetNeighborIds().length >= 4
-            }, 15000, 2000)
-        }))
+        await waitForCondition(() => range(4).every((i) => graphNodes[i].getTargetNeighborIds().length >= 4), 15000, 1000)
         range(4).forEach((i) => {
             expect(graphNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)
             expect(graphNodes[i].getTargetNeighborIds().length).toBeGreaterThanOrEqual(4)
