@@ -20,9 +20,9 @@ describe('StreamrClient', () => {
     it('getPeerDescriptor', async () => {
         const descriptor = await client.getPeerDescriptor()
         expect(descriptor).toMatchObject({
-            id: expect.toBeString(),
+            nodeId: expect.toBeString(),
             type: 'nodejs',
         })
-        expect(descriptor.id).toEqual(await client.getNodeId())
+        expect(descriptor.nodeId).toEqual(await client.getNodeId())
     }, 30 * 1000)
 })

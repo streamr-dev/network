@@ -1,5 +1,5 @@
-import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import EventEmitter from 'eventemitter3'
+import { DhtAddress } from '../../identifiers'
 
 export class ContactState<C> {
     public contacted = false
@@ -16,27 +16,28 @@ export interface Events<C> {
     newContact: (newContact: C, closestContacts: C[]) => void
 }
 
-export class ContactList<C extends { getPeerId: () => PeerID }> extends EventEmitter<Events<C>> {
+export class ContactList<C extends { getNodeId: () => DhtAddress }> extends EventEmitter<Events<C>> {
 
-    protected contactsById: Map<PeerIDKey, ContactState<C>> = new Map()
-    protected contactIds: PeerID[] = []
-    protected ownId: PeerID
+    protected contactsById: Map<DhtAddress, ContactState<C>> = new Map()
+    // TODO move this to SortedContactList
+    protected contactIds: DhtAddress[] = []
+    protected localNodeId: DhtAddress
     protected maxSize: number
     protected defaultContactQueryLimit
 
     constructor(
-        ownId: PeerID,
+        localNodeId: DhtAddress,
         maxSize: number,
         defaultContactQueryLimit = 20
     ) {
         super()
-        this.ownId = ownId
+        this.localNodeId = localNodeId
         this.maxSize = maxSize
         this.defaultContactQueryLimit = defaultContactQueryLimit
     }
 
-    public getContact(id: PeerID): ContactState<C> | undefined {
-        return this.contactsById.get(id.toKey())
+    public getContact(id: DhtAddress): ContactState<C> | undefined {
+        return this.contactsById.get(id)
     }
 
     public getSize(): number {

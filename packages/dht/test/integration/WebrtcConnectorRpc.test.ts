@@ -2,32 +2,27 @@ import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/prot
 import { WebrtcConnectorRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import {
     IceCandidate,
-    NodeType,
-    PeerDescriptor,
     RtcAnswer,
     RtcOffer,
     WebrtcConnectionRequest
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
-import { generateId } from '../utils/utils'
+import { createMockPeerDescriptor } from '../utils/utils'
 import { IWebrtcConnectorRpc } from '../../src/proto/packages/dht/protos/DhtRpc.server'
 import { waitForCondition } from '@streamr/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('WebRTC rpc messages', () => {
-    let rpcCommunicator1: RpcCommunicator
-    let rpcCommunicator2: RpcCommunicator
-    let client: ProtoRpcClient<WebrtcConnectorRpcClient>
 
+    let rpcCommunicator1: RpcCommunicator<DhtCallContext>
+    let rpcCommunicator2: RpcCommunicator<DhtCallContext>
+    let client: ProtoRpcClient<WebrtcConnectorRpcClient>
     let requestConnectionCounter: number
     let rtcOfferCounter: number
     let rtcAnswerCounter: number
     let iceCandidateCounter: number
-
-    const targetDescriptor: PeerDescriptor = {
-        kademliaId: generateId('peer'),
-        type: NodeType.NODEJS
-    }
+    const targetDescriptor = createMockPeerDescriptor()
 
     beforeEach(() => {
         requestConnectionCounter = 0

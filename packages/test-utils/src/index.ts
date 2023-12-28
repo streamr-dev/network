@@ -276,7 +276,7 @@ export class KeyServer {
 export async function fetchPrivateKeyWithGas(): Promise<string> {
     let response
     try {
-        response = await fetch(`http://localhost:${KeyServer.KEY_SERVER_PORT}/key`, {
+        response = await fetch(`http://127.0.0.1:${KeyServer.KEY_SERVER_PORT}/key`, {
             timeout: 5 * 1000
         })
     } catch (_e) {
@@ -285,7 +285,7 @@ export async function fetchPrivateKeyWithGas(): Promise<string> {
         } catch (_e2) {
             // no-op
         } finally {
-            response = await fetch(`http://localhost:${KeyServer.KEY_SERVER_PORT}/key`, {
+            response = await fetch(`http://127.0.0.1:${KeyServer.KEY_SERVER_PORT}/key`, {
                 timeout: 5 * 1000
             })
         }
@@ -336,10 +336,21 @@ export const startTestServer = async (
     await once(server, 'listening')
     const port = (server.address() as AddressInfo).port
     return {
-        url: `http://localhost:${port}`,
+        url: `http://127.0.0.1:${port}`,
         stop: async () => {
             server.close()
             await once(server, 'close')
         }
     }
 }
+
+// Get property names which have a Function-typed value i.e. a method
+type MethodNames<T> = {
+    // undefined extends T[K] to handle optional properties
+    [K in keyof T]: (
+        (undefined extends T[K] ? never : T[K]) extends (...args: any[]) => any ? K : never
+    )
+}[keyof T]
+
+// Pick only methods of T
+export type Methods<T> = Pick<T, MethodNames<T>>

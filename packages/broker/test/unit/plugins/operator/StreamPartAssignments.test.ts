@@ -1,16 +1,16 @@
-import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
-import EventEmitter3 from 'eventemitter3'
-import { OperatorFleetStateEvents } from '../../../../src/plugins/operator/OperatorFleetState'
-import { MaintainTopologyHelperEvents } from '../../../../src/plugins/operator/MaintainTopologyHelper'
+import { DhtAddress } from '@streamr/dht'
+import { StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { eventsWithArgsToArray } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
-import { StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
+import EventEmitter3 from 'eventemitter3'
 import range from 'lodash/range'
-import { NodeID } from '@streamr/trackerless-network'
+import { MaintainTopologyHelperEvents } from '../../../../src/plugins/operator/MaintainTopologyHelper'
+import { OperatorFleetStateEvents } from '../../../../src/plugins/operator/OperatorFleetState'
+import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
 
-const MY_NODE_ID = '0x0000' as NodeID
-const N1 = '0x1111' as NodeID
-const N2 = '0x2222' as NodeID
+const MY_NODE_ID = '0x0000' as DhtAddress
+const N1 = '0x1111' as DhtAddress
+const N2 = '0x2222' as DhtAddress
 const S1 = toStreamID('S1')
 const S2 = toStreamID('S2')
 const S3 = toStreamID('S3')

@@ -1,37 +1,38 @@
-import { RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { Logger, areEqualBinaries } from '@streamr/utils'
 import { v4 } from 'uuid'
 import {
-    areEqualPeerDescriptors,
     getNodeIdFromPeerDescriptor
 } from '../../helpers/peerIdFromPeerDescriptor'
-import { IRouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { Remote } from '../contact/Remote'
-import { Logger } from '@streamr/utils'
+import { RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { RouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { RpcRemote } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
 
 const logger = new Logger(module)
 
-export class RouterRpcRemote extends Remote<IRouterRpcClient> {
+export class RouterRpcRemote extends RpcRemote<RouterRpcClient> {
 
     async routeMessage(params: RouteMessageWrapper): Promise<boolean> {
         const message: RouteMessageWrapper = {
-            destinationPeer: params.destinationPeer,
+            target: params.target,
             sourcePeer: params.sourcePeer,
             message: params.message,
             requestId: params.requestId ?? v4(),
             reachableThrough: params.reachableThrough ?? [],
-            routingPath: params.routingPath
+            routingPath: params.routingPath,
+            parallelRootNodeIds: params.parallelRootNodeIds
         }
-        const options = this.formDhtRpcOptions()
+        const options = this.formDhtRpcOptions({
+            connect: false
+        })
         try {
             const ack = await this.getClient().routeMessage(message, options)
             // Success signal if sent to destination and error includes duplicate
-            if (
-                areEqualPeerDescriptors(params.destinationPeer!, this.getPeerDescriptor())
-                && ack.error.includes('duplicate')
+            if (ack.error === RouteMessageError.DUPLICATE
+                && areEqualBinaries(params.target, this.getPeerDescriptor().nodeId)
             ) {
                 return true
-            } else if (ack.error.length > 0) {
+            } else if (ack.error !== undefined) {
                 return false
             }
         } catch (err) {
@@ -39,7 +40,8 @@ export class RouterRpcRemote extends Remote<IRouterRpcClient> {
             const fromNode = previousPeer
                 ? getNodeIdFromPeerDescriptor(previousPeer)
                 : getNodeIdFromPeerDescriptor(params.sourcePeer!)
-            logger.trace(`Failed to send routeMessage from ${fromNode} to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`)
+            const toNode = getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
+            logger.trace(`Failed to send routeMessage from ${fromNode} to ${toNode} with: ${err}`)
             return false
         }
         return true
@@ -47,17 +49,20 @@ export class RouterRpcRemote extends Remote<IRouterRpcClient> {
 
     async forwardMessage(params: RouteMessageWrapper): Promise<boolean> {
         const message: RouteMessageWrapper = {
-            destinationPeer: params.destinationPeer,
+            target: params.target,
             sourcePeer: params.sourcePeer,
             message: params.message,
             requestId: params.requestId ?? v4(),
             reachableThrough: params.reachableThrough ?? [],
-            routingPath: params.routingPath
+            routingPath: params.routingPath,
+            parallelRootNodeIds: params.parallelRootNodeIds
         }
-        const options = this.formDhtRpcOptions()
+        const options = this.formDhtRpcOptions({
+            connect: false
+        })
         try {
             const ack = await this.getClient().forwardMessage(message, options)
-            if (ack.error.length > 0) {
+            if (ack.error !== undefined) {
                 return false
             }
         } catch (err) {
@@ -65,9 +70,8 @@ export class RouterRpcRemote extends Remote<IRouterRpcClient> {
             const fromNode = previousPeer
                 ? getNodeIdFromPeerDescriptor(previousPeer)
                 : getNodeIdFromPeerDescriptor(params.sourcePeer!)
-            logger.trace(
-                `Failed to send forwardMessage from ${fromNode} to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} with: ${err}`
-            )
+            const toNode = getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
+            logger.trace(`Failed to send forwardMessage from ${fromNode} to ${toNode} with: ${err}`)
             return false
         }
         return true

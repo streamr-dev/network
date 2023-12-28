@@ -1,9 +1,10 @@
-import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { ProtoRpcClient } from '@streamr/proto-rpc'
-import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
-import { ServiceID } from '../../types/ServiceID'
+import type { ServiceInfo } from '@protobuf-ts/runtime-rpc'
+import { ClassType, ClientTransport, ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import { ConnectionType } from '../../connection/IConnection'
 import { expectedConnectionType } from '../../helpers/Connectivity'
+import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
+import { DhtCallContext } from '../../rpc-protocol/DhtCallContext' 
 
 // Should connect directly to the server, timeout can be low
 const WEBSOCKET_CLIENT_TIMEOUT = 5000
@@ -15,7 +16,7 @@ const WEBRTC_TIMEOUT = 15000
 // default timeout for existing connections
 export const EXISTING_CONNECTION_TIMEOUT = 5000
 
-const getRpcTimeout = (localPeerDescriptor: PeerDescriptor, remotePeerDescriptor: PeerDescriptor): number => {
+const getTimeout = (localPeerDescriptor: PeerDescriptor, remotePeerDescriptor: PeerDescriptor): number => {
     const connectionType = expectedConnectionType(localPeerDescriptor, remotePeerDescriptor)
     if (connectionType === ConnectionType.WEBSOCKET_CLIENT) {
         return WEBSOCKET_CLIENT_TIMEOUT
@@ -27,25 +28,25 @@ const getRpcTimeout = (localPeerDescriptor: PeerDescriptor, remotePeerDescriptor
     return WEBRTC_TIMEOUT
 }
 
-export abstract class Remote<T> {
+export abstract class RpcRemote<T extends ServiceInfo & ClassType> {
 
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly remotePeerDescriptor: PeerDescriptor
-    private readonly serviceId: ServiceID
     private readonly client: ProtoRpcClient<T>
-    private readonly rpcTimeout?: number
+    private readonly timeout?: number
+
     constructor(
         localPeerDescriptor: PeerDescriptor,
         remotePeerDescriptor: PeerDescriptor,
-        serviceId: ServiceID,
-        client: ProtoRpcClient<T>,
-        rpcTimeout?: number
+        rpcCommunicator: RpcCommunicator<DhtCallContext>,
+        // eslint-disable-next-line @typescript-eslint/prefer-function-type
+        clientClass: { new (clientTransport: ClientTransport): T },
+        timeout?: number
     ) {
         this.localPeerDescriptor = localPeerDescriptor
         this.remotePeerDescriptor = remotePeerDescriptor
-        this.client = client
-        this.serviceId = serviceId
-        this.rpcTimeout = rpcTimeout
+        this.client = toProtoRpcClient(new clientClass(rpcCommunicator.getRpcClientTransport()))
+        this.timeout = timeout
     }
 
     getPeerDescriptor(): PeerDescriptor {
@@ -56,10 +57,6 @@ export abstract class Remote<T> {
         return this.localPeerDescriptor
     }
 
-    getServiceId(): string {
-        return this.serviceId
-    }
-
     getClient(): ProtoRpcClient<T> {
         return this.client
     }
@@ -68,7 +65,7 @@ export abstract class Remote<T> {
         return {
             sourceDescriptor: this.localPeerDescriptor,
             targetDescriptor: this.remotePeerDescriptor,
-            timeout: this.rpcTimeout ?? getRpcTimeout(this.localPeerDescriptor, this.remotePeerDescriptor),
+            timeout: this.timeout ?? getTimeout(this.localPeerDescriptor, this.remotePeerDescriptor),
             ...opts
         }
     }

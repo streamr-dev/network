@@ -89,7 +89,7 @@ The only information they will need from you is your address. Please do not enga
             "controlLayer": {
                 "entryPoints": [
                     {
-                        "id": "e1",
+                        "nodeId": "e1",
                         "websocket": {
                             "host": "entrypoint-1.streamr.network",
                             "port": 40401,
@@ -97,7 +97,7 @@ The only information they will need from you is your address. Please do not enga
                         }
                     },
                     {
-                        "id": "e2",
+                        "nodeId": "e2",
                         "websocket": {
                             "host": "entrypoint-2.streamr.network",
                             "port": 40401,
@@ -111,15 +111,6 @@ The only information they will need from you is your address. Please do not enga
             "streamRegistryChainAddress": "0x4F0779292bd0aB33B9EBC1DBE8e0868f3940E3F2",
             "streamStorageRegistryChainAddress": "0xA5a2298c9b48C08DaBF5D76727620d898FD2BEc1",
             "storageNodeRegistryChainAddress": "0xE6D449A7Ef200C0e50418c56F84079B9fe625199",
-            "mainChainRPCs": {
-                "name": "mumbai",
-                "chainId": 80001,
-                "rpcs": [
-                    {
-                        "url": "https://rpc-mumbai.maticvigil.com"
-                    }
-                ]
-            },
             "streamRegistryChainRPCs": {
                 "name": "mumbai",
                 "chainId": 80001,
