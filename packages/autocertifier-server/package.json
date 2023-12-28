@@ -26,7 +26,7 @@
     "test-integration": "jest test/integration"
   },
   "dependencies": {
-    "@aws-sdk/client-route-53": "^3.454.0",
+    "@aws-sdk/client-route-53": "^3.481.0",
     "@streamr/autocertifier-client": "100.0.0-pretestnet.4",
     "@streamr/dht": "100.0.0-pretestnet.4",
     "@streamr/utils": "100.0.0-pretestnet.4",
@@ -47,6 +47,6 @@
     "@types/request": "^2.48.8",
     "@types/uuid": "^9.0.7",
     "request": "^2.88.2",
-    "ts-node": "^10.9.1"
+    "ts-node": "^10.9.2"
   }
 }
