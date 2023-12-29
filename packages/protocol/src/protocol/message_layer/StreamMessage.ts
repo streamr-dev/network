@@ -20,7 +20,8 @@ export enum StreamMessageType {
 }
 
 export enum ContentType {
-    JSON = 0
+    JSON = 0,
+    BINARY = 1
 }
 
 export enum EncryptionType {
@@ -34,7 +35,7 @@ export interface StreamMessageOptions {
     prevMsgRef?: MessageRef | null
     content: Uint8Array
     messageType?: StreamMessageType
-    contentType?: ContentType
+    contentType: ContentType
     encryptionType?: EncryptionType
     groupKeyId?: string | null
     newGroupKey?: EncryptedGroupKey | null
@@ -88,7 +89,7 @@ export default class StreamMessage {
         prevMsgRef = null,
         content,
         messageType = StreamMessageType.MESSAGE,
-        contentType = ContentType.JSON,
+        contentType,
         encryptionType = EncryptionType.NONE,
         groupKeyId = null,
         newGroupKey = null,
@@ -174,8 +175,9 @@ export default class StreamMessage {
      */
     getParsedContent(): unknown {
         if (this.parsedContent == null) {
-            // Don't try to parse encrypted messages
-            if (this.messageType === StreamMessageType.MESSAGE && this.encryptionType !== EncryptionType.NONE) {
+            // Don't try to parse encrypted or binary type messages
+            if (this.contentType === ContentType.BINARY 
+                || (this.messageType === StreamMessageType.MESSAGE && this.encryptionType !== EncryptionType.NONE)) {
                 return this.serializedContent
             }
             if (this.contentType === ContentType.JSON) {

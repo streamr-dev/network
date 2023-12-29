@@ -1,4 +1,5 @@
 import {
+    ContentType,
     EncryptedGroupKey,
     EncryptionType,
     GroupKeyRequest,
@@ -120,7 +121,8 @@ export class PublisherKeyExchange {
             serializedContent: utf8ToBinary(JSON.stringify(responseContent.toArray())),
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             encryptionType: EncryptionType.RSA,
-            authentication: this.authentication
+            authentication: this.authentication,
+            contentType: ContentType.JSON,
         })
         return response
     }

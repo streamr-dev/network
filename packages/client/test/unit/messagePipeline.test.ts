@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
-import { EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { ContentType, EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
 import { collect, toEthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'
@@ -36,6 +36,7 @@ describe('messagePipeline', () => {
         serializedContent?: Uint8Array
         encryptionType?: EncryptionType
         groupKeyId?: string
+        contentType?: ContentType
     } = {}): Promise<StreamMessage> => {
         const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         return createSignedMessage({
@@ -47,8 +48,9 @@ describe('messagePipeline', () => {
                 toEthereumAddress(publisher.address),
                 'mock-msgChainId'
             ),
-            serializedContent: utf8ToBinary(JSON.stringify(CONTENT)),
+            serializedContent: opts.contentType === ContentType.BINARY ? opts.serializedContent! : utf8ToBinary(JSON.stringify(CONTENT)),
             authentication: createPrivateKeyAuthentication(publisher.privateKey, undefined as any),
+            contentType: opts.contentType ?? ContentType.JSON,
             ...opts
         })
     }
@@ -114,6 +116,19 @@ describe('messagePipeline', () => {
         const output = await collect(pipeline)
         expect(output).toHaveLength(1)
         expect(output[0].getParsedContent()).toEqual(CONTENT)
+    })
+
+    it('binary content', async () => {
+        const content = new Uint8Array([1, 2, 3])
+        const msg = await createMessage({
+            serializedContent: content,
+            contentType: ContentType.BINARY
+        })
+        await pipeline.push(msg)
+        pipeline.endWrite()
+        const output = await collect(pipeline)
+        expect(output).toHaveLength(1)
+        expect(output[0].getParsedContent()).toEqual(content)
     })
 
     it('error: invalid signature', async () => {

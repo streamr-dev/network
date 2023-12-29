@@ -1,7 +1,16 @@
 /* eslint-disable no-console */
 
 import { DhtNode, LatencyType, Simulator, getNodeIdFromPeerDescriptor, getRandomRegion } from '@streamr/dht'
-import { MessageID, StreamMessage, StreamMessageType, StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
+import { 
+    ContentType,
+    MessageID,
+    StreamMessage,
+    StreamMessageType,
+    StreamPartID,
+    StreamPartIDUtils,
+    toStreamID,
+    toStreamPartID
+} from '@streamr/protocol'
 import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import fs from 'fs'
 import { PeerDescriptor } from '@streamr/dht'
@@ -83,6 +92,7 @@ const measureJoiningTime = async () => {
                 hello: 'world'
             })),
             messageType: StreamMessageType.MESSAGE,
+            contentType: ContentType.JSON,
             signature: hexToBinary('0x1234'),
         })
         streamParts.get(stream)!.broadcast(streamMessage)
