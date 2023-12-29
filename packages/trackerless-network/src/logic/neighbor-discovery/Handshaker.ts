@@ -91,7 +91,11 @@ export class Handshaker {
         return targetNeighbors.map((neighbor) => this.createRpcRemote(neighbor.getPeerDescriptor()))
     }
 
-    private async doParallelHandshakes(targetOne: HandshakeRpcRemote, targetTwo: HandshakeRpcRemote, excludedIds: DhtAddress[]): Promise<DhtAddress[]> {
+    private async doParallelHandshakes(
+        targetOne: HandshakeRpcRemote,
+        targetTwo: HandshakeRpcRemote,
+        excludedIds: DhtAddress[]
+    ): Promise<DhtAddress[]> {
         const results = await Promise.allSettled([
             this.handshakeWithTarget(targetOne, getNodeIdFromPeerDescriptor(targetTwo.getPeerDescriptor())),
             this.handshakeWithTarget(targetTwo, getNodeIdFromPeerDescriptor(targetOne.getPeerDescriptor()))
