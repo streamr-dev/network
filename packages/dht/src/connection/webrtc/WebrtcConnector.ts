@@ -159,7 +159,7 @@ export class WebrtcConnector {
 
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
 
-        this.ongoingConnectAttempts.set(getNodeIdFromPeerDescriptor(targetPeerDescriptor), managedConnection)
+        this.ongoingConnectAttempts.set(targetNodeId, managedConnection)
 
         const delFunc = () => {
             this.ongoingConnectAttempts.delete(nodeId)
