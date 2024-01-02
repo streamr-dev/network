@@ -94,7 +94,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 || this.config.proxyConnectionRpcLocal?.getConnection(sourceId )?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
-                    this.config.layer1Node.removeContact(contact.getPeerDescriptor())
+                    this.config.layer1Node.removeContact(sourceId)
                     this.config.targetNeighbors.remove(sourceId)
                     this.config.nearbyNodeView.remove(sourceId)
                     this.config.connectionLocker.unlockConnection(contact.getPeerDescriptor(), this.config.streamPartId)

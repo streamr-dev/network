@@ -17,7 +17,7 @@ interface DhtNodeRpcLocalConfig {
     peerDiscoveryQueryBatchSize: number
     getClosestPeersTo: (nodeId: DhtAddress, limit: number) => PeerDescriptor[]
     addNewContact: (contact: PeerDescriptor) => void
-    removeContact: (contact: PeerDescriptor) => void
+    removeContact: (nodeId: DhtAddress) => void
 }
 
 const logger = new Logger(module)
@@ -53,8 +53,9 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
     async leaveNotice(context: ServerCallContext): Promise<Empty> {
         // TODO check signature??
         const sender = (context as DhtCallContext).incomingSourceDescriptor!
-        logger.trace('received leave notice: ' + getNodeIdFromPeerDescriptor(sender))
-        this.config.removeContact(sender)
+        const senderNodeId = getNodeIdFromPeerDescriptor(sender)
+        logger.trace('received leave notice: ' + senderNodeId)
+        this.config.removeContact(senderNodeId)
         return {}
     }
 }
