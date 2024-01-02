@@ -28,7 +28,7 @@ export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
     }
 
     removeNode(nodeId: DhtAddress): void {
-        this.temporaryNodes.removeById(nodeId)
+        this.temporaryNodes.remove(nodeId)
     }
 
     async openConnection(

@@ -119,7 +119,7 @@ describe('Handshakes', () => {
             )
         )
         expect(res).toEqual(true)
-        expect(targetNeighbors.hasNodeById(getNodeIdFromPeerDescriptor(peerDescriptor1))).toEqual(true)
+        expect(targetNeighbors.has(getNodeIdFromPeerDescriptor(peerDescriptor1))).toEqual(true)
     })
 
     it('Handshake accepted', async () => {
@@ -134,7 +134,7 @@ describe('Handshakes', () => {
             )
         )
         expect(res).toEqual(true)
-        expect(targetNeighbors.hasNodeById(getNodeIdFromPeerDescriptor(peerDescriptor1))).toEqual(true)
+        expect(targetNeighbors.has(getNodeIdFromPeerDescriptor(peerDescriptor1))).toEqual(true)
     })
 
     it('Handshake rejected', async () => {
@@ -149,7 +149,7 @@ describe('Handshakes', () => {
             )
         )
         expect(res).toEqual(false)
-        expect(targetNeighbors.hasNodeById(getNodeIdFromPeerDescriptor(peerDescriptor1))).toEqual(false)
+        expect(targetNeighbors.has(getNodeIdFromPeerDescriptor(peerDescriptor1))).toEqual(false)
     })
 
     it('Handshake with Interleaving', async () => {
@@ -165,7 +165,7 @@ describe('Handshakes', () => {
             )
         )
         expect(res).toEqual(true)
-        expect(targetNeighbors.hasNodeById(getNodeIdFromPeerDescriptor(peerDescriptor1))).toEqual(true)
-        expect(targetNeighbors.hasNodeById(getNodeIdFromPeerDescriptor(peerDescriptor3))).toEqual(true)
+        expect(targetNeighbors.has(getNodeIdFromPeerDescriptor(peerDescriptor1))).toEqual(true)
+        expect(targetNeighbors.has(getNodeIdFromPeerDescriptor(peerDescriptor3))).toEqual(true)
     })
 })

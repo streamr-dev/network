@@ -39,11 +39,11 @@ export class NodeList extends EventEmitter<Events> {
         }
     }
 
-    removeById(nodeId: DhtAddress): void {
+    remove(nodeId: DhtAddress): void {
         this.nodes.delete(nodeId)
     }
 
-    hasNodeById(nodeId: DhtAddress): boolean {
+    has(nodeId: DhtAddress): boolean {
         return this.nodes.has(nodeId)
     }
 

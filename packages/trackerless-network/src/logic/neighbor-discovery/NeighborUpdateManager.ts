@@ -49,7 +49,7 @@ export class NeighborUpdateManager {
             const res = await this.createRemote(neighbor.getPeerDescriptor()).updateNeighbors(this.config.streamPartId, neighborDescriptors)
             if (res.removeMe) {
                 const nodeId = getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor())
-                this.config.targetNeighbors.removeById(nodeId)
+                this.config.targetNeighbors.remove(nodeId)
                 this.config.neighborFinder.start([nodeId])
             }
         }))

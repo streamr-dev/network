@@ -53,7 +53,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
         const senderNodeId = getNodeIdFromPeerDescriptor(senderDescriptor)
         if (this.config.ongoingInterleaves.has(senderNodeId)) {
             return this.rejectHandshake(request)
-        } else if (this.config.targetNeighbors.hasNodeById(senderNodeId)
+        } else if (this.config.targetNeighbors.has(senderNodeId)
             || this.config.ongoingHandshakes.has(senderNodeId)
         ) {
             return this.acceptHandshake(request, senderDescriptor)
@@ -108,7 +108,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
                 // and unlock the connection
                 // If response is not accepted, keep the last node as a neighbor
                 if (response.accepted) {
-                    this.config.targetNeighbors.removeById(getNodeIdFromPeerDescriptor(lastPeerDescriptor!))
+                    this.config.targetNeighbors.remove(getNodeIdFromPeerDescriptor(lastPeerDescriptor!))
                     this.config.connectionLocker.unlockConnection(lastPeerDescriptor!, this.config.streamPartId)
                 }
                 return
@@ -132,9 +132,9 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
         const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
         try {
             await this.config.handshakeWithInterleaving(message.interleaveTargetDescriptor!, senderId)
-            if (this.config.targetNeighbors.hasNodeById(senderId)) {
+            if (this.config.targetNeighbors.has(senderId)) {
                 this.config.connectionLocker.unlockConnection(senderPeerDescriptor, this.config.streamPartId)
-                this.config.targetNeighbors.removeById(senderId)
+                this.config.targetNeighbors.remove(senderId)
             }
             return { accepted: true }
         } catch (err) {
