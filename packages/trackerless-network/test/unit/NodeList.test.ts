@@ -67,12 +67,6 @@ describe('NodeList', () => {
         expect(nodeList.hasNode(newDescriptor2)).toEqual(false)
     })
 
-    it('remove', () => {
-        const toRemove = nodeList.getFirst([])
-        nodeList.remove(toRemove!.getPeerDescriptor())
-        expect(nodeList.hasNode(toRemove!.getPeerDescriptor())).toEqual(false)
-    })
-
     it('removeById', () => {
         const toRemove = nodeList.getFirst([])
         const nodeId = getNodeIdFromPeerDescriptor(toRemove!.getPeerDescriptor())

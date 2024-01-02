@@ -108,7 +108,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
                 // and unlock the connection
                 // If response is not accepted, keep the last node as a neighbor
                 if (response.accepted) {
-                    this.config.targetNeighbors.remove(last.getPeerDescriptor())
+                    this.config.targetNeighbors.removeById(getNodeIdFromPeerDescriptor(lastPeerDescriptor!))
                     this.config.connectionLocker.unlockConnection(lastPeerDescriptor!, this.config.streamPartId)
                 }
                 return
@@ -134,7 +134,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
             await this.config.handshakeWithInterleaving(message.interleaveTargetDescriptor!, senderId)
             if (this.config.targetNeighbors.hasNodeById(senderId)) {
                 this.config.connectionLocker.unlockConnection(senderPeerDescriptor, this.config.streamPartId)
-                this.config.targetNeighbors.remove(senderPeerDescriptor)
+                this.config.targetNeighbors.removeById(senderId)
             }
             return { accepted: true }
         } catch (err) {

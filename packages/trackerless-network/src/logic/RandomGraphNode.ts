@@ -94,9 +94,10 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 || this.config.proxyConnectionRpcLocal?.getConnection(sourceId )?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
+                    const nodeId = getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())
                     this.config.layer1Node.removeContact(contact.getPeerDescriptor())
-                    this.config.targetNeighbors.remove(contact.getPeerDescriptor())
-                    this.config.nearbyNodeView.remove(contact.getPeerDescriptor())
+                    this.config.targetNeighbors.removeById(nodeId)
+                    this.config.nearbyNodeView.removeById(nodeId)
                     this.config.connectionLocker.unlockConnection(contact.getPeerDescriptor(), this.config.streamPartId)
                     this.config.neighborFinder.start([sourceId])
                     this.config.proxyConnectionRpcLocal?.removeConnection(sourceId)
@@ -258,10 +259,11 @@ export class RandomGraphNode extends EventEmitter<Events> {
 
     private onNodeDisconnected(peerDescriptor: PeerDescriptor): void {
         if (this.config.targetNeighbors.hasNode(peerDescriptor)) {
-            this.config.targetNeighbors.remove(peerDescriptor)
+            const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+            this.config.targetNeighbors.removeById(nodeId)
             this.config.connectionLocker.unlockConnection(peerDescriptor, this.config.streamPartId)
-            this.config.neighborFinder.start([getNodeIdFromPeerDescriptor(peerDescriptor)])
-            this.config.temporaryConnectionRpcLocal.removeNode(peerDescriptor)
+            this.config.neighborFinder.start([nodeId])
+            this.config.temporaryConnectionRpcLocal.removeNode(nodeId)
         }
     }
 

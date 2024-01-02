@@ -39,10 +39,6 @@ export class NodeList extends EventEmitter<Events> {
         }
     }
 
-    remove(peerDescriptor: PeerDescriptor): void {
-        this.nodes.delete(getNodeIdFromPeerDescriptor(peerDescriptor))
-    }
-
     removeById(nodeId: DhtAddress): void {
         this.nodes.delete(nodeId)
     }
