@@ -5,8 +5,7 @@ import { DuplicateDetector } from '../dht/routing/DuplicateDetector'
 import * as Err from '../helpers/errors'
 import {
     areEqualPeerDescriptors,
-    getNodeIdFromPeerDescriptor,
-    peerIdFromPeerDescriptor
+    getNodeIdFromPeerDescriptor
 } from '../helpers/peerIdFromPeerDescriptor'
 import {
     DisconnectMode,
@@ -30,6 +29,7 @@ import { WEBRTC_CLEANUP } from './webrtc/NodeWebrtcConnection'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ConnectionLockRpcLocal } from './ConnectionLockRpcLocal'
 import { DhtAddress } from '../identifiers'
+import { getOfferer } from '../helpers/offering'
 
 export interface ConnectionManagerConfig {
     maxConnections?: number
@@ -403,8 +403,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const nodeId = getNodeIdFromPeerDescriptor(newConnection.getPeerDescriptor()!)
         logger.trace(nodeId + ' acceptIncomingConnection()')
         if (this.connections.has(nodeId)) {
-            const newPeerID = peerIdFromPeerDescriptor(newConnection.getPeerDescriptor()!)
-            if (newPeerID.hasSmallerHashThan(peerIdFromPeerDescriptor(this.getLocalPeerDescriptor()))) {
+            if (getOfferer(getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor()), nodeId) === 'remote') {
                 logger.trace(nodeId + ' acceptIncomingConnection() replace current connection')
                 // replace the current connection
                 const oldConnection = this.connections.get(nodeId)!

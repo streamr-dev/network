@@ -20,7 +20,7 @@ import { MockTransport } from '../utils/mock/Transport'
 import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
 import { Router } from '../../src/dht/routing/Router'
-import { ITransport } from '../../src/exports'
+import { ITransport } from '../../src/transport/ITransport'
 import { getDhtAddressFromRaw } from '../../src/identifiers'
 
 const createMockRouter = (error?: RouteMessageError): Partial<Router> => {

@@ -4,7 +4,7 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { Message, MessageType } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { getNodeIdFromPeerDescriptor } from '../../src/exports'
+import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 
 const MESSAGE_ID = 'mock-message-id'
 

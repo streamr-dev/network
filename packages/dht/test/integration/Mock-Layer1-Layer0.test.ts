@@ -2,7 +2,7 @@ import { Logger } from '@streamr/utils'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils/utils'
-import { PeerID } from '../../src/exports'
+import { PeerID } from '../../src/helpers/PeerID'
 import { getDhtAddressFromRaw } from '../../src/identifiers'
 
 const logger = new Logger(module)

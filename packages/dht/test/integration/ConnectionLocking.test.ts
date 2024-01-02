@@ -3,10 +3,11 @@ import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
-import { ITransport, getNodeIdFromPeerDescriptor } from '../../src/exports'
+import { ITransport } from '../../src/transport/ITransport'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { getRandomRegion } from '../../dist/src/connection/simulator/pings'
 import { createMockPeerDescriptor } from '../utils/utils'
+import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 
 const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport: ITransport) => {
     return new ConnectionManager({
