@@ -1,7 +1,6 @@
 import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 import { EventEmitter } from 'eventemitter3'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
-import { PeerID } from '../helpers/PeerID'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
@@ -116,7 +115,17 @@ export type Events = TransportEvents & DhtNodeEvents
 export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string): PeerDescriptor => {
     let nodeId: DhtAddressRaw
     if (msg) {
-        nodeId = (peerId !== undefined) ? getRawFromDhtAddress(peerId as DhtAddress) : PeerID.fromIp(msg.host).value
+        if (peerId !== undefined) {
+            nodeId = getRawFromDhtAddress(peerId as DhtAddress)
+        } else {
+            nodeId = new Uint8Array(20)
+            const ipNum = msg.host.split('.').map((octet, index, array) => {
+                return parseInt(octet) * Math.pow(256, (array.length - index - 1))
+            }).reduce((prev, curr) => prev + curr)
+            const view = new DataView(nodeId.buffer)
+            view.setInt32(0, ipNum)
+            nodeId.set((new UUID()).value, 4)
+        }
     } else {
         nodeId = getRawFromDhtAddress(peerId! as DhtAddress)
     }
