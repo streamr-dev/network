@@ -181,7 +181,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         logger.trace(`Starting ConnectionManager...`)
         await this.connectorFacade.start(
             (connection: ManagedConnection) => this.onNewConnection(connection),
-            (peerDescriptor: PeerDescriptor) => this.hasConnection(getNodeIdFromPeerDescriptor(peerDescriptor)),
+            (nodeId: DhtAddress) => this.hasConnection(nodeId),
             this
         )
         // Garbage collection of connections
