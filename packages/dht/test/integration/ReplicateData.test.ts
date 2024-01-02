@@ -6,7 +6,7 @@ import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils/
 import { execSync } from 'child_process'
 import fs from 'fs'
 import { Logger } from '@streamr/utils'
-import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
 import { DhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress } from '../../src/identifiers'
@@ -130,8 +130,8 @@ describe('Replicate data from node to node in DHT', () => {
 
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
         await Promise.all(
-            nodes.map((node) => {
-                if (keyFromPeerDescriptor(node.getLocalPeerDescriptor()) != '0') {
+            nodes.map((node, i) => {
+                if (i !== 0) {
                     node.joinDht([entrypointDescriptor])
                 }
             })
