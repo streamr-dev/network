@@ -6,10 +6,9 @@ import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils/
 import { execSync } from 'child_process'
 import fs from 'fs'
 import { Logger } from '@streamr/utils'
-import { peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
-import { DhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress } from '../../src/identifiers'
+import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
 import { createMockDataEntry } from '../utils/mock/mockDataEntry'
 import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
 
@@ -125,7 +124,7 @@ describe('Replicate data from node to node in DHT', () => {
             }
 
             // eslint-disable-next-line max-len
-            logger.info(peerIdFromPeerDescriptor(contact.getPeerDescriptor()) + ' ' + node.getNodeId() + hasDataMarker)
+            logger.info(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()) + ' ' + node.getNodeId() + hasDataMarker)
         })
 
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
