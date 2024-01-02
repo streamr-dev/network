@@ -4,8 +4,7 @@ import { DataEntry, RecursiveOperationResponse, PeerDescriptor } from '../../pro
 import { Logger } from '@streamr/utils'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
-import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { DhtAddress } from '../../identifiers'
+import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 const logger = new Logger(module)
 

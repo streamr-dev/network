@@ -7,7 +7,7 @@ import { IWebsocketConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.s
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { ManagedConnection } from '../ManagedConnection'
 import { Empty } from '../../proto/google/protobuf/empty'
-import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { DhtAddress } from '../../identifiers'
 
 interface WebsocketConnectorRpcLocalConfig {

@@ -11,7 +11,6 @@ export { LockID } from './connection/ConnectionLockHandler'
 export { DefaultConnectorFacade } from './connection/ConnectorFacade'
 export { DhtRpcOptions } from './rpc-protocol/DhtRpcOptions'
 export { RpcRemote, EXISTING_CONNECTION_TIMEOUT } from './dht/contact/RpcRemote'
-export { areEqualPeerDescriptors } from './helpers/peerIdFromPeerDescriptor'
 export { IceServer } from './connection/webrtc/WebrtcConnector'
 export { DhtCallContext } from './rpc-protocol/DhtCallContext'
 export { ClientWebsocket } from './connection/websocket/ClientWebsocket'
@@ -19,5 +18,12 @@ export { ManagedConnection } from './connection/ManagedConnection'
 export { ConnectionType } from './connection/IConnection'
 export { PeerID } from './helpers/PeerID'
 export { ServiceID } from './types/ServiceID'
-export { DhtAddress, DhtAddressRaw, getDhtAddressFromRaw, getRawFromDhtAddress, createRandomDhtAddress } from './identifiers'
-export { getNodeIdFromPeerDescriptor } from './helpers/peerIdFromPeerDescriptor'
+export { 
+    DhtAddress,
+    DhtAddressRaw,
+    getDhtAddressFromRaw,
+    getRawFromDhtAddress,
+    createRandomDhtAddress,
+    areEqualPeerDescriptors,
+    getNodeIdFromPeerDescriptor
+} from './identifiers'

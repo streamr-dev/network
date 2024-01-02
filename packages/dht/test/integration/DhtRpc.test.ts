@@ -4,7 +4,7 @@ import { DhtNodeRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.cli
 import { ClosestPeersRequest, ClosestPeersResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { wait } from '@streamr/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('DhtRpc', () => {
