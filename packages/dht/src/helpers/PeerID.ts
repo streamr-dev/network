@@ -1,7 +1,6 @@
 import { BrandedString, binaryToHex } from '@streamr/utils'
 import { UUID } from './UUID'
 import { IllegalArguments } from './errors'
-import crypto from 'crypto'
 import { DhtAddress, getDhtAddressFromRaw } from '../identifiers'
 
 export type PeerIDKey = BrandedString<'PeerIDKey'>
@@ -82,16 +81,5 @@ export class PeerID {
 
     get value(): Uint8Array {
         return this.data
-    }
-
-    hasSmallerHashThan(other: PeerID): boolean {
-        const myId = this.toKey()
-        const theirId = other.toKey()
-        return PeerID.offeringHash(myId + ',' + theirId) < PeerID.offeringHash(theirId + ',' + myId)
-    }
-
-    private static offeringHash(idPair: string): number {
-        const buffer = crypto.createHash('md5').update(idPair).digest()
-        return buffer.readInt32LE(0)
     }
 }
