@@ -56,7 +56,7 @@ describe('NodeList', () => {
         }
         const newNode = createRemoteGraphNode(newDescriptor)
         nodeList.add(newNode)
-        expect(nodeList.hasNode(newDescriptor)).toEqual(true)
+        expect(nodeList.has(getNodeIdFromPeerDescriptor(newDescriptor))).toEqual(true)
 
         const newDescriptor2 = {
             nodeId: new Uint8Array([1, 2, 4]),
@@ -64,20 +64,14 @@ describe('NodeList', () => {
         }
         const newNode2 = createRemoteGraphNode(newDescriptor2)
         nodeList.add(newNode2)
-        expect(nodeList.hasNode(newDescriptor2)).toEqual(false)
+        expect(nodeList.has(getNodeIdFromPeerDescriptor(newDescriptor2))).toEqual(false)
     })
 
     it('remove', () => {
         const toRemove = nodeList.getFirst([])
-        nodeList.remove(toRemove!.getPeerDescriptor())
-        expect(nodeList.hasNode(toRemove!.getPeerDescriptor())).toEqual(false)
-    })
-
-    it('removeById', () => {
-        const toRemove = nodeList.getFirst([])
         const nodeId = getNodeIdFromPeerDescriptor(toRemove!.getPeerDescriptor())
-        nodeList.removeById(nodeId)
-        expect(nodeList.hasNode(toRemove!.getPeerDescriptor())).toEqual(false)
+        nodeList.remove(nodeId)
+        expect(nodeList.has(nodeId)).toEqual(false)
     })
 
     it('getFirst', () => {

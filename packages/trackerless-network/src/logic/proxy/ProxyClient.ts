@@ -222,7 +222,7 @@ export class ProxyClient extends EventEmitter<Events> {
 
     private removeConnection(nodeId: DhtAddress): void {
         this.connections.delete(nodeId)
-        this.targetNeighbors.removeById(nodeId)
+        this.targetNeighbors.remove(nodeId)
     }
 
     broadcast(msg: StreamMessage, previousNode?: DhtAddress): void {

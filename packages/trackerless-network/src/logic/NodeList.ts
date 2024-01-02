@@ -1,4 +1,4 @@
-import { DhtAddress, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { DhtAddress, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { sample } from 'lodash'
 import { DeliveryRpcRemote } from './DeliveryRpcRemote'
 import { EventEmitter } from 'eventemitter3'
@@ -39,19 +39,11 @@ export class NodeList extends EventEmitter<Events> {
         }
     }
 
-    remove(peerDescriptor: PeerDescriptor): void {
-        this.nodes.delete(getNodeIdFromPeerDescriptor(peerDescriptor))
-    }
-
-    removeById(nodeId: DhtAddress): void {
+    remove(nodeId: DhtAddress): void {
         this.nodes.delete(nodeId)
     }
 
-    hasNode(peerDescriptor: PeerDescriptor): boolean {
-        return this.nodes.has(getNodeIdFromPeerDescriptor(peerDescriptor))
-    }
-
-    hasNodeById(nodeId: DhtAddress): boolean {
+    has(nodeId: DhtAddress): boolean {
         return this.nodes.has(nodeId)
     }
 
