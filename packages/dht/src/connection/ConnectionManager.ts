@@ -181,7 +181,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         logger.trace(`Starting ConnectionManager...`)
         await this.connectorFacade.start(
             (connection: ManagedConnection) => this.onNewConnection(connection),
-            (peerDescriptor: PeerDescriptor) => this.hasConnection(peerDescriptor),
+            (peerDescriptor: PeerDescriptor) => this.hasConnection(getNodeIdFromPeerDescriptor(peerDescriptor)),
             this
         )
         // Garbage collection of connections
@@ -289,8 +289,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         }
     }
 
-    public getConnection(peerDescriptor: PeerDescriptor): ManagedConnection | undefined {
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+    public getConnection(nodeId: DhtAddress): ManagedConnection | undefined {
         return this.connections.get(nodeId)
     }
 
@@ -298,18 +297,15 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         return this.connectorFacade.getLocalPeerDescriptor()!
     }
 
-    public hasConnection(peerDescriptor: PeerDescriptor): boolean {
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+    public hasConnection(nodeId: DhtAddress): boolean {
         return this.connections.has(nodeId)
     }
 
-    public hasLocalLockedConnection(peerDescriptor: PeerDescriptor): boolean {
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+    public hasLocalLockedConnection(nodeId: DhtAddress): boolean {
         return this.locks.isLocalLocked(nodeId)
     }
 
-    public hasRemoteLockedConnection(peerDescriptor: PeerDescriptor): boolean {
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+    public hasRemoteLockedConnection(nodeId: DhtAddress): boolean {
         return this.locks.isRemoteLocked(nodeId)
     }
 
