@@ -115,7 +115,7 @@ export class Router {
         }
     }
 
-    public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE, excludedPeer?: PeerDescriptor): RouteMessageAck {
+    public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE, excludedPeer?: DhtAddress): RouteMessageAck {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
@@ -155,10 +155,10 @@ export class Router {
         }
     }
 
-    private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedNode?: PeerDescriptor): RoutingSession {
+    private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedNode?: DhtAddress): RoutingSession {
         const excludedNodeIds = new Set<DhtAddress>(routedMessage.routingPath.map((descriptor) => getNodeIdFromPeerDescriptor(descriptor)))
         if (excludedNode) {
-            excludedNodeIds.add(getNodeIdFromPeerDescriptor(excludedNode))
+            excludedNodeIds.add(excludedNode)
         }
         routedMessage.parallelRootNodeIds.forEach((nodeId) => {
             excludedNodeIds.add(nodeId as DhtAddress)

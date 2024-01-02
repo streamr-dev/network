@@ -77,7 +77,7 @@ export class RecursiveOperationManager {
     public async execute(
         targetId: DhtAddress,
         operation: RecursiveOperation,
-        excludedPeer?: PeerDescriptor,
+        excludedPeer?: DhtAddress,
         waitForCompletion = true
     ): Promise<RecursiveOperationResult> {
         if (this.stopped) {
@@ -171,7 +171,7 @@ export class RecursiveOperationManager {
         }
     }
 
-    private doRouteRequest(routedMessage: RouteMessageWrapper, excludedPeer?: PeerDescriptor): RouteMessageAck {
+    private doRouteRequest(routedMessage: RouteMessageWrapper, excludedPeer?: DhtAddress): RouteMessageAck {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }

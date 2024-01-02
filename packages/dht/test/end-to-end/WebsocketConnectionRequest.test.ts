@@ -62,8 +62,8 @@ describe('Websocket IConnection Requests', () => {
 
         await waitForCondition(() => { return (connected1 && connected2) })
 
-        expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getLocalPeerDescriptor())).toEqual(true)
-        expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getLocalPeerDescriptor())).toEqual(true)
+        expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getNodeId())).toEqual(true)
+        expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getNodeId())).toEqual(true)
 
     }, 10000)
 })

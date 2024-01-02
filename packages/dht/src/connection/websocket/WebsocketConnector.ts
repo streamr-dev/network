@@ -46,7 +46,7 @@ const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
 export interface WebsocketConnectorConfig {
     transport: ITransport
     onNewConnection: (connection: ManagedConnection) => boolean
-    hasConnection: (peerDescriptor: PeerDescriptor) => boolean
+    hasConnection: (nodeId: DhtAddress) => boolean
     portRange?: PortRange
     maxMessageSize?: number
     host?: string
@@ -90,12 +90,11 @@ export class WebsocketConnector {
     private registerLocalRpcMethods(config: WebsocketConnectorConfig) {
         const rpcLocal = new WebsocketConnectorRpcLocal({
             connect: (targetPeerDescriptor: PeerDescriptor) => this.connect(targetPeerDescriptor),
-            hasConnection: (targetPeerDescriptor: PeerDescriptor): boolean => {
-                const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
+            hasConnection: (nodeId: DhtAddress): boolean => {
                 if (this.connectingConnections.has(nodeId)
                     || this.connectingConnections.has(nodeId)
                     || this.ongoingConnectRequests.has(nodeId)
-                    || config.hasConnection(targetPeerDescriptor)
+                    || config.hasConnection(nodeId)
                 ) {
                     return true
                 } else {
