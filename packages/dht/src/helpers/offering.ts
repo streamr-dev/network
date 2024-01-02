@@ -1,8 +1,12 @@
 import crypto from 'crypto'
 import { DhtAddress } from '../identifiers'
 
-export const hasSmallerOfferingHashThan = (localNodeId: DhtAddress, remoteNodeId: DhtAddress): boolean => {
+type Offerer = 'local' | 'remote'
+
+export const getOfferer = (localNodeId: DhtAddress, remoteNodeId: DhtAddress): Offerer => {
     return getOfferingHash(localNodeId + ',' + remoteNodeId) < getOfferingHash(remoteNodeId + ',' + localNodeId)
+        ? 'local'
+        : 'remote'
 }
 
 const getOfferingHash = (idPair: string): number => {

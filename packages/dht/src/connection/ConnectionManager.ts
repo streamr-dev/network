@@ -29,7 +29,7 @@ import { WEBRTC_CLEANUP } from './webrtc/NodeWebrtcConnection'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ConnectionLockRpcLocal } from './ConnectionLockRpcLocal'
 import { DhtAddress } from '../identifiers'
-import { hasSmallerOfferingHashThan } from '../helpers/offering'
+import { getOfferer } from '../helpers/offering'
 
 export interface ConnectionManagerConfig {
     maxConnections?: number
@@ -407,7 +407,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const nodeId = getNodeIdFromPeerDescriptor(newConnection.getPeerDescriptor()!)
         logger.trace(nodeId + ' acceptIncomingConnection()')
         if (this.connections.has(nodeId)) {
-            if (!hasSmallerOfferingHashThan(getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor()), nodeId)) {
+            if (getOfferer(getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor()), nodeId) === 'remote') {
                 logger.trace(nodeId + ' acceptIncomingConnection() replace current connection')
                 // replace the current connection
                 const oldConnection = this.connections.get(nodeId)!

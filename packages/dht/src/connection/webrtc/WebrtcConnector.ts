@@ -21,7 +21,7 @@ import { PortRange } from '../ConnectionManager'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { WebrtcConnectorRpcLocal } from './WebrtcConnectorRpcLocal'
 import { DhtAddress } from '../../identifiers'
-import { hasSmallerOfferingHashThan } from '../../helpers/offering'
+import { getOfferer } from '../../helpers/offering'
 
 const logger = new Logger(module)
 
@@ -146,7 +146,9 @@ export class WebrtcConnector {
             portRange: this.config.portRange
         })
 
-        const offering = this.isOffering(targetPeerDescriptor)
+        const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor!)
+        const targetNodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
+        const offering = (getOfferer(localNodeId, targetNodeId) === 'local')
         let managedConnection: ManagedWebrtcConnection
 
         if (offering) {
@@ -213,11 +215,5 @@ export class WebrtcConnector {
         await Promise.allSettled(attempts.map((conn) => conn.close(false)))
 
         this.rpcCommunicator.destroy()
-    }
-
-    public isOffering(targetPeerDescriptor: PeerDescriptor): boolean {
-        const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor!)
-        const remoteNodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
-        return hasSmallerOfferingHashThan(localNodeId, remoteNodeId)
     }
 }
