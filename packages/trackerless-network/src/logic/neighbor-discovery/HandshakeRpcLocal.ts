@@ -53,7 +53,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
         const senderNodeId = getNodeIdFromPeerDescriptor(senderDescriptor)
         if (this.config.ongoingInterleaves.has(senderNodeId)) {
             return this.rejectHandshake(request)
-        } else if (this.config.targetNeighbors.hasNode(senderDescriptor)
+        } else if (this.config.targetNeighbors.hasNodeById(senderNodeId)
             || this.config.ongoingHandshakes.has(senderNodeId)
         ) {
             return this.acceptHandshake(request, senderDescriptor)

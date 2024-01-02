@@ -258,8 +258,8 @@ export class RandomGraphNode extends EventEmitter<Events> {
     }
 
     private onNodeDisconnected(peerDescriptor: PeerDescriptor): void {
-        if (this.config.targetNeighbors.hasNode(peerDescriptor)) {
-            const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        if (this.config.targetNeighbors.hasNodeById(nodeId)) {
             this.config.targetNeighbors.removeById(nodeId)
             this.config.connectionLocker.unlockConnection(peerDescriptor, this.config.streamPartId)
             this.config.neighborFinder.start([nodeId])
