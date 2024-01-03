@@ -5,7 +5,6 @@ import { ExternalStoreDataResponse } from "./DhtRpc";
 import { ExternalStoreDataRequest } from "./DhtRpc";
 import { ExternalFindDataResponse } from "./DhtRpc";
 import { ExternalFindDataRequest } from "./DhtRpc";
-import { DisconnectNoticeResponse } from "./DhtRpc";
 import { DisconnectNotice } from "./DhtRpc";
 import { UnlockRequest } from "./DhtRpc";
 import { LockResponse } from "./DhtRpc";
@@ -132,9 +131,9 @@ export interface IConnectionLockRpc<T = ServerCallContext> {
      */
     unlockRequest(request: UnlockRequest, context: T): Promise<Empty>;
     /**
-     * @generated from protobuf rpc: gracefulDisconnect(dht.DisconnectNotice) returns (dht.DisconnectNoticeResponse);
+     * @generated from protobuf rpc: gracefulDisconnect(dht.DisconnectNotice) returns (google.protobuf.Empty);
      */
-    gracefulDisconnect(request: DisconnectNotice, context: T): Promise<DisconnectNoticeResponse>;
+    gracefulDisconnect(request: DisconnectNotice, context: T): Promise<Empty>;
 }
 /**
  * @generated from protobuf service dht.ExternalApiRpc
