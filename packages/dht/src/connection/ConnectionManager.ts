@@ -10,7 +10,6 @@ import {
 import {
     DisconnectMode,
     DisconnectNotice,
-    DisconnectNoticeResponse,
     LockRequest,
     LockResponse,
     Message,
@@ -144,7 +143,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             (req: LockRequest, context: ServerCallContext) => lockRpcLocal.lockRequest(req, context))
         this.rpcCommunicator.registerRpcNotification(UnlockRequest, 'unlockRequest',
             (req: UnlockRequest, context: ServerCallContext) => lockRpcLocal.unlockRequest(req, context))
-        this.rpcCommunicator.registerRpcMethod(DisconnectNotice, DisconnectNoticeResponse, 'gracefulDisconnect',
+        this.rpcCommunicator.registerRpcNotification(DisconnectNotice, 'gracefulDisconnect',
             (req: DisconnectNotice, context: ServerCallContext) => lockRpcLocal.gracefulDisconnect(req, context))
     }
 
