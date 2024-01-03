@@ -1,7 +1,6 @@
 import { v4 } from 'uuid'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { Router } from '../../src/dht/routing/Router'
-import { PeerID } from '../../src/helpers/PeerID'
 import { 
     Message,
     MessageType,
@@ -12,9 +11,8 @@ import {
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockPeerDescriptor, createWrappedClosestPeersRequest } from '../utils/utils'
 import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
-import { DhtAddress } from '../../src/identifiers'
+import { DhtAddress, getNodeIdFromPeerDescriptor, createRandomDhtAddress } from '../../src/identifiers'
 import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
-import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 
 describe('Router', () => {
 
@@ -77,7 +75,7 @@ describe('Router', () => {
     })
 
     it('doRouteMessage with connections', async () => {
-        connections.set(PeerID.fromString('test').toNodeId(), createMockDhtNodeRpcRemote(peerDescriptor2))
+        connections.set(createRandomDhtAddress(), createMockDhtNodeRpcRemote(peerDescriptor2))
         const ack = await rpcCommunicator.callRpcMethod('routeMessage', {
             message,
             target: peerDescriptor2.nodeId,
@@ -111,7 +109,7 @@ describe('Router', () => {
     })
 
     it('route server with connections', async () => {
-        connections.set(PeerID.fromString('test').toNodeId(), createMockDhtNodeRpcRemote(peerDescriptor2))
+        connections.set(createRandomDhtAddress(), createMockDhtNodeRpcRemote(peerDescriptor2))
         const ack = await rpcCommunicator.callRpcMethod('routeMessage', routedMessage) as RouteMessageAck
         expect(ack.error).toBeUndefined()
     })
@@ -128,7 +126,7 @@ describe('Router', () => {
     })
 
     it('forward server with connections', async () => {
-        connections.set(PeerID.fromString('test').toNodeId(), createMockDhtNodeRpcRemote(peerDescriptor2))
+        connections.set(createRandomDhtAddress(), createMockDhtNodeRpcRemote(peerDescriptor2))
         const ack = await rpcCommunicator.callRpcMethod('forwardMessage', routedMessage) as RouteMessageAck
         expect(ack.error).toBeUndefined()
     })

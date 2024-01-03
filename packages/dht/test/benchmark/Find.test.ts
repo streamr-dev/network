@@ -5,10 +5,9 @@ import { RecursiveOperation } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
-import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Logger, wait } from '@streamr/utils'
 import { debugVars } from '../../src/helpers/debugHelpers'
-import { getDhtAddressFromRaw } from '../../src/identifiers'
+import { getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 const logger = new Logger(module)
 

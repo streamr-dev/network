@@ -6,11 +6,9 @@ import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils/
 import { execSync } from 'child_process'
 import fs from 'fs'
 import { Logger } from '@streamr/utils'
-import { PeerID } from '../../src/helpers/PeerID'
-import { keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
-import { DhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress } from '../../src/identifiers'
+import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
 import { createMockDataEntry } from '../utils/mock/mockDataEntry'
 import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
 
@@ -80,7 +78,7 @@ describe('Replicate data from node to node in DHT', () => {
     })
 
     it('Data replicates to the closest node no matter where it is stored', async () => {
-        const dataKey = getDhtAddressFromRaw(PeerID.fromString('3232323e12r31r3').value)
+        const dataKey = '333233323332336531327233317233' as DhtAddress  // TODO use random data
         const data = createMockDataEntry({ key: dataKey })
 
         // calculate offline which node is closest to the data
@@ -126,13 +124,13 @@ describe('Replicate data from node to node in DHT', () => {
             }
 
             // eslint-disable-next-line max-len
-            logger.info(peerIdFromPeerDescriptor(contact.getPeerDescriptor()) + ' ' + node.getNodeId() + hasDataMarker)
+            logger.info(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()) + ' ' + node.getNodeId() + hasDataMarker)
         })
 
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')
         await Promise.all(
-            nodes.map((node) => {
-                if (keyFromPeerDescriptor(node.getLocalPeerDescriptor()) != '0') {
+            nodes.map((node, i) => {
+                if (i !== 0) {
                     node.joinDht([entrypointDescriptor])
                 }
             })
@@ -165,7 +163,7 @@ describe('Replicate data from node to node in DHT', () => {
     }, 180000)
 
     it('Data replicates to the last remaining node if all other nodes leave gracefully', async () => {
-        const dataKey = getDhtAddressFromRaw(PeerID.fromString('3232323e12r31r3').value)
+        const dataKey = '333233323332336531327233317233' as DhtAddress  // TODO use random data
         const data = createMockDataEntry({ key: dataKey })
 
         logger.info(NUM_NODES + ' nodes joining layer0 DHT')

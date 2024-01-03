@@ -6,12 +6,11 @@ import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/
 import { ConnectionType } from '../../src/connection/IConnection'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
-import { PeerID } from '../../src/helpers/PeerID'
 import * as Err from '../../src/helpers/errors'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { TransportEvents } from '../../src/transport/ITransport'
-import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 const SERVICE_ID = 'test'
 
@@ -32,7 +31,7 @@ describe('Websocket Connection Management', () => {
     let biggerNoWsServerManager: ConnectionManager
     const simulator = new Simulator()
     const wsServerConnectorPeerDescriptor: PeerDescriptor = {
-        nodeId: PeerID.fromString('2').value,
+        nodeId: new Uint8Array([2]),
         type: NodeType.NODEJS,
         websocket: {
             host: '127.0.0.1',
@@ -41,11 +40,11 @@ describe('Websocket Connection Management', () => {
         }
     }
     const noWsServerConnectorPeerDescriptor: PeerDescriptor = {
-        nodeId: PeerID.fromString('1').value,
+        nodeId: new Uint8Array([1]),
         type: NodeType.NODEJS,
     }
     const biggerNoWsServerConnectorPeerDescriptor: PeerDescriptor = {
-        nodeId: PeerID.fromString('3').value,
+        nodeId: new Uint8Array([3]),
         type: NodeType.NODEJS,
     }
 
@@ -92,7 +91,7 @@ describe('Websocket Connection Management', () => {
         await connectorTransport3.stop()
     })
 
-    it('Can open connections to serverless peer with smaller peerId', (done) => {
+    it('Can open connections to serverless peer with smaller nodeId', (done) => {
         const dummyMessage: Message = {
             serviceId: SERVICE_ID,
             body: {
@@ -118,7 +117,7 @@ describe('Websocket Connection Management', () => {
         wsServerManager.send(dummyMessage)
     })
 
-    it('Can open connections to serverless peer with bigger peerId', (done) => {
+    it('Can open connections to serverless peer with bigger nodeId', (done) => {
         const dummyMessage: Message = {
             serviceId: SERVICE_ID,
             body: {

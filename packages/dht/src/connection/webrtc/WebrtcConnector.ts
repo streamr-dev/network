@@ -13,14 +13,10 @@ import { ManagedWebrtcConnection } from '../ManagedWebrtcConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
 import { ManagedConnection } from '../ManagedConnection'
-import {
-    areEqualPeerDescriptors,
-    getNodeIdFromPeerDescriptor
-} from '../../helpers/peerIdFromPeerDescriptor'
 import { PortRange } from '../ConnectionManager'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { WebrtcConnectorRpcLocal } from './WebrtcConnectorRpcLocal'
-import { DhtAddress } from '../../identifiers'
+import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { getOfferer } from '../../helpers/offering'
 
 const logger = new Logger(module)

@@ -1,7 +1,6 @@
 import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 import { EventEmitter } from 'eventemitter3'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
-import { PeerID } from '../helpers/PeerID'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
@@ -29,9 +28,6 @@ import {
     waitForCondition
 } from '@streamr/utils'
 import { Any } from '../proto/google/protobuf/any'
-import {
-    getNodeIdFromPeerDescriptor
-} from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
 import { RecursiveOperationManager, RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'
 import { StoreManager } from './store/StoreManager'
@@ -49,7 +45,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
 import { PeerManager } from './PeerManager'
 import { ServiceID } from '../types/ServiceID'
-import { DhtAddress, DhtAddressRaw, getRawFromDhtAddress } from '../identifiers'
+import { DhtAddress, DhtAddressRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../identifiers'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
 
 export interface DhtNodeEvents {
@@ -118,8 +114,14 @@ export type Events = TransportEvents & DhtNodeEvents
 
 export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string): PeerDescriptor => {
     let nodeId: DhtAddressRaw
-    if (msg) {
-        nodeId = (peerId !== undefined) ? getRawFromDhtAddress(peerId as DhtAddress) : PeerID.fromIp(msg.host).value
+    if ((peerId === undefined) && (msg !== undefined)) {
+        nodeId = new Uint8Array(20)
+        const ipNum = msg.host.split('.').map((octet, index, array) => {
+            return parseInt(octet) * Math.pow(256, (array.length - index - 1))
+        }).reduce((prev, curr) => prev + curr)
+        const view = new DataView(nodeId.buffer)
+        view.setInt32(0, ipNum)
+        nodeId.set((new UUID()).value, 4)
     } else {
         nodeId = getRawFromDhtAddress(peerId! as DhtAddress)
     }

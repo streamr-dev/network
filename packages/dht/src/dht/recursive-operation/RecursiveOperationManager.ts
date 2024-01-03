@@ -9,7 +9,6 @@ import {
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { Router } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
-import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, areEqualBinaries, runAndWaitForEvents3, wait } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RecursiveOperationSessionRpcRemote } from './RecursiveOperationSessionRpcRemote'
@@ -24,7 +23,7 @@ import { getPreviousPeer } from '../routing/getPreviousPeer'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationRpcLocal } from './RecursiveOperationRpcLocal'
-import { DhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress } from '../../identifiers'
+import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
 import { getDistance } from '../PeerManager'
 
 interface RecursiveOperationManagerConfig {

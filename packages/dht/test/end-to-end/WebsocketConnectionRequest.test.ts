@@ -2,8 +2,8 @@ import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { waitForCondition } from '@streamr/utils'
-import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { createMockPeerDescriptor } from '../utils/utils'
+import { areEqualPeerDescriptors } from '../../src/identifiers'
 
 describe('Websocket IConnection Requests', () => {
 

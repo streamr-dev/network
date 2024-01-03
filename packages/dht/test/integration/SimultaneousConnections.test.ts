@@ -8,7 +8,7 @@ import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
 import { MockTransport } from '../utils/mock/Transport'
-import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 const BASE_MESSAGE: Message = {
     serviceId: 'serviceId',

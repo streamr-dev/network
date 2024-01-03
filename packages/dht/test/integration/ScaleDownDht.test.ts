@@ -2,10 +2,9 @@ import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
-import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Logger } from '@streamr/utils'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
-import { createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
+import { areEqualPeerDescriptors, createRandomDhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
 
 const logger = new Logger(module)
 

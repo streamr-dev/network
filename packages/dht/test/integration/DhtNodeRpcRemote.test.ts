@@ -9,7 +9,7 @@ import {
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
-import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 const SERVICE_ID = 'test'
 

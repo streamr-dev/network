@@ -1,12 +1,10 @@
 import { Logger, areEqualBinaries } from '@streamr/utils'
 import { v4 } from 'uuid'
-import {
-    getNodeIdFromPeerDescriptor
-} from '../../helpers/peerIdFromPeerDescriptor'
 import { RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { RouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RpcRemote } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
+import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 const logger = new Logger(module)
 

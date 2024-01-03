@@ -1,6 +1,5 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '@streamr/utils'
-import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { Empty } from '../proto/google/protobuf/empty'
 import {
     ClosestPeersRequest,
@@ -11,7 +10,7 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import { IDhtNodeRpc } from '../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
-import { DhtAddress, getDhtAddressFromRaw } from '../identifiers'
+import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../identifiers'
 
 interface DhtNodeRpcLocalConfig {
     peerDiscoveryQueryBatchSize: number
