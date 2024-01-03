@@ -244,7 +244,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     }
 
     public async send(message: Message, opts: SendOptions = DEFAULT_SEND_OPTIONS): Promise<void> {
-        if (this.state === ConnectionManagerState.STOPPED && !opts.sendIfStopped) {
+        if ((this.state === ConnectionManagerState.STOPPED || this.state === ConnectionManagerState.STOPPING) && !opts.sendIfStopped) {
             return
         }
         const peerDescriptor = message.targetDescriptor!
