@@ -11,7 +11,6 @@ import { BucketManager, BucketManagerOptions } from './BucketManager'
 import { Logger } from '@streamr/utils'
 import { Bucket, BucketId } from './Bucket'
 import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE } from './dataQueryEndpoint'
-import { convertBytesToStreamMessage } from '@streamr/trackerless-network'
 
 const logger = new Logger(module)
 
@@ -230,9 +229,9 @@ export class Storage extends EventEmitter {
             writeBytesPerSecond: new RateMetric()
         }
         metricsContext.addMetrics('broker.plugin.storage', metrics)
-        this.on('read', (streamMessage: StreamMessage) => {
+        this.on('read', (bytes: Uint8Array) => {
             metrics.readMessagesPerSecond.record(1)
-            metrics.readBytesPerSecond.record(streamMessage.getContent(false).length)
+            metrics.readBytesPerSecond.record(bytes.length)
         })
         this.on('write', (streamMessage: StreamMessage) => {
             metrics.writeMessagesPerSecond.record(1)
@@ -360,9 +359,8 @@ export class Storage extends EventEmitter {
             return null
         }
 
-        const streamMessage = convertBytesToStreamMessage(row.payload)
-        this.emit('read', streamMessage)
-        return streamMessage
+        this.emit('read', row.payload)
+        return row.payload
     }
 
     private createResultStream(debugInfo: ResendDebugInfo) {

@@ -2,7 +2,6 @@
  * Endpoints for RESTful data requests
  */
 import { Request, RequestHandler, Response } from 'express'
-import { StreamMessage } from '@streamr/protocol'
 import { Logger, MetricsContext, MetricsDefinition, RateMetric } from '@streamr/utils'
 import { Readable, Transform, pipeline } from 'stream'
 import { Storage } from './Storage'
@@ -27,14 +26,14 @@ class ResponseTransform extends Transform {
         this.format = format
     }
 
-    override _transform(input: StreamMessage, _encoding: string, done: () => void) {
+    override _transform(input: Uint8Array, _encoding: string, done: () => void) {
         if (this.firstMessage) {
             this.firstMessage = false
             this.push(this.format.header)
         } else {
             this.push(this.format.delimiter)
         }
-        this.push(this.format.getMessageAsString(input))
+        this.push(this.format.formatMessage(input))
         done()
     }
 
