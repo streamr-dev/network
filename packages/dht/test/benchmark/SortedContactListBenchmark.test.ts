@@ -32,7 +32,7 @@ function shuffleArray<T>(array: T[]): T[] {
 
 describe('SortedContactListBenchmark', () => {
 
-    it('adds ' + NUM_ADDS + ' random peerIDs', async () => {
+    it('adds ' + NUM_ADDS + ' random nodeIds', async () => {
         const randomIds = []
         for (let i = 0; i < NUM_ADDS; i++) {
             randomIds.push(createRandomItem(i))
