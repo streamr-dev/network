@@ -11,6 +11,7 @@ import { BucketManager, BucketManagerOptions } from './BucketManager'
 import { Logger } from '@streamr/utils'
 import { Bucket, BucketId } from './Bucket'
 import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE } from './dataQueryEndpoint'
+import { convertBytesToStreamMessage } from '@streamr/trackerless-network'
 
 const logger = new Logger(module)
 
@@ -359,7 +360,7 @@ export class Storage extends EventEmitter {
             return null
         }
 
-        const streamMessage = StreamMessage.deserialize(row.payload.toString())
+        const streamMessage = convertBytesToStreamMessage(row.payload)
         this.emit('read', streamMessage)
         return streamMessage
     }

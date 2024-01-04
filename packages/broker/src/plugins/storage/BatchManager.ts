@@ -5,6 +5,7 @@ import type { StreamMessage } from '@streamr/protocol'
 import { Batch, BatchId, DoneCallback } from './Batch'
 import { BucketId } from './Bucket'
 import { merge } from '@streamr/utils'
+import { convertStreamMessageToBytes } from '@streamr/trackerless-network'
 
 const INSERT_STATEMENT = 'INSERT INTO stream_data '
     + '(stream_id, partition, bucket_id, ts, sequence_no, publisher_id, msg_chain_id, payload) '
@@ -117,7 +118,7 @@ export class BatchManager extends EventEmitter {
                         streamMessage.getSequenceNumber(),
                         streamMessage.getPublisherId(),
                         streamMessage.getMsgChainId(),
-                        Buffer.from(streamMessage.serialize()),
+                        Buffer.from(convertStreamMessageToBytes(streamMessage)),
                     ]
                 }
             })

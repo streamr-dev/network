@@ -6,6 +6,7 @@ import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { ContentType, toStreamID, StreamMessage, MessageID, EncryptionType } from '@streamr/protocol'
 import { EthereumAddress, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { convertStreamMessageToBytes } from '@streamr/trackerless-network'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
@@ -37,7 +38,7 @@ export function buildMsg({
     return new StreamMessage({
         messageId: new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
         content: utf8ToBinary(JSON.stringify(content)),
-        signature: hexToBinary('0x1234'),
+        signature: new Uint8Array(hexToBinary('0x1234')),
         contentType: ContentType.JSON
     })
 }
@@ -61,7 +62,7 @@ function buildEncryptedMsg({
         messageId: new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
         content: new Uint8Array([1, 2, 3]),
         encryptionType: EncryptionType.AES,
-        signature: hexToBinary('0x1234'),
+        signature: new Uint8Array(hexToBinary('0x1234')),
         groupKeyId: 'groupKeyId',
         contentType: ContentType.JSON
     })
@@ -169,7 +170,7 @@ describe('Storage', () => {
             sequence_no: 0,
             publisher_id: publisherZero,
             msg_chain_id: '1',
-            payload: Buffer.from(msg.serialize()),
+            payload: Buffer.from(convertStreamMessageToBytes(msg)),
         })
     })
 
