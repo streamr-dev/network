@@ -45,7 +45,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
 import { PeerManager } from './PeerManager'
 import { ServiceID } from '../types/ServiceID'
-import { DhtAddress, DhtAddressRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../identifiers'
+import { DhtAddress, DhtAddressRaw, createRandomDhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../identifiers'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
 
 export interface DhtNodeEvents {
@@ -75,7 +75,7 @@ export interface DhtNodeOptions {
     websocketHost?: string
     websocketPortRange?: PortRange
     websocketServerEnableTls?: boolean
-    peerId?: string
+    peerId?: DhtAddress
 
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
@@ -112,7 +112,7 @@ const logger = new Logger(module)
 
 export type Events = TransportEvents & DhtNodeEvents
 
-export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string): PeerDescriptor => {
+export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: DhtAddress): PeerDescriptor => {
     let nodeId: DhtAddressRaw
     if ((peerId === undefined) && (msg !== undefined)) {
         nodeId = new Uint8Array(20)
@@ -123,7 +123,7 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string
         view.setInt32(0, ipNum)
         nodeId.set((new UUID()).value, 4)
     } else {
-        nodeId = getRawFromDhtAddress(peerId! as DhtAddress)
+        nodeId = getRawFromDhtAddress(peerId!)
     }
     const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS
     const ret: PeerDescriptor = { nodeId, type: nodeType }
@@ -165,7 +165,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             networkConnectivityTimeout: 10000,
             storageRedundancyFactor: 5,
             metricsContext: new MetricsContext(),
-            peerId: new UUID().toHex()
+            peerId: createRandomDhtAddress()
         }, conf)
         this.localDataStore = new LocalDataStore(this.config.storeMaxTtl) 
         this.send = this.send.bind(this)
