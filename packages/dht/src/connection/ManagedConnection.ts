@@ -6,6 +6,7 @@ import { Logger, runAndRaceEvents3, RunAndRaceEventsReturnType } from '@streamr/
 import EventEmitter from 'eventemitter3'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
 import { DhtAddress, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { createRandomConnectionId } from './Connection'
 
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
@@ -58,7 +59,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.outgoingConnection = outgoingConnection
         this.incomingConnection = incomingConnection
         this.connectionType = connectionType
-        this.connectionId = new ConnectionID()
+        this.connectionId = createRandomConnectionId()
 
         this.send = this.send.bind(this)
         this.onDisconnected = this.onDisconnected.bind(this)
