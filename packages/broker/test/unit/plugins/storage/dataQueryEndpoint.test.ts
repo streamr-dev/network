@@ -8,14 +8,19 @@ import {
 } from '../../../../src/plugins/storage/dataQueryEndpoint'
 import { toObject } from '../../../../src/plugins/storage/DataQueryFormat'
 import { Storage } from '../../../../src/plugins/storage/Storage'
-import { PassThrough } from 'stream'
+import { PassThrough, Readable } from 'stream'
 import { ContentType, MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
-import { MetricsContext, toEthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { MetricsContext, toEthereumAddress, hexToBinary, utf8ToBinary, toLengthPrefixedFrame } from '@streamr/utils'
+import { convertStreamMessageToBytes } from '@streamr/trackerless-network'
 
 const createEmptyStream = () => {
     const stream = new PassThrough()
     stream.push(null)
     return stream
+}
+
+const intoBinaryStream = (msg: StreamMessage[]): Readable => {
+    return toReadableStream(...msg.map(convertStreamMessageToBytes))
 }
 
 describe('dataQueryEndpoint', () => {
@@ -25,7 +30,6 @@ describe('dataQueryEndpoint', () => {
     function testGetRequest(url: string, sessionToken = 'mock-session-token') {
         return request(app)
             .get(url)
-            .set('Accept', 'application/json')
             .set('Authorization', `Bearer ${sessionToken}`)
     }
 
@@ -64,7 +68,7 @@ describe('dataQueryEndpoint', () => {
                     world: 2,
                 }),
             ]
-            storage.requestLast = jest.fn().mockReturnValue(toReadableStream(...streamMessages))
+            storage.requestLast = jest.fn().mockReturnValue(intoBinaryStream(streamMessages))
         })
 
         describe('user errors', () => {
@@ -119,15 +123,10 @@ describe('dataQueryEndpoint', () => {
                     .expect(streamMessages.map((m) => toObject(m)), done)
             })
 
-            it('responds with protocol serialization of messages given format=protocol', (done) => {
-                testGetRequest('/streams/streamId/data/partitions/0/last?format=protocol')
-                    .expect(streamMessages.map((msg) => msg.serialize()), done)
-            })
-
             it('responds with raw format', (done) => {
                 testGetRequest('/streams/streamId/data/partitions/0/last?count=2&format=raw')
-                    .expect('Content-Type', 'text/plain')
-                    .expect(streamMessages.map((msg) => msg.serialize()).join('\n'), done)
+                    .expect('Content-Type', 'application/octet-stream')
+                    .expect(Buffer.concat(streamMessages.map(convertStreamMessageToBytes).map(toLengthPrefixedFrame)), done)
             })
 
             it('invokes storage#requestLast once with correct arguments', async () => {
@@ -173,7 +172,7 @@ describe('dataQueryEndpoint', () => {
                     z: 'z',
                 }),
             ]
-            storage.requestFrom = () => toReadableStream(...streamMessages)
+            storage.requestFrom = () => intoBinaryStream(streamMessages)
         })
 
         describe('?fromTimestamp=1496408255672', () => {
@@ -305,7 +304,7 @@ describe('dataQueryEndpoint', () => {
                         '6': '6',
                     }),
                 ]
-                storage.requestRange = () => toReadableStream(...streamMessages)
+                storage.requestRange = () => intoBinaryStream(streamMessages)
             })
 
             it('responds 200 and Content-Type JSON', (done) => {
@@ -387,7 +386,7 @@ describe('dataQueryEndpoint', () => {
                         '6': '6',
                     }),
                 ]
-                storage.requestRange = () => toReadableStream(...streamMessages)
+                storage.requestRange = () => intoBinaryStream(streamMessages)
             })
 
             it('responds 200 and Content-Type JSON', (done) => {
