@@ -2,11 +2,14 @@ import 'reflect-metadata'
 
 import { ContentType, MessageID, StreamMessage, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { randomEthereumAddress, startTestServer } from '@streamr/test-utils'
-import { collect } from '@streamr/utils'
+import { collect, toLengthPrefixedFrame } from '@streamr/utils'
 import range from 'lodash/range'
 import { Resends } from '../../src/subscribe/Resends'
 import { mockLoggerFactory, MOCK_CONTENT } from '../test-utils/utils'
 import { hexToBinary } from '@streamr/utils'
+import {
+    convertStreamMessageToBytes
+} from '@streamr/trackerless-network/dist/src/logic/protocol-integration/stream-message/oldStreamMessageBinaryUtils'
 
 const createResends = (serverUrl: string) => {
     return new Resends(
@@ -64,7 +67,7 @@ describe('Resends', () => {
                     signature: hexToBinary('0x1234'),
                     contentType: ContentType.JSON
                 })
-                res.write(`${msg.serialize()}\n`)
+                res.write(toLengthPrefixedFrame(convertStreamMessageToBytes(msg)))
             }
             res.end()
         })
