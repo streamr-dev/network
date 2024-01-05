@@ -6,6 +6,7 @@ import { Storage } from '../../../../src/plugins/storage/Storage'
 import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { ContentType, MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
+import { convertBytesToStreamMessage } from '@streamr/trackerless-network'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
@@ -32,8 +33,8 @@ const REQUEST_TYPE_FROM = 'requestFrom'
 const REQUEST_TYPE_RANGE = 'requestRange'
 
 const streamToContentValues = async (resultStream: Readable) => {
-    const messages: StreamMessage[] = (await waitForStreamToEnd(resultStream)) as StreamMessage[]
-    return messages.map((message) => (message.getParsedContent() as any).value)
+    const messages: Uint8Array[] = await waitForStreamToEnd(resultStream) as Uint8Array[]
+    return messages.map(convertBytesToStreamMessage).map((message) => (message.getParsedContent() as any).value)
 }
 
 class ProxyClient {
