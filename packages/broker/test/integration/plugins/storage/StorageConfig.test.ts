@@ -67,6 +67,6 @@ describe('StorageConfig', () => {
         })
         const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
         const storeMessage = convertBytesToStreamMessage(result.first().payload)
-        expect(storeMessage.signature).toEqual(new Uint8Array(publishMessage.signature))
+        expect(storeMessage.signature).toEqual(publishMessage.signature)
     })
 })
