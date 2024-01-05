@@ -7,9 +7,7 @@ import range from 'lodash/range'
 import { Resends } from '../../src/subscribe/Resends'
 import { mockLoggerFactory, MOCK_CONTENT } from '../test-utils/utils'
 import { hexToBinary } from '@streamr/utils'
-import {
-    convertStreamMessageToBytes
-} from '@streamr/trackerless-network/dist/src/logic/protocol-integration/stream-message/oldStreamMessageBinaryUtils'
+import { convertStreamMessageToBytes } from '@streamr/trackerless-network'
 
 const createResends = (serverUrl: string) => {
     return new Resends(
