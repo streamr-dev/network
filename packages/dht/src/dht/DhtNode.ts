@@ -113,20 +113,20 @@ const logger = new Logger(module)
 export type Events = TransportEvents & DhtNodeEvents
 
 export const createPeerDescriptor = (msg?: ConnectivityResponse, nodeId?: DhtAddress): PeerDescriptor => {
-    let nodeIdRAw: DhtAddressRaw
+    let nodeIdRaw: DhtAddressRaw
     if ((nodeId === undefined) && (msg !== undefined)) {
-        nodeIdRAw = new Uint8Array(20)
+        nodeIdRaw = new Uint8Array(20)
         const ipNum = msg.host.split('.').map((octet, index, array) => {
             return parseInt(octet) * Math.pow(256, (array.length - index - 1))
         }).reduce((prev, curr) => prev + curr)
-        const view = new DataView(nodeIdRAw.buffer)
+        const view = new DataView(nodeIdRaw.buffer)
         view.setInt32(0, ipNum)
-        nodeIdRAw.set((new UUID()).value, 4)
+        nodeIdRaw.set((new UUID()).value, 4)
     } else {
-        nodeIdRAw = getRawFromDhtAddress(nodeId!)
+        nodeIdRaw = getRawFromDhtAddress(nodeId!)
     }
     const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS
-    const ret: PeerDescriptor = { nodeId: nodeIdRAw, type: nodeType }
+    const ret: PeerDescriptor = { nodeId: nodeIdRaw, type: nodeType }
     if (msg && msg.websocket) {
         ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
     }
