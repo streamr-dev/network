@@ -12,9 +12,7 @@ import { pull } from '../utils/PushBuffer'
 import { PushPipeline } from '../utils/PushPipeline'
 import { FetchHttpStreamResponseError, createQueryString, fetchHttpBinaryStream } from '../utils/utils'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
-import {
-    convertBytesToStreamMessage
-} from '@streamr/trackerless-network/dist/src/logic/protocol-integration/stream-message/oldStreamMessageBinaryUtils'
+import { convertBytesToStreamMessage } from '@streamr/trackerless-network'
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 
