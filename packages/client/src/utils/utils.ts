@@ -203,7 +203,7 @@ export class FetchHttpStreamResponseError extends Error {
     }
 }
 
-export const fetchHttpBinaryStream = async function*(
+export const fetchLengthPrefixedFrameHttpBinaryStream = async function*(
     url: string,
     abortSignal?: AbortSignal
 ): AsyncGenerator<Uint8Array, void, undefined> {
