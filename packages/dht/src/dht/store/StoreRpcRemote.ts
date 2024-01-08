@@ -1,4 +1,4 @@
-import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import {
     ReplicateDataRequest,
     StoreDataRequest

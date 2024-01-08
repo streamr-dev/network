@@ -1,5 +1,5 @@
 import { DhtNode } from '../../src/dht/DhtNode'
-import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors } from '../../src/identifiers'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_ID1 = 'stream1'

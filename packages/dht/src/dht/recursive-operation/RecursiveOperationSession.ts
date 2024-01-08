@@ -16,10 +16,9 @@ import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicat
 import { Contact } from '../contact/Contact'
 import { SortedContactList } from '../contact/SortedContactList'
 import { RecursiveOperationResult } from './RecursiveOperationManager'
-import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationSessionRpcLocal } from './RecursiveOperationSessionRpcLocal'
-import { DhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress } from '../../identifiers'
+import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 export interface RecursiveOperationSessionEvents {

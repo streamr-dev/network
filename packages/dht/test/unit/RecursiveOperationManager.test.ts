@@ -6,7 +6,6 @@ import {
     RouteMessageError,
     RouteMessageWrapper
 } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { PeerID } from '../../src/helpers/PeerID'
 import {
     createWrappedClosestPeersRequest,
     createFindRequest,
@@ -17,11 +16,10 @@ import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
 import { v4 } from 'uuid'
 import { MockRouter } from '../utils/mock/Router'
 import { MockTransport } from '../utils/mock/Transport'
-import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
 import { Router } from '../../src/dht/routing/Router'
-import { ITransport } from '../../src/exports'
-import { getDhtAddressFromRaw } from '../../src/identifiers'
+import { ITransport } from '../../src/transport/ITransport'
+import { areEqualPeerDescriptors, createRandomDhtAddress } from '../../src/identifiers'
 
 const createMockRouter = (error?: RouteMessageError): Partial<Router> => {
     return {
@@ -87,7 +85,7 @@ describe('RecursiveOperationManager', () => {
 
     it('startFind with mode Node returns self if no peers', async () => {
         const recursiveOperationManager = createRecursiveOperationManager()
-        const res = await recursiveOperationManager.execute(getDhtAddressFromRaw(PeerID.fromString('find').value), RecursiveOperation.FIND_NODE)
+        const res = await recursiveOperationManager.execute(createRandomDhtAddress(), RecursiveOperation.FIND_NODE)
         expect(areEqualPeerDescriptors(res.closestNodes[0], peerDescriptor1)).toEqual(true)
         recursiveOperationManager.stop()
     })

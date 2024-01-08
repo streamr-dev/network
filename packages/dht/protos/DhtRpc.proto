@@ -46,7 +46,7 @@ service WebrtcConnectorRpc {
 service ConnectionLockRpc {
   rpc lockRequest (LockRequest) returns (LockResponse);
   rpc unlockRequest (UnlockRequest) returns (google.protobuf.Empty);
-  rpc gracefulDisconnect (DisconnectNotice) returns (DisconnectNoticeResponse);
+  rpc gracefulDisconnect (DisconnectNotice) returns (google.protobuf.Empty);
 }
 
 service ExternalApiRpc {
@@ -285,9 +285,6 @@ enum DisconnectMode {
 
 message DisconnectNotice {
   DisconnectMode disconnectMode = 1;
-}
-
-message DisconnectNoticeResponse {
 }
 
 message ExternalFindDataRequest {

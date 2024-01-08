@@ -1,10 +1,10 @@
 import { Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
-import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { RecursiveOperationRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RpcRemote } from '../contact/RpcRemote'
 import { getPreviousPeer } from '../routing/getPreviousPeer'
+import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 const logger = new Logger(module)
 

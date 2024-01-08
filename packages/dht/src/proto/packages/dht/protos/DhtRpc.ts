@@ -519,11 +519,6 @@ export interface DisconnectNotice {
     disconnectMode: DisconnectMode;
 }
 /**
- * @generated from protobuf message dht.DisconnectNoticeResponse
- */
-export interface DisconnectNoticeResponse {
-}
-/**
  * @generated from protobuf message dht.ExternalFindDataRequest
  */
 export interface ExternalFindDataRequest {
@@ -1106,16 +1101,6 @@ class DisconnectNotice$Type extends MessageType$<DisconnectNotice> {
  */
 export const DisconnectNotice = new DisconnectNotice$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class DisconnectNoticeResponse$Type extends MessageType$<DisconnectNoticeResponse> {
-    constructor() {
-        super("dht.DisconnectNoticeResponse", []);
-    }
-}
-/**
- * @generated MessageType for protobuf message dht.DisconnectNoticeResponse
- */
-export const DisconnectNoticeResponse = new DisconnectNoticeResponse$Type();
-// @generated message type with reflection information, may provide speed optimized methods
 class ExternalFindDataRequest$Type extends MessageType$<ExternalFindDataRequest> {
     constructor() {
         super("dht.ExternalFindDataRequest", [
@@ -1207,7 +1192,7 @@ export const WebrtcConnectorRpc = new ServiceType("dht.WebrtcConnectorRpc", [
 export const ConnectionLockRpc = new ServiceType("dht.ConnectionLockRpc", [
     { name: "lockRequest", options: {}, I: LockRequest, O: LockResponse },
     { name: "unlockRequest", options: {}, I: UnlockRequest, O: Empty },
-    { name: "gracefulDisconnect", options: {}, I: DisconnectNotice, O: DisconnectNoticeResponse }
+    { name: "gracefulDisconnect", options: {}, I: DisconnectNotice, O: Empty }
 ]);
 /**
  * @generated ServiceType for protobuf service dht.ExternalApiRpc

@@ -1,4 +1,4 @@
-import { MessageID, MessageRef, StreamMessage, StreamMessageType, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { ContentType, MessageID, MessageRef, StreamMessage, StreamMessageType, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
@@ -22,6 +22,7 @@ const createMessage = (streamPartId: StreamPartID): StreamMessage => {
             hello: 'world'
         })),
         messageType: StreamMessageType.MESSAGE,
+        contentType: ContentType.JSON,
         signature: hexToBinary('0x1234'),
     })
 }

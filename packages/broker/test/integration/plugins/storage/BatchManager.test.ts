@@ -2,7 +2,7 @@ import { Client, types as cassandraTypes } from 'cassandra-driver'
 import { BatchManager } from '../../../../src/plugins/storage/BatchManager'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
+import { ContentType, MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
 import { hexToBinary, utf8ToBinary, toEthereumAddress, waitForCondition } from '@streamr/utils'
 const { TimeUuid } = cassandraTypes
 
@@ -32,7 +32,8 @@ function buildMsg(
             msgChainId
         ),
         content: utf8ToBinary(JSON.stringify(content)),
-        signature: hexToBinary('0x1234')
+        signature: hexToBinary('0x1234'),
+        contentType: ContentType.JSON
     })
 }
 

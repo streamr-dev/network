@@ -1,8 +1,7 @@
 import { RpcCommunicator } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
-import { DhtAddress, DhtAddressRaw, getRawFromDhtAddress } from '../identifiers'
-import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { DhtAddress, DhtAddressRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../identifiers'
 import {
     ClosestPeersRequest,
     PeerDescriptor,

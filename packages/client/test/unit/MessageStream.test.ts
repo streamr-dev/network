@@ -1,5 +1,5 @@
 import { toEthereumAddress, utf8ToBinary } from '@streamr/utils'
-import { MessageID, toStreamID } from '@streamr/protocol'
+import { ContentType, MessageID, toStreamID } from '@streamr/protocol'
 import { Authentication } from '../../src/Authentication'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { MessageStream } from '../../src/subscribe/MessageStream'
@@ -19,7 +19,8 @@ describe('MessageStream', () => {
         return await createSignedMessage({
             messageId: new MessageID(streamId, 0, 0, 0, PUBLISHER_ID, 'msgChainId'),
             serializedContent: utf8ToBinary(JSON.stringify(Msg())),
-            authentication
+            authentication,
+            contentType: ContentType.JSON
         })
     }
 

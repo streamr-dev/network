@@ -1,7 +1,6 @@
 import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 import { EventEmitter } from 'eventemitter3'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
-import { PeerID } from '../helpers/PeerID'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
@@ -30,9 +29,6 @@ import {
     waitForCondition
 } from '@streamr/utils'
 import { Any } from '../proto/google/protobuf/any'
-import {
-    getNodeIdFromPeerDescriptor
-} from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
 import { RecursiveOperationManager, RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'
 import { StoreManager } from './store/StoreManager'
@@ -50,7 +46,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
 import { PeerManager } from './PeerManager'
 import { ServiceID } from '../types/ServiceID'
-import { DhtAddress, DhtAddressRaw, getRawFromDhtAddress } from '../identifiers'
+import { DhtAddress, DhtAddressRaw, createRandomDhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../identifiers'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
 
 export interface DhtNodeEvents {
@@ -80,7 +76,7 @@ export interface DhtNodeOptions {
     websocketHost?: string
     websocketPortRange?: PortRange
     websocketServerEnableTls?: boolean
-    peerId?: string
+    peerId?: DhtAddress
 
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
@@ -117,12 +113,18 @@ const logger = new Logger(module)
 
 export type Events = TransportEvents & DhtNodeEvents
 
-export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: string): PeerDescriptor => {
+export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: DhtAddress): PeerDescriptor => {
     let nodeId: DhtAddressRaw
-    if (msg) {
-        nodeId = (peerId !== undefined) ? getRawFromDhtAddress(peerId as DhtAddress) : PeerID.fromIp(msg.host).value
+    if ((peerId === undefined) && (msg !== undefined)) {
+        nodeId = new Uint8Array(20)
+        const ipNum = msg.host.split('.').map((octet, index, array) => {
+            return parseInt(octet) * Math.pow(256, (array.length - index - 1))
+        }).reduce((prev, curr) => prev + curr)
+        const view = new DataView(nodeId.buffer)
+        view.setInt32(0, ipNum)
+        nodeId.set((new UUID()).value, 4)
     } else {
-        nodeId = getRawFromDhtAddress(peerId! as DhtAddress)
+        nodeId = getRawFromDhtAddress(peerId!)
     }
     const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS
     const ret: PeerDescriptor = { nodeId, type: nodeType }
@@ -164,7 +166,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             networkConnectivityTimeout: 10000,
             storageRedundancyFactor: 5,
             metricsContext: new MetricsContext(),
-            peerId: new UUID().toHex()
+            peerId: createRandomDhtAddress()
         }, conf)
         this.localDataStore = new LocalDataStore(this.config.storeMaxTtl) 
         this.send = this.send.bind(this)
@@ -335,7 +337,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.emit('connected', peerDescriptor)
         })
         this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => {
-            this.peerManager!.handleDisconnected(peerDescriptor, gracefulLeave)
+            this.peerManager!.handleDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor), gracefulLeave)
             this.emit('disconnected', peerDescriptor, gracefulLeave)
         })
         this.transport!.getAllConnectionPeerDescriptors().forEach((peer) => {
@@ -354,7 +356,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                     .map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor())
             },
             addNewContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
-            removeContact: (contact: PeerDescriptor) => this.removeContact(contact)
+            removeContact: (nodeId: DhtAddress) => this.removeContact(nodeId)
         })
         this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers',
             (req: ClosestPeersRequest, context) => dhtNodeRpcLocal.getClosestPeers(req, context))
@@ -363,7 +365,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice',
             (_req: LeaveNotice, context) => dhtNodeRpcLocal.leaveNotice(context))
         const externalApiRpcLocal = new ExternalApiRpcLocal({
-            executeRecursiveOperation: (key: DhtAddress, operation: RecursiveOperation, excludedPeer: PeerDescriptor) => {
+            executeRecursiveOperation: (key: DhtAddress, operation: RecursiveOperation, excludedPeer: DhtAddress) => {
                 return this.executeRecursiveOperation(key, operation, excludedPeer)
             },
             storeDataToDht: (key: DhtAddress, data: Any, creator?: DhtAddress) => this.storeDataToDht(key, data, creator)
@@ -419,11 +421,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.peerManager!.getNumberOfNeighbors()
     }
 
-    public removeContact(contact: PeerDescriptor): void {
+    public removeContact(nodeId: DhtAddress): void {
         if (!this.started) {  // the stopped state is checked in PeerManager
             return
         }
-        this.peerManager!.handlePeerLeaving(contact)
+        this.peerManager!.handlePeerLeaving(nodeId)
     }
 
     public async send(msg: Message): Promise<void> {
@@ -452,7 +454,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     public async executeRecursiveOperation(
         key: DhtAddress,
         operation: RecursiveOperation,
-        excludedPeer?: PeerDescriptor
+        excludedPeer?: DhtAddress
     ): Promise<RecursiveOperationResult> {
         return this.recursiveOperationManager!.execute(key, operation, excludedPeer)
     }
