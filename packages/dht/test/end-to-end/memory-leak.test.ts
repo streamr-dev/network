@@ -19,7 +19,7 @@ describe('memory leak', () => {
             }
         })
         let entryPoint: DhtNode | undefined = new DhtNode({
-            id: getNodeIdFromPeerDescriptor(entryPointDescriptor),
+            nodeId: getNodeIdFromPeerDescriptor(entryPointDescriptor),
             websocketHost: entryPointDescriptor.websocket!.host,
             websocketPortRange: {
                 min: entryPointDescriptor.websocket!.port,
