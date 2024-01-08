@@ -118,7 +118,7 @@ export class BatchManager extends EventEmitter {
                         streamMessage.getSequenceNumber(),
                         streamMessage.getPublisherId(),
                         streamMessage.getMsgChainId(),
-                        Buffer.from(convertStreamMessageToBytes(streamMessage)),
+                        Buffer.from(convertStreamMessageToBytes(streamMessage)), // cassandra-driver expects Buffer
                     ]
                 }
             })
