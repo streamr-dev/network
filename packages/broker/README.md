@@ -14,7 +14,7 @@ using the programming language of your choice.
 
 Broker nodes can also perform other tasks in addition to (or instead of) serving applications, such as mining.
 
-## Table of Contents TESTI
+## Table of Contents TESTI (TESTI)
 - [Install](#install)
 - [Run](#run)
 - [Configuration](#configuration)
