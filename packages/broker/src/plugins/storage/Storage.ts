@@ -95,12 +95,12 @@ export class Storage extends EventEmitter {
                     payload: Buffer.from(convertStreamMessageToBytes(streamMessage))
                 }
 
-                this.bucketManager.incrementBucket(bucketId,record.payload.length)
+                this.bucketManager.incrementBucket(bucketId, record.payload.length)
                 setImmediate(() => this.batchManager.store(bucketId, record, (err?: Error) => {
                     if (err) {
                         reject(err)
                     } else {
-                        this.emit('write', streamMessage)
+                        this.emit('write', record.payload)
                         resolve(true)
                     }
                 }))
@@ -240,13 +240,13 @@ export class Storage extends EventEmitter {
             writeBytesPerSecond: new RateMetric()
         }
         metricsContext.addMetrics('broker.plugin.storage', metrics)
-        this.on('read', (bytes: Uint8Array) => {
+        this.on('read', (streamMessage: Uint8Array) => {
             metrics.readMessagesPerSecond.record(1)
-            metrics.readBytesPerSecond.record(bytes.length)
+            metrics.readBytesPerSecond.record(streamMessage.length)
         })
-        this.on('write', (streamMessage: StreamMessage) => {
+        this.on('write', (streamMessage: Uint8Array) => {
             metrics.writeMessagesPerSecond.record(1)
-            metrics.writeBytesPerSecond.record(streamMessage.getContent(false).length)
+            metrics.writeBytesPerSecond.record(streamMessage.length)
         })
     }
 
