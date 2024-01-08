@@ -1,11 +1,9 @@
 import { Client } from 'cassandra-driver'
 import { EventEmitter } from 'events'
 import { Logger } from '@streamr/utils'
-import type { StreamMessage } from '@streamr/protocol'
-import { Batch, BatchId, DoneCallback } from './Batch'
+import { Batch, BatchId, DoneCallback, InsertRecord } from './Batch'
 import { BucketId } from './Bucket'
 import { merge } from '@streamr/utils'
-import { convertStreamMessageToBytes } from '@streamr/trackerless-network'
 
 const INSERT_STATEMENT = 'INSERT INTO stream_data '
     + '(stream_id, partition, bucket_id, ts, sequence_no, publisher_id, msg_chain_id, payload) '
@@ -60,7 +58,7 @@ export class BatchManager extends EventEmitter {
         this.insertStatement = this.opts.useTtl ? INSERT_STATEMENT_WITH_TTL : INSERT_STATEMENT
     }
 
-    store(bucketId: BucketId, streamMessage: StreamMessage, doneCb?: DoneCallback): void {
+    store(bucketId: BucketId, record: InsertRecord, doneCb?: DoneCallback): void {
         const batch = this.batches[bucketId]
 
         if (batch && batch.isFull()) {
@@ -84,7 +82,7 @@ export class BatchManager extends EventEmitter {
             this.batches[bucketId] = newBatch
         }
 
-        this.batches[bucketId].push(streamMessage, doneCb)
+        this.batches[bucketId].push(record, doneCb)
     }
 
     stop(): void {
@@ -107,18 +105,18 @@ export class BatchManager extends EventEmitter {
         const batch = this.pendingBatches[batchId]
 
         try {
-            const queries = batch.streamMessages.map((streamMessage) => {
+            const queries = batch.records.map((record) => {
                 return {
                     query: this.insertStatement,
                     params: [
-                        streamMessage.getStreamId(),
-                        streamMessage.getStreamPartition(),
+                        record.streamId,
+                        record.partition,
                         batch.getBucketId(),
-                        streamMessage.getTimestamp(),
-                        streamMessage.getSequenceNumber(),
-                        streamMessage.getPublisherId(),
-                        streamMessage.getMsgChainId(),
-                        Buffer.from(convertStreamMessageToBytes(streamMessage)), // cassandra-driver expects Buffer
+                        record.timestamp,
+                        record.sequenceNo,
+                        record.publisherId,
+                        record.msgChainId,
+                        record.payload,
                     ]
                 }
             })

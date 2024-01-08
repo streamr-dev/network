@@ -11,6 +11,7 @@ import { BucketManager, BucketManagerOptions } from './BucketManager'
 import { Logger } from '@streamr/utils'
 import { Bucket, BucketId } from './Bucket'
 import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE } from './dataQueryEndpoint'
+import { convertStreamMessageToBytes } from '@streamr/trackerless-network'
 
 const logger = new Logger(module)
 
@@ -84,8 +85,18 @@ export class Storage extends EventEmitter {
             if (bucketId) {
                 logger.trace('Found bucket', { bucketId })
 
-                this.bucketManager.incrementBucket(bucketId, Buffer.byteLength(streamMessage.serialize()))
-                setImmediate(() => this.batchManager.store(bucketId, streamMessage, (err?: Error) => {
+                const record = {
+                    streamId: streamMessage.getStreamId(),
+                    partition: streamMessage.getStreamPartition(),
+                    timestamp: streamMessage.getTimestamp(),
+                    sequenceNo: streamMessage.getSequenceNumber(),
+                    publisherId: streamMessage.getPublisherId(),
+                    msgChainId: streamMessage.getMsgChainId(),
+                    payload: Buffer.from(convertStreamMessageToBytes(streamMessage))
+                }
+
+                this.bucketManager.incrementBucket(bucketId,record.payload.length)
+                setImmediate(() => this.batchManager.store(bucketId, record, (err?: Error) => {
                     if (err) {
                         reject(err)
                     } else {
