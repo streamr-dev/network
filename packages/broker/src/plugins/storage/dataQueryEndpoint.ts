@@ -29,9 +29,13 @@ class ResponseTransform extends Transform {
     override _transform(input: Uint8Array, _encoding: string, done: () => void) {
         if (this.firstMessage) {
             this.firstMessage = false
-            this.push(this.format.header)
+            if (this.format.header !== undefined) {
+                this.push(this.format.header)
+            }
         } else {
-            this.push(this.format.delimiter)
+            if (this.format.delimiter !== undefined) {
+                this.push(this.format.delimiter)
+            }
         }
         this.push(this.format.formatMessage(input))
         done()
@@ -39,9 +43,13 @@ class ResponseTransform extends Transform {
 
     override _flush(done: () => void) {
         if (this.firstMessage) {
-            this.push(this.format.header)
+            if (this.format.header !== undefined) {
+                this.push(this.format.header)
+            }
         }
-        this.push(this.format.footer)
+        if (this.format.footer !== undefined) {
+            this.push(this.format.footer)
+        }
         done()
     }
 }
