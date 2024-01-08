@@ -1,41 +1,42 @@
 ---
-test:
-  - '*test*'
-ci:
-  - '.github/*'
-  - '.github/**/*'
-docs:
-  - '**.md'
-  - '*.md'
-broker:
-  - 'packages/broker/*'
-  - 'packages/broker/**/*'
-browser-test-runner:
-  - 'package/browser-test-runner/*'
-  - 'package/browser-test-runner/**/*'
-network:
-  - 'packages/trackerless-network/*'
-  - 'packages/trackerless-network/**/*'
-dht:
-  - 'packages/dht/*'
-  - 'packages/dht/**/*'
-proto-rpc:
-  - 'packages/proto-rpc/*'
-  - 'packages/proto-rpc/**/*'
-client:
-  - 'packages/client/*'
-  - 'packages/client/**/*'
-protocol:
-  - 'packages/protocol/*'
-  - 'packages/protocol/**/*'
-test-utils:
-  - 'packages/test-utils/*'
-  - 'packages/test-utils/**/*'
-utils:
-  - 'packages/utils/*'
-  - 'packages/utils/**/*'
-cli-tools:
-  - 'packages/cli-tools/*'
-  - 'packages/cli-tools/**/*'
-changelog:
-  - 'packages/*/CHANGELOG.md'
+any:
+  test:
+    - '*test*'
+  ci:
+    - '.github/*'
+    - '.github/**/*'
+  docs:
+    - '**.md'
+    - '*.md'
+  broker:
+    - 'packages/broker/*'
+    - 'packages/broker/**/*'
+  browser-test-runner:
+    - 'package/browser-test-runner/*'
+    - 'package/browser-test-runner/**/*'
+  network:
+    - 'packages/trackerless-network/*'
+    - 'packages/trackerless-network/**/*'
+  dht:
+    - 'packages/dht/*'
+    - 'packages/dht/**/*'
+  proto-rpc:
+    - 'packages/proto-rpc/*'
+    - 'packages/proto-rpc/**/*'
+  client:
+    - 'packages/client/*'
+    - 'packages/client/**/*'
+  protocol:
+    - 'packages/protocol/*'
+    - 'packages/protocol/**/*'
+  test-utils:
+    - 'packages/test-utils/*'
+    - 'packages/test-utils/**/*'
+  utils:
+    - 'packages/utils/*'
+    - 'packages/utils/**/*'
+  cli-tools:
+    - 'packages/cli-tools/*'
+    - 'packages/cli-tools/**/*'
+  changelog:
+    - 'packages/*/CHANGELOG.md'
