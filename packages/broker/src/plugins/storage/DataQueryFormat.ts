@@ -5,9 +5,9 @@ import { binaryToHex, toLengthPrefixedFrame } from '@streamr/utils'
 export interface Format {
     formatMessage: ((bytes: Uint8Array) => string) | ((bytes: Uint8Array) => Uint8Array)
     contentType: string
-    delimiter: string
-    header: string
-    footer: string
+    delimiter?: string
+    header?: string
+    footer?: string
 }
 
 const createJsonFormat = (formatMessage: (bytes: Uint8Array) => string): Format => {
@@ -23,10 +23,7 @@ const createJsonFormat = (formatMessage: (bytes: Uint8Array) => string): Format 
 const createBinaryFormat = (formatMessage: (bytes: Uint8Array) => Uint8Array): Format => {
     return {
         formatMessage,
-        contentType: 'application/octet-stream',
-        delimiter: '',
-        header: '',
-        footer: ''
+        contentType: 'application/octet-stream'
     }
 }
 
