@@ -201,7 +201,8 @@ describe(inspectTarget, () => {
         expect(result).toEqual(false)
     })
 
-    it('returns false if no online nodes pass inspection', async () => {
+    // TODO: re-enable when full inspection re-enabled
+    it.skip('returns false if no online nodes pass inspection', async () => {
         streamrClient.inspect.mockResolvedValue(false)
         const result = await inspectTarget({
             target,
@@ -217,7 +218,8 @@ describe(inspectTarget, () => {
         expect(streamrClient.inspect).toHaveBeenCalledWith(PEER_DESCRIPTOR_THREE, target.streamPart)
     })
 
-    it('returns true if at least one online node passes inspection', async () => {
+    // TODO: re-enable when full inspection re-enabled
+    it.skip('returns true if at least one online node passes inspection', async () => {
         streamrClient.inspect.mockResolvedValueOnce(false)
         streamrClient.inspect.mockResolvedValueOnce(true)
         const result = await inspectTarget({
