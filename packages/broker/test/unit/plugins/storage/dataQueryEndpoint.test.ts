@@ -8,16 +8,10 @@ import {
 } from '../../../../src/plugins/storage/dataQueryEndpoint'
 import { toObject } from '../../../../src/plugins/storage/DataQueryFormat'
 import { Storage } from '../../../../src/plugins/storage/Storage'
-import { PassThrough, Readable } from 'stream'
+import { Readable } from 'stream'
 import { ContentType, MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
 import { MetricsContext, toEthereumAddress, hexToBinary, utf8ToBinary, toLengthPrefixedFrame } from '@streamr/utils'
 import { convertStreamMessageToBytes } from '@streamr/trackerless-network'
-
-const createEmptyStream = () => {
-    const stream = new PassThrough()
-    stream.push(null)
-    return stream
-}
 
 const createOutputStream = (msg: StreamMessage[]): Readable => {
     return toReadableStream(...msg.map(convertStreamMessageToBytes))
@@ -188,7 +182,7 @@ describe('dataQueryEndpoint', () => {
             })
 
             it('invokes storage#requestFrom once with correct arguments', async () => {
-                storage.requestFrom = jest.fn().mockReturnValue(createEmptyStream())
+                storage.requestFrom = jest.fn().mockReturnValue(createOutputStream([]))
 
                 await testGetRequest('/streams/streamId/data/partitions/0/from?fromTimestamp=1496408255672')
 
@@ -228,7 +222,7 @@ describe('dataQueryEndpoint', () => {
             })
 
             it('invokes storage#requestFrom once with correct arguments', async () => {
-                storage.requestFrom = jest.fn().mockReturnValue(createEmptyStream())
+                storage.requestFrom = jest.fn().mockReturnValue(createOutputStream([]))
 
                 await testGetRequest(`/streams/streamId/data/partitions/0/from?${query}`)
 
@@ -321,7 +315,7 @@ describe('dataQueryEndpoint', () => {
             })
 
             it('invokes storage#requestRange once with correct arguments', async () => {
-                storage.requestRange = jest.fn().mockReturnValue(createEmptyStream())
+                storage.requestRange = jest.fn().mockReturnValue(createOutputStream([]))
 
                 // eslint-disable-next-line max-len
                 await testGetRequest('/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
@@ -355,7 +349,7 @@ describe('dataQueryEndpoint', () => {
 
             const query = '?fromTimestamp=1000&toTimestamp=2000&fromSequenceNumber=1&toSequenceNumber=2'
             it('invokes storage#requestRange once with correct arguments', async () => {
-                storage.requestRange = jest.fn().mockReturnValue(createEmptyStream())
+                storage.requestRange = jest.fn().mockReturnValue(createOutputStream([]))
 
                 await testGetRequest(`/streams/streamId/data/partitions/0/range${query}`)
                 expect(storage.requestRange).toHaveBeenCalledTimes(1)
@@ -401,7 +395,7 @@ describe('dataQueryEndpoint', () => {
             })
 
             it('invokes storage#requestRange once with correct arguments', async () => {
-                storage.requestRange = jest.fn().mockReturnValue(createEmptyStream())
+                storage.requestRange = jest.fn().mockReturnValue(createOutputStream([]))
 
                 await testGetRequest(`/streams/streamId/data/partitions/0/range?${query}`)
                 expect(storage.requestRange).toHaveBeenCalledTimes(1)
