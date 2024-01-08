@@ -7,13 +7,12 @@ import { createMessagingPluginTest } from '../../createMessagingPluginTest'
 jest.setTimeout(30000)
 
 const WEBSOCKET_PORT = 12400
-const NETWORK_LAYER_PORT = 44410
 
 createMessagingPluginTest('websocket', 
     {
         createClient: async (action: 'publish' | 'subscribe', streamId: string, apiKey?: string): Promise<WebSocket> => {
             const apiKeySuffix = (apiKey !== undefined) ? `?apiKey=${apiKey}` : ''
-            const client = new WebSocket(`ws://localhost:${WEBSOCKET_PORT}/streams/${encodeURIComponent(streamId)}/${action}${apiKeySuffix}`)
+            const client = new WebSocket(`ws://127.0.0.1:${WEBSOCKET_PORT}/streams/${encodeURIComponent(streamId)}/${action}${apiKeySuffix}`)
             return Promise.race([
                 (async () => {
                     await waitForEvent(client, 'open')
@@ -43,8 +42,7 @@ createMessagingPluginTest('websocket',
         }
     },
     {
-        plugin: WEBSOCKET_PORT,
-        networkLayer: NETWORK_LAYER_PORT
+        plugin: WEBSOCKET_PORT
     },
     module
 )

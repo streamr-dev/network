@@ -31,6 +31,7 @@ import { waitForEvent3, runAndWaitForEvents3, raceEvents3, runAndRaceEvents3, Ru
 import { withRateLimit } from './withRateLimit'
 import { ObservableEventEmitter } from './ObservableEventEmitter'
 import { initEventGateway } from './initEventGateway'
+import { addManagedEventListener } from './addManagedEventListener'
 import { merge } from './merge'
 import { collect } from './collect'
 import { Gate } from './Gate'
@@ -38,6 +39,8 @@ import { TheGraphClient, GraphQLQuery, FetchResponse } from './TheGraphClient'
 import { Heap } from './Heap'
 import { executeSafePromise } from './executeSafePromise'
 import { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary, areEqualBinaries } from './binaryUtils'
+import { filePathToNodeFormat } from './filePathToNodeFormat'
+import { retry } from './retry'
 
 export {
     BrandedString,
@@ -76,6 +79,7 @@ export {
     Events,
     ObservableEventEmitter,
     initEventGateway,
+    addManagedEventListener,
     merge,
     collect,
     Gate,
@@ -88,7 +92,9 @@ export {
     binaryToUtf8,
     hexToBinary,
     utf8ToBinary,
-    areEqualBinaries
+    areEqualBinaries,
+    filePathToNodeFormat,
+    retry
 }
 
 export {

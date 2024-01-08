@@ -1,6 +1,4 @@
 export { NetworkStack, NetworkOptions } from './NetworkStack'
-export { NetworkNode } from './NetworkNode'
+export { NetworkNode, createNetworkNode } from './NetworkNode'
 export { StreamrNodeConfig } from './logic/StreamrNode'
-export { NameDirectory } from './NameDirectory'
-export { NodeID, UserID } from './identifiers'
 export { ProxyDirection } from './proto/packages/trackerless-network/protos/NetworkRpc'

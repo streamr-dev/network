@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { toEthereumAddress } from '@streamr/utils'
-import { MessageID } from '@streamr/protocol'
+import { MessageID, ContentType } from '@streamr/protocol'
 import { Authentication } from '../../src/Authentication'
 import { StreamPermission } from '../../src/permission'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
@@ -10,7 +10,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { StreamrClientError } from '../../src/StreamrClientError'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
-import { createRandomAuthentication, createRelativeTestStreamId } from '../test-utils/utils'
+import { createRandomAuthentication, createRelativeTestStreamId, MOCK_CONTENT } from '../test-utils/utils'
 import { convertStreamMessageToMessage } from '../../src/Message'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
@@ -69,8 +69,9 @@ describe('waitForStorage', () => {
         await stream.addToStorageNode(storageNode.getAddress())
         const msg = convertStreamMessageToMessage(await createSignedMessage({
             messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
-            serializedContent: JSON.stringify({}),
-            authentication
+            serializedContent: MOCK_CONTENT,
+            authentication,
+            contentType: ContentType.JSON
         }))
         await expect(() => client.waitForStorage(msg, {
             interval: 50,
@@ -85,8 +86,9 @@ describe('waitForStorage', () => {
     it('no storage assigned', async () => {
         const msg = convertStreamMessageToMessage(await createSignedMessage({
             messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
-            serializedContent: JSON.stringify({}),
-            authentication
+            serializedContent: MOCK_CONTENT,
+            authentication,
+            contentType: ContentType.JSON
         }))
         await expect(() => client.waitForStorage(msg, {
             messageMatchFn: () => {

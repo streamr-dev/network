@@ -2,8 +2,8 @@ import { Client, types as cassandraTypes } from 'cassandra-driver'
 import { BatchManager } from '../../../../src/plugins/storage/BatchManager'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
-import { toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { ContentType, MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
+import { hexToBinary, utf8ToBinary, toEthereumAddress, waitForCondition } from '@streamr/utils'
 const { TimeUuid } = cassandraTypes
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
@@ -31,8 +31,9 @@ function buildMsg(
             publisherId,
             msgChainId
         ),
-        content: JSON.stringify(content),
-        signature: 'signature'
+        content: utf8ToBinary(JSON.stringify(content)),
+        signature: hexToBinary('0x1234'),
+        contentType: ContentType.JSON
     })
 }
 
@@ -137,7 +138,7 @@ describe('BatchManager', () => {
         expect(batch.retries).toEqual(0)
 
         const mockBatch = jest.fn().mockImplementation(() => {
-            throw Error('Throw not inserted')
+            throw new Error('Throw not inserted')
         })
         batchManager.cassandraClient.batch = mockBatch
 
@@ -158,7 +159,7 @@ describe('BatchManager', () => {
         const batch = batchManager.batches[bucketId]
 
         const mockBatch = jest.fn().mockImplementation(() => {
-            throw Error('Throw not inserted')
+            throw new Error('Throw not inserted')
         })
         batchManager.cassandraClient.batch = mockBatch
 

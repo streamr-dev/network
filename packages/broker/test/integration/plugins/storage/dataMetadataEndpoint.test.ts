@@ -12,7 +12,6 @@ import { toEthereumAddress } from '@streamr/utils'
 
 jest.setTimeout(30000)
 const httpPort1 = 12371
-const networkLayerPort = 40412
 
 const httpGet = (url: string): Promise<[number, string]> => { // return tuple is of form [statusCode, body]
     return new Promise((resolve, reject) => {
@@ -35,11 +34,7 @@ describe('dataMetadataEndpoints', () => {
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
         client1 = createClient(await fetchPrivateKeyWithGas())
-        storageNode = await startStorageNode(
-            storageNodeAccount.privateKey,
-            httpPort1,
-            networkLayerPort
-        )
+        storageNode = await startStorageNode(storageNodeAccount.privateKey, httpPort1)
     })
 
     afterAll(async () => {
@@ -50,7 +45,7 @@ describe('dataMetadataEndpoints', () => {
     })
 
     it('returns http error 400 if given non-numeric partition', async () => {
-        const url = `http://localhost:${httpPort1}/streams/stream/metadata/partitions/non-numeric`
+        const url = `http://127.0.0.1:${httpPort1}/streams/stream/metadata/partitions/non-numeric`
         const [status, json] = await httpGet(url)
         const res = JSON.parse(json)
 
@@ -61,7 +56,7 @@ describe('dataMetadataEndpoints', () => {
     })
 
     it('returns zero values for non-existing stream', async () => {
-        const url = `http://localhost:${httpPort1}/streams/non-existing-stream/metadata/partitions/0`
+        const url = `http://127.0.0.1:${httpPort1}/streams/non-existing-stream/metadata/partitions/0`
         const [status, json] = await httpGet(url)
         const res = JSON.parse(json)
 
@@ -94,12 +89,12 @@ describe('dataMetadataEndpoints', () => {
         })
         await client1.waitForStorage(lastItem)
 
-        const url = `http://localhost:${httpPort1}/streams/${encodeURIComponent(stream.id)}/metadata/partitions/0`
+        const url = `http://127.0.0.1:${httpPort1}/streams/${encodeURIComponent(stream.id)}/metadata/partitions/0`
         const [status, json] = await httpGet(url)
         const res = JSON.parse(json)
 
         expect(status).toEqual(200)
-        expect(res.totalBytes).toEqual(1771)
+        expect(res.totalBytes).toEqual(1763)
         expect(res.totalMessages).toEqual(4)
         expect(
             new Date(res.firstMessage).getTime()

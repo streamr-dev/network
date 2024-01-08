@@ -1,27 +1,29 @@
 import { DuplicateDetector } from '../../src/dht/routing/DuplicateDetector'
 
+const MAX_VALUE_COUNT = 10
+
 describe('Duplicate Detector', () => {
+
     let detector: DuplicateDetector
-    const maxLimit = 10
-    const senderId = 'sender'
+
     beforeEach(async () => {
-        detector = new DuplicateDetector(maxLimit, 100)
+        detector = new DuplicateDetector(MAX_VALUE_COUNT)
     })
 
     it('detects duplicates', async () => {
-        detector.add('test', senderId)
+        detector.add('test')
         expect(detector.size()).toEqual(1)
         expect(detector.isMostLikelyDuplicate('test')).toEqual(true)
     })
 
-    it('resets on resetLimit', () => {
-        for (let i = 0; i < maxLimit; i++) {
-            detector.add(`test${i}`, senderId)
+    it('removes from tail when full', () => {
+        for (let i = 0; i < MAX_VALUE_COUNT; i++) {
+            detector.add(`test${i}`)
         }
-        for (let i = 0; i < maxLimit; i++) {
+        for (let i = 0; i < MAX_VALUE_COUNT; i++) {
             expect(detector.isMostLikelyDuplicate(`test${i}`)).toEqual(true)
         }
-        detector.add('test10', senderId)
+        detector.add('test10')
         expect(detector.size()).toEqual(10)
         expect(detector.isMostLikelyDuplicate('test0')).toEqual(false)
         expect(detector.isMostLikelyDuplicate('test10')).toEqual(true)

@@ -3,7 +3,7 @@ import 'reflect-metadata'
 import { Wallet } from '@ethersproject/wallet'
 import { MAX_PARTITION_COUNT, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { fastPrivateKey, fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { EthereumAddress, Logger, merge, wait, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, Logger, merge, wait, waitForCondition, utf8ToBinary } from '@streamr/utils'
 import crypto from 'crypto'
 import { once } from 'events'
 import express, { Request, Response } from 'express'
@@ -133,6 +133,9 @@ export const createMockMessage = async (
     }, partition)
 }
 
+// When binary contents are supported we don't need this anymore.
+export const MOCK_CONTENT = utf8ToBinary(JSON.stringify({}))
+
 export const getLocalGroupKeyStore = (userAddress: EthereumAddress): LocalGroupKeyStore => {
     const authentication = {
         getAddress: () => userAddress
@@ -153,7 +156,7 @@ export const startPublisherKeyExchangeSubscription = async (
     publisherClient: StreamrClient,
     streamPartId: StreamPartID): Promise<void> => {
     const node = await publisherClient.getNode()
-    await node.subscribe(streamPartId)
+    await node.join(streamPartId)
 }
 
 export const createRandomAuthentication = (): Authentication => {
@@ -181,6 +184,7 @@ export const createStreamRegistry = (opts?: {
         isStreamSubscriber: async () => {
             return opts?.isStreamSubscriber ?? true
         },
+        clearStreamCache: () => {}
     } as any
 }
 
@@ -229,7 +233,7 @@ export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Pro
     })
 }
 
-export const createTestClient = (privateKey: string, id: string, wsPort?: number, acceptProxyConnections = false): StreamrClient => {
+export const createTestClient = (privateKey: string, wsPort?: number, acceptProxyConnections = false): StreamrClient => {
     return new StreamrClient({
         ...CONFIG_TEST,
         auth: {
@@ -238,13 +242,7 @@ export const createTestClient = (privateKey: string, id: string, wsPort?: number
         network: {
             controlLayer: {
                 ...CONFIG_TEST.network!.controlLayer,
-                peerDescriptor: {
-                    id,
-                    websocket: wsPort ? {
-                        ip: 'localhost',
-                        port: wsPort
-                    } : undefined
-                }
+                websocketPortRange: wsPort !== undefined ? { min: wsPort, max: wsPort } : undefined
             },
             node: {
                 acceptProxyConnections
@@ -265,7 +263,7 @@ export const startTestServer = async (
     await once(server, 'listening')
     const port = (server.address() as AddressInfo).port
     return {
-        url: `http://localhost:${port}`,
+        url: `http://127.0.0.1:${port}`,
         stop: async () => {
             server.close()
             await once(server, 'close')

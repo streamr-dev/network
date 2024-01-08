@@ -1,76 +1,43 @@
-import { RandomGraphNode } from './RandomGraphNode'
 import {
-    PeerDescriptor,
     ConnectionLocker,
     DhtNode,
-    ITransport
+    ITransport,
+    PeerDescriptor,
+    EXISTING_CONNECTION_TIMEOUT,
+    DhtAddress,
+    getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
-import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { EventEmitter } from 'eventemitter3'
+import { StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
 import {
+    EthereumAddress,
     Logger,
-    MetricsContext,
-    RateMetric,
     Metric,
+    MetricsContext,
     MetricsDefinition,
-    waitForEvent3
+    RateMetric
 } from '@streamr/utils'
-import { uniq } from 'lodash'
-import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
-import { StreamEntryPointDiscovery } from './StreamEntryPointDiscovery'
-import { ILayer0 } from './ILayer0'
+import { ProxyDirection, StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { Layer0Node } from './Layer0Node'
+import { Layer1Node } from './Layer1Node'
+import { RandomGraphNode } from './RandomGraphNode'
+import { NETWORK_SPLIT_AVOIDANCE_LIMIT, EntryPointDiscovery } from './EntryPointDiscovery'
 import { createRandomGraphNode } from './createRandomGraphNode'
-import { ProxyDirection } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { IStreamNode } from './IStreamNode'
-import { ProxyStreamConnectionClient } from './proxy/ProxyStreamConnectionClient'
-import { NodeID, UserID, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { ProxyClient } from './proxy/ProxyClient'
 
-export enum StreamNodeType {
-    RANDOM_GRAPH = 'random-graph',
-    PROXY = 'proxy'
-}
-
-export interface NeighborCounterEvents {
-    targetReached: () => void
-}
-
-class NeighborCounter {
-
-    private counter = 0
-    private readonly emitter = new EventEmitter<NeighborCounterEvents>()
-    private readonly randomGraphNode: RandomGraphNode
-    private readonly targetNumberOfNeighbors: number
-
-    constructor(randomGraphNode: RandomGraphNode, targetNumberOfNeighbors: number) {
-        this.randomGraphNode = randomGraphNode
-        this.targetNumberOfNeighbors = targetNumberOfNeighbors
-        this.counter = randomGraphNode.getTargetNeighborIds().length
-        this.randomGraphNode.on('targetNeighborConnected', this.onTargetNeighborConnected)
-    }
-
-    private onTargetNeighborConnected = () => {
-        this.counter++
-        if (this.counter == this.targetNumberOfNeighbors) {
-            this.randomGraphNode.off('targetNeighborConnected', this.onTargetNeighborConnected)
-            this.emitter.emit('targetReached')
-        }
-    }
-
-    public async waitForTargetReached(timeout = 5000): Promise<void> {
-        if (this.counter >= this.targetNumberOfNeighbors) {
-            return
-        } else {
-            await waitForEvent3<NeighborCounterEvents>(this.emitter, 'targetReached', timeout)
-        }
-    }
-}
-
-export interface StreamObject {
-    layer1?: DhtNode
-    layer2: IStreamNode
-    type: StreamNodeType
-}
+export type StreamPartDelivery = {
+    broadcast: (msg: StreamMessage) => void
+    stop: () => Promise<void>
+} & ({ 
+    proxied: false
+    layer1Node: Layer1Node
+    node: RandomGraphNode
+    entryPointDiscovery: EntryPointDiscovery
+} | {
+    proxied: true
+    client: ProxyClient
+})
 
 export interface Events {
     newMessage: (msg: StreamMessage) => void
@@ -78,66 +45,53 @@ export interface Events {
 
 const logger = new Logger(module)
 
-let cleanUp: () => Promise<void> = async () => { }
-
 interface Metrics extends MetricsDefinition {
-    publishMessagesPerSecond: Metric
-    publishBytesPerSecond: Metric
+    broadcastMessagesPerSecond: Metric
+    broadcastBytesPerSecond: Metric
 }
 
 export interface StreamrNodeConfig {
     metricsContext?: MetricsContext
     streamPartitionNumOfNeighbors?: number
     streamPartitionMinPropagationTargets?: number
-    nodeName?: string
-    firstConnectionTimeout?: number
     acceptProxyConnections?: boolean
+    rpcRequestTimeout?: number
 }
 
+// TODO rename class?
 export class StreamrNode extends EventEmitter<Events> {
-    private P2PTransport?: ITransport
+    private transport?: ITransport
     private connectionLocker?: ConnectionLocker
-    private layer0?: ILayer0
-    private streamEntryPointDiscovery?: StreamEntryPointDiscovery
+    private layer0Node?: Layer0Node
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
-    public config: StreamrNodeConfig
-    private readonly streams: Map<string, StreamObject>
-    private readonly knownStreamEntryPoints: Map<string, PeerDescriptor[]> = new Map()
-    protected extraMetadata: Record<string, unknown> = {}
+    private readonly config: StreamrNodeConfig
+    private readonly streamParts: Map<StreamPartID, StreamPartDelivery>
+    private readonly knownStreamPartEntryPoints: Map<StreamPartID, PeerDescriptor[]> = new Map()
     private started = false
     private destroyed = false
 
     constructor(config: StreamrNodeConfig) {
         super()
         this.config = config
-        this.streams = new Map()
+        this.streamParts = new Map()
         this.metricsContext = config.metricsContext ?? new MetricsContext()
         this.metrics = {
-            publishMessagesPerSecond: new RateMetric(),
-            publishBytesPerSecond: new RateMetric()
+            broadcastMessagesPerSecond: new RateMetric(),
+            broadcastBytesPerSecond: new RateMetric()
         }
         this.metricsContext.addMetrics('node', this.metrics)
     }
 
-    async start(startedAndJoinedLayer0: ILayer0, transport: ITransport, connectionLocker: ConnectionLocker): Promise<void> {
+    async start(startedAndJoinedLayer0Node: Layer0Node, transport: ITransport, connectionLocker: ConnectionLocker): Promise<void> {
         if (this.started || this.destroyed) {
             return
         }
-        logger.info(`Starting new StreamrNode with id ${getNodeIdFromPeerDescriptor(startedAndJoinedLayer0.getPeerDescriptor())}`)
+        logger.info(`Starting new StreamrNode with id ${getNodeIdFromPeerDescriptor(startedAndJoinedLayer0Node.getLocalPeerDescriptor())}`)
         this.started = true
-        this.layer0 = startedAndJoinedLayer0
-        this.P2PTransport = transport
+        this.layer0Node = startedAndJoinedLayer0Node
+        this.transport = transport
         this.connectionLocker = connectionLocker
-        this.streamEntryPointDiscovery = new StreamEntryPointDiscovery({
-            ownPeerDescriptor: this.getPeerDescriptor(),
-            streams: this.streams,
-            getEntryPointData: (key) => this.layer0!.getDataFromDht(key),
-            getEntryPointDataViaNode: (peerDescriptor, key) => this.layer0!.findDataViaPeer(peerDescriptor, key),
-            storeEntryPointData: (key, data) => this.layer0!.storeDataToDht(key, data),
-            deleteEntryPointData: (key) => this.layer0!.deleteDataFromDht(key)
-        })
-        cleanUp = () => this.destroy()
     }
 
     async destroy(): Promise<void> {
@@ -146,264 +100,225 @@ export class StreamrNode extends EventEmitter<Events> {
         }
         logger.trace('Destroying StreamrNode...')
         this.destroyed = true
-        this.streams.forEach((stream) => {
-            stream.layer2.stop()
-            stream.layer1?.stop()
-        })
-        await this.streamEntryPointDiscovery!.destroy()
-        this.streams.clear()
+        await Promise.all(Array.from(this.streamParts.values()).map((streamPart) => streamPart.stop()))
+        this.streamParts.clear()
         this.removeAllListeners()
-        await this.layer0!.stop()
-        await this.P2PTransport!.stop()
-        this.layer0 = undefined
-        this.P2PTransport = undefined
-        this.streamEntryPointDiscovery = undefined
+        this.layer0Node = undefined
+        this.transport = undefined
         this.connectionLocker = undefined
     }
 
-    subscribeToStream(streamPartId: StreamPartID): void {
-        if (!this.streams.has(streamPartId)) {
-            this.joinStream(streamPartId)
-                .catch((err) => {
-                    logger.warn(`Failed to subscribe to stream ${streamPartId} with error: ${err}`)
-                })
+    broadcast(msg: StreamMessage): void {
+        const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
+        logger.debug(`Broadcasting to stream part ${streamPartId}`)
+        this.joinStreamPart(streamPartId)
+        this.streamParts.get(streamPartId)!.broadcast(msg)
+        this.metrics.broadcastMessagesPerSecond.record(1)
+        this.metrics.broadcastBytesPerSecond.record(msg.content.length)
+    }
+
+    async leaveStreamPart(streamPartId: StreamPartID): Promise<void> {
+        const streamPart = this.streamParts.get(streamPartId)
+        if (streamPart) {
+            await streamPart.stop()
+            this.streamParts.delete(streamPartId)
         }
     }
 
-    publishToStream(streamPartId: StreamPartID, msg: StreamMessage): void {
-        if (this.streams.has(streamPartId)) {
-            this.streams.get(streamPartId)!.layer2.broadcast(msg)
-        } else {
-            this.joinStream(streamPartId)
-                .catch((err) => {
-                    logger.warn(`Failed to publish to stream ${streamPartId} with error: ${err}`)
-                })
-            this.streams.get(streamPartId)!.layer2.broadcast(msg)
-        }
-        this.metrics.publishMessagesPerSecond.record(1)
-        this.metrics.publishBytesPerSecond.record(msg.content.length)
-    }
-
-    unsubscribeFromStream(streamPartId: StreamPartID): void {
-        this.leaveStream(streamPartId)
-    }
-
-    leaveStream(streamPartId: StreamPartID): void {
-        const stream = this.streams.get(streamPartId)
-        if (stream) {
-            stream.layer2.stop()
-            stream.layer1?.stop()
-            this.streams.delete(streamPartId)
-        }
-        this.streamEntryPointDiscovery!.removeSelfAsEntryPoint(streamPartId)
-    }
-
-    async joinStream(streamPartId: StreamPartID): Promise<void> {
-        if (this.streams.has(streamPartId)) {
+    joinStreamPart(streamPartId: StreamPartID): void {
+        let streamPart = this.streamParts.get(streamPartId)
+        if (streamPart !== undefined) {
             return
         }
-        logger.debug(`Joining stream ${streamPartId}`)
-        const knownEntryPoints = this.knownStreamEntryPoints.get(streamPartId) ?? []
-        let entryPoints = knownEntryPoints.concat(knownEntryPoints)
-        const [layer1, layer2] = this.createStream(streamPartId, knownEntryPoints)
-        await layer1.start()
-        await layer2.start()
-        const forwardingPeer = this.layer0!.isJoinOngoing() ? this.layer0!.getKnownEntryPoints()[0] : undefined
-        const discoveryResult = await this.streamEntryPointDiscovery!.discoverEntryPointsFromDht(
+        logger.debug(`Join stream part ${streamPartId}`)
+        const layer1Node = this.createLayer1Node(streamPartId, this.knownStreamPartEntryPoints.get(streamPartId) ?? [])
+        const entryPointDiscovery = new EntryPointDiscovery({
             streamPartId,
-            knownEntryPoints.length,
-            forwardingPeer
-        )
-        entryPoints = knownEntryPoints.concat(discoveryResult.discoveredEntryPoints)
-        await layer1.joinDht(sampleSize(entryPoints, 4))
-        await this.streamEntryPointDiscovery!.storeSelfAsEntryPointIfNecessary(
-            streamPartId,
-            discoveryResult.joiningEmptyStream,
-            discoveryResult.entryPointsFromDht,
-            entryPoints.length
-        )
-    }
-
-    private createStream(streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): [DhtNode, RandomGraphNode] {
-        const layer1 = this.createLayer1Node(streamPartId, entryPoints)
-        const layer2 = this.createRandomGraphNode(streamPartId, layer1)
-        this.streams.set(streamPartId, {
-            type: StreamNodeType.RANDOM_GRAPH,
-            layer1,
-            layer2
+            localPeerDescriptor: this.getPeerDescriptor(),
+            layer1Node,
+            getEntryPointData: (key) => this.layer0Node!.getDataFromDht(key),
+            storeEntryPointData: (key, data) => this.layer0Node!.storeDataToDht(key, data),
+            deleteEntryPointData: async (key) => this.layer0Node!.deleteDataFromDht(key, false)
         })
-        layer2.on('message', (message: StreamMessage) => {
+        const node = this.createRandomGraphNode(
+            streamPartId,
+            layer1Node, 
+            () => entryPointDiscovery.isLocalNodeEntryPoint()
+        )
+        streamPart = {
+            proxied: false,
+            layer1Node,
+            node,
+            entryPointDiscovery,
+            broadcast: (msg: StreamMessage) => node.broadcast(msg),
+            stop: async () => {
+                await entryPointDiscovery.destroy()
+                node.stop()
+                await layer1Node.stop()
+            }
+        }
+        this.streamParts.set(streamPartId, streamPart)
+        node.on('message', (message: StreamMessage) => {
             this.emit('newMessage', message)
         })
-        return [layer1, layer2]
-    }
-
-    private createLayer1Node = (streamPartId: StreamPartID, entryPoints: PeerDescriptor[]) => {
-        return new DhtNode({
-            transportLayer: this.layer0!,
-            serviceId: 'layer1::' + streamPartId,
-            peerDescriptor: this.layer0!.getPeerDescriptor(),
-            entryPoints,
-            numberOfNodesPerKBucket: 4,
-            rpcRequestTimeout: 15000,
-            dhtJoinTimeout: 60000,
-            nodeName: this.config.nodeName + ':layer1'
+        const handleEntryPointLeave = async () => {
+            if (this.destroyed || entryPointDiscovery.isLocalNodeEntryPoint() || this.knownStreamPartEntryPoints.has(streamPartId)) {
+                return
+            }
+            const entryPoints = await entryPointDiscovery.discoverEntryPointsFromDht(0)
+            await entryPointDiscovery.storeSelfAsEntryPointIfNecessary(entryPoints.discoveredEntryPoints.length)
+        }
+        node.on('entryPointLeaveDetected', () => handleEntryPointLeave())
+        setImmediate(async () => {
+            try {
+                await this.startLayersAndJoinDht(streamPartId, entryPointDiscovery)
+            } catch (err) {
+                logger.warn(`Failed to join to stream part ${streamPartId} with error: ${err}`)
+            }
         })
     }
 
-    private createRandomGraphNode = (streamPartId: StreamPartID, layer1: DhtNode) => {
+    private async startLayersAndJoinDht(streamPartId: StreamPartID, entryPointDiscovery: EntryPointDiscovery): Promise<void> {
+        logger.debug(`Start layers and join DHT for stream part ${streamPartId}`)
+        const streamPart = this.streamParts.get(streamPartId)
+        if ((streamPart === undefined) || streamPart.proxied) {
+            // leaveStreamPart has been called (or leaveStreamPart called, and then setProxies called)
+            return
+        }
+        await streamPart.layer1Node.start()
+        await streamPart.node.start()
+        let entryPoints = this.knownStreamPartEntryPoints.get(streamPartId) ?? []
+        const discoveryResult = await entryPointDiscovery.discoverEntryPointsFromDht(
+            entryPoints.length
+        )
+        entryPoints = entryPoints.concat(discoveryResult.discoveredEntryPoints)
+        await streamPart.layer1Node.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT))
+        if (discoveryResult.entryPointsFromDht) {
+            await entryPointDiscovery.storeSelfAsEntryPointIfNecessary(entryPoints.length)
+        }
+    }
+
+    private createLayer1Node(streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): Layer1Node {
+        return new DhtNode({
+            transport: this.layer0Node!,
+            serviceId: 'layer1::' + streamPartId,
+            peerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
+            entryPoints,
+            numberOfNodesPerKBucket: 4,  // TODO use config option or named constant?
+            rpcRequestTimeout: EXISTING_CONNECTION_TIMEOUT,
+            dhtJoinTimeout: 20000  // TODO use config option or named constant?
+        })
+    }
+
+    private createRandomGraphNode(
+        streamPartId: StreamPartID,
+        layer1Node: Layer1Node,
+        isLocalNodeEntryPoint: () => boolean
+    ) {
         return createRandomGraphNode({
-            randomGraphId: streamPartId,
-            P2PTransport: this.P2PTransport!,
-            layer1,
+            streamPartId,
+            transport: this.transport!,
+            layer1Node,
             connectionLocker: this.connectionLocker!,
-            ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
+            localPeerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
             minPropagationTargets: this.config.streamPartitionMinPropagationTargets,
             numOfTargetNeighbors: this.config.streamPartitionNumOfNeighbors,
-            name: this.config.nodeName,
-            acceptProxyConnections: this.config.acceptProxyConnections
+            acceptProxyConnections: this.config.acceptProxyConnections,
+            rpcRequestTimeout: this.config.rpcRequestTimeout,
+            isLocalNodeEntryPoint
         })
-    }
-
-    async waitForJoinAndPublish(
-        streamPartId: StreamPartID,
-        msg: StreamMessage,
-        timeout?: number
-    ): Promise<number> {
-        if (this.getStream(streamPartId)?.type === StreamNodeType.PROXY) {
-            return 0
-        }
-        await this.joinStream(streamPartId)
-        if (this.getStream(streamPartId)!.layer1!.getBucketSize() > 0) {
-            const neighborCounter = new NeighborCounter(this.getStream(streamPartId)!.layer2 as RandomGraphNode, 1)
-            await neighborCounter.waitForTargetReached(timeout)
-        }
-        this.publishToStream(streamPartId, msg)
-        return this.getStream(streamPartId)?.layer2.getTargetNeighborIds().length ?? 0
-    }
-
-    async waitForJoinAndSubscribe(
-        streamPartId: StreamPartID,
-        timeout?: number,
-        expectedNeighbors = 1
-    ): Promise<number> {
-        if (this.getStream(streamPartId)?.type === StreamNodeType.PROXY) {
-            return 0
-        }
-        await this.joinStream(streamPartId)
-        if (this.getStream(streamPartId)!.layer1!.getBucketSize() > 0) {
-            const neighborCounter = new NeighborCounter(this.getStream(streamPartId)!.layer2 as RandomGraphNode, expectedNeighbors)
-            await neighborCounter.waitForTargetReached(timeout)
-        }
-        this.subscribeToStream(streamPartId)
-        return this.getStream(streamPartId)?.layer2.getTargetNeighborIds().length ?? 0
     }
 
     async setProxies(
         streamPartId: StreamPartID,
-        contactPeerDescriptors: PeerDescriptor[],
+        nodes: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: UserID,
+        userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
-        if (this.streams.get(streamPartId)?.type === StreamNodeType.PROXY && contactPeerDescriptors.length > 0) {
-            const proxyClient = this.streams.get(streamPartId)!.layer2 as ProxyStreamConnectionClient
-            await proxyClient.setProxies(streamPartId, contactPeerDescriptors, direction, userId, connectionCount)
-        } else if (this.streams.get(streamPartId)?.type === StreamNodeType.PROXY && contactPeerDescriptors.length === 0) {
-            this.streams.get(streamPartId)!.layer2.stop()
-            this.streams.delete(streamPartId)
+        // TODO explicit default value for "acceptProxyConnections" or make it required
+        if (this.config.acceptProxyConnections) {
+            throw new Error('cannot set proxies when acceptProxyConnections=true')
+        }
+        const enable = (nodes.length > 0) && ((connectionCount === undefined) || (connectionCount > 0))
+        if (enable) {
+            let client: ProxyClient
+            const alreadyProxied = this.isProxiedStreamPart(streamPartId)
+            if (alreadyProxied) {
+                client = (this.streamParts.get(streamPartId)! as { client: ProxyClient }).client 
+            } else {
+                client = this.createProxyClient(streamPartId)
+                this.streamParts.set(streamPartId, {
+                    proxied: true,
+                    client,
+                    broadcast: (msg: StreamMessage) => client.broadcast(msg),
+                    stop: async () => client.stop()
+                })
+                client.on('message', (message: StreamMessage) => {
+                    this.emit('newMessage', message)
+                })
+                await client.start()
+            }
+            await client.setProxies(nodes, direction, userId, connectionCount)
         } else {
-            const proxyClient = this.createProxyStream(streamPartId, userId)
-            await proxyClient.start()
-            await proxyClient.setProxies(streamPartId, contactPeerDescriptors, direction, userId, connectionCount)
+            await this.streamParts.get(streamPartId)?.stop()
+            this.streamParts.delete(streamPartId)
         }
     }
 
-    private createProxyStream(streamPartId: StreamPartID, userId: UserID): ProxyStreamConnectionClient {
-        const layer2 = this.createProxyStreamConnectionClient(streamPartId, userId)
-        this.streams.set(streamPartId, {
-            type: StreamNodeType.PROXY,
-            layer2
-        })
-        layer2.on('message', (message: StreamMessage) => {
-            this.emit('newMessage', message)
-        })
-        return layer2
-    }
-
-    private createProxyStreamConnectionClient(streamPartId: StreamPartID, userId: UserID): ProxyStreamConnectionClient {
-        return new ProxyStreamConnectionClient({
-            P2PTransport: this.P2PTransport!,
-            ownPeerDescriptor: this.layer0!.getPeerDescriptor(),
+    private createProxyClient(streamPartId: StreamPartID): ProxyClient {
+        return new ProxyClient({
+            transport: this.transport!,
+            localPeerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
             streamPartId,
             connectionLocker: this.connectionLocker!,
-            nodeName: this.config.nodeName,
-            userId
+            minPropagationTargets: this.config.streamPartitionMinPropagationTargets
         })
     }
 
     async inspect(peerDescriptor: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
-        if (this.streams.get(streamPartId)?.type === StreamNodeType.RANDOM_GRAPH) {
-            const streamNode = this.streams.get(streamPartId)!.layer2 as RandomGraphNode
-            return streamNode.inspect(peerDescriptor)
+        const streamPart = this.streamParts.get(streamPartId)
+        if ((streamPart !== undefined) && !streamPart.proxied) {
+            return streamPart.node.inspect(peerDescriptor)
         }
         return false
     }
 
     setStreamPartEntryPoints(streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): void {
-        this.knownStreamEntryPoints.set(streamPartId, entryPoints)
+        this.knownStreamPartEntryPoints.set(streamPartId, entryPoints)
     }
 
-    isProxiedStreamPart(streamId: string, direction: ProxyDirection): boolean {
-        return this.streams.get(streamId)?.type === StreamNodeType.PROXY 
-            && (this.streams.get(streamId)!.layer2 as ProxyStreamConnectionClient).getDirection() === direction
+    isProxiedStreamPart(streamPartId: StreamPartID, direction?: ProxyDirection): boolean {
+        const streamPart = this.streamParts.get(streamPartId)
+        return (streamPart !== undefined)
+            && streamPart.proxied
+            && ((direction === undefined) || (streamPart.client.getDirection() === direction))
     }
 
-    hasProxyConnection(streamId: string, nodeId: NodeID, direction: ProxyDirection): boolean {
-        return this.streams.has(streamId) && this.streams.get(streamId)!.layer2.hasProxyConnection(nodeId, direction)
+    getStreamPartDelivery(streamPartId: StreamPartID): StreamPartDelivery | undefined {
+        return this.streamParts.get(streamPartId)
     }
 
-    getStream(streamPartId: StreamPartID): StreamObject | undefined {
-        return this.streams.get(streamPartId)
-    }
-
-    hasStream(streamPartId: StreamPartID): boolean {
-        return this.streams.has(streamPartId)
+    hasStreamPart(streamPartId: StreamPartID): boolean {
+        return this.streamParts.has(streamPartId)
     }
 
     getPeerDescriptor(): PeerDescriptor {
-        return this.layer0!.getPeerDescriptor()
+        return this.layer0Node!.getLocalPeerDescriptor()
     }
 
-    getNodeId(): NodeID {
-        return this.layer0!.getNodeId().toKey() as unknown as NodeID
+    getNodeId(): DhtAddress {
+        return getNodeIdFromPeerDescriptor(this.layer0Node!.getLocalPeerDescriptor())
     }
 
-    getNeighbors(): NodeID[] {
-        const neighbors: NodeID[] = []
-        this.streams.forEach((stream) =>
-            stream.layer2.getTargetNeighborIds().forEach((neighbor) => neighbors.push(neighbor))
-        )
-        return uniq(neighbors)
+    getNeighbors(streamPartId: StreamPartID): DhtAddress[] {
+        const streamPart = this.streamParts.get(streamPartId)
+        return (streamPart !== undefined) && (streamPart.proxied === false)
+            ? streamPart.node.getTargetNeighborIds()
+            : []
     }
 
     getStreamParts(): StreamPartID[] {
-        return Array.from(this.streams.keys()).map((id) => StreamPartIDUtils.parse(id))
+        return Array.from(this.streamParts.keys()).map((id) => StreamPartIDUtils.parse(id))
     }
-
-    setExtraMetadata(metadata: Record<string, unknown>): void {
-        this.extraMetadata = metadata
-    }
-
-    isJoinRequired(streamPartId: StreamPartID): boolean {
-        return !this.streams.has(streamPartId) && Array.from(this.streams.values()).every((stream) => stream.type === StreamNodeType.PROXY)
-    }
-
 }
-
-[`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`].forEach((term) => {
-    process.on(term, async () => {
-        await cleanUp()
-        process.exit()
-    })
-})

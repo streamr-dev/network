@@ -1,3 +1,4 @@
+import { NetworkNodeType } from 'streamr-client'
 import { overrideConfigToEnvVarsIfGiven } from '../../src/config/config'
 
 describe('overrideConfigToEnvVarsIfGiven', () => {
@@ -25,8 +26,8 @@ describe('overrideConfigToEnvVarsIfGiven', () => {
         process.env.STREAMR__BROKER__CLIENT__AUTH__PRIVATE_KEY = '0x111'
         process.env.STREAMR__BROKER__CLIENT__ORDER_MESSAGES = 'true'
         process.env.STREAMR__BROKER__CLIENT__GAP_FILL = 'false'
-        process.env.STREAMR__BROKER__CLIENT__NETWORK__CONTROL_LAYER__PEER_DESCRIPTOR__ID = 'kademliaID'
-        process.env.STREAMR__BROKER__CLIENT__NETWORK__CONTROL_LAYER__PEER_DESCRIPTOR__TYPE = '0'
+        process.env.STREAMR__BROKER__CLIENT__NETWORK__CONTROL_LAYER__PEER_DESCRIPTOR__NODE_ID = 'nodeId'
+        process.env.STREAMR__BROKER__CLIENT__NETWORK__CONTROL_LAYER__PEER_DESCRIPTOR__TYPE = NetworkNodeType.NODEJS
         process.env.STREAMR__BROKER__AUTHENTICATION__KEYS_1 = 'key-1'
         process.env.STREAMR__BROKER__AUTHENTICATION__KEYS_2 = 'key-2'
         overrideConfigToEnvVarsIfGiven(config)
@@ -40,8 +41,8 @@ describe('overrideConfigToEnvVarsIfGiven', () => {
                 network: {
                     controlLayer: {
                         peerDescriptor: {
-                            id: 'kademliaID',
-                            type: 0
+                            nodeId: 'nodeId',
+                            type: NetworkNodeType.NODEJS
                         }
                     }
                 }

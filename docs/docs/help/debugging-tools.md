@@ -6,10 +6,12 @@ sidebar_position: 2
 <!-- TODO, talking through common connectivity issues and so on -->
 Turning up the log level is a good way to diagnose tricky connectivity problems. There are two ways to set a desired logging level.
 
-You can pass the logging level in the StreamrClient constructor as follows:
+You can pass the logging level in the Streamr constructor as follows:
 
 ```ts
-const streamr = new StreamrClient({
+const Streamr = require('streamr-client')
+
+const streamr = new Streamr({
   logLevel: 'debug',
   // ... more options
 })
@@ -30,7 +32,7 @@ You can learn more about the underlying network connections with this code:
 
 ```ts
 setInterval(() => {
-    const info = await client.getDiagnosticInfo()
+    const info = await streamr.getDiagnosticInfo()
     console.log(JSON.stringify(info))
 }, 10 * 1000) // every 10 sec
 ```

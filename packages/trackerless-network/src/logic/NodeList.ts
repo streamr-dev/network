@@ -1,34 +1,35 @@
-import { PeerDescriptor, PeerID, peerIdFromPeerDescriptor } from '@streamr/dht'
+import { DhtAddress, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { sample } from 'lodash'
-import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
+import { DeliveryRpcRemote } from './DeliveryRpcRemote'
 import { EventEmitter } from 'eventemitter3'
-import { getNodeIdFromPeerDescriptor, NodeID } from '../identifiers'
 
 export interface Events {
-    nodeAdded: (id: NodeID, remote: RemoteRandomGraphNode) => any
+    nodeAdded: (id: DhtAddress, remote: DeliveryRpcRemote) => any
 }
 
-const getValuesOfIncludedKeys = (nodes: Map<NodeID, RemoteRandomGraphNode>, exclude: NodeID[]): RemoteRandomGraphNode[] => {
+const getValuesOfIncludedKeys = (nodes: Map<DhtAddress, DeliveryRpcRemote>, exclude: DhtAddress[]): DeliveryRpcRemote[] => {
     return Array.from(nodes.entries())
         .filter(([id, _node]) => !exclude.includes(id))
         .map(([_id, node]) => node)
 }
 
-export class NodeList extends EventEmitter<Events> {
-    private readonly nodes: Map<NodeID, RemoteRandomGraphNode>
-    private readonly limit: number
-    private ownPeerID: PeerID
+// The items in the list are in the insertion order
 
-    constructor(ownPeerId: PeerID, limit: number) {
+export class NodeList extends EventEmitter<Events> {
+    private readonly nodes: Map<DhtAddress, DeliveryRpcRemote>
+    private readonly limit: number
+    private ownId: DhtAddress
+
+    constructor(ownId: DhtAddress, limit: number) {
         super()
         this.nodes = new Map()
         this.limit = limit
-        this.ownPeerID = ownPeerId
+        this.ownId = ownId
     }
 
-    add(remote: RemoteRandomGraphNode): void {
-        if (!this.ownPeerID.equals(peerIdFromPeerDescriptor(remote.getPeerDescriptor())) && this.nodes.size < this.limit) {
-            const nodeId = getNodeIdFromPeerDescriptor(remote.getPeerDescriptor())
+    add(remote: DeliveryRpcRemote): void {
+        const nodeId = getNodeIdFromPeerDescriptor(remote.getPeerDescriptor())
+        if ((this.ownId !== nodeId) && (this.nodes.size < this.limit)) {
             const isExistingNode = this.nodes.has(nodeId)
             this.nodes.set(nodeId, remote)
             
@@ -38,23 +39,15 @@ export class NodeList extends EventEmitter<Events> {
         }
     }
 
-    remove(peerDescriptor: PeerDescriptor): void {
-        this.nodes.delete(getNodeIdFromPeerDescriptor(peerDescriptor))
-    }
-
-    removeById(nodeId: NodeID): void {
+    remove(nodeId: DhtAddress): void {
         this.nodes.delete(nodeId)
     }
 
-    hasNode(peerDescriptor: PeerDescriptor): boolean {
-        return this.nodes.has(getNodeIdFromPeerDescriptor(peerDescriptor))
-    }
-
-    hasNodeById(nodeId: NodeID): boolean {
+    has(nodeId: DhtAddress): boolean {
         return this.nodes.has(nodeId)
     }
 
-    replaceAll(neighbors: RemoteRandomGraphNode[]): void {
+    replaceAll(neighbors: DeliveryRpcRemote[]): void {
         this.nodes.clear()
         const limited = neighbors.splice(0, this.limit)
         limited.forEach((remote) => {
@@ -62,41 +55,41 @@ export class NodeList extends EventEmitter<Events> {
         })
     }
 
-    getIds(): NodeID[] {
+    getIds(): DhtAddress[] {
         return Array.from(this.nodes.keys())
     }
 
-    getNeighborById(id: NodeID): RemoteRandomGraphNode | undefined {
+    get(id: DhtAddress): DeliveryRpcRemote | undefined {
         return this.nodes.get(id)
     }
 
-    size(exclude: NodeID[] = []): number {
+    size(exclude: DhtAddress[] = []): number {
         return Array.from(this.nodes.keys()).filter((node) => !exclude.includes(node)).length
     }
 
-    getRandom(exclude: NodeID[]): RemoteRandomGraphNode | undefined {
+    getRandom(exclude: DhtAddress[]): DeliveryRpcRemote | undefined {
         return sample(getValuesOfIncludedKeys(this.nodes, exclude))
     }
 
-    getClosest(exclude: NodeID[]): RemoteRandomGraphNode | undefined {
+    getFirst(exclude: DhtAddress[]): DeliveryRpcRemote | undefined {
         const included = getValuesOfIncludedKeys(this.nodes, exclude)
         return included[0]
     }
 
-    getClosestAndFurthest(exclude: NodeID[]): RemoteRandomGraphNode[] {
+    getFirstAndLast(exclude: DhtAddress[]): DeliveryRpcRemote[] {
         const included = getValuesOfIncludedKeys(this.nodes, exclude)
         if (included.length === 0) {
             return []
         }
-        return included.length > 1 ? [this.getClosest(exclude)!, this.getFurthest(exclude)!] : [this.getClosest(exclude)!]
+        return included.length > 1 ? [this.getFirst(exclude)!, this.getLast(exclude)!] : [this.getFirst(exclude)!]
     }
 
-    getFurthest(exclude: NodeID[]): RemoteRandomGraphNode | undefined {
+    getLast(exclude: DhtAddress[]): DeliveryRpcRemote | undefined {
         const included = getValuesOfIncludedKeys(this.nodes, exclude)
         return included[included.length - 1]
     }
 
-    getNodes(): RemoteRandomGraphNode[] {
+    getAll(): DeliveryRpcRemote[] {
         return Array.from(this.nodes.values())
     }
 

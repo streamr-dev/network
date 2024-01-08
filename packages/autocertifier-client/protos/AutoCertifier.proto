@@ -1,0 +1,13 @@
+syntax = "proto3";
+option optimize_for = CODE_SIZE;
+
+message HasSessionRequest {
+    string sessionId = 1;
+}
+
+message HasSessionResponse {
+}
+
+service AutoCertifierRpc {
+    rpc hasSession (HasSessionRequest) returns (HasSessionResponse);
+}

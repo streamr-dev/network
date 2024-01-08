@@ -1,10 +1,6 @@
-import { DhtPeer } from './DhtPeer'
-import KBucket from 'k-bucket'
+import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 import { EventEmitter } from 'eventemitter3'
-import { SortedContactList } from './contact/SortedContactList'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { PeerID, PeerIDKey } from '../helpers/PeerID'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
@@ -15,675 +11,515 @@ import {
     PeerDescriptor,
     PingRequest,
     PingResponse,
-    FindMode,
     DataEntry,
+    ExternalFindDataRequest,
+    ExternalFindDataResponse,
+    ExternalStoreDataRequest,
+    ExternalStoreDataResponse,
+    RecursiveOperation,
 } from '../proto/packages/dht/protos/DhtRpc'
-import * as Err from '../helpers/errors'
-import { DisconnectionType, ITransport, TransportEvents } from '../transport/ITransport'
-import { ConnectionManager, ConnectionManagerConfig, PortRange } from '../connection/ConnectionManager'
-import { DhtRpcServiceClient, ExternalApiServiceClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { ITransport, TransportEvents } from '../transport/ITransport'
+import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
+import { ExternalApiRpcClient, StoreRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
     Logger,
-    MetricsContext
+    MetricsContext,
+    merge,
+    waitForCondition
 } from '@streamr/utils'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { RandomContactList } from './contact/RandomContactList'
-import { Empty } from '../proto/google/protobuf/empty'
-import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { Any } from '../proto/google/protobuf/any'
-import { isSamePeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { Router } from './routing/Router'
-import { RecursiveFinder, RecursiveFindResult } from './find/RecursiveFinder'
-import { DataStore } from './store/DataStore'
+import { RecursiveOperationManager, RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'
+import { StoreManager } from './store/StoreManager'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
-import { IceServer } from '../connection/WebRTC/WebRtcConnector'
-import { ExternalApi } from './ExternalApi'
-import { RemoteExternalApi } from './RemoteExternalApi'
-import { UUID } from '../exports'
-import { isNodeJS } from '../helpers/browser/isNodeJS'
+import { IceServer } from '../connection/webrtc/WebrtcConnector'
+import { ExternalApiRpcRemote } from './ExternalApiRpcRemote'
+import { UUID } from '../helpers/UUID'
+import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
+import { sample } from 'lodash'
+import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
+import { MarkRequired } from 'ts-essentials'
+import { DhtNodeRpcLocal } from './DhtNodeRpcLocal'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
+import { PeerManager } from './PeerManager'
+import { ServiceID } from '../types/ServiceID'
+import { DhtAddress, DhtAddressRaw, createRandomDhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../identifiers'
+import { StoreRpcRemote } from './store/StoreRpcRemote'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     contactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    joinCompleted: () => void
-    newKbucketContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    kbucketContactRemoved: (peerDescriptor: PeerDescriptor) => void
-    newOpenInternetContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    openInternetContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     newRandomContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     randomContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
 }
 
 export interface DhtNodeOptions {
-    serviceId?: string
+    serviceId?: ServiceID
     joinParallelism?: number
     maxNeighborListSize?: number
     numberOfNodesPerKBucket?: number
     joinNoProgressLimit?: number
+    peerDiscoveryQueryBatchSize?: number
     dhtJoinTimeout?: number
     metricsContext?: MetricsContext
     storeHighestTtl?: number
     storeMaxTtl?: number
+    networkConnectivityTimeout?: number
+    storageRedundancyFactor?: number
 
-    transportLayer?: ITransport
+    transport?: ITransport
     peerDescriptor?: PeerDescriptor
     entryPoints?: PeerDescriptor[]
     websocketHost?: string
     websocketPortRange?: PortRange
-    peerIdString?: string
+    websocketServerEnableTls?: boolean
+    peerId?: DhtAddress
 
-    nodeName?: string
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
     webrtcAllowPrivateAddresses?: boolean
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
     webrtcNewConnectionTimeout?: number
+    webrtcPortRange?: PortRange
+    maxMessageSize?: number
     maxConnections?: number
+    tlsCertificate?: TlsCertificate
+    externalIp?: string
+    autoCertifierUrl?: string
+    autoCertifierConfigFile?: string
 }
 
-export class DhtNodeConfig {
-    serviceId = 'layer0'
-    joinParallelism = 3
-    maxNeighborListSize = 200
-    numberOfNodesPerKBucket = 8
-    joinNoProgressLimit = 4
-    dhtJoinTimeout = 60000
-    getClosestContactsLimit = 5
-    maxConnections = 80
-    storeHighestTtl = 60000
-    storeMaxTtl = 60000
-    storeNumberOfCopies = 5
-    metricsContext = new MetricsContext()
-    peerIdString = new UUID().toString()
-
-    transportLayer?: ITransport
-    peerDescriptor?: PeerDescriptor
-    entryPoints?: PeerDescriptor[]
-    websocketHost?: string
-    websocketPortRange?: PortRange
-    nodeName?: string
-    rpcRequestTimeout?: number
-    iceServers?: IceServer[]
-    webrtcAllowPrivateAddresses?: boolean
-    webrtcDatachannelBufferThresholdLow?: number
-    webrtcDatachannelBufferThresholdHigh?: number
-    webrtcNewConnectionTimeout?: number
-
-    constructor(conf: Partial<DhtNodeOptions>) {
-        // assign given non-undefined config vars over defaults
-        let k: keyof typeof conf
-        for (k in conf) {
-            if (conf[k] === undefined) {
-                delete conf[k]
-            }
-        }
-        Object.assign(this, conf)
-    }
-}
+type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
+    'serviceId' |
+    'joinParallelism' |
+    'maxNeighborListSize' |
+    'numberOfNodesPerKBucket' |
+    'joinNoProgressLimit' |
+    'dhtJoinTimeout' |
+    'peerDiscoveryQueryBatchSize' |
+    'maxConnections' |
+    'storeHighestTtl' |
+    'storeMaxTtl' |
+    'networkConnectivityTimeout' |
+    'storageRedundancyFactor' |
+    'metricsContext' |
+    'peerId'>
 
 const logger = new Logger(module)
 
 export type Events = TransportEvents & DhtNodeEvents
 
-export const createPeerDescriptor = (msg?: ConnectivityResponse, peerIdString?: string, nodeName?: string): PeerDescriptor => {
-    let peerId: Uint8Array
-    if (msg) {
-        peerId = peerIdString ? PeerID.fromString(peerIdString).value : PeerID.fromIp(msg.ip).value
+export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: DhtAddress): PeerDescriptor => {
+    let nodeId: DhtAddressRaw
+    if ((peerId === undefined) && (msg !== undefined)) {
+        nodeId = new Uint8Array(20)
+        const ipNum = msg.host.split('.').map((octet, index, array) => {
+            return parseInt(octet) * Math.pow(256, (array.length - index - 1))
+        }).reduce((prev, curr) => prev + curr)
+        const view = new DataView(nodeId.buffer)
+        view.setInt32(0, ipNum)
+        nodeId.set((new UUID()).value, 4)
     } else {
-        peerId = PeerID.fromString(peerIdString!).value
+        nodeId = getRawFromDhtAddress(peerId!)
     }
-    const ret: PeerDescriptor = { kademliaId: peerId, nodeName: nodeName, type: NodeType.NODEJS }
+    const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS
+    const ret: PeerDescriptor = { nodeId, type: nodeType }
     if (msg && msg.websocket) {
-        ret.websocket = { ip: msg.websocket!.ip, port: msg.websocket!.port }
-        ret.openInternet = true
+        ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
     }
     return ret
 }
 
 export class DhtNode extends EventEmitter<Events> implements ITransport {
-    private readonly config: DhtNodeConfig
 
-    private bucket?: KBucket<DhtPeer>
-    private connections: Map<PeerIDKey, DhtPeer> = new Map()
-    private neighborList?: SortedContactList<DhtPeer>
-    private openInternetPeers?: SortedContactList<DhtPeer>
-    private randomPeers?: RandomContactList<DhtPeer>
+    private readonly config: StrictDhtNodeOptions
     private rpcCommunicator?: RoutingRpcCommunicator
-    private transportLayer?: ITransport
-    private ownPeerDescriptor?: PeerDescriptor
-    private ownPeerId?: PeerID
+    private transport?: ITransport
+    private localPeerDescriptor?: PeerDescriptor
     public router?: Router
-    public dataStore?: DataStore
-    private localDataStore = new LocalDataStore()
-    private recursiveFinder?: RecursiveFinder
+    private storeManager?: StoreManager
+    private localDataStore: LocalDataStore
+    private recursiveOperationManager?: RecursiveOperationManager
     private peerDiscovery?: PeerDiscovery
-    private externalApi?: ExternalApi
-
+    private peerManager?: PeerManager
     public connectionManager?: ConnectionManager
     private started = false
-    private stopped = false
-    private entryPointDisconnectTimeout?: NodeJS.Timeout
+    private abortController = new AbortController()
 
-    public contactAddCounter = 0
-    public contactOnAddedCounter = 0
-
-    constructor(conf: Partial<DhtNodeConfig>) {
+    constructor(conf: DhtNodeOptions) {
         super()
-        this.config = new DhtNodeConfig(conf)
+        this.config = merge({
+            serviceId: 'layer0',
+            joinParallelism: 3,
+            maxNeighborListSize: 200,
+            numberOfNodesPerKBucket: 8,
+            joinNoProgressLimit: 5,
+            dhtJoinTimeout: 60000,
+            peerDiscoveryQueryBatchSize: 5,
+            maxConnections: 80,
+            storeHighestTtl: 60000,
+            storeMaxTtl: 60000,
+            networkConnectivityTimeout: 10000,
+            storageRedundancyFactor: 5,
+            metricsContext: new MetricsContext(),
+            peerId: createRandomDhtAddress()
+        }, conf)
+        this.localDataStore = new LocalDataStore(this.config.storeMaxTtl) 
         this.send = this.send.bind(this)
     }
 
     public async start(): Promise<void> {
-        if (this.started || this.stopped) {
+        if (this.started || this.abortController.signal.aborted) {
             return
         }
         logger.trace(`Starting new Streamr Network DHT Node with serviceId ${this.config.serviceId}`)
         this.started = true
 
-        if (!isNodeJS()) {
+        if (isBrowserEnvironment()) {
             this.config.websocketPortRange = undefined
             if (this.config.peerDescriptor) {
                 this.config.peerDescriptor.websocket = undefined
             }
         }
-        // If transportLayer is given, do not create a ConnectionManager
-        if (this.config.transportLayer) {
-            this.transportLayer = this.config.transportLayer
-            this.ownPeerDescriptor = this.transportLayer.getPeerDescriptor()
-            if (this.config.transportLayer instanceof ConnectionManager) {
-                this.connectionManager = this.config.transportLayer
+        // If transport is given, do not create a ConnectionManager
+        if (this.config.transport) {
+            this.transport = this.config.transport
+            this.localPeerDescriptor = this.transport.getLocalPeerDescriptor()
+            if (this.config.transport instanceof ConnectionManager) {
+                this.connectionManager = this.config.transport
             }
         } else {
-            const connectionManagerConfig: ConnectionManagerConfig = {
-                transportLayer: this,
+            const connectorFacadeConfig: DefaultConnectorFacadeConfig = {
+                transport: this,
                 entryPoints: this.config.entryPoints,
                 iceServers: this.config.iceServers,
-                metricsContext: this.config.metricsContext,
                 webrtcAllowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
                 webrtcDatachannelBufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
                 webrtcDatachannelBufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
                 webrtcNewConnectionTimeout: this.config.webrtcNewConnectionTimeout,
-                nodeName: this.getNodeName(),
-                maxConnections: this.config.maxConnections
+                webrtcPortRange: this.config.webrtcPortRange,
+                maxMessageSize: this.config.maxMessageSize,
+                websocketServerEnableTls: this.config.websocketServerEnableTls,
+                tlsCertificate: this.config.tlsCertificate,
+                externalIp: this.config.externalIp,
+                autoCertifierUrl: this.config.autoCertifierUrl,
+                autoCertifierConfigFile: this.config.autoCertifierConfigFile,
+                createLocalPeerDescriptor: (connectivityResponse: ConnectivityResponse) => this.generatePeerDescriptorCallBack(connectivityResponse),
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor?.websocket) {
-                connectionManagerConfig.websocketHost = this.config.peerDescriptor.websocket.ip
-                connectionManagerConfig.websocketPortRange = { 
+                connectorFacadeConfig.websocketHost = this.config.peerDescriptor.websocket.host
+                connectorFacadeConfig.websocketPortRange = {
                     min: this.config.peerDescriptor.websocket.port,
                     max: this.config.peerDescriptor.websocket.port
                 }
             // If websocketPortRange is given, create ws server using it, websocketHost can be undefined
-            } else if (this.config.websocketPortRange) { 
-                connectionManagerConfig.websocketHost = this.config.websocketHost
-                connectionManagerConfig.websocketPortRange = this.config.websocketPortRange
+            } else if (this.config.websocketPortRange) {
+                connectorFacadeConfig.websocketHost = this.config.websocketHost
+                connectorFacadeConfig.websocketPortRange = this.config.websocketPortRange
             }
 
-            const connectionManager = new ConnectionManager(connectionManagerConfig)
-            await connectionManager.start(this.generatePeerDescriptorCallBack)
+            const connectionManager = new ConnectionManager({
+                createConnectorFacade: () => new DefaultConnectorFacade(connectorFacadeConfig),
+                maxConnections: this.config.maxConnections,
+                metricsContext: this.config.metricsContext
+            })
+            await connectionManager.start()
             this.connectionManager = connectionManager
-            this.transportLayer = connectionManager
+            this.transport = connectionManager
         }
 
         this.rpcCommunicator = new RoutingRpcCommunicator(
             this.config.serviceId,
-            this.transportLayer.send,
+            this.transport.send,
             { rpcRequestTimeout: this.config.rpcRequestTimeout }
         )
 
-        this.transportLayer.on('message', (message: Message) => this.handleMessage(message))
+        this.transport.on('message', (message: Message) => this.handleMessage(message))
 
-        this.bindDefaultServerMethods()
-        this.ownPeerId = peerIdFromPeerDescriptor(this.ownPeerDescriptor!)
-        this.initKBuckets(this.ownPeerId!)
+        this.initPeerManager()
+
         this.peerDiscovery = new PeerDiscovery({
-            rpcCommunicator: this.rpcCommunicator!,
-            ownPeerDescriptor: this.ownPeerDescriptor!,
-            ownPeerId: this.ownPeerId!,
-            bucket: this.bucket!,
-            connections: this.connections!,
-            neighborList: this.neighborList!,
-            randomPeers: this.randomPeers!,
-            openInternetPeers: this.openInternetPeers!,
+            localPeerDescriptor: this.localPeerDescriptor!,
             joinNoProgressLimit: this.config.joinNoProgressLimit,
-            getClosestContactsLimit: this.config.getClosestContactsLimit,
+            peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
             joinTimeout: this.config.dhtJoinTimeout,
             serviceId: this.config.serviceId,
             parallelism: this.config.joinParallelism,
-            addContact: this.addNewContact.bind(this),
-            connectionManager: this.connectionManager
+            connectionManager: this.connectionManager,
+            peerManager: this.peerManager!
         })
         this.router = new Router({
-            rpcCommunicator: this.rpcCommunicator!,
-            connections: this.connections,
-            ownPeerDescriptor: this.ownPeerDescriptor!,
-            ownPeerId: this.ownPeerId!,
-            addContact: this.addNewContact.bind(this),
-            serviceId: this.config.serviceId,
+            rpcCommunicator: this.rpcCommunicator,
+            connections: this.peerManager!.connections,
+            localPeerDescriptor: this.localPeerDescriptor!,
+            addContact: (contact: PeerDescriptor, setActive?: boolean) => this.peerManager!.handleNewPeers([contact], setActive),
             connectionManager: this.connectionManager
         })
-        this.recursiveFinder = new RecursiveFinder({
-            rpcCommunicator: this.rpcCommunicator!,
-            router: this.router!,
+        this.recursiveOperationManager = new RecursiveOperationManager({
+            rpcCommunicator: this.rpcCommunicator,
+            router: this.router,
             sessionTransport: this,
-            connections: this.connections,
-            ownPeerDescriptor: this.ownPeerDescriptor!,
+            connections: this.peerManager!.connections,
+            localPeerDescriptor: this.localPeerDescriptor!,
             serviceId: this.config.serviceId,
-            ownPeerId: this.ownPeerId!,
-            addContact: this.addNewContact.bind(this),
-            isPeerCloserToIdThanSelf: this.isPeerCloserToIdThanSelf.bind(this),
+            addContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
             localDataStore: this.localDataStore
         })
-        this.dataStore = new DataStore({
-            rpcCommunicator: this.rpcCommunicator!,
-            recursiveFinder: this.recursiveFinder,
-            ownPeerDescriptor: this.ownPeerDescriptor!,
+        this.storeManager = new StoreManager({
+            rpcCommunicator: this.rpcCommunicator,
+            recursiveOperationManager: this.recursiveOperationManager,
+            localPeerDescriptor: this.localPeerDescriptor!,
             serviceId: this.config.serviceId,
-            storeHighestTtl: this.config.storeHighestTtl,
-            storeMaxTtl: this.config.storeMaxTtl,
-            storeNumberOfCopies: this.config.storeNumberOfCopies,
+            highestTtl: this.config.storeHighestTtl,
+            redundancyFactor: this.config.storageRedundancyFactor,
             localDataStore: this.localDataStore,
-            dhtNodeEmitter: this,
-            getNodesClosestToIdFromBucket: (id: Uint8Array, n?: number) => {
-                return this.bucket!.closest(id, n)
+            getClosestNeighborsTo: (key: DhtAddress, n?: number) => {
+                return this.peerManager!.getClosestNeighborsTo(key, n).map((n) => n.getPeerDescriptor())
+            },
+            createRpcRemote: (contact: PeerDescriptor) => {
+                return new StoreRpcRemote(
+                    this.localPeerDescriptor!,
+                    contact,
+                    this.rpcCommunicator!,
+                    StoreRpcClient,
+                    this.config.rpcRequestTimeout
+                )
             }
         })
-        this.externalApi = new ExternalApi(this)
-        if (this.connectionManager! && this.config.entryPoints && this.config.entryPoints.length > 0 
-            && !isSamePeerDescriptor(this.config.entryPoints[0], this.ownPeerDescriptor!)) {
-            this.connectToEntryPoint(this.config.entryPoints[0])
-        }
+        this.on('newContact', (peerDescriptor: PeerDescriptor) => {
+            this.storeManager!.onNewContact(peerDescriptor)
+        })
+        this.bindRpcLocalMethods()
     }
 
-    private initKBuckets = (selfId: PeerID) => {
-        this.bucket = new KBucket<DhtPeer>({
-            localNodeId: selfId.value,
+    private initPeerManager() {
+        this.peerManager = new PeerManager({
             numberOfNodesPerKBucket: this.config.numberOfNodesPerKBucket,
-            numberOfNodesToPing: this.config.numberOfNodesPerKBucket
+            maxContactListSize: this.config.maxNeighborListSize,
+            localNodeId: this.getNodeId(),
+            connectionManager: this.connectionManager!,
+            peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
+            isLayer0: (this.connectionManager !== undefined),
+            createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => this.createDhtNodeRpcRemote(peerDescriptor)
         })
-        this.bucket.on('ping', (oldContacts: DhtPeer[], newContact: DhtPeer) => this.onKBucketPing(oldContacts, newContact))
-        this.bucket.on('removed', (contact: DhtPeer) => this.onKBucketRemoved(contact))
-        this.bucket.on('added', (contact: DhtPeer) => this.onKBucketAdded(contact))
-        this.bucket.on('updated', (_oldContact: DhtPeer, _newContact: DhtPeer) => {
-            // TODO: Update contact info to the connection manager and reconnect
-        })
-        this.neighborList = new SortedContactList(selfId, this.config.maxNeighborListSize)
-        this.neighborList.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) => {
-            if (this.stopped) {
-                return
-            }
+        this.peerManager.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) => {
             this.emit('contactRemoved', peerDescriptor, activeContacts)
-            this.randomPeers!.addContact(
-                new DhtPeer(
-                    this.ownPeerDescriptor!,
-                    peerDescriptor,
-                    toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
-                    this.config.serviceId
-                )
-            )
         })
-        this.neighborList.on('newContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
+        this.peerManager.on('newContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
             this.emit('newContact', peerDescriptor, activeContacts)
         )
-        this.openInternetPeers = new SortedContactList(selfId, this.config.maxNeighborListSize / 2)
-        this.openInternetPeers.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('openInternetContactRemoved', peerDescriptor, activeContacts)
-        )
-        this.openInternetPeers.on('newContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('newOpenInternetContact', peerDescriptor, activeContacts)
-        )
-        this.transportLayer!.on('connected', (peerDescriptor: PeerDescriptor) => this.onTransportConnected(peerDescriptor))
-
-        this.transportLayer!.on('disconnected', (peerDescriptor: PeerDescriptor, disonnectionType: DisconnectionType) => {
-            this.onTransportDisconnected(peerDescriptor, disonnectionType)
-        })
-
-        this.transportLayer!.getAllConnectionPeerDescriptors().map((peer) => {
-            const peerId = peerIdFromPeerDescriptor(peer)
-            const dhtPeer = new DhtPeer(
-                this.ownPeerDescriptor!,
-                peer,
-                toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
-                this.config.serviceId
-            )
-            if (peerId.equals(this.ownPeerId!)) {
-                logger.error('own peerdescriptor added to connections in initKBucket')
-            }
-            this.connections.set(peerId.toKey(), dhtPeer)
-        })
-        this.randomPeers = new RandomContactList(selfId, this.config.maxNeighborListSize)
-        this.randomPeers.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
+        this.peerManager.on('randomContactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
             this.emit('randomContactRemoved', peerDescriptor, activeContacts)
         )
-        this.randomPeers.on('newContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
+        this.peerManager.on('newRandomContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
             this.emit('newRandomContact', peerDescriptor, activeContacts)
         )
-    }
-
-    private onTransportConnected(peerDescriptor: PeerDescriptor): void {
-
-        if (this.ownPeerId!.equals(PeerID.fromValue(peerDescriptor.kademliaId))) {
-            logger.error('onTransportConnected() to self')
-        }
-
-        const dhtPeer = new DhtPeer(
-            this.ownPeerDescriptor!,
-            peerDescriptor,
-            toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
-            this.config.serviceId
-        )
-        if (!this.connections.has(PeerID.fromValue(dhtPeer.id).toKey())) {
-            this.connections.set(PeerID.fromValue(dhtPeer.id).toKey(), dhtPeer)
-            logger.trace(' ' + this.config.nodeName + ' connectionschange add ' + this.connections.size)
-        } else {
-            logger.trace('new connection not set to connections, there is already a connection with the peer ID')
-        }
-        if (this.ownPeerDescriptor!.nodeName === 'entrypoint') {
-            logger.trace('connected: ' + this.ownPeerDescriptor!.nodeName + ', ' + peerDescriptor.nodeName + ' ' + this.connections.size)
-        }
-        this.emit('connected', peerDescriptor)
-    }
-
-    private onTransportDisconnected(peerDescriptor: PeerDescriptor, dicsonnectionType: DisconnectionType): void {
-        logger.trace('disconnected: ' + this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ')
-        this.connections.delete(keyFromPeerDescriptor(peerDescriptor))
-        // only remove from bucket if we are on layer 0
-        if (this.connectionManager) {
-            this.bucket!.remove(peerDescriptor.kademliaId)
-
-            if (dicsonnectionType === 'OUTGOING_GRACEFUL_LEAVE' || dicsonnectionType === 'INCOMING_GRACEFUL_LEAVE') {
-                logger.trace( this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
-                this.removeContact(peerDescriptor, true)
-            } else {
-                logger.trace( this.config.nodeName + ', ' + peerDescriptor.nodeName + ' ' + 'onTransportDisconnected with type ' + dicsonnectionType)
+        this.peerManager.on('kBucketEmpty', () => {
+            if (!this.peerDiscovery!.isJoinOngoing()
+                && this.config.entryPoints
+                && this.config.entryPoints.length > 0
+            ) {
+                setImmediate(async () => {
+                    // TODO should we catch possible promise rejection?
+                    await Promise.all(this.config.entryPoints!.map((entryPoint) =>
+                        this.peerDiscovery!.rejoinDht(entryPoint)
+                    ))
+                })
             }
-        }
-
-        this.emit('disconnected', peerDescriptor, dicsonnectionType)
+        })
+        this.transport!.on('connected', (peerDescriptor: PeerDescriptor) => {
+            this.peerManager!.handleConnected(peerDescriptor)
+            this.emit('connected', peerDescriptor)
+        })
+        this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => {
+            this.peerManager!.handleDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor), gracefulLeave)
+            this.emit('disconnected', peerDescriptor, gracefulLeave)
+        })
+        this.transport!.getAllConnectionPeerDescriptors().forEach((peer) => {
+            this.peerManager!.handleConnected(peer)
+        })
     }
 
-    private bindDefaultServerMethods(): void {
-        if (!this.started || this.stopped) {
+    private bindRpcLocalMethods(): void {
+        if (!this.started || this.abortController.signal.aborted) {
             return
         }
-        logger.trace(`Binding default DHT RPC methods`)
+        const dhtNodeRpcLocal = new DhtNodeRpcLocal({
+            peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
+            getClosestPeersTo: (nodeId: DhtAddress, limit: number) => {
+                return this.peerManager!.getClosestNeighborsTo(nodeId, limit)
+                    .map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor())
+            },
+            addNewContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
+            removeContact: (nodeId: DhtAddress) => this.removeContact(nodeId)
+        })
         this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers',
-            (req: ClosestPeersRequest, context) => this.getClosestPeers(req, context))
+            (req: ClosestPeersRequest, context) => dhtNodeRpcLocal.getClosestPeers(req, context))
         this.rpcCommunicator!.registerRpcMethod(PingRequest, PingResponse, 'ping',
-            (req: PingRequest, context) => this.ping(req, context))
+            (req: PingRequest, context) => dhtNodeRpcLocal.ping(req, context))
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice',
-            (req: LeaveNotice, context) => this.leaveNotice(req, context))
+            (_req: LeaveNotice, context) => dhtNodeRpcLocal.leaveNotice(context))
+        const externalApiRpcLocal = new ExternalApiRpcLocal({
+            executeRecursiveOperation: (key: DhtAddress, operation: RecursiveOperation, excludedPeer: DhtAddress) => {
+                return this.executeRecursiveOperation(key, operation, excludedPeer)
+            },
+            storeDataToDht: (key: DhtAddress, data: Any, creator?: DhtAddress) => this.storeDataToDht(key, data, creator)
+        })
+        this.rpcCommunicator!.registerRpcMethod(
+            ExternalFindDataRequest,
+            ExternalFindDataResponse,
+            'externalFindData',
+            (req: ExternalFindDataRequest, context: ServerCallContext) => externalApiRpcLocal.externalFindData(req, context),
+            { timeout: 10000 }  // TODO use config option or named constant?
+        )
+        this.rpcCommunicator!.registerRpcMethod(
+            ExternalStoreDataRequest,
+            ExternalStoreDataResponse,
+            'externalStoreData',
+            (req: ExternalStoreDataRequest, context: ServerCallContext) => externalApiRpcLocal.externalStoreData(req, context),
+            { timeout: 10000 }  // TODO use config option or named constant?
+        )
     }
 
-    private isPeerCloserToIdThanSelf(peer1: PeerDescriptor, compareToId: PeerID): boolean {
-        const distance1 = this.bucket!.distance(peer1.kademliaId, compareToId.value)
-        const distance2 = this.bucket!.distance(this.ownPeerDescriptor!.kademliaId, compareToId.value)
-        return distance1 < distance2
-    }
-
-    public handleMessage(message: Message): void {
+    private handleMessage(message: Message): void {
+        const nodeId = getNodeIdFromPeerDescriptor(message.sourceDescriptor!)
         if (message.serviceId === this.config.serviceId) {
-            logger.trace('callig this.handleMessageFromPeer ' + this.config.nodeName + ', ' +
-                message.sourceDescriptor?.nodeName + ' ' + message.serviceId + ' ' + message.messageId)
+            logger.trace('calling this.handleMessageFromPeer ' + nodeId + ' ' + message.serviceId + ' ' + message.messageId)
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {
-            logger.trace('emit "message" ' + this.config.nodeName + ', ' + message.sourceDescriptor?.nodeName +
-                ' ' + message.serviceId + ' ' + message.messageId)
+            logger.trace('emit "message" ' + nodeId + ' ' + message.serviceId + ' ' + message.messageId)
             this.emit('message', message)
         }
     }
 
-    private generatePeerDescriptorCallBack = (connectivityResponse: ConnectivityResponse) => {
+    private generatePeerDescriptorCallBack(connectivityResponse: ConnectivityResponse) {
         if (this.config.peerDescriptor) {
-            this.ownPeerDescriptor = this.config.peerDescriptor
+            this.localPeerDescriptor = this.config.peerDescriptor
         } else {
-            this.ownPeerDescriptor = createPeerDescriptor(connectivityResponse,
-                this.config.peerIdString,
-                this.config.nodeName)
+            this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, this.config.peerId)
         }
-        return this.ownPeerDescriptor
+        return this.localPeerDescriptor
     }
 
-    private getClosestPeerDescriptors(kademliaId: Uint8Array, limit: number): PeerDescriptor[] {
-        const closestPeers = this.bucket!.closest(kademliaId, limit)
-        return closestPeers.map((dhtPeer: DhtPeer) => dhtPeer.getPeerDescriptor())
-    }
-
-    private onKBucketPing(oldContacts: DhtPeer[], newContact: DhtPeer): void {
-        if (this.stopped) {
-            return
-        }
-        const sortingList: SortedContactList<DhtPeer> = new SortedContactList(this.ownPeerId!, 100)
-        sortingList.addContacts(oldContacts)
-        const sortedContacts = sortingList.getAllContacts()
-        this.connectionManager?.weakUnlockConnection(sortedContacts[sortedContacts.length - 1].getPeerDescriptor())
-        this.bucket?.remove(sortedContacts[sortedContacts.length - 1].getPeerId().value)
-        this.bucket!.add(newContact)
-    }
-
-    private onKBucketRemoved(contact: DhtPeer): void {
-        if (this.stopped) {
-            return
-        }
-        this.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
-        logger.trace(`Removed contact ${contact.getPeerId().value.toString()}`)
-        this.emit(
-            'kbucketContactRemoved',
-            contact.getPeerDescriptor()
+    public getClosestContacts(limit?: number): PeerDescriptor[] {
+        return this.peerManager!.getClosestContactsTo(
+            this.getNodeId(),
+            limit).map((peer) => peer.getPeerDescriptor()
         )
-        if (this.bucket!.count() === 0
-            && !this.peerDiscovery!.isJoinOngoing()
-            && this.config.entryPoints
-            && this.config.entryPoints.length > 0
-        ) {
-            setImmediate(async () => {
-                await Promise.all(this.config.entryPoints!.map((entryPoint) => 
-                    this.peerDiscovery!.rejoinDht(entryPoint)
-                )) 
-            })
-        }
+    }
+    
+    public getNodeId(): DhtAddress {
+        return getNodeIdFromPeerDescriptor(this.localPeerDescriptor!)
     }
 
-    private onKBucketAdded(contact: DhtPeer): void {
-        if (this.stopped) {
+    public getNumberOfNeighbors(): number {
+        return this.peerManager!.getNumberOfNeighbors()
+    }
+
+    public removeContact(nodeId: DhtAddress): void {
+        if (!this.started) {  // the stopped state is checked in PeerManager
             return
         }
-        this.contactOnAddedCounter++
-        if (!this.stopped && !contact.getPeerId().equals(this.ownPeerId!)) {
-            // Important to lock here, before the ping result is known
-            this.connectionManager?.weakLockConnection(contact.getPeerDescriptor())
-            if (this.connections.has(contact.getPeerId().toKey())) {
-                logger.trace(`Added new contact ${contact.getPeerId().value.toString()}`)
-                this.emit(
-                    'newKbucketContact',
-                    contact.getPeerDescriptor(),
-                    this.neighborList!.getClosestContacts(this.config.getClosestContactsLimit).map((peer) => peer.getPeerDescriptor())
-                )
-            } else {    // open connection by pinging
-                logger.trace('starting ping ' + this.config.nodeName + ', ' + contact.getPeerDescriptor().nodeName + ' ')
-                contact.ping().then((result) => {
-                    if (result) {
-                        logger.trace(`Added new contact ${contact.getPeerId().value.toString()}`)
-                        this.emit(
-                            'newKbucketContact',
-                            contact.getPeerDescriptor(),
-                            this.neighborList!.getClosestContacts(this.config.getClosestContactsLimit).map((peer) => peer.getPeerDescriptor())
-                        )
-                    } else {
-                        logger.trace('ping failed ' + this.config.nodeName + ', ' + contact.getPeerDescriptor().nodeName + ' ')
-                        this.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
-                        this.removeContact(contact.getPeerDescriptor())
-                        this.addClosestContactToBucket()
-                    }
-                    return
-                }).catch((_e) => {
-                    this.connectionManager?.weakUnlockConnection(contact.getPeerDescriptor())
-                    this.removeContact(contact.getPeerDescriptor())
-                    this.addClosestContactToBucket()
-                })
-            }
-        }
+        this.peerManager!.handlePeerLeaving(nodeId)
     }
 
-    private addClosestContactToBucket(): void {
-        if (!this.started || this.stopped) {
+    public async send(msg: Message): Promise<void> {
+        if (!this.started || this.abortController.signal.aborted) {
             return
         }
-        const closest = this.getClosestActiveContactNotInBucket()
-        if (closest) {
-            this.addNewContact(closest.getPeerDescriptor())
-        }
+        const reachableThrough = this.peerDiscovery!.isJoinOngoing() ? this.getConnectedEntryPoints() : []
+        this.router!.send(msg, reachableThrough)
     }
 
-    private getClosestActiveContactNotInBucket(): DhtPeer | undefined {
-        for (const contactId of this.neighborList!.getContactIds()) {
-            if (!this.bucket!.get(contactId.value) && this.neighborList!.isActive(contactId)) {
-                return this.neighborList!.getContact(contactId).contact
-            }
-        }
-        return undefined
+    private getConnectedEntryPoints(): PeerDescriptor[] {
+        return this.config.entryPoints !== undefined ? this.config.entryPoints.filter((entryPoint) =>
+            this.peerManager!.connections.has(getNodeIdFromPeerDescriptor(entryPoint))
+        ) : []
     }
 
-    public getNeighborList(): SortedContactList<DhtPeer> {
-        return this.neighborList!
-    }
-
-    public getNodeId(): PeerID {
-        return this.ownPeerId!
-    }
-
-    public getBucketSize(): number {
-        return this.bucket!.count()
-    }
-
-    private addNewContact(contact: PeerDescriptor, setActive = false): void {
-        if (!this.started || this.stopped) {
-            return
-        }
-        const peerId = peerIdFromPeerDescriptor(contact)
-        if (!peerId.equals(this.ownPeerId!)) {
-            logger.trace(`Adding new contact ${contact.kademliaId.toString()}`)
-            const dhtPeer = new DhtPeer(
-                this.ownPeerDescriptor!,
-                contact,
-                toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
-                this.config.serviceId
-            )
-            if (!this.bucket!.get(contact.kademliaId) && !this.neighborList!.getContact(peerIdFromPeerDescriptor(contact))) {
-                this.neighborList!.addContact(dhtPeer)
-                if (contact.openInternet) {
-                    this.openInternetPeers!.addContact(dhtPeer)
-                }
-                if (setActive) {
-                    this.neighborList!.setActive(peerId)
-                    this.openInternetPeers!.setActive(peerId)
-                }
-                this.contactAddCounter++
-                this.bucket!.add(dhtPeer)
-            } else {
-                this.randomPeers!.addContact(dhtPeer)
-            }
-        }
-    }
-
-    private connectToEntryPoint(entryPoint: PeerDescriptor): void {
-        this.connectionManager!.lockConnection(entryPoint, 'temporary-layer0-connection')
-        this.entryPointDisconnectTimeout = setTimeout(() => {
-            this.connectionManager!.unlockConnection(entryPoint, 'temporary-layer0-connection')
-        }, 10 * 1000)
-    }
-
-    public removeContact(contact: PeerDescriptor, removeFromOpenInternetPeers = false): void {
-        if (!this.started || this.stopped) {
-            return
-        }
-        logger.trace(`Removing contact ${contact.kademliaId.toString()}`)
-        const peerId = peerIdFromPeerDescriptor(contact)
-        this.bucket!.remove(peerId.value)
-        this.neighborList!.removeContact(peerId)
-        this.randomPeers!.removeContact(peerId)
-        if (removeFromOpenInternetPeers) {
-            this.openInternetPeers!.removeContact(peerId)
-        }
-    }
-
-    public async send(msg: Message, _doNotConnect?: boolean): Promise<void> {
-        if (!this.started || this.stopped) {
-            return
-        }
-        const reachableThrough = this.peerDiscovery!.isJoinOngoing() ? this.config.entryPoints || [] : []
-        await this.router!.send(msg, reachableThrough)
-    }
-
-    public async joinDht(entryPointDescriptors: PeerDescriptor[], doRandomJoin?: boolean): Promise<void> {
+    public async joinDht(entryPointDescriptors: PeerDescriptor[], doAdditionalRandomPeerDiscovery?: boolean, retry?: boolean): Promise<void> {
         if (!this.started) {
             throw new Error('Cannot join DHT before calling start() on DhtNode')
         }
-        await Promise.all(entryPointDescriptors.map((entryPoint) => 
-            this.peerDiscovery!.joinDht(entryPoint, doRandomJoin)
-        ))
+        await this.peerDiscovery!.joinDht(entryPointDescriptors, doAdditionalRandomPeerDiscovery, retry)
     }
 
-    public async startRecursiveFind(idToFind: Uint8Array, findMode?: FindMode, excludedPeer?: PeerDescriptor): Promise<RecursiveFindResult> {
-        return this.recursiveFinder!.startRecursiveFind(idToFind, findMode, excludedPeer)
+    // TODO make this private and unify the public API of find/fetch/store/delete methods
+    // (we already have storeDataToDht etc. here)
+    public async executeRecursiveOperation(
+        key: DhtAddress,
+        operation: RecursiveOperation,
+        excludedPeer?: DhtAddress
+    ): Promise<RecursiveOperationResult> {
+        return this.recursiveOperationManager!.execute(key, operation, excludedPeer)
     }
 
-    public async storeDataToDht(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
-        return this.dataStore!.storeDataToDht(key, data)
+    public async storeDataToDht(key: DhtAddress, data: Any, creator?: DhtAddress): Promise<PeerDescriptor[]> {
+        const connectedEntryPoints = this.getConnectedEntryPoints()
+        if (this.peerDiscovery!.isJoinOngoing() && connectedEntryPoints.length > 0) {
+            return this.storeDataViaPeer(key, data, sample(connectedEntryPoints)!)
+        }
+        return this.storeManager!.storeDataToDht(key, data, creator ?? this.getNodeId())
     }
 
-    public async getDataFromDht(idToFind: Uint8Array): Promise<RecursiveFindResult> {
-        return this.recursiveFinder!.startRecursiveFind(idToFind, FindMode.DATA)
+    public async storeDataViaPeer(key: DhtAddress, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
+        const rpcRemote = new ExternalApiRpcRemote(
+            this.localPeerDescriptor!,
+            peer,
+            this.rpcCommunicator!,
+            ExternalApiRpcClient
+        )
+        return await rpcRemote.storeData(key, data)
     }
 
-    public async deleteDataFromDht(idToDelete: Uint8Array): Promise<void> {
-        if (!this.stopped) {
-            return this.dataStore!.deleteDataFromDht(idToDelete)
+    public async getDataFromDht(key: DhtAddress): Promise<DataEntry[]> {
+        const connectedEntryPoints = this.getConnectedEntryPoints()
+        if (this.peerDiscovery!.isJoinOngoing() && connectedEntryPoints.length > 0) {
+            return this.findDataViaPeer(key, sample(connectedEntryPoints)!)
+        }
+        const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FETCH_DATA)
+        return result.dataEntries ?? []  // TODO is this fallback needed?
+    }
+
+    public async deleteDataFromDht(key: DhtAddress, waitForCompletion: boolean): Promise<void> {
+        if (!this.abortController.signal.aborted) {
+            await this.recursiveOperationManager!.execute(key, RecursiveOperation.DELETE_DATA, undefined, waitForCompletion)
         }
     }
 
-    public async findDataViaPeer(idToFind: Uint8Array, peer: PeerDescriptor): Promise<DataEntry[]> {
-        const target = new RemoteExternalApi(
-            this.ownPeerDescriptor!,
+    public async findDataViaPeer(key: DhtAddress, peer: PeerDescriptor): Promise<DataEntry[]> {
+        const rpcRemote = new ExternalApiRpcRemote(
+            this.localPeerDescriptor!,
             peer,
-            toProtoRpcClient(new ExternalApiServiceClient(this.rpcCommunicator!.getRpcClientTransport())),
-            this.config.serviceId
+            this.rpcCommunicator!,
+            ExternalApiRpcClient
         )
-        return await target.findData(idToFind)
-    }
-
-    public getRpcCommunicator(): RoutingRpcCommunicator {
-        return this.rpcCommunicator!
+        return await rpcRemote.externalFindData(key)
     }
 
     public getTransport(): ITransport {
-        return this.transportLayer!
+        return this.transport!
     }
 
-    public getPeerDescriptor(): PeerDescriptor {
-        return this.ownPeerDescriptor!
+    public getLocalPeerDescriptor(): PeerDescriptor {
+        return this.localPeerDescriptor!
     }
 
     public getAllConnectionPeerDescriptors(): PeerDescriptor[] {
-        return Array.from(this.connections.values()).map((peer) => peer.getPeerDescriptor())
+        return Array.from(this.peerManager!.connections.values()).map((peer) => peer.getPeerDescriptor())
     }
 
-    public getK(): number {
-        return this.config.numberOfNodesPerKBucket
-    }
-
-    public getKBucketPeers(): PeerDescriptor[] {
-        return this.bucket!.toArray().map((dhtPeer: DhtPeer) => dhtPeer.getPeerDescriptor())
-    }
-
-    public getOpenInternetPeerDescriptors(): PeerDescriptor[] {
-        return this.openInternetPeers!.getAllContacts().map((contact) => contact.getPeerDescriptor())
+    // TODO rename to getNeighbors
+    public getAllNeighborPeerDescriptors(): PeerDescriptor[] {
+        return this.peerManager!.getNeighbors()
     }
 
     public getNumberOfConnections(): number {
-        return this.connections.size
+        return this.peerManager!.getNumberOfConnections()
     }
 
     public getNumberOfLocalLockedConnections(): number {
@@ -698,87 +534,50 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.connectionManager!.getNumberOfWeakLockedConnections()
     }
 
-    public getNodeName(): string {
-        if (this.config.nodeName) {
-            return this.config.nodeName
-        } else {
-            return 'unnamed node'
-        }
-    }
-
-    public isJoinOngoing(): boolean {
-        return this.peerDiscovery!.isJoinOngoing()
+    public async waitForNetworkConnectivity(): Promise<void> {
+        await waitForCondition(() => {
+            if (!this.peerManager) {
+                return false
+            } else {
+                return (this.peerManager.getNumberOfConnections() > 0)
+            }
+        }, this.config.networkConnectivityTimeout, 100, this.abortController.signal)
     }
 
     public hasJoined(): boolean {
         return this.peerDiscovery!.isJoinCalled()
     }
 
-    public getKnownEntryPoints(): PeerDescriptor[] {
-        return this.config.entryPoints || []
-    }
-
     public async stop(): Promise<void> {
-        if (this.stopped) {
+        if (this.abortController.signal.aborted || !this.started) {
             return
         }
         logger.trace('stop()')
-        if (!this.started) {
-            throw new Err.CouldNotStop('Cannot not stop() before start()')
-        }
-        this.stopped = true
-
-        if (this.entryPointDisconnectTimeout) {
-            clearTimeout(this.entryPointDisconnectTimeout)
-        }
-        this.bucket!.toArray().map((dhtPeer: DhtPeer) => this.bucket!.remove(dhtPeer.id))
-        this.bucket!.removeAllListeners()
+        this.abortController.abort()
+        await this.storeManager!.destroy()
         this.localDataStore.clear()
-        this.neighborList!.stop()
-        this.randomPeers!.stop()
-        this.openInternetPeers!.stop()
+        this.peerManager?.stop()
         this.rpcCommunicator!.stop()
         this.router!.stop()
-        this.recursiveFinder!.stop()
+        this.recursiveOperationManager!.stop()
         this.peerDiscovery!.stop()
-        if (this.connectionManager) {
-            await this.connectionManager.stop()
+        if (this.config.transport === undefined) {
+            // if the transport was not given in config, the instance was created in start() and
+            // this component is responsible for stopping it
+            await this.transport!.stop()
         }
-        this.transportLayer = undefined
+        this.transport = undefined
         this.connectionManager = undefined
-        this.externalApi = undefined
-        this.connections.clear()
         this.removeAllListeners()
     }
 
-    // IDHTRpcService implementation
-    private async getClosestPeers(request: ClosestPeersRequest, context: ServerCallContext): Promise<ClosestPeersResponse> {
-        this.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
-        const response = {
-            peers: this.getClosestPeerDescriptors(request.kademliaId, this.config.getClosestContactsLimit),
-            requestId: request.requestId
-        }
-        return response
-    }
-
-    // IDHTRpcService implementation
-    private async ping(request: PingRequest, context: ServerCallContext): Promise<PingResponse> {
-        logger.trace('received ping request: ' + this.config.nodeName + ', ' + (context as DhtCallContext).incomingSourceDescriptor?.nodeName)
-        setImmediate(() => {
-            this.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
-        })
-        const response: PingResponse = {
-            requestId: request.requestId
-        }
-        return response
-    }
-
-    // IDHTRpcService implementation
-    public async leaveNotice(request: LeaveNotice, context: ServerCallContext): Promise<Empty> {
-        // TODO check signature??
-        if (request.serviceId === this.config.serviceId) {
-            this.removeContact((context as DhtCallContext).incomingSourceDescriptor!)
-        }
-        return {}
+    private createDhtNodeRpcRemote(peerDescriptor: PeerDescriptor) {
+        return new DhtNodeRpcRemote(
+            this.localPeerDescriptor!,
+            peerDescriptor,
+            this.config.serviceId,
+            this.rpcCommunicator!,
+            this.config.rpcRequestTimeout
+        )
     }
 }

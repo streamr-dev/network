@@ -1,9 +1,8 @@
+import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { LatencyType, Simulator } from '../../src/connection/Simulator/Simulator'
+import { createRandomDhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
 import { createMockConnectionDhtNode } from '../utils/utils'
-import { Any } from '../../src/proto/google/protobuf/any'
-import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { PeerID } from '../../src/helpers/PeerID'
 
 describe('DhtNodeExternalApi', () => {
 
@@ -13,9 +12,9 @@ describe('DhtNodeExternalApi', () => {
 
     beforeEach(async () => {
         simulator = new Simulator(LatencyType.NONE)
-        dhtNode1 = await createMockConnectionDhtNode('node1', simulator)
-        remote = await createMockConnectionDhtNode('remote', simulator)
-        await dhtNode1.joinDht([dhtNode1.getPeerDescriptor()])
+        dhtNode1 = await createMockConnectionDhtNode(simulator)
+        remote = await createMockConnectionDhtNode(simulator)
+        await dhtNode1.joinDht([dhtNode1.getLocalPeerDescriptor()])
     })
 
     afterEach(async () => {
@@ -27,17 +26,23 @@ describe('DhtNodeExternalApi', () => {
     })
 
     it('findData happy path', async () => {
-        const data = Any.pack(dhtNode1.getPeerDescriptor(), PeerDescriptor)
-        const key = PeerID.fromString('key').value
-        await dhtNode1.storeDataToDht(key, data)
-
-        const foundData = await remote.findDataViaPeer(key, dhtNode1.getPeerDescriptor())
-        expect(Any.unpack(foundData[0].data!, PeerDescriptor)).toEqual(dhtNode1.getPeerDescriptor())
+        const entry = createMockDataEntry()
+        await dhtNode1.storeDataToDht(getDhtAddressFromRaw(entry.key), entry.data!)
+        const foundData = await remote.findDataViaPeer(getDhtAddressFromRaw(entry.key), dhtNode1.getLocalPeerDescriptor())
+        expectEqualData(foundData[0], entry)
     })
     
     it('findData returns empty array if no data found', async () => {
-        const foundData = await remote.findDataViaPeer(PeerID.fromString('key').value, dhtNode1.getPeerDescriptor())
+        const foundData = await remote.findDataViaPeer(createRandomDhtAddress(), dhtNode1.getLocalPeerDescriptor())
         expect(foundData).toEqual([])
+    })
+
+    it('external store data happy path', async () => {
+        const entry = createMockDataEntry()
+        await remote.storeDataViaPeer(getDhtAddressFromRaw(entry.key), entry.data!, dhtNode1.getLocalPeerDescriptor())
+        const foundData = await remote.findDataViaPeer(getDhtAddressFromRaw(entry.key), dhtNode1.getLocalPeerDescriptor())
+        expectEqualData(foundData[0], entry)
+        expect(getDhtAddressFromRaw(foundData[0].creator)).toEqual(getNodeIdFromPeerDescriptor(remote.getLocalPeerDescriptor()))
     })
   
 })

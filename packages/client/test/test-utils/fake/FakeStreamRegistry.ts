@@ -1,5 +1,6 @@
 import { StreamID } from '@streamr/protocol'
 import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
+import { Methods } from '@streamr/test-utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
 import { Stream, StreamMetadata } from '../../../src/Stream'
@@ -14,7 +15,6 @@ import {
 } from '../../../src/permission'
 import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { SearchStreamsPermissionFilter } from '../../../src/registry/searchStreams'
-import { Methods } from '../types'
 import { FakeChain, PUBLIC_PERMISSION_TARGET, PublicPermissionTarget, StreamRegistryItem } from './FakeChain'
 
 @scoped(Lifecycle.ContainerScoped)
@@ -174,7 +174,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
     
     // eslint-disable-next-line class-methods-use-this
-    clearStreamCache(_streamId: StreamID): void {
+    clearStreamCache(): void {
         // no-op
     }
 
@@ -192,7 +192,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    deleteStream(_streamIdOrPath: string): Promise<void> {
+    deleteStream(): Promise<void> {
         throw new Error('not implemented')
     }
 
@@ -207,12 +207,12 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamPublishers(_streamIdOrPath: string): AsyncIterable<EthereumAddress> {
+    getStreamPublishers(): AsyncIterable<EthereumAddress> {
         throw new Error('not implemented')
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamSubscribers(_streamIdOrPath: string): AsyncIterable<EthereumAddress> {
+    getStreamSubscribers(): AsyncIterable<EthereumAddress> {
         throw new Error('not implemented')
     }
 }

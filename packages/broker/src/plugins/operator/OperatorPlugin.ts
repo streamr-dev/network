@@ -1,108 +1,259 @@
-import { toStreamID } from '@streamr/protocol'
-import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, Logger, scheduleAtInterval, setAbortableInterval, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
-import { Signer } from 'ethers'
-import { CONFIG_TEST } from 'streamr-client'
+import { Overrides } from 'ethers'
+import { StreamrClient, SignerWithProvider } from 'streamr-client'
 import { Plugin } from '../../Plugin'
-import { AnnounceNodeToContractHelper } from './AnnounceNodeToContractHelper'
-import { AnnounceNodeToContractService } from './AnnounceNodeToContractService'
-import { AnnounceNodeToStreamService } from './AnnounceNodeToStreamService'
-import { InspectRandomNodeService } from './InspectRandomNodeService'
-import { MaintainOperatorValueService } from './MaintainOperatorValueService'
-import { MaintainTopologyService, setUpAndStartMaintainTopologyService } from './MaintainTopologyService'
-import { OperatorValueBreachWatcher } from './OperatorValueBreachWatcher'
+import { maintainOperatorValue } from './maintainOperatorValue'
+import { MaintainTopologyService } from './MaintainTopologyService'
 import { OperatorFleetState } from './OperatorFleetState'
-import { VoteOnSuspectNodeService } from './VoteOnSuspectNodeService'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-
-export const DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW = 20 // max number to loop over before the earnings withdraw tx gets too big and EVM reverts it
-export const DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW = 1 // token value, not wei
+import { createIsLeaderFn } from './createIsLeaderFn'
+import { announceNodeToContract } from './announceNodeToContract'
+import { announceNodeToStream } from './announceNodeToStream'
+import { checkOperatorValueBreach } from './checkOperatorValueBreach'
+import { fetchRedundancyFactor } from './fetchRedundancyFactor'
+import { formCoordinationStreamId } from './formCoordinationStreamId'
+import { StreamPartAssignments } from './StreamPartAssignments'
+import { MaintainTopologyHelper } from './MaintainTopologyHelper'
+import { inspectRandomNode } from './inspectRandomNode'
+import { ContractFacade } from './ContractFacade'
+import { reviewSuspectNode } from './reviewSuspectNode'
+import { closeExpiredFlags } from './closeExpiredFlags'
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
-    redundancyFactor: number
+    heartbeatUpdateIntervalInMs: number
+    heartbeatTimeoutInMs: number
+    fleetState: {
+        pruneAgeInMs: number
+        pruneIntervalInMs: number
+        latencyExtraInMs: number
+        warmupPeriodInMs: number
+    }
+    checkOperatorValueBreachIntervalInMs: number
+    announceNodeToContract: {
+        pollIntervalInMs: number
+        writeIntervalInMs: number
+    }
+    maintainOperatorValue: {
+        intervalInMs: number
+        withdrawLimitSafetyFraction: number
+        minSponsorshipEarningsInWithdraw: number
+        maxSponsorshipsInWithdraw: number
+    }
+    inspectRandomNode: {
+        intervalInMs: number
+    }
+    closeExpiredFlags: {
+        intervalInMs: number
+        maxAgeInMs: number
+    }
 }
 
 export interface OperatorServiceConfig {
-    signer: Signer
+    signer: SignerWithProvider
     operatorContractAddress: EthereumAddress
     theGraphUrl: string
-    maxSponsorshipsInWithdraw?: number
-    minSponsorshipEarningsInWithdraw?: number
+    getEthersOverrides: () => Overrides
 }
 
 const logger = new Logger(module)
 
 export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
-    private announceNodeToStreamService?: AnnounceNodeToStreamService
-    private announceNodeToContractService?: AnnounceNodeToContractService
-    private inspectRandomNodeService = new InspectRandomNodeService()
-    private voteOnSuspectNodeService?: VoteOnSuspectNodeService
-    private maintainTopologyService?: MaintainTopologyService
-    private maintainOperatorValueService?: MaintainOperatorValueService
-    private operatorValueBreachWatcher?: OperatorValueBreachWatcher
-    private fleetState?: OperatorFleetState
-    private serviceConfig?: OperatorServiceConfig
+    private readonly abortController: AbortController = new AbortController()
 
-    async start(): Promise<void> {
-        const signer = await this.streamrClient.getSigner()
-        this.serviceConfig = {
+    async start(streamrClient: StreamrClient): Promise<void> {
+        const signer = await streamrClient.getSigner()
+        const nodeId = await streamrClient.getNodeId()
+        const operatorContractAddress = toEthereumAddress(this.pluginConfig.operatorContractAddress)
+        const serviceConfig = {
             signer,
-            operatorContractAddress: toEthereumAddress(this.pluginConfig.operatorContractAddress),
-            // TODO read from client, as we need to use production value in production environment (not ConfigTest)
-            theGraphUrl: CONFIG_TEST.contracts!.theGraphUrl!,
-            maxSponsorshipsInWithdraw: DEFAULT_MAX_SPONSORSHIP_IN_WITHDRAW,
-            minSponsorshipEarningsInWithdraw: DEFAULT_MIN_SPONSORSHIP_EARNINGS_IN_WITHDRAW
+            operatorContractAddress,
+            theGraphUrl: streamrClient.getConfig().contracts.theGraphUrl,
+            getEthersOverrides: () => streamrClient.getEthersOverrides()
         }
-        this.announceNodeToStreamService = new AnnounceNodeToStreamService(
-            this.streamrClient,
-            toEthereumAddress(this.pluginConfig.operatorContractAddress)
-        )
-        this.fleetState = new OperatorFleetState(
-            this.streamrClient,
-            toStreamID('/operator/coordination', this.serviceConfig.operatorContractAddress)
-        )
-        this.announceNodeToContractService = new AnnounceNodeToContractService(
-            this.streamrClient,
-            new AnnounceNodeToContractHelper(this.serviceConfig),
-            this.fleetState
-        )
-        this.maintainOperatorValueService = new MaintainOperatorValueService(this.serviceConfig)
-        this.operatorValueBreachWatcher = new OperatorValueBreachWatcher(this.serviceConfig)
-        this.voteOnSuspectNodeService = new VoteOnSuspectNodeService(
-            this.streamrClient,
-            this.serviceConfig
+
+        const redundancyFactor = await fetchRedundancyFactor(serviceConfig)
+        if (redundancyFactor === undefined) {
+            throw new Error('Failed to fetch my redundancy factor')
+        }
+        logger.info('Fetched my redundancy factor', { redundancyFactor })
+
+        const contractFacade = ContractFacade.createInstance(serviceConfig)
+        const maintainTopologyHelper = new MaintainTopologyHelper(serviceConfig)
+        const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
+            streamrClient,
+            this.pluginConfig.heartbeatUpdateIntervalInMs,
+            this.pluginConfig.fleetState.pruneAgeInMs,
+            this.pluginConfig.fleetState.pruneIntervalInMs,
+            this.pluginConfig.fleetState.latencyExtraInMs,
+            this.pluginConfig.fleetState.warmupPeriodInMs
         )
 
-        this.maintainTopologyService = await setUpAndStartMaintainTopologyService({
-            streamrClient: this.streamrClient,
-            redundancyFactor: this.pluginConfig.redundancyFactor,
-            serviceHelperConfig: this.serviceConfig,
-            operatorFleetState: this.fleetState
+        const fleetState = createOperatorFleetState(formCoordinationStreamId(operatorContractAddress))
+        const streamPartAssignments = new StreamPartAssignments(
+            nodeId,
+            redundancyFactor,
+            async (streamId) => {
+                const stream = await streamrClient.getStream(streamId)
+                return stream.getStreamParts()
+            },
+            fleetState,
+            maintainTopologyHelper
+        )
+
+        // Important: must be created before maintainTopologyHelper#start is invoked!
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const maintainTopologyService = new MaintainTopologyService(streamrClient, streamPartAssignments)
+        await fleetState.start()
+        await maintainTopologyHelper.start()
+
+        this.abortController.signal.addEventListener('abort', async () => {
+            await fleetState.destroy()
         })
-        await this.announceNodeToStreamService.start()
-        await this.inspectRandomNodeService.start()
-        await this.maintainOperatorValueService.start()
-        await this.maintainTopologyService.start()
-        await this.voteOnSuspectNodeService.start()
-        await this.operatorValueBreachWatcher.start()
-        await this.fleetState.start()
-        this.announceNodeToContractService.start().catch((err) => {
-            logger.fatal('Encountered fatal error in announceNodeToContractService', { err })
-            process.exit(1)
+
+        // start tasks in background so that operations which take significant amount of time (e.g. fleetState.waitUntilReady())
+        // don't block the startup of Broker
+        setImmediate(async () => {
+            setAbortableInterval(() => {
+                (async () => {
+                    await announceNodeToStream(
+                        toEthereumAddress(this.pluginConfig.operatorContractAddress),
+                        streamrClient
+                    )
+                })()
+            }, this.pluginConfig.heartbeatUpdateIntervalInMs, this.abortController.signal)
+            await scheduleAtInterval(
+                async () => checkOperatorValueBreach(
+                    contractFacade,
+                    this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
+                    this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw
+                ).catch((err) => {
+                    logger.warn('Encountered error', { err })
+                }),
+                this.pluginConfig.checkOperatorValueBreachIntervalInMs,
+                true,
+                this.abortController.signal
+            )
+            await fleetState!.waitUntilReady()
+            const isLeader = await createIsLeaderFn(streamrClient, fleetState!, logger)
+            try {
+                await scheduleAtInterval(async () => {
+                    if (isLeader()) {
+                        await announceNodeToContract(
+                            this.pluginConfig.announceNodeToContract.writeIntervalInMs,
+                            contractFacade,
+                            streamrClient
+                        )
+                    }
+                }, this.pluginConfig.announceNodeToContract.pollIntervalInMs, true, this.abortController.signal)
+            } catch (err) {
+                logger.fatal('Encountered fatal error in announceNodeToContract', { err })
+                process.exit(1)
+            }
+            await scheduleAtInterval(
+                async () => {
+                    if (isLeader()) {
+                        try {
+                            await maintainOperatorValue(
+                                this.pluginConfig.maintainOperatorValue.withdrawLimitSafetyFraction,
+                                this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
+                                this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw,
+                                contractFacade
+                            )
+                        } catch (err) {
+                            logger.error('Encountered error while checking earnings', { err })
+                        }
+                    }
+                },
+                this.pluginConfig.maintainOperatorValue.intervalInMs,
+                true,
+                this.abortController.signal
+            )
+
+            await scheduleAtInterval(async () => {
+                try {
+                    await inspectRandomNode(
+                        operatorContractAddress,
+                        contractFacade,
+                        streamPartAssignments,
+                        streamrClient,
+                        this.pluginConfig.heartbeatTimeoutInMs,
+                        (operatorContractAddress) => fetchRedundancyFactor({
+                            operatorContractAddress,
+                            signer
+                        }),
+                        createOperatorFleetState,
+                        this.abortController.signal
+                    )
+                } catch (err) {
+                    logger.error('Encountered error while inspecting random node', { err })
+                }
+            }, this.pluginConfig.inspectRandomNode.intervalInMs, false, this.abortController.signal)
+
+            await scheduleAtInterval(async () => {
+                try {
+                    await closeExpiredFlags(
+                        this.pluginConfig.closeExpiredFlags.maxAgeInMs,
+                        serviceConfig.operatorContractAddress,
+                        contractFacade
+                    )
+                } catch (err) {
+                    logger.error('Encountered error while closing expired flags', { err })
+                }
+            }, this.pluginConfig.closeExpiredFlags.intervalInMs, false, this.abortController.signal)
+
+            contractFacade.addReviewRequestListener(async (
+                sponsorshipAddress,
+                targetOperator,
+                partition,
+                votingPeriodStartTimestamp,
+                votingPeriodEndTimestamp
+            ) => {
+                try {
+                    if (isLeader()) {
+                        await reviewSuspectNode({
+                            sponsorshipAddress,
+                            targetOperator,
+                            partition,
+                            contractFacade,
+                            streamrClient,
+                            createOperatorFleetState,
+                            getRedundancyFactor: (operatorContractAddress) => fetchRedundancyFactor({
+                                operatorContractAddress,
+                                signer
+                            }),
+                            maxSleepTime: 5 * 60 * 1000,
+                            heartbeatTimeoutInMs: this.pluginConfig.heartbeatTimeoutInMs,
+                            votingPeriod: {
+                                startTime: votingPeriodStartTimestamp,
+                                endTime: votingPeriodEndTimestamp
+                            },
+                            inspectionIntervalInMs: 8 * 60 * 1000,
+                            maxInspections: 10,
+                            abortSignal: this.abortController.signal
+                        })
+                    }
+                } catch (err) {
+                    logger.error('Encountered error while processing review request', { err })
+                }
+            }, this.abortController.signal)
         })
     }
 
     async stop(): Promise<void> {
-        await this.announceNodeToStreamService!.stop()
-        await this.inspectRandomNodeService.stop()
-        await this.maintainOperatorValueService!.stop()
-        await this.voteOnSuspectNodeService!.stop()
-        await this.operatorValueBreachWatcher!.stop()
+        this.abortController.abort()
     }
 
     // eslint-disable-next-line class-methods-use-this
     override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    override getClientConfig(): { path: string, value: any }[] {
+        return [{
+            path: 'network.node.acceptProxyConnections', value: true
+        }]
     }
 }

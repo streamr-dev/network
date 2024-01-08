@@ -8,7 +8,7 @@ import { StreamID, StreamMessage } from '@streamr/protocol'
  */
 export interface Message {
     /**
-     * The message contents / payload.
+     * The message contents / payload. Given as JSON or Uint8Array
      */
     content: unknown
 
@@ -35,7 +35,7 @@ export interface Message {
     /**
      * Signature of message signed by publisher.
      */
-    signature: string
+    signature: Uint8Array
 
     /**
      * Publisher of message.

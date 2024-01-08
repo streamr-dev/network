@@ -27,6 +27,10 @@ function isPrettyPrintDisabled(): boolean {
     return typeof window === 'object' || (parseBoolean(process.env.DISABLE_PRETTY_LOG) ?? false)
 }
 
+function isJestRunning(): boolean {
+    return process.env.JEST_WORKER_ID !== undefined
+}
+
 const rootLogger = pino({
     name: 'rootLogger',
     enabled: !process.env.NOLOG,
@@ -44,6 +48,7 @@ const rootLogger = pino({
             translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',
             ignore: 'pid,hostname',
             levelFirst: true,
+            sync: isJestRunning(),
         },
     },
     browser: {
@@ -68,7 +73,7 @@ function wrappedMethodCall(
 }
 
 export class Logger {
-    static NAME_LENGTH = 20
+    static NAME_LENGTH = 25
 
     private readonly logger: pino.Logger
     fatal: (msg: string, metadata?: Record<string, unknown>) => void

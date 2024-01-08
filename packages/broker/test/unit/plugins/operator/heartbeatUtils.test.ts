@@ -4,12 +4,12 @@ import { ZodError } from 'zod'
 describe('heartbeatUtils', () => {
     it('messages created with createHeartbeatMessage pass validation', () => {
         const msg = createHeartbeatMessage({
-            id: 'nodeId',
+            nodeId: 'nodeId',
             websocket: {
                 port: 31313,
-                ip: '127.0.0.1'
-            },
-            openInternet: false,
+                host: '127.0.0.1',
+                tls: false
+            }
         })
         expect(() => HeartbeatMessageSchema.parse(msg)).not.toThrowError()
     })

@@ -1,4 +1,5 @@
 import {
+    ContentType,
     MessageID,
     MessageRef,
     StreamMessage,
@@ -7,11 +8,12 @@ import {
     toStreamID
 } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, wait, waitForCondition, hexToBinary } from '@streamr/utils'
 import { shuffle } from 'lodash'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
 import { PushPipeline } from '../../src/utils/PushPipeline'
+import { MOCK_CONTENT } from '../test-utils/utils'
 
 const MESSAGES_PER_PUBLISHER = 1000
 const NUM_OF_DUPLICATE_MESSAGES = 500
@@ -89,8 +91,9 @@ function createMsg({ publisherId, timestamp }: MessageInfo): StreamMessage {
     return new StreamMessage({
         messageId,
         prevMsgRef,
-        content: {},
-        signature: 'signature'
+        content: MOCK_CONTENT,
+        signature: hexToBinary('0x1234'),
+        contentType: ContentType.JSON
     })
 }
 

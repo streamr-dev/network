@@ -1,27 +1,26 @@
 import { NeighborFinder } from '../../src/logic/neighbor-discovery/NeighborFinder'
 import { NodeList } from '../../src/logic/NodeList'
-import { PeerID } from '@streamr/dht'
 import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { expect } from 'expect'
-import { createMockRemoteNode } from '../utils/utils'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { createMockDeliveryRpcRemote, createRandomNodeId } from '../utils/utils'
+import { DhtAddress, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 
 describe('NeighborFinder', () => {
 
-    const peerId = PeerID.fromString('NeighborFinder')
+    const nodeId = createRandomNodeId()
     let targetNeighbors: NodeList
-    let nearbyContactPool: NodeList
+    let nearbyNodeView: NodeList
     let neighborFinder: NeighborFinder
 
-    const N = 4
+    const minCount = 4
 
     beforeEach(() => {
-        targetNeighbors = new NodeList(peerId, 15)
-        nearbyContactPool = new NodeList(peerId, 30)
-        range(30).forEach(() => nearbyContactPool.add(createMockRemoteNode()))
-        const mockDoFindNeighbors = async (excluded: NodeID[]) => {
-            const target = nearbyContactPool.getRandom(excluded)
+        targetNeighbors = new NodeList(nodeId, 15)
+        nearbyNodeView = new NodeList(nodeId, 30)
+        range(30).forEach(() => nearbyNodeView.add(createMockDeliveryRpcRemote()))
+        const mockDoFindNeighbors = async (excluded: DhtAddress[]) => {
+            const target = nearbyNodeView.getRandom(excluded)
             if (Math.random() < 0.5) {
                 targetNeighbors.add(target!)
             } else {
@@ -31,9 +30,9 @@ describe('NeighborFinder', () => {
         }
         neighborFinder = new NeighborFinder({
             targetNeighbors,
-            nearbyContactPool,
+            nearbyNodeView,
             doFindNeighbors: (excluded) => mockDoFindNeighbors(excluded),
-            N
+            minCount
         })
     })
 
@@ -43,7 +42,7 @@ describe('NeighborFinder', () => {
 
     it('Finds target number of nodes', async () => {
         neighborFinder.start()
-        await waitForCondition(() => targetNeighbors.size() >= N, 10000)
+        await waitForCondition(() => targetNeighbors.size() >= minCount, 10000)
         expect(neighborFinder.isRunning()).toEqual(false)
     })
 })

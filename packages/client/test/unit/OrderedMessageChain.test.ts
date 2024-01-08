@@ -1,5 +1,5 @@
-import { MessageID, MessageRef, StreamMessage, toStreamID } from '@streamr/protocol'
-import { toEthereumAddress } from '@streamr/utils'
+import { ContentType, MessageID, MessageRef, StreamMessage, toStreamID } from '@streamr/protocol'
+import { toEthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { Gap, OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
 
 const STREAM_ID = toStreamID('stream')
@@ -10,8 +10,9 @@ const createMessage = (timestamp: number, hasPrevRef = true) => {
     return new StreamMessage({
         messageId: new MessageID(STREAM_ID, 0, timestamp, 0, PUBLISHER_ID, MSG_CHAIN_ID),
         prevMsgRef: hasPrevRef ? new MessageRef(timestamp - 1, 0) : null,
-        content: '{}',
-        signature: 'signature'
+        content: utf8ToBinary('{}'),
+        signature: hexToBinary('0x1234'),
+        contentType: ContentType.JSON
     })
 }
 

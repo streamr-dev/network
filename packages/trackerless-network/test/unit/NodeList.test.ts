@@ -1,16 +1,20 @@
-import { NodeList } from '../../src/logic/NodeList'
-import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import {
-    PeerDescriptor,
     ListeningRpcCommunicator,
-    Simulator,
-    PeerID,
-    SimulatorTransport,
+    NodeType,
+    PeerDescriptor,
+    getDhtAddressFromRaw,
+    getNodeIdFromPeerDescriptor,
 } from '@streamr/dht'
-import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
+import { StreamPartIDUtils } from '@streamr/protocol'
 import { expect } from 'expect'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { DeliveryRpcRemote } from '../../src/logic/DeliveryRpcRemote'
+import { NodeList } from '../../src/logic/NodeList'
+import { formStreamPartDeliveryServiceId } from '../../src/logic/formStreamPartDeliveryServiceId'
+import { DeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { createMockPeerDescriptor, createRandomNodeId } from '../utils/utils'
+import { MockTransport } from '../utils/mock/Transport'
+
+const streamPartId = StreamPartIDUtils.parse('stream#0')
 
 describe('NodeList', () => {
 
@@ -21,110 +25,92 @@ describe('NodeList', () => {
         new Uint8Array([1, 1, 4]),
         new Uint8Array([1, 1, 5])
     ]
-    const ownId = PeerID.fromString('test')
-    const graphId = 'test'
+    const ownId = createRandomNodeId()
     let nodeList: NodeList
-    let simulator: Simulator
-    let mockTransports: SimulatorTransport[]
 
     const createRemoteGraphNode = (peerDescriptor: PeerDescriptor) => {
-        const mockTransport = new SimulatorTransport(peerDescriptor, simulator)
-        const mockCommunicator = new ListeningRpcCommunicator(`layer2-${ graphId }`, mockTransport)
-        const mockClient = mockCommunicator.getRpcClientTransport()
-        
-        mockTransports.push(mockTransport)
-        return new RemoteRandomGraphNode(peerDescriptor, graphId, toProtoRpcClient(new NetworkRpcClient(mockClient)))
+        const mockCommunicator = new ListeningRpcCommunicator(formStreamPartDeliveryServiceId(streamPartId), new MockTransport())
+        return new DeliveryRpcRemote(
+            createMockPeerDescriptor(),
+            peerDescriptor,
+            mockCommunicator,
+            DeliveryRpcClient
+        )
     }
 
     beforeEach(() => {
-        simulator = new Simulator()
-        mockTransports = []
         nodeList = new NodeList(ownId, 6)
-        ids.forEach((peerId) => {
+        for (const id of ids) {
             const peerDescriptor: PeerDescriptor = {
-                kademliaId: peerId,
-                type: 0
+                nodeId: id,
+                type: NodeType.NODEJS
             }
             nodeList.add(createRemoteGraphNode(peerDescriptor))
-        })
-    })
-
-    afterEach(async ()=> {
-        // eslint-disable-next-line @typescript-eslint/prefer-for-of
-        for (let i = 0; i < mockTransports.length; i++) {
-            await mockTransports[i].stop()
         }
-        simulator.stop()
     })
 
     it('add', () => {
         const newDescriptor = {
-            kademliaId: new Uint8Array([1, 2, 3]),
-            type: 0
+            nodeId: new Uint8Array([1, 2, 3]),
+            type: NodeType.NODEJS
         }
         const newNode = createRemoteGraphNode(newDescriptor)
         nodeList.add(newNode)
-        expect(nodeList.hasNode(newDescriptor)).toEqual(true)
+        expect(nodeList.has(getNodeIdFromPeerDescriptor(newDescriptor))).toEqual(true)
 
         const newDescriptor2 = {
-            kademliaId: new Uint8Array([1, 2, 4]),
-            type: 0
+            nodeId: new Uint8Array([1, 2, 4]),
+            type: NodeType.NODEJS
         }
         const newNode2 = createRemoteGraphNode(newDescriptor2)
         nodeList.add(newNode2)
-        expect(nodeList.hasNode(newDescriptor2)).toEqual(false)
+        expect(nodeList.has(getNodeIdFromPeerDescriptor(newDescriptor2))).toEqual(false)
     })
 
     it('remove', () => {
-        const toRemove = nodeList.getClosest([])
-        nodeList.remove(toRemove!.getPeerDescriptor())
-        expect(nodeList.hasNode(toRemove!.getPeerDescriptor())).toEqual(false)
-    })
-
-    it('removeById', () => {
-        const toRemove = nodeList.getClosest([])
+        const toRemove = nodeList.getFirst([])
         const nodeId = getNodeIdFromPeerDescriptor(toRemove!.getPeerDescriptor())
-        nodeList.removeById(nodeId)
-        expect(nodeList.hasNode(toRemove!.getPeerDescriptor())).toEqual(false)
+        nodeList.remove(nodeId)
+        expect(nodeList.has(nodeId)).toEqual(false)
     })
 
-    it('getClosest', () => {
-        const closest = nodeList.getClosest([])
+    it('getFirst', () => {
+        const closest = nodeList.getFirst([])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
-            .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey())
+            .toEqual(getDhtAddressFromRaw(new Uint8Array([1, 1, 1])))
     })
 
-    it('getClosest with exclude', () => {
-        const closest = nodeList.getClosest([PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey() as unknown as NodeID])
+    it('getFirst with exclude', () => {
+        const closest = nodeList.getFirst([getDhtAddressFromRaw(new Uint8Array([1, 1, 1]))])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
-            .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 2])).toKey())
+            .toEqual(getDhtAddressFromRaw(new Uint8Array([1, 1, 2])))
     })
 
-    it('getFurthest', () => {
-        const closest = nodeList.getFurthest([])
+    it('getLast', () => {
+        const closest = nodeList.getLast([])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
-            .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey())
+            .toEqual(getDhtAddressFromRaw(new Uint8Array([1, 1, 5])))
     })
 
-    it('getFurthest with exclude', () => {
-        const closest = nodeList.getFurthest([PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey() as unknown as NodeID])
+    it('getLast with exclude', () => {
+        const closest = nodeList.getLast([getDhtAddressFromRaw(new Uint8Array([1, 1, 5]))])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
-            .toEqual(PeerID.fromValue(new Uint8Array([1, 1, 4])).toKey())
+            .toEqual(getDhtAddressFromRaw(new Uint8Array([1, 1, 4])))
     })
 
-    it('getClosestAndFurthest', () => {
-        const results = nodeList.getClosestAndFurthest([])
-        expect(results).toEqual([nodeList.getClosest([]), nodeList.getFurthest([])])
+    it('getFirstAndLast', () => {
+        const results = nodeList.getFirstAndLast([])
+        expect(results).toEqual([nodeList.getFirst([]), nodeList.getLast([])])
     })
 
-    it('getClosest empty', () => {
+    it('getFirst empty', () => {
         const emptyList = new NodeList(ownId, 2)
-        expect(emptyList.getClosest([])).toBeUndefined()
+        expect(emptyList.getFirst([])).toBeUndefined()
     })
 
-    it('getFurthest empty', () => {
+    it('getLast empty', () => {
         const emptyList = new NodeList(ownId, 2)
-        expect(emptyList.getFurthest([])).toBeUndefined()
+        expect(emptyList.getLast([])).toBeUndefined()
     })
 
     it('getRandom empty', () => {
@@ -132,19 +118,40 @@ describe('NodeList', () => {
         expect(emptyList.getRandom([])).toBeUndefined()
     })
 
-    it('getClosestAndFurthest empty', () => {
+    it('getFirstAndLast empty', () => {
         const emptyList = new NodeList(ownId, 2)
-        expect(emptyList.getClosestAndFurthest([])).toEqual([])
+        expect(emptyList.getFirstAndLast([])).toEqual([])
     })
 
-    it('getClosestAndFurthest with exclude', () => {
-        const results = nodeList.getClosestAndFurthest([
-            PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey() as unknown as NodeID,
-            PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey() as unknown as NodeID
+    it('getFirstAndLast with exclude', () => {
+        const results = nodeList.getFirstAndLast([
+            getDhtAddressFromRaw(new Uint8Array([1, 1, 1])),
+            getDhtAddressFromRaw(new Uint8Array([1, 1, 5]))
         ])
         expect(results).toEqual([
-            nodeList.getClosest([PeerID.fromValue(new Uint8Array([1, 1, 1])).toKey() as unknown as NodeID]),
-            nodeList.getFurthest([PeerID.fromValue(new Uint8Array([1, 1, 5])).toKey() as unknown as NodeID])
+            nodeList.getFirst([getDhtAddressFromRaw(new Uint8Array([1, 1, 1]))]),
+            nodeList.getLast([getDhtAddressFromRaw(new Uint8Array([1, 1, 5]))])
         ])
+    })
+
+    it('items are in insertion order', () => {
+        const list = new NodeList(createRandomNodeId(), 100)
+        const item1 = createRemoteGraphNode(createMockPeerDescriptor())
+        const item2 = createRemoteGraphNode(createMockPeerDescriptor())
+        const item3 = createRemoteGraphNode(createMockPeerDescriptor())
+        const item4 = createRemoteGraphNode(createMockPeerDescriptor())
+        const item5 = createRemoteGraphNode(createMockPeerDescriptor())
+        const item6 = createRemoteGraphNode(createMockPeerDescriptor())
+        list.add(item2)
+        list.add(item3)
+        list.add(item1)
+        list.add(item6)
+        list.add(item4)
+        list.add(item5)
+        expect(list.getFirst([])!).toEqual(item2)
+        expect(list.getLast([])!).toEqual(item5)
+        // the order doesn't change if item re-added
+        list.add(item4)
+        expect(list.getLast([])!).toEqual(item5)
     })
 })

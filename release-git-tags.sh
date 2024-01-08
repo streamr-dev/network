@@ -9,7 +9,7 @@ if [[ "$1" == "" ]]; then
 fi
 
 # Exit early if version is wrong
-if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-(tatum|beta)\.[0-9]+)?$ ]]; then
+if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-(tatum|beta|pretestnet)\.[0-9]+)?$ ]]; then
     echo "Error: Invalid version"
     exit 1
 fi
@@ -24,4 +24,5 @@ fi
 
 git commit -m "release: $TAG"
 git tag $TAG
-git push --atomic origin streamr-1.0 $TAG
+git tag broker/$TAG # TODO: This tag needed to activate tagged release of docker images, remove once 1.0 merged to main
+git push --atomic origin streamr-1.0 $TAG broker/$TAG

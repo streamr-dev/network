@@ -1,22 +1,10 @@
-import { Contract } from '@ethersproject/contracts'
-import { Provider } from '@ethersproject/providers'
-import type { Operator, Sponsorship } from '@streamr/network-contracts'
-import { operatorABI, sponsorshipABI } from '@streamr/network-contracts'
 import { StreamID, toStreamID } from '@streamr/protocol'
-import { EthereumAddress, Logger, TheGraphClient, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
-import fetch from 'node-fetch'
+import { ContractFacade } from './ContractFacade'
 import { OperatorServiceConfig } from './OperatorPlugin'
 
 const logger = new Logger(module)
-
-function toStreamIDSafe(input: string): StreamID | undefined {
-    try {
-        return toStreamID(input)
-    } catch {
-        return undefined
-    }
-}
 
 export interface MaintainTopologyHelperEvents {
     /**
@@ -31,31 +19,25 @@ export interface MaintainTopologyHelperEvents {
 }
 
 export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperEvents> {
+
     private readonly streamIdOfSponsorship: Map<EthereumAddress, StreamID> = new Map()
     private readonly sponsorshipCountOfStream: Map<StreamID, number> = new Map()
-    private readonly operatorContractAddress: EthereumAddress
-    private readonly operatorContract: Operator
-    private readonly theGraphClient: TheGraphClient
+    private onStakedListener?: (sponsorship: string) => unknown
+    private onUnstakedListener?: (sponsorship: string) => unknown
+    private readonly contractFacade: ContractFacade
 
-    constructor({ operatorContractAddress, signer, theGraphUrl }: OperatorServiceConfig) {
+    constructor(config: OperatorServiceConfig) {
         super()
-        this.operatorContractAddress = operatorContractAddress
-        this.operatorContract = new Contract(operatorContractAddress, operatorABI, signer) as unknown as Operator
-        this.theGraphClient = new TheGraphClient({
-            serverUrl: theGraphUrl,
-            fetch,
-            logger
-        })
+        this.contractFacade = ContractFacade.createInstance(config)
     }
 
     async start(): Promise<void> {
-        logger.info('Starting')
-        const latestBlock = await this.operatorContract.provider.getBlockNumber()
+        const latestBlock = await this.contractFacade.getProvider().getBlockNumber()
 
-        this.operatorContract.on('Staked', async (sponsorship: string) => {
+        this.onStakedListener = async (sponsorship: string) => {
             logger.info('Receive "Staked" event', { sponsorship })
             const sponsorshipAddress = toEthereumAddress(sponsorship)
-            const streamId = await this.getStreamId(sponsorshipAddress) // TODO: add catching here
+            const streamId = await this.contractFacade.getStreamId(sponsorshipAddress) // TODO: add catching here
             if (this.streamIdOfSponsorship.has(sponsorshipAddress)) {
                 logger.debug('Ignore already staked into sponsorship', { sponsorship })
                 return
@@ -67,8 +49,9 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
             if (sponsorshipCount === 1) {
                 this.emit('addStakedStreams', [streamId])
             }
-        })
-        this.operatorContract.on('Unstaked', (sponsorship: string) => {
+        }
+        this.contractFacade.addOperatorContractStakeEventListener('Staked', this.onStakedListener)
+        this.onUnstakedListener = (sponsorship: string) => {
             logger.info('Receive "Unstaked" event', { sponsorship })
             const sponsorshipAddress = toEthereumAddress(sponsorship)
             const streamId = this.streamIdOfSponsorship.get(sponsorshipAddress)
@@ -83,68 +66,28 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
                 this.sponsorshipCountOfStream.delete(streamId)
                 this.emit('removeStakedStream', streamId)
             }
-        })
+        }
+        this.contractFacade.addOperatorContractStakeEventListener('Unstaked', this.onUnstakedListener)
         
-        const initialStreams = await this.pullStakedStreams(latestBlock)
-        if (initialStreams.length > 0) {
-            this.emit('addStakedStreams', initialStreams)
-        }
-    }
-
-    async getStreamId(sponsorshipAddress: string): Promise<StreamID> {
-        const sponsorship = new Contract(sponsorshipAddress, sponsorshipABI, this.operatorContract.provider as Provider) as unknown as Sponsorship
-        return toStreamID(await sponsorship.streamId())
-    }
-
-    private async pullStakedStreams(requiredBlockNumber: number): Promise<StreamID[]> {
-        const createQuery = (lastId: string, pageSize: number) => {
-            return {
-                query: `
-                    {
-                        operator(id: "${this.operatorContractAddress}") {
-                            stakes(where: {id_gt: "${lastId}"}, first: ${pageSize}) {
-                                sponsorship {
-                                    id
-                                    stream {
-                                        id
-                                    }
-                                }
-                            }
-                        }
-                        _meta {
-                            block {
-                            number
-                            }
-                        }
-                    }
-                    `
-            }
-        }
-        const parseItems = (response: any) => {
-            if (!response.operator) {
-                logger.error('Unable to find operator in The Graph', { operatorContractAddress: this.operatorContractAddress })
-                return []
-            }
-            return response.operator.stakes
-        }
-        this.theGraphClient.updateRequiredBlockNumber(requiredBlockNumber)
-        const queryResult = this.theGraphClient.queryEntities<any>(createQuery, parseItems) // TODO: add type
-
+        const queryResult = this.contractFacade.pullStakedStreams(latestBlock)
         for await (const stake of queryResult) {
-            const sponsorshipId = stake.sponsorship?.id
-            const streamId = toStreamIDSafe(stake.sponsorship?.stream?.id)
-            // TODO: null-checks needed or being too defensive?
-            if (streamId !== undefined && sponsorshipId !== undefined && this.streamIdOfSponsorship.get(sponsorshipId) !== streamId) {
+            const sponsorshipId = toEthereumAddress(stake.sponsorship.id)
+            const streamId = toStreamID(stake.sponsorship.stream.id)
+            if (this.streamIdOfSponsorship.get(sponsorshipId) !== streamId) {
                 this.streamIdOfSponsorship.set(sponsorshipId, streamId)
                 const sponsorshipCount = (this.sponsorshipCountOfStream.get(streamId) || 0) + 1
                 this.sponsorshipCountOfStream.set(streamId, sponsorshipCount)
             }
         }
-        return Array.from(this.sponsorshipCountOfStream.keys())
+        if (this.sponsorshipCountOfStream.size > 0) {
+            const initialStreams = Array.from(this.sponsorshipCountOfStream.keys())
+            this.emit('addStakedStreams', initialStreams)
+        }
     }
 
     stop(): void {
-        this.operatorContract.removeAllListeners()
+        this.contractFacade.removeOperatorContractStakeEventListener('Staked', this.onStakedListener!)
+        this.contractFacade.removeOperatorContractStakeEventListener('Unstaked', this.onUnstakedListener!)
         this.removeAllListeners()
     }
 }

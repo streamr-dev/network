@@ -1,5 +1,16 @@
 import { randomBytes } from 'crypto'
-import { ConnectionLocker, DhtNode, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
+import { 
+    ConnectionLocker,
+    DhtAddress,
+    DhtNode,
+    NodeType,
+    PeerDescriptor,
+    Simulator,
+    SimulatorTransport,
+    getDhtAddressFromRaw,
+    getRandomRegion,
+    getRawFromDhtAddress
+} from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import {
     ContentType,
@@ -8,13 +19,15 @@ import {
     StreamMessage,
     StreamMessageType
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
+import { DeliveryRpcRemote } from '../../src/logic/DeliveryRpcRemote'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
-import { RemoteHandshaker } from '../../src/logic/neighbor-discovery/RemoteHandshaker'
-import { NetworkNode } from '../../src/NetworkNode'
-import { hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
+import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
+import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { NodeID } from '../../src/identifiers'
+import { Layer1Node } from '../../src/logic/Layer1Node'
+import { DeliveryRpcClient, HandshakeRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { RpcCommunicator } from '@streamr/proto-rpc'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -23,42 +36,46 @@ export const mockConnectionLocker: ConnectionLocker = {
     weakUnlockConnection: () => {}
 }
 
-export const createMockRandomGraphNodeAndDhtNode = (
-    ownPeerDescriptor: PeerDescriptor,
+export const createMockRandomGraphNodeAndDhtNode = async (
+    localPeerDescriptor: PeerDescriptor,
     entryPointDescriptor: PeerDescriptor,
-    randomGraphId: string,
+    streamPartId: StreamPartID,
     simulator: Simulator
-): [ DhtNode, RandomGraphNode ] => {
-    const mockCm = new SimulatorTransport(ownPeerDescriptor, simulator)
-    const dhtNode = new DhtNode({
-        transportLayer: mockCm,
-        peerDescriptor: ownPeerDescriptor,
+): Promise<[ Layer1Node, RandomGraphNode ]> => {
+    const mockCm = new SimulatorTransport(localPeerDescriptor, simulator)
+    await mockCm.start()
+    const layer1Node = new DhtNode({
+        transport: mockCm,
+        peerDescriptor: localPeerDescriptor,
         numberOfNodesPerKBucket: 4,
-        entryPoints: [entryPointDescriptor]
+        entryPoints: [entryPointDescriptor],
+        rpcRequestTimeout: 5000
     })
     const randomGraphNode = createRandomGraphNode({
-        randomGraphId,
-        P2PTransport: mockCm,
-        layer1: dhtNode,
+        streamPartId,
+        transport: mockCm,
+        layer1Node,
         connectionLocker: mockCm,
-        ownPeerDescriptor
+        localPeerDescriptor,
+        rpcRequestTimeout: 5000,
+        isLocalNodeEntryPoint: () => false
     })
-    return [dhtNode, randomGraphNode]
+    return [layer1Node, randomGraphNode]
 }
 
 export const createStreamMessage = (
     content: string,
     streamPartId: StreamPartID,
-    publisherId: Uint8Array,
+    publisherId: EthereumAddress,
     timestamp?: number,
     sequenceNumber?: number
 ): StreamMessage => {
     const messageId: MessageID = {
         streamId: StreamPartIDUtils.getStreamID(streamPartId),
         streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
-        sequenceNumber: sequenceNumber || 0,
-        timestamp: timestamp || Date.now(),
-        publisherId,
+        sequenceNumber: sequenceNumber ?? 0,
+        timestamp: timestamp ?? Date.now(),
+        publisherId: hexToBinary(publisherId),
         messageChainId: 'messageChain0',
     }
     const msg: StreamMessage = {
@@ -72,44 +89,52 @@ export const createStreamMessage = (
     return msg
 }
 
-export const createRandomNodeId = (): NodeID => {
-    return randomBytes(10).toString('hex') as NodeID
+export const createRandomNodeId = (): DhtAddress => {
+    return getDhtAddressFromRaw(randomBytes(10))
 }
 
-export const createMockRemoteNode = (peerDescriptor?: PeerDescriptor): RemoteRandomGraphNode => {
-    const mockPeerDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: 0
+export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'nodeId' | 'type'>): PeerDescriptor => {
+    return {
+        ...opts,
+        nodeId: getRawFromDhtAddress(createRandomNodeId()),
+        type: NodeType.NODEJS,
+        region: getRandomRegion()
     }
-    return new RemoteRandomGraphNode(peerDescriptor || mockPeerDescriptor, 'mock', {} as any)
 }
 
-export const createMockRemoteHandshaker = (): RemoteHandshaker => {
-    const mockPeerDescriptor: PeerDescriptor = {
-        kademliaId: hexToBinary(createRandomNodeId()),
-        type: 0
-    }
-    return new RemoteHandshaker(mockPeerDescriptor, 'mock', {
-        handshake: async () => {},
-        interleaveNotice: async () => {}
-    } as any)
+export const createMockDeliveryRpcRemote = (remotePeerDescriptor?: PeerDescriptor): DeliveryRpcRemote => {
+    return new DeliveryRpcRemote(
+        createMockPeerDescriptor(),
+        remotePeerDescriptor ?? createMockPeerDescriptor(),
+        new RpcCommunicator(),
+        DeliveryRpcClient
+    )
 }
 
-export const createNetworkNodeWithSimulator = (
+export const createMockHandshakeRpcRemote = (): HandshakeRpcRemote => {
+    return new HandshakeRpcRemote(
+        createMockPeerDescriptor(),
+        createMockPeerDescriptor(), 
+        new RpcCommunicator(),
+        HandshakeRpcClient
+    )
+}
+
+export const createNetworkNodeWithSimulator = async (
     peerDescriptor: PeerDescriptor,
     simulator: Simulator,
     entryPoints: PeerDescriptor[]
-): NetworkNode => {
+): Promise<NetworkNode> => {
     const transport = new SimulatorTransport(peerDescriptor, simulator)
-    return new NetworkNode({
+    await transport.start()
+    return createNetworkNode({
         layer0: {
             peerDescriptor,
             entryPoints,
-            transportLayer: transport,
+            transport,
             maxConnections: 25,
             storeHighestTtl: 120000,
             storeMaxTtl: 120000
-        },
-        networkNode: {}
+        }
     })
 }

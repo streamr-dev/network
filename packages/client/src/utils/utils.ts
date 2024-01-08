@@ -1,6 +1,14 @@
 import { ContractReceipt } from '@ethersproject/contracts'
+import { DhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress } from '@streamr/dht'
 import { StreamID, toStreamID } from '@streamr/protocol'
-import { composeAbortSignals, Logger, merge, randomString, TheGraphClient, toEthereumAddress } from '@streamr/utils'
+import {
+    composeAbortSignals,
+    Logger,
+    merge,
+    randomString,
+    TheGraphClient,
+    toEthereumAddress
+} from '@streamr/utils'
 import compact from 'lodash/compact'
 import fetch, { Response } from 'node-fetch'
 import { AbortSignal as FetchAbortSignal } from 'node-fetch/externals'
@@ -11,8 +19,7 @@ import { NetworkNodeType, NetworkPeerDescriptor, StrictStreamrClientConfig } fro
 import { StreamrClientEventEmitter } from '../events'
 import { WebStreamToNodeStream } from './WebStreamToNodeStream'
 import { SEPARATOR } from './uuid'
-import { NodeType, PeerDescriptor, PeerID } from '@streamr/dht'
-import omit from 'lodash/omit'
+import { NodeType, PeerDescriptor } from '@streamr/dht'
 
 const logger = new Logger(module)
 
@@ -114,24 +121,36 @@ export class MaxSizedSet<T> {
 }
 
 // TODO: rename to convertNetworkPeerDescriptorToPeerDescriptor
+
+// This function contains temporary compatibility layer which allows that PeerDescriptor can be configured with 
+// "id" field instead of "nodeId" field. This is done so that pretestnet users don't need to change their configs.
+// After strear-1.0 testnet1 or mainnet starts, remove this hack.
+// - Good to ensure at that point that the new format has landed to the public documentation: 
+//   https://docs.streamr.network/guides/become-an-operator
+// - or maybe NET-1133 or NET-1004 have been implemented and the documentation no longer mentions the low
+//   level way of configuring the entry points.
+// Actions:
+// - remove "temporary compatibility" test case from Broker's config.test.ts 
+// - remove "id" property from config.schema.json (line 536) and make "nodeId" property required
+// - remove "id" property handling from this method
 export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescriptor {
     const type = json.type === NetworkNodeType.BROWSER ? NodeType.BROWSER : NodeType.NODEJS
     const peerDescriptor: PeerDescriptor = {
         ...json,
-        kademliaId: PeerID.fromString(json.id).value,
+        nodeId: getRawFromDhtAddress((json.nodeId ?? (json as any).id) as DhtAddress),
         type,
         websocket: json.websocket
+    }
+    if ((peerDescriptor as any).id !== undefined) {
+        delete (peerDescriptor as any).id
     }
     return peerDescriptor
 }
 
 export function convertPeerDescriptorToNetworkPeerDescriptor(descriptor: PeerDescriptor): NetworkPeerDescriptor {
-    if (descriptor.type === NodeType.VIRTUAL) {
-        throw new Error('nodeType "virtual" not supported')
-    }
     return {
-        ...omit(descriptor, 'kademliaId'),
-        id: PeerID.fromValue(descriptor.kademliaId).toString(),
+        ...descriptor,
+        nodeId: getDhtAddressFromRaw(descriptor.nodeId),
         type: descriptor.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER
     }
 }

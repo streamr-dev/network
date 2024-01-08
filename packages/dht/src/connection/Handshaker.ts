@@ -1,59 +1,74 @@
 import { Logger } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { v4 } from 'uuid'
-import { Message, HandshakeRequest, HandshakeResponse, MessageType, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { Message, HandshakeRequest, HandshakeResponse, MessageType, PeerDescriptor, HandshakeError } from '../proto/packages/dht/protos/DhtRpc'
 import { IConnection } from './IConnection'
+import { version } from '../../package.json'
+import { isCompatibleVersion } from '../helpers/versionCompatibility'
+
+// Used for backwards compatibility with older versions of the protocol that do not send version in handshakes
+const BEFORE_TESTNET_TWO_VERSION = '100.0.0-before-testnet-two.0'
 
 const logger = new Logger(module)
 
 interface HandshakerEvents {
-    handshakeRequest: (peerDescriptor: PeerDescriptor) => void
-    handshakeCompleted: (peerDescriptor: PeerDescriptor) => void
-    handshakeFailed: (reason?: string) => void
+    handshakeRequest: (source: PeerDescriptor, version: string, target?: PeerDescriptor) => void
+    handshakeCompleted: (remote: PeerDescriptor) => void
+    handshakeFailed: (error?: HandshakeError) => void
 }
 
 export class Handshaker extends EventEmitter<HandshakerEvents> {
 
     private static readonly HANDSHAKER_SERVICE_ID = 'system/handshaker'
-    private ownPeerDescriptor: PeerDescriptor
-    private protocolVersion: string
+    private localPeerDescriptor: PeerDescriptor
     private connection: IConnection
 
     constructor(
-        ownPeerDescriptor: PeerDescriptor,
-        protocolVersion: string, 
+        localPeerDescriptor: PeerDescriptor,
         connection: IConnection
     ) {
         super()
-        this.ownPeerDescriptor = ownPeerDescriptor
-        this.protocolVersion = protocolVersion
+        this.localPeerDescriptor = localPeerDescriptor
         this.connection = connection
-        this.connection.on('data', this.onData)
+        this.connection.on('data', (data: Uint8Array) => this.onData(data))
     }
 
-    private onData = (data: Uint8Array) => {
-        const message = Message.fromBinary(data)
-        if (message.body.oneofKind === 'handshakeRequest') {
-            logger.trace('handshake request received')
-            const handshake = message.body.handshakeRequest
-            this.emit('handshakeRequest', handshake.peerDescriptor!)
-        }
-        if (message.body.oneofKind === 'handshakeResponse') {
-            logger.trace('handshake response received')
-            const handshake = message.body.handshakeResponse
-            if (handshake.responseError) {
-                this.emit('handshakeFailed', handshake.responseError)
-            } else {
-                this.emit('handshakeCompleted', handshake.peerDescriptor!)
+    private onData(data: Uint8Array) {
+        try {
+            const message = Message.fromBinary(data)
+            if (message.body.oneofKind === 'handshakeRequest') {
+                logger.trace('handshake request received')
+                const handshake = message.body.handshakeRequest
+                this.emit(
+                    'handshakeRequest',
+                    handshake.sourcePeerDescriptor!, 
+                    handshake.version ?? BEFORE_TESTNET_TWO_VERSION,
+                    handshake.targetPeerDescriptor
+                )
             }
+            if (message.body.oneofKind === 'handshakeResponse') {
+                logger.trace('handshake response received')
+                const handshake = message.body.handshakeResponse
+                const sourceVersion = handshake.version ?? BEFORE_TESTNET_TWO_VERSION
+                const error = !isCompatibleVersion(sourceVersion, version) ? HandshakeError.UNSUPPORTED_VERSION : undefined
+                    ?? handshake.error
+                if (error !== undefined) {
+                    this.emit('handshakeFailed', error)
+                } else {
+                    this.emit('handshakeCompleted', handshake.sourcePeerDescriptor!)
+                }
+            }
+        } catch (err) {
+            logger.error('error while parsing handshake message', err)
         }
+        
     }
 
-    public sendHandshakeRequest(): void {
+    public sendHandshakeRequest(remotePeerDescriptor?: PeerDescriptor): void {
         const outgoingHandshake: HandshakeRequest = {
-            sourceId: this.ownPeerDescriptor.kademliaId,
-            protocolVersion: this.protocolVersion,
-            peerDescriptor: this.ownPeerDescriptor
+            sourcePeerDescriptor: this.localPeerDescriptor,
+            targetPeerDescriptor: remotePeerDescriptor,
+            version 
         }
         const msg: Message = {
             serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
@@ -68,14 +83,11 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
         logger.trace('handshake request sent')
     }
 
-    public sendHandshakeResponse(error?: string): void {
+    public sendHandshakeResponse(error?: HandshakeError): void {
         const outgoingHandshakeResponse: HandshakeResponse = {
-            sourceId: this.ownPeerDescriptor.kademliaId,
-            protocolVersion: this.protocolVersion,
-            peerDescriptor: this.ownPeerDescriptor
-        }
-        if (error) {
-            outgoingHandshakeResponse.responseError = error
+            sourcePeerDescriptor: this.localPeerDescriptor,
+            error,
+            version
         }
         const msg: Message = {
             serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
@@ -87,6 +99,6 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
             }
         }
         this.connection.send(Message.toBinary(msg))
-        logger.trace('handshake request sent')
+        logger.trace('handshake response sent')
     }
 }

@@ -9,7 +9,7 @@ import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { MessageFactory, MessageFactoryOptions } from '../../src/publish/MessageFactory'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
-import { merge } from '@streamr/utils'
+import { merge, utf8ToBinary } from '@streamr/utils'
 
 const WALLET = fastWallet()
 const STREAM_ID = toStreamID('/path', toEthereumAddress(WALLET.address))
@@ -42,9 +42,10 @@ const createMessageFactory = async (opts?: {
 
 const createMessage = async (
     opts: Omit<PublishMetadata, 'timestamp'> & { timestamp?: number, explicitPartition?: number },
-    messageFactory: MessageFactory
+    messageFactory: MessageFactory,
+    content: unknown | Uint8Array = CONTENT
 ): Promise<StreamMessage> => {
-    return messageFactory.createMessage(CONTENT, merge(
+    return messageFactory.createMessage(content, merge(
         {
             timestamp: TIMESTAMP
         },
@@ -71,9 +72,9 @@ describe('MessageFactory', () => {
             encryptionType: EncryptionType.AES,
             groupKeyId: GROUP_KEY.id,
             newGroupKey: null,
-            signature: expect.stringMatching(/^0x[0-9a-f]+$/),
+            signature: expect.any(Uint8Array),
             contentType: ContentType.JSON,
-            serializedContent: expect.stringMatching(/^[0-9a-f]+$/)
+            serializedContent: expect.any(Uint8Array)
         })
     })
 
@@ -87,7 +88,7 @@ describe('MessageFactory', () => {
         expect(msg).toMatchObject({
             encryptionType: EncryptionType.NONE,
             groupKeyId: null,
-            serializedContent: JSON.stringify(CONTENT)
+            serializedContent: utf8ToBinary(JSON.stringify(CONTENT))
         })
     })
 
@@ -116,8 +117,8 @@ describe('MessageFactory', () => {
         expect(msg.groupKeyId).toBe(GROUP_KEY.id)
         expect(msg.newGroupKey).toMatchObject({
             groupKeyId: nextGroupKey.id,
-            encryptedGroupKeyHex: expect.any(String)
-        })
+            data: expect.any(Uint8Array)
+        })    
         expect(GROUP_KEY.decryptNextGroupKey(msg.newGroupKey!)).toEqual(nextGroupKey)
     })
 
@@ -130,6 +131,14 @@ describe('MessageFactory', () => {
         return expect(() =>
             createMessage({}, messageFactory)
         ).rejects.toThrow(/You don't have permission to publish to this stream/)
+    })
+
+    it('detects binary content', async () => {
+        const messageFactory = await createMessageFactory()
+        const msg = await createMessage({}, messageFactory, utf8ToBinary('mock-content'))
+        expect(msg).toMatchObject({
+            contentType: ContentType.BINARY,
+        })
     })
 
     describe('partitions', () => {

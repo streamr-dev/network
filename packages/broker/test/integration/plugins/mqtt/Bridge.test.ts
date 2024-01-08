@@ -7,12 +7,11 @@ import { wait } from '@streamr/utils'
 import { Wallet } from '@ethersproject/wallet'
 
 const MQTT_PLUGIN_PORT = 12470
-const NETWORK_LAYER_PORT = 40415
 
 jest.setTimeout(30000)
 
 const createMqttClient = () => {
-    return mqtt.connectAsync(`mqtt://localhost:${MQTT_PLUGIN_PORT}`)
+    return mqtt.connectAsync(`mqtt://127.0.0.1:${MQTT_PLUGIN_PORT}`)
 }
 
 describe('MQTT Bridge', () => {
@@ -36,8 +35,7 @@ describe('MQTT Bridge', () => {
                 mqtt: {
                     port: MQTT_PLUGIN_PORT
                 }
-            },
-            networkLayerWsServerPort: NETWORK_LAYER_PORT
+            }
         })
     })
 

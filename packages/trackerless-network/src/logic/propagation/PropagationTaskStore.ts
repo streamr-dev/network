@@ -1,11 +1,11 @@
-import { NodeID } from '../../identifiers'
+import { DhtAddress } from '@streamr/dht'
 import { MessageRef, StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { FifoMapWithTTL } from './FifoMapWithTTL'
 
 export interface PropagationTask {
     message: StreamMessage
     source: string | null
-    handledNeighbors: Set<NodeID>
+    handledNeighbors: Set<DhtAddress>
 }
 
 /**

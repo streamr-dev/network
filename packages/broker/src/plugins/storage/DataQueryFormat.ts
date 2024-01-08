@@ -1,4 +1,5 @@
 import { EncryptionType, StreamMessage } from '@streamr/protocol'
+import { binaryToHex } from '@streamr/utils'
 
 export interface Format {
     getMessageAsString: (streamMessage: StreamMessage) => string
@@ -28,7 +29,7 @@ const createPlainTextFormat = (getMessageAsString: (streamMessage: StreamMessage
     }
 }
 
-export const toObject = (msg: StreamMessage<any>): any => {
+export const toObject = (msg: StreamMessage): any => {
     return {
         streamId: msg.getStreamId(),
         streamPartition: msg.getStreamPartition(),
@@ -41,7 +42,7 @@ export const toObject = (msg: StreamMessage<any>): any => {
         encryptionType: msg.encryptionType,
         groupKeyId: msg.groupKeyId,
         content: (msg.encryptionType === EncryptionType.NONE ? msg.getParsedContent() : msg.getSerializedContent()),
-        signature: msg.signature,
+        signature: binaryToHex(msg.signature),
     }
 }
 
