@@ -71,7 +71,8 @@ module.exports = {
         //'@typescript-eslint/no-empty-function': 'error',
         'no-multi-spaces': ["error", { ignoreEOLComments: true }],
         'default-case': ['error'],
-        // select which rules we should disable
+        // TODO: in follow up PRs, select which rules we should enable and fix the code. When all recommended rules
+        //  have been enabled, consider enabling the "strict" preset.
         '@typescript-eslint/require-await': 'off',
         '@typescript-eslint/no-floating-promises': 'off',
         '@typescript-eslint/await-thenable': 'off',
@@ -84,6 +85,9 @@ module.exports = {
         '@typescript-eslint/no-unnecessary-type-assertion': 'off',
         '@typescript-eslint/restrict-template-expressions': 'off',
         '@typescript-eslint/restrict-plus-operands': 'off',
-        '@typescript-eslint/unbound-method': 'off'
+        '@typescript-eslint/unbound-method': 'off',
+        '@typescript-eslint/no-base-to-string': 'off',
+        '@typescript-eslint/no-unsafe-enum-comparison': 'off',
+        '@typescript-eslint/no-redundant-type-constituents': 'off'
     }
 }
