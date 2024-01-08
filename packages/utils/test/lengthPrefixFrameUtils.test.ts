@@ -30,12 +30,12 @@ describe('LengthPrefixedFrameUtils', () => {
             const payload = Buffer.from('Hello, world!', 'utf-8')
             const frame = toLengthPrefixedFrame(payload)
 
-            decoder.write(frame)
-
             decoder.on('data', (data: Buffer) => {
                 expect(data).toEqual(payload)
                 done()
             })
+
+            decoder.write(frame)
         })
 
         it('can decode multiple frames in one chunk', (done) => {
@@ -46,8 +46,6 @@ describe('LengthPrefixedFrameUtils', () => {
                 toLengthPrefixedFrame(payload2)
             ])
 
-            decoder.write(chunk)
-
             let count = 0
             decoder.on('data', (data: Buffer) => {
                 if (count === 0) {
@@ -58,20 +56,22 @@ describe('LengthPrefixedFrameUtils', () => {
                 }
                 count++
             })
+
+            decoder.write(chunk)
         })
 
         it('can decode a frame split across multiple chunks', (done) => {
             const payload = Buffer.from('Hello, world!', 'utf-8')
             const frame = toLengthPrefixedFrame(payload)
 
-            decoder.write(frame.subarray(0, 2))
-            decoder.write(frame.subarray(2, 9))
-            decoder.end(frame.subarray(9))
-
             decoder.on('data', (data: Buffer) => {
                 expect(data).toEqual(payload)
                 done()
             })
+
+            decoder.write(frame.subarray(0, 2))
+            decoder.write(frame.subarray(2, 9))
+            decoder.end(frame.subarray(9))
         })
 
         it('can decode multiple frames split across multiple chunks', (done) => {
@@ -80,12 +80,6 @@ describe('LengthPrefixedFrameUtils', () => {
             const frame1 = toLengthPrefixedFrame(payload1)
             const frame2 = toLengthPrefixedFrame(payload2)
 
-            decoder.write(frame1.subarray(0, 2))
-            decoder.write(frame1.subarray(2, 9))
-            decoder.write(Buffer.concat([frame1.subarray(9), frame2.subarray(0, 6)]))
-            decoder.write(frame2.subarray(6, 10))
-            decoder.end(frame2.subarray(10))
-
             let count = 0
             decoder.on('data', (data: Buffer) => {
                 if (count === 0) {
@@ -96,16 +90,17 @@ describe('LengthPrefixedFrameUtils', () => {
                 }
                 count++
             })
+
+            decoder.write(frame1.subarray(0, 2))
+            decoder.write(frame1.subarray(2, 9))
+            decoder.write(Buffer.concat([frame1.subarray(9), frame2.subarray(0, 6)]))
+            decoder.write(frame2.subarray(6, 10))
+            decoder.end(frame2.subarray(10))
         })
 
         it('can ignore an incomplete frame when stream ends', (done) => {
             const payload = Buffer.from('Hello, world!', 'utf-8')
             const frame = toLengthPrefixedFrame(payload)
-
-            decoder.write(frame.subarray(0, 5))
-            setTimeout(() => {
-                decoder.end(frame.subarray(5, 9))
-            }, 10)
 
             decoder.on('data', (data: Buffer) => {
                 fail(`Should not have received data: ${data}`)
@@ -113,17 +108,22 @@ describe('LengthPrefixedFrameUtils', () => {
             decoder.on('end', () => {
                 done()
             })
+
+            decoder.write(frame.subarray(0, 5))
+            setTimeout(() => {
+                decoder.end(frame.subarray(5, 7))
+            }, 10)
         })
 
         it('can decode a zero-sized frame', (done) => {
             const frame = toLengthPrefixedFrame(Buffer.alloc(0))
 
-            decoder.write(frame)
-
             decoder.on('data', (data: Buffer) => {
                 expect(data.length).toBe(0)
                 done()
             })
+
+            decoder.write(frame)
         })
     })
 })
