@@ -19,7 +19,7 @@ describe('waitForCondition', () => {
         it('rejects if conditionFn does not return true within timeout', (done) => {
             const pollCb = () => false
             waitForCondition(pollCb, 50, 5).catch((err) => {
-                expect(err.message).toEqual("waitForCondition: timed out before \"() => false\" became true")
+                expect(err.message).toEqual('waitForCondition: timed out before "() => false" became true')
                 done()
             })
         })
@@ -30,7 +30,7 @@ describe('waitForCondition', () => {
                 abortController.abort()
             }, 100)
             waitForCondition(() => false, 5000, 10, abortController.signal).catch((err) => {
-                expect(err.message).toEqual("waitForCondition: aborted before \"() => false\" became true")
+                expect(err.message).toEqual('waitForCondition: aborted before "() => false" became true')
                 done()
             })
         })
@@ -54,7 +54,7 @@ describe('waitForCondition', () => {
         it('rejects if conditionFn keeps returning (promisified) false within timeout', async () => {
             const fn = () => Promise.resolve(false)
             await expect(waitForCondition(fn, 50, 10)).rejects
-                .toThrow("waitForCondition: timed out before \"() => Promise.resolve(false)\" became true")
+                .toThrow('waitForCondition: timed out before "() => Promise.resolve(false)" became true')
         })
 
         it('rejects immediately if conditionFn returns rejected promise from the get-go', async () => {
@@ -84,7 +84,7 @@ describe('waitForCondition', () => {
                 abortController.abort()
             }, 100)
             waitForCondition(() => Promise.resolve(false), 5000, 10, abortController.signal).catch((err) => {
-                expect(err.message).toEqual("waitForCondition: aborted before \"() => Promise.resolve(false)\" became true")
+                expect(err.message).toEqual('waitForCondition: aborted before "() => Promise.resolve(false)" became true')
                 done()
             })
         })
@@ -94,16 +94,16 @@ describe('waitForCondition', () => {
         const abortController = new AbortController()
         abortController.abort()
         waitForCondition(() => true, 5000, 1, abortController.signal).catch((err) => {
-            expect(err.message).toEqual("waitForCondition: aborted before \"() => true\" became true")
+            expect(err.message).toEqual('waitForCondition: aborted before "() => true" became true')
             done()
         })
     })
 
     it('can provide contextual information on rejection', (done) => {
         const pollCb = () => false
-        waitForCondition(pollCb, 50, 5, undefined, () => "a was 5, expected 10").catch((err) => {
-            expect(err.message).toEqual("waitForCondition: timed out before \"() => false\" became true" +
-                "\na was 5, expected 10")
+        waitForCondition(pollCb, 50, 5, undefined, () => 'a was 5, expected 10').catch((err) => {
+            expect(err.message).toEqual('waitForCondition: timed out before "() => false" became true' +
+                '\na was 5, expected 10')
             done()
         })
     })

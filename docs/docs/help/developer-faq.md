@@ -23,7 +23,7 @@ On some of the largest streams, messages reach all interested subscribers within
 DATA is the currency of the incentive layer of the Network. Its used to improve stream security, scalability and privacy.
 
 ### Do you have a Python SDK?
-Just JavaScript at the moment. But you can interact with the Network by running a Broker node, then interacting with it via WebSockets, MQTT or HTTP in any language.
+Just JavaScript at the moment. But you can interact with the Network by running a Streamr node, then interacting with it via WebSockets, MQTT or HTTP in any language.
 
 ### Does Streamr store data?
 Yes, but currently in a centralized way, using Streamr Storage nodes. There are ecosystem and community efforts underway to bridge the Streamr Network's data transport capabilities with decentralized data storage.

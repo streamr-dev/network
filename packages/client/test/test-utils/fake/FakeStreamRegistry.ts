@@ -1,44 +1,40 @@
-import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
 import { StreamID } from '@streamr/protocol'
-import { inject, Lifecycle, scoped } from 'tsyringe'
+import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
+import { Methods } from '@streamr/test-utils'
+import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
-import { NotFoundError } from '../../../src/HttpUtil'
-import {
-    isPublicPermissionAssignment,
-    isPublicPermissionQuery,
-    PermissionAssignment,
-    PermissionQuery, StreamPermission
-} from '../../../src/permission'
-import { SearchStreamsPermissionFilter } from '../../../src/registry/searchStreams'
-import { StreamRegistry } from '../../../src/registry/StreamRegistry'
-import { StreamRegistryCached } from '../../../src/registry/StreamRegistryCached'
 import { Stream, StreamMetadata } from '../../../src/Stream'
 import { StreamFactory } from '../../../src/StreamFactory'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
-import { Methods } from '../types'
-import { FakeChain, PublicPermissionTarget, PUBLIC_PERMISSION_TARGET, StreamRegistryItem } from './FakeChain'
+import { StreamrClientError } from '../../../src/StreamrClientError'
+import {
+    PermissionAssignment,
+    PermissionQuery, StreamPermission,
+    isPublicPermissionAssignment,
+    isPublicPermissionQuery
+} from '../../../src/permission'
+import { StreamRegistry } from '../../../src/registry/StreamRegistry'
+import { SearchStreamsPermissionFilter } from '../../../src/registry/searchStreams'
+import { FakeChain, PUBLIC_PERMISSION_TARGET, PublicPermissionTarget, StreamRegistryItem } from './FakeChain'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStreamRegistry implements Methods<StreamRegistry> {
 
     private readonly chain: FakeChain
+    private readonly streamFactory: StreamFactory
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
-    private readonly streamFactory: StreamFactory
-    private readonly streamRegistryCached: StreamRegistryCached
-
+    
     constructor(
         chain: FakeChain,
-        streamIdBuilder: StreamIDBuilder,
         streamFactory: StreamFactory,
-        streamRegistryCached: StreamRegistryCached,
+        streamIdBuilder: StreamIDBuilder,
         @inject(AuthenticationInjectionToken) authentication: Authentication
     ) {
         this.chain = chain
+        this.streamFactory = streamFactory
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
-        this.streamFactory = streamFactory
-        this.streamRegistryCached = streamRegistryCached
     }
 
     async createStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
@@ -61,7 +57,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         if (registryItem !== undefined) {
             return this.streamFactory.createStream(id, registryItem.metadata)
         } else {
-            throw new NotFoundError('Stream not found: id=' + id)
+            throw new StreamrClientError('Stream not found: id=' + id, 'STREAM_NOT_FOUND')
         }
     }
 
@@ -146,7 +142,6 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         ) => void
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.streamRegistryCached.clearStream(streamId)
         const registryItem = this.chain.streams.get(streamId)
         if (registryItem === undefined) {
             throw new Error('Stream not found')
@@ -170,6 +165,19 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         }))
     }
 
+    hasPublicSubscribePermission(streamId: StreamID): Promise<boolean> {
+        return this.hasPermission({
+            streamId,
+            public: true,
+            permission: StreamPermission.SUBSCRIBE
+        })
+    }
+    
+    // eslint-disable-next-line class-methods-use-this
+    clearStreamCache(): void {
+        // no-op
+    }
+
     async isStreamPublisher(streamIdOrPath: string, user: EthereumAddress): Promise<boolean> {
         return this.hasPermission({ streamId: streamIdOrPath, user, permission: StreamPermission.PUBLISH, allowPublic: true })
     }
@@ -184,7 +192,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    deleteStream(_streamIdOrPath: string): Promise<void> {
+    deleteStream(): Promise<void> {
         throw new Error('not implemented')
     }
 
@@ -199,12 +207,12 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamPublishers(_streamIdOrPath: string): AsyncIterable<EthereumAddress> {
+    getStreamPublishers(): AsyncIterable<EthereumAddress> {
         throw new Error('not implemented')
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamSubscribers(_streamIdOrPath: string): AsyncIterable<EthereumAddress> {
+    getStreamSubscribers(): AsyncIterable<EthereumAddress> {
         throw new Error('not implemented')
     }
 }

@@ -1,12 +1,12 @@
+import { DhtAddress } from '@streamr/dht'
 import { StreamMessage, StreamMessageType } from '@streamr/protocol'
-import { NodeId } from '@streamr/network-node'
-import { FakeNetworkNode } from './FakeNetworkNode'
 import { waitForCondition } from '@streamr/utils'
+import { FakeNetworkNode } from './FakeNetworkNode'
 
 interface Send {
     message: StreamMessage
-    sender: NodeId
-    recipients: NodeId[]
+    sender: DhtAddress
+    recipients: DhtAddress[]
 }
 
 interface SentMessagesFilter {
@@ -16,22 +16,22 @@ interface SentMessagesFilter {
 
 export class FakeNetwork {
 
-    private readonly nodes: Map<NodeId, FakeNetworkNode> = new Map()
+    private readonly nodes: Map<DhtAddress, FakeNetworkNode> = new Map()
     private sends: Send[] = []
 
     addNode(node: FakeNetworkNode): void {
-        if (!this.nodes.has(node.id)) {
-            this.nodes.set(node.id, node)
+        if (!this.nodes.has(node.getNodeId())) {
+            this.nodes.set(node.getNodeId(), node)
         } else {
-            throw new Error(`Duplicate node: ${node.id}`)
+            throw new Error(`Duplicate node: ${node.getNodeId()}`)
         }
     }
 
-    removeNode(id: NodeId): void {
+    removeNode(id: DhtAddress): void {
         this.nodes.delete(id)
     }
 
-    getNode(id: NodeId): FakeNetworkNode | undefined {
+    getNode(id: DhtAddress): FakeNetworkNode | undefined {
         return this.nodes.get(id)
     }
 
@@ -39,25 +39,15 @@ export class FakeNetwork {
         return Array.from(this.nodes.values())
     }
 
-    send(msg: StreamMessage, sender: NodeId, isRecipient: (networkNode: FakeNetworkNode) => boolean): void {
+    send(msg: StreamMessage, sender: DhtAddress, isRecipient: (networkNode: FakeNetworkNode) => boolean): void {
         const recipients = this.getNodes().filter((n) => isRecipient(n))
-        /*
-        * This serialization+serialization is needed in test/integration/Encryption.ts
-        * as it expects that the EncryptedGroupKey format changes in the process.
-        * TODO: should we change the serialization or the test? Or keep this hack?
-        */
-        const serialized = msg.serialize()
         recipients.forEach((n) => {
-            n.messageListeners.forEach((listener) => {
-                // return a clone as client mutates message when it decrypts messages
-                const deserialized = StreamMessage.deserialize(serialized)
-                listener(deserialized)
-            })
+            n.messageListeners.forEach((listener) => listener(msg))
         })
         this.sends.push({
             message: msg,
             sender,
-            recipients: recipients.map((n) => n.id)
+            recipients: recipients.map((n) => n.getNodeId())
         })
     }
 

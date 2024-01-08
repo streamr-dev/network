@@ -1,14 +1,12 @@
-import { Tracker } from '@streamr/network-tracker'
-import { createClient, startTestTracker } from '../../../utils'
+import { createClient } from '../../../utils'
 import { SubscriberPlugin } from '../../../../src/plugins/subscriber/SubscriberPlugin'
-import StreamrClient from 'streamr-client'
+import { StreamrClient } from 'streamr-client'
 import { fastWallet } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
 
-const TRACKER_PORT = 12465
 const wallet = fastWallet()
 
-const createMockPlugin = async (streamrClient: StreamrClient) => {
+const createMockPlugin = async () => {
     const brokerConfig: any = {
         client: {
             auth: {
@@ -19,55 +17,48 @@ const createMockPlugin = async (streamrClient: StreamrClient) => {
             subscriber: {
                 streams: [
                     {
-                        streamId: "stream-0",
+                        streamId: 'stream-0',
                         streamPartition: 0
                     },
                     {
-                        streamId: "stream-0",
+                        streamId: 'stream-0',
                         streamPartition: 1
                     },
                     {
-                        streamId: "stream-1",
+                        streamId: 'stream-1',
                         streamPartition: 0
                     }
                 ]
             }
         }
     }
-    return new SubscriberPlugin({
-        name: 'subscriber',
-        streamrClient,
-        brokerConfig
-    })
+    return new SubscriberPlugin('subscriber', brokerConfig)
 }
 
 describe('Subscriber Plugin', () => {
-    let tracker: Tracker
     let client: StreamrClient
     let plugin: any
 
     beforeAll(async () => {
-        tracker = await startTestTracker(TRACKER_PORT)
-        client = await createClient(tracker, wallet.privateKey)
-        plugin = await createMockPlugin(client)
-        await plugin.start()
+        client = createClient(wallet.privateKey)
+        plugin = await createMockPlugin()
+        await plugin.start(client)
     })
 
     afterAll(async () => {
         await Promise.allSettled([
             client?.destroy(),
-            plugin?.stop(),
-            tracker?.stop(),
+            plugin?.stop()
         ])
     })
 
     it('subscribes to the configured list of streams', async () => {
-        const nodeId = (await client.getNode()).getNodeId()
+        const node = await client.getNode()
         await waitForCondition(() => {
-            const overlays = tracker.getOverlayPerStreamPart() as any
-            return (overlays["stream-0#0"]?.nodes[nodeId] !== undefined)
-                && (overlays["stream-0#1"]?.nodes[nodeId] !== undefined)
-                && (overlays["stream-1#0"]?.nodes[nodeId] !== undefined)
+            const streams = node.getStreamParts().map((stream) => stream.toString())
+            return streams.includes('stream-0#0')
+                && streams.includes('stream-0#1')
+                && streams.includes('stream-1#0')
         })
         // If waitForCondition succeeds we are okay
         expect(true).toEqual(true)

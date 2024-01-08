@@ -1,13 +1,13 @@
+import { EthereumAddress } from '@streamr/utils'
+import { Methods } from '@streamr/test-utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { StorageNodeMetadata, StorageNodeRegistry } from '../../../src/registry/StorageNodeRegistry'
-import { Methods } from '../types'
 import { FakeChain } from './FakeChain'
-import { EthereumAddress } from '@streamr/utils'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStorageNodeRegistry implements Methods<StorageNodeRegistry> {
 
-    private chain: FakeChain
+    private readonly chain: FakeChain
 
     constructor(chain: FakeChain) {
         this.chain = chain
@@ -19,7 +19,7 @@ export class FakeStorageNodeRegistry implements Methods<StorageNodeRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async getStorageNodeMetadata(nodeAddress: EthereumAddress): Promise<StorageNodeMetadata | never> {
+    async getStorageNodeMetadata(nodeAddress: EthereumAddress): Promise<StorageNodeMetadata> {
         const metadata = this.chain.storageNodeMetadatas.get(nodeAddress)
         if (metadata !== undefined) {
             return metadata

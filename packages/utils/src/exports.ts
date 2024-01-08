@@ -25,13 +25,22 @@ import { Events, BrandedString } from './types'
 import { wait } from './wait'
 import { waitForEvent } from './waitForEvent'
 import { TimeoutError, withTimeout } from './withTimeout'
-import { composeAbortSignals } from './composeAbortSignals'
+import { composeAbortSignals, ComposedAbortSignal } from './composeAbortSignals'
 import { waitForCondition } from './waitForCondition'
+import { waitForEvent3, runAndWaitForEvents3, raceEvents3, runAndRaceEvents3, RunAndRaceEventsReturnType } from './waitForEvent3'
 import { withRateLimit } from './withRateLimit'
 import { ObservableEventEmitter } from './ObservableEventEmitter'
 import { initEventGateway } from './initEventGateway'
+import { addManagedEventListener } from './addManagedEventListener'
 import { merge } from './merge'
 import { collect } from './collect'
+import { Gate } from './Gate'
+import { TheGraphClient, GraphQLQuery, FetchResponse } from './TheGraphClient'
+import { Heap } from './Heap'
+import { executeSafePromise } from './executeSafePromise'
+import { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary, areEqualBinaries } from './binaryUtils'
+import { filePathToNodeFormat } from './filePathToNodeFormat'
+import { retry } from './retry'
 
 export {
     BrandedString,
@@ -46,6 +55,7 @@ export {
     pTransaction,
     asAbortable,
     composeAbortSignals,
+    ComposedAbortSignal,
     isENSName,
     keyToArrayIndex,
     randomString,
@@ -61,11 +71,30 @@ export {
     waitForEvent,
     withRateLimit,
     withTimeout,
+    waitForEvent3,
+    runAndWaitForEvents3,
+    raceEvents3,
+    runAndRaceEvents3,
+    RunAndRaceEventsReturnType,
     Events,
     ObservableEventEmitter,
     initEventGateway,
+    addManagedEventListener,
     merge,
-    collect
+    collect,
+    Gate,
+    TheGraphClient,
+    GraphQLQuery,
+    FetchResponse,
+    Heap,
+    executeSafePromise,
+    binaryToHex,
+    binaryToUtf8,
+    hexToBinary,
+    utf8ToBinary,
+    areEqualBinaries,
+    filePathToNodeFormat,
+    retry
 }
 
 export {

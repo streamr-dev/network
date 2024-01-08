@@ -9,25 +9,20 @@ if [[ "$1" == "" ]]; then
 fi
 
 # Exit early if version is wrong
-if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-beta\.[0-9]+)?$ ]]; then
+if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-(tatum|beta|pretestnet)\.[0-9]+)?$ ]]; then
     echo "Error: Invalid version"
     exit 1
 fi
 
-CLIENT_TAG=client/v$1
-CLI_TOOLS_TAG=cli-tools/v$1
+TAG=v$1
 
 # Exit early if tags already exist
-if git rev-parse "$CLIENT_TAG" >/dev/null 2>&1; then
-    echo "Error: Tag '$CLIENT_TAG' already exists."
-    exit 1
-fi
-if git rev-parse "$CLI_TOOLS_TAG" >/dev/null 2>&1; then
-    echo "Error: Tag '$CLI_TOOLS_TAG' already exists."
+if git rev-parse "$TAG" >/dev/null 2>&1; then
+    echo "Error: Tag '$TAG' already exists."
     exit 1
 fi
 
-git commit -m "release(client, cli-tools): v$1"
-git tag client/v$1
-git tag cli-tools/v$1
-git push --atomic origin main client/v$1 cli-tools/v$1
+git commit -m "release: $TAG"
+git tag $TAG
+git tag broker/$TAG # TODO: This tag needed to activate tagged release of docker images, remove once 1.0 merged to main
+git push --atomic origin streamr-1.0 $TAG broker/$TAG

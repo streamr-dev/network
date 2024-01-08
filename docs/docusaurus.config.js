@@ -3,13 +3,14 @@
 
 const lightCodeTheme = require("prism-react-renderer/themes/github")
 const darkCodeTheme = require("prism-react-renderer/themes/dracula")
+const path = require("path")
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
     title: "Streamr Docs",
     tagline:
         "Publish and subscribe to your json based real-time data powered by the decentralized Streamr network.",
-    url: "https://streamr.network/",
+    url: "https://docs.streamr.network/",
     baseUrl: "/",
     onBrokenLinks: "throw",
     onBrokenMarkdownLinks: "throw",
@@ -36,7 +37,7 @@ const config = {
             {
                 entryPoints: ["../packages/client/src/exports.ts"],
                 disableSources: true,
-                name: "⚙️ Streamr SDK",
+                name: "API reference",
                 excludePrivate: true,
                 excludeProtected: true,
                 excludeInternal: true,
@@ -45,11 +46,15 @@ const config = {
                 treatWarningsAsErrors: true,
                 watch: process.env.TYPEDOC_WATCH,
                 sidebar: {
-                    categoryLabel: "⚙️ API",
+                    categoryLabel: "API reference",
+                    indexLabel: " ",
+                    position: 5,
                 },
+                out: "usage/streamr-js-client/api",
                 tsconfig: "../packages/client/tsconfig.json",
             },
         ],
+        path.resolve("plugins", "refine-docs"),
     ],
 
     presets: [
@@ -61,7 +66,11 @@ const config = {
                     routeBasePath: "/",
                     sidebarPath: require.resolve("./sidebars.js"),
                     editUrl:
-                        "https://github.com/streamr-dev/documentation/blob/main",
+                        "https://github.com/streamr-dev/network/tree/main/docs",
+                    exclude: [
+                        "**usage/streamr-js-client/api/modules.mdx",
+                        "**usage/streamr-js-client/api/modules.md",
+                    ],
                 },
                 blog: {
                     showReadingTime: true,
@@ -103,14 +112,26 @@ const config = {
                 //   },
                 // ],
             },
+            algolia: {
+                // The application ID provided by Algolia
+                appId: "NOLYN2Z67B",
+
+                // Public API key: it is safe to commit it
+                apiKey: "f9fcf2cbeb33f2edee5ee580110d8045",
+
+                indexName: "streamr",
+
+                // Optional: see doc section below
+                contextualSearch: true,
+            },
             footer: {
                 links: [
                     {
                         title: "DOCS",
                         items: [
                             {
-                                label: "Quickstart",
-                                to: "quickstart/nodejs",
+                                label: "Quickstart guides",
+                                to: "guides/nodejs",
                             },
                             {
                                 label: "Usage",
@@ -121,8 +142,8 @@ const config = {
                                 to: "streamr-network",
                             },
                             {
-                                label: "Node runners",
-                                to: "node-runners/run-a-node",
+                                label: "Node operators",
+                                to: "streamr-network/network-roles/operators",
                             },
                             {
                                 label: "Help",

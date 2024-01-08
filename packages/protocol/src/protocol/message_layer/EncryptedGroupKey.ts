@@ -1,32 +1,34 @@
-import { validateIsString } from '../../utils/validations'
+import { validateIsString, validateIsType } from '../../utils/validations'
+import { binaryToHex, hexToBinary } from '@streamr/utils'
 
 /** @internal */
 export type EncryptedGroupKeySerialized = [string, string]
 export default class EncryptedGroupKey {
 
     groupKeyId: string
-    encryptedGroupKeyHex: string
+    data: Uint8Array
     serialized: string | null
 
     /**
      * A pair (groupKeyId, encryptedGroupKey) where the encryptedGroupKey is an encrypted, hex-encoded version of the group key.
      * @param groupKeyId
-     * @param encryptedGroupKeyHex
+     * @param data
      * @param serialized Optional. If given, this exact string is returned from serialize().
      */
-    constructor(groupKeyId: string, encryptedGroupKeyHex: string, serialized: string | null = null) {
+    constructor(groupKeyId: string, data: Uint8Array, serialized: string | null = null) {
         validateIsString('groupKeyId', groupKeyId)
         this.groupKeyId = groupKeyId
 
-        validateIsString('encryptedGroupKeyHex', encryptedGroupKeyHex)
-        this.encryptedGroupKeyHex = encryptedGroupKeyHex
+        validateIsType('data', data, 'Uint8Array', Uint8Array)
+        this.data = data
 
         validateIsString('serialized', serialized, true)
         this.serialized = serialized
     }
 
+    /** @internal */
     toArray(): EncryptedGroupKeySerialized {
-        return [this.groupKeyId, this.encryptedGroupKeyHex]
+        return [this.groupKeyId, binaryToHex(this.data)]
     }
 
     serialize(): string {
@@ -38,12 +40,13 @@ export default class EncryptedGroupKey {
     }
 
     static deserialize(json: string): EncryptedGroupKey {
-        const [groupKeyId, encryptedGroupKeyHex] = JSON.parse(json)
-        return new EncryptedGroupKey(groupKeyId, encryptedGroupKeyHex, json)
+        const [groupKeyId, data] = JSON.parse(json)
+        return new EncryptedGroupKey(groupKeyId, hexToBinary(data), json)
     }
-
+    
+    /** @internal */
     static fromArray(arr: EncryptedGroupKeySerialized): EncryptedGroupKey {
-        const [groupKeyId, encryptedGroupKeyHex] = arr
-        return new EncryptedGroupKey(groupKeyId, encryptedGroupKeyHex)
+        const [groupKeyId, data] = arr
+        return new EncryptedGroupKey(groupKeyId, hexToBinary(data))
     }
 }

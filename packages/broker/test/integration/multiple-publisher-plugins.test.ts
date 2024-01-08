@@ -2,17 +2,15 @@ import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import WebSocket from 'ws'
 import fetch from 'node-fetch'
 import { StreamPermission } from 'streamr-client'
-import { Tracker } from '@streamr/network-tracker'
 import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
 import { Broker } from '../../src/broker'
-import { startBroker, createClient, createTestStream, startTestTracker } from '../utils'
+import { startBroker, createClient, createTestStream } from '../utils'
 import { fastPrivateKey } from '@streamr/test-utils'
 import { wait, waitForEvent, waitForCondition } from '@streamr/utils'
 import sample from 'lodash/sample'
 import range from 'lodash/range'
 
 const MESSAGE_COUNT = 120
-const trackerPort = 13610
 const mqttPort = 13611
 const wsPort = 13612
 const httpPort = 13613
@@ -34,7 +32,7 @@ interface PluginPublisher {
 class MqttPluginPublisher implements PluginPublisher {
     client: AsyncMqttClient | undefined
     async connect(): Promise<void> {
-        this.client = await mqtt.connectAsync(`mqtt://localhost:${mqttPort}`)
+        this.client = await mqtt.connectAsync(`mqtt://127.0.0.1:${mqttPort}`)
     }
     publish(msg: object, streamId: string): Promise<unknown> {
         return this.client!.publish(streamId, JSON.stringify(msg))
@@ -47,7 +45,7 @@ class MqttPluginPublisher implements PluginPublisher {
 class WebsocketPluginPublisher implements PluginPublisher {
     client: WebSocket | undefined
     async connect(streamId: string): Promise<void> {
-        this.client = new WebSocket(`ws://localhost:${wsPort}/streams/${encodeURIComponent(streamId)}/publish`)
+        this.client = new WebSocket(`ws://127.0.0.1:${wsPort}/streams/${encodeURIComponent(streamId)}/publish`)
         await waitForEvent(this.client, 'open')
     }
     async publish(msg: object): Promise<unknown> {
@@ -63,7 +61,7 @@ class HttpPluginPublisher implements PluginPublisher {
     async connect(): Promise<void> {
     }
     async publish(msg: object, streamId: string): Promise<unknown> {
-        return sendPostRequest(`http://localhost:${httpPort}/streams/${encodeURIComponent(streamId)}`, msg)
+        return sendPostRequest(`http://127.0.0.1:${httpPort}/streams/${encodeURIComponent(streamId)}`, msg)
     }
     async close(): Promise<void> {
     }
@@ -87,7 +85,7 @@ const publishMessages = async (streamId: string): Promise<any[]> => {
         })
     }
     let firstMessage = true
-    for await (const msg of messages) {
+    for (const msg of messages) {
         await publishers[msg.publisher].publish(msg, streamId)
         if (firstMessage) {
             firstMessage = false
@@ -100,15 +98,13 @@ const publishMessages = async (streamId: string): Promise<any[]> => {
 
 describe('multiple publisher plugins', () => {
 
-    let tracker: Tracker
     let broker: Broker
     let privateKey: string
     let streamId: string
 
     beforeAll(async () => {
         privateKey = await fetchPrivateKeyWithGas()
-        tracker = await startTestTracker(trackerPort)
-        const client = await createClient(tracker, privateKey)
+        const client = createClient(privateKey)
         const stream = await createTestStream(client, module)
         streamId = stream.id
         await stream.grantPermissions({
@@ -118,14 +114,9 @@ describe('multiple publisher plugins', () => {
         await client.destroy()
     }, 30 * 1000)
 
-    afterAll(async () => {
-        await tracker?.stop()
-    })
-
     beforeEach(async () => {
         broker = await startBroker({
             privateKey,
-            trackerPort,
             httpPort,
             extraPlugins: {
                 mqtt: {
@@ -134,7 +125,7 @@ describe('multiple publisher plugins', () => {
                 websocket: {
                     port: wsPort
                 },
-                http: {}
+                http: {},
             }
         })
     })
@@ -146,7 +137,7 @@ describe('multiple publisher plugins', () => {
     it('subscribe by StreamrClient', async () => {
 
         const receivedMessages: Queue<unknown> = new Queue()
-        const subscriber = await createClient(tracker, fastPrivateKey())
+        const subscriber = createClient(fastPrivateKey())
         await subscriber.subscribe(streamId, (message: unknown) => {
             receivedMessages.push(message)
         })
@@ -154,7 +145,7 @@ describe('multiple publisher plugins', () => {
         const messages = await publishMessages(streamId)
 
         await waitForCondition(() => receivedMessages.size() >= messages.length)
-        expect(receivedMessages.items).toIncludeSameMembers(messages)
+        expect(receivedMessages.values()).toIncludeSameMembers(messages)
         await subscriber.destroy()
 
     }, 10 * 1000)
@@ -162,7 +153,7 @@ describe('multiple publisher plugins', () => {
     it('subscribe by websocket plugin', async () => {
 
         const receivedMessages: Queue<object> = new Queue()
-        const subscriber = new WebSocket(`ws://localhost:${wsPort}/streams/${encodeURIComponent(streamId)}/subscribe`)
+        const subscriber = new WebSocket(`ws://127.0.0.1:${wsPort}/streams/${encodeURIComponent(streamId)}/subscribe`)
         subscriber.on('message', (data: WebSocket.RawData) => {
             const message = data.toString()
             receivedMessages.push(JSON.parse(message))
@@ -171,15 +162,15 @@ describe('multiple publisher plugins', () => {
         const messages = await publishMessages(streamId)
 
         await waitForCondition(() => receivedMessages.size() >= messages.length)
-        expect(receivedMessages.items).toIncludeSameMembers(messages)
-        await subscriber.close()
+        expect(receivedMessages.values()).toIncludeSameMembers(messages)
+        subscriber.close()
 
     })
 
     it('subscribe by mqtt plugin', async () => {
 
         const receivedMessages: Queue<object> = new Queue()
-        const subscriber = await mqtt.connectAsync(`mqtt://localhost:${mqttPort}`)
+        const subscriber = await mqtt.connectAsync(`mqtt://127.0.0.1:${mqttPort}`)
         subscriber.on('message', (topic: string, message: Buffer) => {
             if (topic === streamId) {
                 receivedMessages.push(JSON.parse(message.toString()))
@@ -190,7 +181,7 @@ describe('multiple publisher plugins', () => {
         const messages = await publishMessages(streamId)
 
         await waitForCondition(() => receivedMessages.size() >= messages.length)
-        expect(receivedMessages.items).toIncludeSameMembers(messages)
+        expect(receivedMessages.values()).toIncludeSameMembers(messages)
         await subscriber.end(true)
     })
 })

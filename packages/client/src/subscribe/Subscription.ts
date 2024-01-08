@@ -25,18 +25,19 @@ export interface SubscriptionEvents {
  * @category Important
  */
 export class Subscription extends MessageStream {
-    protected readonly logger: Logger
+
     readonly streamPartId: StreamPartID
-    protected eventEmitter: EventEmitter<SubscriptionEvents>
     /** @internal */
     readonly isRaw: boolean
+    private readonly eventEmitter: EventEmitter<SubscriptionEvents>
+    private readonly logger: Logger
 
     /** @internal */
-    constructor(streamPartId: StreamPartID, isRaw: boolean, loggerFactory: LoggerFactory) {
+    constructor(streamPartId: StreamPartID, isRaw: boolean, eventEmitter: EventEmitter<SubscriptionEvents>, loggerFactory: LoggerFactory) {
         super()
         this.streamPartId = streamPartId
         this.isRaw = isRaw
-        this.eventEmitter = new EventEmitter<SubscriptionEvents>()
+        this.eventEmitter = eventEmitter
         this.logger = loggerFactory.createLogger(module)
         this.onError.listen((err) => {
             this.eventEmitter.emit('error', err)

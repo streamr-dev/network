@@ -1,0 +1,12 @@
+name: "run entry point"
+description: "run entry point dht node directly from the monorepo codebase"
+
+runs:
+  using: "composite"
+  steps:
+    - name: run entry point
+      run: |
+        mkdir -p logs
+        ./bin/run-entry-point.sh >logs/entry-point-logs.txt 2>&1 &
+      shell: bash
+      working-directory: './'

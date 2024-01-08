@@ -16,7 +16,7 @@ You can also create a stream by defining the address in the provided id. Please 
 
 ```ts
 // Requires MATIC tokens (Polygon blockchain gas token)
-const stream = await client.createStream({
+const stream = await streamr.createStream({
   id: `${address}/foo/bar`,
 });
 
@@ -24,7 +24,7 @@ console.log(stream.id); // e.g. `0x12345.../foo/bar`
 ```
 
 :::note
-The client generally supports the following **three ways of defining a stream id**:
+The Streamr SDK generally supports the following **three ways of defining a stream id**:
 
 ```ts
 // Stream id as a string:
@@ -38,5 +38,17 @@ const streamId = {
   id: `${address}/foo/bar`,
   partition: 4,
 };
+```
+:::
+
+:::note
+The domain portion of the stream ID is case-insensitive and the Streamr SDK will force this portion of the stream ID to be lowercase for you.
+
+However the path portion, i.e. anything that comes after the 0x address or ENS domain is **case-sensitive**.
+
+For example,
+```ts
+0x123a/cat === 0x123A/cat
+0x123a/CAT !== 0x123a/cat
 ```
 :::

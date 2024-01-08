@@ -2,11 +2,12 @@ name: Production Documentation
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - '*'
-      - '!**beta**'
-      - '!**alpha**'
+  #push:
+  #  tags:
+  #    - '*'
+  #    - '!**beta**'
+  #    - '!**alpha**'
+  #    - '!**tatum**'
 
 jobs:  
   deploy:
@@ -16,9 +17,9 @@ jobs:
       url: https://docs.streamr.network
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Use Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           cache: npm
@@ -27,14 +28,14 @@ jobs:
         run: npm run bootstrap
       - name: Build documentation
         working-directory: ./docs
-        run: npm ci && npm run build && npm run refine
+        run: npm ci && npm run build
       - name: Get version string from git tag name
         id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
       - name: Print version string
         run: echo ${{ steps.get_version.outputs.VERSION }}
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with: 
           aws-access-key-id: ${{ secrets.AWS_KEY_PROD_DOCS }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_PROD_DOCS }}

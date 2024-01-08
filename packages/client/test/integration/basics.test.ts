@@ -9,19 +9,21 @@ import { Msg, publishTestMessagesGenerator } from '../test-utils/publish'
 import { createTestStream } from './../test-utils/utils'
 
 describe('Basics', () => {
+
     const MAX_MESSAGES = 10
     let client: StreamrClient
     let stream: Stream
+    let environment: FakeEnvironment
 
     beforeEach(async () => {
-        const environment = new FakeEnvironment()
+        environment = new FakeEnvironment()
         client = environment.createClient()
         stream = await createTestStream(client, module)
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
     })
 
     afterEach(async () => {
-        await client?.destroy()
+        await environment.destroy()
     })
 
     describe('Pub/Sub', () => {

@@ -11,11 +11,6 @@ const createClient = (opts: StreamrClientConfig = {}) => {
     return new StreamrClient(merge(
         {},
         CONFIG_TEST,
-        {
-            network: {
-                trackers: [] // without this setting NetworkNodeFacade would query the tracker addresses from the contract
-            }
-        },
         opts
     ), container)
 }

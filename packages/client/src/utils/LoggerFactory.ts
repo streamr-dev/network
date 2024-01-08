@@ -1,5 +1,5 @@
-import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Logger } from '@streamr/utils'
+import { inject, Lifecycle, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 
 @scoped(Lifecycle.ContainerScoped)

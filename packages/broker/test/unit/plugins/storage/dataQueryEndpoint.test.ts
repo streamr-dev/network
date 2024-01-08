@@ -9,8 +9,8 @@ import {
 import { toObject } from '../../../../src/plugins/storage/DataQueryFormat'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { PassThrough } from 'stream'
-import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
-import { MetricsContext, toEthereumAddress } from '@streamr/utils'
+import { ContentType, MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
+import { MetricsContext, toEthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 
 const createEmptyStream = () => {
     const stream = new PassThrough()
@@ -39,8 +39,9 @@ describe('dataQueryEndpoint', () => {
                 toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
                 'msgChainId'
             ),
-            content,
-            signature: 'signature'
+            content: utf8ToBinary(JSON.stringify(content)),
+            signature: hexToBinary('0x1234'),
+            contentType: ContentType.JSON
         })
     }
 
@@ -118,20 +119,15 @@ describe('dataQueryEndpoint', () => {
                     .expect(streamMessages.map((m) => toObject(m)), done)
             })
 
-            it('responds with latest version protocol serialization of messages given format=protocol', (done) => {
+            it('responds with protocol serialization of messages given format=protocol', (done) => {
                 testGetRequest('/streams/streamId/data/partitions/0/last?format=protocol')
-                    .expect(streamMessages.map((msg) => msg.serialize(StreamMessage.LATEST_VERSION)), done)
-            })
-
-            it('responds with specific version protocol serialization of messages given format=protocol&version=32', (done) => {
-                testGetRequest('/streams/streamId/data/partitions/0/last?format=protocol&version=32')
-                    .expect(streamMessages.map((msg) => msg.serialize(32)), done)
+                    .expect(streamMessages.map((msg) => msg.serialize()), done)
             })
 
             it('responds with raw format', (done) => {
-                testGetRequest('/streams/streamId/data/partitions/0/last?count=2&format=raw&version=32')
+                testGetRequest('/streams/streamId/data/partitions/0/last?count=2&format=raw')
                     .expect('Content-Type', 'text/plain')
-                    .expect(streamMessages.map((msg) => msg.serialize(32)).join('\n'), done)
+                    .expect(streamMessages.map((msg) => msg.serialize()).join('\n'), done)
             })
 
             it('invokes storage#requestLast once with correct arguments', async () => {

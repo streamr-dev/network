@@ -7,13 +7,13 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { writeHeapSnapshot } from 'v8'
 import { Subscription } from '../../src/subscribe/Subscription'
-import { counterId, instanceId } from '../../src/utils/utils'
+import { counterId, instanceId, createTheGraphClient } from '../../src/utils/utils'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { createStrictConfig, ConfigInjectionToken, StrictStreamrClientConfig } from '../../src/Config'
 import * as ethersAbi from '@ethersproject/abi'
 import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
 import { StorageNodeRegistry } from '../../src/registry/StorageNodeRegistry'
-import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
+import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { Resends } from '../../src/subscribe/Resends'
 import { Publisher } from '../../src/publish/Publisher'
 import { Subscriber } from '../../src/subscribe/Subscriber'
@@ -21,12 +21,14 @@ import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { DestroySignal } from '../../src/DestroySignal'
 import { MessageMetadata } from '../../src/Message'
 import { AuthenticationInjectionToken, createAuthentication } from '../../src/Authentication'
-import { merge } from '@streamr/utils'
+import { merge, TheGraphClient } from '@streamr/utils'
+import { StreamrClientEventEmitter } from '../../src/events'
+import { config as CHAIN_CONFIG } from '@streamr/config'
 
 const Dependencies = {
     NetworkNodeFacade,
     StorageNodeRegistry,
-    StreamRegistryCached,
+    StreamRegistry,
     Resends,
     Publisher,
     Subscriber,
@@ -53,6 +55,7 @@ describe('MemoryLeaks', () => {
         leaksDetector = new LeaksDetector()
         leaksDetector.ignoreAll(rootContainer)
         leaksDetector.ignoreAll(ethersAbi)
+        leaksDetector.ignoreAll(CHAIN_CONFIG)
         snapshot()
     })
 
@@ -60,7 +63,7 @@ describe('MemoryLeaks', () => {
         expect(leaksDetector).toBeTruthy()
         if (!leaksDetector) { return }
         const detector = leaksDetector
-        await wait(1000)
+        await wait(5000)
         snapshot()
         await detector.checkNoLeaks() // this is very slow
         detector.clear()
@@ -87,6 +90,9 @@ describe('MemoryLeaks', () => {
                 const childContainer = rootContainer.createChildContainer()
                 childContainer.register(AuthenticationInjectionToken, { useValue: createAuthentication(config) })
                 childContainer.register(ConfigInjectionToken, { useValue: config })
+                childContainer.register(TheGraphClient, { useValue:
+                    createTheGraphClient(childContainer.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), config)
+                })
                 return { config, childContainer }
             }
         })
@@ -142,8 +148,8 @@ describe('MemoryLeaks', () => {
             test('connect + destroy', async () => {
                 const client = await createClient()
                 await client.connect()
-                leaksDetector.addAll(instanceId(client), client)
                 await client.destroy()
+                leaksDetector.addAll(instanceId(client), client)
             })
         })
 

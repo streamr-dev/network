@@ -1,14 +1,15 @@
-import * as LitJsSdk from '@lit-protocol/lit-node-client'
-import { inject, Lifecycle, scoped } from 'tsyringe'
-import * as siwe from 'lit-siwe'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
-import { ethers } from 'ethers'
+import { LitCore } from '@lit-protocol/core'
+import { uint8arrayToString } from '@lit-protocol/uint8arrays'
 import { StreamID } from '@streamr/protocol'
-import { StreamPermission, streamPermissionToSolidityType } from '../permission'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { GroupKey } from './GroupKey'
 import { Logger, randomString, withRateLimit } from '@streamr/utils'
+import { ethers } from 'ethers'
+import * as siwe from 'lit-siwe'
+import { inject, Lifecycle, scoped } from 'tsyringe'
+import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { StreamPermission, streamPermissionToSolidityType } from '../permission'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { GroupKey } from './GroupKey'
 
 const logger = new Logger(module)
 
@@ -25,54 +26,54 @@ const formEvmContractConditions = (streamRegistryChainAddress: string, streamId:
         functionAbi: {
             inputs: [
                 {
-                    name: "streamId",
-                    type: "string"
+                    name: 'streamId',
+                    type: 'string'
                 },
                 {
-                    name: "user",
-                    type: "address"
+                    name: 'user',
+                    type: 'address'
                 },
                 {
-                    name: "permissionType",
-                    type: "uint8"
+                    name: 'permissionType',
+                    type: 'uint8'
                 }
             ],
-            name: "hasPermission",
+            name: 'hasPermission',
             outputs: [
                 {
-                    name: "userHasPermission",
-                    type: "bool"
+                    name: 'userHasPermission',
+                    type: 'bool'
                 }
             ],
-            stateMutability: "view",
-            type: "function"
+            stateMutability: 'view',
+            type: 'function'
         },
         returnValueTest: {
-            key: "userHasPermission",
+            key: 'userHasPermission',
             comparator: '=',
-            value: "true",
+            value: 'true',
         },
     }
 ])
 
 const signAuthMessage = async (authentication: Authentication) => {
-    const domain = "dummy.com"
-    const uri = "https://dummy.com"
-    const statement = "dummy"
+    const domain = 'dummy.com'
+    const uri = 'https://dummy.com'
+    const statement = 'dummy'
     const addressInChecksumCase = ethers.utils.getAddress(await authentication.getAddress())
     const siweMessage = new siwe.SiweMessage({
         domain,
         uri,
         statement,
         address: addressInChecksumCase,
-        version: "1",
+        version: '1',
         chainId: 1
     })
     const messageToSign = siweMessage.prepareMessage()
     const signature = await authentication.createMessageSignature(messageToSign)
     return {
         sig: signature,
-        derivedVia: "web3.eth.personal.sign",
+        derivedVia: 'web3.eth.personal.sign',
         signedMessage: messageToSign,
         address: addressInChecksumCase
     }
@@ -83,25 +84,27 @@ const signAuthMessage = async (authentication: Authentication) => {
  */
 @scoped(Lifecycle.ContainerScoped)
 export class LitProtocolFacade {
-    private readonly authentication: Authentication
+
+    private litNodeClient?: LitCore
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>
+    private readonly authentication: Authentication
     private readonly logger: Logger
-    private litNodeClient?: LitJsSdk.LitNodeClient
     private connectLitNodeClient?: () => Promise<void>
 
+    /* eslint-disable indent */
     constructor(
-        loggerFactory: LoggerFactory,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
+        loggerFactory: LoggerFactory
     ) {
-        this.authentication = authentication
         this.config = config
+        this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
     }
 
-    async getLitNodeClient(): Promise<LitJsSdk.LitNodeClient> {
+    async getLitNodeClient(): Promise<LitCore> {
         if (this.litNodeClient === undefined) {
-            this.litNodeClient = new LitJsSdk.LitNodeClient({
+            this.litNodeClient = new LitCore({
                 alertWhenUnauthorized: false,
                 debug: this.config.encryption.litProtocolLogging
             })
@@ -127,7 +130,7 @@ export class LitProtocolFacade {
             if (encryptedSymmetricKey === undefined) {
                 return undefined
             }
-            const groupKeyId = LitJsSdk.uint8arrayToString(encryptedSymmetricKey, 'base16')
+            const groupKeyId = uint8arrayToString(encryptedSymmetricKey, 'base16')
             this.logger.debug('Stored key', { traceId, streamId, groupKeyId })
             return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
         } catch (err) {

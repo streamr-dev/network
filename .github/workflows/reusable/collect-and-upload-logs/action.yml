@@ -1,5 +1,5 @@
 name: "collect and upload logs"
-description: "collect and upload logs (e.g. Docker services, brokers, trackers) on test failure"
+description: "collect and upload logs (e.g. Docker services, brokers) on test failure"
 inputs:
   artifact_prefix:
     description: a prefix to use in the filename for the uploaded artifact
@@ -16,3 +16,4 @@ runs:
       with:
         name: logs-${{ inputs.artifact_prefix }}-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
         path: 'logs'
+        if-no-files-found: ignore

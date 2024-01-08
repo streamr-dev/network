@@ -111,26 +111,17 @@ module.exports = (env, argv) => {
                 buffer: require.resolve('buffer/'),
                 'node-fetch': path.resolve('./src/shim/node-fetch.ts'),
                 '@streamr/protocol': path.resolve('../protocol/src/exports.ts'),
-                '@streamr/network-node': path.resolve('../network/src/exports-browser.ts'),
-                [path.join(__dirname, '../network/src/connection/webrtc/NodeWebRtcConnection.ts$')]: require.resolve('@streamr/network-node/src/connection/webrtc/BrowserWebRtcConnection.ts'),
-                [path.join(__dirname, '../network/src/connection/ws/NodeClientWsEndpoint.ts$')]: require.resolve('@streamr/network-node/src/connection/ws/BrowserClientWsEndpoint.ts'),
-                [path.join(__dirname, '../network/src/connection/ws/NodeClientWsConnection.ts$')]: require.resolve('@streamr/network-node/src/connection/ws/BrowserClientWsConnection.ts'),
+                '@streamr/trackerless-network': path.resolve('../trackerless-network/src/exports.ts'),
+                '@streamr/dht': path.resolve('../dht/src/exports.ts'),
+                '@streamr/autocertifier-client': false,
+                [path.resolve(__dirname, '../dht/src/connection/webrtc/NodeWebrtcConnection.ts')]:
+                    path.resolve(__dirname, '../dht/src/connection/webrtc/BrowserWebrtcConnection.ts'),
+                [path.resolve(__dirname, '../dht/src/helpers/browser/isBrowserEnvironment.ts')]:
+                    path.resolve(__dirname, '../dht/src/helpers/browser/isBrowserEnvironment_override.ts'),
                 // swap out ServerPersistence for BrowserPersistence
                 [path.resolve('./src/utils/persistence/ServerPersistence.ts')]: (
                     path.resolve('./src/utils/persistence/BrowserPersistence.ts')
-                ),
-                '@walletconnect/ethereum-provider': false, // This and below brought in by @litprotocol/client-node but not actually used by our use case...
-                '@walletconnect/universal-provider': false,
-                '@walletconnect/core': false,
-                '@walletconnect/sign-client': false,
-                '@walletconnect/logger': false,
-                '@walletconnect/utils': false,
-                '@walletconnect/time': false,
-                '@walletconnect/keyvaluestorage': false,
-                '@walletconnect/heartbeat': false,
-                '@walletconnect/environment': false,
-                'ipfs-http-client': false,
-                'jszip': false,
+                )
             },
             fallback: {
                 module: false,
@@ -154,7 +145,17 @@ module.exports = (env, argv) => {
                     openAnalyzer: false,
                     generateStatsFile: true,
                 })
-            ] : [])
+            ] : []),
+            new webpack.ProvidePlugin({
+                process: "process/browser",
+                Buffer: ["buffer", "Buffer"],
+            }),
+            new webpack.NormalModuleReplacementPlugin(/node:/, (resource) => {
+                const library = resource.request.replace(/^node:/, '');
+                if (library === "buffer") {
+                        resource.request = 'buffer'
+                }
+            })
         ]
     })
 

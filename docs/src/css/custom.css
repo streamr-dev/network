@@ -72,3 +72,18 @@ thead {
 .hide-expandable-sidebar ul {
     display: none !important;
 }
+
+/* override base styles on API reference featured classes */
+.link_t2Qp {
+    font-weight: var(--ifm-font-weight-bold) !important;
+    padding-left: 2.5rem !important;
+    border: 0px !important;
+    background-color: transparent !important;
+  }
+
+/* override base styles on API reference featured classes */
+.link_t2Qp:before {
+    border-color: var(--ifm-color-emphasis-700) !important;  
+    color: var(--ifm-color-emphasis-700) !important;  
+    left: 0 !important;
+}

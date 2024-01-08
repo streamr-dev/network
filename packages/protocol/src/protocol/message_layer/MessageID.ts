@@ -2,7 +2,7 @@ import { validateIsNotEmptyString, validateIsNotNegativeInteger, validateIsStrin
 
 import MessageRef from './MessageRef'
 import { StreamID, toStreamID } from '../../../src/utils/StreamID'
-import { StreamPartID, toStreamPartID } from "../../utils/StreamPartID"
+import { StreamPartID, toStreamPartID } from '../../utils/StreamPartID'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 /** @internal */
 export type MessageIDArray = [string, number, number, number, string, string]
@@ -38,6 +38,7 @@ export default class MessageID {
         this.msgChainId = msgChainId
     }
 
+    /** @internal */
     toArray(): MessageIDArray {
         return [
             this.streamId,
@@ -49,6 +50,7 @@ export default class MessageID {
         ]
     }
 
+    /** @internal */
     static fromArray(arr: MessageIDArray): MessageID {
         const [
             streamId,

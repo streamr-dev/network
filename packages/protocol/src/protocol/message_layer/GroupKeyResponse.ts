@@ -3,7 +3,9 @@ import ValidationError from '../../errors/ValidationError'
 
 import StreamMessage, { StreamMessageType } from './StreamMessage'
 import GroupKeyMessage from './GroupKeyMessage'
-import EncryptedGroupKey, { EncryptedGroupKeySerialized } from './EncryptedGroupKey'
+import EncryptedGroupKey from './EncryptedGroupKey'
+/** @internal */
+import { EncryptedGroupKeySerialized } from './EncryptedGroupKey'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 interface Options {
@@ -12,7 +14,11 @@ interface Options {
     encryptedGroupKeys: EncryptedGroupKey[]
 }
 
-export type GroupKeyResponseSerialized = [string, string, EncryptedGroupKeySerialized[]]
+export type GroupKeyResponseSerialized = [
+    string, string, 
+    /** @internal */
+    EncryptedGroupKeySerialized[]
+]
 
 export default class GroupKeyResponse extends GroupKeyMessage {
 
@@ -51,7 +57,7 @@ export default class GroupKeyResponse extends GroupKeyMessage {
         })
     }
 
-    static is(streamMessage: StreamMessage): streamMessage is StreamMessage<GroupKeyResponseSerialized> {
+    static is(streamMessage: StreamMessage): streamMessage is StreamMessage {
         return streamMessage.messageType === StreamMessageType.GROUP_KEY_RESPONSE
     }
 }
