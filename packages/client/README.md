@@ -12,7 +12,7 @@
 ![GitHub stars](https://img.shields.io/github/stars/streamr-dev/network-monorepo?style=social)
 [![Discord Chat](https://img.shields.io/discord/801574432350928907.svg?label=Discord&logo=Discord&colorB=7289da)](https://discord.gg/FVtAph9cvz)
 
-The Streamr Client library allows you to easily interact with the [Streamr Network](https://streamr.network) from
+The (test) Streamr Client library allows you to easily interact with the [Streamr Network](https://streamr.network) from
 JavaScript-based environments, such as browsers and [Node.js](https://nodejs.org). The library wraps a Streamr light node for publishing and subscribing to messages. It also contains convenience functions for creating and managing streams.
 
 **[Checkout our documentation](https://docs.streamr.network) for the full usage instructions.**
