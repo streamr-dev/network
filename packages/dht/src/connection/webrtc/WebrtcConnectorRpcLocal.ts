@@ -20,6 +20,7 @@ import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
 import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { version } from '../../../package.json'
 import { isCompatibleVersion } from '../../helpers/versionCompatibility'
+import { ConnectionID } from '../IConnection'
 
 const logger = new Logger(module)
 
@@ -71,16 +72,16 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
                 WebrtcConnectorRpcClient
             )
             connection.on('localCandidate', (candidate: string, mid: string) => {
-                remoteConnector.sendIceCandidate(candidate, mid, connection!.connectionId.toString())
+                remoteConnector.sendIceCandidate(candidate, mid, connection!.connectionId)
             })
             connection.once('localDescription', (description: string) => {
-                remoteConnector.sendRtcAnswer(description, connection!.connectionId.toString())
+                remoteConnector.sendRtcAnswer(description, connection!.connectionId)
             })
             connection.start(false)
         }
 
         // Always use offerers connectionId
-        connection!.setConnectionId(request.connectionId)
+        connection!.setConnectionId(request.connectionId as ConnectionID)
         connection!.setRemoteDescription(request.description, 'offer')
 
         managedConnection.on('handshakeRequest', (_sourceDescriptor: PeerDescriptor, sourceVersion: string) => {
@@ -102,7 +103,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         const connection = this.config.ongoingConnectAttempts.get(nodeId)?.getWebrtcConnection()
         if (!connection) {
             return {}
-        } else if (connection.connectionId.toString() !== request.connectionId) {
+        } else if (connection.connectionId !== request.connectionId) {
             logger.trace(`Ignoring RTC answer due to connectionId mismatch`)
             return {}
         }
@@ -116,7 +117,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         const connection = this.config.ongoingConnectAttempts.get(nodeId)?.getWebrtcConnection()
         if (!connection) {
             return {}
-        } else if (connection.connectionId.toString() !== request.connectionId) {
+        } else if (connection.connectionId !== request.connectionId) {
             logger.trace(`Ignoring remote candidate due to connectionId mismatch`)
             return {}
         } else if (this.isIceCandidateAllowed(request.candidate)) {

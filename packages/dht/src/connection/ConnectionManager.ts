@@ -357,7 +357,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const nodeId = getNodeIdFromPeerDescriptor(connection.getPeerDescriptor()!)
         logger.trace(nodeId + ' onDisconnected() gracefulLeave: ' + gracefulLeave)
         const storedConnection = this.connections.get(nodeId)
-        if (storedConnection && storedConnection.connectionId.equals(connection.connectionId)) {
+        if (storedConnection && (storedConnection.connectionId === connection.connectionId)) {
             this.locks.clearAllLocks(nodeId)
             this.connections.delete(nodeId)
             logger.trace(nodeId + ' deleted connection in onDisconnected() gracefulLeave: ' + gracefulLeave)
@@ -366,8 +366,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         } else {
             logger.trace(nodeId + ' onDisconnected() did nothing, no such connection in connectionManager')
             if (storedConnection) {
-                const connectionId = storedConnection.connectionId.toString()
-                logger.trace(nodeId + ' connectionIds do not match ' + connectionId + ' ' + connection.connectionId.toString())
+                logger.trace(nodeId + ' connectionIds do not match ' + storedConnection.connectionId + ' ' + connection.connectionId.toString())
             }
         }
     }

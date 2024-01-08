@@ -177,16 +177,16 @@ export class WebrtcConnector {
                 candidate = replaceInternalIpWithExternalIp(candidate, this.config.externalIp)
                 logger.debug(`onLocalCandidate injected external ip ${candidate} ${mid}`)
             }
-            remoteConnector.sendIceCandidate(candidate, mid, connection.connectionId.toString())
+            remoteConnector.sendIceCandidate(candidate, mid, connection.connectionId)
         })
 
         if (offering) {
             connection.once('localDescription', (description: string) => {
-                remoteConnector.sendRtcOffer(description, connection.connectionId.toString())
+                remoteConnector.sendRtcOffer(description, connection.connectionId)
             })
         } else {
             connection.once('localDescription', (description: string) => {
-                remoteConnector.sendRtcAnswer(description, connection.connectionId.toString())
+                remoteConnector.sendRtcAnswer(description, connection.connectionId)
             })
         }
 
