@@ -5,10 +5,9 @@ module.exports = {
         'plugin:@typescript-eslint/recommended-requiring-type-checking',
         'eslint-config-streamr-ts'
     ],
-    plugins: ['@typescript-eslint'],
     parser: '@typescript-eslint/parser',
     parserOptions: {
-        project: ['./tsconfig.jest.json', './packages/*/tsconfig.jest.json'],
+        project: ['./tsconfig.jest.json'],
         tsconfigRootDir: __dirname,
     },
     root: true,
