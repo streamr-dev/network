@@ -14,8 +14,7 @@ module.exports = {
     root: true,
     env: {
         node: true
-    },    
-    ignorePatterns: ['*test*'],  // ignore temporarily
+    },
     rules: {
         'eol-last': ['error'],
         'quotes': ['error', 'single', { 'allowTemplateLiterals': true }],
