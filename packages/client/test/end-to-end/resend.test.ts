@@ -24,7 +24,7 @@ describe('resend', () => {
         resendClient = createTestClient(fastPrivateKey(), 43233)
         const binaryPayloads = range(NUM_OF_MESSAGES / 2).map(() => randomBytes(random(0, 256)))
         const jsonPayloads = range(NUM_OF_MESSAGES / 2).map((idx) => ({ idx }))
-        payloads = shuffle([... binaryPayloads, ...jsonPayloads])
+        payloads = shuffle([...binaryPayloads, ...jsonPayloads])
     }, TIMEOUT)
 
     afterEach(async () => {
