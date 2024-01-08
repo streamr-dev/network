@@ -19,7 +19,7 @@ const createEmptyStream = () => {
     return stream
 }
 
-const intoBinaryStream = (msg: StreamMessage[]): Readable => {
+const createOutputStream = (msg: StreamMessage[]): Readable => {
     return toReadableStream(...msg.map(convertStreamMessageToBytes))
 }
 
@@ -68,7 +68,7 @@ describe('dataQueryEndpoint', () => {
                     world: 2,
                 }),
             ]
-            storage.requestLast = jest.fn().mockReturnValue(intoBinaryStream(streamMessages))
+            storage.requestLast = jest.fn().mockReturnValue(createOutputStream(streamMessages))
         })
 
         describe('user errors', () => {
@@ -172,7 +172,7 @@ describe('dataQueryEndpoint', () => {
                     z: 'z',
                 }),
             ]
-            storage.requestFrom = () => intoBinaryStream(streamMessages)
+            storage.requestFrom = () => createOutputStream(streamMessages)
         })
 
         describe('?fromTimestamp=1496408255672', () => {
@@ -304,7 +304,7 @@ describe('dataQueryEndpoint', () => {
                         '6': '6',
                     }),
                 ]
-                storage.requestRange = () => intoBinaryStream(streamMessages)
+                storage.requestRange = () => createOutputStream(streamMessages)
             })
 
             it('responds 200 and Content-Type JSON', (done) => {
@@ -386,7 +386,7 @@ describe('dataQueryEndpoint', () => {
                         '6': '6',
                     }),
                 ]
-                storage.requestRange = () => intoBinaryStream(streamMessages)
+                storage.requestRange = () => createOutputStream(streamMessages)
             })
 
             it('responds 200 and Content-Type JSON', (done) => {
