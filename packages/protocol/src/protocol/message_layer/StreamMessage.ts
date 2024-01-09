@@ -9,7 +9,6 @@ import EncryptedGroupKey from './EncryptedGroupKey'
 import { StreamID } from '../../utils/StreamID'
 import { StreamPartID } from '../../utils/StreamPartID'
 import { EthereumAddress, binaryToUtf8 } from '@streamr/utils'
-import { fromArray, toArray } from './streamMessageSerialization'
 
 export const VERSION = 32
 
@@ -209,18 +208,6 @@ export default class StreamMessage {
 
     getNewGroupKey(): EncryptedGroupKey | null {
         return this.newGroupKey
-    }
-
-    serialize(): string {
-        return JSON.stringify(toArray(this))
-    }
-
-    /**
-     * Takes a serialized representation (array or string) of a message, and returns a StreamMessage instance.
-     */
-    static deserialize(msg: any[] | string): StreamMessage {
-        const messageArray = (typeof msg === 'string' ? JSON.parse(msg) : msg)
-        return fromArray(messageArray)
     }
 
     static validateMessageType(messageType: StreamMessageType): void {

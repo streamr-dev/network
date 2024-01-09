@@ -252,7 +252,6 @@ describe('StreamMessage', () => {
             })
             const streamMessageClone = streamMessage.clone()
             expect(streamMessageClone).not.toBe(streamMessage)
-            expect(streamMessageClone.serialize()).toEqual(streamMessage.serialize())
         })
 
         it('works with encrypted messages', () => {
@@ -271,7 +270,6 @@ describe('StreamMessage', () => {
             expect(encryptedMessage.encryptionType).toEqual(EncryptionType.RSA)
             expect(streamMessageClone.encryptionType).toEqual(EncryptionType.RSA)
             expect(streamMessageClone.encryptionType).toEqual(encryptedMessage.encryptionType)
-            expect(streamMessageClone.serialize()).toEqual(encryptedMessage.serialize())
         })
     })
 })
