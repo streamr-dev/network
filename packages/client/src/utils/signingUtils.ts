@@ -17,7 +17,7 @@ const keccak = new Keccak(256)
  * https://github.com/streamr-dev/streamr-client-protocol-js/pull/35
  */
 
-function hash(message: Uint8Array) {
+function hash(message: Uint8Array): Buffer {
     const prefixString = SIGN_MAGIC + message.length
     const merged = Buffer.concat([Buffer.from(prefixString, 'utf-8'), message])
     keccak.reset()
@@ -25,12 +25,13 @@ function hash(message: Uint8Array) {
     return keccak.digest('binary')
 }
 
-function recoverPublicKey(signatureBuffer: Buffer, payloadBuffer: Buffer) {
+function recoverPublicKey(signature: Uint8Array, payload: Uint8Array): Uint8Array {
+    const signatureBuffer = Buffer.from(signature)
     const recoveryId = signatureBuffer.readUInt8(signatureBuffer.length - 1) - 27
     return secp256k1.ecdsaRecover(
         signatureBuffer.subarray(0, signatureBuffer.length - 1),
         recoveryId,
-        hash(payloadBuffer),
+        hash(payload),
         false,
         Buffer.alloc,
     )
@@ -55,11 +56,8 @@ export function recover(
     payload: Uint8Array,
     publicKeyBuffer: Buffer | Uint8Array | undefined = undefined
 ): string {
-    const signatureBuffer = Buffer.from(signature)
-    const payloadBuffer = Buffer.from(payload)
-
     if (!publicKeyBuffer) {
-        publicKeyBuffer = recoverPublicKey(signatureBuffer, payloadBuffer)
+        publicKeyBuffer = recoverPublicKey(signature, payload)
     }
     const pubKeyWithoutFirstByte = publicKeyBuffer.subarray(1, publicKeyBuffer.length)
     keccak.reset()
