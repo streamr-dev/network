@@ -1,15 +1,15 @@
 import {
-    ContentType,
+    ContentType, deserializeGroupKeyResponse,
     EncryptionType,
     GroupKeyRequest,
     GroupKeyResponse,
-    MessageID,
+    MessageID, serializeGroupKeyRequest,
     StreamMessage,
     StreamMessageType,
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { EthereumAddress, Logger, utf8ToBinary } from '@streamr/utils'
+import { EthereumAddress, Logger } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -101,7 +101,7 @@ export class SubscriberKeyExchange {
             requestId,
             rsaPublicKey,
             groupKeyIds: [groupKeyId],
-        }).toArray()
+        })
         return createSignedMessage({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(streamPartId),
@@ -111,7 +111,7 @@ export class SubscriberKeyExchange {
                 await this.authentication.getAddress(),
                 createRandomMsgChainId()
             ),
-            serializedContent: utf8ToBinary(JSON.stringify(requestContent)),
+            serializedContent: serializeGroupKeyRequest(requestContent),
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
@@ -123,7 +123,7 @@ export class SubscriberKeyExchange {
         if (GroupKeyResponse.is(msg)) {
             try {
                 const authenticatedUser = await this.authentication.getAddress()
-                const { requestId, recipient, encryptedGroupKeys } = GroupKeyResponse.fromStreamMessage(msg) as GroupKeyResponse
+                const { requestId, recipient, encryptedGroupKeys } = deserializeGroupKeyResponse(msg.serializedContent) as GroupKeyResponse
                 if ((recipient === authenticatedUser) && (this.pendingRequests.has(requestId))) {
                     this.logger.debug('Handle group key response', { requestId })
                     this.pendingRequests.delete(requestId)

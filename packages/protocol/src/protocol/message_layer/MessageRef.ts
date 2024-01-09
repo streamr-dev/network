@@ -28,25 +28,6 @@ export default class MessageRef {
         return 0
     }
 
-    toArray(): any[] {
-        return [
-            this.timestamp,
-            this.sequenceNumber,
-        ]
-    }
-
-    static fromArray(arr: any[]): MessageRef {
-        const [
-            timestamp,
-            sequenceNumber,
-        ] = arr
-        return new MessageRef(timestamp, sequenceNumber)
-    }
-
-    serialize(): string {
-        return JSON.stringify(this.toArray())
-    }
-
     clone(): MessageRef {
         return new MessageRef(this.timestamp, this.sequenceNumber)
     }
