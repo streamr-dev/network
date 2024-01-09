@@ -19,7 +19,7 @@ const keccak = new Keccak(256)
 
 function hash(message: Uint8Array): Buffer {
     const prefixString = SIGN_MAGIC + message.length
-    const merged = Buffer.concat([Buffer.from(prefixString, 'utf-8'), message])
+    const merged = Buffer.concat([Buffer.from(prefixString), message])
     keccak.reset()
     keccak.update(merged)
     return keccak.digest('binary')

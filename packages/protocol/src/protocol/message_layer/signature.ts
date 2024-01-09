@@ -14,5 +14,5 @@ export const createSignaturePayload = (opts: {
     const prev = ((opts.prevMsgRef !== undefined) ? `${opts.prevMsgRef.timestamp}${opts.prevMsgRef.sequenceNumber}` : '')
     const newGroupKey = ((opts.newGroupKey !== undefined) ? opts.newGroupKey.serialize() : '')
     return Buffer.from(`${opts.messageId.streamId}${opts.messageId.streamPartition}${opts.messageId.timestamp}${opts.messageId.sequenceNumber}`
-        + `${opts.messageId.publisherId}${opts.messageId.msgChainId}${prev}${binaryToUtf8((opts.serializedContent))}${newGroupKey}`, 'utf8')
+        + `${opts.messageId.publisherId}${opts.messageId.msgChainId}${prev}${binaryToUtf8((opts.serializedContent))}${newGroupKey}`)
 }
