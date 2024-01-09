@@ -6,7 +6,7 @@ export class DhtCallContext extends ProtoCallContext implements DhtRpcOptions {
     // used by client
     targetDescriptor?: PeerDescriptor
     sourceDescriptor?: PeerDescriptor
-    notification?: boolean
+    declare notification?: boolean
     clientId?: number
     connect?: boolean
     sendIfStopped?: boolean
