@@ -21,7 +21,8 @@
         "test/legacy/*",
         "test/memory/*",
         "test/exports/*",
-        "src/exports-esm.mjs"
+        "src/exports-esm.mjs",
+        "src/utils/persistence/BrowserPersistence.ts"
     ],
     "references": [
         { "path": "../test-utils/tsconfig.node.json" },

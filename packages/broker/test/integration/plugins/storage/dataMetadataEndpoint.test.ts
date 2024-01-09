@@ -10,7 +10,6 @@ import { Broker } from '../../../../src/broker'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
 
-jest.setTimeout(30000)
 const httpPort1 = 12371
 
 const httpGet = (url: string): Promise<[number, string]> => { // return tuple is of form [statusCode, body]
@@ -94,12 +93,14 @@ describe('dataMetadataEndpoints', () => {
         const res = JSON.parse(json)
 
         expect(status).toEqual(200)
-        expect(res.totalBytes).toEqual(1763)
         expect(res.totalMessages).toEqual(4)
+        // 282 is the lower bound of the size of a single messages, the size will be non-deterministic
+        // due to the possibility of sequence number being != 0
+        expect(res.totalBytes).toBeGreaterThan(4 * 282)
         expect(
             new Date(res.firstMessage).getTime()
         ).toBeLessThan(
             new Date(res.lastMessage).getTime()
         )
-    })
+    }, 30 * 1000)
 })

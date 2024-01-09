@@ -15,7 +15,10 @@
         "vendor/**/*",
         "src/config.schema.json"
     ],
-    "exclude": ["src/exports-esm.mjs"],
+    "exclude": [
+        "src/exports-esm.mjs",
+        "src/utils/persistence/BrowserPersistence.ts"
+    ],
     "references": [
         { "path": "../test-utils/tsconfig.node.json" },
         { "path": "../protocol/tsconfig.node.json" },

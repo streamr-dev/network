@@ -1,5 +1,6 @@
 import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 import { EventEmitter } from 'eventemitter3'
+import crypto from 'crypto'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import {
     ClosestPeersRequest,
@@ -36,7 +37,6 @@ import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
 import { IceServer } from '../connection/webrtc/WebrtcConnector'
 import { ExternalApiRpcRemote } from './ExternalApiRpcRemote'
-import { UUID } from '../helpers/UUID'
 import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
 import { sample } from 'lodash'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
@@ -76,7 +76,7 @@ export interface DhtNodeOptions {
     websocketHost?: string
     websocketPortRange?: PortRange
     websocketServerEnableTls?: boolean
-    peerId?: DhtAddress
+    nodeId?: DhtAddress
 
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
@@ -107,27 +107,27 @@ type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
     'networkConnectivityTimeout' |
     'storageRedundancyFactor' |
     'metricsContext' |
-    'peerId'>
+    'nodeId'>
 
 const logger = new Logger(module)
 
 export type Events = TransportEvents & DhtNodeEvents
 
-export const createPeerDescriptor = (msg?: ConnectivityResponse, peerId?: DhtAddress): PeerDescriptor => {
-    let nodeId: DhtAddressRaw
-    if ((peerId === undefined) && (msg !== undefined)) {
-        nodeId = new Uint8Array(20)
+export const createPeerDescriptor = (msg?: ConnectivityResponse, nodeId?: DhtAddress): PeerDescriptor => {
+    let nodeIdRaw: DhtAddressRaw
+    if ((nodeId === undefined) && (msg !== undefined)) {
+        nodeIdRaw = new Uint8Array(20)
         const ipNum = msg.host.split('.').map((octet, index, array) => {
             return parseInt(octet) * Math.pow(256, (array.length - index - 1))
         }).reduce((prev, curr) => prev + curr)
-        const view = new DataView(nodeId.buffer)
+        const view = new DataView(nodeIdRaw.buffer)
         view.setInt32(0, ipNum)
-        nodeId.set((new UUID()).value, 4)
+        nodeIdRaw.set(crypto.randomBytes(20 - 4), 4)
     } else {
-        nodeId = getRawFromDhtAddress(peerId!)
+        nodeIdRaw = getRawFromDhtAddress(nodeId!)
     }
     const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS
-    const ret: PeerDescriptor = { nodeId, type: nodeType }
+    const ret: PeerDescriptor = { nodeId: nodeIdRaw, type: nodeType }
     if (msg && msg.websocket) {
         ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
     }
@@ -166,7 +166,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             networkConnectivityTimeout: 10000,
             storageRedundancyFactor: 5,
             metricsContext: new MetricsContext(),
-            peerId: createRandomDhtAddress()
+            nodeId: createRandomDhtAddress()
         }, conf)
         this.localDataStore = new LocalDataStore(this.config.storeMaxTtl) 
         this.send = this.send.bind(this)
@@ -401,7 +401,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.config.peerDescriptor) {
             this.localPeerDescriptor = this.config.peerDescriptor
         } else {
-            this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, this.config.peerId)
+            this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, this.config.nodeId)
         }
         return this.localPeerDescriptor
     }

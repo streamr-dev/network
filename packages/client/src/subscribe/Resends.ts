@@ -10,8 +10,9 @@ import { forEach, map, transformError } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { pull } from '../utils/PushBuffer'
 import { PushPipeline } from '../utils/PushPipeline'
-import { FetchHttpStreamResponseError, createQueryString, fetchHttpStream } from '../utils/utils'
+import { FetchHttpStreamResponseError, createQueryString, fetchLengthPrefixedFrameHttpBinaryStream } from '../utils/utils'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
+import { convertBytesToStreamMessage } from '@streamr/trackerless-network'
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 
@@ -188,10 +189,10 @@ export class Resends {
             getStorageNodes: async () => without(nodeAddresses, nodeAddress),
             config: (nodeAddresses.length === 1) ? { ...this.config, orderMessages: false } : this.config
         })
-        const lines = transformError(fetchHttpStream(url, abortSignal), getHttpErrorTransform())
+        const lines = transformError(fetchLengthPrefixedFrameHttpBinaryStream(url, abortSignal), getHttpErrorTransform())
         setImmediate(async () => {
             let count = 0
-            const messages = map(lines, (line: string) => StreamMessage.deserialize(line))
+            const messages = map(lines, (bytes: Uint8Array) => convertBytesToStreamMessage(bytes))
             await pull(
                 forEach(messages, () => count++),
                 messageStream
