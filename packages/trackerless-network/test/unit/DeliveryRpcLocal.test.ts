@@ -35,7 +35,7 @@ describe('DeliveryRpcLocal', () => {
             broadcast: mockBroadcast,
             onLeaveNotice: mockOnLeaveNotice,
             markForInspection: mockMarkForInspection,
-            ownPeerDescriptor: peerDescriptor,
+            localPeerDescriptor: peerDescriptor,
             streamPartId: StreamPartIDUtils.parse('stream#0'),
             rpcCommunicator: new ListeningRpcCommunicator('random-graph-node', new MockTransport())
         })
@@ -50,7 +50,8 @@ describe('DeliveryRpcLocal', () => {
 
     it('Server leaveStreamPartNotice()', async () => {
         const leaveNotice: LeaveStreamPartNotice = {
-            streamPartId: StreamPartIDUtils.parse('stream#0')
+            streamPartId: StreamPartIDUtils.parse('stream#0'),
+            isEntryPoint: false
         }
         await rpcLocal.leaveStreamPartNotice(leaveNotice, { incomingSourceDescriptor: mockSender } as any)
         expect(mockOnLeaveNotice).toHaveBeenCalledTimes(1)

@@ -59,7 +59,6 @@ export class PushBuffer<T> implements IPushBuffer<T> {
         this.writeGate.close()
         this.readGate.close()
         this.iterator = this.iterate()
-        // this.debug('create', this.bufferSize)
     }
 
     /**

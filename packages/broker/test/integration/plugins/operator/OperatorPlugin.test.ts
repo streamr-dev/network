@@ -1,12 +1,11 @@
 import type { Operator } from '@streamr/network-contracts'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { collect } from '@streamr/utils'
+import { collect, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { ProxyDirection, StreamPermission } from 'streamr-client'
 import { Broker, createBroker } from '../../../../src/broker'
 import { createClient, createTestStream, formConfig, startBroker } from '../../../utils'
 import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, setupOperatorContract, sponsor, stake } from './contractUtils'
-import { wait } from '@streamr/utils'
 
 describe('OperatorPlugin', () => {
 
@@ -54,9 +53,9 @@ describe('OperatorPlugin', () => {
                 }
             }
         })
-        // wait for a while so that MaintainTopologyService has time to handle addStakedStreams
+        // wait for MaintainTopologyService to handle addStakedStreams
         // events emitted during Broker start
-        await wait(500)
+        await waitForCondition(async () => (await broker.getStreamrClient().getSubscriptions(stream.id)).length > 0)
         const brokerDescriptor = await broker.getStreamrClient().getPeerDescriptor()
         await subscriber.setProxies({ id: stream.id }, [brokerDescriptor], ProxyDirection.SUBSCRIBE)
         const subscription = await subscriber.subscribe(stream.id)

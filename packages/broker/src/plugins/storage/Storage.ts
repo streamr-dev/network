@@ -11,6 +11,7 @@ import { BucketManager, BucketManagerOptions } from './BucketManager'
 import { Logger } from '@streamr/utils'
 import { Bucket, BucketId } from './Bucket'
 import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE } from './dataQueryEndpoint'
+import { convertStreamMessageToBytes } from '@streamr/trackerless-network'
 
 const logger = new Logger(module)
 
@@ -84,12 +85,22 @@ export class Storage extends EventEmitter {
             if (bucketId) {
                 logger.trace('Found bucket', { bucketId })
 
-                this.bucketManager.incrementBucket(bucketId, Buffer.byteLength(streamMessage.serialize()))
-                setImmediate(() => this.batchManager.store(bucketId, streamMessage, (err?: Error) => {
+                const record = {
+                    streamId: streamMessage.getStreamId(),
+                    partition: streamMessage.getStreamPartition(),
+                    timestamp: streamMessage.getTimestamp(),
+                    sequenceNo: streamMessage.getSequenceNumber(),
+                    publisherId: streamMessage.getPublisherId(),
+                    msgChainId: streamMessage.getMsgChainId(),
+                    payload: Buffer.from(convertStreamMessageToBytes(streamMessage))
+                }
+
+                this.bucketManager.incrementBucket(bucketId, record.payload.length)
+                setImmediate(() => this.batchManager.store(bucketId, record, (err?: Error) => {
                     if (err) {
                         reject(err)
                     } else {
-                        this.emit('write', streamMessage)
+                        this.emit('write', record.payload)
                         resolve(true)
                     }
                 }))
@@ -229,13 +240,13 @@ export class Storage extends EventEmitter {
             writeBytesPerSecond: new RateMetric()
         }
         metricsContext.addMetrics('broker.plugin.storage', metrics)
-        this.on('read', (streamMessage: StreamMessage) => {
+        this.on('read', (streamMessage: Uint8Array) => {
             metrics.readMessagesPerSecond.record(1)
-            metrics.readBytesPerSecond.record(streamMessage.getContent(false).length)
+            metrics.readBytesPerSecond.record(streamMessage.length)
         })
-        this.on('write', (streamMessage: StreamMessage) => {
+        this.on('write', (streamMessage: Uint8Array) => {
             metrics.writeMessagesPerSecond.record(1)
-            metrics.writeBytesPerSecond.record(streamMessage.getContent(false).length)
+            metrics.writeBytesPerSecond.record(streamMessage.length)
         })
     }
 
@@ -359,9 +370,8 @@ export class Storage extends EventEmitter {
             return null
         }
 
-        const streamMessage = StreamMessage.deserialize(row.payload.toString())
-        this.emit('read', streamMessage)
-        return streamMessage
+        this.emit('read', row.payload)
+        return row.payload
     }
 
     private createResultStream(debugInfo: ResendDebugInfo) {

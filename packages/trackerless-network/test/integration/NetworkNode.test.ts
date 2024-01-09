@@ -21,33 +21,34 @@ describe('NetworkNode', () => {
     let node2: NetworkNode
 
     const pd1: PeerDescriptor = {
-        kademliaId: new Uint8Array([1, 2, 3]),
+        nodeId: new Uint8Array([1, 2, 3]),
         type: NodeType.NODEJS
     }
 
     const pd2: PeerDescriptor = {
-        kademliaId: new Uint8Array([1, 1, 1]),
+        nodeId: new Uint8Array([1, 1, 1]),
         type: NodeType.NODEJS
     }
 
     beforeEach(async () => {
-        Simulator.useFakeTimers()
         const simulator = new Simulator()
         transport1 = new SimulatorTransport(pd1, simulator)
+        await transport1.start()
         transport2 = new SimulatorTransport(pd2, simulator)
+        await transport2.start()
 
         node1 = createNetworkNode({
             layer0: {
                 entryPoints: [pd1],
                 peerDescriptor: pd1,
-                transportLayer: transport1
+                transport: transport1
             }
         })
         node2 = createNetworkNode({
             layer0: {
                 entryPoints: [pd1],
                 peerDescriptor: pd2,
-                transportLayer: transport2
+                transport: transport2
             }
         })
 
@@ -62,7 +63,6 @@ describe('NetworkNode', () => {
             node1.stop(),
             node2.stop()
         ])
-        Simulator.useFakeTimers(false)
     })
 
     it('wait for join + broadcast and subscribe', async () => {

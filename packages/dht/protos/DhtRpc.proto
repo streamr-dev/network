@@ -8,61 +8,63 @@ import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
 import "packages/proto-rpc/protos/ProtoRpc.proto";
 
-service DhtRpcService {
+service DhtNodeRpc {
   rpc getClosestPeers (ClosestPeersRequest) returns (ClosestPeersResponse);
   rpc ping (PingRequest) returns (PingResponse);
   rpc leaveNotice (LeaveNotice) returns (google.protobuf.Empty);
 }
 
-service RoutingService {
+service RouterRpc {
   rpc routeMessage (RouteMessageWrapper) returns (RouteMessageAck);
   rpc forwardMessage (RouteMessageWrapper) returns (RouteMessageAck);
-  rpc findRecursively (RouteMessageWrapper) returns (RouteMessageAck);
 }
 
-service StoreService {
+service RecursiveOperationRpc {
+  rpc routeRequest (RouteMessageWrapper) returns (RouteMessageAck);
+}
+
+service StoreRpc {
   rpc storeData (StoreDataRequest) returns (StoreDataResponse);
-  rpc migrateData (MigrateDataRequest) returns (MigrateDataResponse);
-  rpc deleteData (DeleteDataRequest) returns (DeleteDataResponse);
+  rpc replicateData (ReplicateDataRequest) returns (google.protobuf.Empty);
 }
 
-service RecursiveFindSessionService {
-  rpc reportRecursiveFindResult(RecursiveFindReport) returns (google.protobuf.Empty);
+service RecursiveOperationSessionRpc {
+  rpc sendResponse(RecursiveOperationResponse) returns (google.protobuf.Empty);
 }
 
-service WebSocketConnectorService {
-  rpc requestConnection (WebSocketConnectionRequest) returns (WebSocketConnectionResponse);
+service WebsocketConnectorRpc {
+  rpc requestConnection (WebsocketConnectionRequest) returns (google.protobuf.Empty);
 }
 
-service WebRtcConnectorService {
-  rpc requestConnection (WebRtcConnectionRequest) returns (google.protobuf.Empty);
+service WebrtcConnectorRpc {
+  rpc requestConnection (WebrtcConnectionRequest) returns (google.protobuf.Empty);
   rpc rtcOffer (RtcOffer) returns (google.protobuf.Empty);
   rpc rtcAnswer (RtcAnswer) returns (google.protobuf.Empty);
   rpc iceCandidate (IceCandidate) returns (google.protobuf.Empty);
 }
 
-service ConnectionLocker {
+service ConnectionLockRpc {
   rpc lockRequest (LockRequest) returns (LockResponse);
   rpc unlockRequest (UnlockRequest) returns (google.protobuf.Empty);
-  rpc gracefulDisconnect (DisconnectNotice) returns (DisconnectNoticeResponse);
+  rpc gracefulDisconnect (DisconnectNotice) returns (google.protobuf.Empty);
 }
 
-service ExternalApiService {
-  rpc findData (FindDataRequest) returns (FindDataResponse);
+service ExternalApiRpc {
+  rpc externalFindData (ExternalFindDataRequest) returns (ExternalFindDataResponse);
   rpc externalStoreData (ExternalStoreDataRequest) returns (ExternalStoreDataResponse);
 }
 
 // Used inside RpcMessage
 
 message StoreDataRequest {
-  bytes kademliaId = 1;
+  bytes key = 1;
   google.protobuf.Any data = 2;
-  uint32 ttl = 3;
-  google.protobuf.Timestamp storerTime = 4;
+  bytes creator = 3;
+  google.protobuf.Timestamp createdAt = 4;
+  uint32 ttl = 5;
 }
 
 message StoreDataResponse {
-  string error = 1;
 }
 
 message ExternalStoreDataRequest {
@@ -74,35 +76,23 @@ message ExternalStoreDataResponse {
   repeated PeerDescriptor storers = 1;
 }
 
-message MigrateDataRequest {
-  DataEntry dataEntry = 1;
-}
-  
-message MigrateDataResponse {
-  string error = 1;
-}
-
-message DeleteDataRequest {
-  bytes kademliaId = 1;
-}
-
-message DeleteDataResponse {
-  bool deleted = 1;
+message ReplicateDataRequest {
+  DataEntry entry = 1;
 }
 
 message DataEntry {
-  PeerDescriptor storer = 1;
-  bytes kademliaId = 2;
-  google.protobuf.Any data = 3;
-  google.protobuf.Timestamp storedAt = 4; 
-  uint32 ttl = 5;   // milliseconds
-  bool stale = 6;
-  bool deleted = 7;
-  google.protobuf.Timestamp storerTime = 8;
+  bytes key = 1;
+  google.protobuf.Any data = 2;
+  bytes creator = 3;
+  google.protobuf.Timestamp createdAt = 4;
+  google.protobuf.Timestamp storedAt = 5; 
+  uint32 ttl = 6;   // milliseconds
+  bool stale = 7;
+  bool deleted = 8;
 }
 
 message ClosestPeersRequest {
-  bytes kademliaId = 1;
+  bytes nodeId = 1;
   string requestId = 2;
 }
 
@@ -111,20 +101,21 @@ message ClosestPeersResponse {
   string requestId = 2;
 }
 
-enum FindMode {
-  NODE = 0;
-  DATA = 1;
+message RecursiveOperationRequest {
+  string sessionId = 1;
+  RecursiveOperation operation = 2;
 }
 
-message RecursiveFindRequest {
-  string recursiveFindSessionId = 1;
-  FindMode findMode = 2;
+enum RecursiveOperation {
+  FIND_NODE = 0;
+  FETCH_DATA = 1;
+  DELETE_DATA = 2;
 }
 
-message RecursiveFindReport {
-  repeated PeerDescriptor nodes = 1;
+message RecursiveOperationResponse {
+  repeated PeerDescriptor closestConnectedPeers = 1;
   repeated DataEntry dataEntries = 2;
-  optional bool noCloserNodesFound = 3;
+  bool noCloserNodesFound = 3;
   repeated PeerDescriptor routingPath = 4;
 }
 
@@ -137,17 +128,15 @@ message PingResponse {
 }
 
 message LeaveNotice {
-  string serviceId = 1;
 }
 
 message PeerDescriptor {
-  bytes kademliaId = 1;
+  bytes nodeId = 1;
   NodeType type = 2;
   ConnectivityMethod udp = 3;
   ConnectivityMethod tcp = 4;
   ConnectivityMethod websocket = 5;
-  optional bool openInternet = 6;
-  optional uint32 region = 7;
+  optional uint32 region = 6;
 }
 
 message ConnectivityMethod {
@@ -159,7 +148,6 @@ message ConnectivityMethod {
 enum NodeType {
   NODEJS = 0;
   BROWSER = 1;
-  VIRTUAL = 3;
 }
 
 enum RpcResponseError {
@@ -170,20 +158,26 @@ enum RpcResponseError {
 }
 
 message RouteMessageWrapper {
-  PeerDescriptor sourcePeer = 1;
-  string requestId = 2;
-  PeerDescriptor destinationPeer = 3;
-  PeerDescriptor previousPeer = 4;
-  Message message = 5;
-  repeated PeerDescriptor reachableThrough = 6;
-  repeated PeerDescriptor routingPath = 7;
+  string requestId = 1;
+  PeerDescriptor sourcePeer = 2;
+  bytes target = 3;
+  Message message = 4;
+  repeated PeerDescriptor reachableThrough = 5;
+  repeated PeerDescriptor routingPath = 6;
+  repeated string parallelRootNodeIds = 7;
 }
 
 message RouteMessageAck {
-  PeerDescriptor sourcePeer = 1;
-  string requestId = 2;
-  PeerDescriptor destinationPeer = 3;
-  string error = 4;
+  string requestId = 1;
+  optional RouteMessageError error = 2;
+}
+
+enum RouteMessageError {
+  NO_TARGETS = 0;
+  DUPLICATE = 1;
+  // TODO: can this be removed? If DhtNode is already stopped the server side requests
+  // should not be processed
+  STOPPED = 2;
 }
 
 // Correspond to the MessageType Enum
@@ -192,37 +186,42 @@ message ConnectivityRequest {
   uint32 port = 1;
   bool tls = 2;
   optional string host = 3;
+  bool selfSigned = 4;
 }
 
 message ConnectivityResponse {
-  bool open_internet = 1;
-  string host = 2;
-  string natType = 3;
-  ConnectivityMethod websocket = 4;
+  string host = 1;
+  string natType = 2;
+  ConnectivityMethod websocket = 3;
 }
 
 message HandshakeRequest {
-  bytes sourceId = 1;
-  string protocolVersion = 2;
-  PeerDescriptor peerDescriptor = 3;
+  PeerDescriptor sourcePeerDescriptor = 1;
+  optional PeerDescriptor targetPeerDescriptor = 2;
+  string version = 3;
 }
 
 message HandshakeResponse {
-  bytes sourceId = 1;
-  string protocolVersion = 2;
-  PeerDescriptor peerDescriptor = 3;
-  optional string responseError = 4;
+  PeerDescriptor sourcePeerDescriptor = 1;
+  optional HandshakeError error = 2;
+  string version = 3;
+}
+
+enum HandshakeError {
+  DUPLICATE_CONNECTION = 0;
+  INVALID_TARGET_PEER_DESCRIPTOR = 1;
+  UNSUPPORTED_VERSION = 2;
 }
 
 // Wraps all messages
 
 enum MessageType {
-  CONNECTIVITY_REQUEST = 0;
-  CONNECTIVITY_RESPONSE = 1;
-  HANDSHAKE_REQUEST = 2;
-  HANDSHAKE_RESPONSE = 3;
-  RPC = 4;
-  RECURSIVE_FIND_REQUEST = 5;
+  RPC = 0;
+  CONNECTIVITY_REQUEST = 1;
+  CONNECTIVITY_RESPONSE = 2;
+  HANDSHAKE_REQUEST = 3;
+  HANDSHAKE_RESPONSE = 4;
+  RECURSIVE_OPERATION_REQUEST = 5;
 }
 
 message Message {
@@ -237,71 +236,46 @@ message Message {
     HandshakeRequest handshakeRequest = 8;
     HandshakeResponse handshakeResponse = 9;
     protorpc.RpcMessage rpcMessage = 10;
-    RecursiveFindRequest RecursiveFindRequest = 11;
+    RecursiveOperationRequest recursiveOperationRequest = 11;
   };
 }
 
 // Connector Messages
 
 // WebSocket
-message WebSocketConnectionRequest {
-  PeerDescriptor requester = 1;
-  PeerDescriptor target = 2;
-  string ip = 3;
-  uint32 port = 4;
-}
-
-message WebSocketConnectionResponse {
-  PeerDescriptor requester = 1;
-  PeerDescriptor target = 2;
-  bool accepted = 3;
-  optional string reason = 4;
+message WebsocketConnectionRequest {
 }
 
 // WebRTC
-message WebRtcConnectionRequest {
-  PeerDescriptor requester = 1;
-  PeerDescriptor target = 2;
-  string connectionId = 3;
+message WebrtcConnectionRequest {
 }
 
 message RtcOffer {
-  PeerDescriptor requester = 1;
-  PeerDescriptor target = 2;
-  string description = 3;
-  string connectionId = 4;
+  string description = 1;
+  string connectionId = 2;
 }
 
 message RtcAnswer {
-  PeerDescriptor requester = 1;
-  PeerDescriptor target = 2;
-  string description = 3;
-  string connectionId = 4;
+  string description = 1;
+  string connectionId = 2;
 }
 
 message IceCandidate {
   string candidate = 1;
   string mid = 2;
   string connectionId = 3;
-  PeerDescriptor requester = 4;
-  PeerDescriptor target = 5;
 }
 
 message LockRequest {
-  string protocolVersion = 1;
-  PeerDescriptor peerDescriptor = 2;
-  string serviceId = 3;
+  string lockId = 1;
 }
 
 message UnlockRequest {
-  string protocolVersion = 1;
-  PeerDescriptor peerDescriptor = 2;
-  string serviceId = 3;
+  string lockId = 1;
 }
 
 message LockResponse {
   bool accepted = 1;
-  optional bool reason = 2;
 }
 
 enum DisconnectMode {
@@ -310,21 +284,13 @@ enum DisconnectMode {
 }
 
 message DisconnectNotice {
-  string protocolVersion = 1;
-  PeerDescriptor peerDescriptor = 2;
-  DisconnectMode disconnecMode = 3;
+  DisconnectMode disconnectMode = 1;
 }
 
-message DisconnectNoticeResponse {
-  string protocolVersion = 1;
+message ExternalFindDataRequest {
+  bytes key = 1;
 }
 
-message FindDataRequest {
-  bytes kademliaId = 1;
-  PeerDescriptor requestor = 2;
-}
-
-message FindDataResponse {
-  repeated DataEntry dataEntries = 1;
-  optional string error = 2;
+message ExternalFindDataResponse {
+  repeated DataEntry entries = 1;
 }

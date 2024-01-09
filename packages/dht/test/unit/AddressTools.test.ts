@@ -37,4 +37,8 @@ describe('isPrivateIPv4', () => {
     it('return false for a public address', () => {
         expect(isPrivateIPv4('203.0.113.181')).toBe(false)
     })
+
+    it('return true for localhost IP address', () => {
+        expect(isPrivateIPv4('127.0.0.1')).toBe(true)
+    })
 })

@@ -75,7 +75,8 @@ describe('MaintainTopologyService', () => {
         const serviceHelperConfig = {
             signer: operatorWallet,
             operatorContractAddress: toEthereumAddress(operatorContract.address),
-            theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl
+            theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl,
+            getEthersOverrides: () => ({})
         }
 
         const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
@@ -83,7 +84,8 @@ describe('MaintainTopologyService', () => {
             10 * 1000,
             5 * 60 * 1000,
             30 * 1000,
-            2 * 1000
+            2 * 1000,
+            0
         )
         const operatorFleetState = createOperatorFleetState(formCoordinationStreamId(serviceHelperConfig.operatorContractAddress))
         const maintainTopologyHelper = new MaintainTopologyHelper(serviceHelperConfig)

@@ -19,6 +19,12 @@
       "minimum": 0,
       "default": 10000
     },
+    "heartbeatTimeoutInMs": {
+      "type": "integer",
+      "description": "The maximum time (in milliseconds) to wait for the 1st heartbeat of a target operator's nodes",
+      "minimum": 0,
+      "default": 120000
+    },
     "fleetState": {
       "type": "object",
       "description": "Operator fleet state settings (both for me and targets)",
@@ -29,7 +35,7 @@
           "type": "integer",
           "description": "The maximum time (in milliseconds) of a heartbeat to count towards a node being online",
           "minimum": 0,
-          "default": 300000
+          "default": 180000
         },
         "pruneIntervalInMs": {
           "type": "integer",
@@ -42,6 +48,12 @@
           "description": "Account for extra latency (milliseconds) due to networking",
           "minimum": 0,
           "default": 2000
+        },
+        "warmupPeriodInMs": {
+          "type": "integer",
+          "description": "The time (in milliseconds) to wait before starting to count heartbeats",
+          "minimum": 0,
+          "default": 10000
         }
       }
     },
@@ -113,12 +125,26 @@
           "description": "How often to run (in milliseconds)",
           "minimum": 0,
           "default": 900000
-        },
-        "heartbeatTimeoutInMs": {
+        }
+      }
+    },
+    "closeExpiredFlags": {
+      "type": "object",
+      "description": "Close expired flags settings",
+      "additionalProperties": false,
+      "default": {},
+      "properties": {
+        "intervalInMs": {
           "type": "integer",
-          "description": "The maximum time (in milliseconds) to wait for the 1st heartbeat of a target operator's nodes",
+          "description": "How often to run (in milliseconds)",
           "minimum": 0,
-          "default": 120000
+          "default": 600000
+        },
+        "maxAgeInMs": {
+          "type": "integer",
+          "description": "The maximum age (in milliseconds) of a flag before it is expired",
+          "minimum": 0,
+          "default": 86400000
         }
       }
     }

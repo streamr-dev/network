@@ -81,13 +81,13 @@ describe('Logger', () => {
     describe('name', () => {
         it('short', () => {
             const expected = typeof _streamr_electron_test === 'undefined'
-                ? 'Logger.test         '
+                ? 'Logger.test              '
                 : 'Logger.test'
             expect(Logger.createName(module)).toBe(expected)
         })
         it('application id', () => {
             const expected = typeof _streamr_electron_test === 'undefined'
-                ? 'APP:Logger.test     '
+                ? 'APP:Logger.test          '
                 : 'APP:Logger.test'
             process.env.STREAMR_APPLICATION_ID = 'APP'
             expect(Logger.createName(module)).toBe(expected)
@@ -95,7 +95,7 @@ describe('Logger', () => {
         })
         it('index', () => {
             const expected = typeof _streamr_electron_test === 'undefined'
-                ? 'mock                '
+                ? 'mock                     '
                 : 'mock'
             expect(Logger.createName({
                 id: ['foo', 'bar', 'mock', 'index'].join(path.sep)

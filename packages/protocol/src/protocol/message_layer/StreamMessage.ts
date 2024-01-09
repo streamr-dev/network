@@ -175,8 +175,8 @@ export default class StreamMessage {
      */
     getParsedContent(): unknown {
         if (this.parsedContent == null) {
-            // Don't try to parse encrypted messages
-            if (this.contentType === ContentType.BINARY 
+            // Don't try to parse encrypted or binary type messages
+            if (this.contentType === ContentType.BINARY
                 || (this.messageType === StreamMessageType.MESSAGE && this.encryptionType !== EncryptionType.NONE)) {
                 return this.serializedContent
             }
