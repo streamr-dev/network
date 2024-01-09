@@ -1,5 +1,6 @@
 import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 import { EventEmitter } from 'eventemitter3'
+import crypto from 'crypto'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import {
     ClosestPeersRequest,
@@ -35,7 +36,6 @@ import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { LocalDataStore } from './store/LocalDataStore'
 import { IceServer } from '../connection/webrtc/WebrtcConnector'
 import { ExternalApiRpcRemote } from './ExternalApiRpcRemote'
-import { UUID } from '../helpers/UUID'
 import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
 import { sample } from 'lodash'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
@@ -121,7 +121,7 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, nodeId?: DhtAdd
         }).reduce((prev, curr) => prev + curr)
         const view = new DataView(nodeIdRaw.buffer)
         view.setInt32(0, ipNum)
-        nodeIdRaw.set((new UUID()).value, 4)
+        nodeIdRaw.set(crypto.randomBytes(20 - 4), 4)
     } else {
         nodeIdRaw = getRawFromDhtAddress(nodeId!)
     }
