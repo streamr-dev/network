@@ -120,7 +120,7 @@ describe('Config wizard', () => {
             storagePath,
         ])
 
-        const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+        const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
@@ -183,7 +183,7 @@ describe('Config wizard', () => {
             storagePath,
         ])
 
-        const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+        const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
@@ -256,7 +256,7 @@ describe('Config wizard', () => {
             storagePath,
         ])
 
-        const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+        const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
@@ -346,7 +346,7 @@ describe('Config wizard', () => {
             storagePath,
         ])
 
-        const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+        const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
@@ -404,7 +404,7 @@ describe('Config wizard', () => {
             storagePath,
         ])
 
-        const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+        const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
@@ -466,7 +466,7 @@ describe('Config wizard', () => {
             storagePath,
         ])
 
-        const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+        const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
@@ -528,7 +528,7 @@ describe('Config wizard', () => {
             storagePath,
         ])
 
-        const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+        const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
@@ -591,7 +591,7 @@ describe('Config wizard', () => {
             storagePath,
         ])
 
-        const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+        const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
@@ -654,7 +654,7 @@ describe('Config wizard', () => {
             storagePath,
         ])
 
-        const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+        const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
@@ -721,7 +721,7 @@ describe('Config wizard', () => {
             storagePath,
         ])
 
-        const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+        const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
@@ -794,7 +794,7 @@ describe('Config wizard', () => {
             storagePath,
         ])
 
-        const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+        const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
@@ -904,7 +904,7 @@ describe('Config wizard', () => {
             storagePath,
         ])
 
-        const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+        const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
@@ -981,7 +981,7 @@ describe('Config wizard', () => {
             storagePath,
         ])
 
-        const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+        const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
@@ -1043,7 +1043,7 @@ describe('Config wizard', () => {
 
         expect(existsSync(storagePath)).toBe(true)
 
-        const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+        const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
@@ -1057,7 +1057,7 @@ describe('Config wizard', () => {
     it('overwrites the existing config file if told to', async () => {
         writeFileSync(storagePath, '{"FOOBAR":true}')
 
-        let config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+        let config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             FOOBAR: true,
@@ -1085,7 +1085,7 @@ describe('Config wizard', () => {
 
         expect(existsSync(storagePath)).toBe(true)
 
-        config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+        config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
@@ -1099,7 +1099,7 @@ describe('Config wizard', () => {
     it('allows to change the storage location if the one they initially picked is taken', async () => {
         writeFileSync(storagePath, '{"FOOBAR":true}')
 
-        let config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+        let config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             FOOBAR: true,
@@ -1131,13 +1131,13 @@ describe('Config wizard', () => {
             otherStoragePath,
         ])
 
-        config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+        config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             FOOBAR: true,
         })
 
-        config = JSON.parse(readFileSync(otherStoragePath).toString('utf-8'))
+        config = JSON.parse(readFileSync(otherStoragePath).toString())
 
         expect(config).toMatchObject({
             client: {
@@ -1184,7 +1184,7 @@ describe('Config wizard', () => {
             storagePath,
         ])
 
-        const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+        const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config).toMatchObject({
             client: {
@@ -1460,7 +1460,7 @@ describe('Config wizard', () => {
             Step.storage({ type: storagePath }, 'enter'),
         ])
 
-        const config = JSON.parse(readFileSync(storagePath).toString('utf-8'))
+        const config = JSON.parse(readFileSync(storagePath).toString())
 
         expect(config.apiAuthentication.keys).toEqual([
             'NWViZWNiY2Y1YWRmNGZjNjllOTk2MzFlOGU2NGNjOWI',
