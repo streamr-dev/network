@@ -1,6 +1,6 @@
 import secp256k1 from 'secp256k1'
 import { Keccak } from 'sha3'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { binaryToHex, EthereumAddress, hexToBinary, toEthereumAddress } from '@streamr/utils'
 
 const SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
 const keccak = new Keccak(256)
@@ -37,33 +37,23 @@ function recoverPublicKey(signature: Uint8Array, payload: Uint8Array): Uint8Arra
     )
 }
 
-function normalize(privateKeyOrAddress: string): string {
-    return privateKeyOrAddress.startsWith('0x') ? privateKeyOrAddress.substring(2) : privateKeyOrAddress
-}
-
-export function sign(payload: Uint8Array, privateKey: string): Uint8Array {
-    const privateKeyBuffer = Buffer.from(normalize(privateKey), 'hex')
+export function sign(payload: Uint8Array, privateKeyAsHex: string): Uint8Array {
+    const privateKey = hexToBinary(privateKeyAsHex)
 
     const msgHash = hash(payload)
-    const sigObj = secp256k1.ecdsaSign(msgHash, privateKeyBuffer)
+    const sigObj = secp256k1.ecdsaSign(msgHash, privateKey)
     const result = Buffer.alloc(sigObj.signature.length + 1, Buffer.from(sigObj.signature))
     result.writeInt8(27 + sigObj.recid, result.length - 1)
     return result
 }
 
-export function recover(
-    signature: Uint8Array,
-    payload: Uint8Array,
-    publicKeyBuffer: Buffer | Uint8Array | undefined = undefined
-): string {
-    if (!publicKeyBuffer) {
-        publicKeyBuffer = recoverPublicKey(signature, payload)
-    }
-    const pubKeyWithoutFirstByte = publicKeyBuffer.subarray(1, publicKeyBuffer.length)
+export function recover(signature: Uint8Array, payload: Uint8Array): string {
+    const publicKey = recoverPublicKey(signature, payload)
+    const pubKeyWithoutFirstByte = publicKey.subarray(1, publicKey.length)
     keccak.reset()
     keccak.update(Buffer.from(pubKeyWithoutFirstByte))
     const hashOfPubKey = keccak.digest('binary')
-    return '0x' + hashOfPubKey.subarray(12, hashOfPubKey.length).toString('hex')
+    return binaryToHex(hashOfPubKey.subarray(12, hashOfPubKey.length), true)
 }
 
 export function verify(address: EthereumAddress, payload: Uint8Array, signature: Uint8Array): boolean {
