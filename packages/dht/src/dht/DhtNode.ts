@@ -75,7 +75,7 @@ export interface DhtNodeOptions {
     websocketHost?: string
     websocketPortRange?: PortRange
     websocketServerEnableTls?: boolean
-    id?: DhtAddress
+    nodeId?: DhtAddress
 
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
@@ -106,7 +106,7 @@ type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
     'networkConnectivityTimeout' |
     'storageRedundancyFactor' |
     'metricsContext' |
-    'id'>
+    'nodeId'>
 
 const logger = new Logger(module)
 
@@ -165,7 +165,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             networkConnectivityTimeout: 10000,
             storageRedundancyFactor: 5,
             metricsContext: new MetricsContext(),
-            id: createRandomDhtAddress()
+            nodeId: createRandomDhtAddress()
         }, conf)
         this.localDataStore = new LocalDataStore(this.config.storeMaxTtl) 
         this.send = this.send.bind(this)
@@ -400,7 +400,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.config.peerDescriptor) {
             this.localPeerDescriptor = this.config.peerDescriptor
         } else {
-            this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, this.config.id)
+            this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, this.config.nodeId)
         }
         return this.localPeerDescriptor
     }
