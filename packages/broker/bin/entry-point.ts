@@ -10,7 +10,7 @@ const main = async () => {
         type: NodeType.NODEJS  // TODO remove this when NET-1070 done
     }
     const dhtNode = new DhtNode({
-        peerId: entryPoint.nodeId as DhtAddress,
+        nodeId: entryPoint.nodeId as DhtAddress,
         websocketHost: entryPoint.websocket!.host,
         websocketPortRange: {
             min: entryPoint.websocket!.port,
