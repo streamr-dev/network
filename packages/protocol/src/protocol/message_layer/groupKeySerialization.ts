@@ -3,6 +3,11 @@ import GroupKeyRequest from './GroupKeyRequest'
 import GroupKeyResponse from './GroupKeyResponse'
 import EncryptedGroupKey from './EncryptedGroupKey'
 
+/**
+ * Serialization and deserialization of group key requests and responses. We hope to deprecate this
+ * in the future and only use protobufs instead.
+ */
+
 export function deserializeGroupKeyRequest(rawContent: Uint8Array): GroupKeyRequest {
     const [requestId, recipient, rsaPublicKey, groupKeyIds] = JSON.parse(binaryToUtf8(rawContent))
     return new GroupKeyRequest({
