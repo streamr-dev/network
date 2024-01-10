@@ -8,7 +8,7 @@
 - Variables and fields which store counts should be named `fooCount`
 
 Examples:
-- getConnectionCount, neighborCount
+- `getConnectionCount`, `neighborCount`
 
 ## Topics
 - [Testing Best Practices](testing-best-practices.md)
