@@ -48,8 +48,9 @@ export class NeighborUpdateManager {
         await Promise.allSettled(this.config.targetNeighbors.getAll().map(async (neighbor) => {
             const res = await this.createRemote(neighbor.getPeerDescriptor()).updateNeighbors(this.config.streamPartId, neighborDescriptors)
             if (res.removeMe) {
-                this.config.targetNeighbors.remove(neighbor.getPeerDescriptor())
-                this.config.neighborFinder.start([getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor())])
+                const nodeId = getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor())
+                this.config.targetNeighbors.remove(nodeId)
+                this.config.neighborFinder.start([nodeId])
             }
         }))
     }

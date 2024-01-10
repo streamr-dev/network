@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import { Server } from 'http'
 import fetch from 'node-fetch'
 import { startServer, stopServer } from '../../src/httpServer'
+import { wait } from '@streamr/utils'
 
 const MOCK_API_KEY = 'mock-api-key'
 const PORT = 18888
@@ -25,6 +26,7 @@ const startTestServer = (...endpoints: Endpoint[]) => {
 }
 
 const createRequest = async (endpoint: string, headers?: Record<string, string>) => {
+    await wait(10) // TODO: remove when fixed https://github.com/node-fetch/node-fetch/issues/1735
     return await fetch(`http://127.0.0.1:${PORT}/${endpoint}`, {
         timeout: 9 * 1000,
         headers

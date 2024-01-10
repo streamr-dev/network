@@ -1,9 +1,5 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '@streamr/utils'
-import {
-    areEqualPeerDescriptors,
-    getNodeIdFromPeerDescriptor
-} from '../helpers/peerIdFromPeerDescriptor'
 import { Empty } from '../proto/google/protobuf/empty'
 import {
     DisconnectMode,
@@ -17,7 +13,7 @@ import { IConnectionLockRpc } from '../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
 import { LockID } from './ConnectionLockHandler'
-import { DhtAddress } from '../identifiers'
+import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../identifiers'
 
 interface ConnectionLockRpcLocalConfig {
     addRemoteLocked: (id: DhtAddress, lockId: LockID) => void

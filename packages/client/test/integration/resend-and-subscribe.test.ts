@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { GroupKeyMessage, GroupKeyRequest, StreamMessageType } from '@streamr/protocol'
+import { deserializeGroupKeyRequest, StreamMessageType } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
@@ -95,6 +95,6 @@ describe('resend and subscribe', () => {
             messageType: StreamMessageType.GROUP_KEY_REQUEST
         })
         expect(groupKeyRequests.length).toBe(1)
-        expect((GroupKeyMessage.fromStreamMessage(groupKeyRequests[0]) as GroupKeyRequest).groupKeyIds).toEqual([groupKey.id])
+        expect(deserializeGroupKeyRequest(groupKeyRequests[0].serializedContent).groupKeyIds).toEqual([groupKey.id])
     })
 })

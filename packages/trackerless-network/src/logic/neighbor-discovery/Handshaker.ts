@@ -1,7 +1,6 @@
-import { ConnectionLocker, DhtAddress, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { ConnectionLocker, DhtAddress, PeerDescriptor, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { NodeList } from '../NodeList'
 import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
-import { RpcCommunicator } from '@streamr/proto-rpc'
 import {
     DeliveryRpcClient, HandshakeRpcClient
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -24,7 +23,7 @@ interface HandshakerConfig {
     targetNeighbors: NodeList
     nearbyNodeView: NodeList
     randomNodeView: NodeList
-    rpcCommunicator: RpcCommunicator
+    rpcCommunicator: ListeningRpcCommunicator
     maxNeighborCount: number
     rpcRequestTimeout?: number
 }
@@ -78,7 +77,7 @@ export class Handshaker {
     }
 
     private selectParallelTargets(excludedIds: DhtAddress[]): HandshakeRpcRemote[] {
-        const targetNeighbors = this.config.nearbyNodeView.getClosestAndFurthest(excludedIds)
+        const targetNeighbors = this.config.nearbyNodeView.getFirstAndLast(excludedIds)
         while (targetNeighbors.length < PARALLEL_HANDSHAKE_COUNT && this.config.randomNodeView.size(excludedIds) > 0) {
             const random = this.config.randomNodeView.getRandom(excludedIds)
             if (random) {
@@ -107,7 +106,7 @@ export class Handshaker {
 
     private async selectNewTargetAndHandshake(excludedIds: DhtAddress[]): Promise<DhtAddress[]> {
         const exclude = excludedIds.concat(this.config.targetNeighbors.getIds())
-        const targetNeighbor = this.config.nearbyNodeView.getClosest(exclude) ?? this.config.randomNodeView.getRandom(exclude)
+        const targetNeighbor = this.config.nearbyNodeView.getFirst(exclude) ?? this.config.randomNodeView.getRandom(exclude)
         if (targetNeighbor) {
             const accepted = await this.handshakeWithTarget(this.createRpcRemote(targetNeighbor.getPeerDescriptor()))
             if (!accepted) {

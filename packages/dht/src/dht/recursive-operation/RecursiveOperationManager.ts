@@ -9,7 +9,6 @@ import {
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { Router } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
-import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Logger, areEqualBinaries, runAndWaitForEvents3, wait } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RecursiveOperationSessionRpcRemote } from './RecursiveOperationSessionRpcRemote'
@@ -24,7 +23,7 @@ import { getPreviousPeer } from '../routing/getPreviousPeer'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationRpcLocal } from './RecursiveOperationRpcLocal'
-import { DhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress } from '../../identifiers'
+import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
 import { getDistance } from '../PeerManager'
 
 interface RecursiveOperationManagerConfig {
@@ -77,7 +76,7 @@ export class RecursiveOperationManager {
     public async execute(
         targetId: DhtAddress,
         operation: RecursiveOperation,
-        excludedPeer?: PeerDescriptor,
+        excludedPeer?: DhtAddress,
         waitForCompletion = true
     ): Promise<RecursiveOperationResult> {
         if (this.stopped) {
@@ -98,6 +97,7 @@ export class RecursiveOperationManager {
         if (this.config.connections.size === 0) {
             const dataEntries = Array.from(this.config.localDataStore.values(targetId))
             session.onResponseReceived(
+                getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor),
                 [this.config.localPeerDescriptor],
                 [this.config.localPeerDescriptor],
                 dataEntries,
@@ -126,7 +126,7 @@ export class RecursiveOperationManager {
         if (operation === RecursiveOperation.FETCH_DATA) {
             const dataEntries = Array.from(this.config.localDataStore.values(targetId))
             if (dataEntries.length > 0) {
-                this.sendResponse([], this.config.localPeerDescriptor, session.getId(), [], dataEntries, true)
+                this.sendResponse([this.config.localPeerDescriptor], this.config.localPeerDescriptor, session.getId(), [], dataEntries, true)
             }
         } else if (operation === RecursiveOperation.DELETE_DATA) {
             this.config.localDataStore.markAsDeleted(targetId, getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor))
@@ -147,7 +147,13 @@ export class RecursiveOperationManager {
         const isOwnNode = areEqualPeerDescriptors(this.config.localPeerDescriptor, targetPeerDescriptor)
         if (isOwnNode && this.ongoingSessions.has(serviceId)) {
             this.ongoingSessions.get(serviceId)!
-                .onResponseReceived(routingPath, closestNodes, dataEntries, noCloserNodesFound)
+                .onResponseReceived(
+                    getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor),
+                    routingPath,
+                    closestNodes,
+                    dataEntries,
+                    noCloserNodesFound
+                )
         } else {
             // TODO use config option or named constant?
             const remoteCommunicator = new ListeningRpcCommunicator(serviceId, this.config.sessionTransport, { rpcRequestTimeout: 15000 })
@@ -164,7 +170,7 @@ export class RecursiveOperationManager {
         }
     }
 
-    private doRouteRequest(routedMessage: RouteMessageWrapper, excludedPeer?: PeerDescriptor): RouteMessageAck {
+    private doRouteRequest(routedMessage: RouteMessageWrapper, excludedPeer?: DhtAddress): RouteMessageAck {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }

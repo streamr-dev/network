@@ -3,6 +3,8 @@ import { setupOperatorContract } from './contractUtils'
 import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 import { announceNodeToContract } from '../../../../src/plugins/operator/announceNodeToContract'
 
+const TIMEOUT = 30 * 1000
+
 describe('announceNodeToContract', () => {
 
     let contractFacade: ContractFacade
@@ -15,7 +17,7 @@ describe('announceNodeToContract', () => {
             ...operatorServiceConfig,
             signer: nodeWallets[0]
         })
-    })
+    }, TIMEOUT)
 
     it('read empty heartbeat, then write heartbeat then read timestamp', async () => {
         expect(await contractFacade.getTimestampOfLastHeartbeat()).toBeUndefined()
@@ -35,5 +37,5 @@ describe('announceNodeToContract', () => {
             approximateWriteTimestamp - DELTA,
             approximateWriteTimestamp + DELTA
         )
-    })
+    }, TIMEOUT)
 })

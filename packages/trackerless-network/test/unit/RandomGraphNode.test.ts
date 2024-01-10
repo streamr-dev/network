@@ -57,7 +57,6 @@ describe('RandomGraphNode', () => {
         targetNeighbors.add(mockRemote)
         const ids = randomGraphNode.getTargetNeighborIds()
         expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
-        targetNeighbors.remove(mockRemote.getPeerDescriptor())
     })
 
     it('getNearbyNodeView', () => {

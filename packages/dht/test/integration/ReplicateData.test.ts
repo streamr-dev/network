@@ -3,18 +3,16 @@ import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils/utils'
 import { Logger } from '@streamr/utils'
-import { PeerID } from '../../src/helpers/PeerID'
-import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { Contact } from '../../src/dht/contact/Contact'
 import { createMockDataEntry, unpackData } from '../utils/mock/mockDataEntry'
-import { DhtAddress, createRandomDhtAddress } from '../../src/identifiers'
+import { DhtAddress, createRandomDhtAddress, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
 jest.setTimeout(60000)
 
-const DATA_KEY = PeerID.fromString('3232323e12r31r3').toNodeId()
+const DATA_KEY = '333233323332336531327233317233' as DhtAddress  // TODO use random data
 const DATA_VALUE = createMockDataEntry({ key: DATA_KEY })
 const NUM_NODES = 100
 const MAX_CONNECTIONS = 80

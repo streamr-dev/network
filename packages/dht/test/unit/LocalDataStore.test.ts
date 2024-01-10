@@ -1,11 +1,8 @@
 import { wait } from '@streamr/utils'
 import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
-import {
-    getNodeIdFromPeerDescriptor,
-} from '../../src/helpers/peerIdFromPeerDescriptor'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { createMockDataEntry } from '../utils/mock/mockDataEntry'
-import { createRandomDhtAddress, getDhtAddressFromRaw } from '../../src/identifiers'
+import { createRandomDhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 describe('LocalDataStore', () => {
 

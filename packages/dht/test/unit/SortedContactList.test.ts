@@ -1,11 +1,9 @@
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
-import { PeerID } from '../../src/helpers/PeerID'
 import { DhtAddress, DhtAddressRaw, createRandomDhtAddress, getDhtAddressFromRaw } from '../../src/identifiers'
 
-const createItem = (nodeId: DhtAddressRaw): { getNodeId: () => DhtAddress, getPeerId: () => PeerID } => {
+const createItem = (nodeId: DhtAddressRaw): { getNodeId: () => DhtAddress } => {
     return { 
-        getNodeId: () => getDhtAddressFromRaw(nodeId),
-        getPeerId: () => PeerID.fromValue(nodeId)
+        getNodeId: () => getDhtAddressFromRaw(nodeId)
     }
 }
 
