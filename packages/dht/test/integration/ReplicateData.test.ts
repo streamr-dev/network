@@ -6,7 +6,7 @@ import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { createMockDataEntry, expectEqualData, unpackData } from '../utils/mock/mockDataEntry'
 import { DhtAddress, createRandomDhtAddress } from '../../src/identifiers'
 import { range, shuffle } from 'lodash'
-import { PeerDescriptor } from '../../src/exports'
+import { DataEntry, PeerDescriptor } from '../../src/exports'
 
 jest.setTimeout(60000)
 
@@ -17,15 +17,10 @@ const MAX_CONNECTIONS = 80
 const K = 8
 const ENTRY_POINT_INDEX = 0
 
-const getDataValues = (node: DhtNode): { foo: string }[] => {
+const getDataEntries = (node: DhtNode): DataEntry[] => {
     // @ts-expect-error private field
     const store = node.localDataStore
-    const entries = Array.from(store.values(DATA_KEY))
-    return entries.map((e) => unpackData(e))
-}
-
-const hasData = (node: DhtNode): boolean => {
-    return getDataValues(node).length > 0
+    return Array.from(store.values(DATA_KEY))
 }
 
 describe('Replicate data from node to node in DHT', () => {
@@ -84,8 +79,9 @@ describe('Replicate data from node to node in DHT', () => {
         )
         await waitNodesReadyForTesting(nodes)
 
-        // TODO assert the content?
-        expect(hasData(closest[0])).toBe(true)
+        const data = getDataEntries(closest[0])
+        expect(data).toHaveLength(1)
+        expectEqualData(data[0], DATA_VALUE)
     }, 180000)
 
     it('Data replicates to the last remaining node if most of the other nodes leave gracefully', async () => {
