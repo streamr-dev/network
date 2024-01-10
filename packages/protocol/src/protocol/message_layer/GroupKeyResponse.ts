@@ -12,9 +12,9 @@ interface Options {
 }
 
 export default class GroupKeyResponse {
-    requestId: string
-    recipient: EthereumAddress
-    encryptedGroupKeys: EncryptedGroupKey[]
+    readonly requestId: string
+    readonly recipient: EthereumAddress
+    readonly encryptedGroupKeys: ReadonlyArray<EncryptedGroupKey>
 
     constructor({ requestId, recipient, encryptedGroupKeys }: Options) {
         validateIsString('requestId', requestId)

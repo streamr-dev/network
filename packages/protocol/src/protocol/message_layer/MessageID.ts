@@ -7,12 +7,12 @@ import { EthereumAddress } from '@streamr/utils'
 
 export default class MessageID {
 
-    streamId: StreamID
-    streamPartition: number
-    timestamp: number
-    sequenceNumber: number
-    publisherId: EthereumAddress
-    msgChainId: string
+    readonly streamId: StreamID
+    readonly streamPartition: number
+    readonly timestamp: number
+    readonly sequenceNumber: number
+    readonly publisherId: EthereumAddress
+    readonly msgChainId: string
 
     constructor(
         streamId: StreamID,

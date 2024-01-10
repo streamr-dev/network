@@ -54,16 +54,16 @@ export default class StreamMessage {
     private static VALID_CONTENT_TYPES = new Set(Object.values(ContentType))
     private static VALID_ENCRYPTIONS = new Set(Object.values(EncryptionType))
 
-    messageId: MessageID
-    prevMsgRef: MessageRef | null
-    messageType: StreamMessageType
-    contentType: ContentType
+    readonly messageId: MessageID
+    readonly prevMsgRef: MessageRef | null
+    readonly messageType: StreamMessageType
+    readonly contentType: ContentType
     encryptionType: EncryptionType
     groupKeyId: string | null
     newGroupKey: EncryptedGroupKey | null
     signature: Uint8Array
-    private parsedContent?: unknown
     serializedContent: Uint8Array
+    private parsedContent?: unknown
 
     /**
      * Create a new StreamMessage identical to the passed-in streamMessage.

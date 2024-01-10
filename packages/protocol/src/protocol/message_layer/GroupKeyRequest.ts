@@ -11,10 +11,10 @@ interface Options {
 }
 
 export default class GroupKeyRequest {
-    requestId: string
-    recipient: EthereumAddress
-    rsaPublicKey: string
-    groupKeyIds: string[]
+    readonly requestId: string
+    readonly recipient: EthereumAddress
+    readonly rsaPublicKey: string
+    readonly groupKeyIds: ReadonlyArray<string>
 
     constructor({ requestId, recipient, rsaPublicKey, groupKeyIds }: Options) {
         validateIsString('requestId', requestId)
