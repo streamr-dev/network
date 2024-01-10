@@ -15,10 +15,21 @@ import { IWakeUpRpcService } from '../proto/WakeUpRpc.server'
 import { RpcMessage } from '../../src/proto/ProtoRpc'
 
 export class HelloResponseDecorator {
-    _parent: HelloResponse
+    // It is important to name the memeber variables of the decorator class
+    // in a way that does not conflict with the member variables of the decorated class
+    // that is why the member variable is named _parent with a leading underscore
+
+    private _parent: HelloResponse
+    
+    // The only requirement for a decorator class is that it has a constructor
+    // that takes the decorated class as its single parameter. It is
+    // for example not required to store the decorated class in a member variable
+    // like we do here.
+
     constructor(request: HelloResponse) {
         this._parent = request
     }
+
     public getDecoratedGreeting(): string {
         return 'decorated:' + this._parent.greeting
     }
