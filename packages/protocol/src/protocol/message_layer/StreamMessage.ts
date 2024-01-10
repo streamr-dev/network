@@ -158,10 +158,6 @@ export default class StreamMessage {
         return this.prevMsgRef
     }
 
-    getMessageID(): MessageID {
-        return this.messageId
-    }
-
     /**
      * Lazily parses the content to JSON
      */
