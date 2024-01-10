@@ -23,7 +23,7 @@ import { StreamPartID } from '@streamr/protocol'
 
 interface HandshakeRpcLocalConfig {
     streamPartId: StreamPartID
-    targetNeighbors: NodeList
+    neighbors: NodeList
     connectionLocker: ConnectionLocker
     ongoingHandshakes: Set<DhtAddress>
     ongoingInterleaves: Set<DhtAddress>
@@ -53,13 +53,13 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
         const senderNodeId = getNodeIdFromPeerDescriptor(senderDescriptor)
         if (this.config.ongoingInterleaves.has(senderNodeId)) {
             return this.rejectHandshake(request)
-        } else if (this.config.targetNeighbors.has(senderNodeId)
+        } else if (this.config.neighbors.has(senderNodeId)
             || this.config.ongoingHandshakes.has(senderNodeId)
         ) {
             return this.acceptHandshake(request, senderDescriptor)
-        } else if (this.config.targetNeighbors.size() + this.config.ongoingHandshakes.size < this.config.maxNeighborCount) {
+        } else if (this.config.neighbors.size() + this.config.ongoingHandshakes.size < this.config.maxNeighborCount) {
             return this.acceptHandshake(request, senderDescriptor)
-        } else if (this.config.targetNeighbors.size(getInterleaveSourceIds()) - this.config.ongoingInterleaves.size >= 2) {
+        } else if (this.config.neighbors.size(getInterleaveSourceIds()) - this.config.ongoingInterleaves.size >= 2) {
             // Do not accept the handshakes requests if the target neighbor count can potentially drop below 2 
             // due to interleaving. This ensures that a stable number of connections is kept during high churn.
             return this.acceptHandshakeWithInterleaving(request, senderDescriptor)
@@ -73,7 +73,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
             requestId: request.requestId,
             accepted: true
         }
-        this.config.targetNeighbors.add(this.config.createDeliveryRpcRemote(requester))
+        this.config.neighbors.add(this.config.createDeliveryRpcRemote(requester))
         this.config.connectionLocker.lockConnection(requester, this.config.streamPartId)
         return res
     }
@@ -95,7 +95,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
         if (request.interleaveSourceId !== undefined) {
             exclude.push(getDhtAddressFromRaw(request.interleaveSourceId))
         }
-        const last = this.config.targetNeighbors.getLast(exclude)
+        const last = this.config.neighbors.getLast(exclude)
         const lastPeerDescriptor = last ? last.getPeerDescriptor() : undefined
         if (last) {
             const nodeId = getNodeIdFromPeerDescriptor(last.getPeerDescriptor())
@@ -108,7 +108,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
                 // and unlock the connection
                 // If response is not accepted, keep the last node as a neighbor
                 if (response.accepted) {
-                    this.config.targetNeighbors.remove(getNodeIdFromPeerDescriptor(lastPeerDescriptor!))
+                    this.config.neighbors.remove(getNodeIdFromPeerDescriptor(lastPeerDescriptor!))
                     this.config.connectionLocker.unlockConnection(lastPeerDescriptor!, this.config.streamPartId)
                 }
                 return
@@ -118,7 +118,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
                 this.config.ongoingInterleaves.delete(nodeId)
             })
         }
-        this.config.targetNeighbors.add(this.config.createDeliveryRpcRemote(requester))
+        this.config.neighbors.add(this.config.createDeliveryRpcRemote(requester))
         this.config.connectionLocker.lockConnection(requester, this.config.streamPartId)
         return {
             requestId: request.requestId,
@@ -132,9 +132,9 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
         const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
         try {
             await this.config.handshakeWithInterleaving(message.interleaveTargetDescriptor!, senderId)
-            if (this.config.targetNeighbors.has(senderId)) {
+            if (this.config.neighbors.has(senderId)) {
                 this.config.connectionLocker.unlockConnection(senderPeerDescriptor, this.config.streamPartId)
-                this.config.targetNeighbors.remove(senderId)
+                this.config.neighbors.remove(senderId)
             }
             return { accepted: true }
         } catch (err) {

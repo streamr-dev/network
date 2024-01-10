@@ -13,7 +13,7 @@ describe('Handshaker', () => {
     const maxNeighborCount = 4
     const streamPartId = StreamPartIDUtils.parse('stream#0')
 
-    let targetNeighbors: NodeList
+    let neighbors: NodeList
     let nearbyNodeView: NodeList
     let randomNodeView: NodeList
 
@@ -27,7 +27,7 @@ describe('Handshaker', () => {
         const rpcCommunicator = new ListeningRpcCommunicator(streamPartId, simulatorTransport)
 
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
-        targetNeighbors = new NodeList(nodeId, 10)
+        neighbors = new NodeList(nodeId, 10)
         nearbyNodeView = new NodeList(nodeId, 20)
         randomNodeView = new NodeList(nodeId, 20)
 
@@ -35,7 +35,7 @@ describe('Handshaker', () => {
             localPeerDescriptor: peerDescriptor,
             streamPartId,
             connectionLocker: mockConnectionLocker,
-            targetNeighbors,
+            neighbors,
             nearbyNodeView,
             randomNodeView,
             rpcCommunicator,
