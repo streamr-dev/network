@@ -10,8 +10,6 @@ import { StreamID } from '../../utils/StreamID'
 import { StreamPartID } from '../../utils/StreamPartID'
 import { EthereumAddress, binaryToUtf8 } from '@streamr/utils'
 
-export const VERSION = 32
-
 export enum StreamMessageType {
     MESSAGE = 27,
     GROUP_KEY_REQUEST = 28,
