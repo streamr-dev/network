@@ -93,10 +93,10 @@ export class StreamMessageTranslator {
             }
         }
         let newGroupKey: GroupKey | undefined = undefined
-        if (msg.getNewGroupKey()) {
+        if (msg.newGroupKey) {
             newGroupKey = {
-                id: msg.getNewGroupKey()!.groupKeyId,
-                data: msg.getNewGroupKey()!.data
+                id: msg.newGroupKey!.groupKeyId,
+                data: msg.newGroupKey!.data
             }
         }
         const translated: StreamMessage = {

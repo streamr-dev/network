@@ -189,29 +189,29 @@ export default class StreamMessage {
         return this.parsedContent
     }
 
-    getNewGroupKey(): EncryptedGroupKey | null {
-        return this.newGroupKey
+    static isAESEncrypted(msg: StreamMessage): msg is StreamMessageAESEncrypted {
+        return msg.encryptionType === EncryptionType.AES
     }
 
-    static validateMessageType(messageType: StreamMessageType): void {
+    private static validateMessageType(messageType: StreamMessageType): void {
         if (!StreamMessage.VALID_MESSAGE_TYPES.has(messageType)) {
             throw new ValidationError(`Unsupported message type: ${messageType}`)
         }
     }
 
-    static validateContentType(contentType: ContentType): void {
+    private static validateContentType(contentType: ContentType): void {
         if (!StreamMessage.VALID_CONTENT_TYPES.has(contentType)) {
             throw new ValidationError(`Unsupported content type: ${contentType}`)
         }
     }
 
-    static validateEncryptionType(encryptionType: EncryptionType): void {
+    private static validateEncryptionType(encryptionType: EncryptionType): void {
         if (!StreamMessage.VALID_ENCRYPTIONS.has(encryptionType)) {
             throw new ValidationError(`Unsupported encryption type: ${encryptionType}`)
         }
     }
 
-    static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef | null }): void {
+    private static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef | null }): void {
         if (!prevMsgRef) {
             return
         }
@@ -233,9 +233,5 @@ export default class StreamMessage {
                 `prevMessageRef must come before current. Current: ${JSON.stringify(messageId.toMessageRef())} Previous: ${JSON.stringify(prevMsgRef)}`
             )
         }
-    }
-
-    static isAESEncrypted(msg: StreamMessage): msg is StreamMessageAESEncrypted {
-        return msg.encryptionType === EncryptionType.AES
     }
 }
