@@ -3,9 +3,8 @@ import 'reflect-metadata'
 import { toEthereumAddress } from '@streamr/utils'
 import { Wallet } from '@ethersproject/wallet'
 import {
-    ContentType,
+    ContentType, deserializeGroupKeyResponse,
     EncryptionType,
-    GroupKeyResponse,
     StreamMessage,
     StreamMessageType,
     StreamPartID,
@@ -60,7 +59,7 @@ describe('PublisherKeyExchange', () => {
             encryptionType: EncryptionType.RSA,
             signature: expect.any(Uint8Array)
         })
-        const encryptedGroupKeys = (GroupKeyResponse.fromStreamMessage(actualResponse) as GroupKeyResponse).encryptedGroupKeys
+        const encryptedGroupKeys = deserializeGroupKeyResponse(actualResponse.serializedContent).encryptedGroupKeys
         expect(encryptedGroupKeys).toMatchObject([{
             groupKeyId: expectedGroupKey.id,
             data: expect.any(Uint8Array)

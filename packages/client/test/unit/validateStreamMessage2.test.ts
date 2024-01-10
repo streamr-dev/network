@@ -1,14 +1,15 @@
 import {
     ContentType,
     EncryptedGroupKey,
-    GroupKeyMessage,
     GroupKeyRequest,
     GroupKeyResponse,
     MessageID,
     MessageRef,
     StreamMessage,
     ValidationError,
-    toStreamID
+    toStreamID,
+    serializeGroupKeyRequest,
+    serializeGroupKeyResponse
 } from '@streamr/protocol'
 import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
@@ -19,7 +20,7 @@ import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { createRandomAuthentication, MOCK_CONTENT } from '../test-utils/utils'
 
 const groupKeyMessageToStreamMessage = async (
-    groupKeyMessage: GroupKeyMessage,
+    groupKeyMessage: GroupKeyRequest | GroupKeyResponse,
     messageId: MessageID,
     prevMsgRef: MessageRef | null,
     authentication: Authentication
@@ -27,7 +28,8 @@ const groupKeyMessageToStreamMessage = async (
     return createSignedMessage({
         messageId,
         prevMsgRef,
-        serializedContent: utf8ToBinary(groupKeyMessage.serialize()),
+        serializedContent: groupKeyMessage instanceof GroupKeyRequest ?
+            serializeGroupKeyRequest(groupKeyMessage) : serializeGroupKeyResponse(groupKeyMessage),
         messageType: groupKeyMessage.messageType,
         contentType: ContentType.JSON,
         authentication
