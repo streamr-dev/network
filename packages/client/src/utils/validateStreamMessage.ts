@@ -40,7 +40,7 @@ const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry
         case StreamMessageType.GROUP_KEY_REQUEST:
             return validateGroupKeyMessage(
                 streamMessage,
-                deserializeGroupKeyRequest(streamMessage.serializedContent).recipient,
+                deserializeGroupKeyRequest(streamMessage.content).recipient,
                 streamMessage.getPublisherId(),
                 streamRegistry
             )
@@ -48,7 +48,7 @@ const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry
             return validateGroupKeyMessage(
                 streamMessage,
                 streamMessage.getPublisherId(),
-                deserializeGroupKeyResponse(streamMessage.serializedContent).recipient,
+                deserializeGroupKeyResponse(streamMessage.content).recipient,
                 streamRegistry
             )
         default:

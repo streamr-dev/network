@@ -156,7 +156,7 @@ describe('Validator2', () => {
         })
 
         it('rejects tampered content', async () => {
-            msg.serializedContent = utf8ToBinary('{"attack":true}')
+            msg.content = utf8ToBinary('{"attack":true}')
 
             await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)

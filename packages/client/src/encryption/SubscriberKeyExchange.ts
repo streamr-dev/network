@@ -125,7 +125,7 @@ export class SubscriberKeyExchange {
         if (GroupKeyResponse.is(msg)) {
             try {
                 const authenticatedUser = await this.authentication.getAddress()
-                const { requestId, recipient, encryptedGroupKeys } = deserializeGroupKeyResponse(msg.serializedContent) as GroupKeyResponse
+                const { requestId, recipient, encryptedGroupKeys } = deserializeGroupKeyResponse(msg.content)
                 if ((recipient === authenticatedUser) && (this.pendingRequests.has(requestId))) {
                     this.logger.debug('Handle group key response', { requestId })
                     this.pendingRequests.delete(requestId)

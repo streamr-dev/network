@@ -60,7 +60,7 @@ export default class StreamMessage {
     groupKeyId: string | null
     newGroupKey: EncryptedGroupKey | null
     signature: Uint8Array
-    serializedContent: Uint8Array
+    content: Uint8Array
     private parsedContent?: unknown
 
     /**
@@ -116,9 +116,9 @@ export default class StreamMessage {
         validateIsType('signature', signature, 'Uint8Array', Uint8Array)
         this.signature = signature
 
-        this.serializedContent = content
+        this.content = content
 
-        validateIsNotEmptyByteArray('content', this.serializedContent)
+        validateIsNotEmptyByteArray('content', this.content)
 
         StreamMessage.validateSequence(this)
     }
@@ -164,7 +164,7 @@ export default class StreamMessage {
     }
 
     getSerializedContent(): Uint8Array {
-        return this.serializedContent
+        return this.content
     }
 
     /**
@@ -175,11 +175,11 @@ export default class StreamMessage {
             // Don't try to parse encrypted or binary type messages
             if (this.contentType === ContentType.BINARY
                 || (this.messageType === StreamMessageType.MESSAGE && this.encryptionType !== EncryptionType.NONE)) {
-                return this.serializedContent
+                return this.content
             }
             if (this.contentType === ContentType.JSON) {
                 try {
-                    this.parsedContent = JSON.parse(binaryToUtf8(this.serializedContent))
+                    this.parsedContent = JSON.parse(binaryToUtf8(this.content))
                 } catch (err: any) {
                     throw new InvalidJsonError(
                         this.getStreamId(),

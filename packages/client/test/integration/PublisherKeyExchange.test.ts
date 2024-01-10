@@ -60,7 +60,7 @@ describe('PublisherKeyExchange', () => {
             encryptionType: EncryptionType.RSA,
             signature: expect.any(Uint8Array)
         })
-        const encryptedGroupKeys = deserializeGroupKeyResponse(actualResponse.serializedContent).encryptedGroupKeys
+        const encryptedGroupKeys = deserializeGroupKeyResponse(actualResponse.content).encryptedGroupKeys
         expect(encryptedGroupKeys).toMatchObject([{
             groupKeyId: expectedGroupKey.id,
             data: expect.any(Uint8Array)
