@@ -2,13 +2,11 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils/utils'
-import { Logger } from '@streamr/utils'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
-import { Contact } from '../../src/dht/contact/Contact'
-import { createMockDataEntry, unpackData } from '../utils/mock/mockDataEntry'
-import { DhtAddress, createRandomDhtAddress, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
-
-const logger = new Logger(module)
+import { createMockDataEntry, expectEqualData, unpackData } from '../utils/mock/mockDataEntry'
+import { DhtAddress, createRandomDhtAddress } from '../../src/identifiers'
+import { range, shuffle } from 'lodash'
+import { PeerDescriptor } from '../../src/exports'
 
 jest.setTimeout(60000)
 
@@ -17,6 +15,7 @@ const DATA_VALUE = createMockDataEntry({ key: DATA_KEY })
 const NUM_NODES = 100
 const MAX_CONNECTIONS = 80
 const K = 8
+const ENTRY_POINT_INDEX = 0
 
 const getDataValues = (node: DhtNode): { foo: string }[] => {
     // @ts-expect-error private field
@@ -31,18 +30,17 @@ const hasData = (node: DhtNode): boolean => {
 
 describe('Replicate data from node to node in DHT', () => {
 
-    let entryPoint: DhtNode
     let nodes: DhtNode[]
-    const nodesById: Map<DhtAddress, DhtNode> = new Map()
+    let entryPointDescriptor: PeerDescriptor
     const simulator = new Simulator(LatencyType.FIXED, 20)
 
     beforeEach(async () => {
-        entryPoint = await createMockConnectionDhtNode(simulator, createRandomDhtAddress(), K, MAX_CONNECTIONS)
-        await entryPoint.joinDht([entryPoint.getLocalPeerDescriptor()])
-
+        const entryPoint = await createMockConnectionDhtNode(simulator, createRandomDhtAddress(), K, MAX_CONNECTIONS)
+        entryPointDescriptor = entryPoint.getLocalPeerDescriptor()
+        await entryPoint.joinDht([entryPointDescriptor])
         nodes = []
-        nodesById.clear()
-        for (let i = 0; i < NUM_NODES; i++) {
+        nodes.push(entryPoint)
+        for (let i = 1; i < NUM_NODES; i++) {
             const node = await createMockConnectionDhtNode(
                 simulator,
                 createRandomDhtAddress(),
@@ -52,16 +50,11 @@ describe('Replicate data from node to node in DHT', () => {
                 [entryPoint.getLocalPeerDescriptor()]
             )
             nodes.push(node)
-            nodesById.set(node.getNodeId(), node)
         }
     })
 
     afterEach(async () => {
-        await Promise.all([
-            ...nodes.map(async (node) => await node.stop())
-        ])
-        await entryPoint.stop()
-        logger.info('nodes stopped')
+        await Promise.all(nodes.map(async (node) => await node.stop()))
     })
 
     afterAll(async () => {
@@ -70,105 +63,54 @@ describe('Replicate data from node to node in DHT', () => {
 
     it('Data replicates to the closest node no matter where it is stored', async () => {
         // calculate offline which node is closest to the data
-        const sortedList = new SortedContactList<Contact>({ 
+        const sortedList = new SortedContactList<DhtNode>({ 
             referenceId: DATA_KEY,
             maxSize: 10000, 
             allowToContainReferenceId: true, 
             emitEvents: false 
         })
-
-        nodes.forEach((node) => sortedList.addContact(new Contact(node.getLocalPeerDescriptor())))
+        nodes.forEach((node) => sortedList.addContact(node))
 
         const closest = sortedList.getAllContacts()
-
-        logger.info('Nodes sorted according to distance to data are: ')
-        closest.forEach((contact) => {
-            logger.info(contact.getNodeId())
-        })
-
-        logger.info('storing data to node 0')
         const successfulStorers = await nodes[0].storeDataToDht(DATA_KEY, DATA_VALUE.data!)
         expect(successfulStorers.length).toBe(1)
-        logger.info('data successfully stored to node 0')
 
-        logger.info('Nodes sorted according to distance to data with storing nodes marked are: ')
-
-        closest.forEach((contact) => {
-            const node = nodesById.get(contact.getNodeId())!
-            let hasDataMarker = ''
-            
-            if (hasData(node)) {
-                hasDataMarker = '<-'
-            }
-
-            logger.info(contact.getNodeId() + ' ' + node.getNodeId() + hasDataMarker)
-        })
-
-        logger.info(NUM_NODES + ' nodes joining layer0 DHT')
         await Promise.all(
             nodes.map(async (node, i) => {
-                if (i !== 0) {
-                    await node.joinDht([entryPoint.getLocalPeerDescriptor()])
+                if (i !== ENTRY_POINT_INDEX) {
+                    await node.joinDht([entryPointDescriptor])
                 }
             })
         )
-
-        logger.info('completed ' + NUM_NODES + ' nodes joining layer0 DHT')
-
         await waitNodesReadyForTesting(nodes)
 
-        logger.info('After join of 99 nodes: nodes sorted according to distance to data with storing nodes marked are: ')
-
-        closest.forEach((contact) => {
-            const node = nodesById.get(contact.getNodeId())!
-            let hasDataMarker = ''
-            if (hasData(node)) {
-                hasDataMarker = ' <-'
-            }
-            logger.info(node.getNodeId() + hasDataMarker)
-        })
-
-        const closestNode = nodesById.get(closest[0].getNodeId())!
-
         // TODO assert the content?
-        expect(hasData(closestNode)).toBe(true)
+        expect(hasData(closest[0])).toBe(true)
     }, 180000)
 
-    it('Data replicates to the last remaining node if all other nodes leave gracefully', async () => {
-        logger.info(NUM_NODES + ' nodes joining layer0 DHT')
-        await Promise.all(nodes.map((node) => node.joinDht([entryPoint.getLocalPeerDescriptor()])))
-
-        logger.info('completed ' + NUM_NODES + ' nodes joining layer0 DHT')
-
+    it('Data replicates to the last remaining node if most of the other nodes leave gracefully', async () => {
+        await Promise.all(
+            nodes.map(async (node, i) => {
+                if (i !== ENTRY_POINT_INDEX) {
+                    await node.joinDht([entryPointDescriptor])
+                }
+            })
+        )
         await waitNodesReadyForTesting(nodes)
 
         const randomIndex = Math.floor(Math.random() * nodes.length)
-        logger.info('storing data to a random node: ' + randomIndex)
+        await nodes[randomIndex].storeDataToDht(DATA_KEY, DATA_VALUE.data!)
 
-        const successfulStorers = await nodes[randomIndex].storeDataToDht(DATA_KEY, DATA_VALUE.data!)
-
-        logger.info('data successfully stored to ' 
-            + successfulStorers.map((peerDescriptor) => getNodeIdFromPeerDescriptor(peerDescriptor)).join() + ' nodes')
-
-        const randomIndices = []
-        for (let i = 0; i < nodes.length; i++) {
-            randomIndices.push(i)
-        }
-        logger.info('Random indices: ' + randomIndices.map((i) => i.toString()).join())
-        while (randomIndices.length > 1) {
-            const index = Math.floor(Math.random() * randomIndices.length)
-            const nodeIndex = randomIndices[index]
-            randomIndices.splice(index, 1)
-            logger.info('Stopping node ' + nodeIndex, { hasData: hasData(nodes[nodeIndex]) })
-            await nodes[nodeIndex].stop()
+        const nodeIndices = shuffle(range(nodes.length))
+        const MIN_NODE_COUNT = 20
+        while (nodeIndices.length > MIN_NODE_COUNT) {
+            const index = nodeIndices.pop()!
+            await nodes[index].stop()
         }
 
-        logger.info('after random graceful leaving, node ' + randomIndices[0] + ' is left')
-
-        logger.info('data of ' + randomIndices[0] + ' was ' + JSON.stringify(getDataValues(nodes[randomIndices[0]])))
-
-        // TODO assert the content?
-        expect(hasData(nodes[randomIndices[0]])).toBe(true)
-
+        const randomNonStoppedNode = nodes[nodeIndices.pop()!]
+        const data = await randomNonStoppedNode.getDataFromDht(DATA_KEY)
+        expect(data).toHaveLength(1)
+        expectEqualData(data[0], DATA_VALUE)
     }, 180000)
 })
