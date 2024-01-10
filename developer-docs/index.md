@@ -1,4 +1,6 @@
-# Streamr Network Technical Documentation
+# Streamr Network Developer Documentation
+
+## Conventions
 
 ## Topics
 - [Testing Best Practices](testing-best-practices.md)
