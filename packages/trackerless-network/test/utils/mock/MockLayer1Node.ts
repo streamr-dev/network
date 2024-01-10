@@ -20,7 +20,7 @@ export class MockLayer1Node extends EventEmitter implements Layer1Node {
         return this.kbucketPeers
     }
 
-    getNumberOfNeighbors(): number {
+    getNeighborCount(): number {
         return this.kbucketPeers.length
     }
 

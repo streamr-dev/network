@@ -113,7 +113,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         ))
 
         await Promise.all(graphNodes.map((node) =>
-            waitForCondition(() => node.getNumberOfOutgoingHandshakes() === 0)
+            waitForCondition(() => node.getOutgoingHandshakeCount() === 0)
         ))
 
         await waitForCondition(() => {

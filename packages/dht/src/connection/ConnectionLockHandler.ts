@@ -13,15 +13,15 @@ export class ConnectionLockHandler {
     // simply do not send lock requests.
     private weakLocks: Set<DhtAddress> = new Set()
 
-    public getNumberOfLocalLockedConnections(): number {
+    public getLocalLockedConnectionCount(): number {
         return this.localLocks.size
     }
 
-    public getNumberOfRemoteLockedConnections(): number {
+    public getRemoteLockedConnectionCount(): number {
         return this.remoteLocks.size
     }
 
-    public getNumberOfWeakLockedConnections(): number {
+    public getWeakLockedConnectionCount(): number {
         return this.weakLocks.size
     }
 

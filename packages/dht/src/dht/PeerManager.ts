@@ -252,7 +252,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         return closest.getClosestContacts(limit)
     }
 
-    getNumberOfContacts(excludedNodeIds?: Set<DhtAddress>): number {
+    getContactCount(excludedNodeIds?: Set<DhtAddress>): number {
         return this.contacts.getAllContacts().filter((contact) => {
             if (!excludedNodeIds) {
                 return true
@@ -262,11 +262,11 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         }).length
     }
 
-    getNumberOfConnections(): number {
+    getConnectionCount(): number {
         return this.connections.size
     }
 
-    getNumberOfNeighbors(): number {
+    getNeighborCount(): number {
         return this.bucket.count()
     }
 

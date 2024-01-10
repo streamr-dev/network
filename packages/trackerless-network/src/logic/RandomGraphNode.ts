@@ -329,7 +329,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         return getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
     }
 
-    getNumberOfOutgoingHandshakes(): number {
+    getOutgoingHandshakeCount(): number {
         return this.config.handshaker.getOngoingHandshakes().size
     }
 

@@ -142,17 +142,17 @@ export class Batch extends EventEmitter {
     }
 
     isFull(): boolean {
-        return this.size >= this.maxSize || this.getNumberOfRecords() >= this.maxRecords
+        return this.size >= this.maxSize || this.getRecordCount() >= this.maxRecords
     }
 
-    private getNumberOfRecords(): number {
+    private getRecordCount(): number {
         return this.records.length
     }
 
     private setState(state: State): void {
         this.state = state
         this.logger.trace('setState', { state })
-        this.emit(this.state, this.getBucketId(), this.getId(), this.state, this.size, this.getNumberOfRecords())
+        this.emit(this.state, this.getBucketId(), this.getId(), this.state, this.size, this.getRecordCount())
     }
 }
 

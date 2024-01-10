@@ -17,7 +17,7 @@ type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
     | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'numOfTargetNeighbors'
     | 'rpcCommunicator' | 'nodeViewSize'
     | 'inspector' | 'temporaryConnectionRpcLocal'> & {
-        maxNumberOfContacts?: number
+        maxContactCount?: number
         minPropagationTargets?: number
         acceptProxyConnections?: boolean
         neighborUpdateInterval?: number
@@ -30,13 +30,13 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         config.transport
     )
     const numOfTargetNeighbors = config.numOfTargetNeighbors ?? 4
-    const maxNumberOfContacts = config.maxNumberOfContacts ?? 20
+    const maxContactCount = config.maxContactCount ?? 20
     const minPropagationTargets = config.minPropagationTargets ?? 2
     const acceptProxyConnections = config.acceptProxyConnections ?? false
     const neighborUpdateInterval = config.neighborUpdateInterval ?? 10000
     const nearbyNodeView = config.nearbyNodeView ?? new NodeList(ownNodeId, numOfTargetNeighbors + 1)
-    const randomNodeView = config.randomNodeView ?? new NodeList(ownNodeId, maxNumberOfContacts)
-    const targetNeighbors = config.targetNeighbors ?? new NodeList(ownNodeId, maxNumberOfContacts)
+    const randomNodeView = config.randomNodeView ?? new NodeList(ownNodeId, maxContactCount)
+    const targetNeighbors = config.targetNeighbors ?? new NodeList(ownNodeId, maxContactCount)
 
     const temporaryConnectionRpcLocal = new TemporaryConnectionRpcLocal({
         rpcCommunicator,
@@ -104,7 +104,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         neighborUpdateManager,
         propagation,
         numOfTargetNeighbors,
-        nodeViewSize: maxNumberOfContacts,
+        nodeViewSize: maxContactCount,
         proxyConnectionRpcLocal,
         inspector,
         temporaryConnectionRpcLocal
