@@ -1,9 +1,11 @@
 import {
-    ContentType, deserializeGroupKeyResponse,
+    ContentType,
+    deserializeGroupKeyResponse,
     EncryptionType,
     GroupKeyRequest,
     GroupKeyResponse,
-    MessageID, serializeGroupKeyRequest,
+    MessageID,
+    serializeGroupKeyRequest,
     StreamMessage,
     StreamMessageType,
     StreamPartID,

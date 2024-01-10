@@ -3,7 +3,8 @@ import 'reflect-metadata'
 import { toEthereumAddress } from '@streamr/utils'
 import { Wallet } from '@ethersproject/wallet'
 import {
-    ContentType, deserializeGroupKeyResponse,
+    ContentType,
+    deserializeGroupKeyResponse,
     EncryptionType,
     StreamMessage,
     StreamMessageType,
