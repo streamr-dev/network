@@ -74,7 +74,7 @@ describe('MessageFactory', () => {
             newGroupKey: null,
             signature: expect.any(Uint8Array),
             contentType: ContentType.JSON,
-            serializedContent: expect.any(Uint8Array)
+            content: expect.any(Uint8Array)
         })
     })
 
@@ -88,7 +88,7 @@ describe('MessageFactory', () => {
         expect(msg).toMatchObject({
             encryptionType: EncryptionType.NONE,
             groupKeyId: null,
-            serializedContent: utf8ToBinary(JSON.stringify(CONTENT))
+            content: utf8ToBinary(JSON.stringify(CONTENT))
         })
     })
 

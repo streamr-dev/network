@@ -67,11 +67,10 @@ export default class StreamMessage {
      * Create a new StreamMessage identical to the passed-in streamMessage.
      */
     clone(): StreamMessage {
-        const content = this.getSerializedContent()
         return new StreamMessage({
             messageId: this.messageId.clone(),
             prevMsgRef: this.prevMsgRef ? this.prevMsgRef.clone() : null,
-            content,
+            content: this.content,
             messageType: this.messageType,
             contentType: this.contentType,
             encryptionType: this.encryptionType,
@@ -161,10 +160,6 @@ export default class StreamMessage {
 
     getMessageID(): MessageID {
         return this.messageId
-    }
-
-    getSerializedContent(): Uint8Array {
-        return this.content
     }
 
     /**

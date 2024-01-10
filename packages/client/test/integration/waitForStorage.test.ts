@@ -69,7 +69,7 @@ describe('waitForStorage', () => {
         await stream.addToStorageNode(storageNode.getAddress())
         const msg = convertStreamMessageToMessage(await createSignedMessage({
             messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
-            serializedContent: MOCK_CONTENT,
+            content: MOCK_CONTENT,
             authentication,
             contentType: ContentType.JSON
         }))
@@ -86,7 +86,7 @@ describe('waitForStorage', () => {
     it('no storage assigned', async () => {
         const msg = convertStreamMessageToMessage(await createSignedMessage({
             messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
-            serializedContent: MOCK_CONTENT,
+            content: MOCK_CONTENT,
             authentication,
             contentType: ContentType.JSON
         }))

@@ -113,7 +113,7 @@ export class SubscriberKeyExchange {
                 await this.authentication.getAddress(),
                 createRandomMsgChainId()
             ),
-            serializedContent: serializeGroupKeyRequest(requestContent),
+            content: serializeGroupKeyRequest(requestContent),
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,

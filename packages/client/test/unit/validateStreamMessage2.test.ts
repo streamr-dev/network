@@ -29,7 +29,7 @@ const groupKeyMessageToStreamMessage = async (
     return createSignedMessage({
         messageId,
         prevMsgRef,
-        serializedContent: groupKeyMessage instanceof GroupKeyRequest
+        content: groupKeyMessage instanceof GroupKeyRequest
             ? serializeGroupKeyRequest(groupKeyMessage)
             : serializeGroupKeyResponse(groupKeyMessage),
         messageType: groupKeyMessage instanceof GroupKeyRequest
@@ -83,14 +83,14 @@ describe('Validator2', () => {
 
         msg = await createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
-            serializedContent: MOCK_CONTENT,
+            content: MOCK_CONTENT,
             authentication: publisherAuthentication,
             contentType: ContentType.JSON
         })
 
         msgWithNewGroupKey = await createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
-            serializedContent: MOCK_CONTENT,
+            content: MOCK_CONTENT,
             newGroupKey: new EncryptedGroupKey('groupKeyId', hexToBinary('0x1111')),
             authentication: publisherAuthentication,
             contentType: ContentType.JSON
@@ -99,7 +99,7 @@ describe('Validator2', () => {
 
         msgWithPrevMsgRef = await createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 2000, 0, publisher, 'msgChainId'),
-            serializedContent: MOCK_CONTENT,
+            content: MOCK_CONTENT,
             prevMsgRef: new MessageRef(1000, 0),
             authentication: publisherAuthentication,
             contentType: ContentType.JSON

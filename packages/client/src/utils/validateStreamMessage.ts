@@ -65,7 +65,7 @@ const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry
 const assertSignatureIsValid = (streamMessage: StreamMessage): void => {
     const payload = createSignaturePayload({
         messageId: streamMessage.getMessageID(),
-        serializedContent: streamMessage.getSerializedContent(),
+        content: streamMessage.content,
         prevMsgRef: streamMessage.prevMsgRef ?? undefined,
         newGroupKey: streamMessage.newGroupKey ?? undefined
     })

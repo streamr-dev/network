@@ -120,7 +120,7 @@ export class PublisherKeyExchange {
                 await this.authentication.getAddress(),
                 createRandomMsgChainId()
             ),
-            serializedContent: serializeGroupKeyResponse(responseContent),
+            content: serializeGroupKeyResponse(responseContent),
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             encryptionType: EncryptionType.RSA,
             authentication: this.authentication,
