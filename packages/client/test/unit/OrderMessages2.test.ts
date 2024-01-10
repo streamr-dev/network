@@ -43,9 +43,9 @@ interface MessageInfo {
     delivery: Delivery
 }
 
-function duplicateElements<T>(arr: readonly T[], numOfDuplicates: number): T[] {
+function duplicateElements<T>(arr: readonly T[], duplicateCount: number): T[] {
     const newArr = Array.from(arr)
-    for (let i = 0; i < numOfDuplicates; ++i) {
+    for (let i = 0; i < duplicateCount; ++i) {
         newArr.push(arr[Math.floor(Math.random() * arr.length)])
     }
     return newArr

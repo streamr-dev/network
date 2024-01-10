@@ -10,7 +10,7 @@ import { Layer1Node } from '../../src/logic/Layer1Node'
 const logger = new Logger(module)
 
 describe('RandomGraphNode-DhtNode', () => {
-    const numOfNodes = 64
+    const nodeCount = 64
     let layer1Nodes: Layer1Node[]
     let dhtEntryPoint: Layer1Node
     let entryPointRandomGraphNode: RandomGraphNode
@@ -21,7 +21,7 @@ describe('RandomGraphNode-DhtNode', () => {
         region: getRandomRegion()
     })
 
-    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map(() => {
+    const peerDescriptors: PeerDescriptor[] = range(nodeCount).map(() => {
         return createMockPeerDescriptor({
             region: getRandomRegion()
         })
@@ -34,7 +34,7 @@ describe('RandomGraphNode-DhtNode', () => {
         )
         await entrypointCm.start()
 
-        const cms: ConnectionManager[] = range(numOfNodes).map((i) =>
+        const cms: ConnectionManager[] = range(nodeCount).map((i) =>
             new SimulatorTransport(
                 peerDescriptors[i],
                 simulator
@@ -48,13 +48,13 @@ describe('RandomGraphNode-DhtNode', () => {
             serviceId: streamPartId
         })
 
-        layer1Nodes = range(numOfNodes).map((i) => new DhtNode({
+        layer1Nodes = range(nodeCount).map((i) => new DhtNode({
             transport: cms[i],
             peerDescriptor: peerDescriptors[i],
             serviceId: streamPartId
         }))
 
-        graphNodes = range(numOfNodes).map((i) => createRandomGraphNode({
+        graphNodes = range(nodeCount).map((i) => createRandomGraphNode({
             streamPartId,
             layer1Node: layer1Nodes[i],
             transport: cms[i],
@@ -124,8 +124,8 @@ describe('RandomGraphNode-DhtNode', () => {
     }, 10000)
 
     it('happy path 64 nodes', async () => {
-        await Promise.all(range(numOfNodes).map((i) => graphNodes[i].start()))
-        await Promise.all(range(numOfNodes).map((i) => {
+        await Promise.all(range(nodeCount).map((i) => graphNodes[i].start()))
+        await Promise.all(range(nodeCount).map((i) => {
             layer1Nodes[i].joinDht([entrypointDescriptor])
         }))
         await Promise.all(graphNodes.map((node) =>
@@ -134,7 +134,7 @@ describe('RandomGraphNode-DhtNode', () => {
 
         const avg = graphNodes.reduce((acc, curr) => {
             return acc + curr.getTargetNeighborIds().length
-        }, 0) / numOfNodes
+        }, 0) / nodeCount
 
         logger.info(`AVG Number of neighbors: ${avg}`)
         await Promise.all(graphNodes.map((node) =>

@@ -8,7 +8,7 @@ import { StreamPartIDUtils } from '@streamr/protocol'
 import { Layer1Node } from '../../src/logic/Layer1Node'
 
 describe('RandomGraphNode-DhtNode-Latencies', () => {
-    const numOfNodes = 64
+    const nodeCount = 64
     let layer1Nodes: Layer1Node[]
     let dhtEntryPoint: Layer1Node
     let entryPointRandomGraphNode: RandomGraphNode
@@ -17,11 +17,11 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
     const streamPartId = StreamPartIDUtils.parse('stream#0')
     const entrypointDescriptor = createMockPeerDescriptor()
 
-    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map(() => createMockPeerDescriptor())
+    const peerDescriptors: PeerDescriptor[] = range(nodeCount).map(() => createMockPeerDescriptor())
     beforeEach(async () => {
         const simulator = new Simulator(LatencyType.FIXED, 50)
         const entrypointCm = new SimulatorTransport(entrypointDescriptor, simulator)
-        const cms: SimulatorTransport[] = range(numOfNodes).map((i) =>
+        const cms: SimulatorTransport[] = range(nodeCount).map((i) =>
             new SimulatorTransport(peerDescriptors[i], simulator)
         )
         await entrypointCm.start()
@@ -32,12 +32,12 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             peerDescriptor: entrypointDescriptor,
             serviceId: streamPartId
         })
-        layer1Nodes = range(numOfNodes).map((i) => new DhtNode({
+        layer1Nodes = range(nodeCount).map((i) => new DhtNode({
             transport: cms[i],
             peerDescriptor: peerDescriptors[i],
             serviceId: streamPartId
         }))
-        graphNodes = range(numOfNodes).map((i) => createRandomGraphNode({
+        graphNodes = range(nodeCount).map((i) => createRandomGraphNode({
             streamPartId,
             layer1Node: layer1Nodes[i],
             transport: cms[i],
@@ -104,8 +104,8 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
     }, 60000)
 
     it('happy path 64 nodes', async () => {
-        await Promise.all(range(numOfNodes).map((i) => graphNodes[i].start()))
-        await Promise.all(range(numOfNodes).map((i) => {
+        await Promise.all(range(nodeCount).map((i) => graphNodes[i].start()))
+        await Promise.all(range(nodeCount).map((i) => {
             layer1Nodes[i].joinDht([entrypointDescriptor])
         }))
         await Promise.all(graphNodes.map((node) =>

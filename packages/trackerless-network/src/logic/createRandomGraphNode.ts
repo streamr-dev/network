@@ -14,7 +14,7 @@ import { formStreamPartDeliveryServiceId } from './formStreamPartDeliveryService
 
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
     'nearbyNodeView' | 'randomNodeView' | 'targetNeighbors' | 'propagation'
-    | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'numOfTargetNeighbors'
+    | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'targetNeighborCount'
     | 'rpcCommunicator' | 'nodeViewSize'
     | 'inspector' | 'temporaryConnectionRpcLocal'> & {
         maxContactCount?: number
@@ -29,12 +29,12 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         formStreamPartDeliveryServiceId(config.streamPartId),
         config.transport
     )
-    const numOfTargetNeighbors = config.numOfTargetNeighbors ?? 4
+    const targetNeighborCount = config.targetNeighborCount ?? 4
     const maxContactCount = config.maxContactCount ?? 20
     const minPropagationTargets = config.minPropagationTargets ?? 2
     const acceptProxyConnections = config.acceptProxyConnections ?? false
     const neighborUpdateInterval = config.neighborUpdateInterval ?? 10000
-    const nearbyNodeView = config.nearbyNodeView ?? new NodeList(ownNodeId, numOfTargetNeighbors + 1)
+    const nearbyNodeView = config.nearbyNodeView ?? new NodeList(ownNodeId, targetNeighborCount + 1)
     const randomNodeView = config.randomNodeView ?? new NodeList(ownNodeId, maxContactCount)
     const targetNeighbors = config.targetNeighbors ?? new NodeList(ownNodeId, maxContactCount)
 
@@ -69,14 +69,14 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         nearbyNodeView,
         randomNodeView,
         targetNeighbors,
-        maxNeighborCount: numOfTargetNeighbors,
+        maxNeighborCount: targetNeighborCount,
         rpcRequestTimeout: config.rpcRequestTimeout
     })
     const neighborFinder = config.neighborFinder ?? new NeighborFinder({
         targetNeighbors,
         nearbyNodeView,
         doFindNeighbors: (excludedIds) => handshaker.attemptHandshakesOnContacts(excludedIds),
-        minCount: numOfTargetNeighbors
+        minCount: targetNeighborCount
     })
     const neighborUpdateManager = config.neighborUpdateManager ?? new NeighborUpdateManager({
         targetNeighbors,
@@ -103,7 +103,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         neighborFinder,
         neighborUpdateManager,
         propagation,
-        numOfTargetNeighbors,
+        targetNeighborCount,
         nodeViewSize: maxContactCount,
         proxyConnectionRpcLocal,
         inspector,

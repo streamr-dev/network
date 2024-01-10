@@ -87,14 +87,14 @@ describe('Route Message With Mock Connections', () => {
     }, 30000)
 
     it('Receives multiple messages', async () => {
-        const numOfMessages = 20
+        const messageCount = 20
         let receivedMessages = 0
         destinationNode.on('message', () => {
             receivedMessages += 1
         })
         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getLocalPeerDescriptor())
 
-        for (let i = 0; i < numOfMessages; i++) {
+        for (let i = 0; i < messageCount; i++) {
             const message: Message = {
                 serviceId: 'unknown',
                 messageId: v4(),
@@ -116,7 +116,7 @@ describe('Route Message With Mock Connections', () => {
                 parallelRootNodeIds: []
             })
         }
-        await waitForCondition(() => receivedMessages === numOfMessages)
+        await waitForCondition(() => receivedMessages === messageCount)
     })
 
     it('From all to all', async () => {
