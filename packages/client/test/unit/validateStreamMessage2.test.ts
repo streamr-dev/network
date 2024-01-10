@@ -165,7 +165,7 @@ describe('Validator2', () => {
         })
 
         it('rejects tampered newGroupKey', async () => {
-            msgWithNewGroupKey.newGroupKey!.groupKeyId = 'foo'
+            msgWithNewGroupKey.newGroupKey = new EncryptedGroupKey('foo', msgWithNewGroupKey.newGroupKey!.data)
 
             await assert.rejects(getValidator().validate(msgWithNewGroupKey), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
