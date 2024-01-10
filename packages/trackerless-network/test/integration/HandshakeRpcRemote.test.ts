@@ -13,6 +13,7 @@ import {
     HandshakeRpcClient,
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
+import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('HandshakeRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator
@@ -58,7 +59,6 @@ describe('HandshakeRpcRemote', () => {
         rpcRemote = new HandshakeRpcRemote(
             clientNode,
             serverNode,
-            'test-stream-part',
             clientRpc,
             HandshakeRpcClient
         )
@@ -73,7 +73,7 @@ describe('HandshakeRpcRemote', () => {
     })
 
     it('handshake', async () => {
-        const result = await rpcRemote.handshake([])
+        const result = await rpcRemote.handshake(StreamPartIDUtils.parse('test#0'), [])
         expect(result.accepted).toEqual(true)
     })
 })

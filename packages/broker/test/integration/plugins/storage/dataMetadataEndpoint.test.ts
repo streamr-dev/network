@@ -45,7 +45,7 @@ describe('dataMetadataEndpoints', () => {
     })
 
     it('returns http error 400 if given non-numeric partition', async () => {
-        const url = `http://localhost:${httpPort1}/streams/stream/metadata/partitions/non-numeric`
+        const url = `http://127.0.0.1:${httpPort1}/streams/stream/metadata/partitions/non-numeric`
         const [status, json] = await httpGet(url)
         const res = JSON.parse(json)
 
@@ -56,7 +56,7 @@ describe('dataMetadataEndpoints', () => {
     })
 
     it('returns zero values for non-existing stream', async () => {
-        const url = `http://localhost:${httpPort1}/streams/non-existing-stream/metadata/partitions/0`
+        const url = `http://127.0.0.1:${httpPort1}/streams/non-existing-stream/metadata/partitions/0`
         const [status, json] = await httpGet(url)
         const res = JSON.parse(json)
 
@@ -89,7 +89,7 @@ describe('dataMetadataEndpoints', () => {
         })
         await client1.waitForStorage(lastItem)
 
-        const url = `http://localhost:${httpPort1}/streams/${encodeURIComponent(stream.id)}/metadata/partitions/0`
+        const url = `http://127.0.0.1:${httpPort1}/streams/${encodeURIComponent(stream.id)}/metadata/partitions/0`
         const [status, json] = await httpGet(url)
         const res = JSON.parse(json)
 

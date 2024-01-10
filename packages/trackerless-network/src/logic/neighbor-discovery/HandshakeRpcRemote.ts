@@ -1,9 +1,9 @@
-import { PeerDescriptor, RpcRemote } from '@streamr/dht'
-import { Logger, hexToBinary } from '@streamr/utils'
+import { DhtAddress, PeerDescriptor, RpcRemote, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '@streamr/dht'
+import { Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { InterleaveRequest, InterleaveResponse, StreamPartHandshakeRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { HandshakeRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { StreamPartID } from '@streamr/protocol'
 
 const logger = new Logger(module)
 
@@ -17,16 +17,17 @@ export const INTERLEAVE_REQUEST_TIMEOUT = 15000
 export class HandshakeRpcRemote extends RpcRemote<HandshakeRpcClient> {
 
     async handshake(
-        neighborIds: NodeID[],
-        concurrentHandshakeTargetId?: NodeID,
-        interleaveSourceId?: NodeID
+        streamPartId: StreamPartID,
+        neighborIds: DhtAddress[],
+        concurrentHandshakeTargetId?: DhtAddress,
+        interleaveSourceId?: DhtAddress
     ): Promise<HandshakeResponse> {
         const request: StreamPartHandshakeRequest = {
-            streamPartId: this.getServiceId(),
+            streamPartId,
             requestId: v4(),
-            neighborIds: neighborIds.map((id) => hexToBinary(id)),
-            concurrentHandshakeTargetId: (concurrentHandshakeTargetId !== undefined) ? hexToBinary(concurrentHandshakeTargetId) : undefined,
-            interleaveSourceId: (interleaveSourceId !== undefined) ? hexToBinary(interleaveSourceId) : undefined
+            neighborIds: neighborIds.map((id) => getRawFromDhtAddress(id)),
+            concurrentHandshakeTargetId: (concurrentHandshakeTargetId !== undefined) ? getRawFromDhtAddress(concurrentHandshakeTargetId) : undefined,
+            interleaveSourceId: (interleaveSourceId !== undefined) ? getRawFromDhtAddress(interleaveSourceId) : undefined
         }
         try {
             const response = await this.getClient().handshake(request, this.formDhtRpcOptions())

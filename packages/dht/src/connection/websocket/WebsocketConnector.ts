@@ -12,7 +12,7 @@ import {
     WebsocketConnectionRequest
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { WebsocketConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { Logger, binaryToHex, wait } from '@streamr/utils'
+import { Logger, wait } from '@streamr/utils'
 import { ManagedConnection } from '../ManagedConnection'
 import { WebsocketServer } from './WebsocketServer'
 import { sendConnectivityRequest } from '../connectivityChecker'
@@ -29,7 +29,7 @@ import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
 import { attachConnectivityRequestHandler } from '../connectivityRequestHandler'
 import * as Err from '../../helpers/errors'
 import { Empty } from '../../proto/google/protobuf/empty'
-import { NodeID } from '../../helpers/nodeId'
+import { DhtAddress } from '../../identifiers'
 import { version } from '../../../package.json'
 import { isCompatibleVersion } from '../../helpers/versionCompatibility'
 
@@ -63,12 +63,12 @@ export class WebsocketConnector {
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly websocketServer?: WebsocketServer
-    private readonly ongoingConnectRequests: Map<NodeID, ManagedConnection> = new Map()
+    private readonly ongoingConnectRequests: Map<DhtAddress, ManagedConnection> = new Map()
     private host?: string
     private autoCertifierClient?: AutoCertifierClientFacade
     private selectedPort?: number
     private localPeerDescriptor?: PeerDescriptor
-    private connectingConnections: Map<NodeID, ManagedConnection> = new Map()
+    private connectingConnections: Map<DhtAddress, ManagedConnection> = new Map()
     private abortController = new AbortController()
     private readonly config: WebsocketConnectorConfig
 
@@ -203,7 +203,7 @@ export class WebsocketConnector {
                 }
             } catch (err) {
                 if (reattempt < ENTRY_POINT_CONNECTION_ATTEMPTS) {
-                    const error = `Failed to connect to entrypoint with id ${binaryToHex(entryPoint.nodeId)} `
+                    const error = `Failed to connect to entrypoint with id ${getNodeIdFromPeerDescriptor(entryPoint)} `
                         + `and URL ${connectivityMethodToWebsocketUrl(entryPoint.websocket!)}`
                     logger.error(error, { error: err })
                     await wait(2000)
@@ -241,7 +241,7 @@ export class WebsocketConnector {
             )
             managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
 
-            this.connectingConnections.set(getNodeIdFromPeerDescriptor(targetPeerDescriptor), managedConnection)
+            this.connectingConnections.set(nodeId, managedConnection)
 
             const delFunc = () => {
                 if (this.connectingConnections.has(nodeId)) {
@@ -264,7 +264,6 @@ export class WebsocketConnector {
             const remoteConnector = new WebsocketConnectorRpcRemote(
                 localPeerDescriptor,
                 targetPeerDescriptor,
-                'DUMMY',
                 this.rpcCommunicator,
                 WebsocketConnectorRpcClient
             )
@@ -284,9 +283,10 @@ export class WebsocketConnector {
             undefined,
             targetPeerDescriptor
         )
-        managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(getNodeIdFromPeerDescriptor(targetPeerDescriptor)))
+        const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
+        managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(nodeId))
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
-        this.ongoingConnectRequests.set(getNodeIdFromPeerDescriptor(targetPeerDescriptor), managedConnection)
+        this.ongoingConnectRequests.set(nodeId, managedConnection)
         return managedConnection
     }
 

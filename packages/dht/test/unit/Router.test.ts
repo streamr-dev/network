@@ -12,7 +12,7 @@ import {
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockPeerDescriptor, createWrappedClosestPeersRequest } from '../utils/utils'
 import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
-import { NodeID } from '../../src/helpers/nodeId'
+import { DhtAddress } from '../../src/identifiers'
 import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 
 describe('Router', () => {
@@ -40,7 +40,7 @@ describe('Router', () => {
         target: peerDescriptor1.nodeId,
         sourcePeer: peerDescriptor2
     }
-    let connections: Map<NodeID, DhtNodeRpcRemote>
+    let connections: Map<DhtAddress, DhtNodeRpcRemote>
     const rpcCommunicator = new FakeRpcCommunicator()
 
     const createMockDhtNodeRpcRemote = (destination: PeerDescriptor): DhtNodeRpcRemote => {

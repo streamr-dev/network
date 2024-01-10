@@ -21,7 +21,7 @@ import {
 import { PortRange } from '../ConnectionManager'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { WebrtcConnectorRpcLocal } from './WebrtcConnectorRpcLocal'
-import { NodeID } from '../../helpers/nodeId'
+import { DhtAddress } from '../../identifiers'
 
 const logger = new Logger(module)
 
@@ -58,7 +58,7 @@ export class WebrtcConnector {
 
     private static readonly WEBRTC_CONNECTOR_SERVICE_ID = 'system/webrtc-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
-    private readonly ongoingConnectAttempts: Map<NodeID, ManagedWebrtcConnection> = new Map()
+    private readonly ongoingConnectAttempts: Map<DhtAddress, ManagedWebrtcConnection> = new Map()
     private localPeerDescriptor?: PeerDescriptor
     private stopped = false
     private config: WebrtcConnectorConfig
@@ -170,7 +170,6 @@ export class WebrtcConnector {
         const remoteConnector = new WebrtcConnectorRpcRemote(
             this.localPeerDescriptor!,
             targetPeerDescriptor,
-            'DUMMY',
             this.rpcCommunicator,
             WebrtcConnectorRpcClient
         )

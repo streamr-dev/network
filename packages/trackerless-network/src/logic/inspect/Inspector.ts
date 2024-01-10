@@ -1,11 +1,10 @@
-import { PeerDescriptor, ConnectionLocker, LockID } from '@streamr/dht'
+import { PeerDescriptor, ConnectionLocker, LockID, DhtAddress, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { MessageID } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { InspectSession, Events as InspectSessionEvents } from './InspectSession'
 import { TemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RpcCommunicator } from '@streamr/proto-rpc'
 import { Logger, waitForEvent3 } from '@streamr/utils'
 import { TemporaryConnectionRpcRemote } from '../temporary-connection/TemporaryConnectionRpcRemote'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { StreamPartID } from '@streamr/protocol'
 
 interface InspectorConfig {
@@ -22,7 +21,7 @@ const DEFAULT_TIMEOUT = 60 * 1000
 
 export class Inspector {
 
-    private readonly sessions: Map<NodeID, InspectSession> = new Map()
+    private readonly sessions: Map<DhtAddress, InspectSession> = new Map()
     private readonly streamPartId: StreamPartID
     private readonly localPeerDescriptor: PeerDescriptor
     private readonly rpcCommunicator: RpcCommunicator
@@ -43,7 +42,6 @@ export class Inspector {
         const rpcRemote = new TemporaryConnectionRpcRemote(
             this.localPeerDescriptor,
             peerDescriptor,
-            this.streamPartId,
             this.rpcCommunicator,
             TemporaryConnectionRpcClient
         )
@@ -72,11 +70,11 @@ export class Inspector {
         return success || session.getInspectedMessageCount() < 1
     }
 
-    markMessage(sender: NodeID, messageId: MessageID): void {
+    markMessage(sender: DhtAddress, messageId: MessageID): void {
         this.sessions.forEach((session) => session.markMessage(sender, messageId))
     }
 
-    isInspected(nodeId: NodeID): boolean {
+    isInspected(nodeId: DhtAddress): boolean {
         return this.sessions.has(nodeId)
     }
 

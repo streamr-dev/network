@@ -144,13 +144,11 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     private async* iterate(): AsyncGenerator<any, void, unknown> {
         this.isIterating = true
 
-        // this.debug('iterate', this.definition.source)
         if (!this.definition.source) {
             throw new StreamrClientError('no source', 'PIPELINE_ERROR')
         }
 
         const transforms = this.definition.getTransforms()
-        // this.debug('transforms', transforms)
 
         // each pipeline step creates a generator
         // which is then passed into the next transform
