@@ -9,7 +9,8 @@ import {
     ValidationError,
     toStreamID,
     serializeGroupKeyRequest,
-    serializeGroupKeyResponse
+    serializeGroupKeyResponse,
+    StreamMessageType
 } from '@streamr/protocol'
 import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
@@ -28,9 +29,12 @@ const groupKeyMessageToStreamMessage = async (
     return createSignedMessage({
         messageId,
         prevMsgRef,
-        serializedContent: groupKeyMessage instanceof GroupKeyRequest ?
-            serializeGroupKeyRequest(groupKeyMessage) : serializeGroupKeyResponse(groupKeyMessage),
-        messageType: groupKeyMessage.messageType,
+        serializedContent: groupKeyMessage instanceof GroupKeyRequest
+            ? serializeGroupKeyRequest(groupKeyMessage)
+            : serializeGroupKeyResponse(groupKeyMessage),
+        messageType: groupKeyMessage instanceof GroupKeyRequest
+            ? StreamMessageType.GROUP_KEY_REQUEST
+            : StreamMessageType.GROUP_KEY_RESPONSE,
         contentType: ContentType.JSON,
         authentication
     })

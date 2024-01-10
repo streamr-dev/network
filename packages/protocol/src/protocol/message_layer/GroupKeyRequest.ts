@@ -1,6 +1,5 @@
 import { validateIsArray, validateIsString } from '../../utils/validations'
 
-import GroupKeyMessage from './GroupKeyMessage'
 import StreamMessage, { StreamMessageType } from './StreamMessage'
 import { EthereumAddress } from '@streamr/utils'
 
@@ -11,17 +10,18 @@ interface Options {
     groupKeyIds: string[]
 }
 
-export default class GroupKeyRequest extends GroupKeyMessage {
-
+export default class GroupKeyRequest {
     requestId: string
+    recipient: EthereumAddress
     rsaPublicKey: string
     groupKeyIds: string[]
 
     constructor({ requestId, recipient, rsaPublicKey, groupKeyIds }: Options) {
-        super(recipient, StreamMessageType.GROUP_KEY_REQUEST)
-
         validateIsString('requestId', requestId)
         this.requestId = requestId
+
+        validateIsString('recipient', recipient)
+        this.recipient = recipient
 
         validateIsString('rsaPublicKey', rsaPublicKey)
         this.rsaPublicKey = rsaPublicKey
