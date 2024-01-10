@@ -5,7 +5,7 @@ describe('LengthPrefixedFrameUtils', () => {
 
     describe('toLengthPrefixedFrame', () => {
         it('prefixes length to payload', () => {
-            const payload = Buffer.from('Hello, world!', 'utf-8')
+            const payload = Buffer.from('Hello, world!')
             const frame = toLengthPrefixedFrame(payload)
             expect(frame.readUInt32BE(0)).toBe(payload.length)
             expect(frame.subarray(4)).toEqual(payload)
@@ -27,7 +27,7 @@ describe('LengthPrefixedFrameUtils', () => {
         })
 
         it('can decode a single frame', (done) => {
-            const payload = Buffer.from('Hello, world!', 'utf-8')
+            const payload = Buffer.from('Hello, world!')
             const frame = toLengthPrefixedFrame(payload)
 
             decoder.on('data', (data: Buffer) => {
@@ -39,8 +39,8 @@ describe('LengthPrefixedFrameUtils', () => {
         })
 
         it('can decode multiple frames in one chunk', (done) => {
-            const payload1 = Buffer.from('Hello, world!', 'utf-8')
-            const payload2 = Buffer.from('Goodbye, world!', 'utf-8')
+            const payload1 = Buffer.from('Hello, world!')
+            const payload2 = Buffer.from('Goodbye, world!')
             const chunk = Buffer.concat([
                 toLengthPrefixedFrame(payload1),
                 toLengthPrefixedFrame(payload2)
@@ -61,7 +61,7 @@ describe('LengthPrefixedFrameUtils', () => {
         })
 
         it('can decode a frame split across multiple chunks', (done) => {
-            const payload = Buffer.from('Hello, world!', 'utf-8')
+            const payload = Buffer.from('Hello, world!')
             const frame = toLengthPrefixedFrame(payload)
 
             decoder.on('data', (data: Buffer) => {
@@ -75,8 +75,8 @@ describe('LengthPrefixedFrameUtils', () => {
         })
 
         it('can decode multiple frames split across multiple chunks', (done) => {
-            const payload1 = Buffer.from('Hello, world!', 'utf-8')
-            const payload2 = Buffer.from('Goodbye, world!', 'utf-8')
+            const payload1 = Buffer.from('Hello, world!')
+            const payload2 = Buffer.from('Goodbye, world!')
             const frame1 = toLengthPrefixedFrame(payload1)
             const frame2 = toLengthPrefixedFrame(payload2)
 
@@ -99,7 +99,7 @@ describe('LengthPrefixedFrameUtils', () => {
         })
 
         it('can ignore an incomplete frame when stream ends', (done) => {
-            const payload = Buffer.from('Hello, world!', 'utf-8')
+            const payload = Buffer.from('Hello, world!')
             const frame = toLengthPrefixedFrame(payload)
 
             decoder.on('data', (data: Buffer) => {

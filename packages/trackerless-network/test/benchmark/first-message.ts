@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
 import { DhtNode, LatencyType, Simulator, getNodeIdFromPeerDescriptor, getRandomRegion } from '@streamr/dht'
-import { 
+import {
     ContentType,
     MessageID,
     StreamMessage,
