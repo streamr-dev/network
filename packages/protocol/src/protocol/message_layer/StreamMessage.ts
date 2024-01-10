@@ -9,9 +9,6 @@ import EncryptedGroupKey from './EncryptedGroupKey'
 import { StreamID } from '../../utils/StreamID'
 import { StreamPartID } from '../../utils/StreamPartID'
 import { EthereumAddress, binaryToUtf8 } from '@streamr/utils'
-import { fromArray, toArray } from './streamMessageSerialization'
-
-export const VERSION = 32
 
 export enum StreamMessageType {
     MESSAGE = 27,
@@ -55,16 +52,16 @@ export default class StreamMessage {
     private static VALID_CONTENT_TYPES = new Set(Object.values(ContentType))
     private static VALID_ENCRYPTIONS = new Set(Object.values(EncryptionType))
 
-    messageId: MessageID
-    prevMsgRef: MessageRef | null
-    messageType: StreamMessageType
-    contentType: ContentType
+    readonly messageId: MessageID
+    readonly prevMsgRef: MessageRef | null
+    readonly messageType: StreamMessageType
+    readonly contentType: ContentType
     encryptionType: EncryptionType
     groupKeyId: string | null
     newGroupKey: EncryptedGroupKey | null
     signature: Uint8Array
-    private parsedContent?: unknown
     serializedContent: Uint8Array
+    private parsedContent?: unknown
 
     /**
      * Create a new StreamMessage identical to the passed-in streamMessage.
@@ -211,18 +208,6 @@ export default class StreamMessage {
         return this.newGroupKey
     }
 
-    serialize(): string {
-        return JSON.stringify(toArray(this))
-    }
-
-    /**
-     * Takes a serialized representation (array or string) of a message, and returns a StreamMessage instance.
-     */
-    static deserialize(msg: any[] | string): StreamMessage {
-        const messageArray = (typeof msg === 'string' ? JSON.parse(msg) : msg)
-        return fromArray(messageArray)
-    }
-
     static validateMessageType(messageType: StreamMessageType): void {
         if (!StreamMessage.VALID_MESSAGE_TYPES.has(messageType)) {
             throw new ValidationError(`Unsupported message type: ${messageType}`)
@@ -251,14 +236,16 @@ export default class StreamMessage {
         // cannot have same timestamp + sequence
         if (comparison === 0) {
             throw new ValidationError(
-                `prevMessageRef cannot be identical to current. Current: ${messageId.toMessageRef().toArray()} Previous: ${prevMsgRef.toArray()}`
+                // eslint-disable-next-line max-len
+                `prevMessageRef cannot be identical to current. Current: ${JSON.stringify(messageId.toMessageRef())} Previous: ${JSON.stringify(prevMsgRef)}`
             )
         }
 
         // previous cannot be newer
         if (comparison < 0) {
             throw new ValidationError(
-                `prevMessageRef must come before current. Current: ${messageId.toMessageRef().toArray()} Previous: ${prevMsgRef.toArray()}`
+                // eslint-disable-next-line max-len
+                `prevMessageRef must come before current. Current: ${JSON.stringify(messageId.toMessageRef())} Previous: ${JSON.stringify(prevMsgRef)}`
             )
         }
     }

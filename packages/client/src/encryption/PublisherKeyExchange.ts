@@ -1,16 +1,18 @@
 import {
     ContentType,
+    deserializeGroupKeyRequest,
     EncryptedGroupKey,
     EncryptionType,
     GroupKeyRequest,
     GroupKeyResponse,
     MessageID,
+    serializeGroupKeyResponse,
     StreamMessage,
     StreamMessageType,
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { EthereumAddress, Logger, utf8ToBinary } from '@streamr/utils'
+import { EthereumAddress, Logger } from '@streamr/utils'
 import without from 'lodash/without'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -60,7 +62,7 @@ export class PublisherKeyExchange {
         if (GroupKeyRequest.is(request)) {
             try {
                 const authenticatedUser = await this.authentication.getAddress()
-                const { recipient, requestId, rsaPublicKey, groupKeyIds } = GroupKeyRequest.fromStreamMessage(request) as GroupKeyRequest
+                const { recipient, requestId, rsaPublicKey, groupKeyIds } = deserializeGroupKeyRequest(request.serializedContent) as GroupKeyRequest
                 if (recipient === authenticatedUser) {
                     this.logger.debug('Handling group key request', { requestId })
                     await validateStreamMessage(request, this.streamRegistry)
@@ -118,7 +120,7 @@ export class PublisherKeyExchange {
                 await this.authentication.getAddress(),
                 createRandomMsgChainId()
             ),
-            serializedContent: utf8ToBinary(JSON.stringify(responseContent.toArray())),
+            serializedContent: serializeGroupKeyResponse(responseContent),
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             encryptionType: EncryptionType.RSA,
             authentication: this.authentication,
