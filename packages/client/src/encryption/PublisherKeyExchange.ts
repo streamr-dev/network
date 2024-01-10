@@ -10,7 +10,7 @@ import {
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { EthereumAddress, Logger, utf8ToBinary } from '@streamr/utils'
+import { EthereumAddress, Logger } from '@streamr/utils'
 import without from 'lodash/without'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'

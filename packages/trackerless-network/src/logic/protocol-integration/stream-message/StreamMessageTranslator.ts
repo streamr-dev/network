@@ -4,8 +4,6 @@ import {
     StreamMessageType as OldStreamMessageType,
     MessageRef as OldMessageRef,
     EncryptedGroupKey as OldEncryptedGroupKey,
-    GroupKeyRequest as OldGroupKeyRequest,
-    GroupKeyResponse as OldGroupKeyResponse,
     StreamID,
     EncryptionType as OldEncryptionType,
     ContentType as OldContentType,
@@ -25,7 +23,7 @@ import {
     StreamMessageType,
     MessageID
 } from '../../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { toEthereumAddress, binaryToHex, hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { toEthereumAddress, binaryToHex, hexToBinary } from '@streamr/utils'
 import { GroupKeyRequestTranslator } from './GroupKeyRequestTranslator'
 import { GroupKeyResponseTranslator } from './GroupKeyResponseTranslator'
 
