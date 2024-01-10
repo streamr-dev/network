@@ -194,16 +194,6 @@ export default class StreamMessage {
         return this.parsedContent
     }
 
-    getContent(): Uint8Array
-    getContent(parsedContent: false): Uint8Array
-    getContent(parsedContent: true): unknown
-    getContent(parsedContent = true): Uint8Array | unknown {
-        if (parsedContent) {
-            return this.getParsedContent()
-        }
-        return this.getSerializedContent()
-    }
-
     getNewGroupKey(): EncryptedGroupKey | null {
         return this.newGroupKey
     }
