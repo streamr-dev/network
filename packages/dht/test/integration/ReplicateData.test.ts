@@ -8,8 +8,6 @@ import { createRandomDhtAddress, getDhtAddressFromRaw } from '../../src/identifi
 import { range, shuffle } from 'lodash'
 import { DataEntry, PeerDescriptor } from '../../src/exports'
 
-jest.setTimeout(60000)
-
 const DATA = createMockDataEntry()
 const NUM_NODES = 100
 const MAX_CONNECTIONS = 80
@@ -45,11 +43,11 @@ describe('Replicate data from node to node in DHT', () => {
             )
             nodes.push(node)
         }
-    })
+    }, 60000)
 
     afterEach(async () => {
         await Promise.all(nodes.map(async (node) => await node.stop()))
-    })
+    }, 60000)
 
     afterAll(async () => {
         simulator.stop()
