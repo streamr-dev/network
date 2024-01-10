@@ -1,6 +1,6 @@
 {
   "name": "@streamr/trackerless-network",
-  "version": "0.0.1-tatum.6",
+  "version": "100.0.0-pretestnet.4",
   "description": "Minimal and extendable implementation of the Streamr Network node.",
   "repository": {
     "type": "git",
@@ -30,11 +30,11 @@
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
-    "@streamr/dht": "0.0.1-tatum.6",
-    "@streamr/proto-rpc": "0.0.1-tatum.6",
-    "@streamr/protocol": "0.0.1-tatum.6",
-    "@streamr/test-utils": "0.0.1-tatum.6",
-    "@streamr/utils": "0.0.1-tatum.6",
+    "@streamr/dht": "100.0.0-pretestnet.4",
+    "@streamr/proto-rpc": "100.0.0-pretestnet.4",
+    "@streamr/protocol": "100.0.0-pretestnet.4",
+    "@streamr/test-utils": "100.0.0-pretestnet.4",
+    "@streamr/utils": "100.0.0-pretestnet.4",
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
     "uuid": "^9.0.1",
@@ -42,14 +42,14 @@
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
-    "@types/lodash": "^4.14.199",
-    "@types/uuid": "^9.0.5",
+    "@types/lodash": "^4.14.202",
+    "@types/uuid": "^9.0.7",
     "@types/yallist": "^4.0.1",
     "commander": "^11.1.0",
     "expect": "^29.6.2",
     "express": "^4.17.1",
     "ts-essentials": "^9.4.1",
-    "ts-loader": "^9.5.0",
-    "ts-node": "^10.9.1"
+    "ts-loader": "^9.5.1",
+    "ts-node": "^10.9.2"
   }
 }

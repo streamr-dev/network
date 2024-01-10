@@ -4,11 +4,13 @@ import {
     GroupKeyRequest,
     GroupKeyResponse,
     MessageID,
+    serializeGroupKeyRequest,
+    serializeGroupKeyResponse,
     StreamMessage,
     StreamMessageType,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { hexToBinary, toEthereumAddress, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
+import { hexToBinary, toEthereumAddress, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
@@ -34,6 +36,7 @@ describe('proxy group key exchange', () => {
             layer0: {
                 entryPoints: [proxyNodeDescriptor],
                 peerDescriptor: proxyNodeDescriptor,
+                websocketServerEnableTls: false
             },
             networkNode: {
                 acceptProxyConnections: true
@@ -69,14 +72,14 @@ describe('proxy group key exchange', () => {
         await publisher.setProxies(STREAM_PART_ID, [proxyNodeDescriptor], ProxyDirection.PUBLISH, publisherUserId)
         await subscriber.setProxies(STREAM_PART_ID, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, subscriberUserId)
 
-        const requestContent = utf8ToBinary(new GroupKeyRequest({
+        const groupKeyRequest = new GroupKeyRequest({
             recipient: publisherUserId,
             requestId: 'requestId',
             rsaPublicKey: 'mockKey',
             groupKeyIds: [
                 'mock'
             ],
-        }).serialize())
+        })
         const request = new StreamMessage({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(STREAM_PART_ID),
@@ -89,7 +92,7 @@ describe('proxy group key exchange', () => {
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-            content: requestContent,
+            content: serializeGroupKeyRequest(groupKeyRequest),
             signature: hexToBinary('1234')
         })
 
@@ -103,11 +106,11 @@ describe('proxy group key exchange', () => {
         await publisher.setProxies(STREAM_PART_ID, [proxyNodeDescriptor], ProxyDirection.PUBLISH, publisherUserId)
         await subscriber.setProxies(STREAM_PART_ID, [proxyNodeDescriptor], ProxyDirection.SUBSCRIBE, subscriberUserId)
 
-        const responseContent = utf8ToBinary(new GroupKeyResponse({
+        const groupKeyResponse = new GroupKeyResponse({
             recipient: publisherUserId,
             requestId: 'requestId',
             encryptedGroupKeys: []
-        }).serialize())
+        })
         const response = new StreamMessage({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(STREAM_PART_ID),
@@ -120,7 +123,7 @@ describe('proxy group key exchange', () => {
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.RSA,
-            content: responseContent,
+            content: serializeGroupKeyResponse(groupKeyResponse),
             signature: hexToBinary('1234')
         })
 

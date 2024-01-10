@@ -1,4 +1,3 @@
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import {
     ListeningRpcCommunicator,
     NodeType,
@@ -6,7 +5,6 @@ import {
     Simulator,
     SimulatorTransport
 } from '@streamr/dht'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { NeighborUpdateRpcRemote } from '../../src/logic/neighbor-discovery/NeighborUpdateRpcRemote'
 import { NeighborUpdate } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import {
@@ -20,11 +18,11 @@ describe('NeighborUpdateRpcRemote', () => {
     let rpcRemote: NeighborUpdateRpcRemote
 
     const clientNode: PeerDescriptor = {
-        kademliaId: new Uint8Array([1, 1, 1]),
+        nodeId: new Uint8Array([1, 1, 1]),
         type: NodeType.NODEJS
     }
     const serverNode: PeerDescriptor = {
-        kademliaId: new Uint8Array([2, 2, 2]),
+        nodeId: new Uint8Array([2, 2, 2]),
         type: NodeType.NODEJS
     }
 
@@ -32,10 +30,12 @@ describe('NeighborUpdateRpcRemote', () => {
     let mockConnectionManager1: SimulatorTransport
     let mockConnectionManager2: SimulatorTransport
 
-    beforeEach(() => {
+    beforeEach(async () => {
         simulator = new Simulator()
         mockConnectionManager1 = new SimulatorTransport(serverNode, simulator)
+        await mockConnectionManager1.start()
         mockConnectionManager2 = new SimulatorTransport(clientNode, simulator)
+        await mockConnectionManager2.start()
 
         mockServerRpc = new ListeningRpcCommunicator('test', mockConnectionManager1)
         clientRpc = new ListeningRpcCommunicator('test', mockConnectionManager2)
@@ -44,9 +44,9 @@ describe('NeighborUpdateRpcRemote', () => {
             NeighborUpdate,
             NeighborUpdate,
             'neighborUpdate',
-            async (_msg: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> => {
+            async (): Promise<NeighborUpdate> => {
                 const node: PeerDescriptor = {
-                    kademliaId: new Uint8Array([4, 2, 4]),
+                    nodeId: new Uint8Array([4, 2, 4]),
                     type: NodeType.NODEJS
                 }
                 const update: NeighborUpdate = {
@@ -62,8 +62,8 @@ describe('NeighborUpdateRpcRemote', () => {
         rpcRemote = new NeighborUpdateRpcRemote(
             clientNode,
             serverNode,
-            'test-stream-part',
-            toProtoRpcClient(new NeighborUpdateRpcClient(clientRpc.getRpcClientTransport()))
+            clientRpc,
+            NeighborUpdateRpcClient
         )
     })
 
@@ -76,7 +76,7 @@ describe('NeighborUpdateRpcRemote', () => {
     })
 
     it('updateNeighbors', async () => {
-        const res = await rpcRemote.updateNeighbors([])
+        const res = await rpcRemote.updateNeighbors(StreamPartIDUtils.parse('test#0'), [])
         expect(res.peerDescriptors.length).toEqual(1)
     })
 })

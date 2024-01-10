@@ -1,12 +1,15 @@
 import EncryptedGroupKey from './EncryptedGroupKey'
 import MessageID from './MessageID'
 import MessageRef from './MessageRef'
-import { SignatureType, EncryptionType } from './StreamMessage'
 import { binaryToHex, binaryToUtf8 } from '@streamr/utils'
+
+const serializeGroupKey = ({ groupKeyId, data }: EncryptedGroupKey): string => {
+    return JSON.stringify([groupKeyId, binaryToHex(data)])
+}
 
 export const createSignaturePayload = (opts: {
     messageId: MessageID
-    serializedContent: Uint8Array
+    content: Uint8Array
     signatureType: SignatureType
     encryptionType: EncryptionType
     prevMsgRef?: MessageRef
@@ -16,7 +19,7 @@ export const createSignaturePayload = (opts: {
     if (opts.signatureType == SignatureType.NEW_SECP256K1) {
         const header = Buffer.from(`${opts.messageId.streamId}${opts.messageId.streamPartition}${opts.messageId.timestamp}`
             + `${opts.messageId.sequenceNumber}${opts.messageId.publisherId}${opts.messageId.msgChainId}`, 'utf8')
-        
+
         const prevMsgRef = (opts.prevMsgRef !== undefined) ? Buffer.from(`${opts.prevMsgRef.timestamp}${opts.prevMsgRef.sequenceNumber}`) : undefined
 
         const newGroupKeyId = opts.newGroupKey ? Buffer.from(opts.newGroupKey.groupKeyId) : undefined
@@ -31,10 +34,10 @@ export const createSignaturePayload = (opts: {
 
     } else if (opts.signatureType === SignatureType.LEGACY_SECP256K1) {
         const prev = ((opts.prevMsgRef !== undefined) ? `${opts.prevMsgRef.timestamp}${opts.prevMsgRef.sequenceNumber}` : '')
-        const newGroupKey = ((opts.newGroupKey !== undefined) ? opts.newGroupKey.serialize() : '')
+        const newGroupKey = ((opts.newGroupKey !== undefined) ? serializeGroupKey(opts.newGroupKey) : '')
 
         // In the legacy signature type, encrypted content was signed as a hex-encoded string
-        const contentAsString = (opts.encryptionType === EncryptionType.NONE ? 
+        const contentAsString = (opts.encryptionType === EncryptionType.NONE ?
             binaryToUtf8(opts.serializedContent) : binaryToHex(opts.serializedContent))
 
         return Buffer.from(`${opts.messageId.streamId}${opts.messageId.streamPartition}${opts.messageId.timestamp}${opts.messageId.sequenceNumber}`

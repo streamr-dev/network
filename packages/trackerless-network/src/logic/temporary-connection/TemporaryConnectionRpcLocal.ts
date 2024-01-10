@@ -1,19 +1,15 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { TemporaryConnectionRequest, TemporaryConnectionResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ITemporaryConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
-import { DhtCallContext, ListeningRpcCommunicator } from '@streamr/dht'
+import { DhtAddress, DhtCallContext, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { DeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { NodeList } from '../NodeList'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { StreamPartID } from '@streamr/protocol'
 
 interface TemporaryConnectionRpcLocalConfig {
-    streamPartId: StreamPartID
     rpcCommunicator: ListeningRpcCommunicator
-    ownPeerDescriptor: PeerDescriptor
+    localPeerDescriptor: PeerDescriptor
 } 
 
 export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
@@ -23,15 +19,16 @@ export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
 
     constructor(config: TemporaryConnectionRpcLocalConfig) {
         this.config = config
-        this.temporaryNodes = new NodeList(getNodeIdFromPeerDescriptor(config.ownPeerDescriptor), 10)
+        // TODO use config option or named constant?
+        this.temporaryNodes = new NodeList(getNodeIdFromPeerDescriptor(config.localPeerDescriptor), 10)
     }
 
     getNodes(): NodeList {
         return this.temporaryNodes
     }
 
-    removeNode(peerDescriptor: PeerDescriptor): void {
-        this.temporaryNodes.remove(peerDescriptor)
+    removeNode(nodeId: DhtAddress): void {
+        this.temporaryNodes.remove(nodeId)
     }
 
     async openConnection(
@@ -40,10 +37,10 @@ export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
     ): Promise<TemporaryConnectionResponse> {
         const sender = (context as DhtCallContext).incomingSourceDescriptor!
         const remote = new DeliveryRpcRemote(
-            this.config.ownPeerDescriptor,
+            this.config.localPeerDescriptor,
             sender,
-            this.config.streamPartId,
-            toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+            this.config.rpcCommunicator,
+            DeliveryRpcClient
         )
         this.temporaryNodes.add(remote)
         return {

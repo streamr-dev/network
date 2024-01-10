@@ -51,9 +51,8 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.contentType, ContentType.JSON)
             assert.strictEqual(streamMessage.encryptionType, EncryptionType.NONE)
             assert.strictEqual(streamMessage.groupKeyId, null)
-            assert.deepStrictEqual(streamMessage.getContent(), content)
-            expect(streamMessage.getSerializedContent()).toEqual(utf8ToBinary(JSON.stringify(content)))
-            assert.deepStrictEqual(streamMessage.getNewGroupKey(), newGroupKey)
+            assert.deepStrictEqual(streamMessage.getParsedContent(), content)
+            expect(streamMessage.content).toEqual(utf8ToBinary(JSON.stringify(content)))
             assert.strictEqual(streamMessage.signature, signature)
             assert.strictEqual(streamMessage.getStreamPartID(), StreamPartIDUtils.parse('streamId#0'))
         })
@@ -76,9 +75,31 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.contentType, ContentType.JSON)
             assert.strictEqual(streamMessage.encryptionType, EncryptionType.NONE)
             assert.strictEqual(streamMessage.groupKeyId, null)
-            assert.deepStrictEqual(streamMessage.getContent(), content)
-            expect(streamMessage.getSerializedContent()).toEqual(utf8ToBinary(JSON.stringify(content)))
-            assert.strictEqual(streamMessage.getNewGroupKey(), null)
+            assert.deepStrictEqual(streamMessage.getParsedContent(), content)
+            expect(streamMessage.content).toEqual(utf8ToBinary(JSON.stringify(content)))
+            assert.strictEqual(streamMessage.signature, signature)
+        })
+
+        it('create StreamMessage binary content', () => {
+            const streamMessage = new StreamMessage({
+                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
+                content: new Uint8Array([1, 2, 3]),
+                contentType: ContentType.BINARY,
+                signature
+            })
+            assert.strictEqual(streamMessage.getStreamId(), 'streamId')
+            assert.strictEqual(streamMessage.getStreamPartition(), 0)
+            assert.strictEqual(streamMessage.getTimestamp(), 1564046332168)
+            assert.strictEqual(streamMessage.getSequenceNumber(), 10)
+            assert.strictEqual(streamMessage.getPublisherId(), PUBLISHER_ID)
+            assert.strictEqual(streamMessage.getMsgChainId(), 'msgChainId')
+            assert.deepStrictEqual(streamMessage.prevMsgRef, null)
+            assert.strictEqual(streamMessage.messageType, StreamMessageType.MESSAGE)
+            assert.strictEqual(streamMessage.contentType, ContentType.BINARY)
+            assert.strictEqual(streamMessage.encryptionType, EncryptionType.NONE)
+            assert.strictEqual(streamMessage.groupKeyId, null)
+            assert.deepStrictEqual(streamMessage.content, new Uint8Array([1, 2, 3]))
+            expect(streamMessage.content).toEqual(new Uint8Array([1, 2, 3]))
             assert.strictEqual(streamMessage.signature, signature)
         })
 
@@ -252,7 +273,6 @@ describe('StreamMessage', () => {
             })
             const streamMessageClone = streamMessage.clone()
             expect(streamMessageClone).not.toBe(streamMessage)
-            expect(streamMessageClone.serialize()).toEqual(streamMessage.serialize())
         })
 
         it('works with encrypted messages', () => {
@@ -271,7 +291,6 @@ describe('StreamMessage', () => {
             expect(encryptedMessage.encryptionType).toEqual(EncryptionType.RSA)
             expect(streamMessageClone.encryptionType).toEqual(EncryptionType.RSA)
             expect(streamMessageClone.encryptionType).toEqual(encryptedMessage.encryptionType)
-            expect(streamMessageClone.serialize()).toEqual(encryptedMessage.serialize())
         })
     })
 })

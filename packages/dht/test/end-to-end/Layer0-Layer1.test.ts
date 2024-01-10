@@ -1,45 +1,49 @@
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { isSamePeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { areEqualPeerDescriptors } from '../../src/identifiers'
+import { createMockPeerDescriptor } from '../utils/utils'
+
+const STREAM_ID1 = 'stream1'
+const STREAM_ID2 = 'stream2'
+const WEBSOCKET_PORT_RANGE = { min: 10017, max: 10018 }
 
 describe('Layer0-Layer1', () => {
-    const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: Uint8Array.from([1, 2, 3]),
-        type: NodeType.NODEJS,
+
+    const epPeerDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 10016, tls: false }
-    }
-
-    const STREAM_ID1 = 'stream1'
-    const STREAM_ID2 = 'stream2'
-
+    })
     let epDhtNode: DhtNode
     let node1: DhtNode
     let node2: DhtNode
-
     let stream1Node1: DhtNode
     let stream1Node2: DhtNode
     let stream2Node1: DhtNode
     let stream2Node2: DhtNode
 
-    const websocketPortRange = { min: 10017, max: 10018 }
-
     beforeEach(async () => {
 
-        epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor })
+        epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor, websocketServerEnableTls: false })
         await epDhtNode.start()
         await epDhtNode.joinDht([epPeerDescriptor])
 
-        node1 = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })
-        node2 = new DhtNode({ websocketPortRange, entryPoints: [epPeerDescriptor] })
+        node1 = new DhtNode({ 
+            websocketPortRange: WEBSOCKET_PORT_RANGE, 
+            entryPoints: [epPeerDescriptor], 
+            websocketServerEnableTls: false
+        })
+        node2 = new DhtNode({ 
+            websocketPortRange: WEBSOCKET_PORT_RANGE,
+            entryPoints: [epPeerDescriptor],
+            websocketServerEnableTls: false
+        })
 
         await node1.start()
         await node2.start()
 
-        stream1Node1 = new DhtNode({ transportLayer: epDhtNode, serviceId: STREAM_ID1 })
-        stream1Node2 = new DhtNode({ transportLayer: node1, serviceId: STREAM_ID1 })
+        stream1Node1 = new DhtNode({ transport: epDhtNode, serviceId: STREAM_ID1 })
+        stream1Node2 = new DhtNode({ transport: node1, serviceId: STREAM_ID1 })
 
-        stream2Node1 = new DhtNode({ transportLayer: epDhtNode, serviceId: STREAM_ID2 })
-        stream2Node2 = new DhtNode({ transportLayer: node2, serviceId: STREAM_ID2 })
+        stream2Node1 = new DhtNode({ transport: epDhtNode, serviceId: STREAM_ID2 })
+        stream2Node2 = new DhtNode({ transport: node2, serviceId: STREAM_ID2 })
 
         await Promise.all([
             stream1Node1.start(),
@@ -81,9 +85,9 @@ describe('Layer0-Layer1', () => {
         expect(stream2Node1.getClosestContacts()).toHaveLength(1)
         expect(stream2Node2.getClosestContacts()).toHaveLength(1)
 
-        expect(isSamePeerDescriptor(stream1Node1.getClosestContacts()[0], node1.getPeerDescriptor())).toBe(true)
-        expect(isSamePeerDescriptor(stream1Node2.getClosestContacts()[0], epPeerDescriptor)).toBe(true)
-        expect(isSamePeerDescriptor(stream2Node1.getClosestContacts()[0], node2.getPeerDescriptor())).toBe(true)
-        expect(isSamePeerDescriptor(stream2Node2.getClosestContacts()[0], epPeerDescriptor)).toBe(true)
+        expect(areEqualPeerDescriptors(stream1Node1.getClosestContacts()[0], node1.getLocalPeerDescriptor())).toBe(true)
+        expect(areEqualPeerDescriptors(stream1Node2.getClosestContacts()[0], epPeerDescriptor)).toBe(true)
+        expect(areEqualPeerDescriptors(stream2Node1.getClosestContacts()[0], node2.getLocalPeerDescriptor())).toBe(true)
+        expect(areEqualPeerDescriptors(stream2Node2.getClosestContacts()[0], epPeerDescriptor)).toBe(true)
     })
 })

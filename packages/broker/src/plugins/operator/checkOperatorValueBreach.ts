@@ -13,7 +13,7 @@ export const checkOperatorValueBreach = async (
         logger.info('No operators found')
         return
     }
-    logger.info('Check earnings', { targetOperatorAddress })
+    logger.info('Check other operator\'s earnings for breach', { targetOperatorAddress })
     const { sumDataWei, maxAllowedEarningsDataWei, sponsorshipAddresses } = await contractFacade.getEarningsOf(
         targetOperatorAddress,
         minSponsorshipEarningsInWithdraw,

@@ -12,14 +12,10 @@ import {
     StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { waitForCondition } from '@streamr/utils'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { createStreamMessage } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-
-const STREAM_PART_ID = StreamPartIDUtils.parse('test-stream#0')
 
 describe('DeliveryRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator
@@ -27,11 +23,11 @@ describe('DeliveryRpcRemote', () => {
     let rpcRemote: DeliveryRpcRemote
 
     const clientNode: PeerDescriptor = {
-        kademliaId: new Uint8Array([1, 1, 1]),
+        nodeId: new Uint8Array([1, 1, 1]),
         type: NodeType.NODEJS
     }
     const serverNode: PeerDescriptor = {
-        kademliaId: new Uint8Array([2, 2, 2]),
+        nodeId: new Uint8Array([2, 2, 2]),
         type: NodeType.NODEJS
     }
 
@@ -41,11 +37,13 @@ describe('DeliveryRpcRemote', () => {
     let mockConnectionManager1: SimulatorTransport
     let mockConnectionManager2: SimulatorTransport
 
-    beforeEach(() => {
+    beforeEach(async () => {
         recvCounter = 0
         simulator = new Simulator()
         mockConnectionManager1 = new SimulatorTransport(serverNode, simulator)
+        await mockConnectionManager1.start()
         mockConnectionManager2 = new SimulatorTransport(clientNode, simulator)
+        await mockConnectionManager2.start()
         
         mockServerRpc = new ListeningRpcCommunicator('test', mockConnectionManager1)
         clientRpc = new ListeningRpcCommunicator('test', mockConnectionManager2)
@@ -53,7 +51,7 @@ describe('DeliveryRpcRemote', () => {
         mockServerRpc.registerRpcNotification(
             StreamMessage,
             'sendStreamMessage',
-            async (_msg: StreamMessage, _context: ServerCallContext): Promise<Empty> => {
+            async (): Promise<Empty> => {
                 recvCounter += 1
                 return Empty
             }
@@ -62,7 +60,7 @@ describe('DeliveryRpcRemote', () => {
         mockServerRpc.registerRpcNotification(
             LeaveStreamPartNotice,
             'leaveStreamPartNotice',
-            async (_msg: LeaveStreamPartNotice, _context: ServerCallContext): Promise<Empty> => {
+            async (): Promise<Empty> => {
                 recvCounter += 1
                 return Empty
             }
@@ -71,8 +69,8 @@ describe('DeliveryRpcRemote', () => {
         rpcRemote = new DeliveryRpcRemote(
             clientNode,
             serverNode,
-            STREAM_PART_ID,
-            toProtoRpcClient(new DeliveryRpcClient(clientRpc.getRpcClientTransport()))
+            clientRpc,
+            DeliveryRpcClient
         )
     })
 
@@ -87,7 +85,7 @@ describe('DeliveryRpcRemote', () => {
     it('sendStreamMessage', async () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
-            STREAM_PART_ID,
+            StreamPartIDUtils.parse('test-stream#0'),
             randomEthereumAddress()
         )
 
@@ -96,7 +94,7 @@ describe('DeliveryRpcRemote', () => {
     })
 
     it('leaveNotice', async () => {
-        rpcRemote.leaveStreamPartNotice()
+        rpcRemote.leaveStreamPartNotice(StreamPartIDUtils.parse('test#0'), false)
         await waitForCondition(() => recvCounter === 1)
     })
 

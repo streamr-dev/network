@@ -12,7 +12,7 @@ createMessagingPluginTest('websocket',
     {
         createClient: async (action: 'publish' | 'subscribe', streamId: string, apiKey?: string): Promise<WebSocket> => {
             const apiKeySuffix = (apiKey !== undefined) ? `?apiKey=${apiKey}` : ''
-            const client = new WebSocket(`ws://localhost:${WEBSOCKET_PORT}/streams/${encodeURIComponent(streamId)}/${action}${apiKeySuffix}`)
+            const client = new WebSocket(`ws://127.0.0.1:${WEBSOCKET_PORT}/streams/${encodeURIComponent(streamId)}/${action}${apiKeySuffix}`)
             return Promise.race([
                 (async () => {
                     await waitForEvent(client, 'open')

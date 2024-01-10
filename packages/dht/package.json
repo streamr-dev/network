@@ -1,6 +1,6 @@
 {
   "name": "@streamr/dht",
-  "version": "0.0.1-tatum.6",
+  "version": "100.0.0-pretestnet.4",
   "description": "Streamr Network DHT",
   "repository": {
     "type": "git",
@@ -31,31 +31,33 @@
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
-    "@streamr/proto-rpc": "0.0.1-tatum.6",
-    "@streamr/utils": "0.0.1-tatum.6",
+    "@streamr/autocertifier-client": "100.0.0-pretestnet.4",
+    "@streamr/proto-rpc": "100.0.0-pretestnet.4",
+    "@streamr/utils": "100.0.0-pretestnet.4",
     "eventemitter3": "^5.0.0",
     "heap": "^0.2.6",
     "ipaddr.js": "^2.0.1",
     "k-bucket": "^5.1.0",
     "lodash": "^4.17.21",
     "node-datachannel": "^0.4.3",
-    "sinon": "15.1.2",
     "uuid": "^9.0.1",
     "websocket": "^1.0.34"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
-    "@streamr/test-utils": "0.0.1-tatum.6",
-    "@types/express": "^4.17.19",
-    "@types/heap": "^0.2.32",
+    "@streamr/test-utils": "100.0.0-pretestnet.4",
+    "@types/express": "^4.17.21",
+    "@types/heap": "^0.2.34",
     "@types/k-bucket": "^5.0.1",
-    "@types/lodash": "^4.14.199",
+    "@types/lodash": "^4.14.202",
     "@types/sinon": "^10.0.15",
-    "@types/uuid": "^9.0.5",
+    "@types/uuid": "^9.0.7",
     "@types/websocket": "^1.0.3",
     "express": "^4.17.1",
+    "jest-leak-detector": "^27.3.1",
     "patch-package": "^8.0.0",
-    "ts-node": "^10.9.1"
+    "ts-essentials": "^9.4.1",
+    "ts-node": "^10.9.2"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8",

@@ -18,7 +18,7 @@ describe('MessageStream', () => {
     const createMockMessage = async () => {
         return await createSignedMessage({
             messageId: new MessageID(streamId, 0, 0, 0, PUBLISHER_ID, 'msgChainId'),
-            serializedContent: utf8ToBinary(JSON.stringify(Msg())),
+            content: utf8ToBinary(JSON.stringify(Msg())),
             authentication,
             contentType: ContentType.JSON
         })

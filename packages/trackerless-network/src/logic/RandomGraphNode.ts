@@ -3,7 +3,9 @@ import {
     PeerDescriptor,
     ListeningRpcCommunicator,
     ITransport,
-    ConnectionLocker
+    ConnectionLocker,
+    DhtAddress,
+    getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
 import {
     StreamMessage,
@@ -19,50 +21,53 @@ import { DeliveryRpcRemote } from './DeliveryRpcRemote'
 import { IDeliveryRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { DuplicateMessageDetector } from './DuplicateMessageDetector'
 import { Logger, addManagedEventListener } from '@streamr/utils'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { IHandshaker } from './neighbor-discovery/Handshaker'
+import { Handshaker } from './neighbor-discovery/Handshaker'
 import { Propagation } from './propagation/Propagation'
-import { INeighborFinder } from './neighbor-discovery/NeighborFinder'
-import { INeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
+import { NeighborFinder } from './neighbor-discovery/NeighborFinder'
+import { NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
 import { DeliveryRpcLocal } from './DeliveryRpcLocal'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
-import { IInspector } from './inspect/Inspector'
+import { Inspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { markAndCheckDuplicate } from './utils'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../identifiers'
-import { ILayer1 } from './ILayer1'
+import { Layer1Node } from './Layer1Node'
 import { StreamPartID } from '@streamr/protocol'
+import { uniqBy } from 'lodash'
 
 export interface Events {
     message: (message: StreamMessage) => void
-    targetNeighborConnected: (nodeId: NodeID) => void
+    targetNeighborConnected: (nodeId: DhtAddress) => void
+    entryPointLeaveDetected: () => void
 }
 
 export interface StrictRandomGraphNodeConfig {
     streamPartId: StreamPartID
-    layer1: ILayer1
-    P2PTransport: ITransport
+    layer1Node: Layer1Node
+    transport: ITransport
     connectionLocker: ConnectionLocker
-    ownPeerDescriptor: PeerDescriptor
+    localPeerDescriptor: PeerDescriptor
     nodeViewSize: number
     nearbyNodeView: NodeList
     randomNodeView: NodeList
     targetNeighbors: NodeList
-    handshaker: IHandshaker
-    neighborFinder: INeighborFinder
-    neighborUpdateManager: INeighborUpdateManager
+    handshaker: Handshaker
+    neighborFinder: NeighborFinder
+    neighborUpdateManager: NeighborUpdateManager
     propagation: Propagation
     rpcCommunicator: ListeningRpcCommunicator
     numOfTargetNeighbors: number
-    inspector: IInspector
+    inspector: Inspector
     temporaryConnectionRpcLocal: TemporaryConnectionRpcLocal
+    isLocalNodeEntryPoint: () => boolean
+
     proxyConnectionRpcLocal?: ProxyConnectionRpcLocal
+    rpcRequestTimeout?: number
 }
 
 const logger = new Logger(module)
 
 export class RandomGraphNode extends EventEmitter<Events> {
-    private stopped = false
+
     private started = false
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector>
     private config: StrictRandomGraphNodeConfig
@@ -74,27 +79,33 @@ export class RandomGraphNode extends EventEmitter<Events> {
         this.config = config
         this.duplicateDetectors = new Map()
         this.deliveryRpcLocal = new DeliveryRpcLocal({
-            ownPeerDescriptor: this.config.ownPeerDescriptor,
+            localPeerDescriptor: this.config.localPeerDescriptor,
             streamPartId: this.config.streamPartId,
             rpcCommunicator: this.config.rpcCommunicator,
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
-            broadcast: (message: StreamMessage, previousNode?: NodeID) => this.broadcast(message, previousNode),
-            onLeaveNotice: (senderId: NodeID) => {
-                const contact = this.config.nearbyNodeView.get(senderId)
-                || this.config.randomNodeView.get(senderId)
-                || this.config.targetNeighbors.get(senderId)
-                || this.config.proxyConnectionRpcLocal?.getConnection(senderId )?.remote
+            broadcast: (message: StreamMessage, previousNode?: DhtAddress) => this.broadcast(message, previousNode),
+            onLeaveNotice: (sourceId: DhtAddress, sourceIsStreamEntryPoint: boolean) => {
+                if (this.abortController.signal.aborted) {
+                    return
+                }
+                const contact = this.config.nearbyNodeView.get(sourceId)
+                || this.config.randomNodeView.get(sourceId)
+                || this.config.targetNeighbors.get(sourceId)
+                || this.config.proxyConnectionRpcLocal?.getConnection(sourceId )?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
-                    this.config.layer1.removeContact(contact.getPeerDescriptor(), true)
-                    this.config.targetNeighbors.remove(contact.getPeerDescriptor())
-                    this.config.nearbyNodeView.remove(contact.getPeerDescriptor())
+                    this.config.layer1Node.removeContact(sourceId)
+                    this.config.targetNeighbors.remove(sourceId)
+                    this.config.nearbyNodeView.remove(sourceId)
                     this.config.connectionLocker.unlockConnection(contact.getPeerDescriptor(), this.config.streamPartId)
-                    this.config.neighborFinder.start([senderId])
-                    this.config.proxyConnectionRpcLocal?.removeConnection(senderId)
+                    this.config.neighborFinder.start([sourceId])
+                    this.config.proxyConnectionRpcLocal?.removeConnection(sourceId)
+                }
+                if (sourceIsStreamEntryPoint) {
+                    this.emit('entryPointLeaveDetected')
                 }
             },
-            markForInspection: (senderId: NodeID, messageId: MessageID) => this.config.inspector.markMessage(senderId, messageId)
+            markForInspection: (senderId: DhtAddress, messageId: MessageID) => this.config.inspector.markMessage(senderId, messageId)
         })
     }
 
@@ -102,31 +113,31 @@ export class RandomGraphNode extends EventEmitter<Events> {
         this.started = true
         this.registerDefaultServerMethods()
         addManagedEventListener<any, any>(
-            this.config.layer1 as any,
+            this.config.layer1Node as any,
             'newContact',
-            (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.newContact(peerDescriptor, closestPeers),
+            (_peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.newContact(closestPeers),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
-            this.config.layer1 as any,
+            this.config.layer1Node as any,
             'contactRemoved',
-            (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.removedContact(peerDescriptor, closestPeers),
+            (_peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.removedContact(closestPeers),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
-            this.config.layer1 as any,
+            this.config.layer1Node as any,
             'newRandomContact',
-            (peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.newRandomContact(peerDescriptor, randomPeers),
+            (_peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.newRandomContact(randomPeers),
             this.abortController.signal
         )   
         addManagedEventListener<any, any>(
-            this.config.layer1 as any,
+            this.config.layer1Node as any,
             'randomContactRemoved',
-            (peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.removedRandomContact(peerDescriptor, randomPeers),
+            (_peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.removedRandomContact(randomPeers),
             this.abortController.signal
         )   
         addManagedEventListener<any, any>(
-            this.config.P2PTransport as any,
+            this.config.transport as any,
             'disconnected',
             (peerDescriptor: PeerDescriptor) => this.onNodeDisconnected(peerDescriptor),
             this.abortController.signal
@@ -144,13 +155,13 @@ export class RandomGraphNode extends EventEmitter<Events> {
             addManagedEventListener(
                 this.config.proxyConnectionRpcLocal,
                 'newConnection',
-                (id: NodeID) => this.config.propagation.onNeighborJoined(id),
+                (id: DhtAddress) => this.config.propagation.onNeighborJoined(id),
                 this.abortController.signal
             )
         }
         const candidates = this.getNeighborCandidatesFromLayer1()
         if (candidates.length > 0) {
-            this.newContact(candidates[0], candidates)
+            this.newContact(candidates)
         }
         this.config.neighborFinder.start()
         await this.config.neighborUpdateManager.start()
@@ -165,9 +176,9 @@ export class RandomGraphNode extends EventEmitter<Events> {
             (req: TemporaryConnectionRequest, context) => this.config.temporaryConnectionRpcLocal.openConnection(req, context))
     }
 
-    private newContact(_newContact: PeerDescriptor, closestNodes: PeerDescriptor[]): void {
+    private newContact(closestNodes: PeerDescriptor[]): void {
         logger.trace(`New nearby contact found`)
-        if (this.stopped) {
+        if (this.isStopped()) {
             return
         }
         this.updateNearbyNodeView(closestNodes)
@@ -176,9 +187,9 @@ export class RandomGraphNode extends EventEmitter<Events> {
         }
     }
 
-    private removedContact(_removedContact: PeerDescriptor, closestNodes: PeerDescriptor[]): void {
+    private removedContact(closestNodes: PeerDescriptor[]): void {
         logger.trace(`Nearby contact removed`)
-        if (this.stopped) {
+        if (this.isStopped()) {
             return
         }
         this.updateNearbyNodeView(closestNodes)
@@ -187,37 +198,41 @@ export class RandomGraphNode extends EventEmitter<Events> {
     private updateNearbyNodeView(nodes: PeerDescriptor[]) {
         this.config.nearbyNodeView.replaceAll(Array.from(nodes).map((descriptor) =>
             new DeliveryRpcRemote(
-                this.config.ownPeerDescriptor,
+                this.config.localPeerDescriptor,
                 descriptor,
-                this.config.streamPartId,
-                toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                this.config.rpcCommunicator,
+                DeliveryRpcClient,
+                this.config.rpcRequestTimeout
             )
         ))
-        for (const descriptor of this.config.layer1.getKBucketPeers()) {
+        for (const descriptor of this.config.layer1Node.getAllNeighborPeerDescriptors()) {
             if (this.config.nearbyNodeView.size() >= this.config.nodeViewSize) {
                 break
             }
             this.config.nearbyNodeView.add(
                 new DeliveryRpcRemote(
-                    this.config.ownPeerDescriptor,
+                    this.config.localPeerDescriptor,
                     descriptor,
-                    this.config.streamPartId,
-                    toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                    this.config.rpcCommunicator,
+                    DeliveryRpcClient,
+                    this.config.rpcRequestTimeout
+
                 )
             )
         }
     }
 
-    private newRandomContact(_newDescriptor: PeerDescriptor, randomNodes: PeerDescriptor[]): void {
-        if (this.stopped) {
+    private newRandomContact(randomNodes: PeerDescriptor[]): void {
+        if (this.isStopped()) {
             return
         }
         this.config.randomNodeView.replaceAll(randomNodes.map((descriptor) =>
             new DeliveryRpcRemote(
-                this.config.ownPeerDescriptor,
+                this.config.localPeerDescriptor,
                 descriptor,
-                this.config.streamPartId,
-                toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                this.config.rpcCommunicator,
+                DeliveryRpcClient,
+                this.config.rpcRequestTimeout
             )
         ))
         if (this.config.targetNeighbors.size() < this.config.numOfTargetNeighbors) {
@@ -225,42 +240,44 @@ export class RandomGraphNode extends EventEmitter<Events> {
         }
     }
 
-    private removedRandomContact(_removedDescriptor: PeerDescriptor, randomNodes: PeerDescriptor[]): void {
+    private removedRandomContact(randomNodes: PeerDescriptor[]): void {
         logger.trace(`New nearby contact found`)
-        if (this.stopped) {
+        if (this.isStopped()) {
             return
         }
         this.config.randomNodeView.replaceAll(randomNodes.map((descriptor) =>
             new DeliveryRpcRemote(
-                this.config.ownPeerDescriptor,
+                this.config.localPeerDescriptor,
                 descriptor,
-                this.config.streamPartId,
-                toProtoRpcClient(new DeliveryRpcClient(this.config.rpcCommunicator.getRpcClientTransport()))
+                this.config.rpcCommunicator,
+                DeliveryRpcClient,
+                this.config.rpcRequestTimeout
             )
         ))
     }
 
     private onNodeDisconnected(peerDescriptor: PeerDescriptor): void {
-        if (this.config.targetNeighbors.hasNode(peerDescriptor)) {
-            this.config.targetNeighbors.remove(peerDescriptor)
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        if (this.config.targetNeighbors.has(nodeId)) {
+            this.config.targetNeighbors.remove(nodeId)
             this.config.connectionLocker.unlockConnection(peerDescriptor, this.config.streamPartId)
-            this.config.neighborFinder.start([getNodeIdFromPeerDescriptor(peerDescriptor)])
-            this.config.temporaryConnectionRpcLocal.removeNode(peerDescriptor)
+            this.config.neighborFinder.start([nodeId])
+            this.config.temporaryConnectionRpcLocal.removeNode(nodeId)
         }
     }
 
     private getNeighborCandidatesFromLayer1(): PeerDescriptor[] {
-        const uniqueNodes = new Set<PeerDescriptor>()
-        this.config.layer1.getClosestContacts(this.config.nodeViewSize).forEach((peer: PeerDescriptor) => {
-            uniqueNodes.add(peer)
+        const nodes: PeerDescriptor[] = []
+        this.config.layer1Node.getClosestContacts(this.config.nodeViewSize).forEach((peer: PeerDescriptor) => {
+            nodes.push(peer)
         })
-        this.config.layer1.getKBucketPeers().forEach((peer: PeerDescriptor) => {
-            uniqueNodes.add(peer)
+        this.config.layer1Node.getAllNeighborPeerDescriptors().forEach((peer: PeerDescriptor) => {
+            nodes.push(peer)
         })
-        return Array.from(uniqueNodes)
+        return uniqBy(nodes, (p) => getNodeIdFromPeerDescriptor(p))
     }
 
-    hasProxyConnection(nodeId: NodeID): boolean {
+    hasProxyConnection(nodeId: DhtAddress): boolean {
         if (this.config.proxyConnectionRpcLocal) {
             return this.config.proxyConnectionRpcLocal.hasConnection(nodeId)
         }
@@ -271,11 +288,12 @@ export class RandomGraphNode extends EventEmitter<Events> {
         if (!this.started) {
             return
         }
-        this.stopped = true
         this.abortController.abort()
         this.config.proxyConnectionRpcLocal?.stop()
-        this.config.targetNeighbors.getAll().map((remote) => remote.leaveStreamPartNotice())
-        this.config.rpcCommunicator.stop()
+        this.config.targetNeighbors.getAll().map(
+            (remote) => remote.leaveStreamPartNotice(this.config.streamPartId, this.config.isLocalNodeEntryPoint())
+        )
+        this.config.rpcCommunicator.destroy()
         this.removeAllListeners()
         this.config.nearbyNodeView.stop()
         this.config.targetNeighbors.stop()
@@ -285,7 +303,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         this.config.inspector.stop()
     }
 
-    broadcast(msg: StreamMessage, previousNode?: NodeID): void {
+    broadcast(msg: StreamMessage, previousNode?: DhtAddress): void {
         if (!previousNode) {
             markAndCheckDuplicate(this.duplicateDetectors, msg.messageId!, msg.previousMessageRef)
         }
@@ -297,26 +315,26 @@ export class RandomGraphNode extends EventEmitter<Events> {
         return this.config.inspector.inspect(peerDescriptor)
     }
 
-    private getPropagationTargets(msg: StreamMessage): NodeID[] {
+    private getPropagationTargets(msg: StreamMessage): DhtAddress[] {
         let propagationTargets = this.config.targetNeighbors.getIds()
         if (this.config.proxyConnectionRpcLocal) {
-            propagationTargets = propagationTargets.concat(this.config.proxyConnectionRpcLocal!.getPropagationTargets(msg))
+            propagationTargets = propagationTargets.concat(this.config.proxyConnectionRpcLocal.getPropagationTargets(msg))
         }
         propagationTargets = propagationTargets.filter((target) => !this.config.inspector.isInspected(target ))
         propagationTargets = propagationTargets.concat(this.config.temporaryConnectionRpcLocal.getNodes().getIds())
         return propagationTargets
     }
 
-    getOwnNodeId(): NodeID {
-        return getNodeIdFromPeerDescriptor(this.config.ownPeerDescriptor)
+    getOwnNodeId(): DhtAddress {
+        return getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
     }
 
     getNumberOfOutgoingHandshakes(): number {
         return this.config.handshaker.getOngoingHandshakes().size
     }
 
-    getTargetNeighborIds(): NodeID[] {
-        if (!this.started && this.stopped) {
+    getTargetNeighborIds(): DhtAddress[] {
+        if (!this.started && this.isStopped()) {
             return []
         }
         return this.config.targetNeighbors.getIds()
@@ -324,5 +342,9 @@ export class RandomGraphNode extends EventEmitter<Events> {
 
     getNearbyNodeView(): NodeList {
         return this.config.nearbyNodeView
+    }
+
+    private isStopped() {
+        return this.abortController.signal.aborted
     }
 }

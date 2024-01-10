@@ -1,14 +1,16 @@
 import {
     ContentType,
     EncryptedGroupKey,
-    GroupKeyMessage,
     GroupKeyRequest,
     GroupKeyResponse,
     MessageID,
     MessageRef,
     StreamMessage,
     ValidationError,
-    toStreamID
+    toStreamID,
+    serializeGroupKeyRequest,
+    serializeGroupKeyResponse,
+    StreamMessageType
 } from '@streamr/protocol'
 import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
@@ -19,7 +21,7 @@ import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { createRandomAuthentication, MOCK_CONTENT } from '../test-utils/utils'
 
 const groupKeyMessageToStreamMessage = async (
-    groupKeyMessage: GroupKeyMessage,
+    groupKeyMessage: GroupKeyRequest | GroupKeyResponse,
     messageId: MessageID,
     prevMsgRef: MessageRef | null,
     authentication: Authentication
@@ -27,8 +29,13 @@ const groupKeyMessageToStreamMessage = async (
     return createSignedMessage({
         messageId,
         prevMsgRef,
-        serializedContent: utf8ToBinary(groupKeyMessage.serialize()),
-        messageType: groupKeyMessage.messageType,
+        content: groupKeyMessage instanceof GroupKeyRequest
+            ? serializeGroupKeyRequest(groupKeyMessage)
+            : serializeGroupKeyResponse(groupKeyMessage),
+        messageType: groupKeyMessage instanceof GroupKeyRequest
+            ? StreamMessageType.GROUP_KEY_REQUEST
+            : StreamMessageType.GROUP_KEY_RESPONSE,
+        contentType: ContentType.JSON,
         contentType: ContentType.JSON,
         authentication
     })
@@ -77,14 +84,14 @@ describe('Validator2', () => {
 
         msg = await createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
-            serializedContent: MOCK_CONTENT,
+            content: MOCK_CONTENT,
             authentication: publisherAuthentication,
             contentType: ContentType.JSON
         })
 
         msgWithNewGroupKey = await createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
-            serializedContent: MOCK_CONTENT,
+            content: MOCK_CONTENT,
             newGroupKey: new EncryptedGroupKey('groupKeyId', hexToBinary('0x1111')),
             authentication: publisherAuthentication,
             contentType: ContentType.JSON
@@ -93,7 +100,7 @@ describe('Validator2', () => {
 
         msgWithPrevMsgRef = await createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 2000, 0, publisher, 'msgChainId'),
-            serializedContent: MOCK_CONTENT,
+            content: MOCK_CONTENT,
             prevMsgRef: new MessageRef(1000, 0),
             authentication: publisherAuthentication,
             contentType: ContentType.JSON
@@ -150,7 +157,7 @@ describe('Validator2', () => {
         })
 
         it('rejects tampered content', async () => {
-            msg.serializedContent = utf8ToBinary('{"attack":true}')
+            msg.content = utf8ToBinary('{"attack":true}')
 
             await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
@@ -159,7 +166,7 @@ describe('Validator2', () => {
         })
 
         it('rejects tampered newGroupKey', async () => {
-            msgWithNewGroupKey.newGroupKey!.groupKeyId = 'foo'
+            msgWithNewGroupKey.newGroupKey = new EncryptedGroupKey('foo', msgWithNewGroupKey.newGroupKey!.data)
 
             await assert.rejects(getValidator().validate(msgWithNewGroupKey), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)

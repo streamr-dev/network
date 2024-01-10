@@ -10,7 +10,7 @@ export class GroupKeyRequestTranslator {
             recipientId: hexToBinary(msg.recipient),
             requestId: msg.requestId,
             rsaPublicKey: utf8ToBinary(msg.rsaPublicKey),
-            groupKeyIds: msg.groupKeyIds
+            groupKeyIds: [...msg.groupKeyIds]
         }
         return translated
     }

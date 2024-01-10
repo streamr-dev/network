@@ -24,7 +24,7 @@ describe('binary publish', () => {
         publisherPk = await fetchPrivateKeyWithGas()
     }, 30 * 1000)
 
-    describe('encrypted', () => {
+    describe('private stream', () => {
 
         beforeEach(async () => {
             subscriber = createTestClient(subscriberWallet.privateKey)
@@ -43,7 +43,7 @@ describe('binary publish', () => {
             await publisher.destroy()
         })
 
-        it('messages are published encrypted', async () => {
+        it('published binary message is received by subscriber', async () => {
             const messages: unknown[] = []
             await subscriber.subscribe(stream.id, (msg: any) => {
                 messages.push(msg)
@@ -54,7 +54,7 @@ describe('binary publish', () => {
         }, TIMEOUT)
     })
 
-    describe('unencrypted', () => {
+    describe('public stream', () => {
         beforeEach(async () => {
             subscriber = createTestClient(subscriberWallet.privateKey)
             publisher = createTestClient(publisherPk)
@@ -72,7 +72,7 @@ describe('binary publish', () => {
             await publisher.destroy()
         })
 
-        it('messages are published unencrypted', async () => {
+        it('published binary message is received by subscriber', async () => {
             const messages: unknown[] = []
             await subscriber.subscribe(stream.id, (msg: any) => {
                 messages.push(msg)

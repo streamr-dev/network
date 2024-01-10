@@ -1,19 +1,19 @@
-import { ConsistentHashRing } from '../../../../src/plugins/operator/ConsistentHashRing'
-import range from 'lodash/range'
-import random from 'lodash/random'
-import { randomString } from '@streamr/utils'
+import { DhtAddress } from '@streamr/dht'
 import { toStreamID, toStreamPartID } from '@streamr/protocol'
-import { NodeID } from 'streamr-client'
+import { randomString } from '@streamr/utils'
+import random from 'lodash/random'
+import range from 'lodash/range'
+import { ConsistentHashRing } from '../../../../src/plugins/operator/ConsistentHashRing'
 
-const NODE_1 = 'node1' as NodeID
-const NODE_2 = 'node2' as NodeID
-const NODE_3 = 'node3' as NodeID
-const NODE_4 = 'node4' as NodeID
-const NODE_5 = 'node5' as NodeID
-const NODE_6 = 'node6' as NodeID
-const NODE_7 = 'node7' as NodeID
-const NODE_8 = 'node8' as NodeID
-const NODE_9 = 'node9' as NodeID
+const NODE_1 = 'node1' as DhtAddress
+const NODE_2 = 'node2' as DhtAddress
+const NODE_3 = 'node3' as DhtAddress
+const NODE_4 = 'node4' as DhtAddress
+const NODE_5 = 'node5' as DhtAddress
+const NODE_6 = 'node6' as DhtAddress
+const NODE_7 = 'node7' as DhtAddress
+const NODE_8 = 'node8' as DhtAddress
+const NODE_9 = 'node9' as DhtAddress
 
 // caveat: statistically unlikely to get 10 consecutive assignments, but not impossible
 function checkForConsistentSequentialAssignments(assignments: string[]): void {

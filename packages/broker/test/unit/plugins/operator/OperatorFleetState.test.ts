@@ -1,11 +1,11 @@
-import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
-import { mock, MockProxy } from 'jest-mock-extended'
-import { StreamrClient, MessageListener, Subscription } from 'streamr-client'
-import { wait, waitForCondition, waitForEvent } from '@streamr/utils'
+import { DhtAddress } from '@streamr/dht'
 import { eventsWithArgsToArray, randomEthereumAddress } from '@streamr/test-utils'
-import { createHeartbeatMessage } from '../../../../src/plugins/operator/heartbeatUtils'
-import { NodeID } from '@streamr/trackerless-network'
+import { wait, waitForCondition, waitForEvent } from '@streamr/utils'
+import { mock, MockProxy } from 'jest-mock-extended'
+import { MessageListener, StreamrClient, Subscription } from 'streamr-client'
 import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
+import { createHeartbeatMessage } from '../../../../src/plugins/operator/heartbeatUtils'
+import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 
 const ADDRESS = randomEthereumAddress()
 const coordinationStreamId = formCoordinationStreamId(ADDRESS)
@@ -13,8 +13,8 @@ const coordinationStreamId = formCoordinationStreamId(ADDRESS)
 const READY_WAIT_MS = 500
 const JITTER = 100
 
-function createHeartbeatMsg(id: string): Record<string, unknown> {
-    return createHeartbeatMessage({ id })
+function createHeartbeatMsg(nodeId: string): Record<string, unknown> {
+    return createHeartbeatMessage({ nodeId })
 }
 
 describe(OperatorFleetState, () => {
@@ -43,6 +43,7 @@ describe(OperatorFleetState, () => {
             READY_WAIT_MS,
             10,
             100,
+            0,
             0,
             () => currentTime
         )
@@ -162,13 +163,13 @@ describe(OperatorFleetState, () => {
         await state.start()
         await setTimeAndPublishMessage(10, createHeartbeatMsg('a'))
 
-        expect(state.getPeerDescriptor('a' as NodeID)).toEqual({ id: 'a' })
-        expect(state.getPeerDescriptor('unknown' as NodeID)).toBeUndefined()
+        expect(state.getPeerDescriptor('a' as DhtAddress)).toEqual({ nodeId: 'a' })
+        expect(state.getPeerDescriptor('unknown' as DhtAddress)).toBeUndefined()
 
         currentTime = 30
         await waitForEvent(state as any, 'removed')
 
-        expect(state.getPeerDescriptor('a' as NodeID)).toBeUndefined()
+        expect(state.getPeerDescriptor('a' as DhtAddress)).toBeUndefined()
     })
 
     describe('waitUntilReady', () => {
