@@ -16,6 +16,12 @@ export const getRawFromDhtAddress = (address: DhtAddress): DhtAddressRaw => {
     return hexToBinary(address) as unknown as DhtAddressRaw
 }
 
+export const getFlippedDhtAddress = (address: DhtAddress): DhtAddress => {
+    const raw = getRawFromDhtAddress(address)
+    const flipped = raw.map((val) => ~val)
+    return getDhtAddressFromRaw(flipped)
+}
+
 export const getNodeIdFromPeerDescriptor = (peerDescriptor: PeerDescriptor): DhtAddress => {
     return getDhtAddressFromRaw(peerDescriptor.nodeId)
 }

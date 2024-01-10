@@ -4,7 +4,7 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import { ConnectionManager } from '../../connection/ConnectionManager'
 import { PeerManager } from '../PeerManager'
-import { DhtAddress, areEqualPeerDescriptors, createRandomDhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { DhtAddress, areEqualPeerDescriptors, getFlippedDhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { ServiceID } from '../../types/ServiceID'
 
 interface PeerDiscoveryConfig {
@@ -36,14 +36,14 @@ export class PeerDiscovery {
 
     async joinDht(
         entryPoints: PeerDescriptor[],
-        doAdditionalRandomPeerDiscovery = true,
+        doAdditionalFlippedPeerDiscovery = true,
         retry = true
     ): Promise<void> {
         const contactedPeers = new Set<DhtAddress>()
         await Promise.all(entryPoints.map((entryPoint) => this.joinThroughEntryPoint(
             entryPoint,
             contactedPeers,
-            doAdditionalRandomPeerDiscovery,
+            doAdditionalFlippedPeerDiscovery,
             retry
         )))
     }
@@ -52,7 +52,7 @@ export class PeerDiscovery {
         entryPointDescriptor: PeerDescriptor,
         // Note that this set is mutated by DiscoverySession
         contactedPeers: Set<DhtAddress>,
-        doAdditionalRandomPeerDiscovery = true,
+        doAdditionalFlippedPeerDiscovery = true,
         retry = true
     ): Promise<void> {
         if (this.isStopped()) {
@@ -70,8 +70,8 @@ export class PeerDiscovery {
         this.config.peerManager.handleNewPeers([entryPointDescriptor])
         const targetId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
         const sessions = [this.createSession(targetId, contactedPeers)]
-        if (doAdditionalRandomPeerDiscovery) {
-            sessions.push(this.createSession(createRandomDhtAddress(), contactedPeers))
+        if (doAdditionalFlippedPeerDiscovery) {
+            sessions.push(this.createSession(getFlippedDhtAddress(targetId), contactedPeers))
         }
         await this.runSessions(sessions, entryPointDescriptor, retry)
         this.config.connectionManager?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
