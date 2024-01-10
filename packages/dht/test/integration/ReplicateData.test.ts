@@ -3,15 +3,14 @@ import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils/utils'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
-import { createMockDataEntry, expectEqualData, unpackData } from '../utils/mock/mockDataEntry'
-import { DhtAddress, createRandomDhtAddress } from '../../src/identifiers'
+import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
+import { createRandomDhtAddress, getDhtAddressFromRaw } from '../../src/identifiers'
 import { range, shuffle } from 'lodash'
 import { DataEntry, PeerDescriptor } from '../../src/exports'
 
 jest.setTimeout(60000)
 
-const DATA_KEY = '333233323332336531327233317233' as DhtAddress  // TODO use random data
-const DATA_VALUE = createMockDataEntry({ key: DATA_KEY })
+const DATA = createMockDataEntry()
 const NUM_NODES = 100
 const MAX_CONNECTIONS = 80
 const K = 8
@@ -20,7 +19,7 @@ const ENTRY_POINT_INDEX = 0
 const getDataEntries = (node: DhtNode): DataEntry[] => {
     // @ts-expect-error private field
     const store = node.localDataStore
-    return Array.from(store.values(DATA_KEY))
+    return Array.from(store.values(getDhtAddressFromRaw(DATA.key)))
 }
 
 describe('Replicate data from node to node in DHT', () => {
@@ -59,7 +58,7 @@ describe('Replicate data from node to node in DHT', () => {
     it('Data replicates to the closest node no matter where it is stored', async () => {
         // calculate offline which node is closest to the data
         const sortedList = new SortedContactList<DhtNode>({ 
-            referenceId: DATA_KEY,
+            referenceId: getDhtAddressFromRaw(DATA.key),
             maxSize: 10000, 
             allowToContainReferenceId: true, 
             emitEvents: false 
@@ -67,7 +66,7 @@ describe('Replicate data from node to node in DHT', () => {
         nodes.forEach((node) => sortedList.addContact(node))
 
         const closest = sortedList.getAllContacts()
-        const successfulStorers = await nodes[0].storeDataToDht(DATA_KEY, DATA_VALUE.data!)
+        const successfulStorers = await nodes[0].storeDataToDht(getDhtAddressFromRaw(DATA.key), DATA.data!)
         expect(successfulStorers.length).toBe(1)
 
         await Promise.all(
@@ -81,7 +80,7 @@ describe('Replicate data from node to node in DHT', () => {
 
         const data = getDataEntries(closest[0])
         expect(data).toHaveLength(1)
-        expectEqualData(data[0], DATA_VALUE)
+        expectEqualData(data[0], DATA)
     }, 180000)
 
     it('Data replicates to the last remaining node if most of the other nodes leave gracefully', async () => {
@@ -95,7 +94,7 @@ describe('Replicate data from node to node in DHT', () => {
         await waitNodesReadyForTesting(nodes)
 
         const randomIndex = Math.floor(Math.random() * nodes.length)
-        await nodes[randomIndex].storeDataToDht(DATA_KEY, DATA_VALUE.data!)
+        await nodes[randomIndex].storeDataToDht(getDhtAddressFromRaw(DATA.key), DATA.data!)
 
         const nodeIndices = shuffle(range(nodes.length))
         const MIN_NODE_COUNT = 20
@@ -105,8 +104,8 @@ describe('Replicate data from node to node in DHT', () => {
         }
 
         const randomNonStoppedNode = nodes[nodeIndices.pop()!]
-        const data = await randomNonStoppedNode.getDataFromDht(DATA_KEY)
+        const data = await randomNonStoppedNode.getDataFromDht(getDhtAddressFromRaw(DATA.key))
         expect(data).toHaveLength(1)
-        expectEqualData(data[0], DATA_VALUE)
+        expectEqualData(data[0], DATA)
     }, 180000)
 })
