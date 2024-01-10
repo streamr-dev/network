@@ -154,10 +154,6 @@ export default class StreamMessage {
         return new MessageRef(this.getTimestamp(), this.getSequenceNumber())
     }
 
-    getPreviousMessageRef(): MessageRef | null {
-        return this.prevMsgRef
-    }
-
     /**
      * Lazily parses the content to JSON
      */

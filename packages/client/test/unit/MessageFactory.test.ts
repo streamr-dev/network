@@ -210,7 +210,7 @@ describe('MessageFactory', () => {
             const msg1 = await createMessage({}, messageFactory)
             const msg2 = await createMessage({}, messageFactory)
             expect(msg2.messageId.msgChainId).toBe(msg1.messageId.msgChainId)
-            expect(msg2.getPreviousMessageRef()).toEqual(msg1.getMessageRef())
+            expect(msg2.prevMsgRef).toEqual(msg1.getMessageRef())
         })
 
         it('partitions have separate chains', async () => {
@@ -220,8 +220,8 @@ describe('MessageFactory', () => {
             const msg3 = await createMessage({ msgChainId: msg2.getMsgChainId(), explicitPartition: 20 }, messageFactory)
             expect(msg2.messageId.msgChainId).not.toBe(msg1.messageId.msgChainId)
             expect(msg3.messageId.msgChainId).not.toBe(msg1.messageId.msgChainId)
-            expect(msg2.getPreviousMessageRef()).toBe(null)
-            expect(msg3.getPreviousMessageRef()).toBe(null)
+            expect(msg2.prevMsgRef).toBe(null)
+            expect(msg3.prevMsgRef).toBe(null)
         })
 
         it('explicit msgChainId', async () => {
@@ -231,9 +231,9 @@ describe('MessageFactory', () => {
             const msg3 = await createMessage({ msgChainId: 'mock-id' }, messageFactory)
             expect(msg1.messageId.msgChainId).toBe('mock-id')
             expect(msg2.messageId.msgChainId).not.toBe('mock-id')
-            expect(msg2.getPreviousMessageRef()).toBe(null)
+            expect(msg2.prevMsgRef).toBe(null)
             expect(msg3.messageId.msgChainId).toBe('mock-id')
-            expect(msg3.getPreviousMessageRef()).toEqual(msg1.getMessageRef())
+            expect(msg3.prevMsgRef).toEqual(msg1.getMessageRef())
         })
 
         it('backdated', async () => {
@@ -243,7 +243,7 @@ describe('MessageFactory', () => {
                 return createMessage({ timestamp: 1000 }, messageFactory)
             }).rejects.toThrow('prevMessageRef must come before current')
             const msg3 = await createMessage({}, messageFactory)
-            expect(msg3.getPreviousMessageRef()).toEqual(msg1.getMessageRef())
+            expect(msg3.prevMsgRef).toEqual(msg1.getMessageRef())
         })
     })
 })

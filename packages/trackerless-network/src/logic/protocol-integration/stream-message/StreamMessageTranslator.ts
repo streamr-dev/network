@@ -86,10 +86,10 @@ export class StreamMessageTranslator {
             messageChainId: msg.getMsgChainId()
         }
         let previousMessageRef: MessageRef | undefined = undefined
-        if (msg.getPreviousMessageRef()) {
+        if (msg.prevMsgRef) {
             previousMessageRef = {
-                timestamp: msg.getPreviousMessageRef()!.timestamp,
-                sequenceNumber: msg.getPreviousMessageRef()!.sequenceNumber,
+                timestamp: msg.prevMsgRef!.timestamp,
+                sequenceNumber: msg.prevMsgRef!.sequenceNumber,
             }
         }
         let newGroupKey: GroupKey | undefined = undefined
