@@ -61,7 +61,6 @@ export default class StreamMessage {
     newGroupKey: EncryptedGroupKey | null
     signature: Uint8Array
     content: Uint8Array
-    private parsedContent?: unknown
 
     /**
      * Create a new StreamMessage identical to the passed-in streamMessage.
@@ -154,31 +153,23 @@ export default class StreamMessage {
         return new MessageRef(this.getTimestamp(), this.getSequenceNumber())
     }
 
-    /**
-     * Lazily parses the content to JSON
-     */
-    getParsedContent(): unknown {
-        if (this.parsedContent == null) {
-            // Don't try to parse encrypted or binary type messages
-            if (this.contentType === ContentType.BINARY
-                || (this.messageType === StreamMessageType.MESSAGE && this.encryptionType !== EncryptionType.NONE)) {
-                return this.content
+    // TODO: consider replacing later half of type with a "JSON type" from a ts-toolbelt or type-fest or ts-essentials
+    getParsedContent(): Uint8Array | Record<string, unknown> | Array<unknown> {
+        if (this.encryptionType !== EncryptionType.NONE || this.contentType === ContentType.BINARY) {
+            return this.content
+        } else if (this.contentType === ContentType.JSON) {
+            try {
+                return JSON.parse(binaryToUtf8(this.content))
+            } catch (err: any) {
+                throw new InvalidJsonError(
+                    this.getStreamId(),
+                    err,
+                    this,
+                )
             }
-            if (this.contentType === ContentType.JSON) {
-                try {
-                    this.parsedContent = JSON.parse(binaryToUtf8(this.content))
-                } catch (err: any) {
-                    throw new InvalidJsonError(
-                        this.getStreamId(),
-                        err,
-                        this,
-                    )
-                }
-            } else {
-                throw new StreamMessageError(`Unsupported contentType for getParsedContent: ${this.contentType}`, this)
-            }
+        } else {
+            throw new StreamMessageError(`Unsupported contentType: ${this.contentType}`, this)
         }
-        return this.parsedContent
     }
 
     static isAESEncrypted(msg: StreamMessage): msg is StreamMessageAESEncrypted {
