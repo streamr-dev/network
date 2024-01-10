@@ -60,18 +60,16 @@ export default class StreamMessage {
     groupKeyId: string | null
     newGroupKey: EncryptedGroupKey | null
     signature: Uint8Array
-    serializedContent: Uint8Array
-    private parsedContent?: unknown
+    content: Uint8Array
 
     /**
      * Create a new StreamMessage identical to the passed-in streamMessage.
      */
     clone(): StreamMessage {
-        const content = this.getSerializedContent()
         return new StreamMessage({
             messageId: this.messageId.clone(),
             prevMsgRef: this.prevMsgRef ? this.prevMsgRef.clone() : null,
-            content,
+            content: this.content,
             messageType: this.messageType,
             contentType: this.contentType,
             encryptionType: this.encryptionType,
@@ -116,9 +114,9 @@ export default class StreamMessage {
         validateIsType('signature', signature, 'Uint8Array', Uint8Array)
         this.signature = signature
 
-        this.serializedContent = content
+        this.content = content
 
-        validateIsNotEmptyByteArray('content', this.serializedContent)
+        validateIsNotEmptyByteArray('content', this.content)
 
         StreamMessage.validateSequence(this)
     }
@@ -155,78 +153,48 @@ export default class StreamMessage {
         return new MessageRef(this.getTimestamp(), this.getSequenceNumber())
     }
 
-    getPreviousMessageRef(): MessageRef | null {
-        return this.prevMsgRef
-    }
-
-    getMessageID(): MessageID {
-        return this.messageId
-    }
-
-    getSerializedContent(): Uint8Array {
-        return this.serializedContent
-    }
-
-    /**
-     * Lazily parses the content to JSON
-     */
-    getParsedContent(): unknown {
-        if (this.parsedContent == null) {
-            // Don't try to parse encrypted or binary type messages
-            if (this.contentType === ContentType.BINARY
-                || (this.messageType === StreamMessageType.MESSAGE && this.encryptionType !== EncryptionType.NONE)) {
-                return this.serializedContent
+    // TODO: consider replacing later half of type with a "JSON type" from a ts-toolbelt or type-fest or ts-essentials
+    getParsedContent(): Uint8Array | Record<string, unknown> | Array<unknown> {
+        if (this.encryptionType !== EncryptionType.NONE || this.contentType === ContentType.BINARY) {
+            return this.content
+        } else if (this.contentType === ContentType.JSON) {
+            try {
+                return JSON.parse(binaryToUtf8(this.content))
+            } catch (err: any) {
+                throw new InvalidJsonError(
+                    this.getStreamId(),
+                    err,
+                    this,
+                )
             }
-            if (this.contentType === ContentType.JSON) {
-                try {
-                    this.parsedContent = JSON.parse(binaryToUtf8(this.serializedContent))
-                } catch (err: any) {
-                    throw new InvalidJsonError(
-                        this.getStreamId(),
-                        err,
-                        this,
-                    )
-                }
-            } else {
-                throw new StreamMessageError(`Unsupported contentType for getParsedContent: ${this.contentType}`, this)
-            }
+        } else {
+            throw new StreamMessageError(`Unsupported contentType: ${this.contentType}`, this)
         }
-        return this.parsedContent
     }
 
-    getContent(): Uint8Array
-    getContent(parsedContent: false): Uint8Array
-    getContent(parsedContent: true): unknown
-    getContent(parsedContent = true): Uint8Array | unknown {
-        if (parsedContent) {
-            return this.getParsedContent()
-        }
-        return this.getSerializedContent()
+    static isAESEncrypted(msg: StreamMessage): msg is StreamMessageAESEncrypted {
+        return msg.encryptionType === EncryptionType.AES
     }
 
-    getNewGroupKey(): EncryptedGroupKey | null {
-        return this.newGroupKey
-    }
-
-    static validateMessageType(messageType: StreamMessageType): void {
+    private static validateMessageType(messageType: StreamMessageType): void {
         if (!StreamMessage.VALID_MESSAGE_TYPES.has(messageType)) {
             throw new ValidationError(`Unsupported message type: ${messageType}`)
         }
     }
 
-    static validateContentType(contentType: ContentType): void {
+    private static validateContentType(contentType: ContentType): void {
         if (!StreamMessage.VALID_CONTENT_TYPES.has(contentType)) {
             throw new ValidationError(`Unsupported content type: ${contentType}`)
         }
     }
 
-    static validateEncryptionType(encryptionType: EncryptionType): void {
+    private static validateEncryptionType(encryptionType: EncryptionType): void {
         if (!StreamMessage.VALID_ENCRYPTIONS.has(encryptionType)) {
             throw new ValidationError(`Unsupported encryption type: ${encryptionType}`)
         }
     }
 
-    static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef | null }): void {
+    private static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef | null }): void {
         if (!prevMsgRef) {
             return
         }
@@ -248,9 +216,5 @@ export default class StreamMessage {
                 `prevMessageRef must come before current. Current: ${JSON.stringify(messageId.toMessageRef())} Previous: ${JSON.stringify(prevMsgRef)}`
             )
         }
-    }
-
-    static isAESEncrypted(msg: StreamMessage): msg is StreamMessageAESEncrypted {
-        return msg.encryptionType === EncryptionType.AES
     }
 }

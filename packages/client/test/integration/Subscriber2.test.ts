@@ -49,10 +49,10 @@ describe('Subscriber', () => {
         return subcriptions.length
     }
 
-    const createMockMessage = async (serializedContent: Uint8Array, timestamp: number) => {
+    const createMockMessage = async (content: Uint8Array, timestamp: number) => {
         return await createSignedMessage({
             messageId: new MessageID(streamId, 0, timestamp, 0, await publisher.getAddress(), 'msgChainId'),
-            serializedContent,
+            content,
             authentication: publisherAuthentication,
             contentType: ContentType.JSON
         })
@@ -336,8 +336,8 @@ describe('Subscriber', () => {
                 const nodeId = await publisher.getNodeId()
                 const node = environment.getNetwork().getNode(nodeId)!
                 for (let i = 0; i < NUM_MESSAGES; i++) {
-                    const serializedContent = (i === MAX_ITEMS) ? 'invalid-json' : JSON.stringify({ foo: i })
-                    const msg = await createMockMessage(utf8ToBinary(serializedContent), i)
+                    const content = (i === MAX_ITEMS) ? 'invalid-json' : JSON.stringify({ foo: i })
+                    const msg = await createMockMessage(utf8ToBinary(content), i)
                     await node.broadcast(msg)
                     published.push(msg)
                 }

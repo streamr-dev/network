@@ -62,7 +62,7 @@ export class PublisherKeyExchange {
         if (GroupKeyRequest.is(request)) {
             try {
                 const authenticatedUser = await this.authentication.getAddress()
-                const { recipient, requestId, rsaPublicKey, groupKeyIds } = deserializeGroupKeyRequest(request.serializedContent) as GroupKeyRequest
+                const { recipient, requestId, rsaPublicKey, groupKeyIds } = deserializeGroupKeyRequest(request.content)
                 if (recipient === authenticatedUser) {
                     this.logger.debug('Handling group key request', { requestId })
                     await validateStreamMessage(request, this.streamRegistry)
@@ -120,7 +120,7 @@ export class PublisherKeyExchange {
                 await this.authentication.getAddress(),
                 createRandomMsgChainId()
             ),
-            serializedContent: serializeGroupKeyResponse(responseContent),
+            content: serializeGroupKeyResponse(responseContent),
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             encryptionType: EncryptionType.RSA,
             authentication: this.authentication,

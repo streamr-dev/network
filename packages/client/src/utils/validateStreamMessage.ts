@@ -40,7 +40,7 @@ const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry
         case StreamMessageType.GROUP_KEY_REQUEST:
             return validateGroupKeyMessage(
                 streamMessage,
-                deserializeGroupKeyRequest(streamMessage.serializedContent).recipient,
+                deserializeGroupKeyRequest(streamMessage.content).recipient,
                 streamMessage.getPublisherId(),
                 streamRegistry
             )
@@ -48,7 +48,7 @@ const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry
             return validateGroupKeyMessage(
                 streamMessage,
                 streamMessage.getPublisherId(),
-                deserializeGroupKeyResponse(streamMessage.serializedContent).recipient,
+                deserializeGroupKeyResponse(streamMessage.content).recipient,
                 streamRegistry
             )
         default:
@@ -64,8 +64,8 @@ const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry
  */
 const assertSignatureIsValid = (streamMessage: StreamMessage): void => {
     const payload = createSignaturePayload({
-        messageId: streamMessage.getMessageID(),
-        serializedContent: streamMessage.getSerializedContent(),
+        messageId: streamMessage.messageId,
+        content: streamMessage.content,
         prevMsgRef: streamMessage.prevMsgRef ?? undefined,
         newGroupKey: streamMessage.newGroupKey ?? undefined
     })

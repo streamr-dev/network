@@ -95,6 +95,6 @@ describe('resend and subscribe', () => {
             messageType: StreamMessageType.GROUP_KEY_REQUEST
         })
         expect(groupKeyRequests.length).toBe(1)
-        expect(deserializeGroupKeyRequest(groupKeyRequests[0].serializedContent).groupKeyIds).toEqual([groupKey.id])
+        expect(deserializeGroupKeyRequest(groupKeyRequests[0].content).groupKeyIds).toEqual([groupKey.id])
     })
 })

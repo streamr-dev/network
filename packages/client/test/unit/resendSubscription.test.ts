@@ -10,6 +10,7 @@ import { Subscription, SubscriptionEvents } from '../../src/subscribe/Subscripti
 import { initResendSubscription } from '../../src/subscribe/resendSubscription'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { createGroupKeyQueue, createRandomAuthentication, createStreamRegistry, mockLoggerFactory } from '../test-utils/utils'
+import { isEqual } from 'lodash'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 const MAX_GAP_REQUESTS = 2
@@ -31,7 +32,7 @@ const createResend = (historicalMessages: StreamMessage[], gapHandler: (opts: Re
 
 const waitForMatchingItem = async (streamMessage: StreamMessage, queue: Queue<Message>) => {
     await waitForCondition(() => {
-        return queue.values().some((msg) => msg.content === streamMessage.getParsedContent())
+        return queue.values().some((msg) => isEqual(msg.content, streamMessage.getParsedContent()))
     })
 }
 
