@@ -295,7 +295,7 @@ export class StreamrNode extends EventEmitter<Events> {
                 const stream = this.streamParts.get(streamPartId)! as { node: RandomGraphNode, layer1Node: Layer1Node }
                 return {
                     id: streamPartId,
-                    layer1Neighbors: stream.layer1Node.getAllNeighborPeerDescriptors(),
+                    layer1Neighbors: stream.layer1Node.getNeighbors(),
                     layer2Neighbors: stream.node.getNeighborIds()
                 }
             })
