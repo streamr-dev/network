@@ -24,7 +24,7 @@ describe('Batch', () => {
 
         expect(() => {
             new Batch('bucketId', 1, 0, 123, 123)
-        }).toThrow(new TypeError('maxRecords must be > 0'))
+        }).toThrow(new TypeError('maxRecordCount must be > 0'))
 
         expect(() => {
             new Batch('bucketId', 1, 1, 0, 123)
