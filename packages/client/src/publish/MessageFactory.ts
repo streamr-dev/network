@@ -5,6 +5,7 @@ import {
     EncryptionType,
     MessageID,
     MessageRef,
+    SignatureType,
     StreamID,
     StreamMessage,
     StreamMessageOptions,
@@ -34,6 +35,8 @@ export const createSignedMessage = async (
     const signature = await opts.authentication.createMessageSignature(createSignaturePayload({
         messageId: opts.messageId,
         content: opts.content,
+        signatureType: opts.signatureType,
+        encryptionType: opts.encryptionType,
         prevMsgRef: opts.prevMsgRef ?? undefined,
         newGroupKey: opts.newGroupKey ?? undefined
     }))
@@ -109,7 +112,7 @@ export class MessageFactory {
             contentType = ContentType.BINARY
             rawContent = content
         } else {
-            contentType = ContentType.JSON        
+            contentType = ContentType.JSON
             rawContent = utf8ToBinary(JSON.stringify(content))
         }
         if (encryptionType === EncryptionType.AES) {
@@ -129,7 +132,8 @@ export class MessageFactory {
             groupKeyId,
             newGroupKey,
             authentication: this.authentication,
-            contentType
+            contentType,
+            signatureType: SignatureType.SECP256K1,
         })
     }
 

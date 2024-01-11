@@ -12,6 +12,7 @@ import {
     ContentType,
     EncryptionType,
     MessageID,
+    SignatureType,
     StreamMessage,
     StreamMessageType,
     StreamPartID,
@@ -102,6 +103,8 @@ const measureJoiningTime = async () => {
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
             signature: hexToBinary('0x1234'),
+            signatureType: SignatureType.SECP256K1,
+
         })
         streamParts.get(stream)!.broadcast(streamMessage)
     }, 1000)

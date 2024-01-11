@@ -1,6 +1,14 @@
 import 'reflect-metadata'
 
-import { ContentType, EncryptionType, MessageID, StreamMessage, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
+import {
+    ContentType,
+    EncryptionType,
+    MessageID,
+    SignatureType,
+    StreamMessage,
+    StreamPartIDUtils,
+    toStreamID
+} from '@streamr/protocol'
 import { randomEthereumAddress, startTestServer } from '@streamr/test-utils'
 import { collect, toLengthPrefixedFrame } from '@streamr/utils'
 import range from 'lodash/range'
@@ -64,7 +72,8 @@ describe('Resends', () => {
                     content: MOCK_CONTENT,
                     signature: hexToBinary('0x1234'),
                     contentType: ContentType.JSON,
-                    encryptionType: EncryptionType.NONE
+                    encryptionType: EncryptionType.NONE,
+                    signatureType: SignatureType.SECP256K1
                 })
                 res.write(toLengthPrefixedFrame(convertStreamMessageToBytes(msg)))
             }

@@ -1,7 +1,7 @@
 import {
     ContentType, EncryptionType,
     MessageID,
-    MessageRef,
+    MessageRef, SignatureType,
     StreamMessage,
     StreamPartID,
     StreamPartIDUtils,
@@ -94,7 +94,8 @@ function createMsg({ publisherId, timestamp }: MessageInfo): StreamMessage {
         content: MOCK_CONTENT,
         signature: hexToBinary('0x1234'),
         contentType: ContentType.JSON,
-        encryptionType: EncryptionType.NONE
+        encryptionType: EncryptionType.NONE,
+        signatureType: SignatureType.SECP256K1
     })
 }
 
