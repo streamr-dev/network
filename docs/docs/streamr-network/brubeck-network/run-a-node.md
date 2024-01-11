@@ -89,9 +89,9 @@ Change the permissions on the node's folder:
 sudo chmod -R 777 ~/.streamrDocker*/
 ```
 
-### Step 3: Run the config wizard to create and configure your Streamr node
+### Step 3: Run the Config Wizard to create and configure your Streamr node
 
-Start the config wizard with the below command. Docker will download the Broker image unless you have it already.
+Start the Config Wizard with the below command. Docker will download the Broker image unless you have it already.
 
 **Linux / macOS**
 
@@ -107,17 +107,17 @@ Change the working directory (move into your node's folder):
 cd ~/.streamrDocker1
 ```
 
-Then run the config wizard:
+Then run the Config Wizard:
 
 ```
 docker run -it -v ${pwd}:/home/streamr/.streamr streamr/broker-node:latest bin/config-wizard
 ```
 
-**Using the config wizard**
+**Using the Config Wizard**
 
 _"Generate or import Ethereum private key"_
 
-You can generate a new private key or use one you already have. You can avoid having the private key of the wallet with your soon-to-be staked DATA stored in a plain text file by generating a new private key in this step and adding your staking wallet's public key as a *beneficiary address* once you are done configuring the node via the config wizard (highly recommended).
+You can generate a new private key or use one you already have. You can avoid having the private key of the wallet with your soon-to-be staked DATA stored in a plain text file by generating a new private key in this step and adding your staking wallet's public key as a *beneficiary address* once you are done configuring the node via the Config Wizard (highly recommended).
 
 _"Plugins to enable"_
 
@@ -129,7 +129,7 @@ Press 'enter' to use the default path.
 
 :::caution
 
-The path to the config file in the `docker run` command and the path defined via the config wizard differs and tend to cause some confusion. They are different for a reason. The path in the `docker run` command (`/home/streamr/.streamr`) refers to the path _inside_ the Docker container, whereas the path you define via the config wizard refers to the path _outside_ the Docker container. Hence, you need to use the default path as mentioned above.
+The path to the config file in the `docker run` command and the path defined via the Config Wizard differs and tend to cause some confusion. They are different for a reason. The path in the `docker run` command (`/home/streamr/.streamr`) refers to the path _inside_ the Docker container, whereas the path you define via the Config Wizard refers to the path _outside_ the Docker container. Hence, you need to use the default path as mentioned above.
 
 :::
 

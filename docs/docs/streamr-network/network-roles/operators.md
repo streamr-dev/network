@@ -20,15 +20,13 @@ Operators represent themselves on-chain with an Operator smart contract and it�
 
 Operators can join or leave Sponsorships at any time, subject to conditions like minimum stake and penalties for early withdrawal or misconduct. Under normal conditions their staked DATA tokens are returned in full.
 
-### Operator Contract and Streamr node interactions
+### Streamr node interactions
 The "leader" node in the Operator's fleet of Streamr nodes will send heartbeat transactions once per day to the Operator contract. The transaction includes the contact details for the node.
 
 When new nodes want to join the network, they need to find someone already in the network. The purpose of the heartbeat process is to maintain publicly discoverable contact details for a decentralized set of nodes, so that joining the network doesn't need to rely on a hard-coded centralized entrypoint.
 
-In order to stake on Sponsorships and start earning, the Operators fund their Operator contract (technically, self-delegate) or accept delegations from external Delegators, with whom they then share revenue. The Operator contract is also the exit point for earnings and delegated stake.
-
 ### The Operator plugin
-The Operator plugin is packed with the Streamr node software. It’s essential that Operators use run this plugin (or build a functional equivalent) to be able to join Sponsorships and participate on the Streamr Network incentive layer.
+The Operator plugin is packed with the Streamr node software. It’s essential that Operators run this plugin (or build a functional equivalent) to be able to join Sponsorships and participate on the Streamr Network incentive layer.
 
 ![image](@site/static/img/operator-flows.png)
 The Operator plugin interfaces with the Network and the Operator contract, which is connected to Sponsorship smart contracts.

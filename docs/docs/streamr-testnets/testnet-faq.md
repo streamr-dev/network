@@ -4,10 +4,27 @@ sidebar_position: 2
 
 # Testnet FAQs
 ## General
-#### What are the differences between the "pretestnet" and Testnet 1?
-This `v100.0.0-testnet-one.0` version can be used to connect to Testnet 1 **or** the Mumbai testing environment. 
+#### Migrating from Brubeck to Streamr 1.0 
+If you’ve been running a Streamr node in the past you might be familiar with a two step process– run some software and stake some tokens, i.e. a software step and a blockchain step. Behind the scenes, the Streamr core team would validate user’s stake and transfer tokens to node runner wallets at the end of each month. This has worked, but it's been highly centralized. With the introduction of stream Sponsorships, Operators, Sponsors and Delegators we now have everything we need for a peer to peer decentralized and market based incentivization on Streamr. The most important role is the Operator, so let's learn how to become one.
 
-The active network depends on the node config. The [Mumbai node config](../guides/become-an-operator#the-mumbai-test-environment) is unchanged. The [Testnet 1 config](../guides/become-an-operator#testnet-node-config) is a much shorter version.
+:::info Streamr 1.0 network versus the Brubeck (older) network
+- You can run ~~up to 5 nodes per IP address~~ any number of nodes from the same IP address, although one node per machine is recommended
+- Rewards are ~~automatically paid out at the beginning of the following month~~ claimed from active Sponsorships at any time
+- You can stake ~~up to 20K DATA per node~~ as much as you want. Note that at least 5% of Operator stake must come from the owner, and therefore delegations can not exceed 95%.
+- To participate in the testnets, use specific versions/tags of the Streamr node software, such as `v100.0.0-testnet-two.4`. The `latest` tag still points to the previous milestone (Brubeck) software.
+- There is no need for a "beneficiary address" in Streamr 1.0. Instead, the node configuration contains the Operator contract address.
+:::
+
+#### Migrating from the Mumbai testing environment to Stream 1.0
+If you've created your node in the Mumbai testing environment and you want to participate in the incentivized testnets with real token rewards and risks, then you'll need to recreate your Operator using the Streamr Network [Hub](https://streamr.network/hub/network/operators). The same funding and pairing steps that you did for your Mumbai Operator need to be repeated here too. The testnets and the future 1.0 mainnet will run on the Polygon Blockchain.
+
+- **Node version:** The `pretestnet` tagged releases shouldn't be used anymore, instead use `v100.0.0-testnet-two.4`. 
+- **Node config:** Your node config should resemble the [Testnet 1 config template](../guides/become-an-operator.md#testnet-node-config).
+
+#### What are the differences between the "pretestnet" and Testnet 1?
+This `v100.0.0-testnet-two.4` version can be used to connect to Testnet 1 **or** the Mumbai testing environment. 
+
+The active network depends on the node config. The [Mumbai node config](../guides/become-an-operator.md#the-mumbai-test-environment) is unchanged. The [Testnet 1 config](../guides/become-an-operator.md#testnet-node-config) is a much shorter version.
 
 Don’t use the `pretestnet` releases anymore.
 
@@ -26,6 +43,9 @@ From the 'network strength' perspective (interpreted to mean from the decentrali
 
 So, it's not wrong to think that more nodes in a stream is better, but it's an oversimplification that completely ignores any quality aspect. The goal in 1.0 is to give sponsors what they pay for, which is essentially robustness and security for their stream, and those are achieved through a sufficient amount of decentralized nodes doing the work.
 
+#### How do I get DATA tokens?
+You'll need at least 5k `DATA` tokens to participate in any Sponsorship. The `DATA` token is traded on [exchanges](https://coinmarketcap.com/currencies/streamr/#Markets). You'll need to either withdraw to Polygon, or bridge Ethereum mainnet tokens using the [Polygon bridge](https://wallet.polygon.technology/polygon/bridge/deposit). Please [stay safe](#safety)! 
+
 ## Technical
 #### What are the hardware requirements for running nodes?
 The main resources demanded of Streamr nodes are bandwidth and CPU. Memory usage is moderate and there's no storage requirement since the node doesn't write anything to disk. Generally speaking, a medium size VM with 8GB of RAM, 3-4 virtual cores, and ideally 1Gbps bandwidth is a safe choice, though you may get by with much lower specs as well. An idle Raspberry Pi may also be used as a Streamr node. 
@@ -37,7 +57,7 @@ Running a fleet of nodes with a redundancy factor greater than one is recommende
 
 Nodes will be doing real work on real streams, and the amount one can stake/earn is not directly limited by the number of nodes. Still of course, more nodes can do more work and that potentially allows you to earn more, so the relationship is more indirect.
 
-Learn more about [node redundancy](../streamr-network/network-roles/operators#node-redundancy-factor).
+Learn more about [node redundancy](../streamr-network/network-roles/operators.md#node-redundancy-factor).
 
 #### What is the advantage of Operators running multiple nodes?
 With more nodes, Operators can do more work and/or have more redundancy to protect from slashing. Theoretical example:
@@ -133,7 +153,7 @@ Add given nodes public key to operator node addresses.
 I’m receiving the following warning message.
 
 ```JSON
-INFO [2023-11-10T10:52:30.450] (broker              ): Start broker version v100.0.0-testnet-one.0
+INFO [2023-11-10T10:52:30.450] (broker              ): Start broker version v100.0.0-testnet-two.4
 Error: call revert exception [ See: https://links.ethers.org/v5-errors-CALL_EXCEPTION ] (method="metadata()", data="0x", errorArgs=null, errorName=null, errorSignature=null, reason=null, code=CALL_EXCEPTION, version=abi/5.7.0)
 ```
 
@@ -183,8 +203,39 @@ Could not synchronize with thegraph blockchain indexing service.
 This is likely to only be an issue on the Mumbai environment where The Graph support is limited. Check that your internet connection is active and try to restart the Streamr node. If this doesn’t help, try again in a while, The Graph service may be updating.
 
 ## Staking on, and earning from Sponsorships
+#### How many sponsorships should I stake on as an operator?
+Operators will want to stake on whatever pays best (within the limits of how much data volume their nodes can handle, of course). Example:
+- You have 1M DATA and want to allocate it to Sponsorships
+- Let's imagine there are two sponsorships: Sponsorship 1 is paying 50% APY and has 1M DATA staked, and Sponsorship 2 is paying 40% APY and has 10M staked
+- On first glance, Sponsorship 1 pays a better yield, but it isn't paying much in absolute terms and the APY gets quickly diluted as more stake is placed. If you staked all your 1M DATA on it, the staked amount would double and therefore the APY would halve, becoming 25%. It would then pay worse than the second one.
+- Sponsorship 2 is paying 40% on 10M staked, so you adding all of your tokens there wouldn't change the APY that much (to 36%)
+- Assuming the volume of data in both streams can be handled by the operator's nodes, an Optimal Operator would compute how much tokens they should stake on each Sponsorship to earn the best combined yield. In the optimal end result, both Sponsorships will be paying the same APY, therefore removing the "anomaly" of the first Sponsorship and returning the market to equilibrium.
+
+<!-- 
+TODO
+DATA delegated to an Operator are converted in StreamrOp tokens, and explain why and how 1 DATA ≠ 1 StreamrOp.
+
+This is especially confusing in the Undelegate pop-up where Streamr currently tells us we can undelegate X DATA which is false in fact.
+We can undelegate/withdraw X StreamrOp tokens which will be converted in DATA tokens that we will receive in our wallet, for a total value of Y DATA tokens initially delegated + Z DATA tokens we gained as interest.
+ -->
+
+<!-- TODO Is it possible to reduce the stake without withdrawal penalty by leaving the min stake at the sponsorship? 
+The Operator can always reduce down to min stake without penalty. The reasoning is that the operator is still doing the same promised work regardless of the size of the stake.
+-->
+
+
+#### Can Operators get all their tokens out, if they for example want to stop running nodes? What happens to delegations then?
+Normally owners need to provide at least 5% of the operator’s total value and keep it in the operator, while 95% can come from delegators. Owners can’t withdraw below this limit and keep operating. However, if they want to quit, they can unstake from all sponsorships and then withdraw all their tokens from the Operator. This is allowed as a special case.
+
+The delegators will then simply leave and delegate to someone else, as they are no longer earning anything with that operator.
+
 #### Will my rewards automatically be sent to my wallet?
 No, you will need to periodically check and claim your uncollected earnings from the Operator(s) that you have staked/delegated on.
+
+#### How does the auto collect earnings work?
+Nodes work on a collection trigger which is based on how much value there is to collect. The limit to decide whether the earnings are collected upon checking is configurable, and this is defined relative to the limit. The default is halfway to the limit, meaning that uncollected earnings are collected when they equal at least 2.5% of Operator stake. If nodes are running and have enough `MATIC` to pay for gas, then the 5% uncollected limit should not be exceeded.
+
+These check runs every hour by default. 
 
 #### Does staking mean holding tokens on a beneficiary address?
 You'll be staking into a smart contract rather than holding tokens on a beneficiary address. The Operator Contract is synonymous to your beneficiary address.
@@ -196,7 +247,7 @@ No. You must manually unstake your Operator.
 Anyone getting to 'buy' Operator shares too cheap harms the other parties involved. 
 Here's an example where the Operator self-delegates while there's a relatively large amount of pending earnings:
 
-**Operator self-delegates with pending earnings**:
+*Operator self-delegates with pending earnings*:
 - Operator self-delegated (funds) 10k DATA (Operator on-chain value: 10k, 100% owned by Operator)
 - Delegator delegates 10k DATA to Operator (Operator on-chain value: 20k, 50% owned by Operator, 50% by Delegator)
 - Operator works on some Sponsorship(s) for a while, say now there's 1k DATA in uncollected earnings (Operator on-chain value: 20k, "realtime" value: 21k)
@@ -211,7 +262,7 @@ So as you can see, if the Operator valuation is not correct, it can lead to mone
 
 *Note this example was simplified and did not include an Operator's cut or protocol fee.
 
-For more, see [Operator maintenance](../streamr-network/network-roles/operators#operator-maintenance).
+For more, see [Operator maintenance](../streamr-network/network-roles/operators.md#operator-maintenance).
 
 #### As an Operator can I always withdraw tokens from my Operator?
 It depends. If you're staked on Sponsorships with minimum stake periods then you'll need to wait for those periods to elapse or pay the 5k DATA early withdrawal penalty. Once unstaked from all Sponsorships and if there is no undelegation que to fulfill then you will be able to withdraw tokens from your Operator.
@@ -229,9 +280,15 @@ No, you only need `DATA` tokens.
 #### As a Delegator can I always withdraw tokens from the Operators that I have delegated to?
 Eventually, yes. If there's not enough available balance on the Operator you have delegated on then your withdrawal gets entered into the delegation que. When the Operator has an available balance, your tokens will be withdrawn. This will take at maximum 30 days and will happen automatically with no further action required.
 
+#### Do uncollected earnings impact my undelegation amount (Operator withdrawal)?
+Yes. Uncollected earnings are not counted in the undelegation process. If these uncollected earnings are significant and you want them to be counted then you could manually trigger the collection of earnings before undelegating.
+
+#### I have delegated my DATA to an Operator. Are the earnings transferred to my wallet automatically after a period of time or will I have to claim them from the operator page?
+Your earned tokens accumulate on the Operator and your share is calculated at the time of undelegation (withdrawal from the Operator). If there's uncollected earnings that are significant, you may want to manually trigger collection so they're made apart of your share (which maps to earnings) before undelegating.
+
 ## Slashing & kicking
 #### What are the penalties for Testnet 1?
-Testnet 1 will have reduced slashing penalties of 1% instead of the usual 10%.
+Testnet 1 will have reduced slashing penalties of 0.01% instead of the usual 10%.
 
 #### How and when does slashing occurs? When exactly will operators be slashed?
 There are two kinds of slashing events that Operators need to pay attention to. These are "Normal slashing" and "False flag" slashing. The short answer is that normal slashing occurs when nodes are caught being offline or unreachable when they should be online and doing work. It's a similar story for false flag voting, though the penalties are smaller. 
@@ -261,3 +318,9 @@ You'll no longer be earning from the Sponsorship and no longer required to do th
 
 #### I force unstaked from a Sponsorship, what happens?
 You'll need to pay the early exit fee of 5k DATA. The unwithdrawn earnings from that Sponsorship are automatically sent out, along with the remaining stake after slashing.
+
+## Safety
+#### What are some tips for staying safe on Streamr?
+- Consider starting small with your stake amount during the testnets and use common sense to never stake more than you can afford to lose. A professional audit of the incentive layer has been completed by Cyfrin, but nothing can be guaranteed of course. 
+- If you want to stake on a sponsorship, DO NOT click on the "Sponsor". That's for funding the sponsorship, not staking! Instead, go to the sponsorship you want to stake on and click "Join as an operator” and enter the amount. 
+- There may be an increase in activity by scammers during the testnets. A common approach is to pretend to offer help or tech support in direct messages (something we never do). Report any account that is asking you to sign transactions or asking for any sort of credentials such as your private key. These accounts are trying to steal your tokens. It’s advised you disable DMs on Discord. More tips can be found in #server-safety-guide.
