@@ -73,7 +73,11 @@ export class Handshaker {
         const exclude = excludedIds.concat(this.config.targetNeighbors.getIds())
         const targetNeighbors = this.selectParallelTargets(exclude)
         targetNeighbors.forEach((contact) => this.ongoingHandshakes.add(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())))
-        return this.doParallelHandshakes(targetNeighbors, exclude)
+        if (targetNeighbors.length >= 2) {
+            return this.doParallelHandshakes(targetNeighbors[0], targetNeighbors[1], exclude)
+        } else {
+            return this.selectNewTargetAndHandshake(exclude)
+        }
     }
 
     private selectParallelTargets(excludedIds: DhtAddress[]): HandshakeRpcRemote[] {
@@ -87,18 +91,22 @@ export class Handshaker {
         return targetNeighbors.map((neighbor) => this.createRpcRemote(neighbor.getPeerDescriptor()))
     }
 
-    private async doParallelHandshakes(targets: HandshakeRpcRemote[], excludedIds: DhtAddress[]): Promise<DhtAddress[]> {
-        const results = await Promise.allSettled(
-            Array.from(targets.values()).map(async (target: HandshakeRpcRemote, i) => {
-                const otherNode = i === 0 ? targets[1] : targets[0]
-                // TODO better check (currently this condition is always true)
-                const otherNodeId = otherNode ? getNodeIdFromPeerDescriptor(otherNode.getPeerDescriptor()) : undefined
-                return this.handshakeWithTarget(target, otherNodeId)
-            })
-        )
-        results.forEach((res, i) => {
+    private async doParallelHandshakes(
+        targetOne: HandshakeRpcRemote,
+        targetTwo: HandshakeRpcRemote,
+        excludedIds: DhtAddress[]
+    ): Promise<DhtAddress[]> {
+        const results = await Promise.allSettled([
+            this.handshakeWithTarget(targetOne, getNodeIdFromPeerDescriptor(targetTwo.getPeerDescriptor())),
+            this.handshakeWithTarget(targetTwo, getNodeIdFromPeerDescriptor(targetOne.getPeerDescriptor()))
+        ])
+        results.map((res, i) => {
             if (res.status !== 'fulfilled' || !res.value) {
-                excludedIds.push(getNodeIdFromPeerDescriptor(targets[i].getPeerDescriptor()))
+                if (i === 0) {
+                    excludedIds.push(getNodeIdFromPeerDescriptor(targetOne.getPeerDescriptor()))
+                } else {
+                    excludedIds.push(getNodeIdFromPeerDescriptor(targetTwo.getPeerDescriptor()))
+                }
             }
         })
         return excludedIds
