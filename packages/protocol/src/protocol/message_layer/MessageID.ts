@@ -1,19 +1,18 @@
 import { validateIsNotEmptyString, validateIsNotNegativeInteger, validateIsString } from '../../utils/validations'
 
 import MessageRef from './MessageRef'
-import { StreamID, toStreamID } from '../../../src/utils/StreamID'
+import { StreamID } from '../../../src/utils/StreamID'
 import { StreamPartID, toStreamPartID } from '../../utils/StreamPartID'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
-/** @internal */
-export type MessageIDArray = [string, number, number, number, string, string]
+import { EthereumAddress } from '@streamr/utils'
+
 export default class MessageID {
 
-    streamId: StreamID
-    streamPartition: number
-    timestamp: number
-    sequenceNumber: number
-    publisherId: EthereumAddress
-    msgChainId: string
+    readonly streamId: StreamID
+    readonly streamPartition: number
+    readonly timestamp: number
+    readonly sequenceNumber: number
+    readonly publisherId: EthereumAddress
+    readonly msgChainId: string
 
     constructor(
         streamId: StreamID,
@@ -38,45 +37,8 @@ export default class MessageID {
         this.msgChainId = msgChainId
     }
 
-    /** @internal */
-    toArray(): MessageIDArray {
-        return [
-            this.streamId,
-            this.streamPartition,
-            this.timestamp,
-            this.sequenceNumber,
-            this.publisherId,
-            this.msgChainId,
-        ]
-    }
-
-    /** @internal */
-    static fromArray(arr: MessageIDArray): MessageID {
-        const [
-            streamId,
-            streamPartition,
-            timestamp,
-            sequenceNumber,
-            publisherId,
-            msgChainId,
-        ] = arr
-
-        return new MessageID(
-            toStreamID(streamId),
-            streamPartition,
-            timestamp,
-            sequenceNumber,
-            toEthereumAddress(publisherId),
-            msgChainId
-        )
-    }
-
     getStreamPartID(): StreamPartID {
         return toStreamPartID(this.streamId, this.streamPartition)
-    }
-
-    serialize(): string {
-        return JSON.stringify(this.toArray())
     }
 
     toMessageRef(): MessageRef {
@@ -84,6 +46,13 @@ export default class MessageID {
     }
 
     clone(): MessageID {
-        return new MessageID(...this.toArray() as [StreamID, number, number, number, EthereumAddress, string])
+        return new MessageID(
+            this.streamId,
+            this.streamPartition,
+            this.timestamp,
+            this.sequenceNumber,
+            this.publisherId,
+            this.msgChainId
+        )
     }
 }

@@ -1,4 +1,12 @@
-import { ContentType, MessageID, MessageRef, StreamMessage, StreamMessageType, StreamPartIDUtils } from '@streamr/protocol'
+import {
+    ContentType,
+    EncryptionType,
+    MessageID,
+    MessageRef,
+    StreamMessage,
+    StreamMessageType,
+    StreamPartIDUtils
+} from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
@@ -53,6 +61,7 @@ describe('inspect', () => {
         })),
         messageType: StreamMessageType.MESSAGE,
         contentType: ContentType.JSON,
+        encryptionType: EncryptionType.NONE,
         signature: hexToBinary('0x1234'),
     })
     
