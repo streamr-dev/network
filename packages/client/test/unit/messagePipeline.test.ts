@@ -33,7 +33,7 @@ describe('messagePipeline', () => {
     let publisher: Wallet
 
     const createMessage = async (opts: {
-        serializedContent?: Uint8Array
+        content?: Uint8Array
         encryptionType?: EncryptionType
         groupKeyId?: string
         contentType?: ContentType
@@ -48,7 +48,7 @@ describe('messagePipeline', () => {
                 toEthereumAddress(publisher.address),
                 'mock-msgChainId'
             ),
-            serializedContent: opts.contentType === ContentType.BINARY ? opts.serializedContent! : utf8ToBinary(JSON.stringify(CONTENT)),
+            content: opts.contentType === ContentType.BINARY ? opts.content! : utf8ToBinary(JSON.stringify(CONTENT)),
             authentication: createPrivateKeyAuthentication(publisher.privateKey, undefined as any),
             contentType: opts.contentType ?? ContentType.JSON,
             ...opts
@@ -121,7 +121,7 @@ describe('messagePipeline', () => {
     it('binary content', async () => {
         const content = new Uint8Array([1, 2, 3])
         const msg = await createMessage({
-            serializedContent: content,
+            content: content,
             contentType: ContentType.BINARY
         })
         await pipeline.push(msg)
@@ -147,7 +147,7 @@ describe('messagePipeline', () => {
 
     it('error: invalid content', async () => {
         const msg = await createMessage({
-            serializedContent: utf8ToBinary('{ invalid-json'),
+            content: utf8ToBinary('{ invalid-json'),
         })
         await pipeline.push(msg)
         pipeline.endWrite()
@@ -162,9 +162,9 @@ describe('messagePipeline', () => {
 
     it('error: no encryption key available', async () => {
         const encryptionKey = GroupKey.generate()
-        const serializedContent = EncryptionUtil.encryptWithAES(Buffer.from(JSON.stringify(CONTENT), 'utf8'), encryptionKey.data)
+        const content = EncryptionUtil.encryptWithAES(Buffer.from(JSON.stringify(CONTENT), 'utf8'), encryptionKey.data)
         await pipeline.push(await createMessage({
-            serializedContent,
+            content,
             encryptionType: EncryptionType.AES,
             groupKeyId: encryptionKey.id
         }))

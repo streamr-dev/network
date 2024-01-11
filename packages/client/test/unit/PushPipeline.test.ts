@@ -20,7 +20,7 @@ describe('PushPipeline', () => {
     const createMockMessage = async () => {
         return await createSignedMessage({
             messageId: new MessageID(streamId, 0, 0, 0, PUBLISHER_ID, 'msgChainId'),
-            serializedContent: utf8ToBinary(JSON.stringify(Msg())),
+            content: utf8ToBinary(JSON.stringify(Msg())),
             authentication,
             contentType: ContentType.JSON
         })
@@ -85,7 +85,7 @@ describe('PushPipeline', () => {
         leaksDetector.add('testMessage', testMessage)
         const streamMessage = createSignedMessage({
             messageId: new MessageID(streamId, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
-            serializedContent: utf8ToBinary(JSON.stringify(testMessage)),
+            content: utf8ToBinary(JSON.stringify(testMessage)),
             authentication,
             contentType: ContentType.JSON
         })

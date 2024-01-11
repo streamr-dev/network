@@ -51,7 +51,7 @@ export async function* startCommand(commandLine: string, opts?: StartCommandOpti
 async function* lines(src: AsyncIterable<Buffer>): AsyncGenerator<string, any, any> {
     let buffer = ''
     for await (const chunk of src) {
-        buffer += chunk.toString('utf-8')
+        buffer += chunk.toString()
         while (true) {
             const delimeterPos = buffer.indexOf('\n')
             if (delimeterPos === -1) {
