@@ -16,10 +16,10 @@
   "license": "Apache-2.0",
   "dependencies": {},
   "devDependencies": {
-    "@electron/rebuild": "^3.4.1",
+    "@electron/rebuild": "^3.3.1",
     "@jest/fake-timers": "^29.6.2",
     "buffer": "^6.0.3",
-    "electron": "^28.1.1",
+    "electron": "^27.1.2",
     "expect": "^29.6.2",
     "jest-mock": "^29.6.3",
     "karma": "^6.4.0",
@@ -30,7 +30,7 @@
     "karma-spec-reporter": "^0.0.36",
     "karma-webpack": "^5.0.0",
     "node-module-polyfill": "^1.0.1",
-    "node-polyfill-webpack-plugin": "~2.0.1",
+    "node-polyfill-webpack-plugin": "^2.0.1",
     "timers-browserify": "^2.0.12",
     "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4"
