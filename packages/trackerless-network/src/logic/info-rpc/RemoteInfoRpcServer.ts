@@ -5,7 +5,7 @@ import { RpcRemote } from '@streamr/dht'
 
 export class RemoteInfoRpcServer extends RpcRemote<InfoRpcClient> {
 
-    // streams is a list of stream partition IDs if empty list then return info about all streams
+    // streams is a list of streamPartIDs, if the list is empty then info of all streams is returned
     async getInfo(
         getControlLayerInfo: boolean,
         streamParts?: StreamPartID[]
@@ -17,7 +17,7 @@ export class RemoteInfoRpcServer extends RpcRemote<InfoRpcClient> {
             } : undefined
         }
         // TODO: Why does TS think this is Promise<void>
-        const result = await this.getClient().getInfo(request, this.formDhtRpcOptions({}))
+        const result = await this.getClient().getInfo(request, this.formDhtRpcOptions())
         return result as unknown as InfoResponse
     }
 
