@@ -19,7 +19,7 @@ export const createSignaturePayload = (opts: {
 
     if (opts.signatureType == SignatureType.SECP256K1) {
         const header = Buffer.from(`${opts.messageId.streamId}${opts.messageId.streamPartition}${opts.messageId.timestamp}`
-            + `${opts.messageId.sequenceNumber}${opts.messageId.publisherId}${opts.messageId.msgChainId}`, 'utf8')
+            + `${opts.messageId.sequenceNumber}${opts.messageId.publisherId}${opts.messageId.msgChainId}`)
 
         const prevMsgRef = (opts.prevMsgRef !== undefined) ? Buffer.from(`${opts.prevMsgRef.timestamp}${opts.prevMsgRef.sequenceNumber}`) : undefined
 
@@ -42,7 +42,7 @@ export const createSignaturePayload = (opts: {
             binaryToUtf8(opts.content) : binaryToHex(opts.content))
 
         return Buffer.from(`${opts.messageId.streamId}${opts.messageId.streamPartition}${opts.messageId.timestamp}${opts.messageId.sequenceNumber}`
-            + `${opts.messageId.publisherId}${opts.messageId.msgChainId}${prev}${contentAsString}${newGroupKey}`, 'utf8')
+            + `${opts.messageId.publisherId}${opts.messageId.msgChainId}${prev}${contentAsString}${newGroupKey}`)
 
     } else {
         throw new Error(`Unsupported SignatureType: ${SignatureType}`)
