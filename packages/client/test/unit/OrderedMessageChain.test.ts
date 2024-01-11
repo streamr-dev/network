@@ -1,4 +1,12 @@
-import { ContentType, EncryptionType, MessageID, MessageRef, StreamMessage, toStreamID } from '@streamr/protocol'
+import {
+    ContentType,
+    EncryptionType,
+    MessageID,
+    MessageRef,
+    SignatureType,
+    StreamMessage,
+    toStreamID
+} from '@streamr/protocol'
 import { toEthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { Gap, OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
 
@@ -13,7 +21,8 @@ const createMessage = (timestamp: number, hasPrevRef = true) => {
         content: utf8ToBinary('{}'),
         signature: hexToBinary('0x1234'),
         contentType: ContentType.JSON,
-        encryptionType: EncryptionType.NONE
+        encryptionType: EncryptionType.NONE,
+        signatureType: SignatureType.NEW_SECP256K1
     })
 }
 

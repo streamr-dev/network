@@ -2,13 +2,15 @@
 
 import {
     DhtNode,
-    getNodeIdFromPeerDescriptor,getRandomRegion ,
+    getNodeIdFromPeerDescriptor,
+    getRandomRegion,
     LatencyType,
     PeerDescriptor,
     Simulator
 } from '@streamr/dht'
 import {
     ContentType,
+    EncryptionType,
     MessageID,
     SignatureType,
     StreamMessage,

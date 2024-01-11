@@ -4,7 +4,7 @@ import toArray from 'stream-to-array'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { ContentType, toStreamID, StreamMessage, MessageID, EncryptionType } from '@streamr/protocol'
+import { ContentType, toStreamID, StreamMessage, MessageID, EncryptionType, SignatureType } from '@streamr/protocol'
 import { EthereumAddress, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import { convertBytesToStreamMessage, convertStreamMessageToBytes } from '@streamr/trackerless-network'
 import { Readable } from 'stream'
@@ -41,7 +41,8 @@ export function buildMsg({
         content: Buffer.from(utf8ToBinary(JSON.stringify(content))),
         signature: Buffer.from(hexToBinary('0x1234')),
         contentType: ContentType.JSON,
-        encryptionType: EncryptionType.NONE
+        encryptionType: EncryptionType.NONE,
+        signatureType: SignatureType.NEW_SECP256K1
     })
 }
 
@@ -66,7 +67,8 @@ function buildEncryptedMsg({
         encryptionType: EncryptionType.AES,
         signature: Buffer.from(hexToBinary('0x1234')),
         groupKeyId: 'groupKeyId',
-        contentType: ContentType.JSON
+        contentType: ContentType.JSON,
+        signatureType: SignatureType.NEW_SECP256K1
     })
 }
 

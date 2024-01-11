@@ -3,6 +3,7 @@ import {
     EncryptionType,
     MessageID,
     MessageRef,
+    SignatureType,
     StreamMessage,
     StreamMessageType,
     StreamPartIDUtils
@@ -33,6 +34,7 @@ const MESSAGE = new StreamMessage({
     })),
     messageType: StreamMessageType.MESSAGE,
     encryptionType: EncryptionType.NONE,
+    signatureType: SignatureType.NEW_SECP256K1,
     signature: hexToBinary('0x1234'),
     contentType: ContentType.JSON
 })

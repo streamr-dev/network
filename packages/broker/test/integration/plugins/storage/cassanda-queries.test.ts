@@ -5,7 +5,7 @@ import { Readable, PassThrough } from 'stream'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { ContentType, EncryptionType, MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
+import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, toStreamID } from '@streamr/protocol'
 import { convertBytesToStreamMessage } from '@streamr/trackerless-network'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
@@ -23,7 +23,8 @@ const createMockMessage = (i: number) => {
         })),
         signature: hexToBinary('0x1234'),
         contentType: ContentType.JSON,
-        encryptionType: EncryptionType.NONE
+        encryptionType: EncryptionType.NONE,
+        signatureType: SignatureType.NEW_SECP256K1
     })
 }
 const MOCK_MESSAGES = [1, 2, 3].map((contentValue: number) => createMockMessage(contentValue))

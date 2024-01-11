@@ -11,7 +11,7 @@ import {
     serializeGroupKeyRequest,
     serializeGroupKeyResponse,
     StreamMessageType,
-    EncryptionType
+    EncryptionType, SignatureType
 } from '@streamr/protocol'
 import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
@@ -38,6 +38,7 @@ const groupKeyMessageToStreamMessage = async (
             : StreamMessageType.GROUP_KEY_RESPONSE,
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
+        signatureType: SignatureType.NEW_SECP256K1,
         authentication
     })
 }
@@ -88,7 +89,8 @@ describe('Validator2', () => {
             content: MOCK_CONTENT,
             authentication: publisherAuthentication,
             contentType: ContentType.JSON,
-            encryptionType: EncryptionType.NONE
+            encryptionType: EncryptionType.NONE,
+            signatureType: SignatureType.NEW_SECP256K1
         })
 
         msgWithNewGroupKey = await createSignedMessage({
@@ -97,7 +99,8 @@ describe('Validator2', () => {
             newGroupKey: new EncryptedGroupKey('groupKeyId', hexToBinary('0x1111')),
             authentication: publisherAuthentication,
             contentType: ContentType.JSON,
-            encryptionType: EncryptionType.NONE
+            encryptionType: EncryptionType.NONE,
+            signatureType: SignatureType.NEW_SECP256K1
         })
         assert.notStrictEqual(msg.signature, msgWithNewGroupKey.signature)
 
@@ -107,7 +110,8 @@ describe('Validator2', () => {
             prevMsgRef: new MessageRef(1000, 0),
             authentication: publisherAuthentication,
             contentType: ContentType.JSON,
-            encryptionType: EncryptionType.NONE
+            encryptionType: EncryptionType.NONE,
+            signatureType: SignatureType.NEW_SECP256K1
         })
         assert.notStrictEqual(msg.signature, msgWithPrevMsgRef.signature)
 

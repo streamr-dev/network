@@ -4,7 +4,8 @@ import {
     StreamMessage as OldStreamMessage,
     StreamMessageType as OldStreamMessageType,
     StreamPartIDUtils,
-    ContentType
+    ContentType,
+    SignatureType
 } from '@streamr/protocol'
 import { binaryToHex, binaryToUtf8, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import { StreamMessageTranslator } from '../../src/logic/protocol-integration/stream-message/StreamMessageTranslator'
@@ -37,6 +38,7 @@ describe('StreamMessageTranslator', () => {
         contentType: ContentType.JSON,
         messageType: OldStreamMessageType.MESSAGE,
         encryptionType: EncryptionType.NONE,
+        signatureType: SignatureType.NEW_SECP256K1,
         signature,
     })
 

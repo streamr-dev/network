@@ -3,7 +3,7 @@ import toArray from 'stream-to-array'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { startCassandraStorage, Storage } from '../../../../src/plugins/storage/Storage'
-import { ContentType, EncryptionType, MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
+import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, toStreamID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 
@@ -65,7 +65,8 @@ async function storeMockMessages({
             content: utf8ToBinary(JSON.stringify({})),
             signature: hexToBinary('0x1234'),
             contentType: ContentType.JSON,
-            encryptionType: EncryptionType.NONE
+            encryptionType: EncryptionType.NONE,
+            signatureType: SignatureType.NEW_SECP256K1
         })
         storePromises.push(storage.store(msg))
     }
