@@ -4,9 +4,9 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils/utils'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
-import { createRandomDhtAddress, getDhtAddressFromRaw } from '../../src/identifiers'
-import { range, shuffle } from 'lodash'
-import { DataEntry, PeerDescriptor } from '../../src/exports'
+import { DhtAddress, createRandomDhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { sample } from 'lodash'
+import { DataEntry, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 
 const DATA = createMockDataEntry()
 const NUM_NODES = 100
@@ -81,7 +81,7 @@ describe('Replicate data from node to node in DHT', () => {
         expectEqualData(data[0], DATA)
     }, 180000)
 
-    it('Data replicates to the last remaining node if most of the other nodes leave gracefully', async () => {
+    it('Data replicates to the other nodes when storers are stopped', async () => {
         await Promise.all(
             nodes.map(async (node, i) => {
                 if (i !== ENTRY_POINT_INDEX) {
@@ -92,16 +92,20 @@ describe('Replicate data from node to node in DHT', () => {
         await waitNodesReadyForTesting(nodes)
 
         const randomIndex = Math.floor(Math.random() * nodes.length)
-        await nodes[randomIndex].storeDataToDht(getDhtAddressFromRaw(DATA.key), DATA.data!)
+        const storerDescriptors = await nodes[randomIndex].storeDataToDht(getDhtAddressFromRaw(DATA.key), DATA.data!)
+        const stoppedNodeIds: DhtAddress[] = []
+        await Promise.all(storerDescriptors.map(async (storerDescriptor) => {
+            const storer = nodes.find((n) => n.getNodeId() === getNodeIdFromPeerDescriptor(storerDescriptor))!
+            await storer.stop()
+            stoppedNodeIds.push(storer.getNodeId())
+        }))
+        /*for (const storerDescriptor of storerDescriptors) {
+            const storer = nodes.find((n) => n.getNodeId() === getNodeIdFromPeerDescriptor(storerDescriptor))!
+            await storer.stop()
+            stoppedNodeIds.push(storer.getNodeId())
+        }*/
 
-        const nodeIndices = shuffle(range(nodes.length))
-        const MIN_NODE_COUNT = 20
-        while (nodeIndices.length > MIN_NODE_COUNT) {
-            const index = nodeIndices.pop()!
-            await nodes[index].stop()
-        }
-
-        const randomNonStoppedNode = nodes[nodeIndices.pop()!]
+        const randomNonStoppedNode = sample(nodes.filter((n) => !stoppedNodeIds.includes(n.getNodeId())))!
         const data = await randomNonStoppedNode.getDataFromDht(getDhtAddressFromRaw(DATA.key))
         expect(data).toHaveLength(1)
         expectEqualData(data[0], DATA)
