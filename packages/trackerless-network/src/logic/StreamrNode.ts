@@ -296,7 +296,7 @@ export class StreamrNode extends EventEmitter<Events> {
                 return {
                     id: streamPartId,
                     layer1Neighbors: stream.layer1Node.getAllNeighborPeerDescriptors(),
-                    layer2Neighbors: stream.node.getTargetNeighborIds()
+                    layer2Neighbors: stream.node.getNeighborIds()
                 }
             })
         }
