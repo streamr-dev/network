@@ -537,19 +537,6 @@ export interface ExternalFindDataResponse {
     entries: DataEntry[];
 }
 /**
- * @generated from protobuf message dht.ControlLayerInfo
- */
-export interface ControlLayerInfo {
-    /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor neighbors = 1;
-     */
-    neighbors: PeerDescriptor[];
-    /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor connections = 2;
-     */
-    connections: PeerDescriptor[];
-}
-/**
  * @generated from protobuf enum dht.RecursiveOperation
  */
 export enum RecursiveOperation {
@@ -1124,19 +1111,6 @@ class ExternalFindDataResponse$Type extends MessageType$<ExternalFindDataRespons
  * @generated MessageType for protobuf message dht.ExternalFindDataResponse
  */
 export const ExternalFindDataResponse = new ExternalFindDataResponse$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class ControlLayerInfo$Type extends MessageType$<ControlLayerInfo> {
-    constructor() {
-        super("dht.ControlLayerInfo", [
-            { no: 1, name: "neighbors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
-            { no: 2, name: "connections", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message dht.ControlLayerInfo
- */
-export const ControlLayerInfo = new ControlLayerInfo$Type();
 /**
  * @generated ServiceType for protobuf service dht.DhtNodeRpc
  */

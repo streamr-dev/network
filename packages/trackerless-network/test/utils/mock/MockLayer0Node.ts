@@ -1,7 +1,6 @@
 import { PeerDescriptor, DataEntry, ITransport } from '@streamr/dht'
 import { Layer0Node } from '../../../src/logic/Layer0Node'
 import { EventEmitter } from 'eventemitter3'
-import { ControlLayerInfo } from '../../../src/proto/packages/dht/protos/DhtRpc'
 
 export class MockLayer0Node extends EventEmitter implements Layer0Node {
 
@@ -51,16 +50,16 @@ export class MockLayer0Node extends EventEmitter implements Layer0Node {
     }
 
     // eslint-disable-next-line class-methods-use-this
+    getNeighbors(): PeerDescriptor[] {
+        return []
+    }
+
+    // eslint-disable-next-line class-methods-use-this
     async waitForNetworkConnectivity(): Promise<void> {
     }
 
     // eslint-disable-next-line class-methods-use-this
     getTransport(): ITransport {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    getInfo(): ControlLayerInfo {
         throw new Error('not implemented')
     }
 

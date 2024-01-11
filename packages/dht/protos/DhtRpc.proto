@@ -294,8 +294,3 @@ message ExternalFindDataRequest {
 message ExternalFindDataResponse {
   repeated DataEntry entries = 1;
 }
-
-message ControlLayerInfo {
-  repeated PeerDescriptor neighbors = 1;
-  repeated PeerDescriptor connections = 2;
-}

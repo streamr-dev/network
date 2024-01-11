@@ -13,7 +13,6 @@ import {
     PingRequest,
     PingResponse,
     DataEntry,
-    ControlLayerInfo,
     ExternalFindDataRequest,
     ExternalFindDataResponse,
     ExternalStoreDataRequest,
@@ -546,13 +545,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     public hasJoined(): boolean {
         return this.peerDiscovery!.isJoinCalled()
-    }
-
-    public getInfo(): ControlLayerInfo {
-        return {
-            connections: Array.from(this.peerManager!.connections.values()).map((peer) => peer.getPeerDescriptor()),
-            neighbors: this.peerManager!.getNeighbors(),
-        }
     }
 
     public async stop(): Promise<void> {

@@ -98,24 +98,17 @@ describe('StreamrNode', () => {
     describe('getInfo', () => {
 
         const streamPartId = StreamPartIDUtils.parse('stream#0')
-
-        it('getInfo returns queried streamPartition', async () => {
-            node.joinStreamPart(streamPartId)
-            await waitForCondition(() => node.getInfo([streamPartId]).streamPartitions.length === 1)
-            const info = node.getInfo([streamPartId])
-            expect(info.streamPartitions[0].id).toEqual(streamPartId)
-        })
     
-        it('getInfo does not return queried streamPart if it does not exist', async () => {
-            const info = node.getInfo([streamPartId])
-            expect(info.streamPartitions.length).toEqual(0)
-        })
-    
-        it('getInfo without specified streamPartitions returns all streams', async () => {
-            node.joinStreamPart(streamPartId)
-            await waitForCondition(() => node.getInfo([streamPartId]).streamPartitions.length === 1)
+        it('getInfo returns empty list if node has not joined any streamParts', async () => {
             const info = node.getInfo()
-            expect(info.streamPartitions.length).toEqual(1)
+            expect(info.length).toEqual(0)
+        })
+    
+        it('getInfo without specified streamPartitions returns all streamParts', async () => {
+            node.joinStreamPart(streamPartId)
+            await waitForCondition(() => node.getInfo().length === 1)
+            const info = node.getInfo()
+            expect(info.length).toEqual(1)
         })
     })
 

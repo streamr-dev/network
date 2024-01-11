@@ -70,8 +70,8 @@ describe('NetworkStack InfoRpc', () => {
 
     it('InfoClient can query NetworkStacks', async () => {
         const result = await infoClient.getInfo(stack1PeerDescriptor, true, [])
-        expect(result.controlLayerInfo).toBeDefined()
-        expect(result.streamInfo).toBeDefined()
+        expect(result.controlLayer).toBeDefined()
+        expect(result.streamPartitions).toBeDefined()
     })
 
     it('InfoClient can query streams', async () => {
@@ -82,9 +82,9 @@ describe('NetworkStack InfoRpc', () => {
             && stack2.getStreamrNode().getNeighbors(streamPartId).length === 1)
         const result = await infoClient.getInfo(stack1PeerDescriptor, false, [streamPartId])
         expect(areEqualPeerDescriptors(result.peerDescriptor!, stack1PeerDescriptor)).toEqual(true)
-        expect(result.streamInfo!.streamPartitions[0].id).toEqual(streamPartId)
-        expect(result.streamInfo!.streamPartitions[0].layer2Neighbors[0]).toEqual(stack2.getStreamrNode().getNodeId())
-        expect(areEqualPeerDescriptors(result.streamInfo!.streamPartitions[0].layer1Neighbors[0], stack2PeerDescriptor)).toEqual(true)
+        expect(result.streamPartitions[0].id).toEqual(streamPartId)
+        expect(result.streamPartitions[0].layer2Neighbors[0]).toEqual(stack2.getStreamrNode().getNodeId())
+        expect(areEqualPeerDescriptors(result.streamPartitions[0].layer1Neighbors[0], stack2PeerDescriptor)).toEqual(true)
     })
 
     it('InfoClient can query all streams', async () => {
@@ -101,7 +101,7 @@ describe('NetworkStack InfoRpc', () => {
             && stack2.getStreamrNode().getNeighbors(streamPartId2).length === 1
         )
         const result = await infoClient.getInfo(stack1PeerDescriptor, false, [])
-        expect(result.streamInfo!.streamPartitions.length).toEqual(2)
+        expect(result.streamPartitions.length).toEqual(2)
     })
 
 })

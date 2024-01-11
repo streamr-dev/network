@@ -148,27 +148,21 @@ enum ProxyDirection {
   SUBSCRIBE = 1;
 }
 
-message StreamInfo {
-  repeated StreamPartitionInfo streamPartitions = 1;
-}
-
 message StreamPartitionInfo {
   string id = 1;
   repeated dht.PeerDescriptor layer1Neighbors = 2;
   repeated string layer2Neighbors = 3;
 }
 
-message GetStreamInfo {
-  repeated string streamPartIds = 1;
+message ControlLayerInfo {
+  repeated dht.PeerDescriptor neighbors = 1;
+  repeated dht.PeerDescriptor connections = 2;
 }
 
-message InfoRequest {
-  bool getControlLayerInfo = 1;
-  optional GetStreamInfo getStreamInfo = 2; 
-}
+message InfoRequest {}
 
 message InfoResponse {
   dht.PeerDescriptor peerDescriptor = 1;
-  optional StreamInfo streamInfo = 2;
-  optional dht.ControlLayerInfo controlLayerInfo = 3;
+  repeated StreamPartitionInfo streamPartitions = 2;
+  optional ControlLayerInfo controlLayer = 3;
 }

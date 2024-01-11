@@ -4,7 +4,6 @@
 import { Empty } from "../../../google/protobuf/empty";
 import { ServiceType } from "@protobuf-ts/runtime-rpc";
 import { MessageType } from "@protobuf-ts/runtime";
-import { ControlLayerInfo } from "../../dht/protos/DhtRpc";
 import { PeerDescriptor } from "../../dht/protos/DhtRpc";
 /**
  * @generated from protobuf message MessageID
@@ -271,15 +270,6 @@ export interface TemporaryConnectionResponse {
     accepted: boolean;
 }
 /**
- * @generated from protobuf message StreamInfo
- */
-export interface StreamInfo {
-    /**
-     * @generated from protobuf field: repeated StreamPartitionInfo streamPartitions = 1;
-     */
-    streamPartitions: StreamPartitionInfo[];
-}
-/**
  * @generated from protobuf message StreamPartitionInfo
  */
 export interface StreamPartitionInfo {
@@ -297,26 +287,22 @@ export interface StreamPartitionInfo {
     layer2Neighbors: string[];
 }
 /**
- * @generated from protobuf message GetStreamInfo
+ * @generated from protobuf message ControlLayerInfo
  */
-export interface GetStreamInfo {
+export interface ControlLayerInfo {
     /**
-     * @generated from protobuf field: repeated string streamPartIds = 1;
+     * @generated from protobuf field: repeated dht.PeerDescriptor neighbors = 1;
      */
-    streamPartIds: string[];
+    neighbors: PeerDescriptor[];
+    /**
+     * @generated from protobuf field: repeated dht.PeerDescriptor connections = 2;
+     */
+    connections: PeerDescriptor[];
 }
 /**
  * @generated from protobuf message InfoRequest
  */
 export interface InfoRequest {
-    /**
-     * @generated from protobuf field: bool getControlLayerInfo = 1;
-     */
-    getControlLayerInfo: boolean;
-    /**
-     * @generated from protobuf field: optional GetStreamInfo getStreamInfo = 2;
-     */
-    getStreamInfo?: GetStreamInfo;
 }
 /**
  * @generated from protobuf message InfoResponse
@@ -327,13 +313,13 @@ export interface InfoResponse {
      */
     peerDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: optional StreamInfo streamInfo = 2;
+     * @generated from protobuf field: repeated StreamPartitionInfo streamPartitions = 2;
      */
-    streamInfo?: StreamInfo;
+    streamPartitions: StreamPartitionInfo[];
     /**
-     * @generated from protobuf field: optional dht.ControlLayerInfo controlLayerInfo = 3;
+     * @generated from protobuf field: optional ControlLayerInfo controlLayer = 3;
      */
-    controlLayerInfo?: ControlLayerInfo;
+    controlLayer?: ControlLayerInfo;
 }
 /**
  * @generated from protobuf enum StreamMessageType
@@ -612,18 +598,6 @@ class TemporaryConnectionResponse$Type extends MessageType<TemporaryConnectionRe
  */
 export const TemporaryConnectionResponse = new TemporaryConnectionResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class StreamInfo$Type extends MessageType<StreamInfo> {
-    constructor() {
-        super("StreamInfo", [
-            { no: 1, name: "streamPartitions", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => StreamPartitionInfo }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message StreamInfo
- */
-export const StreamInfo = new StreamInfo$Type();
-// @generated message type with reflection information, may provide speed optimized methods
 class StreamPartitionInfo$Type extends MessageType<StreamPartitionInfo> {
     constructor() {
         super("StreamPartitionInfo", [
@@ -638,24 +612,22 @@ class StreamPartitionInfo$Type extends MessageType<StreamPartitionInfo> {
  */
 export const StreamPartitionInfo = new StreamPartitionInfo$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class GetStreamInfo$Type extends MessageType<GetStreamInfo> {
+class ControlLayerInfo$Type extends MessageType<ControlLayerInfo> {
     constructor() {
-        super("GetStreamInfo", [
-            { no: 1, name: "streamPartIds", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+        super("ControlLayerInfo", [
+            { no: 1, name: "neighbors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 2, name: "connections", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message GetStreamInfo
+ * @generated MessageType for protobuf message ControlLayerInfo
  */
-export const GetStreamInfo = new GetStreamInfo$Type();
+export const ControlLayerInfo = new ControlLayerInfo$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class InfoRequest$Type extends MessageType<InfoRequest> {
     constructor() {
-        super("InfoRequest", [
-            { no: 1, name: "getControlLayerInfo", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 2, name: "getStreamInfo", kind: "message", T: () => GetStreamInfo }
-        ]);
+        super("InfoRequest", []);
     }
 }
 /**
@@ -667,8 +639,8 @@ class InfoResponse$Type extends MessageType<InfoResponse> {
     constructor() {
         super("InfoResponse", [
             { no: 1, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "streamInfo", kind: "message", T: () => StreamInfo },
-            { no: 3, name: "controlLayerInfo", kind: "message", T: () => ControlLayerInfo }
+            { no: 2, name: "streamPartitions", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => StreamPartitionInfo },
+            { no: 3, name: "controlLayer", kind: "message", T: () => ControlLayerInfo }
         ]);
     }
 }

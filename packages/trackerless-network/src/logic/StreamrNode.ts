@@ -18,7 +18,7 @@ import {
 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
-import { ProxyDirection, StreamInfo, StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { ProxyDirection, StreamPartitionInfo, StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Layer0Node } from './Layer0Node'
 import { Layer1Node } from './Layer1Node'
 import { RandomGraphNode } from './RandomGraphNode'
@@ -285,21 +285,16 @@ export class StreamrNode extends EventEmitter<Events> {
     }
 
     // Returns info of all streamParts or all given streamParts that are acting as a full node on a stream
-    getInfo(streamPartsIds?: StreamPartID[]): StreamInfo {
-        const filtered = streamPartsIds?.length ? Array.from(this.streamParts.entries())
-            .filter(([streamPartId]) => streamPartsIds!.includes(StreamPartIDUtils.parse(streamPartId)))
-            : Array.from(this.streamParts.entries())
-        const onStreamAsFullNode = filtered.filter(([_, node]) => node.proxied === false)
-        return {
-            streamPartitions: onStreamAsFullNode.map(([streamPartId]) => {
-                const stream = this.streamParts.get(streamPartId)! as { node: RandomGraphNode, layer1Node: Layer1Node }
-                return {
-                    id: streamPartId,
-                    layer1Neighbors: stream.layer1Node.getNeighbors(),
-                    layer2Neighbors: stream.node.getNeighborIds()
-                }
-            })
-        }
+    getInfo(): StreamPartitionInfo[] {
+        const onStreamAsFullNode = Array.from(this.streamParts.entries()).filter(([_, node]) => node.proxied === false)
+        return onStreamAsFullNode.map(([streamPartId]) => {
+            const stream = this.streamParts.get(streamPartId)! as { node: RandomGraphNode, layer1Node: Layer1Node }
+            return {
+                id: streamPartId,
+                layer1Neighbors: stream.layer1Node.getNeighbors(),
+                layer2Neighbors: stream.node.getNeighborIds()
+            }
+        })
 
     }
 
