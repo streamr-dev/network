@@ -1,8 +1,16 @@
 /* eslint-disable no-console */
 
-import { DhtNode, LatencyType, Simulator, getNodeIdFromPeerDescriptor, getRandomRegion } from '@streamr/dht'
+import {
+    DhtNode,
+    getNodeIdFromPeerDescriptor,
+    getRandomRegion,
+    LatencyType,
+    PeerDescriptor,
+    Simulator
+} from '@streamr/dht'
 import {
     ContentType,
+    EncryptionType,
     MessageID,
     StreamMessage,
     StreamMessageType,
@@ -13,7 +21,6 @@ import {
 } from '@streamr/protocol'
 import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import fs from 'fs'
-import { PeerDescriptor } from '@streamr/dht'
 import { NetworkNode } from '../../src/NetworkNode'
 import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
 import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
@@ -93,6 +100,7 @@ const measureJoiningTime = async () => {
             })),
             messageType: StreamMessageType.MESSAGE,
             contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE,
             signature: hexToBinary('0x1234'),
         })
         streamParts.get(stream)!.broadcast(streamMessage)

@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { ContentType, MessageID, StreamID, StreamMessage } from '@streamr/protocol'
+import { ContentType, EncryptionType, MessageID, StreamID, StreamMessage } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { Defer, collect, waitForCondition, utf8ToBinary } from '@streamr/utils'
 import sample from 'lodash/sample'
@@ -54,7 +54,8 @@ describe('Subscriber', () => {
             messageId: new MessageID(streamId, 0, timestamp, 0, await publisher.getAddress(), 'msgChainId'),
             content,
             authentication: publisherAuthentication,
-            contentType: ContentType.JSON
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE,
         })
     }
 
