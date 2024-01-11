@@ -37,9 +37,7 @@ describe('Replicate data from node to node in DHT', () => {
                 simulator,
                 createRandomDhtAddress(),
                 K,
-                MAX_CONNECTIONS,
-                undefined,
-                [entryPoint.getLocalPeerDescriptor()]
+                MAX_CONNECTIONS
             )
             nodes.push(node)
         }
@@ -99,11 +97,6 @@ describe('Replicate data from node to node in DHT', () => {
             await storer.stop()
             stoppedNodeIds.push(storer.getNodeId())
         }))
-        /*for (const storerDescriptor of storerDescriptors) {
-            const storer = nodes.find((n) => n.getNodeId() === getNodeIdFromPeerDescriptor(storerDescriptor))!
-            await storer.stop()
-            stoppedNodeIds.push(storer.getNodeId())
-        }*/
 
         const randomNonStoppedNode = sample(nodes.filter((n) => !stoppedNodeIds.includes(n.getNodeId())))!
         const data = await randomNonStoppedNode.getDataFromDht(getDhtAddressFromRaw(DATA.key))

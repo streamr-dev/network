@@ -43,8 +43,7 @@ export const createMockConnectionDhtNode = async (
     nodeId?: DhtAddress,
     numberOfNodesPerKBucket?: number,
     maxConnections = 80,
-    dhtJoinTimeout = 45000,
-    entryPoints: PeerDescriptor[] = []
+    dhtJoinTimeout = 45000
 ): Promise<DhtNode> => {
     const peerDescriptor: PeerDescriptor = {
         nodeId: getRawFromDhtAddress(nodeId ?? createRandomDhtAddress()),
@@ -55,12 +54,11 @@ export const createMockConnectionDhtNode = async (
     await mockConnectionManager.start()
     const opts = {
         peerDescriptor: peerDescriptor,
-        entryPoints,
         transport: mockConnectionManager,
         numberOfNodesPerKBucket,
         maxConnections: maxConnections,
         dhtJoinTimeout,
-        rpcRequestTimeout: 5000,
+        rpcRequestTimeout: 5000
     }
     const node = new class extends DhtNode {
         async stop(): Promise<void> {
