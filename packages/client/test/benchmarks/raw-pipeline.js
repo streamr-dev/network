@@ -135,7 +135,7 @@ async function run() {
                 this.TOTAL_BYTES = this.TOTAL_BYTES || 0
                 let subMessagesBytes = 0
                 streamMessages.slice(0, batchSize).forEach((msg) => {
-                    subMessagesBytes += Buffer.byteLength(msg.getSerializedContent())
+                    subMessagesBytes += Buffer.byteLength(msg.content)
                 })
                 this.TOTAL_BYTES += subMessagesBytes
                 this.MESSAGES_BYTES = this.MESSAGES_BYTES || []

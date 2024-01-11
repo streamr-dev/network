@@ -1,9 +1,10 @@
 import {
-    GroupKeyMessage,
     StreamMessage,
     StreamMessageError,
     StreamMessageType,
     createSignaturePayload,
+    deserializeGroupKeyRequest,
+    deserializeGroupKeyResponse,
 } from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
 import { StreamRegistry } from '../registry/StreamRegistry'
@@ -39,7 +40,7 @@ const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry
         case StreamMessageType.GROUP_KEY_REQUEST:
             return validateGroupKeyMessage(
                 streamMessage,
-                GroupKeyMessage.fromStreamMessage(streamMessage).recipient,
+                deserializeGroupKeyRequest(streamMessage.content).recipient,
                 streamMessage.getPublisherId(),
                 streamRegistry
             )
@@ -47,7 +48,7 @@ const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry
             return validateGroupKeyMessage(
                 streamMessage,
                 streamMessage.getPublisherId(),
-                GroupKeyMessage.fromStreamMessage(streamMessage).recipient,
+                deserializeGroupKeyResponse(streamMessage.content).recipient,
                 streamRegistry
             )
         default:
@@ -61,10 +62,12 @@ const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry
  *
  * @param streamMessage the StreamMessage to validate.
  */
-const assertSignatureIsValid = (streamMessage: StreamMessage): void => {
+export const assertSignatureIsValid = (streamMessage: StreamMessage): void => {
     const payload = createSignaturePayload({
-        messageId: streamMessage.getMessageID(),
-        serializedContent: streamMessage.getSerializedContent(),
+        messageId: streamMessage.messageId,
+        content: streamMessage.content,
+        signatureType: streamMessage.signatureType,
+        encryptionType: streamMessage.encryptionType,
         prevMsgRef: streamMessage.prevMsgRef ?? undefined,
         newGroupKey: streamMessage.newGroupKey ?? undefined
     })

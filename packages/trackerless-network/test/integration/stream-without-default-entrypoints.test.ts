@@ -1,7 +1,10 @@
 import { LatencyType, NodeType, PeerDescriptor, Simulator, SimulatorTransport, getRandomRegion } from '@streamr/dht'
 import {
+    ContentType,
+    EncryptionType,
     MessageID,
     MessageRef,
+    SignatureType,
     StreamMessage,
     StreamMessageType,
     StreamPartIDUtils
@@ -18,7 +21,7 @@ describe('stream without default entrypoints', () => {
 
     let entrypoint: NetworkNode
     let nodes: NetworkNode[]
-    let numOfReceivedMessages: number
+    let receivedMessageCount: number
     const entryPointPeerDescriptor: PeerDescriptor = {
         nodeId: new Uint8Array([1, 2, 3]),
         type: NodeType.NODEJS,
@@ -39,13 +42,16 @@ describe('stream without default entrypoints', () => {
             hello: 'world'
         })),
         messageType: StreamMessageType.MESSAGE,
+        contentType: ContentType.JSON,
+        encryptionType: EncryptionType.NONE,
+        signatureType: SignatureType.SECP256K1,
         signature: hexToBinary('0x1234'),
     })
 
     beforeEach(async () => {
         const simulator = new Simulator(LatencyType.REAL)
         nodes = []
-        numOfReceivedMessages = 0
+        receivedMessageCount = 0
         const entryPointTransport = new SimulatorTransport(entryPointPeerDescriptor, simulator)
         await entryPointTransport.start()
         entrypoint = createNetworkNode({
@@ -82,36 +88,36 @@ describe('stream without default entrypoints', () => {
     it('can join stream without configured entrypoints one by one', async () => {
         await nodes[0].join(STREAM_PART_ID)
         nodes[0].addMessageListener((_msg) => {
-            numOfReceivedMessages += 1
+            receivedMessageCount += 1
         })
         await Promise.all([
-            waitForCondition(() => numOfReceivedMessages === 1, 10000),
+            waitForCondition(() => receivedMessageCount === 1, 10000),
             nodes[1].broadcast(streamMessage)
         ])
     })
 
     it('can join without configured entrypoints simultaneously', async () => {
         nodes[0].addMessageListener((_msg) => {
-            numOfReceivedMessages += 1
+            receivedMessageCount += 1
         })
         await Promise.all([
-            waitForCondition(() => numOfReceivedMessages === 1, 15000),
+            waitForCondition(() => receivedMessageCount === 1, 15000),
             nodes[0].join(STREAM_PART_ID),
             nodes[1].broadcast(streamMessage),
         ])
     })
 
     it('multiple nodes can join without configured entrypoints simultaneously', async () => {
-        const numOfSubscribers = 8
-        await Promise.all(range(numOfSubscribers).map(async (i) => {
+        const subscriberCount = 8
+        await Promise.all(range(subscriberCount).map(async (i) => {
             await nodes[i].join(STREAM_PART_ID, { minCount: 4, timeout: 15000 })
             nodes[i].addMessageListener(() => {
-                numOfReceivedMessages += 1
+                receivedMessageCount += 1
             })
         }))
-        const nonjoinedNode = nodes[numOfSubscribers]
+        const nonjoinedNode = nodes[subscriberCount]
         await nonjoinedNode.broadcast(streamMessage)
-        await waitForCondition(() => numOfReceivedMessages === numOfSubscribers, 15000)
+        await waitForCondition(() => receivedMessageCount === subscriberCount, 15000)
     }, 45000)
 
     it('nodes store themselves as entrypoints on streamPart if number of entrypoints is low', async () => {

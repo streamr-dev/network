@@ -103,7 +103,7 @@ describe('publish-subscribe', () => {
 
             it('messages are published encrypted', (done) => {
                 networkNode.addMessageListener((msg) => {
-                    const message = msg.getContent()
+                    const message = msg.content
                     expect(message).toBeInstanceOf(Uint8Array)
                     done()
                 })
@@ -145,7 +145,7 @@ describe('publish-subscribe', () => {
 
             it('messages are published unencrypted', (done) => {
                 networkNode.addMessageListener((msg) => {
-                    const message = msg.getContent()
+                    const message = msg.content
                     expect(message).toEqual(PAYLOAD)
                     done()
                 })

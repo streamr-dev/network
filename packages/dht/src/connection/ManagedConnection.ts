@@ -4,9 +4,9 @@ import { Handshaker } from './Handshaker'
 import { HandshakeError, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { Logger, runAndRaceEvents3, RunAndRaceEventsReturnType } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
-import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
-import { DhtAddress } from '../identifiers'
+import { DhtAddress, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { createRandomConnectionId } from './Connection'
 
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
@@ -59,7 +59,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.outgoingConnection = outgoingConnection
         this.incomingConnection = incomingConnection
         this.connectionType = connectionType
-        this.connectionId = new ConnectionID()
+        this.connectionId = createRandomConnectionId()
 
         this.send = this.send.bind(this)
         this.onDisconnected = this.onDisconnected.bind(this)

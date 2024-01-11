@@ -73,19 +73,19 @@ export const generateId = (stringId: string): Uint8Array => {
 
 export const getMockPeers = (): PeerDescriptor[] => {
     const n1: PeerDescriptor = {
-        peerId: generateId('Neighbor1'),
+        nodeId: generateId('Neighbor1'),
         type: NodeType.NODEJS,
     }
     const n2: PeerDescriptor = {
-        peerId: generateId('Neighbor2'),
+        nodeId: generateId('Neighbor2'),
         type: NodeType.NODEJS,
     }
     const n3: PeerDescriptor = {
-        peerId: generateId('Neighbor3'),
+        nodeId: generateId('Neighbor3'),
         type: NodeType.NODEJS,
     }
     const n4: PeerDescriptor = {
-        peerId: generateId('Neighbor4'),
+        nodeId: generateId('Neighbor4'),
         type: NodeType.NODEJS,
     }
     return [

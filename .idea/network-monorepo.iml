@@ -13,6 +13,9 @@
       <excludeFolder url="file://$MODULE_DIR$/packages/proto-rpc/dist" />
       <excludeFolder url="file://$MODULE_DIR$/packages/dht/dist" />
       <excludeFolder url="file://$MODULE_DIR$/packages/utils/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/autocertifier-client/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/autocertifier-server/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/trackerless-network/dist" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

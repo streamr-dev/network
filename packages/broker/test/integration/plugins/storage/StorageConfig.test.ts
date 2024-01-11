@@ -11,8 +11,8 @@ import {
     KEYSERVER_PORT
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
-import { StreamMessage } from '@streamr/protocol'
 import { waitForCondition } from '@streamr/utils'
+import { convertBytesToStreamMessage } from '@streamr/trackerless-network'
 
 jest.setTimeout(30000)
 
@@ -67,7 +67,7 @@ describe('StorageConfig', () => {
             return (result.first().count > 0)
         }, 15000)
         const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
-        const storeMessage = StreamMessage.deserialize(JSON.parse(result.first().payload.toString()))
+        const storeMessage = convertBytesToStreamMessage(result.first().payload)
         expect(storeMessage.signature).toEqual(publishMessage.signature)
     })
 })

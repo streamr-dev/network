@@ -1,4 +1,12 @@
-import { MessageID, MessageRef, StreamMessage, StreamPartIDUtils } from '@streamr/protocol'
+import {
+    ContentType,
+    EncryptionType,
+    MessageID,
+    MessageRef,
+    SignatureType,
+    StreamMessage,
+    StreamPartIDUtils
+} from '@streamr/protocol'
 import { Defer, EthereumAddress, toEthereumAddress, wait, waitForCondition, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
 import { GapFiller, GapFillStrategy } from '../../src/subscribe/ordering/GapFiller'
@@ -24,7 +32,10 @@ const createMessage = (timestamp: number, hasPrevRef = true) => {
         ),
         prevMsgRef: hasPrevRef ? new MessageRef(timestamp - 1, 0) : null,
         content: utf8ToBinary('{}'),
-        signature: hexToBinary('0x1324')
+        signature: hexToBinary('0x1324'),
+        contentType: ContentType.JSON,
+        encryptionType: EncryptionType.NONE,
+        signatureType: SignatureType.SECP256K1
     })
 }
 

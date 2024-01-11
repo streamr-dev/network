@@ -22,7 +22,7 @@ const createMessageChain = (
                 timestamp: gap.from.getMessageRef().timestamp,
                 sequenceNumber: gap.from.getMessageRef().sequenceNumber + 1,
             },
-            to: gap.to.getPreviousMessageRef()!,
+            to: gap.to.prevMsgRef!,
             publisherId: context.publisherId,
             msgChainId: context.msgChainId,
             raw: true

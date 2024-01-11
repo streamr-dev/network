@@ -14,6 +14,7 @@
   "exports": {
     "browser": "./dist/streamr-client.web.js",
     "default": {
+      "types": "./dist/types/src/index.d.ts",
       "import": "./dist/src/exports-esm.mjs",
       "require": "./dist/src/exports-commonjs.js"
     }
@@ -52,7 +53,6 @@
     "@types/lodash": "^4.14.202",
     "@types/node-fetch": "^2.6.4",
     "@types/secp256k1": "^4.0.6",
-    "@types/split2": "^4.2.3",
     "@types/uuid": "^9.0.7",
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
@@ -121,7 +121,6 @@
     "reflect-metadata": "^0.1.13",
     "secp256k1": "^5.0.0",
     "sha3": "^2.1.4",
-    "split2": "^4.2.0",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.0.3",
     "ts-essentials": "^9.4.1",
