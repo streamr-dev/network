@@ -10,8 +10,13 @@ const logger = new Logger(module)
 export const executeSafePromise = async <T>(createPromise: () => Promise<T>): Promise<T> => {
     try {
         return await createPromise()
-    } catch (error: any) {
-        logger.fatal('Assertion failure!', { message: error?.message, stack: error?.stack })
-        process.exit(1)
+    } catch (err: any) {
+        logger.fatal('Assertion failure!', { message: err?.message, err })
+        if (process.exit !== undefined) {
+            process.exit(1)
+        } else {
+            // cause an unhandled promise rejection on purpose
+            throw new Error('executeSafePromise: Assertion failure!', err)
+        }
     }
 }
