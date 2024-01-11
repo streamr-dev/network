@@ -73,7 +73,7 @@ describe('waitForStorage', () => {
             authentication,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-            signatureType: SignatureType.NEW_SECP256K1
+            signatureType: SignatureType.SECP256K1
         }))
         await expect(() => client.waitForStorage(msg, {
             interval: 50,
@@ -92,7 +92,7 @@ describe('waitForStorage', () => {
             authentication,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-            signatureType: SignatureType.NEW_SECP256K1
+            signatureType: SignatureType.SECP256K1
         }))
         await expect(() => client.waitForStorage(msg, {
             messageMatchFn: () => {

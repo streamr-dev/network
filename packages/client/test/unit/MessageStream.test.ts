@@ -22,7 +22,7 @@ describe('MessageStream', () => {
             authentication,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-            signatureType: SignatureType.NEW_SECP256K1
+            signatureType: SignatureType.SECP256K1
         })
     }
 

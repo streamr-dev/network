@@ -126,7 +126,7 @@ export class PublisherKeyExchange {
             encryptionType: EncryptionType.RSA,
             authentication: this.authentication,
             contentType: ContentType.JSON,
-            signatureType: SignatureType.NEW_SECP256K1,
+            signatureType: SignatureType.SECP256K1,
         })
         return response
     }

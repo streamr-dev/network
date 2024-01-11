@@ -133,7 +133,7 @@ export class MessageFactory {
             newGroupKey,
             authentication: this.authentication,
             contentType,
-            signatureType: SignatureType.NEW_SECP256K1,
+            signatureType: SignatureType.SECP256K1,
         })
     }
 

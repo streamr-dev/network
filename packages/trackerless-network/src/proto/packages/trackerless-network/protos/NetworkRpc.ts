@@ -325,9 +325,9 @@ export enum SignatureType {
      */
     LEGACY_SECP256K1 = 0,
     /**
-     * @generated from protobuf enum value: NEW_SECP256K1 = 1;
+     * @generated from protobuf enum value: SECP256K1 = 1;
      */
-    NEW_SECP256K1 = 1
+    SECP256K1 = 1
 }
 /**
  * @generated from protobuf enum ProxyDirection

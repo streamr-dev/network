@@ -28,7 +28,7 @@ function makeMsg(streamId: string, partition: number, ts: number, msgNo: number)
         encryptionType: EncryptionType.NONE,
         signature: hexToBinary('0x1111'),
         messageType: StreamMessageType.MESSAGE,
-        signatureType: SignatureType.NEW_SECP256K1
+        signatureType: SignatureType.SECP256K1
     }
 }
 

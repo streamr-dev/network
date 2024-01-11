@@ -38,7 +38,7 @@ const groupKeyMessageToStreamMessage = async (
             : StreamMessageType.GROUP_KEY_RESPONSE,
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
-        signatureType: SignatureType.NEW_SECP256K1,
+        signatureType: SignatureType.SECP256K1,
         authentication
     })
 }
@@ -90,7 +90,7 @@ describe('Validator2', () => {
             authentication: publisherAuthentication,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-            signatureType: SignatureType.NEW_SECP256K1
+            signatureType: SignatureType.SECP256K1
         })
 
         msgWithNewGroupKey = await createSignedMessage({
@@ -100,7 +100,7 @@ describe('Validator2', () => {
             authentication: publisherAuthentication,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-            signatureType: SignatureType.NEW_SECP256K1
+            signatureType: SignatureType.SECP256K1
         })
         assert.notStrictEqual(msg.signature, msgWithNewGroupKey.signature)
 
@@ -111,7 +111,7 @@ describe('Validator2', () => {
             authentication: publisherAuthentication,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-            signatureType: SignatureType.NEW_SECP256K1
+            signatureType: SignatureType.SECP256K1
         })
         assert.notStrictEqual(msg.signature, msgWithPrevMsgRef.signature)
 

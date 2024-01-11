@@ -17,7 +17,7 @@ export const createSignaturePayload = (opts: {
     newGroupKey?: EncryptedGroupKey
 }): Uint8Array => {
 
-    if (opts.signatureType == SignatureType.NEW_SECP256K1) {
+    if (opts.signatureType == SignatureType.SECP256K1) {
         const header = Buffer.from(`${opts.messageId.streamId}${opts.messageId.streamPartition}${opts.messageId.timestamp}`
             + `${opts.messageId.sequenceNumber}${opts.messageId.publisherId}${opts.messageId.msgChainId}`, 'utf8')
 

@@ -31,7 +31,7 @@ const msg = ({ timestamp = 1564046332168, sequenceNumber = 10, ...overrides } = 
                 contentType: ContentType.JSON,
                 messageType: StreamMessageType.MESSAGE,
                 encryptionType: EncryptionType.NONE,
-                signatureType: SignatureType.NEW_SECP256K1,
+                signatureType: SignatureType.SECP256K1,
                 signature,
                 newGroupKey
             },
@@ -69,7 +69,7 @@ describe('StreamMessage', () => {
                 content: utf8ToBinary(JSON.stringify(content)),
                 contentType: ContentType.JSON,
                 encryptionType: EncryptionType.NONE,
-                signatureType: SignatureType.NEW_SECP256K1,
+                signatureType: SignatureType.SECP256K1,
                 signature
             })
             assert.strictEqual(streamMessage.getStreamId(), 'streamId')
@@ -94,7 +94,7 @@ describe('StreamMessage', () => {
                 content: new Uint8Array([1, 2, 3]),
                 contentType: ContentType.BINARY,
                 encryptionType: EncryptionType.NONE,
-                signatureType: SignatureType.NEW_SECP256K1,
+                signatureType: SignatureType.SECP256K1,
                 signature
             })
             assert.strictEqual(streamMessage.getStreamId(), 'streamId')
@@ -118,7 +118,7 @@ describe('StreamMessage', () => {
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: new Uint8Array([1, 2, 3]),
                 contentType: ContentType.BINARY,
-                signatureType: SignatureType.NEW_SECP256K1,
+                signatureType: SignatureType.SECP256K1,
                 encryptionType: EncryptionType.NONE,
                 signature
             })
@@ -144,7 +144,7 @@ describe('StreamMessage', () => {
                 content: utf8ToBinary(JSON.stringify(content)),
                 contentType: ContentType.JSON,
                 encryptionType: EncryptionType.NONE,
-                signatureType: SignatureType.NEW_SECP256K1,
+                signatureType: SignatureType.SECP256K1,
                 signature
             })
             expect(StreamMessage.isAESEncrypted(streamMessage)).toBe(false)
@@ -154,7 +154,7 @@ describe('StreamMessage', () => {
                 contentType: ContentType.JSON,
                 signature,
                 encryptionType: EncryptionType.AES,
-                signatureType: SignatureType.NEW_SECP256K1,
+                signatureType: SignatureType.SECP256K1,
                 groupKeyId: 'mock-id'
             })
 
@@ -284,7 +284,7 @@ describe('StreamMessage', () => {
                 content: utf8ToBinary(JSON.stringify(content)),
                 contentType: ContentType.JSON,
                 encryptionType: EncryptionType.NONE,
-                signatureType: SignatureType.NEW_SECP256K1,
+                signatureType: SignatureType.SECP256K1,
                 signature
             })
             const streamMessageClone = streamMessage.clone()
@@ -298,7 +298,7 @@ describe('StreamMessage', () => {
                 contentType: ContentType.JSON,
                 signature,
                 encryptionType: EncryptionType.RSA,
-                signatureType: SignatureType.NEW_SECP256K1,
+                signatureType: SignatureType.SECP256K1,
                 prevMsgRef: new MessageRef(1564046332168, 5),
             })
             const streamMessageClone = encryptedMessage.clone()

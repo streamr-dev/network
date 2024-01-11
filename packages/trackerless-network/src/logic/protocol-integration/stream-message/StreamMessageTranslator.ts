@@ -61,14 +61,14 @@ const oldToNewSignatureType = (type: OldSignatureType): SignatureType => {
     if (type === OldSignatureType.LEGACY_SECP256K1) {
         return SignatureType.LEGACY_SECP256K1
     }
-    return SignatureType.NEW_SECP256K1
+    return SignatureType.SECP256K1
 }
 
 const newToOldSignatureType = (type: SignatureType): OldSignatureType => {
     if (type === SignatureType.LEGACY_SECP256K1) {
         return OldSignatureType.LEGACY_SECP256K1
     }
-    return OldSignatureType.NEW_SECP256K1
+    return OldSignatureType.SECP256K1
 
 }
 

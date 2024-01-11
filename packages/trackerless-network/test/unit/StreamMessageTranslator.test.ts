@@ -38,7 +38,7 @@ describe('StreamMessageTranslator', () => {
         contentType: ContentType.JSON,
         messageType: OldStreamMessageType.MESSAGE,
         encryptionType: EncryptionType.NONE,
-        signatureType: SignatureType.NEW_SECP256K1,
+        signatureType: SignatureType.SECP256K1,
         signature,
     })
 

@@ -93,7 +93,7 @@ describe('proxy group key exchange', () => {
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
             content: serializeGroupKeyRequest(groupKeyRequest),
-            signatureType: SignatureType.NEW_SECP256K1,
+            signatureType: SignatureType.SECP256K1,
             signature: hexToBinary('1234')
         })
 
@@ -125,7 +125,7 @@ describe('proxy group key exchange', () => {
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.RSA,
             content: serializeGroupKeyResponse(groupKeyResponse),
-            signatureType: SignatureType.NEW_SECP256K1,
+            signatureType: SignatureType.SECP256K1,
             signature: hexToBinary('1234')
         })
 

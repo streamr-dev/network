@@ -41,7 +41,7 @@ describe('dataQueryEndpoint', () => {
             signature: hexToBinary('0x1234'),
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-            signatureType: SignatureType.NEW_SECP256K1
+            signatureType: SignatureType.SECP256K1
         })
     }
 

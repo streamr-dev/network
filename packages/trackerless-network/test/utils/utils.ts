@@ -86,7 +86,7 @@ export const createStreamMessage = (
         contentType: ContentType.JSON,
         messageId,
         signature: hexToBinary('0x1234'),
-        signatureType: SignatureType.NEW_SECP256K1,
+        signatureType: SignatureType.SECP256K1,
     }
     return msg
 }

@@ -119,7 +119,7 @@ export class SubscriberKeyExchange {
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
             authentication: this.authentication,
-            signatureType: SignatureType.NEW_SECP256K1,
+            signatureType: SignatureType.SECP256K1,
         })
     }
 
