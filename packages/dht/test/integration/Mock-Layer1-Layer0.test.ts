@@ -76,10 +76,10 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
         expect(layer1Node3.getNeighborCount()).toEqual(layer0Node3.getNeighborCount())
         expect(layer1Node4.getNeighborCount()).toEqual(layer0Node4.getNeighborCount())
 
-        expect(layer1Node1.getAllNeighborPeerDescriptors()).toContainValues(layer0Node1.getAllNeighborPeerDescriptors())
-        expect(layer1Node2.getAllNeighborPeerDescriptors()).toContainValues(layer0Node2.getAllNeighborPeerDescriptors())
-        expect(layer1Node3.getAllNeighborPeerDescriptors()).toContainValues(layer0Node3.getAllNeighborPeerDescriptors())
-        expect(layer1Node4.getAllNeighborPeerDescriptors()).toContainValues(layer0Node4.getAllNeighborPeerDescriptors())
+        expect(layer1Node1.getNeighbors()).toContainValues(layer0Node1.getNeighbors())
+        expect(layer1Node2.getNeighbors()).toContainValues(layer0Node2.getNeighbors())
+        expect(layer1Node3.getNeighbors()).toContainValues(layer0Node3.getNeighbors())
+        expect(layer1Node4.getNeighbors()).toContainValues(layer0Node4.getNeighbors())
 
     }, 60000)
 })

@@ -1,8 +1,16 @@
 /* eslint-disable no-console */
 
-import { DhtNode, LatencyType, Simulator, getNodeIdFromPeerDescriptor, getRandomRegion } from '@streamr/dht'
-import { 
+import {
+    DhtNode,
+    getNodeIdFromPeerDescriptor,
+    getRandomRegion,
+    LatencyType,
+    PeerDescriptor,
+    Simulator
+} from '@streamr/dht'
+import {
     ContentType,
+    EncryptionType,
     MessageID,
     StreamMessage,
     StreamMessageType,
@@ -13,7 +21,6 @@ import {
 } from '@streamr/protocol'
 import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import fs from 'fs'
-import { PeerDescriptor } from '@streamr/dht'
 import { NetworkNode } from '../../src/NetworkNode'
 import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
 import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
@@ -93,6 +100,7 @@ const measureJoiningTime = async () => {
             })),
             messageType: StreamMessageType.MESSAGE,
             contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE,
             signature: hexToBinary('0x1234'),
         })
         streamParts.get(stream)!.broadcast(streamMessage)
@@ -148,11 +156,11 @@ run().then(() => {
     const foundData = nodes[0].stack.getLayer0Node().getDataFromDht(streamPartIdToDataKey(streamParts[0]))
     console.log(foundData)
     const layer0Node = currentNode.stack.getLayer0Node() as DhtNode
-    console.log(layer0Node.getAllNeighborPeerDescriptors().length)
+    console.log(layer0Node.getNeighbors().length)
     console.log(layer0Node.getConnectionCount())
     const streamPartDelivery = streamrNode.getStreamPartDelivery(streamParts[0])! as { layer1Node: Layer1Node, node: RandomGraphNode }
-    console.log(streamPartDelivery.layer1Node.getAllNeighborPeerDescriptors())
-    console.log(streamPartDelivery.node.getTargetNeighborIds())
+    console.log(streamPartDelivery.layer1Node.getNeighbors())
+    console.log(streamPartDelivery.node.getNeighborIds())
     console.log(nodes[nodes.length - 1])
     if (publishInterval) {
         clearInterval(publishInterval)

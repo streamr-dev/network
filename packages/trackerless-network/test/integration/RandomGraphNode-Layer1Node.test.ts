@@ -92,9 +92,9 @@ describe('RandomGraphNode-DhtNode', () => {
 
         await graphNodes[0].start()
 
-        await waitForCondition(() => graphNodes[0].getTargetNeighborIds().length === 1)
+        await waitForCondition(() => graphNodes[0].getNeighborIds().length === 1)
         expect(graphNodes[0].getNearbyNodeView().getIds().length).toEqual(1)
-        expect(graphNodes[0].getTargetNeighborIds().length).toEqual(1)
+        expect(graphNodes[0].getNeighborIds().length).toEqual(1)
     })
 
     it('happy path 4 nodes', async () => {
@@ -104,10 +104,10 @@ describe('RandomGraphNode-DhtNode', () => {
             await layer1Nodes[i].joinDht([entrypointDescriptor])
         }))
 
-        await waitForCondition(() => range(4).every((i) => graphNodes[i].getTargetNeighborIds().length === 4))
+        await waitForCondition(() => range(4).every((i) => graphNodes[i].getNeighborIds().length === 4))
         range(4).forEach((i) => {
             expect(graphNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)
-            expect(graphNodes[i].getTargetNeighborIds().length).toBeGreaterThanOrEqual(4)
+            expect(graphNodes[i].getNeighborIds().length).toBeGreaterThanOrEqual(4)
         })
 
         // Check bidirectionality
@@ -118,7 +118,7 @@ describe('RandomGraphNode-DhtNode', () => {
                 const neighbor = allNodes.find((node) => {
                     return node.getOwnNodeId() === nodeId
                 })
-                expect(neighbor!.getTargetNeighborIds().includes(allNodes[i].getOwnNodeId())).toEqual(true)
+                expect(neighbor!.getNeighborIds().includes(allNodes[i].getOwnNodeId())).toEqual(true)
             })
         })
     }, 10000)
@@ -129,11 +129,11 @@ describe('RandomGraphNode-DhtNode', () => {
             layer1Nodes[i].joinDht([entrypointDescriptor])
         }))
         await Promise.all(graphNodes.map((node) =>
-            waitForCondition(() => node.getTargetNeighborIds().length >= 4, 10000)
+            waitForCondition(() => node.getNeighborIds().length >= 4, 10000)
         ))
 
         const avg = graphNodes.reduce((acc, curr) => {
-            return acc + curr.getTargetNeighborIds().length
+            return acc + curr.getNeighborIds().length
         }, 0) / nodeCount
 
         logger.info(`AVG Number of neighbors: ${avg}`)
@@ -144,10 +144,10 @@ describe('RandomGraphNode-DhtNode', () => {
             let mismatchCounter = 0
             graphNodes.forEach((node) => {
                 const nodeId = node.getOwnNodeId()
-                node.getTargetNeighborIds().forEach((neighborId) => {
+                node.getNeighborIds().forEach((neighborId) => {
                     if (neighborId !== entryPointRandomGraphNode.getOwnNodeId()) {
                         const neighbor = graphNodes.find((n) => n.getOwnNodeId() === neighborId)
-                        if (!neighbor!.getTargetNeighborIds().includes(nodeId)) {
+                        if (!neighbor!.getNeighborIds().includes(nodeId)) {
                             mismatchCounter += 1
                         }
                     }

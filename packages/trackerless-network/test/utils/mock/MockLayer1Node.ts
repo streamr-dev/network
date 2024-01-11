@@ -16,7 +16,7 @@ export class MockLayer1Node extends EventEmitter implements Layer1Node {
         return []
     }
 
-    getAllNeighborPeerDescriptors(): PeerDescriptor[] {
+    getNeighbors(): PeerDescriptor[] {
         return this.kbucketPeers
     }
 

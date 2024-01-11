@@ -166,7 +166,7 @@ export class EntryPointDiscovery {
             if (this.config.layer1Node.getNeighborCount() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
                 // Filter out nodes that are not neighbors as those nodes are assumed to be offline
                 const nodesToAvoid = rediscoveredEntrypoints
-                    .filter((peer) => !this.config.layer1Node.getAllNeighborPeerDescriptors()
+                    .filter((peer) => !this.config.layer1Node.getNeighbors()
                         .some((neighbor) => areEqualPeerDescriptors(neighbor, peer)))
                     .map((peer) => getNodeIdFromPeerDescriptor(peer))
                 nodesToAvoid.forEach((node) => this.networkSplitAvoidedNodes.add(node))

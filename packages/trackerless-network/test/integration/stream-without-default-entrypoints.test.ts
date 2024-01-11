@@ -1,6 +1,6 @@
 import { LatencyType, NodeType, PeerDescriptor, Simulator, SimulatorTransport, getRandomRegion } from '@streamr/dht'
 import {
-    ContentType,
+    ContentType, EncryptionType,
     MessageID,
     MessageRef,
     StreamMessage,
@@ -41,6 +41,7 @@ describe('stream without default entrypoints', () => {
         })),
         messageType: StreamMessageType.MESSAGE,
         contentType: ContentType.JSON,
+        encryptionType: EncryptionType.NONE,
         signature: hexToBinary('0x1234'),
     })
 

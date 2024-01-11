@@ -13,7 +13,7 @@ export interface Layer1Node {
     off<T extends keyof Layer1NodeEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, peers: PeerDescriptor[]) => void): void
     removeContact: (nodeId: DhtAddress) => void
     getClosestContacts: (maxCount?: number) => PeerDescriptor[]
-    getAllNeighborPeerDescriptors: () => PeerDescriptor[]
+    getNeighbors: () => PeerDescriptor[]
     getNeighborCount(): number
     joinDht: (entryPoints: PeerDescriptor[], doRandomJoin?: boolean, retry?: boolean) => Promise<void>
     start: () => Promise<void>

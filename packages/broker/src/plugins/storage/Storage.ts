@@ -105,8 +105,9 @@ export class Storage extends EventEmitter {
                     }
                 }))
             } else {
-                const messageId = streamMessage.messageId.serialize()
-                logger.trace('Move message to pending messages (bucket not found)', { messageId })
+                logger.trace('Move message to pending messages (bucket not found)', {
+                    messageId: JSON.stringify(streamMessage.messageId)
+                })
 
                 const uuid = uuidv1()
                 const timeout = setTimeout(() => {
