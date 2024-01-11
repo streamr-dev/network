@@ -50,7 +50,7 @@
     "@types/heap": "^0.2.34",
     "@types/k-bucket": "^5.0.1",
     "@types/lodash": "^4.14.202",
-    "@types/sinon": "^10.0.15",
+    "@types/sinon": "^17.0.3",
     "@types/uuid": "^9.0.7",
     "@types/websocket": "^1.0.3",
     "express": "^4.17.1",
