@@ -2,12 +2,9 @@ import { Logger } from '@streamr/utils'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils/utils'
-import { PeerID } from '../../src/exports'
-import { getDhtAddressFromRaw } from '../../src/identifiers'
+import { createRandomDhtAddress } from '../../src/identifiers'
 
 const logger = new Logger(module)
-
-// TODO refactor the test to not to use PeerID
 
 describe('Layer 1 on Layer 0 with mocked connections', () => {
 
@@ -25,11 +22,11 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
 
     beforeEach(async () => {
 
-        layer0EntryPoint = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(PeerID.fromString('layer0entrypoint').value))
-        layer0Node1 = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(PeerID.fromString('node1').value))
-        layer0Node2 = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(PeerID.fromString('node2').value))
-        layer0Node3 = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(PeerID.fromString('node3').value))
-        layer0Node4 = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(PeerID.fromString('node4').value))
+        layer0EntryPoint = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
+        layer0Node1 = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
+        layer0Node2 = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
+        layer0Node3 = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
+        layer0Node4 = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
 
         layer1EntryPoint = await createMockConnectionLayer1Node(layer0EntryPoint)
 
@@ -79,10 +76,10 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
         expect(layer1Node3.getNumberOfNeighbors()).toEqual(layer0Node3.getNumberOfNeighbors())
         expect(layer1Node4.getNumberOfNeighbors()).toEqual(layer0Node4.getNumberOfNeighbors())
 
-        expect(layer1Node1.getAllNeighborPeerDescriptors()).toContainValues(layer0Node1.getAllNeighborPeerDescriptors())
-        expect(layer1Node2.getAllNeighborPeerDescriptors()).toContainValues(layer0Node2.getAllNeighborPeerDescriptors())
-        expect(layer1Node3.getAllNeighborPeerDescriptors()).toContainValues(layer0Node3.getAllNeighborPeerDescriptors())
-        expect(layer1Node4.getAllNeighborPeerDescriptors()).toContainValues(layer0Node4.getAllNeighborPeerDescriptors())
+        expect(layer1Node1.getNeighbors()).toContainValues(layer0Node1.getNeighbors())
+        expect(layer1Node2.getNeighbors()).toContainValues(layer0Node2.getNeighbors())
+        expect(layer1Node3.getNeighbors()).toContainValues(layer0Node3.getNeighbors())
+        expect(layer1Node4.getNeighbors()).toContainValues(layer0Node4.getNeighbors())
 
     }, 60000)
 })

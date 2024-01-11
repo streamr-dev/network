@@ -1,4 +1,4 @@
-import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
+import { ContentType, EncryptionType, MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
 import { collect, toEthereumAddress, wait, utf8ToBinary } from '@streamr/utils'
 import { Authentication } from '../../src/Authentication'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
@@ -20,8 +20,10 @@ describe('PushPipeline', () => {
     const createMockMessage = async () => {
         return await createSignedMessage({
             messageId: new MessageID(streamId, 0, 0, 0, PUBLISHER_ID, 'msgChainId'),
-            serializedContent: utf8ToBinary(JSON.stringify(Msg())),
-            authentication
+            content: utf8ToBinary(JSON.stringify(Msg())),
+            authentication,
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE
         })
     }
 
@@ -84,8 +86,10 @@ describe('PushPipeline', () => {
         leaksDetector.add('testMessage', testMessage)
         const streamMessage = createSignedMessage({
             messageId: new MessageID(streamId, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
-            serializedContent: utf8ToBinary(JSON.stringify(testMessage)),
-            authentication
+            content: utf8ToBinary(JSON.stringify(testMessage)),
+            authentication,
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE
         })
         leaksDetector.add('streamMessage', streamMessage)
         const s = new PushPipeline<StreamMessage>()

@@ -1,5 +1,6 @@
 import { waitForAssignmentsToPropagate } from '../../src/utils/waitForAssignmentsToPropagate'
 import {
+    ContentType, EncryptionType,
     MessageID,
     StreamID,
     StreamMessage,
@@ -18,8 +19,10 @@ const authentication = createRandomAuthentication()
 async function makeMsg(ts: number, content: unknown): Promise<StreamMessage> {
     return createSignedMessage({
         messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await authentication.getAddress(), 'msgChain'),
-        serializedContent: utf8ToBinary(JSON.stringify(content)),
-        authentication
+        content: utf8ToBinary(JSON.stringify(content)),
+        authentication,
+        contentType: ContentType.JSON,
+        encryptionType: EncryptionType.NONE
     })
 }
 

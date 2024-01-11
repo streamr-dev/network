@@ -2,6 +2,7 @@ import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { ICloseEvent, IMessageEvent, w3cwebsocket as Websocket } from 'websocket'
 import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from '../IConnection'
+import { createRandomConnectionId } from '../Connection'
 
 const logger = new Logger(module)
 
@@ -24,7 +25,7 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
 
     constructor() {
         super()
-        this.connectionId = new ConnectionID()
+        this.connectionId = createRandomConnectionId()
     }
 
     // TODO explicit default value for "selfSigned" or make it required
@@ -95,7 +96,7 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
         this.emit('disconnected', gracefulLeave, undefined, 'close() called')
         this.removeAllListeners()
         if (!this.destroyed) {
-            logger.trace(`Closing socket for connection ${this.connectionId.toString()}`)
+            logger.trace(`Closing socket for connection ${this.connectionId}`)
             this.socket?.close(gracefulLeave ? CUSTOM_GOING_AWAY : undefined)
         } else {
             logger.debug('Tried to close() a stopped connection')

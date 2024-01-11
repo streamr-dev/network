@@ -1,5 +1,6 @@
 import { NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import {
+    ContentType, EncryptionType,
     MessageID,
     MessageRef,
     StreamMessage,
@@ -78,7 +79,9 @@ describe('NetworkNode', () => {
             content: utf8ToBinary(JSON.stringify({
                 hello: 'world'
             })),
+            contentType: ContentType.JSON,
             messageType: StreamMessageType.MESSAGE,
+            encryptionType: EncryptionType.NONE,
             signature: hexToBinary('0x1234'),
         })
 

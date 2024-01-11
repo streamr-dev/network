@@ -3,7 +3,7 @@ import { NodeList } from '../NodeList'
 import { DhtAddress } from '@streamr/dht'
 
 interface FindNeighborsSessionConfig {
-    targetNeighbors: NodeList
+    neighbors: NodeList
     nearbyNodeView: NodeList
     doFindNeighbors: (excludedNodes: DhtAddress[]) => Promise<DhtAddress[]>
     minCount: number
@@ -27,7 +27,7 @@ export class NeighborFinder {
             return
         }
         const newExcludes = await this.config.doFindNeighbors(excluded)
-        if (this.config.targetNeighbors.size() < this.config.minCount && newExcludes.length < this.config.nearbyNodeView.size()) {
+        if (this.config.neighbors.size() < this.config.minCount && newExcludes.length < this.config.nearbyNodeView.size()) {
             // TODO should we catch possible promise rejection?
             setAbortableTimeout(() => this.findNeighbors(newExcludes), INTERVAL, this.abortController.signal)
         } else {

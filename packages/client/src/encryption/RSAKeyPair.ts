@@ -1,8 +1,6 @@
 import crypto from 'crypto'
 import { promisify } from 'util'
 
-const { webcrypto } = crypto
-
 /**
  * The length of encrypted data determines the minimum length. In StreamrClient we use RSA
  * for encrypting 32 byte GroupKeys. In Node environment 585 bits is enough, but in
@@ -11,8 +9,8 @@ const { webcrypto } = crypto
  */
 export const MIN_KEY_LENGTH = 640
 
-function getSubtle(): SubtleCrypto {
-    const subtle = typeof window !== 'undefined' ? window?.crypto?.subtle : webcrypto.subtle
+function getSubtle(): crypto.webcrypto.SubtleCrypto {
+    const subtle = typeof window !== 'undefined' ? window?.crypto?.subtle : crypto.webcrypto.subtle
     if (!subtle) {
         const url = 'https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto'
         throw new Error(`SubtleCrypto not supported. This feature is available only in secure contexts (HTTPS) & Node 16+. ${url}`)

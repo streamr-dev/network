@@ -1,8 +1,8 @@
 import { startTestServer } from '@streamr/test-utils'
-import { collect, waitForCondition } from '@streamr/utils'
+import { collect, toLengthPrefixedFrame, waitForCondition } from '@streamr/utils'
 import { Request, Response } from 'express'
 import range from 'lodash/range'
-import { FetchHttpStreamResponseError, createQueryString, fetchHttpStream, getEndpointUrl } from '../../src/utils/utils'
+import { FetchHttpStreamResponseError, createQueryString, fetchLengthPrefixedFrameHttpBinaryStream, getEndpointUrl } from '../../src/utils/utils'
 import { nextValue } from './../../src/utils/iterators'
 
 describe('utils', () => {
@@ -26,18 +26,18 @@ describe('utils', () => {
         expect(actual).toBe('a=foo&d=123&e=x%2Cy')
     })
 
-    describe('fetchHttpStream', () => {
+    describe('fetchLengthPrefixedFrameHttpBinaryStream', () => {
 
         it('happy path', async () => {
             const LINE_COUNT = 5
             const server = await startTestServer('/', async (_req: Request, res: Response) => {
                 for (const i of range(LINE_COUNT)) {
-                    res.write(`${i}\n`)
+                    res.write(toLengthPrefixedFrame(Buffer.from(`${i}`)))
                 }
                 res.end()
             })
-            const lines = await collect(fetchHttpStream(server.url))
-            expect(lines.map((line) => parseInt(line))).toEqual(range(LINE_COUNT))
+            const lines = await collect(fetchLengthPrefixedFrameHttpBinaryStream(server.url))
+            expect(lines.map((line) => parseInt(line.toString()))).toEqual(range(LINE_COUNT))
             await server.stop()
         })
 
@@ -47,12 +47,12 @@ describe('utils', () => {
                 res.on('close', () => {
                     serverResponseClosed = true
                 })
-                res.write(`foobar\n`)
+                res.write(toLengthPrefixedFrame(Buffer.from('foobar')))
             })
             const abortController = new AbortController()
-            const iterator = fetchHttpStream(server.url, abortController.signal)[Symbol.asyncIterator]()
+            const iterator = fetchLengthPrefixedFrameHttpBinaryStream(server.url, abortController.signal)[Symbol.asyncIterator]()
             const line = await nextValue(iterator)
-            expect(line).toBe('foobar')
+            expect(line?.toString()).toBe('foobar')
             abortController.abort()
             await waitForCondition(() => serverResponseClosed === true)
             await expect(() => nextValue(iterator)).rejects.toThrow(/aborted/)
@@ -61,7 +61,7 @@ describe('utils', () => {
 
         it('error response', async () => {
             const server = await startTestServer('/foo', async () => {})
-            const iterator = fetchHttpStream(`${server.url}/bar`)[Symbol.asyncIterator]()
+            const iterator = fetchLengthPrefixedFrameHttpBinaryStream(`${server.url}/bar`)[Symbol.asyncIterator]()
             try {
                 await nextValue(iterator)
                 fail('Should throw')
@@ -73,7 +73,7 @@ describe('utils', () => {
         })
 
         it('invalid host', async () => {
-            const iterator = fetchHttpStream('http://mock.test')[Symbol.asyncIterator]()
+            const iterator = fetchLengthPrefixedFrameHttpBinaryStream('http://mock.test')[Symbol.asyncIterator]()
             await expect(() => nextValue(iterator)).rejects.toThrow(/getaddrinfo ENOTFOUND/)
         })
     })

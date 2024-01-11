@@ -185,7 +185,7 @@ export class OrderedMessageChain {
     }
 
     private isNextOrderedMessage(msg: StreamMessage) {
-        const previousRef = msg.getPreviousMessageRef()
+        const previousRef = msg.prevMsgRef
         return (this.lastOrderedMsg === undefined) || (previousRef === null) || areEqualRefs(previousRef, this.lastOrderedMsg.getMessageRef())
     }
 

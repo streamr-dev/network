@@ -72,10 +72,10 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         await graphNodes[0].start()
         await Promise.all([
             waitForCondition(() => graphNodes[0].getNearbyNodeView().getIds().length === 1),
-            waitForCondition(() => graphNodes[0].getTargetNeighborIds().length === 1)
+            waitForCondition(() => graphNodes[0].getNeighborIds().length === 1)
         ])
         expect(graphNodes[0].getNearbyNodeView().getIds().length).toEqual(1)
-        expect(graphNodes[0].getTargetNeighborIds().length).toEqual(1)
+        expect(graphNodes[0].getNeighborIds().length).toEqual(1)
     })
 
     it('happy path 5 nodes', async () => {
@@ -84,14 +84,10 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         await Promise.all(range(4).map(async (i) => {
             await layer1Nodes[i].joinDht([entrypointDescriptor])
         }))
-        await Promise.all(range(4).map((i) => {
-            return waitForCondition(() => {
-                return graphNodes[i].getTargetNeighborIds().length >= 4
-            }, 15000, 2000)
-        }))
+        await waitForCondition(() => range(4).every((i) => graphNodes[i].getNeighborIds().length >= 4), 15000, 1000)
         range(4).forEach((i) => {
             expect(graphNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)
-            expect(graphNodes[i].getTargetNeighborIds().length).toBeGreaterThanOrEqual(4)
+            expect(graphNodes[i].getNeighborIds().length).toBeGreaterThanOrEqual(4)
         })
         // Check bidirectionality
         const allNodes = graphNodes
@@ -102,7 +98,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
                 const neighbor = allNodes.find((node) => {
                     return node.getOwnNodeId() === ownNodeId
                 })
-                expect(neighbor!.getTargetNeighborIds()).toContain(nodeId)
+                expect(neighbor!.getNeighborIds()).toContain(nodeId)
             })
         })
     }, 60000)
@@ -113,7 +109,7 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             layer1Nodes[i].joinDht([entrypointDescriptor])
         }))
         await Promise.all(graphNodes.map((node) =>
-            waitForCondition(() => node.getTargetNeighborIds().length >= 4, 10000)
+            waitForCondition(() => node.getNeighborIds().length >= 4, 10000)
         ))
 
         await Promise.all(graphNodes.map((node) =>
@@ -124,10 +120,10 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             let mismatchCounter = 0
             graphNodes.forEach((node) => {
                 const nodeId = node.getOwnNodeId()
-                node.getTargetNeighborIds().forEach((neighborId) => {
+                node.getNeighborIds().forEach((neighborId) => {
                     if (neighborId !== entryPointRandomGraphNode.getOwnNodeId()) {
                         const neighbor = graphNodes.find((n) => n.getOwnNodeId() === neighborId)
-                        if (!neighbor!.getTargetNeighborIds().includes(nodeId)) {
+                        if (!neighbor!.getNeighborIds().includes(nodeId)) {
                             mismatchCounter += 1
                         }
                     }

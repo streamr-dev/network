@@ -1,6 +1,6 @@
 import { DhtNode } from '../../src/dht/DhtNode'
+import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { getNodeIdFromPeerDescriptor } from '../../src/exports'
 
 describe('Layer 1 on Layer 0 with mocked connections', () => {
 
@@ -26,52 +26,52 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
 
         layer0EntryPoint = new DhtNode({ peerDescriptor: entrypointDescriptor, websocketServerEnableTls: false })
 
-        const layer0Node1Id = '11'
+        const layer0Node1Id = '11' as DhtAddress
         layer0Node1 = new DhtNode({
-            peerId: layer0Node1Id
+            nodeId: layer0Node1Id
         })
 
-        const layer0Node2Id = '22'
+        const layer0Node2Id = '22' as DhtAddress
         layer0Node2 = new DhtNode({
-            peerId: layer0Node2Id
+            nodeId: layer0Node2Id
         })
 
-        const layer0Node3Id = '33'
+        const layer0Node3Id = '33' as DhtAddress
         layer0Node3 = new DhtNode({
-            peerId: layer0Node3Id
+            nodeId: layer0Node3Id
         })
 
-        const layer0Node4Id = '44'
+        const layer0Node4Id = '44' as DhtAddress
         layer0Node4 = new DhtNode({
-            peerId: layer0Node4Id
+            nodeId: layer0Node4Id
         })
 
         layer1EntryPoint = new DhtNode({
-            peerId: getNodeIdFromPeerDescriptor(entrypointDescriptor),
+            nodeId: getNodeIdFromPeerDescriptor(entrypointDescriptor),
             transport: layer0EntryPoint,
             serviceId: 'layer1'
         })
 
         layer1Node1 = new DhtNode({
-            peerId: layer0Node1Id,
+            nodeId: layer0Node1Id,
             transport: layer0Node1,
             serviceId: 'layer1'
         })
 
         layer1Node2 = new DhtNode({
-            peerId: layer0Node2Id,
+            nodeId: layer0Node2Id,
             transport: layer0Node2,
             serviceId: 'layer1'
         })
 
         layer1Node3 = new DhtNode({
-            peerId: layer0Node3Id,
+            nodeId: layer0Node3Id,
             transport: layer0Node3,
             serviceId: 'layer1'
         })
 
         layer1Node4 = new DhtNode({
-            peerId: layer0Node4Id,
+            nodeId: layer0Node4Id,
             transport: layer0Node4,
             serviceId: 'layer1'
         })

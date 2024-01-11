@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { toEthereumAddress } from '@streamr/utils'
-import { MessageID } from '@streamr/protocol'
+import { MessageID, ContentType, EncryptionType } from '@streamr/protocol'
 import { Authentication } from '../../src/Authentication'
 import { StreamPermission } from '../../src/permission'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
@@ -69,8 +69,10 @@ describe('waitForStorage', () => {
         await stream.addToStorageNode(storageNode.getAddress())
         const msg = convertStreamMessageToMessage(await createSignedMessage({
             messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
-            serializedContent: MOCK_CONTENT,
-            authentication
+            content: MOCK_CONTENT,
+            authentication,
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE
         }))
         await expect(() => client.waitForStorage(msg, {
             interval: 50,
@@ -85,8 +87,10 @@ describe('waitForStorage', () => {
     it('no storage assigned', async () => {
         const msg = convertStreamMessageToMessage(await createSignedMessage({
             messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
-            serializedContent: MOCK_CONTENT,
-            authentication
+            content: MOCK_CONTENT,
+            authentication,
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE
         }))
         await expect(() => client.waitForStorage(msg, {
             messageMatchFn: () => {

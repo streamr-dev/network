@@ -7,10 +7,12 @@ import { IWebsocketConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.s
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { ManagedConnection } from '../ManagedConnection'
 import { Empty } from '../../proto/google/protobuf/empty'
+import { getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { DhtAddress } from '../../identifiers'
 
 interface WebsocketConnectorRpcLocalConfig {
     connect: (targetPeerDescriptor: PeerDescriptor) => ManagedConnection
-    hasConnection: (targetPeerDescriptor: PeerDescriptor) => boolean
+    hasConnection: (nodeId: DhtAddress) => boolean
     onNewConnection: (connection: ManagedConnection) => boolean
     abortSignal: AbortSignal
 }
@@ -28,7 +30,7 @@ export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
             return {}
         }
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        if (!this.config.hasConnection(senderPeerDescriptor)) {
+        if (!this.config.hasConnection(getNodeIdFromPeerDescriptor(senderPeerDescriptor))) {
             const connection = this.config.connect(senderPeerDescriptor)
             this.config.onNewConnection(connection)
         }

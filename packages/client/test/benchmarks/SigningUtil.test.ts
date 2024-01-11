@@ -30,11 +30,11 @@ describe('SigningUtil', () => {
         let wallet: Wallet
         let hexSignature: string
         let binarySignature: Uint8Array
-        let payload: string
+        let payload: Uint8Array
 
         beforeEach(async () => {
             wallet = fastWallet()
-            payload = randomString(payloadSize)
+            payload = Buffer.from(randomString(payloadSize))
             hexSignature = await wallet.signMessage(payload)
             binarySignature = hexToBinary(hexSignature)  
         })

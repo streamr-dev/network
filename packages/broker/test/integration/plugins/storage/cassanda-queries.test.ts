@@ -5,7 +5,8 @@ import { Readable, PassThrough } from 'stream'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
+import { ContentType, EncryptionType, MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
+import { convertBytesToStreamMessage } from '@streamr/trackerless-network'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
@@ -20,7 +21,9 @@ const createMockMessage = (i: number) => {
         content: utf8ToBinary(JSON.stringify({
             value: i
         })),
-        signature: hexToBinary('0x1234')
+        signature: hexToBinary('0x1234'),
+        contentType: ContentType.JSON,
+        encryptionType: EncryptionType.NONE
     })
 }
 const MOCK_MESSAGES = [1, 2, 3].map((contentValue: number) => createMockMessage(contentValue))
@@ -31,8 +34,8 @@ const REQUEST_TYPE_FROM = 'requestFrom'
 const REQUEST_TYPE_RANGE = 'requestRange'
 
 const streamToContentValues = async (resultStream: Readable) => {
-    const messages: StreamMessage[] = (await waitForStreamToEnd(resultStream)) as StreamMessage[]
-    return messages.map((message) => (message.getParsedContent() as any).value)
+    const messages: Uint8Array[] = await waitForStreamToEnd(resultStream) as Uint8Array[]
+    return messages.map(convertBytesToStreamMessage).map((message) => (message.getParsedContent() as any).value)
 }
 
 class ProxyClient {
