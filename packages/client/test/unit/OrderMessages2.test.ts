@@ -43,9 +43,9 @@ interface MessageInfo {
     delivery: Delivery
 }
 
-function duplicateElements<T>(arr: readonly T[], numOfDuplicates: number): T[] {
+function duplicateElements<T>(arr: readonly T[], duplicateCount: number): T[] {
     const newArr = Array.from(arr)
-    for (let i = 0; i < numOfDuplicates; ++i) {
+    for (let i = 0; i < duplicateCount; ++i) {
         newArr.push(arr[Math.floor(Math.random() * arr.length)])
     }
     return newArr
@@ -99,7 +99,7 @@ function createMsg({ publisherId, timestamp }: MessageInfo): StreamMessage {
     })
 }
 
-function calculateNumberOfUnfillableGaps(messageInfosInOrder: MessageInfo[]): number {
+function calculateUnfillableGapCount(messageInfosInOrder: MessageInfo[]): number {
     let lastMessageUnavailable = false
     let gaps = 0
     messageInfosInOrder.forEach((messageInfo) => {
@@ -129,7 +129,7 @@ describe.skip('OrderMessages2', () => {
         }
 
         const totalUnfillableGaps = PUBLISHER_IDS.reduce((sum, publisherId) => (
-            sum + calculateNumberOfUnfillableGaps(groundTruthMessages[publisherId])
+            sum + calculateUnfillableGapCount(groundTruthMessages[publisherId])
         ), 0)
 
         const inOrderHandler = (msg: StreamMessage) => {

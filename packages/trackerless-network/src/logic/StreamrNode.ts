@@ -52,7 +52,7 @@ interface Metrics extends MetricsDefinition {
 
 export interface StreamrNodeConfig {
     metricsContext?: MetricsContext
-    streamPartitionNumOfNeighbors?: number
+    streamPartitionNeighborCount?: number
     streamPartitionMinPropagationTargets?: number
     acceptProxyConnections?: boolean
     rpcRequestTimeout?: number
@@ -222,7 +222,7 @@ export class StreamrNode extends EventEmitter<Events> {
             connectionLocker: this.connectionLocker!,
             localPeerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
             minPropagationTargets: this.config.streamPartitionMinPropagationTargets,
-            numOfNeighbors: this.config.streamPartitionNumOfNeighbors,
+            neighborCount: this.config.streamPartitionNeighborCount,
             acceptProxyConnections: this.config.acceptProxyConnections,
             rpcRequestTimeout: this.config.rpcRequestTimeout,
             isLocalNodeEntryPoint

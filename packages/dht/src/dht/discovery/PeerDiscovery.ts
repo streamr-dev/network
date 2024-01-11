@@ -99,7 +99,7 @@ export class PeerDiscovery {
             logger.debug(`DHT join on ${this.config.serviceId} timed out`)
         } finally {
             if (!this.isStopped()) {
-                if (this.config.peerManager.getNumberOfNeighbors() === 0) {
+                if (this.config.peerManager.getNeighborCount() === 0) {
                     if (retry) {
                         // TODO should we catch possible promise rejection?
                         // TODO use config option or named constant?

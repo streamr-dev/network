@@ -106,7 +106,7 @@ export class DiscoverySession {
     }
 
     public async findClosestNodes(timeout: number): Promise<void> {
-        if (this.config.peerManager.getNumberOfContacts(this.config.contactedPeers) === 0) {
+        if (this.config.peerManager.getContactCount(this.config.contactedPeers) === 0) {
             return
         }
         // TODO add abortController and signal it in stop()

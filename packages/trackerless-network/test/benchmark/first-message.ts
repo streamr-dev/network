@@ -160,7 +160,7 @@ run().then(() => {
     console.log(foundData)
     const layer0Node = currentNode.stack.getLayer0Node() as DhtNode
     console.log(layer0Node.getNeighbors().length)
-    console.log(layer0Node.getNumberOfConnections())
+    console.log(layer0Node.getConnectionCount())
     const streamPartDelivery = streamrNode.getStreamPartDelivery(streamParts[0])! as { layer1Node: Layer1Node, node: RandomGraphNode }
     console.log(streamPartDelivery.layer1Node.getNeighbors())
     console.log(streamPartDelivery.node.getNeighborIds())

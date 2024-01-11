@@ -42,17 +42,17 @@ export class KademliaSimulation {
 
         for (let i = this.nodes.length - 1; i >= 0; i--) {
             
-            const numberOfOutgoingRpcCalls = this.nodes[i].getNumberOfOutgoingRpcCalls()
+            const outgoingRpcCallCount = this.nodes[i].getOutgoingRpcCallCount()
             console.log('-----------')
             console.log('Node: ' + i)
             console.log('Kbucket size: ' + this.nodes[i].getKBucketSize())
-            console.log('Num incoming RPC calls: ' + this.nodes[i].getNumberOfIncomingRpcCalls())
-            console.log('Num outgoing RPC calls: ' + numberOfOutgoingRpcCalls)
+            console.log('Num incoming RPC calls: ' + this.nodes[i].getIncomingRpcCallCount())
+            console.log('Num outgoing RPC calls: ' + outgoingRpcCallCount)
     
-            sumOutgoingRpcCalls += numberOfOutgoingRpcCalls
+            sumOutgoingRpcCalls += outgoingRpcCallCount
     
-            if (maxOutgoingRpcCalls < numberOfOutgoingRpcCalls) {
-                maxOutgoingRpcCalls = numberOfOutgoingRpcCalls
+            if (maxOutgoingRpcCalls < outgoingRpcCallCount) {
+                maxOutgoingRpcCalls = outgoingRpcCallCount
             }
 
             const kademliaNeighbors = this.nodes[i].getNeightborList().getContactIds()
@@ -79,13 +79,13 @@ export class KademliaSimulation {
 
         const avgCorrectNeighbors = sumCorrectNeighbors / (KademliaSimulation.NUM_NODES - 1)
         const avgKbucketSize = sumKbucketSize / (KademliaSimulation.NUM_NODES - 1)
-        const avgNumberOfOutgoingRpcCalls = sumOutgoingRpcCalls / (KademliaSimulation.NUM_NODES - 1)
+        const avgOutgoingRpcCallCount = sumOutgoingRpcCalls / (KademliaSimulation.NUM_NODES - 1)
 
         console.log('----------- Simulation results ------------------')
         console.log('Minimum correct neighbors: ' + minimumCorrectNeighbors)
         console.log('Average correct neighbors: ' + avgCorrectNeighbors)
         console.log('Average Kbucket size: ' + avgKbucketSize)
-        console.log('Average number of outgoing RPC calls: ' + avgNumberOfOutgoingRpcCalls)
+        console.log('Average number of outgoing RPC calls: ' + avgOutgoingRpcCallCount)
         console.log('MAX number of outgoing RPC calls: ' + maxOutgoingRpcCalls)
     }
 }
