@@ -205,7 +205,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 this.config.rpcRequestTimeout
             )
         ))
-        for (const descriptor of this.config.layer1Node.getAllNeighborPeerDescriptors()) {
+        for (const descriptor of this.config.layer1Node.getNeighbors()) {
             if (this.config.nearbyNodeView.size() >= this.config.nodeViewSize) {
                 break
             }
@@ -271,7 +271,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         this.config.layer1Node.getClosestContacts(this.config.nodeViewSize).forEach((peer: PeerDescriptor) => {
             nodes.push(peer)
         })
-        this.config.layer1Node.getAllNeighborPeerDescriptors().forEach((peer: PeerDescriptor) => {
+        this.config.layer1Node.getNeighbors().forEach((peer: PeerDescriptor) => {
             nodes.push(peer)
         })
         return uniqBy(nodes, (p) => getNodeIdFromPeerDescriptor(p))
