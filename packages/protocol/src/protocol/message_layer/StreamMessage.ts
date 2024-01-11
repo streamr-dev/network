@@ -127,7 +127,7 @@ export default class StreamMessage {
         StreamMessage.validateSignatureType(signatureType)
         this.signatureType = signatureType
 
-        validateIsNotEmptyByteArray('content', this.content)
+        validateIsNotEmptyByteArray('content', content)
         this.content = content
 
         StreamMessage.validateSequence(this)

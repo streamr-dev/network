@@ -23,8 +23,7 @@ function buildRecord(
         sequenceNo,
         publisherId: toEthereumAddress('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'),
         msgChainId: 'msgChainId',
-        payload: Buffer.from(new Uint8Array([1, 2])),
-        contentType: ContentType.JSON
+        payload: Buffer.from(new Uint8Array([1, 2]))
     }
 }
 
