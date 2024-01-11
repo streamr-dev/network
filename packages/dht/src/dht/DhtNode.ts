@@ -441,11 +441,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         ) : []
     }
 
-    public async joinDht(entryPointDescriptors: PeerDescriptor[], doAdditionalRandomPeerDiscovery?: boolean, retry?: boolean): Promise<void> {
+    public async joinDht(entryPointDescriptors: PeerDescriptor[], doAdditionalDistantPeerDiscovery?: boolean, retry?: boolean): Promise<void> {
         if (!this.started) {
             throw new Error('Cannot join DHT before calling start() on DhtNode')
         }
-        await this.peerDiscovery!.joinDht(entryPointDescriptors, doAdditionalRandomPeerDiscovery, retry)
+        await this.peerDiscovery!.joinDht(entryPointDescriptors, doAdditionalDistantPeerDiscovery, retry)
     }
 
     // TODO make this private and unify the public API of find/fetch/store/delete methods

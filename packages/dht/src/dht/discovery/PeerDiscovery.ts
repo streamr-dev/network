@@ -4,7 +4,7 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import { ConnectionManager } from '../../connection/ConnectionManager'
 import { PeerManager } from '../PeerManager'
-import { DhtAddress, areEqualPeerDescriptors, getFlippedDhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
 import { ServiceID } from '../../types/ServiceID'
 
 interface PeerDiscoveryConfig {
@@ -16,6 +16,12 @@ interface PeerDiscoveryConfig {
     joinTimeout: number
     connectionManager?: ConnectionManager
     peerManager: PeerManager
+}
+
+export const createDistantDhtAddress = (address: DhtAddress): DhtAddress => {
+    const raw = getRawFromDhtAddress(address)
+    const flipped = raw.map((val) => ~val)
+    return getDhtAddressFromRaw(flipped)
 }
 
 const logger = new Logger(module)
@@ -36,14 +42,14 @@ export class PeerDiscovery {
 
     async joinDht(
         entryPoints: PeerDescriptor[],
-        doAdditionalFlippedPeerDiscovery = true,
+        doAdditionalDistantPeerDiscovery = true,
         retry = true
     ): Promise<void> {
         const contactedPeers = new Set<DhtAddress>()
         await Promise.all(entryPoints.map((entryPoint) => this.joinThroughEntryPoint(
             entryPoint,
             contactedPeers,
-            doAdditionalFlippedPeerDiscovery,
+            doAdditionalDistantPeerDiscovery,
             retry
         )))
     }
@@ -52,7 +58,7 @@ export class PeerDiscovery {
         entryPointDescriptor: PeerDescriptor,
         // Note that this set is mutated by DiscoverySession
         contactedPeers: Set<DhtAddress>,
-        doAdditionalFlippedPeerDiscovery = true,
+        doAdditionalDistantPeerDiscovery = true,
         retry = true
     ): Promise<void> {
         if (this.isStopped()) {
@@ -70,8 +76,8 @@ export class PeerDiscovery {
         this.config.peerManager.handleNewPeers([entryPointDescriptor])
         const targetId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
         const sessions = [this.createSession(targetId, contactedPeers)]
-        if (doAdditionalFlippedPeerDiscovery) {
-            sessions.push(this.createSession(getFlippedDhtAddress(targetId), contactedPeers))
+        if (doAdditionalDistantPeerDiscovery) {
+            sessions.push(this.createSession(createDistantDhtAddress(targetId), contactedPeers))
         }
         await this.runSessions(sessions, entryPointDescriptor, retry)
         this.config.connectionManager?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
