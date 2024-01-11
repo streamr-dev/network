@@ -6,7 +6,7 @@ import { StreamPartIDUtils } from '@streamr/protocol'
 import { ListeningRpcCommunicator } from '@streamr/dht'
 
 export const INFO_RPC_SERVICE_ID = 'system/info-rpc'
-export class InfoRpcServer implements IInfoRpc {
+export class InfoRpcLocal implements IInfoRpc {
     
     private readonly stack: NetworkStack
     private readonly rpcCommunicator: ListeningRpcCommunicator

@@ -5,7 +5,7 @@ import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { InfoResponse, ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
 import { Layer0Node } from './logic/Layer0Node'
 import { pull } from 'lodash'
-import { INFO_RPC_SERVICE_ID, InfoRpcServer } from './logic/info-rpc/InfoRpcServer'
+import { INFO_RPC_SERVICE_ID, InfoRpcLocal } from './logic/info-rpc/InfoRpcLocal'
 import { InfoClient } from './logic/info-rpc/InfoClient'
 
 export interface NetworkOptions {
@@ -42,7 +42,7 @@ export class NetworkStack {
     private stopped = false
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
-    private infoServer?: InfoRpcServer
+    private infoServer?: InfoRpcLocal
     private infoClient?: InfoClient
 
     constructor(options: NetworkOptions) {
@@ -100,7 +100,7 @@ export class NetworkStack {
         await this.streamrNode?.start(this.layer0Node!, connectionManager, connectionManager)
         if (this.streamrNode) {
             const infoRpcCommunicator = new ListeningRpcCommunicator(INFO_RPC_SERVICE_ID, this.getConnectionManager())
-            this.infoServer = new InfoRpcServer(this, infoRpcCommunicator)
+            this.infoServer = new InfoRpcLocal(this, infoRpcCommunicator)
             this.infoServer.registerDefaultServerMethods()
             this.infoClient = new InfoClient(
                 this.layer0Node!.getLocalPeerDescriptor(),

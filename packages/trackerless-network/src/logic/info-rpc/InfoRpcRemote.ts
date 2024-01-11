@@ -3,7 +3,7 @@ import { InfoRequest, InfoResponse } from '../../proto/packages/trackerless-netw
 import { InfoRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RpcRemote } from '@streamr/dht'
 
-export class RemoteInfoRpcServer extends RpcRemote<InfoRpcClient> {
+export class InfoRpcRemote extends RpcRemote<InfoRpcClient> {
 
     // streams is a list of streamPartIDs, if the list is empty then info of all streams is returned
     async getInfo(

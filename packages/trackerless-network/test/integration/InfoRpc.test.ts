@@ -3,7 +3,7 @@ import { NetworkStack } from '../../src/NetworkStack'
 import { hexToBinary } from '../../../utils/dist/src/binaryUtils'
 import { createRandomNodeId } from '../utils/utils'
 import { InfoClient } from '../../src/logic/info-rpc/InfoClient'
-import { INFO_RPC_SERVICE_ID } from '../../src/logic/info-rpc/InfoRpcServer'
+import { INFO_RPC_SERVICE_ID } from '../../src/logic/info-rpc/InfoRpcLocal'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { waitForCondition } from '@streamr/utils'
 
