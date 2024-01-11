@@ -6,9 +6,8 @@ import {
     deserializeGroupKeyRequest,
     deserializeGroupKeyResponse,
 } from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
+import { verify, EthereumAddress } from '@streamr/utils'
 import { StreamRegistry } from '../registry/StreamRegistry'
-import { verify } from '../utils/signingUtils'
 
 export const validateStreamMessage = async (msg: StreamMessage, streamRegistry: StreamRegistry): Promise<void> => {
     await doValidate(msg, streamRegistry).catch((err: any) => {

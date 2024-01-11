@@ -1,6 +1,7 @@
 import secp256k1 from 'secp256k1'
 import { Keccak } from 'sha3'
-import { binaryToHex, EthereumAddress, hexToBinary, toEthereumAddress } from '@streamr/utils'
+import { hexToBinary, binaryToHex } from './binaryUtils'
+import { EthereumAddress, toEthereumAddress } from './EthereumAddress'
 
 const SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
 const keccak = new Keccak(256)
