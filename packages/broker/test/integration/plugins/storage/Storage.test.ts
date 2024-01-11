@@ -40,7 +40,8 @@ export function buildMsg({
         messageId: new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
         content: Buffer.from(utf8ToBinary(JSON.stringify(content))),
         signature: Buffer.from(hexToBinary('0x1234')),
-        contentType: ContentType.JSON
+        contentType: ContentType.JSON,
+        encryptionType: EncryptionType.NONE
     })
 }
 

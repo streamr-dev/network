@@ -1,6 +1,6 @@
 import { waitForAssignmentsToPropagate } from '../../src/utils/waitForAssignmentsToPropagate'
 import {
-    ContentType,
+    ContentType, EncryptionType,
     MessageID,
     StreamID,
     StreamMessage,
@@ -21,7 +21,8 @@ async function makeMsg(ts: number, content: unknown): Promise<StreamMessage> {
         messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await authentication.getAddress(), 'msgChain'),
         content: utf8ToBinary(JSON.stringify(content)),
         authentication,
-        contentType: ContentType.JSON
+        contentType: ContentType.JSON,
+        encryptionType: EncryptionType.NONE
     })
 }
 

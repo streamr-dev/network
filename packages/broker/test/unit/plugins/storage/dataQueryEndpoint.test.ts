@@ -9,7 +9,7 @@ import {
 import { toObject } from '../../../../src/plugins/storage/DataQueryFormat'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { Readable } from 'stream'
-import { ContentType, MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
+import { ContentType, EncryptionType, MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
 import { MetricsContext, toEthereumAddress, hexToBinary, utf8ToBinary, toLengthPrefixedFrame } from '@streamr/utils'
 import { convertStreamMessageToBytes } from '@streamr/trackerless-network'
 
@@ -39,7 +39,8 @@ describe('dataQueryEndpoint', () => {
             ),
             content: utf8ToBinary(JSON.stringify(content)),
             signature: hexToBinary('0x1234'),
-            contentType: ContentType.JSON
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE
         })
     }
 
