@@ -62,6 +62,7 @@ describe('StreamMessage', () => {
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: utf8ToBinary(JSON.stringify(content)),
                 contentType: ContentType.JSON,
+                encryptionType: EncryptionType.NONE,
                 signature
             })
             assert.strictEqual(streamMessage.getStreamId(), 'streamId')
@@ -85,6 +86,7 @@ describe('StreamMessage', () => {
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: new Uint8Array([1, 2, 3]),
                 contentType: ContentType.BINARY,
+                encryptionType: EncryptionType.NONE,
                 signature
             })
             assert.strictEqual(streamMessage.getStreamId(), 'streamId')
@@ -108,6 +110,7 @@ describe('StreamMessage', () => {
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: utf8ToBinary(JSON.stringify(content)),
                 contentType: ContentType.JSON,
+                encryptionType: EncryptionType.NONE,
                 signature
             })
             expect(StreamMessage.isAESEncrypted(streamMessage)).toBe(false)
@@ -245,6 +248,7 @@ describe('StreamMessage', () => {
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: utf8ToBinary(JSON.stringify(content)),
                 contentType: ContentType.JSON,
+                encryptionType: EncryptionType.NONE,
                 signature
             })
             const streamMessageClone = streamMessage.clone()

@@ -222,7 +222,7 @@ export class StreamrNode extends EventEmitter<Events> {
             connectionLocker: this.connectionLocker!,
             localPeerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
             minPropagationTargets: this.config.streamPartitionMinPropagationTargets,
-            numOfTargetNeighbors: this.config.streamPartitionNumOfNeighbors,
+            numOfNeighbors: this.config.streamPartitionNumOfNeighbors,
             acceptProxyConnections: this.config.acceptProxyConnections,
             rpcRequestTimeout: this.config.rpcRequestTimeout,
             isLocalNodeEntryPoint
@@ -333,7 +333,7 @@ export class StreamrNode extends EventEmitter<Events> {
     getNeighbors(streamPartId: StreamPartID): DhtAddress[] {
         const streamPart = this.streamParts.get(streamPartId)
         return (streamPart !== undefined) && (streamPart.proxied === false)
-            ? streamPart.node.getTargetNeighborIds()
+            ? streamPart.node.getNeighborIds()
             : []
     }
 

@@ -51,6 +51,7 @@ describe('messagePipeline', () => {
             content: opts.contentType === ContentType.BINARY ? opts.content! : utf8ToBinary(JSON.stringify(CONTENT)),
             authentication: createPrivateKeyAuthentication(publisher.privateKey, undefined as any),
             contentType: opts.contentType ?? ContentType.JSON,
+            encryptionType: EncryptionType.NONE,
             ...opts
         })
     }

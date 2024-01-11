@@ -11,7 +11,7 @@ import { StreamPartID } from '@streamr/protocol'
 interface NeighborUpdateRpcLocalConfig {
     localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
-    targetNeighbors: NodeList
+    neighbors: NodeList
     nearbyNodeView: NodeList
     neighborFinder: NeighborFinder
     rpcCommunicator: ListeningRpcCommunicator
@@ -29,11 +29,11 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
     async neighborUpdate(message: NeighborUpdate, context: ServerCallContext): Promise<NeighborUpdate> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
-        if (this.config.targetNeighbors.has(senderId)) {
+        if (this.config.neighbors.has(senderId)) {
             const ownNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
             const newPeerDescriptors = message.neighborDescriptors.filter((peerDescriptor) => {
                 const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
-                return nodeId !== ownNodeId && !this.config.targetNeighbors.getIds().includes(nodeId)
+                return nodeId !== ownNodeId && !this.config.neighbors.getIds().includes(nodeId)
             })
             newPeerDescriptors.forEach((peerDescriptor) => this.config.nearbyNodeView.add(
                 new DeliveryRpcRemote(
@@ -46,14 +46,14 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
             this.config.neighborFinder.start()
             const response: NeighborUpdate = {
                 streamPartId: this.config.streamPartId,
-                neighborDescriptors: this.config.targetNeighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor()),
+                neighborDescriptors: this.config.neighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor()),
                 removeMe: false
             }
             return response
         } else {
             const response: NeighborUpdate = {
                 streamPartId: this.config.streamPartId,
-                neighborDescriptors: this.config.targetNeighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor()),
+                neighborDescriptors: this.config.neighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor()),
                 removeMe: true
             }
             return response
