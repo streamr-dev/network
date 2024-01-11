@@ -35,16 +35,19 @@ Keep a close eye on this page as these dates may change based on the findings of
 - Duration: 7 days
 - **Testnet 1 had a reduced slashing penalties of 0.01% instead of 10%**
 
-### Testnet 2
-- Start date: 21st December to 8th January (tentative)
+### Testnet 2 - Completed!
+- Start date: 21st December to 8th January
 - Reward pool: 1.5 million DATA
 - Duration: 18 days
-- **Testnet 1 will have reduced slashing penalties of 0.01% instead of 10%**
+- **Testnet 2 will have reduced slashing penalties of 0.01% instead of 10%**
 
 ### Testnet 3
-- Start date: 15th January to 29th January (tentative)
+- Start date: 22nd January to 5th February (tentative)
 - Reward pool: 2.5 million DATA
 - Duration: 14 days
+
+### Mainnet launch
+- Coming soon after the completion of **Testnet 3**
 
 ### Testnet Sponsorships
 Each testnet will have a set of Sponsorships that will be the source of incentivization. These will be visible on [The Hub](https://streamr.network/hub/network/sponsorships).
