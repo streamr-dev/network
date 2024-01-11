@@ -24,7 +24,7 @@ updates:
     open-pull-requests-limit: 20
     versioning-strategy: increase
     schedule:
-      interval: weekly
+      interval: daily
     groups:
       dependencies:
         patterns:
