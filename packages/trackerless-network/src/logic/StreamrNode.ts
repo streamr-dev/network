@@ -284,20 +284,23 @@ export class StreamrNode extends EventEmitter<Events> {
         return false
     }
 
+    // Returns info of all streamParts or all given streamParts that are acting as a full node on a stream
     getInfo(streamPartsIds?: StreamPartID[]): StreamInfo {
         const filtered = streamPartsIds?.length ? Array.from(this.streamParts.entries())
             .filter(([streamPartId]) => streamPartsIds!.includes(StreamPartIDUtils.parse(streamPartId)))
             : Array.from(this.streamParts.entries())
         const onStreamAsFullNode = filtered.filter(([_, node]) => node.proxied === false)
         return {
-            streamPartitions: onStreamAsFullNode.map(([streamPartId, stream]) => ({
-                id: streamPartId,
-                // @ts-expect-error private
-                layer1Neighbors: stream.layer1Node.getAllNeighborPeerDescriptors(),
-                // @ts-expect-error private
-                layer2Neighbors: stream.node.getTargetNeighborIds()
-            }))
+            streamPartitions: onStreamAsFullNode.map(([streamPartId]) => {
+                const stream = this.streamParts.get(streamPartId)! as { node: RandomGraphNode, layer1Node: Layer1Node }
+                return {
+                    id: streamPartId,
+                    layer1Neighbors: stream.layer1Node.getAllNeighborPeerDescriptors(),
+                    layer2Neighbors: stream.node.getTargetNeighborIds()
+                }
+            })
         }
+
     }
 
     setStreamPartEntryPoints(streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): void {
