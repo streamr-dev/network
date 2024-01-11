@@ -36,7 +36,7 @@ export const createSignedMessage = async (
         messageId: opts.messageId,
         content: opts.content,
         signatureType: opts.signatureType,
-        encryptionType: opts.encryptionType || EncryptionType.NONE,
+        encryptionType: opts.encryptionType,
         prevMsgRef: opts.prevMsgRef ?? undefined,
         newGroupKey: opts.newGroupKey ?? undefined
     }))
