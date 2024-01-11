@@ -5,7 +5,7 @@ import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } fr
 import { getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
 
 const NUM_NODES = 100
-const K = 4
+const K = 8
 
 describe('Find correctness', () => {
 

@@ -513,8 +513,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return Array.from(this.peerManager!.connections.values()).map((peer) => peer.getPeerDescriptor())
     }
 
-    // TODO rename to getNeighbors
-    public getAllNeighborPeerDescriptors(): PeerDescriptor[] {
+    public getNeighbors(): PeerDescriptor[] {
         return this.peerManager!.getNeighbors()
     }
 
