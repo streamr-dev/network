@@ -38,7 +38,7 @@ export interface StreamMessageOptions {
     content: Uint8Array
     messageType?: StreamMessageType
     contentType: ContentType
-    encryptionType?: EncryptionType
+    encryptionType: EncryptionType
     groupKeyId?: string | null
     newGroupKey?: EncryptedGroupKey | null
     signature: Uint8Array
@@ -94,7 +94,7 @@ export default class StreamMessage {
         content,
         messageType = StreamMessageType.MESSAGE,
         contentType,
-        encryptionType = EncryptionType.NONE,
+        encryptionType,
         groupKeyId = null,
         newGroupKey = null,
         signature,

@@ -1,4 +1,14 @@
-import { ContentType, MessageID, MessageRef, StreamID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
+import {
+    ContentType,
+    EncryptionType,
+    MessageID,
+    MessageRef,
+    StreamID,
+    StreamMessage,
+    StreamPartID,
+    StreamPartIDUtils,
+    toStreamID
+} from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { EthereumAddress, collect, waitForCondition, hexToBinary } from '@streamr/utils'
 import last from 'lodash/last'
@@ -47,7 +57,8 @@ const createMessage = (timestamp: number) => {
         prevMsgRef: new MessageRef(timestamp - 1000, 0),
         content: MOCK_CONTENT,
         signature: hexToBinary('0x1234'),
-        contentType: ContentType.JSON
+        contentType: ContentType.JSON,
+        encryptionType: EncryptionType.NONE
     })
 }
 
