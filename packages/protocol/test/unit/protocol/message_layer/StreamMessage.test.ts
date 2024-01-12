@@ -275,39 +275,33 @@ describe('StreamMessage', () => {
                 })
             })
         })
-    })
 
-    describe('clone', () => {
-        it('works', () => {
-            const streamMessage = new StreamMessage({
-                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
-                content: utf8ToBinary(JSON.stringify(content)),
-                contentType: ContentType.JSON,
-                encryptionType: EncryptionType.NONE,
-                signatureType: SignatureType.SECP256K1,
-                signature
+        describe('copy constructor', () => {
+            it('can nullify fields', () => {
+                const message = new StreamMessage({
+                    messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
+                    content: new Uint8Array([1, 2, 3, 4, 5]),
+                    contentType: ContentType.BINARY,
+                    encryptionType: EncryptionType.AES,
+                    signatureType: SignatureType.SECP256K1,
+                    signature,
+                    groupKeyId: 'foo',
+                    newGroupKey: new EncryptedGroupKey('bar', new Uint8Array([1, 2, 3])),
+                    prevMsgRef: new MessageRef(1564046332168, 5),
+                })
+                const copyWithFieldsNullified = new StreamMessage({
+                    ...message,
+                    encryptionType: EncryptionType.NONE,
+                    groupKeyId: null,
+                    newGroupKey: null,
+                    prevMsgRef: null,
+                })
+                expect(copyWithFieldsNullified.messageId).toEqual(message.messageId)
+                expect(copyWithFieldsNullified.encryptionType).toEqual(EncryptionType.NONE)
+                expect(copyWithFieldsNullified.groupKeyId).toEqual(null)
+                expect(copyWithFieldsNullified.newGroupKey).toEqual(null)
+                expect(copyWithFieldsNullified.prevMsgRef).toEqual(null)
             })
-            const streamMessageClone = streamMessage.clone()
-            expect(streamMessageClone).not.toBe(streamMessage)
-        })
-
-        it('works with encrypted messages', () => {
-            const encryptedMessage = new StreamMessage({
-                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
-                content: utf8ToBinary(JSON.stringify(content)),
-                contentType: ContentType.JSON,
-                signature,
-                encryptionType: EncryptionType.RSA,
-                signatureType: SignatureType.SECP256K1,
-                prevMsgRef: new MessageRef(1564046332168, 5),
-            })
-            const streamMessageClone = encryptedMessage.clone()
-            expect(streamMessageClone).not.toBe(encryptedMessage)
-            expect(streamMessageClone.messageId).not.toBe(encryptedMessage.messageId)
-            expect(streamMessageClone.prevMsgRef).not.toBe(encryptedMessage.prevMsgRef)
-            expect(encryptedMessage.encryptionType).toEqual(EncryptionType.RSA)
-            expect(streamMessageClone.encryptionType).toEqual(EncryptionType.RSA)
-            expect(streamMessageClone.encryptionType).toEqual(encryptedMessage.encryptionType)
         })
     })
 })

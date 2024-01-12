@@ -35,14 +35,14 @@ export enum SignatureType {
 export interface StreamMessageOptions {
     messageId: MessageID
     prevMsgRef?: MessageRef | null
-    content: Uint8Array
     messageType?: StreamMessageType
+    content: Uint8Array
     contentType: ContentType
+    signature: Uint8Array
+    signatureType: SignatureType
     encryptionType: EncryptionType
     groupKeyId?: string | null
     newGroupKey?: EncryptedGroupKey | null
-    signature: Uint8Array
-    signatureType: SignatureType
 }
 
 /**
@@ -53,7 +53,7 @@ export type StreamMessageAESEncrypted = StreamMessage & {
     groupKeyId: string
 }
 
-export default class StreamMessage {
+export default class StreamMessage implements StreamMessageOptions {
     private static VALID_MESSAGE_TYPES = new Set(Object.values(StreamMessageType))
     private static VALID_CONTENT_TYPES = new Set(Object.values(ContentType))
     private static VALID_ENCRYPTIONS = new Set(Object.values(EncryptionType))
@@ -62,43 +62,25 @@ export default class StreamMessage {
     readonly messageId: MessageID
     readonly prevMsgRef: MessageRef | null
     readonly messageType: StreamMessageType
+    readonly content: Uint8Array
     readonly contentType: ContentType
-    encryptionType: EncryptionType
-    groupKeyId: string | null
-    newGroupKey: EncryptedGroupKey | null
-    signature: Uint8Array
-    signatureType: SignatureType
-    content: Uint8Array
-
-    /**
-     * Create a new StreamMessage identical to the passed-in streamMessage.
-     */
-    clone(): StreamMessage {
-        return new StreamMessage({
-            messageId: this.messageId.clone(),
-            prevMsgRef: this.prevMsgRef ? this.prevMsgRef.clone() : null,
-            content: this.content,
-            messageType: this.messageType,
-            contentType: this.contentType,
-            encryptionType: this.encryptionType,
-            groupKeyId: this.groupKeyId,
-            newGroupKey: this.newGroupKey,
-            signature: this.signature,
-            signatureType: this.signatureType,
-        })
-    }
+    readonly signature: Uint8Array
+    readonly signatureType: SignatureType
+    readonly encryptionType: EncryptionType
+    readonly groupKeyId: string | null
+    readonly newGroupKey: EncryptedGroupKey | null
 
     constructor({
         messageId,
         prevMsgRef = null,
-        content,
         messageType = StreamMessageType.MESSAGE,
+        content,
         contentType,
+        signature,
+        signatureType,
         encryptionType,
         groupKeyId = null,
         newGroupKey = null,
-        signature,
-        signatureType,
     }: StreamMessageOptions) {
         validateIsType('messageId', messageId, 'MessageID', MessageID)
         this.messageId = messageId

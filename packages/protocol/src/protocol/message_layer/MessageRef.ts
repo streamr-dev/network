@@ -27,8 +27,4 @@ export default class MessageRef {
         }
         return 0
     }
-
-    clone(): MessageRef {
-        return new MessageRef(this.timestamp, this.sequenceNumber)
-    }
 }
