@@ -24,10 +24,10 @@ export class GroupKey {
     /** @internal */
     readonly data: Buffer
 
-    constructor(groupKeyId: string, data: Buffer) {
-        this.id = groupKeyId
-        if (!groupKeyId) {
-            throw new GroupKeyError(`groupKeyId must not be falsey ${groupKeyId}`)
+    constructor(id: string, data: Buffer) {
+        this.id = id
+        if (!id) {
+            throw new GroupKeyError(`groupKeyId must not be falsey ${id}`)
         }
         if (!data) {
             throw new GroupKeyError(`groupKeyBufferOrHexString must not be falsey ${data}`)
