@@ -12,14 +12,14 @@ import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector
 const logger = new Logger(module)
 
 // TODO use config option or named constant?
-export const connectAsync = async ({ url, selfSigned, timeoutMs = 1000 }:
-    { url: string, selfSigned: boolean, timeoutMs?: number }
+export const connectAsync = async ({ url, allowSelfSignedCertificate, timeoutMs = 1000 }:
+    { url: string, allowSelfSignedCertificate: boolean, timeoutMs?: number }
 ): Promise<IConnection> => {
     const socket = new ClientWebsocket()
     let result: RunAndRaceEventsReturnType<ConnectionEvents>
     try {
         result = await runAndRaceEvents3<ConnectionEvents>([
-            () => { socket.connect(url, selfSigned) }],
+            () => { socket.connect(url, allowSelfSignedCertificate) }],
         socket, ['connected', 'error'],
         timeoutMs)
     } catch (e) {
@@ -49,7 +49,7 @@ export const sendConnectivityRequest = async (
     try {
         outgoingConnection = await connectAsync({
             url,
-            selfSigned: request.selfSigned
+            allowSelfSignedCertificate: request.allowSelfSignedCertificate
         })
     } catch (e) {
         throw new Err.ConnectionFailed(`Failed to connect to entrypoint for connectivity check: ${url}`, e)

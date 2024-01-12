@@ -28,9 +28,9 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
         this.connectionId = createRandomConnectionId()
     }
 
-    public connect(address: string, selfSigned: boolean): void {
+    public connect(address: string, allowSelfSignedCertificate: boolean): void {
         if (!this.destroyed) {
-            this.socket = new Websocket(address, undefined, undefined, undefined, { rejectUnauthorized: !selfSigned })
+            this.socket = new Websocket(address, undefined, undefined, undefined, { rejectUnauthorized: !allowSelfSignedCertificate })
             this.socket.binaryType = BINARY_TYPE
             this.socket.onerror = (error: Error) => {
                 if (!this.destroyed) {

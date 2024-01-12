@@ -46,7 +46,7 @@ const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, co
         logger.trace(`Attempting Connectivity Check to ${url}`)
         outgoingConnection = await connectAsync({
             url,
-            selfSigned: connectivityRequest.selfSigned
+            allowSelfSignedCertificate: connectivityRequest.allowSelfSignedCertificate
         })
     } catch (err) {
         logger.debug('error', { err })
