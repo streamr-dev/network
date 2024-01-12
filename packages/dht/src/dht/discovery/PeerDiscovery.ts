@@ -46,10 +46,11 @@ export class PeerDiscovery {
         retry = true
     ): Promise<void> {
         const contactedPeers = new Set<DhtAddress>()
+        const distantJoinConfig = doAdditionalDistantPeerDiscovery ? { contactedPeers: new Set<DhtAddress>() } : undefined
         await Promise.all(entryPoints.map((entryPoint) => this.joinThroughEntryPoint(
             entryPoint,
             contactedPeers,
-            doAdditionalDistantPeerDiscovery,
+            distantJoinConfig,
             retry
         )))
     }
@@ -58,7 +59,7 @@ export class PeerDiscovery {
         entryPointDescriptor: PeerDescriptor,
         // Note that this set is mutated by DiscoverySession
         contactedPeers: Set<DhtAddress>,
-        doAdditionalDistantPeerDiscovery = true,
+        additionalDistantJoinConfig?: { contactedPeers: Set<DhtAddress> },
         retry = true
     ): Promise<void> {
         if (this.isStopped()) {
@@ -76,8 +77,8 @@ export class PeerDiscovery {
         this.config.peerManager.handleNewPeers([entryPointDescriptor])
         const targetId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
         const sessions = [this.createSession(targetId, contactedPeers)]
-        if (doAdditionalDistantPeerDiscovery) {
-            sessions.push(this.createSession(createDistantDhtAddress(targetId), contactedPeers))
+        if (additionalDistantJoinConfig !== undefined) {
+            sessions.push(this.createSession(createDistantDhtAddress(targetId), additionalDistantJoinConfig.contactedPeers))
         }
         await this.runSessions(sessions, entryPointDescriptor, retry)
         this.config.connectionManager?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
