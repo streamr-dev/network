@@ -35,14 +35,14 @@ export enum SignatureType {
 export interface StreamMessageOptions {
     messageId: MessageID
     prevMsgRef?: MessageRef | null
-    content: Uint8Array
     messageType?: StreamMessageType
+    content: Uint8Array
     contentType: ContentType
+    signature: Uint8Array
+    signatureType: SignatureType
     encryptionType: EncryptionType
     groupKeyId?: string | null
     newGroupKey?: EncryptedGroupKey | null
-    signature: Uint8Array
-    signatureType: SignatureType
 }
 
 /**
@@ -62,25 +62,25 @@ export default class StreamMessage implements StreamMessageOptions {
     readonly messageId: MessageID
     readonly prevMsgRef: MessageRef | null
     readonly messageType: StreamMessageType
+    readonly content: Uint8Array
     readonly contentType: ContentType
+    readonly signature: Uint8Array
+    readonly signatureType: SignatureType
     readonly encryptionType: EncryptionType
     readonly groupKeyId: string | null
     readonly newGroupKey: EncryptedGroupKey | null
-    readonly signature: Uint8Array
-    readonly signatureType: SignatureType
-    readonly content: Uint8Array
 
     constructor({
         messageId,
         prevMsgRef = null,
-        content,
         messageType = StreamMessageType.MESSAGE,
+        content,
         contentType,
+        signature,
+        signatureType,
         encryptionType,
         groupKeyId = null,
         newGroupKey = null,
-        signature,
-        signatureType,
     }: StreamMessageOptions) {
         validateIsType('messageId', messageId, 'MessageID', MessageID)
         this.messageId = messageId
