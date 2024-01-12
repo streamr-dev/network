@@ -61,6 +61,9 @@ export class BucketManager {
         this.checkFullBucketsTimeout = undefined
         this.storeBucketsTimeout = undefined
 
+        // TODO: error handling is missing here, leading to unhandled promise rejection e.g. on Cassandra driver error.
+        // Needs further though.
+        /* eslint-disable @typescript-eslint/no-floating-promises */
         this.checkFullBuckets()
         this.storeBuckets()
     }

@@ -190,7 +190,7 @@ export class Storage extends EventEmitter {
                     if (result.nextPage && total < limit && total < MAX_RESEND_LAST) {
                         result.nextPage()
                     } else {
-                        makeLastQuery(bucketIds)
+                        await makeLastQuery(bucketIds)
                     }
                 } catch (err) {
                     resultStream.destroy(err)

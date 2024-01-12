@@ -14,7 +14,7 @@ describe('close', () => {
         await waitForEvent(client, 'open')
         const onClose = jest.fn()
         client.on('close', onClose)
-        server.stop()
+        await server.stop()
         await wait(100)
         expect(onClose).toBeCalled()
     })

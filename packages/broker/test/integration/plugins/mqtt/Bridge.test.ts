@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { Stream, StreamrClient } from 'streamr-client'
 import mqtt from 'async-mqtt'
 import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'

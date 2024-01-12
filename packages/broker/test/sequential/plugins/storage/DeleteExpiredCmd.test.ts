@@ -80,7 +80,7 @@ describe('DeleteExpiredCmd', () => {
     })
 
     const daysArray = [0, 1, 2, 3]
-    daysArray.map(async (days) => {
+    daysArray.map((days) => {
         test(`keep in database ${days} days of data`, async () => {
             const stream = await createTestStream(client, module, {
                 storageDays: days

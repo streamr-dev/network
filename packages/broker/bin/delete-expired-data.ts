@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { program } from 'commander'
 import pkg from '../package.json'
 import { DeleteExpiredCmd } from '../src/plugins/storage/DeleteExpiredCmd'

@@ -50,8 +50,8 @@ describe(OperatorFleetState, () => {
         state = createOperatorFleetState(coordinationStreamId)
     })
 
-    afterEach(() => {
-        state?.destroy()
+    afterEach(async () => {
+        await state?.destroy()
     })
 
     it('cannot double start', async () => {
@@ -177,7 +177,7 @@ describe(OperatorFleetState, () => {
 
         beforeEach(() => {
             ready = false
-            // eslint-disable-next-line promise/always-return,promise/catch-or-return
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises, promise/catch-or-return, promise/always-return
             state.waitUntilReady().then(() => {
                 ready = true
             })

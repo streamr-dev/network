@@ -142,7 +142,7 @@ export async function startStorageNode(
         })
         await createAssignmentStream(client)
     } finally {
-        client?.destroy()
+        await client?.destroy()
     }
     return startBroker({
         privateKey: storageNodePrivateKey,
