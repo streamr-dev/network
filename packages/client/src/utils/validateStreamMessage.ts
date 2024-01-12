@@ -62,10 +62,12 @@ const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry
  *
  * @param streamMessage the StreamMessage to validate.
  */
-const assertSignatureIsValid = (streamMessage: StreamMessage): void => {
+export const assertSignatureIsValid = (streamMessage: StreamMessage): void => {
     const payload = createSignaturePayload({
         messageId: streamMessage.messageId,
         content: streamMessage.content,
+        signatureType: streamMessage.signatureType,
+        encryptionType: streamMessage.encryptionType,
         prevMsgRef: streamMessage.prevMsgRef ?? undefined,
         newGroupKey: streamMessage.newGroupKey ?? undefined
     })

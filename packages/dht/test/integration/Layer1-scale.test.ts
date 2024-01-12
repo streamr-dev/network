@@ -63,8 +63,8 @@ describe('Layer1', () => {
             const layer0Node = nodes[i]
             const layer1Node = layer1Nodes[i]
             expect(layer1Node.getNodeId()).toEqual(layer0Node.getNodeId())
-            expect(layer1Node.getNumberOfConnections()).toEqual(layer0Node.getNumberOfConnections())
-            expect(layer1Node.getNumberOfNeighbors()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
+            expect(layer1Node.getConnectionCount()).toEqual(layer0Node.getConnectionCount())
+            expect(layer1Node.getNeighborCount()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
             expect(layer1Node.getAllConnectionPeerDescriptors()).toEqual(layer0Node.getAllConnectionPeerDescriptors())
         }
     }, 120000)
@@ -119,10 +119,10 @@ describe('Layer1', () => {
             const stream3Node = stream3[i]
             const stream4Node = stream4[i]
 
-            expect(layer0Node.getNumberOfConnections()).toEqual(stream1Node.getNumberOfConnections())
-            expect(layer0Node.getNumberOfConnections()).toEqual(stream2Node.getNumberOfConnections())
-            expect(layer0Node.getNumberOfConnections()).toEqual(stream3Node.getNumberOfConnections())
-            expect(layer0Node.getNumberOfConnections()).toEqual(stream4Node.getNumberOfConnections())
+            expect(layer0Node.getConnectionCount()).toEqual(stream1Node.getConnectionCount())
+            expect(layer0Node.getConnectionCount()).toEqual(stream2Node.getConnectionCount())
+            expect(layer0Node.getConnectionCount()).toEqual(stream3Node.getConnectionCount())
+            expect(layer0Node.getConnectionCount()).toEqual(stream4Node.getConnectionCount())
 
         }
     }, 120000)

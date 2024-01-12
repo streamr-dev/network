@@ -4,6 +4,7 @@ import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } fr
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
 import { createRandomDhtAddress } from '../../src/identifiers'
 import { getDhtAddressFromRaw } from '../../src/identifiers'
+import { wait } from '@streamr/utils'
 
 const NUM_NODES = 5
 const MAX_CONNECTIONS = 5
@@ -42,6 +43,8 @@ describe('Storing data in DHT', () => {
         const successfulStorers = await storingNode.storeDataToDht(getDhtAddressFromRaw(entry.key), entry.data!)
         expect(successfulStorers.length).toBeGreaterThan(4)
         await storingNode.deleteDataFromDht(getDhtAddressFromRaw(entry.key), true)
+        // Wait for the delete operation to propagate
+        await wait(500)
         const fetchingNode = getRandomNode()
         const results = await fetchingNode.getDataFromDht(getDhtAddressFromRaw(entry.key))
         results.forEach((result) => {
@@ -56,6 +59,8 @@ describe('Storing data in DHT', () => {
         const successfulStorers1 = await storingNode.storeDataToDht(getDhtAddressFromRaw(entry.key), entry.data!)
         expect(successfulStorers1.length).toBeGreaterThan(4)
         await storingNode.deleteDataFromDht(getDhtAddressFromRaw(entry.key), true)
+        // Wait for the delete operation to propagate
+        await wait(500)
         const fetchingNode = getRandomNode()
         const results1 = await fetchingNode.getDataFromDht(getDhtAddressFromRaw(entry.key))
         results1.forEach((result) => {

@@ -24,7 +24,7 @@ describe('Batch', () => {
 
         expect(() => {
             new Batch('bucketId', 1, 0, 123, 123)
-        }).toThrow(new TypeError('maxRecords must be > 0'))
+        }).toThrow(new TypeError('maxRecordCount must be > 0'))
 
         expect(() => {
             new Batch('bucketId', 1, 1, 0, 123)
@@ -44,12 +44,12 @@ describe('Batch', () => {
 
         expect(batch.state).toEqual(Batch.states.OPENED)
 
-        batch.on('locked', (_bucketId: BucketId, id: number, state: State, size: number, numberOfRecords: number) => {
+        batch.on('locked', (_bucketId: BucketId, id: number, state: State, size: number, recordCount: number) => {
             expect(id).toEqual(batch.getId())
             expect('bucketId').toEqual(batch.getBucketId())
             expect(state).toEqual(Batch.states.LOCKED)
             expect(size).toEqual(0)
-            expect(numberOfRecords).toEqual(0)
+            expect(recordCount).toEqual(0)
             done()
         })
     })
@@ -61,11 +61,11 @@ describe('Batch', () => {
         batch.push(record)
         batch.push(record)
 
-        batch.on('locked', (_bucketId: BucketId, id: number, state: State, size: number, numberOfRecords: number) => {
+        batch.on('locked', (_bucketId: BucketId, id: number, state: State, size: number, recordCount: number) => {
             expect(id).toEqual(batch.getId())
             expect(state).toEqual(Batch.states.LOCKED)
             expect(size).toEqual(9)
-            expect(numberOfRecords).toEqual(3)
+            expect(recordCount).toEqual(3)
             done()
         })
     })

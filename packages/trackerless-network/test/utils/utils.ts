@@ -16,6 +16,7 @@ import {
     ContentType,
     EncryptionType,
     MessageID,
+    SignatureType,
     StreamMessage,
     StreamMessageType
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
@@ -84,7 +85,8 @@ export const createStreamMessage = (
         content: utf8ToBinary(content),
         contentType: ContentType.JSON,
         messageId,
-        signature: hexToBinary('0x1234')
+        signature: hexToBinary('0x1234'),
+        signatureType: SignatureType.SECP256K1,
     }
     return msg
 }

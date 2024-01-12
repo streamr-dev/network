@@ -33,7 +33,7 @@ describe('Bucket', () => {
 
         expect(() => {
             new Bucket('id', 'streamId', 0, 0, 0, new Date('2019-07-19'), 1, 0, 123)
-        }).toThrow(new TypeError('maxRecords must be > 0'))
+        }).toThrow(new TypeError('maxRecordCount must be > 0'))
 
         expect(() => {
             new Bucket('id', 'streamId', 0, 0, 0, new Date('2019-07-19'), 1, 1, 0)

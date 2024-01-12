@@ -57,10 +57,10 @@ describe('Find correctness', () => {
         logger.info('waiting over')
 
         nodes.forEach((node) => logger.info(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + ': connections:' +
-            node.getNumberOfConnections() + ', kbucket: ' + node.getNumberOfNeighbors()
-            + ', localLocked: ' + node.getNumberOfLocalLockedConnections()
-            + ', remoteLocked: ' + node.getNumberOfRemoteLockedConnections()
-            + ', weakLocked: ' + node.getNumberOfWeakLockedConnections()))
+            node.getConnectionCount() + ', kbucket: ' + node.getNeighborCount()
+            + ', localLocked: ' + node.getLocalLockedConnectionCount()
+            + ', remoteLocked: ' + node.getRemoteLockedConnectionCount()
+            + ', weakLocked: ' + node.getWeakLockedConnectionCount()))
 
         logger.info('starting find')
         const targetId = Uint8Array.from(dhtIds[9].data)

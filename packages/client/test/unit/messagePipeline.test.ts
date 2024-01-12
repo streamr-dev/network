@@ -1,7 +1,15 @@
 import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
-import { ContentType, EncryptionType, MessageID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import {
+    ContentType,
+    EncryptionType,
+    MessageID,
+    SignatureType,
+    StreamMessage,
+    StreamPartID,
+    StreamPartIDUtils
+} from '@streamr/protocol'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
 import { collect, toEthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'
@@ -52,6 +60,7 @@ describe('messagePipeline', () => {
             authentication: createPrivateKeyAuthentication(publisher.privateKey, undefined as any),
             contentType: opts.contentType ?? ContentType.JSON,
             encryptionType: EncryptionType.NONE,
+            signatureType: SignatureType.SECP256K1,
             ...opts
         })
     }

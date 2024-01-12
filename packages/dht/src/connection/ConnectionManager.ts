@@ -231,16 +231,16 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         WEBRTC_CLEANUP.cleanUp()
     }
 
-    public getNumberOfLocalLockedConnections(): number {
-        return this.locks.getNumberOfLocalLockedConnections()
+    public getLocalLockedConnectionCount(): number {
+        return this.locks.getLocalLockedConnectionCount()
     }
 
-    public getNumberOfRemoteLockedConnections(): number {
-        return this.locks.getNumberOfRemoteLockedConnections()
+    public getRemoteLockedConnectionCount(): number {
+        return this.locks.getRemoteLockedConnectionCount()
     }
 
-    public getNumberOfWeakLockedConnections(): number {
-        return this.locks.getNumberOfWeakLockedConnections()
+    public getWeakLockedConnectionCount(): number {
+        return this.locks.getWeakLockedConnectionCount()
     }
 
     public async send(message: Message, opts: SendOptions = DEFAULT_SEND_OPTIONS): Promise<void> {
