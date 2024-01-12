@@ -31,14 +31,15 @@ export const decrypt = async (
     if (destroySignal.isDestroyed()) {
         return streamMessage
     }
-    const clone = streamMessage.clone()
-    EncryptionUtil.decryptStreamMessage(clone, groupKey)
-    if (streamMessage.newGroupKey) {
-        // newGroupKey has been converted into GroupKey
+    const decryptedStreamMessage = EncryptionUtil.decryptStreamMessage(streamMessage, groupKey)
+    if (decryptedStreamMessage.newGroupKey) {
         await groupKeyManager.addKeyToLocalStore(
-            clone.newGroupKey as unknown as GroupKey,
+            new GroupKey(
+                decryptedStreamMessage.newGroupKey.groupKeyId,
+                Buffer.from(decryptedStreamMessage.newGroupKey.data)
+            ),
             streamMessage.getPublisherId()
         )
     }
-    return clone
+    return decryptedStreamMessage
 }

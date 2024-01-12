@@ -48,32 +48,32 @@ export class EncryptionUtil {
         return Buffer.concat([decipher.update(cipher.slice(INITIALIZATION_VECTOR_LENGTH)), decipher.final()])
     }
 
-    static decryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey): void | never {
-        if ((streamMessage.encryptionType !== EncryptionType.AES)) {
-            return
+    static decryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey): StreamMessage | never {
+        if (streamMessage.encryptionType !== EncryptionType.AES) {
+            return streamMessage
         }
 
+        let content: Buffer
         try {
-            streamMessage.encryptionType = EncryptionType.NONE
-            const content = this.decryptWithAES(streamMessage.content, groupKey.data)
-            streamMessage.content = content
+            content = this.decryptWithAES(streamMessage.content, groupKey.data)
         } catch (err) {
-            streamMessage.encryptionType = EncryptionType.AES
             throw new DecryptError(streamMessage, err.stack)
         }
 
+        let newGroupKey: GroupKey | undefined = undefined
         try {
-            const { newGroupKey } = streamMessage
-            if (newGroupKey) {
-                // newGroupKey should be EncryptedGroupKey | GroupKey, but GroupKey is not defined in protocol
-                // @ts-expect-error expecting EncryptedGroupKey
-                streamMessage.newGroupKey = groupKey.decryptNextGroupKey(newGroupKey)
+            if (streamMessage.newGroupKey) {
+                newGroupKey = groupKey.decryptNextGroupKey(streamMessage.newGroupKey)
             }
         } catch (err) {
-            streamMessage.encryptionType = EncryptionType.AES
             throw new DecryptError(streamMessage, `Could not decrypt new group key: ${err.stack}`)
         }
-        /* eslint-enable no-param-reassign */
+
+        return new StreamMessage({
+            ...streamMessage,
+            content,
+            encryptionType: EncryptionType.NONE,
+            newGroupKey: newGroupKey !== undefined ? { groupKeyId: newGroupKey.id, data: newGroupKey.data } : null,
+        })
     }
 }
-
