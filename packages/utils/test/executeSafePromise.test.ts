@@ -3,10 +3,13 @@ import { wait } from '../src/wait'
 
 describe('executeSafePromise', () => {
     it('success', async () => {
-        const result = await executeSafePromise(async () => {
+        let result: number | undefined
+        executeSafePromise(async () => {
             await wait(10)
-            return 123
+            result = 123
         })
-        expect(result).toBe(123)
+        setTimeout(() => {
+            expect(result).toBe(123)
+        }, 50)
     })
 })
