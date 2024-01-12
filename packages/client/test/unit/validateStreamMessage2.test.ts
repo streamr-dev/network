@@ -156,27 +156,36 @@ describe('Validator2', () => {
         })
 
         it('rejects invalid signatures', async () => {
-            msg.signature = Buffer.from(msg.signature).reverse()
+            const invalidMsg = new StreamMessage({
+                ...msg,
+                signature: Buffer.from(msg.signature).reverse()
+            })
 
-            await assert.rejects(getValidator().validate(msg), (err: Error) => {
+            await assert.rejects(getValidator().validate(invalidMsg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
         })
 
         it('rejects tampered content', async () => {
-            msg.content = utf8ToBinary('{"attack":true}')
+            const invalidMsg = new StreamMessage({
+                ...msg,
+                content: utf8ToBinary('{"attack":true}')
+            })
 
-            await assert.rejects(getValidator().validate(msg), (err: Error) => {
+            await assert.rejects(getValidator().validate(invalidMsg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
         })
 
         it('rejects tampered newGroupKey', async () => {
-            msgWithNewGroupKey.newGroupKey = new EncryptedGroupKey('foo', msgWithNewGroupKey.newGroupKey!.data)
+            const invalidMsg = new StreamMessage({
+                ...msg,
+                newGroupKey: new EncryptedGroupKey('foo', msgWithNewGroupKey.newGroupKey!.data)
+            })
 
-            await assert.rejects(getValidator().validate(msgWithNewGroupKey), (err: Error) => {
+            await assert.rejects(getValidator().validate(invalidMsg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -227,9 +236,12 @@ describe('Validator2', () => {
         })
 
         it('rejects invalid signatures', async () => {
-            groupKeyRequest.signature = Buffer.from(groupKeyRequest.signature).reverse()
+            const invalidGroupKeyRequest = new StreamMessage({
+                ...groupKeyRequest,
+                signature: Buffer.from(groupKeyRequest.signature).reverse()
+            })
 
-            await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
+            await assert.rejects(getValidator().validate(invalidGroupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -282,9 +294,12 @@ describe('Validator2', () => {
         })
 
         it('rejects invalid signatures', async () => {
-            groupKeyResponse.signature = Buffer.from(groupKeyResponse.signature).reverse()
+            const invalidGroupKeyResponse = new StreamMessage({
+                ...groupKeyResponse,
+                signature: Buffer.from(groupKeyResponse.signature).reverse()
+            })
 
-            await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
+            await assert.rejects(getValidator().validate(invalidGroupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })

@@ -1,6 +1,7 @@
 import {
     EncryptedGroupKey,
     EncryptionType,
+    StreamMessage,
     StreamPartIDUtils,
     toStreamID,
     toStreamPartID
@@ -65,11 +66,10 @@ describe('EncryptionUtil', () => {
             streamPartId: toStreamPartID(STREAM_ID, 0),
             encryptionKey: key
         })
-        msg.newGroupKey = {
-            groupKeyId: 'mockId',
-            data: hexToBinary('0x1234'),
-            serialized: ''
-        } as EncryptedGroupKey
-        expect(() => EncryptionUtil.decryptStreamMessage(msg, key)).toThrow('Could not decrypt new group key')
+        const msg2 = new StreamMessage({
+            ...msg,
+            newGroupKey: new EncryptedGroupKey('mockId', hexToBinary('0x1234'))
+        })
+        expect(() => EncryptionUtil.decryptStreamMessage(msg2, key)).toThrow('Could not decrypt new group key')
     })
 })

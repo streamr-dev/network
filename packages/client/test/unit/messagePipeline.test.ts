@@ -142,8 +142,11 @@ describe('messagePipeline', () => {
     })
 
     it('error: invalid signature', async () => {
-        const msg = await createMessage()
-        msg.signature = hexToBinary('0x111111')
+        const originalMsg = await createMessage()
+        const msg = new StreamMessage({
+            ...originalMsg,
+            signature: hexToBinary('0x111111')
+        })
         await pipeline.push(msg)
         pipeline.endWrite()
         const onError = jest.fn()
