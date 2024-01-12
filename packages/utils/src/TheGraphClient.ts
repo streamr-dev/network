@@ -2,6 +2,7 @@ import { Gate } from './Gate'
 import { Logger } from './Logger'
 import { wait } from './wait'
 import { TimeoutError, withTimeout } from './withTimeout'
+import { executeSafePromise } from './executeSafePromise'
 
 export interface GraphQLQuery {
     query: string
@@ -183,7 +184,7 @@ class IndexingState {
             gate.close()
             this.gates.add(gate)
             if (!isPolling) {
-                this.startPolling()
+                executeSafePromise(() => this.startPolling())
             }
         }
         return gate
@@ -192,16 +193,20 @@ class IndexingState {
     private async startPolling(): Promise<void> {
         this.logger.trace('Start polling')
         while (this.gates.size > 0) {
-            const newBlockNumber = await this.getCurrentBlockNumber()
-            if (newBlockNumber !== this.blockNumber) {
-                this.blockNumber = newBlockNumber
-                this.logger.trace('Polled', { blockNumber: this.blockNumber })
-                this.gates.forEach((gate) => {
-                    if (gate.blockNumber <= this.blockNumber) {
-                        gate.open()
-                        this.gates.delete(gate)
-                    }
-                })
+            try {
+                const newBlockNumber = await this.getCurrentBlockNumber()
+                if (newBlockNumber !== this.blockNumber) {
+                    this.blockNumber = newBlockNumber
+                    this.logger.trace('Polled', { blockNumber: this.blockNumber })
+                    this.gates.forEach((gate) => {
+                        if (gate.blockNumber <= this.blockNumber) {
+                            gate.open()
+                            this.gates.delete(gate)
+                        }
+                    })
+                }
+            } catch (err) {
+                this.logger.warn('Polling failed', { err })
             }
             if (this.gates.size > 0) {
                 await wait(this.pollInterval)

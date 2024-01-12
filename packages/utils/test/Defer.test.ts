@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { Defer } from '../src/Defer'
 
 describe('Defer', () => {
