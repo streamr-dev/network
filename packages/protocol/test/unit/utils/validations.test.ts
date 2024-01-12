@@ -1,5 +1,5 @@
 import {
-    validateIsNotNullOrUndefined,
+    validateIsDefined,
     validateIsString,
     validateIsNotEmptyString,
     validateIsInteger,
@@ -10,41 +10,26 @@ import {
 import ValidationError from '../../../src/errors/ValidationError'
 
 describe('validations', () => {
-    describe('validateIsNotNullOrUndefined', () => {
+    describe('validateIsDefined', () => {
         it('throws ValidationError on undefined', () => {
             expect(() => {
-                validateIsNotNullOrUndefined('varName', undefined)
+                validateIsDefined('varName', undefined)
             }).toThrow(new ValidationError('Expected varName to not be undefined.'))
-        })
-        it('throws ValidationError on null', () => {
-            expect(() => {
-                validateIsNotNullOrUndefined('varName', null)
-            }).toThrow(new ValidationError('Expected varName to not be null.'))
         })
     })
 
     describe('validateIsString', () => {
-        describe('when allowNull = false (default)', () => {
+        describe('when allowUndefined = false (default)', () => {
             it('throws ValidationError on undefined', () => {
                 expect(() => {
                     validateIsString('varName', undefined)
                 }).toThrow(new ValidationError('Expected varName to not be undefined.'))
             })
-            it('throws ValidationError on null', () => {
-                expect(() => {
-                    validateIsString('varName', null)
-                }).toThrow(new ValidationError('Expected varName to not be null.'))
-            })
         })
-        describe('when allowNull = true', () => {
+        describe('when allowUndefined = true', () => {
             it('does not throw on undefined', () => {
                 expect(() => {
                     validateIsString('varName', undefined, true)
-                }).not.toThrow()
-            })
-            it('does not throw on null', () => {
-                expect(() => {
-                    validateIsString('varName', null, true)
                 }).not.toThrow()
             })
         })
@@ -73,27 +58,17 @@ describe('validations', () => {
     })
 
     describe('validateIsNotEmptyString', () => {
-        describe('when allowNull = false (default)', () => {
+        describe('when allowUndefined = false (default)', () => {
             it('throws ValidationError on undefined', () => {
                 expect(() => {
                     validateIsNotEmptyString('varName', undefined)
                 }).toThrow(new ValidationError('Expected varName to not be undefined.'))
             })
-            it('throws ValidationError on null', () => {
-                expect(() => {
-                    validateIsNotEmptyString('varName', null)
-                }).toThrow(new ValidationError('Expected varName to not be null.'))
-            })
         })
-        describe('when allowNull = true', () => {
+        describe('when allowUndefined = true', () => {
             it('does not throw on undefined', () => {
                 expect(() => {
                     validateIsNotEmptyString('varName', undefined, true)
-                }).not.toThrow()
-            })
-            it('does not throw on null', () => {
-                expect(() => {
-                    validateIsNotEmptyString('varName', null, true)
                 }).not.toThrow()
             })
         })
@@ -122,27 +97,17 @@ describe('validations', () => {
     })
 
     describe('validateIsInteger', () => {
-        describe('when allowNull = false (default)', () => {
+        describe('when allowUndefined = false (default)', () => {
             it('throws ValidationError on undefined', () => {
                 expect(() => {
                     validateIsInteger('varName', undefined)
                 }).toThrow(new ValidationError('Expected varName to not be undefined.'))
             })
-            it('throws ValidationError on null', () => {
-                expect(() => {
-                    validateIsInteger('varName', null)
-                }).toThrow(new ValidationError('Expected varName to not be null.'))
-            })
         })
-        describe('when allowNull = true', () => {
+        describe('when allowUndefined = true', () => {
             it('does not throw on undefined', () => {
                 expect(() => {
                     validateIsInteger('varName', undefined, true)
-                }).not.toThrow()
-            })
-            it('does not throw on null', () => {
-                expect(() => {
-                    validateIsInteger('varName', null, true)
                 }).not.toThrow()
             })
         })
@@ -196,27 +161,17 @@ describe('validations', () => {
     })
 
     describe('validateIsNotNegativeInteger', () => {
-        describe('when allowNull = false (default)', () => {
+        describe('when allowUndefined = false (default)', () => {
             it('throws ValidationError on undefined', () => {
                 expect(() => {
                     validateIsNotNegativeInteger('varName', undefined)
                 }).toThrow(new ValidationError('Expected varName to not be undefined.'))
             })
-            it('throws ValidationError on null', () => {
-                expect(() => {
-                    validateIsNotNegativeInteger('varName', null)
-                }).toThrow(new ValidationError('Expected varName to not be null.'))
-            })
         })
-        describe('when allowNull = true', () => {
+        describe('when allowUndefined = true', () => {
             it('does not throw on undefined', () => {
                 expect(() => {
                     validateIsNotNegativeInteger('varName', undefined, true)
-                }).not.toThrow()
-            })
-            it('does not throw on null', () => {
-                expect(() => {
-                    validateIsNotNegativeInteger('varName', null, true)
                 }).not.toThrow()
             })
         })
@@ -270,27 +225,17 @@ describe('validations', () => {
     })
 
     describe('validateIsArray', () => {
-        describe('when allowNull = false (default)', () => {
+        describe('when allowUndefined = false (default)', () => {
             it('throws ValidationError on undefined', () => {
                 expect(() => {
                     validateIsArray('varName', undefined)
                 }).toThrow(new ValidationError('Expected varName to not be undefined.'))
             })
-            it('throws ValidationError on null', () => {
-                expect(() => {
-                    validateIsArray('varName', null)
-                }).toThrow(new ValidationError('Expected varName to not be null.'))
-            })
         })
-        describe('when allowNull = true', () => {
+        describe('when allowUndefined = true', () => {
             it('does not throw on undefined', () => {
                 expect(() => {
                     validateIsArray('varName', undefined, true)
-                }).not.toThrow()
-            })
-            it('does not throw on null', () => {
-                expect(() => {
-                    validateIsArray('varName', null, true)
                 }).not.toThrow()
             })
         })
@@ -324,27 +269,17 @@ describe('validations', () => {
     })
 
     describe('validateIsOneOf', () => {
-        describe('when allowNull = false (default)', () => {
+        describe('when allowUndefined = false (default)', () => {
             it('throws ValidationError on undefined', () => {
                 expect(() => {
                     validateIsOneOf('varName', undefined, [])
                 }).toThrow(new ValidationError('Expected varName to not be undefined.'))
             })
-            it('throws ValidationError on null', () => {
-                expect(() => {
-                    validateIsOneOf('varName', null, [])
-                }).toThrow(new ValidationError('Expected varName to not be null.'))
-            })
         })
-        describe('when allowNull = true', () => {
+        describe('when allowUndefined = true', () => {
             it('does not throw on undefined', () => {
                 expect(() => {
                     validateIsOneOf('varName', undefined, [], true)
-                }).not.toThrow()
-            })
-            it('does not throw on null', () => {
-                expect(() => {
-                    validateIsOneOf('varName', null, [], true)
                 }).not.toThrow()
             })
         })

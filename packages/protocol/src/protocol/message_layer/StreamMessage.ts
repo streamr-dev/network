@@ -194,7 +194,7 @@ export default class StreamMessage implements StreamMessageOptions {
         }
     }
 
-    private static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef | null }): void {
+    private static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef }): void {
         if (!prevMsgRef) {
             return
         }

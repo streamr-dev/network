@@ -1,27 +1,24 @@
 import ValidationError from '../errors/ValidationError'
 import { ProxyDirection } from './types'
 
-export function validateIsNotNullOrUndefined(varName: string, varValue: unknown): void | never {
+export function validateIsDefined(varName: string, varValue: unknown): void | never {
     if (varValue === undefined) {
         throw new ValidationError(`Expected ${varName} to not be undefined.`)
     }
-    if (varValue == null) {
-        throw new ValidationError(`Expected ${varName} to not be null.`)
-    }
 }
 
-export function validateIsString(varName: string, varValue: unknown, allowNull = false): void | never {
-    if (allowNull && varValue == null) {
+export function validateIsString(varName: string, varValue: unknown, allowUndefined = false): void | never {
+    if (allowUndefined && varValue === undefined) {
         return
     }
-    validateIsNotNullOrUndefined(varName, varValue)
+    validateIsDefined(varName, varValue)
     if (typeof varValue !== 'string' && !(varValue instanceof String)) {
         throw new ValidationError(`Expected ${varName} to be a string but was a ${typeof varValue} (${varValue}).`)
     }
 }
 
-export function validateIsNotEmptyString(varName: string, varValue: unknown, allowNull = false): void | never {
-    if (allowNull && varValue == null) {
+export function validateIsNotEmptyString(varName: string, varValue: unknown, allowUndefined = false): void | never {
+    if (allowUndefined && varValue === undefined) {
         return
     }
     validateIsString(varName, varValue)
@@ -30,18 +27,18 @@ export function validateIsNotEmptyString(varName: string, varValue: unknown, all
     }
 }
 
-export function validateIsInteger(varName: string, varValue: unknown, allowNull = false): void | never {
-    if (allowNull && varValue == null) {
+export function validateIsInteger(varName: string, varValue: unknown, allowUndefined = false): void | never {
+    if (allowUndefined && varValue === undefined) {
         return
     }
-    validateIsNotNullOrUndefined(varName, varValue)
+    validateIsDefined(varName, varValue)
     if (!Number.isInteger(varValue)) {
         throw new ValidationError(`Expected ${varName} to be an integer but was a ${typeof varValue} (${varValue}).`)
     }
 }
 
-export function validateIsNotNegativeInteger(varName: string, varValue: unknown, allowNull = false): void | never {
-    if (allowNull && varValue == null) {
+export function validateIsNotNegativeInteger(varName: string, varValue: unknown, allowUndefined = false): void | never {
+    if (allowUndefined && varValue === undefined) {
         return
     }
     validateIsInteger(varName, varValue)
@@ -50,31 +47,31 @@ export function validateIsNotNegativeInteger(varName: string, varValue: unknown,
     }
 }
 
-export function validateIsNotEmptyByteArray(varName: string, varValue: unknown, allowNull = false): void | never {
-    if (allowNull && varValue == null) {
+export function validateIsNotEmptyByteArray(varName: string, varValue: unknown, allowUndefined = false): void | never {
+    if (allowUndefined && varValue === undefined) {
         return
     }
-    validateIsNotNullOrUndefined(varName, varValue)
+    validateIsDefined(varName, varValue)
     if (!(varValue instanceof Uint8Array) || varValue.length === 0) {
         throw new ValidationError(`Expected ${varName} to be a non-empty byte array`)
     }
 }
 
-export function validateIsArray(varName: string, varValue: unknown, allowNull = false): void | never {
-    if (allowNull && varValue == null) {
+export function validateIsArray(varName: string, varValue: unknown, allowUndefined = false): void | never {
+    if (allowUndefined && varValue === undefined) {
         return
     }
-    validateIsNotNullOrUndefined(varName, varValue)
+    validateIsDefined(varName, varValue)
     if (!Array.isArray(varValue)) {
         throw new ValidationError(`Expected ${varName} to be an array but was a ${typeof varValue} (${varValue}).`)
     }
 }
 
-export function validateIsDirection(varName: string, varValue: unknown, allowNull = false): void | never {
-    if (allowNull && varValue == null) {
+export function validateIsDirection(varName: string, varValue: unknown, allowUndefined = false): void | never {
+    if (allowUndefined && varValue === undefined) {
         return
     }
-    validateIsNotNullOrUndefined(varName, varValue)
+    validateIsDefined(varName, varValue)
     if (varValue as ProxyDirection in ProxyDirection) {
         throw new ValidationError(`Expected ${varName} to be a ProxyDirection but was a ${typeof varValue} (${varValue}).`)
     }
@@ -85,9 +82,9 @@ export function validateIsType(
     varValue: unknown,
     typeName: string,
     typeClass: unknown,
-    allowNull = false
+    allowUndefined = false
 ): void | never {
-    if (allowNull && varValue == null) {
+    if (allowUndefined && varValue === undefined) {
         return
     }
     if (!(varValue instanceof (typeClass as any))) {
@@ -100,12 +97,12 @@ export function validateIsOneOf(
     varName: string,
     varValue: unknown,
     validValues: ReadonlyArray<any>,
-    allowNull = false
+    allowUndefined = false
 ): void | never {
-    if (allowNull && varValue == null) {
+    if (allowUndefined && varValue === undefined) {
         return
     }
-    validateIsNotNullOrUndefined(varName, varValue)
+    validateIsDefined(varName, varValue)
     if (!validValues.includes(varValue)) {
         const msg = `Expected ${varName} to be one of ${JSON.stringify(validValues)} but was (${varValue}).`
         throw new ValidationError(msg)
