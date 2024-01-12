@@ -51,12 +51,12 @@ describe('EncryptionUtil', () => {
             encryptionKey: key,
             nextEncryptionKey: nextKey
         })
-        EncryptionUtil.decryptStreamMessage(streamMessage, key)
+        const decryptedStreamMessage = EncryptionUtil.decryptStreamMessage(streamMessage, key)
         // Coparing this way as jest does not like comparing buffers to Uint8Arrays
-        expect(binaryToUtf8(streamMessage.content)).toStrictEqual('{"foo":"bar"}')
-        expect(streamMessage.encryptionType).toStrictEqual(EncryptionType.NONE)
-        expect(streamMessage.groupKeyId).toBe(key.id)
-        expect(streamMessage.newGroupKey).toEqual(nextKey)
+        expect(binaryToUtf8(decryptedStreamMessage.content)).toStrictEqual('{"foo":"bar"}')
+        expect(decryptedStreamMessage.encryptionType).toStrictEqual(EncryptionType.NONE)
+        expect(decryptedStreamMessage.groupKeyId).toBe(key.id)
+        expect(decryptedStreamMessage.newGroupKey).toEqual(nextKey.toEncryptedGroupKey())
     })
 
     it('StreamMessage decryption throws if newGroupKey invalid', async () => {
