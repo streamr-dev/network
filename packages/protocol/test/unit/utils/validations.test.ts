@@ -1,6 +1,5 @@
 import {
     validateIsDefined,
-    validateIsString,
     validateIsNotEmptyString,
     validateIsInteger,
     validateIsNotNegativeInteger,
@@ -18,72 +17,7 @@ describe('validations', () => {
         })
     })
 
-    describe('validateIsString', () => {
-        describe('when allowUndefined = false (default)', () => {
-            it('throws ValidationError on undefined', () => {
-                expect(() => {
-                    validateIsString('varName', undefined)
-                }).toThrow(new ValidationError('Expected varName to not be undefined.'))
-            })
-        })
-        describe('when allowUndefined = true', () => {
-            it('does not throw on undefined', () => {
-                expect(() => {
-                    validateIsString('varName', undefined, true)
-                }).not.toThrow()
-            })
-        })
-        it('throws ValidationError on number', () => {
-            expect(() => {
-                validateIsString('varName', 10)
-            }).toThrow(new ValidationError('Expected varName to be a string but was a number (10).'))
-        })
-        it('throws ValidationError on object', () => {
-            expect(() => {
-                validateIsString('varName', {
-                    hello: 'world',
-                })
-            }).toThrow(new ValidationError('Expected varName to be a string but was a object ([object Object]).'))
-        })
-        it('does not throw on empty string', () => {
-            expect(() => {
-                validateIsString('varName', '')
-            }).not.toThrow()
-        })
-        it('does not throw on non-empty string', () => {
-            expect(() => {
-                validateIsString('varName', 'hello, world')
-            }).not.toThrow()
-        })
-    })
-
     describe('validateIsNotEmptyString', () => {
-        describe('when allowUndefined = false (default)', () => {
-            it('throws ValidationError on undefined', () => {
-                expect(() => {
-                    validateIsNotEmptyString('varName', undefined)
-                }).toThrow(new ValidationError('Expected varName to not be undefined.'))
-            })
-        })
-        describe('when allowUndefined = true', () => {
-            it('does not throw on undefined', () => {
-                expect(() => {
-                    validateIsNotEmptyString('varName', undefined, true)
-                }).not.toThrow()
-            })
-        })
-        it('throws ValidationError on number', () => {
-            expect(() => {
-                validateIsNotEmptyString('varName', 10)
-            }).toThrow(new ValidationError('Expected varName to be a string but was a number (10).'))
-        })
-        it('throws ValidationError on object', () => {
-            expect(() => {
-                validateIsNotEmptyString('varName', {
-                    hello: 'world',
-                })
-            }).toThrow(new ValidationError('Expected varName to be a string but was a object ([object Object]).'))
-        })
         it('throws on empty string', () => {
             expect(() => {
                 validateIsNotEmptyString('varName', '')

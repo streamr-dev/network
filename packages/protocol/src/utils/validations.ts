@@ -7,22 +7,8 @@ export function validateIsDefined(varName: string, varValue: unknown): void | ne
     }
 }
 
-export function validateIsString(varName: string, varValue: unknown, allowUndefined = false): void | never {
-    if (allowUndefined && varValue === undefined) {
-        return
-    }
-    validateIsDefined(varName, varValue)
-    if (typeof varValue !== 'string' && !(varValue instanceof String)) {
-        throw new ValidationError(`Expected ${varName} to be a string but was a ${typeof varValue} (${varValue}).`)
-    }
-}
-
-export function validateIsNotEmptyString(varName: string, varValue: unknown, allowUndefined = false): void | never {
-    if (allowUndefined && varValue === undefined) {
-        return
-    }
-    validateIsString(varName, varValue)
-    if ((varValue as string).length === 0) {
+export function validateIsNotEmptyString(varName: string, varValue: string): void | never {
+    if (varValue.length === 0) {
         throw new ValidationError(`Expected ${varName} to not be an empty string.`)
     }
 }

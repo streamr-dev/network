@@ -1,4 +1,4 @@
-import { validateIsArray, validateIsString } from '../../utils/validations'
+import { validateIsArray } from '../../utils/validations'
 import ValidationError from '../../errors/ValidationError'
 
 import StreamMessage, { StreamMessageType } from './StreamMessage'
@@ -17,15 +17,10 @@ export default class GroupKeyResponse {
     readonly encryptedGroupKeys: ReadonlyArray<EncryptedGroupKey>
 
     constructor({ requestId, recipient, encryptedGroupKeys }: Options) {
-        validateIsString('requestId', requestId)
         this.requestId = requestId
-
-        validateIsString('recipient', recipient)
         this.recipient = recipient
-
         validateIsArray('encryptedGroupKeys', encryptedGroupKeys)
         this.encryptedGroupKeys = encryptedGroupKeys
-
         // Validate content of encryptedGroupKeys
         this.encryptedGroupKeys.forEach((it: EncryptedGroupKey) => {
             if (!(it instanceof EncryptedGroupKey)) {

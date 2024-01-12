@@ -1,8 +1,7 @@
 import InvalidJsonError from '../../errors/InvalidJsonError'
 import StreamMessageError from '../../errors/StreamMessageError'
 import ValidationError from '../../errors/ValidationError'
-import { validateIsNotEmptyByteArray, validateIsString, validateIsType } from '../../utils/validations'
-
+import { validateIsDefined, validateIsNotEmptyByteArray, validateIsType } from '../../utils/validations'
 import MessageRef from './MessageRef'
 import MessageID from './MessageID'
 import EncryptedGroupKey from './EncryptedGroupKey'
@@ -84,34 +83,26 @@ export default class StreamMessage implements StreamMessageOptions {
     }: StreamMessageOptions) {
         validateIsType('messageId', messageId, 'MessageID', MessageID)
         this.messageId = messageId
-
         validateIsType('prevMsgRef', prevMsgRef, 'MessageRef', MessageRef, true)
         this.prevMsgRef = prevMsgRef
-
         StreamMessage.validateMessageType(messageType)
         this.messageType = messageType
-
         StreamMessage.validateContentType(contentType)
         this.contentType = contentType
-
         StreamMessage.validateEncryptionType(encryptionType)
         this.encryptionType = encryptionType
-
-        validateIsString('groupKeyId', groupKeyId, this.encryptionType !== EncryptionType.AES)
+        if (this.encryptionType === EncryptionType.AES) {
+            validateIsDefined('groupKeyId', groupKeyId)
+        }
         this.groupKeyId = groupKeyId
-
         validateIsType('newGroupKey', newGroupKey, 'EncryptedGroupKey', EncryptedGroupKey, true)
         this.newGroupKey = newGroupKey
-
         validateIsType('signature', signature, 'Uint8Array', Uint8Array)
         this.signature = signature
-
         StreamMessage.validateSignatureType(signatureType)
         this.signatureType = signatureType
-
         validateIsNotEmptyByteArray('content', content)
         this.content = content
-
         StreamMessage.validateSequence(this)
     }
 
