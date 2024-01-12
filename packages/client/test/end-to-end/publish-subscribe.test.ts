@@ -10,6 +10,7 @@ import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
 import { createTestClient, createTestStream } from '../test-utils/utils'
+import { binaryToUtf8 } from '@streamr/utils'
 
 const logger = new Logger(module)
 
@@ -145,8 +146,7 @@ describe('publish-subscribe', () => {
 
             it('messages are published unencrypted', (done) => {
                 networkNode.addMessageListener((msg) => {
-                    const message = msg.content
-                    expect(message).toEqual(PAYLOAD)
+                    expect(JSON.parse(binaryToUtf8(msg.content))).toEqual(PAYLOAD)
                     done()
                 })
                 publisherClient.publish(stream.id, PAYLOAD)
