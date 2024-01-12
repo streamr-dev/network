@@ -1,8 +1,7 @@
 import {
     validateIsDefined,
     validateIsNotEmptyString,
-    validateIsNotNegativeInteger,
-    validateIsOneOf
+    validateIsNotNegativeInteger
 } from '../../../src/utils/validations'
 import ValidationError from '../../../src/errors/ValidationError'
 
@@ -76,33 +75,6 @@ describe('validations', () => {
         it('does not throw on number that is representable as an integer', () => {
             expect(() => {
                 validateIsNotNegativeInteger('varName', 10.00)
-            }).not.toThrow()
-        })
-    })
-
-    describe('validateIsOneOf', () => {
-        describe('when allowUndefined = false (default)', () => {
-            it('throws ValidationError on undefined', () => {
-                expect(() => {
-                    validateIsOneOf('varName', undefined, [])
-                }).toThrow(new ValidationError('Expected varName to not be undefined.'))
-            })
-        })
-        describe('when allowUndefined = true', () => {
-            it('does not throw on undefined', () => {
-                expect(() => {
-                    validateIsOneOf('varName', undefined, [], true)
-                }).not.toThrow()
-            })
-        })
-        it('throws ValidationError when value not in list', () => {
-            expect(() => {
-                validateIsOneOf('varName', 'not-in-list', ['a', 'b', 'c'])
-            }).toThrow(new ValidationError('Expected varName to be one of ["a","b","c"] but was (not-in-list).'))
-        })
-        it('does not throw on included value', () => {
-            expect(() => {
-                validateIsOneOf('varName', 'b', ['a', 'b', 'c'])
             }).not.toThrow()
         })
     })

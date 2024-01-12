@@ -46,19 +46,3 @@ export function validateIsType(
         throw new ValidationError(msg)
     }
 }
-
-export function validateIsOneOf(
-    varName: string,
-    varValue: unknown,
-    validValues: ReadonlyArray<any>,
-    allowUndefined = false
-): void | never {
-    if (allowUndefined && varValue === undefined) {
-        return
-    }
-    validateIsDefined(varName, varValue)
-    if (!validValues.includes(varValue)) {
-        const msg = `Expected ${varName} to be one of ${JSON.stringify(validValues)} but was (${varValue}).`
-        throw new ValidationError(msg)
-    }
-}
