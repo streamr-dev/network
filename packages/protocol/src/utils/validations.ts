@@ -13,7 +13,7 @@ export function validateIsNotEmptyString(varName: string, varValue: string): voi
     }
 }
 
-export function validateIsInteger(varName: string, varValue: unknown, allowUndefined = false): void | never {
+export function validateIsNotNegativeInteger(varName: string, varValue?: number, allowUndefined = false): void | never {
     if (allowUndefined && varValue === undefined) {
         return
     }
@@ -21,14 +21,7 @@ export function validateIsInteger(varName: string, varValue: unknown, allowUndef
     if (!Number.isInteger(varValue)) {
         throw new ValidationError(`Expected ${varName} to be an integer but was a ${typeof varValue} (${varValue}).`)
     }
-}
-
-export function validateIsNotNegativeInteger(varName: string, varValue: unknown, allowUndefined = false): void | never {
-    if (allowUndefined && varValue === undefined) {
-        return
-    }
-    validateIsInteger(varName, varValue)
-    if ((varValue as number) < 0) {
+    if (varValue! < 0) {
         throw new ValidationError(`Expected ${varName} to not be negative (${varValue}).`)
     }
 }

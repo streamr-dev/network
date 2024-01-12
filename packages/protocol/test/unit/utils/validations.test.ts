@@ -1,7 +1,6 @@
 import {
     validateIsDefined,
     validateIsNotEmptyString,
-    validateIsInteger,
     validateIsNotNegativeInteger,
     validateIsArray,
     validateIsOneOf
@@ -30,70 +29,6 @@ describe('validations', () => {
         })
     })
 
-    describe('validateIsInteger', () => {
-        describe('when allowUndefined = false (default)', () => {
-            it('throws ValidationError on undefined', () => {
-                expect(() => {
-                    validateIsInteger('varName', undefined)
-                }).toThrow(new ValidationError('Expected varName to not be undefined.'))
-            })
-        })
-        describe('when allowUndefined = true', () => {
-            it('does not throw on undefined', () => {
-                expect(() => {
-                    validateIsInteger('varName', undefined, true)
-                }).not.toThrow()
-            })
-        })
-        it('throws ValidationError on string', () => {
-            expect(() => {
-                validateIsInteger('varName', 'string')
-            }).toThrow(new ValidationError('Expected varName to be an integer but was a string (string).'))
-        })
-        it('throws ValidationError on object', () => {
-            expect(() => {
-                validateIsInteger('varName', {
-                    hello: 'world',
-                })
-            }).toThrow(new ValidationError('Expected varName to be an integer but was a object ([object Object]).'))
-        })
-        it('throws ValidationError on NaN', () => {
-            expect(() => {
-                validateIsInteger('varName', NaN)
-            }).toThrow(new ValidationError('Expected varName to be an integer but was a number (NaN).'))
-        })
-        it('throws ValidationError on infinity', () => {
-            expect(() => {
-                validateIsInteger('varName', Number.POSITIVE_INFINITY)
-            }).toThrow(new ValidationError('Expected varName to be an integer but was a number (Infinity).'))
-        })
-        it('throws ValidationError on number that is not representable as an integer', () => {
-            expect(() => {
-                validateIsInteger('varName', 6.66)
-            }).toThrow(new ValidationError('Expected varName to be an integer but was a number (6.66).'))
-        })
-        it('does not throw on negative integer', () => {
-            expect(() => {
-                validateIsInteger('varName', -10)
-            }).not.toThrow()
-        })
-        it('does not throw on zero integer', () => {
-            expect(() => {
-                validateIsInteger('varName', 0)
-            }).not.toThrow()
-        })
-        it('does not throw on positive integer', () => {
-            expect(() => {
-                validateIsInteger('varName', 10)
-            }).not.toThrow()
-        })
-        it('does not throw on number that is representable as an integer', () => {
-            expect(() => {
-                validateIsInteger('varName', 10.00)
-            }).not.toThrow()
-        })
-    })
-
     describe('validateIsNotNegativeInteger', () => {
         describe('when allowUndefined = false (default)', () => {
             it('throws ValidationError on undefined', () => {
@@ -108,18 +43,6 @@ describe('validations', () => {
                     validateIsNotNegativeInteger('varName', undefined, true)
                 }).not.toThrow()
             })
-        })
-        it('throws ValidationError on string', () => {
-            expect(() => {
-                validateIsNotNegativeInteger('varName', 'string')
-            }).toThrow(new ValidationError('Expected varName to be an integer but was a string (string).'))
-        })
-        it('throws ValidationError on object', () => {
-            expect(() => {
-                validateIsNotNegativeInteger('varName', {
-                    hello: 'world',
-                })
-            }).toThrow(new ValidationError('Expected varName to be an integer but was a object ([object Object]).'))
         })
         it('throws ValidationError on NaN', () => {
             expect(() => {
