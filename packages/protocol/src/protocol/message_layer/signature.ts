@@ -4,8 +4,8 @@ import MessageRef from './MessageRef'
 import { binaryToHex, binaryToUtf8 } from '@streamr/utils'
 import { EncryptionType, SignatureType } from './StreamMessage'
 
-const serializeGroupKey = ({ groupKeyId, data }: EncryptedGroupKey): string => {
-    return JSON.stringify([groupKeyId, binaryToHex(data)])
+const serializeGroupKey = ({ id, data }: EncryptedGroupKey): string => {
+    return JSON.stringify([id, binaryToHex(data)])
 }
 
 export const createSignaturePayload = (opts: {
@@ -23,7 +23,7 @@ export const createSignaturePayload = (opts: {
 
         const prevMsgRef = (opts.prevMsgRef !== undefined) ? Buffer.from(`${opts.prevMsgRef.timestamp}${opts.prevMsgRef.sequenceNumber}`) : undefined
 
-        const newGroupKeyId = opts.newGroupKey ? Buffer.from(opts.newGroupKey.groupKeyId) : undefined
+        const newGroupKeyId = opts.newGroupKey ? Buffer.from(opts.newGroupKey.id) : undefined
 
         return Buffer.concat([
             header,
