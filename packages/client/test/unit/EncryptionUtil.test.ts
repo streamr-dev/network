@@ -1,7 +1,7 @@
 import {
     EncryptedGroupKey,
-    EncryptionType,
     StreamMessage,
+    StreamMessageAESEncrypted,
     StreamPartIDUtils,
     toStreamID,
     toStreamPartID
@@ -50,13 +50,11 @@ describe('EncryptionUtil', () => {
             },
             encryptionKey: key,
             nextEncryptionKey: nextKey
-        })
-        const decryptedStreamMessage = EncryptionUtil.decryptStreamMessage(streamMessage, key)
+        }) as StreamMessageAESEncrypted
+        const [content, newGroupKey] = EncryptionUtil.decryptStreamMessage(streamMessage, key)
         // Coparing this way as jest does not like comparing buffers to Uint8Arrays
-        expect(binaryToUtf8(decryptedStreamMessage.content)).toStrictEqual('{"foo":"bar"}')
-        expect(decryptedStreamMessage.encryptionType).toStrictEqual(EncryptionType.NONE)
-        expect(decryptedStreamMessage.groupKeyId).toBe(key.id)
-        expect(decryptedStreamMessage.newGroupKey).toEqual(nextKey.toEncryptedGroupKey())
+        expect(binaryToUtf8(content)).toStrictEqual('{"foo":"bar"}')
+        expect(newGroupKey).toEqual(nextKey)
     })
 
     it('StreamMessage decryption throws if newGroupKey invalid', async () => {
@@ -69,7 +67,7 @@ describe('EncryptionUtil', () => {
         const msg2 = new StreamMessage({
             ...msg,
             newGroupKey: new EncryptedGroupKey('mockId', hexToBinary('0x1234'))
-        })
+        }) as StreamMessageAESEncrypted
         expect(() => EncryptionUtil.decryptStreamMessage(msg2, key)).toThrow('Could not decrypt new group key')
     })
 })

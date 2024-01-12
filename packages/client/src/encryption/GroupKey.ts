@@ -60,10 +60,6 @@ export class GroupKey {
         }
     }
 
-    toEncryptedGroupKey(): EncryptedGroupKey {
-        return new EncryptedGroupKey(this.id, this.data)
-    }
-
     static generate(id = uuid('GroupKey')): GroupKey {
         const keyBytes = crypto.randomBytes(32)
         return new GroupKey(id, keyBytes)

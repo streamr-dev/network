@@ -1,4 +1,4 @@
-import { StreamMessage, StreamMessageAESEncrypted } from '@streamr/protocol'
+import { EncryptionType, StreamMessage, StreamMessageAESEncrypted } from '@streamr/protocol'
 import { EncryptionUtil, DecryptError } from '../encryption/EncryptionUtil'
 import { DestroySignal } from '../DestroySignal'
 import { GroupKey } from '../encryption/GroupKey'
@@ -31,15 +31,14 @@ export const decrypt = async (
     if (destroySignal.isDestroyed()) {
         return streamMessage
     }
-    const decryptedStreamMessage = EncryptionUtil.decryptStreamMessage(streamMessage, groupKey)
-    if (decryptedStreamMessage.newGroupKey) {
-        await groupKeyManager.addKeyToLocalStore(
-            new GroupKey(
-                decryptedStreamMessage.newGroupKey.groupKeyId,
-                Buffer.from(decryptedStreamMessage.newGroupKey.data)
-            ),
-            streamMessage.getPublisherId()
-        )
+    const [content, newGroupKey] = EncryptionUtil.decryptStreamMessage(streamMessage, groupKey)
+    if (newGroupKey !== undefined) {
+        await groupKeyManager.addKeyToLocalStore(newGroupKey, streamMessage.getPublisherId())
     }
-    return decryptedStreamMessage
+
+    return new StreamMessage({
+        ...streamMessage,
+        content,
+        encryptionType: EncryptionType.NONE
+    })
 }
