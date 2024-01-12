@@ -70,7 +70,7 @@ describe('update encryption key', () => {
         expect(msg2!.content).toEqual({
             mockId: 2
         })
-        expect(msg2!.streamMessage.newGroupKey!.groupKeyId).toBe(rotatedKey.id)
+        expect(msg2!.streamMessage.newGroupKey!.id).toBe(rotatedKey.id)
 
         await publisher.publish(streamPartId, {
             mockId: 3

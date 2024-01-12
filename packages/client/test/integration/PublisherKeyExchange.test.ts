@@ -62,7 +62,7 @@ describe('PublisherKeyExchange', () => {
         })
         const encryptedGroupKeys = deserializeGroupKeyResponse(actualResponse.content).encryptedGroupKeys
         expect(encryptedGroupKeys).toMatchObject([{
-            groupKeyId: expectedGroupKey.id,
+            id: expectedGroupKey.id,
             data: expect.any(Uint8Array)
         }])
     }

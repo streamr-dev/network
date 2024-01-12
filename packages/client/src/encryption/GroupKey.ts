@@ -73,7 +73,7 @@ export class GroupKey {
     /** @internal */
     decryptNextGroupKey(nextGroupKey: EncryptedGroupKey): GroupKey {
         return new GroupKey(
-            nextGroupKey.groupKeyId,
+            nextGroupKey.id,
             EncryptionUtil.decryptWithAES(nextGroupKey.data, this.data)
         )
     }
@@ -81,7 +81,7 @@ export class GroupKey {
     /** @internal */
     static decryptRSAEncrypted(encryptedKey: EncryptedGroupKey, rsaPrivateKey: string): GroupKey {
         return new GroupKey(
-            encryptedKey.groupKeyId,
+            encryptedKey.id,
             EncryptionUtil.decryptWithRSAPrivateKey(encryptedKey.data, rsaPrivateKey)
         )
     }

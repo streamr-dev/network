@@ -116,7 +116,7 @@ describe('MessageFactory', () => {
         const msg = await createMessage({}, messageFactory)
         expect(msg.groupKeyId).toBe(GROUP_KEY.id)
         expect(msg.newGroupKey).toMatchObject({
-            groupKeyId: nextGroupKey.id,
+            id: nextGroupKey.id,
             data: expect.any(Uint8Array)
         })    
         expect(GROUP_KEY.decryptNextGroupKey(msg.newGroupKey!)).toEqual(nextGroupKey)
