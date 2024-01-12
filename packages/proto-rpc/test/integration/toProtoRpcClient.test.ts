@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import EventEmitter from 'eventemitter3'
 import { RpcCommunicator } from '../../src/RpcCommunicator'

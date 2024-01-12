@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { RpcCommunicator } from '../../src/RpcCommunicator'
 import {
     RpcMessage,

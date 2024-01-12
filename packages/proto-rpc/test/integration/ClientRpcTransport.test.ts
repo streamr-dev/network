@@ -24,7 +24,8 @@ describe('DhtClientRpcTransport', () => {
                 body: Any.pack(responseBody, ClosestPeersResponse),
                 requestId: message.requestId
             }
-            
+
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             rpcCommunicator.handleIncomingMessage(response)
         })
 

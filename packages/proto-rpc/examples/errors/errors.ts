@@ -5,6 +5,7 @@ import { RpcCommunicator, ProtoCallContext, toProtoRpcClient, RpcError } from '@
 import { HelloRequest, HelloResponse } from './proto/ErrorRpc'
 import { IErrorRpcService } from './proto/ErrorRpc.server'
 import { ErrorRpcServiceClient } from './proto/ErrorRpc.client'
+import { executeSafePromise } from '@streamr/utils'
 
 // Rpc service
 /* eslint-disable class-methods-use-this */
