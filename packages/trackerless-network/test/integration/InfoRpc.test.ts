@@ -83,8 +83,8 @@ describe('NetworkStack InfoRpc', () => {
         const result = await infoClient.getInfo(stack1PeerDescriptor, false, [streamPartId])
         expect(areEqualPeerDescriptors(result.peerDescriptor!, stack1PeerDescriptor)).toEqual(true)
         expect(result.streamPartitions[0].id).toEqual(streamPartId)
-        expect(result.streamPartitions[0].layer2Neighbors[0]).toEqual(stack2.getStreamrNode().getNodeId())
-        expect(areEqualPeerDescriptors(result.streamPartitions[0].layer1Neighbors[0], stack2PeerDescriptor)).toEqual(true)
+        expect(result.streamPartitions[0].deliveryLayerNeighbors[0]).toEqual(stack2.getStreamrNode().getNodeId())
+        expect(areEqualPeerDescriptors(result.streamPartitions[0].controlLayerNeighbors[0], stack2PeerDescriptor)).toEqual(true)
     })
 
     it('InfoClient can query all streams', async () => {

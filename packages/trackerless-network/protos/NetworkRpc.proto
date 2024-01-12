@@ -156,8 +156,8 @@ enum ProxyDirection {
 
 message StreamPartitionInfo {
   string id = 1;
-  repeated dht.PeerDescriptor layer1Neighbors = 2;
-  repeated string layer2Neighbors = 3;
+  repeated dht.PeerDescriptor controlLayerNeighbors = 2;
+  repeated string deliveryLayerNeighbors = 3;
 }
 
 message ControlLayerInfo {
