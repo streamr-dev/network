@@ -9,9 +9,6 @@ import EncryptedGroupKey from './EncryptedGroupKey'
 import { StreamID } from '../../utils/StreamID'
 import { StreamPartID } from '../../utils/StreamPartID'
 import { EthereumAddress, binaryToUtf8 } from '@streamr/utils'
-import { fromArray, toArray } from './streamMessageSerialization'
-
-export const VERSION = 32
 
 export enum StreamMessageType {
     MESSAGE = 27,
@@ -20,7 +17,8 @@ export enum StreamMessageType {
 }
 
 export enum ContentType {
-    JSON = 0
+    JSON = 0,
+    BINARY = 1
 }
 
 export enum EncryptionType {
@@ -29,16 +27,22 @@ export enum EncryptionType {
     AES = 2
 }
 
+export enum SignatureType {
+    LEGACY_SECP256K1,   // Brubeck payload signed with secp256k1 curve
+    SECP256K1,      // Streamr 1.0 payload signed with secp256k1 curve
+}
+
 export interface StreamMessageOptions {
     messageId: MessageID
     prevMsgRef?: MessageRef | null
     content: Uint8Array
     messageType?: StreamMessageType
-    contentType?: ContentType
-    encryptionType?: EncryptionType
+    contentType: ContentType
+    encryptionType: EncryptionType
     groupKeyId?: string | null
     newGroupKey?: EncryptedGroupKey | null
     signature: Uint8Array
+    signatureType: SignatureType
 }
 
 /**
@@ -53,33 +57,34 @@ export default class StreamMessage {
     private static VALID_MESSAGE_TYPES = new Set(Object.values(StreamMessageType))
     private static VALID_CONTENT_TYPES = new Set(Object.values(ContentType))
     private static VALID_ENCRYPTIONS = new Set(Object.values(EncryptionType))
+    private static VALID_SIGNATURE_TYPES = new Set(Object.values(SignatureType))
 
-    messageId: MessageID
-    prevMsgRef: MessageRef | null
-    messageType: StreamMessageType
-    contentType: ContentType
+    readonly messageId: MessageID
+    readonly prevMsgRef: MessageRef | null
+    readonly messageType: StreamMessageType
+    readonly contentType: ContentType
     encryptionType: EncryptionType
     groupKeyId: string | null
     newGroupKey: EncryptedGroupKey | null
     signature: Uint8Array
-    private parsedContent?: unknown
-    serializedContent: Uint8Array
+    signatureType: SignatureType
+    content: Uint8Array
 
     /**
      * Create a new StreamMessage identical to the passed-in streamMessage.
      */
     clone(): StreamMessage {
-        const content = this.getSerializedContent()
         return new StreamMessage({
             messageId: this.messageId.clone(),
             prevMsgRef: this.prevMsgRef ? this.prevMsgRef.clone() : null,
-            content,
+            content: this.content,
             messageType: this.messageType,
             contentType: this.contentType,
             encryptionType: this.encryptionType,
             groupKeyId: this.groupKeyId,
             newGroupKey: this.newGroupKey,
             signature: this.signature,
+            signatureType: this.signatureType,
         })
     }
 
@@ -88,11 +93,12 @@ export default class StreamMessage {
         prevMsgRef = null,
         content,
         messageType = StreamMessageType.MESSAGE,
-        contentType = ContentType.JSON,
-        encryptionType = EncryptionType.NONE,
+        contentType,
+        encryptionType,
         groupKeyId = null,
         newGroupKey = null,
         signature,
+        signatureType,
     }: StreamMessageOptions) {
         validateIsType('messageId', messageId, 'MessageID', MessageID)
         this.messageId = messageId
@@ -118,9 +124,11 @@ export default class StreamMessage {
         validateIsType('signature', signature, 'Uint8Array', Uint8Array)
         this.signature = signature
 
-        this.serializedContent = content
+        StreamMessage.validateSignatureType(signatureType)
+        this.signatureType = signatureType
 
-        validateIsNotEmptyByteArray('content', this.serializedContent)
+        validateIsNotEmptyByteArray('content', content)
+        this.content = content
 
         StreamMessage.validateSequence(this)
     }
@@ -157,89 +165,54 @@ export default class StreamMessage {
         return new MessageRef(this.getTimestamp(), this.getSequenceNumber())
     }
 
-    getPreviousMessageRef(): MessageRef | null {
-        return this.prevMsgRef
-    }
-
-    getMessageID(): MessageID {
-        return this.messageId
-    }
-
-    getSerializedContent(): Uint8Array {
-        return this.serializedContent
-    }
-
-    /**
-     * Lazily parses the content to JSON
-     */
-    getParsedContent(): unknown {
-        if (this.parsedContent == null) {
-            // Don't try to parse encrypted messages
-            if (this.messageType === StreamMessageType.MESSAGE && this.encryptionType !== EncryptionType.NONE) {
-                return this.serializedContent
+    // TODO: consider replacing later half of type with a "JSON type" from a ts-toolbelt or type-fest or ts-essentials
+    getParsedContent(): Uint8Array | Record<string, unknown> | Array<unknown> {
+        if (this.encryptionType !== EncryptionType.NONE || this.contentType === ContentType.BINARY) {
+            return this.content
+        } else if (this.contentType === ContentType.JSON) {
+            try {
+                return JSON.parse(binaryToUtf8(this.content))
+            } catch (err: any) {
+                throw new InvalidJsonError(
+                    this.getStreamId(),
+                    err,
+                    this,
+                )
             }
-            if (this.contentType === ContentType.JSON) {
-                try {
-                    this.parsedContent = JSON.parse(binaryToUtf8(this.serializedContent))
-                } catch (err: any) {
-                    throw new InvalidJsonError(
-                        this.getStreamId(),
-                        err,
-                        this,
-                    )
-                }
-            } else {
-                throw new StreamMessageError(`Unsupported contentType for getParsedContent: ${this.contentType}`, this)
-            }
+        } else {
+            throw new StreamMessageError(`Unsupported contentType: ${this.contentType}`, this)
         }
-        return this.parsedContent
     }
 
-    getContent(): Uint8Array
-    getContent(parsedContent: false): Uint8Array
-    getContent(parsedContent: true): unknown
-    getContent(parsedContent = true): Uint8Array | unknown {
-        if (parsedContent) {
-            return this.getParsedContent()
-        }
-        return this.getSerializedContent()
+    static isAESEncrypted(msg: StreamMessage): msg is StreamMessageAESEncrypted {
+        return msg.encryptionType === EncryptionType.AES
     }
 
-    getNewGroupKey(): EncryptedGroupKey | null {
-        return this.newGroupKey
-    }
-
-    serialize(): string {
-        return JSON.stringify(toArray(this))
-    }
-
-    /**
-     * Takes a serialized representation (array or string) of a message, and returns a StreamMessage instance.
-     */
-    static deserialize(msg: any[] | string): StreamMessage {
-        const messageArray = (typeof msg === 'string' ? JSON.parse(msg) : msg)
-        return fromArray(messageArray)
-    }
-
-    static validateMessageType(messageType: StreamMessageType): void {
+    private static validateMessageType(messageType: StreamMessageType): void {
         if (!StreamMessage.VALID_MESSAGE_TYPES.has(messageType)) {
             throw new ValidationError(`Unsupported message type: ${messageType}`)
         }
     }
 
-    static validateContentType(contentType: ContentType): void {
+    private static validateContentType(contentType: ContentType): void {
         if (!StreamMessage.VALID_CONTENT_TYPES.has(contentType)) {
             throw new ValidationError(`Unsupported content type: ${contentType}`)
         }
     }
 
-    static validateEncryptionType(encryptionType: EncryptionType): void {
+    private static validateEncryptionType(encryptionType: EncryptionType): void {
         if (!StreamMessage.VALID_ENCRYPTIONS.has(encryptionType)) {
             throw new ValidationError(`Unsupported encryption type: ${encryptionType}`)
         }
     }
 
-    static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef | null }): void {
+    private static validateSignatureType(signatureType: SignatureType): void {
+        if (!StreamMessage.VALID_SIGNATURE_TYPES.has(signatureType)) {
+            throw new ValidationError(`Unsupported signature type: ${signatureType}`)
+        }
+    }
+
+    private static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef | null }): void {
         if (!prevMsgRef) {
             return
         }
@@ -249,19 +222,17 @@ export default class StreamMessage {
         // cannot have same timestamp + sequence
         if (comparison === 0) {
             throw new ValidationError(
-                `prevMessageRef cannot be identical to current. Current: ${messageId.toMessageRef().toArray()} Previous: ${prevMsgRef.toArray()}`
+                // eslint-disable-next-line max-len
+                `prevMessageRef cannot be identical to current. Current: ${JSON.stringify(messageId.toMessageRef())} Previous: ${JSON.stringify(prevMsgRef)}`
             )
         }
 
         // previous cannot be newer
         if (comparison < 0) {
             throw new ValidationError(
-                `prevMessageRef must come before current. Current: ${messageId.toMessageRef().toArray()} Previous: ${prevMsgRef.toArray()}`
+                // eslint-disable-next-line max-len
+                `prevMessageRef must come before current. Current: ${JSON.stringify(messageId.toMessageRef())} Previous: ${JSON.stringify(prevMsgRef)}`
             )
         }
-    }
-
-    static isAESEncrypted(msg: StreamMessage): msg is StreamMessageAESEncrypted {
-        return msg.encryptionType === EncryptionType.AES
     }
 }

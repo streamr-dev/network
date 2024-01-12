@@ -1,11 +1,10 @@
 import { DiscoverySession } from './DiscoverySession'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
-import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import { ConnectionManager } from '../../connection/ConnectionManager'
 import { PeerManager } from '../PeerManager'
-import { DhtAddress, createRandomDhtAddress } from '../../identifiers'
+import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
 import { ServiceID } from '../../types/ServiceID'
 
 interface PeerDiscoveryConfig {
@@ -17,6 +16,12 @@ interface PeerDiscoveryConfig {
     joinTimeout: number
     connectionManager?: ConnectionManager
     peerManager: PeerManager
+}
+
+export const createDistantDhtAddress = (address: DhtAddress): DhtAddress => {
+    const raw = getRawFromDhtAddress(address)
+    const flipped = raw.map((val) => ~val)
+    return getDhtAddressFromRaw(flipped)
 }
 
 const logger = new Logger(module)
@@ -37,14 +42,14 @@ export class PeerDiscovery {
 
     async joinDht(
         entryPoints: PeerDescriptor[],
-        doAdditionalRandomPeerDiscovery = true,
+        doAdditionalDistantPeerDiscovery = true,
         retry = true
     ): Promise<void> {
         const contactedPeers = new Set<DhtAddress>()
         await Promise.all(entryPoints.map((entryPoint) => this.joinThroughEntryPoint(
             entryPoint,
             contactedPeers,
-            doAdditionalRandomPeerDiscovery,
+            doAdditionalDistantPeerDiscovery,
             retry
         )))
     }
@@ -53,7 +58,7 @@ export class PeerDiscovery {
         entryPointDescriptor: PeerDescriptor,
         // Note that this set is mutated by DiscoverySession
         contactedPeers: Set<DhtAddress>,
-        doAdditionalRandomPeerDiscovery = true,
+        doAdditionalDistantPeerDiscovery = true,
         retry = true
     ): Promise<void> {
         if (this.isStopped()) {
@@ -71,8 +76,8 @@ export class PeerDiscovery {
         this.config.peerManager.handleNewPeers([entryPointDescriptor])
         const targetId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
         const sessions = [this.createSession(targetId, contactedPeers)]
-        if (doAdditionalRandomPeerDiscovery) {
-            sessions.push(this.createSession(createRandomDhtAddress(), contactedPeers))
+        if (doAdditionalDistantPeerDiscovery) {
+            sessions.push(this.createSession(createDistantDhtAddress(targetId), contactedPeers))
         }
         await this.runSessions(sessions, entryPointDescriptor, retry)
         this.config.connectionManager?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
@@ -100,7 +105,7 @@ export class PeerDiscovery {
             logger.debug(`DHT join on ${this.config.serviceId} timed out`)
         } finally {
             if (!this.isStopped()) {
-                if (this.config.peerManager.getNumberOfNeighbors() === 0) {
+                if (this.config.peerManager.getNeighborCount() === 0) {
                     if (retry) {
                         // TODO should we catch possible promise rejection?
                         // TODO use config option or named constant?

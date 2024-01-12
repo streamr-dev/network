@@ -4,6 +4,7 @@ import { Message, connection as WsConnection } from 'websocket'
 import { Logger } from '@streamr/utils'
 import { Url } from 'url'
 import { CUSTOM_GOING_AWAY, GOING_AWAY } from './ClientWebsocket'
+import { createRandomConnectionId } from '../Connection'
 
 const logger = new Logger(module)
 
@@ -34,7 +35,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         this.onError = this.onError.bind(this)
 
         this.resourceURL = resourceURL
-        this.connectionId = new ConnectionID()
+        this.connectionId = createRandomConnectionId()
 
         socket.on('message', this.onMessage)
         socket.on('close', this.onClose)

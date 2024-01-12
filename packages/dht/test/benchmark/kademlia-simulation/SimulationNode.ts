@@ -12,8 +12,8 @@ export class SimulationNode {
     private bucket: KBucket<Contact>
     private ownContact: Contact
 
-    private numberOfIncomingRpcCalls = 0
-    private numberOfOutgoingRpcCalls = 0
+    private incomingRpcCallCount = 0
+    private outgoingRpcCallCount = 0
 
     private neighborList: SortedContactList<Contact>
     private ownId: DhtAddress
@@ -47,18 +47,18 @@ export class SimulationNode {
         return this.bucket.count()
     }
 
-    public getNumberOfIncomingRpcCalls(): number {
-        return this.numberOfIncomingRpcCalls
+    public getIncomingRpcCallCount(): number {
+        return this.incomingRpcCallCount
     }
 
-    public getNumberOfOutgoingRpcCalls(): number {
-        return this.numberOfOutgoingRpcCalls
+    public getOutgoingRpcCallCount(): number {
+        return this.outgoingRpcCallCount
     }
 
     // RPC call
 
     public getClosestNodesTo(id: DhtAddress, caller: SimulationNode): Contact[] {
-        this.numberOfIncomingRpcCalls++
+        this.incomingRpcCallCount++
         const idValue = getRawFromDhtAddress(id)
         const ret = this.bucket.closest(idValue)
         if (!this.bucket.get(idValue)) {
@@ -73,7 +73,7 @@ export class SimulationNode {
         contactList.forEach((contact) => {
             shortlist.setContacted(contact.getNodeId())
             shortlist.setActive(contact.getNodeId())
-            this.numberOfOutgoingRpcCalls++
+            this.outgoingRpcCallCount++
             const returnedContacts = contact.dhtNode!.getClosestNodesTo(this.ownId, this)
             shortlist.addContacts(returnedContacts)
             returnedContacts.forEach((returnedContact: Contact) => {

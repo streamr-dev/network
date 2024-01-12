@@ -6,7 +6,6 @@
     },
     "include": [
         "src/**/*",
-        "package.json",
         "test/benchmark/first-message.ts",
         "test/utils/utils.ts"
     ],

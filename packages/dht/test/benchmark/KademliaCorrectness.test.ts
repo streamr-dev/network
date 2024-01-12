@@ -1,11 +1,10 @@
 /* eslint-disable no-console */
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
-import { DhtAddress, getDhtAddressFromRaw } from '../../src/identifiers'
+import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 describe('Kademlia correctness', () => {
     let entryPoint: DhtNode
@@ -93,7 +92,7 @@ describe('Kademlia correctness', () => {
             }
 
             if (i > 0) {
-                sumKbucketSize += nodes[i].getNumberOfNeighbors()
+                sumKbucketSize += nodes[i].getNeighborCount()
                 sumCorrectNeighbors += correctNeighbors
             }
         }

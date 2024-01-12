@@ -11,15 +11,14 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'
 import { Any } from '../proto/google/protobuf/any'
-import { DhtAddress } from '../identifiers'
-import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
+import { DhtAddress, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { getDhtAddressFromRaw } from '../identifiers'
 
 interface ExternalApiRpcLocalConfig {
     executeRecursiveOperation: (
         targetId: DhtAddress,
         operation: RecursiveOperation,
-        excludedPeer: PeerDescriptor
+        excludedPeer: DhtAddress
     ) => Promise<RecursiveOperationResult>
     storeDataToDht: (
         key: DhtAddress,
@@ -41,7 +40,7 @@ export class ExternalApiRpcLocal implements IExternalApiRpc {
         const result = await this.config.executeRecursiveOperation(
             getDhtAddressFromRaw(findDataRequest.key),
             RecursiveOperation.FETCH_DATA,
-            senderPeerDescriptor
+            getNodeIdFromPeerDescriptor(senderPeerDescriptor)
         )
         return ExternalFindDataResponse.create({ entries: result.dataEntries ?? [] })
     }

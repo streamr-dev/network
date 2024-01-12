@@ -7,11 +7,12 @@ import {
 import { mockWebsocketConnectorRpc } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
+import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('WebsocketConnectorRpc', () => {
 
-    let rpcCommunicator1: RpcCommunicator
-    let rpcCommunicator2: RpcCommunicator
+    let rpcCommunicator1: RpcCommunicator<DhtCallContext>
+    let rpcCommunicator2: RpcCommunicator<DhtCallContext>
     let client1: ProtoRpcClient<WebsocketConnectorRpcClient>
     let client2: ProtoRpcClient<WebsocketConnectorRpcClient>
     const peerDescriptor1 = createMockPeerDescriptor()

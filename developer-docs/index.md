@@ -1,4 +1,14 @@
-# Streamr Network Technical Documentation
+# Streamr Network Developer Documentation
+
+## Conventions
+
+### Counts 
+
+- Functions and methods for getting counts should be named `getFooCount`
+- Variables and fields which store counts should be named `fooCount`
+
+Examples:
+- `getConnectionCount`, `neighborCount`
 
 ## Topics
 - [Testing Best Practices](testing-best-practices.md)

@@ -10,7 +10,7 @@ import { WebsocketServerStartError } from '../../helpers/errors'
 import { PortRange, TlsCertificate } from '../ConnectionManager'
 import { range } from 'lodash'
 import fs from 'fs'
-import { UUID } from '../../helpers/UUID'
+import { v4 as uuid } from 'uuid'
 
 const logger = new Logger(module)
 
@@ -77,7 +77,7 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
                 this.httpServer = createHttpServer(requestListener)
             } else {
                 // TODO use config option or named constant?
-                const certificate = createSelfSignedCertificate('streamr-self-signed-' + new UUID().toString(), 1000)
+                const certificate = createSelfSignedCertificate('streamr-self-signed-' + uuid(), 1000)
                 this.httpServer = createHttpsServer({
                     key: certificate.serverKey,
                     cert: certificate.serverCert

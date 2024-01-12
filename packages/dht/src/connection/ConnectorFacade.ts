@@ -10,13 +10,14 @@ import { Simulator } from './simulator/Simulator'
 import { SimulatorConnector } from './simulator/SimulatorConnector'
 import { IceServer, WebrtcConnector } from './webrtc/WebrtcConnector'
 import { WebsocketConnector, WebsocketConnectorConfig } from './websocket/WebsocketConnector'
+import { DhtAddress } from '../identifiers'
 
 export interface ConnectorFacade {
     createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection
     getLocalPeerDescriptor: () => PeerDescriptor | undefined
     start: (
         onNewConnection: (connection: ManagedConnection) => boolean,
-        hasConnection: (peerDescriptor: PeerDescriptor) => boolean,
+        hasConnection: (nodeId: DhtAddress) => boolean,
         autoCertifierTransport: ITransport
     ) => Promise<void>
     stop: () => Promise<void>
@@ -59,7 +60,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
 
     async start(
         onNewConnection: (connection: ManagedConnection) => boolean,
-        hasConnection: (peerDescriptor: PeerDescriptor) => boolean,
+        hasConnection: (nodeId: DhtAddress) => boolean,
         autoCertifierTransport: ITransport
     ): Promise<void> {
         logger.trace(`Creating WebsocketConnectorRpcLocal`)
