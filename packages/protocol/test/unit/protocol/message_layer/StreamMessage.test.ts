@@ -292,15 +292,15 @@ describe('StreamMessage', () => {
                 const copyWithFieldsNullified = new StreamMessage({
                     ...message,
                     encryptionType: EncryptionType.NONE,
-                    groupKeyId: null,
-                    newGroupKey: null,
-                    prevMsgRef: null,
+                    groupKeyId: undefined,
+                    newGroupKey: undefined,
+                    prevMsgRef: undefined,
                 })
                 expect(copyWithFieldsNullified.messageId).toEqual(message.messageId)
                 expect(copyWithFieldsNullified.encryptionType).toEqual(EncryptionType.NONE)
-                expect(copyWithFieldsNullified.groupKeyId).toEqual(null)
-                expect(copyWithFieldsNullified.newGroupKey).toEqual(null)
-                expect(copyWithFieldsNullified.prevMsgRef).toEqual(null)
+                expect(copyWithFieldsNullified.groupKeyId).toEqual(undefined)
+                expect(copyWithFieldsNullified.newGroupKey).toEqual(undefined)
+                expect(copyWithFieldsNullified.prevMsgRef).toEqual(undefined)
             })
         })
     })

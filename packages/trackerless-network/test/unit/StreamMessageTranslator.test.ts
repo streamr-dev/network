@@ -33,7 +33,6 @@ describe('StreamMessageTranslator', () => {
     )
     const oldProtocolMsg = new OldStreamMessage({
         messageId,
-        prevMsgRef: null,
         content: utf8ToBinary(JSON.stringify({ hello: 'WORLD' })),
         contentType: ContentType.JSON,
         messageType: OldStreamMessageType.MESSAGE,
@@ -63,10 +62,10 @@ describe('StreamMessageTranslator', () => {
         expect(translated.messageId.timestamp).toBeGreaterThanOrEqual(0)
         expect(translated.messageId.sequenceNumber).toEqual(0)
         expect(translated.getPublisherId()).toEqual('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
-        expect(translated.prevMsgRef).toEqual(null)
+        expect(translated.prevMsgRef).toEqual(undefined)
         expect(translated.messageType).toEqual(OldStreamMessageType.MESSAGE)
         expect(translated.contentType).toEqual(0)
-        expect(translated.groupKeyId).toEqual(null)
+        expect(translated.groupKeyId).toEqual(undefined)
         expect(translated.signature).toStrictEqual(signature)
         expect(translated.getParsedContent()).toEqual({ hello: 'WORLD' })
     })
