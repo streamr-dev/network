@@ -26,11 +26,7 @@ export function validateIsNotNegativeInteger(varName: string, varValue?: number,
     }
 }
 
-export function validateIsNotEmptyByteArray(varName: string, varValue: unknown, allowUndefined = false): void | never {
-    if (allowUndefined && varValue === undefined) {
-        return
-    }
-    validateIsDefined(varName, varValue)
+export function validateIsNotEmptyByteArray(varName: string, varValue: Uint8Array): void | never {
     if (!(varValue instanceof Uint8Array) || varValue.length === 0) {
         throw new ValidationError(`Expected ${varName} to be a non-empty byte array`)
     }
