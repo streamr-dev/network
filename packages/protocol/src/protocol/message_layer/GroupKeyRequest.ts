@@ -1,5 +1,3 @@
-import { validateIsArray } from '../../utils/validations'
-
 import StreamMessage, { StreamMessageType } from './StreamMessage'
 import { EthereumAddress } from '@streamr/utils'
 
@@ -20,7 +18,6 @@ export default class GroupKeyRequest {
         this.requestId = requestId
         this.recipient = recipient
         this.rsaPublicKey = rsaPublicKey
-        validateIsArray('groupKeyIds', groupKeyIds)
         this.groupKeyIds = groupKeyIds
     }
 

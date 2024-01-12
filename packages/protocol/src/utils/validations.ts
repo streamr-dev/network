@@ -32,16 +32,6 @@ export function validateIsNotEmptyByteArray(varName: string, varValue: Uint8Arra
     }
 }
 
-export function validateIsArray(varName: string, varValue: unknown, allowUndefined = false): void | never {
-    if (allowUndefined && varValue === undefined) {
-        return
-    }
-    validateIsDefined(varName, varValue)
-    if (!Array.isArray(varValue)) {
-        throw new ValidationError(`Expected ${varName} to be an array but was a ${typeof varValue} (${varValue}).`)
-    }
-}
-
 export function validateIsDirection(varName: string, varValue: unknown, allowUndefined = false): void | never {
     if (allowUndefined && varValue === undefined) {
         return
