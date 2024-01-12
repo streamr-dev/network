@@ -63,12 +63,12 @@ export default class StreamMessage implements StreamMessageOptions {
     readonly prevMsgRef: MessageRef | null
     readonly messageType: StreamMessageType
     readonly contentType: ContentType
-    encryptionType: EncryptionType
-    groupKeyId: string | null
-    newGroupKey: EncryptedGroupKey | null
-    signature: Uint8Array
-    signatureType: SignatureType
-    content: Uint8Array
+    readonly encryptionType: EncryptionType
+    readonly groupKeyId: string | null
+    readonly newGroupKey: EncryptedGroupKey | null
+    readonly signature: Uint8Array
+    readonly signatureType: SignatureType
+    readonly content: Uint8Array
 
     constructor({
         messageId,
