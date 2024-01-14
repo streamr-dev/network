@@ -1,8 +1,9 @@
-import { StreamID, StreamMessage, StreamPartIDUtils } from '@streamr/protocol'
+import { StreamID, StreamPartIDUtils } from '@streamr/protocol'
 import { LoggerFactory } from './LoggerFactory'
+import { Message } from '../Message'
 
 export async function waitForAssignmentsToPropagate(
-    messages: AsyncIterable<StreamMessage>,
+    messages: AsyncIterable<Message>,
     targetStream: {
         id: StreamID
         partitions: number
@@ -11,7 +12,7 @@ export async function waitForAssignmentsToPropagate(
 ): Promise<void> {
     const foundPartitions = new Set<number>
     for await (const msg of messages) {
-        const streamPart = (msg.getParsedContent() as any).streamPart
+        const streamPart = (msg.content as any).streamPart
         try {
             const streamPartId = StreamPartIDUtils.parse(streamPart)
             const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)

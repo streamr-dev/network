@@ -1,27 +1,31 @@
-import without from 'lodash/without'
 import {
+    ContentType,
+    deserializeGroupKeyRequest,
     EncryptedGroupKey,
     EncryptionType,
     GroupKeyRequest,
     GroupKeyResponse,
-    GroupKeyResponseSerialized,
     MessageID,
+    serializeGroupKeyResponse,
+    SignatureType,
     StreamMessage,
     StreamMessageType,
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { inject, Lifecycle, scoped } from 'tsyringe'
+import { EthereumAddress, Logger } from '@streamr/utils'
+import without from 'lodash/without'
+import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { createRandomMsgChainId } from '../publish/messageChain'
 import { createSignedMessage } from '../publish/MessageFactory'
-import { Validator } from '../Validator'
+import { createRandomMsgChainId } from '../publish/messageChain'
+import { StreamRegistry } from '../registry/StreamRegistry'
+import { LoggerFactory } from '../utils/LoggerFactory'
+import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
-import { EthereumAddress, Logger } from '@streamr/utils'
-import { LoggerFactory } from '../utils/LoggerFactory'
 
 /*
  * Sends group key responses
@@ -29,24 +33,25 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 
 @scoped(Lifecycle.ContainerScoped)
 export class PublisherKeyExchange {
-    private readonly logger: Logger
-    private readonly store: LocalGroupKeyStore
+
     private readonly networkNodeFacade: NetworkNodeFacade
+    private readonly streamRegistry: StreamRegistry
+    private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
-    private readonly validator: Validator
+    private readonly logger: Logger
 
     constructor(
-        store: LocalGroupKeyStore,
         networkNodeFacade: NetworkNodeFacade,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
+        streamRegistry: StreamRegistry,
+        store: LocalGroupKeyStore,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        validator: Validator
+        loggerFactory: LoggerFactory
     ) {
-        this.logger = loggerFactory.createLogger(module)
-        this.store = store
         this.networkNodeFacade = networkNodeFacade
+        this.streamRegistry = streamRegistry
+        this.store = store
         this.authentication = authentication
-        this.validator = validator
+        this.logger = loggerFactory.createLogger(module)
         networkNodeFacade.once('start', async () => {
             const node = await networkNodeFacade.getNode()
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
@@ -58,10 +63,10 @@ export class PublisherKeyExchange {
         if (GroupKeyRequest.is(request)) {
             try {
                 const authenticatedUser = await this.authentication.getAddress()
-                const { recipient, requestId, rsaPublicKey, groupKeyIds } = GroupKeyRequest.fromStreamMessage(request) as GroupKeyRequest
+                const { recipient, requestId, rsaPublicKey, groupKeyIds } = deserializeGroupKeyRequest(request.content)
                 if (recipient === authenticatedUser) {
                     this.logger.debug('Handling group key request', { requestId })
-                    await this.validator.validate(request)
+                    await validateStreamMessage(request, this.streamRegistry)
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
                         undefined) as GroupKey[]
@@ -73,7 +78,7 @@ export class PublisherKeyExchange {
                             request.getPublisherId(),
                             requestId)
                         const node = await this.networkNodeFacade.getNode()
-                        node.publish(response)
+                        await node.broadcast(response)
                         this.logger.debug('Handled group key request (found keys)', {
                             groupKeyIds: keys.map((k) => k.id).join(),
                             recipient: request.getPublisherId()
@@ -97,17 +102,17 @@ export class PublisherKeyExchange {
         rsaPublicKey: string,
         recipient: EthereumAddress,
         requestId: string
-    ): Promise<StreamMessage<GroupKeyResponseSerialized>> {
+    ): Promise<StreamMessage> {
         const encryptedGroupKeys = await Promise.all(keys.map((key) => {
-            const encryptedGroupKeyHex = EncryptionUtil.encryptWithRSAPublicKey(key.data, rsaPublicKey, true)
-            return new EncryptedGroupKey(key.id, encryptedGroupKeyHex)
+            const encryptedGroupKey = EncryptionUtil.encryptWithRSAPublicKey(key.data, rsaPublicKey)
+            return new EncryptedGroupKey(key.id, encryptedGroupKey)
         }))
         const responseContent = new GroupKeyResponse({
             recipient,
             requestId,
             encryptedGroupKeys
         })
-        const response = createSignedMessage<GroupKeyResponseSerialized>({
+        const response = createSignedMessage({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(streamPartId),
                 StreamPartIDUtils.getStreamPartition(streamPartId),
@@ -116,10 +121,12 @@ export class PublisherKeyExchange {
                 await this.authentication.getAddress(),
                 createRandomMsgChainId()
             ),
-            serializedContent: JSON.stringify(responseContent.toArray()),
+            content: serializeGroupKeyResponse(responseContent),
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             encryptionType: EncryptionType.RSA,
-            authentication: this.authentication
+            authentication: this.authentication,
+            contentType: ContentType.JSON,
+            signatureType: SignatureType.SECP256K1,
         })
         return response
     }

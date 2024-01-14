@@ -30,10 +30,14 @@ describe('parallel publish', () => {
         stream = await publisher.createStream('/path')
     })
 
+    afterAll(async () => {
+        await environment.destroy()
+    })
+
     it('messages in order and in same chain', async () => {
         const publishTasks = []
         for (let i = 0; i < MESSAGE_COUNT; i++) {
-            const task = publisher.publish(stream.id, {
+            const task = await publisher.publish(stream.id, {
                 mockId: i
             })
             publishTasks.push(task)

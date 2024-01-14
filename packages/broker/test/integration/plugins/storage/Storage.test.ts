@@ -1,12 +1,13 @@
 import { randomFillSync } from 'crypto'
-
 import { Client } from 'cassandra-driver'
 import toArray from 'stream-to-array'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { toStreamID, StreamMessage, MessageID, EncryptionType } from "@streamr/protocol"
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { ContentType, toStreamID, StreamMessage, MessageID, EncryptionType, SignatureType } from '@streamr/protocol'
+import { EthereumAddress, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { convertBytesToStreamMessage, convertStreamMessageToBytes } from '@streamr/trackerless-network'
+import { Readable } from 'stream'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
@@ -37,8 +38,11 @@ export function buildMsg({
 }): StreamMessage {
     return new StreamMessage({
         messageId: new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
-        content: JSON.stringify(content),
-        signature: 'signature'
+        content: Buffer.from(utf8ToBinary(JSON.stringify(content))),
+        signature: Buffer.from(hexToBinary('0x1234')),
+        contentType: ContentType.JSON,
+        encryptionType: EncryptionType.NONE,
+        signatureType: SignatureType.SECP256K1
     })
 }
 
@@ -48,8 +52,7 @@ function buildEncryptedMsg({
     timestamp,
     sequenceNumber,
     publisherId = publisherZero,
-    msgChainId = '1',
-    content = 'ab3516983712fa4eb216a898ddd'
+    msgChainId = '1'
 }: {
     streamId: string
     streamPartition: number
@@ -57,14 +60,15 @@ function buildEncryptedMsg({
     sequenceNumber: number
     publisherId?: EthereumAddress
     msgChainId?: string
-    content?: string
 }) {
     return new StreamMessage({
         messageId: new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
-        content,
+        content: Buffer.from(new Uint8Array([1, 2, 3])),
         encryptionType: EncryptionType.AES,
-        signature: 'signature',
-        groupKeyId: 'groupKeyId'
+        signature: Buffer.from(hexToBinary('0x1234')),
+        groupKeyId: 'groupKeyId',
+        contentType: ContentType.JSON,
+        signatureType: SignatureType.SECP256K1
     })
 }
 
@@ -90,6 +94,11 @@ async function storeMockMessages({
         storePromises.push(storage.store(msg))
     }
     return Promise.all(storePromises)
+}
+
+async function readStreamToEnd(streamingResults: Readable): Promise<StreamMessage[]> {
+    const messages: Uint8Array[] = await toArray(streamingResults)
+    return messages.map(convertBytesToStreamMessage)
 }
 
 describe('Storage', () => {
@@ -131,7 +140,7 @@ describe('Storage', () => {
 
     test('requestFrom not throwing exception if timestamp is zero', async () => {
         const a = storage.requestFrom(streamId, 0, 0, 0, undefined)
-        const resultsA = await toArray(a)
+        const resultsA = await readStreamToEnd(a)
         expect(resultsA).toEqual([])
     })
 
@@ -170,7 +179,7 @@ describe('Storage', () => {
             sequence_no: 0,
             publisher_id: publisherZero,
             msg_chain_id: '1',
-            payload: Buffer.from(msg.serialize()),
+            payload: Buffer.from(convertStreamMessageToBytes(msg)),
         })
     })
 
@@ -193,7 +202,7 @@ describe('Storage', () => {
         ])
 
         const streamingResults = storage.requestLast(streamId, 10, 3)
-        const results = await toArray(streamingResults)
+        const results = await readStreamToEnd(streamingResults)
 
         expect(results).toEqual([msg1, msg2, msg3])
     })
@@ -224,7 +233,7 @@ describe('Storage', () => {
             ])
 
             const streamingResults = storage.requestFrom(streamId, 10, 3000, 6, undefined)
-            const results = await toArray(streamingResults)
+            const results = await readStreamToEnd(streamingResults)
 
             expect(results).toEqual([msg1, msg2, msg3, msg4, msg5])
         })
@@ -255,7 +264,7 @@ describe('Storage', () => {
             ])
 
             const streamingResults = storage.requestRange(streamId, 10, 1500, 5, 3500, 4, undefined, undefined)
-            const results = await toArray(streamingResults)
+            const results = await readStreamToEnd(streamingResults)
 
             expect(results).toEqual([msg1, msg2, msg3, msg4, msg5])
         })
@@ -264,7 +273,7 @@ describe('Storage', () => {
             const msg = buildMsg({ streamId, streamPartition: 10, timestamp: 2000, sequenceNumber: 0 })
             await storage.store(msg)
             const streamingResults = storage.requestRange(streamId, 10, 1500, 0, 3500, 0, undefined, undefined)
-            const results = await toArray(streamingResults)
+            const results = await readStreamToEnd(streamingResults)
             expect(results).toEqual([msg])
         })
 
@@ -293,7 +302,7 @@ describe('Storage', () => {
             ])
 
             const streamingResults = storage.requestRange(streamId, 10, 1500, 3, 3000, 2, publisherOne, '1')
-            const results = await toArray(streamingResults)
+            const results = await readStreamToEnd(streamingResults)
 
             expect(results).toEqual([msg1, msg2, msg3, msg4])
         })
@@ -305,17 +314,17 @@ describe('Storage', () => {
 
         // get all
         const streamingResults1 = storage.requestRange(streamId, 777, 100000000, 0, 555000000, 0, undefined, undefined)
-        const results1 = await toArray(streamingResults1)
+        const results1 = await readStreamToEnd(streamingResults1)
         expect(results1.length).toEqual(messageCount)
 
         // no messages in range (ignorable messages before range)
         const streamingResults2 = storage.requestRange(streamId, 777, 460000000, 0, 470000000, 0, undefined, undefined)
-        const results2 = await toArray(streamingResults2)
+        const results2 = await readStreamToEnd(streamingResults2)
         expect(results2).toEqual([])
 
         // no messages in range (ignorable messages after range)
         const streamingResults3 = storage.requestRange(streamId, 777, 100000000, 0, 110000000, 0, undefined, undefined)
-        const results3 = await toArray(streamingResults3)
+        const results3 = await readStreamToEnd(streamingResults3)
         expect(results3).toEqual([])
     }, 20000)
 
@@ -359,19 +368,19 @@ describe('Storage', () => {
 
         it('requestLast correctly returns last 10 messages', async () => {
             const streamingResults = storage.requestLast(streamId, 0, 10)
-            const results = await toArray(streamingResults)
+            const results = await readStreamToEnd(streamingResults)
             expect(results.map((msg) => msg.messageId.sequenceNumber)).toEqual([90, 91, 92, 93, 94, 95, 96, 97, 98, 99])
         })
 
         it('requestFrom correctly returns messages', async () => {
             const streamingResults = storage.requestFrom(streamId, 0, 91000, 0)
-            const results = await toArray(streamingResults)
+            const results = await readStreamToEnd(streamingResults)
             expect(results.map((msg) => msg.messageId.sequenceNumber)).toEqual([90, 91, 92, 93, 94, 95, 96, 97, 98, 99])
         })
 
         it('requestRange correctly returns range of messages', async () => {
             const streamingResults = storage.requestRange(streamId, 0, 41000, 0, 50000, 0, undefined, undefined)
-            const results = await toArray(streamingResults)
+            const results = await readStreamToEnd(streamingResults)
             expect(results.map((msg) => msg.messageId.sequenceNumber)).toEqual([40, 41, 42, 43, 44, 45, 46, 47, 48, 49])
         })
     })

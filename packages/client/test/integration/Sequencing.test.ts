@@ -28,12 +28,19 @@ function toSeq(requests: Message[], ts = Date.now()) {
 }
 
 describe('Sequencing', () => {
+
     let client: StreamrClient
     let stream: Stream
+    let environment: FakeEnvironment
 
     beforeEach(async () => {
-        client = new FakeEnvironment().createClient()
+        environment = new FakeEnvironment()
+        client = environment.createClient()
         stream = await createTestStream(client, module)
+    })
+
+    afterEach(async () => {
+        await environment.destroy()
     })
 
     it('should sequence in order', async () => {

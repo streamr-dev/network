@@ -7,7 +7,7 @@ sidebar_position: 6
 You can enable data storage on your streams to retain historical message and access it later via a `resend`. Storage needs to be enabled and is not on by default. Storage is currently centralized and offered via the Streamr Storage nodes.
 
 :::info Good to know:
-To retrieve data from storage, a key exchange between the publisher and subscriber needs to be performed. This means that the publisher must be online and present in the Network at the time of the retrieval. You can get around this liveness requirement by using the Lit protocol for key exchange (see #[Working with Lit](./store-and-retrieve#working-with-lit-protocol)).
+To retrieve data from storage, a key exchange between the publisher and subscriber needs to be performed. This means that the publisher must be online and present in the Network at the time of the retrieval. You can get around this liveness requirement by using the Lit protocol for key exchange (see #[Working with Lit](#working-with-lit-protocol)).
 :::
 
 ## Enable storage
@@ -34,7 +34,7 @@ const storageNodes = stream.getStorageNodes();
 
 ## Working with Lit Protocol
 
-To enable Lit, add this encryption object to the Streamr client constructor:
+To enable Lit, add this encryption object to the Streamr constructor:
 
 ```ts
 new StreamrClient({
@@ -48,20 +48,20 @@ new StreamrClient({
 
 As the Streamr Network deals with real-time messages, publishers are often constantly online. However, it may happen that the publisher has disappeared since publishing the data, making those messages inaccessible to subscribers who have yet to receive the key. This is a consequence of the data publisher being in full control of who can access their data on the Network. If this liveness requirement is disruptive to your use case, there is an opportunity to connect with the Lit protocol.
 
-The [Lit Protocol](https://litprotocol.com) is a decentralized key management network powered by threshold cryptography. The Streamr JS client can be configured to use Lit to manage stream key management.
+The [Lit Protocol](https://litprotocol.com) is a decentralized key management network powered by threshold cryptography. The Streamr SDK can be configured to use Lit to manage stream key management.
 
 :::info Good to know:
 
 - Lit must be enabled for both the publisher(s) and subscriber(s)
-- Enabling and using Lit is a client constructor parameter. It is not specific to any stream.
-- If Lit fails for any reason, the client will fallback to the native Streamr key exchange mechanism.
+- Enabling and using Lit is a Streamr SDK constructor parameter. It is not specific to any stream.
+- If Lit fails for any reason, the Streamr SDK will fallback to the native Streamr key exchange mechanism.
 
 :::
 
 ## Request historical messages
 
 :::caution Important:
-In order to fetch historical messages the stream needs to have **[storage enabled](./store-and-retrieve#enable-storage)**.
+In order to fetch historical messages the stream needs to have **[storage enabled](#enable-storage)**.
 :::
 
 By default `subscribe` will not request historical messages.

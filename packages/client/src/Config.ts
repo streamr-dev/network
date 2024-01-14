@@ -1,18 +1,15 @@
 import 'reflect-metadata'
 import type { Overrides } from '@ethersproject/contracts'
-import cloneDeep from 'lodash/cloneDeep'
-import Ajv, { ErrorObject } from 'ajv'
-import addFormats from 'ajv-formats'
 import type { ExternalProvider } from '@ethersproject/providers'
-import { MarkOptional, DeepRequired } from 'ts-essentials'
-
-import CONFIG_SCHEMA from './config.schema.json'
-import { TrackerRegistryRecord } from '@streamr/protocol'
-import { LogLevel } from '@streamr/utils'
-
-import { IceServer, Location, WebRtcPortRange, ExternalIP } from '@streamr/network-node'
 import type { ConnectionInfo } from '@ethersproject/web'
+import cloneDeep from 'lodash/cloneDeep'
+import { DeepRequired, MarkOptional } from 'ts-essentials'
+import { LogLevel, merge } from '@streamr/utils'
+import { IceServer, PortRange, TlsCertificate } from '@streamr/dht'
 import { generateClientId } from './utils/utils'
+import validate from './generated/validateConfig'
+import { GapFillStrategy } from './subscribe/ordering/GapFiller'
+import { config as CHAIN_CONFIG } from '@streamr/config'
 
 export interface ProviderAuthConfig {
     ethereum: ExternalProvider
@@ -26,12 +23,199 @@ export interface PrivateKeyAuthConfig {
     address?: string
 }
 
-export interface TrackerRegistryContract {
-    jsonRpcProvider?: ConnectionInfo
-    contractAddress: string
+export interface ControlLayerConfig {
+
+    /**
+     * The list of entry point PeerDescriptors used to join the Streamr Network.
+     */
+    entryPoints?: NetworkPeerDescriptor[]
+
+    /**
+     * The maximum number of connections before unwanted connections are clean up.
+     * This is a soft limit, meaning that the number of connections may exceed the count temporarily.
+     * Locked connections such as the ones used for stream operations are not counted towards this limit.
+    */
+    maxConnections?: number
+
+    /**
+     * If true, an attempt is made to discover additional network entrypoint nodes
+     * by querying them from The Graph. If false, only the nodes
+     * listed in entryPoints are used.
+     */
+    entryPointDiscovery?: EntryPointDiscovery
+
+    /**
+     * The list of STUN and TURN servers to use in ICE protocol when
+     * forming WebRTC connections.
+    */
+    iceServers?: IceServer[]
+
+    /**
+     * When set to true private addresses will not be probed when forming
+     * WebRTC connections.
+     *
+     * Probing private addresses can trigger false-positive incidents in
+     * some port scanning detection systems employed by web hosting
+     * providers. Disallowing private addresses may prevent direct
+     * connections from being formed between nodes using IPv4 addresses
+     * on a local network.
+     *
+     * Details: https://github.com/streamr-dev/network/wiki/WebRTC-private-addresses
+    */
+    webrtcAllowPrivateAddresses?: boolean
+
+    /**
+     * Defines WebRTC connection establishment timeout in milliseconds.
+     *
+     * When attempting to form a new connection, if not established within
+     * this timeout, the attempt is considered as failed and further
+     * waiting for it will cease.
+    */
+    webrtcNewConnectionTimeout?: number
+
+    /**
+     * Sets the low-water mark used by send buffers of WebRTC connections.
+    */
+    webrtcDatachannelBufferThresholdLow?: number
+
+    /**
+     * Sets the high-water mark used by send buffers of WebRTC connections.
+    */
+    webrtcDatachannelBufferThresholdHigh?: number
+
+    /**
+     * Defines a custom UDP port range to be used for WebRTC connections.
+     * This port range should not be restricted by enclosing firewalls
+     * or virtual private cloud configurations. NodeJS only.
+     */
+    webrtcPortRange?: PortRange
+
+    /**
+     * The maximum outgoing message size (in bytes) accepted by connections.
+     * Messages exceeding the maximum size are simply discarded.
+     */
+    maxMessageSize?: number
+
+    /**
+     * Contains connectivity information to the client's Network Node, used in the network layer.
+     * Can be used in cases where the client's public IP address is known before
+     * starting the network node. If not specified, the PeerDescriptor will be auto-generated.
+    */
+    peerDescriptor?: NetworkPeerDescriptor
+
+    /**
+     * The port range used to find a free port for the client's network layer WebSocket server.
+     * If not specified, a server will not be started.
+     * The server is used by the network layer to accept incoming connections
+     * over the public internet to improve the network node's connectivity.
+     */
+    websocketPortRange?: PortRange
+
+    /**
+     * The host name or IP address of the WebSocket server used to connect to it over the internet.
+     * If not specified, the host name will be auto-detected. 
+     * Can be useful in situations where the host is running behind a reverse-proxy or load balancer.
+     */
+    websocketHost?: string
+
+    /**
+     * TLS configuration for the WebSocket server
+     */
+    tlsCertificate?: TlsCertificate
+    
+    /*
+     * Used to assign a custom external IPv4 address for the node.
+     * Useful in cases where the node has a public IP address but
+     * the hosts network interface does not know of it.
+     *
+     * Works only if the Full Cone NAT that the node is behind preserves local
+     * port mappings on the public side.
+    */
+    externalIp?: string
+
+    /**
+     * The maximum time to wait when establishing connectivity to the control layer. If the connection
+     * is not formed within this time, the client's network node will throw an error.
+     */
+    networkConnectivityTimeout?: number
+
+    /**
+     * URL of the autocertifier service used to obtain TLS certificates and subdomain names for the WS server.
+     */
+    autoCertifierUrl?: string
+
+    /**
+     * File path to the autocertified subdomain file. The file contains the autocertified subdomain name
+     * and it's TLS certificate.
+     */
+    autoCertifierConfigFile?: string
+
+    /**
+     * If the node is running a WS server, this option can be used to disable TLS autocertification to
+     * run the server without TLS. This will speed up the starting time of the network node 
+     * (especially when starting the node for the first time on a new machine).
+     */
+    websocketServerEnableTls?: boolean
 }
 
-export interface ChainConnectionInfo { 
+export interface NetworkNodeConfig {
+
+    /** The Ethereum address of the node. */
+    id?: string
+
+    /**
+     * The number of connections the client's network node should have
+     * on each stream partition.
+    */
+    streamPartitionNeighborCount?: number
+
+    /**
+     * The minimum number of peers in a stream partition that the client's network node
+     * will attempt to propagate messages to
+     */
+    streamPartitionMinPropagationTargets?: number
+
+    /**
+     * Whether to accept proxy connections. Enabling this option allows
+     * this network node to act as proxy on behalf of other nodes / clients.
+     * When enabling this option, a WebSocket server should be configured for the client
+     * and the node needs to be in the open internet. The server can be started by setting
+     * the websocketPort configuration to a free port in the network control layer configuration.
+     */
+    acceptProxyConnections?: boolean
+}
+
+export interface NetworkConfig {
+    controlLayer?: ControlLayerConfig
+    node?: NetworkNodeConfig
+}
+
+export enum NetworkNodeType {
+    NODEJS = 'nodejs',
+    BROWSER = 'browser'
+}
+
+export interface NetworkPeerDescriptor {
+    nodeId: string
+    type?: NetworkNodeType
+    websocket?: ConnectivityMethod
+    region?: number
+}
+
+export interface EntryPointDiscovery {
+    enabled?: boolean
+    maxEntryPoints?: number
+    maxQueryResults?: number
+    maxHeartbeatAgeHours?: number
+}
+
+export interface ConnectivityMethod {
+    host: string
+    port: number
+    tls: boolean
+}
+
+export interface ChainConnectionInfo {
     rpcs: ConnectionInfo[]
     chainId?: number
     name?: string
@@ -39,15 +223,28 @@ export interface ChainConnectionInfo {
 
 // these should come from ETH-184 config package when it's ready
 export interface EthereumNetworkConfig {
-    chainId: number
     overrides?: Overrides
     highGasPriceStrategy?: boolean
 }
+
+// a subset of environment ids which are available in @streamr/config
+// - do not include legacy configs, which no longer work, e.g. "dev0"
+// - and no need to include configs, which users won't use in practice
+// - note that there is no special handling for empty arrays in the applyConfig and therefore
+//   empty arrays will be applied as-is: we may want to remove "enthereum.rpcEndpoints" key 
+//   from @streamr/config as the intention is to use system-defaults (e.g. Metamask defaults)
+//   in Ethereum network
+export type EnvironmentId = 'polygon' | 'mumbai' | 'dev2'
+
+export const DEFAULT_ENVIRONMENT: EnvironmentId = 'polygon'
 
 /**
  * @category Important
  */
 export interface StreamrClientConfig {
+
+    environment?: EnvironmentId
+
     /** Custom human-readable debug id for client. Used in logging. */
     id?: string
 
@@ -100,6 +297,11 @@ export interface StreamrClientConfig {
     gapFillTimeout?: number
 
     /**
+     * Config for the decentralized network layer.
+     */
+    network?: NetworkConfig
+
+    /**
      * When gap filling is enabled and a gap is encountered, a resend request
      * may eventually be sent to a storage node in an attempt to _actively_
      * fill in the gap. This option controls how long to wait for, in
@@ -107,6 +309,27 @@ export interface StreamrClientConfig {
      * proceeding to the next attempt.
      */
     retryResendAfter?: number
+
+    /**
+     * When gap filling is enabled, this setting controls whether to enable a
+     * lighter (default) or a full gap fill strategy.
+     *
+     * While filling a gap, new gaps may emerge further along the message
+     * chain. After a gap has been filled, the gap filling mechanism will
+     * attend to the next gap until that has been resolved and so forth.
+     *
+     * This is great in theory, but sometimes in practice, especially in
+     * streams with heavy traffic, the gap filling mechanism may never catch
+     * up leading to permanently increased latency, and even dropped messages
+     * (due to buffer overflows) further exacerbating the presence of gaps.
+     *
+     * With `light` strategy, when a gap cannot be successfully filled and
+     * must be dropped, all subsequent accumulated gaps will be dropped as
+     * well. This improves the ability to stay up-to-date at the cost of
+     * potentially missing messages. With `full` strategy the subsequent gaps
+     * will not be dropped.
+     */
+    gapFillStrategy?: GapFillStrategy
 
     /**
      * Controls how messages encryption and decryption should be handled and
@@ -145,167 +368,21 @@ export interface StreamrClientConfig {
          * from overflowing.
          */
         maxKeyRequestsPerSecond?: number
+
+        /**
+         * Defines how strong RSA key, in bits, is used when an encryption key is
+         * requested via the standard Streamr key-exchange.
+         */
+        rsaKeyLength?: number
     }
 
-    /**
-     * These settings determine how the client performs and interacts with the
-     * Streamr Network.
-     */
-    network?: {
-        /**
-         * The network-wide identifier of this node. Should be unique
-         * within the Streamr Network.
-         */
-        id?: string
-
-        /**
-         * Whether to accept proxy connections. Enabling this option allows
-         * this network node to act as proxy on behalf of other nodes / clients.
-         */
-        acceptProxyConnections?: boolean
-
-        /**
-         * Defines the trackers that should be used for peer discovery and
-         * connection forming.
-         *
-         * Generally not intended to be configured by the end-user unless a
-         * custom network is being formed.
-         */
-        trackers?: TrackerRegistryRecord[] | TrackerRegistryContract
-
-        /**
-         * Defines how often, in milliseconds, to ping connected tracker(s) to
-         * determine connection aliveness.
-         */
-        trackerPingInterval?: number
-
-        /**
-         * Determines how often, in milliseconds, should tracker connections be
-         * maintained. This involves connecting to any relevant trackers to
-         * which a connection does not yet exist and disconnecting from
-         * irrelevant ones.
-         */
-        trackerConnectionMaintenanceInterval?: number
-
-        /**
-         * When set to true private addresses will not be probed when forming
-         * WebRTC connections.
-         *
-         * Probing private addresses can trigger false-positive incidents in
-         * some port scanning detection systems employed by web hosting
-         * providers. Disallowing private addresses may prevent direct
-         * connections from being formed between nodes using IPv4 addresses
-         * on a local network.
-         *
-         * Details: https://github.com/streamr-dev/network/wiki/WebRTC-private-addresses
-         */
-        webrtcDisallowPrivateAddresses?: boolean
-
-        /**
-         * Defines WebRTC connection establishment timeout in milliseconds.
-         *
-         * When attempting to form a new connection, if not established within
-         * this timeout, the attempt is considered as failed and further
-         * waiting for it will cease.
-         */
-        newWebrtcConnectionTimeout?: number
-
-        /**
-         * Sets the low-water mark used by send buffers of WebRTC connections.
-         */
-        webrtcDatachannelBufferThresholdLow?: number
-
-        /**
-         * Sets the high-water mark used by send buffers of WebRTC connections.
-         */
-        webrtcDatachannelBufferThresholdHigh?: number
-
-        /**
-         * The maximum outgoing message size (in bytes) accepted by WebRTC
-         * connections. Messages exceeding the maximum size are simply
-         * discarded.
-         */
-        webrtcMaxMessageSize?: number
-
-        /**
-         * Defines a custom UDP port range to be used for WebRTC connections.
-         * This port range should not be restricted by enclosing firewalls
-         * or virtual private cloud configurations.
-         */
-        webrtcPortRange?: WebRtcPortRange
-
-        /**
-         * The maximum amount of messages retained in the send queue of a WebRTC
-         * connection.
-         *
-         * When the send queue becomes full, oldest messages are discarded
-         * first to make room for new.
-         */
-        webrtcSendBufferMaxMessageCount?: number
-
-        /**
-         * Determines how long, in milliseconds, to keep non-relevant neighbor
-         * connections around for before disconnecting them.
-         *
-         * A connection with another node is relevant when the two share
-         * one or more streams and thus have messages to propagate to one
-         * another. When this no longer holds, the connection may be cut.
-         *
-         * During the topology re-organization process, sometimes a neighbor
-         * node may cease to be our neighbor only to become one once again in
-         * a short period of time. For this reason, it can be beneficial not to
-         * disconnect non-relevant neighbors right away.
-         */
-        disconnectionWaitTime?: number
-
-        /**
-         * Defines how often, in milliseconds, to ping connected nodes to
-         * determine connection aliveness.
-         */
-        peerPingInterval?: number
-
-        /**
-         * Determines how often, in milliseconds, at most, to include
-         * round-trip time (RTT) statistics in status updates to trackers.
-         */
-        rttUpdateTimeout?: number
-
-        /**
-         * The list of STUN and TURN servers to use in ICE protocol when
-         * forming WebRTC connections.
-         */
-        iceServers?: ReadonlyArray<IceServer>
-
-        /**
-         * Defines an explicit geographic location for this node (overriding Geo
-         * IP lookup).
-         */
-        location?: Location
-
-        /**
-         * Used to assign a custom external IP address for the node.
-         * Useful in cases where the node has a public IP address but
-         * the hosts network interface does not know of it.
-         * 
-         * Works only if the Full Cone NAT that the node is behind preserves local   
-         * port mappings on the public side. 
-        */
-        externalIp?: ExternalIP
-    }
-
-    /**
-     * The smart contract addresses and RPC urls to be used in the client.
-     * Generally not intended to be configured by the end-user unless a
-     * custom network is being formed.
-     */
     contracts?: {
         streamRegistryChainAddress?: string
         streamStorageRegistryChainAddress?: string
         storageNodeRegistryChainAddress?: string
-        mainChainRPCs?: ChainConnectionInfo
         streamRegistryChainRPCs?: ChainConnectionInfo
         // most of the above should go into ethereumNetworks configs once ETH-184 is ready
-        ethereumNetworks?: Record<string, EthereumNetworkConfig>
+        ethereumNetwork?: EthereumNetworkConfig
         /** Some TheGraph instance, that indexes the streamr registries */
         theGraphUrl?: string
         maxConcurrentCalls?: number
@@ -337,8 +414,9 @@ export interface StreamrClientConfig {
     /** @internal */
     _timeouts?: {
         theGraph?: {
-            timeout?: number
-            retryInterval?: number
+            indexTimeout?: number
+            indexPollInterval?: number
+            fetchTimeout?: number
         }
         storageNode?: {
             timeout?: number
@@ -348,15 +426,15 @@ export interface StreamrClientConfig {
             timeout?: number
             retryInterval?: number
         }
-        httpFetchTimeout?: number
     }
 }
 
-export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfig>, 'auth' | 'metrics'> & {
-    network: MarkOptional<Exclude<Required<StreamrClientConfig['network']>, undefined>, 'location'>
+export type StrictStreamrClientConfig = MarkOptional<Required<StreamrClientConfig>, 'environment' | 'auth' | 'metrics'> & {
+    network: Exclude<Required<StreamrClientConfig['network']>, undefined>
     contracts: Exclude<Required<StreamrClientConfig['contracts']>, undefined>
     encryption: Exclude<Required<StreamrClientConfig['encryption']>, undefined>
     cache: Exclude<Required<StreamrClientConfig['cache']>, undefined>
+    /** @internal */
     _timeouts: Exclude<DeepRequired<StreamrClientConfig['_timeouts']>, undefined>
 }
 
@@ -364,29 +442,66 @@ export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc3
 
 export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStreamrClientConfig => {
     // TODO is it good to cloneDeep the input object as it may have object references (e.g. auth.ethereum)?
-    const config: StrictStreamrClientConfig = validateConfig(cloneDeep(input))
-    config.id ??= generateClientId()
+    let config = cloneDeep(input)
+    const environment = config.environment ?? DEFAULT_ENVIRONMENT
+    config = applyEnvironmentDefaults(environment, config)
+    const strictConfig = validateConfig(config)
+    strictConfig.id ??= generateClientId()
+    return strictConfig
+}
+
+const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrClientConfig): StreamrClientConfig => {
+    const defaults = CHAIN_CONFIG[environmentId]
+    const config = merge(data, {
+        network: {
+            ...data.network,
+            controlLayer: {
+                entryPoints: defaults.entryPoints,
+                ...data.network?.controlLayer,
+            }
+        } as any,
+        contracts: {
+            streamRegistryChainAddress: defaults.contracts.StreamRegistry,
+            streamStorageRegistryChainAddress: defaults.contracts.StreamStorageRegistry,
+            storageNodeRegistryChainAddress: defaults.contracts.StorageNodeRegistry,
+            streamRegistryChainRPCs: {
+                name: defaults.name,
+                chainId: defaults.id,
+                rpcs: defaults.rpcEndpoints
+            },
+            theGraphUrl: defaults.theGraphUrl,
+            ...data.contracts,
+        } as any
+    }) as any
+    if (environmentId === 'polygon') {
+        config.contracts.ethereumNetwork = { 
+            highGasPriceStrategy: true,
+            ...config.contracts.ethereumNetwork
+        }
+    }
+    if (environmentId === 'dev2') {
+        // TODO config the 30s default for "dev2 in" @streamr/config and remove this explicit timeout
+        const toNumber = (value: any): number | undefined => {
+            return (value !== undefined) ? Number(value) : undefined
+        }
+        config.contracts.streamRegistryChainRPCs.rpcs.forEach((rpc: ConnectionInfo) => {
+            rpc.timeout = toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
+        })
+    }
     return config
 }
 
 export const validateConfig = (data: unknown): StrictStreamrClientConfig | never => {
-    const ajv = new Ajv({
-        useDefaults: true
-    })
-    addFormats(ajv)
-    ajv.addFormat('ethereum-address', /^0x[a-zA-Z0-9]{40}$/)
-    ajv.addFormat('ethereum-private-key', /^(0x)?[a-zA-Z0-9]{64}$/)
-    const validate = ajv.compile<StrictStreamrClientConfig>(CONFIG_SCHEMA)
     if (!validate(data)) {
-        throw new Error(validate.errors!.map((e: ErrorObject) => {
-            let text = ajv.errorsText([e], { dataVar: '' }).trim()
+        throw new Error((validate as any).errors!.map((e: any) => {
+            let text = e.instancePath + ' ' + e.message
             if (e.params.additionalProperty) {
                 text += `: ${e.params.additionalProperty}`
             }
             return text
         }).join('\n'))
     }
-    return data
+    return data as any
 }
 
 export const redactConfig = (config: StrictStreamrClientConfig): void => {

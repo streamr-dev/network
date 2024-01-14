@@ -1,56 +1,50 @@
 /**
  * Wrap a network node.
  */
-import { inject, Lifecycle, scoped } from 'tsyringe'
+import { DhtAddress, PeerDescriptor } from '@streamr/dht'
+import { StreamMessage, StreamPartID } from '@streamr/protocol'
+import { NetworkOptions, ProxyDirection, createNetworkNode as createNetworkNode_ } from '@streamr/trackerless-network'
+import { EthereumAddress, MetricsContext } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
-import { NetworkNodeOptions, createNetworkNode as _createNetworkNode } from '@streamr/network-node'
-import { MetricsContext } from '@streamr/utils'
-import { uuid } from './utils/uuid'
-import { pOnce } from './utils/promises'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
-import { StreamMessage, StreamPartID, ProxyDirection } from '@streamr/protocol'
-import { DestroySignal } from './DestroySignal'
+import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
-import { getTrackers } from './registry/trackerRegistry'
+import { ConfigInjectionToken, NetworkPeerDescriptor, StrictStreamrClientConfig } from './Config'
+import { DestroySignal } from './DestroySignal'
+import { OperatorRegistry } from './registry/OperatorRegistry'
+import { pOnce } from './utils/promises'
+import { peerDescriptorTranslator } from './utils/utils'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 /** @deprecated This in an internal interface */
 export interface NetworkNodeStub {
-    getNodeId: () => string
+    getNodeId: () => DhtAddress
     addMessageListener: (listener: (msg: StreamMessage) => void) => void
     removeMessageListener: (listener: (msg: StreamMessage) => void) => void
-    subscribe: (streamPartId: StreamPartID) => void
-    subscribeAndWaitForJoin: (streamPart: StreamPartID, timeout?: number) => Promise<number>
-    waitForJoinAndPublish: (msg: StreamMessage, timeout?: number) => Promise<number>
-    unsubscribe: (streamPartId: StreamPartID) => void
-    publish: (streamMessage: StreamMessage) => void
-    getStreamParts: () => Iterable<StreamPartID>
-    getNeighbors: () => ReadonlyArray<string>
-    getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<string>
-    getRtt: (nodeId: string) => number | undefined
-    setExtraMetadata: (metadata: Record<string, unknown>) => void
+    join: (streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }) => Promise<void>
+    leave: (streamPartId: StreamPartID) => Promise<void>
+    broadcast: (streamMessage: StreamMessage) => Promise<void>
+    getStreamParts: () => StreamPartID[]
+    getNeighbors: (streamPartId: StreamPartID) => ReadonlyArray<DhtAddress>
+    getPeerDescriptor: () => PeerDescriptor
+    getOptions: () => NetworkOptions
     getMetricsContext: () => MetricsContext
     getDiagnosticInfo: () => Record<string, unknown>
     hasStreamPart: (streamPartId: StreamPartID) => boolean
+    inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean>
     /** @internal */
-    hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection) => boolean
+    start: (doJoin?: boolean) => Promise<void>
     /** @internal */
-    start: () => void
-    /** @internal */
-    stop: () => Promise<unknown>
+    stop: () => Promise<void>
     /** @internal */
     setProxies: (
         streamPartId: StreamPartID,
-        nodeIds: string[],
+        nodes: PeerDescriptor[],
         direction: ProxyDirection,
-        getUserId: () => Promise<string>,
+        userId: EthereumAddress,
         connectionCount?: number
     ) => Promise<void>
-}
-
-export const getEthereumAddressFromNodeId = (nodeId: string): string => {
-    const ETHERUM_ADDRESS_LENGTH = 42
-    return nodeId.substring(0, ETHERUM_ADDRESS_LENGTH)
+    isProxiedStreamPart(streamPartId: StreamPartID): boolean
+    setStreamPartEntryPoints: (streamPartId: StreamPartID, peerDescriptors: PeerDescriptor[]) => void
 }
 
 export interface Events {
@@ -63,8 +57,8 @@ export interface Events {
 /* eslint-disable class-methods-use-this */
 @scoped(Lifecycle.ContainerScoped)
 export class NetworkNodeFactory {
-    createNetworkNode(opts: NetworkNodeOptions): NetworkNodeStub {
-        return _createNetworkNode(opts)
+    createNetworkNode(opts: NetworkOptions): NetworkNodeStub {
+        return createNetworkNode_(opts)
     }
 }
 
@@ -75,26 +69,29 @@ export class NetworkNodeFactory {
 @scoped(Lifecycle.ContainerScoped)
 export class NetworkNodeFacade {
 
-    private destroySignal: DestroySignal
-    private networkNodeFactory: NetworkNodeFactory
-    private authentication: Authentication
     private cachedNode?: NetworkNodeStub
     private startNodeCalled = false
     private startNodeComplete = false
+    private readonly networkNodeFactory: NetworkNodeFactory
+    private readonly operatorRegistry: OperatorRegistry
     private readonly config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>
+    private readonly authentication: Authentication
     private readonly eventEmitter: EventEmitter<Events>
+    private readonly destroySignal: DestroySignal
 
     constructor(
-        destroySignal: DestroySignal,
         networkNodeFactory: NetworkNodeFactory,
+        operatorRegistry: OperatorRegistry,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>
+        destroySignal: DestroySignal
     ) {
-        this.destroySignal = destroySignal
         this.networkNodeFactory = networkNodeFactory
-        this.authentication = authentication
+        this.operatorRegistry = operatorRegistry
         this.config = config
+        this.authentication = authentication
         this.eventEmitter = new EventEmitter<Events>()
+        this.destroySignal = destroySignal
         destroySignal.onDestroy.listen(this.destroy)
     }
 
@@ -102,21 +99,17 @@ export class NetworkNodeFacade {
         this.destroySignal.assertNotDestroyed()
     }
 
-    private async getNetworkOptions(): Promise<NetworkNodeOptions> {
-        let id = this.config.network.id
-        if (id == null || id === '') {
-            id = await this.generateId()
-        } else {
-            const ethereumAddress = await this.authentication.getAddress()
-            if (!id.toLowerCase().startsWith(ethereumAddress)) {
-                throw new Error(`given node id ${id} not compatible with authenticated wallet ${ethereumAddress}`)
-            }
-        }
-        
+    private async getNetworkOptions(): Promise<NetworkOptions> {
+        const entryPoints = await this.getEntryPoints()
+        const localPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer.peerDescriptor ? 
+            peerDescriptorTranslator(this.config.network.controlLayer.peerDescriptor) : undefined
         return {
-            ...this.config.network,
-            id,
-            trackers: await getTrackers(this.config),
+            layer0: {
+                ...this.config.network.controlLayer,
+                entryPoints: entryPoints.map(peerDescriptorTranslator),
+                peerDescriptor: localPeerDescriptor
+            },
+            networkNode: this.config.network.node,
             metricsContext: new MetricsContext()
         }
     }
@@ -130,11 +123,6 @@ export class NetworkNodeFacade {
             this.cachedNode = node
         }
         return node
-    }
-
-    private async generateId(): Promise<string> {
-        const address = await this.authentication.getAddress()
-        return `${address}#${uuid()}`
     }
 
     /**
@@ -152,7 +140,6 @@ export class NetworkNodeFacade {
                 this.startNodeTask.reset() // allow subsequent calls to fail
                 await startNodeTask
             }
-
             await node.stop()
         }
         this.startNodeTask.reset() // allow subsequent calls to fail
@@ -161,12 +148,12 @@ export class NetworkNodeFacade {
     /**
      * Start network node, or wait for it to start if already started.
      */
-    private startNodeTask = pOnce(async () => {
+    private startNodeTask = pOnce(async (doJoin: boolean = true) => {
         this.startNodeCalled = true
         try {
             const node = await this.initNode()
             if (!this.destroySignal.isDestroyed()) {
-                node.start()
+                await node.start(doJoin)
             }
 
             if (this.destroySignal.isDestroyed()) {
@@ -185,7 +172,7 @@ export class NetworkNodeFacade {
 
     getNode: () => Promise<NetworkNodeStub> = this.startNodeTask
 
-    async getNodeId(): Promise<string> {
+    async getNodeId(): Promise<DhtAddress> {
         const node = await this.getNode()
         return node.getNodeId()
     }
@@ -196,7 +183,7 @@ export class NetworkNodeFacade {
      * but will be sync in case that node is already started.
      * Zalgo intentional. See below.
      */
-    publishToNode(streamMessage: StreamMessage): void | Promise<void> {
+    async publishToNode(streamMessage: StreamMessage): Promise<void> {
         // NOTE: function is intentionally not async for performance reasons.
         // Will call cachedNode.publish immediately if cachedNode is set.
         // Otherwise will wait for node to start.
@@ -204,29 +191,46 @@ export class NetworkNodeFacade {
         if (this.isStarting()) {
             // use .then instead of async/await so
             // this.cachedNode.publish call can be sync
-            return this.startNodeTask().then((node) => {
-                return node.publish(streamMessage)
-            })
+            return this.startNodeTask().then((node) =>
+                node.broadcast(streamMessage)
+            )
         }
-        return this.cachedNode!.publish(streamMessage)
+        return this.cachedNode!.broadcast(streamMessage)
+    }
+
+    async inspect(node: NetworkPeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
+        if (this.isStarting()) {
+            await this.startNodeTask(false)
+        }
+        const peerDescriptor = peerDescriptorTranslator(node)
+        return this.cachedNode!.inspect(peerDescriptor, streamPartId)
     }
 
     async setProxies(
         streamPartId: StreamPartID,
-        nodeIds: string[],
+        nodes: NetworkPeerDescriptor[],
         direction: ProxyDirection,
         connectionCount?: number
     ): Promise<void> {
         if (this.isStarting()) {
-            await this.startNodeTask()
+            await this.startNodeTask(false)
         }
+        const peerDescriptors = nodes.map(peerDescriptorTranslator)
         await this.cachedNode!.setProxies(
             streamPartId,
-            nodeIds,
+            peerDescriptors,
             direction,
-            () => this.authentication.getAddress(),
+            await this.authentication.getAddress(),
             connectionCount
         )
+    }
+
+    async setStreamPartEntryPoints(streamPartId: StreamPartID, nodeDescriptors: NetworkPeerDescriptor[]): Promise<void> {
+        if (this.isStarting()) {
+            await this.startNodeTask(false)
+        }
+        const peerDescriptors = nodeDescriptors.map(peerDescriptorTranslator)
+        this.cachedNode!.setStreamPartEntryPoints(streamPartId, peerDescriptors)
     }
 
     private isStarting(): boolean {
@@ -236,5 +240,16 @@ export class NetworkNodeFacade {
     once<E extends keyof Events>(eventName: E, listener: Events[E]): void {
         this.eventEmitter.once(eventName, listener as any)
     }
-}
 
+    private async getEntryPoints(): Promise<NetworkPeerDescriptor[]> {
+        const discoveryConfig = this.config.network.controlLayer.entryPointDiscovery
+        const discoveredEntryPoints = (discoveryConfig?.enabled)
+            ? await this.operatorRegistry.findRandomNetworkEntrypoints(
+                discoveryConfig.maxEntryPoints!,
+                discoveryConfig.maxQueryResults!,
+                discoveryConfig.maxHeartbeatAgeHours!,
+            )
+            : []
+        return [...this.config.network.controlLayer.entryPoints!, ...discoveredEntryPoints]
+    }
+}

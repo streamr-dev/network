@@ -1,13 +1,13 @@
 import cassandra, { Client } from 'cassandra-driver'
 import pLimit, { Limit } from 'p-limit'
-import StreamrClient from 'streamr-client'
+import { StreamrClient } from 'streamr-client'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
 const totalSizeOfBuckets = (buckets: BucketInfo[]) => buckets.reduce((mem, { size }) => mem + size, 0) / (1024 * 1024)
 
-const totalNumOfRecords = (buckets: BucketInfo[]) => buckets.reduce((mem, { records }) => mem + records, 0)
+const totalRecordCount = (buckets: BucketInfo[]) => buckets.reduce((mem, { records }) => mem + records, 0)
 
 interface StreamPart {
     streamId: string
@@ -86,7 +86,7 @@ export class DeleteExpiredCmd {
 
         const expiredBuckets = await this.filterExpiredBuckets(cutPotentialBuckets)
         logger.info(`Found ${expiredBuckets.length} expired buckets`, {
-            totalRecords: totalNumOfRecords(expiredBuckets),
+            totalRecords: totalRecordCount(expiredBuckets),
             totalSizeOfBucketsInMb: totalSizeOfBuckets(expiredBuckets)
         })
 

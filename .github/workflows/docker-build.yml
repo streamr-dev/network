@@ -13,6 +13,8 @@ on:
         type: string
       test_script:
         type: string
+      branch:
+        type: string
       push_image:
         type: boolean
       host_machine_platform:
@@ -34,9 +36,11 @@ jobs:
   build:
     runs-on: ${{ inputs.host_machine_platform }}
     steps:
-      - uses: actions/checkout@v3.5.2
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
       - name: Cache Docker layers
-        uses: actions/cache@v3.3.1
+        uses: actions/cache@v3.3.3
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-v1-${{ github.sha }}
@@ -44,15 +48,15 @@ jobs:
             ${{ runner.os }}-buildx-v1-
       - name: Setup qemu
         if: contains(inputs.build_platforms, 'arm64')
-        uses: docker/setup-qemu-action@v2.1.0
+        uses: docker/setup-qemu-action@v3.0.0
         with:
           platforms: arm64
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2.5.0
+        uses: docker/setup-buildx-action@v3.0.0
         with:
           driver-opts: |
             network=host
-      - uses: docker/login-action@v2.1.0
+      - uses: docker/login-action@v3.0.0
         if: ${{inputs.push_image}}
         with:
           username: ${{ secrets.dockerhub_username }}
@@ -66,7 +70,7 @@ jobs:
 
       - name: Docker meta
         id: docker_meta_success
-        uses: docker/metadata-action@v4.4.0
+        uses: docker/metadata-action@v5.5.0
         if: ${{inputs.push_image}}
         with:
           images: ${{inputs.image_name}}
@@ -74,11 +78,14 @@ jobs:
             latest=false
           tags: |
             type=match,pattern=broker/(v.*),group=1,value=${{ env.broker_head_tag }}
-            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=dev,enable=${{ inputs.branch == 'brubeck' }}
+            type=raw,value=dev-tatum,enable=${{ inputs.branch == 'main' }}
+            type=raw,value=testnet-two,enable=${{ inputs.branch == 'testnet-two' }}
+            type=raw,value=testnet-three,enable=${{ inputs.branch == 'testnet-three' }}
 
       - name: Build
         if: ${{!inputs.push_image}}
-        uses: docker/build-push-action@v4.0.0
+        uses: docker/build-push-action@v5.1.0
         with:
           context: .
           file: ${{inputs.docker_file}}
@@ -103,7 +110,7 @@ jobs:
 
       - name: Build & Push
         if: ${{inputs.push_image}}
-        uses: docker/build-push-action@v4.0.0
+        uses: docker/build-push-action@v5.1.0
         with:
           context: .
           file: ${{inputs.docker_file}}
@@ -125,7 +132,7 @@ jobs:
 
       - name: Upload logs to GitHub
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: docker-logs-node${{ matrix.node-version }}--${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
           path: 'logs'

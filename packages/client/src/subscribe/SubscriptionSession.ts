@@ -1,20 +1,10 @@
-import { inject } from 'tsyringe'
-
 import { StreamMessage, StreamMessageType, StreamPartID } from '@streamr/protocol'
-
+import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
+import { PushPipeline } from '../utils/PushPipeline'
 import { Scaffold } from '../utils/Scaffold'
 import { Signal } from '../utils/Signal'
-import { MessageStream } from './MessageStream'
-
+import { MessagePipelineFactory } from './MessagePipelineFactory'
 import { Subscription } from './Subscription'
-import { createSubscribePipeline } from './subscribePipeline'
-import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
-import { Resends } from './Resends'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { DestroySignal } from '../DestroySignal'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { LoggerFactory } from '../utils/LoggerFactory'
-import { GroupKeyManager } from '../encryption/GroupKeyManager'
 
 /**
  * Manages adding & removing subscriptions to node as needed.
@@ -22,37 +12,27 @@ import { GroupKeyManager } from '../encryption/GroupKeyManager'
  */
 
 export class SubscriptionSession {
+
     public readonly streamPartId: StreamPartID
     public readonly onRetired = Signal.once()
     private isRetired: boolean = false
     private isStopped = false
     private readonly subscriptions: Set<Subscription> = new Set()
     private readonly pendingRemoval: WeakSet<Subscription> = new WeakSet()
-    private readonly pipeline: MessageStream
+    private readonly pipeline: PushPipeline<StreamMessage, StreamMessage>
     private readonly node: NetworkNodeFacade
 
     constructor(
         streamPartId: StreamPartID,
-        resends: Resends,
-        groupKeyManager: GroupKeyManager,
-        streamRegistryCached: StreamRegistryCached,
-        node: NetworkNodeFacade,
-        destroySignal: DestroySignal,
-        loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken) config: StrictStreamrClientConfig
+        messagePipelineFactory: MessagePipelineFactory,
+        node: NetworkNodeFacade
     ) {
         this.streamPartId = streamPartId
         this.distributeMessage = this.distributeMessage.bind(this)
         this.node = node
         this.onError = this.onError.bind(this)
-        this.pipeline = createSubscribePipeline({
-            streamPartId,
-            resends,
-            groupKeyManager,
-            streamRegistryCached,
-            loggerFactory,
-            destroySignal,
-            config: config
+        this.pipeline = messagePipelineFactory.createMessagePipeline({
+            streamPartId
         })
         this.pipeline.onError.listen(this.onError)
         this.pipeline
@@ -121,7 +101,9 @@ export class SubscriptionSession {
     private async subscribe(): Promise<NetworkNodeStub> {
         const node = await this.node.getNode()
         node.addMessageListener(this.onMessageInput)
-        node.subscribe(this.streamPartId)
+        if (!node.isProxiedStreamPart(this.streamPartId)) {
+            await node.join(this.streamPartId)
+        }
         return node
     }
 
@@ -130,7 +112,7 @@ export class SubscriptionSession {
         this.pipeline.return()
         this.pipeline.onError.end(new Error('done'))
         node.removeMessageListener(this.onMessageInput)
-        node.unsubscribe(this.streamPartId)
+        await node.leave(this.streamPartId)
     }
 
     updateNodeSubscriptions = (() => {

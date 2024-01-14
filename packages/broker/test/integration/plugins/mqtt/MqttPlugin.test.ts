@@ -5,7 +5,6 @@ import { Message } from '../../../../src/helpers/PayloadFormat'
 import { createMessagingPluginTest } from '../../createMessagingPluginTest'
 
 const MQTT_PORT = 12430
-const TRACKER_PORT = 12432
 
 jest.setTimeout(30000)
 
@@ -16,7 +15,7 @@ createMessagingPluginTest('mqtt',
                 username: '',
                 password: apiKey
             } : undefined
-            return mqtt.connectAsync(`mqtt://localhost:${MQTT_PORT}`, opts)
+            return mqtt.connectAsync(`mqtt://127.0.0.1:${MQTT_PORT}`, opts)
         },
         closeClient: async (client: AsyncMqttClient): Promise<void> => {
             await client.end(true)
@@ -38,8 +37,7 @@ createMessagingPluginTest('mqtt',
         }
     },
     {
-        plugin: MQTT_PORT,
-        tracker: TRACKER_PORT
+        plugin: MQTT_PORT
     },
     module
 )

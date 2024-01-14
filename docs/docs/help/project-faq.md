@@ -19,11 +19,11 @@ Yes. We've worked very hard to prove that the Network does indeed scale. You can
 ### What has the project delivered so far?
 Streamr began in 2017, in that time the project has delivered:
 - The decentralized real time data network
-- The Streamr Client (JavaScript convenience library to interact with the Streamr Network)
+- The Streamr SDK (TypeScript library to interact with the Streamr Network)
 - A data marketplace, offering pay to access data streams
 - A Data Unions SDK
-- The Hub; A stream creation and discovery UI. (Q1 2023)
-- The incentive layer of the Network (estimated Q2 2023)
+- The Hub; A stream creation and discovery UI.
+- The incentive layer of the Network (estimated Q1 2024)
 
 ### What is the DATA token used for?
 DATA is a quality of service and governance token for the Network. It is designed to be used primarily in the incentive layer of the Network to improve reliability, security and privacy in a decentralized setting.

@@ -16,6 +16,7 @@ import { createTestStream, startPublisherKeyExchangeSubscription } from '../test
 import { DEFAULT_PARTITION } from './../../src/StreamIDBuilder'
 
 describe('Group Key Persistence', () => {
+
     let publisherPrivateKey: string
     let subscriberPrivateKey: string
     let publisher: StreamrClient
@@ -24,9 +25,17 @@ describe('Group Key Persistence', () => {
     let storageNode: FakeStorageNode
     let environment: FakeEnvironment
 
-    beforeEach(() => {
+    beforeEach(async () => {
         environment = new FakeEnvironment()
-        storageNode = environment.startStorageNode()
+        storageNode = await environment.startStorageNode()
+    })
+
+    afterEach(async () => {
+        await environment.destroy()
+    })
+
+    afterEach(async () => {
+        await environment.destroy()
     })
 
     describe('with encrypted streams', () => {
@@ -37,7 +46,7 @@ describe('Group Key Persistence', () => {
             stream = await createTestStream(client, module, {
                 ...streamOpts,
             })
-            await stream.addToStorageNode(storageNode.id)
+            await stream.addToStorageNode(storageNode.getAddress())
             publishTestMessages = getPublishTestStreamMessages(client, stream)
             return client
         }
@@ -149,7 +158,7 @@ describe('Group Key Persistence', () => {
             })
             const node2 = await subscriber2.getNode()
             await until(async () => {
-                return node2.getNeighborsForStreamPart(toStreamPartID(stream.id, DEFAULT_PARTITION)).length >= 1
+                return node2.getNeighbors(toStreamPartID(stream.id, DEFAULT_PARTITION)).length >= 1
             })
 
             await Promise.all([
@@ -310,7 +319,7 @@ describe('Group Key Persistence', () => {
                 for (let i = 0; i < NUM_STREAMS; i++) {
 
                     const s = await createTestStream(publisher, module)
-                    await s.addToStorageNode(storageNode.id)
+                    await s.addToStorageNode(storageNode.getAddress())
                     streams.push(s)
                 }
             })

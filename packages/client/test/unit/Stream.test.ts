@@ -4,14 +4,12 @@ import { toStreamID } from '@streamr/protocol'
 import { Stream } from '../../src/Stream'
 import { StreamFactory } from '../../src/StreamFactory'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
-import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 
-const createStreamFactory = (streamRegistry?: StreamRegistry, streamRegistryCached?: StreamRegistryCached) => {
+const createStreamFactory = (streamRegistry?: StreamRegistry) => {
     return new StreamFactory(
         undefined as any,
         undefined as any,
         undefined as any,
-        streamRegistryCached as any,
         streamRegistry as any,
         undefined as any,
         undefined as any,
@@ -47,14 +45,11 @@ describe('Stream', () => {
 
     describe('update', () => {
         it('fields not updated if transaction fails', async () => {
-            const clearStream = jest.fn()
-            const streamRegistryCached: Partial<StreamRegistryCached> = {
-                clearStream
-            }
             const streamRegistry: Partial<StreamRegistry> = {
-                updateStream: jest.fn().mockRejectedValue(new Error('mock-error'))
+                updateStream: jest.fn().mockRejectedValue(new Error('mock-error')),
+                clearStreamCache: jest.fn()
             } 
-            const factory = createStreamFactory(streamRegistry as any, streamRegistryCached as any)
+            const factory = createStreamFactory(streamRegistry as any)
                 
             const stream = factory.createStream(toStreamID('mock-id'), {
                 description: 'original-description'
@@ -66,7 +61,7 @@ describe('Stream', () => {
                 })
             }).rejects.toThrow('mock-error')
             expect(stream.getMetadata().description).toBe('original-description')
-            expect(clearStream).toBeCalledWith('mock-id')
+            expect(streamRegistry.clearStreamCache).toBeCalledWith('mock-id')
         })
     })
 

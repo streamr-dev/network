@@ -30,4 +30,12 @@ export class Mapping<K extends (string | number)[], V> {
         }
         return valueWrapper.value
     }
+
+    values(): V[] {
+        const result: V[] = []
+        for (const wrapper of this.delegate.values()) {
+            result.push(wrapper.value)
+        }
+        return result
+    }
 }

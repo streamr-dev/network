@@ -6,7 +6,8 @@
         "lib": ["es2021", "dom"],
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "noImplicitOverride": false
     },
     "include": [
         "package.json",
@@ -20,11 +21,13 @@
         "test/legacy/*",
         "test/memory/*",
         "test/exports/*",
-        "src/exports-esm.mjs"
+        "src/exports-esm.mjs",
+        "src/utils/persistence/BrowserPersistence.ts"
     ],
     "references": [
         { "path": "../test-utils/tsconfig.node.json" },
         { "path": "../protocol/tsconfig.node.json" },
-        { "path": "../network/tsconfig.node.json" }
+        { "path": "../dht/tsconfig.node.json" },
+        { "path": "../trackerless-network/tsconfig.node.json" }
     ]
 }

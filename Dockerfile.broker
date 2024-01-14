@@ -1,4 +1,4 @@
-FROM node:18-bullseye as build
+FROM node:20-bullseye as build
 WORKDIR /usr/src/network
 COPY . .
 RUN --mount=type=cache,target=/root/.npm \
@@ -23,9 +23,9 @@ ENV LOG_LEVEL=info
 EXPOSE 1883/tcp
 EXPOSE 7170/tcp
 EXPOSE 7171/tcp
+EXPOSE 32200/tcp
 
 WORKDIR /home/streamr/network/packages/broker
 
 # start broker from default config (needs mounted volume, e.g. docker run -v $(cd ~/.streamr/config;pwd):/home/streamr/.streamr/config IMAGE
 CMD ["/usr/local/bin/npm", "exec", "streamr-broker"]
-

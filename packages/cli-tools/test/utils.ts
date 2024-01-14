@@ -1,7 +1,7 @@
-import { collect } from '@streamr/utils'
+import { collect, waitForCondition } from '@streamr/utils'
 import { spawn } from 'child_process'
 import merge2 from 'merge2'
-import { CONFIG_TEST, StreamrClient } from 'streamr-client'
+import { CONFIG_TEST, Stream, StreamrClient } from 'streamr-client'
 
 export const DOCKER_DEV_STORAGE_NODE = '0xde1112f631486CfC759A50196853011528bC5FA0'
 
@@ -51,7 +51,7 @@ export async function* startCommand(commandLine: string, opts?: StartCommandOpti
 async function* lines(src: AsyncIterable<Buffer>): AsyncGenerator<string, any, any> {
     let buffer = ''
     for await (const chunk of src) {
-        buffer += chunk.toString('utf-8')
+        buffer += chunk.toString()
         while (true) {
             const delimeterPos = buffer.indexOf('\n')
             if (delimeterPos === -1) {
@@ -72,4 +72,14 @@ export const createTestClient = (privateKey?: string): StreamrClient => {
         ...CONFIG_TEST,
         auth: (privateKey !== undefined) ? { privateKey } : undefined
     })
+}
+
+export const waitForTheGraphToHaveIndexed = async (stream: Stream, client: StreamrClient): Promise<void> => {
+    await waitForCondition(async () => {
+        // eslint-disable-next-line no-underscore-dangle
+        for await (const _msg of client.searchStreams(stream.id, undefined)) {
+            return true
+        }
+        return false
+    }, 15 * 1000, 600)
 }

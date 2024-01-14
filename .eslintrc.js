@@ -2,13 +2,21 @@ module.exports = {
     extends: [
         "eslint:recommended",
         "plugin:@typescript-eslint/eslint-recommended",
+        'plugin:@typescript-eslint/recommended-requiring-type-checking',
         'eslint-config-streamr-ts'
     ],
+    parser: '@typescript-eslint/parser',
+    parserOptions: {
+        project: ['./tsconfig.jest.json'],
+        tsconfigRootDir: __dirname,
+    },
+    root: true,
     env: {
         node: true
     },
     rules: {
         'eol-last': ['error'],
+        'quotes': ['error', 'single', { 'allowTemplateLiterals': true }],
         'no-console': ['error', {allow: ['warn', 'error', 'info']}],
         'no-restricted-imports': ['error', {
             "patterns": ["*/dist"]
@@ -61,6 +69,24 @@ module.exports = {
         'promise/no-promise-in-callback': ['error'],
         //'@typescript-eslint/no-empty-function': 'error',
         'no-multi-spaces': ["error", { ignoreEOLComments: true }],
-        'default-case': ['error']
+        'default-case': ['error'],
+        // TODO: in follow up PRs, select which rules we should enable and fix the code. When all recommended rules
+        //  have been enabled, consider enabling the "strict" preset.
+        '@typescript-eslint/require-await': 'off',
+        '@typescript-eslint/no-floating-promises': 'off',
+        '@typescript-eslint/await-thenable': 'off',
+        '@typescript-eslint/no-misused-promises': 'off',
+        '@typescript-eslint/no-unsafe-return': 'off',
+        '@typescript-eslint/no-unsafe-argument': 'off',
+        '@typescript-eslint/no-unsafe-assignment': 'off',
+        '@typescript-eslint/no-unsafe-member-access': 'off',
+        '@typescript-eslint/no-unsafe-call': 'off',
+        '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+        '@typescript-eslint/restrict-template-expressions': 'off',
+        '@typescript-eslint/restrict-plus-operands': 'off',
+        '@typescript-eslint/unbound-method': 'off',
+        '@typescript-eslint/no-base-to-string': 'off',
+        '@typescript-eslint/no-unsafe-enum-comparison': 'off',
+        '@typescript-eslint/no-redundant-type-constituents': 'off'
     }
 }

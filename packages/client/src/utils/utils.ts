@@ -1,8 +1,27 @@
-import LRU from '../../vendor/quick-lru'
-import { SEPARATOR } from './uuid'
-
+import { ContractReceipt } from '@ethersproject/contracts'
+import { DhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress } from '@streamr/dht'
 import { StreamID, toStreamID } from '@streamr/protocol'
-import { randomString, toEthereumAddress } from '@streamr/utils'
+import {
+    composeAbortSignals,
+    LengthPrefixedFrameDecoder,
+    Logger,
+    merge,
+    randomString,
+    TheGraphClient,
+    toEthereumAddress
+} from '@streamr/utils'
+import compact from 'lodash/compact'
+import fetch, { Response } from 'node-fetch'
+import { AbortSignal as FetchAbortSignal } from 'node-fetch/externals'
+import { Readable } from 'stream'
+import LRU from '../../vendor/quick-lru'
+import { NetworkNodeType, NetworkPeerDescriptor, StrictStreamrClientConfig } from '../Config'
+import { StreamrClientEventEmitter } from '../events'
+import { WebStreamToNodeStream } from './WebStreamToNodeStream'
+import { SEPARATOR } from './uuid'
+import { NodeType, PeerDescriptor } from '@streamr/dht'
+
+const logger = new Logger(module)
 
 /**
  * Generates counter-based ids.
@@ -101,6 +120,41 @@ export class MaxSizedSet<T> {
     }
 }
 
+// TODO: rename to convertNetworkPeerDescriptorToPeerDescriptor
+
+// This function contains temporary compatibility layer which allows that PeerDescriptor can be configured with 
+// "id" field instead of "nodeId" field. This is done so that pretestnet users don't need to change their configs.
+// After strear-1.0 testnet1 or mainnet starts, remove this hack.
+// - Good to ensure at that point that the new format has landed to the public documentation: 
+//   https://docs.streamr.network/guides/become-an-operator
+// - or maybe NET-1133 or NET-1004 have been implemented and the documentation no longer mentions the low
+//   level way of configuring the entry points.
+// Actions:
+// - remove "temporary compatibility" test case from Broker's config.test.ts 
+// - remove "id" property from config.schema.json (line 536) and make "nodeId" property required
+// - remove "id" property handling from this method
+export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescriptor {
+    const type = json.type === NetworkNodeType.BROWSER ? NodeType.BROWSER : NodeType.NODEJS
+    const peerDescriptor: PeerDescriptor = {
+        ...json,
+        nodeId: getRawFromDhtAddress((json.nodeId ?? (json as any).id) as DhtAddress),
+        type,
+        websocket: json.websocket
+    }
+    if ((peerDescriptor as any).id !== undefined) {
+        delete (peerDescriptor as any).id
+    }
+    return peerDescriptor
+}
+
+export function convertPeerDescriptorToNetworkPeerDescriptor(descriptor: PeerDescriptor): NetworkPeerDescriptor {
+    return {
+        ...descriptor,
+        nodeId: getDhtAddressFromRaw(descriptor.nodeId),
+        type: descriptor.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER
+    }
+}
+
 export function generateClientId(): string {
     return counterId(process.pid ? `${process.pid}` : randomString(4), '/')
 }
@@ -109,4 +163,83 @@ export function generateClientId(): string {
 // e.g. as a map key or a cache key.
 export const formLookupKey = <K extends (string | number)[]>(...args: K): string => {
     return args.join('|')
+}
+
+/** @internal */
+export const createTheGraphClient = (
+    eventEmitter: StreamrClientEventEmitter,
+    config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
+): TheGraphClient => {
+    const instance = new TheGraphClient({
+        serverUrl: config.contracts.theGraphUrl,
+        fetch: (url: string, init?: Record<string, unknown>) => {
+            // eslint-disable-next-line no-underscore-dangle
+            const timeout = config._timeouts.theGraph.fetchTimeout
+            return fetch(url, merge({ timeout }, init))
+        },
+        // eslint-disable-next-line no-underscore-dangle
+        indexTimeout: config._timeouts.theGraph.indexTimeout,
+        // eslint-disable-next-line no-underscore-dangle
+        indexPollInterval: config._timeouts.theGraph.indexPollInterval
+    })
+    eventEmitter.on('confirmContractTransaction', (payload: { receipt: ContractReceipt }) => {
+        instance.updateRequiredBlockNumber(payload.receipt.blockNumber)
+    })
+    return instance
+}
+
+export const createQueryString = (query: Record<string, any>): string => {
+    const withoutEmpty = Object.fromEntries(Object.entries(query).filter(([_k, v]) => v != null))
+    return new URLSearchParams(withoutEmpty).toString()
+}
+
+export class FetchHttpStreamResponseError extends Error {
+
+    response: Response
+
+    constructor(response: Response) {
+        super(`Fetch error, url=${response.url}`)
+        this.response = response
+    }
+}
+
+export const fetchLengthPrefixedFrameHttpBinaryStream = async function*(
+    url: string,
+    abortSignal?: AbortSignal
+): AsyncGenerator<Uint8Array, void, undefined> {
+    logger.debug('Send HTTP request', { url }) 
+    const abortController = new AbortController()
+    const fetchAbortSignal = composeAbortSignals(...compact([abortController.signal, abortSignal]))
+    const response: Response = await fetch(url, {
+        // cast is needed until this is fixed: https://github.com/node-fetch/node-fetch/issues/1652
+        signal: fetchAbortSignal as FetchAbortSignal
+    })
+    logger.debug('Received HTTP response', {
+        url,
+        status: response.status,
+    })
+    if (!response.ok) {
+        throw new FetchHttpStreamResponseError(response)
+    }
+    if (!response.body) {
+        throw new Error('No Response Body')
+    }
+
+    let stream: Readable | undefined
+    try {
+        // in the browser, response.body will be a web stream. Convert this into a node stream.
+        const source: Readable = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
+        stream = source.pipe(new LengthPrefixedFrameDecoder())
+        source.on('error', (err: Error) => stream!.destroy(err))
+        stream.once('close', () => {
+            abortController.abort()
+        })
+        yield* stream
+    } catch (err) {
+        abortController.abort()
+        throw err
+    } finally {
+        stream?.destroy()
+        fetchAbortSignal.destroy()
+    }
 }

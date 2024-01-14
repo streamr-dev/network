@@ -1,4 +1,5 @@
 import { PassThrough, Readable, TransformOptions } from 'stream'
+import WebStream from 'node:stream/web'
 import { once } from 'events'
 
 const ignoreAbort = (err: Error) => {
@@ -22,7 +23,7 @@ async function write(stream: PassThrough, data: any, ac: AbortController) {
 /**
  * Background async task to pull data from the browser stream and push it into the node stream.
  */
-async function pull(fromBrowserStream: ReadableStream, toNodeStream: PassThrough) {
+async function pull(fromBrowserStream: ReadableStream | WebStream.ReadableStream, toNodeStream: PassThrough) {
     const reader = fromBrowserStream.getReader()
     /* eslint-disable no-constant-condition */
     const ac = new AbortController()
@@ -32,7 +33,6 @@ async function pull(fromBrowserStream: ReadableStream, toNodeStream: PassThrough
     reader.closed.finally(() => { // eslint-disable-line promise/catch-or-return
         toNodeStream.off('close', cleanup)
     })
-    // toNodeStream.once('error', cleanup)
 
     try {
         while (true) {
@@ -60,7 +60,10 @@ async function pull(fromBrowserStream: ReadableStream, toNodeStream: PassThrough
 /**
  * Convert browser ReadableStream to Node stream.Readable.
  */
-export function WebStreamToNodeStream(webStream: ReadableStream | Readable, nodeStreamOptions?: TransformOptions): Readable {
+export function WebStreamToNodeStream(
+    webStream: ReadableStream | Readable | WebStream.ReadableStream,
+    nodeStreamOptions?: TransformOptions
+): Readable {
     if ('pipe' in webStream) {
         return webStream as Readable
     }

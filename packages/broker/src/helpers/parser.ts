@@ -1,4 +1,4 @@
-import { ParsedQs } from 'qs'
+import { ParsedQs, parse } from 'qs'
 
 export const parsePositiveInteger = (n: string): number | never => {
     const parsed = parseInt(n)
@@ -36,4 +36,19 @@ export const parseQueryParameter = <T>(name: string, query: ParsedQs, parser: (i
 
 export const parseQueryParameterArray = <T>(name: string, query: ParsedQs, parser: (input: string) => T): T[] | undefined => {
     return parseQueryParameter(name, query, (input) => input.split(',').map((part) => parser(part)))
+}
+
+export const parseQueryAndBase = (str: string): { base: string, query: ParsedQs } => {
+    const queryParameterStartPos = str.lastIndexOf('?')
+    if (queryParameterStartPos !== -1) {
+        return {
+            base: str.substring(0, queryParameterStartPos),
+            query: parse(str.substring(queryParameterStartPos + 1))
+        }
+    } else {
+        return {
+            base: str,
+            query: {}
+        }
+    }
 }

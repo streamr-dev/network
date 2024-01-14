@@ -105,15 +105,11 @@ module.exports = function(context, options) {
     const refineAPIRef = async () => {
         const sourceFilePath = relativeAPIDocPath + "/modules.md"
         const destinationFilePath = relativeAPIDocPath + "/modules.mdx"
-    
         // replaces index content with module content
         // index is by default the readme, which we don't want
         if (fs.existsSync(sourceFilePath)) {
             const content = fs.readFileSync(sourceFilePath, "utf-8")
             fs.writeFileSync(destinationFilePath, content)
-    
-            fs.unlinkSync(sourceFilePath)
-            fs.unlinkSync(relativeAPIDocPath + "/index.md")
         }
     
         const APILinks = await readFolderRecursive(relativeAPIDocPath)
@@ -151,7 +147,6 @@ module.exports = function(context, options) {
         newContent = newContent.replace(new RegExp("Ƭ", 'g'), "•")
         fs.writeFileSync(relativeAPIDocPath + "/index.md", newContent)
         fs.writeFileSync(sourceFilePath, newContent)
-        fs.unlinkSync(destinationFilePath)
     }
     
     //refineAPIRef()

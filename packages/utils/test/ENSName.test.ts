@@ -1,4 +1,4 @@
-import { toENSName } from '../src/exports'
+import { toENSName } from '../src/ENSName'
 
 describe('toENSName', () => {
     it.each(['noperiod', '.domain'])('throws on invalid ENS name "%s"', (str) => {

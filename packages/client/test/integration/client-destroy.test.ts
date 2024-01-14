@@ -10,11 +10,16 @@ describe('client destroy', () => {
 
     let client: StreamrClient
     let stream: Stream
+    let environment: FakeEnvironment
 
     beforeEach(async () => {
-        const environment = new FakeEnvironment()
+        environment = new FakeEnvironment()
         client = environment.createClient()
         stream = await createTestStream(client, module)
+    })
+
+    afterEach(async () => {
+        await environment.destroy()
     })
 
     it('unsubscribes', async () => {

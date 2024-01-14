@@ -1,12 +1,12 @@
 import { Provider } from '@ethersproject/providers'
 import { StreamID, toStreamID } from '@streamr/protocol'
-import { EthereumAddress, Logger, collect, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, Logger, TheGraphClient, collect, toEthereumAddress } from '@streamr/utils'
 import min from 'lodash/min'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { ContractFactory } from '../ContractFactory'
-import { getStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
+import { getStreamRegistryChainProviders, getEthersOverrides } from '../Ethereum'
 import { Stream } from '../Stream'
 import { StreamFactory } from '../StreamFactory'
 import { StreamIDBuilder } from '../StreamIDBuilder'
@@ -14,7 +14,6 @@ import type { StreamStorageRegistryV2 as StreamStorageRegistryContract } from '.
 import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageRegistryV2Abi.json'
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
 import { initContractEventGateway, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 
 export interface StorageNodeAssignmentEvent {
@@ -35,32 +34,33 @@ interface NodeQueryResult {
 @scoped(Lifecycle.ContainerScoped)
 export class StreamStorageRegistry {
 
-    private contractFactory: ContractFactory
-    private streamFactory: StreamFactory
-    private streamIdBuilder: StreamIDBuilder
-    private graphQLClient: SynchronizedGraphQLClient
-    private authentication: Authentication
     private streamStorageRegistryContract?: StreamStorageRegistryContract
-    private config: Pick<StrictStreamrClientConfig, 'contracts'>
     private readonly streamStorageRegistryContractsReadonly: StreamStorageRegistryContract[]
+    private readonly streamFactory: StreamFactory
+    private readonly streamIdBuilder: StreamIDBuilder
+    private readonly contractFactory: ContractFactory
+    private readonly theGraphClient: TheGraphClient
+    private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
+    private readonly authentication: Authentication
     private readonly logger: Logger
 
+    /* eslint-disable indent */
     constructor(
-        contractFactory: ContractFactory,
         @inject(delay(() => StreamFactory)) streamFactory: StreamFactory,
-        @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
-        @inject(SynchronizedGraphQLClient) graphQLClient: SynchronizedGraphQLClient,
-        @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
+        streamIdBuilder: StreamIDBuilder,
+        contractFactory: ContractFactory,
+        theGraphClient: TheGraphClient,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        @inject(LoggerFactory) loggerFactory: LoggerFactory,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>
+        eventEmitter: StreamrClientEventEmitter,
+        loggerFactory: LoggerFactory
     ) {
-        this.contractFactory = contractFactory
         this.streamFactory = streamFactory
         this.streamIdBuilder = streamIdBuilder
-        this.graphQLClient = graphQLClient
-        this.authentication = authentication
+        this.contractFactory = contractFactory
+        this.theGraphClient = theGraphClient
         this.config = config
+        this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
         this.streamStorageRegistryContractsReadonly = getStreamRegistryChainProviders(config).map((provider: Provider) => {
             return this.contractFactory.createReadContract(
@@ -114,7 +114,7 @@ export class StreamStorageRegistry {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.logger.debug('Add stream to storage node', { streamId, nodeAddress })
         await this.connectToContract()
-        const ethersOverrides = getStreamRegistryOverrides(this.config)
+        const ethersOverrides = getEthersOverrides(this.config)
         await waitForTx(this.streamStorageRegistryContract!.addStorageNode(streamId, nodeAddress, ethersOverrides))
     }
 
@@ -122,7 +122,7 @@ export class StreamStorageRegistry {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.logger.debug('Remove stream from storage node', { streamId, nodeAddress })
         await this.connectToContract()
-        const ethersOverrides = getStreamRegistryOverrides(this.config)
+        const ethersOverrides = getEthersOverrides(this.config)
         await waitForTx(this.streamStorageRegistryContract!.removeStorageNode(streamId, nodeAddress, ethersOverrides))
     }
 
@@ -137,7 +137,7 @@ export class StreamStorageRegistry {
     async getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
         this.logger.debug('Get stored streams of storage node', { nodeAddress })
         const blockNumbers: number[] = []
-        const res = await collect(this.graphQLClient.fetchPaginatedResults(
+        const res = await collect(this.theGraphClient.queryEntities(
             (lastId: string, pageSize: number) => {
                 const query = `{
                     node (id: "${nodeAddress}") {
@@ -178,7 +178,7 @@ export class StreamStorageRegistry {
         if (streamIdOrPath !== undefined) {
             const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
             this.logger.debug('Get storage nodes of stream', { streamId })
-            queryResults = await collect(this.graphQLClient.fetchPaginatedResults<NodeQueryResult>(
+            queryResults = await collect(this.theGraphClient.queryEntities<NodeQueryResult>(
                 (lastId: string, pageSize: number) => {
                     const query = `{
                         stream (id: "${streamId}") {
@@ -199,7 +199,7 @@ export class StreamStorageRegistry {
             ))
         } else {
             this.logger.debug('Get all storage nodes')
-            queryResults = await collect(this.graphQLClient.fetchPaginatedResults<NodeQueryResult>(
+            queryResults = await collect(this.theGraphClient.queryEntities<NodeQueryResult>(
                 (lastId: string, pageSize: number) => {
                     const query = `{
                         nodes (first: ${pageSize} orderBy: "id" where: { id_gt: "${lastId}"}) {

@@ -1,7 +1,8 @@
-import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
-import { collect, toEthereumAddress, wait } from '@streamr/utils'
+import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, toStreamID } from '@streamr/protocol'
+import { collect, toEthereumAddress, wait, utf8ToBinary } from '@streamr/utils'
 import { Authentication } from '../../src/Authentication'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
+import { pull } from '../../src/utils/PushBuffer'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { counterId, instanceId } from '../../src/utils/utils'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
@@ -20,8 +21,11 @@ describe('PushPipeline', () => {
     const createMockMessage = async () => {
         return await createSignedMessage({
             messageId: new MessageID(streamId, 0, 0, 0, PUBLISHER_ID, 'msgChainId'),
-            serializedContent: JSON.stringify(Msg()),
-            authentication
+            content: utf8ToBinary(JSON.stringify(Msg())),
+            authentication,
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE,
+            signatureType: SignatureType.SECP256K1
         })
     }
 
@@ -68,11 +72,10 @@ describe('PushPipeline', () => {
         const s = new PushPipeline<StreamMessage>()
         leaksDetector.add(instanceId(s), s)
         const received: StreamMessage[] = []
-        s.pull((async function* g() {
+        pull((async function* g() {
             yield streamMessage
-
             throw err
-        }()))
+        }()), s)
 
         await expect(async () => {
             for await (const msg of s) {
@@ -94,8 +97,11 @@ describe('PushPipeline', () => {
         leaksDetector.add('testMessage', testMessage)
         const streamMessage = createSignedMessage({
             messageId: new MessageID(streamId, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
-            serializedContent: JSON.stringify(testMessage),
-            authentication
+            content: utf8ToBinary(JSON.stringify(testMessage)),
+            authentication,
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE,
+            signatureType: SignatureType.SECP256K1
         })
         leaksDetector.add('streamMessage', streamMessage)
         const s = new PushPipeline<StreamMessage>()
@@ -105,9 +111,9 @@ describe('PushPipeline', () => {
             throw error
         })
         // eslint-disable-next-line require-yield
-        s.pull((async function* g() {
+        pull((async function* g() {
             throw err
-        }()))
+        }()), s)
 
         await expect(async () => {
             for await (const msg of s) {

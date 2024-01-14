@@ -1,17 +1,19 @@
-import MessageID from "./MessageID"
-import MessageRef from "./MessageRef"
-import StreamMessage, { StreamMessageAESEncrypted } from "./StreamMessage"
-import { StreamMessageType } from "./StreamMessage"
-import GroupKeyRequest, { GroupKeyRequestSerialized } from "./GroupKeyRequest"
-import GroupKeyResponse, { GroupKeyResponseSerialized } from "./GroupKeyResponse"
-import EncryptedGroupKey from "./EncryptedGroupKey"
+import MessageID from './MessageID'
+import MessageRef from './MessageRef'
+import StreamMessage, { StreamMessageAESEncrypted } from './StreamMessage'
+import { StreamMessageType } from './StreamMessage'
+import GroupKeyRequest from './GroupKeyRequest'
+import GroupKeyResponse from './GroupKeyResponse'
+import EncryptedGroupKey from './EncryptedGroupKey'
 import { createSignaturePayload } from './signature'
+import {
+    serializeGroupKeyRequest,
+    serializeGroupKeyResponse,
+    deserializeGroupKeyRequest,
+    deserializeGroupKeyResponse
+} from './groupKeySerialization'
 
 export * from './StreamMessage'
-
-// Serializers are imported because of their side effects: they statically register themselves to the factory class
-import './StreamMessageSerializerV32'
-import GroupKeyMessage from "./GroupKeyMessage"
 
 export {
     MessageID,
@@ -19,11 +21,12 @@ export {
     StreamMessage,
     StreamMessageType,
     StreamMessageAESEncrypted,
-    GroupKeyMessage,
     GroupKeyRequest,
-    GroupKeyRequestSerialized,
     GroupKeyResponse,
-    GroupKeyResponseSerialized,
     EncryptedGroupKey,
-    createSignaturePayload
+    createSignaturePayload,
+    serializeGroupKeyRequest,
+    serializeGroupKeyResponse,
+    deserializeGroupKeyRequest,
+    deserializeGroupKeyResponse
 }

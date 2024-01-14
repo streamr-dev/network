@@ -1,18 +1,20 @@
 name: release
 on:
   workflow_run:
-    branches: [main]
+    branches: [main, brubeck, testnet-two, testnet-three]
     workflows: [validate]
     types:
       - completed
+  workflow_dispatch:
 jobs:
   tracker-docker-image:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'refs/heads/brubeck' }}
     uses: ./.github/workflows/docker-build.yml
     with:
       docker_file: Dockerfile.tracker
       image_name: streamr/tracker
       build_platforms: linux/amd64
+      branch: ${{ github.event.workflow_run.head_branch }}
       push_image: true
     secrets:
       dockerhub_username: ${{secrets.DOCKERHUB_USERNAME}}
@@ -25,6 +27,7 @@ jobs:
       image_name: streamr/broker-node
       host_machine_platform: self-hosted
       build_platforms: linux/amd64,linux/arm64
+      branch: ${{ github.event.workflow_run.head_branch }}
       push_image: true
     secrets:
       dockerhub_username: ${{secrets.DOCKERHUB_USERNAME}}

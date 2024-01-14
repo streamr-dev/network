@@ -1,29 +1,30 @@
-import { Wallet } from '@ethersproject/wallet'
-import { Web3Provider } from '@ethersproject/providers'
 import type { Signer } from '@ethersproject/abstract-signer'
+import { Provider, Web3Provider } from '@ethersproject/providers'
 import { computeAddress } from '@ethersproject/transactions'
-import { getStreamRegistryChainProviders } from './Ethereum'
-import { PrivateKeyAuthConfig, ProviderAuthConfig } from './Config'
-import { pLimitFn } from './utils/promises'
+import { Wallet } from '@ethersproject/wallet'
+import { EthereumAddress, hexToBinary, toEthereumAddress, wait } from '@streamr/utils'
 import pMemoize from 'p-memoize'
-import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
+import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'
+import { getStreamRegistryChainProviders } from './Ethereum'
+import { pLimitFn } from './utils/promises'
 import { sign } from './utils/signingUtils'
-import { StrictStreamrClientConfig } from './Config'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
+
+export type SignerWithProvider = Signer & { readonly provider: Provider }
 
 export interface Authentication {
     // always in lowercase
     getAddress: () => Promise<EthereumAddress>
-    createMessageSignature: (payload: string) => Promise<string>
-    getStreamRegistryChainSigner: () => Promise<Signer>
+    createMessageSignature: (payload: Uint8Array) => Promise<Uint8Array>
+    getStreamRegistryChainSigner: () => Promise<SignerWithProvider>
 }
 
 export const createPrivateKeyAuthentication = (key: string, config: Pick<StrictStreamrClientConfig, 'contracts'>): Authentication => {
     const address = toEthereumAddress(computeAddress(key))
     return {
         getAddress: async () => address,
-        createMessageSignature: async (payload: string) => sign(payload, key),
+        createMessageSignature: async (payload: Uint8Array) => sign(payload, key),
         getStreamRegistryChainSigner: async () => {
             const primaryProvider = getStreamRegistryChainProviders(config)[0]
             return new Wallet(key, primaryProvider)
@@ -54,12 +55,12 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                     throw new Error('no addresses connected and selected in the custom authentication provider')
                 }
             }),
-            createMessageSignature: pLimitFn(async (payload: string) => {
+            createMessageSignature: pLimitFn(async (payload: Uint8Array) => {
                 // sign one at a time & wait a moment before asking for next signature
                 // otherwise MetaMask extension may not show the prompt window
                 const sig = await signer.signMessage(payload)
                 await wait(50)
-                return sig
+                return hexToBinary(sig)
             }, 1),
             getStreamRegistryChainSigner: async () => {
                 if (config.contracts.streamRegistryChainRPCs.chainId === undefined) {

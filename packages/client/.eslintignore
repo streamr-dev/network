@@ -8,3 +8,4 @@ test/benchmarks/**
 test/memory/*
 docs/**
 .idea/**
+src/generated/**

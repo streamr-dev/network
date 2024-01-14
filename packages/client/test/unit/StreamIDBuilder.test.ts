@@ -90,21 +90,23 @@ describe('StreamIDBuilder', () => {
         })
     })
 
-    describe('match', () => {
+    describe('getMatcher', () => {
         const fullMatch = StreamPartIDUtils.parse('test.eth/foo/bar#66')
         const streamOnlyMatch = StreamPartIDUtils.parse('test.eth/foo/bar#3')
         const noMatch = StreamPartIDUtils.parse('streamr.eth/foo/bar#66')
 
         it.each(DEFINITIONS_WITHOUT_PARTITION)('given %s as string definition', async (definition) => {
-            await expect(streamIdBuilder.match(definition, fullMatch)).resolves.toEqual(true)
-            await expect(streamIdBuilder.match(definition, streamOnlyMatch)).resolves.toEqual(true)
-            await expect(streamIdBuilder.match(definition, noMatch)).resolves.toEqual(false)
+            const matcher = await streamIdBuilder.getMatcher(definition)
+            expect(matcher(fullMatch)).toBe(true)
+            expect(matcher(streamOnlyMatch)).toBe(true)
+            expect(matcher(noMatch)).toBe(false)
         })
 
         it.each(DEFINITIONS_WITH_PARTITION)('given %s as string part definition', async (definition) => {
-            await expect(streamIdBuilder.match(definition, fullMatch)).resolves.toEqual(true)
-            await expect(streamIdBuilder.match(definition, streamOnlyMatch)).resolves.toEqual(false)
-            await expect(streamIdBuilder.match(definition, noMatch)).resolves.toEqual(false)
+            const matcher = await streamIdBuilder.getMatcher(definition)
+            expect(matcher(fullMatch)).toBe(true)
+            expect(matcher(streamOnlyMatch)).toBe(false)
+            expect(matcher(noMatch)).toBe(false)
         })
     })
 })

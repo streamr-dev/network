@@ -5,42 +5,45 @@ import {
     EncryptionType,
     MessageID,
     MessageRef,
+    SignatureType,
     StreamID,
     StreamMessage,
-    StreamMessageOptions
+    StreamMessageOptions,
+    ContentType
 } from '@streamr/protocol'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { createMessageRef, createRandomMsgChainId } from './messageChain'
 import { PublishMetadata } from './Publisher'
-import { keyToArrayIndex } from '@streamr/utils'
+import { keyToArrayIndex, utf8ToBinary } from '@streamr/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
 import { Authentication } from '../Authentication'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { StreamRegistry } from '../registry/StreamRegistry'
 import { formLookupKey } from '../utils/utils'
 import { StreamrClientError } from '../StreamrClientError'
 
 export interface MessageFactoryOptions {
     streamId: StreamID
     authentication: Authentication
-    streamRegistry: Pick<StreamRegistryCached, 'getStream' | 'isPublic' | 'isStreamPublisher'>
+    streamRegistry: Pick<StreamRegistry, 'getStream' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'clearStreamCache'>
     groupKeyQueue: GroupKeyQueue
 }
 
-export const createSignedMessage = async <T>(
-    opts: Omit<StreamMessageOptions<T>, 'signature' | 'content'>
-    & { serializedContent: string, authentication: Authentication }
-): Promise<StreamMessage<T>> => {
+export const createSignedMessage = async (
+    opts: Omit<StreamMessageOptions, 'signature'> & { authentication: Authentication }
+): Promise<StreamMessage> => {
     const signature = await opts.authentication.createMessageSignature(createSignaturePayload({
         messageId: opts.messageId,
-        serializedContent: opts.serializedContent,
+        content: opts.content,
+        signatureType: opts.signatureType,
+        encryptionType: opts.encryptionType,
         prevMsgRef: opts.prevMsgRef ?? undefined,
         newGroupKey: opts.newGroupKey ?? undefined
     }))
-    return new StreamMessage<T>({
+    return new StreamMessage({
         ...opts,
         signature,
-        content: opts.serializedContent,
+        content: opts.content
     })
 }
 
@@ -51,7 +54,7 @@ export class MessageFactory {
     private defaultPartition: number | undefined
     private readonly defaultMessageChainIds: Mapping<[partition: number], string>
     private readonly prevMsgRefs: Map<string, MessageRef> = new Map()
-    private readonly streamRegistry: Pick<StreamRegistryCached, 'getStream' | 'isPublic' | 'isStreamPublisher'>
+    private readonly streamRegistry: Pick<StreamRegistry, 'getStream' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'clearStreamCache'>
     private readonly groupKeyQueue: GroupKeyQueue
 
     constructor(opts: MessageFactoryOptions) {
@@ -59,20 +62,21 @@ export class MessageFactory {
         this.authentication = opts.authentication
         this.streamRegistry = opts.streamRegistry
         this.groupKeyQueue = opts.groupKeyQueue
-        this.defaultMessageChainIds = new Mapping(async (_partition: number) => {
+        this.defaultMessageChainIds = new Mapping(async () => {
             return createRandomMsgChainId()
         })
     }
 
     /* eslint-disable padding-line-between-statements */
-    async createMessage<T>(
-        content: T,
+    async createMessage(
+        content: unknown,
         metadata: PublishMetadata & { timestamp: number },
         explicitPartition?: number
-    ): Promise<StreamMessage<T>> {
+    ): Promise<StreamMessage> {
         const publisherId = await this.authentication.getAddress()
         const isPublisher = await this.streamRegistry.isStreamPublisher(this.streamId, publisherId)
         if (!isPublisher) {
+            this.streamRegistry.clearStreamCache(this.streamId)
             throw new StreamrClientError(`You don't have permission to publish to this stream. Using address: ${publisherId}`, 'MISSING_PERMISSION')
         }
 
@@ -99,27 +103,37 @@ export class MessageFactory {
         this.prevMsgRefs.set(msgChainKey, msgRef)
         const messageId = new MessageID(this.streamId, partition, msgRef.timestamp, msgRef.sequenceNumber, publisherId, msgChainId)
 
-        const encryptionType = (await this.streamRegistry.isPublic(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
+        const encryptionType = (await this.streamRegistry.hasPublicSubscribePermission(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
         let groupKeyId: string | undefined
         let newGroupKey: EncryptedGroupKey | undefined
-        let serializedContent = JSON.stringify(content)
+        let rawContent: Uint8Array
+        let contentType: ContentType
+        if (content instanceof Uint8Array) {
+            contentType = ContentType.BINARY
+            rawContent = content
+        } else {
+            contentType = ContentType.JSON
+            rawContent = utf8ToBinary(JSON.stringify(content))
+        }
         if (encryptionType === EncryptionType.AES) {
             const keySequence = await this.groupKeyQueue.useGroupKey()
-            serializedContent = EncryptionUtil.encryptWithAES(Buffer.from(serializedContent, 'utf8'), keySequence.current.data)
+            rawContent = EncryptionUtil.encryptWithAES(rawContent, keySequence.current.data)
             groupKeyId = keySequence.current.id
             if (keySequence.next !== undefined) {
                 newGroupKey = keySequence.current.encryptNextGroupKey(keySequence.next)
             }
         }
 
-        return createSignedMessage<T>({
+        return createSignedMessage({
             messageId,
-            serializedContent,
+            content: rawContent,
             prevMsgRef,
             encryptionType,
             groupKeyId,
             newGroupKey,
-            authentication: this.authentication
+            authentication: this.authentication,
+            contentType,
+            signatureType: SignatureType.SECP256K1,
         })
     }
 

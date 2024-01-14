@@ -96,9 +96,9 @@ describe('searchStreams', () => {
     }, TIMEOUT)
 
     it('no filters', async () => {
-        return expect(async () => {
-            await client.searchStreams(undefined, undefined)
-        }).rejects.toThrow('Requires a search term or a permission filter')
+        expect(() => {
+            client.searchStreams(undefined, undefined)
+        }).toThrow('Requires a search term or a permission filter')
     }, TIMEOUT)
 
     describe('permission filter', () => {

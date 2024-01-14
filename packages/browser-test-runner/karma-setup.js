@@ -63,4 +63,5 @@ window.expect = expect
 window.setImmediate = setTimeout
 window.clearImmediate = clearTimeout
 window.jest = jestMock
-
+window.it.skip = window.xit
+window.describe.skip = window.xdescribe

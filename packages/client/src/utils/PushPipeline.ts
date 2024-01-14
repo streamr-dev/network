@@ -1,4 +1,4 @@
-import { IPushBuffer, PushBuffer, DEFAULT_BUFFER_SIZE, pull } from './PushBuffer'
+import { IPushBuffer, PushBuffer, DEFAULT_BUFFER_SIZE } from './PushBuffer'
 import * as G from './GeneratorUtils'
 import { Pipeline, PipelineTransform } from './Pipeline'
 
@@ -21,38 +21,9 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
         return this as PushPipeline<InType, unknown> as PushPipeline<InType, NewOutType>
     }
 
-    override map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>): PushPipeline<InType, NewOutType> {
-        // this method override just fixes the output type to be PushPipeline rather than Pipeline
-        return super.map(fn) as PushPipeline<InType, NewOutType>
-    }
-
-    override mapBefore(fn: G.GeneratorMap<InType, InType>): PushPipeline<InType, OutType> {
-        // this method override just fixes the output type to be PushPipeline rather than Pipeline
-        return super.mapBefore(fn) as PushPipeline<InType, OutType>
-    }
-
-    override filterBefore(fn: G.GeneratorFilter<InType>): PushPipeline<InType, OutType> {
-        // this method override just fixes the output type to be PushPipeline rather than Pipeline
-        return super.filterBefore(fn) as PushPipeline<InType, OutType>
-    }
-
     override filter(fn: G.GeneratorFilter<OutType>): PushPipeline<InType, OutType> {
         // this method override just fixes the output type to be PushPipeline rather than Pipeline
         return super.filter(fn) as PushPipeline<InType, OutType>
-    }
-
-    override forEach(fn: G.GeneratorForEach<OutType>): PushPipeline<InType, OutType> {
-        // this method override just fixes the output type to be PushPipeline rather than Pipeline
-        return super.forEach(fn) as PushPipeline<InType, OutType>
-    }
-
-    override forEachBefore(fn: G.GeneratorForEach<InType>): PushPipeline<InType, OutType> {
-        // this method override just fixes the output type to be PushPipeline rather than Pipeline
-        return super.forEachBefore(fn) as PushPipeline<InType, OutType>
-    }
-
-    pull(source: AsyncGenerator<InType>): Promise<void> {
-        return pull(source, this)
     }
 
     // wrapped PushBuffer methods below here

@@ -1,8 +1,7 @@
 import { Client } from 'cassandra-driver'
 import { EventEmitter } from 'events'
 import { Logger } from '@streamr/utils'
-import type { StreamMessage } from '@streamr/protocol'
-import { Batch, BatchId, DoneCallback } from './Batch'
+import { Batch, BatchId, DoneCallback, InsertRecord } from './Batch'
 import { BucketId } from './Bucket'
 import { merge } from '@streamr/utils'
 
@@ -18,7 +17,7 @@ export interface BatchManagerOptions {
     useTtl: boolean
     logErrors: boolean
     batchMaxSize: number
-    batchMaxRecords: number
+    batchMaxRecordCount: number
     batchCloseTimeout: number
     batchMaxRetries: number
 }
@@ -43,7 +42,7 @@ export class BatchManager extends EventEmitter {
             useTtl: false,
             logErrors: false,
             batchMaxSize: 8000 * 300,
-            batchMaxRecords: 8000,
+            batchMaxRecordCount: 8000,
             batchCloseTimeout: 1000,
             batchMaxRetries: 1000 // in total max ~16 minutes timeout
         }
@@ -59,7 +58,7 @@ export class BatchManager extends EventEmitter {
         this.insertStatement = this.opts.useTtl ? INSERT_STATEMENT_WITH_TTL : INSERT_STATEMENT
     }
 
-    store(bucketId: BucketId, streamMessage: StreamMessage, doneCb?: DoneCallback): void {
+    store(bucketId: BucketId, record: InsertRecord, doneCb?: DoneCallback): void {
         const batch = this.batches[bucketId]
 
         if (batch && batch.isFull()) {
@@ -72,7 +71,7 @@ export class BatchManager extends EventEmitter {
             const newBatch = new Batch(
                 bucketId,
                 this.opts.batchMaxSize,
-                this.opts.batchMaxRecords,
+                this.opts.batchMaxRecordCount,
                 this.opts.batchCloseTimeout,
                 this.opts.batchMaxRetries
             )
@@ -83,7 +82,7 @@ export class BatchManager extends EventEmitter {
             this.batches[bucketId] = newBatch
         }
 
-        this.batches[bucketId].push(streamMessage, doneCb)
+        this.batches[bucketId].push(record, doneCb)
     }
 
     stop(): void {
@@ -106,18 +105,18 @@ export class BatchManager extends EventEmitter {
         const batch = this.pendingBatches[batchId]
 
         try {
-            const queries = batch.streamMessages.map((streamMessage) => {
+            const queries = batch.records.map((record) => {
                 return {
                     query: this.insertStatement,
                     params: [
-                        streamMessage.getStreamId(),
-                        streamMessage.getStreamPartition(),
+                        record.streamId,
+                        record.partition,
                         batch.getBucketId(),
-                        streamMessage.getTimestamp(),
-                        streamMessage.getSequenceNumber(),
-                        streamMessage.getPublisherId(),
-                        streamMessage.getMsgChainId(),
-                        Buffer.from(streamMessage.serialize()),
+                        record.timestamp,
+                        record.sequenceNo,
+                        record.publisherId,
+                        record.msgChainId,
+                        record.payload,
                     ]
                 }
             })

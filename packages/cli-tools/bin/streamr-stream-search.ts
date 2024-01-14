@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import '../src/logLevel'
-import StreamrClient, { SearchStreamsPermissionFilter, StreamPermission } from 'streamr-client'
+import { StreamrClient, SearchStreamsPermissionFilter, StreamPermission } from 'streamr-client'
 import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { Option } from 'commander'
 import { getPermission, PERMISSIONS } from '../src/permission'

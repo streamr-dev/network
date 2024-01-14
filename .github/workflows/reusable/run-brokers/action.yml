@@ -1,0 +1,12 @@
+name: "run brokers"
+description: "run brokers directly from the monorepo codebase"
+
+runs:
+  using: "composite"
+  steps:
+    - name: run brokers
+      run: |
+        mkdir -p logs
+        ./bin/run-brokers.sh >logs/broker-logs.txt 2>&1 &
+      shell: bash
+      working-directory: './'

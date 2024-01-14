@@ -6,14 +6,15 @@
     },
     "include": [
         "src/**/*",
-        "test/data/pings.ts"
+        "package.json"
     ],
     "exclude": [
-        "src/connection/WebRTC/BrowserWebRtcConnection.ts"
+        "src/connection/webrtc/BrowserWebrtcConnection.ts"
     ],
     "references": [
         { "path": "../utils/tsconfig.node.json" },
         { "path": "../test-utils/tsconfig.node.json" },
-        { "path": "../proto-rpc/tsconfig.node.json" }
+        { "path": "../proto-rpc/tsconfig.node.json" },
+        { "path": "../autocertifier-client/tsconfig.node.json" }
     ]
 }

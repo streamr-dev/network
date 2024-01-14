@@ -2,26 +2,6 @@ import pLimit from 'p-limit'
 import pThrottle from 'p-throttle'
 import { Defer, wait } from '@streamr/utils'
 import { MaybeAsync } from '../types'
-import { AggregatedError } from './AggregatedError'
-
-/**
- * Execute functions in parallel, but ensure they resolve in the order they were executed
- */
-export function pOrderedResolve<ArgsType extends unknown[], ReturnType>(
-    fn: (...args: ArgsType) => ReturnType
-): ((...args: ArgsType) => Promise<any>) & { clear(): void } {
-    const queue = pLimit(1)
-    return Object.assign(async (...args: ArgsType) => {
-        const d = new Defer<ReturnType>()
-        const done = queue(() => d)
-        await Promise.resolve(fn(...args)).then(d.resolve.bind(d), d.reject.bind(d))
-        return done
-    }, {
-        clear() {
-            queue.clearQueue()
-        }
-    })
-}
 
 /**
  * Returns a function that executes with limited concurrency.
@@ -195,23 +175,6 @@ export async function pTimeout<T>(promise: Promise<T>, ...args: pTimeoutArgs): P
         clearTimeout(t)
         p.resolve(undefined)
     })
-}
-
-/**
- * Convert allSettled results into a thrown Aggregate error if necessary.
- */
-
-export async function allSettledValues(items: Parameters<(typeof Promise)['allSettled']>[0], errorMessage = ''): Promise<unknown[]> {
-    const result = await Promise.allSettled(items)
-    const errs = result
-        .filter(({ status }) => status === 'rejected')
-        .map((v) => (v as PromiseRejectedResult).reason)
-    if (errs.length) {
-        throw new AggregatedError(errs, errorMessage)
-    }
-
-    return result
-        .map((v) => (v as PromiseFulfilledResult<unknown>).value)
 }
 
 // TODO use streamr-test-utils#waitForCondition instead (when streamr-test-utils is no longer a test-only dependency)

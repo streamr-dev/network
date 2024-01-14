@@ -1,15 +1,16 @@
-import { arrayify } from '@ethersproject/bytes'
 import {
     EncryptedGroupKey,
-    EncryptionType,
+    StreamMessage,
+    StreamMessageAESEncrypted,
     StreamPartIDUtils,
     toStreamID,
     toStreamPartID
 } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
+import { EncryptionUtil, INITIALIZATION_VECTOR_LENGTH } from '../../src/encryption/EncryptionUtil'
 import { createMockMessage } from '../test-utils/utils'
+import { hexToBinary, binaryToUtf8 } from '@streamr/utils'
 
 const STREAM_ID = toStreamID('streamId')
 
@@ -26,17 +27,16 @@ describe('EncryptionUtil', () => {
         const plaintext = 'some random text'
         const plaintextBuffer = Buffer.from(plaintext, 'utf8')
         const ciphertext = EncryptionUtil.encryptWithAES(plaintextBuffer, key.data)
-        const ciphertextBuffer = arrayify(`0x${ciphertext}`)
-        expect(ciphertextBuffer.length).toStrictEqual(plaintextBuffer.length + 16)
+        expect(ciphertext.length).toStrictEqual(plaintextBuffer.length + INITIALIZATION_VECTOR_LENGTH)
     })
 
     it('multiple same encrypt() calls use different ivs and produce different ciphertexts', () => {
         const key = GroupKey.generate()
         const plaintext = 'some random text'
-        const ciphertext1 = EncryptionUtil.encryptWithAES(Buffer.from(plaintext, 'utf8'), key.data)
-        const ciphertext2 = EncryptionUtil.encryptWithAES(Buffer.from(plaintext, 'utf8'), key.data)
-        expect(ciphertext1.slice(0, 32)).not.toStrictEqual(ciphertext2.slice(0, 32))
-        expect(ciphertext1.slice(32)).not.toStrictEqual(ciphertext2.slice(32))
+        const cipher1 = EncryptionUtil.encryptWithAES(Buffer.from(plaintext, 'utf8'), key.data)
+        const cipher2 = EncryptionUtil.encryptWithAES(Buffer.from(plaintext, 'utf8'), key.data)
+        expect(cipher1.slice(0, INITIALIZATION_VECTOR_LENGTH)).not.toStrictEqual(cipher2.slice(0, INITIALIZATION_VECTOR_LENGTH))
+        expect(cipher1.slice(INITIALIZATION_VECTOR_LENGTH)).not.toStrictEqual(cipher2.slice(INITIALIZATION_VECTOR_LENGTH))
     })
 
     it('StreamMessage decryption: happy path', async () => {
@@ -50,12 +50,11 @@ describe('EncryptionUtil', () => {
             },
             encryptionKey: key,
             nextEncryptionKey: nextKey
-        })
-        EncryptionUtil.decryptStreamMessage(streamMessage, key)
-        expect(streamMessage.getSerializedContent()).toStrictEqual('{"foo":"bar"}')
-        expect(streamMessage.encryptionType).toStrictEqual(EncryptionType.NONE)
-        expect(streamMessage.groupKeyId).toBe(key.id)
-        expect(streamMessage.newGroupKey).toEqual(nextKey)
+        }) as StreamMessageAESEncrypted
+        const [content, newGroupKey] = EncryptionUtil.decryptStreamMessage(streamMessage, key)
+        // Coparing this way as jest does not like comparing buffers to Uint8Arrays
+        expect(binaryToUtf8(content)).toStrictEqual('{"foo":"bar"}')
+        expect(newGroupKey).toEqual(nextKey)
     })
 
     it('StreamMessage decryption throws if newGroupKey invalid', async () => {
@@ -65,11 +64,10 @@ describe('EncryptionUtil', () => {
             streamPartId: toStreamPartID(STREAM_ID, 0),
             encryptionKey: key
         })
-        msg.newGroupKey = {
-            groupKeyId: 'mockId',
-            encryptedGroupKeyHex: '0x1234',
-            serialized: ''
-        } as EncryptedGroupKey
-        expect(() => EncryptionUtil.decryptStreamMessage(msg, key)).toThrow('Could not decrypt new group key')
+        const msg2 = new StreamMessage({
+            ...msg,
+            newGroupKey: new EncryptedGroupKey('mockId', hexToBinary('0x1234'))
+        }) as StreamMessageAESEncrypted
+        expect(() => EncryptionUtil.decryptStreamMessage(msg2, key)).toThrow('Could not decrypt new group key')
     })
 })

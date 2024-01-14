@@ -9,14 +9,15 @@ describe('Publisher', () => {
         const authentication = createRandomAuthentication()
         const streamIdBuilder = new StreamIDBuilder(authentication)
         const streamRegistry = {
-            isStreamPublisher: async () => false
+            isStreamPublisher: async () => false,
+            clearStreamCache: () => {}
         }
         const publisher = new Publisher(
-            streamIdBuilder,
-            authentication,
+            undefined as any,
             streamRegistry as any,
             createGroupKeyManager(undefined, authentication),
-            undefined as any,
+            streamIdBuilder,
+            authentication
         )
         const streamId = await streamIdBuilder.toStreamID('/test')
         await expect(async () => {

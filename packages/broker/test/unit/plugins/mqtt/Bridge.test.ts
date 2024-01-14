@@ -48,17 +48,21 @@ describe('MQTT Bridge', () => {
 
         it('onMessageReceived', async () => {
             await bridge.onMessageReceived(topic, JSON.stringify(MOCK_CONTENT), MOCK_CLIENT_ID)
-            expect(streamrClient.publish).toBeCalledWith(MOCK_STREAM_ID, MOCK_CONTENT, { msgChainId: expect.any(String) })
+            expect(streamrClient.publish).toBeCalledWith(
+                { id: MOCK_STREAM_ID, partition: undefined },
+                MOCK_CONTENT,
+                { msgChainId: expect.any(String) }
+            )
         })
 
         it('onSubscribed', async () => {
             await bridge.onSubscribed(topic, MOCK_CLIENT_ID)
-            expect(streamrClient.subscribe).toBeCalledWith(MOCK_STREAM_ID, expect.anything())
+            expect(streamrClient.subscribe).toBeCalledWith(`${MOCK_STREAM_ID}#0`, expect.anything())
         })
 
         it('onUnsubscribed', async () => {
             await bridge.onSubscribed(topic, MOCK_CLIENT_ID)
-            await bridge.onUnsubscribed(topic, MOCK_CLIENT_ID)
+            bridge.onUnsubscribed(topic, MOCK_CLIENT_ID)
             expect(subscription.unsubscribe).toBeCalled()
         })
     
@@ -88,5 +92,69 @@ describe('MQTT Bridge', () => {
             expect(firstMessageMsgChainId).not.toBe(secondMessageMsgChainId)
         })
 
+    })
+
+    describe('partition', () => {
+
+        let bridge: Bridge
+
+        beforeEach(() => {
+            bridge = new Bridge(streamrClient as any, undefined as any, new PlainPayloadFormat(), undefined)
+        })
+    
+        it('publish with partition', async () => {
+            await bridge.onMessageReceived(`${MOCK_TOPIC}?partition=5`, JSON.stringify(MOCK_CONTENT), MOCK_CLIENT_ID)
+            expect(streamrClient.publish).toBeCalledWith(
+                {
+                    id: MOCK_TOPIC,
+                    partition: 5
+                }, 
+                MOCK_CONTENT,
+                {
+                    msgChainId: MOCK_CLIENT_ID,
+                    timestamp: undefined
+                }
+            )
+        })
+
+        it('publish with partition key', async () => {
+            await bridge.onMessageReceived(`${MOCK_TOPIC}?partitionKey=mock-key`, JSON.stringify(MOCK_CONTENT), MOCK_CLIENT_ID)
+            expect(streamrClient.publish).toBeCalledWith(
+                {
+                    id: MOCK_TOPIC,
+                    partition: undefined
+                }, 
+                MOCK_CONTENT,
+                {
+                    partitionKey: 'mock-key',
+                    msgChainId: MOCK_CLIENT_ID,
+                    timestamp: undefined
+                }
+            )
+        })
+
+        it('publish with partition key field', async () => {
+            await bridge.onMessageReceived(`${MOCK_TOPIC}?partitionKeyField=foo`, JSON.stringify(MOCK_CONTENT), MOCK_CLIENT_ID)
+            expect(streamrClient.publish).toBeCalledWith(
+                {
+                    id: MOCK_TOPIC,
+                    partition: undefined
+                }, 
+                MOCK_CONTENT,
+                {
+                    partitionKey: MOCK_CONTENT.foo,
+                    msgChainId: MOCK_CLIENT_ID,
+                    timestamp: undefined
+                }
+            )
+        })
+
+        it('subscribe', async () => {
+            await bridge.onSubscribed(`${MOCK_TOPIC}?partition=5`, MOCK_CLIENT_ID)
+            expect(streamrClient.subscribe).toBeCalledWith(
+                `${MOCK_TOPIC}#5`,
+                expect.anything()
+            )
+        })
     })
 })

@@ -252,7 +252,7 @@ export class BucketManager {
                 query = GET_LAST_BUCKETS_TO_TIMESTAMP
                 params = [streamId, partition, toTimestamp]
             } else {
-                throw TypeError(`Not correct combination of fromTimestamp (${fromTimestamp}) and toTimestamp (${toTimestamp})`)
+                throw new TypeError(`Not correct combination of fromTimestamp (${fromTimestamp}) and toTimestamp (${toTimestamp})`)
             }
             return this.getBucketsFromDatabase(query, params, streamId, partition)
         }

@@ -6,8 +6,18 @@ describe('events', () => {
 
     describe('remove listeners when client destroyed', () => {
 
+        let environment: FakeEnvironment
+
+        beforeEach(() => {
+            environment = new FakeEnvironment()
+        })
+    
+        afterEach(async () => {
+            await environment.destroy()
+        })
+
         it('client', async () => {
-            const client = new FakeEnvironment().createClient()
+            const client = environment.createClient()
             client.on('addToStorageNode', () => {})
             await client.destroy()
             // @ts-expect-error private
@@ -15,7 +25,7 @@ describe('events', () => {
         })
 
         it('resend subcription', async () => {
-            const client = new FakeEnvironment().createClient()
+            const client = environment.createClient()
             const stream = await client.createStream('/foobar')
             const subscription = await client.subscribe({
                 streamId: stream.id,

@@ -1,33 +1,36 @@
 import { waitForAssignmentsToPropagate } from '../../src/utils/waitForAssignmentsToPropagate'
 import {
-    MessageID,
+    ContentType, EncryptionType,
+    MessageID, SignatureType,
     StreamID,
     StreamMessage,
-    StreamPartID,
     toStreamID,
     toStreamPartID
 } from '@streamr/protocol'
 import range from 'lodash/range'
 import shuffle from 'lodash/shuffle'
-import { wait } from '@streamr/utils'
+import { wait, utf8ToBinary } from '@streamr/utils'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { createRandomAuthentication, mockLoggerFactory } from '../test-utils/utils'
 import { MessageStream } from '../../src/subscribe/MessageStream'
 
 const authentication = createRandomAuthentication()
 
-async function makeMsg<T>(ts: number, content: T): Promise<StreamMessage<T>> {
+async function makeMsg(ts: number, content: unknown): Promise<StreamMessage> {
     return createSignedMessage({
         messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await authentication.getAddress(), 'msgChain'),
-        serializedContent: JSON.stringify(content),
-        authentication
+        content: utf8ToBinary(JSON.stringify(content)),
+        authentication,
+        contentType: ContentType.JSON,
+        encryptionType: EncryptionType.NONE,
+        signatureType: SignatureType.SECP256K1
     })
 }
 
 async function createAssignmentMessagesFor(stream: {
     id: StreamID
     partitions: number
-}): Promise<StreamMessage<{ streamPart: StreamPartID }>[]> {
+}): Promise<StreamMessage[]> {
     return Promise.all(range(0, stream.partitions).map((partition) => (
         makeMsg(partition * 1000, {
             streamPart: toStreamPartID(stream.id, partition)
@@ -50,7 +53,7 @@ describe(waitForAssignmentsToPropagate, () => {
     beforeEach(() => {
         messageStream = new MessageStream()
         propagatePromiseState = 'pending'
-        propagatePromise = waitForAssignmentsToPropagate(messageStream.getStreamMessages(), TARGET_STREAM, mockLoggerFactory())
+        propagatePromise = waitForAssignmentsToPropagate(messageStream, TARGET_STREAM, mockLoggerFactory())
             .then((retValue) => {
                 propagatePromiseState = 'resolved'
                 return retValue
