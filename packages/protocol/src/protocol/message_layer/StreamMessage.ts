@@ -22,7 +22,6 @@ export enum ContentType {
 
 export enum EncryptionType {
     NONE = 0,
-    RSA = 1,
     AES = 2
 }
 
