@@ -52,11 +52,6 @@ export type StreamMessageAESEncrypted = StreamMessage & {
 }
 
 export default class StreamMessage implements StreamMessageOptions {
-    private static VALID_MESSAGE_TYPES = new Set(Object.values(StreamMessageType))
-    private static VALID_CONTENT_TYPES = new Set(Object.values(ContentType))
-    private static VALID_ENCRYPTIONS = new Set(Object.values(EncryptionType))
-    private static VALID_SIGNATURE_TYPES = new Set(Object.values(SignatureType))
-
     readonly messageId: MessageID
     readonly prevMsgRef?: MessageRef
     readonly messageType: StreamMessageType
@@ -84,11 +79,8 @@ export default class StreamMessage implements StreamMessageOptions {
         this.messageId = messageId
         validateIsType('prevMsgRef', prevMsgRef, 'MessageRef', MessageRef, true)
         this.prevMsgRef = prevMsgRef
-        StreamMessage.validateMessageType(messageType)
         this.messageType = messageType
-        StreamMessage.validateContentType(contentType)
         this.contentType = contentType
-        StreamMessage.validateEncryptionType(encryptionType)
         this.encryptionType = encryptionType
         if (this.encryptionType === EncryptionType.AES) {
             validateIsDefined('groupKeyId', groupKeyId)
@@ -98,7 +90,6 @@ export default class StreamMessage implements StreamMessageOptions {
         this.newGroupKey = newGroupKey
         validateIsType('signature', signature, 'Uint8Array', Uint8Array)
         this.signature = signature
-        StreamMessage.validateSignatureType(signatureType)
         this.signatureType = signatureType
         validateIsNotEmptyByteArray('content', content)
         this.content = content
@@ -158,30 +149,6 @@ export default class StreamMessage implements StreamMessageOptions {
 
     static isAESEncrypted(msg: StreamMessage): msg is StreamMessageAESEncrypted {
         return msg.encryptionType === EncryptionType.AES
-    }
-
-    private static validateMessageType(messageType: StreamMessageType): void {
-        if (!StreamMessage.VALID_MESSAGE_TYPES.has(messageType)) {
-            throw new ValidationError(`Unsupported message type: ${messageType}`)
-        }
-    }
-
-    private static validateContentType(contentType: ContentType): void {
-        if (!StreamMessage.VALID_CONTENT_TYPES.has(contentType)) {
-            throw new ValidationError(`Unsupported content type: ${contentType}`)
-        }
-    }
-
-    private static validateEncryptionType(encryptionType: EncryptionType): void {
-        if (!StreamMessage.VALID_ENCRYPTIONS.has(encryptionType)) {
-            throw new ValidationError(`Unsupported encryption type: ${encryptionType}`)
-        }
-    }
-
-    private static validateSignatureType(signatureType: SignatureType): void {
-        if (!StreamMessage.VALID_SIGNATURE_TYPES.has(signatureType)) {
-            throw new ValidationError(`Unsupported signature type: ${signatureType}`)
-        }
     }
 
     private static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef }): void {

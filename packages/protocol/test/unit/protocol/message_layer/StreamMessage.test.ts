@@ -180,13 +180,6 @@ describe('StreamMessage', () => {
             }))
         })
 
-        it('Throws with an invalid content type', () => {
-            assert.throws(() => msg({
-                // @ts-expect-error TODO
-                contentType: 999, // invalid
-            }), ValidationError)
-        })
-
         it('Throws with an invalid newGroupKey', () => {
             assert.throws(() => msg({
                 // @ts-expect-error TODO
