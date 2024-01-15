@@ -2,12 +2,11 @@ import type { Signer } from '@ethersproject/abstract-signer'
 import { Provider, Web3Provider } from '@ethersproject/providers'
 import { computeAddress } from '@ethersproject/transactions'
 import { Wallet } from '@ethersproject/wallet'
-import { EthereumAddress, hexToBinary, toEthereumAddress, wait } from '@streamr/utils'
+import { EthereumAddress, hexToBinary, toEthereumAddress, wait, sign } from '@streamr/utils'
 import pMemoize from 'p-memoize'
 import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'
 import { getStreamRegistryChainProviders } from './Ethereum'
 import { pLimitFn } from './utils/promises'
-import { sign } from './utils/signingUtils'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 

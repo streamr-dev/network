@@ -1,7 +1,8 @@
 /* eslint-disable max-len */
 import assert from 'assert'
-import { sign, recover, verify } from '../../src/utils/signingUtils'
-import { toEthereumAddress, hexToBinary } from '@streamr/utils'
+import { sign, recover, verify } from '../src/signingUtils'
+import { toEthereumAddress } from '../src/EthereumAddress'
+import { hexToBinary } from '../src/binaryUtils'
 
 const privateKey = '23bead9b499af21c4c16e4511b3b6b08c3e22e76e0591f5ab5ba8d4c3a5b1820'
 
