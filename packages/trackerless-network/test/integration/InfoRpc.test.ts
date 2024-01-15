@@ -1,7 +1,6 @@
-import { Simulator, PeerDescriptor, NodeType, SimulatorTransport, ListeningRpcCommunicator, areEqualPeerDescriptors } from '@streamr/dht'
+import { Simulator, SimulatorTransport, ListeningRpcCommunicator, areEqualPeerDescriptors } from '@streamr/dht'
 import { NetworkStack } from '../../src/NetworkStack'
-import { hexToBinary } from '../../../utils/dist/src/binaryUtils'
-import { createRandomNodeId } from '../utils/utils'
+import { createMockPeerDescriptor } from '../utils/utils'
 import { InfoClient } from '../../src/logic/info-rpc/InfoClient'
 import { INFO_RPC_SERVICE_ID } from '../../src/logic/info-rpc/InfoRpcLocal'
 import { StreamPartIDUtils } from '@streamr/protocol'
@@ -18,20 +17,9 @@ describe('NetworkStack InfoRpc', () => {
 
     let simulator: Simulator
 
-    const stack1PeerDescriptor: PeerDescriptor = {
-        nodeId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS
-    }
-
-    const stack2PeerDescriptor: PeerDescriptor = {
-        nodeId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS
-    }
-
-    const stack3PeerDescriptor: PeerDescriptor = {
-        nodeId: hexToBinary(createRandomNodeId()),
-        type: NodeType.NODEJS
-    }
+    const stack1PeerDescriptor = createMockPeerDescriptor()
+    const stack2PeerDescriptor = createMockPeerDescriptor()
+    const stack3PeerDescriptor = createMockPeerDescriptor()
 
     beforeEach(async () => {
         simulator = new Simulator()

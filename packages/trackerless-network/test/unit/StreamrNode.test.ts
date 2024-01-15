@@ -109,6 +109,7 @@ describe('StreamrNode', () => {
             await waitForCondition(() => node.getInfo().length === 1)
             const info = node.getInfo()
             expect(info.length).toEqual(1)
+            expect(info[0].id).toEqual(streamPartId)
         })
     })
 
