@@ -44,15 +44,4 @@ export default class MessageID {
     toMessageRef(): MessageRef {
         return new MessageRef(this.timestamp, this.sequenceNumber)
     }
-
-    clone(): MessageID {
-        return new MessageID(
-            this.streamId,
-            this.streamPartition,
-            this.timestamp,
-            this.sequenceNumber,
-            this.publisherId,
-            this.msgChainId
-        )
-    }
 }

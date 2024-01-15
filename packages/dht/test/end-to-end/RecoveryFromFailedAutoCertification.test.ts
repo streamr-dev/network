@@ -46,7 +46,7 @@ describe('Failed autocertification', () => {
         const failedAutocertificationPeerDescriptor = failedAutocertificationNode.getLocalPeerDescriptor()
         expect(failedAutocertificationPeerDescriptor.details?.websocket!.tls).toBe(false)
         await failedAutocertificationNode.joinDht([entryPointPeerDescriptor])
-        expect(failedAutocertificationNode.getNumberOfNeighbors()).toEqual(2)
+        expect(failedAutocertificationNode.getNeighborCount()).toEqual(2)
     })
 
 })

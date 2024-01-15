@@ -17,7 +17,7 @@ export interface BatchManagerOptions {
     useTtl: boolean
     logErrors: boolean
     batchMaxSize: number
-    batchMaxRecords: number
+    batchMaxRecordCount: number
     batchCloseTimeout: number
     batchMaxRetries: number
 }
@@ -42,7 +42,7 @@ export class BatchManager extends EventEmitter {
             useTtl: false,
             logErrors: false,
             batchMaxSize: 8000 * 300,
-            batchMaxRecords: 8000,
+            batchMaxRecordCount: 8000,
             batchCloseTimeout: 1000,
             batchMaxRetries: 1000 // in total max ~16 minutes timeout
         }
@@ -71,7 +71,7 @@ export class BatchManager extends EventEmitter {
             const newBatch = new Batch(
                 bucketId,
                 this.opts.batchMaxSize,
-                this.opts.batchMaxRecords,
+                this.opts.batchMaxRecordCount,
                 this.opts.batchCloseTimeout,
                 this.opts.batchMaxRetries
             )

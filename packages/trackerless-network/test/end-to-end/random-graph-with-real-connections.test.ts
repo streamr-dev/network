@@ -140,11 +140,11 @@ describe('random graph with real connections', () => {
     })
 
     it('can propagate messages', async () => {
-        let numOfMessagesReceived = 0
-        randomGraphNode2.on('message', () => numOfMessagesReceived += 1)
-        randomGraphNode3.on('message', () => numOfMessagesReceived += 1)
-        randomGraphNode4.on('message', () => numOfMessagesReceived += 1)
-        randomGraphNode5.on('message', () => numOfMessagesReceived += 1)
+        let receivedMessageCount = 0
+        randomGraphNode2.on('message', () => receivedMessageCount += 1)
+        randomGraphNode3.on('message', () => receivedMessageCount += 1)
+        randomGraphNode4.on('message', () => receivedMessageCount += 1)
+        randomGraphNode5.on('message', () => receivedMessageCount += 1)
 
         await waitForCondition(() => {
             return randomGraphNode1.getNeighborIds().length >= 3
@@ -160,6 +160,6 @@ describe('random graph with real connections', () => {
             randomEthereumAddress()
         )
         randomGraphNode1.broadcast(msg)
-        await waitForCondition(() => numOfMessagesReceived >= 4)
+        await waitForCondition(() => receivedMessageCount >= 4)
     })
 })

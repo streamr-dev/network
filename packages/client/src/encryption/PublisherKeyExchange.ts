@@ -7,6 +7,7 @@ import {
     GroupKeyResponse,
     MessageID,
     serializeGroupKeyResponse,
+    SignatureType,
     StreamMessage,
     StreamMessageType,
     StreamPartID,
@@ -125,6 +126,7 @@ export class PublisherKeyExchange {
             encryptionType: EncryptionType.RSA,
             authentication: this.authentication,
             contentType: ContentType.JSON,
+            signatureType: SignatureType.SECP256K1,
         })
         return response
     }

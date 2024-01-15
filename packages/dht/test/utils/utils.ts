@@ -242,13 +242,13 @@ async function waitReadyForTesting(connectionManager: ConnectionManager, limit: 
     connectionManager.garbageCollectConnections(limit, LAST_USED_LIMIT)
     try {
         await waitForCondition(() => {
-            return (connectionManager.getNumberOfLocalLockedConnections() === 0 &&
-                connectionManager.getNumberOfRemoteLockedConnections() === 0 &&
+            return (connectionManager.getLocalLockedConnectionCount() === 0 &&
+                connectionManager.getRemoteLockedConnectionCount() === 0 &&
                 connectionManager.getAllConnectionPeerDescriptors().length <= limit)
         }, 20000)
     } catch (err) {
-        if (connectionManager.getNumberOfLocalLockedConnections() > 0
-            && connectionManager.getNumberOfRemoteLockedConnections() > 0) {
+        if (connectionManager.getLocalLockedConnectionCount() > 0
+            && connectionManager.getRemoteLockedConnectionCount() > 0) {
             throw new Error('Connections are still locked')
         } else if (connectionManager.getAllConnectionPeerDescriptors().length > limit) {
             throw new Error(`ConnectionManager has more than ${limit}`)

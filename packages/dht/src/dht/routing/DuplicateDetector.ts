@@ -2,18 +2,18 @@ export class DuplicateDetector {
 
     private values: Set<string> = new Set()
     private queue: Array<string> = []
-    private maxNumberOfValues: number
+    private maxItemCount: number
 
     constructor(
-        maxNumberOfValues: number,
+        maxItemCount: number,
     ) {
-        this.maxNumberOfValues = maxNumberOfValues
+        this.maxItemCount = maxItemCount
     }
 
     public add(value: string): void {
         this.values.add(value)
         this.queue.push(value)
-        if (this.queue.length > this.maxNumberOfValues) {
+        if (this.queue.length > this.maxItemCount) {
             const removed = this.queue.shift()!
             this.values.delete(removed)
         }

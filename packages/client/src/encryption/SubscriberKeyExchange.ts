@@ -5,6 +5,7 @@ import {
     GroupKeyRequest,
     GroupKeyResponse,
     MessageID,
+    SignatureType,
     serializeGroupKeyRequest,
     StreamMessage,
     StreamMessageType,
@@ -117,7 +118,8 @@ export class SubscriberKeyExchange {
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-            authentication: this.authentication
+            authentication: this.authentication,
+            signatureType: SignatureType.SECP256K1,
         })
     }
 

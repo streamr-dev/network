@@ -27,16 +27,22 @@ export enum EncryptionType {
     AES = 2
 }
 
+export enum SignatureType {
+    LEGACY_SECP256K1,   // Brubeck payload signed with secp256k1 curve
+    SECP256K1,      // Streamr 1.0 payload signed with secp256k1 curve
+}
+
 export interface StreamMessageOptions {
     messageId: MessageID
     prevMsgRef?: MessageRef | null
-    content: Uint8Array
     messageType?: StreamMessageType
+    content: Uint8Array
     contentType: ContentType
+    signature: Uint8Array
+    signatureType: SignatureType
     encryptionType: EncryptionType
     groupKeyId?: string | null
     newGroupKey?: EncryptedGroupKey | null
-    signature: Uint8Array
 }
 
 /**
@@ -47,48 +53,34 @@ export type StreamMessageAESEncrypted = StreamMessage & {
     groupKeyId: string
 }
 
-export default class StreamMessage {
+export default class StreamMessage implements StreamMessageOptions {
     private static VALID_MESSAGE_TYPES = new Set(Object.values(StreamMessageType))
     private static VALID_CONTENT_TYPES = new Set(Object.values(ContentType))
     private static VALID_ENCRYPTIONS = new Set(Object.values(EncryptionType))
+    private static VALID_SIGNATURE_TYPES = new Set(Object.values(SignatureType))
 
     readonly messageId: MessageID
     readonly prevMsgRef: MessageRef | null
     readonly messageType: StreamMessageType
+    readonly content: Uint8Array
     readonly contentType: ContentType
-    encryptionType: EncryptionType
-    groupKeyId: string | null
-    newGroupKey: EncryptedGroupKey | null
-    signature: Uint8Array
-    content: Uint8Array
-
-    /**
-     * Create a new StreamMessage identical to the passed-in streamMessage.
-     */
-    clone(): StreamMessage {
-        return new StreamMessage({
-            messageId: this.messageId.clone(),
-            prevMsgRef: this.prevMsgRef ? this.prevMsgRef.clone() : null,
-            content: this.content,
-            messageType: this.messageType,
-            contentType: this.contentType,
-            encryptionType: this.encryptionType,
-            groupKeyId: this.groupKeyId,
-            newGroupKey: this.newGroupKey,
-            signature: this.signature,
-        })
-    }
+    readonly signature: Uint8Array
+    readonly signatureType: SignatureType
+    readonly encryptionType: EncryptionType
+    readonly groupKeyId: string | null
+    readonly newGroupKey: EncryptedGroupKey | null
 
     constructor({
         messageId,
         prevMsgRef = null,
-        content,
         messageType = StreamMessageType.MESSAGE,
+        content,
         contentType,
+        signature,
+        signatureType,
         encryptionType,
         groupKeyId = null,
         newGroupKey = null,
-        signature,
     }: StreamMessageOptions) {
         validateIsType('messageId', messageId, 'MessageID', MessageID)
         this.messageId = messageId
@@ -114,9 +106,11 @@ export default class StreamMessage {
         validateIsType('signature', signature, 'Uint8Array', Uint8Array)
         this.signature = signature
 
-        this.content = content
+        StreamMessage.validateSignatureType(signatureType)
+        this.signatureType = signatureType
 
-        validateIsNotEmptyByteArray('content', this.content)
+        validateIsNotEmptyByteArray('content', content)
+        this.content = content
 
         StreamMessage.validateSequence(this)
     }
@@ -191,6 +185,12 @@ export default class StreamMessage {
     private static validateEncryptionType(encryptionType: EncryptionType): void {
         if (!StreamMessage.VALID_ENCRYPTIONS.has(encryptionType)) {
             throw new ValidationError(`Unsupported encryption type: ${encryptionType}`)
+        }
+    }
+
+    private static validateSignatureType(signatureType: SignatureType): void {
+        if (!StreamMessage.VALID_SIGNATURE_TYPES.has(signatureType)) {
+            throw new ValidationError(`Unsupported signature type: ${signatureType}`)
         }
     }
 

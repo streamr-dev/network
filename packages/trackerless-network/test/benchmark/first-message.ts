@@ -12,6 +12,7 @@ import {
     ContentType,
     EncryptionType,
     MessageID,
+    SignatureType,
     StreamMessage,
     StreamMessageType,
     StreamPartID,
@@ -102,6 +103,8 @@ const measureJoiningTime = async () => {
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
             signature: hexToBinary('0x1234'),
+            signatureType: SignatureType.SECP256K1,
+
         })
         streamParts.get(stream)!.broadcast(streamMessage)
     }, 1000)
@@ -156,10 +159,10 @@ run().then(() => {
     const foundData = nodes[0].stack.getLayer0Node().getDataFromDht(streamPartIdToDataKey(streamParts[0]))
     console.log(foundData)
     const layer0Node = currentNode.stack.getLayer0Node() as DhtNode
-    console.log(layer0Node.getAllNeighborPeerDescriptors().length)
-    console.log(layer0Node.getNumberOfConnections())
+    console.log(layer0Node.getNeighbors().length)
+    console.log(layer0Node.getConnectionCount())
     const streamPartDelivery = streamrNode.getStreamPartDelivery(streamParts[0])! as { layer1Node: Layer1Node, node: RandomGraphNode }
-    console.log(streamPartDelivery.layer1Node.getAllNeighborPeerDescriptors())
+    console.log(streamPartDelivery.layer1Node.getNeighbors())
     console.log(streamPartDelivery.node.getNeighborIds())
     console.log(nodes[nodes.length - 1])
     if (publishInterval) {
