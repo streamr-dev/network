@@ -88,7 +88,9 @@ describe('HandshakeRpcLocal', () => {
         const req: InterleaveRequest = {
             interleaveTargetDescriptor: {
                 nodeId: getRawFromDhtAddress('0x2222' as DhtAddress),
-                type: NodeType.NODEJS
+                details: {
+                    type: NodeType.NODEJS
+                }
             }
         }
         await rpcLocal.interleaveRequest(req, {
@@ -101,7 +103,9 @@ describe('HandshakeRpcLocal', () => {
         const req: InterleaveRequest = {
             interleaveTargetDescriptor: {
                 nodeId: getRawFromDhtAddress('0x2222' as DhtAddress),
-                type: NodeType.NODEJS
+                details: {
+                    type: NodeType.NODEJS
+                }
             }
         }
         await rpcLocal.interleaveRequest(req, {

@@ -276,9 +276,9 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
 
     private isOwnWebsocketServer(peerDescriptor: PeerDescriptor): boolean {
         const localPeerDescriptor = this.getLocalPeerDescriptor()
-        if ((peerDescriptor.websocket !== undefined) && (localPeerDescriptor.websocket !== undefined)) {
-            return ((peerDescriptor.websocket.port === localPeerDescriptor.websocket.port)
-                && (peerDescriptor.websocket.host === localPeerDescriptor.websocket.host))
+        if ((peerDescriptor.details?.websocket !== undefined) && (localPeerDescriptor.details?.websocket !== undefined)) {
+            return ((peerDescriptor.details?.websocket.port === localPeerDescriptor.details?.websocket.port)
+                && (peerDescriptor.details?.websocket.host === localPeerDescriptor.details?.websocket.host))
         } else {
             return false
         }

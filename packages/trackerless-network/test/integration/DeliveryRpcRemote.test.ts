@@ -24,11 +24,15 @@ describe('DeliveryRpcRemote', () => {
 
     const clientNode: PeerDescriptor = {
         nodeId: new Uint8Array([1, 1, 1]),
-        type: NodeType.NODEJS
+        details: {
+            type: NodeType.NODEJS
+        }
     }
     const serverNode: PeerDescriptor = {
         nodeId: new Uint8Array([2, 2, 2]),
-        type: NodeType.NODEJS
+        details: {
+            type: NodeType.NODEJS
+        }
     }
 
     let recvCounter: number

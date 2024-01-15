@@ -22,12 +22,16 @@ describe('NetworkNode', () => {
 
     const pd1: PeerDescriptor = {
         nodeId: new Uint8Array([1, 2, 3]),
-        type: NodeType.NODEJS
+        details: {
+            type: NodeType.NODEJS
+        }
     }
 
     const pd2: PeerDescriptor = {
         nodeId: new Uint8Array([1, 1, 1]),
-        type: NodeType.NODEJS
+        details: {
+            type: NodeType.NODEJS
+        }
     }
 
     beforeEach(async () => {

@@ -126,9 +126,9 @@ export const createPeerDescriptor = (msg?: ConnectivityResponse, nodeId?: DhtAdd
         nodeIdRaw = getRawFromDhtAddress(nodeId!)
     }
     const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS
-    const ret: PeerDescriptor = { nodeId: nodeIdRaw, type: nodeType }
+    const ret: PeerDescriptor = { nodeId: nodeIdRaw, details: { type: nodeType } }
     if (msg && msg.websocket) {
-        ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
+        ret.details!.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
     }
     return ret
 }
@@ -180,8 +180,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
         if (isBrowserEnvironment()) {
             this.config.websocketPortRange = undefined
-            if (this.config.peerDescriptor) {
-                this.config.peerDescriptor.websocket = undefined
+            if (this.config.peerDescriptor && this.config.peerDescriptor.details && this.config.peerDescriptor.details.websocket) {
+                this.config.peerDescriptor.details.websocket = undefined
             }
         }
         // If transport is given, do not create a ConnectionManager
@@ -210,11 +210,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 createLocalPeerDescriptor: (connectivityResponse: ConnectivityResponse) => this.generatePeerDescriptorCallBack(connectivityResponse),
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
-            if (this.config.peerDescriptor?.websocket) {
-                connectorFacadeConfig.websocketHost = this.config.peerDescriptor.websocket.host
+            if (this.config.peerDescriptor?.details?.websocket) {
+                connectorFacadeConfig.websocketHost = this.config.peerDescriptor.details.websocket.host
                 connectorFacadeConfig.websocketPortRange = {
-                    min: this.config.peerDescriptor.websocket.port,
-                    max: this.config.peerDescriptor.websocket.port
+                    min: this.config.peerDescriptor.details.websocket.port,
+                    max: this.config.peerDescriptor.details.websocket.port
                 }
             // If websocketPortRange is given, create ws server using it, websocketHost can be undefined
             } else if (this.config.websocketPortRange) {

@@ -19,11 +19,15 @@ describe('NeighborUpdateRpcRemote', () => {
 
     const clientNode: PeerDescriptor = {
         nodeId: new Uint8Array([1, 1, 1]),
-        type: NodeType.NODEJS
+        details: {
+            type: NodeType.NODEJS
+        }
     }
     const serverNode: PeerDescriptor = {
         nodeId: new Uint8Array([2, 2, 2]),
-        type: NodeType.NODEJS
+        details: {
+            type: NodeType.NODEJS
+        }
     }
 
     let simulator: Simulator
@@ -47,7 +51,9 @@ describe('NeighborUpdateRpcRemote', () => {
             async (): Promise<NeighborUpdate> => {
                 const node: PeerDescriptor = {
                     nodeId: new Uint8Array([4, 2, 4]),
-                    type: NodeType.NODEJS
+                    details: {
+                        type: NodeType.NODEJS
+                    }
                 }
                 const update: NeighborUpdate = {
                     streamPartId: StreamPartIDUtils.parse('stream#0'),

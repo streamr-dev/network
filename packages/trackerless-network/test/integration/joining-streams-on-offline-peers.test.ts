@@ -13,32 +13,42 @@ describe('Joining stream parts on offline nodes', () => {
 
     const entryPointPeerDescriptor: PeerDescriptor = {
         nodeId: new Uint8Array([1, 2, 3]),
-        type: NodeType.NODEJS,
-        region: getRandomRegion()
+        details: {
+            type: NodeType.NODEJS,
+            region: getRandomRegion()
+        }
     }
 
     const node1PeerDescriptor: PeerDescriptor = {
         nodeId: new Uint8Array([1, 1, 1]),
-        type: NodeType.NODEJS,
-        region: getRandomRegion()
+        details: {
+            type: NodeType.NODEJS,
+            region: getRandomRegion()
+        }
     }
 
     const node2PeerDescriptor: PeerDescriptor = {
         nodeId: new Uint8Array([2, 2, 2]),
-        type: NodeType.NODEJS,
-        region: getRandomRegion()
+        details: {
+            type: NodeType.NODEJS,
+            region: getRandomRegion()
+        }
     }
 
     const offlineDescriptor1: PeerDescriptor = {
         nodeId: new Uint8Array([3, 3, 3]),
-        type: NodeType.NODEJS,
-        region: getRandomRegion()
+        details: {
+            type: NodeType.NODEJS,
+            region: getRandomRegion()
+        }
     }
 
     const offlineDescriptor2: PeerDescriptor = {
         nodeId: new Uint8Array([4, 4, 4]),
-        type: NodeType.NODEJS,
-        region: getRandomRegion()
+        details: {
+            type: NodeType.NODEJS,
+            region: getRandomRegion()
+        }
     }
 
     let entryPoint: NetworkStack

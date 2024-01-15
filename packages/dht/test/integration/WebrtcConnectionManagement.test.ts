@@ -220,7 +220,9 @@ describe('WebRTC Connection Management', () => {
 
         msg.targetDescriptor = {
             nodeId: new Uint8Array([0, 0, 0, 0, 0]),
-            type: NodeType.NODEJS,
+            details: {
+                type: NodeType.NODEJS 
+            }
         }
         
         await Promise.allSettled([

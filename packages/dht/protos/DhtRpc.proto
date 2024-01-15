@@ -148,7 +148,7 @@ message PeerDescriptor {
   
   PeerDetails details = 2;
 
-   // 65 bytes signature of all the details field
+   // 65 bytes signature of the details field
    optional bytes signature = 3;
 }
 

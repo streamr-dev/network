@@ -43,7 +43,9 @@ describe('NodeList', () => {
         for (const id of ids) {
             const peerDescriptor: PeerDescriptor = {
                 nodeId: id,
-                type: NodeType.NODEJS
+                details: {
+                    type: NodeType.NODEJS
+                }
             }
             nodeList.add(createRemoteGraphNode(peerDescriptor))
         }

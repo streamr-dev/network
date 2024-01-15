@@ -4,13 +4,14 @@ import {
     ClosestPeersResponse,
     NodeType,
     PeerDescriptor,
+    PeerDetails,
     PingRequest,
     PingResponse,
     RouteMessageAck,
     RouteMessageWrapper,
     StoreDataRequest,
     StoreDataResponse,
-    RecursiveOperationRequest, 
+    RecursiveOperationRequest,
     RecursiveOperation
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
@@ -30,11 +31,13 @@ import { wait, waitForCondition } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { DhtAddress, createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
 
-export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'nodeId'>>): PeerDescriptor => {
+export const createMockPeerDescriptor = (opts?: Partial<PeerDetails>): PeerDescriptor => {
     return {
         nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
-        type: NodeType.NODEJS,
-        ...opts
+        details: {
+            type: NodeType.NODEJS,
+            ...opts
+        }
     }
 }
 
@@ -47,8 +50,10 @@ export const createMockConnectionDhtNode = async (
 ): Promise<DhtNode> => {
     const peerDescriptor: PeerDescriptor = {
         nodeId: getRawFromDhtAddress(nodeId ?? createRandomDhtAddress()),
-        type: NodeType.NODEJS,
-        region: getRandomRegion()
+        details: {
+            type: NodeType.NODEJS,
+            region: getRandomRegion()
+        }
     }
     const mockConnectionManager = new SimulatorTransport(peerDescriptor, simulator)
     await mockConnectionManager.start()
@@ -77,7 +82,9 @@ export const createMockConnectionLayer1Node = async (
 ): Promise<DhtNode> => {
     const descriptor: PeerDescriptor = {
         nodeId: layer0Node.getLocalPeerDescriptor().nodeId,
-        type: NodeType.NODEJS,
+        details : {
+            type: NodeType.NODEJS
+        }
     }
     const node = new DhtNode({
         peerDescriptor: descriptor, transport: layer0Node,

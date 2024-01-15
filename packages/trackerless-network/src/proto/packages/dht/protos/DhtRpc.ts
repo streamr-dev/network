@@ -191,6 +191,43 @@ export interface PingResponse {
 export interface LeaveNotice {
 }
 /**
+ * @generated from protobuf message dht.PeerDetails
+ */
+export interface PeerDetails {
+    /**
+     * @generated from protobuf field: dht.NodeType type = 1;
+     */
+    type: NodeType;
+    /**
+     * @generated from protobuf field: dht.ConnectivityMethod udp = 2;
+     */
+    udp?: ConnectivityMethod;
+    /**
+     * @generated from protobuf field: dht.ConnectivityMethod tcp = 3;
+     */
+    tcp?: ConnectivityMethod;
+    /**
+     * @generated from protobuf field: dht.ConnectivityMethod websocket = 4;
+     */
+    websocket?: ConnectivityMethod;
+    /**
+     * @generated from protobuf field: optional uint32 region = 5;
+     */
+    region?: number;
+    /**
+     * @generated from protobuf field: optional uint32 ipAddress = 6;
+     */
+    ipAddress?: number;
+    /**
+     * @generated from protobuf field: optional bytes salt = 7;
+     */
+    salt?: Uint8Array;
+}
+/**
+ * nodeId is calculated  from the details field as
+ * concatenate( get100LeastSignificantBits(kessac256(ipAddress)),
+ *  get60LeastSignificantBits(kessac256(signature, salt)))
+ *
  * @generated from protobuf message dht.PeerDescriptor
  */
 export interface PeerDescriptor {
@@ -199,25 +236,15 @@ export interface PeerDescriptor {
      */
     nodeId: Uint8Array;
     /**
-     * @generated from protobuf field: dht.NodeType type = 2;
+     * @generated from protobuf field: dht.PeerDetails details = 2;
      */
-    type: NodeType;
+    details?: PeerDetails;
     /**
-     * @generated from protobuf field: dht.ConnectivityMethod udp = 3;
+     * 65 bytes signature of the details field
+     *
+     * @generated from protobuf field: optional bytes signature = 3;
      */
-    udp?: ConnectivityMethod;
-    /**
-     * @generated from protobuf field: dht.ConnectivityMethod tcp = 4;
-     */
-    tcp?: ConnectivityMethod;
-    /**
-     * @generated from protobuf field: dht.ConnectivityMethod websocket = 5;
-     */
-    websocket?: ConnectivityMethod;
-    /**
-     * @generated from protobuf field: optional uint32 region = 6;
-     */
-    region?: number;
+    signature?: Uint8Array;
 }
 /**
  * @generated from protobuf message dht.ConnectivityMethod
@@ -839,15 +866,30 @@ class LeaveNotice$Type extends MessageType$<LeaveNotice> {
  */
 export const LeaveNotice = new LeaveNotice$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class PeerDetails$Type extends MessageType$<PeerDetails> {
+    constructor() {
+        super("dht.PeerDetails", [
+            { no: 1, name: "type", kind: "enum", T: () => ["dht.NodeType", NodeType] },
+            { no: 2, name: "udp", kind: "message", T: () => ConnectivityMethod },
+            { no: 3, name: "tcp", kind: "message", T: () => ConnectivityMethod },
+            { no: 4, name: "websocket", kind: "message", T: () => ConnectivityMethod },
+            { no: 5, name: "region", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ },
+            { no: 6, name: "ipAddress", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ },
+            { no: 7, name: "salt", kind: "scalar", opt: true, T: 12 /*ScalarType.BYTES*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.PeerDetails
+ */
+export const PeerDetails = new PeerDetails$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class PeerDescriptor$Type extends MessageType$<PeerDescriptor> {
     constructor() {
         super("dht.PeerDescriptor", [
             { no: 1, name: "nodeId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 2, name: "type", kind: "enum", T: () => ["dht.NodeType", NodeType] },
-            { no: 3, name: "udp", kind: "message", T: () => ConnectivityMethod },
-            { no: 4, name: "tcp", kind: "message", T: () => ConnectivityMethod },
-            { no: 5, name: "websocket", kind: "message", T: () => ConnectivityMethod },
-            { no: 6, name: "region", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ }
+            { no: 2, name: "details", kind: "message", T: () => PeerDetails },
+            { no: 3, name: "signature", kind: "scalar", opt: true, T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
 }

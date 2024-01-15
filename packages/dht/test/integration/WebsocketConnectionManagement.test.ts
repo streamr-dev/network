@@ -32,20 +32,26 @@ describe('Websocket Connection Management', () => {
     const simulator = new Simulator()
     const wsServerConnectorPeerDescriptor: PeerDescriptor = {
         nodeId: new Uint8Array([2]),
-        type: NodeType.NODEJS,
-        websocket: {
-            host: '127.0.0.1',
-            port: 12223,
-            tls: false
+        details: {
+            type: NodeType.NODEJS,
+            websocket: {
+                host: '127.0.0.1',
+                port: 12223,
+                tls: false
+            }
         }
     }
     const noWsServerConnectorPeerDescriptor: PeerDescriptor = {
         nodeId: new Uint8Array([1]),
-        type: NodeType.NODEJS,
+        details: {
+            type: NodeType.NODEJS,
+        }
     }
     const biggerNoWsServerConnectorPeerDescriptor: PeerDescriptor = {
         nodeId: new Uint8Array([3]),
-        type: NodeType.NODEJS,
+        details: {
+            type: NodeType.NODEJS,
+        }
     }
 
     let connectorTransport1: SimulatorTransport
@@ -154,7 +160,9 @@ describe('Websocket Connection Management', () => {
             messageId: 'mockerer',
             targetDescriptor: {
                 nodeId: new Uint8Array([1, 2, 4]),
-                type: NodeType.NODEJS
+                details: {
+                    type: NodeType.NODEJS
+                }
             }
         }
 

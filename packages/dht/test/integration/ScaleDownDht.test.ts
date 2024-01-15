@@ -27,8 +27,10 @@ describe('Scaling down a Dht network', () => {
 
         entrypointDescriptor = {
             nodeId: getRawFromDhtAddress(entryPoint.getNodeId()),
-            type: NodeType.NODEJS,
-            region: getRandomRegion()
+            details: {
+                type: NodeType.NODEJS,
+                region: getRandomRegion()
+            }
         }
 
         for (let i = 1; i < NUM_NODES; i++) {

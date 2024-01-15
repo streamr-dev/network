@@ -20,15 +20,21 @@ describe('Handshakes', () => {
 
     const peerDescriptor1: PeerDescriptor = {
         nodeId: new Uint8Array([1, 1, 1]),
-        type: NodeType.NODEJS
+        details: {
+            type: NodeType.NODEJS
+        }
     }
     const peerDescriptor2: PeerDescriptor = {
         nodeId: new Uint8Array([2, 1, 1]),
-        type: NodeType.NODEJS
+        details: {
+            type: NodeType.NODEJS
+        }
     }
     const peerDescriptor3: PeerDescriptor = {
         nodeId: new Uint8Array([3, 1, 1]),
-        type: NodeType.NODEJS
+        details: {
+            type: NodeType.NODEJS
+        }
     }
     let rpcCommunicator1: ListeningRpcCommunicator
     let rpcCommunicator2: ListeningRpcCommunicator

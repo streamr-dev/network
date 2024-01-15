@@ -44,7 +44,7 @@ describe('Failed autocertification', () => {
     it('failed auto certification should default to no tls', async () => {
         await failedAutocertificationNode.start()
         const failedAutocertificationPeerDescriptor = failedAutocertificationNode.getLocalPeerDescriptor()
-        expect(failedAutocertificationPeerDescriptor.websocket!.tls).toBe(false)
+        expect(failedAutocertificationPeerDescriptor.details?.websocket!.tls).toBe(false)
         await failedAutocertificationNode.joinDht([entryPointPeerDescriptor])
         expect(failedAutocertificationNode.getNumberOfNeighbors()).toEqual(2)
     })

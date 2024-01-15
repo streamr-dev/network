@@ -29,7 +29,9 @@ describe('Route Message With Mock Connections', () => {
 
         entryPointDescriptor = {
             nodeId: getRawFromDhtAddress(entryPoint.getNodeId()),
-            type: NodeType.NODEJS
+            details: {
+                type: NodeType.NODEJS
+            }
         }
 
         sourceNode = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())

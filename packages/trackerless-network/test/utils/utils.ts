@@ -28,6 +28,7 @@ import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { Layer1Node } from '../../src/logic/Layer1Node'
 import { DeliveryRpcClient, HandshakeRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RpcCommunicator } from '@streamr/proto-rpc'
+import { PeerDetails } from '@streamr/dht/dist/src/proto/packages/dht/protos/DhtRpc'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -93,12 +94,14 @@ export const createRandomNodeId = (): DhtAddress => {
     return getDhtAddressFromRaw(randomBytes(10))
 }
 
-export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'nodeId' | 'type'>): PeerDescriptor => {
+export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDetails>, 'type'>): PeerDescriptor => {
     return {
-        ...opts,
         nodeId: getRawFromDhtAddress(createRandomNodeId()),
-        type: NodeType.NODEJS,
-        region: getRandomRegion()
+        details: {
+            type: NodeType.NODEJS,
+            region: getRandomRegion(),
+            ...opts
+        }
     }
 }
 

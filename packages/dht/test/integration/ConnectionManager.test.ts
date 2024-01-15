@@ -364,8 +364,10 @@ describe('ConnectionManager', () => {
             targetDescriptor: {
                 // This is not the correct nodeId of peerDescriptor2
                 nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
-                type: NodeType.NODEJS,
-                websocket: peerDescriptor2.websocket
+                details: {
+                    type: NodeType.NODEJS,
+                    websocket: peerDescriptor2.details?.websocket
+                }
             },
             body: {
                 oneofKind: 'rpcMessage',
@@ -393,7 +395,7 @@ describe('ConnectionManager', () => {
         })
 
         await connectionManager1.start()
-        expect(connectionManager1.getLocalPeerDescriptor().websocket!.tls).toEqual(false)
+        expect(connectionManager1.getLocalPeerDescriptor().details!.websocket!.tls).toEqual(false)
         await connectionManager1.stop()
     })
 })

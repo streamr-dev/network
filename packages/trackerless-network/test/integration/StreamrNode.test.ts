@@ -23,11 +23,15 @@ describe('StreamrNode', () => {
 
     const peerDescriptor1: PeerDescriptor = {
         nodeId: new Uint8Array([1, 2, 3]),
-        type: NodeType.NODEJS
+        details: {
+            type: NodeType.NODEJS
+        }
     }
     const peerDescriptor2: PeerDescriptor = {
         nodeId: new Uint8Array([1, 1, 1]),
-        type: NodeType.NODEJS
+        details: {
+            type: NodeType.NODEJS
+        }
     }
     const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
 

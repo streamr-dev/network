@@ -12,8 +12,10 @@ describe('random graph with real connections', () => {
 
     const epPeerDescriptor: PeerDescriptor = {
         nodeId: Uint8Array.from([1, 2, 3]),
-        type: NodeType.NODEJS,
-        websocket: { host: '127.0.0.1', port: 12221, tls: false }
+        details: {
+            type: NodeType.NODEJS,
+            websocket: { host: '127.0.0.1', port: 12221, tls: false }
+        }
     }
 
     const streamPartId = StreamPartIDUtils.parse('random-graph#0')

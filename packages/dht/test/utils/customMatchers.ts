@@ -27,15 +27,15 @@ const toEqualPeerDescriptor = (
     if (!areEqualBinaries(expected.nodeId, actual.nodeId)) {
         messages.push(formErrorMessage('nodeId', getDhtAddressFromRaw(expected.nodeId), getDhtAddressFromRaw(actual.nodeId)))
     }
-    if (!isEqual(expected.type, actual.type)) {
+    if (!isEqual(expected.details?.type, actual.details?.type)) {
         const typeNames = { [NodeType.NODEJS]: 'NODEJS', [NodeType.BROWSER]: 'BROWSER' }
-        messages.push(formErrorMessage('type', typeNames[expected.type], typeNames[actual.type]))
+        messages.push(formErrorMessage('type', typeNames[expected.details!.type], typeNames[actual.details!.type]))
     }
-    expectEqualConnectivityMethod('udp', expected.udp, actual.udp, messages)
-    expectEqualConnectivityMethod('tpc', expected.tcp, actual.tcp, messages)
-    expectEqualConnectivityMethod('websocket', expected.websocket, actual.websocket, messages)
-    if (expected.region !== actual.region) {
-        messages.push(formErrorMessage('region', expected?.region, actual?.region))
+    expectEqualConnectivityMethod('udp', expected.details?.udp, actual.details?.udp, messages)
+    expectEqualConnectivityMethod('tpc', expected.details?.tcp, actual.details?.tcp, messages)
+    expectEqualConnectivityMethod('websocket', expected.details?.websocket, actual.details?.websocket, messages)
+    if (expected.details?.region !== actual.details?.region) {
+        messages.push(formErrorMessage('region', expected?.details?.region, actual?.details?.region))
     } 
     if (messages.length > 0) {
         return {

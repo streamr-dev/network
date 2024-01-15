@@ -202,7 +202,7 @@ export class WebsocketConnector {
             } catch (err) {
                 if (reattempt < ENTRY_POINT_CONNECTION_ATTEMPTS) {
                     const error = `Failed to connect to entrypoint with id ${getNodeIdFromPeerDescriptor(entryPoint)} `
-                        + `and URL ${connectivityMethodToWebsocketUrl(entryPoint.websocket!)}`
+                        + `and URL ${connectivityMethodToWebsocketUrl(entryPoint.details!.websocket!)}`
                     logger.error(error, { error: err })
                     await wait(2000)
                 }
@@ -223,12 +223,12 @@ export class WebsocketConnector {
             return existingConnection
         }
 
-        if (this.localPeerDescriptor!.websocket && !targetPeerDescriptor.websocket) {
+        if (this.localPeerDescriptor!.details?.websocket && !targetPeerDescriptor.details?.websocket) {
             return this.requestConnectionFromPeer(this.localPeerDescriptor!, targetPeerDescriptor)
         } else {
             const socket = new ClientWebsocket()
 
-            const url = connectivityMethodToWebsocketUrl(targetPeerDescriptor.websocket!)
+            const url = connectivityMethodToWebsocketUrl(targetPeerDescriptor.details!.websocket!)
 
             const managedConnection = new ManagedConnection(
                 this.localPeerDescriptor!,

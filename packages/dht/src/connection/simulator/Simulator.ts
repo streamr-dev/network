@@ -302,7 +302,9 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         const association = new Association(sourceConnection, undefined, connectedCallback)
         this.associations.set(sourceConnection.connectionId, association)
 
-        const executionTime = this.generateExecutionTime(association, sourceConnection.localPeerDescriptor.region, targetDescriptor.region)
+        const executionTime = this.generateExecutionTime(association, sourceConnection.localPeerDescriptor.details!.region, 
+            targetDescriptor.details!.region)
+        
         association.setLastOperationAt(executionTime)
 
         const operation = new ConnectOperation(executionTime, association,
@@ -325,8 +327,8 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         association.setClosing()
 
         const executionTime = this.generateExecutionTime(association,
-            sourceConnection.localPeerDescriptor.region,
-            sourceConnection.getPeerDescriptor()?.region)
+            sourceConnection.localPeerDescriptor.details!.region,
+            sourceConnection.getPeerDescriptor()?.details!.region)
         association.setLastOperationAt(executionTime)
 
         const operation = new CloseOperation(executionTime, association)
@@ -351,8 +353,8 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         }
 
         const executionTime = this.generateExecutionTime(association,
-            sourceConnection.localPeerDescriptor.region,
-            association.destinationConnection!.localPeerDescriptor.region)
+            sourceConnection.localPeerDescriptor.details!.region,
+            association.destinationConnection!.localPeerDescriptor.details!.region)
 
         association.setLastOperationAt(executionTime)
 

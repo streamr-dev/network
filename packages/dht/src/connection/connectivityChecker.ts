@@ -40,9 +40,9 @@ export const sendConnectivityRequest = async (
 ): Promise<ConnectivityResponse> => {
     let outgoingConnection: IConnection
     const wsServerInfo = {
-        host: entryPoint.websocket!.host, 
-        port: entryPoint.websocket!.port,
-        tls: entryPoint.websocket!.tls,
+        host: entryPoint.details!.websocket!.host, 
+        port: entryPoint.details!.websocket!.port,
+        tls: entryPoint.details!.websocket!.tls,
     }
     const url = connectivityMethodToWebsocketUrl(wsServerInfo, 'connectivityRequest')
     logger.debug(`Attempting connectivity check with entrypoint ${url}`)

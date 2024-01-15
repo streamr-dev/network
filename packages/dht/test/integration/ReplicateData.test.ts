@@ -53,7 +53,9 @@ describe('Replicate data from node to node in DHT', () => {
 
         entrypointDescriptor = {
             nodeId: getRawFromDhtAddress(entryPoint.getNodeId()),
-            type: NodeType.NODEJS
+            details: {
+                type: NodeType.NODEJS
+            }
         }
 
         nodes.push(entryPoint)

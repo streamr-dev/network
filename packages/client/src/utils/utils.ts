@@ -136,10 +136,12 @@ export class MaxSizedSet<T> {
 export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescriptor {
     const type = json.type === NetworkNodeType.BROWSER ? NodeType.BROWSER : NodeType.NODEJS
     const peerDescriptor: PeerDescriptor = {
-        ...json,
         nodeId: getRawFromDhtAddress((json.nodeId ?? (json as any).id) as DhtAddress),
-        type,
-        websocket: json.websocket
+        details: {
+            type,
+            websocket: json.websocket,
+            region: json.region
+        }
     }
     if ((peerDescriptor as any).id !== undefined) {
         delete (peerDescriptor as any).id
@@ -149,9 +151,9 @@ export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescr
 
 export function convertPeerDescriptorToNetworkPeerDescriptor(descriptor: PeerDescriptor): NetworkPeerDescriptor {
     return {
-        ...descriptor,
+        ...descriptor.details,
         nodeId: getDhtAddressFromRaw(descriptor.nodeId),
-        type: descriptor.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER
+        type: descriptor.details!.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER
     }
 }
 

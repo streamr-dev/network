@@ -8,11 +8,11 @@ export const canOpenConnectionFromBrowser = (websocketServer: ConnectivityMethod
 }
 
 export const expectedConnectionType = (localPeerDescriptor: PeerDescriptor, remotePeerDescriptor: PeerDescriptor): ConnectionType => {
-    if (remotePeerDescriptor.websocket 
-        && (localPeerDescriptor.type !== NodeType.BROWSER || canOpenConnectionFromBrowser(remotePeerDescriptor.websocket))) {
+    if (remotePeerDescriptor.details?.websocket 
+        && (localPeerDescriptor.details?.type !== NodeType.BROWSER || canOpenConnectionFromBrowser(remotePeerDescriptor.details?.websocket))) {
         return ConnectionType.WEBSOCKET_CLIENT
-    } else if (localPeerDescriptor.websocket 
-        && (remotePeerDescriptor.type !== NodeType.BROWSER || canOpenConnectionFromBrowser(localPeerDescriptor.websocket))) {
+    } else if (localPeerDescriptor.details?.websocket 
+        && (remotePeerDescriptor.details?.type !== NodeType.BROWSER || canOpenConnectionFromBrowser(localPeerDescriptor.details?.websocket))) {
         return ConnectionType.WEBSOCKET_SERVER
     }
     return ConnectionType.WEBRTC

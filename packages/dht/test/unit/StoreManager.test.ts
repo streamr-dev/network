@@ -38,7 +38,7 @@ describe('StoreManager', () => {
                     registerRpcNotification: () => {}
                 } as any,
                 recursiveOperationManager: undefined as any,
-                localPeerDescriptor: { nodeId: getRawFromDhtAddress(localNodeId), type: NodeType.NODEJS },
+                localPeerDescriptor: { nodeId: getRawFromDhtAddress(localNodeId), details: { type: NodeType.NODEJS } },
                 localDataStore: { values: () => [DATA_ENTRY], setStale } as any,
                 serviceId: undefined as any,
                 highestTtl: undefined as any,
@@ -59,7 +59,7 @@ describe('StoreManager', () => {
                     replicateData,
                     setStale
                 )
-                manager.onNewContact({ nodeId: getRawFromDhtAddress(NODES_CLOSEST_TO_DATA[2]), type: NodeType.NODEJS })
+                manager.onNewContact({ nodeId: getRawFromDhtAddress(NODES_CLOSEST_TO_DATA[2]), details: { type: NodeType.NODEJS } })
                 await waitForCondition(() => replicateData.mock.calls.length === 1)
                 expect(replicateData).toHaveBeenCalledWith({
                     entry: DATA_ENTRY
@@ -76,7 +76,7 @@ describe('StoreManager', () => {
                     replicateData,
                     setStale
                 )
-                manager.onNewContact({ nodeId: getRawFromDhtAddress(NODES_CLOSEST_TO_DATA[4]), type: NodeType.NODEJS })
+                manager.onNewContact({ nodeId: getRawFromDhtAddress(NODES_CLOSEST_TO_DATA[4]), details: { type: NodeType.NODEJS } })
                 await wait(50)
                 expect(replicateData).not.toHaveBeenCalled()
                 expect(setStale).not.toHaveBeenCalled()
@@ -94,7 +94,7 @@ describe('StoreManager', () => {
                     replicateData,
                     setStale
                 )
-                manager.onNewContact({ nodeId: getRawFromDhtAddress(NODES_CLOSEST_TO_DATA[4]), type: NodeType.NODEJS })
+                manager.onNewContact({ nodeId: getRawFromDhtAddress(NODES_CLOSEST_TO_DATA[4]), details: { type: NodeType.NODEJS } })
                 await wait(50)
                 expect(replicateData).not.toHaveBeenCalled()
                 expect(setStale).not.toHaveBeenCalled()
@@ -109,7 +109,7 @@ describe('StoreManager', () => {
                     replicateData,
                     setStale
                 )
-                manager.onNewContact({ nodeId: getRawFromDhtAddress(NODES_CLOSEST_TO_DATA[4]), type: NodeType.NODEJS })
+                manager.onNewContact({ nodeId: getRawFromDhtAddress(NODES_CLOSEST_TO_DATA[4]), details: { type: NodeType.NODEJS } })
                 await wait(50)
                 expect(replicateData).not.toHaveBeenCalled()
                 expect(setStale).toHaveBeenCalledTimes(1)
@@ -125,7 +125,7 @@ describe('StoreManager', () => {
                     replicateData,
                     setStale
                 )
-                manager.onNewContact({ nodeId: getRawFromDhtAddress(NODES_CLOSEST_TO_DATA[4]), type: NodeType.NODEJS })
+                manager.onNewContact({ nodeId: getRawFromDhtAddress(NODES_CLOSEST_TO_DATA[4]), details: { type: NodeType.NODEJS } })
                 await wait(50)
                 expect(replicateData).not.toHaveBeenCalled()
                 expect(setStale).toHaveBeenCalledTimes(0)
