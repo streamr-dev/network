@@ -1,8 +1,4 @@
-import {
-    validateIsDefined,
-    validateIsNotEmptyString,
-    validateIsNotNegativeInteger
-} from '../../../src/utils/validations'
+import { validateIsDefined, validateIsNotNegativeInteger } from '../../../src/utils/validations'
 import ValidationError from '../../../src/errors/ValidationError'
 
 describe('validations', () => {
@@ -11,19 +7,6 @@ describe('validations', () => {
             expect(() => {
                 validateIsDefined('varName', undefined)
             }).toThrow(new ValidationError('Expected varName to not be undefined.'))
-        })
-    })
-
-    describe('validateIsNotEmptyString', () => {
-        it('throws on empty string', () => {
-            expect(() => {
-                validateIsNotEmptyString('varName', '')
-            }).toThrow(new ValidationError('Expected varName to not be an empty string.'))
-        })
-        it('does not throw on non-empty string', () => {
-            expect(() => {
-                validateIsNotEmptyString('varName', 'hello, world')
-            }).not.toThrow()
         })
     })
 

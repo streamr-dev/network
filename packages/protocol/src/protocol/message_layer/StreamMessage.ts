@@ -1,13 +1,13 @@
 import InvalidJsonError from '../../errors/InvalidJsonError'
 import StreamMessageError from '../../errors/StreamMessageError'
-import ValidationError from '../../errors/ValidationError'
-import { validateIsDefined, validateIsNotEmptyByteArray, validateIsType } from '../../utils/validations'
+import { validateIsDefined, validateIsNotEmptyByteArray } from '../../utils/validations'
 import MessageRef from './MessageRef'
 import MessageID from './MessageID'
 import EncryptedGroupKey from './EncryptedGroupKey'
 import { StreamID } from '../../utils/StreamID'
 import { StreamPartID } from '../../utils/StreamPartID'
 import { EthereumAddress, binaryToUtf8 } from '@streamr/utils'
+import ValidationError from '../../errors/ValidationError'
 
 export enum StreamMessageType {
     MESSAGE = 27,
@@ -22,7 +22,6 @@ export enum ContentType {
 
 export enum EncryptionType {
     NONE = 0,
-    RSA = 1,
     AES = 2
 }
 
@@ -52,12 +51,31 @@ export type StreamMessageAESEncrypted = StreamMessage & {
     groupKeyId: string
 }
 
-export default class StreamMessage implements StreamMessageOptions {
-    private static VALID_MESSAGE_TYPES = new Set(Object.values(StreamMessageType))
-    private static VALID_CONTENT_TYPES = new Set(Object.values(ContentType))
-    private static VALID_ENCRYPTIONS = new Set(Object.values(EncryptionType))
-    private static VALID_SIGNATURE_TYPES = new Set(Object.values(SignatureType))
+/**
+ * Validates that messageId is strictly after prevMsgRef in time.
+ */
+function validateSequence(messageId: MessageID, prevMsgRef: MessageRef | undefined): void {
+    if (prevMsgRef === undefined) {
+        return
+    }
 
+    const comparison = messageId.toMessageRef().compareTo(prevMsgRef)
+
+    if (comparison === 0) {
+        throw new ValidationError(
+            // eslint-disable-next-line max-len
+            `prevMessageRef cannot be identical to current. Current: ${JSON.stringify(messageId.toMessageRef())} Previous: ${JSON.stringify(prevMsgRef)}`
+        )
+    }
+    if (comparison < 0) {
+        throw new ValidationError(
+            // eslint-disable-next-line max-len
+            `prevMessageRef must come before current. Current: ${JSON.stringify(messageId.toMessageRef())} Previous: ${JSON.stringify(prevMsgRef)}`
+        )
+    }
+}
+
+export default class StreamMessage implements StreamMessageOptions {
     readonly messageId: MessageID
     readonly prevMsgRef?: MessageRef
     readonly messageType: StreamMessageType
@@ -81,29 +99,22 @@ export default class StreamMessage implements StreamMessageOptions {
         groupKeyId,
         newGroupKey,
     }: StreamMessageOptions) {
-        validateIsType('messageId', messageId, 'MessageID', MessageID)
-        this.messageId = messageId
-        validateIsType('prevMsgRef', prevMsgRef, 'MessageRef', MessageRef, true)
-        this.prevMsgRef = prevMsgRef
-        StreamMessage.validateMessageType(messageType)
-        this.messageType = messageType
-        StreamMessage.validateContentType(contentType)
-        this.contentType = contentType
-        StreamMessage.validateEncryptionType(encryptionType)
-        this.encryptionType = encryptionType
-        if (this.encryptionType === EncryptionType.AES) {
+        validateSequence(messageId, prevMsgRef)
+        validateIsNotEmptyByteArray('content', content)
+        if (encryptionType === EncryptionType.AES) {
             validateIsDefined('groupKeyId', groupKeyId)
         }
+
+        this.messageId = messageId
+        this.prevMsgRef = prevMsgRef
+        this.messageType = messageType
+        this.contentType = contentType
+        this.encryptionType = encryptionType
         this.groupKeyId = groupKeyId
-        validateIsType('newGroupKey', newGroupKey, 'EncryptedGroupKey', EncryptedGroupKey, true)
         this.newGroupKey = newGroupKey
-        validateIsType('signature', signature, 'Uint8Array', Uint8Array)
         this.signature = signature
-        StreamMessage.validateSignatureType(signatureType)
         this.signatureType = signatureType
-        validateIsNotEmptyByteArray('content', content)
         this.content = content
-        StreamMessage.validateSequence(this)
     }
 
     getStreamId(): StreamID {
@@ -159,53 +170,5 @@ export default class StreamMessage implements StreamMessageOptions {
 
     static isAESEncrypted(msg: StreamMessage): msg is StreamMessageAESEncrypted {
         return msg.encryptionType === EncryptionType.AES
-    }
-
-    private static validateMessageType(messageType: StreamMessageType): void {
-        if (!StreamMessage.VALID_MESSAGE_TYPES.has(messageType)) {
-            throw new ValidationError(`Unsupported message type: ${messageType}`)
-        }
-    }
-
-    private static validateContentType(contentType: ContentType): void {
-        if (!StreamMessage.VALID_CONTENT_TYPES.has(contentType)) {
-            throw new ValidationError(`Unsupported content type: ${contentType}`)
-        }
-    }
-
-    private static validateEncryptionType(encryptionType: EncryptionType): void {
-        if (!StreamMessage.VALID_ENCRYPTIONS.has(encryptionType)) {
-            throw new ValidationError(`Unsupported encryption type: ${encryptionType}`)
-        }
-    }
-
-    private static validateSignatureType(signatureType: SignatureType): void {
-        if (!StreamMessage.VALID_SIGNATURE_TYPES.has(signatureType)) {
-            throw new ValidationError(`Unsupported signature type: ${signatureType}`)
-        }
-    }
-
-    private static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef }): void {
-        if (!prevMsgRef) {
-            return
-        }
-
-        const comparison = messageId.toMessageRef().compareTo(prevMsgRef)
-
-        // cannot have same timestamp + sequence
-        if (comparison === 0) {
-            throw new ValidationError(
-                // eslint-disable-next-line max-len
-                `prevMessageRef cannot be identical to current. Current: ${JSON.stringify(messageId.toMessageRef())} Previous: ${JSON.stringify(prevMsgRef)}`
-            )
-        }
-
-        // previous cannot be newer
-        if (comparison < 0) {
-            throw new ValidationError(
-                // eslint-disable-next-line max-len
-                `prevMessageRef must come before current. Current: ${JSON.stringify(messageId.toMessageRef())} Previous: ${JSON.stringify(prevMsgRef)}`
-            )
-        }
     }
 }

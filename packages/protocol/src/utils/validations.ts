@@ -6,12 +6,6 @@ export function validateIsDefined(varName: string, varValue: unknown): void | ne
     }
 }
 
-export function validateIsNotEmptyString(varName: string, varValue: string): void | never {
-    if (varValue.length === 0) {
-        throw new ValidationError(`Expected ${varName} to not be an empty string.`)
-    }
-}
-
 export function validateIsNotNegativeInteger(varName: string, varValue?: number, allowUndefined = false): void | never {
     if (allowUndefined && varValue === undefined) {
         return
@@ -28,21 +22,5 @@ export function validateIsNotNegativeInteger(varName: string, varValue?: number,
 export function validateIsNotEmptyByteArray(varName: string, varValue: Uint8Array): void | never {
     if (!(varValue instanceof Uint8Array) || varValue.length === 0) {
         throw new ValidationError(`Expected ${varName} to be a non-empty byte array`)
-    }
-}
-
-export function validateIsType(
-    varName: string,
-    varValue: unknown,
-    typeName: string,
-    typeClass: unknown,
-    allowUndefined = false
-): void | never {
-    if (allowUndefined && varValue === undefined) {
-        return
-    }
-    if (!(varValue instanceof (typeClass as any))) {
-        const msg = `Expected ${varName} to be an instance of (${typeName}), but it was: ${JSON.stringify(varValue)}`
-        throw new ValidationError(msg)
     }
 }

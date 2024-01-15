@@ -57,7 +57,7 @@ describe('PublisherKeyExchange', () => {
             },
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             contentType: ContentType.JSON,
-            encryptionType: EncryptionType.RSA,
+            encryptionType: EncryptionType.NONE,
             signature: expect.any(Uint8Array)
         })
         const encryptedGroupKeys = deserializeGroupKeyResponse(actualResponse.content).encryptedGroupKeys
