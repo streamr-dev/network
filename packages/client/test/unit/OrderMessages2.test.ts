@@ -87,7 +87,7 @@ function formChainOfMessages(publisherId: EthereumAddress): Array<MessageInfo> {
 
 function createMsg({ publisherId, timestamp }: MessageInfo): StreamMessage {
     const messageId = new MessageID(toStreamID('streamId'), 0, timestamp, 0, publisherId, '')
-    const prevMsgRef = timestamp > 1 ? new MessageRef(timestamp - 1, 0) : null
+    const prevMsgRef = timestamp > 1 ? new MessageRef(timestamp - 1, 0) : undefined
     return new StreamMessage({
         messageId,
         prevMsgRef,

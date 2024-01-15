@@ -112,7 +112,7 @@ export class StreamMessageTranslator {
         let newGroupKey: GroupKey | undefined = undefined
         if (msg.newGroupKey) {
             newGroupKey = {
-                id: msg.newGroupKey!.groupKeyId,
+                id: msg.newGroupKey!.id,
                 data: msg.newGroupKey!.data
             }
         }

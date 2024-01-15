@@ -95,7 +95,6 @@ const measureJoiningTime = async () => {
                 '2222' as any,
                 'msgChainId'
             ),
-            prevMsgRef: null,
             content: utf8ToBinary(JSON.stringify({
                 hello: 'world'
             })),
