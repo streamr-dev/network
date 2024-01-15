@@ -71,7 +71,7 @@ describe('StorageNodeRegistry', () => {
                 }
             }
         })
-        await storageNodeManager.setStorageNodeMetadata({ http: 'mock-url' })
+        await storageNodeManager.setStorageNodeMetadata({ urls: ['mock-url'] })
         const stored = await creatorClient.getStoredStreams(storageNodeWallet.address)
         expect(stored.streams).toEqual([])
         expect(stored.blockNumber).toBeNumber()
