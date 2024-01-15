@@ -14,7 +14,8 @@ import {
     Metric,
     MetricsContext,
     MetricsDefinition,
-    RateMetric
+    RateMetric,
+    hexToBinary
 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
@@ -291,7 +292,7 @@ export class StreamrNode extends EventEmitter<Events> {
             return {
                 id: streamPartId,
                 controlLayerNeighbors: stream.layer1Node.getNeighbors(),
-                deliveryLayerNeighbors: stream.node.getNeighborIds()
+                deliveryLayerNeighbors: stream.node.getNeighborIds().map((nodeId) => hexToBinary(nodeId))
             }
         })
 

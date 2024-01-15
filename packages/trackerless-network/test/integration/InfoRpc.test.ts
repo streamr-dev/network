@@ -4,7 +4,7 @@ import { createMockPeerDescriptor } from '../utils/utils'
 import { InfoClient } from '../../src/logic/info-rpc/InfoClient'
 import { INFO_RPC_SERVICE_ID } from '../../src/logic/info-rpc/InfoRpcLocal'
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { waitForCondition } from '@streamr/utils'
+import { waitForCondition, binaryToHex } from '@streamr/utils'
 
 describe('NetworkStack InfoRpc', () => {
 
@@ -71,7 +71,7 @@ describe('NetworkStack InfoRpc', () => {
         const result = await infoClient.getInfo(stack1PeerDescriptor, false, [streamPartId])
         expect(areEqualPeerDescriptors(result.peerDescriptor!, stack1PeerDescriptor)).toEqual(true)
         expect(result.streamPartitions[0].id).toEqual(streamPartId)
-        expect(result.streamPartitions[0].deliveryLayerNeighbors[0]).toEqual(stack2.getStreamrNode().getNodeId())
+        expect(binaryToHex(result.streamPartitions[0].deliveryLayerNeighbors[0])).toEqual(stack2.getStreamrNode().getNodeId())
         expect(areEqualPeerDescriptors(result.streamPartitions[0].controlLayerNeighbors[0], stack2PeerDescriptor)).toEqual(true)
     })
 
