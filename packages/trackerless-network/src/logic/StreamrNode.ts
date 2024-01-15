@@ -284,7 +284,6 @@ export class StreamrNode extends EventEmitter<Events> {
         return false
     }
 
-    // Returns info of all streamParts or all given streamParts that are acting as a full node on a stream
     getInfo(): StreamPartitionInfo[] {
         const onStreamAsFullNode = Array.from(this.streamParts.entries()).filter(([_, node]) => node.proxied === false)
         return onStreamAsFullNode.map(([streamPartId]) => {

@@ -97,6 +97,7 @@ export class NetworkStack {
                 await this.ensureConnectedToControlLayer()
             }
         }
+        // TODO: remove undefined checks here. Assume that start is approproately awaited before stop is called.
         await this.streamrNode?.start(this.layer0Node!, connectionManager, connectionManager)
         if (this.streamrNode) {
             const infoRpcCommunicator = new ListeningRpcCommunicator(INFO_RPC_SERVICE_ID, this.getConnectionManager())
