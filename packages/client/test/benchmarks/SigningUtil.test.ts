@@ -1,7 +1,7 @@
 import { verifyMessage, Wallet } from '@ethersproject/wallet'
 import { randomString, toEthereumAddress, hexToBinary, areEqualBinaries } from '@streamr/utils'
 import { fastWallet } from '@streamr/test-utils'
-import { sign, verify } from '@streamr/utils'
+import { createSignature, verifySignature } from '@streamr/utils'
 
 /*
  * Benchmarking SigningUtil against ether.js implementation. This test is skipped
@@ -70,7 +70,7 @@ describe('SigningUtil', () => {
         
         it('sign', async () => {
             const elapsedTimeOur = await run(async () => {
-                return sign(payload, wallet.privateKey)
+                return createSignature(payload, wallet.privateKey)
             }, binarySignature, 'Sign-our')
     
             const elapsedTimeEthers = await run(async () => {
@@ -85,7 +85,7 @@ describe('SigningUtil', () => {
     
         it('verify', async () => {
             const elapsedTimeOur = await run(async () => {
-                return verify(toEthereumAddress(wallet.address), payload, binarySignature)
+                return verifySignature(toEthereumAddress(wallet.address), payload, binarySignature)
             }, true, 'Verify-our')
     
             const elapsedTimeEthers = await run(async () => {

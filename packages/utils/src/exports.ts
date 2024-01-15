@@ -42,7 +42,7 @@ import { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary, areEqualBinaries 
 import { filePathToNodeFormat } from './filePathToNodeFormat'
 import { retry } from './retry'
 import { toLengthPrefixedFrame, LengthPrefixedFrameDecoder } from './lengthPrefixedFrameUtils'
-import { verify, sign, recover } from './signingUtils'
+import { verifySignature, createSignature, recoverSignature } from './signingUtils'
 
 export {
     BrandedString,
@@ -99,9 +99,9 @@ export {
     retry,
     LengthPrefixedFrameDecoder,
     toLengthPrefixedFrame,
-    verify,
-    sign,
-    recover
+    createSignature,
+    verifySignature,
+    recoverSignature
 }
 
 export {

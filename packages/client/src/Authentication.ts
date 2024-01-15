@@ -2,7 +2,7 @@ import type { Signer } from '@ethersproject/abstract-signer'
 import { Provider, Web3Provider } from '@ethersproject/providers'
 import { computeAddress } from '@ethersproject/transactions'
 import { Wallet } from '@ethersproject/wallet'
-import { EthereumAddress, hexToBinary, toEthereumAddress, wait, sign } from '@streamr/utils'
+import { EthereumAddress, hexToBinary, toEthereumAddress, wait, createSignature } from '@streamr/utils'
 import pMemoize from 'p-memoize'
 import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'
 import { getStreamRegistryChainProviders } from './Ethereum'
@@ -23,7 +23,7 @@ export const createPrivateKeyAuthentication = (key: string, config: Pick<StrictS
     const address = toEthereumAddress(computeAddress(key))
     return {
         getAddress: async () => address,
-        createMessageSignature: async (payload: Uint8Array) => sign(payload, key),
+        createMessageSignature: async (payload: Uint8Array) => createSignature(payload, key),
         getStreamRegistryChainSigner: async () => {
             const primaryProvider = getStreamRegistryChainProviders(config)[0]
             return new Wallet(key, primaryProvider)
