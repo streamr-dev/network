@@ -46,7 +46,8 @@ export class PeerDiscovery {
         retry = true
     ): Promise<void> {
         const contactedPeers = new Set<DhtAddress>()
-        const distantJoinConfig = doAdditionalDistantPeerDiscovery ? { contactedPeers: new Set<DhtAddress>() } : undefined
+        const distantJoinConfig = doAdditionalDistantPeerDiscovery 
+            ? { enabled: true, contactedPeers: new Set<DhtAddress>() } : { enabled: false } as { enabled: false }
         await Promise.all(entryPoints.map((entryPoint) => this.joinThroughEntryPoint(
             entryPoint,
             contactedPeers,
@@ -59,7 +60,7 @@ export class PeerDiscovery {
         entryPointDescriptor: PeerDescriptor,
         // Note that this set is mutated by DiscoverySession
         contactedPeers: Set<DhtAddress>,
-        additionalDistantJoinConfig?: { contactedPeers: Set<DhtAddress> },
+        additionalDistantJoin: { enabled: true, contactedPeers: Set<DhtAddress> } | { enabled: false },
         retry = true
     ): Promise<void> {
         if (this.isStopped()) {
@@ -77,8 +78,8 @@ export class PeerDiscovery {
         this.config.peerManager.handleNewPeers([entryPointDescriptor])
         const targetId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
         const sessions = [this.createSession(targetId, contactedPeers)]
-        if (additionalDistantJoinConfig !== undefined) {
-            sessions.push(this.createSession(createDistantDhtAddress(targetId), additionalDistantJoinConfig.contactedPeers))
+        if (additionalDistantJoin.enabled) {
+            sessions.push(this.createSession(createDistantDhtAddress(targetId), additionalDistantJoin.contactedPeers))
         }
         await this.runSessions(sessions, entryPointDescriptor, retry)
         this.config.connectionManager?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
@@ -127,7 +128,7 @@ export class PeerDiscovery {
         logger.debug(`Rejoining DHT ${this.config.serviceId}`)
         this.rejoinOngoing = true
         try {
-            await this.joinThroughEntryPoint(entryPoint, new Set())
+            await this.joinThroughEntryPoint(entryPoint, new Set(), { enabled: false })
             logger.debug(`Rejoined DHT successfully ${this.config.serviceId}!`)
         } catch (err) {
             logger.warn(`Rejoining DHT ${this.config.serviceId} failed`)
