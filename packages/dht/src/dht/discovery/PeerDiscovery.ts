@@ -47,7 +47,7 @@ export class PeerDiscovery {
     ): Promise<void> {
         const contactedPeers = new Set<DhtAddress>()
         const distantJoinConfig = doAdditionalDistantPeerDiscovery 
-            ? { enabled: true, contactedPeers: new Set<DhtAddress>() } : { enabled: false } as { enabled: false }
+            ? { enabled: true, contactedPeers: new Set<DhtAddress>() } : { enabled: false } as const
         await Promise.all(entryPoints.map((entryPoint) => this.joinThroughEntryPoint(
             entryPoint,
             contactedPeers,
