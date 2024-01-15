@@ -11,7 +11,7 @@ export interface Layer0Node extends ITransport {
     waitForNetworkConnectivity(): Promise<void>
     getTransport(): ITransport
     getNeighbors(): PeerDescriptor[]
-    getAllConnectionPeerDescriptors(): PeerDescriptor[]
+    getConnections(): PeerDescriptor[]
     start(): Promise<void>
     stop(): Promise<void>
 }

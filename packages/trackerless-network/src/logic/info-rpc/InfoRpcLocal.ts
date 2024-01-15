@@ -21,7 +21,7 @@ export class InfoRpcLocal implements IInfoRpc {
  
     public getControlLayerInfo(): ControlLayerInfo {
         return {
-            connections: this.stack.getLayer0Node!().getAllConnectionPeerDescriptors(),
+            connections: this.stack.getLayer0Node!().getConnections(),
             neighbors: this.stack.getLayer0Node().getNeighbors()
         }
     }

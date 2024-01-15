@@ -535,7 +535,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         }
     }
 
-    public getAllConnectionPeerDescriptors(): PeerDescriptor[] {
+    public getConnections(): PeerDescriptor[] {
         return Array.from(this.connections.values())
             .filter((managedConnection: ManagedConnection) => managedConnection.isHandshakeCompleted())
             .map((managedConnection: ManagedConnection) => managedConnection.getPeerDescriptor()!)
