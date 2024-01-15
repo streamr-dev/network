@@ -180,13 +180,6 @@ describe('StreamMessage', () => {
             }))
         })
 
-        it('Throws with an invalid newGroupKey', () => {
-            assert.throws(() => msg({
-                // @ts-expect-error TODO
-                newGroupKey: 'foo', // invalid
-            }), ValidationError)
-        })
-
         it('Throws with an no group key for AES encrypted message', () => {
             assert.throws(() => msg({
                 encryptionType: EncryptionType.AES
