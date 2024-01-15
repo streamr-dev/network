@@ -51,6 +51,30 @@ export type StreamMessageAESEncrypted = StreamMessage & {
     groupKeyId: string
 }
 
+/**
+ * Validates that messageId is strictly after prevMsgRef in time.
+ */
+function validateSequence(messageId: MessageID, prevMsgRef: MessageRef | undefined): void {
+    if (prevMsgRef === undefined) {
+        return
+    }
+
+    const comparison = messageId.toMessageRef().compareTo(prevMsgRef)
+
+    if (comparison === 0) {
+        throw new ValidationError(
+            // eslint-disable-next-line max-len
+            `prevMessageRef cannot be identical to current. Current: ${JSON.stringify(messageId.toMessageRef())} Previous: ${JSON.stringify(prevMsgRef)}`
+        )
+    }
+    if (comparison < 0) {
+        throw new ValidationError(
+            // eslint-disable-next-line max-len
+            `prevMessageRef must come before current. Current: ${JSON.stringify(messageId.toMessageRef())} Previous: ${JSON.stringify(prevMsgRef)}`
+        )
+    }
+}
+
 export default class StreamMessage implements StreamMessageOptions {
     readonly messageId: MessageID
     readonly prevMsgRef?: MessageRef
@@ -146,29 +170,5 @@ export default class StreamMessage implements StreamMessageOptions {
 
     static isAESEncrypted(msg: StreamMessage): msg is StreamMessageAESEncrypted {
         return msg.encryptionType === EncryptionType.AES
-    }
-}
-
-/**
- * Validates that messageId is strictly after prevMsgRef in time.
- */
-function validateSequence(messageId: MessageID, prevMsgRef: MessageRef | undefined): void {
-    if (prevMsgRef === undefined) {
-        return
-    }
-
-    const comparison = messageId.toMessageRef().compareTo(prevMsgRef)
-
-    if (comparison === 0) {
-        throw new ValidationError(
-            // eslint-disable-next-line max-len
-            `prevMessageRef cannot be identical to current. Current: ${JSON.stringify(messageId.toMessageRef())} Previous: ${JSON.stringify(prevMsgRef)}`
-        )
-    }
-    if (comparison < 0) {
-        throw new ValidationError(
-            // eslint-disable-next-line max-len
-            `prevMessageRef must come before current. Current: ${JSON.stringify(messageId.toMessageRef())} Previous: ${JSON.stringify(prevMsgRef)}`
-        )
     }
 }
