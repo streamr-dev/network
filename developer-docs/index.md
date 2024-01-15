@@ -1,9 +1,15 @@
 # Streamr Network Developer Documentation
 
-## Conventions
+## Coding conventions
 
-### Counts 
+### Immutability
+Prefer immutable variables and fields over mutable ones. For example, use `const` for variables and `readonly` for
+fields. Copy arrays and objects when mutating them.
 
+### Avoid `null`, prefer `undefined`
+Avoid `null`. Use `undefined` instead. At the very least avoid mixing the two in the same context / types.
+
+### Naming counts
 - Functions and methods for getting counts should be named `getFooCount`
 - Variables and fields which store counts should be named `fooCount`
 
