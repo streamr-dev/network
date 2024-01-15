@@ -42,7 +42,7 @@ export class NetworkStack {
     private stopped = false
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
-    private infoServer?: InfoRpcLocal
+    private infoRpcLocal?: InfoRpcLocal
     private infoClient?: InfoClient
 
     constructor(options: NetworkOptions) {
@@ -100,8 +100,8 @@ export class NetworkStack {
         await this.streamrNode?.start(this.layer0Node!, connectionManager, connectionManager)
         if (this.streamrNode) {
             const infoRpcCommunicator = new ListeningRpcCommunicator(INFO_RPC_SERVICE_ID, this.getConnectionManager())
-            this.infoServer = new InfoRpcLocal(this, infoRpcCommunicator)
-            this.infoServer.registerDefaultServerMethods()
+            this.infoRpcLocal = new InfoRpcLocal(this, infoRpcCommunicator)
+            this.infoRpcLocal.registerDefaultServerMethods()
             this.infoClient = new InfoClient(
                 this.layer0Node!.getLocalPeerDescriptor(),
                 infoRpcCommunicator
