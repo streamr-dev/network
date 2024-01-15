@@ -1,4 +1,4 @@
-import { validateIsNotEmptyString, validateIsNotNegativeInteger, validateIsString } from '../../utils/validations'
+import { validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../utils/validations'
 
 import MessageRef from './MessageRef'
 import { StreamID } from '../../../src/utils/StreamID'
@@ -26,9 +26,6 @@ export default class MessageID {
         validateIsNotNegativeInteger('streamPartition', streamPartition)
         validateIsNotNegativeInteger('timestamp', timestamp)
         validateIsNotNegativeInteger('sequenceNumber', sequenceNumber)
-        validateIsString('publisherId', publisherId)
-        validateIsString('msgChainId', msgChainId)
-
         this.streamId = streamId
         this.streamPartition = streamPartition
         this.timestamp = timestamp

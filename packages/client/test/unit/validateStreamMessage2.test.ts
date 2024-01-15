@@ -24,7 +24,7 @@ import { createRandomAuthentication, MOCK_CONTENT } from '../test-utils/utils'
 const groupKeyMessageToStreamMessage = async (
     groupKeyMessage: GroupKeyRequest | GroupKeyResponse,
     messageId: MessageID,
-    prevMsgRef: MessageRef | null,
+    prevMsgRef: MessageRef | undefined,
     authentication: Authentication
 ): Promise<StreamMessage> => {
     return createSignedMessage({
@@ -120,7 +120,7 @@ describe('Validator2', () => {
             recipient: publisher,
             rsaPublicKey: 'rsaPublicKey',
             groupKeyIds: ['groupKeyId1', 'groupKeyId2']
-        }), new MessageID(toStreamID('streamId'), 0, 0, 0, subscriber, 'msgChainId'), null, subscriberAuthentication)
+        }), new MessageID(toStreamID('streamId'), 0, 0, 0, subscriber, 'msgChainId'), undefined, subscriberAuthentication)
 
         groupKeyResponse = await groupKeyMessageToStreamMessage(new GroupKeyResponse({
             requestId: 'requestId',
@@ -129,7 +129,7 @@ describe('Validator2', () => {
                 new EncryptedGroupKey('groupKeyId1', hexToBinary('0x1111')),
                 new EncryptedGroupKey('groupKeyId2', hexToBinary('0x2222'))
             ],
-        }), new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'), null, publisherAuthentication)
+        }), new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'), undefined, publisherAuthentication)
     })
 
     describe('validate(unknown message type)', () => {

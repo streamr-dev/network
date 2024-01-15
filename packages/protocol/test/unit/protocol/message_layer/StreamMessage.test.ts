@@ -12,7 +12,7 @@ import StreamMessage, {
 } from '../../../../src/protocol/message_layer/StreamMessage'
 import { toStreamID } from '../../../../src/utils/StreamID'
 import { StreamPartIDUtils } from '../../../../src/utils/StreamPartID'
-import { merge, hexToBinary } from '@streamr/utils'
+import { hexToBinary } from '@streamr/utils'
 
 const content = {
     hello: 'world',
@@ -22,22 +22,18 @@ const newGroupKey = new EncryptedGroupKey('groupKeyId', hexToBinary('1234'))
 const signature = hexToBinary('0x123123')
 
 const msg = ({ timestamp = 1564046332168, sequenceNumber = 10, ...overrides } = {}) => {
-    return new StreamMessage(
-        merge(
-            {
-                messageId: new MessageID(toStreamID('streamId'), 0, timestamp, sequenceNumber, PUBLISHER_ID, 'msgChainId'),
-                prevMsgRef: new MessageRef(timestamp, 5),
-                content: utf8ToBinary(JSON.stringify(content)),
-                contentType: ContentType.JSON,
-                messageType: StreamMessageType.MESSAGE,
-                encryptionType: EncryptionType.NONE,
-                signatureType: SignatureType.SECP256K1,
-                signature,
-                newGroupKey
-            },
-            overrides
-        )
-    )
+    return new StreamMessage({
+        messageId: new MessageID(toStreamID('streamId'), 0, timestamp, sequenceNumber, PUBLISHER_ID, 'msgChainId'),
+        prevMsgRef: new MessageRef(timestamp, 5),
+        content: utf8ToBinary(JSON.stringify(content)),
+        contentType: ContentType.JSON,
+        messageType: StreamMessageType.MESSAGE,
+        encryptionType: EncryptionType.NONE,
+        signatureType: SignatureType.SECP256K1,
+        signature,
+        newGroupKey,
+        ...overrides
+    })
 }
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
@@ -56,7 +52,7 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.messageType, StreamMessageType.MESSAGE)
             assert.strictEqual(streamMessage.contentType, ContentType.JSON)
             assert.strictEqual(streamMessage.encryptionType, EncryptionType.NONE)
-            assert.strictEqual(streamMessage.groupKeyId, null)
+            assert.strictEqual(streamMessage.groupKeyId, undefined)
             assert.deepStrictEqual(streamMessage.getParsedContent(), content)
             expect(streamMessage.content).toEqual(utf8ToBinary(JSON.stringify(content)))
             assert.strictEqual(streamMessage.signature, signature)
@@ -78,11 +74,11 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.getSequenceNumber(), 10)
             assert.strictEqual(streamMessage.getPublisherId(), PUBLISHER_ID)
             assert.strictEqual(streamMessage.getMsgChainId(), 'msgChainId')
-            assert.deepStrictEqual(streamMessage.prevMsgRef, null)
+            assert.deepStrictEqual(streamMessage.prevMsgRef, undefined)
             assert.strictEqual(streamMessage.messageType, StreamMessageType.MESSAGE)
             assert.strictEqual(streamMessage.contentType, ContentType.JSON)
             assert.strictEqual(streamMessage.encryptionType, EncryptionType.NONE)
-            assert.strictEqual(streamMessage.groupKeyId, null)
+            assert.strictEqual(streamMessage.groupKeyId, undefined)
             assert.deepStrictEqual(streamMessage.getParsedContent(), content)
             expect(streamMessage.content).toEqual(utf8ToBinary(JSON.stringify(content)))
             assert.strictEqual(streamMessage.signature, signature)
@@ -103,11 +99,11 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.getSequenceNumber(), 10)
             assert.strictEqual(streamMessage.getPublisherId(), PUBLISHER_ID)
             assert.strictEqual(streamMessage.getMsgChainId(), 'msgChainId')
-            assert.deepStrictEqual(streamMessage.prevMsgRef, null)
+            assert.deepStrictEqual(streamMessage.prevMsgRef, undefined)
             assert.strictEqual(streamMessage.messageType, StreamMessageType.MESSAGE)
             assert.strictEqual(streamMessage.contentType, ContentType.BINARY)
             assert.strictEqual(streamMessage.encryptionType, EncryptionType.NONE)
-            assert.strictEqual(streamMessage.groupKeyId, null)
+            assert.strictEqual(streamMessage.groupKeyId, undefined)
             assert.deepStrictEqual(streamMessage.content, new Uint8Array([1, 2, 3]))
             expect(streamMessage.content).toEqual(new Uint8Array([1, 2, 3]))
             assert.strictEqual(streamMessage.signature, signature)
@@ -128,13 +124,13 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.getSequenceNumber(), 10)
             assert.strictEqual(streamMessage.getPublisherId(), PUBLISHER_ID)
             assert.strictEqual(streamMessage.getMsgChainId(), 'msgChainId')
-            assert.deepStrictEqual(streamMessage.prevMsgRef, null)
+            assert.deepStrictEqual(streamMessage.prevMsgRef, undefined)
             assert.strictEqual(streamMessage.messageType, StreamMessageType.MESSAGE)
             assert.strictEqual(streamMessage.contentType, ContentType.BINARY)
             assert.strictEqual(streamMessage.encryptionType, EncryptionType.NONE)
-            assert.strictEqual(streamMessage.groupKeyId, null)
+            assert.strictEqual(streamMessage.groupKeyId, undefined)
             assert.deepStrictEqual(streamMessage.content, new Uint8Array([1, 2, 3]))
-            assert.strictEqual(streamMessage.newGroupKey, null)
+            assert.strictEqual(streamMessage.newGroupKey, undefined)
             assert.strictEqual(streamMessage.signature, signature)
         })
 
@@ -200,8 +196,7 @@ describe('StreamMessage', () => {
 
         it('Throws with an no group key for AES encrypted message', () => {
             assert.throws(() => msg({
-                encryptionType: EncryptionType.AES,
-                groupKeyId: null
+                encryptionType: EncryptionType.AES
             } as any), ValidationError)
         })
 
@@ -271,7 +266,7 @@ describe('StreamMessage', () => {
                     timestamp: ts,
                     sequenceNumber: 0,
                     // @ts-expect-error TODO
-                    prevMsgRef: null
+                    prevMsgRef: undefined
                 })
             })
         })
@@ -292,15 +287,15 @@ describe('StreamMessage', () => {
                 const copyWithFieldsNullified = new StreamMessage({
                     ...message,
                     encryptionType: EncryptionType.NONE,
-                    groupKeyId: null,
-                    newGroupKey: null,
-                    prevMsgRef: null,
+                    groupKeyId: undefined,
+                    newGroupKey: undefined,
+                    prevMsgRef: undefined,
                 })
                 expect(copyWithFieldsNullified.messageId).toEqual(message.messageId)
                 expect(copyWithFieldsNullified.encryptionType).toEqual(EncryptionType.NONE)
-                expect(copyWithFieldsNullified.groupKeyId).toEqual(null)
-                expect(copyWithFieldsNullified.newGroupKey).toEqual(null)
-                expect(copyWithFieldsNullified.prevMsgRef).toEqual(null)
+                expect(copyWithFieldsNullified.groupKeyId).toEqual(undefined)
+                expect(copyWithFieldsNullified.newGroupKey).toEqual(undefined)
+                expect(copyWithFieldsNullified.prevMsgRef).toEqual(undefined)
             })
         })
     })

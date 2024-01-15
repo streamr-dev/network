@@ -67,11 +67,11 @@ describe('MessageFactory', () => {
                 streamPartition: expect.toBeWithin(0, PARTITION_COUNT),
                 timestamp: TIMESTAMP
             },
-            prevMsgRef: null,
+            prevMsgRef: undefined,
             messageType: StreamMessageType.MESSAGE,
             encryptionType: EncryptionType.AES,
             groupKeyId: GROUP_KEY.id,
-            newGroupKey: null,
+            newGroupKey: undefined,
             signature: expect.any(Uint8Array),
             contentType: ContentType.JSON,
             content: expect.any(Uint8Array)
@@ -87,7 +87,7 @@ describe('MessageFactory', () => {
         const msg = await createMessage({}, messageFactory)
         expect(msg).toMatchObject({
             encryptionType: EncryptionType.NONE,
-            groupKeyId: null,
+            groupKeyId: undefined,
             content: utf8ToBinary(JSON.stringify(CONTENT))
         })
     })
@@ -137,7 +137,7 @@ describe('MessageFactory', () => {
         const messageFactory = await createMessageFactory()
         const msg = await createMessage({}, messageFactory, utf8ToBinary('mock-content'))
         expect(msg).toMatchObject({
-            contentType: ContentType.BINARY,
+            contentType: ContentType.BINARY
         })
     })
 
@@ -220,8 +220,8 @@ describe('MessageFactory', () => {
             const msg3 = await createMessage({ msgChainId: msg2.getMsgChainId(), explicitPartition: 20 }, messageFactory)
             expect(msg2.messageId.msgChainId).not.toBe(msg1.messageId.msgChainId)
             expect(msg3.messageId.msgChainId).not.toBe(msg1.messageId.msgChainId)
-            expect(msg2.prevMsgRef).toBe(null)
-            expect(msg3.prevMsgRef).toBe(null)
+            expect(msg2.prevMsgRef).toBe(undefined)
+            expect(msg3.prevMsgRef).toBe(undefined)
         })
 
         it('explicit msgChainId', async () => {
@@ -231,7 +231,7 @@ describe('MessageFactory', () => {
             const msg3 = await createMessage({ msgChainId: 'mock-id' }, messageFactory)
             expect(msg1.messageId.msgChainId).toBe('mock-id')
             expect(msg2.messageId.msgChainId).not.toBe('mock-id')
-            expect(msg2.prevMsgRef).toBe(null)
+            expect(msg2.prevMsgRef).toBe(undefined)
             expect(msg3.messageId.msgChainId).toBe('mock-id')
             expect(msg3.prevMsgRef).toEqual(msg1.getMessageRef())
         })

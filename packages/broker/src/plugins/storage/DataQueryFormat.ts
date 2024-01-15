@@ -29,7 +29,7 @@ const createBinaryFormat = (formatMessage: (bytes: Uint8Array) => Uint8Array): F
 
 export const toObject = (msg: StreamMessage): any => {
     const parsedContent = msg.getParsedContent()
-    return {
+    const result: any = {
         streamId: msg.getStreamId(),
         streamPartition: msg.getStreamPartition(),
         timestamp: msg.getTimestamp(),
@@ -39,10 +39,13 @@ export const toObject = (msg: StreamMessage): any => {
         messageType: msg.messageType,
         contentType: msg.contentType,
         encryptionType: msg.encryptionType,
-        groupKeyId: msg.groupKeyId,
         content: parsedContent instanceof Uint8Array ? binaryToHex(parsedContent) : parsedContent,
         signature: binaryToHex(msg.signature),
     }
+    if (msg.groupKeyId !== undefined) {
+        result.groupKeyId = msg.groupKeyId
+    }
+    return result
 }
 
 const FORMATS: Record<string, Format> = {

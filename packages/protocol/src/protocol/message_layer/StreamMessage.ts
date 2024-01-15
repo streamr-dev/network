@@ -1,8 +1,7 @@
 import InvalidJsonError from '../../errors/InvalidJsonError'
 import StreamMessageError from '../../errors/StreamMessageError'
 import ValidationError from '../../errors/ValidationError'
-import { validateIsNotEmptyByteArray, validateIsString, validateIsType } from '../../utils/validations'
-
+import { validateIsDefined, validateIsNotEmptyByteArray, validateIsType } from '../../utils/validations'
 import MessageRef from './MessageRef'
 import MessageID from './MessageID'
 import EncryptedGroupKey from './EncryptedGroupKey'
@@ -34,15 +33,15 @@ export enum SignatureType {
 
 export interface StreamMessageOptions {
     messageId: MessageID
-    prevMsgRef?: MessageRef | null
+    prevMsgRef?: MessageRef
     messageType?: StreamMessageType
     content: Uint8Array
     contentType: ContentType
     signature: Uint8Array
     signatureType: SignatureType
     encryptionType: EncryptionType
-    groupKeyId?: string | null
-    newGroupKey?: EncryptedGroupKey | null
+    groupKeyId?: string
+    newGroupKey?: EncryptedGroupKey
 }
 
 /**
@@ -60,58 +59,50 @@ export default class StreamMessage implements StreamMessageOptions {
     private static VALID_SIGNATURE_TYPES = new Set(Object.values(SignatureType))
 
     readonly messageId: MessageID
-    readonly prevMsgRef: MessageRef | null
+    readonly prevMsgRef?: MessageRef
     readonly messageType: StreamMessageType
     readonly content: Uint8Array
     readonly contentType: ContentType
     readonly signature: Uint8Array
     readonly signatureType: SignatureType
     readonly encryptionType: EncryptionType
-    readonly groupKeyId: string | null
-    readonly newGroupKey: EncryptedGroupKey | null
+    readonly groupKeyId?: string
+    readonly newGroupKey?: EncryptedGroupKey
 
     constructor({
         messageId,
-        prevMsgRef = null,
+        prevMsgRef,
         messageType = StreamMessageType.MESSAGE,
         content,
         contentType,
         signature,
         signatureType,
         encryptionType,
-        groupKeyId = null,
-        newGroupKey = null,
+        groupKeyId,
+        newGroupKey,
     }: StreamMessageOptions) {
         validateIsType('messageId', messageId, 'MessageID', MessageID)
         this.messageId = messageId
-
         validateIsType('prevMsgRef', prevMsgRef, 'MessageRef', MessageRef, true)
         this.prevMsgRef = prevMsgRef
-
         StreamMessage.validateMessageType(messageType)
         this.messageType = messageType
-
         StreamMessage.validateContentType(contentType)
         this.contentType = contentType
-
         StreamMessage.validateEncryptionType(encryptionType)
         this.encryptionType = encryptionType
-
-        validateIsString('groupKeyId', groupKeyId, this.encryptionType !== EncryptionType.AES)
+        if (this.encryptionType === EncryptionType.AES) {
+            validateIsDefined('groupKeyId', groupKeyId)
+        }
         this.groupKeyId = groupKeyId
-
         validateIsType('newGroupKey', newGroupKey, 'EncryptedGroupKey', EncryptedGroupKey, true)
         this.newGroupKey = newGroupKey
-
         validateIsType('signature', signature, 'Uint8Array', Uint8Array)
         this.signature = signature
-
         StreamMessage.validateSignatureType(signatureType)
         this.signatureType = signatureType
-
         validateIsNotEmptyByteArray('content', content)
         this.content = content
-
         StreamMessage.validateSequence(this)
     }
 
@@ -194,7 +185,7 @@ export default class StreamMessage implements StreamMessageOptions {
         }
     }
 
-    private static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef | null }): void {
+    private static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef }): void {
         if (!prevMsgRef) {
             return
         }
