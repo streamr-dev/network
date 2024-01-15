@@ -186,7 +186,7 @@ export class OrderedMessageChain {
 
     private isNextOrderedMessage(msg: StreamMessage) {
         const previousRef = msg.prevMsgRef
-        return (this.lastOrderedMsg === undefined) || (previousRef === null) || areEqualRefs(previousRef, this.lastOrderedMsg.getMessageRef())
+        return (this.lastOrderedMsg === undefined) || (previousRef === undefined) || areEqualRefs(previousRef, this.lastOrderedMsg.getMessageRef())
     }
 
     private isStaleMessage(msg: StreamMessage): boolean {

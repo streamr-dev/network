@@ -11,7 +11,7 @@ import NodeRegistryArtifact from '../ethereumArtifacts/NodeRegistryAbi.json'
 import { queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 
 export interface StorageNodeMetadata {
-    http: string
+    urls: string[]
 }
 
 /**

@@ -20,7 +20,7 @@ import { convertStreamMessageToBytes } from '@streamr/trackerless-network'
 const createResends = (serverUrl: string) => {
     return new Resends(
         {
-            getStorageNodeMetadata: async () => ({ http: serverUrl })
+            getStorageNodeMetadata: async () => ({ urls: [serverUrl] })
         } as any,
         undefined as any,
         undefined as any,

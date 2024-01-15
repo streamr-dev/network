@@ -17,7 +17,7 @@ const MSG_CHAIN_ID = 'msgChainId'
 const createMessage = (timestamp: number, hasPrevRef = true) => {
     return new StreamMessage({
         messageId: new MessageID(STREAM_ID, 0, timestamp, 0, PUBLISHER_ID, MSG_CHAIN_ID),
-        prevMsgRef: hasPrevRef ? new MessageRef(timestamp - 1, 0) : null,
+        prevMsgRef: hasPrevRef ? new MessageRef(timestamp - 1, 0) : undefined,
         content: utf8ToBinary('{}'),
         signature: hexToBinary('0x1234'),
         contentType: ContentType.JSON,
