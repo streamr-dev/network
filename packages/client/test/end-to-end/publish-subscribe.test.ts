@@ -17,9 +17,11 @@ const PAYLOAD = { hello: 'world' }
 
 async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID): Promise<unknown[]> {
     const entryPoints = CHAIN_CONFIG.dev2.entryPoints.map((entryPoint) => ({
-        ...entryPoint,
         nodeId: getRawFromDhtAddress(entryPoint.nodeId as DhtAddress),
-        type: NodeType.NODEJS
+        details: {
+            type: NodeType.NODEJS,
+            websocket: entryPoint.websocket
+        }
     }))
     const networkNode = createNetworkNode({
         layer0: {
