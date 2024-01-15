@@ -16,7 +16,7 @@ export class InfoRpcRemote extends RpcRemote<InfoRpcClient> {
                 streamPartIds: streamParts 
             } : undefined
         }
-        // TODO: Why does TS think this is Promise<void>
+        // TODO: Why does TS think this is Promise<void>: https://github.com/streamr-dev/network/pull/2293
         const result = await this.getClient().getInfo(request, this.formDhtRpcOptions())
         return result as unknown as InfoResponse
     }
