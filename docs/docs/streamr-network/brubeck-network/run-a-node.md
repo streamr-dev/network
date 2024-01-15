@@ -263,7 +263,7 @@ docker logs --tail 100 streamr1
 See [Docker's documentation](https://docs.docker.com/engine/reference/commandline/logs/) to learn more about how to use the `docker logs` command.
 
 ## The npm approach
-If you don’t have Node.js installed, install it using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) or manually from the [Node.js site](https://nodejs.org/en/download/). The Broker requires at least Node.js version 14.x. Once installed, you can download, configure, and start the Streamr Broker.
+If you don’t have Node.js installed, install it using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) or manually from the [Node.js site](https://nodejs.org/en/download/). The Broker requires at least Node.js version 18.x. Once installed, you can download, configure, and start the Streamr Broker.
 
 ### Step 1: Install the latest version using npm
 -   Run `npm install -g streamr-broker@latest` to download and install the package. You may need administrative access to run this command.

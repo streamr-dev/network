@@ -8,7 +8,7 @@ This is a quickstart guide on creating your first stream using the Streamr TypeS
 **Prerequisites:**
 
 -   NPM v8 or greater
--   NodeJS 16.13.x or greater
+-   NodeJS 18.13.x or greater (version 20 and later ideally)
 -   A small amount of `MATIC` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
 
 ## Streamr SDK

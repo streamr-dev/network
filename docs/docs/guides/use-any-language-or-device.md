@@ -9,7 +9,7 @@ This tutorial will show you how to publish data into the Streamr Network from in
 **Prerequisites:**
 
 -   NPM v8 or greater
--   NodeJS 16.13.x or greater
+-   NodeJS 18.x or greater (Ideally v20+)
 -   MacOS/Linux environments (Windows environments may require minor adjustments)
 -   A small amount of `MATIC` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
 -   A MQTT library of your choice (this tutorial uses [MQTT.js](https://www.npmjs.com/package/mqtt))
