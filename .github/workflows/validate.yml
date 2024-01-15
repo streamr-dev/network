@@ -131,7 +131,9 @@ jobs:
       docker-services: init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
       run-entry-point: true
       run-brokers: true
-      command: npm run test-browser
+      command: |
+        sudo apt-get install xvfb
+        npm run test-browser
   cli-tools:
     needs: build
     uses: ./.github/workflows/test-setup.yml
