@@ -1,7 +1,7 @@
 import { verifyMessage, Wallet } from '@ethersproject/wallet'
 import { randomString, toEthereumAddress, hexToBinary, areEqualBinaries } from '@streamr/utils'
 import { fastWallet } from '@streamr/test-utils'
-import { sign, verify } from '../../src/utils/signingUtils'
+import { sign, verify } from '@streamr/utils'
 
 /*
  * Benchmarking SigningUtil against ether.js implementation. This test is skipped

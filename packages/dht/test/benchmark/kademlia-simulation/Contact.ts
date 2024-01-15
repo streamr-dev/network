@@ -20,7 +20,9 @@ export class Contact {
     getPeerDescriptor(): PeerDescriptor {
         const peerDescriptor: PeerDescriptor = {
             nodeId: getRawFromDhtAddress(this.ownId),
-            type: NodeType.NODEJS
+            details: {
+                type: NodeType.NODEJS
+            }
         }
         return peerDescriptor
     }
