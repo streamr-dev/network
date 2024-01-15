@@ -19,7 +19,9 @@ const logger = new Logger(module)
 // To ensure that the autocertified subdomain is used for the Streamr Network
 const LOCAL_PEER_DESCRIPTOR: PeerDescriptor = {
     nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
-    type: NodeType.NODEJS,
+    details: {
+        type: NodeType.NODEJS
+    }
 }
 
 // TODO: use async/await
@@ -31,16 +33,18 @@ export const runStreamrChallenge = (
     return new Promise((resolve, reject) => {
         const remotePeerDescriptor: PeerDescriptor = {
             nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
-            type: NodeType.NODEJS,
-            websocket: {
-                host: streamrWebSocketIp,
-                port: parseInt(streamrWebSocketPort),
-                tls: true
+            details: {
+                type: NodeType.NODEJS,
+                websocket: {
+                    host: streamrWebSocketIp,
+                    port: parseInt(streamrWebSocketPort),
+                    tls: true
+                }
             }
         }
         const socket = new ClientWebsocket()
-        const address = 'wss://' + remotePeerDescriptor.websocket!.host + ':' +
-        remotePeerDescriptor.websocket!.port
+        const address = 'wss://' + remotePeerDescriptor.details!.websocket!.host + ':' +
+        remotePeerDescriptor.details!.websocket!.port
 
         const managedConnection = new ManagedConnection(LOCAL_PEER_DESCRIPTOR,
             ConnectionType.WEBSOCKET_CLIENT, socket, undefined)

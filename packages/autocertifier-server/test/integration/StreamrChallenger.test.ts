@@ -23,11 +23,13 @@ describe('StreamrChallenger', () => {
 
     const mockPeerDescriptor1: PeerDescriptor = {
         nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
-        type: NodeType.NODEJS,
-        websocket: {
-            host: '127.0.0.1',
-            port: 12323,
-            tls: false
+        details: {
+            type: NodeType.NODEJS,
+            websocket: {
+                host: '127.0.0.1',
+                port: 12323,
+                tls: false
+            }
         }
     }
     const sessionId = 'sessionId'
