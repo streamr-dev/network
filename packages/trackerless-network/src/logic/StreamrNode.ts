@@ -286,8 +286,8 @@ export class StreamrNode extends EventEmitter<Events> {
     }
 
     getInfo(): StreamPartitionInfo[] {
-        const onStreamAsFullNode = Array.from(this.streamParts.entries()).filter(([_, node]) => node.proxied === false)
-        return onStreamAsFullNode.map(([streamPartId]) => {
+        const streamParts = Array.from(this.streamParts.entries()).filter(([_, node]) => node.proxied === false)
+        return streamParts.map(([streamPartId]) => {
             const stream = this.streamParts.get(streamPartId)! as { node: RandomGraphNode, layer1Node: Layer1Node }
             return {
                 id: streamPartId,
