@@ -5,7 +5,7 @@ const { createKarmaConfig, createWebpackConfig } = require('@streamr/browser-tes
 const TEST_PATHS = [
     './test/unit/**/*.ts',
     './test/integration/**/*.ts',
-    './test/end-to-end/**/!(webrtc*|websocket*)',
+    './test/end-to-end/**/!(webrtc*|websocket*|memory-leak*)',
 ]
 
 module.exports = createKarmaConfig(TEST_PATHS, createWebpackConfig({
