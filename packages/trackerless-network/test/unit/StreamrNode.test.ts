@@ -104,12 +104,14 @@ describe('StreamrNode', () => {
             expect(info.length).toEqual(0)
         })
     
-        it('getInfo without specified streamPartitions returns all streamParts', async () => {
+        it('getInfo with streamParts', async () => {
             node.joinStreamPart(streamPartId)
             await waitForCondition(() => node.getInfo().length === 1)
             const info = node.getInfo()
             expect(info.length).toEqual(1)
             expect(info[0].id).toEqual(streamPartId)
+            expect(info[0].controlLayerNeighbors).toEqual([])
+            expect(info[0].deliveryLayerNeighbors).toEqual([])
         })
     })
 
