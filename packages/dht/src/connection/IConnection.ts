@@ -1,4 +1,4 @@
-import { UUID } from '../helpers/UUID'
+import { BrandedString } from '@streamr/utils'
 
 export interface ConnectionEvents {
     data: (bytes: Uint8Array) => void
@@ -13,13 +13,7 @@ export enum ConnectionType {
     WEBRTC = 'webrtc'
 }
 
-export type ConnectionIDKey = string & { readonly __brand: 'connectionIDKey' } // Nominal typing 
-
-export class ConnectionID extends UUID {
-    toMapKey(): ConnectionIDKey {
-        return this.toString() as ConnectionIDKey
-    }
-}
+export type ConnectionID = BrandedString<'ConnectionID'>
 
 export interface IConnection {
     

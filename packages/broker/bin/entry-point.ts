@@ -1,17 +1,16 @@
 #!/usr/bin/env node
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { DhtNode, NodeType } from '@streamr/dht'
-import { hexToBinary } from '@streamr/utils'
+import { DhtAddress, DhtNode, NodeType, getRawFromDhtAddress } from '@streamr/dht'
 
 const main = async () => {
     const entryPoint = CHAIN_CONFIG.dev2.entryPoints![0]
     const peerDescriptor = {
         ...entryPoint,
-        nodeId: hexToBinary(entryPoint.nodeId),
+        nodeId: getRawFromDhtAddress(entryPoint.nodeId as DhtAddress),
         type: NodeType.NODEJS  // TODO remove this when NET-1070 done
     }
     const dhtNode = new DhtNode({
-        peerId: entryPoint.nodeId,
+        nodeId: entryPoint.nodeId as DhtAddress,
         websocketHost: entryPoint.websocket!.host,
         websocketPortRange: {
             min: entryPoint.websocket!.port,

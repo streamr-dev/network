@@ -16,7 +16,7 @@ describe('RandomGraphNode', () => {
     let randomGraphNode: RandomGraphNode
     const peerDescriptor = createMockPeerDescriptor()
 
-    let targetNeighbors: NodeList
+    let neighbors: NodeList
     let nearbyNodeView: NodeList
     let randomNodeView: NodeList
 
@@ -25,13 +25,13 @@ describe('RandomGraphNode', () => {
     beforeEach(async () => {
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
 
-        targetNeighbors = new NodeList(nodeId, 10)
+        neighbors = new NodeList(nodeId, 10)
         randomNodeView = new NodeList(nodeId, 10)
         nearbyNodeView = new NodeList(nodeId, 10)
         layer1Node = new MockLayer1Node()
 
         randomGraphNode = createRandomGraphNode({
-            targetNeighbors,
+            neighbors,
             randomNodeView,
             nearbyNodeView,
             transport: new MockTransport(),
@@ -52,12 +52,11 @@ describe('RandomGraphNode', () => {
         randomGraphNode.stop()
     })
 
-    it('getTargetNeighborIds', () => {
+    it('getNeighborIds', () => {
         const mockRemote = createMockDeliveryRpcRemote()
-        targetNeighbors.add(mockRemote)
-        const ids = randomGraphNode.getTargetNeighborIds()
+        neighbors.add(mockRemote)
+        const ids = randomGraphNode.getNeighborIds()
         expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
-        targetNeighbors.remove(mockRemote.getPeerDescriptor())
     })
 
     it('getNearbyNodeView', () => {

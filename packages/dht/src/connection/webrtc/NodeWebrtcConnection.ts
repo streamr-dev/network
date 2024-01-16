@@ -5,10 +5,11 @@ import EventEmitter from 'eventemitter3'
 import nodeDatachannel, { DataChannel, DescriptionType, PeerConnection } from 'node-datachannel'
 import { Logger } from '@streamr/utils'
 import { IllegalRtcPeerConnectionState } from '../../helpers/errors'
-import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { iceServerAsString } from './iceServerAsString'
 import { IceServer } from './WebrtcConnector'
 import { PortRange } from '../ConnectionManager'
+import { getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { createRandomConnectionId } from '../Connection'
 
 const logger = new Logger(module)
 
@@ -66,7 +67,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
 
     constructor(params: Params) {
         super()
-        this.connectionId = new ConnectionID()
+        this.connectionId = createRandomConnectionId()
         this.iceServers = params.iceServers ?? []
         // eslint-disable-next-line no-underscore-dangle
         this._bufferThresholdHigh = params.bufferThresholdHigh ?? 2 ** 17
@@ -252,7 +253,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
         return !this.closed && this.lastState === 'connected' && !!this.dataChannel
     }
 
-    public setConnectionId(connectionID: string): void {
-        this.connectionId = new ConnectionID(connectionID)
+    public setConnectionId(connectionId: ConnectionID): void {
+        this.connectionId = connectionId
     }
 }

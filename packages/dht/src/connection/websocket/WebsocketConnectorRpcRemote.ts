@@ -2,9 +2,9 @@ import {
     WebsocketConnectionRequest
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger } from '@streamr/utils'
-import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { RpcRemote } from '../../dht/contact/RpcRemote'
 import { WebsocketConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 const logger = new Logger(module)
 

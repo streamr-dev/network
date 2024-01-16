@@ -42,7 +42,7 @@ describe('Storing data in DHT with two peers', () => {
 
     it('Can store on one peer DHT', async () => {
         await otherNode.stop()
-        await waitForCondition(() => entryPoint.getNumberOfNeighbors() === 0)
+        await waitForCondition(() => entryPoint.getNeighborCount() === 0)
         const storedData = createMockDataEntry()
         await entryPoint.storeDataToDht(getDhtAddressFromRaw(storedData.key), storedData.data!)
         const foundData = await entryPoint.getDataFromDht(getDhtAddressFromRaw(storedData.key))

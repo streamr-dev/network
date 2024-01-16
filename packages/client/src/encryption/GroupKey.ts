@@ -24,10 +24,10 @@ export class GroupKey {
     /** @internal */
     readonly data: Buffer
 
-    constructor(groupKeyId: string, data: Buffer) {
-        this.id = groupKeyId
-        if (!groupKeyId) {
-            throw new GroupKeyError(`groupKeyId must not be falsey ${groupKeyId}`)
+    constructor(id: string, data: Buffer) {
+        this.id = id
+        if (!id) {
+            throw new GroupKeyError(`groupKeyId must not be falsey ${id}`)
         }
         if (!data) {
             throw new GroupKeyError(`groupKeyBufferOrHexString must not be falsey ${data}`)
@@ -73,7 +73,7 @@ export class GroupKey {
     /** @internal */
     decryptNextGroupKey(nextGroupKey: EncryptedGroupKey): GroupKey {
         return new GroupKey(
-            nextGroupKey.groupKeyId,
+            nextGroupKey.id,
             EncryptionUtil.decryptWithAES(nextGroupKey.data, this.data)
         )
     }
@@ -81,7 +81,7 @@ export class GroupKey {
     /** @internal */
     static decryptRSAEncrypted(encryptedKey: EncryptedGroupKey, rsaPrivateKey: string): GroupKey {
         return new GroupKey(
-            encryptedKey.groupKeyId,
+            encryptedKey.id,
             EncryptionUtil.decryptWithRSAPrivateKey(encryptedKey.data, rsaPrivateKey)
         )
     }

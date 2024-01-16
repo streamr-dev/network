@@ -13,11 +13,11 @@ import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryCon
 import { formStreamPartDeliveryServiceId } from './formStreamPartDeliveryServiceId'
 
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
-    'nearbyNodeView' | 'randomNodeView' | 'targetNeighbors' | 'propagation'
-    | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'numOfTargetNeighbors'
+    'nearbyNodeView' | 'randomNodeView' | 'neighbors' | 'propagation'
+    | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'neighborCount'
     | 'rpcCommunicator' | 'nodeViewSize'
     | 'inspector' | 'temporaryConnectionRpcLocal'> & {
-        maxNumberOfContacts?: number
+        maxContactCount?: number
         minPropagationTargets?: number
         acceptProxyConnections?: boolean
         neighborUpdateInterval?: number
@@ -29,14 +29,14 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         formStreamPartDeliveryServiceId(config.streamPartId),
         config.transport
     )
-    const numOfTargetNeighbors = config.numOfTargetNeighbors ?? 4
-    const maxNumberOfContacts = config.maxNumberOfContacts ?? 20
+    const neighborCount = config.neighborCount ?? 4
+    const maxContactCount = config.maxContactCount ?? 20
     const minPropagationTargets = config.minPropagationTargets ?? 2
     const acceptProxyConnections = config.acceptProxyConnections ?? false
     const neighborUpdateInterval = config.neighborUpdateInterval ?? 10000
-    const nearbyNodeView = config.nearbyNodeView ?? new NodeList(ownNodeId, numOfTargetNeighbors + 1)
-    const randomNodeView = config.randomNodeView ?? new NodeList(ownNodeId, maxNumberOfContacts)
-    const targetNeighbors = config.targetNeighbors ?? new NodeList(ownNodeId, maxNumberOfContacts)
+    const nearbyNodeView = config.nearbyNodeView ?? new NodeList(ownNodeId, neighborCount + 1)
+    const randomNodeView = config.randomNodeView ?? new NodeList(ownNodeId, maxContactCount)
+    const neighbors = config.neighbors ?? new NodeList(ownNodeId, maxContactCount)
 
     const temporaryConnectionRpcLocal = new TemporaryConnectionRpcLocal({
         rpcCommunicator,
@@ -50,7 +50,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const propagation = config.propagation ?? new Propagation({
         minPropagationTargets,
         sendToNeighbor: async (neighborId: DhtAddress, msg: StreamMessage): Promise<void> => {
-            const remote = targetNeighbors.get(neighborId) ?? temporaryConnectionRpcLocal.getNodes().get(neighborId)
+            const remote = neighbors.get(neighborId) ?? temporaryConnectionRpcLocal.getNodes().get(neighborId)
             const proxyConnection = proxyConnectionRpcLocal?.getConnection(neighborId)
             if (remote) {
                 await remote.sendStreamMessage(msg)
@@ -68,18 +68,18 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         rpcCommunicator,
         nearbyNodeView,
         randomNodeView,
-        targetNeighbors,
-        maxNeighborCount: numOfTargetNeighbors,
+        neighbors,
+        maxNeighborCount: neighborCount,
         rpcRequestTimeout: config.rpcRequestTimeout
     })
     const neighborFinder = config.neighborFinder ?? new NeighborFinder({
-        targetNeighbors,
+        neighbors,
         nearbyNodeView,
         doFindNeighbors: (excludedIds) => handshaker.attemptHandshakesOnContacts(excludedIds),
-        minCount: numOfTargetNeighbors
+        minCount: neighborCount
     })
     const neighborUpdateManager = config.neighborUpdateManager ?? new NeighborUpdateManager({
-        targetNeighbors,
+        neighbors,
         nearbyNodeView,
         localPeerDescriptor: config.localPeerDescriptor,
         neighborFinder,
@@ -97,14 +97,14 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         ...config,
         nearbyNodeView,
         randomNodeView,
-        targetNeighbors,
+        neighbors,
         rpcCommunicator,
         handshaker,
         neighborFinder,
         neighborUpdateManager,
         propagation,
-        numOfTargetNeighbors,
-        nodeViewSize: maxNumberOfContacts,
+        neighborCount,
+        nodeViewSize: maxContactCount,
         proxyConnectionRpcLocal,
         inspector,
         temporaryConnectionRpcLocal

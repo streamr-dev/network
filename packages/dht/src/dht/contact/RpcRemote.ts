@@ -4,6 +4,7 @@ import { ConnectionType } from '../../connection/IConnection'
 import { expectedConnectionType } from '../../helpers/Connectivity'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
+import { DhtCallContext } from '../../rpc-protocol/DhtCallContext' 
 
 // Should connect directly to the server, timeout can be low
 const WEBSOCKET_CLIENT_TIMEOUT = 5000
@@ -37,7 +38,7 @@ export abstract class RpcRemote<T extends ServiceInfo & ClassType> {
     constructor(
         localPeerDescriptor: PeerDescriptor,
         remotePeerDescriptor: PeerDescriptor,
-        rpcCommunicator: RpcCommunicator,
+        rpcCommunicator: RpcCommunicator<DhtCallContext>,
         // eslint-disable-next-line @typescript-eslint/prefer-function-type
         clientClass: { new (clientTransport: ClientTransport): T },
         timeout?: number

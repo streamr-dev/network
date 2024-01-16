@@ -5,11 +5,9 @@ import { RecursiveOperation } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
-import { PeerID } from '../../src/helpers/PeerID'
-import { getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { Logger, wait } from '@streamr/utils'
 import { debugVars } from '../../src/helpers/debugHelpers'
-import { getDhtAddressFromRaw } from '../../src/identifiers'
+import { getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
@@ -59,17 +57,17 @@ describe('Find correctness', () => {
         logger.info('waiting over')
 
         nodes.forEach((node) => logger.info(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + ': connections:' +
-            node.getNumberOfConnections() + ', kbucket: ' + node.getNumberOfNeighbors()
-            + ', localLocked: ' + node.getNumberOfLocalLockedConnections()
-            + ', remoteLocked: ' + node.getNumberOfRemoteLockedConnections()
-            + ', weakLocked: ' + node.getNumberOfWeakLockedConnections()))
+            node.getConnectionCount() + ', kbucket: ' + node.getNeighborCount()
+            + ', localLocked: ' + node.getLocalLockedConnectionCount()
+            + ', remoteLocked: ' + node.getRemoteLockedConnectionCount()
+            + ', weakLocked: ' + node.getWeakLockedConnectionCount()))
 
         logger.info('starting find')
         const targetId = Uint8Array.from(dhtIds[9].data)
         const results = await nodes[159].executeRecursiveOperation(getDhtAddressFromRaw(targetId), RecursiveOperation.FIND_NODE)
         logger.info('find over')
         expect(results.closestNodes).toBeGreaterThanOrEqual(5)
-        expect(PeerID.fromValue(targetId).equals(peerIdFromPeerDescriptor(results.closestNodes[0])))
+        expect(getDhtAddressFromRaw(targetId)).toEqual(getNodeIdFromPeerDescriptor(results.closestNodes[0]))
 
     }, 180000)
 })

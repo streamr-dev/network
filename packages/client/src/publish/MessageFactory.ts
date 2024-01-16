@@ -5,6 +5,7 @@ import {
     EncryptionType,
     MessageID,
     MessageRef,
+    SignatureType,
     StreamID,
     StreamMessage,
     StreamMessageOptions,
@@ -29,19 +30,20 @@ export interface MessageFactoryOptions {
 }
 
 export const createSignedMessage = async (
-    opts: Omit<StreamMessageOptions, 'signature' | 'content'>
-    & { serializedContent: Uint8Array, authentication: Authentication }
+    opts: Omit<StreamMessageOptions, 'signature'> & { authentication: Authentication }
 ): Promise<StreamMessage> => {
     const signature = await opts.authentication.createMessageSignature(createSignaturePayload({
         messageId: opts.messageId,
-        serializedContent: opts.serializedContent,
+        content: opts.content,
+        signatureType: opts.signatureType,
+        encryptionType: opts.encryptionType,
         prevMsgRef: opts.prevMsgRef ?? undefined,
         newGroupKey: opts.newGroupKey ?? undefined
     }))
     return new StreamMessage({
         ...opts,
         signature,
-        content: opts.serializedContent
+        content: opts.content
     })
 }
 
@@ -104,10 +106,18 @@ export class MessageFactory {
         const encryptionType = (await this.streamRegistry.hasPublicSubscribePermission(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
         let groupKeyId: string | undefined
         let newGroupKey: EncryptedGroupKey | undefined
-        let serializedContent = utf8ToBinary(JSON.stringify(content))
+        let rawContent: Uint8Array
+        let contentType: ContentType
+        if (content instanceof Uint8Array) {
+            contentType = ContentType.BINARY
+            rawContent = content
+        } else {
+            contentType = ContentType.JSON
+            rawContent = utf8ToBinary(JSON.stringify(content))
+        }
         if (encryptionType === EncryptionType.AES) {
             const keySequence = await this.groupKeyQueue.useGroupKey()
-            serializedContent = EncryptionUtil.encryptWithAES(serializedContent, keySequence.current.data)
+            rawContent = EncryptionUtil.encryptWithAES(rawContent, keySequence.current.data)
             groupKeyId = keySequence.current.id
             if (keySequence.next !== undefined) {
                 newGroupKey = keySequence.current.encryptNextGroupKey(keySequence.next)
@@ -116,13 +126,14 @@ export class MessageFactory {
 
         return createSignedMessage({
             messageId,
-            serializedContent,
+            content: rawContent,
             prevMsgRef,
             encryptionType,
             groupKeyId,
             newGroupKey,
             authentication: this.authentication,
-            contentType: ContentType.JSON
+            contentType,
+            signatureType: SignatureType.SECP256K1,
         })
     }
 

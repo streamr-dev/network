@@ -66,8 +66,8 @@ describe('Layer0 with WebRTC connections', () => {
             node1.joinDht([epPeerDescriptor])
         ])
 
-        expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getLocalPeerDescriptor())).toEqual(true)
-        expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getLocalPeerDescriptor())).toEqual(true)
+        expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getNodeId())).toEqual(true)
+        expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getNodeId())).toEqual(true)
 
     }, 60000)
 
@@ -79,7 +79,7 @@ describe('Layer0 with WebRTC connections', () => {
             node4.joinDht([epPeerDescriptor])
         ])
 
-        expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getLocalPeerDescriptor())).toEqual(true)
-        expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getLocalPeerDescriptor())).toEqual(true)
+        expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getNodeId())).toEqual(true)
+        expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getNodeId())).toEqual(true)
     })
 })

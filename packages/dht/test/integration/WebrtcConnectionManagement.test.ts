@@ -8,6 +8,7 @@ import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTran
 import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
 import { MetricsContext } from '@streamr/utils'
 import { createMockPeerDescriptor } from '../utils/utils'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport: ITransport) => {
     return new ConnectionManager({
@@ -219,6 +220,6 @@ describe('WebRTC Connection Management', () => {
             manager1.send(msg),
             disconnectedPromise1
         ])
-        expect(manager1.getConnection(msg.targetDescriptor!)).toBeUndefined()
+        expect(manager1.getConnection(getNodeIdFromPeerDescriptor(msg.targetDescriptor!))).toBeUndefined()
     }, 20000)
 })
