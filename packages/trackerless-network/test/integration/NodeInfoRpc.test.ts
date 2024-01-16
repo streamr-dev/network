@@ -84,6 +84,17 @@ describe('NetworkStack NodeInfoRpc', () => {
             && stack2.getStreamrNode().getNeighbors(streamPartId2).length === 1
         )
         const result = await nodeInfoClient.getInfo(stack1PeerDescriptor)
+        /*expect(result).toMatchObject({
+            peerDescriptor: {},
+            controlLayer: {},
+            streamPartitions: [
+                {
+                    id: '',
+                    controlLayerNeighbors: [{}, {}],
+                    deliveryLayerNeighbors: [{}, {}]
+                }
+            ]
+        })*/
         expect(result.streamPartitions.length).toEqual(2)
     })
 
