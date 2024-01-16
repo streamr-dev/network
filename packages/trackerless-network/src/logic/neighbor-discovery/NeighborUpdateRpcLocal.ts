@@ -29,7 +29,14 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
     async neighborUpdate(message: NeighborUpdate, context: ServerCallContext): Promise<NeighborUpdate> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
-        if (this.config.neighbors.has(senderId)) {
+        if (this.config.neighbors.has(senderId) && this.config.neighbors.size() > 4 && message.neighborDescriptors.length > 4) {
+            const response: NeighborUpdate = {
+                streamPartId: this.config.streamPartId,
+                neighborDescriptors: this.config.neighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor()),
+                removeMe: true
+            }
+            return response
+        } else if (this.config.neighbors.has(senderId)) {
             const ownNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
             const newPeerDescriptors = message.neighborDescriptors.filter((peerDescriptor) => {
                 const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
