@@ -36,7 +36,7 @@ import { uniqBy } from 'lodash'
 
 export interface Events {
     message: (message: StreamMessage) => void
-    NeighborConnected: (nodeId: DhtAddress) => void
+    neighborConnected: (nodeId: DhtAddress) => void
     entryPointLeaveDetected: () => void
 }
 
@@ -55,7 +55,7 @@ export interface StrictRandomGraphNodeConfig {
     neighborUpdateManager: NeighborUpdateManager
     propagation: Propagation
     rpcCommunicator: ListeningRpcCommunicator
-    numOfNeighbors: number
+    neighborCount: number
     inspector: Inspector
     temporaryConnectionRpcLocal: TemporaryConnectionRpcLocal
     isLocalNodeEntryPoint: () => boolean
@@ -147,7 +147,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
             'nodeAdded',
             (id, _remote) => {
                 this.config.propagation.onNeighborJoined(id)
-                this.emit('NeighborConnected', id)
+                this.emit('neighborConnected', id)
             },
             this.abortController.signal
         )
@@ -182,7 +182,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
             return
         }
         this.updateNearbyNodeView(closestNodes)
-        if (this.config.neighbors.size() < this.config.numOfNeighbors) {
+        if (this.config.neighbors.size() < this.config.neighborCount) {
             this.config.neighborFinder.start()
         }
     }
@@ -235,7 +235,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 this.config.rpcRequestTimeout
             )
         ))
-        if (this.config.neighbors.size() < this.config.numOfNeighbors) {
+        if (this.config.neighbors.size() < this.config.neighborCount) {
             this.config.neighborFinder.start()
         }
     }
@@ -329,7 +329,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         return getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
     }
 
-    getNumberOfOutgoingHandshakes(): number {
+    getOutgoingHandshakeCount(): number {
         return this.config.handshaker.getOngoingHandshakes().size
     }
 

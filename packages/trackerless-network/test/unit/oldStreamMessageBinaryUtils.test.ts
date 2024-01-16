@@ -1,4 +1,12 @@
-import { ContentType, EncryptionType, MessageID, MessageRef, StreamMessage, toStreamID } from '@streamr/protocol'
+import {
+    ContentType,
+    EncryptionType,
+    MessageID,
+    MessageRef,
+    SignatureType,
+    StreamMessage,
+    toStreamID
+} from '@streamr/protocol'
 import { toEthereumAddress } from '@streamr/utils'
 import { convertBytesToStreamMessage, convertStreamMessageToBytes } from '../../src/exports'
 
@@ -18,6 +26,7 @@ describe('oldStreamMessageBinaryUtils', () => {
             contentType: ContentType.BINARY,
             encryptionType: EncryptionType.NONE,
             groupKeyId: '0x1234567890123456789012345678901234567890',
+            signatureType: SignatureType.SECP256K1,
             signature: new Uint8Array([7, 8, 9])
         })
 

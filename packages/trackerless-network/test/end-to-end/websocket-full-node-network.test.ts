@@ -64,12 +64,12 @@ describe('Full node network with WebSocket connections only', () => {
             }
             , 30000)
         ))
-        let numOfMessagesReceived = 0
+        let receivedMessageCount = 0
         const successIds: string[] = []
         nodes.forEach((node) => {
             node.getDeliveryLayer()!.on('newMessage', () => {
                 successIds.push(getNodeIdFromPeerDescriptor(node.getDeliveryLayer()!.getPeerDescriptor()))
-                numOfMessagesReceived += 1
+                receivedMessageCount += 1
             })
         })
 
@@ -79,7 +79,7 @@ describe('Full node network with WebSocket connections only', () => {
             randomEthereumAddress()
         )
         entryPoint.getDeliveryLayer()!.broadcast(msg)
-        await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
+        await waitForCondition(() => receivedMessageCount === NUM_OF_NODES)
     }, 220000)
 
 })

@@ -7,6 +7,7 @@ const { KeyServer } = require('@streamr/test-utils')
 
 // eslint-disable-next-line import/no-unresolved
 const StreamrClient = require('../../dist')
+const { StreamMessage } = require('@streamr/protocol')
 
 const { StorageNode, ConfigTest: clientOptions } = StreamrClient
 
@@ -114,7 +115,7 @@ async function run() {
         try {
             for (const streamMessage of streamMessages) {
                 // clone because pipeline mutates messages
-                const msg = streamMessage.clone()
+                const msg = new StreamMessage(streamMessage)
                 node.emit('streamr:node:unseen-message-received', msg)
             }
         } catch (err) {
@@ -228,4 +229,3 @@ run().catch((err) => {
     log(err)
     process.exit(1)
 })
-

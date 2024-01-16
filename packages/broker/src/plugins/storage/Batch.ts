@@ -32,7 +32,7 @@ export class Batch extends EventEmitter {
     private bucketId: BucketId
     logger: Logger
     private maxSize: number
-    private maxRecords: number
+    private maxRecordCount: number
     private maxRetries: number
     private closeTimeout: number
     private timeout: NodeJS.Timeout
@@ -43,7 +43,7 @@ export class Batch extends EventEmitter {
     state: State
     private doneCbs: DoneCallback[]
 
-    constructor(bucketId: BucketId, maxSize: number, maxRecords: number, closeTimeout: number, maxRetries: number) {
+    constructor(bucketId: BucketId, maxSize: number, maxRecordCount: number, closeTimeout: number, maxRetries: number) {
         if (!bucketId || !bucketId.length) {
             throw new TypeError('bucketId must be not empty string')
         }
@@ -52,8 +52,8 @@ export class Batch extends EventEmitter {
             throw new TypeError('maxSize must be > 0')
         }
 
-        if (maxRecords <= 0) {
-            throw new TypeError('maxRecords must be > 0')
+        if (maxRecordCount <= 0) {
+            throw new TypeError('maxRecordCount must be > 0')
         }
 
         if (closeTimeout <= 0) {
@@ -78,7 +78,7 @@ export class Batch extends EventEmitter {
         this.logger = new Logger(module, { id: this.id })
 
         this.maxSize = maxSize
-        this.maxRecords = maxRecords
+        this.maxRecordCount = maxRecordCount
         this.maxRetries = maxRetries
         this.closeTimeout = closeTimeout
 
@@ -142,17 +142,17 @@ export class Batch extends EventEmitter {
     }
 
     isFull(): boolean {
-        return this.size >= this.maxSize || this.getNumberOfRecords() >= this.maxRecords
+        return this.size >= this.maxSize || this.getRecordCount() >= this.maxRecordCount
     }
 
-    private getNumberOfRecords(): number {
+    private getRecordCount(): number {
         return this.records.length
     }
 
     private setState(state: State): void {
         this.state = state
         this.logger.trace('setState', { state })
-        this.emit(this.state, this.getBucketId(), this.getId(), this.state, this.size, this.getNumberOfRecords())
+        this.emit(this.state, this.getBucketId(), this.getId(), this.state, this.size, this.getRecordCount())
     }
 }
 

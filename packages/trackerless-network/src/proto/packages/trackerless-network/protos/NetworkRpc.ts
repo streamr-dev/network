@@ -68,25 +68,29 @@ export interface StreamMessage {
      */
     content: Uint8Array;
     /**
-     * @generated from protobuf field: bytes signature = 5;
+     * @generated from protobuf field: SignatureType signatureType = 5;
+     */
+    signatureType: SignatureType;
+    /**
+     * @generated from protobuf field: bytes signature = 6;
      */
     signature: Uint8Array;
     /**
      * this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
      *
-     * @generated from protobuf field: MessageID messageId = 6;
+     * @generated from protobuf field: MessageID messageId = 7;
      */
     messageId?: MessageID;
     /**
-     * @generated from protobuf field: optional MessageRef previousMessageRef = 7;
+     * @generated from protobuf field: optional MessageRef previousMessageRef = 8;
      */
     previousMessageRef?: MessageRef;
     /**
-     * @generated from protobuf field: optional string groupKeyId = 8;
+     * @generated from protobuf field: optional string groupKeyId = 9;
      */
     groupKeyId?: string;
     /**
-     * @generated from protobuf field: optional GroupKey newGroupKey = 9;
+     * @generated from protobuf field: optional GroupKey newGroupKey = 10;
      */
     newGroupKey?: GroupKey;
 }
@@ -313,6 +317,19 @@ export enum EncryptionType {
     AES = 1
 }
 /**
+ * @generated from protobuf enum SignatureType
+ */
+export enum SignatureType {
+    /**
+     * @generated from protobuf enum value: LEGACY_SECP256K1 = 0;
+     */
+    LEGACY_SECP256K1 = 0,
+    /**
+     * @generated from protobuf enum value: SECP256K1 = 1;
+     */
+    SECP256K1 = 1
+}
+/**
  * @generated from protobuf enum ProxyDirection
  */
 export enum ProxyDirection {
@@ -363,11 +380,12 @@ class StreamMessage$Type extends MessageType<StreamMessage> {
             { no: 2, name: "contentType", kind: "enum", T: () => ["ContentType", ContentType] },
             { no: 3, name: "encryptionType", kind: "enum", T: () => ["EncryptionType", EncryptionType] },
             { no: 4, name: "content", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 5, name: "signature", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 6, name: "messageId", kind: "message", T: () => MessageID },
-            { no: 7, name: "previousMessageRef", kind: "message", T: () => MessageRef },
-            { no: 8, name: "groupKeyId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
-            { no: 9, name: "newGroupKey", kind: "message", T: () => GroupKey }
+            { no: 5, name: "signatureType", kind: "enum", T: () => ["SignatureType", SignatureType] },
+            { no: 6, name: "signature", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 7, name: "messageId", kind: "message", T: () => MessageID },
+            { no: 8, name: "previousMessageRef", kind: "message", T: () => MessageRef },
+            { no: 9, name: "groupKeyId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 10, name: "newGroupKey", kind: "message", T: () => GroupKey }
         ]);
     }
 }

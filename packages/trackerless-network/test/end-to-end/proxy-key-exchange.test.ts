@@ -5,7 +5,7 @@ import {
     GroupKeyResponse,
     MessageID,
     serializeGroupKeyRequest,
-    serializeGroupKeyResponse,
+    serializeGroupKeyResponse, SignatureType,
     StreamMessage,
     StreamMessageType,
     StreamPartIDUtils
@@ -93,6 +93,7 @@ describe('proxy group key exchange', () => {
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
             content: serializeGroupKeyRequest(groupKeyRequest),
+            signatureType: SignatureType.SECP256K1,
             signature: hexToBinary('1234')
         })
 
@@ -122,8 +123,9 @@ describe('proxy group key exchange', () => {
             ),
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             contentType: ContentType.JSON,
-            encryptionType: EncryptionType.RSA,
+            encryptionType: EncryptionType.NONE,
             content: serializeGroupKeyResponse(groupKeyResponse),
+            signatureType: SignatureType.SECP256K1,
             signature: hexToBinary('1234')
         })
 

@@ -66,12 +66,12 @@ describe('Full node network with WebRTC connections', () => {
             }
             , 30000)
         ))
-        let numOfMessagesReceived = 0
+        let receivedMessageCount = 0
         const successIds: string[] = []
         nodes.forEach((node) => {
             node.getDeliveryLayer()!.on('newMessage', () => {
                 successIds.push(getNodeIdFromPeerDescriptor(node.getDeliveryLayer()!.getPeerDescriptor()))
-                numOfMessagesReceived += 1
+                receivedMessageCount += 1
             })
         })
         const msg = createStreamMessage(
@@ -80,7 +80,7 @@ describe('Full node network with WebRTC connections', () => {
             randomEthereumAddress()
         )
         entryPoint.getDeliveryLayer()!.broadcast(msg)
-        await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
+        await waitForCondition(() => receivedMessageCount === NUM_OF_NODES)
     }, 120000)
 
 })

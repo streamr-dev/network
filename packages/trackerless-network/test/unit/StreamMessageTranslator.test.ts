@@ -4,7 +4,8 @@ import {
     StreamMessage as OldStreamMessage,
     StreamMessageType as OldStreamMessageType,
     StreamPartIDUtils,
-    ContentType
+    ContentType,
+    SignatureType
 } from '@streamr/protocol'
 import { binaryToHex, binaryToUtf8, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import { StreamMessageTranslator } from '../../src/logic/protocol-integration/stream-message/StreamMessageTranslator'
@@ -32,11 +33,11 @@ describe('StreamMessageTranslator', () => {
     )
     const oldProtocolMsg = new OldStreamMessage({
         messageId,
-        prevMsgRef: null,
         content: utf8ToBinary(JSON.stringify({ hello: 'WORLD' })),
         contentType: ContentType.JSON,
         messageType: OldStreamMessageType.MESSAGE,
         encryptionType: EncryptionType.NONE,
+        signatureType: SignatureType.SECP256K1,
         signature,
     })
 
@@ -61,10 +62,10 @@ describe('StreamMessageTranslator', () => {
         expect(translated.messageId.timestamp).toBeGreaterThanOrEqual(0)
         expect(translated.messageId.sequenceNumber).toEqual(0)
         expect(translated.getPublisherId()).toEqual('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
-        expect(translated.prevMsgRef).toEqual(null)
+        expect(translated.prevMsgRef).toEqual(undefined)
         expect(translated.messageType).toEqual(OldStreamMessageType.MESSAGE)
         expect(translated.contentType).toEqual(0)
-        expect(translated.groupKeyId).toEqual(null)
+        expect(translated.groupKeyId).toEqual(undefined)
         expect(translated.signature).toStrictEqual(signature)
         expect(translated.getParsedContent()).toEqual({ hello: 'WORLD' })
     })

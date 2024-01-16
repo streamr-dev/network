@@ -42,9 +42,9 @@ describe('multiple entry point joining', () => {
                 node2.joinDht(entryPoints),
                 node3.joinDht(entryPoints)
             ])
-            expect(node1.getNumberOfNeighbors()).toEqual(2)
-            expect(node2.getNumberOfNeighbors()).toEqual(2)
-            expect(node3.getNumberOfNeighbors()).toEqual(2)
+            expect(node1.getNeighborCount()).toEqual(2)
+            expect(node2.getNeighborCount()).toEqual(2)
+            expect(node3.getNeighborCount()).toEqual(2)
         })
 
         it('can join even if a node is offline', async () => {
@@ -53,8 +53,8 @@ describe('multiple entry point joining', () => {
                 node1.joinDht(entryPoints),
                 node2.joinDht(entryPoints)
             ])
-            expect(node1.getNumberOfNeighbors()).toEqual(1)
-            expect(node2.getNumberOfNeighbors()).toEqual(1)
+            expect(node1.getNeighborCount()).toEqual(1)
+            expect(node2.getNeighborCount()).toEqual(1)
         }, 10000)
     })
 
@@ -96,9 +96,9 @@ describe('multiple entry point joining', () => {
 
         it('non-entry point nodes can join', async () => {
             await node1.joinDht(entryPoints)
-            expect(node1.getNumberOfNeighbors()).toEqual(2)
+            expect(node1.getNeighborCount()).toEqual(2)
             await node2.joinDht(entryPoints)
-            expect(node2.getNumberOfNeighbors()).toEqual(3)
+            expect(node2.getNeighborCount()).toEqual(3)
         })
 
     })

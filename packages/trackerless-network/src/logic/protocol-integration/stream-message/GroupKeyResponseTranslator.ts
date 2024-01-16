@@ -10,7 +10,7 @@ export class GroupKeyResponseTranslator {
         const groupKeys = msg.encryptedGroupKeys.map((groupKey) => {
             return {
                 data: groupKey.data,
-                id: groupKey.groupKeyId
+                id: groupKey.id
             }
         })
         const translated: GroupKeyResponse = {
