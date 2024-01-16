@@ -304,14 +304,14 @@ export interface ControlLayerInfo {
     connections: PeerDescriptor[];
 }
 /**
- * @generated from protobuf message InfoRequest
+ * @generated from protobuf message NodeInfoRequest
  */
-export interface InfoRequest {
+export interface NodeInfoRequest {
 }
 /**
- * @generated from protobuf message InfoResponse
+ * @generated from protobuf message NodeInfoResponse
  */
-export interface InfoResponse {
+export interface NodeInfoResponse {
     /**
      * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 1;
      */
@@ -643,19 +643,19 @@ class ControlLayerInfo$Type extends MessageType<ControlLayerInfo> {
  */
 export const ControlLayerInfo = new ControlLayerInfo$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class InfoRequest$Type extends MessageType<InfoRequest> {
+class NodeInfoRequest$Type extends MessageType<NodeInfoRequest> {
     constructor() {
-        super("InfoRequest", []);
+        super("NodeInfoRequest", []);
     }
 }
 /**
- * @generated MessageType for protobuf message InfoRequest
+ * @generated MessageType for protobuf message NodeInfoRequest
  */
-export const InfoRequest = new InfoRequest$Type();
+export const NodeInfoRequest = new NodeInfoRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class InfoResponse$Type extends MessageType<InfoResponse> {
+class NodeInfoResponse$Type extends MessageType<NodeInfoResponse> {
     constructor() {
-        super("InfoResponse", [
+        super("NodeInfoResponse", [
             { no: 1, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
             { no: 2, name: "streamPartitions", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => StreamPartitionInfo },
             { no: 3, name: "controlLayer", kind: "message", T: () => ControlLayerInfo }
@@ -663,9 +663,9 @@ class InfoResponse$Type extends MessageType<InfoResponse> {
     }
 }
 /**
- * @generated MessageType for protobuf message InfoResponse
+ * @generated MessageType for protobuf message NodeInfoResponse
  */
-export const InfoResponse = new InfoResponse$Type();
+export const NodeInfoResponse = new NodeInfoResponse$Type();
 /**
  * @generated ServiceType for protobuf service DeliveryRpc
  */
@@ -699,8 +699,8 @@ export const TemporaryConnectionRpc = new ServiceType("TemporaryConnectionRpc", 
     { name: "openConnection", options: {}, I: TemporaryConnectionRequest, O: TemporaryConnectionResponse }
 ]);
 /**
- * @generated ServiceType for protobuf service InfoRpc
+ * @generated ServiceType for protobuf service NodeInfoRpc
  */
-export const InfoRpc = new ServiceType("InfoRpc", [
-    { name: "getInfo", options: {}, I: InfoRequest, O: InfoResponse }
+export const NodeInfoRpc = new ServiceType("NodeInfoRpc", [
+    { name: "getInfo", options: {}, I: NodeInfoRequest, O: NodeInfoResponse }
 ]);

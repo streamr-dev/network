@@ -1,10 +1,11 @@
-import { ControlLayerInfo, InfoRequest, InfoResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { IInfoRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
+import { ControlLayerInfo, NodeInfoRequest, NodeInfoResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { INodeInfoRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { NetworkStack } from '../../NetworkStack'
 import { ListeningRpcCommunicator } from '@streamr/dht'
 
-export const INFO_RPC_SERVICE_ID = 'system/info-rpc'
-export class InfoRpcLocal implements IInfoRpc {
+export const NODE_INFO_RPC_SERVICE_ID = 'system/node-info-rpc'
+
+export class NodeInfoRpcLocal implements INodeInfoRpc {
     
     private readonly stack: NetworkStack
     private readonly rpcCommunicator: ListeningRpcCommunicator
@@ -15,7 +16,7 @@ export class InfoRpcLocal implements IInfoRpc {
     }
 
     registerDefaultServerMethods(): void {
-        this.rpcCommunicator.registerRpcMethod(InfoRequest, InfoResponse, 'getInfo',
+        this.rpcCommunicator.registerRpcMethod(NodeInfoRequest, NodeInfoResponse, 'getInfo',
             () => this.getInfo())
     }
  
@@ -26,11 +27,11 @@ export class InfoRpcLocal implements IInfoRpc {
         }
     }
 
-    async getInfo(): Promise<InfoResponse> {
+    async getInfo(): Promise<NodeInfoResponse> {
         return {
             peerDescriptor: this.stack.getLayer0Node().getLocalPeerDescriptor(),
             controlLayer: this.getControlLayerInfo(),
-            streamPartitions: this.stack.getStreamrNode().getInfo()
+            streamPartitions: this.stack.getStreamrNode().getNodeInfo()
         }
     }
 

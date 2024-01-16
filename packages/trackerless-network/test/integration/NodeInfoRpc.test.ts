@@ -1,16 +1,16 @@
 import { Simulator, SimulatorTransport, ListeningRpcCommunicator, areEqualPeerDescriptors } from '@streamr/dht'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { InfoClient } from '../../src/logic/info-rpc/InfoClient'
-import { INFO_RPC_SERVICE_ID } from '../../src/logic/info-rpc/InfoRpcLocal'
+import { NodeInfoClient } from '../../src/logic/node-info-rpc/NodeInfoClient'
+import { NODE_INFO_RPC_SERVICE_ID } from '../../src/logic/node-info-rpc/NodeInfoRpcLocal'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { waitForCondition } from '@streamr/utils'
 
-describe('NetworkStack InfoRpc', () => {
+describe('NetworkStack NodeInfoRpc', () => {
 
     let stack1: NetworkStack
     let stack2: NetworkStack
-    let infoClient: InfoClient
+    let nodeInfoClient: NodeInfoClient
     let transport1: SimulatorTransport
     let transport2: SimulatorTransport
     let transport3: SimulatorTransport
@@ -45,7 +45,7 @@ describe('NetworkStack InfoRpc', () => {
         })
         await stack1.start()
         await stack2.start()
-        infoClient = new InfoClient(stack3PeerDescriptor, new ListeningRpcCommunicator(INFO_RPC_SERVICE_ID, transport3))
+        nodeInfoClient = new NodeInfoClient(stack3PeerDescriptor, new ListeningRpcCommunicator(NODE_INFO_RPC_SERVICE_ID, transport3))
     })
 
     afterEach(async () => {
@@ -56,21 +56,21 @@ describe('NetworkStack InfoRpc', () => {
         await transport3.stop()
     })
 
-    it('InfoClient can query NetworkStacks', async () => {
-        const result = await infoClient.getInfo(stack1PeerDescriptor)
+    it('NodeInfoClient can query NetworkStacks', async () => {
+        const result = await nodeInfoClient.getInfo(stack1PeerDescriptor)
         expect(result.controlLayer).toBeDefined()
         expect(result.streamPartitions).toBeDefined()
     })
 
-    it('InfoClient gets control layer info', async () => {
-        const result = await infoClient.getInfo(stack1PeerDescriptor)
+    it('NodeInfoClient gets control layer info', async () => {
+        const result = await nodeInfoClient.getInfo(stack1PeerDescriptor)
         expect(result.controlLayer).toBeDefined()
         expect(result.controlLayer!.connections.length).toEqual(2)
         expect(result.controlLayer!.neighbors.length).toEqual(1)
         expect(areEqualPeerDescriptors(result.controlLayer!.neighbors[0], stack2PeerDescriptor)).toEqual(true)
     })
 
-    it('InfoClient gets stream partition info', async () => {
+    it('NodeInfoClient gets stream partition info', async () => {
         const streamPartId1 = StreamPartIDUtils.parse('stream1#0')
         const streamPartId2 = StreamPartIDUtils.parse('stream1#1')
         await stack1.getStreamrNode().joinStreamPart(streamPartId1)
@@ -83,7 +83,7 @@ describe('NetworkStack InfoRpc', () => {
             && stack2.getStreamrNode().getNeighbors(streamPartId2).length === 1
             && stack2.getStreamrNode().getNeighbors(streamPartId2).length === 1
         )
-        const result = await infoClient.getInfo(stack1PeerDescriptor)
+        const result = await nodeInfoClient.getInfo(stack1PeerDescriptor)
         expect(result.streamPartitions.length).toEqual(2)
     })
 

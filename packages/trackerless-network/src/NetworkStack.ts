@@ -2,11 +2,11 @@ import { ConnectionManager, DhtNode, DhtNodeOptions, ListeningRpcCommunicator, P
 import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
 import { MetricsContext, waitForCondition } from '@streamr/utils'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
-import { InfoResponse, ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
+import { NodeInfoResponse, ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
 import { Layer0Node } from './logic/Layer0Node'
 import { pull } from 'lodash'
-import { INFO_RPC_SERVICE_ID, InfoRpcLocal } from './logic/info-rpc/InfoRpcLocal'
-import { InfoClient } from './logic/info-rpc/InfoClient'
+import { NODE_INFO_RPC_SERVICE_ID, NodeInfoRpcLocal } from './logic/node-info-rpc/NodeInfoRpcLocal'
+import { NodeInfoClient } from './logic/node-info-rpc/NodeInfoClient'
 
 export interface NetworkOptions {
     layer0?: DhtNodeOptions
@@ -42,8 +42,8 @@ export class NetworkStack {
     private stopped = false
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
-    private infoRpcLocal?: InfoRpcLocal
-    private infoClient?: InfoClient
+    private nodeInfoRpcLocal?: NodeInfoRpcLocal
+    private nodeInfoClient?: NodeInfoClient
 
     constructor(options: NetworkOptions) {
         this.options = options
@@ -100,10 +100,10 @@ export class NetworkStack {
         // TODO: remove undefined checks here. Assume that start is approproately awaited before stop is called.
         await this.streamrNode?.start(this.layer0Node!, connectionManager, connectionManager)
         if (this.streamrNode) {
-            const infoRpcCommunicator = new ListeningRpcCommunicator(INFO_RPC_SERVICE_ID, this.getConnectionManager())
-            this.infoRpcLocal = new InfoRpcLocal(this, infoRpcCommunicator)
-            this.infoRpcLocal.registerDefaultServerMethods()
-            this.infoClient = new InfoClient(
+            const infoRpcCommunicator = new ListeningRpcCommunicator(NODE_INFO_RPC_SERVICE_ID, this.getConnectionManager())
+            this.nodeInfoRpcLocal = new NodeInfoRpcLocal(this, infoRpcCommunicator)
+            this.nodeInfoRpcLocal.registerDefaultServerMethods()
+            this.nodeInfoClient = new NodeInfoClient(
                 this.layer0Node!.getLocalPeerDescriptor(),
                 infoRpcCommunicator
             )
@@ -141,8 +141,8 @@ export class NetworkStack {
         return this.metricsContext
     }
 
-    async fetchNodeInfo(node: PeerDescriptor): Promise<InfoResponse> {
-        return this.infoClient!.getInfo(node)
+    async fetchNodeInfo(node: PeerDescriptor): Promise<NodeInfoResponse> {
+        return this.nodeInfoClient!.getInfo(node)
     }
 
     getOptions(): NetworkOptions {

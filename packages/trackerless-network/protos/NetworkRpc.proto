@@ -28,8 +28,8 @@ service TemporaryConnectionRpc {
   rpc openConnection (TemporaryConnectionRequest) returns (TemporaryConnectionResponse);
 }
 
-service InfoRpc {
-  rpc getInfo (InfoRequest) returns (InfoResponse);
+service NodeInfoRpc {
+  rpc getInfo (NodeInfoRequest) returns (NodeInfoResponse);
 }
 
 message MessageID {
@@ -165,9 +165,9 @@ message ControlLayerInfo {
   repeated dht.PeerDescriptor connections = 2;
 }
 
-message InfoRequest {}
+message NodeInfoRequest {}
 
-message InfoResponse {
+message NodeInfoResponse {
   dht.PeerDescriptor peerDescriptor = 1;
   repeated StreamPartitionInfo streamPartitions = 2;
   optional ControlLayerInfo controlLayer = 3;
