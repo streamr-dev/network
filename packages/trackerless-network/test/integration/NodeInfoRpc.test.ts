@@ -80,7 +80,7 @@ describe('NetworkStack NodeInfoRpc', () => {
         await waitForCondition(() => 
             stack1.getStreamrNode().getNeighbors(streamPartId1).length === 1 
             && stack2.getStreamrNode().getNeighbors(streamPartId1).length === 1
-            && stack2.getStreamrNode().getNeighbors(streamPartId2).length === 1
+            && stack1.getStreamrNode().getNeighbors(streamPartId2).length === 1
             && stack2.getStreamrNode().getNeighbors(streamPartId2).length === 1
         )
         const result = await nodeInfoClient.getInfo(stack1PeerDescriptor)
