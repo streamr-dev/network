@@ -90,6 +90,30 @@
                                 "$ref": "#/definitions/peerDescriptor"
                             }
                         },
+                        "entryPointDiscovery": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "enabled": {
+                                    "type": "boolean"
+                                },
+                                "maxEntryPoints": {
+                                    "type": "number"
+                                },
+                                "maxQueryResults": {
+                                    "type": "number"
+                                },
+                                "maxHeartbeatAgeHours": {
+                                    "type": "number"
+                                }
+                            },
+                            "default": {
+                                "enabled": true,
+                                "maxEntryPoints": 5,
+                                "maxQueryResults": 50,
+                                "maxHeartbeatAgeHours": 24
+                            }
+                        },
                         "websocketPortRange": {
                             "$ref": "#/definitions/portRange",
                             "default": {
@@ -103,6 +127,10 @@
                         },
                         "peerDescriptor": {
                             "$ref": "#/definitions/peerDescriptor"
+                        },
+                        "maxConnections": {
+                            "type": "number",
+                            "default": 80
                         },
                         "tlsCertificate": {
                             "description": "Files to use for TLS",
@@ -227,7 +255,7 @@
                         "id": {
                             "type": "string"
                         },
-                        "streamPartitionNumOfTargetNeighbors": {
+                        "streamPartitionNeighborCount": {
                             "type": "number",
                             "default": 4
                         },
@@ -264,14 +292,18 @@
                 "streamRegistryChainRPCs": {
                     "$ref": "#/definitions/chainConnectionInfoList"
                 },
-                "ethereumNetworks": {
+                "ethereumNetwork": {
                     "type": "object",
-                    "default": {
-                        "polygon": {
-                            "chainId": 137,
-                            "highGasPriceStrategy": true
+                    "additionalProperties": false,
+                    "properties": {
+                        "overrides": {
+                            "type": "object"
+                        },
+                        "highGasPriceStrategy": {
+                            "type": "boolean"
                         }
-                    }
+                    },
+                    "default": {}
                 },
                 "theGraphUrl": {
                     "type": "string",

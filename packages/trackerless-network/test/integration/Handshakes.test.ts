@@ -4,9 +4,9 @@ import {
     PeerDescriptor,
     ListeningRpcCommunicator,
     Simulator,
-    SimulatorTransport
+    SimulatorTransport,
+    getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
 import {
     HandshakeRpcClient
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -14,7 +14,6 @@ import { NodeList } from '../../src/logic/NodeList'
 import { mockConnectionLocker } from '../utils/utils'
 import { StreamPartHandshakeRequest, StreamPartHandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('Handshakes', () => {
@@ -35,7 +34,7 @@ describe('Handshakes', () => {
     let rpcCommunicator2: ListeningRpcCommunicator
     let rpcCommunicator3: ListeningRpcCommunicator
     let nodeView: NodeList
-    let targetNeighbors: NodeList
+    let neighbors: NodeList
     let handshaker: Handshaker
     const streamPartId = StreamPartIDUtils.parse('stream#0')
 
@@ -70,7 +69,6 @@ describe('Handshakes', () => {
     let simulatorTransport3: SimulatorTransport
 
     beforeEach(async () => {
-        Simulator.useFakeTimers()
         simulator = new Simulator()
         simulatorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
         await simulatorTransport1.start()
@@ -85,13 +83,13 @@ describe('Handshakes', () => {
 
         const handshakerNodeId = getNodeIdFromPeerDescriptor(peerDescriptor2)
         nodeView = new NodeList(handshakerNodeId, 10)
-        targetNeighbors = new NodeList(handshakerNodeId, 4)
+        neighbors = new NodeList(handshakerNodeId, 4)
         handshaker = new Handshaker({
             localPeerDescriptor: peerDescriptor2,
             streamPartId,
             nearbyNodeView: nodeView,
             randomNodeView: nodeView,
-            targetNeighbors,
+            neighbors,
             connectionLocker: mockConnectionLocker,
             rpcCommunicator: rpcCommunicator2,
             maxNeighborCount: 4
@@ -107,7 +105,6 @@ describe('Handshakes', () => {
         await simulatorTransport2.stop()
         await simulatorTransport3.stop()
         simulator.stop()
-        Simulator.useFakeTimers(false)
     })
 
     it('Two nodes can handshake', async () => {
@@ -117,12 +114,12 @@ describe('Handshakes', () => {
             new HandshakeRpcRemote(
                 peerDescriptor2,
                 peerDescriptor1,
-                streamPartId,
-                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport()))
+                rpcCommunicator2,
+                HandshakeRpcClient
             )
         )
         expect(res).toEqual(true)
-        expect(targetNeighbors.hasNode(peerDescriptor1)).toEqual(true)
+        expect(neighbors.has(getNodeIdFromPeerDescriptor(peerDescriptor1))).toEqual(true)
     })
 
     it('Handshake accepted', async () => {
@@ -132,12 +129,12 @@ describe('Handshakes', () => {
             new HandshakeRpcRemote(
                 peerDescriptor2,
                 peerDescriptor1,
-                streamPartId,
-                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport()))
+                rpcCommunicator2,
+                HandshakeRpcClient
             )
         )
         expect(res).toEqual(true)
-        expect(targetNeighbors.hasNode(peerDescriptor1)).toEqual(true)
+        expect(neighbors.has(getNodeIdFromPeerDescriptor(peerDescriptor1))).toEqual(true)
     })
 
     it('Handshake rejected', async () => {
@@ -147,12 +144,12 @@ describe('Handshakes', () => {
             new HandshakeRpcRemote(
                 peerDescriptor2,
                 peerDescriptor1,
-                streamPartId,
-                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport()))
+                rpcCommunicator2,
+                HandshakeRpcClient
             )
         )
         expect(res).toEqual(false)
-        expect(targetNeighbors.hasNode(peerDescriptor1)).toEqual(false)
+        expect(neighbors.has(getNodeIdFromPeerDescriptor(peerDescriptor1))).toEqual(false)
     })
 
     it('Handshake with Interleaving', async () => {
@@ -163,12 +160,12 @@ describe('Handshakes', () => {
             new HandshakeRpcRemote(
                 peerDescriptor2,
                 peerDescriptor1,
-                streamPartId,
-                toProtoRpcClient(new HandshakeRpcClient(rpcCommunicator2.getRpcClientTransport()))
+                rpcCommunicator2,
+                HandshakeRpcClient
             )
         )
         expect(res).toEqual(true)
-        expect(targetNeighbors.hasNode(peerDescriptor1)).toEqual(true)
-        expect(targetNeighbors.hasNode(peerDescriptor3)).toEqual(true)
+        expect(neighbors.has(getNodeIdFromPeerDescriptor(peerDescriptor1))).toEqual(true)
+        expect(neighbors.has(getNodeIdFromPeerDescriptor(peerDescriptor3))).toEqual(true)
     })
 })

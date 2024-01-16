@@ -9,7 +9,7 @@ import {
     toEthereumAddress,
     collect
 } from '@streamr/utils'
-import { Contract } from 'ethers'
+import { Contract, Overrides } from 'ethers'
 import sample from 'lodash/sample'
 import fetch from 'node-fetch'
 import { NetworkPeerDescriptor } from 'streamr-client'
@@ -117,7 +117,7 @@ export class ContractFacade {
 
     async writeHeartbeat(nodeDescriptor: NetworkPeerDescriptor): Promise<void> {
         const metadata = JSON.stringify(nodeDescriptor)
-        await (await this.operatorContract.heartbeat(metadata)).wait()
+        await (await this.operatorContract.heartbeat(metadata, this.getEthersOverrides())).wait()
     }
 
     async getTimestampOfLastHeartbeat(): Promise<number | undefined> {
@@ -257,7 +257,7 @@ export class ContractFacade {
 
     async flag(sponsorship: EthereumAddress, operator: EthereumAddress, partition: number): Promise<void> {
         const metadata = JSON.stringify({ partition })
-        await (await this.operatorContract.flag(sponsorship, operator, metadata)).wait()
+        await (await this.operatorContract.flag(sponsorship, operator, metadata, this.getEthersOverrides())).wait()
     }
 
     async getRandomOperator(): Promise<EthereumAddress | undefined> {
@@ -265,7 +265,7 @@ export class ContractFacade {
         const operators = await this.getOperatorAddresses(latestBlock)
         const excluded = this.getOperatorContractAddress()
         const operatorAddresses = operators.filter((id) => id !== excluded)
-        logger.debug(`Found ${operatorAddresses.length} operators`, { operatorAddresses })
+        logger.debug(`Found ${operatorAddresses.length} operators`)
         return sample(operatorAddresses)
     }
 
@@ -313,11 +313,18 @@ export class ContractFacade {
     }
 
     async withdrawMyEarningsFromSponsorships(sponsorshipAddresses: EthereumAddress[]): Promise<void> {
-        await (await this.operatorContract.withdrawEarningsFromSponsorships(sponsorshipAddresses)).wait()
+        await (await this.operatorContract.withdrawEarningsFromSponsorships(
+            sponsorshipAddresses,
+            this.getEthersOverrides()
+        )).wait()
     }
 
     async triggerWithdraw(targetOperatorAddress: EthereumAddress, sponsorshipAddresses: EthereumAddress[]): Promise<void> {
-        await (await this.operatorContract.triggerAnotherOperatorWithdraw(targetOperatorAddress, sponsorshipAddresses)).wait()
+        await (await this.operatorContract.triggerAnotherOperatorWithdraw(
+            targetOperatorAddress,
+            sponsorshipAddresses,
+            this.getEthersOverrides()
+        )).wait()
     }
 
     private async getOperatorAddresses(requiredBlockNumber: number): Promise<EthereumAddress[]> {
@@ -456,7 +463,14 @@ export class ContractFacade {
 
     async voteOnFlag(sponsorship: string, targetOperator: string, kick: boolean): Promise<void> {
         const voteData = kick ? VOTE_KICK : VOTE_NO_KICK
-        await (await this.operatorContract.voteOnFlag(sponsorship, targetOperator, voteData)).wait()
+        // typical gas cost 99336, but this has shown insufficient sometimes
+        // TODO should we set gasLimit only here, or also for other transactions made by ContractFacade?
+        await (await this.operatorContract.voteOnFlag(
+            sponsorship,
+            targetOperator,
+            voteData,
+            { ...this.getEthersOverrides(), gasLimit: '200000' }
+        )).wait()
     }
 
     async closeFlag(sponsorship: string, targetOperator: string): Promise<void> {
@@ -475,5 +489,9 @@ export class ContractFacade {
 
     getProvider(): Provider {
         return this.config.signer.provider!
+    }
+
+    getEthersOverrides(): Overrides {
+        return this.config.getEthersOverrides()
     }
 }

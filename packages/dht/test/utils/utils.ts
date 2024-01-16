@@ -10,12 +10,10 @@ import {
     RouteMessageWrapper,
     StoreDataRequest,
     StoreDataResponse,
-    WebsocketConnectionResponse,
-    FindRequest, 
-    FindAction
+    RecursiveOperationRequest, 
+    RecursiveOperation
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { PeerID } from '../../src/helpers/PeerID'
 import {
     IDhtNodeRpc,
     IRouterRpc,
@@ -30,35 +28,25 @@ import { Empty } from '../../src/proto/google/protobuf/empty'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { wait, waitForCondition } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
-import { createRandomNodeId } from '../../src/helpers/nodeId'
+import { DhtAddress, createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
 
-export const generateId = (stringId: string): Uint8Array => {
-    return PeerID.fromString(stringId).value
-}
-
-export const createMockPeerDescriptor = (): PeerDescriptor => {
+export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'nodeId'>>): PeerDescriptor => {
     return {
-        nodeId: createRandomNodeId(),
+        nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
         type: NodeType.NODEJS,
-    }  
+        ...opts
+    }
 }
 
 export const createMockConnectionDhtNode = async (
-    stringId: string,
     simulator: Simulator,
-    binaryId?: Uint8Array,
+    nodeId?: DhtAddress,
     numberOfNodesPerKBucket?: number,
     maxConnections = 80,
     dhtJoinTimeout = 45000
 ): Promise<DhtNode> => {
-    let id: PeerID
-    if (binaryId) {
-        id = PeerID.fromValue(binaryId)
-    } else {
-        id = PeerID.fromString(stringId)
-    }
     const peerDescriptor: PeerDescriptor = {
-        nodeId: id.value,
+        nodeId: getRawFromDhtAddress(nodeId ?? createRandomDhtAddress()),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }
@@ -83,14 +71,12 @@ export const createMockConnectionDhtNode = async (
 }
 
 export const createMockConnectionLayer1Node = async (
-    stringId: string,
     layer0Node: DhtNode,
     serviceId?: string,
     numberOfNodesPerKBucket = 8
 ): Promise<DhtNode> => {
-    const id = PeerID.fromString(stringId)
     const descriptor: PeerDescriptor = {
-        nodeId: id.value,
+        nodeId: layer0Node.getLocalPeerDescriptor().nodeId,
         type: NodeType.NODEJS,
     }
     const node = new DhtNode({
@@ -121,11 +107,9 @@ export const createWrappedClosestPeersRequest = (
     return rpcWrapper
 }
 
-export const createFindRequest = (
-    action: FindAction
-): FindRequest => {
-    const request: FindRequest = {
-        action,
+export const createFindRequest = (): RecursiveOperationRequest => {
+    const request: RecursiveOperationRequest = {
+        operation: RecursiveOperation.FIND_NODE,
         sessionId: v4()
     }
     return request
@@ -137,36 +121,37 @@ interface IDhtRpcWithError extends IDhtNodeRpc {
     throwGetClosestPeersError: (request: ClosestPeersRequest) => Promise<ClosestPeersResponse>
 }
 
-export const MockDhtRpc: IDhtRpcWithError = {
-    async getClosestPeers(): Promise<ClosestPeersResponse> {
-        const neighbors = getMockPeers()
-        const response: ClosestPeersResponse = {
-            peers: neighbors,
-            requestId: 'why am i still here'
+export const createMockDhtRpc = (neighbors: PeerDescriptor[]): IDhtRpcWithError => {
+    return {
+        async getClosestPeers(): Promise<ClosestPeersResponse> {
+            const response: ClosestPeersResponse = {
+                peers: neighbors,
+                requestId: 'why am i still here'
+            }
+            return response
+        },
+        async ping(request: PingRequest): Promise<PingResponse> {
+            const response: PingResponse = {
+                requestId: request.requestId
+            }
+            return response
+        },
+        async leaveNotice(): Promise<Empty> {
+            return {}
+        },
+        async throwPingError(): Promise<PingResponse> {
+            throw new Error()
+        },
+        async respondPingWithTimeout(request: PingRequest): Promise<PingResponse> {
+            const response: PingResponse = {
+                requestId: request.requestId
+            }
+            await wait(2000)
+            return response
+        },
+        async throwGetClosestPeersError(): Promise<ClosestPeersResponse> {
+            throw new Error('Closest peers error')
         }
-        return response
-    },
-    async ping(request: PingRequest): Promise<PingResponse> {
-        const response: PingResponse = {
-            requestId: request.requestId
-        }
-        return response
-    },
-    async leaveNotice(): Promise<Empty> {
-        return {}
-    },
-    async throwPingError(): Promise<PingResponse> {
-        throw new Error()
-    },
-    async respondPingWithTimeout(request: PingRequest): Promise<PingResponse> {
-        const response: PingResponse = {
-            requestId: request.requestId
-        }
-        await wait(2000)
-        return response
-    },
-    async throwGetClosestPeersError(): Promise<ClosestPeersResponse> {
-        throw new Error('Closest peers error')
     }
 }
 
@@ -194,22 +179,14 @@ export const mockRouterRpc: IRouterRpcWithError = {
 
 interface IStoreRpcWithError extends IStoreRpc {
     throwStoreDataError: (request: StoreDataRequest) => Promise<StoreDataResponse>
-    storeDataErrorString: (request: StoreDataRequest) => Promise<StoreDataResponse>
 }
 
 export const mockStoreRpc: IStoreRpcWithError = {
     async storeData(): Promise<StoreDataResponse> {
-        return {
-            error: ''
-        }
+        return {}
     },
     async throwStoreDataError(): Promise<StoreDataResponse> {
         throw new Error('Mock')
-    },
-    async storeDataErrorString(): Promise<StoreDataResponse> {
-        return {
-            error: 'Mock'
-        }
     },
     async replicateData(): Promise<Empty> {
         return {}
@@ -217,31 +194,16 @@ export const mockStoreRpc: IStoreRpcWithError = {
 }
 
 export const mockWebsocketConnectorRpc: IWebsocketConnectorRpc = {
-    async requestConnection(): Promise<WebsocketConnectionResponse> {
-        const responseConnection: WebsocketConnectionResponse = {
-            accepted: true
-        }
-        return responseConnection
+    async requestConnection(): Promise<Empty> {
+        return {}
     }
 }
 
-export const getMockPeers = (): PeerDescriptor[] => {
-    const n1: PeerDescriptor = {
-        nodeId: generateId('Neighbor1'),
-        type: NodeType.NODEJS,
-    }
-    const n2: PeerDescriptor = {
-        nodeId: generateId('Neighbor2'),
-        type: NodeType.NODEJS,
-    }
-    const n3: PeerDescriptor = {
-        nodeId: generateId('Neighbor3'),
-        type: NodeType.NODEJS,
-    }
-    const n4: PeerDescriptor = {
-        nodeId: generateId('Neighbor4'),
-        type: NodeType.NODEJS,
-    }
+export const createMockPeers = (): PeerDescriptor[] => {
+    const n1 = createMockPeerDescriptor()
+    const n2 = createMockPeerDescriptor()
+    const n3 = createMockPeerDescriptor()
+    const n4 = createMockPeerDescriptor()
     return [
         n1, n2, n3, n4
     ]
@@ -273,13 +235,13 @@ async function waitReadyForTesting(connectionManager: ConnectionManager, limit: 
     connectionManager.garbageCollectConnections(limit, LAST_USED_LIMIT)
     try {
         await waitForCondition(() => {
-            return (connectionManager.getNumberOfLocalLockedConnections() === 0 &&
-                connectionManager.getNumberOfRemoteLockedConnections() === 0 &&
+            return (connectionManager.getLocalLockedConnectionCount() === 0 &&
+                connectionManager.getRemoteLockedConnectionCount() === 0 &&
                 connectionManager.getAllConnectionPeerDescriptors().length <= limit)
         }, 20000)
     } catch (err) {
-        if (connectionManager.getNumberOfLocalLockedConnections() > 0
-            && connectionManager.getNumberOfRemoteLockedConnections() > 0) {
+        if (connectionManager.getLocalLockedConnectionCount() > 0
+            && connectionManager.getRemoteLockedConnectionCount() > 0) {
             throw new Error('Connections are still locked')
         } else if (connectionManager.getAllConnectionPeerDescriptors().length > limit) {
             throw new Error(`ConnectionManager has more than ${limit}`)

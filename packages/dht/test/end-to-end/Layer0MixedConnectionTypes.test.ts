@@ -1,17 +1,16 @@
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { waitForEvent3 } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { TransportEvents } from '../../src/transport/ITransport'
+import { createMockPeerDescriptor } from '../utils/utils'
+
+const WEBSOCKET_PORT_RANGE = { min: 11222, max: 11223 }
 
 describe('Layer0MixedConnectionTypes', () => {
 
-    const epPeerDescriptor: PeerDescriptor = {
-        nodeId: Uint8Array.from([1, 2, 3]),
-        type: NodeType.NODEJS,
+    const epPeerDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 11221, tls: false }
-    }
-
+    })
     let epDhtNode: DhtNode
     let node1: DhtNode
     let node2: DhtNode
@@ -19,7 +18,6 @@ describe('Layer0MixedConnectionTypes', () => {
     let node4: DhtNode
     let node5: DhtNode
 
-    const websocketPortRange = { min: 11222, max: 11223 }
     beforeEach(async () => {
 
         epDhtNode = new DhtNode({ 
@@ -31,12 +29,12 @@ describe('Layer0MixedConnectionTypes', () => {
 
         await epDhtNode.joinDht([epPeerDescriptor])
         node1 = new DhtNode({ 
-            websocketPortRange,
+            websocketPortRange: WEBSOCKET_PORT_RANGE,
             entryPoints: [epPeerDescriptor],
             websocketServerEnableTls: false
         })
         node2 = new DhtNode({ 
-            websocketPortRange,
+            websocketPortRange: WEBSOCKET_PORT_RANGE,
             entryPoints: [epPeerDescriptor],
             websocketServerEnableTls: false
         })
@@ -89,11 +87,11 @@ describe('Layer0MixedConnectionTypes', () => {
             node5.joinDht([epPeerDescriptor])
         ])
 
-        expect(node1.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(node2.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(node3.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(node4.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(node5.getBucketSize()).toBeGreaterThanOrEqual(1)
+        expect(node1.getNeighborCount()).toBeGreaterThanOrEqual(2)
+        expect(node2.getNeighborCount()).toBeGreaterThanOrEqual(2)
+        expect(node3.getNeighborCount()).toBeGreaterThanOrEqual(2)
+        expect(node4.getNeighborCount()).toBeGreaterThanOrEqual(2)
+        expect(node5.getNeighborCount()).toBeGreaterThanOrEqual(1)
 
     }, 15000)
 
@@ -105,10 +103,10 @@ describe('Layer0MixedConnectionTypes', () => {
             node4.joinDht([epPeerDescriptor]),
             node5.joinDht([epPeerDescriptor])
         ])
-        expect(node1.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(node2.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(node3.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(node4.getBucketSize()).toBeGreaterThanOrEqual(2)
-        expect(node5.getBucketSize()).toBeGreaterThanOrEqual(2)
+        expect(node1.getNeighborCount()).toBeGreaterThanOrEqual(2)
+        expect(node2.getNeighborCount()).toBeGreaterThanOrEqual(2)
+        expect(node3.getNeighborCount()).toBeGreaterThanOrEqual(2)
+        expect(node4.getNeighborCount()).toBeGreaterThanOrEqual(2)
+        expect(node5.getNeighborCount()).toBeGreaterThanOrEqual(2)
     }, 30000)
 })

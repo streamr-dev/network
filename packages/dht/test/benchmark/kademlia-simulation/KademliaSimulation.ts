@@ -2,7 +2,7 @@
 
 import { SimulationNode } from './SimulationNode'
 import fs from 'fs'
-import { PeerID } from '../../../src/helpers/PeerID'
+import { getDhtAddressFromRaw } from '../../../src/identifiers'
 
 export class KademliaSimulation {
     
@@ -25,7 +25,7 @@ export class KademliaSimulation {
 
     public run(): void {
         for (let i = 0; i < KademliaSimulation.NUM_NODES; i++) {
-            const node = new SimulationNode(PeerID.fromValue(Buffer.from(this.dhtIds[i].data.slice(0, KademliaSimulation.ID_LENGTH))))
+            const node = new SimulationNode(getDhtAddressFromRaw(Buffer.from(this.dhtIds[i].data.slice(0, KademliaSimulation.ID_LENGTH))))
             this.nodeNamesById[JSON.stringify(node.getContact().id)] = i
             this.nodes.push(node)
             node.joinDht(this.nodes[0])
@@ -42,17 +42,17 @@ export class KademliaSimulation {
 
         for (let i = this.nodes.length - 1; i >= 0; i--) {
             
-            const numberOfOutgoingRpcCalls = this.nodes[i].getNumberOfOutgoingRpcCalls()
+            const outgoingRpcCallCount = this.nodes[i].getOutgoingRpcCallCount()
             console.log('-----------')
             console.log('Node: ' + i)
             console.log('Kbucket size: ' + this.nodes[i].getKBucketSize())
-            console.log('Num incoming RPC calls: ' + this.nodes[i].getNumberOfIncomingRpcCalls())
-            console.log('Num outgoing RPC calls: ' + numberOfOutgoingRpcCalls)
+            console.log('Num incoming RPC calls: ' + this.nodes[i].getIncomingRpcCallCount())
+            console.log('Num outgoing RPC calls: ' + outgoingRpcCallCount)
     
-            sumOutgoingRpcCalls += numberOfOutgoingRpcCalls
+            sumOutgoingRpcCalls += outgoingRpcCallCount
     
-            if (maxOutgoingRpcCalls < numberOfOutgoingRpcCalls) {
-                maxOutgoingRpcCalls = numberOfOutgoingRpcCalls
+            if (maxOutgoingRpcCalls < outgoingRpcCallCount) {
+                maxOutgoingRpcCalls = outgoingRpcCallCount
             }
 
             const kademliaNeighbors = this.nodes[i].getNeightborList().getContactIds()
@@ -79,13 +79,13 @@ export class KademliaSimulation {
 
         const avgCorrectNeighbors = sumCorrectNeighbors / (KademliaSimulation.NUM_NODES - 1)
         const avgKbucketSize = sumKbucketSize / (KademliaSimulation.NUM_NODES - 1)
-        const avgNumberOfOutgoingRpcCalls = sumOutgoingRpcCalls / (KademliaSimulation.NUM_NODES - 1)
+        const avgOutgoingRpcCallCount = sumOutgoingRpcCalls / (KademliaSimulation.NUM_NODES - 1)
 
         console.log('----------- Simulation results ------------------')
         console.log('Minimum correct neighbors: ' + minimumCorrectNeighbors)
         console.log('Average correct neighbors: ' + avgCorrectNeighbors)
         console.log('Average Kbucket size: ' + avgKbucketSize)
-        console.log('Average number of outgoing RPC calls: ' + avgNumberOfOutgoingRpcCalls)
+        console.log('Average number of outgoing RPC calls: ' + avgOutgoingRpcCallCount)
         console.log('MAX number of outgoing RPC calls: ' + maxOutgoingRpcCalls)
     }
 }

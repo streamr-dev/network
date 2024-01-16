@@ -1,203 +1,106 @@
 /* eslint-disable no-console */
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils/utils'
-import { execSync } from 'child_process'
-import fs from 'fs'
-import { Logger } from '@streamr/utils'
-import { PeerID } from '../../src/helpers/PeerID'
-import { getNodeIdFromPeerDescriptor, keyFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { Any } from '../../src/proto/google/protobuf/any'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
-import { Contact } from '../../src/dht/contact/Contact'
+import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
+import { DhtAddress, createRandomDhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { sample } from 'lodash'
+import { DataEntry, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 
-const logger = new Logger(module)
+const DATA = createMockDataEntry()
+const NUM_NODES = 100
+const MAX_CONNECTIONS = 80
+const K = 8
+const ENTRY_POINT_INDEX = 0
 
-jest.setTimeout(60000)
+const getDataEntries = (node: DhtNode): DataEntry[] => {
+    // @ts-expect-error private field
+    const store = node.localDataStore
+    return Array.from(store.values(getDhtAddressFromRaw(DATA.key)))
+}
 
 describe('Replicate data from node to node in DHT', () => {
-    let entryPoint: DhtNode
+
     let nodes: DhtNode[]
-    let entrypointDescriptor: PeerDescriptor
+    let entryPointDescriptor: PeerDescriptor
     const simulator = new Simulator(LatencyType.FIXED, 20)
-    const NUM_NODES = 100
-    const MAX_CONNECTIONS = 80
-    const K = 8
 
-    const nodesById: Map<string, DhtNode> = new Map()
-
-    if (!fs.existsSync('test/data/nodeids.json')) {
-        console.log('ground truth data does not exist yet, generating..')
-        execSync('npm run prepare-kademlia-simulation')
-    }
-
-    const dhtIds: Array<{ type: string, data: Array<number> }> = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
-    /*
-    const getRandomNode = () => {
-        return nodes[Math.floor(Math.random() * nodes.length)]
-    }
-    */
     beforeEach(async () => {
+        const entryPoint = await createMockConnectionDhtNode(simulator, createRandomDhtAddress(), K, MAX_CONNECTIONS)
+        entryPointDescriptor = entryPoint.getLocalPeerDescriptor()
+        await entryPoint.joinDht([entryPointDescriptor])
         nodes = []
-        const entryPointId = '0'
-        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator,
-            Uint8Array.from(dhtIds[0].data), K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
-        nodesById.set(entryPoint.getNodeId().toKey(), entryPoint)
-
-        entrypointDescriptor = {
-            nodeId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS
-        }
-
-        nodes.push(entryPoint)
-
         for (let i = 1; i < NUM_NODES; i++) {
-            const nodeId = `${i}`
-
-            const node = await createMockConnectionDhtNode(nodeId, simulator,
-                Uint8Array.from(dhtIds[i].data), K, MAX_CONNECTIONS)
-            nodesById.set(node.getNodeId().toKey(), node)
+            const node = await createMockConnectionDhtNode(
+                simulator,
+                createRandomDhtAddress(),
+                K,
+                MAX_CONNECTIONS
+            )
             nodes.push(node)
         }
-    })
+    }, 60000)
 
     afterEach(async () => {
-        await Promise.all([
-            ...nodes.map(async (node) => await node.stop())
-        ])
-        logger.info('nodes stopped')
-    })
+        await Promise.all(nodes.map(async (node) => await node.stop()))
+    }, 60000)
 
     afterAll(async () => {
         simulator.stop()
     })
 
     it('Data replicates to the closest node no matter where it is stored', async () => {
-        const dataKey = PeerID.fromString('3232323e12r31r3')
-        const data = Any.pack(entrypointDescriptor, PeerDescriptor)
-
         // calculate offline which node is closest to the data
-
-        const sortedList = new SortedContactList<Contact>(dataKey, 10000)
-
-        nodes.forEach((node) => {
-            sortedList.addContact(new Contact(node.getLocalPeerDescriptor())
-            )
+        const sortedList = new SortedContactList<DhtNode>({ 
+            referenceId: getDhtAddressFromRaw(DATA.key),
+            maxSize: 10000, 
+            allowToContainReferenceId: true, 
+            emitEvents: false 
         })
+        nodes.forEach((node) => sortedList.addContact(node))
 
         const closest = sortedList.getAllContacts()
-
-        logger.info('Nodes sorted according to distance to data are: ')
-        closest.forEach((contact) => {
-            logger.info(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))
-        })
-
-        logger.info('node 0 joining to the DHT')
-
-        await nodes[0].joinDht([entrypointDescriptor])
-
-        logger.info('storing data to node 0')
-        const successfulStorers = await nodes[0].storeDataToDht(dataKey.value, data)
+        const successfulStorers = await nodes[0].storeDataToDht(getDhtAddressFromRaw(DATA.key), DATA.data!)
         expect(successfulStorers.length).toBe(1)
-        logger.info('data successfully stored to node 0')
 
-        logger.info('Nodes sorted according to distance to data with storing nodes marked are: ')
-
-        closest.forEach((contact) => {
-            const node = nodesById.get(PeerID.fromValue(contact.getPeerDescriptor().nodeId).toKey())!
-            let hasDataMarker = ''
-            
-            // @ts-expect-error private field
-            if (node.localDataStore.getEntries(dataKey.value)) {
-                hasDataMarker = '<-'
-            }
-
-            // eslint-disable-next-line max-len
-            logger.info(peerIdFromPeerDescriptor(contact.getPeerDescriptor()) + ' ' + getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
-        })
-
-        logger.info(NUM_NODES + ' nodes joining layer0 DHT')
         await Promise.all(
-            nodes.map((node) => {
-                if (keyFromPeerDescriptor(node.getLocalPeerDescriptor()) != '0') {
-                    node.joinDht([entrypointDescriptor])
+            nodes.map(async (node, i) => {
+                if (i !== ENTRY_POINT_INDEX) {
+                    await node.joinDht([entryPointDescriptor])
                 }
             })
         )
-
-        logger.info('completed ' + NUM_NODES + ' nodes joining layer0 DHT')
-
         await waitNodesReadyForTesting(nodes)
 
-        logger.info('After join of 99 nodes: nodes sorted according to distance to data with storing nodes marked are: ')
-
-        closest.forEach((contact) => {
-            const node = nodesById.get(PeerID.fromValue(contact.getPeerDescriptor().nodeId).toKey())!
-            let hasDataMarker = ''
-
-            // @ts-expect-error private field
-            if (node.localDataStore.getEntries(dataKey.value)) {
-                hasDataMarker = '<-'
-            }
-
-            logger.info(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + hasDataMarker)
-        })
-
-        const closestNode = nodesById.get(PeerID.fromValue(closest[0].getPeerDescriptor().nodeId).toKey())!
-
-        // @ts-expect-error private field
-        expect(closestNode.localDataStore.getEntries(dataKey.value).size).toBeGreaterThanOrEqual(1)
+        const data = getDataEntries(closest[0])
+        expect(data).toHaveLength(1)
+        expectEqualData(data[0], DATA)
     }, 180000)
 
-    it('Data replicates to the last remaining node if all other nodes leave gracefully', async () => {
-        const dataKey = PeerID.fromString('3232323e12r31r3')
-        const data = Any.pack(entrypointDescriptor, PeerDescriptor)
-
-        logger.info(NUM_NODES + ' nodes joining layer0 DHT')
+    it('Data replicates to the other nodes when storers are stopped', async () => {
         await Promise.all(
-            nodes.map((node) => {
-                node.joinDht([entrypointDescriptor])
+            nodes.map(async (node, i) => {
+                if (i !== ENTRY_POINT_INDEX) {
+                    await node.joinDht([entryPointDescriptor])
+                }
             })
         )
-
-        logger.info('completed ' + NUM_NODES + ' nodes joining layer0 DHT')
-
         await waitNodesReadyForTesting(nodes)
 
         const randomIndex = Math.floor(Math.random() * nodes.length)
-        logger.info('storing data to a random node: ' + randomIndex)
+        const storerDescriptors = await nodes[randomIndex].storeDataToDht(getDhtAddressFromRaw(DATA.key), DATA.data!)
+        const stoppedNodeIds: DhtAddress[] = []
+        await Promise.all(storerDescriptors.map(async (storerDescriptor) => {
+            const storer = nodes.find((n) => n.getNodeId() === getNodeIdFromPeerDescriptor(storerDescriptor))!
+            await storer.stop()
+            stoppedNodeIds.push(storer.getNodeId())
+        }))
 
-        const successfulStorers = await nodes[randomIndex].storeDataToDht(dataKey.value, data)
-
-        logger.info('data successfully stored to ' + successfulStorers + ' nodes')
-
-        const randomIndices = []
-        for (let i = 0; i < nodes.length; i++) {
-            randomIndices.push(i)
-        }
-
-        console.error(randomIndices)
-        while (randomIndices.length > 1) {
-            const index = Math.floor(Math.random() * randomIndices.length)
-            const nodeIndex = randomIndices[index]
-            randomIndices.splice(index, 1)
-
-            logger.info('Stopping node ' + nodeIndex + ' ' +
-                // @ts-expect-error private field
-                (nodes[nodeIndex].localDataStore.getEntries(dataKey.value) ? ', has data' : ' does not have data'))
-
-            await nodes[nodeIndex].stop()
-        }
-
-        logger.info('after random graceful leaving, node ' + randomIndices[0] + ' is left')
-
-        // @ts-expect-error private field
-        logger.info('data of ' + randomIndices[0] + ' was ' + nodes[randomIndices[0]].localDataStore.getEntries(dataKey.value))
-
-        // @ts-expect-error private field
-        expect(nodes[randomIndices[0]].localDataStore.getEntries(dataKey.value).size).toBeGreaterThanOrEqual(1)
-
+        const randomNonStoppedNode = sample(nodes.filter((n) => !stoppedNodeIds.includes(n.getNodeId())))!
+        const data = await randomNonStoppedNode.getDataFromDht(getDhtAddressFromRaw(DATA.key))
+        expect(data).toHaveLength(1)
+        expectEqualData(data[0], DATA)
     }, 180000)
 })

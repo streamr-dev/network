@@ -1,13 +1,6 @@
-import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { DataEntry } from '../../proto/packages/dht/protos/DhtRpc'
-import { peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-
-interface LocalDataEntry {
-    dataEntry: DataEntry
-    ttlTimeout: NodeJS.Timeout
-}
-
-type Key = Uint8Array
+import { MapWithTtl } from '../../helpers/MapWithTtl'
+import { DhtAddress, getDhtAddressFromRaw } from '../../identifiers'
 
 export class LocalDataStore {
 
@@ -19,95 +12,76 @@ export class LocalDataStore {
 
     // A map into which each node can store one value per data key
     // The first key is the key of the data, the second key is the
-    // PeerID of the creator of the data
-    private store: Map<PeerIDKey, Map<PeerIDKey, LocalDataEntry>> = new Map()
+    // DhtAddress of the creator of the data
+    private store: Map<DhtAddress, MapWithTtl<DhtAddress, DataEntry>> = new Map()
 
     public storeEntry(dataEntry: DataEntry): boolean {
-        const dataKey = PeerID.fromValue(dataEntry.key).toKey()
-        const creatorKey = PeerID.fromValue(dataEntry.creator!.nodeId).toKey()
-        if (!this.store.has(dataKey)) {
-            this.store.set(dataKey, new Map())
+        const key = getDhtAddressFromRaw(dataEntry.key)
+        const creatorNodeId = getDhtAddressFromRaw(dataEntry.creator)
+        if (!this.store.has(key)) {
+            this.store.set(key, new MapWithTtl((e) => Math.min(e.ttl, this.maxTtl)))
         }
-        if (this.store.get(dataKey)!.has(creatorKey)) {
+        if (this.store.get(key)!.has(creatorNodeId)) {
             const storedMillis = (dataEntry.createdAt!.seconds * 1000) + (dataEntry.createdAt!.nanos / 1000000)
-            const oldLocalEntry = this.store.get(dataKey)!.get(creatorKey)!
-            const oldStoredMillis = (oldLocalEntry.dataEntry.createdAt!.seconds * 1000) + (oldLocalEntry.dataEntry.createdAt!.nanos / 1000000)
-        
+            const oldLocalEntry = this.store.get(key)!.get(creatorNodeId)!
+            const oldStoredMillis = (oldLocalEntry.createdAt!.seconds * 1000) + (oldLocalEntry.createdAt!.nanos / 1000000)
             // do nothing if old entry is newer than the one being replicated
             if (oldStoredMillis >= storedMillis) {
                 return false
-            } else {
-                clearTimeout(oldLocalEntry.ttlTimeout)
             }
         }
-        this.store.get(dataKey)!.set(creatorKey, {
-            dataEntry,
-            ttlTimeout: setTimeout(() => {
-                this.deleteEntry(dataEntry.key, peerIdFromPeerDescriptor(dataEntry.creator!))
-            }, Math.min(dataEntry.ttl, this.maxTtl))
-        })
+        this.store.get(key)!.set(creatorNodeId, dataEntry)
         return true
     }
 
-    public markAsDeleted(key: Key, creator: PeerID): boolean {
-        const dataKey = PeerID.fromValue(key).toKey()
-        const item = this.store.get(dataKey)
-        if ((item === undefined) || !item.has(creator.toKey())) {
+    public markAsDeleted(key: DhtAddress, creator: DhtAddress): boolean {
+        const item = this.store.get(key)
+        if ((item === undefined) || !item.has(creator)) {
             return false
         }
-        const storedEntry = item.get(creator.toKey())
-        storedEntry!.dataEntry.deleted = true
+        const storedEntry = item.get(creator)
+        storedEntry!.deleted = true
         return true
     }
 
-    public getStore(): Map<PeerIDKey, Map<PeerIDKey, LocalDataEntry>> {
-        return this.store
-    }
-
-    public getEntries(key: Key): Map<PeerIDKey, DataEntry> {
-        const dataEntries = new Map<PeerIDKey, DataEntry>
-        const mapKey = PeerID.fromValue(key).toKey()
-        this.store.get(mapKey)?.forEach((value, key) => {
-            dataEntries.set(key, value.dataEntry)
-        })
-        return dataEntries
-    }
-
-    public setStale(key: Key, creator: PeerID, stale: boolean): void {
-        const mapKey = PeerID.fromValue(key).toKey()
-        const creatorKey = creator.toKey()
-        const storedEntry = this.store.get(mapKey)?.get(creatorKey)
-        if (storedEntry) {
-            storedEntry.dataEntry.stale = stale
+    public* values(key?: DhtAddress): IterableIterator<DataEntry> {
+        if (key !== undefined) {
+            const map = this.store.get(key)
+            if (map !== undefined) {
+                yield* map.values()
+            }
+        } else {
+            for (const v of this.store.values()) {
+                yield* v.values()
+            }
         }
     }
 
-    public setAllEntriesAsStale(key: Key): void {
-        const mapKey = PeerID.fromValue(key).toKey()
-        this.store.get(mapKey)?.forEach((value) => {
-            value.dataEntry.stale = true
+    public setStale(key: DhtAddress, creator: DhtAddress, stale: boolean): void {
+        const storedEntry = this.store.get(key)?.get(creator)
+        if (storedEntry) {
+            storedEntry.stale = stale
+        }
+    }
+
+    public setAllEntriesAsStale(key: DhtAddress): void {
+        this.store.get(key)?.forEach((value) => {
+            value.stale = true
         })
     }
 
-    public deleteEntry(key: Key, creator: PeerID): void {
-        const mapKey = PeerID.fromValue(key).toKey()
-        const creatorKey = creator.toKey()
-        const storedEntry = this.store.get(mapKey)?.get(creatorKey)
+    public deleteEntry(key: DhtAddress, creator: DhtAddress): void {
+        const storedEntry = this.store.get(key)?.get(creator)
         if (storedEntry) {
-            clearTimeout(storedEntry.ttlTimeout)
-            this.store.get(mapKey)?.delete(creatorKey)
-            if (this.store.get(mapKey)?.size === 0) {
-                this.store.delete(mapKey)
+            this.store.get(key)?.delete(creator)
+            if (this.store.get(key)?.size() === 0) {
+                this.store.delete(key)
             }
         }
     }
 
     public clear(): void {
-        this.store.forEach((value) => {
-            value.forEach((value) => {
-                clearTimeout(value.ttlTimeout)
-            })
-        })
+        this.store.forEach((value) => value.clear())
         this.store.clear()
     }
 }

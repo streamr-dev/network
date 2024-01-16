@@ -16,8 +16,8 @@ describe('Propagation', () => {
     const NUM_OF_NODES = 256
 
     beforeEach(async () => {
-        totalReceived = 0
         const simulator = new Simulator()
+        totalReceived = 0
         layer1Nodes = []
         randomGraphNodes = []
         const [entryPoint, node1] = await createMockRandomGraphNodeAndDhtNode(entryPointDescriptor, entryPointDescriptor, STREAM_PART_ID, simulator)
@@ -54,11 +54,11 @@ describe('Propagation', () => {
 
     it('All nodes receive messages', async () => {
         await waitForCondition(
-            () => randomGraphNodes.every((node) => node.getTargetNeighborIds().length >= 3), 30000
+            () => randomGraphNodes.every((node) => node.getNeighborIds().length >= 3), 30000
         )
         await waitForCondition(() => {
             const avg = randomGraphNodes.reduce((acc, curr) => {
-                return acc + curr.getTargetNeighborIds().length
+                return acc + curr.getNeighborIds().length
             }, 0) / randomGraphNodes.length
             return avg >= 4
         }, 20000)

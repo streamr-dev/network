@@ -50,7 +50,8 @@ describe('random graph with real connections', () => {
                 layer1Node: epDhtNode,
                 transport: epDhtNode.getTransport(),
                 connectionLocker: epDhtNode.getTransport() as ConnectionManager,
-                localPeerDescriptor: epPeerDescriptor
+                localPeerDescriptor: epPeerDescriptor,
+                isLocalNodeEntryPoint: () => false
             }
         )
         randomGraphNode2 = createRandomGraphNode({
@@ -58,28 +59,32 @@ describe('random graph with real connections', () => {
             layer1Node: dhtNode1,
             transport: dhtNode1.getTransport(),
             connectionLocker: dhtNode1.getTransport() as ConnectionManager,
-            localPeerDescriptor: dhtNode1.getLocalPeerDescriptor()
+            localPeerDescriptor: dhtNode1.getLocalPeerDescriptor(),
+            isLocalNodeEntryPoint: () => false
         })
         randomGraphNode3 = createRandomGraphNode({
             streamPartId,
             layer1Node: dhtNode2,
             transport: dhtNode2.getTransport(),
             connectionLocker: dhtNode2.getTransport() as ConnectionManager,
-            localPeerDescriptor: dhtNode2.getLocalPeerDescriptor()
+            localPeerDescriptor: dhtNode2.getLocalPeerDescriptor(),
+            isLocalNodeEntryPoint: () => false
         })
         randomGraphNode4 = createRandomGraphNode({
             streamPartId,
             layer1Node: dhtNode3,
             transport: dhtNode3.getTransport(),
             connectionLocker: dhtNode3.getTransport() as ConnectionManager,
-            localPeerDescriptor: dhtNode3.getLocalPeerDescriptor()
+            localPeerDescriptor: dhtNode3.getLocalPeerDescriptor(),
+            isLocalNodeEntryPoint: () => false
         })
         randomGraphNode5 = createRandomGraphNode({
             streamPartId,
             layer1Node: dhtNode4,
             transport: dhtNode4.getTransport(),
             connectionLocker: dhtNode4.getTransport() as ConnectionManager,
-            localPeerDescriptor: dhtNode4.getLocalPeerDescriptor()
+            localPeerDescriptor: dhtNode4.getLocalPeerDescriptor(),
+            isLocalNodeEntryPoint: () => false
         })
         await epDhtNode.joinDht([epPeerDescriptor])
         await Promise.all([
@@ -119,32 +124,32 @@ describe('random graph with real connections', () => {
 
     it('can fully connected topologies ', async () => {
         await waitForCondition(() => {
-            return randomGraphNode1.getTargetNeighborIds().length >= 3
-                && randomGraphNode2.getTargetNeighborIds().length >= 3
-                && randomGraphNode3.getTargetNeighborIds().length >= 3
-                && randomGraphNode4.getTargetNeighborIds().length >= 3
-                && randomGraphNode5.getTargetNeighborIds().length >= 3
+            return randomGraphNode1.getNeighborIds().length >= 3
+                && randomGraphNode2.getNeighborIds().length >= 3
+                && randomGraphNode3.getNeighborIds().length >= 3
+                && randomGraphNode4.getNeighborIds().length >= 3
+                && randomGraphNode5.getNeighborIds().length >= 3
         }, 10000)
-        expect(randomGraphNode1.getTargetNeighborIds().length).toBeGreaterThanOrEqual(3)
-        expect(randomGraphNode2.getTargetNeighborIds().length).toBeGreaterThanOrEqual(3)
-        expect(randomGraphNode3.getTargetNeighborIds().length).toBeGreaterThanOrEqual(3)
-        expect(randomGraphNode4.getTargetNeighborIds().length).toBeGreaterThanOrEqual(3)
-        expect(randomGraphNode5.getTargetNeighborIds().length).toBeGreaterThanOrEqual(3)
+        expect(randomGraphNode1.getNeighborIds().length).toBeGreaterThanOrEqual(3)
+        expect(randomGraphNode2.getNeighborIds().length).toBeGreaterThanOrEqual(3)
+        expect(randomGraphNode3.getNeighborIds().length).toBeGreaterThanOrEqual(3)
+        expect(randomGraphNode4.getNeighborIds().length).toBeGreaterThanOrEqual(3)
+        expect(randomGraphNode5.getNeighborIds().length).toBeGreaterThanOrEqual(3)
     })
 
     it('can propagate messages', async () => {
-        let numOfMessagesReceived = 0
-        randomGraphNode2.on('message', () => numOfMessagesReceived += 1)
-        randomGraphNode3.on('message', () => numOfMessagesReceived += 1)
-        randomGraphNode4.on('message', () => numOfMessagesReceived += 1)
-        randomGraphNode5.on('message', () => numOfMessagesReceived += 1)
+        let receivedMessageCount = 0
+        randomGraphNode2.on('message', () => receivedMessageCount += 1)
+        randomGraphNode3.on('message', () => receivedMessageCount += 1)
+        randomGraphNode4.on('message', () => receivedMessageCount += 1)
+        randomGraphNode5.on('message', () => receivedMessageCount += 1)
 
         await waitForCondition(() => {
-            return randomGraphNode1.getTargetNeighborIds().length >= 3
-                && randomGraphNode2.getTargetNeighborIds().length >= 3
-                && randomGraphNode3.getTargetNeighborIds().length >= 3
-                && randomGraphNode4.getTargetNeighborIds().length >= 3
-                && randomGraphNode5.getTargetNeighborIds().length >= 3
+            return randomGraphNode1.getNeighborIds().length >= 3
+                && randomGraphNode2.getNeighborIds().length >= 3
+                && randomGraphNode3.getNeighborIds().length >= 3
+                && randomGraphNode4.getNeighborIds().length >= 3
+                && randomGraphNode5.getNeighborIds().length >= 3
         }, 10000)
 
         const msg = createStreamMessage(
@@ -153,6 +158,6 @@ describe('random graph with real connections', () => {
             randomEthereumAddress()
         )
         randomGraphNode1.broadcast(msg)
-        await waitForCondition(() => numOfMessagesReceived >= 4)
+        await waitForCondition(() => receivedMessageCount >= 4)
     })
 })

@@ -2,12 +2,12 @@ name: Production Documentation
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - '*'
-      - '!**beta**'
-      - '!**alpha**'
-      - '!**tatum**'
+  #push:
+  #  tags:
+  #    - '*'
+  #    - '!**beta**'
+  #    - '!**alpha**'
+  #    - '!**tatum**'
 
 jobs:  
   deploy:
@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           cache: npm

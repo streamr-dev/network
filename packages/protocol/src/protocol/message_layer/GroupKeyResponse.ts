@@ -1,12 +1,8 @@
-import { validateIsArray, validateIsString } from '../../utils/validations'
 import ValidationError from '../../errors/ValidationError'
 
 import StreamMessage, { StreamMessageType } from './StreamMessage'
-import GroupKeyMessage from './GroupKeyMessage'
 import EncryptedGroupKey from './EncryptedGroupKey'
-/** @internal */
-import { EncryptedGroupKeySerialized } from './EncryptedGroupKey'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress } from '@streamr/utils'
 
 interface Options {
     requestId: string
@@ -14,26 +10,15 @@ interface Options {
     encryptedGroupKeys: EncryptedGroupKey[]
 }
 
-export type GroupKeyResponseSerialized = [
-    string, string, 
-    /** @internal */
-    EncryptedGroupKeySerialized[]
-]
-
-export default class GroupKeyResponse extends GroupKeyMessage {
-
-    requestId: string
-    encryptedGroupKeys: EncryptedGroupKey[]
+export default class GroupKeyResponse {
+    readonly requestId: string
+    readonly recipient: EthereumAddress
+    readonly encryptedGroupKeys: ReadonlyArray<EncryptedGroupKey>
 
     constructor({ requestId, recipient, encryptedGroupKeys }: Options) {
-        super(recipient, StreamMessageType.GROUP_KEY_RESPONSE)
-
-        validateIsString('requestId', requestId)
         this.requestId = requestId
-
-        validateIsArray('encryptedGroupKeys', encryptedGroupKeys)
+        this.recipient = recipient
         this.encryptedGroupKeys = encryptedGroupKeys
-
         // Validate content of encryptedGroupKeys
         this.encryptedGroupKeys.forEach((it: EncryptedGroupKey) => {
             if (!(it instanceof EncryptedGroupKey)) {
@@ -44,22 +29,7 @@ export default class GroupKeyResponse extends GroupKeyMessage {
         })
     }
 
-    toArray(): GroupKeyResponseSerialized {
-        return [this.requestId, this.recipient, this.encryptedGroupKeys.map((it: EncryptedGroupKey) => it.toArray())]
-    }
-
-    static override fromArray(arr: GroupKeyResponseSerialized): GroupKeyResponse {
-        const [requestId, recipient, encryptedGroupKeys] = arr
-        return new GroupKeyResponse({
-            requestId,
-            recipient: toEthereumAddress(recipient),
-            encryptedGroupKeys: encryptedGroupKeys.map((it) => EncryptedGroupKey.fromArray(it)),
-        })
-    }
-
     static is(streamMessage: StreamMessage): streamMessage is StreamMessage {
         return streamMessage.messageType === StreamMessageType.GROUP_KEY_RESPONSE
     }
 }
-
-GroupKeyMessage.classByMessageType[StreamMessageType.GROUP_KEY_RESPONSE] = GroupKeyResponse

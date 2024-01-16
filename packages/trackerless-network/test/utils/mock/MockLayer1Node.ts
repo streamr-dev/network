@@ -16,11 +16,11 @@ export class MockLayer1Node extends EventEmitter implements Layer1Node {
         return []
     }
 
-    getKBucketPeers(): PeerDescriptor[] {
+    getNeighbors(): PeerDescriptor[] {
         return this.kbucketPeers
     }
 
-    getBucketSize(): number {
+    getNeighborCount(): number {
         return this.kbucketPeers.length
     }
 

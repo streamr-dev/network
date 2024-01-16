@@ -21,7 +21,7 @@ describe('Failed autocertification', () => {
             entryPoints: [entryPointPeerDescriptor],
             websocketServerEnableTls: true,
             autoCertifierConfigFile: os.tmpdir() + '/failedAutoCertificationConfigFile.json',
-            autoCertifierUrl: 'http://localhost:44444'
+            autoCertifierUrl: 'http://127.0.0.1:44444'
         })
 
         node = new DhtNode({
@@ -46,7 +46,7 @@ describe('Failed autocertification', () => {
         const failedAutocertificationPeerDescriptor = failedAutocertificationNode.getLocalPeerDescriptor()
         expect(failedAutocertificationPeerDescriptor.websocket!.tls).toBe(false)
         await failedAutocertificationNode.joinDht([entryPointPeerDescriptor])
-        expect(failedAutocertificationNode.getBucketSize()).toEqual(2)
+        expect(failedAutocertificationNode.getNeighborCount()).toEqual(2)
     })
 
 })

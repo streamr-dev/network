@@ -2,12 +2,13 @@ import {
     ContentType,
     EncryptionType,
     MessageID,
+    SignatureType,
     StreamMessage,
     StreamMessageType,
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { Propagation } from '../../src/logic/propagation/Propagation'
-import { toEthereumAddress, wait, utf8ToBinary, hexToBinary } from '@streamr/utils'
-import { NodeID } from '../../src/identifiers'
+import { hexToBinary, toEthereumAddress, utf8ToBinary, wait } from '@streamr/utils'
+import { DhtAddress } from '@streamr/dht'
 
 const PUBLISHER_ID = toEthereumAddress('0x1111111111111111111111111111111111111111')
 
@@ -26,21 +27,22 @@ function makeMsg(streamId: string, partition: number, ts: number, msgNo: number)
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
         signature: hexToBinary('0x1111'),
-        messageType: StreamMessageType.MESSAGE
+        messageType: StreamMessageType.MESSAGE,
+        signatureType: SignatureType.SECP256K1
     }
 }
 
 const TTL = 100
 
-const N1 = 'n1' as NodeID
-const N2 = 'n2' as NodeID
-const N3 = 'n3' as NodeID
-const N4 = 'n4' as NodeID
-const N5 = 'n5' as NodeID
+const N1 = 'n1' as DhtAddress
+const N2 = 'n2' as DhtAddress
+const N3 = 'n3' as DhtAddress
+const N4 = 'n4' as DhtAddress
+const N5 = 'n5' as DhtAddress
 
 describe(Propagation, () => {
-    let getNeighbors: jest.Mock<ReadonlyArray<NodeID>, [string]>
-    let sendToNeighbor: jest.Mock<Promise<void>, [NodeID, StreamMessage]>
+    let getNeighbors: jest.Mock<ReadonlyArray<DhtAddress>, [string]>
+    let sendToNeighbor: jest.Mock<Promise<void>, [DhtAddress, StreamMessage]>
     let propagation: Propagation
 
     beforeEach(() => {
@@ -80,7 +82,7 @@ describe(Propagation, () => {
     describe('#onNeighborJoined', () => {
         let msg: StreamMessage
 
-        async function setUpAndFeed(neighbors: NodeID[]): Promise<void> {
+        async function setUpAndFeed(neighbors: DhtAddress[]): Promise<void> {
             getNeighbors.mockReturnValueOnce(neighbors)
             msg = makeMsg('s1', 0, 1000, 1)
             propagation.feedUnseenMessage(msg, [...getNeighbors('s1#0')], N2)

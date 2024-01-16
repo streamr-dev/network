@@ -4,14 +4,14 @@ import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { ContractFactory } from '../ContractFactory'
-import { getStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
+import { getStreamRegistryChainProviders, getEthersOverrides } from '../Ethereum'
 import { StreamrClientError } from '../StreamrClientError'
 import type { NodeRegistry as NodeRegistryContract } from '../ethereumArtifacts/NodeRegistry'
 import NodeRegistryArtifact from '../ethereumArtifacts/NodeRegistryAbi.json'
 import { queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 
 export interface StorageNodeMetadata {
-    http: string
+    urls: string[]
 }
 
 /**
@@ -58,7 +58,7 @@ export class StorageNodeRegistry {
 
     async setStorageNodeMetadata(metadata: StorageNodeMetadata | undefined): Promise<void> {
         await this.connectToContract()
-        const ethersOverrides = getStreamRegistryOverrides(this.config)
+        const ethersOverrides = getEthersOverrides(this.config)
         if (metadata !== undefined) {
             await waitForTx(this.nodeRegistryContract!.createOrUpdateNodeSelf(JSON.stringify(metadata), ethersOverrides))
         } else {

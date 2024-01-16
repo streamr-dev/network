@@ -1,16 +1,15 @@
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { PeerID } from '../../src/helpers/PeerID'
 import { waitForCondition } from '@streamr/utils'
-import { areEqualPeerDescriptors } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { createMockPeerDescriptor } from '../utils/utils'
+import { areEqualPeerDescriptors } from '../../src/identifiers'
 
 describe('Websocket IConnection Requests', () => {
-    const epPeerDescriptor: PeerDescriptor = {
-        nodeId: PeerID.fromString('3').value,
-        type: NodeType.NODEJS,
+
+    const epPeerDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 10021, tls: false }
-    }
+    })
     let epDhtNode: DhtNode
     let node1: DhtNode
     let node2: DhtNode
@@ -63,8 +62,8 @@ describe('Websocket IConnection Requests', () => {
 
         await waitForCondition(() => { return (connected1 && connected2) })
 
-        expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getLocalPeerDescriptor())).toEqual(true)
-        expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getLocalPeerDescriptor())).toEqual(true)
+        expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getNodeId())).toEqual(true)
+        expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getNodeId())).toEqual(true)
 
     }, 10000)
 })

@@ -7,7 +7,6 @@ import type { ExternalStoreDataRequest } from "./DhtRpc";
 import type { ExternalFindDataResponse } from "./DhtRpc";
 import type { ExternalFindDataRequest } from "./DhtRpc";
 import { ConnectionLockRpc } from "./DhtRpc";
-import type { DisconnectNoticeResponse } from "./DhtRpc";
 import type { DisconnectNotice } from "./DhtRpc";
 import type { UnlockRequest } from "./DhtRpc";
 import type { LockResponse } from "./DhtRpc";
@@ -18,15 +17,14 @@ import type { RtcAnswer } from "./DhtRpc";
 import type { RtcOffer } from "./DhtRpc";
 import type { WebrtcConnectionRequest } from "./DhtRpc";
 import { WebsocketConnectorRpc } from "./DhtRpc";
-import type { WebsocketConnectionResponse } from "./DhtRpc";
 import type { WebsocketConnectionRequest } from "./DhtRpc";
-import { FindSessionRpc } from "./DhtRpc";
-import type { FindResponse } from "./DhtRpc";
+import { RecursiveOperationSessionRpc } from "./DhtRpc";
+import type { RecursiveOperationResponse } from "./DhtRpc";
 import { StoreRpc } from "./DhtRpc";
 import type { ReplicateDataRequest } from "./DhtRpc";
 import type { StoreDataResponse } from "./DhtRpc";
 import type { StoreDataRequest } from "./DhtRpc";
-import { FindRpc } from "./DhtRpc";
+import { RecursiveOperationRpc } from "./DhtRpc";
 import { RouterRpc } from "./DhtRpc";
 import type { RouteMessageAck } from "./DhtRpc";
 import type { RouteMessageWrapper } from "./DhtRpc";
@@ -128,27 +126,27 @@ export class RouterRpcClient implements IRouterRpcClient, ServiceInfo {
     }
 }
 /**
- * @generated from protobuf service dht.FindRpc
+ * @generated from protobuf service dht.RecursiveOperationRpc
  */
-export interface IFindRpcClient {
+export interface IRecursiveOperationRpcClient {
     /**
-     * @generated from protobuf rpc: routeFindRequest(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
+     * @generated from protobuf rpc: routeRequest(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */
-    routeFindRequest(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck>;
+    routeRequest(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck>;
 }
 /**
- * @generated from protobuf service dht.FindRpc
+ * @generated from protobuf service dht.RecursiveOperationRpc
  */
-export class FindRpcClient implements IFindRpcClient, ServiceInfo {
-    typeName = FindRpc.typeName;
-    methods = FindRpc.methods;
-    options = FindRpc.options;
+export class RecursiveOperationRpcClient implements IRecursiveOperationRpcClient, ServiceInfo {
+    typeName = RecursiveOperationRpc.typeName;
+    methods = RecursiveOperationRpc.methods;
+    options = RecursiveOperationRpc.options;
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: routeFindRequest(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
+     * @generated from protobuf rpc: routeRequest(dht.RouteMessageWrapper) returns (dht.RouteMessageAck);
      */
-    routeFindRequest(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
+    routeRequest(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
         return stackIntercept<RouteMessageWrapper, RouteMessageAck>("unary", this._transport, method, opt, input);
     }
@@ -191,29 +189,29 @@ export class StoreRpcClient implements IStoreRpcClient, ServiceInfo {
     }
 }
 /**
- * @generated from protobuf service dht.FindSessionRpc
+ * @generated from protobuf service dht.RecursiveOperationSessionRpc
  */
-export interface IFindSessionRpcClient {
+export interface IRecursiveOperationSessionRpcClient {
     /**
-     * @generated from protobuf rpc: sendFindResponse(dht.FindResponse) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: sendResponse(dht.RecursiveOperationResponse) returns (google.protobuf.Empty);
      */
-    sendFindResponse(input: FindResponse, options?: RpcOptions): UnaryCall<FindResponse, Empty>;
+    sendResponse(input: RecursiveOperationResponse, options?: RpcOptions): UnaryCall<RecursiveOperationResponse, Empty>;
 }
 /**
- * @generated from protobuf service dht.FindSessionRpc
+ * @generated from protobuf service dht.RecursiveOperationSessionRpc
  */
-export class FindSessionRpcClient implements IFindSessionRpcClient, ServiceInfo {
-    typeName = FindSessionRpc.typeName;
-    methods = FindSessionRpc.methods;
-    options = FindSessionRpc.options;
+export class RecursiveOperationSessionRpcClient implements IRecursiveOperationSessionRpcClient, ServiceInfo {
+    typeName = RecursiveOperationSessionRpc.typeName;
+    methods = RecursiveOperationSessionRpc.methods;
+    options = RecursiveOperationSessionRpc.options;
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: sendFindResponse(dht.FindResponse) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: sendResponse(dht.RecursiveOperationResponse) returns (google.protobuf.Empty);
      */
-    sendFindResponse(input: FindResponse, options?: RpcOptions): UnaryCall<FindResponse, Empty> {
+    sendResponse(input: RecursiveOperationResponse, options?: RpcOptions): UnaryCall<RecursiveOperationResponse, Empty> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<FindResponse, Empty>("unary", this._transport, method, opt, input);
+        return stackIntercept<RecursiveOperationResponse, Empty>("unary", this._transport, method, opt, input);
     }
 }
 /**
@@ -221,9 +219,9 @@ export class FindSessionRpcClient implements IFindSessionRpcClient, ServiceInfo 
  */
 export interface IWebsocketConnectorRpcClient {
     /**
-     * @generated from protobuf rpc: requestConnection(dht.WebsocketConnectionRequest) returns (dht.WebsocketConnectionResponse);
+     * @generated from protobuf rpc: requestConnection(dht.WebsocketConnectionRequest) returns (google.protobuf.Empty);
      */
-    requestConnection(input: WebsocketConnectionRequest, options?: RpcOptions): UnaryCall<WebsocketConnectionRequest, WebsocketConnectionResponse>;
+    requestConnection(input: WebsocketConnectionRequest, options?: RpcOptions): UnaryCall<WebsocketConnectionRequest, Empty>;
 }
 /**
  * @generated from protobuf service dht.WebsocketConnectorRpc
@@ -235,11 +233,11 @@ export class WebsocketConnectorRpcClient implements IWebsocketConnectorRpcClient
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: requestConnection(dht.WebsocketConnectionRequest) returns (dht.WebsocketConnectionResponse);
+     * @generated from protobuf rpc: requestConnection(dht.WebsocketConnectionRequest) returns (google.protobuf.Empty);
      */
-    requestConnection(input: WebsocketConnectionRequest, options?: RpcOptions): UnaryCall<WebsocketConnectionRequest, WebsocketConnectionResponse> {
+    requestConnection(input: WebsocketConnectionRequest, options?: RpcOptions): UnaryCall<WebsocketConnectionRequest, Empty> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<WebsocketConnectionRequest, WebsocketConnectionResponse>("unary", this._transport, method, opt, input);
+        return stackIntercept<WebsocketConnectionRequest, Empty>("unary", this._transport, method, opt, input);
     }
 }
 /**
@@ -314,9 +312,9 @@ export interface IConnectionLockRpcClient {
      */
     unlockRequest(input: UnlockRequest, options?: RpcOptions): UnaryCall<UnlockRequest, Empty>;
     /**
-     * @generated from protobuf rpc: gracefulDisconnect(dht.DisconnectNotice) returns (dht.DisconnectNoticeResponse);
+     * @generated from protobuf rpc: gracefulDisconnect(dht.DisconnectNotice) returns (google.protobuf.Empty);
      */
-    gracefulDisconnect(input: DisconnectNotice, options?: RpcOptions): UnaryCall<DisconnectNotice, DisconnectNoticeResponse>;
+    gracefulDisconnect(input: DisconnectNotice, options?: RpcOptions): UnaryCall<DisconnectNotice, Empty>;
 }
 /**
  * @generated from protobuf service dht.ConnectionLockRpc
@@ -342,11 +340,11 @@ export class ConnectionLockRpcClient implements IConnectionLockRpcClient, Servic
         return stackIntercept<UnlockRequest, Empty>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: gracefulDisconnect(dht.DisconnectNotice) returns (dht.DisconnectNoticeResponse);
+     * @generated from protobuf rpc: gracefulDisconnect(dht.DisconnectNotice) returns (google.protobuf.Empty);
      */
-    gracefulDisconnect(input: DisconnectNotice, options?: RpcOptions): UnaryCall<DisconnectNotice, DisconnectNoticeResponse> {
+    gracefulDisconnect(input: DisconnectNotice, options?: RpcOptions): UnaryCall<DisconnectNotice, Empty> {
         const method = this.methods[2], opt = this._transport.mergeOptions(options);
-        return stackIntercept<DisconnectNotice, DisconnectNoticeResponse>("unary", this._transport, method, opt, input);
+        return stackIntercept<DisconnectNotice, Empty>("unary", this._transport, method, opt, input);
     }
 }
 /**

@@ -1,5 +1,5 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { NetworkNodeType, NetworkPeerDescriptor, createStrictConfig, redactConfig } from '../../src/Config'
+import { NetworkNodeType, NetworkPeerDescriptor, createStrictConfig, redactConfig, DEFAULT_ENVIRONMENT } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/Ethereum'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -105,7 +105,7 @@ describe('Config', () => {
                 network: {}
             })
             expect(clientOverrides.network).toEqual(clientDefaults.network)
-            expect(clientOverrides.network.controlLayer.entryPoints![0].nodeId).toEqual('eee1')
+            expect(clientOverrides.network.controlLayer.entryPoints![0].nodeId).toEqual(CHAIN_CONFIG[DEFAULT_ENVIRONMENT].entryPoints[0].nodeId)
         })
 
         it('can override entryPoints', () => {
@@ -182,6 +182,63 @@ describe('Config', () => {
                     streamStorageRegistryChainAddress: '0x1234567890123456789012345678901234567890',
                     storageNodeRegistryChainAddress: CHAIN_CONFIG[environmentId].contracts.StorageNodeRegistry
                 }
+            })
+        })
+
+        describe('highGasPrice', () => {
+
+            it('without ethereum network config', () => {
+                const config: any = {
+                    environment: 'polygon'
+                }
+                expect(createStrictConfig(config)).toMatchObject({
+                    contracts: {
+                        ethereumNetwork: {
+                            highGasPriceStrategy: true
+                        }
+                    }
+                })
+            })
+
+            it('with ethereum network config', () => {
+                const config: any = {
+                    environment: 'polygon',
+                    contracts: {
+                        ethereumNetwork: {
+                            overrides: {
+                                gasLimit: 123
+                            }
+                        }
+                    }
+                }
+                expect(createStrictConfig(config)).toMatchObject({
+                    contracts: {
+                        ethereumNetwork: {
+                            highGasPriceStrategy: true,
+                            overrides: {
+                                gasLimit: 123
+                            }
+                        }
+                    }
+                })
+            })
+
+            it('explicit config value is not overriden', () => {
+                const config: any = {
+                    environment: 'polygon',
+                    contracts: {
+                        ethereumNetwork: {
+                            highGasPriceStrategy: false
+                        }
+                    }
+                }
+                expect(createStrictConfig(config)).toMatchObject({
+                    contracts: {
+                        ethereumNetwork: {
+                            highGasPriceStrategy: false
+                        }
+                    }
+                })
             })
         })
     })

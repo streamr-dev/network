@@ -1,7 +1,9 @@
 import { NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import {
+    ContentType,
+    EncryptionType,
     MessageID,
-    MessageRef,
+    MessageRef, SignatureType,
     StreamMessage,
     StreamMessageType,
     StreamPartIDUtils
@@ -30,7 +32,6 @@ describe('NetworkNode', () => {
     }
 
     beforeEach(async () => {
-        Simulator.useFakeTimers()
         const simulator = new Simulator()
         transport1 = new SimulatorTransport(pd1, simulator)
         await transport1.start()
@@ -63,7 +64,6 @@ describe('NetworkNode', () => {
             node1.stop(),
             node2.stop()
         ])
-        Simulator.useFakeTimers(false)
     })
 
     it('wait for join + broadcast and subscribe', async () => {
@@ -80,7 +80,10 @@ describe('NetworkNode', () => {
             content: utf8ToBinary(JSON.stringify({
                 hello: 'world'
             })),
+            contentType: ContentType.JSON,
             messageType: StreamMessageType.MESSAGE,
+            encryptionType: EncryptionType.NONE,
+            signatureType: SignatureType.SECP256K1,
             signature: hexToBinary('0x1234'),
         })
 

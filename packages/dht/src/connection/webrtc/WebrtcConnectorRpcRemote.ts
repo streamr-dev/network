@@ -1,26 +1,16 @@
+import { Logger } from '@streamr/utils'
 import { RpcRemote } from '../../dht/contact/RpcRemote'
 import {
     IceCandidate,
-    PeerDescriptor,
     RtcAnswer,
     RtcOffer,
     WebrtcConnectionRequest
 } from '../../proto/packages/dht/protos/DhtRpc'
-import { IWebrtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { ProtoRpcClient } from '@streamr/proto-rpc'
-import { Logger } from '@streamr/utils'
+import { WebrtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 
 const logger = new Logger(module)
 
-export class WebrtcConnectorRpcRemote extends RpcRemote<IWebrtcConnectorRpcClient> {
-
-    constructor(
-        localPeerDescriptor: PeerDescriptor,
-        remotePeerDescriptor: PeerDescriptor,
-        client: ProtoRpcClient<IWebrtcConnectorRpcClient>
-    ) {
-        super(localPeerDescriptor, remotePeerDescriptor, 'DUMMY', client)
-    }
+export class WebrtcConnectorRpcRemote extends RpcRemote<WebrtcConnectorRpcClient> {
 
     requestConnection(): void {
         const request: WebrtcConnectionRequest = {

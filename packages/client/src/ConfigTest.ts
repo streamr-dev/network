@@ -9,6 +9,9 @@ export const CONFIG_TEST: StreamrClientConfig = {
     environment: 'dev2',
     network: {
         controlLayer: {
+            entryPointDiscovery: {
+                enabled: false,
+            },
             websocketPortRange: {
                 min: 32400,
                 max: 32800
