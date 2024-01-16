@@ -82,11 +82,11 @@ export class GapMisMatchError extends Error {
  *
  */
 export class DuplicateMessageDetector {
-    private readonly maxNumberOfGaps: number
+    private readonly maxGapCount: number
     private readonly gaps: Array<[NumberPair, NumberPair]>
 
-    constructor(maxNumberOfGaps = 10000) {
-        this.maxNumberOfGaps = maxNumberOfGaps
+    constructor(maxGapCount = 10000) {
+        this.maxGapCount = maxGapCount
         this.gaps = [] // ascending order of half-closed intervals (x,y] representing gaps that contain unseen message(s)
     }
 
@@ -144,7 +144,7 @@ export class DuplicateMessageDetector {
                 //   - last gap is [n, Infinity]
                 //   - anything not covered by a gap is considered seen
 
-                this.dropLowestGapIfOverMaxNumberOfGaps()
+                this.dropLowestGapIfOverMaxGapCount()
                 return true
             }
             if (number.greaterThan(lowerBound)) {
@@ -154,9 +154,9 @@ export class DuplicateMessageDetector {
         return false
     }
 
-    private dropLowestGapIfOverMaxNumberOfGaps(): void {
-        // invariant: this.gaps.length <= this.maxNumberOfGaps + 1
-        if (this.gaps.length > this.maxNumberOfGaps) {
+    private dropLowestGapIfOverMaxGapCount(): void {
+        // invariant: this.gaps.length <= this.maxGapCount + 1
+        if (this.gaps.length > this.maxGapCount) {
             this.gaps.shift()
         }
     }

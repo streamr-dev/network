@@ -4,8 +4,7 @@ import { v4 } from 'uuid'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerManager, getDistance } from '../PeerManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
-import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { DhtAddress, getRawFromDhtAddress } from '../../identifiers'
+import { DhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
 
 const logger = new Logger(module)
 
@@ -107,7 +106,7 @@ export class DiscoverySession {
     }
 
     public async findClosestNodes(timeout: number): Promise<void> {
-        if (this.config.peerManager.getNumberOfContacts(this.config.contactedPeers) === 0) {
+        if (this.config.peerManager.getContactCount(this.config.contactedPeers) === 0) {
             return
         }
         // TODO add abortController and signal it in stop()

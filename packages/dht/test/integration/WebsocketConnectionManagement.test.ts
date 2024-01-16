@@ -5,12 +5,12 @@ import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { Simulator } from '../../src/connection/simulator/Simulator'
-import { SimulatorTransport } from '../../src/exports'
-import { PeerID } from '../../src/helpers/PeerID'
+import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import * as Err from '../../src/helpers/errors'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { TransportEvents } from '../../src/transport/ITransport'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 const SERVICE_ID = 'test'
 
@@ -31,7 +31,7 @@ describe('Websocket Connection Management', () => {
     let biggerNoWsServerManager: ConnectionManager
     const simulator = new Simulator()
     const wsServerConnectorPeerDescriptor: PeerDescriptor = {
-        nodeId: PeerID.fromString('2').value,
+        nodeId: new Uint8Array([2]),
         type: NodeType.NODEJS,
         websocket: {
             host: '127.0.0.1',
@@ -40,11 +40,11 @@ describe('Websocket Connection Management', () => {
         }
     }
     const noWsServerConnectorPeerDescriptor: PeerDescriptor = {
-        nodeId: PeerID.fromString('1').value,
+        nodeId: new Uint8Array([1]),
         type: NodeType.NODEJS,
     }
     const biggerNoWsServerConnectorPeerDescriptor: PeerDescriptor = {
-        nodeId: PeerID.fromString('3').value,
+        nodeId: new Uint8Array([3]),
         type: NodeType.NODEJS,
     }
 
@@ -91,7 +91,7 @@ describe('Websocket Connection Management', () => {
         await connectorTransport3.stop()
     })
 
-    it('Can open connections to serverless peer with smaller peerId', (done) => {
+    it('Can open connections to serverless peer with smaller nodeId', (done) => {
         const dummyMessage: Message = {
             serviceId: SERVICE_ID,
             body: {
@@ -104,8 +104,12 @@ describe('Websocket Connection Management', () => {
         }
         noWsServerManager.on('message', (message: Message) => {
             expect(message.messageId).toEqual('mockerer')
-            expect(wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)!.connectionType).toEqual(ConnectionType.WEBSOCKET_SERVER)
-            expect(noWsServerManager.getConnection(wsServerConnectorPeerDescriptor)!.connectionType).toEqual(ConnectionType.WEBSOCKET_CLIENT)
+            expect(wsServerManager.getConnection(getNodeIdFromPeerDescriptor(noWsServerConnectorPeerDescriptor))!.connectionType).toEqual(
+                ConnectionType.WEBSOCKET_SERVER
+            )
+            expect(noWsServerManager.getConnection(getNodeIdFromPeerDescriptor(wsServerConnectorPeerDescriptor))!.connectionType).toEqual(
+                ConnectionType.WEBSOCKET_CLIENT
+            )
 
             done()
         })
@@ -113,7 +117,7 @@ describe('Websocket Connection Management', () => {
         wsServerManager.send(dummyMessage)
     })
 
-    it('Can open connections to serverless peer with bigger peerId', (done) => {
+    it('Can open connections to serverless peer with bigger nodeId', (done) => {
         const dummyMessage: Message = {
             serviceId: SERVICE_ID,
             body: {
@@ -126,8 +130,12 @@ describe('Websocket Connection Management', () => {
         }
         biggerNoWsServerManager.on('message', (message: Message) => {
             expect(message.messageId).toEqual('mockerer')
-            expect(wsServerManager.getConnection(biggerNoWsServerConnectorPeerDescriptor)!.connectionType).toEqual(ConnectionType.WEBSOCKET_SERVER)
-            expect(biggerNoWsServerManager.getConnection(wsServerConnectorPeerDescriptor)!.connectionType).toEqual(ConnectionType.WEBSOCKET_CLIENT)
+            expect(wsServerManager.getConnection(getNodeIdFromPeerDescriptor(biggerNoWsServerConnectorPeerDescriptor))!.connectionType).toEqual(
+                ConnectionType.WEBSOCKET_SERVER
+            )
+            expect(biggerNoWsServerManager.getConnection(getNodeIdFromPeerDescriptor(wsServerConnectorPeerDescriptor))!.connectionType).toEqual(
+                ConnectionType.WEBSOCKET_CLIENT
+            )
 
             done()
         })
@@ -154,7 +162,7 @@ describe('Websocket Connection Management', () => {
             waitForEvent3<TransportEvents>(wsServerManager, 'disconnected', 15000),
             wsServerManager.send(dummyMessage)
         ])
-        expect(wsServerManager.getConnection(dummyMessage.targetDescriptor!)).toBeUndefined()
+        expect(wsServerManager.getConnection(getNodeIdFromPeerDescriptor(dummyMessage.targetDescriptor!))).toBeUndefined()
     }, 20000)
     
     it('Can open connections to peer with server', async () => {
@@ -171,12 +179,16 @@ describe('Websocket Connection Management', () => {
         await noWsServerManager.send(dummyMessage)
         await waitForCondition(
             () => {
-                return (!!wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)
-                    && wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)!.connectionType === ConnectionType.WEBSOCKET_SERVER)
+                const nodeId = getNodeIdFromPeerDescriptor(noWsServerConnectorPeerDescriptor)
+                return (!!wsServerManager.getConnection(nodeId)
+                    && wsServerManager.getConnection(nodeId)!.connectionType === ConnectionType.WEBSOCKET_SERVER)
             }
         )
         await waitForCondition(
-            () => noWsServerManager.getConnection(wsServerConnectorPeerDescriptor)!.connectionType === ConnectionType.WEBSOCKET_CLIENT
+            () => {
+                const connection = noWsServerManager.getConnection(getNodeIdFromPeerDescriptor(wsServerConnectorPeerDescriptor))!
+                return connection.connectionType === ConnectionType.WEBSOCKET_CLIENT
+            }
         )
     })
 

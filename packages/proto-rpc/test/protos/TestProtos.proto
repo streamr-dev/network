@@ -42,7 +42,7 @@ message ClosestPeersResponse {
   }
 
 message PeerDescriptor {
-    bytes peerId = 1;
+    bytes nodeId = 1;
     NodeType type = 2;
     ConnectivityMethod udp = 3;
     ConnectivityMethod tcp = 4;

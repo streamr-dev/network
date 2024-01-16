@@ -50,6 +50,6 @@
     "express": "^4.17.1",
     "ts-essentials": "^9.4.1",
     "ts-loader": "^9.5.1",
-    "ts-node": "^10.9.1"
+    "ts-node": "^10.9.2"
   }
 }

@@ -29,8 +29,8 @@ export const waitForStorage = async (
         const duration = Date.now() - start
         if (duration > opts.timeout) {
             logger.debug('Timed out waiting for storage to contain message', {
-                expected: message.streamMessage.getMessageID(),
-                lastReceived: last?.map((l) => l.getMessageID()),
+                expected: message.streamMessage.messageId,
+                lastReceived: last?.map((l) => l.messageId),
             })
             throw new Error(`timed out after ${duration}ms waiting for message`)
         }
@@ -45,8 +45,8 @@ export const waitForStorage = async (
             }
         }
         logger.debug('Retry after delay (matching message not found)', {
-            expected: message.streamMessage.getMessageID(),
-            'last-3': last.slice(-3).map((l) => l.getMessageID()),
+            expected: message.streamMessage.messageId,
+            'last-3': last.slice(-3).map((l) => l.messageId),
             delayInMs: opts.interval
         })
         await wait(opts.interval)

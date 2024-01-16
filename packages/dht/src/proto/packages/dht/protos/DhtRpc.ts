@@ -264,6 +264,10 @@ export interface RouteMessageWrapper {
      * @generated from protobuf field: repeated dht.PeerDescriptor routingPath = 6;
      */
     routingPath: PeerDescriptor[];
+    /**
+     * @generated from protobuf field: repeated string parallelRootNodeIds = 7;
+     */
+    parallelRootNodeIds: string[];
 }
 /**
  * @generated from protobuf message dht.RouteMessageAck
@@ -513,11 +517,6 @@ export interface DisconnectNotice {
      * @generated from protobuf field: dht.DisconnectMode disconnectMode = 1;
      */
     disconnectMode: DisconnectMode;
-}
-/**
- * @generated from protobuf message dht.DisconnectNoticeResponse
- */
-export interface DisconnectNoticeResponse {
 }
 /**
  * @generated from protobuf message dht.ExternalFindDataRequest
@@ -879,7 +878,8 @@ class RouteMessageWrapper$Type extends MessageType$<RouteMessageWrapper> {
             { no: 3, name: "target", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 4, name: "message", kind: "message", T: () => Message },
             { no: 5, name: "reachableThrough", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
-            { no: 6, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+            { no: 6, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 7, name: "parallelRootNodeIds", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1088,16 +1088,6 @@ class DisconnectNotice$Type extends MessageType$<DisconnectNotice> {
  */
 export const DisconnectNotice = new DisconnectNotice$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class DisconnectNoticeResponse$Type extends MessageType$<DisconnectNoticeResponse> {
-    constructor() {
-        super("dht.DisconnectNoticeResponse", []);
-    }
-}
-/**
- * @generated MessageType for protobuf message dht.DisconnectNoticeResponse
- */
-export const DisconnectNoticeResponse = new DisconnectNoticeResponse$Type();
-// @generated message type with reflection information, may provide speed optimized methods
 class ExternalFindDataRequest$Type extends MessageType$<ExternalFindDataRequest> {
     constructor() {
         super("dht.ExternalFindDataRequest", [
@@ -1176,7 +1166,7 @@ export const WebrtcConnectorRpc = new ServiceType("dht.WebrtcConnectorRpc", [
 export const ConnectionLockRpc = new ServiceType("dht.ConnectionLockRpc", [
     { name: "lockRequest", options: {}, I: LockRequest, O: LockResponse },
     { name: "unlockRequest", options: {}, I: UnlockRequest, O: Empty },
-    { name: "gracefulDisconnect", options: {}, I: DisconnectNotice, O: DisconnectNoticeResponse }
+    { name: "gracefulDisconnect", options: {}, I: DisconnectNotice, O: Empty }
 ]);
 /**
  * @generated ServiceType for protobuf service dht.ExternalApiRpc

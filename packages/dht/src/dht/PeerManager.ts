@@ -3,9 +3,6 @@ import {
 } from '@streamr/utils'
 import KBucket from 'k-bucket'
 import {
-    getNodeIdFromPeerDescriptor
-} from '../helpers/peerIdFromPeerDescriptor'
-import {
     PeerDescriptor
 } from '../proto/packages/dht/protos/DhtRpc'
 import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
@@ -13,7 +10,7 @@ import { RandomContactList } from './contact/RandomContactList'
 import { SortedContactList } from './contact/SortedContactList'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import EventEmitter from 'eventemitter3'
-import { DhtAddress, DhtAddressRaw, getRawFromDhtAddress } from '../identifiers'
+import { DhtAddress, DhtAddressRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../identifiers'
 
 const logger = new Logger(module)
 
@@ -66,7 +63,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             numberOfNodesToPing: this.config.numberOfNodesPerKBucket
         })
         this.bucket.on('ping', (oldContacts: DhtNodeRpcRemote[], newContact: DhtNodeRpcRemote) => this.onKBucketPing(oldContacts, newContact))
-        this.bucket.on('removed', (contact: DhtNodeRpcRemote) => this.onKBucketRemoved(contact))
+        this.bucket.on('removed', (contact: DhtNodeRpcRemote) => this.onKBucketRemoved(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())))
         this.bucket.on('added', (contact: DhtNodeRpcRemote) => this.onKBucketAdded(contact))
         this.bucket.on('updated', () => {
             // TODO: Update contact info to the connection manager and reconnect
@@ -114,11 +111,10 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.bucket.add(newContact)
     }
 
-    private onKBucketRemoved(contact: DhtNodeRpcRemote): void {
+    private onKBucketRemoved(nodeId: DhtAddress): void {
         if (this.stopped) {
             return
         }
-        const nodeId = getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())
         this.config.connectionManager?.weakUnlockConnection(nodeId)
         logger.trace(`Removed contact ${nodeId}`)
         if (this.bucket.count() === 0) {
@@ -145,13 +141,13 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
                     } else {
                         logger.trace('ping failed ' + nodeId)
                         this.config.connectionManager?.weakUnlockConnection(nodeId)
-                        this.removeContact(peerDescriptor)
+                        this.removeContact(nodeId)
                         this.addClosestContactToBucket()
                     }
                     return
                 }).catch((_e) => {
                     this.config.connectionManager?.weakUnlockConnection(nodeId)
-                    this.removeContact(peerDescriptor)
+                    this.removeContact(nodeId)
                     this.addClosestContactToBucket()
                 })
             }
@@ -192,30 +188,28 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         logger.trace('connected: ' + nodeId + ' ' + this.connections.size)
     }
 
-    handleDisconnected(peerDescriptor: PeerDescriptor, gracefulLeave: boolean): void {
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+    handleDisconnected(nodeId: DhtAddress, gracefulLeave: boolean): void {
         logger.trace('disconnected: ' + nodeId)
         this.connections.delete(nodeId)
         if (this.config.isLayer0) {
-            this.bucket.remove(peerDescriptor.nodeId)
+            this.bucket.remove(getRawFromDhtAddress(nodeId))
             if (gracefulLeave === true) {
                 logger.trace(nodeId + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
-                this.removeContact(peerDescriptor)
+                this.removeContact(nodeId)
             } else {
                 logger.trace(nodeId + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
             }
         }
     }
 
-    handlePeerLeaving(peerDescriptor: PeerDescriptor): void {
-        this.removeContact(peerDescriptor)
+    handlePeerLeaving(nodeId: DhtAddress): void {
+        this.removeContact(nodeId)
     }
 
-    private removeContact(contact: PeerDescriptor): void {
+    private removeContact(nodeId: DhtAddress): void {
         if (this.stopped) {
             return
         }
-        const nodeId = getNodeIdFromPeerDescriptor(contact)
         logger.trace(`Removing contact ${nodeId}`)
         this.bucket.remove(getRawFromDhtAddress(nodeId))
         this.contacts.removeContact(nodeId)
@@ -258,7 +252,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         return closest.getClosestContacts(limit)
     }
 
-    getNumberOfContacts(excludedNodeIds?: Set<DhtAddress>): number {
+    getContactCount(excludedNodeIds?: Set<DhtAddress>): number {
         return this.contacts.getAllContacts().filter((contact) => {
             if (!excludedNodeIds) {
                 return true
@@ -268,11 +262,11 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         }).length
     }
 
-    getNumberOfConnections(): number {
+    getConnectionCount(): number {
         return this.connections.size
     }
 
-    getNumberOfNeighbors(): number {
+    getNeighborCount(): number {
         return this.bucket.count()
     }
 

@@ -8,14 +8,14 @@ import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { StoreRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { StoreRpcRemote } from '../../src/dht/store/StoreRpcRemote'
 import { createMockDataEntry } from '../utils/mock/mockDataEntry'
-import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
+import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
+import { createRandomDhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
 
 describe('StoreRpcRemote', () => {
 
     let rpcRemote: StoreRpcRemote
-    let clientRpcCommunicator: RpcCommunicator
-    let serverRpcCommunicator: RpcCommunicator
+    let clientRpcCommunicator: RpcCommunicator<DhtCallContext>
+    let serverRpcCommunicator: RpcCommunicator<DhtCallContext>
     const clientPeerDescriptor = createMockPeerDescriptor()
     const serverPeerDescriptor = createMockPeerDescriptor()
     const data = createMockDataEntry()

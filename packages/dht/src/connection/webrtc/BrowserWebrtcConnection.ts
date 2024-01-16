@@ -3,6 +3,7 @@ import { WebrtcConnectionEvents, IWebrtcConnection, RtcDescription } from './IWe
 import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../IConnection'
 import { Logger } from '@streamr/utils'
 import { IceServer } from './WebrtcConnector'
+import { createRandomConnectionId } from '../Connection'
 
 const logger = new Logger(module)
 
@@ -34,7 +35,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
 
     constructor(params: Params) {
         super()
-        this.connectionId = new ConnectionID()
+        this.connectionId = createRandomConnectionId()
         this.iceServers = params.iceServers ?? []
     }
 
@@ -222,7 +223,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         this.emit('connected')
     }
 
-    public setConnectionId(connectionID: string): void {
-        this.connectionId = new ConnectionID(connectionID)
+    public setConnectionId(connectionId: ConnectionID): void {
+        this.connectionId = connectionId
     }
 }

@@ -1,4 +1,4 @@
-FROM node:18-bullseye as build
+FROM node:20-bullseye as build
 WORKDIR /usr/src/network
 COPY . .
 RUN --mount=type=cache,target=/root/.npm \
