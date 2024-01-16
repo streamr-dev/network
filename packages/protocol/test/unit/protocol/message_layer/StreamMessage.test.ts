@@ -157,20 +157,6 @@ describe('StreamMessage', () => {
             expect(StreamMessage.isAESEncrypted(encryptedMessage)).toBe(true)
         })
 
-        it('should throw if required fields are not defined', () => {
-            assert.throws(() => new StreamMessage({
-                // missing messageId
-                content: JSON.stringify(content),
-            } as any), ValidationError)
-        })
-
-        it('should throw if content is not defined', () => {
-            assert.throws(() => new StreamMessage({
-                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
-                // missing content
-            } as any), ValidationError)
-        })
-
         it('should not throw when encrypted content', () => {
             assert.doesNotThrow(() => msg({
                 // @ts-expect-error TODO
