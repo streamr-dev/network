@@ -6,9 +6,8 @@ import {
     deserializeGroupKeyRequest,
     deserializeGroupKeyResponse,
 } from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
+import { verifySignature, EthereumAddress } from '@streamr/utils'
 import { StreamRegistry } from '../registry/StreamRegistry'
-import { verify } from '../utils/signingUtils'
 
 export const validateStreamMessage = async (msg: StreamMessage, streamRegistry: StreamRegistry): Promise<void> => {
     await doValidate(msg, streamRegistry).catch((err: any) => {
@@ -73,7 +72,7 @@ export const assertSignatureIsValid = (streamMessage: StreamMessage): void => {
     })
     let success
     try {
-        success = verify(streamMessage.getPublisherId(), payload, streamMessage.signature)
+        success = verifySignature(streamMessage.getPublisherId(), payload, streamMessage.signature)
     } catch (err) {
         throw new StreamMessageError(`An error occurred during address recovery from signature: ${err}`, streamMessage)
     }

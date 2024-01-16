@@ -108,7 +108,7 @@ export class FakeStorageNode extends FakeNetworkNode {
         })
         const port = (this.server.address() as AddressInfo).port
         this.chain.storageNodeMetadatas.set(this.getAddress(), {
-            http: `http://127.0.0.1:${port}`
+            urls: [`http://127.0.0.1:${port}`]
         })
         const storageNodeAssignmentStreamPermissions = new Multimap<EthereumAddress, StreamPermission>()
         storageNodeAssignmentStreamPermissions.add(this.getAddress(), StreamPermission.PUBLISH)
