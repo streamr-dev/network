@@ -73,10 +73,10 @@ describe('NetworkStack NodeInfoRpc', () => {
     it('NodeInfoClient gets stream partition info', async () => {
         const streamPartId1 = StreamPartIDUtils.parse('stream1#0')
         const streamPartId2 = StreamPartIDUtils.parse('stream1#1')
-        await stack1.getStreamrNode().joinStreamPart(streamPartId1)
-        await stack2.getStreamrNode().joinStreamPart(streamPartId1)
-        await stack1.getStreamrNode().joinStreamPart(streamPartId2)
-        await stack2.getStreamrNode().joinStreamPart(streamPartId2)
+        stack1.getStreamrNode().joinStreamPart(streamPartId1)
+        stack2.getStreamrNode().joinStreamPart(streamPartId1)
+        stack1.getStreamrNode().joinStreamPart(streamPartId2)
+        stack2.getStreamrNode().joinStreamPart(streamPartId2)
         await waitForCondition(() => 
             stack1.getStreamrNode().getNeighbors(streamPartId1).length === 1 
             && stack2.getStreamrNode().getNeighbors(streamPartId1).length === 1
