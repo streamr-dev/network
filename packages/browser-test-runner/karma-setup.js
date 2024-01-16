@@ -39,10 +39,15 @@ jest.runOnlyPendingTimers = timers.runOnlyPendingTimers
 jest.setSystemTime = timers.setSystemTime
 jest.useFakeTimers = timers.useFakeTimers
 jest.useRealTimers = timers.useRealTimers
+
 // eslint-disable-next-line no-undef
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000
+
 // eslint-disable-next-line no-underscore-dangle
 jest._checkFakeTimers = timers._checkFakeTimers
+
+// eslint-disable-next-line no-undef
+jasmine.getEnv().configure({ random: false }) // disable random test order
 
 Object.assign(jest, timers)
 
