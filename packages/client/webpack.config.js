@@ -154,13 +154,15 @@ module.exports = (env, argv) => {
                 })
             ] : []),
             new webpack.ProvidePlugin({
-                process: "process/browser",
-                Buffer: ["buffer", "Buffer"],
+                process: 'process/browser',
+                Buffer: ['buffer', 'Buffer'],
             }),
             new webpack.NormalModuleReplacementPlugin(/node:/, (resource) => {
-                const library = resource.request.replace(/^node:/, '');
-                if (library === "buffer") {
-                        resource.request = 'buffer'
+                const library = resource.request.replace(/^node:/, '')
+                if (library === 'buffer') {
+                    resource.request = 'buffer'
+                } else if (library === 'stream/web') {
+                    resource.request = false
                 }
             })
         ],
