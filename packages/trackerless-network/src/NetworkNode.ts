@@ -120,8 +120,8 @@ export class NetworkNode {
         return this.stack.getStreamrNode().getStreamParts()
     }
 
-    async fetchNodeInfo(node: PeerDescriptor, getControlLayerInfo: boolean, getStreamPartitionInfo: StreamPartID[]): Promise<InfoResponse> {
-        return this.stack.fetchNodeInfo(node, getControlLayerInfo, getStreamPartitionInfo)
+    async fetchNodeInfo(node: PeerDescriptor): Promise<InfoResponse> {
+        return this.stack.fetchNodeInfo(node)
     }
 
     // eslint-disable-next-line class-methods-use-this

@@ -3,7 +3,6 @@ import { InfoResponse } from '../../proto/packages/trackerless-network/protos/Ne
 import { InfoRpcRemote } from './InfoRpcRemote'
 import { RpcCommunicator } from '@streamr/proto-rpc'
 import { InfoRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { StreamPartID } from '@streamr/protocol'
 
 export class InfoClient {
     private readonly ownPeerDescriptor: PeerDescriptor
@@ -14,13 +13,9 @@ export class InfoClient {
         this.rpcCommunicator = rpcCommunicator
     }
 
-    async getInfo(
-        node: PeerDescriptor,
-        getControlLayerInfo: boolean,
-        streamParts: StreamPartID[]
-    ): Promise<InfoResponse> {
+    async getInfo(node: PeerDescriptor): Promise<InfoResponse> {
         const remote = new InfoRpcRemote(this.ownPeerDescriptor, node, this.rpcCommunicator, InfoRpcClient)
-        return remote.getInfo(getControlLayerInfo, streamParts)
+        return remote.getInfo()
     }
 
 }

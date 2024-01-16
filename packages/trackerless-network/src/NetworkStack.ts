@@ -141,8 +141,8 @@ export class NetworkStack {
         return this.metricsContext
     }
 
-    async fetchNodeInfo(node: PeerDescriptor, getControlLayerInfo: boolean, getStreamPartitionInfo: StreamPartID[]): Promise<InfoResponse> {
-        return this.infoClient!.getInfo(node, getControlLayerInfo, getStreamPartitionInfo)
+    async fetchNodeInfo(node: PeerDescriptor): Promise<InfoResponse> {
+        return this.infoClient!.getInfo(node)
     }
 
     getOptions(): NetworkOptions {
