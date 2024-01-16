@@ -6,8 +6,7 @@ import {
     ManagedConnection,
     RoutingRpcCommunicator,
     createRandomDhtAddress,
-    getRawFromDhtAddress,
-    ConnectionType
+    getRawFromDhtAddress
 } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
