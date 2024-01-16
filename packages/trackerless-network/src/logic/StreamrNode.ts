@@ -292,7 +292,7 @@ export class StreamrNode extends EventEmitter<Events> {
             return {
                 id: streamPartId,
                 controlLayerNeighbors: stream.layer1Node.getNeighbors(),
-                deliveryLayerNeighbors: stream.node.getNeighborIds().map((nodeId) => hexToBinary(nodeId))
+                deliveryLayerNeighbors: stream.node.getNeighbors()
             }
         })
 
@@ -328,7 +328,7 @@ export class StreamrNode extends EventEmitter<Events> {
     getNeighbors(streamPartId: StreamPartID): DhtAddress[] {
         const streamPart = this.streamParts.get(streamPartId)
         return (streamPart !== undefined) && (streamPart.proxied === false)
-            ? streamPart.node.getNeighborIds()
+            ? streamPart.node.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
             : []
     }
 
