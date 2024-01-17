@@ -63,21 +63,7 @@ describe('NetworkStack NodeInfoRpc', () => {
         await requestorTransport.stop()
     })
 
-    it('NodeInfoClient can query NetworkStacks', async () => {
-        const result = await nodeInfoClient.getInfo(requesteePeerDescriptor)
-        expect(result.controlLayer).toBeDefined()
-        expect(result.streamPartitions).toBeDefined()
-    })
-
-    it('NodeInfoClient gets control layer info', async () => {
-        const result = await nodeInfoClient.getInfo(requesteePeerDescriptor)
-        expect(result.controlLayer).toBeDefined()
-        expect(result.controlLayer!.connections.length).toEqual(2)
-        expect(result.controlLayer!.neighbors.length).toEqual(1)
-        expect(areEqualPeerDescriptors(result.controlLayer!.neighbors[0], otherPeerDescriptor)).toEqual(true)
-    })
-
-    it('NodeInfoClient gets stream partition info', async () => {
+    it('happy path', async () => {
         const streamPartId1 = StreamPartIDUtils.parse('stream1#0')
         const streamPartId2 = StreamPartIDUtils.parse('stream2#0')
         requesteStack.getStreamrNode().joinStreamPart(streamPartId1)
