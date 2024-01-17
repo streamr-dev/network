@@ -1,4 +1,4 @@
-import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from './IConnection'
+import { ConnectionEvents, ConnectionID, IConnection } from './IConnection'
 import * as Err from '../helpers/errors'
 import { Handshaker } from './Handshaker'
 import { HandshakeError, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
@@ -32,7 +32,6 @@ export class ManagedConnection extends EventEmitter<Events> {
     private inputBuffer: Uint8Array[] = []
     public connectionId: ConnectionID
     private remotePeerDescriptor?: PeerDescriptor
-    public connectionType: ConnectionType
     private handshaker?: Handshaker
     private handshakeCompleted = false
     private lastUsed: number = Date.now()
@@ -48,7 +47,6 @@ export class ManagedConnection extends EventEmitter<Events> {
 
     constructor(
         localPeerDescriptor: PeerDescriptor,
-        connectionType: ConnectionType,
         outgoingConnection?: IConnection,
         incomingConnection?: IConnection,
         targetPeerDescriptor?: PeerDescriptor
@@ -58,13 +56,12 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.localPeerDescriptor = localPeerDescriptor
         this.outgoingConnection = outgoingConnection
         this.incomingConnection = incomingConnection
-        this.connectionType = connectionType
         this.connectionId = createRandomConnectionId()
 
         this.send = this.send.bind(this)
         this.onDisconnected = this.onDisconnected.bind(this)
 
-        logger.trace('creating ManagedConnection of type: ' + connectionType)
+        logger.trace('creating ManagedConnection')
         if (incomingConnection && outgoingConnection) {
             throw new Err.IllegalArguments('Managed connection constructor only accepts either an incoming connection OR a outgoing connection')
         }
@@ -247,7 +244,6 @@ export class ManagedConnection extends EventEmitter<Events> {
             } catch (e) {
                 logger.debug(`Connection to ${getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor)} timed out`, {
                     peerDescriptor: this.remotePeerDescriptor,
-                    type: this.connectionType,
                     lifetime: Date.now() - this.created
                 })
                 await this.close(false)

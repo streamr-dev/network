@@ -1,7 +1,7 @@
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { ICloseEvent, IMessageEvent, w3cwebsocket as Websocket } from 'websocket'
-import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from '../IConnection'
+import { ConnectionEvents, ConnectionID, IConnection } from '../IConnection'
 import { createRandomConnectionId } from '../Connection'
 
 const logger = new Logger(module)
@@ -19,7 +19,6 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
 
     public readonly connectionId: ConnectionID
     private socket?: Websocket
-    public connectionType = ConnectionType.WEBSOCKET_CLIENT
 
     private destroyed = false
 

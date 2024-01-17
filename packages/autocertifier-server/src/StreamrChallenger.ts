@@ -6,8 +6,7 @@ import {
     ManagedConnection,
     RoutingRpcCommunicator,
     createRandomDhtAddress,
-    getRawFromDhtAddress,
-    ConnectionType
+    getRawFromDhtAddress
 } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
@@ -42,8 +41,7 @@ export const runStreamrChallenge = (
         const address = 'wss://' + remotePeerDescriptor.websocket!.host + ':' +
         remotePeerDescriptor.websocket!.port
 
-        const managedConnection = new ManagedConnection(LOCAL_PEER_DESCRIPTOR,
-            ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
+        const managedConnection = new ManagedConnection(LOCAL_PEER_DESCRIPTOR, socket, undefined)
         managedConnection.setRemotePeerDescriptor(remotePeerDescriptor!)
 
         const onDisconnected = () => {

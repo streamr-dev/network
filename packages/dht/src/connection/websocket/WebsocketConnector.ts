@@ -1,5 +1,5 @@
 import { ClientWebsocket } from './ClientWebsocket'
-import { IConnection, ConnectionType } from '../IConnection'
+import { ConnectionType, IConnection } from '../IConnection'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { WebsocketConnectorRpcLocal } from './WebsocketConnectorRpcLocal'
@@ -232,7 +232,7 @@ export class WebsocketConnector {
 
             const managedConnection = new ManagedConnection(
                 this.localPeerDescriptor!,
-                ConnectionType.WEBSOCKET_CLIENT,
+               
                 socket,
                 undefined,
                 targetPeerDescriptor
@@ -276,7 +276,6 @@ export class WebsocketConnector {
         })
         const managedConnection = new ManagedConnection(
             this.localPeerDescriptor!,
-            ConnectionType.WEBSOCKET_SERVER,
             undefined,
             undefined,
             targetPeerDescriptor
@@ -307,7 +306,6 @@ export class WebsocketConnector {
         } else {
             const managedConnection = new ManagedConnection(
                 this.localPeerDescriptor!,
-                ConnectionType.WEBSOCKET_SERVER,
                 undefined,
                 serverWebsocket,
                 targetPeerDescriptor

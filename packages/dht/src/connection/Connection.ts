@@ -1,17 +1,16 @@
 import EventEmitter from 'eventemitter3'
 import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
-import { ConnectionID, ConnectionType, ConnectionEvents } from './IConnection'
+import { ConnectionID, ConnectionEvents } from './IConnection'
 import { v4 as uuid } from 'uuid'
 
+// TODO merge with SimulatorConnection?
 export class Connection extends EventEmitter<ConnectionEvents> {
     public connectionId: ConnectionID
-    public connectionType: ConnectionType
     private peerDescriptor?: PeerDescriptor
     
-    constructor(connectionType: ConnectionType) {
+    constructor() {
         super()
         this.connectionId = createRandomConnectionId()
-        this.connectionType = connectionType
     }
 
     setPeerDescriptor(peerDescriptor: PeerDescriptor): void {

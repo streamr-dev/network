@@ -349,7 +349,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     private onConnected(connection: ManagedConnection) {
         const peerDescriptor = connection.getPeerDescriptor()!
         this.emit('connected', peerDescriptor)
-        logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' onConnected() ' + connection.connectionType)
+        logger.trace(getNodeIdFromPeerDescriptor(peerDescriptor) + ' onConnected()')
         this.onConnectionCountChange()
     }
 
