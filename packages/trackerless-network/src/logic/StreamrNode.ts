@@ -14,8 +14,7 @@ import {
     Metric,
     MetricsContext,
     MetricsDefinition,
-    RateMetric,
-    hexToBinary
+    RateMetric
 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
