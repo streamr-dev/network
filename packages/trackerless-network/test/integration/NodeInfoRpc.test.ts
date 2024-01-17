@@ -1,8 +1,8 @@
 import { Simulator, SimulatorTransport, ListeningRpcCommunicator, areEqualPeerDescriptors, PeerDescriptor } from '@streamr/dht'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { NodeInfoClient } from '../../src/logic/node-info-rpc/NodeInfoClient'
-import { NODE_INFO_RPC_SERVICE_ID } from '../../src/logic/node-info-rpc/NodeInfoRpcLocal'
+import { NodeInfoClient } from '../../src/logic/node-info/NodeInfoClient'
+import { NODE_INFO_RPC_SERVICE_ID } from '../../src/logic/node-info/NodeInfoRpcLocal'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { waitForCondition } from '@streamr/utils'
 

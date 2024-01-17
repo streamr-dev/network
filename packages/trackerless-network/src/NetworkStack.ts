@@ -5,8 +5,8 @@ import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { NodeInfoResponse, ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
 import { Layer0Node } from './logic/Layer0Node'
 import { pull } from 'lodash'
-import { NODE_INFO_RPC_SERVICE_ID, NodeInfoRpcLocal } from './logic/node-info-rpc/NodeInfoRpcLocal'
-import { NodeInfoClient } from './logic/node-info-rpc/NodeInfoClient'
+import { NODE_INFO_RPC_SERVICE_ID, NodeInfoRpcLocal } from './logic/node-info/NodeInfoRpcLocal'
+import { NodeInfoClient } from './logic/node-info/NodeInfoClient'
 
 export interface NetworkOptions {
     layer0?: DhtNodeOptions
