@@ -1,4 +1,4 @@
-import { Simulator, SimulatorTransport, ListeningRpcCommunicator, areEqualPeerDescriptors, PeerDescriptor } from '@streamr/dht'
+import { Simulator, SimulatorTransport, ListeningRpcCommunicator, PeerDescriptor } from '@streamr/dht'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { NodeInfoClient } from '../../src/logic/node-info/NodeInfoClient'
