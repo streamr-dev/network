@@ -102,7 +102,6 @@ export class NetworkStack {
         if (this.streamrNode) {
             const infoRpcCommunicator = new ListeningRpcCommunicator(NODE_INFO_RPC_SERVICE_ID, this.getConnectionManager())
             this.nodeInfoRpcLocal = new NodeInfoRpcLocal(this, infoRpcCommunicator)
-            this.nodeInfoRpcLocal.registerDefaultServerMethods()
             this.nodeInfoClient = new NodeInfoClient(
                 this.layer0Node!.getLocalPeerDescriptor(),
                 infoRpcCommunicator

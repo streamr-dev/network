@@ -13,9 +13,10 @@ export class NodeInfoRpcLocal implements INodeInfoRpc {
     constructor(stack: NetworkStack, rpcCommunicator: ListeningRpcCommunicator) {
         this.stack = stack
         this.rpcCommunicator = rpcCommunicator
+        this.registerDefaultServerMethods()
     }
 
-    registerDefaultServerMethods(): void {
+    private registerDefaultServerMethods(): void {
         this.rpcCommunicator.registerRpcMethod(NodeInfoRequest, NodeInfoResponse, 'getInfo',
             () => this.getInfo())
     }
