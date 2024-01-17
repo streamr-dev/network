@@ -34,7 +34,9 @@
     "test-unit": "jest --useStderr --forceExit test/unit",
     "test-integration": "jest --bail --useStderr --forceExit --testTimeout=40000 test/integration/*.test.*",
     "test-end-to-end": "jest --bail --useStderr --forceExit --testTimeout=40000 test/end-to-end/*.test.*",
-    "test-browser": "karma start karma.config.js",
+    "test-browser-unit": "karma start karma-unit.config.js",
+    "test-browser-integration": "karma start karma-integration.config.js",
+    "test-browser-end-to-end": "karma start karma-integration.config.js",
     "test-exports": "cd test/exports && npm run link && tsc --noEmit --project ./tsconfig.json && npm test"
   },
   "author": "Streamr Network AG <contact@streamr.network>",
