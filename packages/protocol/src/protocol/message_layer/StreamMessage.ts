@@ -1,6 +1,6 @@
 import InvalidJsonError from '../../errors/InvalidJsonError'
 import StreamMessageError from '../../errors/StreamMessageError'
-import { validateIsDefined, validateIsNotEmptyByteArray } from '../../utils/validations'
+import { validateIsDefined } from '../../utils/validations'
 import MessageRef from './MessageRef'
 import MessageID from './MessageID'
 import EncryptedGroupKey from './EncryptedGroupKey'
@@ -100,7 +100,6 @@ export default class StreamMessage implements StreamMessageOptions {
         newGroupKey,
     }: StreamMessageOptions) {
         validateSequence(messageId, prevMsgRef)
-        validateIsNotEmptyByteArray('content', content)
         if (encryptionType === EncryptionType.AES) {
             validateIsDefined('groupKeyId', groupKeyId)
         }

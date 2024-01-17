@@ -218,6 +218,20 @@ export interface PeerDescriptor {
      * @generated from protobuf field: optional uint32 region = 6;
      */
     region?: number;
+    /**
+     * @generated from protobuf field: optional uint32 ipAddress = 7;
+     */
+    ipAddress?: number;
+    /**
+     * @generated from protobuf field: optional bytes salt = 8;
+     */
+    salt?: Uint8Array;
+    /**
+     * signature of fields 2-8
+     *
+     * @generated from protobuf field: optional bytes signature = 9;
+     */
+    signature?: Uint8Array;
 }
 /**
  * @generated from protobuf message dht.ConnectivityMethod
@@ -847,7 +861,10 @@ class PeerDescriptor$Type extends MessageType$<PeerDescriptor> {
             { no: 3, name: "udp", kind: "message", T: () => ConnectivityMethod },
             { no: 4, name: "tcp", kind: "message", T: () => ConnectivityMethod },
             { no: 5, name: "websocket", kind: "message", T: () => ConnectivityMethod },
-            { no: 6, name: "region", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ }
+            { no: 6, name: "region", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ },
+            { no: 7, name: "ipAddress", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ },
+            { no: 8, name: "salt", kind: "scalar", opt: true, T: 12 /*ScalarType.BYTES*/ },
+            { no: 9, name: "signature", kind: "scalar", opt: true, T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
 }

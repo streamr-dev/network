@@ -135,8 +135,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 true,
                 this.abortController.signal
             )
-            await fleetState!.waitUntilReady()
-            const isLeader = await createIsLeaderFn(streamrClient, fleetState!, logger)
+            await fleetState.waitUntilReady()
+            const isLeader = await createIsLeaderFn(streamrClient, fleetState, logger)
             try {
                 await scheduleAtInterval(async () => {
                     if (isLeader()) {
