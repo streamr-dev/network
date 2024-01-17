@@ -339,7 +339,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.peerManager!.handleDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor), gracefulLeave)
             this.emit('disconnected', peerDescriptor, gracefulLeave)
         })
-        this.transport!.getAllConnectionPeerDescriptors().forEach((peer) => {
+        this.transport!.getConnections().forEach((peer) => {
             this.peerManager!.handleConnected(peer)
         })
     }
@@ -509,12 +509,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.localPeerDescriptor!
     }
 
-    public getAllConnectionPeerDescriptors(): PeerDescriptor[] {
+    public getConnections(): PeerDescriptor[] {
         return Array.from(this.peerManager!.connections.values()).map((peer) => peer.getPeerDescriptor())
     }
 
     public getNeighbors(): PeerDescriptor[] {
-        return this.peerManager!.getNeighbors()
+        return this.started ? this.peerManager!.getNeighbors() : []
     }
 
     public getConnectionCount(): number {
