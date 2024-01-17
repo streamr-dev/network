@@ -24,7 +24,7 @@ const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport:
     })
 }
 
-describe('RPC errors', () => {
+describe('RPC connections over WebRTC', () => {
 
     let manager1: ConnectionManager
     let manager2: ConnectionManager
@@ -58,10 +58,10 @@ describe('RPC errors', () => {
     })
 
     afterEach(async () => {
-        await connectorTransport1.stop()
-        await connectorTransport2.stop()
         await manager1.stop()
         await manager2.stop()
+        await connectorTransport1.stop()
+        await connectorTransport2.stop()
         simulator.stop()
     })
 
@@ -104,6 +104,9 @@ describe('RPC errors', () => {
     }, 60000)
 
     /*
+    
+    TODO enable these tests (NET-1177)
+
     it.only('Throws a client-side exception if WebRTC connection fails', async () => {
 
         const request: PingRequest = {

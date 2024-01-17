@@ -92,7 +92,7 @@ describe('Kademlia correctness', () => {
             }
 
             if (i > 0) {
-                sumKbucketSize += nodes[i].getNumberOfNeighbors()
+                sumKbucketSize += nodes[i].getNeighborCount()
                 sumCorrectNeighbors += correctNeighbors
             }
         }

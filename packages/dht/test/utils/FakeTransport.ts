@@ -24,7 +24,7 @@ class FakeTransport extends EventEmitter<TransportEvents> implements ITransport 
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getAllConnectionPeerDescriptors(): PeerDescriptor[] {
+    getConnections(): PeerDescriptor[] {
         throw new Error('not implemented')
     }
 

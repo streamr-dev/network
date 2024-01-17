@@ -231,16 +231,16 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         WEBRTC_CLEANUP.cleanUp()
     }
 
-    public getNumberOfLocalLockedConnections(): number {
-        return this.locks.getNumberOfLocalLockedConnections()
+    public getLocalLockedConnectionCount(): number {
+        return this.locks.getLocalLockedConnectionCount()
     }
 
-    public getNumberOfRemoteLockedConnections(): number {
-        return this.locks.getNumberOfRemoteLockedConnections()
+    public getRemoteLockedConnectionCount(): number {
+        return this.locks.getRemoteLockedConnectionCount()
     }
 
-    public getNumberOfWeakLockedConnections(): number {
-        return this.locks.getNumberOfWeakLockedConnections()
+    public getWeakLockedConnectionCount(): number {
+        return this.locks.getWeakLockedConnectionCount()
     }
 
     public async send(message: Message, opts: SendOptions = DEFAULT_SEND_OPTIONS): Promise<void> {
@@ -510,13 +510,10 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
                 })
         })
 
-        this.doGracefullyDisconnectAsync(targetDescriptor, disconnectMode)
-            .then(() => { return })
-            .catch((e) => {
-                logger.error(e)
-            })
-
-        await promise
+        await Promise.all([
+            promise,
+            this.doGracefullyDisconnectAsync(targetDescriptor, disconnectMode)
+        ])
     }
 
     private async doGracefullyDisconnectAsync(targetDescriptor: PeerDescriptor, disconnectMode: DisconnectMode): Promise<void> {
@@ -535,7 +532,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         }
     }
 
-    public getAllConnectionPeerDescriptors(): PeerDescriptor[] {
+    public getConnections(): PeerDescriptor[] {
         return Array.from(this.connections.values())
             .filter((managedConnection: ManagedConnection) => managedConnection.isHandshakeCompleted())
             .map((managedConnection: ManagedConnection) => managedConnection.getPeerDescriptor()!)

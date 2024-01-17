@@ -87,14 +87,14 @@ describe('Route Message With Mock Connections', () => {
     }, 30000)
 
     it('Receives multiple messages', async () => {
-        const numOfMessages = 20
+        const messageCount = 20
         let receivedMessages = 0
         destinationNode.on('message', () => {
             receivedMessages += 1
         })
         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getLocalPeerDescriptor())
 
-        for (let i = 0; i < numOfMessages; i++) {
+        for (let i = 0; i < messageCount; i++) {
             const message: Message = {
                 serviceId: 'unknown',
                 messageId: v4(),
@@ -116,16 +116,16 @@ describe('Route Message With Mock Connections', () => {
                 parallelRootNodeIds: []
             })
         }
-        await waitForCondition(() => receivedMessages === numOfMessages)
+        await waitForCondition(() => receivedMessages === messageCount)
     })
 
     it('From all to all', async () => {
-        const numsOfReceivedMessages: Record<DhtAddress, number> = {}
+        const receivedMessageCounts: Record<DhtAddress, number> = {}
         routerNodes.forEach((node) => {
             const key = node.getNodeId()
-            numsOfReceivedMessages[key] = 0
+            receivedMessageCounts[key] = 0
             node.on('message', () => {
-                numsOfReceivedMessages[key] = numsOfReceivedMessages[key] + 1
+                receivedMessageCounts[key] = receivedMessageCounts[key] + 1
             })
         })
         await Promise.all(
@@ -157,10 +157,10 @@ describe('Route Message With Mock Connections', () => {
                 }))
             )
         )
-        await waitForCondition(() => numsOfReceivedMessages[routerNodes[0].getNodeId()] >= routerNodes.length - 1, 30000)
+        await waitForCondition(() => receivedMessageCounts[routerNodes[0].getNodeId()] >= routerNodes.length - 1, 30000)
         await Promise.all(
-            Object.keys(numsOfReceivedMessages).map(async (key) =>
-                waitForCondition(() => numsOfReceivedMessages[key as DhtAddress] >= routerNodes.length - 1, 30000)
+            Object.keys(receivedMessageCounts).map(async (key) =>
+                waitForCondition(() => receivedMessageCounts[key as DhtAddress] >= routerNodes.length - 1, 30000)
             )
         )
 

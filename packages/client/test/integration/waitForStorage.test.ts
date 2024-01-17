@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { toEthereumAddress } from '@streamr/utils'
-import { MessageID, ContentType, EncryptionType } from '@streamr/protocol'
+import { MessageID, ContentType, EncryptionType, SignatureType } from '@streamr/protocol'
 import { Authentication } from '../../src/Authentication'
 import { StreamPermission } from '../../src/permission'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
@@ -72,7 +72,8 @@ describe('waitForStorage', () => {
             content: MOCK_CONTENT,
             authentication,
             contentType: ContentType.JSON,
-            encryptionType: EncryptionType.NONE
+            encryptionType: EncryptionType.NONE,
+            signatureType: SignatureType.SECP256K1
         }))
         await expect(() => client.waitForStorage(msg, {
             interval: 50,
@@ -90,7 +91,8 @@ describe('waitForStorage', () => {
             content: MOCK_CONTENT,
             authentication,
             contentType: ContentType.JSON,
-            encryptionType: EncryptionType.NONE
+            encryptionType: EncryptionType.NONE,
+            signatureType: SignatureType.SECP256K1
         }))
         await expect(() => client.waitForStorage(msg, {
             messageMatchFn: () => {

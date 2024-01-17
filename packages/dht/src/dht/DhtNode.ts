@@ -339,7 +339,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.peerManager!.handleDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor), gracefulLeave)
             this.emit('disconnected', peerDescriptor, gracefulLeave)
         })
-        this.transport!.getAllConnectionPeerDescriptors().forEach((peer) => {
+        this.transport!.getConnections().forEach((peer) => {
             this.peerManager!.handleConnected(peer)
         })
     }
@@ -416,8 +416,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return getNodeIdFromPeerDescriptor(this.localPeerDescriptor!)
     }
 
-    public getNumberOfNeighbors(): number {
-        return this.peerManager!.getNumberOfNeighbors()
+    public getNeighborCount(): number {
+        return this.peerManager!.getNeighborCount()
     }
 
     public removeContact(nodeId: DhtAddress): void {
@@ -441,11 +441,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         ) : []
     }
 
-    public async joinDht(entryPointDescriptors: PeerDescriptor[], doAdditionalRandomPeerDiscovery?: boolean, retry?: boolean): Promise<void> {
+    public async joinDht(entryPointDescriptors: PeerDescriptor[], doAdditionalDistantPeerDiscovery?: boolean, retry?: boolean): Promise<void> {
         if (!this.started) {
             throw new Error('Cannot join DHT before calling start() on DhtNode')
         }
-        await this.peerDiscovery!.joinDht(entryPointDescriptors, doAdditionalRandomPeerDiscovery, retry)
+        await this.peerDiscovery!.joinDht(entryPointDescriptors, doAdditionalDistantPeerDiscovery, retry)
     }
 
     // TODO make this private and unify the public API of find/fetch/store/delete methods
@@ -509,29 +509,28 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.localPeerDescriptor!
     }
 
-    public getAllConnectionPeerDescriptors(): PeerDescriptor[] {
+    public getConnections(): PeerDescriptor[] {
         return Array.from(this.peerManager!.connections.values()).map((peer) => peer.getPeerDescriptor())
     }
 
-    // TODO rename to getNeighbors
-    public getAllNeighborPeerDescriptors(): PeerDescriptor[] {
-        return this.peerManager!.getNeighbors()
+    public getNeighbors(): PeerDescriptor[] {
+        return this.started ? this.peerManager!.getNeighbors() : []
     }
 
-    public getNumberOfConnections(): number {
-        return this.peerManager!.getNumberOfConnections()
+    public getConnectionCount(): number {
+        return this.peerManager!.getConnectionCount()
     }
 
-    public getNumberOfLocalLockedConnections(): number {
-        return this.connectionManager!.getNumberOfLocalLockedConnections()
+    public getLocalLockedConnectionCount(): number {
+        return this.connectionManager!.getLocalLockedConnectionCount()
     }
 
-    public getNumberOfRemoteLockedConnections(): number {
-        return this.connectionManager!.getNumberOfRemoteLockedConnections()
+    public getRemoteLockedConnectionCount(): number {
+        return this.connectionManager!.getRemoteLockedConnectionCount()
     }
 
-    public getNumberOfWeakLockedConnections(): number {
-        return this.connectionManager!.getNumberOfWeakLockedConnections()
+    public getWeakLockedConnectionCount(): number {
+        return this.connectionManager!.getWeakLockedConnectionCount()
     }
 
     public async waitForNetworkConnectivity(): Promise<void> {
@@ -539,7 +538,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             if (!this.peerManager) {
                 return false
             } else {
-                return (this.peerManager.getNumberOfConnections() > 0)
+                return (this.peerManager.getConnectionCount() > 0)
             }
         }, this.config.networkConnectivityTimeout, 100, this.abortController.signal)
     }

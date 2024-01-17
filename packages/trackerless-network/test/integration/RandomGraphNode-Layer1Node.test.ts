@@ -1,4 +1,4 @@
-import { ConnectionManager, DhtNode, PeerDescriptor, Simulator, SimulatorTransport, getRandomRegion } from '@streamr/dht'
+import { ConnectionManager, DhtNode, PeerDescriptor, Simulator, SimulatorTransport, getNodeIdFromPeerDescriptor, getRandomRegion } from '@streamr/dht'
 import { Logger, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
@@ -10,7 +10,7 @@ import { Layer1Node } from '../../src/logic/Layer1Node'
 const logger = new Logger(module)
 
 describe('RandomGraphNode-DhtNode', () => {
-    const numOfNodes = 64
+    const nodeCount = 64
     let layer1Nodes: Layer1Node[]
     let dhtEntryPoint: Layer1Node
     let entryPointRandomGraphNode: RandomGraphNode
@@ -21,7 +21,7 @@ describe('RandomGraphNode-DhtNode', () => {
         region: getRandomRegion()
     })
 
-    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map(() => {
+    const peerDescriptors: PeerDescriptor[] = range(nodeCount).map(() => {
         return createMockPeerDescriptor({
             region: getRandomRegion()
         })
@@ -34,7 +34,7 @@ describe('RandomGraphNode-DhtNode', () => {
         )
         await entrypointCm.start()
 
-        const cms: ConnectionManager[] = range(numOfNodes).map((i) =>
+        const cms: ConnectionManager[] = range(nodeCount).map((i) =>
             new SimulatorTransport(
                 peerDescriptors[i],
                 simulator
@@ -48,13 +48,13 @@ describe('RandomGraphNode-DhtNode', () => {
             serviceId: streamPartId
         })
 
-        layer1Nodes = range(numOfNodes).map((i) => new DhtNode({
+        layer1Nodes = range(nodeCount).map((i) => new DhtNode({
             transport: cms[i],
             peerDescriptor: peerDescriptors[i],
             serviceId: streamPartId
         }))
 
-        graphNodes = range(numOfNodes).map((i) => createRandomGraphNode({
+        graphNodes = range(nodeCount).map((i) => createRandomGraphNode({
             streamPartId,
             layer1Node: layer1Nodes[i],
             transport: cms[i],
@@ -92,9 +92,9 @@ describe('RandomGraphNode-DhtNode', () => {
 
         await graphNodes[0].start()
 
-        await waitForCondition(() => graphNodes[0].getNeighborIds().length === 1)
+        await waitForCondition(() => graphNodes[0].getNeighbors().length === 1)
         expect(graphNodes[0].getNearbyNodeView().getIds().length).toEqual(1)
-        expect(graphNodes[0].getNeighborIds().length).toEqual(1)
+        expect(graphNodes[0].getNeighbors().length).toEqual(1)
     })
 
     it('happy path 4 nodes', async () => {
@@ -104,10 +104,10 @@ describe('RandomGraphNode-DhtNode', () => {
             await layer1Nodes[i].joinDht([entrypointDescriptor])
         }))
 
-        await waitForCondition(() => range(4).every((i) => graphNodes[i].getNeighborIds().length === 4))
+        await waitForCondition(() => range(4).every((i) => graphNodes[i].getNeighbors().length === 4))
         range(4).forEach((i) => {
             expect(graphNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)
-            expect(graphNodes[i].getNeighborIds().length).toBeGreaterThanOrEqual(4)
+            expect(graphNodes[i].getNeighbors().length).toBeGreaterThanOrEqual(4)
         })
 
         // Check bidirectionality
@@ -118,36 +118,39 @@ describe('RandomGraphNode-DhtNode', () => {
                 const neighbor = allNodes.find((node) => {
                     return node.getOwnNodeId() === nodeId
                 })
-                expect(neighbor!.getNeighborIds().includes(allNodes[i].getOwnNodeId())).toEqual(true)
+                const neighborIds = neighbor!.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
+                expect(neighborIds.includes(allNodes[i].getOwnNodeId())).toEqual(true)
             })
         })
     }, 10000)
 
     it('happy path 64 nodes', async () => {
-        await Promise.all(range(numOfNodes).map((i) => graphNodes[i].start()))
-        await Promise.all(range(numOfNodes).map((i) => {
+        await Promise.all(range(nodeCount).map((i) => graphNodes[i].start()))
+        await Promise.all(range(nodeCount).map((i) => {
             layer1Nodes[i].joinDht([entrypointDescriptor])
         }))
         await Promise.all(graphNodes.map((node) =>
-            waitForCondition(() => node.getNeighborIds().length >= 4, 10000)
+            waitForCondition(() => node.getNeighbors().length >= 4, 10000)
         ))
 
         const avg = graphNodes.reduce((acc, curr) => {
-            return acc + curr.getNeighborIds().length
-        }, 0) / numOfNodes
+            return acc + curr.getNeighbors().length
+        }, 0) / nodeCount
 
         logger.info(`AVG Number of neighbors: ${avg}`)
         await Promise.all(graphNodes.map((node) =>
-            waitForCondition(() => node.getNumberOfOutgoingHandshakes() === 0)
+            waitForCondition(() => node.getOutgoingHandshakeCount() === 0)
         ))
         await waitForCondition(() => {
             let mismatchCounter = 0
             graphNodes.forEach((node) => {
                 const nodeId = node.getOwnNodeId()
-                node.getNeighborIds().forEach((neighborId) => {
+                node.getNeighbors().forEach((neighbor) => {
+                    const neighborId = getNodeIdFromPeerDescriptor(neighbor)
                     if (neighborId !== entryPointRandomGraphNode.getOwnNodeId()) {
                         const neighbor = graphNodes.find((n) => n.getOwnNodeId() === neighborId)
-                        if (!neighbor!.getNeighborIds().includes(nodeId)) {
+                        const neighborIds = neighbor!.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
+                        if (!neighborIds.includes(nodeId)) {
                             mismatchCounter += 1
                         }
                     }

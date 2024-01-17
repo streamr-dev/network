@@ -28,6 +28,10 @@ service TemporaryConnectionRpc {
   rpc openConnection (TemporaryConnectionRequest) returns (TemporaryConnectionResponse);
 }
 
+service NodeInfoRpc {
+  rpc getInfo (NodeInfoRequest) returns (NodeInfoResponse);
+}
+
 message MessageID {
   string streamId = 1;
   int32 streamPartition = 2;
@@ -58,17 +62,23 @@ enum EncryptionType {
   AES = 1;
 }
 
+enum SignatureType {
+  LEGACY_SECP256K1 = 0;
+  SECP256K1 = 1;
+}
+
 message StreamMessage {
   StreamMessageType messageType = 1;
   ContentType contentType = 2;
   EncryptionType encryptionType = 3;
   bytes content = 4;
-  bytes signature = 5;
+  SignatureType signatureType = 5;
+  bytes signature = 6;
   // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
-  MessageID messageId = 6;
-  optional MessageRef previousMessageRef = 7;
-  optional string groupKeyId = 8;
-  optional GroupKey newGroupKey = 9;
+  MessageID messageId = 7;
+  optional MessageRef previousMessageRef = 8;
+  optional string groupKeyId = 9;
+  optional GroupKey newGroupKey = 10;
 }
 
 message GroupKeyRequest {
@@ -142,4 +152,23 @@ message TemporaryConnectionResponse {
 enum ProxyDirection {
   PUBLISH = 0;
   SUBSCRIBE = 1;
+}
+
+message StreamPartitionInfo {
+  string id = 1;
+  repeated dht.PeerDescriptor controlLayerNeighbors = 2;
+  repeated dht.PeerDescriptor deliveryLayerNeighbors = 3;
+}
+
+message ControlLayerInfo {
+  repeated dht.PeerDescriptor neighbors = 1;
+  repeated dht.PeerDescriptor connections = 2;
+}
+
+message NodeInfoRequest {}
+
+message NodeInfoResponse {
+  dht.PeerDescriptor peerDescriptor = 1;
+  repeated StreamPartitionInfo streamPartitions = 2;
+  optional ControlLayerInfo controlLayer = 3;
 }

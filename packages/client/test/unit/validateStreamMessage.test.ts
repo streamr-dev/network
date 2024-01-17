@@ -1,6 +1,6 @@
 import { Wallet } from '@ethersproject/wallet'
 import { EthereumAddress, toEthereumAddress, hexToBinary } from '@streamr/utils'
-import { toStreamID, toStreamPartID } from '@streamr/protocol'
+import { StreamMessage, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { Stream } from '../../src/Stream'
@@ -17,12 +17,15 @@ interface MessageOptions {
 }
 
 const validate = async (messageOptions: MessageOptions) => {
-    const msg = await createMockMessage({
+    let msg = await createMockMessage({
         streamPartId: toStreamPartID(toStreamID('streamId'), messageOptions.partition ?? 0),
         publisher: messageOptions.publisher ?? publisherWallet,
     })
     if (messageOptions.signature !== undefined) {
-        msg.signature = messageOptions.signature
+        msg = new StreamMessage({
+            ...msg,
+            signature: messageOptions.signature
+        })
     }
     const streamRegistry: Pick<StreamRegistry, 'getStream' | 'isStreamPublisher'> = {
         getStream: async (): Promise<Stream> => ({

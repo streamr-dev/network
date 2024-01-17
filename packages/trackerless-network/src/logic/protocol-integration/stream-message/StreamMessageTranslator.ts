@@ -6,6 +6,7 @@ import {
     EncryptedGroupKey as OldEncryptedGroupKey,
     StreamID,
     EncryptionType as OldEncryptionType,
+    SignatureType as OldSignatureType,
     ContentType as OldContentType,
     serializeGroupKeyRequest as serializeOldGroupKeyRequest,
     serializeGroupKeyResponse as serializeOldGroupKeyResponse,
@@ -19,6 +20,7 @@ import {
     GroupKeyRequest,
     GroupKeyResponse,
     MessageRef,
+    SignatureType,
     StreamMessage,
     StreamMessageType,
     MessageID
@@ -55,6 +57,21 @@ const newToOldContentType = (type: ContentType): OldContentType => {
     return OldContentType.BINARY
 }
 
+const oldToNewSignatureType = (type: OldSignatureType): SignatureType => {
+    if (type === OldSignatureType.LEGACY_SECP256K1) {
+        return SignatureType.LEGACY_SECP256K1
+    }
+    return SignatureType.SECP256K1
+}
+
+const newToOldSignatureType = (type: SignatureType): OldSignatureType => {
+    if (type === SignatureType.LEGACY_SECP256K1) {
+        return OldSignatureType.LEGACY_SECP256K1
+    }
+    return OldSignatureType.SECP256K1
+
+}
+
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class StreamMessageTranslator {
 
@@ -88,15 +105,15 @@ export class StreamMessageTranslator {
         let previousMessageRef: MessageRef | undefined = undefined
         if (msg.prevMsgRef) {
             previousMessageRef = {
-                timestamp: msg.prevMsgRef!.timestamp,
-                sequenceNumber: msg.prevMsgRef!.sequenceNumber,
+                timestamp: msg.prevMsgRef.timestamp,
+                sequenceNumber: msg.prevMsgRef.sequenceNumber,
             }
         }
         let newGroupKey: GroupKey | undefined = undefined
         if (msg.newGroupKey) {
             newGroupKey = {
-                id: msg.newGroupKey!.groupKeyId,
-                data: msg.newGroupKey!.data
+                id: msg.newGroupKey.id,
+                data: msg.newGroupKey.data
             }
         }
         const translated: StreamMessage = {
@@ -108,7 +125,8 @@ export class StreamMessageTranslator {
             encryptionType: oldToNewEncryptionType(msg.encryptionType),
             groupKeyId: msg.groupKeyId ?? undefined,
             newGroupKey,
-            signature: msg.signature
+            signature: msg.signature,
+            signatureType: oldToNewSignatureType(msg.signatureType),
         }
         return translated
     }
@@ -168,7 +186,8 @@ export class StreamMessageTranslator {
             encryptionType: newToOldEncryptionType(msg.encryptionType),
             groupKeyId: msg.groupKeyId,
             newGroupKey,
-            signature: msg.signature
+            signature: msg.signature,
+            signatureType: newToOldSignatureType(msg.signatureType)
         })
         return translated
     }

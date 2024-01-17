@@ -14,10 +14,10 @@ import { formStreamPartDeliveryServiceId } from './formStreamPartDeliveryService
 
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
     'nearbyNodeView' | 'randomNodeView' | 'neighbors' | 'propagation'
-    | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'numOfNeighbors'
+    | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'neighborCount'
     | 'rpcCommunicator' | 'nodeViewSize'
     | 'inspector' | 'temporaryConnectionRpcLocal'> & {
-        maxNumberOfContacts?: number
+        maxContactCount?: number
         minPropagationTargets?: number
         acceptProxyConnections?: boolean
         neighborUpdateInterval?: number
@@ -29,14 +29,14 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         formStreamPartDeliveryServiceId(config.streamPartId),
         config.transport
     )
-    const numOfNeighbors = config.numOfNeighbors ?? 4
-    const maxNumberOfContacts = config.maxNumberOfContacts ?? 20
+    const neighborCount = config.neighborCount ?? 4
+    const maxContactCount = config.maxContactCount ?? 20
     const minPropagationTargets = config.minPropagationTargets ?? 2
     const acceptProxyConnections = config.acceptProxyConnections ?? false
     const neighborUpdateInterval = config.neighborUpdateInterval ?? 10000
-    const nearbyNodeView = config.nearbyNodeView ?? new NodeList(ownNodeId, numOfNeighbors + 1)
-    const randomNodeView = config.randomNodeView ?? new NodeList(ownNodeId, maxNumberOfContacts)
-    const neighbors = config.neighbors ?? new NodeList(ownNodeId, maxNumberOfContacts)
+    const nearbyNodeView = config.nearbyNodeView ?? new NodeList(ownNodeId, maxContactCount)
+    const randomNodeView = config.randomNodeView ?? new NodeList(ownNodeId, maxContactCount)
+    const neighbors = config.neighbors ?? new NodeList(ownNodeId, maxContactCount)
 
     const temporaryConnectionRpcLocal = new TemporaryConnectionRpcLocal({
         rpcCommunicator,
@@ -69,14 +69,14 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         nearbyNodeView,
         randomNodeView,
         neighbors,
-        maxNeighborCount: numOfNeighbors,
+        maxNeighborCount: neighborCount,
         rpcRequestTimeout: config.rpcRequestTimeout
     })
     const neighborFinder = config.neighborFinder ?? new NeighborFinder({
         neighbors,
         nearbyNodeView,
         doFindNeighbors: (excludedIds) => handshaker.attemptHandshakesOnContacts(excludedIds),
-        minCount: numOfNeighbors
+        minCount: neighborCount
     })
     const neighborUpdateManager = config.neighborUpdateManager ?? new NeighborUpdateManager({
         neighbors,
@@ -103,8 +103,8 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         neighborFinder,
         neighborUpdateManager,
         propagation,
-        numOfNeighbors,
-        nodeViewSize: maxNumberOfContacts,
+        neighborCount,
+        nodeViewSize: maxContactCount,
         proxyConnectionRpcLocal,
         inspector,
         temporaryConnectionRpcLocal
