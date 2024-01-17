@@ -1,4 +1,4 @@
-import { ControlLayerInfo, NodeInfoRequest, NodeInfoResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { NodeInfoRequest, NodeInfoResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { INodeInfoRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { NetworkStack } from '../../NetworkStack'
 import { ListeningRpcCommunicator } from '@streamr/dht'
@@ -21,17 +21,13 @@ export class NodeInfoRpcLocal implements INodeInfoRpc {
             () => this.getInfo())
     }
  
-    public getControlLayerInfo(): ControlLayerInfo {
-        return {
-            connections: this.stack.getLayer0Node().getConnections(),
-            neighbors: this.stack.getLayer0Node().getNeighbors()
-        }
-    }
-
     async getInfo(): Promise<NodeInfoResponse> {
         return {
             peerDescriptor: this.stack.getLayer0Node().getLocalPeerDescriptor(),
-            controlLayer: this.getControlLayerInfo(),
+            controlLayer: {
+                connections: this.stack.getLayer0Node().getConnections(),
+                neighbors: this.stack.getLayer0Node().getNeighbors()
+            },
             streamPartitions: this.stack.getStreamrNode().getNodeInfo()
         }
     }
