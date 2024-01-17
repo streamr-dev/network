@@ -133,7 +133,7 @@ jobs:
       run-brokers: true
       command: |
         sudo apt-get install xvfb
-        npm run test-browser
+        xvfb-run --auto-servernum npm run test-browser
   cli-tools:
     needs: build
     uses: ./.github/workflows/test-setup.yml
