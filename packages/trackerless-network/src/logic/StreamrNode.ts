@@ -284,6 +284,7 @@ export class StreamrNode extends EventEmitter<Events> {
         return false
     }
 
+    // TODO inline this method?
     getNodeInfo(): StreamPartitionInfo[] {
         const streamParts = Array.from(this.streamParts.entries()).filter(([_, node]) => node.proxied === false)
         return streamParts.map(([streamPartId]) => {
