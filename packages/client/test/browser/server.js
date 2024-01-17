@@ -7,7 +7,7 @@ const { KeyServer } = require('@streamr/test-utils')
 const app = express()
 const keyserver = new KeyServer()
 
-// viewed at http://127.0.0.1:8880
+// viewed at http://localhost:8880
 app.use('/static', express.static(path.join(__dirname, '/../../dist')))
 
 let server
