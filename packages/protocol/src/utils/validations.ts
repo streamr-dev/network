@@ -18,9 +18,3 @@ export function validateIsNotNegativeInteger(varName: string, varValue?: number,
         throw new ValidationError(`Expected ${varName} to not be negative (${varValue}).`)
     }
 }
-
-export function validateIsNotEmptyByteArray(varName: string, varValue: Uint8Array): void | never {
-    if (!(varValue instanceof Uint8Array) || varValue.length === 0) {
-        throw new ValidationError(`Expected ${varName} to be a non-empty byte array`)
-    }
-}
