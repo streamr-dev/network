@@ -36,10 +36,10 @@ describe('StorageNodeRegistry2', () => {
         // set metadata 
         const url = `http://mock.com/${Date.now()}`
         await storageNodeClient.setStorageNodeMetadata({
-            http: url
+            urls: [url]
         })
         const metadata = await storageNodeClient.getStorageNodeMetadata(storageNodeAddress)
-        expect(metadata.http).toEqual(url)
+        expect(metadata.urls).toEqual([url])
 
         // add stream to storage node
         await client.addStreamToStorageNode(createdStream.id, storageNodeAddress)

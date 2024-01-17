@@ -8,9 +8,9 @@
         "src/**/*",
         "test/**/*"
     ],
-    "exclude": [
-    ],
     "references": [
-        { "path": "tsconfig.node.json" }
+        { "path": "../protocol/tsconfig.node.json" },
+        { "path": "../proto-rpc/tsconfig.node.json" },
+        { "path": "../dht/tsconfig.node.json" }
     ]
 }

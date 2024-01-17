@@ -40,7 +40,7 @@ export function serializeGroupKeyResponse(request: GroupKeyResponse): Uint8Array
         request.requestId,
         request.recipient,
         request.encryptedGroupKeys.map((s) => {
-            return JSON.stringify([s.groupKeyId, binaryToHex(s.data)])
+            return JSON.stringify([s.id, binaryToHex(s.data)])
         })])
     return utf8ToBinary(json)
 }

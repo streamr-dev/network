@@ -140,7 +140,7 @@ export async function startStorageNode(
     })
     try {
         await client.setStorageNodeMetadata({
-            http: `http://127.0.0.1:${httpPort}`
+            urls: [`http://127.0.0.1:${httpPort}`]
         })
         await createAssignmentStream(client)
     } finally {

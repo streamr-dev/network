@@ -56,10 +56,10 @@ describe('parallel publish', () => {
             return (timestampDiff !== 0) ? timestampDiff : (m1.getSequenceNumber() - m2.getSequenceNumber())
         })
         expect(uniq(sortedMessages.map((m) => m.getMsgChainId()))).toHaveLength(1)
-        expect(sortedMessages[0].prevMsgRef).toBeNull()
+        expect(sortedMessages[0].prevMsgRef).toBeUndefined()
         expect(sortedMessages.every((m, i) => {
             if (i === 0) {
-                return m.prevMsgRef === null
+                return m.prevMsgRef === undefined
             } else {
                 const previous = sortedMessages[i - 1]
                 return (m.prevMsgRef!.timestamp === previous.getTimestamp()) && (m.prevMsgRef!.sequenceNumber === previous.getSequenceNumber())
