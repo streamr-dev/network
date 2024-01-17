@@ -168,6 +168,8 @@ module.exports = (env, argv) => {
         ],
         externals: {
             'express': 'Express',
+            'node:stream/web': 'stream/web',
+            'node:timers/promises': 'timers/promises'
         }
     })
 
