@@ -488,7 +488,7 @@ export class ContractFacade {
     }
 
     getProvider(): Provider {
-        return this.config.signer.provider!
+        return this.config.signer.provider
     }
 
     getEthersOverrides(): Overrides {

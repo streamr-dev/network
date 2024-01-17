@@ -35,8 +35,8 @@ describe('connectivityRequestHandler', () => {
         const connection: any = new EventEmitter()
         connection.send = jest.fn()
         connection.getRemoteIp = () => HOST
-       
-        attachConnectivityRequestHandler(connection as any)
+        
+        attachConnectivityRequestHandler(connection)
         const request: Message = {
             serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
             messageType: MessageType.CONNECTIVITY_REQUEST,
