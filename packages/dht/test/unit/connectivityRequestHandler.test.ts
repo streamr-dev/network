@@ -34,7 +34,8 @@ describe('connectivityRequestHandler', () => {
     it('happy path', async () => {
         const connection: any = new EventEmitter()
         connection.send = jest.fn()
-
+        connection.getRemoteIp = () => HOST
+       
         attachConnectivityRequestHandler(connection as any)
         const request: Message = {
             serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
@@ -60,6 +61,7 @@ describe('connectivityRequestHandler', () => {
                         port: PORT,
                         tls: false
                     },
+                    probedIp: HOST
                 },
                 oneofKind: 'connectivityResponse'
             },

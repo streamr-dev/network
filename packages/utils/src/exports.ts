@@ -43,6 +43,9 @@ import { filePathToNodeFormat } from './filePathToNodeFormat'
 import { retry } from './retry'
 import { toLengthPrefixedFrame, LengthPrefixedFrameDecoder } from './lengthPrefixedFrameUtils'
 import { verifySignature, createSignature } from './signingUtils'
+import { ISigningModule } from './ISigningModule'
+import { EthereumSigningModule } from './EthereumSigningModule'
+import { ipv4ToNumber } from './ipv4ToNumber'
 
 export {
     BrandedString,
@@ -100,7 +103,8 @@ export {
     LengthPrefixedFrameDecoder,
     toLengthPrefixedFrame,
     createSignature,
-    verifySignature
+    verifySignature,
+    ipv4ToNumber
 }
 
 export {
@@ -110,5 +114,7 @@ export {
     MetricsContext,
     MetricsDefinition,
     MetricsReport,
-    RateMetric
+    RateMetric,
+    ISigningModule,
+    EthereumSigningModule
 }

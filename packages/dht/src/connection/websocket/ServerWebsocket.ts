@@ -128,4 +128,13 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
             return ''
         }
     }
+
+    public getRemoteIp(): string {
+        if (!this.stopped && this.socket) {
+            return this.socket.socket.remoteAddress!
+        } else {
+            logger.error('Tried to get the remoteAddress of a stopped connection')
+            return ''
+        }
+    }
 }

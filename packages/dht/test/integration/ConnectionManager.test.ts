@@ -3,7 +3,7 @@ import { ConnectivityResponse, Message, MessageType, NodeType, PeerDescriptor } 
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { createPeerDescriptor } from '../../src/dht/DhtNode'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { Logger, MetricsContext, waitForEvent3 } from '@streamr/utils'
+import { EthereumSigningModule, Logger, MetricsContext, waitForEvent3 } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
 import { MarkOptional } from 'ts-essentials'
@@ -40,7 +40,8 @@ describe('ConnectionManager', () => {
     }
 
     beforeEach(() => {
-        createLocalPeerDescriptor = jest.fn().mockImplementation((response) => createPeerDescriptor(response))
+        const signingModule = new EthereumSigningModule()
+        createLocalPeerDescriptor = jest.fn().mockImplementation((response) => createPeerDescriptor(signingModule, response))
     })
 
     beforeAll(async () => {

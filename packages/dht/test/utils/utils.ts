@@ -1,4 +1,4 @@
-import { DhtNode } from '../../src/dht/DhtNode'
+import { DhtNode, createPeerDescriptor } from '../../src/dht/DhtNode'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
@@ -11,7 +11,8 @@ import {
     StoreDataRequest,
     StoreDataResponse,
     RecursiveOperationRequest, 
-    RecursiveOperation
+    RecursiveOperation,
+    ConnectivityResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import {
@@ -21,21 +22,26 @@ import {
     IWebsocketConnectorRpc
 } from '../../src/proto/packages/dht/protos/DhtRpc.server'
 import { Simulator } from '../../src/connection/simulator/Simulator'
-import { ConnectionManager } from '../../src/connection/ConnectionManager'
+import { ConnectionManager, NatType } from '../../src/connection/ConnectionManager'
 import { v4 } from 'uuid'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { Any } from '../../src/proto/google/protobuf/any'
-import { wait, waitForCondition } from '@streamr/utils'
+import { EthereumSigningModule, wait, waitForCondition } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { DhtAddress, createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
 
 export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'nodeId'>>): PeerDescriptor => {
-    return {
-        nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
-        type: NodeType.NODEJS,
-        ...opts
-    }
+    const signingModule = new EthereumSigningModule()
+    const connectivityResponse: ConnectivityResponse = {
+        host: '127.0.0.1',
+        natType: NatType.OPEN_INTERNET,
+        probedIp: '127.0.0.1'
+    } 
+
+    const ret = createPeerDescriptor(signingModule, connectivityResponse)
+    Object.assign(ret, opts)
+    return ret
 }
 
 export const createMockConnectionDhtNode = async (
