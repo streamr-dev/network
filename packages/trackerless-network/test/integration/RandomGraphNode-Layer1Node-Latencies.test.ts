@@ -98,7 +98,8 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
                 const neighbor = allNodes.find((node) => {
                     return node.getOwnNodeId() === ownNodeId
                 })
-                expect(neighbor!.getNeighbors()).toContain(nodeId)
+                const neighborIds = neighbor!.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
+                expect(neighborIds).toContain(nodeId)
             })
         })
     }, 60000)
