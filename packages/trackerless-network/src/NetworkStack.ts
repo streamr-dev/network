@@ -132,10 +132,6 @@ export class NetworkStack {
         return this.layer0Node!
     }
 
-    getConnectionManager(): ConnectionManager {
-        return this.layer0Node!.getTransport() as ConnectionManager
-    }
-
     getMetricsContext(): MetricsContext {
         return this.metricsContext
     }
@@ -146,6 +142,10 @@ export class NetworkStack {
 
     getOptions(): NetworkOptions {
         return this.options
+    }
+
+    private getConnectionManager(): ConnectionManager {
+        return this.layer0Node!.getTransport() as ConnectionManager
     }
 
     async stop(): Promise<void> {
