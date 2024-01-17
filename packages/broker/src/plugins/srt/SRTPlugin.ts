@@ -63,6 +63,7 @@ export class SRTPlugin extends Plugin<SRTPluginConfig> {
         // make messagePoolSize configurable parameter
         const messagePoolSize = 30
         let messagePool: Array<string> = []
+        let msgCounter = 0
         
         try {
             // eslint-disable-next-line no-constant-condition
@@ -75,9 +76,10 @@ export class SRTPlugin extends Plugin<SRTPluginConfig> {
                     
                     if (messagePool.length == messagePoolSize) {
                         const timestamp = Date.now()
-                        const payload = { b:[0, messagePool, timestamp] }
+                        const payload = { b:[0, messagePool, timestamp, msgCounter] }
                         await this.streamrClient?.publish({ id: this.pluginConfig.streamId, partition: this.pluginConfig.partition }, payload)
                         messagePool = []
+                        msgCounter++
                     }
                 }
             }
