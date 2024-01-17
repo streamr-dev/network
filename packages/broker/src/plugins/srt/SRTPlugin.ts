@@ -28,10 +28,8 @@ export interface SRTPluginConfig {
 export class SRTPlugin extends Plugin<SRTPluginConfig> {
     private server: AsyncSRT = new AsyncSRT()
     private socket: number = 0 // assing random socket ?
-    //private streamrClient: StreamrClient = this.streamrClient
 
     async start(): Promise<void> {
-        //this.streamrClient = streamrClient
         logger.info(JSON.stringify(this.pluginConfig))
         this.server.on('error', async () => {
             logger.info('received error')
@@ -42,10 +40,9 @@ export class SRTPlugin extends Plugin<SRTPluginConfig> {
 
     async prepareServer(): Promise<void> {
         this.socket = await this.server.createSocket(false)
-        let result = await this.server.bind(this.socket, this.pluginConfig.ip, this.pluginConfig.port) // replace with config values
+        let result = await this.server.bind(this.socket, this.pluginConfig.ip, this.pluginConfig.port) 
         result = await this.server.listen(this.socket, 2)
         logger.info('listen() result:', { result })
-        //console.log('listen() result:', result)
         this.awaitConnections(this.socket)
     }
     
@@ -60,7 +57,6 @@ export class SRTPlugin extends Plugin<SRTPluginConfig> {
     }
 
     async awaitConnections(socket: number): Promise<void> {
-        // console.log('Awaiting incoming client connection ...')
         logger.info('SRT plugin: awaiting incoming client connection ...')
         const fd = await this.server!.accept(socket)
         logger.info('SRT plugin: New incoming client fd:', { fd })
@@ -78,7 +74,8 @@ export class SRTPlugin extends Plugin<SRTPluginConfig> {
                     messagePool.push(base64Payload)
                     
                     if (messagePool.length == messagePoolSize) {
-                        const payload = { b:[0, messagePool] }
+                        const timestamp = Date.now()
+                        const payload = { b:[0, messagePool, timestamp] }
                         await this.streamrClient?.publish({ id: this.pluginConfig.streamId, partition: this.pluginConfig.partition }, payload)
                         messagePool = []
                     }
