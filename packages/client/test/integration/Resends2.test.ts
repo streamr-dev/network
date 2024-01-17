@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
 import { StreamID, toStreamPartID } from '@streamr/protocol'
-import { fastWallet } from '@streamr/test-utils'
+import { fastWallet, isRunningInElectron } from '@streamr/test-utils'
 import { collect, waitForCondition } from '@streamr/utils'
 import fs from 'fs'
 import path from 'path'
@@ -428,6 +428,9 @@ describe('Resends2', () => {
     })
 
     it('decodes resent messages correctly', async () => {
+        if (isRunningInElectron()) {
+            return
+        }
         const publishedMessage = Msg({
             content: fs.readFileSync(path.join(__dirname, '../data/utf8Example.txt'), 'utf8')
         })

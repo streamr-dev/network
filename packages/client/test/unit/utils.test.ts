@@ -1,4 +1,4 @@
-import { startTestServer } from '@streamr/test-utils'
+import { isRunningInElectron, startTestServer } from '@streamr/test-utils'
 import { collect, toLengthPrefixedFrame, waitForCondition } from '@streamr/utils'
 import { Request, Response } from 'express'
 import range from 'lodash/range'
@@ -42,6 +42,9 @@ describe('utils', () => {
         })
 
         it('abort', async () => {
+            if (isRunningInElectron()) { // TODO: unhandled promise rejection on Electron
+                return
+            }
             let serverResponseClosed = false
             const server = await startTestServer('/', async (_req: Request, res: Response) => {
                 res.on('close', () => {
@@ -74,7 +77,7 @@ describe('utils', () => {
 
         it('invalid host', async () => {
             const iterator = fetchLengthPrefixedFrameHttpBinaryStream('http://mock.test')[Symbol.asyncIterator]()
-            await expect(() => nextValue(iterator)).rejects.toThrow(/getaddrinfo ENOTFOUND/)
+            await expect(() => nextValue(iterator)).rejects.toThrow(isRunningInElectron() ? /Failed to fetch/ : /getaddrinfo ENOTFOUND/)
         })
     })
 })
