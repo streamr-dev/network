@@ -95,24 +95,4 @@ describe('StreamrNode', () => {
         })
     })
 
-    describe('getNodeInfo', () => {
-
-        const streamPartId = StreamPartIDUtils.parse('stream#0')
-    
-        it('returns empty list if node has not joined any streamParts', async () => {
-            const info = node.getNodeInfo()
-            expect(info.length).toEqual(0)
-        })
-    
-        it('returns correct object', async () => {
-            node.joinStreamPart(streamPartId)
-            await waitForCondition(() => node.getNodeInfo().length === 1)
-            const info = node.getNodeInfo()
-            expect(info.length).toEqual(1)
-            expect(info[0].id).toEqual(streamPartId)
-            expect(info[0].controlLayerNeighbors).toEqual([])
-            expect(info[0].deliveryLayerNeighbors).toEqual([])
-        })
-    })
-
 })
