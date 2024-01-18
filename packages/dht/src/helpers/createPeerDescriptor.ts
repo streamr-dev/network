@@ -29,26 +29,26 @@ const calculateNodeIdRaw = (ipAddress: number, privateKey: Uint8Array): DhtAddre
     return nodeIdRaw
 }
 
-export const createPeerDescriptor = (msg: ConnectivityResponse, nodeId?: DhtAddress): PeerDescriptor => {
+export const createPeerDescriptor = (connectivityResponse: ConnectivityResponse, nodeId?: DhtAddress): PeerDescriptor => {
     const privateKey = crypto.randomBytes(32)
     const publicKey = crypto.randomBytes(20)  // TODO calculate publicKey from privateKey
     let nodeIdRaw: DhtAddressRaw
     if (nodeId !== undefined) {
         nodeIdRaw = getRawFromDhtAddress(nodeId)
     } else {
-        nodeIdRaw = calculateNodeIdRaw(msg.ipAddress, privateKey)
+        nodeIdRaw = calculateNodeIdRaw(connectivityResponse.ipAddress, privateKey)
     }
     const ret: PeerDescriptor = {
         nodeId: nodeIdRaw,
         type: isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS,
-        ipAddress: msg.ipAddress,
+        ipAddress: connectivityResponse.ipAddress,
         publicKey 
     }
-    if (msg.websocket) {
+    if (connectivityResponse.websocket) {
         ret.websocket = {
-            host: msg.websocket.host,
-            port: msg.websocket.port,
-            tls: msg.websocket.tls
+            host: connectivityResponse.websocket.host,
+            port: connectivityResponse.websocket.port,
+            tls: connectivityResponse.websocket.tls
         }
     }
     ret.signature = createSignature(createPeerDescriptorSignaturePayload(ret), privateKey)
