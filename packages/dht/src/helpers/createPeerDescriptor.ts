@@ -23,8 +23,8 @@ const calculateNodeIdRaw = (ipAddress: number, privateKey: Uint8Array): DhtAddre
     const ipHash = hash(ipAsBuffer)
     const signature = createSignature(ipAsBuffer, privateKey)
     const nodeIdRaw = Buffer.concat([
-        ipHash.slice(ipHash.length - 13, ipHash.length),
-        signature.slice(signature.length - 7, signature.length)
+        ipHash.subarray(ipHash.length - 13, ipHash.length),
+        signature.subarray(signature.length - 7, signature.length)
     ])
     return nodeIdRaw
 }
