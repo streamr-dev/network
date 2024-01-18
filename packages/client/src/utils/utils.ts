@@ -148,6 +148,7 @@ export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescr
 }
 
 export function convertPeerDescriptorToNetworkPeerDescriptor(descriptor: PeerDescriptor): NetworkPeerDescriptor {
+    // TODO maybe we should copy most/all fields of PeerDescription (NET-1255)
     return {
         nodeId: getDhtAddressFromRaw(descriptor.nodeId),
         type: descriptor.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER,
