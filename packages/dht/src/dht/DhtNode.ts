@@ -27,7 +27,6 @@ import {
     ISigningModule,
     Logger,
     MetricsContext,
-    ipv4ToNumber,
     merge,
     waitForCondition
 } from '@streamr/utils'
