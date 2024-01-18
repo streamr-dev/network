@@ -279,6 +279,58 @@ export interface TemporaryConnectionResponse {
 export interface CloseTemporaryConnection {
 }
 /**
+ * @generated from protobuf message StreamPartitionInfo
+ */
+export interface StreamPartitionInfo {
+    /**
+     * @generated from protobuf field: string id = 1;
+     */
+    id: string;
+    /**
+     * @generated from protobuf field: repeated dht.PeerDescriptor controlLayerNeighbors = 2;
+     */
+    controlLayerNeighbors: PeerDescriptor[];
+    /**
+     * @generated from protobuf field: repeated dht.PeerDescriptor deliveryLayerNeighbors = 3;
+     */
+    deliveryLayerNeighbors: PeerDescriptor[];
+}
+/**
+ * @generated from protobuf message ControlLayerInfo
+ */
+export interface ControlLayerInfo {
+    /**
+     * @generated from protobuf field: repeated dht.PeerDescriptor neighbors = 1;
+     */
+    neighbors: PeerDescriptor[];
+    /**
+     * @generated from protobuf field: repeated dht.PeerDescriptor connections = 2;
+     */
+    connections: PeerDescriptor[];
+}
+/**
+ * @generated from protobuf message NodeInfoRequest
+ */
+export interface NodeInfoRequest {
+}
+/**
+ * @generated from protobuf message NodeInfoResponse
+ */
+export interface NodeInfoResponse {
+    /**
+     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 1;
+     */
+    peerDescriptor?: PeerDescriptor;
+    /**
+     * @generated from protobuf field: repeated StreamPartitionInfo streamPartitions = 2;
+     */
+    streamPartitions: StreamPartitionInfo[];
+    /**
+     * @generated from protobuf field: optional ControlLayerInfo controlLayer = 3;
+     */
+    controlLayer?: ControlLayerInfo;
+}
+/**
  * @generated from protobuf enum StreamMessageType
  */
 export enum StreamMessageType {
@@ -578,6 +630,57 @@ class CloseTemporaryConnection$Type extends MessageType<CloseTemporaryConnection
  * @generated MessageType for protobuf message CloseTemporaryConnection
  */
 export const CloseTemporaryConnection = new CloseTemporaryConnection$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class StreamPartitionInfo$Type extends MessageType<StreamPartitionInfo> {
+    constructor() {
+        super("StreamPartitionInfo", [
+            { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "controlLayerNeighbors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 3, name: "deliveryLayerNeighbors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message StreamPartitionInfo
+ */
+export const StreamPartitionInfo = new StreamPartitionInfo$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ControlLayerInfo$Type extends MessageType<ControlLayerInfo> {
+    constructor() {
+        super("ControlLayerInfo", [
+            { no: 1, name: "neighbors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 2, name: "connections", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ControlLayerInfo
+ */
+export const ControlLayerInfo = new ControlLayerInfo$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class NodeInfoRequest$Type extends MessageType<NodeInfoRequest> {
+    constructor() {
+        super("NodeInfoRequest", []);
+    }
+}
+/**
+ * @generated MessageType for protobuf message NodeInfoRequest
+ */
+export const NodeInfoRequest = new NodeInfoRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class NodeInfoResponse$Type extends MessageType<NodeInfoResponse> {
+    constructor() {
+        super("NodeInfoResponse", [
+            { no: 1, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 2, name: "streamPartitions", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => StreamPartitionInfo },
+            { no: 3, name: "controlLayer", kind: "message", T: () => ControlLayerInfo }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message NodeInfoResponse
+ */
+export const NodeInfoResponse = new NodeInfoResponse$Type();
 /**
  * @generated ServiceType for protobuf service DeliveryRpc
  */
@@ -610,4 +713,10 @@ export const NeighborUpdateRpc = new ServiceType("NeighborUpdateRpc", [
 export const TemporaryConnectionRpc = new ServiceType("TemporaryConnectionRpc", [
     { name: "openConnection", options: {}, I: TemporaryConnectionRequest, O: TemporaryConnectionResponse },
     { name: "closeConnection", options: {}, I: CloseTemporaryConnection, O: Empty }
+]);
+/**
+ * @generated ServiceType for protobuf service NodeInfoRpc
+ */
+export const NodeInfoRpc = new ServiceType("NodeInfoRpc", [
+    { name: "getInfo", options: {}, I: NodeInfoRequest, O: NodeInfoResponse }
 ]);
