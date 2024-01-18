@@ -15,6 +15,7 @@ interface NeighborUpdateRpcLocalConfig {
     nearbyNodeView: NodeList
     neighborFinder: NeighborFinder
     rpcCommunicator: ListeningRpcCommunicator
+    neighborCount: number
 }
 
 export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
@@ -25,17 +26,23 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
         this.config = config
     }
 
+    private createResponse(removeMe: boolean): NeighborUpdate {
+        return {
+            streamPartId: this.config.streamPartId,
+            neighborDescriptors: this.config.neighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor()),
+            removeMe
+        }
+    }
+
     // INeighborUpdateRpc server method
     async neighborUpdate(message: NeighborUpdate, context: ServerCallContext): Promise<NeighborUpdate> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
-        if (this.config.neighbors.has(senderId) && this.config.neighbors.size() > 4 && message.neighborDescriptors.length > 4) {
-            const response: NeighborUpdate = {
-                streamPartId: this.config.streamPartId,
-                neighborDescriptors: this.config.neighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor()),
-                removeMe: true
-            }
-            return response
+        if (this.config.neighbors.has(senderId) 
+            && this.config.neighbors.size() > this.config.neighborCount
+            && message.neighborDescriptors.length > this.config.neighborCount
+        ) {
+            return this.createResponse(true)
         } else if (this.config.neighbors.has(senderId)) {
             const ownNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
             const newPeerDescriptors = message.neighborDescriptors.filter((peerDescriptor) => {
@@ -51,19 +58,9 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
                 ))
             )
             this.config.neighborFinder.start()
-            const response: NeighborUpdate = {
-                streamPartId: this.config.streamPartId,
-                neighborDescriptors: this.config.neighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor()),
-                removeMe: false
-            }
-            return response
+            return this.createResponse(false)
         } else {
-            const response: NeighborUpdate = {
-                streamPartId: this.config.streamPartId,
-                neighborDescriptors: this.config.neighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor()),
-                removeMe: true
-            }
-            return response
+            return this.createResponse(true)
         }
     }
 }
