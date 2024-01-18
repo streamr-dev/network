@@ -117,19 +117,16 @@ const logger = new Logger(module)
 
 export type Events = TransportEvents & DhtNodeEvents
 
-const calculateNodeIdRaw = (signingModule: ISigningModule, ipAddress: number,
-    salt: Uint8Array): DhtAddressRaw => {
+const calculateNodeIdRaw = (signingModule: ISigningModule, ipAddress: number): DhtAddressRaw => {
     // nodeId is calculated as 
     // concatenate(get104leastSignificatBits(hash(ipAddress)), 
-    //  get56leastSignificatBits(sign(concatenate(ipAddress, salt))))
+    //  get56leastSignificatBits(sign(ipAddress)))
 
     const ipAsBuffer = Buffer.alloc(4)
     ipAsBuffer.writeUInt32BE(ipAddress)
 
     const ipHash = signingModule.hash(ipAsBuffer)
-
-    const idPartToSign = Buffer.concat([ipAsBuffer, salt])
-    const signature = signingModule.sign(idPartToSign)
+    const signature = signingModule.sign(ipAsBuffer)
 
     const nodeIdRaw = Buffer.concat([ipHash.slice(ipHash.length - 13, ipHash.length),
         signature.slice(signature.length - 7, signature.length)])
@@ -156,7 +153,7 @@ export const createPeerDescriptor = (signingModule: ISigningModule, msg: Connect
     if (nodeId !== undefined) {
         nodeIdRaw = getRawFromDhtAddress(nodeId)
     } else {
-        nodeIdRaw = calculateNodeIdRaw(signingModule, msg.ipAddress, salt)
+        nodeIdRaw = calculateNodeIdRaw(signingModule, msg.ipAddress)
     }
 
     const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS
