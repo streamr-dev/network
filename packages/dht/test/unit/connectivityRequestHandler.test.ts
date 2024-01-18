@@ -1,4 +1,4 @@
-import { waitForCondition } from '@streamr/utils'
+import { ipv4ToNumber, waitForCondition } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { once } from 'events'
 import { Server as HttpServer, createServer as createHttpServer } from 'http'
@@ -61,7 +61,7 @@ describe('connectivityRequestHandler', () => {
                         port: PORT,
                         tls: false
                     },
-                    ipAddress: HOST
+                    ipAddress: ipv4ToNumber(HOST)
                 },
                 oneofKind: 'connectivityResponse'
             },
