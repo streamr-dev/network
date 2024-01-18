@@ -18,7 +18,7 @@ const keccak = new Keccak(256)
  * https://github.com/streamr-dev/streamr-client-protocol-js/pull/35
  */
 
-function hash(message: Uint8Array): Buffer {
+export function hash(message: Uint8Array): Buffer {
     const prefixString = SIGN_MAGIC + message.length
     const merged = Buffer.concat([Buffer.from(prefixString), message])
     keccak.reset()
