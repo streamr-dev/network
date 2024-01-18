@@ -10,6 +10,8 @@ export interface Layer0Node extends ITransport {
     deleteDataFromDht(key: DhtAddress, waitForCompletion: boolean): Promise<void>
     waitForNetworkConnectivity(): Promise<void>
     getTransport(): ITransport
+    getNeighbors(): PeerDescriptor[]
+    getConnections(): PeerDescriptor[]
     start(): Promise<void>
     stop(): Promise<void>
 }

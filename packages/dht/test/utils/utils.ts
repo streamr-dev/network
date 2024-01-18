@@ -243,13 +243,13 @@ async function waitReadyForTesting(connectionManager: ConnectionManager, limit: 
         await waitForCondition(() => {
             return (connectionManager.getLocalLockedConnectionCount() === 0 &&
                 connectionManager.getRemoteLockedConnectionCount() === 0 &&
-                connectionManager.getAllConnectionPeerDescriptors().length <= limit)
+                connectionManager.getConnections().length <= limit)
         }, 20000)
     } catch (err) {
         if (connectionManager.getLocalLockedConnectionCount() > 0
             && connectionManager.getRemoteLockedConnectionCount() > 0) {
             throw new Error('Connections are still locked')
-        } else if (connectionManager.getAllConnectionPeerDescriptors().length > limit) {
+        } else if (connectionManager.getConnections().length > limit) {
             throw new Error(`ConnectionManager has more than ${limit}`)
         }
     }

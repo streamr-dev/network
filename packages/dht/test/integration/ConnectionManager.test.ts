@@ -293,6 +293,7 @@ describe('ConnectionManager', () => {
         await Promise.all([disconnectedPromise1, disconnectedPromise2])
         await connectionManager3.stop()
         await connectionManager4.stop()
+        simulator2.stop()
     })
 
     it('Cannot send to own WebsocketServer if nodeIds do not match', async () => {

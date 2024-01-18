@@ -1,6 +1,6 @@
 import secp256k1 from 'secp256k1'
 import { Keccak } from 'sha3'
-import { hexToBinary, binaryToHex } from './binaryUtils'
+import { binaryToHex } from './binaryUtils'
 import { EthereumAddress, toEthereumAddress } from './EthereumAddress'
 
 const SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
@@ -38,17 +38,12 @@ function recoverPublicKey(signature: Uint8Array, payload: Uint8Array): Uint8Arra
     )
 }
 
-export function createSignatureWithBinaryKey(payload: Uint8Array, privateKey: Uint8Array): Uint8Array {
+export function createSignature(payload: Uint8Array, privateKey: Uint8Array): Uint8Array {
     const msgHash = hash(payload)
     const sigObj = secp256k1.ecdsaSign(msgHash, privateKey)
     const result = Buffer.alloc(sigObj.signature.length + 1, Buffer.from(sigObj.signature))
     result.writeInt8(27 + sigObj.recid, result.length - 1)
     return result
-}
-
-export function createSignature(payload: Uint8Array, privateKeyAsHex: string): Uint8Array {
-    const privateKey = hexToBinary(privateKeyAsHex)
-    return createSignatureWithBinaryKey(payload, privateKey)
 }
 
 function recoverSignature(signature: Uint8Array, payload: Uint8Array): string {

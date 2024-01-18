@@ -67,7 +67,7 @@ describe('StreamrChallenger', () => {
 
     it('Happy path', async () => {
         await runStreamrChallenge('127.0.0.1', '12323', sessionId)
-        await waitForCondition(() => challengedClientTransport.getAllConnectionPeerDescriptors().length === 0)
+        await waitForCondition(() => challengedClientTransport.getConnections().length === 0)
     })
 
 })
