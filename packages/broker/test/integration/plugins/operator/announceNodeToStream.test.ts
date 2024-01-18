@@ -7,6 +7,11 @@ import { formCoordinationStreamId } from '../../../../src/plugins/operator/formC
 
 const TIMEOUT = 20 * 1000
 
+// TODO add Jest utility so that the normalization is not needed (NET-1254)
+const normalizeBinaryBuffer = (buffer: Buffer) => {
+    return new Uint8Array(buffer)
+}
+
 describe('announceNodeToStream', () => {
 
     it('publishes to stream', async () => {
@@ -23,9 +28,14 @@ describe('announceNodeToStream', () => {
         await announceNodeToStream(operatorContractAddress, client)
 
         const [{ content }] = await collect(subscription, 1)
+        const localPeerDescriptor = (await client.getPeerDescriptor()) as any
         expect(content).toEqual({
             msgType: 'heartbeat',
-            peerDescriptor: await client.getPeerDescriptor()
+            peerDescriptor: {
+                ...localPeerDescriptor,
+                publicKey: normalizeBinaryBuffer(localPeerDescriptor.publicKey),
+                signature: normalizeBinaryBuffer(localPeerDescriptor.signature),
+            }
         })
 
         await anonymousClient.destroy()
