@@ -12,7 +12,7 @@ import { ConnectionManager, PortRange, TlsCertificate } from '../connection/Conn
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
 import { IceServer } from '../connection/webrtc/WebrtcConnector'
 import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
-import { DhtAddress, createRandomDhtAddress, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { DhtAddress, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { Any } from '../proto/google/protobuf/any'
 import {
     ClosestPeersRequest,
@@ -104,8 +104,7 @@ type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
     'storeMaxTtl' |
     'networkConnectivityTimeout' |
     'storageRedundancyFactor' |
-    'metricsContext' |
-    'nodeId'>
+    'metricsContext'>
 
 const logger = new Logger(module)
 
@@ -142,8 +141,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             storeMaxTtl: 60000,
             networkConnectivityTimeout: 10000,
             storageRedundancyFactor: 5,
-            metricsContext: new MetricsContext(),
-            nodeId: createRandomDhtAddress()
+            metricsContext: new MetricsContext()
         }, conf)
         this.localDataStore = new LocalDataStore(this.config.storeMaxTtl)
         this.send = this.send.bind(this)
