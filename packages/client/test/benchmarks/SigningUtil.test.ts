@@ -69,8 +69,9 @@ describe('SigningUtil', () => {
         }
         
         it('sign', async () => {
+            const privateKey = hexToBinary(wallet.privateKey)
             const elapsedTimeOur = await run(async () => {
-                return createSignature(payload, wallet.privateKey)
+                return createSignature(payload, privateKey)
             }, binarySignature, 'Sign-our')
     
             const elapsedTimeEthers = await run(async () => {

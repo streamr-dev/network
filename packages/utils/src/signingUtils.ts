@@ -38,9 +38,7 @@ function recoverPublicKey(signature: Uint8Array, payload: Uint8Array): Uint8Arra
     )
 }
 
-export function createSignature(payload: Uint8Array, privateKeyAsHex: string): Uint8Array {
-    const privateKey = hexToBinary(privateKeyAsHex)
-
+export function createSignature(payload: Uint8Array, privateKey: Uint8Array): Uint8Array {
     const msgHash = hash(payload)
     const sigObj = secp256k1.ecdsaSign(msgHash, privateKey)
     const result = Buffer.alloc(sigObj.signature.length + 1, Buffer.from(sigObj.signature))
