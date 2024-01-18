@@ -149,9 +149,10 @@ export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescr
 
 export function convertPeerDescriptorToNetworkPeerDescriptor(descriptor: PeerDescriptor): NetworkPeerDescriptor {
     return {
-        ...descriptor,
         nodeId: getDhtAddressFromRaw(descriptor.nodeId),
-        type: descriptor.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER
+        type: descriptor.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER,
+        websocket: descriptor.websocket,
+        region: descriptor.region
     }
 }
 
