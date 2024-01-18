@@ -1,4 +1,4 @@
-import { DhtNode, createPeerDescriptor } from '../../src/dht/DhtNode'
+import { DhtNode } from '../../src/dht/DhtNode'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
@@ -11,8 +11,7 @@ import {
     StoreDataRequest,
     StoreDataResponse,
     RecursiveOperationRequest, 
-    RecursiveOperation,
-    ConnectivityResponse
+    RecursiveOperation
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import {
@@ -22,25 +21,21 @@ import {
     IWebsocketConnectorRpc
 } from '../../src/proto/packages/dht/protos/DhtRpc.server'
 import { Simulator } from '../../src/connection/simulator/Simulator'
-import { ConnectionManager, NatType } from '../../src/connection/ConnectionManager'
+import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { v4 } from 'uuid'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { Any } from '../../src/proto/google/protobuf/any'
-import { ipv4ToNumber, wait, waitForCondition } from '@streamr/utils'
+import { wait, waitForCondition } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { DhtAddress, createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
 
 export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'nodeId'>>): PeerDescriptor => {
-    const connectivityResponse: ConnectivityResponse = {
-        host: '127.0.0.1',
-        natType: NatType.OPEN_INTERNET,
-        ipAddress: ipv4ToNumber('127.0.0.1')
-    } 
-
-    const ret = createPeerDescriptor(connectivityResponse)
-    Object.assign(ret, opts)
-    return ret
+    return {
+        nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
+        type: NodeType.NODEJS,
+        ...opts
+    }
 }
 
 export const createMockConnectionDhtNode = async (
