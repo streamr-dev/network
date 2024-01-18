@@ -441,7 +441,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.config.peerDescriptor !== undefined) {
             this.localPeerDescriptor = this.config.peerDescriptor
         } else {
-            this.localPeerDescriptor = createPeerDescriptor(this.signingModule, connectivityResponse, this.config.nodeId)
+            this.localPeerDescriptor = createPeerDescriptor(this.signingModule, connectivityResponse, this.config.nodeId, this.config.identityKey)
         }
         return this.localPeerDescriptor
     }
