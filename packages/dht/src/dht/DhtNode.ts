@@ -80,7 +80,7 @@ export interface DhtNodeOptions {
     websocketServerEnableTls?: boolean
     nodeId?: DhtAddress
     signingModule?: ISigningModule
-    nodeName?: string   // used as salt in nodeId generation if given, otherwise random salt is used
+    identityKey?: string
 
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
@@ -137,15 +137,14 @@ const calculateNodeIdRaw = (signingModule: ISigningModule, ipAddress: number,
     return nodeIdRaw
 }
 
-export const createPeerDescriptor = (signingModule: ISigningModule, msg: ConnectivityResponse, nodeId?: DhtAddress, nodeName?: string): PeerDescriptor => {
+export const createPeerDescriptor = (signingModule: ISigningModule, msg: ConnectivityResponse, nodeId?: DhtAddress, identityKey?: string): PeerDescriptor => {
 
     let salt: Uint8Array
 
-    // user must configure nodeName if they wish to keep the nodeId constant if they do not 
+    // user must configure identityKey if they wish to keep the nodeId constant if they do not 
     // pass a precalculated nodeId!
-    
-    if (nodeName !== undefined) {
-        salt = Buffer.from(nodeName)
+    if (identityKey !== undefined) {
+        salt = Buffer.from(identityKey)
     } else {
         salt = crypto.randomBytes(20)
     }
