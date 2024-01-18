@@ -1,8 +1,7 @@
-import { getDhtAddressFromRaw } from '@streamr/dht/dist/src/identifiers'
 import { TemporaryConnectionRpcLocal } from '../../src/logic/temporary-connection/TemporaryConnectionRpcLocal'
 import { MockTransport } from '../utils/mock/Transport'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { ListeningRpcCommunicator } from '@streamr/dht'
+import { ListeningRpcCommunicator, getDhtAddressFromRaw } from '@streamr/dht'
 
 describe('TemporaryConnectionRpcLocal', () => {
 
