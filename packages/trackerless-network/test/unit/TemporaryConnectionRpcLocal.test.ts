@@ -15,22 +15,15 @@ describe('TemporaryConnectionRpcLocal', () => {
             localPeerDescriptor: peerDescriptor,
             rpcCommunicator
         })
-
     })
 
     afterEach(() => {
         rpcCommunicator.destroy()
     })
 
-    it('Open Connection', async () => {
-        const caller = createMockPeerDescriptor()
-        await rpcLocal.openConnection(peerDescriptor, { incomingSourceDescriptor: caller } as any)
-        expect(rpcLocal.getNodes().get(getDhtAddressFromRaw(caller.nodeId))).toBeDefined()
-    })
-
     it('Open and Close Connection', async () => {
         const caller = createMockPeerDescriptor()
-        await rpcLocal.openConnection(peerDescriptor, { incomingSourceDescriptor: caller } as any)
+        await rpcLocal.openConnection({}, { incomingSourceDescriptor: caller } as any)
         expect(rpcLocal.getNodes().get(getDhtAddressFromRaw(caller.nodeId))).toBeDefined()
         await rpcLocal.closeConnection({}, { incomingSourceDescriptor: caller } as any)
         expect(rpcLocal.getNodes().get(getDhtAddressFromRaw(caller.nodeId))).toBeUndefined()
