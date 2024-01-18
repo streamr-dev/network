@@ -7,6 +7,7 @@ import { MaintainTopologyHelper } from '../../../../src/plugins/operator/Maintai
 import { createClient, createTestStream } from '../../../utils'
 import { delegate, deploySponsorshipContract, setupOperatorContract, stake, unstake } from './contractUtils'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
+import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 
 const TIMEOUT = 30 * 1000
 const WAIT_FOR_EVENTS_IN_MS = 10 * 1000
@@ -53,10 +54,10 @@ describe(MaintainTopologyHelper, () => {
         }, TIMEOUT)
 
         beforeEach(() => {
-            topologyHelper = new MaintainTopologyHelper({
+            topologyHelper = new MaintainTopologyHelper(ContractFacade.createInstance({
                 ...operatorServiceConfig,
                 signer: nodeWallet
-            })
+            }))
         })
 
         afterEach(async () => {
@@ -120,10 +121,10 @@ describe(MaintainTopologyHelper, () => {
         }, TIMEOUT)
 
         beforeEach(() => {
-            topologyHelper = new MaintainTopologyHelper({
+            topologyHelper = new MaintainTopologyHelper(ContractFacade.createInstance({
                 ...operatorServiceConfig,
                 signer: nodeWallet
-            })
+            }))
         })
 
         afterEach(async () => {

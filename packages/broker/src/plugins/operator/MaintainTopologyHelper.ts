@@ -26,9 +26,9 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
     private onUnstakedListener?: (sponsorship: string) => unknown
     private readonly contractFacade: ContractFacade
 
-    constructor(config: OperatorServiceConfig) {
+    constructor(contractFacade: ContractFacade) {
         super()
-        this.contractFacade = ContractFacade.createInstance(config)
+        this.contractFacade = contractFacade
     }
 
     async start(): Promise<void> {
