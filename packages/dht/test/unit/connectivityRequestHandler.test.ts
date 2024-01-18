@@ -61,7 +61,7 @@ describe('connectivityRequestHandler', () => {
                         port: PORT,
                         tls: false
                     },
-                    probedIp: HOST
+                    ipAddress: HOST
                 },
                 oneofKind: 'connectivityResponse'
             },

@@ -336,9 +336,9 @@ export interface ConnectivityResponse {
      */
     websocket?: ConnectivityMethod;
     /**
-     * @generated from protobuf field: string probedIp = 4;
+     * @generated from protobuf field: string ipAddress = 4;
      */
-    probedIp: string;
+    ipAddress: string;
 }
 /**
  * @generated from protobuf message dht.HandshakeRequest
@@ -943,7 +943,7 @@ class ConnectivityResponse$Type extends MessageType$<ConnectivityResponse> {
             { no: 1, name: "host", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "natType", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "websocket", kind: "message", T: () => ConnectivityMethod },
-            { no: 4, name: "probedIp", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 4, name: "ipAddress", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }

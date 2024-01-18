@@ -166,7 +166,7 @@ export class WebsocketConnector {
         const noServerConnectivityResponse: ConnectivityResponse = {
             host: '127.0.0.1',
             natType: NatType.UNKNOWN,
-            probedIp: '127.0.0.1'
+            ipAddress: '127.0.0.1'
         }
         if (this.abortController.signal.aborted) {
             return noServerConnectivityResponse
@@ -184,7 +184,7 @@ export class WebsocketConnector {
                             natType: NatType.OPEN_INTERNET,
                             websocket: { host: this.host!, port: this.selectedPort!, tls: this.config.tlsCertificate !== undefined },
                             // ToDo: maybe do a DNS lookup here?
-                            probedIp: '127.0.0.1'
+                            ipAddress: '127.0.0.1'
                         }
                         return preconfiguredConnectivityResponse
                     } else {

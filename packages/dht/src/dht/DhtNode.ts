@@ -151,7 +151,7 @@ export const createPeerDescriptor = (signingModule: ISigningModule,
         salt = crypto.randomBytes(20)
     }
 
-    const probedIpAsNumber = ipv4ToNumber(msg!.probedIp)
+    const ipAddressAsNumber = ipv4ToNumber(msg!.ipAddress)
     
     let nodeIdRaw: DhtAddressRaw
     
@@ -160,12 +160,12 @@ export const createPeerDescriptor = (signingModule: ISigningModule,
     if (nodeId !== undefined) {
         nodeIdRaw = getRawFromDhtAddress(nodeId)
     } else {
-        nodeIdRaw = calculateNodeIdRaw(signingModule, probedIpAsNumber, salt)
+        nodeIdRaw = calculateNodeIdRaw(signingModule, ipAddressAsNumber, salt)
     }
 
     const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS
 
-    const ret: PeerDescriptor = { nodeId: nodeIdRaw, type: nodeType, ipAddress: probedIpAsNumber, salt: salt }
+    const ret: PeerDescriptor = { nodeId: nodeIdRaw, type: nodeType, ipAddress: ipAddressAsNumber, salt: salt }
  
     if (msg && msg.websocket) {
         ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }

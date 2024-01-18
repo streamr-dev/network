@@ -37,7 +37,7 @@ const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, co
     let connectivityResponseMessage: ConnectivityResponse | undefined
     const host = connectivityRequest.host ?? connection.getRemoteAddress()
      
-    const probedIp = connection.getRemoteIp()
+    const ipAddress = connection.getRemoteIp()
    
     try {
         const wsServerInfo = {
@@ -56,7 +56,7 @@ const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, co
         connectivityResponseMessage = {
             host,
             natType: NatType.UNKNOWN,
-            probedIp
+            ipAddress
         }
     }
     if (outgoingConnection) {
@@ -68,7 +68,7 @@ const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, co
             host,
             natType: NatType.OPEN_INTERNET,
             websocket: { host, port: connectivityRequest.port, tls: connectivityRequest.tls },
-            probedIp
+            ipAddress
         }
     }
     const msg: Message = {

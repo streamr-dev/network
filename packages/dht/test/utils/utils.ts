@@ -36,7 +36,7 @@ export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'no
     const connectivityResponse: ConnectivityResponse = {
         host: '127.0.0.1',
         natType: NatType.OPEN_INTERNET,
-        probedIp: '127.0.0.1'
+        ipAddress: '127.0.0.1'
     } 
 
     const ret = createPeerDescriptor(signingModule, connectivityResponse)

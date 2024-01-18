@@ -197,7 +197,7 @@ message ConnectivityResponse {
   string host = 1;
   string natType = 2;
   ConnectivityMethod websocket = 3;
-  string probedIp = 4;
+  string ipAddress = 4;
 }
 
 message HandshakeRequest {
