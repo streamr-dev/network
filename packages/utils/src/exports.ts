@@ -42,9 +42,7 @@ import { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary, areEqualBinaries 
 import { filePathToNodeFormat } from './filePathToNodeFormat'
 import { retry } from './retry'
 import { toLengthPrefixedFrame, LengthPrefixedFrameDecoder } from './lengthPrefixedFrameUtils'
-import { verifySignature, createSignature } from './signingUtils'
-import { ISigningModule } from './ISigningModule'
-import { EthereumSigningModule } from './EthereumSigningModule'
+import { verifySignature, createSignature, hash } from './signingUtils'
 import { ipv4ToNumber } from './ipv4ToNumber'
 
 export {
@@ -104,7 +102,8 @@ export {
     toLengthPrefixedFrame,
     createSignature,
     verifySignature,
-    ipv4ToNumber
+    ipv4ToNumber,
+    hash
 }
 
 export {
@@ -114,7 +113,5 @@ export {
     MetricsContext,
     MetricsDefinition,
     MetricsReport,
-    RateMetric,
-    ISigningModule,
-    EthereumSigningModule
+    RateMetric
 }

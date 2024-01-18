@@ -23,12 +23,12 @@ import { ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
 import { ExternalApiRpcClient, StoreRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import {
-    EthereumSigningModule,
-    ISigningModule,
     Logger,
     MetricsContext,
+    createSignature,
     merge,
-    waitForCondition
+    waitForCondition,
+    hash
 } from '@streamr/utils'
 import { Any } from '../proto/google/protobuf/any'
 import { Router } from './routing/Router'
@@ -78,7 +78,6 @@ export interface DhtNodeOptions {
     websocketPortRange?: PortRange
     websocketServerEnableTls?: boolean
     nodeId?: DhtAddress
-    signingModule?: ISigningModule
 
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
@@ -115,7 +114,7 @@ const logger = new Logger(module)
 
 export type Events = TransportEvents & DhtNodeEvents
 
-const calculateNodeIdRaw = (signingModule: ISigningModule, ipAddress: number): DhtAddressRaw => {
+const calculateNodeIdRaw = (ipAddress: number, privateKey: Uint8Array): DhtAddressRaw => {
     // nodeId is calculated as 
     // concatenate(get104leastSignificatBits(hash(ipAddress)), 
     //  get56leastSignificatBits(sign(ipAddress)))
@@ -123,8 +122,8 @@ const calculateNodeIdRaw = (signingModule: ISigningModule, ipAddress: number): D
     const ipAsBuffer = Buffer.alloc(4)
     ipAsBuffer.writeUInt32BE(ipAddress)
 
-    const ipHash = signingModule.hash(ipAsBuffer)
-    const signature = signingModule.sign(ipAsBuffer)
+    const ipHash = hash(ipAsBuffer)
+    const signature = createSignature(ipAsBuffer, privateKey)
 
     const nodeIdRaw = Buffer.concat([ipHash.slice(ipHash.length - 13, ipHash.length),
         signature.slice(signature.length - 7, signature.length)])
@@ -132,9 +131,10 @@ const calculateNodeIdRaw = (signingModule: ISigningModule, ipAddress: number): D
     return nodeIdRaw
 }
 
-export const createPeerDescriptor = (signingModule: ISigningModule, msg: ConnectivityResponse, nodeId?: DhtAddress): PeerDescriptor => {
+export const createPeerDescriptor = (msg: ConnectivityResponse, nodeId?: DhtAddress): PeerDescriptor => {
 
-    const publicKey = crypto.randomBytes(20)
+    const privateKey = crypto.randomBytes(32)
+    const publicKey = crypto.randomBytes(20)  // TODO calculate publicKey from privateKey
     let nodeIdRaw: DhtAddressRaw
     
     // ToDo: add checking that the nodeId is valid
@@ -142,7 +142,7 @@ export const createPeerDescriptor = (signingModule: ISigningModule, msg: Connect
     if (nodeId !== undefined) {
         nodeIdRaw = getRawFromDhtAddress(nodeId)
     } else {
-        nodeIdRaw = calculateNodeIdRaw(signingModule, msg.ipAddress)
+        nodeIdRaw = calculateNodeIdRaw(msg.ipAddress, privateKey)
     }
 
     const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS
@@ -153,7 +153,7 @@ export const createPeerDescriptor = (signingModule: ISigningModule, msg: Connect
         ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
     }
  
-    ret.signature = signingModule.sign(createPeerDescriptorSignaturePayload(ret))
+    ret.signature = createSignature(createPeerDescriptorSignaturePayload(ret), privateKey)
     
     return ret
 }
@@ -173,7 +173,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     public connectionManager?: ConnectionManager
     private started = false
     private abortController = new AbortController()
-    private signingModule: ISigningModule
 
     constructor(conf: DhtNodeOptions) {
         super()
@@ -193,7 +192,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             metricsContext: new MetricsContext(),
             nodeId: createRandomDhtAddress()
         }, conf)
-        this.signingModule = conf.signingModule ?? new EthereumSigningModule()
         this.localDataStore = new LocalDataStore(this.config.storeMaxTtl)
         this.send = this.send.bind(this)
     }
@@ -427,7 +425,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.config.peerDescriptor !== undefined) {
             this.localPeerDescriptor = this.config.peerDescriptor
         } else {
-            this.localPeerDescriptor = createPeerDescriptor(this.signingModule, connectivityResponse, this.config.nodeId)
+            this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, this.config.nodeId)
         }
         return this.localPeerDescriptor
     }
