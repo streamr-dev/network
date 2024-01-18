@@ -1,55 +1,51 @@
-import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import {
+    Logger,
+    MetricsContext,
+    merge,
+    waitForCondition
+} from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
-import crypto from 'crypto'
-import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
+import { sample } from 'lodash'
+import { MarkRequired } from 'ts-essentials'
+import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
+import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
+import { IceServer } from '../connection/webrtc/WebrtcConnector'
+import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
+import { DhtAddress, createRandomDhtAddress, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { Any } from '../proto/google/protobuf/any'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
-    LeaveNotice,
     ConnectivityResponse,
-    Message,
-    NodeType,
-    PeerDescriptor,
-    PingRequest,
-    PingResponse,
     DataEntry,
     ExternalFindDataRequest,
     ExternalFindDataResponse,
     ExternalStoreDataRequest,
     ExternalStoreDataResponse,
-    RecursiveOperation,
+    LeaveNotice,
+    Message,
+    PeerDescriptor,
+    PingRequest,
+    PingResponse,
+    RecursiveOperation
 } from '../proto/packages/dht/protos/DhtRpc'
-import { ITransport, TransportEvents } from '../transport/ITransport'
-import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
 import { ExternalApiRpcClient, StoreRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
-import {
-    Logger,
-    MetricsContext,
-    createSignature,
-    merge,
-    waitForCondition,
-    hash
-} from '@streamr/utils'
-import { Any } from '../proto/google/protobuf/any'
-import { Router } from './routing/Router'
-import { RecursiveOperationManager, RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'
-import { StoreManager } from './store/StoreManager'
-import { PeerDiscovery } from './discovery/PeerDiscovery'
-import { LocalDataStore } from './store/LocalDataStore'
-import { IceServer } from '../connection/webrtc/WebrtcConnector'
-import { ExternalApiRpcRemote } from './ExternalApiRpcRemote'
-import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
-import { sample } from 'lodash'
-import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
-import { MarkRequired } from 'ts-essentials'
-import { DhtNodeRpcLocal } from './DhtNodeRpcLocal'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
-import { PeerManager } from './PeerManager'
+import { ITransport, TransportEvents } from '../transport/ITransport'
+import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { ServiceID } from '../types/ServiceID'
-import { DhtAddress, DhtAddressRaw, createRandomDhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../identifiers'
+import { DhtNodeRpcLocal } from './DhtNodeRpcLocal'
+import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
+import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
+import { ExternalApiRpcRemote } from './ExternalApiRpcRemote'
+import { PeerManager } from './PeerManager'
+import { PeerDiscovery } from './discovery/PeerDiscovery'
+import { RecursiveOperationManager, RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'
+import { Router } from './routing/Router'
+import { LocalDataStore } from './store/LocalDataStore'
+import { StoreManager } from './store/StoreManager'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
-import { createPeerDescriptorSignaturePayload } from '../helpers/createPeerDescriptorSignaturePayload'
+import { createPeerDescriptor } from '../helpers/createPeerDescriptor'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -57,6 +53,7 @@ export interface DhtNodeEvents {
     newRandomContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     randomContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
 }
+
 export interface DhtNodeOptions {
     serviceId?: ServiceID
     joinParallelism?: number
@@ -113,50 +110,6 @@ type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
 const logger = new Logger(module)
 
 export type Events = TransportEvents & DhtNodeEvents
-
-const calculateNodeIdRaw = (ipAddress: number, privateKey: Uint8Array): DhtAddressRaw => {
-    // nodeId is calculated as 
-    // concatenate(
-    //   get104leastSignificatBits(hash(ipAddress)), 
-    //   get56leastSignificatBits(sign(ipAddress))
-    // )
-    const ipAsBuffer = Buffer.alloc(4)
-    ipAsBuffer.writeUInt32BE(ipAddress)
-    const ipHash = hash(ipAsBuffer)
-    const signature = createSignature(ipAsBuffer, privateKey)
-    const nodeIdRaw = Buffer.concat([
-        ipHash.slice(ipHash.length - 13, ipHash.length),
-        signature.slice(signature.length - 7, signature.length)
-    ])
-    return nodeIdRaw
-}
-
-export const createPeerDescriptor = (msg: ConnectivityResponse, nodeId?: DhtAddress): PeerDescriptor => {
-    const privateKey = crypto.randomBytes(32)
-    const publicKey = crypto.randomBytes(20)  // TODO calculate publicKey from privateKey
-    let nodeIdRaw: DhtAddressRaw
-    // ToDo: add checking that the nodeId is valid
-    if (nodeId !== undefined) {
-        nodeIdRaw = getRawFromDhtAddress(nodeId)
-    } else {
-        nodeIdRaw = calculateNodeIdRaw(msg.ipAddress, privateKey)
-    }
-    const ret: PeerDescriptor = {
-        nodeId: nodeIdRaw,
-        type: isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS,
-        ipAddress: msg.ipAddress,
-        publicKey 
-    }
-    if (msg.websocket) {
-        ret.websocket = {
-            host: msg.websocket.host,
-            port: msg.websocket.port,
-            tls: msg.websocket.tls
-        }
-    }
-    ret.signature = createSignature(createPeerDescriptorSignaturePayload(ret), privateKey)
-    return ret
-}
 
 export class DhtNode extends EventEmitter<Events> implements ITransport {
 
