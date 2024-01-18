@@ -23,7 +23,7 @@ export const createPrivateKeyAuthentication = (key: string, config: Pick<StrictS
     const address = toEthereumAddress(computeAddress(key))
     return {
         getAddress: async () => address,
-        createMessageSignature: async (payload: Uint8Array) => createSignature(payload, key),
+        createMessageSignature: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
         getStreamRegistryChainSigner: async () => {
             const primaryProvider = getStreamRegistryChainProviders(config)[0]
             return new Wallet(key, primaryProvider)
