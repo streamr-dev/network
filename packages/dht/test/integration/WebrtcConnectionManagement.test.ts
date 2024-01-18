@@ -227,6 +227,6 @@ describe('WebRTC Connection Management', () => {
             manager1.send(msg),
             disconnectedPromise1
         ])
-        expect(manager1.getConnection(getNodeIdFromPeerDescriptor(msg.targetDescriptor!))).toBeUndefined()
+        expect(manager1.getConnection(getNodeIdFromPeerDescriptor(msg.targetDescriptor))).toBeUndefined()
     }, 20000)
 })

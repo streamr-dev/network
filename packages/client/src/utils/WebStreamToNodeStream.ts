@@ -65,7 +65,7 @@ export function WebStreamToNodeStream(
     nodeStreamOptions?: TransformOptions
 ): Readable {
     if ('pipe' in webStream) {
-        return webStream as Readable
+        return webStream
     }
 
     // use PassThrough so we can write to it

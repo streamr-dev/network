@@ -54,6 +54,18 @@ message PeerDescriptor {
     uint32 port = 2;
     string ip = 3;
   }
+
+  service OptionalService {
+    rpc getOptional (OptionalRequest) returns (OptionalResponse);
+  }
+
+  message OptionalRequest {
+    optional string someOptionalField = 1;   
+  }
+
+  message OptionalResponse {
+    optional string someOptionalField = 1;   
+  }
   
   enum NodeType {
     NODEJS = 0;

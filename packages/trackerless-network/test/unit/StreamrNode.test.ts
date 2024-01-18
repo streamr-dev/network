@@ -56,6 +56,7 @@ describe('StreamrNode', () => {
             node.broadcast(message)
             await waitForCondition(() => node.hasStreamPart(streamPartId))
         })
+
     })
 
     describe('proxied stream', () => {
@@ -93,4 +94,5 @@ describe('StreamrNode', () => {
             expect(node.isProxiedStreamPart(streamPartId)).toBe(false)
         })
     })
+
 })
