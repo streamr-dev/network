@@ -137,8 +137,7 @@ const calculateNodeIdRaw = (signingModule: ISigningModule, ipAddress: number,
     return nodeIdRaw
 }
 
-export const createPeerDescriptor = (signingModule: ISigningModule, 
-    msg?: ConnectivityResponse, nodeId?: DhtAddress, nodeName?: string): PeerDescriptor => {
+export const createPeerDescriptor = (signingModule: ISigningModule, msg: ConnectivityResponse, nodeId?: DhtAddress, nodeName?: string): PeerDescriptor => {
 
     let salt: Uint8Array
 
@@ -158,14 +157,14 @@ export const createPeerDescriptor = (signingModule: ISigningModule,
     if (nodeId !== undefined) {
         nodeIdRaw = getRawFromDhtAddress(nodeId)
     } else {
-        nodeIdRaw = calculateNodeIdRaw(signingModule, msg!.ipAddress, salt)
+        nodeIdRaw = calculateNodeIdRaw(signingModule, msg.ipAddress, salt)
     }
 
     const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS
 
-    const ret: PeerDescriptor = { nodeId: nodeIdRaw, type: nodeType, ipAddress: msg!.ipAddress, salt: salt }
+    const ret: PeerDescriptor = { nodeId: nodeIdRaw, type: nodeType, ipAddress: msg.ipAddress, salt: salt }
  
-    if (msg && msg.websocket) {
+    if (msg.websocket) {
         ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
     }
  
