@@ -6,6 +6,7 @@ import { NODE_INFO_RPC_SERVICE_ID } from '../../src/logic/node-info/NodeInfoRpcL
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { waitForCondition } from '@streamr/utils'
 
+// TODO add Jest utility so that the normalization is not needed (NET-1254)
 const normalizePeerDescriptor = (peerDescriptor: PeerDescriptor) => {
     return {
         ...peerDescriptor,

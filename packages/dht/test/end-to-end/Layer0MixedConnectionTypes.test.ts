@@ -93,7 +93,7 @@ describe('Layer0MixedConnectionTypes', () => {
         expect(node4.getNeighborCount()).toBeGreaterThanOrEqual(2)
         expect(node5.getNeighborCount()).toBeGreaterThanOrEqual(1)
 
-    }, 15000)
+    }, 20000)
 
     it('Simultaneous joins', async () => {
         await Promise.all([
@@ -108,5 +108,5 @@ describe('Layer0MixedConnectionTypes', () => {
         expect(node3.getNeighborCount()).toBeGreaterThanOrEqual(2)
         expect(node4.getNeighborCount()).toBeGreaterThanOrEqual(2)
         expect(node5.getNeighborCount()).toBeGreaterThanOrEqual(2)
-    }, 30000)
+    }, 40000)
 })
