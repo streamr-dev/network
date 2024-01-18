@@ -44,7 +44,7 @@ describe('NeighborUpdateRpcLocal', () => {
         rpcCommunicator.destroy()
     })
 
-    it('Returns neighbors', async () => {
+    it('response contains neighbor list of expected size', async () => {
         for (let i = 0; i < neighborCount; i++) {
             neighbors.add(new DeliveryRpcRemote(
                 localPeerDescriptor,
@@ -61,7 +61,7 @@ describe('NeighborUpdateRpcLocal', () => {
         expect(res.neighborDescriptors.length).toEqual(neighborCount)
     })
 
-    it('Caller is a neighbor', async () => {
+    it('does not ask to be removed if caller is a neighbor', async () => {
         const caller = createMockPeerDescriptor()
         const neighbor = new DeliveryRpcRemote(
             localPeerDescriptor,
@@ -78,7 +78,7 @@ describe('NeighborUpdateRpcLocal', () => {
         expect(res.removeMe).toEqual(false)
     })
 
-    it('Caller is not a neighbor', async () => {
+    it('asks to be removed if caller is not a neighbor', async () => {
         const caller = createMockPeerDescriptor()
         const res = await rpcLocal.neighborUpdate({
             streamPartId,
@@ -88,7 +88,7 @@ describe('NeighborUpdateRpcLocal', () => {
         expect(res.removeMe).toEqual(true)
     })
 
-    it('Caller is a neighbor and both have too many neighbors', async () => {
+    it('asks to be removed if caller is a neighbor and both have too many neighbors', async () => {
         const caller = createMockPeerDescriptor()
         const neighbor = new DeliveryRpcRemote(
             localPeerDescriptor,
