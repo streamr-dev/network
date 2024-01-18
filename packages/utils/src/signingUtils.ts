@@ -1,6 +1,6 @@
 import secp256k1 from 'secp256k1'
 import { Keccak } from 'sha3'
-import { hexToBinary, binaryToHex } from './binaryUtils'
+import { binaryToHex } from './binaryUtils'
 import { EthereumAddress, toEthereumAddress } from './EthereumAddress'
 
 const SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
