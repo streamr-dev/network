@@ -33,7 +33,6 @@ export const createPeerDescriptor = (msg: ConnectivityResponse, nodeId?: DhtAddr
     const privateKey = crypto.randomBytes(32)
     const publicKey = crypto.randomBytes(20)  // TODO calculate publicKey from privateKey
     let nodeIdRaw: DhtAddressRaw
-    // ToDo: add checking that the nodeId is valid
     if (nodeId !== undefined) {
         nodeIdRaw = getRawFromDhtAddress(nodeId)
     } else {
