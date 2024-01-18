@@ -36,9 +36,7 @@ const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, co
     let outgoingConnection: IConnection | undefined
     let connectivityResponseMessage: ConnectivityResponse | undefined
     const host = connectivityRequest.host ?? connection.getRemoteAddress()
-     
     const ipAddress = connection.getRemoteIp()
-   
     try {
         const wsServerInfo = {
             host,
