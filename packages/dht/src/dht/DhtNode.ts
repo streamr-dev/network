@@ -80,7 +80,6 @@ export interface DhtNodeOptions {
     websocketServerEnableTls?: boolean
     nodeId?: DhtAddress
     signingModule?: ISigningModule
-    identityKey?: string
 
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
@@ -134,18 +133,9 @@ const calculateNodeIdRaw = (signingModule: ISigningModule, ipAddress: number): D
     return nodeIdRaw
 }
 
-export const createPeerDescriptor = (signingModule: ISigningModule, msg: ConnectivityResponse, nodeId?: DhtAddress, identityKey?: string): PeerDescriptor => {
+export const createPeerDescriptor = (signingModule: ISigningModule, msg: ConnectivityResponse, nodeId?: DhtAddress): PeerDescriptor => {
 
-    let salt: Uint8Array
-
-    // user must configure identityKey if they wish to keep the nodeId constant if they do not 
-    // pass a precalculated nodeId!
-    if (identityKey !== undefined) {
-        salt = Buffer.from(identityKey)
-    } else {
-        salt = crypto.randomBytes(20)
-    }
-    
+    const publicKey = crypto.randomBytes(20)
     let nodeIdRaw: DhtAddressRaw
     
     // ToDo: add checking that the nodeId is valid
@@ -158,7 +148,7 @@ export const createPeerDescriptor = (signingModule: ISigningModule, msg: Connect
 
     const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS
 
-    const ret: PeerDescriptor = { nodeId: nodeIdRaw, type: nodeType, ipAddress: msg.ipAddress, salt: salt }
+    const ret: PeerDescriptor = { nodeId: nodeIdRaw, type: nodeType, ipAddress: msg.ipAddress, publicKey }
  
     if (msg.websocket) {
         ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
@@ -438,7 +428,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.config.peerDescriptor !== undefined) {
             this.localPeerDescriptor = this.config.peerDescriptor
         } else {
-            this.localPeerDescriptor = createPeerDescriptor(this.signingModule, connectivityResponse, this.config.nodeId, this.config.identityKey)
+            this.localPeerDescriptor = createPeerDescriptor(this.signingModule, connectivityResponse, this.config.nodeId)
         }
         return this.localPeerDescriptor
     }

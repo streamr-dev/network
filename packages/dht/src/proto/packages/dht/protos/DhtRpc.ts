@@ -223,9 +223,9 @@ export interface PeerDescriptor {
      */
     ipAddress?: number;
     /**
-     * @generated from protobuf field: optional bytes salt = 8;
+     * @generated from protobuf field: optional bytes publicKey = 8;
      */
-    salt?: Uint8Array;
+    publicKey?: Uint8Array;
     /**
      * signature of fields 2-8
      *
@@ -867,7 +867,7 @@ class PeerDescriptor$Type extends MessageType$<PeerDescriptor> {
             { no: 5, name: "websocket", kind: "message", T: () => ConnectivityMethod },
             { no: 6, name: "region", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ },
             { no: 7, name: "ipAddress", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ },
-            { no: 8, name: "salt", kind: "scalar", opt: true, T: 12 /*ScalarType.BYTES*/ },
+            { no: 8, name: "publicKey", kind: "scalar", opt: true, T: 12 /*ScalarType.BYTES*/ },
             { no: 9, name: "signature", kind: "scalar", opt: true, T: 12 /*ScalarType.BYTES*/ }
         ]);
     }

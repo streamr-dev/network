@@ -138,7 +138,7 @@ message PeerDescriptor {
   ConnectivityMethod websocket = 5;
   optional uint32 region = 6;
   optional uint32 ipAddress = 7;
-  optional bytes salt = 8;
+  optional bytes publicKey = 8;
   // signature of fields 2-8
   optional bytes signature = 9; 
 }
