@@ -12,7 +12,7 @@ import {
     WebsocketConnectionRequest
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { WebsocketConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { Logger, wait } from '@streamr/utils'
+import { ipv4ToNumber, Logger, wait } from '@streamr/utils'
 import { ManagedConnection } from '../ManagedConnection'
 import { WebsocketServer } from './WebsocketServer'
 import { sendConnectivityRequest } from '../connectivityChecker'
@@ -166,7 +166,7 @@ export class WebsocketConnector {
         const noServerConnectivityResponse: ConnectivityResponse = {
             host: '127.0.0.1',
             natType: NatType.UNKNOWN,
-            ipAddress: '127.0.0.1'
+            ipAddress: ipv4ToNumber('127.0.0.1')
         }
         if (this.abortController.signal.aborted) {
             return noServerConnectivityResponse
@@ -183,8 +183,8 @@ export class WebsocketConnector {
                             host: this.host!,
                             natType: NatType.OPEN_INTERNET,
                             websocket: { host: this.host!, port: this.selectedPort!, tls: this.config.tlsCertificate !== undefined },
-                            // ToDo: maybe do a DNS lookup here?
-                            ipAddress: '127.0.0.1'
+                            // TODO: maybe do a DNS lookup here?
+                            ipAddress: ipv4ToNumber('127.0.0.1')
                         }
                         return preconfiguredConnectivityResponse
                     } else {

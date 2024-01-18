@@ -1,4 +1,4 @@
-import { Logger } from '@streamr/utils'
+import { ipv4ToNumber, Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
 import {
     ConnectivityRequest, ConnectivityResponse,
@@ -56,7 +56,7 @@ const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, co
         connectivityResponseMessage = {
             host,
             natType: NatType.UNKNOWN,
-            ipAddress
+            ipAddress: ipv4ToNumber(ipAddress)
         }
     }
     if (outgoingConnection) {
@@ -68,7 +68,7 @@ const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, co
             host,
             natType: NatType.OPEN_INTERNET,
             websocket: { host, port: connectivityRequest.port, tls: connectivityRequest.tls },
-            ipAddress
+            ipAddress: ipv4ToNumber(ipAddress)
         }
     }
     const msg: Message = {

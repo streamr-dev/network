@@ -27,7 +27,7 @@ import { v4 } from 'uuid'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { Any } from '../../src/proto/google/protobuf/any'
-import { EthereumSigningModule, wait, waitForCondition } from '@streamr/utils'
+import { EthereumSigningModule, ipv4ToNumber, wait, waitForCondition } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { DhtAddress, createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
 
@@ -36,7 +36,7 @@ export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'no
     const connectivityResponse: ConnectivityResponse = {
         host: '127.0.0.1',
         natType: NatType.OPEN_INTERNET,
-        ipAddress: '127.0.0.1'
+        ipAddress: ipv4ToNumber('127.0.0.1')
     } 
 
     const ret = createPeerDescriptor(signingModule, connectivityResponse)
