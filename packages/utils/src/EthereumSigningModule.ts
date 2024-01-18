@@ -1,6 +1,6 @@
 import secp256k1 from 'secp256k1'
 import crypto from 'crypto'
-import { createSignatureWithBinaryKey, hash } from './signingUtils'
+import { createSignature, hash } from './signingUtils'
 import { ISigningModule } from './ISigningModule';
 
 export class EthereumSigningModule implements ISigningModule {
@@ -20,7 +20,7 @@ export class EthereumSigningModule implements ISigningModule {
     }
 
     public sign(data: Uint8Array): Uint8Array {
-        return createSignatureWithBinaryKey(data, this.privateKey)
+        return createSignature(data, this.privateKey)
     }
     
     // eslint-disable-next-line class-methods-use-this
