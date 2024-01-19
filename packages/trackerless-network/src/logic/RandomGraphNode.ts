@@ -308,8 +308,9 @@ export class RandomGraphNode extends EventEmitter<Events> {
             markAndCheckDuplicate(this.duplicateDetectors, msg.messageId!, msg.previousMessageRef)
         }
         this.emit('message', msg)
-        const avoidedBackPropagationNode = previousNode !== undefined && !this.config.temporaryConnectionRpcLocal.hasNode(previousNode) ? previousNode : null
-        this.config.propagation.feedUnseenMessage(msg, this.getPropagationTargets(msg), avoidedBackPropagationNode)
+        const shouldAvoidBackPropagation = previousNode !== undefined && !this.config.temporaryConnectionRpcLocal.hasNode(previousNode)
+        const avoidedNode = shouldAvoidBackPropagation ? previousNode : null
+        this.config.propagation.feedUnseenMessage(msg, this.getPropagationTargets(msg), avoidedNode)
     }
 
     inspect(peerDescriptor: PeerDescriptor): Promise<boolean> {
