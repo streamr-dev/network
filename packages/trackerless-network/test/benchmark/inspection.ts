@@ -1,10 +1,10 @@
 /* eslint-disable no-console */
 
-import { DhtNode, createRandomDhtAddress } from "@streamr/dht"
-import { NetworkNode, createNetworkNode } from "../../src/NetworkNode"
-import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, StreamMessageType, StreamPartIDUtils } from "@streamr/protocol"
-import { hexToBinary, utf8ToBinary, wait } from "@streamr/utils"
-import { sample } from "lodash"
+import { DhtNode, createRandomDhtAddress } from '@streamr/dht'
+import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
+import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, StreamMessageType, StreamPartIDUtils } from '@streamr/protocol'
+import { hexToBinary, utf8ToBinary, wait } from '@streamr/utils'
+import { sample } from 'lodash'
 
 let messageCounter = 0
 let inspectionCounter = 0
@@ -39,8 +39,6 @@ const run = async () => {
     }
     await Promise.all(nodes.map((node) => node.join(STREAM_PART_ID)))
     setInterval(async () => {
-        // console.log("num of (local) neighbors per node", nodes.map((node) => `${node.getNodeId()} ${node.getNeighbors(STREAM_PART_ID).length}`), nodes.map((node) => `${node.getNodeId()} ${node.getNeighbors(STREAM_PART_ID).map((neighbor) => nodes.find((node) => node.getNodeId() === neighbor)!.getNeighbors(STREAM_PART_ID).some((neighbor) => neighbor === node.getNodeId()))}`))
-        // console.log("num of (remote) neighbors per node", nodes.map((node) => `${node.getNodeId()} ${nodes.reduce((acc, curr) => acc + curr.getNeighbors(STREAM_PART_ID).filter((filt) => filt === node.getNodeId()).length, 0)}`))
         messageCounter += 1
         const streamMessage = new StreamMessage({
             messageId: new MessageID(
@@ -61,7 +59,7 @@ const run = async () => {
             signatureType: SignatureType.SECP256K1,
 
         })
-        console.log("Broadcasting...")
+        console.log('Broadcasting...')
         await nodes[0].broadcast(streamMessage)
     }, 5000)
 
@@ -87,8 +85,4 @@ const run = async () => {
     process.exit(0)
 }
 
-run().then(() => {
-    console.log('done')
-}).catch((err) => {
-    console.error(err)
-})
+run()
