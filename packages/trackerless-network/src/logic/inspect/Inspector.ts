@@ -66,7 +66,7 @@ export class Inspector {
             this.sessions.delete(nodeId)
             this.connectionLocker.unlockConnection(peerDescriptor, lockId)
         }
-        return success || session.getInspectedMessageCount() < 1
+        return success || session.getInspectedMessageCount() < 1 || session.onlyMarkedByInspectedNode()
     }
 
     markMessage(sender: DhtAddress, messageId: MessageID): void {
