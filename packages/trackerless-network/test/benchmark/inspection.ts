@@ -12,7 +12,7 @@ let failedInspections = 0
 
 const run = async () => {
     const nodes: NetworkNode[] = []
-    const numNodes = 50
+    const numNodes = 40
     const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
     const entryPoint = new DhtNode({
         nodeId: createRandomDhtAddress(),
