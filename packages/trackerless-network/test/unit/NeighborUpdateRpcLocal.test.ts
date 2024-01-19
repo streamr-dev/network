@@ -21,6 +21,17 @@ describe('NeighborUpdateRpcLocal', () => {
     let neighborFinder: NeighborFinder
     let rpcCommunicator: ListeningRpcCommunicator
 
+    const addNeighbors = (count: number) => {
+        for (let i = 0; i < count; i++) {
+            neighbors.add(new DeliveryRpcRemote(
+                localPeerDescriptor,
+                createMockPeerDescriptor(),
+                rpcCommunicator,
+                DeliveryRpcClient
+            ))
+        }
+    }
+
     beforeEach(() => {
         rpcCommunicator = new ListeningRpcCommunicator('mock', new MockTransport())
         neighbors = new NodeList(getNodeIdFromPeerDescriptor(localPeerDescriptor), neighborCount + 1)
@@ -45,20 +56,24 @@ describe('NeighborUpdateRpcLocal', () => {
     })
 
     it('response contains neighbor list of expected size', async () => {
-        for (let i = 0; i < neighborCount; i++) {
-            neighbors.add(new DeliveryRpcRemote(
-                localPeerDescriptor,
-                createMockPeerDescriptor(),
-                rpcCommunicator,
-                DeliveryRpcClient
-            ))
-        }
+        addNeighbors(neighborCount)
         const res = await rpcLocal.neighborUpdate({
             streamPartId,
             neighborDescriptors: [localPeerDescriptor],
             removeMe: false
         }, { incomingSourceDescriptor: createMockPeerDescriptor() } as any)
         expect(res.neighborDescriptors.length).toEqual(neighborCount)
+    })
+
+    it('updates contacts based on callers neighbors', async () => {
+        addNeighbors(neighborCount)
+        expect(nearbyNodeView.size()).toEqual(0)
+        await rpcLocal.neighborUpdate({
+            streamPartId,
+            neighborDescriptors: range(neighborCount).map(() => createMockPeerDescriptor()),
+            removeMe: false
+        }, { incomingSourceDescriptor: createMockPeerDescriptor() } as any)
+        expect(nearbyNodeView.size()).toEqual(4)
     })
 
     it('does not ask to be removed if caller is a neighbor', async () => {
@@ -97,20 +112,14 @@ describe('NeighborUpdateRpcLocal', () => {
             DeliveryRpcClient
         )
         neighbors.add(neighbor)
-        for (let i = 0; i < neighborCount; i++) {
-            neighbors.add(new DeliveryRpcRemote(
-                localPeerDescriptor,
-                createMockPeerDescriptor(),
-                rpcCommunicator,
-                DeliveryRpcClient
-            ))
-        }
+        addNeighbors(neighborCount)
         const res = await rpcLocal.neighborUpdate({
             streamPartId,
             neighborDescriptors: [localPeerDescriptor, ...range(neighborCount).map(() => createMockPeerDescriptor())],
             removeMe: false
         }, { incomingSourceDescriptor: caller } as any)
         expect(res.removeMe).toEqual(true)
+        expect(neighbors.has(getNodeIdFromPeerDescriptor(caller))).toEqual(false)
     })
 
 })
