@@ -309,8 +309,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         }
         this.emit('message', msg)
         const shouldAvoidBackPropagation = previousNode !== undefined && !this.config.temporaryConnectionRpcLocal.hasNode(previousNode)
-        const avoidedNode = shouldAvoidBackPropagation ? previousNode : null
-        this.config.propagation.feedUnseenMessage(msg, this.getPropagationTargets(msg), avoidedNode)
+        this.config.propagation.feedUnseenMessage(msg, this.getPropagationTargets(msg), shouldAvoidBackPropagation ? previousNode : null)
     }
 
     inspect(peerDescriptor: PeerDescriptor): Promise<boolean> {
