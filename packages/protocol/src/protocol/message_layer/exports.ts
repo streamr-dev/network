@@ -2,11 +2,16 @@ import MessageID from './MessageID'
 import MessageRef from './MessageRef'
 import StreamMessage, { StreamMessageAESEncrypted } from './StreamMessage'
 import { StreamMessageType } from './StreamMessage'
-import GroupKeyRequest, { GroupKeyRequestSerialized } from './GroupKeyRequest'
-import GroupKeyResponse, { GroupKeyResponseSerialized } from './GroupKeyResponse'
+import GroupKeyRequest from './GroupKeyRequest'
+import GroupKeyResponse from './GroupKeyResponse'
 import EncryptedGroupKey from './EncryptedGroupKey'
 import { createSignaturePayload } from './signature'
-import GroupKeyMessage from './GroupKeyMessage'
+import {
+    serializeGroupKeyRequest,
+    serializeGroupKeyResponse,
+    deserializeGroupKeyRequest,
+    deserializeGroupKeyResponse
+} from './groupKeySerialization'
 
 export * from './StreamMessage'
 
@@ -16,11 +21,12 @@ export {
     StreamMessage,
     StreamMessageType,
     StreamMessageAESEncrypted,
-    GroupKeyMessage,
     GroupKeyRequest,
-    GroupKeyRequestSerialized,
     GroupKeyResponse,
-    GroupKeyResponseSerialized,
     EncryptedGroupKey,
-    createSignaturePayload
+    createSignaturePayload,
+    serializeGroupKeyRequest,
+    serializeGroupKeyResponse,
+    deserializeGroupKeyRequest,
+    deserializeGroupKeyResponse
 }

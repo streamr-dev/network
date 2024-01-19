@@ -2,6 +2,7 @@ import { StreamID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@strea
 import { EthereumAddress, Logger, randomString, toEthereumAddress } from '@streamr/utils'
 import random from 'lodash/random'
 import without from 'lodash/without'
+import sample from 'lodash/sample'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { StreamrClientError } from '../StreamrClientError'
@@ -10,8 +11,9 @@ import { forEach, map, transformError } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { pull } from '../utils/PushBuffer'
 import { PushPipeline } from '../utils/PushPipeline'
-import { FetchHttpStreamResponseError, createQueryString, fetchHttpStream } from '../utils/utils'
+import { FetchHttpStreamResponseError, createQueryString, fetchLengthPrefixedFrameHttpBinaryStream } from '../utils/utils'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
+import { convertBytesToStreamMessage } from '@streamr/trackerless-network'
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 
@@ -175,8 +177,8 @@ export class Resends {
             throw new StreamrClientError(`no storage assigned: ${streamId}`, 'NO_STORAGE_NODES')
         }
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
-        const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
-        const url = createUrl(nodeUrl, resendType, streamPartId, query)
+        const nodeUrls = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).urls
+        const url = createUrl(sample(nodeUrls)!, resendType, streamPartId, query)
         const messageStream = raw ? new PushPipeline<StreamMessage, StreamMessage>() : this.messagePipelineFactory.createMessagePipeline({
             streamPartId,
             /*
@@ -188,10 +190,10 @@ export class Resends {
             getStorageNodes: async () => without(nodeAddresses, nodeAddress),
             config: (nodeAddresses.length === 1) ? { ...this.config, orderMessages: false } : this.config
         })
-        const lines = transformError(fetchHttpStream(url, abortSignal), getHttpErrorTransform())
+        const lines = transformError(fetchLengthPrefixedFrameHttpBinaryStream(url, abortSignal), getHttpErrorTransform())
         setImmediate(async () => {
             let count = 0
-            const messages = map(lines, (line: string) => StreamMessage.deserialize(line))
+            const messages = map(lines, (bytes: Uint8Array) => convertBytesToStreamMessage(bytes))
             await pull(
                 forEach(messages, () => count++),
                 messageStream

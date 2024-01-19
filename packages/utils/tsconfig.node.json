@@ -5,9 +5,5 @@
   },
   "include": [
     "src/**/*"
-  ],
-  "lib": [ 
-    "DOM",
-    "ESNext"
   ]
 }

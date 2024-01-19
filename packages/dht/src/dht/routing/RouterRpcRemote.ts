@@ -1,12 +1,10 @@
 import { Logger, areEqualBinaries } from '@streamr/utils'
 import { v4 } from 'uuid'
-import {
-    getNodeIdFromPeerDescriptor
-} from '../../helpers/peerIdFromPeerDescriptor'
 import { RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { RouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RpcRemote } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
+import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 const logger = new Logger(module)
 
@@ -19,7 +17,8 @@ export class RouterRpcRemote extends RpcRemote<RouterRpcClient> {
             message: params.message,
             requestId: params.requestId ?? v4(),
             reachableThrough: params.reachableThrough ?? [],
-            routingPath: params.routingPath
+            routingPath: params.routingPath,
+            parallelRootNodeIds: params.parallelRootNodeIds
         }
         const options = this.formDhtRpcOptions({
             connect: false
@@ -53,7 +52,8 @@ export class RouterRpcRemote extends RpcRemote<RouterRpcClient> {
             message: params.message,
             requestId: params.requestId ?? v4(),
             reachableThrough: params.reachableThrough ?? [],
-            routingPath: params.routingPath
+            routingPath: params.routingPath,
+            parallelRootNodeIds: params.parallelRootNodeIds
         }
         const options = this.formDhtRpcOptions({
             connect: false

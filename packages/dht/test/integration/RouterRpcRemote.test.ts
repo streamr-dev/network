@@ -4,14 +4,15 @@ import { Message, MessageType, RouteMessageAck, RouteMessageWrapper } from '../.
 import { RouterRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { createMockPeerDescriptor, createWrappedClosestPeersRequest, mockRouterRpc } from '../utils/utils'
+import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 const SERVICE_ID = 'test'
 
 describe('RemoteRouter', () => {
 
     let remoteRouter: RouterRpcRemote
-    let clientRpcCommunicator: RpcCommunicator
-    let serverRpcCommunicator: RpcCommunicator
+    let clientRpcCommunicator: RpcCommunicator<DhtCallContext>
+    let serverRpcCommunicator: RpcCommunicator<DhtCallContext>
     const clientPeerDescriptor = createMockPeerDescriptor()
     const serverPeerDescriptor = createMockPeerDescriptor()
 
@@ -45,7 +46,8 @@ describe('RemoteRouter', () => {
             sourcePeer: clientPeerDescriptor,
             target: serverPeerDescriptor.nodeId,
             reachableThrough: [],
-            routingPath: []
+            routingPath: [],
+            parallelRootNodeIds: []
         })
         expect(routable).toEqual(true)
     })
@@ -68,7 +70,8 @@ describe('RemoteRouter', () => {
             sourcePeer: clientPeerDescriptor,
             target: serverPeerDescriptor.nodeId,
             reachableThrough: [],
-            routingPath: []
+            routingPath: [],
+            parallelRootNodeIds: []
         })
         expect(routable).toEqual(false)
     })

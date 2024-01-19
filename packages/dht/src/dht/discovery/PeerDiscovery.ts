@@ -1,11 +1,10 @@
 import { DiscoverySession } from './DiscoverySession'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
-import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import { ConnectionManager } from '../../connection/ConnectionManager'
 import { PeerManager } from '../PeerManager'
-import { DhtAddress, createRandomDhtAddress } from '../../identifiers'
+import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
 import { ServiceID } from '../../types/ServiceID'
 
 interface PeerDiscoveryConfig {
@@ -17,6 +16,12 @@ interface PeerDiscoveryConfig {
     joinTimeout: number
     connectionManager?: ConnectionManager
     peerManager: PeerManager
+}
+
+export const createDistantDhtAddress = (address: DhtAddress): DhtAddress => {
+    const raw = getRawFromDhtAddress(address)
+    const flipped = raw.map((val) => ~val)
+    return getDhtAddressFromRaw(flipped)
 }
 
 const logger = new Logger(module)
@@ -37,14 +42,16 @@ export class PeerDiscovery {
 
     async joinDht(
         entryPoints: PeerDescriptor[],
-        doAdditionalRandomPeerDiscovery = true,
+        doAdditionalDistantPeerDiscovery = true,
         retry = true
     ): Promise<void> {
         const contactedPeers = new Set<DhtAddress>()
+        const distantJoinConfig = doAdditionalDistantPeerDiscovery 
+            ? { enabled: true, contactedPeers: new Set<DhtAddress>() } : { enabled: false } as const
         await Promise.all(entryPoints.map((entryPoint) => this.joinThroughEntryPoint(
             entryPoint,
             contactedPeers,
-            doAdditionalRandomPeerDiscovery,
+            distantJoinConfig,
             retry
         )))
     }
@@ -53,7 +60,7 @@ export class PeerDiscovery {
         entryPointDescriptor: PeerDescriptor,
         // Note that this set is mutated by DiscoverySession
         contactedPeers: Set<DhtAddress>,
-        doAdditionalRandomPeerDiscovery = true,
+        additionalDistantJoin: { enabled: true, contactedPeers: Set<DhtAddress> } | { enabled: false },
         retry = true
     ): Promise<void> {
         if (this.isStopped()) {
@@ -71,8 +78,8 @@ export class PeerDiscovery {
         this.config.peerManager.handleNewPeers([entryPointDescriptor])
         const targetId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
         const sessions = [this.createSession(targetId, contactedPeers)]
-        if (doAdditionalRandomPeerDiscovery) {
-            sessions.push(this.createSession(createRandomDhtAddress(), contactedPeers))
+        if (additionalDistantJoin.enabled) {
+            sessions.push(this.createSession(createDistantDhtAddress(targetId), additionalDistantJoin.contactedPeers))
         }
         await this.runSessions(sessions, entryPointDescriptor, retry)
         this.config.connectionManager?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
@@ -100,7 +107,7 @@ export class PeerDiscovery {
             logger.debug(`DHT join on ${this.config.serviceId} timed out`)
         } finally {
             if (!this.isStopped()) {
-                if (this.config.peerManager.getNumberOfNeighbors() === 0) {
+                if (this.config.peerManager.getNeighborCount() === 0) {
                     if (retry) {
                         // TODO should we catch possible promise rejection?
                         // TODO use config option or named constant?
@@ -121,7 +128,7 @@ export class PeerDiscovery {
         logger.debug(`Rejoining DHT ${this.config.serviceId}`)
         this.rejoinOngoing = true
         try {
-            await this.joinThroughEntryPoint(entryPoint, new Set())
+            await this.joinThroughEntryPoint(entryPoint, new Set(), { enabled: false })
             logger.debug(`Rejoined DHT successfully ${this.config.serviceId}!`)
         } catch (err) {
             logger.warn(`Rejoining DHT ${this.config.serviceId} failed`)

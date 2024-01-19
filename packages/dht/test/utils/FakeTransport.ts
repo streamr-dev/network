@@ -5,13 +5,16 @@ import { Message, PeerDescriptor } from '../../src/proto/packages/dht/protos/Dht
 class FakeTransport extends EventEmitter<TransportEvents> implements ITransport {
 
     private onSend: (msg: Message) => void
+    private readonly localPeerDescriptor: PeerDescriptor
 
-    constructor(onSend: (msg: Message) => void) {
+    constructor(peerDescriptor: PeerDescriptor, onSend: (msg: Message) => void) {
         super()
         this.onSend = onSend
+        this.localPeerDescriptor = peerDescriptor
     }
 
     async send(msg: Message): Promise<void> {
+        msg.sourceDescriptor = this.localPeerDescriptor
         this.onSend(msg)
     }
 
@@ -21,7 +24,7 @@ class FakeTransport extends EventEmitter<TransportEvents> implements ITransport 
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getAllConnectionPeerDescriptors(): PeerDescriptor[] {
+    getConnections(): PeerDescriptor[] {
         throw new Error('not implemented')
     }
 
@@ -34,8 +37,8 @@ export class FakeEnvironment {
 
     private transports: FakeTransport[] = []
 
-    createTransport(): ITransport {
-        const transport = new FakeTransport((msg) => {
+    createTransport(peerDescriptor: PeerDescriptor): ITransport {
+        const transport = new FakeTransport(peerDescriptor, (msg) => {
             this.transports.forEach((t) => t.emit('message', msg))
         })
         this.transports.push(transport)

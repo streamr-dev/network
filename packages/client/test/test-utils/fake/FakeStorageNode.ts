@@ -7,7 +7,7 @@ import {
     toStreamID,
     toStreamPartID
 } from '@streamr/protocol'
-import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, Multimap, toEthereumAddress, toLengthPrefixedFrame } from '@streamr/utils'
 import { once } from 'events'
 import express, { Request, Response } from 'express'
 import { Server } from 'http'
@@ -21,6 +21,7 @@ import { createMockMessage } from '../utils'
 import { FakeChain } from './FakeChain'
 import { FakeNetwork } from './FakeNetwork'
 import { FakeNetworkNode } from './FakeNetworkNode'
+import { convertStreamMessageToBytes } from '@streamr/trackerless-network'
 
 const MAX_TIMESTAMP = 8640000000000000 // https://262.ecma-international.org/5.1/#sec-15.9.1.1
 const MIN_SEQUENCE_NUMBER = 0
@@ -39,7 +40,7 @@ const startServer = async (
         const messages = getMessages(streamPartId, req.params.resendType as ResendType, req.query)
         try {
             for await (const msg of messages) {
-                res.write(`${msg.serialize()}\n`)
+                res.write(toLengthPrefixedFrame(convertStreamMessageToBytes(msg)))
             }
             res.end()
         } catch (err) {
@@ -107,7 +108,7 @@ export class FakeStorageNode extends FakeNetworkNode {
         })
         const port = (this.server.address() as AddressInfo).port
         this.chain.storageNodeMetadatas.set(this.getAddress(), {
-            http: `http://127.0.0.1:${port}`
+            urls: [`http://127.0.0.1:${port}`]
         })
         const storageNodeAssignmentStreamPermissions = new Multimap<EthereumAddress, StreamPermission>()
         storageNodeAssignmentStreamPermissions.add(this.getAddress(), StreamPermission.PUBLISH)

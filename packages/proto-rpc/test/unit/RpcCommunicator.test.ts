@@ -13,7 +13,7 @@ import { waitForCondition } from '@streamr/utils'
 import { Any } from '../../src/proto/google/protobuf/any'
 
 describe('RpcCommunicator', () => {
-    let rpcCommunicator: RpcCommunicator
+    let rpcCommunicator: RpcCommunicator<ProtoCallContext>
 
     let promises: ResultParts
     let request: RpcMessage

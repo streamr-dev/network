@@ -160,15 +160,18 @@ npm install
 
 All packages are released at the same time under the same version (except for internal dev-dependency packages).
 
-1. `git checkout testnet-two && git pull`
-2. `./update-versions.sh <SEMVER>` E.g. `./update-versions.sh 7.1.1`
-3. `npm run clean && npm install && npm run build && npm run versions`
+1. `git checkout testnet-three && git pull`
+2. (skip if beta) Read [CHANGELOG](CHANGELOG.md), decide new version, and edit file.
+3. `./update-versions.sh <SEMVER>` E.g. `./update-versions.sh 7.1.1`
+4. `npm run clean && npm install && npm run build && npm run versions`
    - Ensure output does not contain yellow or red markers
-4. Add files to staging `git add . -p`
-5. `./release-git-tags.sh <SEMVER>` E.g. `./release-git-tags.sh 7.1.1`
-6. Wait for pushed commit to pass CI validation
-7. Publish packages `./release.sh testnet-two`
-8. Update client API docs if major or minor change:
+5. Add files to staging `git add . -p`
+6. `./release-git-tags.sh <SEMVER>` E.g. `./release-git-tags.sh 7.1.1`
+7. Wait for pushed commit to pass CI validation
+8. Publish packages `./release.sh testnet-three`
+    - Use argument `beta` if publishing a beta version
+    - Use argument `latest` if publishing a stable version
+9. Update client API docs if major or minor change:
 ```bash
 cd packages/client
 npm run docs
