@@ -26,6 +26,22 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
         this.config = config
     }
 
+    private updateContacts(neighborDescriptors: PeerDescriptor[]): void {
+        const ownNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
+        const newPeerDescriptors = neighborDescriptors.filter((peerDescriptor) => {
+            const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+            return nodeId !== ownNodeId && !this.config.neighbors.getIds().includes(nodeId)
+        })
+        newPeerDescriptors.forEach((peerDescriptor) => this.config.nearbyNodeView.add(
+            new DeliveryRpcRemote(
+                this.config.localPeerDescriptor,
+                peerDescriptor,
+                this.config.rpcCommunicator,
+                DeliveryRpcClient
+            ))
+        )
+    }
+
     private createResponse(removeMe: boolean): NeighborUpdate {
         return {
             streamPartId: this.config.streamPartId,
@@ -38,29 +54,18 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
     async neighborUpdate(message: NeighborUpdate, context: ServerCallContext): Promise<NeighborUpdate> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
-        if (this.config.neighbors.has(senderId) 
-            && this.config.neighbors.size() > this.config.neighborCount
-            && message.neighborDescriptors.length > this.config.neighborCount
-        ) {
+        this.updateContacts(message.neighborDescriptors)
+        if (!this.config.neighbors.has(senderId)) {
             return this.createResponse(true)
-        } else if (this.config.neighbors.has(senderId)) {
-            const ownNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
-            const newPeerDescriptors = message.neighborDescriptors.filter((peerDescriptor) => {
-                const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
-                return nodeId !== ownNodeId && !this.config.neighbors.getIds().includes(nodeId)
-            })
-            newPeerDescriptors.forEach((peerDescriptor) => this.config.nearbyNodeView.add(
-                new DeliveryRpcRemote(
-                    this.config.localPeerDescriptor,
-                    peerDescriptor,
-                    this.config.rpcCommunicator,
-                    DeliveryRpcClient
-                ))
-            )
-            this.config.neighborFinder.start()
-            return this.createResponse(false)
         } else {
-            return this.createResponse(true)
+            const isOverNeighborCount = this.config.neighbors.size() > this.config.neighborCount
+                && message.neighborDescriptors.length > this.config.neighborCount    
+            if (!isOverNeighborCount) {
+                this.config.neighborFinder.start()
+            } else {
+                this.config.neighbors.remove(senderId)
+            }
+            return this.createResponse(isOverNeighborCount)
         }
     }
 }
