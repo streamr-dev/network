@@ -1,0 +1,16 @@
+name: release docker
+on:
+  workflow_dispatch:
+jobs:
+  broker-docker-image:
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      docker_file: Dockerfile.broker
+      image_name: streamr/broker-node
+      host_machine_platform: self-hosted
+      build_platforms: linux/amd64,linux/arm64
+      branch: ${{ github.ref_name }}
+      push_image: true
+    secrets:
+      dockerhub_username: ${{secrets.DOCKERHUB_USERNAME}}
+      dockerhub_token: ${{secrets.DOCKERHUB_TOKEN}}
