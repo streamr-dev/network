@@ -199,7 +199,7 @@ export class WebsocketConnector {
                             version
                         }
                         if (!this.abortController.signal.aborted) {
-                            return await sendConnectivityRequest(connectivityRequest, entryPoint)
+                            return await sendConnectivityRequest(connectivityRequest, entryPoint, version)
                         } else {
                             throw new Err.ConnectionFailed('ConnectivityChecker is destroyed')
                         }
