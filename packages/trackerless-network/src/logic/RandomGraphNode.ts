@@ -56,7 +56,7 @@ export interface StrictRandomGraphNodeConfig {
     neighborUpdateManager: NeighborUpdateManager
     propagation: Propagation
     rpcCommunicator: ListeningRpcCommunicator
-    neighborCount: number
+    neighborTargetCount: number
     inspector: Inspector
     temporaryConnectionRpcLocal: TemporaryConnectionRpcLocal
     isLocalNodeEntryPoint: () => boolean
@@ -185,7 +185,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
             return
         }
         this.updateNearbyNodeView(closestNodes)
-        if (this.config.neighbors.size() < this.config.neighborCount) {
+        if (this.config.neighbors.size() < this.config.neighborTargetCount) {
             this.config.neighborFinder.start()
         }
     }
@@ -238,7 +238,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 this.config.rpcRequestTimeout
             )
         ))
-        if (this.config.neighbors.size() < this.config.neighborCount) {
+        if (this.config.neighbors.size() < this.config.neighborTargetCount) {
             this.config.neighborFinder.start()
         }
     }
