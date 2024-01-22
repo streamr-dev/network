@@ -80,8 +80,7 @@ jobs:
             type=match,pattern=broker/(v.*),group=1,value=${{ env.broker_head_tag }}
             type=raw,value=dev,enable=${{ inputs.branch == 'brubeck' }}
             type=raw,value=dev-tatum,enable=${{ inputs.branch == 'main' }}
-            type=raw,value=testnet-two,enable=${{ inputs.branch == 'testnet-two' }}
-            type=raw,value=testnet-three,enable=${{ inputs.branch == 'testnet-three' }}
+            type=raw,value=${{ inputs.branch }}
 
       - name: Build
         if: ${{!inputs.push_image}}
