@@ -1,14 +1,16 @@
-import { MetricsContext } from "@streamr/utils"
-import { ConnectionManager } from "../../src/connection/ConnectionManager"
-import { DefaultConnectorFacade } from "../../src/connection/ConnectorFacade"
-import { MockTransport } from "../utils/mock/Transport"
-import { createMockPeerDescriptor } from "../utils/utils"
-import { connectAsync, sendConnectivityRequest } from "../../src/connection/connectivityChecker"
+import { MetricsContext } from '@streamr/utils'
+import { ConnectionManager } from '../../src/connection/ConnectionManager'
+import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
+import { MockTransport } from '../utils/mock/Transport'
+import { createMockPeerDescriptor } from '../utils/utils'
+import { sendConnectivityRequest } from '../../src/connection/connectivityChecker'
 import { version } from '../../package.json'
 
 describe('ConnectivityChecking', () => {
 
     let server: ConnectionManager
+    const PORT = 15000
+    const HOST = '127.0.0.1'
 
     beforeEach(async () => {
         server = new ConnectionManager({
@@ -17,22 +19,20 @@ describe('ConnectivityChecking', () => {
                     return {
                         ...createMockPeerDescriptor(),
                         websocket: {
-                            host: '127.0.0.1',
-                            port: 15000,
+                            host: HOST,
+                            port: PORT,
                             tls: false
                         }
                     }
                 },
+                websocketHost: HOST,
+                websocketPortRange: { min: PORT, max: PORT },
                 websocketServerEnableTls: false,
-                websocketPortRange: { min: 15000, max: 15000 },
-                websocketHost: '127.0.0.1',
                 transport: new MockTransport()
             }),
             metricsContext: new MetricsContext()
         })
         await server.start()
-
-    
     })
 
     afterEach(async () => {
@@ -41,8 +41,8 @@ describe('ConnectivityChecking', () => {
 
     it('connectivityCheck with compatible version', async () => {
         const request = {
-            host: '127.0.0.1',
-            port: 15000,
+            host: HOST,
+            port: PORT,
             tls: false,
             selfSigned: false
         }
@@ -50,10 +50,10 @@ describe('ConnectivityChecking', () => {
         expect(response.version).toEqual(version)
     })
 
-    it('connectivityCheck with non-compatible version', async () => {
+    it('connectivityCheck with incompatible version', async () => {
         const request = {
-            host: '127.0.0.1',
-            port: 15000,
+            host: HOST,
+            port: PORT,
             tls: false,
             selfSigned: false
         }
