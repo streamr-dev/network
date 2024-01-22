@@ -195,8 +195,7 @@ export class WebsocketConnector {
                             port: this.selectedPort!,
                             host: this.host,
                             tls: this.config.serverEnableTls,
-                            selfSigned,
-                            version
+                            selfSigned
                         }
                         if (!this.abortController.signal.aborted) {
                             return await sendConnectivityRequest(connectivityRequest, entryPoint, version)
