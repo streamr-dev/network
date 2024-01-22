@@ -46,7 +46,7 @@ describe('ConnectivityChecking', () => {
             tls: false,
             selfSigned: false
         }
-        const response = await sendConnectivityRequest(request, server.getLocalPeerDescriptor(), undefined as any)
+        const response = await sendConnectivityRequest(request, server.getLocalPeerDescriptor(), version)
         expect(response.version).toEqual(version)
     })
 
