@@ -3,6 +3,7 @@
 // tslint:disable
 import { NodeInfoResponse } from "./NetworkRpc";
 import { NodeInfoRequest } from "./NetworkRpc";
+import { CloseTemporaryConnection } from "./NetworkRpc";
 import { TemporaryConnectionResponse } from "./NetworkRpc";
 import { TemporaryConnectionRequest } from "./NetworkRpc";
 import { NeighborUpdate } from "./NetworkRpc";
@@ -68,6 +69,10 @@ export interface ITemporaryConnectionRpc<T = ServerCallContext> {
      * @generated from protobuf rpc: openConnection(TemporaryConnectionRequest) returns (TemporaryConnectionResponse);
      */
     openConnection(request: TemporaryConnectionRequest, context: T): Promise<TemporaryConnectionResponse>;
+    /**
+     * @generated from protobuf rpc: closeConnection(CloseTemporaryConnection) returns (google.protobuf.Empty);
+     */
+    closeConnection(request: CloseTemporaryConnection, context: T): Promise<Empty>;
 }
 /**
  * @generated from protobuf service NodeInfoRpc

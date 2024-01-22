@@ -5,6 +5,7 @@ import { NodeInfoRpc } from "./NetworkRpc";
 import type { NodeInfoResponse } from "./NetworkRpc";
 import type { NodeInfoRequest } from "./NetworkRpc";
 import { TemporaryConnectionRpc } from "./NetworkRpc";
+import type { CloseTemporaryConnection } from "./NetworkRpc";
 import type { TemporaryConnectionResponse } from "./NetworkRpc";
 import type { TemporaryConnectionRequest } from "./NetworkRpc";
 import { NeighborUpdateRpc } from "./NetworkRpc";
@@ -160,6 +161,10 @@ export interface ITemporaryConnectionRpcClient {
      * @generated from protobuf rpc: openConnection(TemporaryConnectionRequest) returns (TemporaryConnectionResponse);
      */
     openConnection(input: TemporaryConnectionRequest, options?: RpcOptions): UnaryCall<TemporaryConnectionRequest, TemporaryConnectionResponse>;
+    /**
+     * @generated from protobuf rpc: closeConnection(CloseTemporaryConnection) returns (google.protobuf.Empty);
+     */
+    closeConnection(input: CloseTemporaryConnection, options?: RpcOptions): UnaryCall<CloseTemporaryConnection, Empty>;
 }
 /**
  * @generated from protobuf service TemporaryConnectionRpc
@@ -176,6 +181,13 @@ export class TemporaryConnectionRpcClient implements ITemporaryConnectionRpcClie
     openConnection(input: TemporaryConnectionRequest, options?: RpcOptions): UnaryCall<TemporaryConnectionRequest, TemporaryConnectionResponse> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
         return stackIntercept<TemporaryConnectionRequest, TemporaryConnectionResponse>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: closeConnection(CloseTemporaryConnection) returns (google.protobuf.Empty);
+     */
+    closeConnection(input: CloseTemporaryConnection, options?: RpcOptions): UnaryCall<CloseTemporaryConnection, Empty> {
+        const method = this.methods[1], opt = this._transport.mergeOptions(options);
+        return stackIntercept<CloseTemporaryConnection, Empty>("unary", this._transport, method, opt, input);
     }
 }
 /**
