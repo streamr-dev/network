@@ -198,6 +198,7 @@ message ConnectivityResponse {
   string natType = 2;
   ConnectivityMethod websocket = 3;
   uint32 ipAddress = 4;
+  string version = 5;
 }
 
 message HandshakeRequest {

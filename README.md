@@ -6,7 +6,7 @@
 
 # Network
 
-Monorepo containing all the main components of Streamr Network.
+Monorepo containing the main components of Streamr Network.
 
 ## Table of Contents
 - [Packages](#packages)
@@ -22,17 +22,18 @@ Monorepo containing all the main components of Streamr Network.
 * [cli-tools](packages/cli-tools/README.md) (@streamr/cli-tools)
 
 ### Internal
-* [trackerless-network](packages/trackerless-network/README.md) (@streamr/trackerless-network)
-* [dht](packages/dht/README.md) (@streamr/dht)
-* [proto-rpc](packages/proto-rpc/README.md) (@streamr/proto-rpc)
-* [protocol](packages/protocol/README.md) (@streamr/protocol)
+* [browser-test-runner](packages/browser-test-runner/index.js) (@streamr/browser-test-runner)
 * [utils](packages/utils/README.md) (@streamr/utils)
 * [test-utils](packages/test-utils/README.md) (@streamr/test-utils)
-* [browser-test-runner](packages/browser-test-runner/index.js) (@streamr/browser-test-runner)
+* [protocol](packages/protocol/README.md) (@streamr/protocol)
+* [proto-rpc](packages/proto-rpc/README.md) (@streamr/proto-rpc)
+* [autocertifier-client](packages/autocertifier-client/README.md) (@streamr/autocertifier-client)
+* [dht](packages/dht/README.md) (@streamr/dht)
+* [autocertifier-server](packages/autocertifier-server/README.md) (@streamr/autocertifier-server)
+* [trackerless-network](packages/trackerless-network/README.md) (@streamr/trackerless-network)
 
 ## NPM scripts
-| Node.js `16.13.x` is the minimum required version. Node.js `18.12.x`, NPM `8.x` and later versions are recommended. |
-|---------------------------------------------------------------------------------------------------------------------|
+Node.js version 20 is recommended.
 
 The monorepo is managed using [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces).
 

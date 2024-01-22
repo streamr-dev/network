@@ -16,6 +16,7 @@ interface NeighborUpdateManagerConfig {
     streamPartId: StreamPartID
     rpcCommunicator: ListeningRpcCommunicator
     neighborUpdateInterval: number
+    neighborCount: number
 }
 
 const logger = new Logger(module)

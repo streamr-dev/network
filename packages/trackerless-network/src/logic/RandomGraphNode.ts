@@ -14,6 +14,7 @@ import {
     TemporaryConnectionRequest,
     TemporaryConnectionResponse,
     MessageID,
+    CloseTemporaryConnection,
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { NodeList } from './NodeList'
 import { DeliveryRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -174,6 +175,8 @@ export class RandomGraphNode extends EventEmitter<Events> {
             (req: LeaveStreamPartNotice, context) => this.deliveryRpcLocal.leaveStreamPartNotice(req, context))
         this.config.rpcCommunicator.registerRpcMethod(TemporaryConnectionRequest, TemporaryConnectionResponse, 'openConnection',
             (req: TemporaryConnectionRequest, context) => this.config.temporaryConnectionRpcLocal.openConnection(req, context))
+        this.config.rpcCommunicator.registerRpcNotification(CloseTemporaryConnection, 'closeConnection',
+            (req: TemporaryConnectionRequest, context) => this.config.temporaryConnectionRpcLocal.closeConnection(req, context))
     }
 
     private newContact(closestNodes: PeerDescriptor[]): void {
