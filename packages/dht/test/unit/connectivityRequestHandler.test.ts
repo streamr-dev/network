@@ -1,4 +1,4 @@
-import { waitForCondition } from '@streamr/utils'
+import { ipv4ToNumber, waitForCondition } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { once } from 'events'
 import { Server as HttpServer, createServer as createHttpServer } from 'http'
@@ -34,8 +34,9 @@ describe('connectivityRequestHandler', () => {
     it('happy path', async () => {
         const connection: any = new EventEmitter()
         connection.send = jest.fn()
-
-        attachConnectivityRequestHandler(connection as any)
+        connection.getRemoteIp = () => HOST
+        
+        attachConnectivityRequestHandler(connection)
         const request: Message = {
             serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
             messageType: MessageType.CONNECTIVITY_REQUEST,
@@ -60,6 +61,7 @@ describe('connectivityRequestHandler', () => {
                         port: PORT,
                         tls: false
                     },
+                    ipAddress: ipv4ToNumber(HOST)
                 },
                 oneofKind: 'connectivityResponse'
             },

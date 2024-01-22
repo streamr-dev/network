@@ -74,10 +74,6 @@ import { MessageType } from "@protobuf-ts/runtime";
  *     if (any.is(Foo.class)) {
  *       foo = any.unpack(Foo.class);
  *     }
- *     // or ...
- *     if (any.isSameTypeAs(Foo.getDefaultInstance())) {
- *       foo = any.unpack(Foo.getDefaultInstance());
- *     }
  *
  *  Example 3: Pack and unpack a message in Python.
  *
@@ -92,13 +88,10 @@ import { MessageType } from "@protobuf-ts/runtime";
  *  Example 4: Pack and unpack a message in Go
  *
  *      foo := &pb.Foo{...}
- *      any, err := anypb.New(foo)
- *      if err != nil {
- *        ...
- *      }
+ *      any, err := ptypes.MarshalAny(foo)
  *      ...
  *      foo := &pb.Foo{}
- *      if err := any.UnmarshalTo(foo); err != nil {
+ *      if err := ptypes.UnmarshalAny(any, foo); err != nil {
  *        ...
  *      }
  *
@@ -107,6 +100,7 @@ import { MessageType } from "@protobuf-ts/runtime";
  * methods only use the fully qualified type name after the last '/'
  * in the type URL, for example "foo.bar.com/x/y.z" will yield type
  * name "y.z".
+ *
  *
  * JSON
  * ====
@@ -164,8 +158,7 @@ export interface Any {
      *
      * Note: this functionality is not currently available in the official
      * protobuf release, and it is not used for type URLs beginning with
-     * type.googleapis.com. As of May 2023, there are no widely used type server
-     * implementations and no plans to implement one.
+     * type.googleapis.com.
      *
      * Schemes other than `http`, `https` (or the empty scheme) might be
      * used with implementation specific semantics.

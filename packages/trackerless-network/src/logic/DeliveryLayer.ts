@@ -18,7 +18,7 @@ import {
 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
-import { ProxyDirection, StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { ProxyDirection, StreamPartitionInfo, StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Layer0Node } from './Layer0Node'
 import { Layer1Node } from './Layer1Node'
 import { RandomGraphNode } from './RandomGraphNode'
@@ -283,6 +283,20 @@ export class DeliveryLayer extends EventEmitter<Events> {
         return false
     }
 
+    // TODO inline this method?
+    getNodeInfo(): StreamPartitionInfo[] {
+        const streamParts = Array.from(this.streamParts.entries()).filter(([_, node]) => node.proxied === false)
+        return streamParts.map(([streamPartId]) => {
+            const stream = this.streamParts.get(streamPartId)! as { node: RandomGraphNode, layer1Node: Layer1Node }
+            return {
+                id: streamPartId,
+                controlLayerNeighbors: stream.layer1Node.getNeighbors(),
+                deliveryLayerNeighbors: stream.node.getNeighbors()
+            }
+        })
+
+    }
+
     setStreamPartEntryPoints(streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): void {
         this.knownStreamPartEntryPoints.set(streamPartId, entryPoints)
     }
@@ -313,7 +327,7 @@ export class DeliveryLayer extends EventEmitter<Events> {
     getNeighbors(streamPartId: StreamPartID): DhtAddress[] {
         const streamPart = this.streamParts.get(streamPartId)
         return (streamPart !== undefined) && (streamPart.proxied === false)
-            ? streamPart.node.getNeighborIds()
+            ? streamPart.node.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
             : []
     }
 

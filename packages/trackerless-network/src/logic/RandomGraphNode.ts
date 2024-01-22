@@ -333,11 +333,11 @@ export class RandomGraphNode extends EventEmitter<Events> {
         return this.config.handshaker.getOngoingHandshakes().size
     }
 
-    getNeighborIds(): DhtAddress[] {
+    getNeighbors(): PeerDescriptor[] {
         if (!this.started && this.isStopped()) {
             return []
         }
-        return this.config.neighbors.getIds()
+        return this.config.neighbors.getAll().map((n) => n.getPeerDescriptor())
     }
 
     getNearbyNodeView(): NodeList {

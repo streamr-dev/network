@@ -105,15 +105,15 @@ export class StreamMessageTranslator {
         let previousMessageRef: MessageRef | undefined = undefined
         if (msg.prevMsgRef) {
             previousMessageRef = {
-                timestamp: msg.prevMsgRef!.timestamp,
-                sequenceNumber: msg.prevMsgRef!.sequenceNumber,
+                timestamp: msg.prevMsgRef.timestamp,
+                sequenceNumber: msg.prevMsgRef.sequenceNumber,
             }
         }
         let newGroupKey: GroupKey | undefined = undefined
         if (msg.newGroupKey) {
             newGroupKey = {
-                id: msg.newGroupKey!.id,
-                data: msg.newGroupKey!.data
+                id: msg.newGroupKey.id,
+                data: msg.newGroupKey.data
             }
         }
         const translated: StreamMessage = {

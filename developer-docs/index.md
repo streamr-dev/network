@@ -2,6 +2,10 @@
 
 ## Coding conventions
 
+### Use the strictest access modifier that applies
+Fields and methods of classes should be made `private` by default, unless there is an actual need for them to be
+publicly accessible.
+
 ### Immutability
 Prefer immutable variables and fields over mutable ones. For example, use `const` for variables and `readonly` for
 fields. Copy arrays and objects when mutating them.

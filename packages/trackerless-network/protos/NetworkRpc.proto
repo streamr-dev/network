@@ -28,6 +28,10 @@ service TemporaryConnectionRpc {
   rpc openConnection (TemporaryConnectionRequest) returns (TemporaryConnectionResponse);
 }
 
+service NodeInfoRpc {
+  rpc getInfo (NodeInfoRequest) returns (NodeInfoResponse);
+}
+
 message MessageID {
   string streamId = 1;
   int32 streamPartition = 2;
@@ -148,4 +152,23 @@ message TemporaryConnectionResponse {
 enum ProxyDirection {
   PUBLISH = 0;
   SUBSCRIBE = 1;
+}
+
+message StreamPartitionInfo {
+  string id = 1;
+  repeated dht.PeerDescriptor controlLayerNeighbors = 2;
+  repeated dht.PeerDescriptor deliveryLayerNeighbors = 3;
+}
+
+message ControlLayerInfo {
+  repeated dht.PeerDescriptor neighbors = 1;
+  repeated dht.PeerDescriptor connections = 2;
+}
+
+message NodeInfoRequest {}
+
+message NodeInfoResponse {
+  dht.PeerDescriptor peerDescriptor = 1;
+  repeated StreamPartitionInfo streamPartitions = 2;
+  optional ControlLayerInfo controlLayer = 3;
 }

@@ -162,7 +162,7 @@ run().then(() => {
     console.log(layer0Node.getConnectionCount())
     const streamPartDelivery = deliveryLayer.getStreamPartDelivery(streamParts[0])! as { layer1Node: Layer1Node, node: RandomGraphNode }
     console.log(streamPartDelivery.layer1Node.getNeighbors())
-    console.log(streamPartDelivery.node.getNeighborIds())
+    console.log(streamPartDelivery.node.getNeighbors())
     console.log(nodes[nodes.length - 1])
     if (publishInterval) {
         clearInterval(publishInterval)

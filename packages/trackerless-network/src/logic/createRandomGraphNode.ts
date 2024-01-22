@@ -34,7 +34,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const minPropagationTargets = config.minPropagationTargets ?? 2
     const acceptProxyConnections = config.acceptProxyConnections ?? false
     const neighborUpdateInterval = config.neighborUpdateInterval ?? 10000
-    const nearbyNodeView = config.nearbyNodeView ?? new NodeList(ownNodeId, neighborCount + 1)
+    const nearbyNodeView = config.nearbyNodeView ?? new NodeList(ownNodeId, maxContactCount)
     const randomNodeView = config.randomNodeView ?? new NodeList(ownNodeId, maxContactCount)
     const neighbors = config.neighbors ?? new NodeList(ownNodeId, maxContactCount)
 
