@@ -83,8 +83,7 @@ export const sendConnectivityRequest = async (
                         const remoteVersion = connectivityResponseMessage.version
                         outgoingConnection!.off('data', listener)
                         clearTimeout(timeoutId)
-                        // remoteVersion can be undefined if the remote peer is running an older version
-                        if (remoteVersion !== undefined && isCompatibleVersion(localVersion, remoteVersion)) {
+                        if (isCompatibleVersion(localVersion, remoteVersion)) {
                             resolve(connectivityResponseMessage)
                         } else {
                             reject(`Invalid version: ${remoteVersion}`)
