@@ -9,6 +9,7 @@ import { CONNECTIVITY_CHECKER_SERVICE_ID, connectAsync } from './connectivityChe
 import { IConnection } from './IConnection'
 import { ServerWebsocket } from './websocket/ServerWebsocket'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
+import { version } from '../../package.json'
 
 const logger = new Logger(module)
 
@@ -54,7 +55,8 @@ const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, co
         connectivityResponseMessage = {
             host,
             natType: NatType.UNKNOWN,
-            ipAddress: ipv4ToNumber(ipAddress)
+            ipAddress: ipv4ToNumber(ipAddress),
+            version
         }
     }
     if (outgoingConnection) {
@@ -66,7 +68,8 @@ const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, co
             host,
             natType: NatType.OPEN_INTERNET,
             websocket: { host, port: connectivityRequest.port, tls: connectivityRequest.tls },
-            ipAddress: ipv4ToNumber(ipAddress)
+            ipAddress: ipv4ToNumber(ipAddress),
+            version
         }
     }
     const msg: Message = {

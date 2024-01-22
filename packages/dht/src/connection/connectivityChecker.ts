@@ -8,6 +8,7 @@ import {
 import { ConnectionEvents, IConnection } from './IConnection'
 import { ClientWebsocket } from './websocket/ClientWebsocket'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
+import { isCompatibleVersion } from '../helpers/versionCompatibility'
 
 const logger = new Logger(module)
 
@@ -36,7 +37,8 @@ const CONNECTIVITY_CHECKER_TIMEOUT = 5000
 
 export const sendConnectivityRequest = async (
     request: ConnectivityRequest,
-    entryPoint: PeerDescriptor
+    entryPoint: PeerDescriptor,
+    localVersion: string
 ): Promise<ConnectivityResponse> => {
     let outgoingConnection: IConnection
     const wsServerInfo = {
@@ -78,9 +80,15 @@ export const sendConnectivityRequest = async (
                     if (message.body.oneofKind === 'connectivityResponse') {
                         logger.debug('ConnectivityResponse received: ' + JSON.stringify(Message.toJson(message)))
                         const connectivityResponseMessage = message.body.connectivityResponse
+                        const remoteVersion = connectivityResponseMessage.version
                         outgoingConnection!.off('data', listener)
                         clearTimeout(timeoutId)
-                        resolve(connectivityResponseMessage)
+                        // remoteVersion can be undefined if the remote peer is running an older version
+                        if (remoteVersion !== undefined && isCompatibleVersion(localVersion, remoteVersion)) {
+                            resolve(connectivityResponseMessage)
+                        } else {
+                            reject(`Invalid version: ${remoteVersion}`)
+                        }
                     } else {
                         return
                     }

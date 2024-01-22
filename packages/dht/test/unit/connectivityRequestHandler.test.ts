@@ -6,6 +6,7 @@ import { server as WsServer } from 'websocket'
 import { CONNECTIVITY_CHECKER_SERVICE_ID } from '../../src/connection/connectivityChecker'
 import { attachConnectivityRequestHandler } from '../../src/connection/connectivityRequestHandler'
 import { Message, MessageType } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { version } from '../../package.json'
 
 const HOST = '127.0.0.1'
 const PORT = 15001
@@ -61,7 +62,8 @@ describe('connectivityRequestHandler', () => {
                         port: PORT,
                         tls: false
                     },
-                    ipAddress: ipv4ToNumber(HOST)
+                    ipAddress: ipv4ToNumber(HOST),
+                    version
                 },
                 oneofKind: 'connectivityResponse'
             },
