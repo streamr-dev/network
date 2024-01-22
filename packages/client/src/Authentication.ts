@@ -2,12 +2,11 @@ import type { Signer } from '@ethersproject/abstract-signer'
 import { Provider, Web3Provider } from '@ethersproject/providers'
 import { computeAddress } from '@ethersproject/transactions'
 import { Wallet } from '@ethersproject/wallet'
-import { EthereumAddress, hexToBinary, toEthereumAddress, wait } from '@streamr/utils'
+import { EthereumAddress, hexToBinary, toEthereumAddress, wait, createSignature } from '@streamr/utils'
 import pMemoize from 'p-memoize'
 import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'
 import { getStreamRegistryChainProviders } from './Ethereum'
 import { pLimitFn } from './utils/promises'
-import { sign } from './utils/signingUtils'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 
@@ -16,7 +15,7 @@ export type SignerWithProvider = Signer & { readonly provider: Provider }
 export interface Authentication {
     // always in lowercase
     getAddress: () => Promise<EthereumAddress>
-    createMessageSignature: (payload: string) => Promise<Uint8Array>
+    createMessageSignature: (payload: Uint8Array) => Promise<Uint8Array>
     getStreamRegistryChainSigner: () => Promise<SignerWithProvider>
 }
 
@@ -24,7 +23,7 @@ export const createPrivateKeyAuthentication = (key: string, config: Pick<StrictS
     const address = toEthereumAddress(computeAddress(key))
     return {
         getAddress: async () => address,
-        createMessageSignature: async (payload: string) => sign(payload, key),
+        createMessageSignature: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
         getStreamRegistryChainSigner: async () => {
             const primaryProvider = getStreamRegistryChainProviders(config)[0]
             return new Wallet(key, primaryProvider)
@@ -55,7 +54,7 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                     throw new Error('no addresses connected and selected in the custom authentication provider')
                 }
             }),
-            createMessageSignature: pLimitFn(async (payload: string) => {
+            createMessageSignature: pLimitFn(async (payload: Uint8Array) => {
                 // sign one at a time & wait a moment before asking for next signature
                 // otherwise MetaMask extension may not show the prompt window
                 const sig = await signer.signMessage(payload)

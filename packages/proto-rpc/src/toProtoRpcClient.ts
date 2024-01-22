@@ -20,10 +20,27 @@ type ReplaceReturnTypes<T, Replacements extends DecoratorMapType<T>> = {
 export type ClassType = Record<any | symbol | number, (...args: any) => any> & object | Indexable
 
 type ProtoRpcRealApi<T extends ClassType> = {
-    [k in keyof T as T[k] extends Function ? k : never]:
-    (...args: Parameters<T[k]>) => (
-        Promise<Empty> extends (ReturnType<T[k]>)['response'] ? Promise<void> :
-        (ReturnType<T[k]>)['response'])
+    [k in keyof T as T[k] extends Function
+        ? k
+        : never]:
+    
+    T[k] extends (...args: infer A) => infer R 
+        // if T[k] is a function
+        ? R extends { response: Promise<infer P> }
+            // if T[k] returns a ptotobuf-ts response, test if P extends Empty
+            ? Required<P> extends Empty
+                // if P extends Empty one way test if it extends Empty also the other way
+                ? Empty extends Required<P>
+                    // if P extends Empty also the other way, then type T[k] as notification 
+                    ? (...args: A) => Promise<void>
+                    // else type T[k] as rpc call
+                    : (...args: A) => Promise<P>
+                // else type T[k] as rpc call
+                : (...args: A) => Promise<P>
+            // else if T[k] returns a non-protobuf-ts response (impossible case)
+            : never
+        // else if T[k] is not a function (impossible case)
+        : never
 }
 
 interface DecoratorType<T, L > { new(parent: T): L }
@@ -42,7 +59,7 @@ type DecoratorMapType<T> = { [k in keyof T as
         : never       
 }
 
-export type ProtoRpcClient<T, M extends DecoratorMapType<T>> = ReplaceReturnTypes<ProtoRpcRealApi<T & ClassType>, M>
+export type ProtoRpcClient<T, M extends DecoratorMapType<T> = Object> = ReplaceReturnTypes<ProtoRpcRealApi<T & ClassType>, M>
 
 export function toProtoRpcClient<T extends ServiceInfo & ClassType, 
     O extends DecoratorMapType<T>>(orig: T,

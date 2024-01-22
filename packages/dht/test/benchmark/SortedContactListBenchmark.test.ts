@@ -2,21 +2,22 @@
 
 import KBucket from 'k-bucket'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
-import crypto from 'crypto'
-import { NodeID, getNodeIdFromBinary } from '../../src/helpers/nodeId'
+import { DhtAddress, DhtAddressRaw, createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
 
 const NUM_ADDS = 1000
+
 interface Item {
-    id: Uint8Array
+    id: DhtAddressRaw
     vectorClock: number
-    getNodeId: () => NodeID
+    getNodeId: () => DhtAddress
 }
 
 const createRandomItem = (index: number): Item => {
-    const rand = new Uint8Array(crypto.randomBytes(20))
+    const nodeId = createRandomDhtAddress()
+    const nodeIdRaw = getRawFromDhtAddress(nodeId)
     return {
-        getNodeId: () => getNodeIdFromBinary(rand),
-        id: rand,
+        getNodeId: () => nodeId,
+        id: nodeIdRaw,
         vectorClock: index
     }
 }
@@ -31,13 +32,13 @@ function shuffleArray<T>(array: T[]): T[] {
 
 describe('SortedContactListBenchmark', () => {
 
-    it('adds ' + NUM_ADDS + ' random peerIDs', async () => {
+    it('adds ' + NUM_ADDS + ' random nodeIds', async () => {
         const randomIds = []
         for (let i = 0; i < NUM_ADDS; i++) {
             randomIds.push(createRandomItem(i))
         }
         const list = new SortedContactList({
-            referenceId: getNodeIdFromBinary(crypto.randomBytes(20)),
+            referenceId: createRandomDhtAddress(),
             allowToContainReferenceId: true,
             emitEvents: true
         })
@@ -49,7 +50,7 @@ describe('SortedContactListBenchmark', () => {
         console.timeEnd('SortedContactList.addContact() with emitEvents=true')
 
         const list2 = new SortedContactList({
-            referenceId: getNodeIdFromBinary(crypto.randomBytes(20)),
+            referenceId: createRandomDhtAddress(),
             allowToContainReferenceId: true,
             emitEvents: false
         })
@@ -60,7 +61,7 @@ describe('SortedContactListBenchmark', () => {
         }
         console.timeEnd('SortedContactList.addContact() with emitEvents=false')
 
-        const kBucket = new KBucket<Item>({ localNodeId: crypto.randomBytes(20) })
+        const kBucket = new KBucket<Item>({ localNodeId: getRawFromDhtAddress(createRandomDhtAddress()) })
         console.time('KBucket.add()')
         for (let i = 0; i < NUM_ADDS; i++) {
             kBucket.add(randomIds[i])
@@ -76,14 +77,14 @@ describe('SortedContactListBenchmark', () => {
 
         console.time('kBucket closest()')
         for (let i = 0; i < NUM_ADDS; i++) {
-            kBucket.closest(crypto.randomBytes(20), 20)
+            kBucket.closest(getRawFromDhtAddress(createRandomDhtAddress()), 20)
         }
         console.timeEnd('kBucket closest()')
 
         console.time('SortedContactList.getClosestContacts() with emitEvents=true')
         for (let i = 0; i < NUM_ADDS; i++) {
             const closest = new SortedContactList<Item>({
-                referenceId: getNodeIdFromBinary(crypto.randomBytes(20)),
+                referenceId: createRandomDhtAddress(),
                 allowToContainReferenceId: true,
                 emitEvents: true
             })
@@ -97,7 +98,7 @@ describe('SortedContactListBenchmark', () => {
         console.time('SortedContactList.getClosestContacts() with emitEvents=false')
         for (let i = 0; i < NUM_ADDS; i++) {
             const closest = new SortedContactList<Item>({
-                referenceId: getNodeIdFromBinary(crypto.randomBytes(20)),
+                referenceId: createRandomDhtAddress(),
                 allowToContainReferenceId: true,
                 emitEvents: false
             })
@@ -111,7 +112,7 @@ describe('SortedContactListBenchmark', () => {
         console.time('SortedContactList.getClosestContacts() with emitEvents=false and lodash')
         for (let i = 0; i < NUM_ADDS; i++) {
             const closest = new SortedContactList<Item>({
-                referenceId: getNodeIdFromBinary(crypto.randomBytes(20)),
+                referenceId: createRandomDhtAddress(),
                 allowToContainReferenceId: true,
                 emitEvents: false
             })
@@ -125,7 +126,7 @@ describe('SortedContactListBenchmark', () => {
         console.time('SortedContactList.getClosestContacts() with emitEvents=false and addContacts()')
         for (let i = 0; i < NUM_ADDS; i++) {
             const closest = new SortedContactList<Item>({
-                referenceId: getNodeIdFromBinary(crypto.randomBytes(20)),
+                referenceId: createRandomDhtAddress(),
                 allowToContainReferenceId: true,
                 emitEvents: false
             })
@@ -139,10 +140,10 @@ describe('SortedContactListBenchmark', () => {
         const shuffled = shuffleArray(kBucket.toArray())
         console.time('kbucket add and closest')
         for (let i = 0; i < NUM_ADDS; i++) {
-            const bucket2 = new KBucket<Item>({ localNodeId: crypto.randomBytes(20) })
+            const bucket2 = new KBucket<Item>({ localNodeId: getRawFromDhtAddress(createRandomDhtAddress()) })
 
             shuffled.forEach((contact) => bucket2.add(contact))
-            bucket2.closest(crypto.randomBytes(20), 20)
+            bucket2.closest(getRawFromDhtAddress(createRandomDhtAddress()), 20)
         }
         console.timeEnd('kbucket add and closest')
 

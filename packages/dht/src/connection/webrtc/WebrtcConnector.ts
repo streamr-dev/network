@@ -13,15 +13,11 @@ import { ManagedWebrtcConnection } from '../ManagedWebrtcConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
 import { ManagedConnection } from '../ManagedConnection'
-import {
-    areEqualPeerDescriptors,
-    getNodeIdFromPeerDescriptor,
-    peerIdFromPeerDescriptor
-} from '../../helpers/peerIdFromPeerDescriptor'
 import { PortRange } from '../ConnectionManager'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { WebrtcConnectorRpcLocal } from './WebrtcConnectorRpcLocal'
-import { NodeID } from '../../helpers/nodeId'
+import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { getOfferer } from '../../helpers/offering'
 
 const logger = new Logger(module)
 
@@ -58,7 +54,7 @@ export class WebrtcConnector {
 
     private static readonly WEBRTC_CONNECTOR_SERVICE_ID = 'system/webrtc-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
-    private readonly ongoingConnectAttempts: Map<NodeID, ManagedWebrtcConnection> = new Map()
+    private readonly ongoingConnectAttempts: Map<DhtAddress, ManagedWebrtcConnection> = new Map()
     private localPeerDescriptor?: PeerDescriptor
     private stopped = false
     private config: WebrtcConnectorConfig
@@ -146,7 +142,9 @@ export class WebrtcConnector {
             portRange: this.config.portRange
         })
 
-        const offering = this.isOffering(targetPeerDescriptor)
+        const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor!)
+        const targetNodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
+        const offering = (getOfferer(localNodeId, targetNodeId) === 'local')
         let managedConnection: ManagedWebrtcConnection
 
         if (offering) {
@@ -157,7 +155,7 @@ export class WebrtcConnector {
 
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
 
-        this.ongoingConnectAttempts.set(getNodeIdFromPeerDescriptor(targetPeerDescriptor), managedConnection)
+        this.ongoingConnectAttempts.set(targetNodeId, managedConnection)
 
         const delFunc = () => {
             this.ongoingConnectAttempts.delete(nodeId)
@@ -179,16 +177,16 @@ export class WebrtcConnector {
                 candidate = replaceInternalIpWithExternalIp(candidate, this.config.externalIp)
                 logger.debug(`onLocalCandidate injected external ip ${candidate} ${mid}`)
             }
-            remoteConnector.sendIceCandidate(candidate, mid, connection.connectionId.toString())
+            remoteConnector.sendIceCandidate(candidate, mid, connection.connectionId)
         })
 
         if (offering) {
             connection.once('localDescription', (description: string) => {
-                remoteConnector.sendRtcOffer(description, connection.connectionId.toString())
+                remoteConnector.sendRtcOffer(description, connection.connectionId)
             })
         } else {
             connection.once('localDescription', (description: string) => {
-                remoteConnector.sendRtcAnswer(description, connection.connectionId.toString())
+                remoteConnector.sendRtcAnswer(description, connection.connectionId)
             })
         }
 
@@ -213,11 +211,5 @@ export class WebrtcConnector {
         await Promise.allSettled(attempts.map((conn) => conn.close(false)))
 
         this.rpcCommunicator.destroy()
-    }
-
-    public isOffering(targetPeerDescriptor: PeerDescriptor): boolean {
-        const myId = peerIdFromPeerDescriptor(this.localPeerDescriptor!)
-        const theirId = peerIdFromPeerDescriptor(targetPeerDescriptor)
-        return myId.hasSmallerHashThan(theirId)
     }
 }

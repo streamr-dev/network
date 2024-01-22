@@ -3,8 +3,8 @@ import { randomEthereumAddress } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkStack } from '../../src/NetworkStack'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import { getNodeIdFromPeerDescriptor } from '@streamr/dht'
 
 describe('Full node network with WebSocket connections only', () => {
 
@@ -64,12 +64,12 @@ describe('Full node network with WebSocket connections only', () => {
             }
             , 30000)
         ))
-        let numOfMessagesReceived = 0
+        let receivedMessageCount = 0
         const successIds: string[] = []
         nodes.forEach((node) => {
             node.getStreamrNode()!.on('newMessage', () => {
                 successIds.push(getNodeIdFromPeerDescriptor(node.getStreamrNode()!.getPeerDescriptor()))
-                numOfMessagesReceived += 1
+                receivedMessageCount += 1
             })
         })
 
@@ -79,7 +79,7 @@ describe('Full node network with WebSocket connections only', () => {
             randomEthereumAddress()
         )
         entryPoint.getStreamrNode()!.broadcast(msg)
-        await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
+        await waitForCondition(() => receivedMessageCount === NUM_OF_NODES)
     }, 220000)
 
 })

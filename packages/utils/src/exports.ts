@@ -42,6 +42,9 @@ import { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary, areEqualBinaries 
 import { filePathToNodeFormat } from './filePathToNodeFormat'
 import { retry } from './retry'
 import { sF, sI } from './strictly'
+import { toLengthPrefixedFrame, LengthPrefixedFrameDecoder } from './lengthPrefixedFrameUtils'
+import { verifySignature, createSignature, hash } from './signingUtils'
+import { ipv4ToNumber } from './ipv4ToNumber'
 
 export {
     BrandedString,
@@ -97,7 +100,13 @@ export {
     filePathToNodeFormat,
     retry,
     sF,
-    sI
+    sI,
+    LengthPrefixedFrameDecoder,
+    toLengthPrefixedFrame,
+    createSignature,
+    verifySignature,
+    ipv4ToNumber,
+    hash
 }
 
 export {

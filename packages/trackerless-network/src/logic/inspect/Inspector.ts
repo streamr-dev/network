@@ -1,20 +1,19 @@
-import { PeerDescriptor, ConnectionLocker, LockID } from '@streamr/dht'
+import { PeerDescriptor, ConnectionLocker, LockID, DhtAddress, getNodeIdFromPeerDescriptor, ListeningRpcCommunicator } from '@streamr/dht'
 import { MessageID } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { InspectSession, Events as InspectSessionEvents } from './InspectSession'
 import { TemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { RpcCommunicator } from '@streamr/proto-rpc'
 import { Logger, waitForEvent3 } from '@streamr/utils'
 import { TemporaryConnectionRpcRemote } from '../temporary-connection/TemporaryConnectionRpcRemote'
-import { NodeID, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { StreamPartID } from '@streamr/protocol'
 
 interface InspectorConfig {
     localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
-    rpcCommunicator: RpcCommunicator
+    rpcCommunicator: ListeningRpcCommunicator
     connectionLocker: ConnectionLocker
     inspectionTimeout?: number
     openInspectConnection?: (peerDescriptor: PeerDescriptor, lockId: LockID) => Promise<void>
+    closeInspectConnection?: (peerDescriptor: PeerDescriptor, lockId: LockID) => Promise<void>
 }
 
 const logger = new Logger(module)
@@ -22,13 +21,14 @@ const DEFAULT_TIMEOUT = 60 * 1000
 
 export class Inspector {
 
-    private readonly sessions: Map<NodeID, InspectSession> = new Map()
+    private readonly sessions: Map<DhtAddress, InspectSession> = new Map()
     private readonly streamPartId: StreamPartID
     private readonly localPeerDescriptor: PeerDescriptor
-    private readonly rpcCommunicator: RpcCommunicator
+    private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly connectionLocker: ConnectionLocker
     private readonly inspectionTimeout: number
     private readonly openInspectConnection: (peerDescriptor: PeerDescriptor, lockId: LockID) => Promise<void>
+    private readonly closeInspectConnection: (peerDescriptor: PeerDescriptor, lockId: LockID) => Promise<void>
 
     constructor(config: InspectorConfig) {
         this.streamPartId = config.streamPartId
@@ -37,6 +37,7 @@ export class Inspector {
         this.connectionLocker = config.connectionLocker
         this.inspectionTimeout = config.inspectionTimeout ?? DEFAULT_TIMEOUT
         this.openInspectConnection = config.openInspectConnection ?? this.defaultOpenInspectConnection
+        this.closeInspectConnection = config.closeInspectConnection ?? this.defaultCloseInspectConnection
     }
 
     async defaultOpenInspectConnection(peerDescriptor: PeerDescriptor, lockId: LockID): Promise<void> {
@@ -48,6 +49,17 @@ export class Inspector {
         )
         await rpcRemote.openConnection()
         this.connectionLocker.lockConnection(peerDescriptor, lockId)
+    }
+
+    async defaultCloseInspectConnection(peerDescriptor: PeerDescriptor, lockId: LockID): Promise<void> {
+        const rpcRemote = new TemporaryConnectionRpcRemote(
+            this.localPeerDescriptor,
+            peerDescriptor,
+            this.rpcCommunicator,
+            TemporaryConnectionRpcClient
+        )
+        await rpcRemote.closeConnection()
+        this.connectionLocker.unlockConnection(peerDescriptor, lockId)
     }
 
     async inspect(peerDescriptor: PeerDescriptor): Promise<boolean> {
@@ -65,17 +77,17 @@ export class Inspector {
         } catch (err) {
             logger.trace('Inspect session timed out, removing')
         } finally {
+            await this.closeInspectConnection(peerDescriptor, lockId)
             this.sessions.delete(nodeId)
-            this.connectionLocker.unlockConnection(peerDescriptor, lockId)
         }
         return success || session.getInspectedMessageCount() < 1
     }
 
-    markMessage(sender: NodeID, messageId: MessageID): void {
+    markMessage(sender: DhtAddress, messageId: MessageID): void {
         this.sessions.forEach((session) => session.markMessage(sender, messageId))
     }
 
-    isInspected(nodeId: NodeID): boolean {
+    isInspected(nodeId: DhtAddress): boolean {
         return this.sessions.has(nodeId)
     }
 

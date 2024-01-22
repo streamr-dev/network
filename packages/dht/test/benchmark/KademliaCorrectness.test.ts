@@ -1,11 +1,10 @@
 /* eslint-disable no-console */
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
-import { NodeID } from '../../src/helpers/nodeId'
+import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 describe('Kademlia correctness', () => {
     let entryPoint: DhtNode
@@ -13,7 +12,7 @@ describe('Kademlia correctness', () => {
     const simulator = new Simulator()
     const NUM_NODES = 1000
 
-    const nodeIndicesById: Record<NodeID, number> = {}
+    const nodeIndicesById: Record<DhtAddress, number> = {}
 
     if (!fs.existsSync('test/data/nodeids.json')) {
         console.log('gound truth data does not exist yet, generating..')
@@ -27,12 +26,12 @@ describe('Kademlia correctness', () => {
     beforeEach(async () => {
 
         nodes = []
-        entryPoint = await createMockConnectionDhtNode(simulator, Uint8Array.from(dhtIds[0].data), 8)
+        entryPoint = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[0].data)), 8)
         nodes.push(entryPoint)
         nodeIndicesById[entryPoint.getNodeId()] = 0
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator, Uint8Array.from(dhtIds[i].data))
+            const node = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[i].data)))
             nodeIndicesById[node.getNodeId()] = i
             nodes.push(node)
         }
@@ -93,7 +92,7 @@ describe('Kademlia correctness', () => {
             }
 
             if (i > 0) {
-                sumKbucketSize += nodes[i].getNumberOfNeighbors()
+                sumKbucketSize += nodes[i].getNeighborCount()
                 sumCorrectNeighbors += correctNeighbors
             }
         }

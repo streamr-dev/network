@@ -1,11 +1,9 @@
 import { RandomContactList } from '../../src/dht/contact/RandomContactList'
-import { PeerID } from '../../src/helpers/PeerID'
-import { NodeID, getNodeIdFromBinary } from '../../src/helpers/nodeId'
+import { DhtAddress, DhtAddressRaw, getDhtAddressFromRaw } from '../../src/identifiers'
 
-const createItem = (nodeId: Uint8Array): { getNodeId: () => NodeID, getPeerId: () => PeerID } => {
+const createItem = (nodeId: DhtAddressRaw): { getNodeId: () => DhtAddress } => {
     return { 
-        getNodeId: () => getNodeIdFromBinary(nodeId),
-        getPeerId: () => PeerID.fromValue(nodeId)
+        getNodeId: () => getDhtAddressFromRaw(nodeId)
     }
 }
 

@@ -28,11 +28,11 @@ import { Empty } from '../../src/proto/google/protobuf/empty'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { wait, waitForCondition } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
-import { createRandomNodeId } from '../../src/helpers/nodeId'
+import { DhtAddress, createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
 
 export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'nodeId'>>): PeerDescriptor => {
     return {
-        nodeId: createRandomNodeId(),
+        nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
         type: NodeType.NODEJS,
         ...opts
     }
@@ -40,13 +40,13 @@ export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'no
 
 export const createMockConnectionDhtNode = async (
     simulator: Simulator,
-    nodeId?: Uint8Array,
+    nodeId?: DhtAddress,
     numberOfNodesPerKBucket?: number,
     maxConnections = 80,
     dhtJoinTimeout = 45000
 ): Promise<DhtNode> => {
     const peerDescriptor: PeerDescriptor = {
-        nodeId: nodeId ?? createRandomNodeId(),
+        nodeId: getRawFromDhtAddress(nodeId ?? createRandomDhtAddress()),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }
@@ -235,15 +235,15 @@ async function waitReadyForTesting(connectionManager: ConnectionManager, limit: 
     connectionManager.garbageCollectConnections(limit, LAST_USED_LIMIT)
     try {
         await waitForCondition(() => {
-            return (connectionManager.getNumberOfLocalLockedConnections() === 0 &&
-                connectionManager.getNumberOfRemoteLockedConnections() === 0 &&
-                connectionManager.getAllConnectionPeerDescriptors().length <= limit)
+            return (connectionManager.getLocalLockedConnectionCount() === 0 &&
+                connectionManager.getRemoteLockedConnectionCount() === 0 &&
+                connectionManager.getConnections().length <= limit)
         }, 20000)
     } catch (err) {
-        if (connectionManager.getNumberOfLocalLockedConnections() > 0
-            && connectionManager.getNumberOfRemoteLockedConnections() > 0) {
+        if (connectionManager.getLocalLockedConnectionCount() > 0
+            && connectionManager.getRemoteLockedConnectionCount() > 0) {
             throw new Error('Connections are still locked')
-        } else if (connectionManager.getAllConnectionPeerDescriptors().length > limit) {
+        } else if (connectionManager.getConnections().length > limit) {
             throw new Error(`ConnectionManager has more than ${limit}`)
         }
     }

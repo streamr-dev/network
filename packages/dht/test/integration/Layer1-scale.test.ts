@@ -1,7 +1,7 @@
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
+import { getDhtAddressFromRaw } from '../../src/identifiers'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node, createMockPeerDescriptor } from '../utils/utils'
-import { areEqualNodeIds } from '../../src/helpers/nodeId'
 
 const NODE_COUNT = 48
 const NUM_OF_NODES_PER_KBUCKET = 8
@@ -16,7 +16,7 @@ describe('Layer1', () => {
 
     beforeEach(async () => {
         simulator = new Simulator()
-        layer0EntryPoint = await createMockConnectionDhtNode(simulator, entryPoint0Descriptor.nodeId)
+        layer0EntryPoint = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(entryPoint0Descriptor.nodeId))
         await layer0EntryPoint.joinDht([entryPoint0Descriptor])
 
         nodes = []
@@ -62,10 +62,10 @@ describe('Layer1', () => {
         for (let i = 0; i < NODE_COUNT; i++) {
             const layer0Node = nodes[i]
             const layer1Node = layer1Nodes[i]
-            expect(areEqualNodeIds(layer1Node.getNodeId(), layer0Node.getNodeId())).toEqual(true)
-            expect(layer1Node.getNumberOfConnections()).toEqual(layer0Node.getNumberOfConnections())
-            expect(layer1Node.getNumberOfNeighbors()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
-            expect(layer1Node.getAllConnectionPeerDescriptors()).toEqual(layer0Node.getAllConnectionPeerDescriptors())
+            expect(layer1Node.getNodeId()).toEqual(layer0Node.getNodeId())
+            expect(layer1Node.getConnectionCount()).toEqual(layer0Node.getConnectionCount())
+            expect(layer1Node.getNeighborCount()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
+            expect(layer1Node.getConnections()).toEqual(layer0Node.getConnections())
         }
     }, 120000)
 
@@ -119,10 +119,10 @@ describe('Layer1', () => {
             const stream3Node = stream3[i]
             const stream4Node = stream4[i]
 
-            expect(layer0Node.getNumberOfConnections()).toEqual(stream1Node.getNumberOfConnections())
-            expect(layer0Node.getNumberOfConnections()).toEqual(stream2Node.getNumberOfConnections())
-            expect(layer0Node.getNumberOfConnections()).toEqual(stream3Node.getNumberOfConnections())
-            expect(layer0Node.getNumberOfConnections()).toEqual(stream4Node.getNumberOfConnections())
+            expect(layer0Node.getConnectionCount()).toEqual(stream1Node.getConnectionCount())
+            expect(layer0Node.getConnectionCount()).toEqual(stream2Node.getConnectionCount())
+            expect(layer0Node.getConnectionCount()).toEqual(stream3Node.getConnectionCount())
+            expect(layer0Node.getConnectionCount()).toEqual(stream4Node.getConnectionCount())
 
         }
     }, 120000)

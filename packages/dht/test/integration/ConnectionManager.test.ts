@@ -1,15 +1,15 @@
-import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { ConnectivityResponse, Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { Simulator } from '../../src/connection/simulator/Simulator'
-import { createPeerDescriptor } from '../../src/dht/DhtNode'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { Logger, MetricsContext, waitForEvent3 } from '@streamr/utils'
-import { SimulatorTransport } from '../../src/exports'
-import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
 import { MarkOptional } from 'ts-essentials'
+import { ConnectionManager } from '../../src/connection/ConnectionManager'
+import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
+import { Simulator } from '../../src/connection/simulator/Simulator'
+import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
+import { createPeerDescriptor } from '../../src/helpers/createPeerDescriptor'
+import { createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
+import { ConnectivityResponse, Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { TransportEvents } from '../../src/transport/ITransport'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { createRandomNodeId } from '../../src/helpers/nodeId'
 
 const SERVICE_ID = 'demo'
 
@@ -292,6 +292,7 @@ describe('ConnectionManager', () => {
         await Promise.all([disconnectedPromise1, disconnectedPromise2])
         await connectionManager3.stop()
         await connectionManager4.stop()
+        simulator2.stop()
     })
 
     it('Cannot send to own WebsocketServer if nodeIds do not match', async () => {
@@ -363,7 +364,7 @@ describe('ConnectionManager', () => {
             messageId: '1',
             targetDescriptor: {
                 // This is not the correct nodeId of peerDescriptor2
-                nodeId: createRandomNodeId(),
+                nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
                 type: NodeType.NODEJS,
                 websocket: peerDescriptor2.websocket
             },
@@ -387,7 +388,7 @@ describe('ConnectionManager', () => {
         const connectionManager1 = createConnectionManager({
             transport: mockTransport,
             websocketHost: '127.0.0.1',
-            autoCertifierUrl: 'https://localhost:12333',
+            autoCertifierUrl: 'https://127.0.0.1:12333',
             websocketServerEnableTls: true,
             websocketPortRange: { min: 10004, max: 10004 }
         })

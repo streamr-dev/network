@@ -1,4 +1,4 @@
-import { DhtNode, LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
+import { DhtNode, LatencyType, PeerDescriptor, Simulator, SimulatorTransport, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
@@ -8,7 +8,7 @@ import { StreamPartIDUtils } from '@streamr/protocol'
 import { Layer1Node } from '../../src/logic/Layer1Node'
 
 describe('RandomGraphNode-DhtNode-Latencies', () => {
-    const numOfNodes = 64
+    const nodeCount = 64
     let layer1Nodes: Layer1Node[]
     let dhtEntryPoint: Layer1Node
     let entryPointRandomGraphNode: RandomGraphNode
@@ -17,11 +17,11 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
     const streamPartId = StreamPartIDUtils.parse('stream#0')
     const entrypointDescriptor = createMockPeerDescriptor()
 
-    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map(() => createMockPeerDescriptor())
+    const peerDescriptors: PeerDescriptor[] = range(nodeCount).map(() => createMockPeerDescriptor())
     beforeEach(async () => {
         const simulator = new Simulator(LatencyType.FIXED, 50)
         const entrypointCm = new SimulatorTransport(entrypointDescriptor, simulator)
-        const cms: SimulatorTransport[] = range(numOfNodes).map((i) =>
+        const cms: SimulatorTransport[] = range(nodeCount).map((i) =>
             new SimulatorTransport(peerDescriptors[i], simulator)
         )
         await entrypointCm.start()
@@ -32,12 +32,12 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
             peerDescriptor: entrypointDescriptor,
             serviceId: streamPartId
         })
-        layer1Nodes = range(numOfNodes).map((i) => new DhtNode({
+        layer1Nodes = range(nodeCount).map((i) => new DhtNode({
             transport: cms[i],
             peerDescriptor: peerDescriptors[i],
             serviceId: streamPartId
         }))
-        graphNodes = range(numOfNodes).map((i) => createRandomGraphNode({
+        graphNodes = range(nodeCount).map((i) => createRandomGraphNode({
             streamPartId,
             layer1Node: layer1Nodes[i],
             transport: cms[i],
@@ -72,10 +72,10 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         await graphNodes[0].start()
         await Promise.all([
             waitForCondition(() => graphNodes[0].getNearbyNodeView().getIds().length === 1),
-            waitForCondition(() => graphNodes[0].getTargetNeighborIds().length === 1)
+            waitForCondition(() => graphNodes[0].getNeighbors().length === 1)
         ])
         expect(graphNodes[0].getNearbyNodeView().getIds().length).toEqual(1)
-        expect(graphNodes[0].getTargetNeighborIds().length).toEqual(1)
+        expect(graphNodes[0].getNeighbors().length).toEqual(1)
     })
 
     it('happy path 5 nodes', async () => {
@@ -84,14 +84,10 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
         await Promise.all(range(4).map(async (i) => {
             await layer1Nodes[i].joinDht([entrypointDescriptor])
         }))
-        await Promise.all(range(4).map((i) => {
-            return waitForCondition(() => {
-                return graphNodes[i].getTargetNeighborIds().length >= 4
-            }, 15000, 2000)
-        }))
+        await waitForCondition(() => range(4).every((i) => graphNodes[i].getNeighbors().length >= 4), 15000, 1000)
         range(4).forEach((i) => {
             expect(graphNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)
-            expect(graphNodes[i].getTargetNeighborIds().length).toBeGreaterThanOrEqual(4)
+            expect(graphNodes[i].getNeighbors().length).toBeGreaterThanOrEqual(4)
         })
         // Check bidirectionality
         const allNodes = graphNodes
@@ -102,32 +98,35 @@ describe('RandomGraphNode-DhtNode-Latencies', () => {
                 const neighbor = allNodes.find((node) => {
                     return node.getOwnNodeId() === ownNodeId
                 })
-                expect(neighbor!.getTargetNeighborIds()).toContain(nodeId)
+                const neighborIds = neighbor!.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
+                expect(neighborIds).toContain(nodeId)
             })
         })
     }, 60000)
 
     it('happy path 64 nodes', async () => {
-        await Promise.all(range(numOfNodes).map((i) => graphNodes[i].start()))
-        await Promise.all(range(numOfNodes).map((i) => {
+        await Promise.all(range(nodeCount).map((i) => graphNodes[i].start()))
+        await Promise.all(range(nodeCount).map((i) => {
             layer1Nodes[i].joinDht([entrypointDescriptor])
         }))
         await Promise.all(graphNodes.map((node) =>
-            waitForCondition(() => node.getTargetNeighborIds().length >= 4, 10000)
+            waitForCondition(() => node.getNeighbors().length >= 4, 10000)
         ))
 
         await Promise.all(graphNodes.map((node) =>
-            waitForCondition(() => node.getNumberOfOutgoingHandshakes() === 0)
+            waitForCondition(() => node.getOutgoingHandshakeCount() === 0)
         ))
 
         await waitForCondition(() => {
             let mismatchCounter = 0
             graphNodes.forEach((node) => {
                 const nodeId = node.getOwnNodeId()
-                node.getTargetNeighborIds().forEach((neighborId) => {
+                node.getNeighbors().forEach((neighbor) => {
+                    const neighborId = getNodeIdFromPeerDescriptor(neighbor)
                     if (neighborId !== entryPointRandomGraphNode.getOwnNodeId()) {
                         const neighbor = graphNodes.find((n) => n.getOwnNodeId() === neighborId)
-                        if (!neighbor!.getTargetNeighborIds().includes(nodeId)) {
+                        const neighborIds = neighbor!.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
+                        if (!neighborIds.includes(nodeId)) {
                             mismatchCounter += 1
                         }
                     }

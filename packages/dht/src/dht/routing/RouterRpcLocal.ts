@@ -1,11 +1,10 @@
 import { Logger, areEqualBinaries } from '@streamr/utils'
 import { ConnectionManager } from '../../connection/ConnectionManager'
-import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { IRouterRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { DuplicateDetector } from './DuplicateDetector'
 import { RoutingMode } from './RoutingSession'
-import { getNodeIdFromBinary } from '../../helpers/nodeId'
+import { areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 interface RouterRpcLocalConfig {
     doRouteMessage: (routedMessage: RouteMessageWrapper, mode?: RoutingMode) => RouteMessageAck
@@ -37,7 +36,7 @@ export class RouterRpcLocal implements IRouterRpc {
     async routeMessage(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
         if (this.config.duplicateRequestDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
             logger.trace(`Routing message ${routedMessage.requestId} from ${getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!)} `
-                + `to ${getNodeIdFromBinary(routedMessage.target)} is likely a duplicate`)
+                + `to ${getDhtAddressFromRaw(routedMessage.target)} is likely a duplicate`)
             return createRouteMessageAck(routedMessage, RouteMessageError.DUPLICATE)
         }
         logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
@@ -56,7 +55,7 @@ export class RouterRpcLocal implements IRouterRpc {
     async forwardMessage(forwardMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
         if (this.config.duplicateRequestDetector.isMostLikelyDuplicate(forwardMessage.requestId)) {
             logger.trace(`Forwarding message ${forwardMessage.requestId} from ${getNodeIdFromPeerDescriptor(forwardMessage.sourcePeer!)} `
-                + `to ${getNodeIdFromBinary(forwardMessage.target)} is likely a duplicate`)
+                + `to ${getDhtAddressFromRaw(forwardMessage.target)} is likely a duplicate`)
             return createRouteMessageAck(forwardMessage, RouteMessageError.DUPLICATE)
         }
         logger.trace(`Processing received forward routeMessage ${forwardMessage.requestId}`)

@@ -255,7 +255,7 @@
                         "id": {
                             "type": "string"
                         },
-                        "streamPartitionNumOfTargetNeighbors": {
+                        "streamPartitionNeighborCount": {
                             "type": "number",
                             "default": 4
                         },

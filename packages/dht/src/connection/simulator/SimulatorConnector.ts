@@ -8,14 +8,13 @@ import { Logger } from '@streamr/utils'
 import { ManagedConnection } from '../ManagedConnection'
 import { Simulator } from './Simulator'
 import { SimulatorConnection } from './SimulatorConnection'
-import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
-import { NodeID } from '../../helpers/nodeId'
+import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 const logger = new Logger(module)
 
 export class SimulatorConnector {
 
-    private connectingConnections: Map<NodeID, ManagedConnection> = new Map()
+    private connectingConnections: Map<DhtAddress, ManagedConnection> = new Map()
     private stopped = false
     private localPeerDescriptor: PeerDescriptor
     private simulator: Simulator
@@ -62,7 +61,8 @@ export class SimulatorConnector {
     }
 
     public handleIncomingConnection(sourceConnection: SimulatorConnection): void {
-        logger.trace(getNodeIdFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' incoming connection, stopped: ' + this.stopped)
+        const localNodeId = getNodeIdFromPeerDescriptor(sourceConnection.localPeerDescriptor)
+        logger.trace(localNodeId + ' incoming connection, stopped: ' + this.stopped)
         if (this.stopped) {
             return
         }
@@ -74,10 +74,10 @@ export class SimulatorConnector {
         logger.trace('connected')
 
         managedConnection.once('handshakeRequest', () => {
-            logger.trace(getNodeIdFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' incoming handshake request')
+            logger.trace(localNodeId + ' incoming handshake request')
 
             if (this.onNewConnection(managedConnection)) {
-                logger.trace(getNodeIdFromPeerDescriptor(sourceConnection.localPeerDescriptor) + ' calling acceptHandshake')
+                logger.trace(localNodeId + ' calling acceptHandshake')
                 managedConnection.acceptHandshake()
             } else {
                 managedConnection.rejectHandshake(HandshakeError.DUPLICATE_CONNECTION)

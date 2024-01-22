@@ -13,6 +13,9 @@ import { WakeUpRequest } from '../proto/WakeUpRpc'
 import { WakeUpRpcServiceClient } from '../proto/WakeUpRpc.client'
 import { IWakeUpRpcService } from '../proto/WakeUpRpc.server'
 import { RpcMessage } from '../../src/proto/ProtoRpc'
+import { IOptionalService } from '../proto/TestProtos.server'
+import { OptionalRequest, OptionalResponse } from '../proto/TestProtos'
+import { OptionalServiceClient } from '../proto/TestProtos.client'
 
 export class HelloResponseDecorator {
     // It is important to name the memeber variables of the decorator class
@@ -52,6 +55,13 @@ class WakeUpService extends EventEmitter<WakeUpEvents> implements IWakeUpRpcServ
         this.emit('wakeUpCalled', request.reason)
         const ret: Empty = {}
         return ret
+    }
+}
+
+// Rpc call service with response of only optional fields
+class OptionalService implements IOptionalService {
+    async getOptional(_request: OptionalRequest, _context: ServerCallContext): Promise<OptionalResponse> {
+        return {}
     }
 }
 
@@ -136,6 +146,32 @@ describe('toProtoRpcClient', () => {
         wakeUpClient.wakeUp({ reason: 'School' })
     })
 
+    it('can make a rpc call where all response fields are optional', async () => {
+        // Setup server
+        const communicator1 = new RpcCommunicator()
+        const optionalService = new OptionalService()
+        communicator1.registerRpcMethod(OptionalRequest, OptionalResponse, 'getOptional', optionalService.getOptional)
+
+        // Setup client
+        const communicator2 = new RpcCommunicator()
+        const optionalClient = toProtoRpcClient(new OptionalServiceClient(communicator2.getRpcClientTransport()))
+
+        // Simulate a network connection, in real life the message blobs would be transferred over a network
+        communicator1.on('outgoingMessage', (msg: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
+            communicator2.handleIncomingMessage(msg)
+        })
+        communicator2.on('outgoingMessage', (msg: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
+            communicator1.handleIncomingMessage(msg)
+        })
+
+        const { someOptionalField } = await optionalClient.getOptional({ someOptionalField: 'something' })
+        
+        expect(someOptionalField).toBe(undefined)
+
+        communicator1.stop()
+        communicator2.stop()
+    })
+
     it('Handles client-side exceptions on RPC calls', async () => {
         // Setup client
         const communicator2 = new RpcCommunicator()
@@ -151,7 +187,7 @@ describe('toProtoRpcClient', () => {
     })
 
     it('Awaiting RPC notifications returns when using events', async () => {
-       
+
         // Setup server
         const communicator1 = new RpcCommunicator()
         const wakeUpService = new WakeUpService()
@@ -162,7 +198,7 @@ describe('toProtoRpcClient', () => {
         const wakeUpClient = toProtoRpcClient(new WakeUpRpcServiceClient(communicator2.getRpcClientTransport()))
 
         // Simulate a network connection, in real life the message blobs would be transferred over a network
-       
+
         communicator2.on('outgoingMessage', (msg: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
             communicator1.handleIncomingMessage(msg)
         })
@@ -171,7 +207,7 @@ describe('toProtoRpcClient', () => {
     })
 
     it('Awaiting RPC notifications returns when using outgoingMessageListener', async () => {
-       
+
         // Setup server
         const communicator1 = new RpcCommunicator()
         const wakeUpService = new WakeUpService()
@@ -182,11 +218,11 @@ describe('toProtoRpcClient', () => {
         const wakeUpClient = toProtoRpcClient(new WakeUpRpcServiceClient(communicator2.getRpcClientTransport()))
 
         // Simulate a network connection, in real life the message blobs would be transferred over a network
-       
+
         communicator2.setOutgoingMessageListener(async (msg: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
             communicator1.handleIncomingMessage(msg)
         })
-        
+
         await wakeUpClient.wakeUp({ reason: 'School' })
     })
 

@@ -1,22 +1,15 @@
 import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
 import { Message, MessageType, NodeType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { Logger, hexToBinary, runAndWaitForEvents3, waitForCondition } from '@streamr/utils'
+import { Logger, runAndWaitForEvents3, waitForCondition } from '@streamr/utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils/utils'
-import { PeerID, PeerIDKey } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { v4 } from 'uuid'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { RoutingMode } from '../../src/dht/routing/RoutingSession'
-import { areEqualNodeIds } from '../../src/helpers/nodeId'
-import { createRandomNodeId } from '../../src/helpers/nodeId'
+import { DhtAddress, createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
 
 const logger = new Logger(module)
-
-// TODO refactor the test to not to use PeerID
-const getPeerId = (node: DhtNode) => {
-    return PeerID.fromValue(hexToBinary(node.getNodeId()))
-}
 
 const NUM_NODES = 30
 
@@ -28,23 +21,22 @@ describe('Route Message With Mock Connections', () => {
     let routerNodes: DhtNode[]
     let simulator: Simulator
     let entryPointDescriptor: PeerDescriptor
-    const receiveMatrix: Array<Array<number>> = []
 
     beforeEach(async () => {
         routerNodes = []
         simulator = new Simulator()
-        entryPoint = await createMockConnectionDhtNode(simulator, createRandomNodeId())
+        entryPoint = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
 
         entryPointDescriptor = {
-            nodeId: hexToBinary(entryPoint.getNodeId()),
+            nodeId: getRawFromDhtAddress(entryPoint.getNodeId()),
             type: NodeType.NODEJS
         }
 
-        sourceNode = await createMockConnectionDhtNode(simulator, createRandomNodeId())
-        destinationNode = await createMockConnectionDhtNode(simulator, createRandomNodeId())
+        sourceNode = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
+        destinationNode = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator, PeerID.fromString(`${i}`).value)
+            const node = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
             routerNodes.push(node)
         }
 
@@ -88,21 +80,21 @@ describe('Route Message With Mock Connections', () => {
                 requestId: v4(),
                 sourcePeer: sourceNode.getLocalPeerDescriptor(),
                 reachableThrough: [],
-                routingPath: []
-
+                routingPath: [],
+                parallelRootNodeIds: []
             })
         }], [[destinationNode, 'message']], 20000)
     }, 30000)
 
     it('Receives multiple messages', async () => {
-        const numOfMessages = 20
+        const messageCount = 20
         let receivedMessages = 0
         destinationNode.on('message', () => {
             receivedMessages += 1
         })
         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getLocalPeerDescriptor())
 
-        for (let i = 0; i < numOfMessages; i++) {
+        for (let i = 0; i < messageCount; i++) {
             const message: Message = {
                 serviceId: 'unknown',
                 messageId: v4(),
@@ -120,44 +112,26 @@ describe('Route Message With Mock Connections', () => {
                 requestId: v4(),
                 sourcePeer: sourceNode.getLocalPeerDescriptor(),
                 reachableThrough: [],
-                routingPath: []
+                routingPath: [],
+                parallelRootNodeIds: []
             })
         }
-        await waitForCondition(() => receivedMessages === numOfMessages)
+        await waitForCondition(() => receivedMessages === messageCount)
     })
 
     it('From all to all', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        for (const i in routerNodes) {
-            const arr: Array<number> = []
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            for (const j in routerNodes) {
-                arr.push(0)
-            }
-            receiveMatrix.push(arr)
-        }
-
-        const numsOfReceivedMessages: Record<PeerIDKey, number> = {}
+        const receivedMessageCounts: Record<DhtAddress, number> = {}
         routerNodes.forEach((node) => {
-            numsOfReceivedMessages[getPeerId(node).toKey()] = 0
-            node.on('message', (msg: Message) => {
-                numsOfReceivedMessages[getPeerId(node).toKey()] = numsOfReceivedMessages[getPeerId(node).toKey()] + 1
-                try {
-                    const target = receiveMatrix[parseInt(getPeerId(node).toString()) - 1]
-                    target[parseInt(PeerID.fromValue(msg.sourceDescriptor!.nodeId).toString()) - 1]++
-                } catch (e) {
-                    console.error(e)
-                }
-                if (parseInt(getPeerId(node).toString()) > routerNodes.length || parseInt(getPeerId(node).toString()) === 0) {
-                    console.error(getPeerId(node).toString())
-                }
+            const key = node.getNodeId()
+            receivedMessageCounts[key] = 0
+            node.on('message', () => {
+                receivedMessageCounts[key] = receivedMessageCounts[key] + 1
             })
-        }
-        )
+        })
         await Promise.all(
             routerNodes.map(async (node) =>
                 Promise.all(routerNodes.map(async (receiver) => {
-                    if (!areEqualNodeIds(node.getNodeId(), receiver.getNodeId())) {
+                    if (node.getNodeId() !== receiver.getNodeId()) {
                         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getLocalPeerDescriptor())
                         const message: Message = {
                             serviceId: 'nonexisting_service',
@@ -176,17 +150,17 @@ describe('Route Message With Mock Connections', () => {
                             sourcePeer: node.getLocalPeerDescriptor(),
                             requestId: v4(),
                             reachableThrough: [],
-                            routingPath: []
+                            routingPath: [],
+                            parallelRootNodeIds: []
                         })
                     }
                 }))
             )
         )
-        await waitForCondition(() => numsOfReceivedMessages[PeerID.fromString('1').toKey()] >= routerNodes.length - 1
-            , 30000)
+        await waitForCondition(() => receivedMessageCounts[routerNodes[0].getNodeId()] >= routerNodes.length - 1, 30000)
         await Promise.all(
-            Object.keys(numsOfReceivedMessages).map(async (key) =>
-                waitForCondition(() => numsOfReceivedMessages[key as PeerIDKey] >= routerNodes.length - 1, 30000)
+            Object.keys(receivedMessageCounts).map(async (key) =>
+                waitForCondition(() => receivedMessageCounts[key as DhtAddress] >= routerNodes.length - 1, 30000)
             )
         )
 
@@ -212,7 +186,8 @@ describe('Route Message With Mock Connections', () => {
             requestId: v4(),
             sourcePeer: sourceNode.getLocalPeerDescriptor(),
             reachableThrough: [entryPointDescriptor],
-            routingPath: []
+            routingPath: [],
+            parallelRootNodeIds: []
         }
 
         const rpcMessage: RpcMessage = {
@@ -242,7 +217,8 @@ describe('Route Message With Mock Connections', () => {
             sourcePeer: sourceNode.getLocalPeerDescriptor(),
             target: entryPoint.getLocalPeerDescriptor()!.nodeId,
             reachableThrough: [],
-            routingPath: []
+            routingPath: [],
+            parallelRootNodeIds: []
         }
 
         await runAndWaitForEvents3<DhtNodeEvents>([() => {

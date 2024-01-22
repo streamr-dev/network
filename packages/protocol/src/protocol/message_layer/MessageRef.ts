@@ -2,8 +2,8 @@ import { validateIsNotNegativeInteger } from '../../utils/validations'
 
 export default class MessageRef {
 
-    timestamp: number
-    sequenceNumber: number
+    readonly timestamp: number
+    readonly sequenceNumber: number
 
     constructor(timestamp: number, sequenceNumber: number) {
         validateIsNotNegativeInteger('timestamp', timestamp)
@@ -26,28 +26,5 @@ export default class MessageRef {
             return 1
         }
         return 0
-    }
-
-    toArray(): any[] {
-        return [
-            this.timestamp,
-            this.sequenceNumber,
-        ]
-    }
-
-    static fromArray(arr: any[]): MessageRef {
-        const [
-            timestamp,
-            sequenceNumber,
-        ] = arr
-        return new MessageRef(timestamp, sequenceNumber)
-    }
-
-    serialize(): string {
-        return JSON.stringify(this.toArray())
-    }
-
-    clone(): MessageRef {
-        return new MessageRef(this.timestamp, this.sequenceNumber)
     }
 }

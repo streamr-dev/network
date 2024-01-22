@@ -1,7 +1,6 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '@streamr/utils'
 import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../helpers/AddressTools'
-import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { Empty } from '../../proto/google/protobuf/empty'
 import {
     HandshakeError,
@@ -18,9 +17,10 @@ import { ManagedConnection } from '../ManagedConnection'
 import { ManagedWebrtcConnection } from '../ManagedWebrtcConnection'
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'
 import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
-import { NodeID } from '../../helpers/nodeId'
-import { version } from '../../../package.json'
+import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { version as localVersion } from '../../../package.json'
 import { isCompatibleVersion } from '../../helpers/versionCompatibility'
+import { ConnectionID } from '../IConnection'
 
 const logger = new Logger(module)
 
@@ -28,7 +28,7 @@ interface WebrtcConnectorRpcLocalConfig {
     connect: (targetPeerDescriptor: PeerDescriptor) => ManagedConnection 
     onNewConnection: (connection: ManagedConnection) => boolean
     // TODO pass accessor methods instead of passing a mutable entity
-    ongoingConnectAttempts: Map<NodeID, ManagedWebrtcConnection>
+    ongoingConnectAttempts: Map<DhtAddress, ManagedWebrtcConnection>
     rpcCommunicator: ListeningRpcCommunicator
     getLocalPeerDescriptor: () => PeerDescriptor
     allowPrivateAddresses: boolean
@@ -72,23 +72,23 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
                 WebrtcConnectorRpcClient
             )
             connection.on('localCandidate', (candidate: string, mid: string) => {
-                remoteConnector.sendIceCandidate(candidate, mid, connection!.connectionId.toString())
+                remoteConnector.sendIceCandidate(candidate, mid, connection!.connectionId)
             })
             connection.once('localDescription', (description: string) => {
-                remoteConnector.sendRtcAnswer(description, connection!.connectionId.toString())
+                remoteConnector.sendRtcAnswer(description, connection!.connectionId)
             })
             connection.start(false)
         }
 
         // Always use offerers connectionId
-        connection!.setConnectionId(request.connectionId)
+        connection!.setConnectionId(request.connectionId as ConnectionID)
         connection!.setRemoteDescription(request.description, 'offer')
 
         managedConnection.on('handshakeRequest', (_sourceDescriptor: PeerDescriptor, sourceVersion: string) => {
             if (this.config.ongoingConnectAttempts.has(nodeId)) {
                 this.config.ongoingConnectAttempts.delete(nodeId)
             }
-            if (!isCompatibleVersion(sourceVersion, version)) {
+            if (!isCompatibleVersion(sourceVersion, localVersion)) {
                 managedConnection!.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
             } else {
                 managedConnection!.acceptHandshake()
@@ -103,7 +103,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         const connection = this.config.ongoingConnectAttempts.get(nodeId)?.getWebrtcConnection()
         if (!connection) {
             return {}
-        } else if (connection.connectionId.toString() !== request.connectionId) {
+        } else if (connection.connectionId !== request.connectionId) {
             logger.trace(`Ignoring RTC answer due to connectionId mismatch`)
             return {}
         }
@@ -117,7 +117,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         const connection = this.config.ongoingConnectAttempts.get(nodeId)?.getWebrtcConnection()
         if (!connection) {
             return {}
-        } else if (connection.connectionId.toString() !== request.connectionId) {
+        } else if (connection.connectionId !== request.connectionId) {
             logger.trace(`Ignoring remote candidate due to connectionId mismatch`)
             return {}
         } else if (this.isIceCandidateAllowed(request.candidate)) {

@@ -1,9 +1,9 @@
 /**
  * Wrap a network node.
  */
-import { PeerDescriptor } from '@streamr/dht'
+import { DhtAddress, PeerDescriptor } from '@streamr/dht'
 import { StreamMessage, StreamPartID } from '@streamr/protocol'
-import { createNetworkNode as createNetworkNode_, NetworkOptions, NodeID, ProxyDirection } from '@streamr/trackerless-network'
+import { NetworkOptions, ProxyDirection, createNetworkNode as createNetworkNode_ } from '@streamr/trackerless-network'
 import { EthereumAddress, MetricsContext } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -17,14 +17,14 @@ import { peerDescriptorTranslator } from './utils/utils'
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 /** @deprecated This in an internal interface */
 export interface NetworkNodeStub {
-    getNodeId: () => NodeID
+    getNodeId: () => DhtAddress
     addMessageListener: (listener: (msg: StreamMessage) => void) => void
     removeMessageListener: (listener: (msg: StreamMessage) => void) => void
     join: (streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }) => Promise<void>
     leave: (streamPartId: StreamPartID) => Promise<void>
     broadcast: (streamMessage: StreamMessage) => Promise<void>
     getStreamParts: () => StreamPartID[]
-    getNeighbors: (streamPartId: StreamPartID) => ReadonlyArray<NodeID>
+    getNeighbors: (streamPartId: StreamPartID) => ReadonlyArray<DhtAddress>
     getPeerDescriptor: () => PeerDescriptor
     getOptions: () => NetworkOptions
     getMetricsContext: () => MetricsContext
@@ -172,7 +172,7 @@ export class NetworkNodeFacade {
 
     getNode: () => Promise<NetworkNodeStub> = this.startNodeTask
 
-    async getNodeId(): Promise<NodeID> {
+    async getNodeId(): Promise<DhtAddress> {
         const node = await this.getNode()
         return node.getNodeId()
     }

@@ -1,9 +1,9 @@
 import { ContractReceipt } from '@ethersproject/contracts'
+import { DhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress } from '@streamr/dht'
 import { StreamID, toStreamID } from '@streamr/protocol'
 import {
-    binaryToHex,
     composeAbortSignals,
-    hexToBinary,
+    LengthPrefixedFrameDecoder,
     Logger,
     merge,
     randomString,
@@ -13,7 +13,6 @@ import {
 import compact from 'lodash/compact'
 import fetch, { Response } from 'node-fetch'
 import { AbortSignal as FetchAbortSignal } from 'node-fetch/externals'
-import split2 from 'split2'
 import { Readable } from 'stream'
 import LRU from '../../vendor/quick-lru'
 import { NetworkNodeType, NetworkPeerDescriptor, StrictStreamrClientConfig } from '../Config'
@@ -138,7 +137,7 @@ export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescr
     const type = json.type === NetworkNodeType.BROWSER ? NodeType.BROWSER : NodeType.NODEJS
     const peerDescriptor: PeerDescriptor = {
         ...json,
-        nodeId: hexToBinary(json.nodeId ?? (json as any).id),
+        nodeId: getRawFromDhtAddress((json.nodeId ?? (json as any).id) as DhtAddress),
         type,
         websocket: json.websocket
     }
@@ -149,10 +148,12 @@ export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescr
 }
 
 export function convertPeerDescriptorToNetworkPeerDescriptor(descriptor: PeerDescriptor): NetworkPeerDescriptor {
+    // TODO maybe we should copy most/all fields of PeerDescription (NET-1255)
     return {
-        ...descriptor,
-        nodeId: binaryToHex(descriptor.nodeId),
-        type: descriptor.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER
+        nodeId: getDhtAddressFromRaw(descriptor.nodeId),
+        type: descriptor.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER,
+        websocket: descriptor.websocket,
+        region: descriptor.region
     }
 }
 
@@ -204,10 +205,10 @@ export class FetchHttpStreamResponseError extends Error {
     }
 }
 
-export const fetchHttpStream = async function*(
+export const fetchLengthPrefixedFrameHttpBinaryStream = async function*(
     url: string,
     abortSignal?: AbortSignal
-): AsyncGenerator<string, void, undefined> {
+): AsyncGenerator<Uint8Array, void, undefined> {
     logger.debug('Send HTTP request', { url }) 
     const abortController = new AbortController()
     const fetchAbortSignal = composeAbortSignals(...compact([abortController.signal, abortSignal]))
@@ -230,7 +231,7 @@ export const fetchHttpStream = async function*(
     try {
         // in the browser, response.body will be a web stream. Convert this into a node stream.
         const source: Readable = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
-        stream = source.pipe(split2())
+        stream = source.pipe(new LengthPrefixedFrameDecoder())
         source.on('error', (err: Error) => stream!.destroy(err))
         stream.once('close', () => {
             abortController.abort()

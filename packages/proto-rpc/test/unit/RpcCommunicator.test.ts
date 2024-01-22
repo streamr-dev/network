@@ -14,7 +14,7 @@ import { Any } from '../../src/proto/google/protobuf/any'
 import { Empty } from '../proto/google/protobuf/empty'
 
 describe('RpcCommunicator', () => {
-    let rpcCommunicator: RpcCommunicator
+    let rpcCommunicator: RpcCommunicator<ProtoCallContext>
 
     let mockDhtRpc: MockDhtRpc
     let promises: ResultParts

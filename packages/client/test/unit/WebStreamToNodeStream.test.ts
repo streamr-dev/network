@@ -3,18 +3,12 @@ import 'reflect-metadata'
 import { finished } from 'stream/promises'
 import { WebStreamToNodeStream } from '../../src/utils/WebStreamToNodeStream'
 import { Msg } from '../test-utils/publish'
+import WebStream from 'node:stream/web'
+import Timers from 'node:timers/promises'
 
-const version = process.version.slice(1).split('.').map((v) => Number.parseInt(v, 10))
 describe('WebStreamToNodeStream', () => {
-    // webstreams only in 16.5+
-    if (version[0] < 16 && version[1] < 5) {
-        test.skip('node version too low, requires v16.5+')
-        return
-    }
-
     it('works', async () => {
-        const WebStream: any = await import('node:stream/web')
-        const Timers = await import('node:timers/promises')
+
         const published: ReturnType<typeof Msg>[] = []
         const webStream = new WebStream.ReadableStream({
             async start(controller: any) {
@@ -41,8 +35,6 @@ describe('WebStreamToNodeStream', () => {
     })
 
     it('can work with small buffer', async () => {
-        const WebStream: any = await import('node:stream/web')
-        const Timers = await import('node:timers/promises')
         const published: ReturnType<typeof Msg>[] = []
         const webStream = new WebStream.ReadableStream({
             async start(controller: any) {
@@ -69,8 +61,6 @@ describe('WebStreamToNodeStream', () => {
     })
 
     it('can work with errors', async () => {
-        const WebStream: any = await import('node:stream/web')
-        const Timers = await import('node:timers/promises')
         const published: ReturnType<typeof Msg>[] = []
         const webStream = new WebStream.ReadableStream({
             async start(controller: any) {

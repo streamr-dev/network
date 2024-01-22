@@ -1,8 +1,4 @@
 import { Message, PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
-import {
-    areEqualPeerDescriptors,
-    getNodeIdFromPeerDescriptor
-} from '../../helpers/peerIdFromPeerDescriptor'
 import { RoutingMode, RoutingSession, RoutingSessionEvents } from './RoutingSession'
 import { Logger, executeSafePromise, raceEvents3, withTimeout } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
@@ -11,12 +7,12 @@ import { ConnectionManager } from '../../connection/ConnectionManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { v4 } from 'uuid'
 import { RouterRpcLocal, createRouteMessageAck } from './RouterRpcLocal'
-import { NodeID, getNodeIdFromBinary } from '../../helpers/nodeId'
+import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 export interface RouterConfig {
     rpcCommunicator: RoutingRpcCommunicator
     localPeerDescriptor: PeerDescriptor
-    connections: Map<NodeID, DhtNodeRpcRemote>
+    connections: Map<DhtAddress, DhtNodeRpcRemote>
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     connectionManager?: ConnectionManager
 }
@@ -30,10 +26,10 @@ const logger = new Logger(module)
 
 export class Router {
 
-    private readonly forwardingTable: Map<NodeID, ForwardingTableEntry> = new Map()
+    private readonly forwardingTable: Map<DhtAddress, ForwardingTableEntry> = new Map()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
     // TODO use config option or named constant?
-    private readonly duplicateRequestDetector: DuplicateDetector = new DuplicateDetector(100000, 100)
+    private readonly duplicateRequestDetector: DuplicateDetector = new DuplicateDetector(100000)
     private stopped = false
     private readonly config: RouterConfig
 
@@ -87,7 +83,8 @@ export class Router {
                 target: forwardingEntry.peerDescriptors[0].nodeId,
                 sourcePeer: this.config.localPeerDescriptor,
                 reachableThrough,
-                routingPath: []
+                routingPath: [],
+                parallelRootNodeIds: []
             }
             const ack = this.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
             if (ack.error !== undefined) {
@@ -102,7 +99,8 @@ export class Router {
                 target: targetPeerDescriptor.nodeId,
                 sourcePeer: this.config.localPeerDescriptor,
                 reachableThrough,
-                routingPath: []
+                routingPath: [],
+                parallelRootNodeIds: []
             }
             const ack = this.doRouteMessage(routedMessage, RoutingMode.ROUTE)
             if (ack.error !== undefined) {
@@ -113,12 +111,12 @@ export class Router {
         }
     }
 
-    public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE, excludedPeer?: PeerDescriptor): RouteMessageAck {
+    public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE, excludedPeer?: DhtAddress): RouteMessageAck {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
         logger.trace(`Routing message ${routedMessage.requestId} from ${getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!)} `
-            + `to ${getNodeIdFromBinary(routedMessage.target)}`)
+            + `to ${getDhtAddressFromRaw(routedMessage.target)}`)
         const session = this.createRoutingSession(routedMessage, mode, excludedPeer)
         const contacts = session.updateAndGetRoutablePeers()
         if (contacts.length > 0) {
@@ -153,11 +151,14 @@ export class Router {
         }
     }
 
-    private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedNode?: PeerDescriptor): RoutingSession {
-        const excludedNodeIds = new Set<NodeID>(routedMessage.routingPath.map((descriptor) => getNodeIdFromPeerDescriptor(descriptor)))
+    private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedNode?: DhtAddress): RoutingSession {
+        const excludedNodeIds = new Set<DhtAddress>(routedMessage.routingPath.map((descriptor) => getNodeIdFromPeerDescriptor(descriptor)))
         if (excludedNode) {
-            excludedNodeIds.add(getNodeIdFromPeerDescriptor(excludedNode))
+            excludedNodeIds.add(excludedNode)
         }
+        routedMessage.parallelRootNodeIds.forEach((nodeId) => {
+            excludedNodeIds.add(nodeId as DhtAddress)
+        })
         logger.trace('routing session created with connections: ' + this.config.connections.size)
         return new RoutingSession({
             rpcCommunicator: this.config.rpcCommunicator,

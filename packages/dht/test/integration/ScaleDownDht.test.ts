@@ -2,10 +2,9 @@ import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator
 import { DhtNode } from '../../src/dht/DhtNode'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
-import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { Logger, hexToBinary } from '@streamr/utils'
+import { Logger } from '@streamr/utils'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
-import { createRandomNodeId } from '../../src/helpers/nodeId'
+import { areEqualPeerDescriptors, createRandomDhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
@@ -23,11 +22,11 @@ describe('Scaling down a Dht network', () => {
     beforeEach(async () => {
         nodes = []
         entryPoint = await createMockConnectionDhtNode(simulator,
-            createRandomNodeId(), K, MAX_CONNECTIONS)
+            createRandomDhtAddress(), K, MAX_CONNECTIONS)
         nodes.push(entryPoint)
 
         entrypointDescriptor = {
-            nodeId: hexToBinary(entryPoint.getNodeId()),
+            nodeId: getRawFromDhtAddress(entryPoint.getNodeId()),
             type: NodeType.NODEJS,
             region: getRandomRegion()
         }
@@ -55,7 +54,7 @@ describe('Scaling down a Dht network', () => {
             const stoppingPeerDescriptor = nodes[nodeIndex].getLocalPeerDescriptor()
             await nodes[nodeIndex].stop()
             const nodeIsCleaned = nodes.every((node) =>
-                node.getAllConnectionPeerDescriptors().every((peer) => {
+                node.getConnections().every((peer) => {
                     if (areEqualPeerDescriptors(peer, stoppingPeerDescriptor)) {
                         logger.error(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + ', ' 
                             + getNodeIdFromPeerDescriptor(stoppingPeerDescriptor) + ' cleaning up failed')

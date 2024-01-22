@@ -1,12 +1,16 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { TemporaryConnectionRequest, TemporaryConnectionResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { 
+    CloseTemporaryConnection,
+    TemporaryConnectionRequest,
+    TemporaryConnectionResponse
+} from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ITemporaryConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
-import { DhtCallContext, ListeningRpcCommunicator } from '@streamr/dht'
+import { DhtAddress, DhtCallContext, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { DeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { NodeList } from '../NodeList'
 import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { Empty } from '../../proto/google/protobuf/empty'
 
 interface TemporaryConnectionRpcLocalConfig {
     rpcCommunicator: ListeningRpcCommunicator
@@ -28,8 +32,8 @@ export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
         return this.temporaryNodes
     }
 
-    removeNode(peerDescriptor: PeerDescriptor): void {
-        this.temporaryNodes.remove(peerDescriptor)
+    removeNode(nodeId: DhtAddress): void {
+        this.temporaryNodes.remove(nodeId)
     }
 
     async openConnection(
@@ -47,5 +51,11 @@ export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
         return {
             accepted: true
         }
+    }
+
+    async closeConnection(_request: CloseTemporaryConnection, context: ServerCallContext): Promise<Empty> {
+        const senderId = getNodeIdFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!)
+        this.removeNode(senderId)
+        return {}
     }
 }

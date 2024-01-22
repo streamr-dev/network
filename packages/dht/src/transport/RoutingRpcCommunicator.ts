@@ -6,7 +6,7 @@ import { RpcMessage } from '../proto/packages/proto-rpc/protos/ProtoRpc'
 import { ServiceID } from '../types/ServiceID'
 import { DEFAULT_SEND_OPTIONS, SendOptions } from './ITransport'
 
-export class RoutingRpcCommunicator extends RpcCommunicator {
+export class RoutingRpcCommunicator extends RpcCommunicator<DhtCallContext> {
     private ownServiceId: ServiceID
     private sendFn: (msg: Message, opts: SendOptions) => Promise<void>
 

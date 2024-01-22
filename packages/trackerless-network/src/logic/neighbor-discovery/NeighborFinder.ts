@@ -1,11 +1,11 @@
 import { setAbortableTimeout } from '@streamr/utils'
 import { NodeList } from '../NodeList'
-import { NodeID } from '../../identifiers'
+import { DhtAddress } from '@streamr/dht'
 
 interface FindNeighborsSessionConfig {
-    targetNeighbors: NodeList
+    neighbors: NodeList
     nearbyNodeView: NodeList
-    doFindNeighbors: (excludedNodes: NodeID[]) => Promise<NodeID[]>
+    doFindNeighbors: (excludedNodes: DhtAddress[]) => Promise<DhtAddress[]>
     minCount: number
 }
 
@@ -22,12 +22,12 @@ export class NeighborFinder {
         this.abortController = new AbortController()
     }
 
-    private async findNeighbors(excluded: NodeID[]): Promise<void> {
+    private async findNeighbors(excluded: DhtAddress[]): Promise<void> {
         if (!this.running) {
             return
         }
         const newExcludes = await this.config.doFindNeighbors(excluded)
-        if (this.config.targetNeighbors.size() < this.config.minCount && newExcludes.length < this.config.nearbyNodeView.size()) {
+        if (this.config.neighbors.size() < this.config.minCount && newExcludes.length < this.config.nearbyNodeView.size()) {
             // TODO should we catch possible promise rejection?
             setAbortableTimeout(() => this.findNeighbors(newExcludes), INTERVAL, this.abortController.signal)
         } else {
@@ -39,7 +39,7 @@ export class NeighborFinder {
         return this.running
     }
 
-    start(excluded: NodeID[] = []): void {
+    start(excluded: DhtAddress[] = []): void {
         if (this.running) {
             return
         }

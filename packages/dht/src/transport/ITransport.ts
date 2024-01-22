@@ -32,6 +32,6 @@ export interface ITransport {
 
     send(msg: Message, opts?: SendOptions): Promise<void>
     getLocalPeerDescriptor(): PeerDescriptor
-    getAllConnectionPeerDescriptors(): PeerDescriptor[]
+    getConnections(): PeerDescriptor[]
     stop(): void | Promise<void>
 }
