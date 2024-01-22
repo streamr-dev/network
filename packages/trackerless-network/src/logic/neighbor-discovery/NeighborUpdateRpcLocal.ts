@@ -59,7 +59,10 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
             return this.createResponse(true)
         } else {
             const isOverNeighborCount = this.config.neighbors.size() > this.config.neighborCount
-                && message.neighborDescriptors.length > this.config.neighborCount    
+                // Motivation: We don't know the remote's neighborCount setting here. We only ask to cut connections
+                // if the remote has a "sufficient" number of neighbors, where "sufficient" means our neighborCount
+                // setting.
+                && message.neighborDescriptors.length > this.config.neighborCount
             if (!isOverNeighborCount) {
                 this.config.neighborFinder.start()
             } else {
