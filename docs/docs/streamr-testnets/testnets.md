@@ -42,7 +42,7 @@ Keep a close eye on this page as these dates may change based on the findings of
 - **Testnet 2 will have reduced slashing penalties of 0.01% instead of 10%**
 
 ### Testnet 3
-- Start date: 25th January to 8th February (tentative)
+- Start date: 4PM CET / 15:00 UTC, 25th January to 8th February
 - Reward pool: 2.5 million DATA
 - Duration: 14 days
 - **Testnet 3 will have slashing penalties of 0.1%. This penalty has been increased from Testnet 2.**
