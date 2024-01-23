@@ -1,9 +1,6 @@
-/* eslint-disable prefer-template */
-
 process.env.NODE_ENV = process.env.NODE_ENV || 'development' // set a default NODE_ENV
 
 const path = require('path')
-const fs = require('fs')
 
 const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
@@ -15,20 +12,6 @@ const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
 const pkg = require('./package.json')
 
 const gitRevisionPlugin = new GitRevisionPlugin()
-
-function envVars() {
-    const obj = {
-        NODE_ENV: process.env.NODE_ENV,
-        version: pkg.version,
-        GIT_VERSION: gitRevisionPlugin.version(),
-        GIT_COMMITHASH: gitRevisionPlugin.commithash(),
-        GIT_BRANCH: gitRevisionPlugin.branch(),
-    }
-    if (process.env.STREAMR_DOCKER_DEV_HOST !== undefined) {
-        obj.STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST
-    }
-    return obj
-}
 
 module.exports = (env, argv) => {
     const isProduction = argv?.mode === 'production' || process.env.NODE_ENV === 'production'
@@ -74,7 +57,13 @@ module.exports = (env, argv) => {
         },
         plugins: [
             gitRevisionPlugin,
-            new webpack.EnvironmentPlugin(envVars()),
+            new webpack.EnvironmentPlugin({ // TODO: remove?
+                NODE_ENV: process.env.NODE_ENV,
+                version: pkg.version,
+                GIT_VERSION: gitRevisionPlugin.version(),
+                GIT_COMMITHASH: gitRevisionPlugin.commithash(),
+                GIT_BRANCH: gitRevisionPlugin.branch(),
+            }),
             new webpack.optimize.LimitChunkCountPlugin({
                 maxChunks: 1
             })
