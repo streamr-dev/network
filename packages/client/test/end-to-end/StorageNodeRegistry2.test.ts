@@ -18,11 +18,6 @@ describe('StorageNodeRegistry2', () => {
     let createdStream: Stream
     let storageNodeAddress: EthereumAddress
 
-    if (isRunningInElectron()) {
-        it.skip('skipping due to Electron environment (cannot run tests sequentially)...')
-        return
-    }
-
     beforeAll(async () => {
         client = createTestClient(await fetchPrivateKeyWithGas(), 43236)
         const storageNodeWallet = new Wallet(await fetchPrivateKeyWithGas())
