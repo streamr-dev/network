@@ -153,7 +153,13 @@ export class WebsocketConnector {
                 } else if (action === 'connectivityProbe') {
                     // no-op
                 } else {
-                    this.attachHandshaker(connection)
+                    if (this.localPeerDescriptor !== undefined) {
+                        this.attachHandshaker(connection)
+                    } else {
+                        logger.warn('incoming Websocket connection before localPeerDescriptor was set, closing connection')
+                        // ToDo: figure out should we close the connection here or not?
+                        connection.close(false).then(() => { return }).catch(() => {})
+                    }
                 }
             })
             const port = await this.websocketServer.start()
