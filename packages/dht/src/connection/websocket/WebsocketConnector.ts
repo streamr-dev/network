@@ -153,7 +153,12 @@ export class WebsocketConnector {
                 } else if (action === 'connectivityProbe') {
                     // no-op
                 } else {
-                    this.attachHandshaker(connection)
+                    if (this.localPeerDescriptor !== undefined) {
+                        this.attachHandshaker(connection)
+                    } else {
+                        // ToDo: figure out should we close the connection here or not?
+                        connection.close(false).then(() => { return }).catch(() => {})
+                    }
                 }
             })
             const port = await this.websocketServer.start()
