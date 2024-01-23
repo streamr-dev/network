@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { Queue, randomEthereumAddress } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'

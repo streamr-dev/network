@@ -1,5 +1,5 @@
 import { StreamID, StreamMessage } from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
+import { EthereumAddress, executeSafePromise } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { StrictStreamrClientConfig } from '../Config'
 import { LoggerFactory } from '../utils/LoggerFactory'
@@ -51,9 +51,7 @@ export const initResendSubscription = (
             config
         )
         subscription.pipe(async function* (src: AsyncGenerator<StreamMessage>) {
-            setImmediate(() => {
-                orderMessages.addMessages(src)
-            })
+            executeSafePromise(() => orderMessages.addMessages(src))
             yield* orderMessages
         })
         subscription.onBeforeFinally.listen(() => orderMessages.destroy())

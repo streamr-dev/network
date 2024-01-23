@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import 'reflect-metadata'
 
 import { ContentType, EncryptionType, MessageID, SignatureType, StreamID, StreamMessage } from '@streamr/protocol'

@@ -7,7 +7,7 @@ import {
     StreamMessageError,
     StreamPartID
 } from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
+import { EthereumAddress, executeSafePromise } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../Config'
 import { DestroySignal } from '../DestroySignal'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
@@ -86,9 +86,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
             opts.config
         )
         messageStream.pipe(async function* (src: AsyncGenerator<StreamMessage>) {
-            setImmediate(() => {
-                orderMessages.addMessages(src)
-            })
+            executeSafePromise(() => orderMessages.addMessages(src))
             yield* orderMessages
         })
         messageStream.onBeforeFinally.listen(() => {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import 'reflect-metadata'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Defer, wait } from '@streamr/utils'

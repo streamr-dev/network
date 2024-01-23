@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { wait } from '@streamr/utils'
 import { pOnce, pLimitFn, pOne, until, tryInSequence } from '../../src/utils/promises'
 import { CacheAsyncFn } from '../../src/utils/caches'
