@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Subscribe Test</title>
+    <script src="/static/streamr-client.web.js"></script>
+</head>
+<body>
+<script>
+    (async () => {
+        const subscriberKey = '0000000000000000000000000000000000000000000000000000000000000025'
+        const publisherKey = '0000000000000000000000000000000000000000000000000000000000000026'
+        const publisherClient = new StreamrClient({
+            ...StreamrClient.CONFIG_TEST,
+            auth: {
+                privateKey: publisherKey
+            }
+        })
+        const subscriberClient = new StreamrClient({
+            ...StreamrClient.CONFIG_TEST,
+            auth: {
+                privateKey: subscriberKey
+            }
+        })
+
+        const stream = await publisherClient.createStream({ id: '/browser-test-' + Date.now() })
+        console.info("Created stream", stream.id)
+
+        setInterval(() => {
+            stream.publish({
+                msg: 'hello world',
+                time: Date.now()
+            }).catch((err) => {
+                console.error('publish error', err)
+            })
+        }, 1000)
+
+        await subscriberClient.subscribe(stream.id, (msg) => {
+            console.log(msg)
+        })
+    })()
+</script>
+</body>
+</html>

@@ -22,7 +22,7 @@ app.get('/stop', (_req, res) => {
 })
 
 app.get('/', (_req, res) => {
-    res.sendFile(path.join(__dirname, 'browser.html'))
+    res.sendFile(path.join(__dirname, 'subscribe-test.html'))
 })
 
 server = app.listen(8880, () => {
