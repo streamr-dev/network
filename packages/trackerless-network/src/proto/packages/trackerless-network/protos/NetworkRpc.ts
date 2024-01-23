@@ -274,6 +274,11 @@ export interface TemporaryConnectionResponse {
     accepted: boolean;
 }
 /**
+ * @generated from protobuf message CloseTemporaryConnection
+ */
+export interface CloseTemporaryConnection {
+}
+/**
  * @generated from protobuf message StreamPartitionInfo
  */
 export interface StreamPartitionInfo {
@@ -616,6 +621,16 @@ class TemporaryConnectionResponse$Type extends MessageType<TemporaryConnectionRe
  */
 export const TemporaryConnectionResponse = new TemporaryConnectionResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class CloseTemporaryConnection$Type extends MessageType<CloseTemporaryConnection> {
+    constructor() {
+        super("CloseTemporaryConnection", []);
+    }
+}
+/**
+ * @generated MessageType for protobuf message CloseTemporaryConnection
+ */
+export const CloseTemporaryConnection = new CloseTemporaryConnection$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class StreamPartitionInfo$Type extends MessageType<StreamPartitionInfo> {
     constructor() {
         super("StreamPartitionInfo", [
@@ -696,7 +711,8 @@ export const NeighborUpdateRpc = new ServiceType("NeighborUpdateRpc", [
  * @generated ServiceType for protobuf service TemporaryConnectionRpc
  */
 export const TemporaryConnectionRpc = new ServiceType("TemporaryConnectionRpc", [
-    { name: "openConnection", options: {}, I: TemporaryConnectionRequest, O: TemporaryConnectionResponse }
+    { name: "openConnection", options: {}, I: TemporaryConnectionRequest, O: TemporaryConnectionResponse },
+    { name: "closeConnection", options: {}, I: CloseTemporaryConnection, O: Empty }
 ]);
 /**
  * @generated ServiceType for protobuf service NodeInfoRpc
