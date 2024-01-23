@@ -3,7 +3,7 @@ import { EventEmitter } from 'eventemitter3'
 import { v4 } from 'uuid'
 import { Message, HandshakeRequest, HandshakeResponse, MessageType, PeerDescriptor, HandshakeError } from '../proto/packages/dht/protos/DhtRpc'
 import { IConnection } from './IConnection'
-import { version } from '../../package.json'
+import { version as localVersion } from '../../package.json'
 import { isCompatibleVersion } from '../helpers/versionCompatibility'
 
 // Used for backwards compatibility with older versions of the protocol that do not send version in handshakes
@@ -50,7 +50,7 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
                 logger.trace('handshake response received')
                 const handshake = message.body.handshakeResponse
                 const sourceVersion = handshake.version ?? BEFORE_TESTNET_TWO_VERSION
-                const error = !isCompatibleVersion(sourceVersion, version) ? HandshakeError.UNSUPPORTED_VERSION : undefined
+                const error = !isCompatibleVersion(sourceVersion, localVersion) ? HandshakeError.UNSUPPORTED_VERSION : undefined
                     ?? handshake.error
                 if (error !== undefined) {
                     this.emit('handshakeFailed', error)
@@ -68,7 +68,7 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
         const outgoingHandshake: HandshakeRequest = {
             sourcePeerDescriptor: this.localPeerDescriptor,
             targetPeerDescriptor: remotePeerDescriptor,
-            version 
+            version: localVersion
         }
         const msg: Message = {
             serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
@@ -87,7 +87,7 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
         const outgoingHandshakeResponse: HandshakeResponse = {
             sourcePeerDescriptor: this.localPeerDescriptor,
             error,
-            version
+            version: localVersion
         }
         const msg: Message = {
             serviceId: Handshaker.HANDSHAKER_SERVICE_ID,

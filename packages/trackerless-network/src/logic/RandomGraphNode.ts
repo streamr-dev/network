@@ -14,6 +14,7 @@ import {
     TemporaryConnectionRequest,
     TemporaryConnectionResponse,
     MessageID,
+    CloseTemporaryConnection,
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { NodeList } from './NodeList'
 import { DeliveryRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -55,7 +56,7 @@ export interface StrictRandomGraphNodeConfig {
     neighborUpdateManager: NeighborUpdateManager
     propagation: Propagation
     rpcCommunicator: ListeningRpcCommunicator
-    neighborCount: number
+    neighborTargetCount: number
     inspector: Inspector
     temporaryConnectionRpcLocal: TemporaryConnectionRpcLocal
     isLocalNodeEntryPoint: () => boolean
@@ -174,6 +175,8 @@ export class RandomGraphNode extends EventEmitter<Events> {
             (req: LeaveStreamPartNotice, context) => this.deliveryRpcLocal.leaveStreamPartNotice(req, context))
         this.config.rpcCommunicator.registerRpcMethod(TemporaryConnectionRequest, TemporaryConnectionResponse, 'openConnection',
             (req: TemporaryConnectionRequest, context) => this.config.temporaryConnectionRpcLocal.openConnection(req, context))
+        this.config.rpcCommunicator.registerRpcNotification(CloseTemporaryConnection, 'closeConnection',
+            (req: TemporaryConnectionRequest, context) => this.config.temporaryConnectionRpcLocal.closeConnection(req, context))
     }
 
     private newContact(closestNodes: PeerDescriptor[]): void {
@@ -182,7 +185,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
             return
         }
         this.updateNearbyNodeView(closestNodes)
-        if (this.config.neighbors.size() < this.config.neighborCount) {
+        if (this.config.neighbors.size() < this.config.neighborTargetCount) {
             this.config.neighborFinder.start()
         }
     }
@@ -235,7 +238,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 this.config.rpcRequestTimeout
             )
         ))
-        if (this.config.neighbors.size() < this.config.neighborCount) {
+        if (this.config.neighbors.size() < this.config.neighborTargetCount) {
             this.config.neighborFinder.start()
         }
     }
@@ -333,11 +336,11 @@ export class RandomGraphNode extends EventEmitter<Events> {
         return this.config.handshaker.getOngoingHandshakes().size
     }
 
-    getNeighborIds(): DhtAddress[] {
+    getNeighbors(): PeerDescriptor[] {
         if (!this.started && this.isStopped()) {
             return []
         }
-        return this.config.neighbors.getIds()
+        return this.config.neighbors.getAll().map((n) => n.getPeerDescriptor())
     }
 
     getNearbyNodeView(): NodeList {

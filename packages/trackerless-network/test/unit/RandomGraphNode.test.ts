@@ -52,11 +52,11 @@ describe('RandomGraphNode', () => {
         randomGraphNode.stop()
     })
 
-    it('getNeighborIds', () => {
+    it('getNeighbors', () => {
         const mockRemote = createMockDeliveryRpcRemote()
         neighbors.add(mockRemote)
-        const ids = randomGraphNode.getNeighborIds()
-        expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
+        const result = randomGraphNode.getNeighbors()
+        expect(getNodeIdFromPeerDescriptor(result[0])).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
     })
 
     it('getNearbyNodeView', () => {

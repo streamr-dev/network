@@ -44,7 +44,7 @@ export const runStreamrChallenge = (
 
         const managedConnection = new ManagedConnection(LOCAL_PEER_DESCRIPTOR,
             ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
-        managedConnection.setRemotePeerDescriptor(remotePeerDescriptor!)
+        managedConnection.setRemotePeerDescriptor(remotePeerDescriptor)
 
         const onDisconnected = () => {
             reject(new FailedToConnectToStreamrWebSocket('Autocertifier failed to connect to '

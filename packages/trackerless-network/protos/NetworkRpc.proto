@@ -26,6 +26,11 @@ service NeighborUpdateRpc {
 
 service TemporaryConnectionRpc {
   rpc openConnection (TemporaryConnectionRequest) returns (TemporaryConnectionResponse);
+  rpc closeConnection (CloseTemporaryConnection) returns (google.protobuf.Empty);
+}
+
+service NodeInfoRpc {
+  rpc getInfo (NodeInfoRequest) returns (NodeInfoResponse);
 }
 
 message MessageID {
@@ -145,7 +150,29 @@ message TemporaryConnectionResponse {
   bool accepted = 1;
 }
 
+message CloseTemporaryConnection {
+}
+
 enum ProxyDirection {
   PUBLISH = 0;
   SUBSCRIBE = 1;
+}
+
+message StreamPartitionInfo {
+  string id = 1;
+  repeated dht.PeerDescriptor controlLayerNeighbors = 2;
+  repeated dht.PeerDescriptor deliveryLayerNeighbors = 3;
+}
+
+message ControlLayerInfo {
+  repeated dht.PeerDescriptor neighbors = 1;
+  repeated dht.PeerDescriptor connections = 2;
+}
+
+message NodeInfoRequest {}
+
+message NodeInfoResponse {
+  dht.PeerDescriptor peerDescriptor = 1;
+  repeated StreamPartitionInfo streamPartitions = 2;
+  optional ControlLayerInfo controlLayer = 3;
 }

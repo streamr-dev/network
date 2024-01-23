@@ -1,15 +1,15 @@
-import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { ConnectivityResponse, Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { Simulator } from '../../src/connection/simulator/Simulator'
-import { createPeerDescriptor } from '../../src/dht/DhtNode'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { Logger, MetricsContext, waitForEvent3 } from '@streamr/utils'
-import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
-import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
 import { MarkOptional } from 'ts-essentials'
+import { ConnectionManager } from '../../src/connection/ConnectionManager'
+import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
+import { Simulator } from '../../src/connection/simulator/Simulator'
+import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
+import { createPeerDescriptor } from '../../src/helpers/createPeerDescriptor'
+import { createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
+import { ConnectivityResponse, Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { TransportEvents } from '../../src/transport/ITransport'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
 
 const SERVICE_ID = 'demo'
 
@@ -292,6 +292,7 @@ describe('ConnectionManager', () => {
         await Promise.all([disconnectedPromise1, disconnectedPromise2])
         await connectionManager3.stop()
         await connectionManager4.stop()
+        simulator2.stop()
     })
 
     it('Cannot send to own WebsocketServer if nodeIds do not match', async () => {

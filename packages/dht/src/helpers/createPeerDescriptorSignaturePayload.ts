@@ -21,7 +21,7 @@ export const createPeerDescriptorSignaturePayload = (peerDescriptor: PeerDescrip
         separator,
         peerDescriptor.ipAddress !== undefined ? convertUnsignedIntegerToBuffer(peerDescriptor.ipAddress) : new Uint8Array(0),
         separator,
-        peerDescriptor.salt !== undefined ? Buffer.from(peerDescriptor.salt) : new Uint8Array(0)
+        peerDescriptor.publicKey !== undefined ? Buffer.from(peerDescriptor.publicKey) : new Uint8Array(0)
     ]
     return Buffer.concat(buffers)
 }

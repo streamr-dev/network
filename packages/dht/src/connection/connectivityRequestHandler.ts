@@ -1,4 +1,4 @@
-import { Logger } from '@streamr/utils'
+import { ipv4ToNumber, Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
 import {
     ConnectivityRequest, ConnectivityResponse,
@@ -9,6 +9,7 @@ import { CONNECTIVITY_CHECKER_SERVICE_ID, connectAsync } from './connectivityChe
 import { IConnection } from './IConnection'
 import { ServerWebsocket } from './websocket/ServerWebsocket'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
+import { version as localVersion } from '../../package.json'
 
 const logger = new Logger(module)
 
@@ -36,6 +37,7 @@ const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, co
     let outgoingConnection: IConnection | undefined
     let connectivityResponseMessage: ConnectivityResponse | undefined
     const host = connectivityRequest.host ?? connection.getRemoteAddress()
+    const ipAddress = connection.getRemoteIp()
     try {
         const wsServerInfo = {
             host,
@@ -52,17 +54,22 @@ const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, co
         logger.debug('error', { err })
         connectivityResponseMessage = {
             host,
-            natType: NatType.UNKNOWN
+            natType: NatType.UNKNOWN,
+            ipAddress: ipv4ToNumber(ipAddress),
+            version: localVersion
         }
     }
     if (outgoingConnection) {
         // TODO should we have some handling for this floating promise?
         outgoingConnection.close(false)
         logger.trace('Connectivity test produced positive result, communicating reply to the requester ' + host + ':' + connectivityRequest.port)
+        
         connectivityResponseMessage = {
             host,
             natType: NatType.OPEN_INTERNET,
-            websocket: { host, port: connectivityRequest.port, tls: connectivityRequest.tls }
+            websocket: { host, port: connectivityRequest.port, tls: connectivityRequest.tls },
+            ipAddress: ipv4ToNumber(ipAddress),
+            version: localVersion
         }
     }
     const msg: Message = {

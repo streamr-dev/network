@@ -12,7 +12,7 @@ import {
     WebsocketConnectionRequest
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { WebsocketConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { Logger, wait } from '@streamr/utils'
+import { ipv4ToNumber, Logger, wait } from '@streamr/utils'
 import { ManagedConnection } from '../ManagedConnection'
 import { WebsocketServer } from './WebsocketServer'
 import { sendConnectivityRequest } from '../connectivityChecker'
@@ -29,7 +29,7 @@ import { attachConnectivityRequestHandler } from '../connectivityRequestHandler'
 import * as Err from '../../helpers/errors'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { version } from '../../../package.json'
+import { version as localVersion } from '../../../package.json'
 import { isCompatibleVersion } from '../../helpers/versionCompatibility'
 
 const logger = new Logger(module)
@@ -165,7 +165,9 @@ export class WebsocketConnector {
         // TODO: this could throw if the server is not running
         const noServerConnectivityResponse: ConnectivityResponse = {
             host: '127.0.0.1',
-            natType: NatType.UNKNOWN
+            natType: NatType.UNKNOWN,
+            ipAddress: ipv4ToNumber('127.0.0.1'),
+            version: localVersion
         }
         if (this.abortController.signal.aborted) {
             return noServerConnectivityResponse
@@ -181,7 +183,10 @@ export class WebsocketConnector {
                         const preconfiguredConnectivityResponse: ConnectivityResponse = {
                             host: this.host!,
                             natType: NatType.OPEN_INTERNET,
-                            websocket: { host: this.host!, port: this.selectedPort!, tls: this.config.tlsCertificate !== undefined }
+                            websocket: { host: this.host!, port: this.selectedPort!, tls: this.config.tlsCertificate !== undefined },
+                            // TODO: maybe do a DNS lookup here?
+                            ipAddress: ipv4ToNumber('127.0.0.1'),
+                            version: localVersion
                         }
                         return preconfiguredConnectivityResponse
                     } else {
@@ -193,7 +198,7 @@ export class WebsocketConnector {
                             selfSigned
                         }
                         if (!this.abortController.signal.aborted) {
-                            return await sendConnectivityRequest(connectivityRequest, entryPoint)
+                            return await sendConnectivityRequest(connectivityRequest, entryPoint, localVersion)
                         } else {
                             throw new Err.ConnectionFailed('ConnectivityChecker is destroyed')
                         }
@@ -297,7 +302,7 @@ export class WebsocketConnector {
         const nodeId = getNodeIdFromPeerDescriptor(sourcePeerDescriptor)
         if (this.ongoingConnectRequests.has(nodeId)) {
             const ongoingConnectRequest = this.ongoingConnectRequests.get(nodeId)!
-            if (!isCompatibleVersion(sourceVersion, version)) {
+            if (!isCompatibleVersion(sourceVersion, localVersion)) {
                 ongoingConnectRequest.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
             } else {
                 ongoingConnectRequest.attachImplementation(serverWebsocket)
@@ -313,7 +318,7 @@ export class WebsocketConnector {
                 targetPeerDescriptor
             )
             managedConnection.setRemotePeerDescriptor(sourcePeerDescriptor)
-            if (!isCompatibleVersion(sourceVersion, version)) {
+            if (!isCompatibleVersion(sourceVersion, localVersion)) {
                 managedConnection.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 managedConnection.rejectHandshake(HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
