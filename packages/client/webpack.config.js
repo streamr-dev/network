@@ -31,7 +31,7 @@ function envVars() {
 }
 
 module.exports = (env, argv) => {
-    const isProduction = (argv !== undefined && argv.mode === 'production') || process.env.NODE_ENV === 'production'
+    const isProduction = argv?.mode === 'production' || process.env.NODE_ENV === 'production'
 
     const analyze = !!process.env.BUNDLE_ANALYSIS
 
@@ -197,5 +197,5 @@ module.exports = (env, argv) => {
             },
         })
     }
-    return [clientConfig, clientMinifiedConfig].filter(Boolean)[0]
+    return [clientConfig, clientMinifiedConfig].filter(Boolean)
 }
