@@ -173,10 +173,10 @@ module.exports = (env, argv) => {
         }
     })
 
-    let clientMinifiedConfig
-
-    if (isProduction) {
-        clientMinifiedConfig = merge({}, clientConfig, {
+    if (!isProduction) {
+        return clientConfig
+    } else {
+        return merge({}, clientConfig, {
             cache: false,
             optimization: {
                 minimize: true,
@@ -197,5 +197,4 @@ module.exports = (env, argv) => {
             },
         })
     }
-    return [clientConfig, clientMinifiedConfig].filter(Boolean)
 }
