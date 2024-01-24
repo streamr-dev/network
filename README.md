@@ -165,7 +165,7 @@ All packages are released at the same time under the same version.
 You can skip this step if releasing a beta version.
 
 Read and edit [CHANGELOG.md](CHANGELOG.md). Create a new section for the new version, move items from under
-"Unreleased" to this new section. Add any missing changes worth mentioning that may be missing from "Unreleased".
+"Unreleased" to this new section. Add any additional changes worth mentioning that may be missing from "Unreleased".
 
 
 ### Step 2: Creating and pushing the version and tag
