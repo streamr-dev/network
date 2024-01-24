@@ -201,13 +201,7 @@ npm run docs
 aws s3 cp ./docs s3://api-docs.streamr.network/client/vX.Y --recursive --profile streamr-api-docs-upload
 ```
 
-
-#### Docker release
-
-After pushing the broker tag, GitHub Actions will build and publish the Docker image automatically if
-tests pass.
-
-##### Tag `latest`
+### Step 5: (optional) Docker image tag `latest`
 
 GitHub Actions will not update the `latest` tag. This must be done manually. Keep in mind that `latest` should
 always refer to the latest _stable_ version.
