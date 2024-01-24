@@ -149,11 +149,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     private validateConfig(): void {
-        if (this.config.nodeId !== undefined && !/^[0-9a-fA-F]+$/.test(this.config.nodeId)) {
-            throw new Error('Invalid nodeId, the nodeId should be a hex string')
-        }
-        if (this.config.nodeId !== undefined && this.config.nodeId.length !== 40) {
-            throw new Error('Invalid nodeId, the lenght of the nodeId should be 40')
+        if (this.config.nodeId !== undefined ) {
+            if (!/^[0-9a-fA-F]+$/.test(this.config.nodeId)) {
+                throw new Error('Invalid nodeId, the nodeId should be a hex string')
+            } else if (this.config.nodeId.length !== 40) {
+                throw new Error('Invalid nodeId, the lenght of the nodeId should be 40')
+            }
         }
     }
 
