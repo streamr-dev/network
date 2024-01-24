@@ -10,12 +10,13 @@ import { StreamPartID } from '@streamr/protocol'
 
 interface NeighborUpdateManagerConfig {
     localPeerDescriptor: PeerDescriptor
-    targetNeighbors: NodeList
+    neighbors: NodeList
     nearbyNodeView: NodeList
     neighborFinder: NeighborFinder
     streamPartId: StreamPartID
     rpcCommunicator: ListeningRpcCommunicator
     neighborUpdateInterval: number
+    neighborTargetCount: number
 }
 
 const logger = new Logger(module)
@@ -44,12 +45,13 @@ export class NeighborUpdateManager {
 
     private async updateNeighborInfo(): Promise<void> {
         logger.trace(`Updating neighbor info to nodes`)
-        const neighborDescriptors = this.config.targetNeighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor())
-        await Promise.allSettled(this.config.targetNeighbors.getAll().map(async (neighbor) => {
+        const neighborDescriptors = this.config.neighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor())
+        await Promise.allSettled(this.config.neighbors.getAll().map(async (neighbor) => {
             const res = await this.createRemote(neighbor.getPeerDescriptor()).updateNeighbors(this.config.streamPartId, neighborDescriptors)
             if (res.removeMe) {
-                this.config.targetNeighbors.remove(neighbor.getPeerDescriptor())
-                this.config.neighborFinder.start([getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor())])
+                const nodeId = getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor())
+                this.config.neighbors.remove(nodeId)
+                this.config.neighborFinder.start([nodeId])
             }
         }))
     }

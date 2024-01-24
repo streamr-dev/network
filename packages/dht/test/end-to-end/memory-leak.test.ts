@@ -4,7 +4,7 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { Message, MessageType } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { getNodeIdFromPeerDescriptor } from '../../src/exports'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 const MESSAGE_ID = 'mock-message-id'
 
@@ -19,7 +19,7 @@ describe('memory leak', () => {
             }
         })
         let entryPoint: DhtNode | undefined = new DhtNode({
-            peerId: getNodeIdFromPeerDescriptor(entryPointDescriptor),
+            nodeId: getNodeIdFromPeerDescriptor(entryPointDescriptor),
             websocketHost: entryPointDescriptor.websocket!.host,
             websocketPortRange: {
                 min: entryPointDescriptor.websocket!.port,

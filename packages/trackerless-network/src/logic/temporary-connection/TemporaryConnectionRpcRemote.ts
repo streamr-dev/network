@@ -15,4 +15,15 @@ export class TemporaryConnectionRpcRemote extends RpcRemote<TemporaryConnectionR
             return false
         }
     }
+
+    async closeConnection(): Promise<void> {
+        try {
+            await this.getClient().closeConnection({}, this.formDhtRpcOptions({
+                connect: false,
+                notification: true
+            }))
+        } catch (err) {
+            logger.trace(`closeConnection to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
+        }
+    }
 }

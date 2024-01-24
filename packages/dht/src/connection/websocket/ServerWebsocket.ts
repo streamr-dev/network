@@ -4,6 +4,7 @@ import { Message, connection as WsConnection } from 'websocket'
 import { Logger } from '@streamr/utils'
 import { Url } from 'url'
 import { CUSTOM_GOING_AWAY, GOING_AWAY } from './ClientWebsocket'
+import { createRandomConnectionId } from '../Connection'
 
 const logger = new Logger(module)
 
@@ -34,7 +35,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         this.onError = this.onError.bind(this)
 
         this.resourceURL = resourceURL
-        this.connectionId = new ConnectionID()
+        this.connectionId = createRandomConnectionId()
 
         socket.on('message', this.onMessage)
         socket.on('close', this.onClose)
@@ -82,6 +83,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         // If in an Karma / Electron test, use the NodeJS implementation
         // of Buffer instead of the browser polyfill
 
+        // TODO: no need to check this.socket as it is always defined when stopped is false?
         if (!this.stopped && this.socket) {
             if (typeof NodeJsBuffer !== 'undefined') {
                 this.socket.sendBytes(NodeJsBuffer.from(data))
@@ -104,6 +106,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         }
     }
 
+    // TODO could rename to "closeSilently?"
     public destroy(): void {
         if (!this.stopped) {
             this.removeAllListeners()
@@ -119,9 +122,22 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
     }
 
     public getRemoteAddress(): string {
+        // TODO: no need to check this.socket as it is always defined when stopped is false?
         if (!this.stopped && this.socket) {
             return this.socket.remoteAddress
         } else {
+            // TODO throw
+            logger.error('Tried to get the remoteAddress of a stopped connection')
+            return ''
+        }
+    }
+
+    public getRemoteIp(): string {
+        // TODO: no need to check this.socket as it is always defined when stopped is false?
+        if (!this.stopped && this.socket) {
+            return this.socket.socket.remoteAddress!
+        } else {
+            // TODO throw
             logger.error('Tried to get the remoteAddress of a stopped connection')
             return ''
         }

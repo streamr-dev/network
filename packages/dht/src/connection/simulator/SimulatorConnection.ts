@@ -4,7 +4,7 @@ import { Message, PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Connection } from '../Connection'
 import { Logger } from '@streamr/utils'
 import { protoToString } from '../../helpers/protoToString'
-import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
+import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 const logger = new Logger(module)
 

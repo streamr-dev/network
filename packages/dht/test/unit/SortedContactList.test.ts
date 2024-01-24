@@ -1,11 +1,9 @@
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
-import { PeerID } from '../../src/helpers/PeerID'
 import { DhtAddress, DhtAddressRaw, createRandomDhtAddress, getDhtAddressFromRaw } from '../../src/identifiers'
 
-const createItem = (nodeId: DhtAddressRaw): { getNodeId: () => DhtAddress, getPeerId: () => PeerID } => {
+const createItem = (nodeId: DhtAddressRaw): { getNodeId: () => DhtAddress } => {
     return { 
-        getNodeId: () => getDhtAddressFromRaw(nodeId),
-        getPeerId: () => PeerID.fromValue(nodeId)
+        getNodeId: () => getDhtAddressFromRaw(nodeId)
     }
 }
 
@@ -120,4 +118,17 @@ describe('SortedContactList', () => {
         list.setActive(item4.getNodeId())
         expect(list.getActiveContacts()).toEqual([item2, item3, item4])
     })
+
+    it('does not emit newContact if contact did not fit the structure', () => {
+        const list = new SortedContactList({ referenceId: item0.getNodeId(), maxSize: 2, allowToContainReferenceId: false, emitEvents: true })
+        const onNewContact = jest.fn()
+        list.on('newContact', onNewContact)
+        list.addContact(item1)
+        list.addContact(item2)
+        expect(onNewContact).toBeCalledTimes(2)
+        list.addContact(item3)
+        expect(onNewContact).toBeCalledTimes(2)
+        expect(list.getAllContacts().length).toEqual(2)
+    })
+
 })

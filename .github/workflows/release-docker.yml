@@ -1,21 +1,15 @@
-name: release
+name: release docker
 on:
-  workflow_run:
-    branches: [main, streamr-1.0, pretestnet, testnet-one, testnet-two, testnet-three]
-    workflows: [validate]
-    types:
-      - completed
   workflow_dispatch:
 jobs:
   broker-docker-image:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     uses: ./.github/workflows/docker-build.yml
     with:
       docker_file: Dockerfile.broker
       image_name: streamr/broker-node
       host_machine_platform: self-hosted
       build_platforms: linux/amd64,linux/arm64
-      branch: ${{ github.event.workflow_run.head_branch }}
+      branch: ${{ github.ref_name }}
       push_image: true
     secrets:
       dockerhub_username: ${{secrets.DOCKERHUB_USERNAME}}

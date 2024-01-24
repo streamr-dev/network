@@ -59,7 +59,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
                 decrypted = await decrypt(msg, opts.groupKeyManager, opts.destroySignal)
             } catch (err) {
                 // TODO log this in onError? if we want to log all errors?
-                logger.debug('Failed to decrypt', { messageId: msg.getMessageID(), err })
+                logger.debug('Failed to decrypt', { messageId: msg.messageId, err })
                 // clear cached permissions if cannot decrypt, likely permissions need updating
                 opts.streamRegistry.clearStreamCache(msg.getStreamId())
                 throw err

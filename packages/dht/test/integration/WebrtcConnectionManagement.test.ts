@@ -9,6 +9,7 @@ import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTran
 import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
 import { MetricsContext } from '@streamr/utils'
 import { createMockPeerDescriptor } from '../utils/utils'
+import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport: ITransport) => {
     return new ConnectionManager({
@@ -68,8 +69,8 @@ describe('WebRTC Connection Management', () => {
 
         manager2.on('message', (message: Message) => {
             expect(message.messageId).toEqual('mockerer')
-            expect(manager1.getConnection(peerDescriptor2)!.connectionType).toEqual(ConnectionType.WEBRTC)
-            expect(manager2.getConnection(peerDescriptor1)!.connectionType).toEqual(ConnectionType.WEBRTC)
+            expect(manager1.getConnection(getNodeIdFromPeerDescriptor(peerDescriptor2))!.connectionType).toEqual(ConnectionType.WEBRTC)
+            expect(manager2.getConnection(getNodeIdFromPeerDescriptor(peerDescriptor1))!.connectionType).toEqual(ConnectionType.WEBRTC)
 
             done()
         })
@@ -91,8 +92,8 @@ describe('WebRTC Connection Management', () => {
         }
         manager1.on('message', (message: Message) => {
             expect(message.messageId).toEqual('mockerer')
-            expect(manager1.getConnection(peerDescriptor2)!.connectionType).toEqual(ConnectionType.WEBRTC)
-            expect(manager2.getConnection(peerDescriptor1)!.connectionType).toEqual(ConnectionType.WEBRTC)
+            expect(manager1.getConnection(getNodeIdFromPeerDescriptor(peerDescriptor2))!.connectionType).toEqual(ConnectionType.WEBRTC)
+            expect(manager2.getConnection(getNodeIdFromPeerDescriptor(peerDescriptor1))!.connectionType).toEqual(ConnectionType.WEBRTC)
 
             done()
         })
@@ -226,6 +227,6 @@ describe('WebRTC Connection Management', () => {
             manager1.send(msg),
             disconnectedPromise1
         ])
-        expect(manager1.getConnection(msg.targetDescriptor!)).toBeUndefined()
+        expect(manager1.getConnection(getNodeIdFromPeerDescriptor(msg.targetDescriptor))).toBeUndefined()
     }, 20000)
 })

@@ -1,6 +1,5 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '@streamr/utils'
-import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { Empty } from '../proto/google/protobuf/empty'
 import {
     ClosestPeersRequest,
@@ -11,13 +10,13 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import { IDhtNodeRpc } from '../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
-import { DhtAddress, getDhtAddressFromRaw } from '../identifiers'
+import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../identifiers'
 
 interface DhtNodeRpcLocalConfig {
     peerDiscoveryQueryBatchSize: number
     getClosestPeersTo: (nodeId: DhtAddress, limit: number) => PeerDescriptor[]
     addNewContact: (contact: PeerDescriptor) => void
-    removeContact: (contact: PeerDescriptor) => void
+    removeContact: (nodeId: DhtAddress) => void
 }
 
 const logger = new Logger(module)
@@ -53,8 +52,9 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
     async leaveNotice(context: ServerCallContext): Promise<Empty> {
         // TODO check signature??
         const sender = (context as DhtCallContext).incomingSourceDescriptor!
-        logger.trace('received leave notice: ' + getNodeIdFromPeerDescriptor(sender))
-        this.config.removeContact(sender)
+        const senderNodeId = getNodeIdFromPeerDescriptor(sender)
+        logger.trace('received leave notice: ' + senderNodeId)
+        this.config.removeContact(senderNodeId)
         return {}
     }
 }

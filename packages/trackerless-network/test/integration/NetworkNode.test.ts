@@ -1,7 +1,9 @@
 import { NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import {
+    ContentType,
+    EncryptionType,
     MessageID,
-    MessageRef,
+    MessageRef, SignatureType,
     StreamMessage,
     StreamMessageType,
     StreamPartIDUtils
@@ -78,7 +80,10 @@ describe('NetworkNode', () => {
             content: utf8ToBinary(JSON.stringify({
                 hello: 'world'
             })),
+            contentType: ContentType.JSON,
             messageType: StreamMessageType.MESSAGE,
+            encryptionType: EncryptionType.NONE,
+            signatureType: SignatureType.SECP256K1,
             signature: hexToBinary('0x1234'),
         })
 
@@ -91,6 +96,19 @@ describe('NetworkNode', () => {
         })
         await node2.broadcast(streamMessage)
         await waitForCondition(() => msgCount === 1)
+    })
+
+    it('fetchNodeInfo', async () => {
+        await node1.join(STREAM_PART_ID)
+        await node2.join(STREAM_PART_ID)
+        const result1 = await node1.fetchNodeInfo(pd2)
+        const result2 = await node2.fetchNodeInfo(pd1)
+        expect(result1.streamPartitions.length).toEqual(1)
+        expect(result2.streamPartitions.length).toEqual(1)
+        expect(result1.controlLayer!.connections.length).toEqual(1)
+        expect(result2.controlLayer!.connections.length).toEqual(1)
+        expect(result1.controlLayer!.neighbors.length).toEqual(1)
+        expect(result2.controlLayer!.neighbors.length).toEqual(1)
     })
 
 })

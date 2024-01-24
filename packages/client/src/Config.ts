@@ -167,7 +167,7 @@ export interface NetworkNodeConfig {
      * The number of connections the client's network node should have
      * on each stream partition.
     */
-    streamPartitionNumOfNeighbors?: number
+    streamPartitionNeighborTargetCount?: number
 
     /**
      * The minimum number of peers in a stream partition that the client's network node

@@ -1,0 +1,24 @@
+name: publish npm
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        type: choice
+        required: true
+        default: latest
+        options:
+          - latest
+          - beta
+          - alpha
+          - internal
+          - testnet-three
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: build (cached)
+        uses: ./.github/workflows/reusable/cached-build
+      - run: bash release.sh ${{ github.event.inputs.tag }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

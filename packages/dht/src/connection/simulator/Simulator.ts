@@ -7,10 +7,9 @@ import { SimulatorConnection } from './SimulatorConnection'
 import { ConnectionID } from '../IConnection'
 import { Logger } from '@streamr/utils'
 import { getRegionDelayMatrix } from './pings'
-import { getNodeIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import Heap from 'heap'
 import { debugVars } from '../../helpers/debugHelpers'
-import { DhtAddress } from '../../identifiers'
+import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 const logger = new Logger(module)
 

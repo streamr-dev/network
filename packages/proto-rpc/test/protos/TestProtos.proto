@@ -42,7 +42,7 @@ message ClosestPeersResponse {
   }
 
 message PeerDescriptor {
-    bytes peerId = 1;
+    bytes nodeId = 1;
     NodeType type = 2;
     ConnectivityMethod udp = 3;
     ConnectivityMethod tcp = 4;
@@ -53,6 +53,18 @@ message PeerDescriptor {
   message ConnectivityMethod {
     uint32 port = 2;
     string ip = 3;
+  }
+
+  service OptionalService {
+    rpc getOptional (OptionalRequest) returns (OptionalResponse);
+  }
+
+  message OptionalRequest {
+    optional string someOptionalField = 1;   
+  }
+
+  message OptionalResponse {
+    optional string someOptionalField = 1;   
   }
   
   enum NodeType {

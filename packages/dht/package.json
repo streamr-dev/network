@@ -1,6 +1,6 @@
 {
   "name": "@streamr/dht",
-  "version": "100.0.0-pretestnet.4",
+  "version": "100.0.0-testnet-two.4",
   "description": "Streamr Network DHT",
   "repository": {
     "type": "git",
@@ -18,7 +18,6 @@
     "check": "tsc -p ./tsconfig.jest.json --noEmit",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-    "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",
     "test": "npm run test-unit && npm run test-integration && npm run test-end-to-end",
     "test-browser": "karma start karma.config.js",
     "test-unit": "jest test/unit",
@@ -31,9 +30,9 @@
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
-    "@streamr/autocertifier-client": "100.0.0-pretestnet.4",
-    "@streamr/proto-rpc": "100.0.0-pretestnet.4",
-    "@streamr/utils": "100.0.0-pretestnet.4",
+    "@streamr/autocertifier-client": "100.0.0-testnet-two.4",
+    "@streamr/proto-rpc": "100.0.0-testnet-two.4",
+    "@streamr/utils": "100.0.0-testnet-two.4",
     "eventemitter3": "^5.0.0",
     "heap": "^0.2.6",
     "ipaddr.js": "^2.0.1",
@@ -45,19 +44,19 @@
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
-    "@streamr/test-utils": "100.0.0-pretestnet.4",
+    "@streamr/test-utils": "100.0.0-testnet-two.4",
     "@types/express": "^4.17.21",
     "@types/heap": "^0.2.34",
     "@types/k-bucket": "^5.0.1",
     "@types/lodash": "^4.14.202",
-    "@types/sinon": "^10.0.15",
+    "@types/sinon": "^17.0.3",
     "@types/uuid": "^9.0.7",
-    "@types/websocket": "^1.0.3",
+    "@types/websocket": "^1.0.10",
     "express": "^4.17.1",
     "jest-leak-detector": "^27.3.1",
     "patch-package": "^8.0.0",
     "ts-essentials": "^9.4.1",
-    "ts-node": "^10.9.1"
+    "ts-node": "^10.9.2"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8",

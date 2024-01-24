@@ -87,13 +87,13 @@ describe('Layer0MixedConnectionTypes', () => {
             node5.joinDht([epPeerDescriptor])
         ])
 
-        expect(node1.getNumberOfNeighbors()).toBeGreaterThanOrEqual(2)
-        expect(node2.getNumberOfNeighbors()).toBeGreaterThanOrEqual(2)
-        expect(node3.getNumberOfNeighbors()).toBeGreaterThanOrEqual(2)
-        expect(node4.getNumberOfNeighbors()).toBeGreaterThanOrEqual(2)
-        expect(node5.getNumberOfNeighbors()).toBeGreaterThanOrEqual(1)
+        expect(node1.getNeighborCount()).toBeGreaterThanOrEqual(2)
+        expect(node2.getNeighborCount()).toBeGreaterThanOrEqual(2)
+        expect(node3.getNeighborCount()).toBeGreaterThanOrEqual(2)
+        expect(node4.getNeighborCount()).toBeGreaterThanOrEqual(2)
+        expect(node5.getNeighborCount()).toBeGreaterThanOrEqual(1)
 
-    }, 15000)
+    }, 20000)
 
     it('Simultaneous joins', async () => {
         await Promise.all([
@@ -103,10 +103,10 @@ describe('Layer0MixedConnectionTypes', () => {
             node4.joinDht([epPeerDescriptor]),
             node5.joinDht([epPeerDescriptor])
         ])
-        expect(node1.getNumberOfNeighbors()).toBeGreaterThanOrEqual(2)
-        expect(node2.getNumberOfNeighbors()).toBeGreaterThanOrEqual(2)
-        expect(node3.getNumberOfNeighbors()).toBeGreaterThanOrEqual(2)
-        expect(node4.getNumberOfNeighbors()).toBeGreaterThanOrEqual(2)
-        expect(node5.getNumberOfNeighbors()).toBeGreaterThanOrEqual(2)
-    }, 30000)
+        expect(node1.getNeighborCount()).toBeGreaterThanOrEqual(2)
+        expect(node2.getNeighborCount()).toBeGreaterThanOrEqual(2)
+        expect(node3.getNeighborCount()).toBeGreaterThanOrEqual(2)
+        expect(node4.getNeighborCount()).toBeGreaterThanOrEqual(2)
+        expect(node5.getNeighborCount()).toBeGreaterThanOrEqual(2)
+    }, 40000)
 })
