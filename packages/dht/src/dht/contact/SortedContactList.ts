@@ -72,15 +72,16 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
                 const index = sortedIndexBy(this.contactIds, contact.getNodeId(), (id: DhtAddress) => { return this.distanceToReferenceId(id) })
                 this.contactIds.splice(index, 0, contact.getNodeId())
                 if (this.config.emitEvents) {
+                    const closestContacts = this.getClosestContacts()
                     this.emit(
                         'contactRemoved',
                         removedContact,
-                        this.getClosestContacts()
+                        closestContacts
                     )
                     this.emit(
                         'newContact',
                         contact,
-                        this.getClosestContacts()
+                        closestContacts
                     )
                 }
             }
