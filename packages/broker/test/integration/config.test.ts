@@ -28,7 +28,7 @@ describe('Config', () => {
                 network: {
                     controlLayer: {
                         entryPoints: [{
-                            id: 'eeeeeeeeee',
+                            id: 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
                             websocket: {
                                 'host': '10.200.10.1',
                                 'port': 40500,

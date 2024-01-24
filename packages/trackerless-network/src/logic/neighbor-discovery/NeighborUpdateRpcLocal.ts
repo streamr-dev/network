@@ -15,7 +15,7 @@ interface NeighborUpdateRpcLocalConfig {
     nearbyNodeView: NodeList
     neighborFinder: NeighborFinder
     rpcCommunicator: ListeningRpcCommunicator
-    neighborCount: number
+    neighborTargetCount: number
 }
 
 export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
@@ -58,11 +58,11 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
         if (!this.config.neighbors.has(senderId)) {
             return this.createResponse(true)
         } else {
-            const isOverNeighborCount = this.config.neighbors.size() > this.config.neighborCount
-                // Motivation: We don't know the remote's neighborCount setting here. We only ask to cut connections
-                // if the remote has a "sufficient" number of neighbors, where "sufficient" means our neighborCount
+            const isOverNeighborCount = this.config.neighbors.size() > this.config.neighborTargetCount
+                // Motivation: We don't know the remote's neighborTargetCount setting here. We only ask to cut connections
+                // if the remote has a "sufficient" number of neighbors, where "sufficient" means our neighborTargetCount
                 // setting.
-                && message.neighborDescriptors.length > this.config.neighborCount
+                && message.neighborDescriptors.length > this.config.neighborTargetCount
             if (!isOverNeighborCount) {
                 this.config.neighborFinder.start()
             } else {
