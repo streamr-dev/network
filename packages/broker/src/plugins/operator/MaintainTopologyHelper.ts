@@ -2,7 +2,6 @@ import { StreamID, toStreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { ContractFacade } from './ContractFacade'
-import { OperatorServiceConfig } from './OperatorPlugin'
 
 const logger = new Logger(module)
 
