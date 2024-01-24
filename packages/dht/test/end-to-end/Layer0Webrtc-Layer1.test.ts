@@ -1,5 +1,5 @@
 import { DhtNode } from '../../src/dht/DhtNode'
-import { DhtAddress, createRandomDhtAddress, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { createRandomDhtAddress, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('Layer 1 on Layer 0 with mocked connections', () => {
