@@ -143,8 +143,18 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             storageRedundancyFactor: 5,
             metricsContext: new MetricsContext()
         }, conf)
+        this.validateConfig()
         this.localDataStore = new LocalDataStore(this.config.storeMaxTtl)
         this.send = this.send.bind(this)
+    }
+
+    private validateConfig(): void {
+        if (this.config.nodeId !== undefined && !/^[0-9a-fA-F]+$/.test(this.config.nodeId)) {
+            throw new Error('Invalid nodeId, the nodeId should be a hex string')
+        }
+        if (this.config.nodeId !== undefined && this.config.nodeId.length !== 40) {
+            throw new Error('Invalid nodeId, the lenght of the nodeId should be 40')
+        }
     }
 
     public async start(): Promise<void> {
