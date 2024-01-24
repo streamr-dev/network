@@ -154,7 +154,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             if (!/^[0-9a-fA-F]+$/.test(this.config.nodeId)) {
                 throw new Error('Invalid nodeId, the nodeId should be a hex string')
             } else if (this.config.nodeId.length !== expectedNodeIdLength) {
-                throw new Error(`Invalid nodeId, the lenght of the nodeId should be ${expectedNodeIdLength}`)
+                throw new Error(`Invalid nodeId, the length of the nodeId should be ${expectedNodeIdLength}`)
             }
         }
     }
