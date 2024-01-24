@@ -159,16 +159,18 @@ npm install
 
 ## Release
 
-All packages are released at the same time under the same version. (Some internal dev-dependency are not released at all).
+All packages are released at the same time under the same version.
 
 ### Step 1: Edit the CHANGELOG
-You can skip this step if we are releasing a beta version.
+You can skip this step if releasing a beta version.
 
-Read and edit [CHANGELOG](CHANGELOG.md). Create a new section for the new version, move items from under "Unreleased"
-section to this new section. Add any missing changes worth mentioning.
+Read and edit [CHANGELOG.md](CHANGELOG.md). Create a new section for the new version, move items from under
+"Unreleased" to this new section. Add any missing changes worth mentioning that may be missing from "Unreleased".
 
 
 ### Step 2: Creating and pushing the version and tag
+In the bash commands below, replace `<SEMVER>` with the version to be published _without_ the letter "v" infront.
+
 ```
 git checkout main
 git pull
@@ -180,13 +182,14 @@ git add -p .                                                         # or "git a
 
 ### Step 3: Publish NPM and release Docker image
 
-Firstly, wait for all tests to pass validation in CI.
+Firstly, wait for all tests to pass in GitHub Actions.
 
 To publish the NPM packages, use [publish-npm workflow](https://github.com/streamr-dev/network/actions/workflows/publish-npm.yml).
-Select the right branch and NPM tag to be used.
+Click button "Run Workflow". Select the right branch and NPM tag to be used.
 
 To publish the Docker image, use [release-docker workflow](https://github.com/streamr-dev/network/actions/workflows/release-docker.yml).
-Select the right branch and you are good to go. The Docker tags are automatically chosen based oon Git branch and Git tag.
+Click button "Run Workflow". Select the right branch and you are good to go. The Docker tags are automatically chosen based on
+the associated Git branch and tag.
 
 ### Step 4: Update API docs
 
