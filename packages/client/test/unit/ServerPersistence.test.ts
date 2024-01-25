@@ -1,4 +1,4 @@
-import { isRunningInElectron, randomEthereumAddress, testOnlyInNodeJs } from '@streamr/test-utils'
+import { randomEthereumAddress, testOnlyInNodeJs } from '@streamr/test-utils'
 import range from 'lodash/range'
 import { join } from 'path'
 import { Database } from 'sqlite'

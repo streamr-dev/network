@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { describeOnlyInNodeJs, fetchPrivateKeyWithGas, isRunningInElectron } from '@streamr/test-utils'
+import { describeOnlyInNodeJs, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Defer, wait } from '@streamr/utils'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'

@@ -8,7 +8,7 @@ import { counterId, instanceId } from '../../src/utils/utils'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { Msg } from '../test-utils/publish'
 import { createRandomAuthentication } from '../test-utils/utils'
-import { isRunningInElectron, testOnlyInNodeJs } from '@streamr/test-utils'
+import { testOnlyInNodeJs } from '@streamr/test-utils'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 

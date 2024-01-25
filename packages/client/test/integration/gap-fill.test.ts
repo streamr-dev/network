@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
 import { StreamMessage } from '@streamr/protocol'
-import { fastWallet, isRunningInElectron, testOnlyInNodeJs } from '@streamr/test-utils'
+import { fastWallet, testOnlyInNodeJs } from '@streamr/test-utils'
 import { collect, toEthereumAddress } from '@streamr/utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
