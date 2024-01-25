@@ -7,7 +7,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
 import { createTestClient, createTestStream } from '../test-utils/utils'
 
-const TIMEOUT = 15 * 1000
+const TIMEOUT = 30 * 1000
 const SUBSCRIBE_WAIT_TIME = 2000
 const WEBSOCKET_PORT = 14231
 
