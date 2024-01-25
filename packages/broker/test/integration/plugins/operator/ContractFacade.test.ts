@@ -31,14 +31,14 @@ describe('ContractFacade', () => {
     let deployedOperator: SetupOperatorContractReturnType
 
     beforeAll(async () => {
-        const parallel = await Promise.all([
+        const concurrentTasks = await Promise.all([
             createStream(),
             createStream(),
             setupOperatorContract({ nodeCount: 1 })
         ])
-        streamId1 = parallel[0]
-        streamId2 = parallel[1]
-        deployedOperator = parallel[2]
+        streamId1 = concurrentTasks[0]
+        streamId2 = concurrentTasks[1]
+        deployedOperator = concurrentTasks[2]
 
         sponsorship1 = await deploySponsorshipContract({
             streamId: streamId1,
