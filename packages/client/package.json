@@ -35,7 +35,7 @@
     "test-end-to-end": "jest --bail --useStderr --forceExit --testTimeout=40000 test/end-to-end/*.test.*",
     "test-browser-unit": "karma start karma-unit.config.js",
     "test-browser-integration": "karma start karma-integration.config.js",
-    "test-browser-end-to-end": "karma start karma-integration.config.js",
+    "test-browser-end-to-end": "karma start karma-end-to-end.config.js",
     "test-browser-smoke": "bash test/browser-smoke-test/smoke-test.sh",
     "test-exports": "cd test/exports && npm run link && tsc --noEmit --project ./tsconfig.json && npm test"
   },
