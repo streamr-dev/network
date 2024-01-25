@@ -4,6 +4,8 @@ import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { AsyncSRT } from '@eyevinn/srt'
 import { Logger } from '@streamr/utils'
 import StreamrClient from 'streamr-client'
+import fetch from 'node-fetch';
+
 
 const logger = new Logger(module)
 
@@ -56,7 +58,31 @@ export class SRTPlugin extends Plugin<SRTPluginConfig> {
         await this.prepareServer()
     }
 
+    async measureRequestTime(url: string): Promise<any> {
+        const startTime = Date.now(); // Record start time
+
+            try {
+                const response = await fetch(url); // Make the request
+                const endTime = Date.now(); // Record end time after the request completes
+
+                const duration = endTime - startTime; // Calculate the duration
+                console.log(`Request to ${url} took ${duration} milliseconds.`);
+
+                // Process the response as needed
+                const data = await response.json();
+                //console.log(data)
+                return {duration: duration, data: data};
+            } catch (error) {
+                console.error('Request failed:', error);
+            }
+    }
+
     async awaitConnections(socket: number): Promise<void> {
+        const timeUrl = "http://worldtimeapi.org/api/timezone/Europe/Zurich"
+        const comparisonTime = await this.measureRequestTime(timeUrl)
+        const currentTime = Date.now()
+        const clockDifference = new Date(comparisonTime.data?.utc_datetime).getTime() + comparisonTime.duration / 2 - currentTime
+        logger.info('SRT plugin: time difference between external clock and local system clock was: ', {clockDifference})
         logger.info('SRT plugin: awaiting incoming client connection ...')
         const fd = await this.server!.accept(socket)
         logger.info('SRT plugin: New incoming client fd:', { fd })
@@ -76,7 +102,7 @@ export class SRTPlugin extends Plugin<SRTPluginConfig> {
                     
                     if (messagePool.length == messagePoolSize) {
                         const timestamp = Date.now()
-                        const payload = { b:[0, messagePool, timestamp, msgCounter] }
+                        const payload = { b:[0, messagePool, timestamp + clockDifference, msgCounter] }
                         await this.streamrClient?.publish({ id: this.pluginConfig.streamId, partition: this.pluginConfig.partition }, payload)
                         messagePool = []
                         msgCounter++
