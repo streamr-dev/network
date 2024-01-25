@@ -92,7 +92,7 @@ export const createStreamMessage = (
 }
 
 export const createRandomNodeId = (): DhtAddress => {
-    return getDhtAddressFromRaw(randomBytes(10))
+    return getDhtAddressFromRaw(randomBytes(20))
 }
 
 export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'nodeId' | 'type'>): PeerDescriptor => {
