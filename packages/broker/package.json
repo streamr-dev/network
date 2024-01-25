@@ -1,4 +1,4 @@
-{
+{ 
   "name": "streamr-broker",
   "version": "100.0.0-testnet-three.1",
   "description": "A full-featured broker node implementation for the Streamr Network",
@@ -54,7 +54,8 @@
     "streamr-client": "100.0.0-testnet-three.1",
     "uuid": "^9.0.1",
     "ws": "^8.16.0",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "@eyevinn/srt": "^0.8.3"
   },
   "devDependencies": {
     "@inquirer/testing": "^2.1.9",
