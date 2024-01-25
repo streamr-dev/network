@@ -63,10 +63,10 @@ export class StoreManager {
         const newNodeId = getNodeIdFromPeerDescriptor(newNode)
         const key = getDhtAddressFromRaw(dataEntry.key)
         // TODO use config option or named constant?
-        const closestToData = this.config.getClosestNeighborsTo(key, 10)
+        const closestToData = this.config.getClosestNeighborsTo(key, this.config.redundancyFactor)
         const sortedList = new SortedContactList<Contact>({
             referenceId: key, 
-            maxSize: 20,  // TODO use config option or named constant?
+            maxSize: this.config.redundancyFactor,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             emitEvents: false
         })
@@ -80,11 +80,11 @@ export class StoreManager {
         if (selfIsPrimaryStorer) {
             sortedList.addContact(new Contact(newNode))
             const sorted = sortedList.getContactIds()
-            // findIndex should never return -1 here because we just added the new node to the list
+            // findIndex returns -1 if the node did not fit the redundancyFactor closest nodes
             const index = findIndex(sorted, (nodeId) => (nodeId === newNodeId))
             // if new node is within the storageRedundancyFactor closest nodes to the data
             // do replicate data to it
-            if (index < this.config.redundancyFactor) {
+            if (index !== -1) {
                 setImmediate(async () => {
                     await this.replicateDataToContact(dataEntry, newNode)
                 })
