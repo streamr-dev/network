@@ -40,7 +40,6 @@ export class RouterRpcLocal implements IRouterRpc {
             return createRouteMessageAck(routedMessage, RouteMessageError.DUPLICATE)
         }
         logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
-        this.config.addContact(routedMessage.sourcePeer!, true)
         this.config.duplicateRequestDetector.add(routedMessage.requestId)
         if (areEqualBinaries(this.config.localPeerDescriptor.nodeId, routedMessage.target)) {
             logger.trace(`routing message targeted to self ${routedMessage.requestId}`)
@@ -59,7 +58,6 @@ export class RouterRpcLocal implements IRouterRpc {
             return createRouteMessageAck(forwardMessage, RouteMessageError.DUPLICATE)
         }
         logger.trace(`Processing received forward routeMessage ${forwardMessage.requestId}`)
-        this.config.addContact(forwardMessage.sourcePeer!, true)
         this.config.duplicateRequestDetector.add(forwardMessage.requestId)
         if (areEqualBinaries(this.config.localPeerDescriptor.nodeId, forwardMessage.target)) {
             return this.forwardToDestination(forwardMessage)
