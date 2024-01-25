@@ -2,7 +2,8 @@
 <html>
 <head>
     <title>Smoke Test</title>
-    <script src='/static/streamr-client.web.js'></script>
+    <link rel="icon" href="data:,">
+    <script src='/static/streamr-client.web.min.js'></script>
     <script>
         const SUBSCRIBER_KEY = '0000000000000000000000000000000000000000000000000000000000000055'
         const PUBLISHER_KEY = '0000000000000000000000000000000000000000000000000000000000000056'
@@ -29,7 +30,7 @@
 
         ;(async () => {
             // 1. Create stream
-            const stream = await publisherClient.createStream({ id: '/browser-test-' + Date.now() })
+            const stream = await publisherClient.createStream({ id: '/browser-smoke-test-' + Date.now() })
             streamId = stream.id
             document.getElementById('streamCreated').checked = true
             document.getElementById('streamCreatedValue').value = stream.id
@@ -62,7 +63,7 @@
             document.getElementById('publishStarted').checked = true
 
             // 5. Subscribe to stream
-            await subscriberClient.subscribe(stream.id, (msg) => {
+            await subscriberClient.subscribe(stream.id, (_msg) => {
                 subscribeMsgCounter += 1
                 document.getElementById('subscriberMsgCount').value = subscribeMsgCounter
             })
@@ -70,15 +71,12 @@
         })()
 
         // 6. Resend messages after which end pub/sub
-        async function resendAndEnd() {
+        async function resend() {
             document.getElementById('resendStarted').checked = true
             await subscriberClient.resend(streamId, { last: 1000 }, () => {
                 resendMsgCounter += 1
                 document.getElementById('resendMsgCount').value = resendMsgCounter
             })
-            clearInterval(publishIntervalRef)
-            await publisherClient.destroy()
-            await subscriberClient.destroy()
         }
     </script>
 </head>
@@ -117,7 +115,7 @@
         <td>Resent messages</td>
         <td><input id='resendStarted' type='checkbox' disabled></td>
         <td><input id='resendMsgCount' type='number' disabled value='0'></td>
-        <td><button id="executeResend" type='button' onclick='resendAndEnd()'>Execute</button></td>
+        <td><button id="executeResend" type='button' onclick='resend()'>Execute</button></td>
     </tr>
 </table>
 </body>

@@ -36,6 +36,7 @@
     "test-browser-unit": "karma start karma-unit.config.js",
     "test-browser-integration": "karma start karma-integration.config.js",
     "test-browser-end-to-end": "karma start karma-integration.config.js",
+    "test-browser-smoke": "bash test/browser-smoke-test/smoke-test.sh",
     "test-exports": "cd test/exports && npm run link && tsc --noEmit --project ./tsconfig.json && npm test"
   },
   "author": "Streamr Network AG <contact@streamr.network>",

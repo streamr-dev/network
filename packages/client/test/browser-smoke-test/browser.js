@@ -1,30 +1,30 @@
 /* eslint-disable no-undef, @typescript-eslint/no-require-imports */
 
+const TARGET_SUBSCRIBE_MSG_COUNT = 50
+const RESEND_SUBSCRIBE_MSG_COUNT = TARGET_SUBSCRIBE_MSG_COUNT - 10
+
 describe('StreamrClient', () => {
 
-    before(async (browser) => {
+    before((browser) => {
         const browserUrl = 'http://localhost:8880'
         return browser.url(browserUrl)
     })
 
-    test('Test StreamrClient in Chrome Browser', (browser) => {
-        // Make viewport huge to ensure that all buttons are inside it
-        browser.resizeWindow(1000, 1000)
-        browser
-            .waitForElementVisible('body')
+    test('Smoke test StreamrClient in Chrome Browser', async (browser) => {
+        await browser.waitForElementVisible('body')
             .assert.titleContains('Smoke Test')
-            .waitUntil( () => {
-                const counter = browser.execute(() => {
-                    return publishMsgCounter
+            .waitUntil(async () => {
+                const counter = await browser.execute(() => {
+                    return subscribeMsgCounter
                 })
-                return counter > 30
+                return counter >= TARGET_SUBSCRIBE_MSG_COUNT
             })
             .click('#executeResend')
-            .waitUntil( () => {
-                const counter = browser.execute(() => {
+            .waitUntil(async () => {
+                const counter = await browser.execute(() => {
                     return resendMsgCounter
                 })
-                return counter > 30
+                return counter >= RESEND_SUBSCRIBE_MSG_COUNT
             })
     })
 
