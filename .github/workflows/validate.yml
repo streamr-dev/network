@@ -143,6 +143,7 @@ jobs:
       command: |
         sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser-end-to-end
+        npm run test-browser-smoke
   cli-tools:
     needs: build
     uses: ./.github/workflows/test-setup.yml
