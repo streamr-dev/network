@@ -45,7 +45,7 @@ export const uid = (prefix?: string): string => counterId(`p${process.pid}${pref
 
 const getTestName = (module: NodeModule): string => {
     const fileNamePattern = new RegExp('.*/(.*).test\\...')
-    const moduleFilename = (module.filename ?? module.id)
+    const moduleFilename = (module.filename ?? module.id) // browser has no filename
     const groups = moduleFilename.match(fileNamePattern)
     return (groups !== null) ? groups[1] : moduleFilename
 }
