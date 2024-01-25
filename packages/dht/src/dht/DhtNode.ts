@@ -12,7 +12,7 @@ import { ConnectionManager, PortRange, TlsCertificate } from '../connection/Conn
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
 import { IceServer } from '../connection/webrtc/WebrtcConnector'
 import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
-import { DhtAddress, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { DhtAddress, KADEMLIA_ID_LENGTH_IN_BYTES, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { Any } from '../proto/google/protobuf/any'
 import {
     ClosestPeersRequest,
@@ -143,8 +143,20 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             storageRedundancyFactor: 5,
             metricsContext: new MetricsContext()
         }, conf)
+        this.validateConfig()
         this.localDataStore = new LocalDataStore(this.config.storeMaxTtl)
         this.send = this.send.bind(this)
+    }
+
+    private validateConfig(): void {
+        const expectedNodeIdLength = KADEMLIA_ID_LENGTH_IN_BYTES * 2
+        if (this.config.nodeId !== undefined ) {
+            if (!/^[0-9a-fA-F]+$/.test(this.config.nodeId)) {
+                throw new Error('Invalid nodeId, the nodeId should be a hex string')
+            } else if (this.config.nodeId.length !== expectedNodeIdLength) {
+                throw new Error(`Invalid nodeId, the length of the nodeId should be ${expectedNodeIdLength}`)
+            }
+        }
     }
 
     public async start(): Promise<void> {
