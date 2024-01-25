@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { fetchPrivateKeyWithGas, isRunningInElectron } from '@streamr/test-utils'
+import { describeOnlyInNodeJs, fetchPrivateKeyWithGas, isRunningInElectron } from '@streamr/test-utils'
 import { Defer, wait } from '@streamr/utils'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
@@ -48,13 +48,8 @@ function snapshot(): string {
 const MAX_MESSAGES = 5
 const TIMEOUT = 30000
 
-describe('MemoryLeaks', () => {
+describeOnlyInNodeJs('MemoryLeaks', () => { // LeaksDetector is not supported in Electron
     let leaksDetector: LeaksDetector
-
-    if (isRunningInElectron()) {
-        it.skip('skipping due to Electron environment (LeaksDetector not supported)')
-        return
-    }
 
     beforeEach(() => {
         leaksDetector = new LeaksDetector()

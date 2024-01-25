@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { fastPrivateKey, fastWallet, isRunningInElectron } from '@streamr/test-utils'
+import { describeOnlyInNodeJs, fastPrivateKey, fastWallet, isRunningInElectron } from '@streamr/test-utils'
 import { Defer, collect, wait } from '@streamr/utils'
 import fs from 'fs'
 import path from 'path'
@@ -150,11 +150,7 @@ describe('StreamrClient', () => {
         })
     })
 
-    describe('utf-8 encoding', () => {
-        if (isRunningInElectron()) {
-            it.skip('skipping test on Electron')
-            return
-        }
+    describeOnlyInNodeJs('utf-8 encoding', () => {
         it('decodes realtime messages correctly', async () => {
             const publishedMessage = Msg({
                 content: fs.readFileSync(path.join(__dirname, '../data/utf8Example.txt'), 'utf8')

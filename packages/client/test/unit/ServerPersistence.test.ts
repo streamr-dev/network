@@ -1,4 +1,4 @@
-import { isRunningInElectron, randomEthereumAddress } from '@streamr/test-utils'
+import { isRunningInElectron, randomEthereumAddress, testOnlyInNodeJs } from '@streamr/test-utils'
 import range from 'lodash/range'
 import { join } from 'path'
 import { Database } from 'sqlite'
@@ -42,10 +42,7 @@ describe('ServerPersistence', () => {
         expect(await persistence.get('non-existing', NAMESPACE)).toBeUndefined()
     })
 
-    it('database does not exist until value set', async () => {
-        if (isRunningInElectron()) {
-            return
-        }
+    testOnlyInNodeJs('database does not exist until value set', async () => {
         expect(await persistence.exists()).toBeFalse()
         expect(await persistence.get('mock-key', NAMESPACE)).toBeUndefined()
         expect(await persistence.exists()).toBeFalse()

@@ -5,14 +5,9 @@ import { WebStreamToNodeStream } from '../../src/utils/WebStreamToNodeStream'
 import { Msg } from '../test-utils/publish'
 import WebStream from 'node:stream/web'
 import Timers from 'node:timers/promises'
-import { isRunningInElectron } from '@streamr/test-utils'
+import { describeOnlyInNodeJs } from '@streamr/test-utils'
 
-describe('WebStreamToNodeStream', () => {
-    if (isRunningInElectron()) {
-        it.skip('skipping due to Electron environment...')
-        return
-    }
-
+describeOnlyInNodeJs('WebStreamToNodeStream', () => {
     it('works', async () => {
 
         const published: ReturnType<typeof Msg>[] = []

@@ -1,4 +1,4 @@
-import { isRunningInElectron, startTestServer } from '@streamr/test-utils'
+import { isRunningInElectron, startTestServer, testOnlyInNodeJs } from '@streamr/test-utils'
 import { collect, toLengthPrefixedFrame, waitForCondition } from '@streamr/utils'
 import { Request, Response } from 'express'
 import range from 'lodash/range'
@@ -41,10 +41,7 @@ describe('utils', () => {
             await server.stop()
         })
 
-        it('abort', async () => {
-            if (isRunningInElectron()) { // TODO: unhandled promise rejection on Electron
-                return
-            }
+        testOnlyInNodeJs('abort', async () => {
             let serverResponseClosed = false
             const server = await startTestServer('/', async (_req: Request, res: Response) => {
                 res.on('close', () => {
