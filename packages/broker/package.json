@@ -30,7 +30,7 @@
   "dependencies": {
     "@ethersproject/hdnode": "^5.4.0",
     "@inquirer/prompts": "^3.3.0",
-    "@streamr/config": "^5.1.0",
+    "@streamr/config": "^5.1.2",
     "@streamr/network-contracts": "^7.0.7",
     "@streamr/protocol": "100.0.0-testnet-two.4",
     "@streamr/utils": "100.0.0-testnet-two.4",
