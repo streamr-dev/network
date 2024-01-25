@@ -62,11 +62,10 @@ export class StoreManager {
     private replicateAndUpdateStaleState(dataEntry: DataEntry, newNode: PeerDescriptor): void {
         const newNodeId = getNodeIdFromPeerDescriptor(newNode)
         const key = getDhtAddressFromRaw(dataEntry.key)
-        // TODO use config option or named constant?
         const closestToData = this.config.getClosestNeighborsTo(key, this.config.redundancyFactor)
         const sortedList = new SortedContactList<Contact>({
             referenceId: key, 
-            maxSize: this.config.redundancyFactor,  // TODO use config option or named constant?
+            maxSize: this.config.redundancyFactor,
             allowToContainReferenceId: true,
             emitEvents: false
         })
