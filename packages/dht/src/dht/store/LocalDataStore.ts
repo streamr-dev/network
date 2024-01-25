@@ -57,6 +57,10 @@ export class LocalDataStore {
         }
     }
 
+    public keys(): IterableIterator<DhtAddress> {
+        return this.store.keys()
+    }
+
     public setStale(key: DhtAddress, creator: DhtAddress, stale: boolean): void {
         const storedEntry = this.store.get(key)?.get(creator)
         if (storedEntry) {
