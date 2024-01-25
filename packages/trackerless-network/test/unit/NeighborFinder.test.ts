@@ -3,12 +3,12 @@ import { NodeList } from '../../src/logic/NodeList'
 import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { expect } from 'expect'
-import { createMockDeliveryRpcRemote, createRandomNodeId } from '../utils/utils'
-import { DhtAddress, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { createMockDeliveryRpcRemote } from '../utils/utils'
+import { DhtAddress, createRandomDhtAddress, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 
 describe('NeighborFinder', () => {
 
-    const nodeId = createRandomNodeId()
+    const nodeId = createRandomDhtAddress()
     let neighbors: NodeList
     let nearbyNodeView: NodeList
     let neighborFinder: NeighborFinder
