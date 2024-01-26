@@ -80,7 +80,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         logger.info('Fetched my redundancy factor', { redundancyFactor })
 
         const contractFacade = ContractFacade.createInstance(serviceConfig)
-        const maintainTopologyHelper = new MaintainTopologyHelper(ContractFacade.createInstance(serviceConfig))
+        const maintainTopologyHelper = new MaintainTopologyHelper(contractFacade)
         const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
             streamrClient,
             this.pluginConfig.heartbeatUpdateIntervalInMs,
