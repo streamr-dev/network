@@ -13,7 +13,6 @@ import { Timestamp } from '../../proto/google/protobuf/timestamp'
 import { SortedContactList } from '../contact/SortedContactList'
 import { Contact } from '../contact/Contact'
 import { ServiceID } from '../../types/ServiceID'
-import { findIndex } from 'lodash'
 import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
 import { StoreRpcLocal } from './StoreRpcLocal'
 import { getDistance } from '../PeerManager'
@@ -78,12 +77,7 @@ export class StoreManager {
         const selfIsPrimaryStorer = (sortedList.getClosestContactId() === getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor))
         if (selfIsPrimaryStorer) {
             sortedList.addContact(new Contact(newNode))
-            const sorted = sortedList.getContactIds()
-            // findIndex returns -1 if the node did not fit the redundancyFactor closest nodes
-            const index = findIndex(sorted, (nodeId) => (nodeId === newNodeId))
-            // if new node is within the storageRedundancyFactor closest nodes to the data
-            // do replicate data to it
-            if (index !== -1) {
+            if (sortedList.getContact(newNodeId) !== undefined) {
                 setImmediate(async () => {
                     await this.replicateDataToContact(dataEntry, newNode)
                 })
