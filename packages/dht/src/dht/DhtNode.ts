@@ -325,15 +325,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             }
         })
         this.transport!.on('connected', (peerDescriptor: PeerDescriptor) => {
-            this.peerManager!.handleConnected(peerDescriptor)
+            this.peerManager!.onContactConnected(peerDescriptor)
             this.emit('connected', peerDescriptor)
         })
         this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => {
-            this.peerManager!.handleDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor), gracefulLeave)
+            this.peerManager!.onContactDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor), gracefulLeave)
             this.emit('disconnected', peerDescriptor, gracefulLeave)
         })
         this.transport!.getConnections().forEach((peer) => {
-            this.peerManager!.handleConnected(peer)
+            this.peerManager!.onContactConnected(peer)
         })
     }
 

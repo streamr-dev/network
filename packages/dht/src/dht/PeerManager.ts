@@ -173,7 +173,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         return undefined
     }
 
-    handleConnected(peerDescriptor: PeerDescriptor): void {
+    onContactConnected(peerDescriptor: PeerDescriptor): void {
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
         if (nodeId === this.config.localNodeId) {
             logger.error('handleConnected() to self')
@@ -188,7 +188,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         logger.trace('connected: ' + nodeId + ' ' + this.connections.size)
     }
 
-    handleDisconnected(nodeId: DhtAddress, gracefulLeave: boolean): void {
+    onContactDisconnected(nodeId: DhtAddress, gracefulLeave: boolean): void {
         logger.trace('disconnected: ' + nodeId)
         this.connections.delete(nodeId)
         if (this.config.isLayer0) {
