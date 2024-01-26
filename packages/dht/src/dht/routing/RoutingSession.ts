@@ -90,7 +90,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         const previousId = previousPeer ? getNodeIdFromPeerDescriptor(previousPeer) : undefined
         this.contactList = new SortedContactList({
             referenceId: getDhtAddressFromRaw(config.routedMessage.target),
-            maxSize: 10000,  // TODO use config option or named constant?
+            maxSize: 10,  // TODO use config option or named constant?
             allowToContainReferenceId: true,
             nodeIdDistanceLimit: previousId,
             excludedNodeIds: config.excludedNodeIds,
