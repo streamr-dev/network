@@ -48,9 +48,9 @@ import { StoreRpcRemote } from './store/StoreRpcRemote'
 import { createPeerDescriptor } from '../helpers/createPeerDescriptor'
 
 export interface DhtNodeEvents {
-    newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
+    contactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     contactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    newRandomContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
+    randomContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     randomContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
 }
 
@@ -155,6 +155,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 throw new Error('Invalid nodeId, the nodeId should be a hex string')
             } else if (this.config.nodeId.length !== expectedNodeIdLength) {
                 throw new Error(`Invalid nodeId, the length of the nodeId should be ${expectedNodeIdLength}`)
+            }
+        }
+        if (this.config.peerDescriptor !== undefined) {
+            if (this.config.peerDescriptor.nodeId.length !== KADEMLIA_ID_LENGTH_IN_BYTES) {
+                throw new Error(`Invalid peerDescriptor, the length of the nodeId should be ${KADEMLIA_ID_LENGTH_IN_BYTES} bytes`)
             }
         }
     }
@@ -278,8 +283,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 )
             }
         })
-        this.on('newContact', (peerDescriptor: PeerDescriptor) => {
-            this.storeManager!.onNewContact(peerDescriptor)
+        this.on('contactAdded', (peerDescriptor: PeerDescriptor) => {
+            this.storeManager!.onContactAdded(peerDescriptor)
         })
         this.bindRpcLocalMethods()
     }
@@ -297,14 +302,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.peerManager.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) => {
             this.emit('contactRemoved', peerDescriptor, activeContacts)
         })
-        this.peerManager.on('newContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('newContact', peerDescriptor, activeContacts)
+        this.peerManager.on('contactAdded', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
+            this.emit('contactAdded', peerDescriptor, activeContacts)
         )
         this.peerManager.on('randomContactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
             this.emit('randomContactRemoved', peerDescriptor, activeContacts)
         )
-        this.peerManager.on('newRandomContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('newRandomContact', peerDescriptor, activeContacts)
+        this.peerManager.on('randomContactAdded', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
+            this.emit('randomContactAdded', peerDescriptor, activeContacts)
         )
         this.peerManager.on('kBucketEmpty', () => {
             if (!this.peerDiscovery!.isJoinOngoing()
@@ -342,7 +347,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 return this.peerManager!.getClosestNeighborsTo(nodeId, limit)
                     .map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor())
             },
-            addNewContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
+            addContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
             removeContact: (nodeId: DhtAddress) => this.removeContact(nodeId)
         })
         this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers',

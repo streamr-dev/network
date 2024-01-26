@@ -52,15 +52,14 @@ export class StoreManager {
             (request: ReplicateDataRequest, context: ServerCallContext) => rpcLocal.replicateData(request, context))
     }
 
-    onNewContact(peerDescriptor: PeerDescriptor): void {
-        for (const dataEntry of this.config.localDataStore.values()) {
-            this.replicateAndUpdateStaleState(dataEntry, peerDescriptor)
+    onContactAdded(peerDescriptor: PeerDescriptor): void {
+        for (const key of this.config.localDataStore.keys()) {
+            this.replicateAndUpdateStaleState(key, peerDescriptor)
         }
     }
 
-    private replicateAndUpdateStaleState(dataEntry: DataEntry, newNode: PeerDescriptor): void {
+    private replicateAndUpdateStaleState(key: DhtAddress, newNode: PeerDescriptor): void {
         const newNodeId = getNodeIdFromPeerDescriptor(newNode)
-        const key = getDhtAddressFromRaw(dataEntry.key)
         const closestToData = this.config.getClosestNeighborsTo(key, this.config.redundancyFactor)
         const sortedList = new SortedContactList<Contact>({
             referenceId: key, 
@@ -79,11 +78,12 @@ export class StoreManager {
             sortedList.addContact(new Contact(newNode))
             if (sortedList.getContact(newNodeId) !== undefined) {
                 setImmediate(async () => {
-                    await this.replicateDataToContact(dataEntry, newNode)
+                    const dataEntries = Array.from(this.config.localDataStore.values(key))
+                    await Promise.all(dataEntries.map(async (dataEntry) => this.replicateDataToContact(dataEntry, newNode)))
                 })
             }
         } else if (!this.selfIsWithinRedundancyFactor(key)) {
-            this.config.localDataStore.setStale(key, getDhtAddressFromRaw(dataEntry.creator), true)
+            this.config.localDataStore.setAllEntriesAsStale(key)
         }
     }
 

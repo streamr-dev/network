@@ -119,15 +119,15 @@ describe('SortedContactList', () => {
         expect(list.getActiveContacts()).toEqual([item2, item3, item4])
     })
 
-    it('does not emit newContact if contact did not fit the structure', () => {
+    it('does not emit contactAdded if contact did not fit the structure', () => {
         const list = new SortedContactList({ referenceId: item0.getNodeId(), maxSize: 2, allowToContainReferenceId: false, emitEvents: true })
-        const onNewContact = jest.fn()
-        list.on('newContact', onNewContact)
+        const onContactAdded = jest.fn()
+        list.on('contactAdded', onContactAdded)
         list.addContact(item1)
         list.addContact(item2)
-        expect(onNewContact).toBeCalledTimes(2)
+        expect(onContactAdded).toBeCalledTimes(2)
         list.addContact(item3)
-        expect(onNewContact).toBeCalledTimes(2)
+        expect(onContactAdded).toBeCalledTimes(2)
         expect(list.getAllContacts().length).toEqual(2)
     })
 

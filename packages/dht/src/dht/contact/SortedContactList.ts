@@ -57,7 +57,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
                 this.contactIds.splice(index, 0, contact.getNodeId())
                 if (this.config.emitEvents) {
                     this.emit(
-                        'newContact',
+                        'contactAdded',
                         contact,
                         this.getClosestContacts()
                     )
@@ -79,7 +79,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
                         closestContacts
                     )
                     this.emit(
-                        'newContact',
+                        'contactAdded',
                         contact,
                         closestContacts
                     )
