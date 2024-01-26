@@ -116,25 +116,25 @@ export class RandomGraphNode extends EventEmitter<Events> {
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
             'contactAdded',
-            (_peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.newContact(closestPeers),
+            (_peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.onContactAdded(closestPeers),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
             'contactRemoved',
-            (_peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.removedContact(closestPeers),
+            (_peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.onContactRemoved(closestPeers),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
             'randomContactAdded',
-            (_peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.addedRandomContact(randomPeers),
+            (_peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.onRandomContactAdded(randomPeers),
             this.abortController.signal
         )   
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
             'randomContactRemoved',
-            (_peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.removedRandomContact(randomPeers),
+            (_peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.onRandomContactRemoved(randomPeers),
             this.abortController.signal
         )   
         addManagedEventListener<any, any>(
@@ -162,7 +162,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         }
         const candidates = this.getNeighborCandidatesFromLayer1()
         if (candidates.length > 0) {
-            this.newContact(candidates)
+            this.onContactAdded(candidates)
         }
         this.config.neighborFinder.start()
         await this.config.neighborUpdateManager.start()
@@ -179,7 +179,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
             (req: TemporaryConnectionRequest, context) => this.config.temporaryConnectionRpcLocal.closeConnection(req, context))
     }
 
-    private newContact(closestNodes: PeerDescriptor[]): void {
+    private onContactAdded(closestNodes: PeerDescriptor[]): void {
         logger.trace(`New nearby contact found`)
         if (this.isStopped()) {
             return
@@ -190,7 +190,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         }
     }
 
-    private removedContact(closestNodes: PeerDescriptor[]): void {
+    private onContactRemoved(closestNodes: PeerDescriptor[]): void {
         logger.trace(`Nearby contact removed`)
         if (this.isStopped()) {
             return
@@ -225,7 +225,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         }
     }
 
-    private addedRandomContact(randomNodes: PeerDescriptor[]): void {
+    private onRandomContactAdded(randomNodes: PeerDescriptor[]): void {
         if (this.isStopped()) {
             return
         }
@@ -243,7 +243,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         }
     }
 
-    private removedRandomContact(randomNodes: PeerDescriptor[]): void {
+    private onRandomContactRemoved(randomNodes: PeerDescriptor[]): void {
         logger.trace(`New nearby contact found`)
         if (this.isStopped()) {
             return
