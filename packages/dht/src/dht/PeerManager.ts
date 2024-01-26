@@ -279,8 +279,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     }
 
     handlePeerUnresponsive(nodeId: DhtAddress): void {
-        this.bucket.remove(getRawFromDhtAddress(nodeId))
-        this.contacts.removeContact(nodeId)
+        this.removeContact(nodeId)
     }
 
     handleNewPeers(peerDescriptors: PeerDescriptor[], setActive?: boolean): void { 
