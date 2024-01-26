@@ -25,9 +25,9 @@ interface PeerManagerConfig {
 }
 
 export interface PeerManagerEvents {
-    newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
+    contactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     contactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    newRandomContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
+    randomContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     randomContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     kBucketEmpty: () => void
 }
@@ -82,14 +82,14 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             this.randomPeers.addContact(this.config.createDhtNodeRpcRemote(removedContact.getPeerDescriptor()))
         })
         this.contacts.on('contactAdded', (contactAdded: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) =>
-            this.emit('newContact', contactAdded.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
+            this.emit('contactAdded', contactAdded.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
         this.randomPeers = new RandomContactList(this.config.localNodeId, this.config.maxContactListSize)
         this.randomPeers.on('contactRemoved', (removedContact: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) =>
             this.emit('randomContactRemoved', removedContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
         this.randomPeers.on('contactAdded', (contactAdded: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) =>
-            this.emit('newRandomContact', contactAdded.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
+            this.emit('randomContactAdded', contactAdded.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
     }
 
