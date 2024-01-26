@@ -279,7 +279,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             }
         })
         this.on('contactAdded', (peerDescriptor: PeerDescriptor) => {
-            this.storeManager!.onNewContact(peerDescriptor)
+            this.storeManager!.onContactAdded(peerDescriptor)
         })
         this.bindRpcLocalMethods()
     }
