@@ -28,6 +28,7 @@
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "dependencies": {
     "@ethersproject/hdnode": "^5.4.0",
+    "@eyevinn/srt": "^0.8.3",
     "@streamr/network-tracker": "8.5.5",
     "@streamr/protocol": "8.5.5",
     "@streamr/utils": "8.5.5",
@@ -50,8 +51,7 @@
     "qs": "^6.10.1",
     "streamr-client": "8.5.5",
     "uuid": "^9.0.0",
-    "ws": "^8.12.0",
-    "@eyevinn/srt": "^0.8.3"
+    "ws": "^8.12.0"
   },
   "devDependencies": {
     "@streamr/test-utils": "8.5.5",

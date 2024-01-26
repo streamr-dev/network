@@ -5,9 +5,30 @@ import { AsyncSRT } from '@eyevinn/srt'
 import { Logger } from '@streamr/utils'
 import StreamrClient from 'streamr-client'
 import fetch from 'node-fetch';
-
+import * as _ from "lodash";
 
 const logger = new Logger(module)
+
+function calculateMean(arr: number[]): number {
+    const sum = arr.reduce((acc, val) => acc + val, 0);
+    return sum / arr.length;
+}
+
+function calculateStandardDeviation(arr: number[], mean: number): number {
+    const squaredDiffs = arr.map(val => Math.pow(val - mean, 2));
+    const meanOfSquaredDiffs = calculateMean(squaredDiffs);
+    return Math.sqrt(meanOfSquaredDiffs);
+}
+
+function removeOutliers(arr: number[], threshold: number = 2): number[] {
+    const mean = calculateMean(arr);
+    const standardDeviation = calculateStandardDeviation(arr, mean);
+
+    return arr.filter(val => {
+        const diff = Math.abs(val - mean);
+        return diff <= threshold * standardDeviation;
+    });
+}
 
 function arrayBufferToBase64(buffer: Uint8Array): string {
     let binary = ''
@@ -59,29 +80,44 @@ export class SRTPlugin extends Plugin<SRTPluginConfig> {
     }
 
     async measureRequestTime(url: string): Promise<any> {
-        const startTime = Date.now(); // Record start time
-
+        const startTime = new Date().getTime() // Record start time
             try {
-                const response = await fetch(url); // Make the request
-                const endTime = Date.now(); // Record end time after the request completes
-
-                const duration = endTime - startTime; // Calculate the duration
-                console.log(`Request to ${url} took ${duration} milliseconds.`);
-
-                // Process the response as needed
+                //send t0
+                const response = await fetch(url+encodeURIComponent(startTime)); // Make the request
+                const t3 = new Date().getTime(); // Record end time after the request completes
+                //var nowTimeStamp = new Date().getTime();
                 const data = await response.json();
-                //console.log(data)
-                return {duration: duration, data: data};
+                //response sent
+                const t2 = data.sent
+                //received t1-t0 as diff
+                var serverClientRequestDiffTime = data.diff
+                // NTP 
+                var clockOffset = (serverClientRequestDiffTime + t2 - t3)/2;
+                return clockOffset
             } catch (error) {
                 console.error('Request failed:', error);
             }
     }
 
+    async estimateTimeDiff(): Promise<any> {
+        const timeUrl = "http://timeserver-env.eba-dd92jdy3.eu-central-1.elasticbeanstalk.com/time?time="
+        let measurements = []
+        let offSet = 0
+        for (let i = 0; i < 20; i++) {
+            const result = await this.measureRequestTime(timeUrl)
+            offSet = result
+            measurements.push(result)
+        }
+        logger.info('Time measurements', {measurements})
+        const outliersRemoved = removeOutliers(measurements)
+        const clockDifference = _.mean(outliersRemoved)
+        logger.info('Time measurements w/o outliers', {outliersRemoved})
+        return clockDifference
+    }
+
     async awaitConnections(socket: number): Promise<void> {
-        const timeUrl = "http://worldtimeapi.org/api/timezone/Europe/Zurich"
-        const comparisonTime = await this.measureRequestTime(timeUrl)
-        const currentTime = Date.now()
-        const clockDifference = new Date(comparisonTime.data?.utc_datetime).getTime() + comparisonTime.duration / 2 - currentTime
+        
+        const clockDifference = await this.estimateTimeDiff()
         logger.info('SRT plugin: time difference between external clock and local system clock was: ', {clockDifference})
         logger.info('SRT plugin: awaiting incoming client connection ...')
         const fd = await this.server!.accept(socket)
