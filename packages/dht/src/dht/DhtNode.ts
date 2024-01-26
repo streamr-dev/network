@@ -157,6 +157,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 throw new Error(`Invalid nodeId, the length of the nodeId should be ${expectedNodeIdLength}`)
             }
         }
+        if (this.config.peerDescriptor !== undefined) {
+            if (this.config.peerDescriptor.nodeId.length !== KADEMLIA_ID_LENGTH_IN_BYTES) {
+                throw new Error(`Invalid peerDescriptor, the length of the nodeId should be ${KADEMLIA_ID_LENGTH_IN_BYTES} bytes`)
+            }
+        }
     }
 
     public async start(): Promise<void> {

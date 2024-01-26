@@ -1,4 +1,4 @@
-import { LatencyType, NodeType, PeerDescriptor, Simulator, SimulatorTransport, getRandomRegion } from '@streamr/dht'
+import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import {
     ContentType,
     EncryptionType,
@@ -22,11 +22,7 @@ describe('stream without default entrypoints', () => {
     let entrypoint: NetworkNode
     let nodes: NetworkNode[]
     let receivedMessageCount: number
-    const entryPointPeerDescriptor: PeerDescriptor = {
-        nodeId: new Uint8Array([1, 2, 3]),
-        type: NodeType.NODEJS,
-        region: getRandomRegion()
-    }
+    const entryPointPeerDescriptor: PeerDescriptor = createMockPeerDescriptor()
 
     const streamMessage = new StreamMessage({
         messageId: new MessageID(
