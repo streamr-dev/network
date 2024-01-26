@@ -86,7 +86,8 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         streamPartId: config.streamPartId,
         rpcCommunicator,
         neighborUpdateInterval,
-        neighborTargetCount
+        neighborTargetCount,
+        connectionLocker: config.connectionLocker
     })
     const inspector = config.inspector ?? new Inspector({
         localPeerDescriptor: config.localPeerDescriptor,
