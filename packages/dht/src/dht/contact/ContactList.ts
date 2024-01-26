@@ -13,7 +13,7 @@ export class ContactState<C> {
 
 export interface Events<C> {
     contactRemoved: (removedContact: C, closestContacts: C[]) => void
-    newContact: (newContact: C, closestContacts: C[]) => void
+    contactAdded: (contactAdded: C, closestContacts: C[]) => void
 }
 
 export class ContactList<C extends { getNodeId: () => DhtAddress }> extends EventEmitter<Events<C>> {
