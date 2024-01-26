@@ -342,7 +342,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 return this.peerManager!.getClosestNeighborsTo(nodeId, limit)
                     .map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor())
             },
-            addNewContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
+            addContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
             removeContact: (nodeId: DhtAddress) => this.removeContact(nodeId)
         })
         this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers',
