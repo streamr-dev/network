@@ -48,7 +48,7 @@ export class DiscoverySession {
         logger.trace(`Getting closest peers from contact: ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
         this.config.contactedPeers.add(contact.getNodeId())
         const returnedContacts = await contact.getClosestPeers(this.config.targetId)
-        this.config.peerManager.handlePeerActive(contact.getNodeId())
+        this.config.peerManager.setContactActive(contact.getNodeId())
         return returnedContacts
     }
 
@@ -73,7 +73,7 @@ export class DiscoverySession {
             return
         }
         this.ongoingClosestPeersRequests.delete(peer.getNodeId())
-        this.config.peerManager.handlePeerUnresponsive(peer.getNodeId())
+        this.config.peerManager.removeContact(peer.getNodeId())
     }
 
     private findMoreContacts(): void {

@@ -270,7 +270,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         return this.bucket.toArray().map((rpcRemote: DhtNodeRpcRemote) => rpcRemote.getPeerDescriptor())
     }
 
-    handlePeerActive(nodeId: DhtAddress): void {
+    setContactActive(nodeId: DhtAddress): void {
         this.contacts.setActive(nodeId)
     }
 
