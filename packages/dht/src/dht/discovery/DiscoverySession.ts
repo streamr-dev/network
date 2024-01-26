@@ -34,7 +34,7 @@ export class DiscoverySession {
         this.config = config
     }
 
-    private addNewContacts(contacts: PeerDescriptor[]): void {
+    private addContacts(contacts: PeerDescriptor[]): void {
         if (this.stopped) {
             return
         }
@@ -60,7 +60,7 @@ export class DiscoverySession {
         const targetId = getRawFromDhtAddress(this.config.targetId)
         const oldClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
         const oldClosestDistance = getDistance(targetId, getRawFromDhtAddress(oldClosestNeighbor.getNodeId()))
-        this.addNewContacts(contacts)
+        this.addContacts(contacts)
         const newClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
         const newClosestDistance = getDistance(targetId, getRawFromDhtAddress(newClosestNeighbor.getNodeId()))
         if (newClosestDistance >= oldClosestDistance) {
