@@ -117,7 +117,7 @@ export class SRTPlugin extends Plugin<SRTPluginConfig> {
 
     async awaitConnections(socket: number): Promise<void> {
         
-        const clockDifference = await this.estimateTimeDiff()
+        const clockDifference = _.round(await this.estimateTimeDiff(),1)
         logger.info('SRT plugin: time difference between external clock and local system clock was: ', {clockDifference})
         logger.info('SRT plugin: awaiting incoming client connection ...')
         const fd = await this.server!.accept(socket)
