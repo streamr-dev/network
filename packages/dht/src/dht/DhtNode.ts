@@ -417,7 +417,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started) {  // the stopped state is checked in PeerManager
             return
         }
-        this.peerManager!.handlePeerLeaving(nodeId)
+        this.peerManager!.removeContact(nodeId)
     }
 
     public async send(msg: Message): Promise<void> {

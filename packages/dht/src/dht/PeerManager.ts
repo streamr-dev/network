@@ -202,11 +202,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         }
     }
 
-    handlePeerLeaving(nodeId: DhtAddress): void {
-        this.removeContact(nodeId)
-    }
-
-    private removeContact(nodeId: DhtAddress): void {
+    removeContact(nodeId: DhtAddress): void {
         if (this.stopped) {
             return
         }
