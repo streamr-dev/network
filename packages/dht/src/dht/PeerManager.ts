@@ -160,7 +160,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         }
         const closest = this.getClosestActiveContactNotInBucket()
         if (closest) {
-            this.handleNewPeers([closest.getPeerDescriptor()])
+            this.addContact([closest.getPeerDescriptor()])
         }
     }
 
@@ -282,7 +282,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.removeContact(nodeId)
     }
 
-    handleNewPeers(peerDescriptors: PeerDescriptor[], setActive?: boolean): void { 
+    addContact(peerDescriptors: PeerDescriptor[], setActive?: boolean): void { 
         if (this.stopped) {
             return
         }

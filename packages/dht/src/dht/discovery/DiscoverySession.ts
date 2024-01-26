@@ -38,7 +38,7 @@ export class DiscoverySession {
         if (this.stopped) {
             return
         }
-        this.config.peerManager.handleNewPeers(contacts)
+        this.config.peerManager.addContact(contacts)
     }
 
     private async getClosestPeersFromContact(contact: DhtNodeRpcRemote): Promise<PeerDescriptor[]> {

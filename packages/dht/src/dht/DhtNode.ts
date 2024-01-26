@@ -249,7 +249,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             rpcCommunicator: this.rpcCommunicator,
             connections: this.peerManager!.connections,
             localPeerDescriptor: this.localPeerDescriptor!,
-            addContact: (contact: PeerDescriptor, setActive?: boolean) => this.peerManager!.handleNewPeers([contact], setActive),
+            addContact: (contact: PeerDescriptor, setActive?: boolean) => this.peerManager!.addContact([contact], setActive),
             connectionManager: this.connectionManager
         })
         this.recursiveOperationManager = new RecursiveOperationManager({
@@ -259,7 +259,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             connections: this.peerManager!.connections,
             localPeerDescriptor: this.localPeerDescriptor!,
             serviceId: this.config.serviceId,
-            addContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
+            addContact: (contact: PeerDescriptor) => this.peerManager!.addContact([contact]),
             localDataStore: this.localDataStore
         })
         this.storeManager = new StoreManager({
@@ -347,7 +347,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 return this.peerManager!.getClosestNeighborsTo(nodeId, limit)
                     .map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor())
             },
-            addContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
+            addContact: (contact: PeerDescriptor) => this.peerManager!.addContact([contact]),
             removeContact: (nodeId: DhtAddress) => this.removeContact(nodeId)
         })
         this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers',
