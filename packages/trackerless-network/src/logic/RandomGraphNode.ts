@@ -115,7 +115,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         this.registerDefaultServerMethods()
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
-            'newContact',
+            'contactAdded',
             (_peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.newContact(closestPeers),
             this.abortController.signal
         )
@@ -127,8 +127,8 @@ export class RandomGraphNode extends EventEmitter<Events> {
         )
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
-            'newRandomContact',
-            (_peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.newRandomContact(randomPeers),
+            'randomContactAdded',
+            (_peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.addedRandomContact(randomPeers),
             this.abortController.signal
         )   
         addManagedEventListener<any, any>(
@@ -225,7 +225,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         }
     }
 
-    private newRandomContact(randomNodes: PeerDescriptor[]): void {
+    private addedRandomContact(randomNodes: PeerDescriptor[]): void {
         if (this.isStopped()) {
             return
         }

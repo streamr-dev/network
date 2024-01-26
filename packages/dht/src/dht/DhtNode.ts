@@ -48,9 +48,9 @@ import { StoreRpcRemote } from './store/StoreRpcRemote'
 import { createPeerDescriptor } from '../helpers/createPeerDescriptor'
 
 export interface DhtNodeEvents {
-    newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
+    contactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     contactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    newRandomContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
+    randomContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     randomContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
 }
 
@@ -278,7 +278,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 )
             }
         })
-        this.on('newContact', (peerDescriptor: PeerDescriptor) => {
+        this.on('contactAdded', (peerDescriptor: PeerDescriptor) => {
             this.storeManager!.onNewContact(peerDescriptor)
         })
         this.bindRpcLocalMethods()
@@ -298,13 +298,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.emit('contactRemoved', peerDescriptor, activeContacts)
         })
         this.peerManager.on('contactAdded', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('newContact', peerDescriptor, activeContacts)
+            this.emit('contactAdded', peerDescriptor, activeContacts)
         )
         this.peerManager.on('randomContactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
             this.emit('randomContactRemoved', peerDescriptor, activeContacts)
         )
         this.peerManager.on('randomContactAdded', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('newRandomContact', peerDescriptor, activeContacts)
+            this.emit('randomContactAdded', peerDescriptor, activeContacts)
         )
         this.peerManager.on('kBucketEmpty', () => {
             if (!this.peerDiscovery!.isJoinOngoing()
