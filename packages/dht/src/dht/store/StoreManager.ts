@@ -53,7 +53,7 @@ export class StoreManager {
             (request: ReplicateDataRequest, context: ServerCallContext) => rpcLocal.replicateData(request, context))
     }
 
-    onNewContact(peerDescriptor: PeerDescriptor): void {
+    onContactAdded(peerDescriptor: PeerDescriptor): void {
         for (const key of this.config.localDataStore.keys()) {
             this.replicateAndUpdateStaleState(key, peerDescriptor)
         }
