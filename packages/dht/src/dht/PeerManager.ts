@@ -274,10 +274,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.contacts.setActive(nodeId)
     }
 
-    handlePeerUnresponsive(nodeId: DhtAddress): void {
-        this.removeContact(nodeId)
-    }
-
     addContact(peerDescriptors: PeerDescriptor[], setActive?: boolean): void { 
         if (this.stopped) {
             return
