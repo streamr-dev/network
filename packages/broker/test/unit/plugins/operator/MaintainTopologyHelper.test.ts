@@ -23,7 +23,7 @@ describe(MaintainTopologyHelper, () => {
     let contractFacade: MockProxy<ContractFacade>
     let helper: MaintainTopologyHelper
 
-    async function emitSmartContractEvent(event: 'Staked' | 'Unstaked', sponsorship: string): Promise<void> {
+    async function triggerEventHandler(event: 'Staked' | 'Unstaked', sponsorship: string): Promise<void> {
         smartContractEventEmitter.emit(event, sponsorship)
         await wait(0)
     }
@@ -48,8 +48,8 @@ describe(MaintainTopologyHelper, () => {
             const events = eventsWithArgsToArray(helper as any, ['addStakedStreams'])
             await helper.start()
 
-            await emitSmartContractEvent('Staked', SPONSORSHIP_ONE)
-            await emitSmartContractEvent('Staked', SPONSORSHIP_TWO)
+            await triggerEventHandler('Staked', SPONSORSHIP_ONE)
+            await triggerEventHandler('Staked', SPONSORSHIP_TWO)
 
             expect(events).toEqual([
                 ['addStakedStreams', [STREAM_ONE_ID]],
@@ -61,11 +61,11 @@ describe(MaintainTopologyHelper, () => {
             const events = eventsWithArgsToArray(helper as any, ['removeStakedStream'])
             await helper.start()
 
-            await emitSmartContractEvent('Staked', SPONSORSHIP_ONE)
-            await emitSmartContractEvent('Staked', SPONSORSHIP_TWO)
+            await triggerEventHandler('Staked', SPONSORSHIP_ONE)
+            await triggerEventHandler('Staked', SPONSORSHIP_TWO)
 
-            await emitSmartContractEvent('Unstaked', SPONSORSHIP_ONE)
-            await emitSmartContractEvent('Unstaked', SPONSORSHIP_TWO)
+            await triggerEventHandler('Unstaked', SPONSORSHIP_ONE)
+            await triggerEventHandler('Unstaked', SPONSORSHIP_TWO)
             expect(events).toEqual([
                 ['removeStakedStream', STREAM_ONE_ID],
                 ['removeStakedStream', STREAM_TWO_ID]
@@ -84,8 +84,8 @@ describe(MaintainTopologyHelper, () => {
             const events = eventsWithArgsToArray(helper as any, ['addStakedStreams'])
             await helper.start()
 
-            await emitSmartContractEvent('Staked', SPONSORSHIP_ONE)
-            await emitSmartContractEvent('Staked', SPONSORSHIP_TWO)
+            await triggerEventHandler('Staked', SPONSORSHIP_ONE)
+            await triggerEventHandler('Staked', SPONSORSHIP_TWO)
 
             expect(events).toEqual([
                 ['addStakedStreams', [STREAM_ONE_ID]]
@@ -96,13 +96,13 @@ describe(MaintainTopologyHelper, () => {
             const events = eventsWithArgsToArray(helper as any, ['removeStakedStream'])
             await helper.start()
 
-            await emitSmartContractEvent('Staked', SPONSORSHIP_ONE)
-            await emitSmartContractEvent('Staked', SPONSORSHIP_TWO)
+            await triggerEventHandler('Staked', SPONSORSHIP_ONE)
+            await triggerEventHandler('Staked', SPONSORSHIP_TWO)
 
-            await emitSmartContractEvent('Unstaked', SPONSORSHIP_ONE)
+            await triggerEventHandler('Unstaked', SPONSORSHIP_ONE)
             expect(events).toEqual([])
 
-            await emitSmartContractEvent('Unstaked', SPONSORSHIP_TWO)
+            await triggerEventHandler('Unstaked', SPONSORSHIP_TWO)
             expect(events).toEqual([
                 ['removeStakedStream', STREAM_ONE_ID]
             ])
@@ -163,7 +163,7 @@ describe(MaintainTopologyHelper, () => {
             await helper.start()
             const events = eventsWithArgsToArray(helper as any, ['addStakedStreams'])
 
-            await emitSmartContractEvent('Staked', SPONSORSHIP_ONE)
+            await triggerEventHandler('Staked', SPONSORSHIP_ONE)
 
             expect(events).toEqual([])
         })
@@ -172,7 +172,7 @@ describe(MaintainTopologyHelper, () => {
             await helper.start()
             const events = eventsWithArgsToArray(helper as any, ['addStakedStreams'])
 
-            await emitSmartContractEvent('Staked', SPONSORSHIP_SIX)
+            await triggerEventHandler('Staked', SPONSORSHIP_SIX)
 
             expect(events).toEqual([
                 ['addStakedStreams', [STREAM_THREE_ID]]
@@ -183,15 +183,15 @@ describe(MaintainTopologyHelper, () => {
             const events = eventsWithArgsToArray(helper as any, ['removeStakedStream'])
             await helper.start()
 
-            await emitSmartContractEvent('Staked', SPONSORSHIP_ONE) // 3 sponsorships after this point (2 from pull, 1 from event)
+            await triggerEventHandler('Staked', SPONSORSHIP_ONE) // 3 sponsorships after this point (2 from pull, 1 from event)
 
-            await emitSmartContractEvent('Unstaked', SPONSORSHIP_ONE)
+            await triggerEventHandler('Unstaked', SPONSORSHIP_ONE)
             expect(events).toEqual([])
 
-            await emitSmartContractEvent('Unstaked', SPONSORSHIP_FIVE)
+            await triggerEventHandler('Unstaked', SPONSORSHIP_FIVE)
             expect(events).toEqual([])
 
-            await emitSmartContractEvent('Unstaked', SPONSORSHIP_THREE)
+            await triggerEventHandler('Unstaked', SPONSORSHIP_THREE)
             expect(events).toEqual([
                 ['removeStakedStream', STREAM_ONE_ID]
             ])
