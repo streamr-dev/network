@@ -160,9 +160,8 @@ describe(MaintainTopologyHelper, () => {
         })
 
         it('event "addStakedStreams" is not emitted thereafter if staking to an already staked stream', async () => {
-            const events = eventsWithArgsToArray(helper as any, ['addStakedStreams'])
             await helper.start()
-            events.length = 0
+            const events = eventsWithArgsToArray(helper as any, ['addStakedStreams'])
 
             await emitSmartContractEvent('Staked', SPONSORSHIP_ONE)
 
@@ -170,9 +169,8 @@ describe(MaintainTopologyHelper, () => {
         })
 
         it('event "addStakedStreams" is emitted thereafter if staking to a non-staked stream', async () => {
-            const events = eventsWithArgsToArray(helper as any, ['addStakedStreams'])
             await helper.start()
-            events.length = 0
+            const events = eventsWithArgsToArray(helper as any, ['addStakedStreams'])
 
             await emitSmartContractEvent('Staked', SPONSORSHIP_SIX)
 
