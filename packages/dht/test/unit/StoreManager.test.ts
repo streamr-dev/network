@@ -27,7 +27,6 @@ describe('StoreManager', () => {
             localNodeId: DhtAddress,
             closestNeighbors: DhtAddress[],
             replicateData: (request: ReplicateDataRequest) => unknown,
-            setStale: (key: DhtAddress, creator: DhtAddress, stale: boolean) => unknown,
             setAllEntriesAsStale: (key: DhtAddress) => unknown
         ): StoreManager => {
             const getClosestNeighborsTo = () => {
@@ -43,7 +42,6 @@ describe('StoreManager', () => {
                 localDataStore: { 
                     keys: () => [getDhtAddressFromRaw(DATA_ENTRY.key)],
                     values: () => [DATA_ENTRY],
-                    setStale,
                     setAllEntriesAsStale 
                 } as any,
                 serviceId: undefined as any,
@@ -58,13 +56,11 @@ describe('StoreManager', () => {
 
             it('new node is within redundancy factor', async () => {
                 const replicateData = jest.fn<undefined, [ReplicateDataRequest]>()
-                const setStale = jest.fn<undefined, [DhtAddress, DhtAddress]>()
                 const setAllEntriesAsStale = jest.fn<undefined, [DhtAddress]>()
                 const manager = createStoreManager(
                     NODES_CLOSEST_TO_DATA[0],
                     [NODES_CLOSEST_TO_DATA[1], NODES_CLOSEST_TO_DATA[3], NODES_CLOSEST_TO_DATA[4]],
                     replicateData,
-                    setStale,
                     setAllEntriesAsStale
                 )
                 manager.onContactAdded({ nodeId: getRawFromDhtAddress(NODES_CLOSEST_TO_DATA[2]), type: NodeType.NODEJS })
@@ -72,24 +68,22 @@ describe('StoreManager', () => {
                 expect(replicateData).toHaveBeenCalledWith({
                     entry: DATA_ENTRY
                 })
-                expect(setStale).not.toHaveBeenCalled()
+                expect(setAllEntriesAsStale).not.toHaveBeenCalled()
             })
     
             it('new node is not within redundancy factor', async () => {
                 const replicateData = jest.fn<undefined, [ReplicateDataRequest]>()
-                const setStale = jest.fn<undefined, [DhtAddress, DhtAddress]>()
                 const setAllEntriesAsStale = jest.fn<undefined, [DhtAddress]>()
                 const manager = createStoreManager(
                     NODES_CLOSEST_TO_DATA[0],
                     [NODES_CLOSEST_TO_DATA[1], NODES_CLOSEST_TO_DATA[2], NODES_CLOSEST_TO_DATA[3]],
                     replicateData,
-                    setStale,
                     setAllEntriesAsStale
                 )
                 manager.onContactAdded({ nodeId: getRawFromDhtAddress(NODES_CLOSEST_TO_DATA[4]), type: NodeType.NODEJS })
                 await wait(50)
                 expect(replicateData).not.toHaveBeenCalled()
-                expect(setStale).not.toHaveBeenCalled()
+                expect(setAllEntriesAsStale).not.toHaveBeenCalled()
             })
         })
 
@@ -97,30 +91,25 @@ describe('StoreManager', () => {
 
             it('this node is within redundancy factor', async () => {
                 const replicateData = jest.fn<undefined, [ReplicateDataRequest]>()
-                const setStale = jest.fn<undefined, [DhtAddress, DhtAddress]>()
                 const setAllEntriesAsStale = jest.fn<undefined, [DhtAddress]>()
                 const manager = createStoreManager(
                     NODES_CLOSEST_TO_DATA[1],
                     [NODES_CLOSEST_TO_DATA[0], NODES_CLOSEST_TO_DATA[2], NODES_CLOSEST_TO_DATA[3]],
                     replicateData,
-                    setStale,
                     setAllEntriesAsStale
                 )
                 manager.onContactAdded({ nodeId: getRawFromDhtAddress(NODES_CLOSEST_TO_DATA[4]), type: NodeType.NODEJS })
                 await wait(50)
                 expect(replicateData).not.toHaveBeenCalled()
-                expect(setStale).not.toHaveBeenCalled()
             })
 
             it('this node is not within redundancy factor', async () => {
                 const replicateData = jest.fn<undefined, [ReplicateDataRequest]>()
-                const setStale = jest.fn<undefined, [DhtAddress, DhtAddress]>()
                 const setAllEntriesAsStale = jest.fn<undefined, [DhtAddress]>()
                 const manager = createStoreManager(
                     NODES_CLOSEST_TO_DATA[3],
                     [NODES_CLOSEST_TO_DATA[0], NODES_CLOSEST_TO_DATA[1], NODES_CLOSEST_TO_DATA[2]],
                     replicateData,
-                    setStale,
                     setAllEntriesAsStale
                 )
                 manager.onContactAdded({ nodeId: getRawFromDhtAddress(NODES_CLOSEST_TO_DATA[4]), type: NodeType.NODEJS })
@@ -132,19 +121,17 @@ describe('StoreManager', () => {
 
             it('this node has less than redundancyFactor neighbors', async () => {
                 const replicateData = jest.fn<undefined, [ReplicateDataRequest]>()
-                const setStale = jest.fn<undefined, [DhtAddress, DhtAddress]>()
                 const setAllEntriesAsStale = jest.fn<undefined, [DhtAddress]>()
                 const manager = createStoreManager(
                     NODES_CLOSEST_TO_DATA[3],
                     [NODES_CLOSEST_TO_DATA[0], NODES_CLOSEST_TO_DATA[1]],
                     replicateData,
-                    setStale,
                     setAllEntriesAsStale
                 )
                 manager.onContactAdded({ nodeId: getRawFromDhtAddress(NODES_CLOSEST_TO_DATA[4]), type: NodeType.NODEJS })
                 await wait(50)
                 expect(replicateData).not.toHaveBeenCalled()
-                expect(setStale).toHaveBeenCalledTimes(0)
+                expect(setAllEntriesAsStale).toHaveBeenCalledTimes(0)
             })
         })
     })

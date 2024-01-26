@@ -61,13 +61,6 @@ export class LocalDataStore {
         return this.store.keys()
     }
 
-    public setStale(key: DhtAddress, creator: DhtAddress, stale: boolean): void {
-        const storedEntry = this.store.get(key)?.get(creator)
-        if (storedEntry) {
-            storedEntry.stale = stale
-        }
-    }
-
     public setAllEntriesAsStale(key: DhtAddress): void {
         this.store.get(key)?.forEach((value) => {
             value.stale = true
