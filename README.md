@@ -159,32 +159,49 @@ npm install
 
 ## Release
 
-All packages are released at the same time under the same version (except for internal dev-dependency packages).
+All packages are released at the same time under the same version.
 
-1. `git checkout testnet-three && git pull`
-2. (skip if beta) Read [CHANGELOG](CHANGELOG.md), decide new version, and edit file.
-3. `./update-versions.sh <SEMVER>` E.g. `./update-versions.sh 7.1.1`
-4. `npm run clean && npm install && npm run build && npm run versions`
-   - Ensure output does not contain yellow or red markers
-5. Add files to staging `git add . -p`
-6. `./release-git-tags.sh <SEMVER>` E.g. `./release-git-tags.sh 7.1.1`
-7. Wait for pushed commit to pass CI validation
-8. Publish packages `./release.sh testnet-three`
-    - Use argument `beta` if publishing a beta version
-    - Use argument `latest` if publishing a stable version
-9. Update client API docs if major or minor change:
+### Step 1: Edit the CHANGELOG
+You can skip this step if releasing a beta version.
+
+Read and edit [CHANGELOG.md](CHANGELOG.md). Create a new section for the new version, move items from under
+"Unreleased" to this new section. Add any additional changes worth mentioning that may be missing from "Unreleased".
+
+
+### Step 2: Creating and pushing the version and tag
+In the bash commands below, replace `<SEMVER>` with the version to be published _without_ the letter "v" infront.
+
+```
+git checkout testnet-three
+git pull
+./update-versions.sh <SEMVER>                                        # e.g. ./update-versions.sh 7.1.1
+npm run clean && npm install && npm run build && npm run versions    # Check that the output has not red or yellow markers
+git add -p .                                                         # or "git add -all"
+./release-git-tags.sh <SEMVER>                                       # e.g. `./release-git-tags.sh 7.1.1`
+```
+
+### Step 3: Publish NPM and release Docker image
+
+Firstly, wait for all tests to pass in GitHub Actions.
+
+To publish the NPM packages, use [publish-npm workflow](https://github.com/streamr-dev/network/actions/workflows/publish-npm.yml).
+Click button "Run Workflow". Select the right branch and NPM tag to be used.
+
+To publish the Docker image, use [release-docker workflow](https://github.com/streamr-dev/network/actions/workflows/release-docker.yml).
+Click button "Run Workflow". Select the right branch and you are good to go. The Docker tags are automatically chosen based on
+the associated Git branch and tag.
+
+### Step 4: Update API docs
+
+Are we still doing this?
+
 ```bash
 cd packages/client
 npm run docs
 aws s3 cp ./docs s3://api-docs.streamr.network/client/vX.Y --recursive --profile streamr-api-docs-upload
 ```
 
-#### Docker release
-
-After pushing the broker tag, GitHub Actions will build and publish the Docker image automatically if
-tests pass.
-
-##### Tag `latest`
+### Step 5: (optional) Docker image tag `latest`
 
 GitHub Actions will not update the `latest` tag. This must be done manually. Keep in mind that `latest` should
 always refer to the latest _stable_ version.

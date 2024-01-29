@@ -55,6 +55,13 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
                 // eslint-disable-next-line max-len
                 const index = sortedIndexBy(this.contactIds, contact.getNodeId(), (id: DhtAddress) => { return this.distanceToReferenceId(id) })
                 this.contactIds.splice(index, 0, contact.getNodeId())
+                if (this.config.emitEvents) {
+                    this.emit(
+                        'newContact',
+                        contact,
+                        this.getClosestContacts()
+                    )
+                }
             } else if (this.compareIds(this.contactIds[this.config.maxSize - 1], contact.getNodeId()) > 0) {
                 const removedId = this.contactIds.pop()
                 const removedContact = this.contactsById.get(removedId!)!.contact
@@ -65,19 +72,18 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
                 const index = sortedIndexBy(this.contactIds, contact.getNodeId(), (id: DhtAddress) => { return this.distanceToReferenceId(id) })
                 this.contactIds.splice(index, 0, contact.getNodeId())
                 if (this.config.emitEvents) {
+                    const closestContacts = this.getClosestContacts()
                     this.emit(
                         'contactRemoved',
                         removedContact,
-                        this.getClosestContacts()
+                        closestContacts
+                    )
+                    this.emit(
+                        'newContact',
+                        contact,
+                        closestContacts
                     )
                 }
-            }
-            if (this.config.emitEvents) {
-                this.emit(
-                    'newContact',
-                    contact,
-                    this.getClosestContacts()
-                )
             }
         }
     }

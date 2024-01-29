@@ -153,7 +153,15 @@ export class WebsocketConnector {
                 } else if (action === 'connectivityProbe') {
                     // no-op
                 } else {
-                    this.attachHandshaker(connection)
+                    // The localPeerDescriptor can be undefined here as the WS server is used for connectivity checks
+                    // before the localPeerDescriptor is set during start.
+                    // Handshaked connections should be rejected before the localPeerDescriptor is set.
+                    if (this.localPeerDescriptor !== undefined) {
+                        this.attachHandshaker(connection)
+                    } else {
+                        logger.trace('incoming Websocket connection before localPeerDescriptor was set, closing connection')
+                        connection.close(false).catch(() => {})
+                    }
                 }
             })
             const port = await this.websocketServer.start()
