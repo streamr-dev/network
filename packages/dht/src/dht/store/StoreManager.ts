@@ -13,7 +13,6 @@ import { Timestamp } from '../../proto/google/protobuf/timestamp'
 import { SortedContactList } from '../contact/SortedContactList'
 import { Contact } from '../contact/Contact'
 import { ServiceID } from '../../types/ServiceID'
-import { findIndex } from 'lodash'
 import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
 import { StoreRpcLocal } from './StoreRpcLocal'
 import { getDistance } from '../PeerManager'
@@ -61,11 +60,10 @@ export class StoreManager {
 
     private replicateAndUpdateStaleState(key: DhtAddress, newNode: PeerDescriptor): void {
         const newNodeId = getNodeIdFromPeerDescriptor(newNode)
-        // TODO use config option or named constant?
-        const closestToData = this.config.getClosestNeighborsTo(key, 10)
+        const closestToData = this.config.getClosestNeighborsTo(key, this.config.redundancyFactor)
         const sortedList = new SortedContactList<Contact>({
             referenceId: key, 
-            maxSize: 20,  // TODO use config option or named constant?
+            maxSize: this.config.redundancyFactor,
             allowToContainReferenceId: true,
             emitEvents: false
         })
@@ -78,12 +76,7 @@ export class StoreManager {
         const selfIsPrimaryStorer = (sortedList.getClosestContactId() === getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor))
         if (selfIsPrimaryStorer) {
             sortedList.addContact(new Contact(newNode))
-            const sorted = sortedList.getContactIds()
-            // findIndex should never return -1 here because we just added the new node to the list
-            const index = findIndex(sorted, (nodeId) => (nodeId === newNodeId))
-            // if new node is within the storageRedundancyFactor closest nodes to the data
-            // do replicate data to it
-            if (index < this.config.redundancyFactor) {
+            if (sortedList.getContact(newNodeId) !== undefined) {
                 setImmediate(async () => {
                     const dataEntries = Array.from(this.config.localDataStore.values(key))
                     await Promise.all(dataEntries.map(async (dataEntry) => this.replicateDataToContact(dataEntry, newNode)))
