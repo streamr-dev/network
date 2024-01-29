@@ -124,7 +124,7 @@ jobs:
 
       - name: Collect docker logs on failure
         if: failure()
-        uses: jwalton/gh-docker-logs@v2.2.1
+        uses: jwalton/gh-docker-logs@v2.2.2
         with:
           dest: 'logs'
 
