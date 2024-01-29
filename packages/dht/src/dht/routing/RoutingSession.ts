@@ -17,6 +17,7 @@ import { pull } from 'lodash'
 const logger = new Logger(module)
 
 const MAX_FAILED_HOPS = 2
+const CONTACT_LIST_MAX_SIZE = 10
 
 class RemoteContact extends Contact {
 
@@ -90,7 +91,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         const previousId = previousPeer ? getNodeIdFromPeerDescriptor(previousPeer) : undefined
         this.contactList = new SortedContactList({
             referenceId: getDhtAddressFromRaw(config.routedMessage.target),
-            maxSize: 10,  // TODO use config option or named constant?
+            maxSize: CONTACT_LIST_MAX_SIZE,
             allowToContainReferenceId: true,
             nodeIdDistanceLimit: previousId,
             excludedNodeIds: config.excludedNodeIds,
