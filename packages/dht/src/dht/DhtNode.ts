@@ -157,6 +157,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 throw new Error(`Invalid nodeId, the length of the nodeId should be ${expectedNodeIdLength}`)
             }
         }
+        if (this.config.peerDescriptor !== undefined) {
+            if (this.config.peerDescriptor.nodeId.length !== KADEMLIA_ID_LENGTH_IN_BYTES) {
+                throw new Error(`Invalid peerDescriptor, the length of the nodeId should be ${KADEMLIA_ID_LENGTH_IN_BYTES} bytes`)
+            }
+        }
     }
 
     public async start(): Promise<void> {
@@ -244,7 +249,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             rpcCommunicator: this.rpcCommunicator,
             connections: this.peerManager!.connections,
             localPeerDescriptor: this.localPeerDescriptor!,
-            addContact: (contact: PeerDescriptor, setActive?: boolean) => this.peerManager!.handleNewPeers([contact], setActive),
+            addContact: (contact: PeerDescriptor, setActive?: boolean) => this.peerManager!.addContact([contact], setActive),
             connectionManager: this.connectionManager
         })
         this.recursiveOperationManager = new RecursiveOperationManager({
@@ -254,7 +259,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             connections: this.peerManager!.connections,
             localPeerDescriptor: this.localPeerDescriptor!,
             serviceId: this.config.serviceId,
-            addContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
+            addContact: (contact: PeerDescriptor) => this.peerManager!.addContact([contact]),
             localDataStore: this.localDataStore
         })
         this.storeManager = new StoreManager({
@@ -320,15 +325,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             }
         })
         this.transport!.on('connected', (peerDescriptor: PeerDescriptor) => {
-            this.peerManager!.handleConnected(peerDescriptor)
+            this.peerManager!.onContactConnected(peerDescriptor)
             this.emit('connected', peerDescriptor)
         })
         this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => {
-            this.peerManager!.handleDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor), gracefulLeave)
+            this.peerManager!.onContactDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor), gracefulLeave)
             this.emit('disconnected', peerDescriptor, gracefulLeave)
         })
         this.transport!.getConnections().forEach((peer) => {
-            this.peerManager!.handleConnected(peer)
+            this.peerManager!.onContactConnected(peer)
         })
     }
 
@@ -342,7 +347,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 return this.peerManager!.getClosestNeighborsTo(nodeId, limit)
                     .map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor())
             },
-            addContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
+            addContact: (contact: PeerDescriptor) => this.peerManager!.addContact([contact]),
             removeContact: (nodeId: DhtAddress) => this.removeContact(nodeId)
         })
         this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers',
@@ -412,7 +417,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started) {  // the stopped state is checked in PeerManager
             return
         }
-        this.peerManager!.handlePeerLeaving(nodeId)
+        this.peerManager!.removeContact(nodeId)
     }
 
     public async send(msg: Message): Promise<void> {
