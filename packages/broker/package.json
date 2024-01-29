@@ -35,6 +35,7 @@
     "@streamr/protocol": "100.0.0-testnet-three.2",
     "@streamr/utils": "100.0.0-testnet-three.2",
     "aedes": "^0.51.0",
+    "@eyevinn/srt": "^0.8.3",
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
     "cassandra-driver": "^4.7.2",
