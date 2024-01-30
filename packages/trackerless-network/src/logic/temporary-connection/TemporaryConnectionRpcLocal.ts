@@ -32,6 +32,10 @@ export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
         return this.temporaryNodes
     }
 
+    hasNode(node: DhtAddress): boolean {
+        return this.temporaryNodes.has(node)
+    }
+
     removeNode(nodeId: DhtAddress): void {
         this.temporaryNodes.remove(nodeId)
     }

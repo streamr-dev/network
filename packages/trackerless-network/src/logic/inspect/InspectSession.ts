@@ -44,6 +44,10 @@ export class InspectSession extends EventEmitter<Events> {
         return this.inspectionMessages.size
     }
 
+    onlyMarkedByInspectedNode(): boolean {
+        return Array.from(this.inspectionMessages.values()).every((value) => value === true)
+    }
+
     stop(): void {
         this.emit('done')
     }
