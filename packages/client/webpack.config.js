@@ -57,7 +57,7 @@ module.exports = (env, argv) => {
         },
         plugins: [
             gitRevisionPlugin,
-            new webpack.EnvironmentPlugin({ // TODO: remove?
+            new webpack.EnvironmentPlugin({
                 NODE_ENV: process.env.NODE_ENV,
                 version: pkg.version,
                 GIT_VERSION: gitRevisionPlugin.version(),
