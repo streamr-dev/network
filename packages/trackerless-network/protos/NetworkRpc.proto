@@ -26,6 +26,7 @@ service NeighborUpdateRpc {
 
 service TemporaryConnectionRpc {
   rpc openConnection (TemporaryConnectionRequest) returns (TemporaryConnectionResponse);
+  rpc closeConnection (CloseTemporaryConnection) returns (google.protobuf.Empty);
 }
 
 service NodeInfoRpc {
@@ -147,6 +148,9 @@ message TemporaryConnectionRequest {
 
 message TemporaryConnectionResponse {
   bool accepted = 1;
+}
+
+message CloseTemporaryConnection {
 }
 
 enum ProxyDirection {

@@ -29,7 +29,7 @@ import { attachConnectivityRequestHandler } from '../connectivityRequestHandler'
 import * as Err from '../../helpers/errors'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { version } from '../../../package.json'
+import { version as localVersion } from '../../../package.json'
 import { isCompatibleVersion } from '../../helpers/versionCompatibility'
 
 const logger = new Logger(module)
@@ -153,7 +153,15 @@ export class WebsocketConnector {
                 } else if (action === 'connectivityProbe') {
                     // no-op
                 } else {
-                    this.attachHandshaker(connection)
+                    // The localPeerDescriptor can be undefined here as the WS server is used for connectivity checks
+                    // before the localPeerDescriptor is set during start.
+                    // Handshaked connections should be rejected before the localPeerDescriptor is set.
+                    if (this.localPeerDescriptor !== undefined) {
+                        this.attachHandshaker(connection)
+                    } else {
+                        logger.trace('incoming Websocket connection before localPeerDescriptor was set, closing connection')
+                        connection.close(false).catch(() => {})
+                    }
                 }
             })
             const port = await this.websocketServer.start()
@@ -166,7 +174,8 @@ export class WebsocketConnector {
         const noServerConnectivityResponse: ConnectivityResponse = {
             host: '127.0.0.1',
             natType: NatType.UNKNOWN,
-            ipAddress: ipv4ToNumber('127.0.0.1')
+            ipAddress: ipv4ToNumber('127.0.0.1'),
+            version: localVersion
         }
         if (this.abortController.signal.aborted) {
             return noServerConnectivityResponse
@@ -184,7 +193,8 @@ export class WebsocketConnector {
                             natType: NatType.OPEN_INTERNET,
                             websocket: { host: this.host!, port: this.selectedPort!, tls: this.config.tlsCertificate !== undefined },
                             // TODO: maybe do a DNS lookup here?
-                            ipAddress: ipv4ToNumber('127.0.0.1')
+                            ipAddress: ipv4ToNumber('127.0.0.1'),
+                            version: localVersion
                         }
                         return preconfiguredConnectivityResponse
                     } else {
@@ -196,7 +206,7 @@ export class WebsocketConnector {
                             selfSigned
                         }
                         if (!this.abortController.signal.aborted) {
-                            return await sendConnectivityRequest(connectivityRequest, entryPoint)
+                            return await sendConnectivityRequest(connectivityRequest, entryPoint, localVersion)
                         } else {
                             throw new Err.ConnectionFailed('ConnectivityChecker is destroyed')
                         }
@@ -300,7 +310,7 @@ export class WebsocketConnector {
         const nodeId = getNodeIdFromPeerDescriptor(sourcePeerDescriptor)
         if (this.ongoingConnectRequests.has(nodeId)) {
             const ongoingConnectRequest = this.ongoingConnectRequests.get(nodeId)!
-            if (!isCompatibleVersion(sourceVersion, version)) {
+            if (!isCompatibleVersion(sourceVersion, localVersion)) {
                 ongoingConnectRequest.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
             } else {
                 ongoingConnectRequest.attachImplementation(serverWebsocket)
@@ -316,7 +326,7 @@ export class WebsocketConnector {
                 targetPeerDescriptor
             )
             managedConnection.setRemotePeerDescriptor(sourcePeerDescriptor)
-            if (!isCompatibleVersion(sourceVersion, version)) {
+            if (!isCompatibleVersion(sourceVersion, localVersion)) {
                 managedConnection.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 managedConnection.rejectHandshake(HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)

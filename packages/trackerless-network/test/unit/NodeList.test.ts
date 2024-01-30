@@ -2,6 +2,7 @@ import {
     ListeningRpcCommunicator,
     NodeType,
     PeerDescriptor,
+    createRandomDhtAddress,
     getDhtAddressFromRaw,
     getNodeIdFromPeerDescriptor,
 } from '@streamr/dht'
@@ -11,7 +12,7 @@ import { DeliveryRpcRemote } from '../../src/logic/DeliveryRpcRemote'
 import { NodeList } from '../../src/logic/NodeList'
 import { formStreamPartDeliveryServiceId } from '../../src/logic/formStreamPartDeliveryServiceId'
 import { DeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { createMockPeerDescriptor, createRandomNodeId } from '../utils/utils'
+import { createMockPeerDescriptor } from '../utils/utils'
 import { MockTransport } from '../utils/mock/Transport'
 
 const streamPartId = StreamPartIDUtils.parse('stream#0')
@@ -25,7 +26,7 @@ describe('NodeList', () => {
         new Uint8Array([1, 1, 4]),
         new Uint8Array([1, 1, 5])
     ]
-    const ownId = createRandomNodeId()
+    const ownId = createRandomDhtAddress()
     let nodeList: NodeList
 
     const createRemoteGraphNode = (peerDescriptor: PeerDescriptor) => {
@@ -135,7 +136,7 @@ describe('NodeList', () => {
     })
 
     it('items are in insertion order', () => {
-        const list = new NodeList(createRandomNodeId(), 100)
+        const list = new NodeList(createRandomDhtAddress(), 100)
         const item1 = createRemoteGraphNode(createMockPeerDescriptor())
         const item2 = createRemoteGraphNode(createMockPeerDescriptor())
         const item3 = createRemoteGraphNode(createMockPeerDescriptor())
