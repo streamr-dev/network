@@ -140,15 +140,8 @@ export const createDecoratedContract = <T extends Contract>(
         eventEmitter
     }
 
-    function getAllPropertyNames(obj: object): string[] {
-        const proto = Object.getPrototypeOf(obj)
-        const inherited = (proto) ? getAllPropertyNames(proto) : []
-        return [...new Set(Object.getOwnPropertyNames(obj).concat(inherited))]
-    }
-
     // copy own properties and inherited properties (e.g. contract.removeAllListeners)
-    // eslint-disable-next-line no-prototype-builtins
-    for (const key of getAllPropertyNames(contract)) {
+    for (const key in contract) {
         result[key] = methods[key] !== undefined ? methods[key] : contract[key]
     }
     return result
