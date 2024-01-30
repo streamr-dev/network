@@ -7,6 +7,8 @@
 const { toThrowStreamrError } = require('./test/test-utils/customMatchers')
 
 // eslint-disable-next-line no-undef
-expect.extend({
-    toThrowStreamrError
-})
+if (toThrowStreamrError !== undefined) {
+    expect.extend({
+        toThrowStreamrError
+    })
+}
