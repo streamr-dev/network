@@ -6,8 +6,8 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { toThrowStreamrError } = require('./test/test-utils/customMatchers')
 
-// eslint-disable-next-line no-undef
 if (toThrowStreamrError !== undefined) {
+    // eslint-disable-next-line no-undef
     expect.extend({
         toThrowStreamrError
     })
