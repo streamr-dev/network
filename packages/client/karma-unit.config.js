@@ -2,4 +2,4 @@
 const webpackConfig = require('./webpack.config')
 const { createKarmaConfig } = require('@streamr/browser-test-runner')
 
-module.exports = createKarmaConfig(['test/unit/**/*.ts'], webpackConfig)
+module.exports = createKarmaConfig(['test/unit/**/*.ts'], webpackConfig, __dirname)

@@ -15,7 +15,6 @@ import { ModernFakeTimers } from '@jest/fake-timers'
 // prevents tests failing due to global.expect not being set
 import * as jestExtendedMatchers from 'jest-extended'
 
-import { toThrowStreamrError } from './custom-matcher'
 import { format } from 'util'
 
 let jest = jestMock
@@ -52,7 +51,6 @@ jasmine.getEnv().configure({ random: false }) // disable random test order
 Object.assign(jest, timers)
 
 expect.extend(jestExtendedMatchers)
-expect.extend({ toThrowStreamrError })
 
 // Add missing Jest functions
 window.test = window.it
