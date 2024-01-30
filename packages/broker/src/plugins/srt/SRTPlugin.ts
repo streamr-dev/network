@@ -102,7 +102,7 @@ export class SRTPlugin extends Plugin<SRTPluginConfig> {
     }
 
     async estimateTimeDiff(): Promise<any> {
-        const timeUrl = "http://timeserver-env.eba-dd92jdy3.eu-central-1.elasticbeanstalk.com/time?time="
+        const timeUrl = "http://api.streamr.space/time?time="
         let measurements = []
         let offSet = 0
         for (let i = 0; i < 20; i++) {
