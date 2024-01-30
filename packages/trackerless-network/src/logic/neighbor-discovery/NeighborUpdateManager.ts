@@ -1,5 +1,5 @@
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { ConnectionLocker, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { NeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { Logger, scheduleAtInterval } from '@streamr/utils'
 import { NeighborFinder } from './NeighborFinder'
@@ -13,6 +13,7 @@ interface NeighborUpdateManagerConfig {
     neighbors: NodeList
     nearbyNodeView: NodeList
     neighborFinder: NeighborFinder
+    connectionLocker: ConnectionLocker
     streamPartId: StreamPartID
     rpcCommunicator: ListeningRpcCommunicator
     neighborUpdateInterval: number
@@ -51,6 +52,7 @@ export class NeighborUpdateManager {
             if (res.removeMe) {
                 const nodeId = getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor())
                 this.config.neighbors.remove(nodeId)
+                this.config.connectionLocker.unlockConnection(neighbor.getPeerDescriptor(), this.config.streamPartId)
                 this.config.neighborFinder.start([nodeId])
             }
         }))

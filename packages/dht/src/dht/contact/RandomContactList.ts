@@ -29,7 +29,7 @@ export class RandomContactList<C extends { getNodeId: () => DhtAddress }> extend
                 this.contactIds.push(contact.getNodeId())
                 this.contactsById.set(contact.getNodeId(), new ContactState(contact))
                 this.emit(
-                    'newContact',
+                    'contactAdded',
                     contact,
                     this.getContacts()
                 )
