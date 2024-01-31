@@ -424,7 +424,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started || this.abortController.signal.aborted) {
             return
         }
-
         const reachableThrough = this.peerDiscovery!.isJoinOngoing() ? this.getConnectedEntryPoints() : []
         this.router!.send(msg, reachableThrough)
     }
