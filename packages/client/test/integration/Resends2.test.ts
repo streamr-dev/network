@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
 import { StreamID, toStreamPartID } from '@streamr/protocol'
-import { fastWallet, isRunningInElectron, testOnlyInNodeJs } from '@streamr/test-utils'
+import { fastWallet, isRunningInElectron } from '@streamr/test-utils'
 import { collect, waitForCondition } from '@streamr/utils'
 import fs from 'fs'
 import path from 'path'

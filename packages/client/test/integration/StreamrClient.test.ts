@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { describeOnlyInNodeJs, fastPrivateKey, fastWallet, isRunningInElectron } from '@streamr/test-utils'
+import { fastPrivateKey, fastWallet, isRunningInElectron } from '@streamr/test-utils'
 import { Defer, collect, wait } from '@streamr/utils'
 import fs from 'fs'
 import path from 'path'
