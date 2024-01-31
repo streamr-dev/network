@@ -183,33 +183,29 @@ export class WebsocketConnector {
         for (const reattempt of range(ENTRY_POINT_CONNECTION_ATTEMPTS)) {
             const entryPoint = sample(this.config.entrypoints)!
             try {
-                if (!this.websocketServer) {
-                    return noServerConnectivityResponse
+                if (!this.config.entrypoints || this.config.entrypoints.length === 0) {
+                    // return connectivity info given in config
+                    const preconfiguredConnectivityResponse: ConnectivityResponse = {
+                        host: this.host!,
+                        natType: NatType.OPEN_INTERNET,
+                        websocket: { host: this.host!, port: this.selectedPort!, tls: this.config.tlsCertificate !== undefined },
+                        // TODO: maybe do a DNS lookup here?
+                        ipAddress: ipv4ToNumber('127.0.0.1'),
+                        version: localVersion
+                    }
+                    return preconfiguredConnectivityResponse
                 } else {
-                    if (!this.config.entrypoints || this.config.entrypoints.length === 0) {
-                        // return connectivity info given in config
-                        const preconfiguredConnectivityResponse: ConnectivityResponse = {
-                            host: this.host!,
-                            natType: NatType.OPEN_INTERNET,
-                            websocket: { host: this.host!, port: this.selectedPort!, tls: this.config.tlsCertificate !== undefined },
-                            // TODO: maybe do a DNS lookup here?
-                            ipAddress: ipv4ToNumber('127.0.0.1'),
-                            version: localVersion
-                        }
-                        return preconfiguredConnectivityResponse
+                    // Do real connectivity checking
+                    const connectivityRequest = {
+                        port: this.selectedPort ?? 0,
+                        host: this.host,
+                        tls: this.websocketServer ? this.config.serverEnableTls : false,
+                        selfSigned
+                    }
+                    if (!this.abortController.signal.aborted) {
+                        return await sendConnectivityRequest(connectivityRequest, entryPoint, localVersion)
                     } else {
-                        // Do real connectivity checking
-                        const connectivityRequest = {
-                            port: this.selectedPort!,
-                            host: this.host,
-                            tls: this.config.serverEnableTls,
-                            selfSigned
-                        }
-                        if (!this.abortController.signal.aborted) {
-                            return await sendConnectivityRequest(connectivityRequest, entryPoint, localVersion)
-                        } else {
-                            throw new Err.ConnectionFailed('ConnectivityChecker is destroyed')
-                        }
+                        throw new Err.ConnectionFailed('ConnectivityChecker is destroyed')
                     }
                 }
             } catch (err) {

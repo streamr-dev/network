@@ -36,7 +36,19 @@ export const attachConnectivityRequestHandler = (connectionToListenTo: ServerWeb
 const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, connectivityRequest: ConnectivityRequest): Promise<void> => {
     const host = connectivityRequest.host ?? connection.getRemoteAddress()
     const ipAddress = connection.getRemoteIp()
-    const connectivityResponse = await connectivityProbe(connectivityRequest, ipAddress, host)
+    let connectivityResponse: ConnectivityResponse
+    if (connectivityRequest.port === 0) {
+        logger.trace('ConnectivityRequest port is 0, replying without connectivityProbe')
+        connectivityResponse = {
+            host,
+            natType: NatType.UNKNOWN,
+            ipAddress: ipv4ToNumber(ipAddress),
+            version: localVersion
+        }
+    } else {
+        connectivityResponse = await connectivityProbe(connectivityRequest, ipAddress, host)
+    }
+
     const msg: Message = {
         serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
         messageType: MessageType.CONNECTIVITY_RESPONSE,
