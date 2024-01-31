@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { Wallet } from '@ethersproject/wallet'
 import { StreamID, toStreamPartID } from '@streamr/protocol'
-import { fastWallet, testOnlyInNodeJs } from '@streamr/test-utils'
+import { fastWallet, isRunningInElectron, testOnlyInNodeJs } from '@streamr/test-utils'
 import { collect, waitForCondition } from '@streamr/utils'
 import fs from 'fs'
 import path from 'path'
@@ -427,10 +427,11 @@ describe('Resends2', () => {
         })
     })
 
-    testOnlyInNodeJs('decodes resent messages correctly', async () => {
-        const publishedMessage = Msg({
-            content: fs.readFileSync(path.join(__dirname, '../data/utf8Example.txt'), 'utf8')
-        })
+    it('decodes resent messages correctly', async () => {
+        const content = isRunningInElectron()
+            ? Buffer.from('Hęłłö Wørłd! 1234 @#$$%^&*() 你好，世界 Привет, мир こんにちは世界', 'utf-8').toString('utf-8')
+            : fs.readFileSync(path.join(__dirname, '../data/utf8Example.txt'), 'utf8')
+        const publishedMessage = Msg({ content })
         const publishReq = await publisher.publish(stream, publishedMessage)
 
         await getWaitForStorage(client)(publishReq)

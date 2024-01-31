@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { describeOnlyInNodeJs, fastPrivateKey, fastWallet } from '@streamr/test-utils'
+import { describeOnlyInNodeJs, fastPrivateKey, fastWallet, isRunningInElectron } from '@streamr/test-utils'
 import { Defer, collect, wait } from '@streamr/utils'
 import fs from 'fs'
 import path from 'path'
@@ -150,11 +150,12 @@ describe('StreamrClient', () => {
         })
     })
 
-    describeOnlyInNodeJs('utf-8 encoding', () => {
+    describe('utf-8 encoding', () => {
         it('decodes realtime messages correctly', async () => {
-            const publishedMessage = Msg({
-                content: fs.readFileSync(path.join(__dirname, '../data/utf8Example.txt'), 'utf8')
-            })
+            const content = isRunningInElectron()
+                ? Buffer.from('Hęłłö Wørłd! 1234 @#$$%^&*() 你好，世界 Привет, мир こんにちは世界', 'utf-8').toString('utf-8')
+                : fs.readFileSync(path.join(__dirname, '../data/utf8Example.txt'), 'utf8')
+            const publishedMessage = Msg({ content })
             const sub = await client.subscribe(streamDefinition)
             await client.publish(streamDefinition, publishedMessage)
             const messages = await collect(sub, 1)
