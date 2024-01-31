@@ -5,6 +5,7 @@ import { IRouterRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { DuplicateDetector } from './DuplicateDetector'
 import { RoutingMode } from './RoutingSession'
 import { areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { v4 } from 'uuid'
 
 interface RouterRpcLocalConfig {
     doRouteMessage: (routedMessage: RouteMessageWrapper, mode?: RoutingMode) => RouteMessageAck
@@ -73,7 +74,7 @@ export class RouterRpcLocal implements IRouterRpc {
             this.config.connectionManager?.handleMessage(forwardedMessage)
             return createRouteMessageAck(routedMessage)
         }
-        return this.config.doRouteMessage({ ...routedMessage, target: forwardedMessage.targetDescriptor!.nodeId })
+        return this.config.doRouteMessage({ ...routedMessage, requestId: v4(), target: forwardedMessage.targetDescriptor!.nodeId })
     }
 
 }
