@@ -34,10 +34,25 @@ export const attachConnectivityRequestHandler = (connectionToListenTo: ServerWeb
 }
 
 const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, connectivityRequest: ConnectivityRequest): Promise<void> => {
-    let outgoingConnection: IConnection | undefined
-    let connectivityResponseMessage: ConnectivityResponse | undefined
     const host = connectivityRequest.host ?? connection.getRemoteAddress()
     const ipAddress = connection.getRemoteIp()
+    const connectivityResponse = await connectivityProbe(connectivityRequest, ipAddress, host)
+    const msg: Message = {
+        serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
+        messageType: MessageType.CONNECTIVITY_RESPONSE,
+        messageId: v4(),
+        body: {
+            oneofKind: 'connectivityResponse',
+            connectivityResponse
+        }
+    }
+    connection.send(Message.toBinary(msg))
+    logger.trace('ConnectivityResponse sent: ' + JSON.stringify(Message.toJson(msg)))
+}
+
+const connectivityProbe = async (connectivityRequest: ConnectivityRequest, ipAddress: string, host: string): Promise<ConnectivityResponse> => {
+    let outgoingConnection: IConnection | undefined
+    let connectivityResponseMessage: ConnectivityResponse
     try {
         const wsServerInfo = {
             host,
@@ -50,6 +65,14 @@ const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, co
             url,
             selfSigned: connectivityRequest.selfSigned
         })
+        logger.trace('Connectivity test produced positive result, communicating reply to the requester ' + host + ':' + connectivityRequest.port)
+        connectivityResponseMessage = {
+            host,
+            natType: NatType.OPEN_INTERNET,
+            websocket: { host, port: connectivityRequest.port, tls: connectivityRequest.tls },
+            ipAddress: ipv4ToNumber(ipAddress),
+            version: localVersion
+        }
     } catch (err) {
         logger.debug('error', { err })
         connectivityResponseMessage = {
@@ -62,25 +85,6 @@ const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, co
     if (outgoingConnection) {
         // TODO should we have some handling for this floating promise?
         outgoingConnection.close(false)
-        logger.trace('Connectivity test produced positive result, communicating reply to the requester ' + host + ':' + connectivityRequest.port)
-        
-        connectivityResponseMessage = {
-            host,
-            natType: NatType.OPEN_INTERNET,
-            websocket: { host, port: connectivityRequest.port, tls: connectivityRequest.tls },
-            ipAddress: ipv4ToNumber(ipAddress),
-            version: localVersion
-        }
     }
-    const msg: Message = {
-        serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
-        messageType: MessageType.CONNECTIVITY_RESPONSE,
-        messageId: v4(),
-        body: {
-            oneofKind: 'connectivityResponse',
-            connectivityResponse: connectivityResponseMessage!
-        }
-    }
-    connection.send(Message.toBinary(msg))
-    logger.trace('ConnectivityResponse sent: ' + JSON.stringify(Message.toJson(msg)))
+    return connectivityResponseMessage
 }

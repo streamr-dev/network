@@ -39,8 +39,6 @@ describe('Layer0 with WebRTC connections', () => {
             node3.start(),
             node4.start()
         ])
-
-        await epDhtNode.joinDht([epPeerDescriptor])
     })
 
     afterEach(async () => {
