@@ -36,7 +36,7 @@ const DhtNode = new DhtNode({
 
 ## WebSocket Server TLS configuration
 
-Setting up TLS is important if you wish to allow nodes running in the browser to connect to your node over websocket. If left unconfigured webrtc connections will be used.
+Setting up TLS is important if you wish to allow nodes running in the browser to connect to your node over websocket. If left unconfigured webrtc connections will be used in such cases.
 
 There two ways to configure TLS for a DhtNode's WS server.
 
