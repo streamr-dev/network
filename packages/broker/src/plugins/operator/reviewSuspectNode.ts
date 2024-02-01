@@ -72,6 +72,15 @@ export const reviewSuspectNode = async ({
         const results = await consumeResults()
         const kick = results.filter((b) => b).length <= results.length / 2
         logger.info('Vote on flag', { sponsorshipAddress, targetOperator, kick })
-        await contractFacade.voteOnFlag(sponsorshipAddress, targetOperator, kick)
+        try {
+            await contractFacade.voteOnFlag(sponsorshipAddress, targetOperator, kick)
+        } catch (err) {
+            logger.warn('Encountered error while voting on flag', {
+                sponsorshipAddress,
+                targetOperator,
+                kick,
+                reason: err?.message
+            })
+        }
     }, timeUntilVoteInMs, abortSignal)
 }

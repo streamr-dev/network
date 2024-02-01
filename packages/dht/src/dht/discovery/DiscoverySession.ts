@@ -34,11 +34,11 @@ export class DiscoverySession {
         this.config = config
     }
 
-    private addNewContacts(contacts: PeerDescriptor[]): void {
+    private addContacts(contacts: PeerDescriptor[]): void {
         if (this.stopped) {
             return
         }
-        this.config.peerManager.handleNewPeers(contacts)
+        this.config.peerManager.addContact(contacts)
     }
 
     private async getClosestPeersFromContact(contact: DhtNodeRpcRemote): Promise<PeerDescriptor[]> {
@@ -48,7 +48,7 @@ export class DiscoverySession {
         logger.trace(`Getting closest peers from contact: ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
         this.config.contactedPeers.add(contact.getNodeId())
         const returnedContacts = await contact.getClosestPeers(this.config.targetId)
-        this.config.peerManager.handlePeerActive(contact.getNodeId())
+        this.config.peerManager.setContactActive(contact.getNodeId())
         return returnedContacts
     }
 
@@ -60,7 +60,7 @@ export class DiscoverySession {
         const targetId = getRawFromDhtAddress(this.config.targetId)
         const oldClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
         const oldClosestDistance = getDistance(targetId, getRawFromDhtAddress(oldClosestNeighbor.getNodeId()))
-        this.addNewContacts(contacts)
+        this.addContacts(contacts)
         const newClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
         const newClosestDistance = getDistance(targetId, getRawFromDhtAddress(newClosestNeighbor.getNodeId()))
         if (newClosestDistance >= oldClosestDistance) {
@@ -73,7 +73,7 @@ export class DiscoverySession {
             return
         }
         this.ongoingClosestPeersRequests.delete(peer.getNodeId())
-        this.config.peerManager.handlePeerUnresponsive(peer.getNodeId())
+        this.config.peerManager.removeContact(peer.getNodeId())
     }
 
     private findMoreContacts(): void {

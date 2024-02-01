@@ -40,37 +40,33 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
     }
 
     public addContact(contact: C): void {
-        if (this.config.excludedNodeIds !== undefined && this.config.excludedNodeIds.has(contact.getNodeId())) {
+        const contactId = contact.getNodeId()
+        if (this.config.excludedNodeIds !== undefined && this.config.excludedNodeIds.has(contactId)) {
             return
         }
-
-        if ((!this.config.allowToContainReferenceId && (this.config.referenceId === contact.getNodeId())) ||
-            (this.config.nodeIdDistanceLimit !== undefined && this.compareIds(this.config.nodeIdDistanceLimit, contact.getNodeId()) < 0)) {
+        if ((!this.config.allowToContainReferenceId && (this.config.referenceId === contactId)) ||
+            (this.config.nodeIdDistanceLimit !== undefined && this.compareIds(this.config.nodeIdDistanceLimit, contactId) < 0)) {
             return
         }
-        if (!this.contactsById.has(contact.getNodeId())) {
+        if (!this.contactsById.has(contactId)) {
             if ((this.config.maxSize === undefined) || (this.contactIds.length < this.config.maxSize)) {
-                this.contactsById.set(contact.getNodeId(), new ContactState(contact))
-
-                // eslint-disable-next-line max-len
-                const index = sortedIndexBy(this.contactIds, contact.getNodeId(), (id: DhtAddress) => { return this.distanceToReferenceId(id) })
-                this.contactIds.splice(index, 0, contact.getNodeId())
+                this.contactsById.set(contactId, new ContactState(contact))
+                const index = sortedIndexBy(this.contactIds, contactId, (id: DhtAddress) => { return this.distanceToReferenceId(id) })
+                this.contactIds.splice(index, 0, contactId)
                 if (this.config.emitEvents) {
                     this.emit(
-                        'newContact',
+                        'contactAdded',
                         contact,
                         this.getClosestContacts()
                     )
                 }
-            } else if (this.compareIds(this.contactIds[this.config.maxSize - 1], contact.getNodeId()) > 0) {
+            } else if (this.compareIds(this.contactIds[this.config.maxSize - 1], contactId) > 0) {
                 const removedId = this.contactIds.pop()
                 const removedContact = this.contactsById.get(removedId!)!.contact
                 this.contactsById.delete(removedId!)
-                this.contactsById.set(contact.getNodeId(), new ContactState(contact))
-
-                // eslint-disable-next-line max-len
-                const index = sortedIndexBy(this.contactIds, contact.getNodeId(), (id: DhtAddress) => { return this.distanceToReferenceId(id) })
-                this.contactIds.splice(index, 0, contact.getNodeId())
+                this.contactsById.set(contactId, new ContactState(contact))
+                const index = sortedIndexBy(this.contactIds, contactId, (id: DhtAddress) => { return this.distanceToReferenceId(id) })
+                this.contactIds.splice(index, 0, contactId)
                 if (this.config.emitEvents) {
                     const closestContacts = this.getClosestContacts()
                     this.emit(
@@ -79,7 +75,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
                         closestContacts
                     )
                     this.emit(
-                        'newContact',
+                        'contactAdded',
                         contact,
                         closestContacts
                     )

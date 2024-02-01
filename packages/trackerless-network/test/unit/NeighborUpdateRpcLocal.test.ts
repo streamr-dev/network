@@ -39,6 +39,9 @@ describe('NeighborUpdateRpcLocal', () => {
         neighborFinder = {
             start: jest.fn()
         } as any
+        const connectionLocker = {
+            unlockConnection: jest.fn()
+        } as any
 
         rpcLocal = new NeighborUpdateRpcLocal({
             localPeerDescriptor,
@@ -47,7 +50,8 @@ describe('NeighborUpdateRpcLocal', () => {
             neighborFinder,
             streamPartId,
             rpcCommunicator,
-            neighborTargetCount
+            neighborTargetCount,
+            connectionLocker
         })
     })
 
