@@ -1,18 +1,18 @@
 # @streamr/dht
 
-A connectionful Kademlia based P2P distributed hash table (DHT). Implements an in-memory key-value data store where multiple creators of of data can list values behind a single key. The library is entirely browser compatible.
+A connectionful Kademlia based P2P distributed hash table (DHT). Implements an in-memory key-value data store where multiple creators of data store values behind a single key. The library is entirely browser compatible.
 
-All communication between peers utilizes protobuf, transported with the help of the custom `@streamr/proto-rpc` library.
+All communication between peers utilizes [protobuf](https://protobuf.dev/), transported with the help of the custom `@streamr/proto-rpc` library.
 
 Connections in the DHT are established using WebSocket or WebRTC connections. The nodes will decide internally based on peers' connectivity information which connection types to use.
 
-The DHT also provides an interface for sending messages from peer to peer with the `DhtNode#send` function. The sent message is routed over the network to the target node's id.
+The DHT also provides an interface for sending messages from peer to peer with the `DhtNode#send` function. The sent message is routed over the network to the target node.
 
 ## Running a node
 
 Running a bare DhtNode in the Streamr Network is heavily discouraged as it requires advanced configuration. However, if you do wish to run a node here are some recommended configurations.
 
-(the following values are examples for working production or test values check the streamr-client's default network configuration)
+(the following values are examples. For working production or test values check the streamr-client's default network configuration)
 
 ```js
 const DhtNode = new DhtNode({
@@ -25,7 +25,7 @@ const DhtNode = new DhtNode({
     url: "stun.l.google.com",
     port: 19302
   }],
-  // A range of ports that the node will attempt to start a WebSocket server in. If you wish to use an exact port give equal values to min and max.
+  // A range of ports that the node will attempt to start a WebSocket server in. If you wish to use an exact port give equal values to min and max. If left unspecified the node will start without a server.
   websocketPortRange: {
     min: 30000,
     max: 30500
@@ -36,7 +36,7 @@ const DhtNode = new DhtNode({
 
 ## WebSocket Server TLS configuration
 
-Setting up TLS is important 
+Setting up TLS is important if you wish to allow nodes running in the browser to connect to your node over websocket. If left unconfigured webrtc connections will be used.
 
 There two ways to configure TLS for a DhtNode's WS server.
 
