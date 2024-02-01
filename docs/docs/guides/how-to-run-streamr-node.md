@@ -50,7 +50,7 @@ Start the Config Wizard with the below command. Docker will download the node im
 #### Run the config wizard (Linux / macOS instructions)
 
 ```
-sudo docker run -it -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-three.2 bin/config-wizard
+sudo docker run -it -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-three.3 bin/config-wizard
 ```
 
 #### **Windows PowerShell instructions**
@@ -64,7 +64,7 @@ cd ~/.streamrDocker
 Then run the Config Wizard:
 
 ```
-docker run -it -v ${pwd}:/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-three.2 bin/config-wizard
+docker run -it -v ${pwd}:/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-three.3 bin/config-wizard
 ```
 
 #### Using the Config Wizard
@@ -88,7 +88,7 @@ If you're running a node to become an Operator, then you could now jump back to 
 #### Linux / macOS instructions
 
 ```
-sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-three.2
+sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-three.3
 ```
 
 #### Windows PowerShell instructions
@@ -99,7 +99,7 @@ First move into your node's folder:
 cd ~/.streamrDocker
 ```
 ```
-docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v ${pwd}:/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-three.2
+docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v ${pwd}:/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-three.3
 ```
 
 **The `docker run` command, deconstructed:**
@@ -232,7 +232,7 @@ For extra logging on your Streamr node, add the `LOG_LEVEL` environmental variab
 
 For example,
 ```shell
-sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -e LOG_LEVEL=trace -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-three.2
+sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -e LOG_LEVEL=trace -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-three.3
 ```
 
 ## Mumbai node config
