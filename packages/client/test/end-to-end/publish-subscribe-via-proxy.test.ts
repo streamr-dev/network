@@ -11,7 +11,7 @@ const TIMEOUT = 30 * 1000
 const SUBSCRIBE_WAIT_TIME = 2000
 const WEBSOCKET_PORT = 14231
 
-describeOnlyInNodeJs('publish/subscribe via proxy', () => { // Cannot run proxy server in browser
+describe('publish/subscribe via proxy', () => { // Cannot run proxy server in browser
 
     let stream: Stream
     let client: StreamrClient
