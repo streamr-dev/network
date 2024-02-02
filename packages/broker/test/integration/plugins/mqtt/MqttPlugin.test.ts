@@ -24,7 +24,7 @@ createMessagingPluginTest('mqtt',
             await client.publish(streamId, JSON.stringify(msg))
         },
         subscribe: async (messageQueue: Queue<Message>, streamId: string, client: AsyncMqttClient): Promise<void> => {
-            client.once('message', (topic: string, message: Buffer) => {
+            client.on('message', (topic: string, message: Buffer) => {
                 if (topic === streamId) {
                     messageQueue.push(JSON.parse(message.toString()))
                 }

@@ -4,6 +4,7 @@ import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { getCreateClient, createTestClient } from '../test-utils/utils'
+import { KEYSERVER_PORT } from '../../src/ConfigTest'
 
 const NUM_OF_PARTITIONS = 10
 
@@ -15,7 +16,7 @@ describe('NodeMetrics', () => {
 
     beforeAll(async () => {
         const streamPath = `/metrics/${Date.now()}`
-        const generatorClientPrivateKey = await fetchPrivateKeyWithGas()
+        const generatorClientPrivateKey = await fetchPrivateKeyWithGas(KEYSERVER_PORT)
         generatorClient = await createClient({
             auth: {
                 privateKey: generatorClientPrivateKey
@@ -35,7 +36,7 @@ describe('NodeMetrics', () => {
             partitions: NUM_OF_PARTITIONS
         })
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
-        subscriberClient = createTestClient(await fetchPrivateKeyWithGas(), 15653)
+        subscriberClient = createTestClient(await fetchPrivateKeyWithGas(KEYSERVER_PORT), 15653)
     }, 30 * 1000)
 
     afterAll(async () => {

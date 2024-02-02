@@ -5,6 +5,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { createTestStream, createTestClient } from '../test-utils/utils'
 import { StreamPermission } from '../../src/permission'
+import { KEYSERVER_PORT } from '../../src/ConfigTest'
 
 describe('binary publish', () => {
 
@@ -21,7 +22,7 @@ describe('binary publish', () => {
 
     beforeAll(async () => {
         subscriberWallet = fastWallet()
-        publisherPk = await fetchPrivateKeyWithGas()
+        publisherPk = await fetchPrivateKeyWithGas(KEYSERVER_PORT)
     }, 30 * 1000)
 
     describe('private stream', () => {

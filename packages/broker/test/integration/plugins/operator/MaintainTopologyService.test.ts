@@ -3,7 +3,7 @@ import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { Stream, StreamrClient } from 'streamr-client'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
-import { createClient, createTestStream } from '../../../utils'
+import { createClient, createTestStream, KEYSERVER_PORT } from '../../../utils'
 import {
     TEST_CHAIN_CONFIG,
     delegate,
@@ -19,7 +19,7 @@ import { MaintainTopologyService } from '../../../../src/plugins/operator/Mainta
 import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
-    const privateKey = await fetchPrivateKeyWithGas()
+    const privateKey = await fetchPrivateKeyWithGas(KEYSERVER_PORT)
     const client = createClient(privateKey)
     const s1 = await createTestStream(client, module, { partitions: 1 })
     const s2 = await createTestStream(client, module, { partitions: 3 })

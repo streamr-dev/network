@@ -28,9 +28,11 @@ export class LeaksDetector {
 
         this.resetGC()
         const leaksDetector = new LeakDetector(obj)
+        
         // @ts-expect-error monkeypatching
         // eslint-disable-next-line no-underscore-dangle
         leaksDetector._runGarbageCollector = this.runGarbageCollectorOnce(leaksDetector._runGarbageCollector)
+        
         this.leakDetectors.set(name, leaksDetector)
     }
 
@@ -139,7 +141,7 @@ export class LeaksDetector {
         })
     }
 
-    async getLeaks(): Promise<Record<string, string>> {
+    async getLeaks(): Promise<Record<string, string[]>> {
         logger.debug(`checking for leaks with ${this.leakDetectors.size} items >>`)
         await wait(10) // wait a moment for gc to run?
         const outstanding = new Set<string>()
@@ -166,7 +168,7 @@ export class LeaksDetector {
         const leaks = await this.getLeaks()
         const numLeaks = Object.keys(leaks).length
         if (numLeaks) {
-            const msg = `Leaking ${numLeaks} of ${this.leakDetectors.size} items: ${JSON.stringify(leaks)}`
+            const msg = `Leaking ${numLeaks} of ${this.leakDetectors.size} items: ${JSON.stringify(Object.keys(leaks))}`
             this.clear()
             throw new Error(msg)
         }

@@ -16,13 +16,17 @@ export class DestroySignal {
     public readonly onDestroy = Signal.once()
     public readonly trigger = this.destroy
     public readonly abortSignal: AbortSignal
+    private abortController: AbortController
 
     constructor() {
-        const controller = new AbortController()
-        this.abortSignal = controller.signal
-        this.onDestroy.listen(() => {
-            controller.abort()
-        })
+        this.handleDestroy = this.handleDestroy.bind(this)
+        this.abortController = new AbortController()
+        this.abortSignal = this.abortController.signal
+        this.onDestroy.listen(this.handleDestroy)
+    }
+
+    private handleDestroy(): void {
+        this.abortController.abort()
     }
 
     destroy(): Promise<void> {

@@ -1,7 +1,7 @@
 import { Wallet } from '@ethersproject/wallet'
 
 import { createRelativeTestStreamId } from '../test-utils/utils'
-import { CONFIG_TEST } from '../../src/ConfigTest'
+import { CONFIG_TEST, KEYSERVER_PORT } from '../../src/ConfigTest'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
@@ -17,7 +17,7 @@ describe('Stream permissions', () => {
     let otherUser: Wallet
 
     beforeAll(async () => {
-        const wallet = new Wallet(await fetchPrivateKeyWithGas())
+        const wallet = new Wallet(await fetchPrivateKeyWithGas(KEYSERVER_PORT))
         otherUser = fastWallet()
         client = new StreamrClient({
             ...CONFIG_TEST,

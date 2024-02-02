@@ -13,11 +13,11 @@ import {
     sponsor,
     stake
 } from './contractUtils'
-import { createClient, createTestStream } from '../../../utils'
+import { createClient, createTestStream, KEYSERVER_PORT } from '../../../utils'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 
 async function createStream(): Promise<string> {
-    const client = createClient(await fetchPrivateKeyWithGas())
+    const client = createClient(await fetchPrivateKeyWithGas(KEYSERVER_PORT))
     const streamId = (await createTestStream(client, module)).id
     await client.destroy()
     return streamId

@@ -37,8 +37,8 @@ describe('Failed autocertification', () => {
 
     afterEach(async () => {
         await failedAutocertificationNode.stop()
-        await entryPoint.stop()
         await node.stop()
+        await entryPoint.stop()
     })
 
     it('failed auto certification should default to no tls', async () => {

@@ -4,7 +4,7 @@ import { StreamrClient, Stream, StreamPartID, StreamPermission } from 'streamr-c
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { wait, waitForCondition } from '@streamr/utils'
 import { Broker } from '../../src/broker'
-import { startBroker, createClient, createTestStream } from '../utils'
+import { startBroker, createClient, createTestStream, KEYSERVER_PORT } from '../utils'
 
 jest.setTimeout(50000)
 
@@ -60,8 +60,8 @@ describe('broker subscriptions', () => {
             }
         })
 
-        client1 = createClient(await fetchPrivateKeyWithGas())
-        client2 = createClient(await fetchPrivateKeyWithGas())
+        client1 = createClient(await fetchPrivateKeyWithGas(KEYSERVER_PORT))
+        client2 = createClient(await fetchPrivateKeyWithGas(KEYSERVER_PORT))
 
         mqttClient1 = await createMqttClient(mqttPort1)
         mqttClient2 = await createMqttClient(mqttPort2)

@@ -1,6 +1,6 @@
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, waitForCondition } from '@streamr/utils'
-import { createClient, createTestStream } from '../../../utils'
+import { createClient, createTestStream, KEYSERVER_PORT } from '../../../utils'
 import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, setupOperatorContract, sponsor, stake } from './contractUtils'
 import { maintainOperatorValue } from '../../../../src/plugins/operator/maintainOperatorValue'
 import { multiply } from '../../../../src/helpers/multiply'
@@ -17,7 +17,7 @@ describe('maintainOperatorValue', () => {
 
     beforeAll(async () => {
         logger.debug('Creating stream for the test')
-        const client = createClient(await fetchPrivateKeyWithGas())
+        const client = createClient(await fetchPrivateKeyWithGas(KEYSERVER_PORT))
         streamId = (await createTestStream(client, module)).id
         await client.destroy()
     }, 60 * 1000)

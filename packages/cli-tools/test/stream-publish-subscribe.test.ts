@@ -2,7 +2,7 @@ import { Wallet } from '@ethersproject/wallet'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { StreamPermission } from 'streamr-client'
-import { createTestClient, runCommand, startCommand } from './utils'
+import { KEYSERVER_PORT, createTestClient, runCommand, startCommand } from './utils'
 
 const TIMEOUT = 30 * 1000
 
@@ -13,8 +13,8 @@ describe('publish and subscribe', () => {
     let streamId: string
 
     beforeAll(async () => {
-        publisherPrivateKey = await fetchPrivateKeyWithGas()
-        subscriberPrivateKey = await fetchPrivateKeyWithGas()
+        publisherPrivateKey = await fetchPrivateKeyWithGas(KEYSERVER_PORT)
+        subscriberPrivateKey = await fetchPrivateKeyWithGas(KEYSERVER_PORT)
         const client = createTestClient(publisherPrivateKey)
         const stream = await client.createStream(`/${Date.now()}`)
         await stream.grantPermissions({

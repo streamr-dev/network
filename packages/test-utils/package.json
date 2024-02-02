@@ -9,6 +9,9 @@
   },
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
+  "bin": {
+    "streamr-keyserver": "./dist/bin/keyServer.js"
+  },
   "scripts": {
     "build": "tsc --build tsconfig.node.json",
     "check": "tsc -p ./tsconfig.jest.json --noEmit",

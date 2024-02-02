@@ -92,7 +92,7 @@ export class NetworkNodeFacade {
         this.authentication = authentication
         this.eventEmitter = new EventEmitter<Events>()
         this.destroySignal = destroySignal
-        destroySignal.onDestroy.listen(this.destroy)
+        destroySignal.onDestroy.once(this.destroy)
     }
 
     private assertNotDestroyed(): void {

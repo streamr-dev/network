@@ -15,6 +15,7 @@ import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageReg
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { initContractEventGateway, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
+import { DestroySignal } from '../DestroySignal'
 
 export interface StorageNodeAssignmentEvent {
     readonly streamId: StreamID
@@ -53,7 +54,8 @@ export class StreamStorageRegistry {
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         eventEmitter: StreamrClientEventEmitter,
-        loggerFactory: LoggerFactory
+        loggerFactory: LoggerFactory,
+        destroySignal: DestroySignal
     ) {
         this.streamFactory = streamFactory
         this.streamIdBuilder = streamIdBuilder
@@ -71,8 +73,16 @@ export class StreamStorageRegistry {
             ) as StreamStorageRegistryContract
         })
         this.initStreamAssignmentEventListeners(eventEmitter, loggerFactory)
+        destroySignal.onDestroy.once(this.destroy)
     }
 
+    private destroy = (): void => {
+        if (this.streamStorageRegistryContract !== undefined) {
+            this.streamStorageRegistryContract.eventEmitter.removeAllListeners()
+            this.streamStorageRegistryContract = undefined
+        }
+    }
+    
     private initStreamAssignmentEventListeners(eventEmitter: StreamrClientEventEmitter, loggerFactory: LoggerFactory) {
         const primaryReadonlyContract = this.streamStorageRegistryContractsReadonly[0]
         const transformation = (streamId: string, nodeAddress: string, extra: any) => ({

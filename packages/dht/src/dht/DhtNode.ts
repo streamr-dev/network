@@ -69,6 +69,7 @@ export interface DhtNodeOptions {
     storageRedundancyFactor?: number
 
     transport?: ITransport
+    stopGivenTransport?: boolean
     peerDescriptor?: PeerDescriptor
     entryPoints?: PeerDescriptor[]
     websocketHost?: string
@@ -115,6 +116,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private readonly config: StrictDhtNodeOptions
     private rpcCommunicator?: RoutingRpcCommunicator
     private transport?: ITransport
+    private stopGivenTransport = false
     private localPeerDescriptor?: PeerDescriptor
     public router?: Router
     private storeManager?: StoreManager
@@ -180,6 +182,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         // If transport is given, do not create a ConnectionManager
         if (this.config.transport) {
             this.transport = this.config.transport
+            this.stopGivenTransport = this.config.stopGivenTransport ?? false
             this.localPeerDescriptor = this.transport.getLocalPeerDescriptor()
             if (this.config.transport instanceof ConnectionManager) {
                 this.connectionManager = this.config.transport
@@ -553,7 +556,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.router!.stop()
         this.recursiveOperationManager!.stop()
         this.peerDiscovery!.stop()
-        if (this.config.transport === undefined) {
+        if (this.config.transport === undefined || this.stopGivenTransport) {
             // if the transport was not given in config, the instance was created in start() and
             // this component is responsible for stopping it
             await this.transport!.stop()

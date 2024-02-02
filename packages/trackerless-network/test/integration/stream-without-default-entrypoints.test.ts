@@ -53,6 +53,7 @@ describe('stream without default entrypoints', () => {
         entrypoint = createNetworkNode({
             layer0: {
                 transport: entryPointTransport,
+                stopGivenTransport: true,
                 peerDescriptor: entryPointPeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
             }
@@ -66,6 +67,7 @@ describe('stream without default entrypoints', () => {
                 layer0: {
                     peerDescriptor,
                     transport,
+                    stopGivenTransport: true,
                     entryPoints: [entryPointPeerDescriptor]
                 }
             })

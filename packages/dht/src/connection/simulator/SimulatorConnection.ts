@@ -57,6 +57,9 @@ export class SimulatorConnection extends Connection implements IConnection {
 
         logger.trace(localNodeId + ', ' + targetNodeId + ' close()')
         if (!this.stopped) {
+            this.emit('disconnected', gracefulLeave, undefined, 'close() called')
+            this.removeAllListeners()
+            
             logger.trace(localNodeId + ', ' + targetNodeId + ' close() not stopped')
             this.stopped = true
 

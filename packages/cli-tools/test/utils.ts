@@ -5,6 +5,7 @@ import { CONFIG_TEST, Stream, StreamrClient } from 'streamr-client'
 
 export const DOCKER_DEV_STORAGE_NODE = '0xde1112f631486CfC759A50196853011528bC5FA0'
 
+export const KEYSERVER_PORT = 45457
 export interface StartCommandOptions {
     privateKey?: string
     devEnvironment?: boolean

@@ -1,7 +1,7 @@
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import 'jest-extended'
 import { StreamID } from 'streamr-client'
-import { DOCKER_DEV_STORAGE_NODE, createTestClient, runCommand } from './utils'
+import { DOCKER_DEV_STORAGE_NODE, KEYSERVER_PORT, createTestClient, runCommand } from './utils'
 import { waitForCondition } from '@streamr/utils'
 
 const isStored = async (streamId: StreamID): Promise<boolean> => {
@@ -12,7 +12,7 @@ const isStored = async (streamId: StreamID): Promise<boolean> => {
 describe('storage node', () => {
 
     it('add and remove stream', async () => {
-        const privateKey = await fetchPrivateKeyWithGas()
+        const privateKey = await fetchPrivateKeyWithGas(KEYSERVER_PORT)
         const client = createTestClient(privateKey)
         const stream = await client.createStream(`/${Date.now()}`)
         await client.destroy()

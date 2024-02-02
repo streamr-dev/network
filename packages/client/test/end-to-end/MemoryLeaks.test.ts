@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { Defer, wait } from '@streamr/utils'
+import { Defer, wait, waitForCondition } from '@streamr/utils'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -8,7 +8,7 @@ import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { writeHeapSnapshot } from 'v8'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { counterId, instanceId, createTheGraphClient } from '../../src/utils/utils'
-import { CONFIG_TEST } from '../../src/ConfigTest'
+import { CONFIG_TEST, KEYSERVER_PORT } from '../../src/ConfigTest'
 import { createStrictConfig, ConfigInjectionToken, StrictStreamrClientConfig } from '../../src/Config'
 import * as ethersAbi from '@ethersproject/abi'
 import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
@@ -81,7 +81,7 @@ describe('MemoryLeaks', () => {
                         CONFIG_TEST,
                         {
                             auth: {
-                                privateKey: await fetchPrivateKeyWithGas(),
+                                privateKey: await fetchPrivateKeyWithGas(KEYSERVER_PORT),
                             }
                         },
                         opts
@@ -129,7 +129,7 @@ describe('MemoryLeaks', () => {
                         CONFIG_TEST,
                         {
                             auth: {
-                                privateKey: await fetchPrivateKeyWithGas(),
+                                privateKey: await fetchPrivateKeyWithGas(KEYSERVER_PORT),
                             }
                         },
                         opts
@@ -232,20 +232,21 @@ describe('MemoryLeaks', () => {
                     const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                         retainMessages: false,
                     })
-                    const received: MessageMetadata[] = []
-                    const sub = await client.subscribe(stream, (content: any, metadata: MessageMetadata) => {
-                        received.push(metadata)
+                    let received: MessageMetadata[] = []
+                    let sub: Subscription | undefined = await client.subscribe(stream, (content: any, metadata: MessageMetadata) => {
                         leaksDetector.add('content', content)
                         leaksDetector.add('metadata', metadata)
-                        if (received.length === MAX_MESSAGES) {
-                            sub.unsubscribe()
-                        }
+                        received.push(metadata)
                     })
 
                     leaksDetector.add(instanceId(sub), sub)
 
                     await publishTestMessages(MAX_MESSAGES)
-                    await wait(1000)
+                    await waitForCondition(() => received.length >= MAX_MESSAGES)
+                    await sub.unsubscribe()
+                    await client.destroy()
+                    received = []
+                    sub = undefined
                 }, TIMEOUT)
 
                 test('subscriptions can be collected before all subscriptions removed', async () => {
@@ -259,15 +260,22 @@ describe('MemoryLeaks', () => {
                     const sub1Done = new Defer<undefined>()
                     const received1: any[] = []
                     const SOME_MESSAGES = Math.floor(MAX_MESSAGES / 2)
+                    let unsubscribePromise: Promise<void> | undefined
+                    
                     let sub1: Subscription | undefined = await client.subscribe(stream, async (msg: any) => {
                         received1.push(msg)
                         if (received1.length === SOME_MESSAGES) {
                             if (!sub1) { return }
-                            sub1.unsubscribe()
+                            
+                            // For some reason awaiting the unsubscribe to finish
+                            // inside the callback hangs, so we do it outside
+                            
+                            unsubscribePromise = sub1.unsubscribe()
                             // unsub early
                             sub1Done.resolve(undefined)
                         }
                     })
+                   
                     const sub1LeakId = 'sub1 ' + instanceId(sub1)
                     leaksDetector.add(sub1LeakId, sub1)
 
@@ -285,6 +293,7 @@ describe('MemoryLeaks', () => {
                     await publishTestMessages(MAX_MESSAGES)
                     await sub1Done
                     await sub2Done
+                    await unsubscribePromise
                     // eslint-disable-next-line require-atomic-updates
                     sub1 = undefined
                     await wait(1000)
@@ -294,8 +303,8 @@ describe('MemoryLeaks', () => {
                     expect(received1).toHaveLength(SOME_MESSAGES)
                     expect(received2).toHaveLength(MAX_MESSAGES)
                     await sub2.unsubscribe()
-                    await wait(1000)
-                }, TIMEOUT)
+                    await client.destroy()
+                }, TIMEOUT * 2)
             })
         })
     })

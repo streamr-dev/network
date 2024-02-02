@@ -3,7 +3,7 @@ import { MessageMetadata, Stream, StreamrClient } from 'streamr-client'
 import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
 import { Broker } from '../../src/broker'
 import { Message } from '../../src/helpers/PayloadFormat'
-import { createClient, startBroker, createTestStream } from '../utils'
+import { createClient, startBroker, createTestStream, KEYSERVER_PORT } from '../utils'
 import { wait, merge } from '@streamr/utils'
 
 interface MessagingPluginApi<T> {
@@ -58,7 +58,7 @@ export const createMessagingPluginTest = <T>(
         let messageQueue: Queue<Message>
 
         beforeAll(async () => {
-            brokerUser = new Wallet(await fetchPrivateKeyWithGas())
+            brokerUser = new Wallet(await fetchPrivateKeyWithGas(KEYSERVER_PORT))
             broker = await startBroker({
                 privateKey: brokerUser.privateKey,
                 apiAuthentication: {

@@ -7,7 +7,8 @@ import {
     createClient,
     STREAMR_DOCKER_DEV_HOST,
     createTestStream,
-    startStorageNode
+    startStorageNode,
+    KEYSERVER_PORT
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
 import { waitForCondition } from '@streamr/utils'
@@ -30,8 +31,8 @@ describe('StorageConfig', () => {
     let storageNodeAccount: Wallet
 
     beforeAll(async () => {
-        publisherAccount = new Wallet(await fetchPrivateKeyWithGas())
-        storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
+        publisherAccount = new Wallet(await fetchPrivateKeyWithGas(KEYSERVER_PORT))
+        storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas(KEYSERVER_PORT))
         cassandraClient = new cassandra.Client({
             contactPoints,
             localDataCenter,
@@ -64,7 +65,7 @@ describe('StorageConfig', () => {
         await waitForCondition(async () => {
             const result = await cassandraClient.execute('SELECT COUNT(*) FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
             return (result.first().count > 0)
-        })
+        }, 15000)
         const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
         const storeMessage = convertBytesToStreamMessage(result.first().payload)
         expect(storeMessage.signature).toEqual(publishMessage.signature)

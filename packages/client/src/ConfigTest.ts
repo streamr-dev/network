@@ -42,3 +42,4 @@ export const CONFIG_TEST: StreamrClientConfig = {
 }
 
 export const DOCKER_DEV_STORAGE_NODE = toEthereumAddress('0xde1112f631486CfC759A50196853011528bC5FA0')
+export const KEYSERVER_PORT = 45454

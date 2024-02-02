@@ -68,8 +68,9 @@ export class WebsocketServer {
                 connection = this.createConnection(connectionUrl)
             } catch (err) {
                 logger.warn('Reject incoming connection', {
-                    requestUrl: request.url,
-                    reason: err?.message
+                    reason: err?.message,
+                    requestUrl: request.url
+                    
                 })
                 sendHttpError('400 Bad Request', socket)
                 return

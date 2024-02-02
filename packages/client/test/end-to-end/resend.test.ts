@@ -1,7 +1,7 @@
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { createTestStream, createTestClient } from '../test-utils/utils'
 import range from 'lodash/range'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { DOCKER_DEV_STORAGE_NODE, KEYSERVER_PORT } from '../../src/ConfigTest'
 import { wait, waitForCondition } from '@streamr/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
@@ -20,7 +20,7 @@ describe('resend', () => {
     let payloads: Array<Uint8Array | { idx: number }>
 
     beforeEach(async () => {
-        publisherClient = createTestClient(await fetchPrivateKeyWithGas(), 43232)
+        publisherClient = createTestClient(await fetchPrivateKeyWithGas(KEYSERVER_PORT), 43232)
         resendClient = createTestClient(fastPrivateKey(), 43233)
         const binaryPayloads = range(NUM_OF_MESSAGES / 2).map(() => randomBytes(random(0, 256)))
         const jsonPayloads = range(NUM_OF_MESSAGES / 2).map((idx) => ({ idx }))

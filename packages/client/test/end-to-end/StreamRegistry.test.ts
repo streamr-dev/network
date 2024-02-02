@@ -4,7 +4,7 @@ import { Wallet } from '@ethersproject/wallet'
 import { toStreamID } from '@streamr/protocol'
 import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
 import { EthereumAddress, collect, toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { CONFIG_TEST } from '../../src/ConfigTest'
+import { CONFIG_TEST, KEYSERVER_PORT } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils/promises'
@@ -33,7 +33,7 @@ describe('StreamRegistry', () => {
     let createdStream: Stream
 
     beforeAll(async () => {
-        wallet = new Wallet(await fetchPrivateKeyWithGas())
+        wallet = new Wallet(await fetchPrivateKeyWithGas(KEYSERVER_PORT))
         publicAddress = toEthereumAddress(wallet.address)
         client = new StreamrClient({
             ...CONFIG_TEST,

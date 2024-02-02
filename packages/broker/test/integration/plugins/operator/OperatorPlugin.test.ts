@@ -4,7 +4,7 @@ import { collect, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { ProxyDirection, StreamPermission } from 'streamr-client'
 import { Broker, createBroker } from '../../../../src/broker'
-import { createClient, createTestStream, formConfig, startBroker } from '../../../utils'
+import { createClient, createTestStream, formConfig, startBroker, KEYSERVER_PORT } from '../../../utils'
 import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, setupOperatorContract, sponsor, stake } from './contractUtils'
 
 describe('OperatorPlugin', () => {
@@ -28,7 +28,7 @@ describe('OperatorPlugin', () => {
     })
 
     it('accepts proxy connections', async () => {
-        const subscriber = createClient(await fetchPrivateKeyWithGas())
+        const subscriber = createClient(await fetchPrivateKeyWithGas(KEYSERVER_PORT))
         const stream = await createTestStream(subscriber, module)
 
         const sponsorer = await generateWalletWithGasAndTokens()

@@ -4,7 +4,8 @@
         "outDir": "dist"
     },
     "include": [
-        "src/**/*"
+        "src/**/*",
+        "bin/*.ts"
     ],
     "references": [
         { "path": "../utils/tsconfig.node.json" }

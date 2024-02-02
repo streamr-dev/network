@@ -1,9 +1,35 @@
 import { Lifecycle, scoped } from 'tsyringe'
-import { TheGraphClient, Logger } from '@streamr/utils'
+import { TheGraphClient, Logger, GraphQLQuery } from '@streamr/utils'
 import { shuffle } from 'lodash'
 import { NetworkPeerDescriptor } from '../Config'
 import { LoggerFactory } from '../utils/LoggerFactory'
 
+function makeCreateQuery(maxQueryResults: number, maxHeartbeatAgeHours: number):
+    (_lastId: string, _pageSize: number) => GraphQLQuery {
+    return (_lastId: string, _pageSize: number) => {
+        return {
+            query: `{
+                operators(
+                    orderBy: latestHeartbeatTimestamp
+                    orderDirection: desc
+                    first: ${maxQueryResults}
+                    where: {
+                        latestHeartbeatMetadata_contains: "\\"tls\\":true", 
+                        latestHeartbeatTimestamp_gt: "${Math.floor(Date.now() / 1000) - (maxHeartbeatAgeHours * 60 * 60)}"
+                    }
+                ) {
+                    id
+                    latestHeartbeatMetadata
+                }
+            }`
+        }
+    }
+}
+
+interface OperatorMetadata {
+    id: string
+    latestHeartbeatMetadata: string
+}
 @scoped(Lifecycle.ContainerScoped)
 export class OperatorRegistry {
     private readonly theGraphClient: TheGraphClient
@@ -19,32 +45,11 @@ export class OperatorRegistry {
 
     async findRandomNetworkEntrypoints(
         maxEntryPoints: number,
-        maxQueryResults: number, 
+        maxQueryResults: number,
         maxHeartbeatAgeHours: number,
     ): Promise<NetworkPeerDescriptor[]> {
-        interface OperatorMetadata {
-            id: string
-            latestHeartbeatMetadata: string
-        }
-        const createQuery = () => {
-            return {
-                query: `{
-                    operators(
-                        orderBy: latestHeartbeatTimestamp
-                        orderDirection: desc
-                        first: ${maxQueryResults}
-                        where: {
-                            latestHeartbeatMetadata_contains: "\\"tls\\":true", 
-                            latestHeartbeatTimestamp_gt: "${Math.floor(Date.now() / 1000) - (maxHeartbeatAgeHours * 60 * 60)}"
-                        }
-                    ) {
-                        id
-                        latestHeartbeatMetadata
-                    }
-                }`
-            }
-        }
-        const operatorMetadatas = this.theGraphClient.queryEntities<OperatorMetadata>(createQuery)
+              
+        const operatorMetadatas = this.theGraphClient.queryEntities<OperatorMetadata>(makeCreateQuery(maxQueryResults, maxHeartbeatAgeHours))
         const peerDescriptors: NetworkPeerDescriptor[] = []
         for await (const operator of operatorMetadatas) {
             peerDescriptors.push(JSON.parse(operator.latestHeartbeatMetadata))
