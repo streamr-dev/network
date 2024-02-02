@@ -37,8 +37,16 @@ const main = async () => {
         console.log('total stream neighbors on 0x7277c78c02a4192ef8c48f5f4c529278d0e447fc/kyve/kyve-1/0: ' + node.getNeighbors(stream5).length)
         const stream6 = StreamPartIDUtils.parse('streamr.eth/demos/video#0')
         console.log('total stream neighbors on streamr.eth/demos/video: ' + node.getNeighbors(stream6).length)
-        const stream7 = StreamPartIDUtils.parse('0x6ee2d67541640f62ff44d5b1b417255437ed36cd/operator/coordination#0')
-        console.log('total stream neighbors on 0x6ee2d67541640f62ff44d5b1b417255437ed36cd/operator/coordination: ' + node.getNeighbors(stream7).length)
+        const stream7 = StreamPartIDUtils.parse('eth-watch.eth/ethereum/events#0')
+        console.log('total stream neighbors on eth-watch.eth/ethereum/events: ' + node.getNeighbors(stream7).length)
+        const stream8 = StreamPartIDUtils.parse('eth-watch.eth/ethereum/events#1')
+        console.log('total stream neighbors on eth-watch.eth/ethereum/events: ' + node.getNeighbors(stream8).length)
+        const stream9 = StreamPartIDUtils.parse('eth-watch.eth/ethereum/events#2')
+        console.log('total stream neighbors on eth-watch.eth/ethereum/events: ' + node.getNeighbors(stream9).length)
+        const stream10 = StreamPartIDUtils.parse('eth-watch.eth/ethereum/events#3')
+        console.log('total stream neighbors on eth-watch.eth/ethereum/events: ' + node.getNeighbors(stream10).length)
+        const stream11 = StreamPartIDUtils.parse('eth-watch.eth/ethereum/events#4')
+        console.log('total stream neighbors on eth-watch.eth/ethereum/events: ' + node.getNeighbors(stream11).length)
     }, 5000)
 
     await client.subscribe({
@@ -106,8 +114,40 @@ const main = async () => {
     })
 
     await client.subscribe({
-        streamId: "0x2cc640ec3658111cf7333ac42787773708bf31f3/operator/coordination",
+        streamId: "eth-watch.eth/ethereum/events",
         partition: 0
+    }, () => {
+        numOfMessagesPerTenSeconds += 1
+        numOfMessagesPerMinute += 1
+    })
+
+    await client.subscribe({
+        streamId: "eth-watch.eth/ethereum/events",
+        partition: 1
+    }, () => {
+        numOfMessagesPerTenSeconds += 1
+        numOfMessagesPerMinute += 1
+    })
+
+    await client.subscribe({
+        streamId: "eth-watch.eth/ethereum/events",
+        partition: 2
+    }, () => {
+        numOfMessagesPerTenSeconds += 1
+        numOfMessagesPerMinute += 1
+    })
+
+    await client.subscribe({
+        streamId: "eth-watch.eth/ethereum/events",
+        partition: 3
+    }, () => {
+        numOfMessagesPerTenSeconds += 1
+        numOfMessagesPerMinute += 1
+    })
+
+    await client.subscribe({
+        streamId: "eth-watch.eth/ethereum/events",
+        partition: 4
     }, () => {
         numOfMessagesPerTenSeconds += 1
         numOfMessagesPerMinute += 1
