@@ -138,7 +138,7 @@ message PeerDescriptor {
   ConnectivityMethod websocket = 5;
   optional uint32 region = 6;
   optional uint32 ipAddress = 7;
-  optional bytes salt = 8;
+  optional bytes publicKey = 8;
   // signature of fields 2-8
   optional bytes signature = 9; 
 }
@@ -197,6 +197,8 @@ message ConnectivityResponse {
   string host = 1;
   string natType = 2;
   ConnectivityMethod websocket = 3;
+  uint32 ipAddress = 4;
+  string version = 5;
 }
 
 message HandshakeRequest {

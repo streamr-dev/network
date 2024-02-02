@@ -1,13 +1,11 @@
-import { randomBytes } from 'crypto'
 import { 
     ConnectionLocker,
-    DhtAddress,
     DhtNode,
     NodeType,
     PeerDescriptor,
     Simulator,
     SimulatorTransport,
-    getDhtAddressFromRaw,
+    createRandomDhtAddress,
     getRandomRegion,
     getRawFromDhtAddress
 } from '@streamr/dht'
@@ -92,14 +90,10 @@ export const createStreamMessage = (
     return msg
 }
 
-export const createRandomNodeId = (): DhtAddress => {
-    return getDhtAddressFromRaw(randomBytes(10))
-}
-
 export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'nodeId' | 'type'>): PeerDescriptor => {
     return {
         ...opts,
-        nodeId: getRawFromDhtAddress(createRandomNodeId()),
+        nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }

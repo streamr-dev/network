@@ -1,57 +1,56 @@
-import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
-import { EventEmitter } from 'eventemitter3'
-import crypto from 'crypto'
-import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
-import {
-    ClosestPeersRequest,
-    ClosestPeersResponse,
-    LeaveNotice,
-    ConnectivityResponse,
-    Message,
-    NodeType,
-    PeerDescriptor,
-    PingRequest,
-    PingResponse,
-    DataEntry,
-    ExternalFindDataRequest,
-    ExternalFindDataResponse,
-    ExternalStoreDataRequest,
-    ExternalStoreDataResponse,
-    RecursiveOperation,
-} from '../proto/packages/dht/protos/DhtRpc'
-import { ITransport, TransportEvents } from '../transport/ITransport'
-import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
-import { ExternalApiRpcClient, StoreRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import {
     Logger,
     MetricsContext,
     merge,
     waitForCondition
 } from '@streamr/utils'
-import { Any } from '../proto/google/protobuf/any'
-import { Router } from './routing/Router'
-import { RecursiveOperationManager, RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'
-import { StoreManager } from './store/StoreManager'
-import { PeerDiscovery } from './discovery/PeerDiscovery'
-import { LocalDataStore } from './store/LocalDataStore'
-import { IceServer } from '../connection/webrtc/WebrtcConnector'
-import { ExternalApiRpcRemote } from './ExternalApiRpcRemote'
-import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
+import { EventEmitter } from 'eventemitter3'
 import { sample } from 'lodash'
-import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
 import { MarkRequired } from 'ts-essentials'
-import { DhtNodeRpcLocal } from './DhtNodeRpcLocal'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
-import { PeerManager } from './PeerManager'
+import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
+import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
+import { IceServer } from '../connection/webrtc/WebrtcConnector'
+import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
+import { DhtAddress, KADEMLIA_ID_LENGTH_IN_BYTES, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { Any } from '../proto/google/protobuf/any'
+import {
+    ClosestPeersRequest,
+    ClosestPeersResponse,
+    ConnectivityResponse,
+    DataEntry,
+    ExternalFindDataRequest,
+    ExternalFindDataResponse,
+    ExternalStoreDataRequest,
+    ExternalStoreDataResponse,
+    LeaveNotice,
+    Message,
+    PeerDescriptor,
+    PingRequest,
+    PingResponse,
+    RecursiveOperation
+} from '../proto/packages/dht/protos/DhtRpc'
+import { ExternalApiRpcClient, StoreRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { ITransport, TransportEvents } from '../transport/ITransport'
+import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { ServiceID } from '../types/ServiceID'
-import { DhtAddress, DhtAddressRaw, createRandomDhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../identifiers'
+import { DhtNodeRpcLocal } from './DhtNodeRpcLocal'
+import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
+import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
+import { ExternalApiRpcRemote } from './ExternalApiRpcRemote'
+import { PeerManager } from './PeerManager'
+import { PeerDiscovery } from './discovery/PeerDiscovery'
+import { RecursiveOperationManager, RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'
+import { Router } from './routing/Router'
+import { LocalDataStore } from './store/LocalDataStore'
+import { StoreManager } from './store/StoreManager'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
+import { createPeerDescriptor } from '../helpers/createPeerDescriptor'
 
 export interface DhtNodeEvents {
-    newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
+    contactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     contactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    newRandomContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
+    randomContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     randomContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
 }
 
@@ -106,33 +105,11 @@ type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
     'storeMaxTtl' |
     'networkConnectivityTimeout' |
     'storageRedundancyFactor' |
-    'metricsContext' |
-    'nodeId'>
+    'metricsContext'>
 
 const logger = new Logger(module)
 
 export type Events = TransportEvents & DhtNodeEvents
-
-export const createPeerDescriptor = (msg?: ConnectivityResponse, nodeId?: DhtAddress): PeerDescriptor => {
-    let nodeIdRaw: DhtAddressRaw
-    if ((nodeId === undefined) && (msg !== undefined)) {
-        nodeIdRaw = new Uint8Array(20)
-        const ipNum = msg.host.split('.').map((octet, index, array) => {
-            return parseInt(octet) * Math.pow(256, (array.length - index - 1))
-        }).reduce((prev, curr) => prev + curr)
-        const view = new DataView(nodeIdRaw.buffer)
-        view.setInt32(0, ipNum)
-        nodeIdRaw.set(crypto.randomBytes(20 - 4), 4)
-    } else {
-        nodeIdRaw = getRawFromDhtAddress(nodeId!)
-    }
-    const nodeType = isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS
-    const ret: PeerDescriptor = { nodeId: nodeIdRaw, type: nodeType }
-    if (msg && msg.websocket) {
-        ret.websocket = { host: msg.websocket.host, port: msg.websocket.port, tls: msg.websocket.tls }
-    }
-    return ret
-}
 
 export class DhtNode extends EventEmitter<Events> implements ITransport {
 
@@ -166,11 +143,27 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             storeMaxTtl: 60000,
             networkConnectivityTimeout: 10000,
             storageRedundancyFactor: 5,
-            metricsContext: new MetricsContext(),
-            nodeId: createRandomDhtAddress()
+            metricsContext: new MetricsContext()
         }, conf)
-        this.localDataStore = new LocalDataStore(this.config.storeMaxTtl) 
+        this.validateConfig()
+        this.localDataStore = new LocalDataStore(this.config.storeMaxTtl)
         this.send = this.send.bind(this)
+    }
+
+    private validateConfig(): void {
+        const expectedNodeIdLength = KADEMLIA_ID_LENGTH_IN_BYTES * 2
+        if (this.config.nodeId !== undefined ) {
+            if (!/^[0-9a-fA-F]+$/.test(this.config.nodeId)) {
+                throw new Error('Invalid nodeId, the nodeId should be a hex string')
+            } else if (this.config.nodeId.length !== expectedNodeIdLength) {
+                throw new Error(`Invalid nodeId, the length of the nodeId should be ${expectedNodeIdLength}`)
+            }
+        }
+        if (this.config.peerDescriptor !== undefined) {
+            if (this.config.peerDescriptor.nodeId.length !== KADEMLIA_ID_LENGTH_IN_BYTES) {
+                throw new Error(`Invalid peerDescriptor, the length of the nodeId should be ${KADEMLIA_ID_LENGTH_IN_BYTES} bytes`)
+            }
+        }
     }
 
     public async start(): Promise<void> {
@@ -219,7 +212,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                     min: this.config.peerDescriptor.websocket.port,
                     max: this.config.peerDescriptor.websocket.port
                 }
-            // If websocketPortRange is given, create ws server using it, websocketHost can be undefined
+                // If websocketPortRange is given, create ws server using it, websocketHost can be undefined
             } else if (this.config.websocketPortRange) {
                 connectorFacadeConfig.websocketHost = this.config.websocketHost
                 connectorFacadeConfig.websocketPortRange = this.config.websocketPortRange
@@ -259,7 +252,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             rpcCommunicator: this.rpcCommunicator,
             connections: this.peerManager!.connections,
             localPeerDescriptor: this.localPeerDescriptor!,
-            addContact: (contact: PeerDescriptor, setActive?: boolean) => this.peerManager!.handleNewPeers([contact], setActive),
+            addContact: (contact: PeerDescriptor, setActive?: boolean) => this.peerManager!.addContact([contact], setActive),
             connectionManager: this.connectionManager
         })
         this.recursiveOperationManager = new RecursiveOperationManager({
@@ -269,7 +262,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             connections: this.peerManager!.connections,
             localPeerDescriptor: this.localPeerDescriptor!,
             serviceId: this.config.serviceId,
-            addContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
+            addContact: (contact: PeerDescriptor) => this.peerManager!.addContact([contact]),
             localDataStore: this.localDataStore
         })
         this.storeManager = new StoreManager({
@@ -293,8 +286,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 )
             }
         })
-        this.on('newContact', (peerDescriptor: PeerDescriptor) => {
-            this.storeManager!.onNewContact(peerDescriptor)
+        this.on('contactAdded', (peerDescriptor: PeerDescriptor) => {
+            this.storeManager!.onContactAdded(peerDescriptor)
         })
         this.bindRpcLocalMethods()
     }
@@ -312,14 +305,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.peerManager.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) => {
             this.emit('contactRemoved', peerDescriptor, activeContacts)
         })
-        this.peerManager.on('newContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('newContact', peerDescriptor, activeContacts)
+        this.peerManager.on('contactAdded', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
+            this.emit('contactAdded', peerDescriptor, activeContacts)
         )
         this.peerManager.on('randomContactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
             this.emit('randomContactRemoved', peerDescriptor, activeContacts)
         )
-        this.peerManager.on('newRandomContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('newRandomContact', peerDescriptor, activeContacts)
+        this.peerManager.on('randomContactAdded', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
+            this.emit('randomContactAdded', peerDescriptor, activeContacts)
         )
         this.peerManager.on('kBucketEmpty', () => {
             if (!this.peerDiscovery!.isJoinOngoing()
@@ -335,15 +328,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             }
         })
         this.transport!.on('connected', (peerDescriptor: PeerDescriptor) => {
-            this.peerManager!.handleConnected(peerDescriptor)
+            this.peerManager!.onContactConnected(peerDescriptor)
             this.emit('connected', peerDescriptor)
         })
         this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => {
-            this.peerManager!.handleDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor), gracefulLeave)
+            this.peerManager!.onContactDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor), gracefulLeave)
             this.emit('disconnected', peerDescriptor, gracefulLeave)
         })
-        this.transport!.getAllConnectionPeerDescriptors().forEach((peer) => {
-            this.peerManager!.handleConnected(peer)
+        this.transport!.getConnections().forEach((peer) => {
+            this.peerManager!.onContactConnected(peer)
         })
     }
 
@@ -357,7 +350,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 return this.peerManager!.getClosestNeighborsTo(nodeId, limit)
                     .map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor())
             },
-            addNewContact: (contact: PeerDescriptor) => this.peerManager!.handleNewPeers([contact]),
+            addContact: (contact: PeerDescriptor) => this.peerManager!.addContact([contact]),
             removeContact: (nodeId: DhtAddress) => this.removeContact(nodeId)
         })
         this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers',
@@ -400,7 +393,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     private generatePeerDescriptorCallBack(connectivityResponse: ConnectivityResponse) {
-        if (this.config.peerDescriptor) {
+        if (this.config.peerDescriptor !== undefined) {
             this.localPeerDescriptor = this.config.peerDescriptor
         } else {
             this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, this.config.nodeId)
@@ -414,7 +407,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             limit).map((peer) => peer.getPeerDescriptor()
         )
     }
-    
+
     public getNodeId(): DhtAddress {
         return getNodeIdFromPeerDescriptor(this.localPeerDescriptor!)
     }
@@ -427,7 +420,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (!this.started) {  // the stopped state is checked in PeerManager
             return
         }
-        this.peerManager!.handlePeerLeaving(nodeId)
+        this.peerManager!.removeContact(nodeId)
     }
 
     public async send(msg: Message): Promise<void> {
@@ -512,12 +505,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.localPeerDescriptor!
     }
 
-    public getAllConnectionPeerDescriptors(): PeerDescriptor[] {
+    public getConnections(): PeerDescriptor[] {
         return Array.from(this.peerManager!.connections.values()).map((peer) => peer.getPeerDescriptor())
     }
 
     public getNeighbors(): PeerDescriptor[] {
-        return this.peerManager!.getNeighbors()
+        return this.started ? this.peerManager!.getNeighbors() : []
     }
 
     public getConnectionCount(): number {

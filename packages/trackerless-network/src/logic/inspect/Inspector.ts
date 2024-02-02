@@ -13,6 +13,7 @@ interface InspectorConfig {
     connectionLocker: ConnectionLocker
     inspectionTimeout?: number
     openInspectConnection?: (peerDescriptor: PeerDescriptor, lockId: LockID) => Promise<void>
+    closeInspectConnection?: (peerDescriptor: PeerDescriptor, lockId: LockID) => Promise<void>
 }
 
 const logger = new Logger(module)
@@ -27,6 +28,7 @@ export class Inspector {
     private readonly connectionLocker: ConnectionLocker
     private readonly inspectionTimeout: number
     private readonly openInspectConnection: (peerDescriptor: PeerDescriptor, lockId: LockID) => Promise<void>
+    private readonly closeInspectConnection: (peerDescriptor: PeerDescriptor, lockId: LockID) => Promise<void>
 
     constructor(config: InspectorConfig) {
         this.streamPartId = config.streamPartId
@@ -35,6 +37,7 @@ export class Inspector {
         this.connectionLocker = config.connectionLocker
         this.inspectionTimeout = config.inspectionTimeout ?? DEFAULT_TIMEOUT
         this.openInspectConnection = config.openInspectConnection ?? this.defaultOpenInspectConnection
+        this.closeInspectConnection = config.closeInspectConnection ?? this.defaultCloseInspectConnection
     }
 
     async defaultOpenInspectConnection(peerDescriptor: PeerDescriptor, lockId: LockID): Promise<void> {
@@ -46,6 +49,17 @@ export class Inspector {
         )
         await rpcRemote.openConnection()
         this.connectionLocker.lockConnection(peerDescriptor, lockId)
+    }
+
+    async defaultCloseInspectConnection(peerDescriptor: PeerDescriptor, lockId: LockID): Promise<void> {
+        const rpcRemote = new TemporaryConnectionRpcRemote(
+            this.localPeerDescriptor,
+            peerDescriptor,
+            this.rpcCommunicator,
+            TemporaryConnectionRpcClient
+        )
+        await rpcRemote.closeConnection()
+        this.connectionLocker.unlockConnection(peerDescriptor, lockId)
     }
 
     async inspect(peerDescriptor: PeerDescriptor): Promise<boolean> {
@@ -63,10 +77,10 @@ export class Inspector {
         } catch (err) {
             logger.trace('Inspect session timed out, removing')
         } finally {
+            await this.closeInspectConnection(peerDescriptor, lockId)
             this.sessions.delete(nodeId)
-            this.connectionLocker.unlockConnection(peerDescriptor, lockId)
         }
-        return success || session.getInspectedMessageCount() < 1
+        return success || session.getInspectedMessageCount() < 1 || session.onlyMarkedByInspectedNode()
     }
 
     markMessage(sender: DhtAddress, messageId: MessageID): void {

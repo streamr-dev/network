@@ -1,13 +1,7 @@
-import {
-    DhtNode,
-    PeerDescriptor,
-    Simulator,
-    SimulatorTransport,
-    NodeType
-} from '@streamr/dht'
+import { DhtNode, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import { StreamrNode, Events } from '../../src/logic/StreamrNode'
 import { waitForEvent3, waitForCondition } from '@streamr/utils'
-import { createStreamMessage } from '../utils/utils'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { Layer0Node } from '../../src/logic/Layer0Node'
@@ -21,14 +15,8 @@ describe('StreamrNode', () => {
     let node1: StreamrNode
     let node2: StreamrNode
 
-    const peerDescriptor1: PeerDescriptor = {
-        nodeId: new Uint8Array([1, 2, 3]),
-        type: NodeType.NODEJS
-    }
-    const peerDescriptor2: PeerDescriptor = {
-        nodeId: new Uint8Array([1, 1, 1]),
-        type: NodeType.NODEJS
-    }
+    const peerDescriptor1: PeerDescriptor = createMockPeerDescriptor()
+    const peerDescriptor2: PeerDescriptor = createMockPeerDescriptor()
     const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
 
     const msg = createStreamMessage(

@@ -58,6 +58,11 @@ interface ProxyDefinition {
     userId: EthereumAddress
 }
 
+interface ProxyConnection {
+    peerDescriptor: PeerDescriptor
+    direction: ProxyDirection
+}
+
 interface Events {
     message: (message: StreamMessage) => void
 }
@@ -73,7 +78,7 @@ export class ProxyClient extends EventEmitter<Events> {
     private readonly config: ProxyClientConfig
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector> = new Map()
     private definition?: ProxyDefinition
-    private readonly connections: Map<DhtAddress, ProxyDirection> = new Map()
+    private readonly connections: Map<DhtAddress, ProxyConnection> = new Map()
     private readonly propagation: Propagation
     private readonly neighbors: NodeList
     private readonly abortController: AbortController
@@ -159,7 +164,7 @@ export class ProxyClient extends EventEmitter<Events> {
     private getInvalidConnections(): DhtAddress[] {
         return Array.from(this.connections.keys()).filter((id) => {
             return !this.definition!.nodes.has(id)
-                || this.definition!.direction !== this.connections.get(id)
+                || this.definition!.direction !== this.connections.get(id)!.direction
         })
     }
 
@@ -183,7 +188,7 @@ export class ProxyClient extends EventEmitter<Events> {
         const accepted = await rpcRemote.requestConnection(direction, userId)
         if (accepted) {
             this.config.connectionLocker.lockConnection(peerDescriptor, SERVICE_ID)
-            this.connections.set(nodeId, direction)
+            this.connections.set(nodeId, { peerDescriptor, direction })
             const remote = new DeliveryRpcRemote(
                 this.config.localPeerDescriptor,
                 peerDescriptor,
@@ -216,13 +221,15 @@ export class ProxyClient extends EventEmitter<Events> {
             })
             const server = this.neighbors.get(nodeId)
             server?.leaveStreamPartNotice(this.config.streamPartId, false)
-            this.removeConnection(nodeId)
+            this.removeConnection(this.connections.get(nodeId)!.peerDescriptor)
         }
     }
 
-    private removeConnection(nodeId: DhtAddress): void {
+    private removeConnection(peerDescriptor: PeerDescriptor): void {
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
         this.connections.delete(nodeId)
         this.neighbors.remove(nodeId)
+        this.config.connectionLocker.unlockConnection(peerDescriptor, SERVICE_ID)
     }
 
     broadcast(msg: StreamMessage, previousNode?: DhtAddress): void {
@@ -234,7 +241,7 @@ export class ProxyClient extends EventEmitter<Events> {
     }
 
     hasConnection(nodeId: DhtAddress, direction: ProxyDirection): boolean {
-        return this.connections.has(nodeId) && this.connections.get(nodeId) === direction
+        return this.connections.has(nodeId) && this.connections.get(nodeId)!.direction === direction
     }
 
     getDirection(): ProxyDirection {
@@ -245,7 +252,7 @@ export class ProxyClient extends EventEmitter<Events> {
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
         if (this.connections.has(nodeId)) {
             this.config.connectionLocker.unlockConnection(peerDescriptor, SERVICE_ID)
-            this.removeConnection(nodeId)
+            this.removeConnection(peerDescriptor)
             await retry(() => this.updateConnections(), 'updating proxy connections', this.abortController.signal)
         }
     }

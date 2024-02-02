@@ -1,5 +1,5 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { ConnectionLocker, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { DeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { INeighborUpdateRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
@@ -14,7 +14,9 @@ interface NeighborUpdateRpcLocalConfig {
     neighbors: NodeList
     nearbyNodeView: NodeList
     neighborFinder: NeighborFinder
+    connectionLocker: ConnectionLocker
     rpcCommunicator: ListeningRpcCommunicator
+    neighborTargetCount: number
 }
 
 export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
@@ -25,38 +27,50 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
         this.config = config
     }
 
+    private updateContacts(neighborDescriptors: PeerDescriptor[]): void {
+        const ownNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
+        const newPeerDescriptors = neighborDescriptors.filter((peerDescriptor) => {
+            const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+            return nodeId !== ownNodeId && !this.config.neighbors.getIds().includes(nodeId)
+        })
+        newPeerDescriptors.forEach((peerDescriptor) => this.config.nearbyNodeView.add(
+            new DeliveryRpcRemote(
+                this.config.localPeerDescriptor,
+                peerDescriptor,
+                this.config.rpcCommunicator,
+                DeliveryRpcClient
+            ))
+        )
+    }
+
+    private createResponse(removeMe: boolean): NeighborUpdate {
+        return {
+            streamPartId: this.config.streamPartId,
+            neighborDescriptors: this.config.neighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor()),
+            removeMe
+        }
+    }
+
     // INeighborUpdateRpc server method
     async neighborUpdate(message: NeighborUpdate, context: ServerCallContext): Promise<NeighborUpdate> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
-        if (this.config.neighbors.has(senderId)) {
-            const ownNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
-            const newPeerDescriptors = message.neighborDescriptors.filter((peerDescriptor) => {
-                const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
-                return nodeId !== ownNodeId && !this.config.neighbors.getIds().includes(nodeId)
-            })
-            newPeerDescriptors.forEach((peerDescriptor) => this.config.nearbyNodeView.add(
-                new DeliveryRpcRemote(
-                    this.config.localPeerDescriptor,
-                    peerDescriptor,
-                    this.config.rpcCommunicator,
-                    DeliveryRpcClient
-                ))
-            )
-            this.config.neighborFinder.start()
-            const response: NeighborUpdate = {
-                streamPartId: this.config.streamPartId,
-                neighborDescriptors: this.config.neighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor()),
-                removeMe: false
-            }
-            return response
+        this.updateContacts(message.neighborDescriptors)
+        if (!this.config.neighbors.has(senderId)) {
+            return this.createResponse(true)
         } else {
-            const response: NeighborUpdate = {
-                streamPartId: this.config.streamPartId,
-                neighborDescriptors: this.config.neighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor()),
-                removeMe: true
+            const isOverNeighborCount = this.config.neighbors.size() > this.config.neighborTargetCount
+                // Motivation: We don't know the remote's neighborTargetCount setting here. We only ask to cut connections
+                // if the remote has a "sufficient" number of neighbors, where "sufficient" means our neighborTargetCount
+                // setting.
+                && message.neighborDescriptors.length > this.config.neighborTargetCount
+            if (!isOverNeighborCount) {
+                this.config.neighborFinder.start()
+            } else {
+                this.config.neighbors.remove(senderId)
+                this.config.connectionLocker.unlockConnection(senderPeerDescriptor, this.config.streamPartId)
             }
-            return response
+            return this.createResponse(isOverNeighborCount)
         }
     }
 }

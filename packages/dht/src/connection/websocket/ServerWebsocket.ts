@@ -83,6 +83,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         // If in an Karma / Electron test, use the NodeJS implementation
         // of Buffer instead of the browser polyfill
 
+        // TODO: no need to check this.socket as it is always defined when stopped is false?
         if (!this.stopped && this.socket) {
             if (typeof NodeJsBuffer !== 'undefined') {
                 this.socket.sendBytes(NodeJsBuffer.from(data))
@@ -121,9 +122,22 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
     }
 
     public getRemoteAddress(): string {
+        // TODO: no need to check this.socket as it is always defined when stopped is false?
         if (!this.stopped && this.socket) {
             return this.socket.remoteAddress
         } else {
+            // TODO throw
+            logger.error('Tried to get the remoteAddress of a stopped connection')
+            return ''
+        }
+    }
+
+    public getRemoteIp(): string {
+        // TODO: no need to check this.socket as it is always defined when stopped is false?
+        if (!this.stopped && this.socket) {
+            return this.socket.socket.remoteAddress!
+        } else {
+            // TODO throw
             logger.error('Tried to get the remoteAddress of a stopped connection')
             return ''
         }

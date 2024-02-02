@@ -15,7 +15,7 @@ import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '.
 interface DhtNodeRpcLocalConfig {
     peerDiscoveryQueryBatchSize: number
     getClosestPeersTo: (nodeId: DhtAddress, limit: number) => PeerDescriptor[]
-    addNewContact: (contact: PeerDescriptor) => void
+    addContact: (contact: PeerDescriptor) => void
     removeContact: (nodeId: DhtAddress) => void
 }
 
@@ -30,7 +30,7 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
     }
 
     async getClosestPeers(request: ClosestPeersRequest, context: ServerCallContext): Promise<ClosestPeersResponse> {
-        this.config.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
+        this.config.addContact((context as DhtCallContext).incomingSourceDescriptor!)
         const response = {
             peers: this.config.getClosestPeersTo(getDhtAddressFromRaw(request.nodeId), this.config.peerDiscoveryQueryBatchSize),
             requestId: request.requestId
@@ -41,7 +41,7 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
     async ping(request: PingRequest, context: ServerCallContext): Promise<PingResponse> {
         logger.trace('received ping request: ' + getNodeIdFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!))
         setImmediate(() => {
-            this.config.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
+            this.config.addContact((context as DhtCallContext).incomingSourceDescriptor!)
         })
         const response: PingResponse = {
             requestId: request.requestId

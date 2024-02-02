@@ -52,11 +52,11 @@ describe('RandomGraphNode', () => {
         randomGraphNode.stop()
     })
 
-    it('getNeighborIds', () => {
+    it('getNeighbors', () => {
         const mockRemote = createMockDeliveryRpcRemote()
         neighbors.add(mockRemote)
-        const ids = randomGraphNode.getNeighborIds()
-        expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
+        const result = randomGraphNode.getNeighbors()
+        expect(getNodeIdFromPeerDescriptor(result[0])).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
     })
 
     it('getNearbyNodeView', () => {
@@ -66,19 +66,19 @@ describe('RandomGraphNode', () => {
         expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
     })
 
-    it('Adds Closest Nodes from layer1 newContact event to nearbyNodeView', async () => {
+    it('Adds Closest Nodes from layer1 contactAdded event to nearbyNodeView', async () => {
         const peerDescriptor1 = createMockPeerDescriptor()
         const peerDescriptor2 = createMockPeerDescriptor()
-        layer1Node.emit('newContact', peerDescriptor1, [peerDescriptor1, peerDescriptor2])
+        layer1Node.emit('contactAdded', peerDescriptor1, [peerDescriptor1, peerDescriptor2])
         await waitForCondition(() => nearbyNodeView.size() === 2)
         expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor1))).toBeTruthy()
         expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor2))).toBeTruthy()
     })
 
-    it('Adds Random Nodes from layer1 newRandomContact event to randomNodeView', async () => {
+    it('Adds Random Nodes from layer1 randomContactAdded event to randomNodeView', async () => {
         const peerDescriptor1 = createMockPeerDescriptor()
         const peerDescriptor2 = createMockPeerDescriptor()
-        layer1Node.emit('newRandomContact', peerDescriptor1, [peerDescriptor1, peerDescriptor2])
+        layer1Node.emit('randomContactAdded', peerDescriptor1, [peerDescriptor1, peerDescriptor2])
         await waitForCondition(() => randomNodeView.size() === 2)
         expect(randomNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor1))).toBeTruthy()
         expect(randomNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor2))).toBeTruthy()
@@ -88,7 +88,7 @@ describe('RandomGraphNode', () => {
         const peerDescriptor1 = createMockPeerDescriptor()
         const peerDescriptor2 = createMockPeerDescriptor()
         layer1Node.addNewRandomPeerToKBucket()
-        layer1Node.emit('newContact', peerDescriptor1, [peerDescriptor1, peerDescriptor2])
+        layer1Node.emit('contactAdded', peerDescriptor1, [peerDescriptor1, peerDescriptor2])
         await waitForCondition(() => {
             return nearbyNodeView.size() === 3
         }, 20000)

@@ -9,6 +9,7 @@ runs:
         node-version-file: '.nvmrc'
         cache: 'npm'
         cache-dependency-path: package-lock.json
+        registry-url: 'https://registry.npmjs.org'
     - name: cache node_modules
       id: cache-node-modules
       uses: actions/cache@v3
