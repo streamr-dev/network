@@ -25,9 +25,9 @@ interface PeerManagerConfig {
 }
 
 export interface PeerManagerEvents {
-    newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
+    contactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     contactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    newRandomContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
+    randomContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     randomContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     kBucketEmpty: () => void
 }
@@ -81,15 +81,15 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             this.emit('contactRemoved', removedContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
             this.randomPeers.addContact(this.config.createDhtNodeRpcRemote(removedContact.getPeerDescriptor()))
         })
-        this.contacts.on('newContact', (newContact: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) =>
-            this.emit('newContact', newContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
+        this.contacts.on('contactAdded', (contactAdded: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) =>
+            this.emit('contactAdded', contactAdded.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
         this.randomPeers = new RandomContactList(this.config.localNodeId, this.config.maxContactListSize)
         this.randomPeers.on('contactRemoved', (removedContact: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) =>
             this.emit('randomContactRemoved', removedContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
-        this.randomPeers.on('newContact', (newContact: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) =>
-            this.emit('newRandomContact', newContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
+        this.randomPeers.on('contactAdded', (contactAdded: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) =>
+            this.emit('randomContactAdded', contactAdded.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
     }
 
@@ -160,7 +160,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         }
         const closest = this.getClosestActiveContactNotInBucket()
         if (closest) {
-            this.handleNewPeers([closest.getPeerDescriptor()])
+            this.addContact([closest.getPeerDescriptor()])
         }
     }
 
@@ -173,7 +173,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         return undefined
     }
 
-    handleConnected(peerDescriptor: PeerDescriptor): void {
+    onContactConnected(peerDescriptor: PeerDescriptor): void {
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
         if (nodeId === this.config.localNodeId) {
             logger.error('handleConnected() to self')
@@ -188,7 +188,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         logger.trace('connected: ' + nodeId + ' ' + this.connections.size)
     }
 
-    handleDisconnected(nodeId: DhtAddress, gracefulLeave: boolean): void {
+    onContactDisconnected(nodeId: DhtAddress, gracefulLeave: boolean): void {
         logger.trace('disconnected: ' + nodeId)
         this.connections.delete(nodeId)
         if (this.config.isLayer0) {
@@ -202,11 +202,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         }
     }
 
-    handlePeerLeaving(nodeId: DhtAddress): void {
-        this.removeContact(nodeId)
-    }
-
-    private removeContact(nodeId: DhtAddress): void {
+    removeContact(nodeId: DhtAddress): void {
         if (this.stopped) {
             return
         }
@@ -274,16 +270,11 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         return this.bucket.toArray().map((rpcRemote: DhtNodeRpcRemote) => rpcRemote.getPeerDescriptor())
     }
 
-    handlePeerActive(nodeId: DhtAddress): void {
+    setContactActive(nodeId: DhtAddress): void {
         this.contacts.setActive(nodeId)
     }
 
-    handlePeerUnresponsive(nodeId: DhtAddress): void {
-        this.bucket.remove(getRawFromDhtAddress(nodeId))
-        this.contacts.removeContact(nodeId)
-    }
-
-    handleNewPeers(peerDescriptors: PeerDescriptor[], setActive?: boolean): void { 
+    addContact(peerDescriptors: PeerDescriptor[], setActive?: boolean): void { 
         if (this.stopped) {
             return
         }

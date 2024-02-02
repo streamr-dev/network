@@ -1,5 +1,5 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { ConnectionLocker, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { DeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { INeighborUpdateRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
@@ -14,6 +14,7 @@ interface NeighborUpdateRpcLocalConfig {
     neighbors: NodeList
     nearbyNodeView: NodeList
     neighborFinder: NeighborFinder
+    connectionLocker: ConnectionLocker
     rpcCommunicator: ListeningRpcCommunicator
     neighborTargetCount: number
 }
@@ -67,6 +68,7 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
                 this.config.neighborFinder.start()
             } else {
                 this.config.neighbors.remove(senderId)
+                this.config.connectionLocker.unlockConnection(senderPeerDescriptor, this.config.streamPartId)
             }
             return this.createResponse(isOverNeighborCount)
         }

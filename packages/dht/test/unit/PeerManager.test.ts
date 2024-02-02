@@ -15,7 +15,7 @@ describe('PeerManager', () => {
                 return new DhtNodeRpcRemote(undefined as any, peerDescriptor, undefined as any, new MockRpcCommunicator())
             }
         } as any)
-        manager.handleNewPeers(nodeIds.map((n) => ({ nodeId: getRawFromDhtAddress(n), type: NodeType.NODEJS })))
+        manager.addContact(nodeIds.map((n) => ({ nodeId: getRawFromDhtAddress(n), type: NodeType.NODEJS })))
 
         const referenceId = createRandomDhtAddress()
         const excluded = new Set<DhtAddress>(sampleSize(nodeIds, 2)!)

@@ -80,7 +80,7 @@ export class Inspector {
             await this.closeInspectConnection(peerDescriptor, lockId)
             this.sessions.delete(nodeId)
         }
-        return success || session.getInspectedMessageCount() < 1
+        return success || session.getInspectedMessageCount() < 1 || session.onlyMarkedByInspectedNode()
     }
 
     markMessage(sender: DhtAddress, messageId: MessageID): void {
