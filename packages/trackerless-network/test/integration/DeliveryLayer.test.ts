@@ -1,9 +1,7 @@
 import {
     DhtNode,
-    PeerDescriptor,
     Simulator,
-    SimulatorTransport,
-    NodeType
+    SimulatorTransport
 } from '@streamr/dht'
 import { DeliveryLayer, Events } from '../../src/logic/DeliveryLayer'
 import { waitForEvent3, waitForCondition } from '@streamr/utils'
