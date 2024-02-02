@@ -55,9 +55,6 @@ export class NeighborUpdateManager {
                 this.config.neighbors.remove(nodeId)
                 this.config.connectionLocker.unlockConnection(neighbor.getPeerDescriptor(), this.config.streamPartId)
                 this.config.neighborFinder.start([nodeId])
-                // if (this.config.neighbors.size() < this.config.neighborTargetCount) {
-                //     console.log(this.config.neighbors.size(), "WHOOPSIE")   
-                // }
             }
         }))
     }
