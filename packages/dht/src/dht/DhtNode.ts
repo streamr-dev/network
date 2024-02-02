@@ -289,6 +289,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             numberOfNodesPerKBucket: this.config.numberOfNodesPerKBucket,
             maxContactListSize: this.config.maxNeighborListSize,
             localNodeId: this.getNodeId(),
+            localPeerDescriptor: this.localPeerDescriptor!,
             connectionManager: this.connectionManager!,
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
             isLayer0: (this.connectionManager !== undefined),
@@ -396,6 +397,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     public getClosestContacts(limit?: number): PeerDescriptor[] {
         return this.peerManager!.getClosestContactsTo(
             this.getNodeId(),
+            limit).map((peer) => peer.getPeerDescriptor()
+        )
+    }
+
+    public getClosestRingContactsTo(referencePeerDescriptor: PeerDescriptor, limit?: number): PeerDescriptor[] {
+        return this.peerManager!.getClosestRingContactsTo(
+            referencePeerDescriptor,
             limit).map((peer) => peer.getPeerDescriptor()
         )
     }

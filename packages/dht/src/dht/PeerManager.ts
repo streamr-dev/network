@@ -11,6 +11,7 @@ import { SortedContactList } from './contact/SortedContactList'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import EventEmitter from 'eventemitter3'
 import { DhtAddress, DhtAddressRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../identifiers'
+import { RingContactList } from './contact/RingContactList'
 
 const logger = new Logger(module)
 
@@ -19,6 +20,7 @@ interface PeerManagerConfig {
     maxContactListSize: number
     peerDiscoveryQueryBatchSize: number
     localNodeId: DhtAddress
+    localPeerDescriptor: PeerDescriptor
     connectionManager: ConnectionManager
     isLayer0: boolean
     createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => DhtNodeRpcRemote
@@ -48,6 +50,9 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     private bucket: KBucket<DhtNodeRpcRemote>
     // Nodes that are connected to this node on Layer0
     public readonly connections: Map<DhtAddress, DhtNodeRpcRemote> = new Map()
+    
+    private ringContacts: RingContactList<DhtNodeRpcRemote>
+
     // All nodes that we know about
     private contacts: SortedContactList<DhtNodeRpcRemote>
     private randomPeers: RandomContactList<DhtNodeRpcRemote>
@@ -62,6 +67,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             numberOfNodesPerKBucket: this.config.numberOfNodesPerKBucket,
             numberOfNodesToPing: this.config.numberOfNodesPerKBucket
         })
+        this.ringContacts = new RingContactList<DhtNodeRpcRemote>(this.config.localPeerDescriptor)
         this.bucket.on('ping', (oldContacts: DhtNodeRpcRemote[], newContact: DhtNodeRpcRemote) => this.onKBucketPing(oldContacts, newContact))
         this.bucket.on('removed', (contact: DhtNodeRpcRemote) => this.onKBucketRemoved(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())))
         this.bucket.on('added', (contact: DhtNodeRpcRemote) => this.onKBucketAdded(contact))
@@ -250,6 +256,13 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.contacts.getAllContacts().map((contact) => closest.addContact(contact))
         // TODO should set the excludeSet and limit to SortedContactList constructor and remove these line
         return closest.getClosestContacts(limit)
+    }
+
+    getClosestRingContactsTo(referencePeerDescriptor: PeerDescriptor, limit?: number, excludedNodeIds?: Set<DhtAddress>): DhtNodeRpcRemote[] {
+        const closest = new RingContactList<DhtNodeRpcRemote>(referencePeerDescriptor)
+        this.contacts.getAllContacts().map((contact) => closest.addContact(contact))
+        this.ringContacts.getAllContacts().map((contact) => closest.addContact(contact))
+        return closest.getClosestContacts(limit ?? 8)
     }
 
     getContactCount(excludedNodeIds?: Set<DhtAddress>): number {

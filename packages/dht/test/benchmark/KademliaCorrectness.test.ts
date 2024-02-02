@@ -47,7 +47,7 @@ describe('Kademlia correctness', () => {
     it('Can find correct neighbors', async () => {
         await entryPoint.joinDht([entryPoint.getLocalPeerDescriptor()])
 
-        await Promise.allSettled(
+        await Promise.all(
             nodes.map((node) => node.joinDht([entryPoint.getLocalPeerDescriptor()]))
         )
 
@@ -62,7 +62,7 @@ describe('Kademlia correctness', () => {
                 groundTruthString += groundTruth[i + ''][j].name + ','
             }
 
-            const kademliaNeighbors = nodes[i].getClosestContacts().map((p) => getNodeIdFromPeerDescriptor(p))
+            const kademliaNeighbors = nodes[i].getClosestContacts(8).map((p) => getNodeIdFromPeerDescriptor(p))
 
             let kadString = 'kademliaNeighbors: '
             kademliaNeighbors.forEach((neighbor) => {
