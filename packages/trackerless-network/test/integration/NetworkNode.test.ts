@@ -1,4 +1,4 @@
-import { NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
+import { PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import {
     ContentType,
     EncryptionType,
@@ -10,6 +10,7 @@ import {
 } from '@streamr/protocol'
 import { EthereumAddress, hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
 
@@ -21,15 +22,9 @@ describe('NetworkNode', () => {
     let node1: NetworkNode
     let node2: NetworkNode
 
-    const pd1: PeerDescriptor = {
-        nodeId: new Uint8Array([1, 2, 3]),
-        type: NodeType.NODEJS
-    }
+    const pd1: PeerDescriptor = createMockPeerDescriptor()
 
-    const pd2: PeerDescriptor = {
-        nodeId: new Uint8Array([1, 1, 1]),
-        type: NodeType.NODEJS
-    }
+    const pd2: PeerDescriptor = createMockPeerDescriptor()
 
     beforeEach(async () => {
         const simulator = new Simulator()

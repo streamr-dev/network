@@ -17,7 +17,7 @@ const main = async () => {
             max: entryPoint.websocket.port
         },
         websocketServerEnableTls: false,
-        entryPoints: [peerDescriptor]
+        entryPoints: []
     })
     await dhtNode.start()
     await dhtNode.joinDht([peerDescriptor])
