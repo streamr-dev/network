@@ -40,7 +40,7 @@ describe('NeighborUpdateRpcLocal', () => {
             start: jest.fn()
         } as any
         const connectionLocker = {
-            unlockConnection: jest.fn()
+            weakUnlockConnection: jest.fn()
         } as any
 
         rpcLocal = new NeighborUpdateRpcLocal({
