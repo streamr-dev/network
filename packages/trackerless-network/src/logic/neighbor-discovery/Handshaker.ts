@@ -126,7 +126,7 @@ export class Handshaker {
         )
         if (result.accepted) {
             this.config.neighbors.add(this.createDeliveryRpcRemote(neighbor.getPeerDescriptor()))
-            this.config.connectionLocker.lockConnection(neighbor.getPeerDescriptor(), this.config.streamPartId)
+            this.config.connectionLocker.weakLockConnection(getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor()), this.config.streamPartId)
         }
         if (result.interleaveTargetDescriptor) {
             await this.handshakeWithInterleaving(result.interleaveTargetDescriptor, targetNodeId)
@@ -147,7 +147,7 @@ export class Handshaker {
         )
         if (result.accepted) {
             this.config.neighbors.add(this.createDeliveryRpcRemote(neighbor.getPeerDescriptor()))
-            this.config.connectionLocker.lockConnection(neighbor.getPeerDescriptor(), this.config.streamPartId)
+            this.config.connectionLocker.weakLockConnection(getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor()), this.config.streamPartId)
         }
         this.ongoingHandshakes.delete(targetNodeId)
         return result.accepted

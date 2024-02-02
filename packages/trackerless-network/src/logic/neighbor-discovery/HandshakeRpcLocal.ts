@@ -74,7 +74,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
             accepted: true
         }
         this.config.neighbors.add(this.config.createDeliveryRpcRemote(requester))
-        this.config.connectionLocker.lockConnection(requester, this.config.streamPartId)
+        this.config.connectionLocker.weakLockConnection(getNodeIdFromPeerDescriptor(requester), this.config.streamPartId)
         return res
     }
 
@@ -109,7 +109,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
                 // If response is not accepted, keep the last node as a neighbor
                 if (response.accepted) {
                     this.config.neighbors.remove(getNodeIdFromPeerDescriptor(lastPeerDescriptor!))
-                    this.config.connectionLocker.unlockConnection(lastPeerDescriptor!, this.config.streamPartId)
+                    this.config.connectionLocker.weakUnlockConnection(getNodeIdFromPeerDescriptor(lastPeerDescriptor!), this.config.streamPartId)
                 }
                 return
             }).catch(() => {
@@ -119,7 +119,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
             })
         }
         this.config.neighbors.add(this.config.createDeliveryRpcRemote(requester))
-        this.config.connectionLocker.lockConnection(requester, this.config.streamPartId)
+        this.config.connectionLocker.weakLockConnection(getNodeIdFromPeerDescriptor(requester), this.config.streamPartId)
         return {
             requestId: request.requestId,
             accepted: true,
@@ -133,7 +133,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
         try {
             await this.config.handshakeWithInterleaving(message.interleaveTargetDescriptor!, senderId)
             if (this.config.neighbors.has(senderId)) {
-                this.config.connectionLocker.unlockConnection(senderPeerDescriptor, this.config.streamPartId)
+                this.config.connectionLocker.weakUnlockConnection(getNodeIdFromPeerDescriptor(senderPeerDescriptor), this.config.streamPartId)
                 this.config.neighbors.remove(senderId)
             }
             return { accepted: true }

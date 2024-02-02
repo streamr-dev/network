@@ -52,7 +52,7 @@ export class NeighborUpdateManager {
             if (res.removeMe) {
                 const nodeId = getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor())
                 this.config.neighbors.remove(nodeId)
-                this.config.connectionLocker.unlockConnection(neighbor.getPeerDescriptor(), this.config.streamPartId)
+                this.config.connectionLocker.weakUnlockConnection(getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor()), this.config.streamPartId)
                 this.config.neighborFinder.start([nodeId])
             }
         }))

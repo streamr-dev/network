@@ -68,7 +68,7 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
                 this.config.neighborFinder.start()
             } else {
                 this.config.neighbors.remove(senderId)
-                this.config.connectionLocker.unlockConnection(senderPeerDescriptor, this.config.streamPartId)
+                this.config.connectionLocker.weakUnlockConnection(getNodeIdFromPeerDescriptor(senderPeerDescriptor), this.config.streamPartId)
             }
             return this.createResponse(isOverNeighborCount)
         }
