@@ -1,7 +1,7 @@
-import { ConnectionManager, DhtNode, PeerDescriptor, NodeType } from '@streamr/dht'
+import { ConnectionManager, DhtNode, PeerDescriptor } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { waitForCondition } from '@streamr/utils'
-import { createStreamMessage } from '../utils/utils'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
@@ -10,11 +10,9 @@ import { Layer1Node } from '../../src/logic/Layer1Node'
 
 describe('random graph with real connections', () => {
 
-    const epPeerDescriptor: PeerDescriptor = {
-        nodeId: Uint8Array.from([1, 2, 3]),
-        type: NodeType.NODEJS,
+    const epPeerDescriptor: PeerDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 12221, tls: false }
-    }
+    })
 
     const streamPartId = StreamPartIDUtils.parse('random-graph#0')
     // Currently the nodes here are practically layer0 nodes acting as layer1 nodes, for the purpose of this test

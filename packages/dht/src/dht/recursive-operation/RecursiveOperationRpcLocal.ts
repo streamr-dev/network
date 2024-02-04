@@ -28,7 +28,6 @@ export class RecursiveOperationRpcLocal implements IRecursiveOperationRpc {
         }
         const senderId = getNodeIdFromPeerDescriptor(getPreviousPeer(routedMessage) ?? routedMessage.sourcePeer!)
         logger.trace(`Received routeRequest call from ${senderId}`)
-        this.config.addContact(routedMessage.sourcePeer!, true)
         this.config.addToDuplicateDetector(routedMessage.requestId)
         return this.config.doRouteRequest(routedMessage)
     }
