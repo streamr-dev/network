@@ -32,7 +32,7 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
     async getClosestPeers(request: ClosestPeersRequest, context: ServerCallContext): Promise<ClosestPeersResponse> {
         this.config.addContact((context as DhtCallContext).incomingSourceDescriptor!)
         const response = {
-            peers: this.config.getClosestPeersTo(getDhtAddressFromRaw(request.nodeId), this.config.peerDiscoveryQueryBatchSize),
+            peers: this.config.getClosestPeersTo(getDhtAddressFromRaw(request.nodeId), 7), //this.config.peerDiscoveryQueryBatchSize),
             requestId: request.requestId
         }
         return response
