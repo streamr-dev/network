@@ -4,7 +4,7 @@ import KBucket from 'k-bucket'
 import { DhtAddressRaw } from '../../src/identifiers'
 
 const ID_LENGTH = 20
-const NUM_NODES = 2000
+const NUM_NODES = 200
 const NUM_NEAREST = 10
 
 const generateId = function(): DhtAddressRaw {

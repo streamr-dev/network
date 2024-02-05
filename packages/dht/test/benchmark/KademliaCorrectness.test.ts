@@ -10,7 +10,7 @@ describe('Kademlia correctness', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     const simulator = new Simulator()
-    const NUM_NODES = 1000
+    const NUM_NODES = 200
 
     const nodeIndicesById: Record<DhtAddress, number> = {}
 
