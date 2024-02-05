@@ -196,6 +196,14 @@ export function isRunningInElectron(): boolean {
     return typeof _streamr_electron_test !== 'undefined'
 }
 
+export function testOnlyInNodeJs(...args: Parameters<typeof it>): void {
+    return isRunningInElectron() ? it.skip(...args) : it(...args)
+}
+
+export function describeOnlyInNodeJs(...args: Parameters<typeof describe>): void {
+    return isRunningInElectron() ? describe.skip(...args) : describe(...args)
+}
+
 /**
  * Used to spin up an HTTP server used by integration tests to fetch private keys having non-zero ERC-20 token
  * balances in streamr-docker-dev environment.
