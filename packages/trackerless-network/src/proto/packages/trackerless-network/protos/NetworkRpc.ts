@@ -329,6 +329,10 @@ export interface NodeInfoResponse {
      * @generated from protobuf field: optional ControlLayerInfo controlLayer = 3;
      */
     controlLayer?: ControlLayerInfo;
+    /**
+     * @generated from protobuf field: string version = 4;
+     */
+    version: string;
 }
 /**
  * @generated from protobuf enum StreamMessageType
@@ -673,7 +677,8 @@ class NodeInfoResponse$Type extends MessageType<NodeInfoResponse> {
         super("NodeInfoResponse", [
             { no: 1, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
             { no: 2, name: "streamPartitions", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => StreamPartitionInfo },
-            { no: 3, name: "controlLayer", kind: "message", T: () => ControlLayerInfo }
+            { no: 3, name: "controlLayer", kind: "message", T: () => ControlLayerInfo },
+            { no: 4, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }

@@ -6,7 +6,8 @@
     },
     "include": [
         "src/**/*",
-        "test/**/*"
+        "test/**/*",
+        "package.json"
     ],
     "references": [
         { "path": "../protocol/tsconfig.node.json" },
