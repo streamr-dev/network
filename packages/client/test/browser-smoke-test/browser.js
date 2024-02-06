@@ -1,7 +1,7 @@
 /* eslint-disable no-undef, @typescript-eslint/no-require-imports */
 
 const TARGET_SUBSCRIBE_MSG_COUNT = 50
-const RESEND_SUBSCRIBE_MSG_COUNT = TARGET_SUBSCRIBE_MSG_COUNT - 10
+const RESEND_SUBSCRIBE_MSG_COUNT = TARGET_SUBSCRIBE_MSG_COUNT - 10 // some may not have landed in storage yet
 
 describe('StreamrClient', () => {
 
