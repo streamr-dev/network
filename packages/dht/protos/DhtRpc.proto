@@ -198,19 +198,20 @@ message ConnectivityResponse {
   string natType = 2;
   ConnectivityMethod websocket = 3;
   uint32 ipAddress = 4;
-  string version = 5;
+  string protocolVersion = 5;
 }
 
 message HandshakeRequest {
   PeerDescriptor sourcePeerDescriptor = 1;
   optional PeerDescriptor targetPeerDescriptor = 2;
-  string version = 3;
+  string protocolVersion = 3;
+  repeated string supportedProtocolVersions = 4;
 }
 
 message HandshakeResponse {
   PeerDescriptor sourcePeerDescriptor = 1;
   optional HandshakeError error = 2;
-  string version = 3;
+  string protocolVersion = 3;
 }
 
 enum HandshakeError {

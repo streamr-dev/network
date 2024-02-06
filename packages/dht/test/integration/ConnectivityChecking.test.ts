@@ -47,7 +47,7 @@ describe('ConnectivityChecking', () => {
             selfSigned: false
         }
         const response = await sendConnectivityRequest(request, server.getLocalPeerDescriptor(), version)
-        expect(response.version).toEqual(version)
+        expect(response.protocolVersion).toEqual(version)
     })
 
     it('connectivityCheck with incompatible version', async () => {

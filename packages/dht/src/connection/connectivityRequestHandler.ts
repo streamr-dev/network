@@ -71,7 +71,7 @@ const connectivityProbe = async (connectivityRequest: ConnectivityRequest, ipAdd
             natType: NatType.OPEN_INTERNET,
             websocket: { host, port: connectivityRequest.port, tls: connectivityRequest.tls },
             ipAddress: ipv4ToNumber(ipAddress),
-            version: localVersion
+            protocolVersion: localVersion
         }
     } catch (err) {
         logger.debug('error', { err })
@@ -79,7 +79,7 @@ const connectivityProbe = async (connectivityRequest: ConnectivityRequest, ipAdd
             host,
             natType: NatType.UNKNOWN,
             ipAddress: ipv4ToNumber(ipAddress),
-            version: localVersion
+            protocolVersion: localVersion
         }
     }
     if (outgoingConnection) {

@@ -63,7 +63,7 @@ describe('connectivityRequestHandler', () => {
                         tls: false
                     },
                     ipAddress: ipv4ToNumber(HOST),
-                    version
+                    protocolVersion: version
                 },
                 oneofKind: 'connectivityResponse'
             },

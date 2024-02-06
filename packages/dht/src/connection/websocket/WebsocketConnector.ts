@@ -175,7 +175,7 @@ export class WebsocketConnector {
             host: '127.0.0.1',
             natType: NatType.UNKNOWN,
             ipAddress: ipv4ToNumber('127.0.0.1'),
-            version: localVersion
+            protocolVersion: localVersion
         }
         if (this.abortController.signal.aborted) {
             return noServerConnectivityResponse
@@ -194,7 +194,7 @@ export class WebsocketConnector {
                             websocket: { host: this.host!, port: this.selectedPort!, tls: this.config.tlsCertificate !== undefined },
                             // TODO: maybe do a DNS lookup here?
                             ipAddress: ipv4ToNumber('127.0.0.1'),
-                            version: localVersion
+                            protocolVersion: localVersion
                         }
                         return preconfiguredConnectivityResponse
                     } else {

@@ -340,9 +340,9 @@ export interface ConnectivityResponse {
      */
     ipAddress: number;
     /**
-     * @generated from protobuf field: string version = 5;
+     * @generated from protobuf field: string protocolVersion = 5;
      */
-    version: string;
+    protocolVersion: string;
 }
 /**
  * @generated from protobuf message dht.HandshakeRequest
@@ -357,9 +357,13 @@ export interface HandshakeRequest {
      */
     targetPeerDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: string version = 3;
+     * @generated from protobuf field: string protocolVersion = 3;
      */
-    version: string;
+    protocolVersion: string;
+    /**
+     * @generated from protobuf field: repeated string supportedProtocolVersions = 4;
+     */
+    supportedProtocolVersions: string[];
 }
 /**
  * @generated from protobuf message dht.HandshakeResponse
@@ -374,9 +378,9 @@ export interface HandshakeResponse {
      */
     error?: HandshakeError;
     /**
-     * @generated from protobuf field: string version = 3;
+     * @generated from protobuf field: string protocolVersion = 3;
      */
-    version: string;
+    protocolVersion: string;
 }
 /**
  * @generated from protobuf message dht.Message
@@ -948,7 +952,7 @@ class ConnectivityResponse$Type extends MessageType$<ConnectivityResponse> {
             { no: 2, name: "natType", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "websocket", kind: "message", T: () => ConnectivityMethod },
             { no: 4, name: "ipAddress", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 5, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 5, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -962,7 +966,8 @@ class HandshakeRequest$Type extends MessageType$<HandshakeRequest> {
         super("dht.HandshakeRequest", [
             { no: 1, name: "sourcePeerDescriptor", kind: "message", T: () => PeerDescriptor },
             { no: 2, name: "targetPeerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 3, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 3, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "supportedProtocolVersions", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -976,7 +981,7 @@ class HandshakeResponse$Type extends MessageType$<HandshakeResponse> {
         super("dht.HandshakeResponse", [
             { no: 1, name: "sourcePeerDescriptor", kind: "message", T: () => PeerDescriptor },
             { no: 2, name: "error", kind: "enum", opt: true, T: () => ["dht.HandshakeError", HandshakeError] },
-            { no: 3, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 3, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }

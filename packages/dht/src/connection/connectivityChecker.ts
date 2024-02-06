@@ -80,7 +80,7 @@ export const sendConnectivityRequest = async (
                     if (message.body.oneofKind === 'connectivityResponse') {
                         logger.debug('ConnectivityResponse received: ' + JSON.stringify(Message.toJson(message)))
                         const connectivityResponseMessage = message.body.connectivityResponse
-                        const remoteVersion = connectivityResponseMessage.version
+                        const remoteVersion = connectivityResponseMessage.protocolVersion
                         outgoingConnection!.off('data', listener)
                         clearTimeout(timeoutId)
                         if (isCompatibleVersion(localVersion, remoteVersion)) {
