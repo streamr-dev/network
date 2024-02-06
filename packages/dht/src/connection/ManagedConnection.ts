@@ -10,7 +10,7 @@ import { createRandomConnectionId } from './Connection'
 
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
-    handshakeRequest: (source: PeerDescriptor, version: string, target?: PeerDescriptor) => void
+    handshakeRequest: (source: PeerDescriptor, remoteVersion: string, supportedProtocolVersions: string[], target?: PeerDescriptor) => void
     handshakeCompleted: (peerDescriptor: PeerDescriptor) => void
     handshakeFailed: () => void
 }
@@ -101,11 +101,12 @@ export class ManagedConnection extends EventEmitter<Events> {
                 this.handshaker = new Handshaker(this.localPeerDescriptor, incomingConnection)
                 this.handshaker.on('handshakeRequest', (
                     sourcePeerDescriptor: PeerDescriptor,
-                    version: string,
+                    remoteProtocolVersion: string,
+                    supportedProtocolVersions: string[],
                     targetPeerDescriptor?: PeerDescriptor
                 ) => {
                     this.setRemotePeerDescriptor(sourcePeerDescriptor)
-                    this.emit('handshakeRequest', sourcePeerDescriptor, version, targetPeerDescriptor)
+                    this.emit('handshakeRequest', sourcePeerDescriptor, remoteProtocolVersion, supportedProtocolVersions, targetPeerDescriptor)
                 })
 
                 incomingConnection.on('disconnected', this.onDisconnected)
