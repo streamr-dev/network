@@ -25,7 +25,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { expectedConnectionType } from '../../helpers/Connectivity'
 import { WebsocketServerStartError } from '../../helpers/errors'
 import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
-import { attachConnectivityRequestHandler } from '../connectivityRequestHandler'
+import { DISABLE_CONNECTIVITY_PROBE, attachConnectivityRequestHandler } from '../connectivityRequestHandler'
 import * as Err from '../../helpers/errors'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../identifiers'
@@ -41,7 +41,6 @@ export const connectivityMethodToWebsocketUrl = (ws: ConnectivityMethod, action?
 }
 
 const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
-
 export interface WebsocketConnectorConfig {
     transport: ITransport
     onNewConnection: (connection: ManagedConnection) => boolean
@@ -170,34 +169,36 @@ export class WebsocketConnector {
     }
 
     public async checkConnectivity(selfSigned: boolean): Promise<ConnectivityResponse> {
-        // TODO: this could throw if the server is not running
-        const noServerConnectivityResponse: ConnectivityResponse = {
-            host: '127.0.0.1',
-            natType: NatType.UNKNOWN,
-            ipAddress: ipv4ToNumber('127.0.0.1'),
-            version: localVersion
-        }
+        // TODO: this could throw?
         if (this.abortController.signal.aborted) {
-            return noServerConnectivityResponse
-        }
-        if (!this.config.entrypoints || this.config.entrypoints.length === 0) {
-            // return connectivity info given in config
-            const preconfiguredConnectivityResponse: ConnectivityResponse = {
-                host: this.host!,
-                natType: NatType.OPEN_INTERNET,
-                websocket: { host: this.host!, port: this.selectedPort!, tls: this.config.tlsCertificate !== undefined },
-                // TODO: maybe do a DNS lookup here?
+            return {
+                host: '127.0.0.1',
+                natType: NatType.UNKNOWN,
                 ipAddress: ipv4ToNumber('127.0.0.1'),
                 version: localVersion
             }
-            return preconfiguredConnectivityResponse
+        }
+        if (!this.config.entrypoints || this.config.entrypoints.length === 0) {
+            // return connectivity info given in config
+            return {
+                host: this.host!,
+                natType: NatType.OPEN_INTERNET,
+                websocket: { 
+                    host: this.host!, 
+                    port: this.selectedPort!, 
+                    tls: this.config.tlsCertificate !== undefined
+                },
+                // TODO: Resolve the given host name or or use as is if IP was given. 
+                ipAddress: ipv4ToNumber('127.0.0.1'),
+                version: localVersion
+            }
         }
         for (const reattempt of range(ENTRY_POINT_CONNECTION_ATTEMPTS)) {
             const entryPoint = sample(this.config.entrypoints)!
             try {
                 // Do real connectivity checking
                 const connectivityRequest = {
-                    port: this.selectedPort ?? 0,
+                    port: this.selectedPort ?? DISABLE_CONNECTIVITY_PROBE,
                     host: this.host,
                     tls: this.websocketServer ? this.config.serverEnableTls : false,
                     selfSigned
