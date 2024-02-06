@@ -1,5 +1,6 @@
 import { StreamrClient } from './StreamrClient'
 import { StreamPartIDUtils } from '@streamr/protocol'
+import { getNodeIdFromPeerDescriptor, ConnectionManager, PeerDescriptor } from '@streamr/dht'
 
 const main = async () => {
     let numOfMessagesPerTenSeconds = 0
@@ -22,9 +23,22 @@ const main = async () => {
     setInterval(async () => {
         const node = await client.getNode()
         // @ts-expect-error private
-        console.log('total connections (CM): ' + (node.stack.getLayer0Node().getTransport() as ConnectionManager).getConnections().length)
+        const cmConnections = (node.stack.getLayer0Node().getTransport() as ConnectionManager).getConnections()
+        console.log('total connections (CM): ' + cmConnections.length)
         // @ts-expect-error private
-        console.log('total connections: (DHTNODE)' + (node.stack.getLayer0Node() as DhtNode).getConnections().length)
+        const dhtConnections =  (node.stack.getLayer0Node() as DhtNode).getConnections()
+        console.log('total connections: (DHTNODE)' + dhtConnections.length)
+        if (cmConnections.length !== dhtConnections.length) {
+            console.error('FATAL: connections mismatch')
+            const badConnections = cmConnections.filter((cmConnection) => {
+                const nodeId = getNodeIdFromPeerDescriptor(cmConnection)
+                return !dhtConnections.some((dhtConnection: PeerDescriptor) => getNodeIdFromPeerDescriptor(dhtConnection) === nodeId)
+            })
+            badConnections.forEach((badConnection) => {
+                // @ts-expect-error private
+                console.log((node.stack.getLayer0Node().getTransport() as ConnectionManager).getConnection(getNodeIdFromPeerDescriptor(badConnection)))
+            })
+        }
         const stream1 = StreamPartIDUtils.parse('streams.dimo.eth/firehose/weather#0')
         console.log('total stream neighbors on streams.dimo.eth/firehose/weather: ' + node.getNeighbors(stream1).length)
         const stream2 = StreamPartIDUtils.parse('eth-watch.eth/ethereum/blocks#0')
