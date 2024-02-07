@@ -14,7 +14,7 @@ import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { Msg, getPublishTestStreamMessages, getWaitForStorage } from '../test-utils/publish'
-import { createTestStream } from '../test-utils/utils'
+import { createTestStream, readUtf8ExampleIndirectly } from '../test-utils/utils'
 import { startFailingStorageNode } from './../test-utils/utils'
 
 const MAX_MESSAGES = 5
@@ -428,9 +428,7 @@ describe('Resends2', () => {
     })
 
     it('decodes resent messages correctly', async () => {
-        const content = isRunningInElectron()
-            ? Buffer.from('Hęłłö Wørłd! 1234 @#$$%^&*() 你好，世界 Привет, мир こんにちは世界', 'utf-8').toString('utf-8')
-            : fs.readFileSync(path.join(__dirname, '../data/utf8Example.txt'), 'utf8')
+        const content = await readUtf8ExampleIndirectly()
         const publishedMessage = Msg({ content })
         const publishReq = await publisher.publish(stream, publishedMessage)
 
