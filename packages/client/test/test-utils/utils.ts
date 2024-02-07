@@ -290,6 +290,10 @@ export const startFailingStorageNode = async (error: Error, environment: FakeEnv
     return node
 }
 
+/**
+ * We can't read the file directly from the file system when running in the browser (Karma) environment.
+ * Hence, we need to read the file indirectly via an Express server.
+ */
 export const readUtf8ExampleIndirectly = async (): Promise<string> => {
     return new Promise((resolve) => {
         const app = express()
