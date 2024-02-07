@@ -38,6 +38,9 @@ const main = async () => {
                 // @ts-expect-error private
                 console.log((node.stack.getLayer0Node().getTransport() as ConnectionManager).getConnection(getNodeIdFromPeerDescriptor(badConnection)))
             })
+            badConnections.forEach((badConnection) => {
+                console.log(badConnection)
+            })
         }
         const stream1 = StreamPartIDUtils.parse('streams.dimo.eth/firehose/weather#0')
         console.log('total stream neighbors on streams.dimo.eth/firehose/weather: ' + node.getNeighbors(stream1).length)
