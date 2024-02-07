@@ -1,10 +1,8 @@
 import 'reflect-metadata'
 
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { fastPrivateKey, fastWallet, isRunningInElectron } from '@streamr/test-utils'
+import { fastPrivateKey, fastWallet } from '@streamr/test-utils'
 import { Defer, collect, wait } from '@streamr/utils'
-import fs from 'fs'
-import path from 'path'
 import { MessageMetadata } from '../../src/Message'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
@@ -13,7 +11,7 @@ import {
     Msg,
     getPublishTestStreamMessages
 } from '../test-utils/publish'
-import { createTestStream } from '../test-utils/utils'
+import { createTestStream, readUtf8ExampleIndirectly } from '../test-utils/utils'
 
 // TODO rename this test to something more specific (and maybe divide to multiple test files?)
 
@@ -152,9 +150,7 @@ describe('StreamrClient', () => {
 
     describe('utf-8 encoding', () => {
         it('decodes realtime messages correctly', async () => {
-            const content = isRunningInElectron()
-                ? Buffer.from('Hęłłö Wørłd! 1234 @#$$%^&*() 你好，世界 Привет, мир こんにちは世界', 'utf-8').toString('utf-8')
-                : fs.readFileSync(path.join(__dirname, '../data/utf8Example.txt'), 'utf8')
+            const content = await readUtf8ExampleIndirectly()
             const publishedMessage = Msg({ content })
             const sub = await client.subscribe(streamDefinition)
             await client.publish(streamDefinition, publishedMessage)
