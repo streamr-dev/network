@@ -1,12 +1,14 @@
-import { hexToBinary, binaryToHex } from "@streamr/utils"
+import { hexToBinary, binaryToHex, wait } from "@streamr/utils"
 import { DhtNode } from "./dht/DhtNode"
 import { NodeType, RecursiveOperation } from "./proto/packages/dht/protos/DhtRpc"
 import { DhtAddress } from "./identifiers"
 
+// 63876bf3c80c636dec99b016709d0573caaf161c
+// 60e56386b9276f64c820a4a8704e54ad2b5e481c
 const findNode = async () => {
-    const nodeId = 'fe4dd97dcf7c4eb98f443da42bbd2a77'
+    const nodeId = '63876bf3c80c636dec99b016709d0573caaf161c'
     const entryPoints = [{
-        nodeId: hexToBinary("93684a8ad560fc6e8fb02bf22af64103"),
+        nodeId: hexToBinary("e5f87a7ee99b3c91e7b795b70f87ef8ba5497596"),
         type: NodeType.NODEJS,
         websocket: {
             host: "polygon-entrypoint-1.streamr.network",
@@ -15,7 +17,7 @@ const findNode = async () => {
         }
     },
     {
-        nodeId: hexToBinary("6d5787d4e9e72c0f59f97df0afa53921"),
+        nodeId: hexToBinary("6f5b53812fd9cc07f225a0b3a6aa5b96672e852e"),
         type: NodeType.NODEJS,
         websocket: {
             host: "polygon-entrypoint-2.streamr.network",
@@ -27,12 +29,13 @@ const findNode = async () => {
         entryPoints
     })
     await node.start()
-    await node.joinDht(entryPoints) 
+    await node.joinDht(entryPoints)
+    await wait(60000)
     const result = await node.executeRecursiveOperation(nodeId as DhtAddress, RecursiveOperation.FIND_NODE)
     console.log("FOUND NODES:", result.closestNodes)
+    console.log("FOUND NODE IDS:", result.closestNodes.map((node) => binaryToHex(node.nodeId)))
     const wasFound = result.closestNodes.some((node) => binaryToHex(node.nodeId) === nodeId)
     console.log("Searched node with id", nodeId, `${wasFound ? 'was found' : 'was not found'}`)
     await node.stop()
 }
-
 findNode()

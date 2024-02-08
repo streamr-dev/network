@@ -35,6 +35,7 @@ const main = async () => {
                 return !dhtConnections.some((dhtConnection: PeerDescriptor) => getNodeIdFromPeerDescriptor(dhtConnection) === nodeId)
             })
             badConnections.forEach((badConnection) => {
+                console.log(getNodeIdFromPeerDescriptor(badConnection))
                 // @ts-expect-error private
                 console.log((node.stack.getLayer0Node().getTransport() as ConnectionManager).getConnection(getNodeIdFromPeerDescriptor(badConnection)))
             })
