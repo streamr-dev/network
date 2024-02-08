@@ -63,7 +63,7 @@ const connectivityProbe = async (connectivityRequest: ConnectivityRequest, ipAdd
         logger.trace(`Attempting Connectivity Check to ${url}`)
         outgoingConnection = await connectAsync({
             url,
-            selfSigned: connectivityRequest.selfSigned
+            allowSelfSignedCertificate: connectivityRequest.allowSelfSignedCertificate
         })
         logger.trace('Connectivity test produced positive result, communicating reply to the requester ' + host + ':' + connectivityRequest.port)
         connectivityResponseMessage = {

@@ -169,7 +169,7 @@ export class WebsocketConnector {
         }
     }
 
-    public async checkConnectivity(selfSigned: boolean): Promise<ConnectivityResponse> {
+    public async checkConnectivity(allowSelfSignedCertificate: boolean): Promise<ConnectivityResponse> {
         // TODO: this could throw if the server is not running
         const noServerConnectivityResponse: ConnectivityResponse = {
             host: '127.0.0.1',
@@ -203,7 +203,7 @@ export class WebsocketConnector {
                             port: this.selectedPort!,
                             host: this.host,
                             tls: this.config.serverEnableTls,
-                            selfSigned
+                            allowSelfSignedCertificate
                         }
                         if (!this.abortController.signal.aborted) {
                             return await sendConnectivityRequest(connectivityRequest, entryPoint, localVersion)
@@ -264,7 +264,7 @@ export class WebsocketConnector {
             socket.on('disconnected', delFunc)
             managedConnection.on('handshakeCompleted', delFunc)
 
-            socket.connect(url)
+            socket.connect(url, false)
 
             return managedConnection
         }
