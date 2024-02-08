@@ -153,8 +153,12 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             allowToContainReferenceId: false,
             emitEvents: false
         })
-        this.connections.forEach((connection) => {
-            if (!this.locks.isLocked(connection.getNodeId()) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
+        this.connections.forEach((connection, key) => {
+            if (connection.getPeerDescriptor() !== undefined && !this.hasConnection(getNodeIdFromPeerDescriptor(connection.getPeerDescriptor()!))) {
+                logger.fatal(`Attempting to disconnect an invalid connection ${getNodeIdFromPeerDescriptor(connection.getPeerDescriptor()!)}`)
+                connection.close(false).catch(() => {})
+                this.connections.delete(key)
+            } else if (!this.locks.isLocked(connection.getNodeId()) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
                 logger.trace('disconnecting in timeout interval: ' + getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()))
                 disconnectionCandidates.addContact(connection)
             }
