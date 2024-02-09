@@ -95,7 +95,8 @@ describe('NetworkStack NodeInfoRpc', () => {
                     controlLayerNeighbors: [normalizePeerDescriptor(otherPeerDescriptor)],
                     deliveryLayerNeighbors: [normalizePeerDescriptor(otherPeerDescriptor)]
                 }
-            ]
+            ],
+            version: expect.any(String)
         })
         expect(result.streamPartitions.length).toEqual(2)
     })

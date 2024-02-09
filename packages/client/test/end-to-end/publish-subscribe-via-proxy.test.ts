@@ -1,5 +1,5 @@
 import { Wallet } from '@ethersproject/wallet'
-import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { describeOnlyInNodeJs, fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { ProxyDirection } from '@streamr/trackerless-network'
 import { collect, wait, withTimeout } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
@@ -7,11 +7,11 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
 import { createTestClient, createTestStream } from '../test-utils/utils'
 
-const TIMEOUT = 15 * 1000
+const TIMEOUT = 30 * 1000
 const SUBSCRIBE_WAIT_TIME = 2000
 const WEBSOCKET_PORT = 14231
 
-describe('publish/subscribe via proxy', () => {
+describeOnlyInNodeJs('publish/subscribe via proxy', () => { // Cannot run proxy server in browser
 
     let stream: Stream
     let client: StreamrClient

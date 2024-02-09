@@ -15,6 +15,8 @@ import { ModernFakeTimers } from '@jest/fake-timers'
 // prevents tests failing due to global.expect not being set
 import * as jestExtendedMatchers from 'jest-extended'
 
+import { format } from 'util'
+
 let jest = jestMock
 const timers = new ModernFakeTimers({ global: window, config: null })
 
@@ -36,10 +38,15 @@ jest.runOnlyPendingTimers = timers.runOnlyPendingTimers
 jest.setSystemTime = timers.setSystemTime
 jest.useFakeTimers = timers.useFakeTimers
 jest.useRealTimers = timers.useRealTimers
+
 // eslint-disable-next-line no-undef
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000
+
 // eslint-disable-next-line no-underscore-dangle
 jest._checkFakeTimers = timers._checkFakeTimers
+
+// eslint-disable-next-line no-undef
+jasmine.getEnv().configure({ random: false }) // disable random test order
 
 Object.assign(jest, timers)
 
@@ -48,10 +55,12 @@ expect.extend(jestExtendedMatchers)
 // Add missing Jest functions
 window.test = window.it
 window.test.each = (inputs) => (testName, test) =>
-    inputs.forEach((args) => window.it(testName, () => test(...args)))
+    inputs.forEach((args) => window.it(format(testName, args), () => test(args)))
 window.test.todo = function() {
     return undefined
 }
+window.it.skip = window.xit
+window.describe.skip = window.xdescribe
 
 window.expect = expect
 window.setImmediate = setTimeout
