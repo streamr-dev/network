@@ -2,17 +2,25 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { OrderedMap } from '@js-sdsl/ordered-map'
 import { RingDistance, RingId, RingIdRaw, getLeftDistance, getRightDistance, getRingIdFromPeerDescriptor, getRingIdFromRaw } from './ringIdentifiers'
 import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import EventEmitter from 'eventemitter3'
 
-export class RingContactList<C extends { getPeerDescriptor(): PeerDescriptor }> {
+export interface RingContactListEvents {  
+    ringContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => void
+    ringContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => void
+}
+export class RingContactList<C extends { getPeerDescriptor(): PeerDescriptor }> extends EventEmitter<RingContactListEvents> {
 
-    private readonly numNeighborsPerSide = 2
+    private readonly numNeighborsPerSide = 5
     private readonly referenceId: RingId
     private readonly excludedIds: Set<DhtAddress>
     private readonly leftNeighbors: OrderedMap<RingDistance, C>
     private readonly rightNeighbors: OrderedMap<RingDistance, C>
+    private readonly emitEvents: boolean
 
-    constructor(rawReferenceId: RingIdRaw, excludedIds?: Set<DhtAddress>) {
+    constructor(rawReferenceId: RingIdRaw, emitEvents: boolean, excludedIds?: Set<DhtAddress>) {
+        super()
         this.referenceId = getRingIdFromRaw(rawReferenceId)
+        this.emitEvents = emitEvents
         this.excludedIds = excludedIds ?? new Set()
         this.leftNeighbors = new OrderedMap<RingDistance, C>()
         this.rightNeighbors = new OrderedMap<RingDistance, C>()
@@ -25,13 +33,18 @@ export class RingContactList<C extends { getPeerDescriptor(): PeerDescriptor }> 
             return
         }
 
+        let elementAdded = false
+        let elementRemoved = false
+
         const leftDistance = getLeftDistance(this.referenceId, id)
         const lastLeftNeighbor = this.leftNeighbors.back()
 
         if (lastLeftNeighbor === undefined || leftDistance < lastLeftNeighbor[0]) {
             this.leftNeighbors.setElement(leftDistance, contact)
+            elementAdded = true
             if (this.leftNeighbors.size() > this.numNeighborsPerSide) {
                 this.leftNeighbors.eraseElementByIterator(this.leftNeighbors.rBegin())
+                elementRemoved = true
             }
         }
 
@@ -40,9 +53,49 @@ export class RingContactList<C extends { getPeerDescriptor(): PeerDescriptor }> 
 
         if (lastRightNeighbor === undefined || rightDistance < lastRightNeighbor[0]) {
             this.rightNeighbors.setElement(rightDistance, contact)
+            elementAdded = true
             if (this.rightNeighbors.size() > this.numNeighborsPerSide) {
                 this.rightNeighbors.eraseElementByIterator(this.rightNeighbors.rBegin())
+                elementRemoved = true
             }
+        }
+
+        if (this.emitEvents && (elementAdded || elementRemoved)) {
+            const closestContacts = this.getClosestContacts()
+            const closestDescriptors = { left: closestContacts.left.map((c) => c.getPeerDescriptor()), 
+                right: closestContacts.right.map((c) => c.getPeerDescriptor()) }
+
+            if (elementAdded) {
+                this.emit('ringContactAdded', contact.getPeerDescriptor(), closestDescriptors)
+            }
+            if (elementRemoved) {
+                this.emit('ringContactRemoved', contact.getPeerDescriptor(), closestDescriptors)
+            }
+        }
+    }
+
+    removeContact(contact?: C): void {
+        if (contact === undefined) {
+            return
+        }
+
+        const id = getRingIdFromPeerDescriptor(contact.getPeerDescriptor())
+        const leftDistance = getLeftDistance(this.referenceId, id)
+        const rightDistance = getRightDistance(this.referenceId, id)
+
+        let elementRemoved = false
+        if (this.leftNeighbors.eraseElementByKey(leftDistance)) {
+            elementRemoved = true
+        }
+        if (this.rightNeighbors.eraseElementByKey(rightDistance)) {
+            elementRemoved = true
+        }
+
+        if (this.emitEvents && elementRemoved) {
+            const closestContacts = this.getClosestContacts()
+            const closestDescriptors = { left: closestContacts.left.map((c) => c.getPeerDescriptor()), 
+                right: closestContacts.right.map((c) => c.getPeerDescriptor()) }
+            this.emit('ringContactRemoved', contact.getPeerDescriptor(), closestDescriptors)
         }
     }
 
