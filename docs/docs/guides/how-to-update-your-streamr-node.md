@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 6
 ---
 
 # How to update your Streamr node
@@ -52,7 +52,7 @@ pm2 stop streamr
 
 Next, globally install the node upgrade:
 ```
-npm install -g streamr-broker@100.0.0-testnet-two.4
+npm install -g streamr-broker@100.0.0-testnet-three.3
 ```
 
 And then you can run the node:

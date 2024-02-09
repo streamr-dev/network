@@ -2,7 +2,8 @@
 sidebar_position: 2
 ---
 
-# Testnet FAQs
+# Operator FAQ
+
 ## General
 #### Migrating from Brubeck to Streamr 1.0 
 If you’ve been running a Streamr node in the past you might be familiar with a two step process– run some software and stake some tokens, i.e. a software step and a blockchain step. Behind the scenes, the Streamr core team would validate user’s stake and transfer tokens to node runner wallets at the end of each month. This has worked, but it's been highly centralized. With the introduction of stream Sponsorships, Operators, Sponsors and Delegators we now have everything we need for a peer to peer decentralized and market based incentivization on Streamr. The most important role is the Operator, so let's learn how to become one.
@@ -11,24 +12,14 @@ If you’ve been running a Streamr node in the past you might be familiar with a
 - You can run ~~up to 5 nodes per IP address~~ any number of nodes from the same IP address, although one node per machine is recommended
 - Rewards are ~~automatically paid out at the beginning of the following month~~ claimed from active Sponsorships at any time
 - You can stake ~~up to 20K DATA per node~~ as much as you want. Note that at least 5% of Operator stake must come from the owner, and therefore delegations can not exceed 95%.
-- To participate in the testnets, use specific versions/tags of the Streamr node software, such as `v100.0.0-testnet-three.3`. The `latest` tag still points to the previous milestone (Brubeck) software.
+- To participate, use specific versions/tags of the Streamr node software, such as `v100.0.0-testnet-three.3`. The `latest` tag still points to the previous milestone (Brubeck) software.
 - There is no need for a "beneficiary address" in Streamr 1.0. Instead, the node configuration contains the Operator contract address.
 :::
 
 #### Migrating from the Mumbai testing environment to Stream 1.0
-If you've created your node in the Mumbai testing environment and you want to participate in the incentivized testnets with real token rewards and risks, then you'll need to recreate your Operator using the Streamr Network [Hub](https://streamr.network/hub/network/operators). The same funding and pairing steps that you did for your Mumbai Operator need to be repeated here too. The testnets and the future 1.0 mainnet will run on the Polygon Blockchain.
+If you've created your node in the Mumbai testing environment and you want to participate with real token rewards and risks, then you'll need to recreate your Operator using the Streamr Network [Hub](https://streamr.network/hub/network/operators). The same funding and pairing steps that you did for your Mumbai Operator need to be repeated here too. Mainnet runs on the Polygon POS Blockchain.
 
-- **Node version:** The `pretestnet` tagged releases shouldn't be used anymore, instead use `v100.0.0-testnet-three.3`. 
-- **Node config:** Your node config should resemble the [Testnet 1 config template](../guides/become-an-operator.md#testnet-node-config).
-
-#### What are the differences between the "pretestnet" and Testnet 1?
-This `v100.0.0-testnet-three.3` version can be used to connect to Testnet 1 **or** the Mumbai testing environment. 
-
-The active network depends on the node config. The [Mumbai node config](../guides/become-an-operator.md#the-mumbai-test-environment) is unchanged. The [Testnet 1 config](../guides/become-an-operator.md#testnet-node-config) is a much shorter version.
-
-Don’t use the `pretestnet` releases anymore.
-
-![image](@site/static/img/mumbai-to-testnet.jpg)
+- **Mainnet node config:** Your node config should resemble the [Mainnet config template](../guides/how-to-run-streamr-node.md#mainnet-node-config).
 
 #### What are the differences between the Brubeck network and the 1.0 network?
 In the old Brubeck network, people would cram multiple Streamr nodes into the cheapest possible VMs to optimize earnings vs. costs, but that only made sense because the nodes weren't doing much in terms of actual work. Now the nodes will be doing actual work by relaying data in the streams that the node Operator stakes on, and this has a few consequences:
@@ -61,7 +52,7 @@ Learn more about [node redundancy](../streamr-network/network-roles/operators.md
 
 #### What is the advantage of Operators running multiple nodes?
 With more nodes, Operators can do more work and/or have more redundancy to protect from slashing. Theoretical example:
-- Say there's a sponsored stream in the testnet which has so much data that it takes 100% of the capacity of any node that works on it. (In practice such heavy streams should be partitioned, and therefore the work would be distributed more evenly, but let's entertain this for the sake of example!)
+- Say there's a sponsored stream which has so much data that it takes 100% of the capacity of any node that works on it. (In practice such heavy streams should be partitioned, and therefore the work would be distributed more evenly, but let's entertain this for the sake of example!)
 - If the user runs 1 node, it will be working at full capacity and the owner shouldn't stake on any other sponsorships (or else their node becomes overloaded and risks getting slashed). Also if that single node goes down, they will get slashed.
 - If the user runs 2 nodes, and their `redundancyFactor` setting is 2, then both nodes will be working at full capacity and they still can not take on more work, but now the failure of 1 node won't lead to slashing.
 - If the user runs 5 nodes, and their `redundancyFactor` setting is 2, then only 2 of their nodes are working on that heavy stream at full capacity and the other 3 are doing nothing, enabling them to stake on other sponsorships to take on more work and earn more rewards. They are also well protected from slashing as multiple nodes could fail without any of the work getting neglected.
@@ -287,9 +278,6 @@ Yes. Uncollected earnings are not counted in the undelegation process. If these 
 Your earned tokens accumulate on the Operator and your share is calculated at the time of undelegation (withdrawal from the Operator). If there's uncollected earnings that are significant, you may want to manually trigger collection so they're made apart of your share (which maps to earnings) before undelegating.
 
 ## Slashing & kicking
-#### What are the penalties for Testnet 1?
-Testnet 1 will have reduced slashing penalties of 0.01% instead of the usual 10%.
-
 #### How and when does slashing occurs? When exactly will operators be slashed?
 There are two kinds of slashing events that Operators need to pay attention to. These are "Normal slashing" and "False flag" slashing. The short answer is that normal slashing occurs when nodes are caught being offline or unreachable when they should be online and doing work. It's a similar story for false flag voting, though the penalties are smaller. 
 
@@ -321,6 +309,6 @@ You'll need to pay the early exit fee of 5k DATA. The unwithdrawn earnings from 
 
 ## Safety
 #### What are some tips for staying safe on Streamr?
-- Consider starting small with your stake amount during the testnets and use common sense to never stake more than you can afford to lose. A professional audit of the incentive layer has been completed by Cyfrin, but nothing can be guaranteed of course. 
+- Consider starting small with your stake amount and use common sense to never stake more than you can afford to lose. A professional audit of the incentive layer has been completed by Cyfrin, but nothing can be guaranteed of course. 
 - If you want to stake on a sponsorship, DO NOT click on the "Sponsor". That's for funding the sponsorship, not staking! Instead, go to the sponsorship you want to stake on and click "Join as an operator” and enter the amount. 
-- There may be an increase in activity by scammers during the testnets. A common approach is to pretend to offer help or tech support in direct messages (something we never do). Report any account that is asking you to sign transactions or asking for any sort of credentials such as your private key. These accounts are trying to steal your tokens. It’s advised you disable DMs on Discord. More tips can be found in #server-safety-guide.
+- There may be an increase in activity by scammers. A common approach is to pretend to offer help or tech support in direct messages (something we never do). Report any account that is asking you to sign transactions or asking for any sort of credentials such as your private key. These accounts are trying to steal your tokens. It’s advised you disable DMs on Discord. More tips can be found in #server-safety-guide.

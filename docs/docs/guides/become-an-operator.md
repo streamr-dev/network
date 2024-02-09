@@ -1,5 +1,5 @@
 ---
-sidebar_position: 6
+sidebar_position: 7
 ---
 
 # How to become an Operator
@@ -9,13 +9,10 @@ sidebar_position: 6
 - Stake `DATA` tokens on your Operator and give your node address a few `MATIC`
 - Join Sponsorships through your Operator that will earn you DATA tokens.
 
-### Testnet schedule
-Checkout the official [Streamr Testnets page](../streamr-testnets/testnets.md) for the latest news and updates related to the incentivized three testnets running over December 2023 and January 2024.
-
 ### Migrating from an older network
 See these helpful FAQs advice on:
-- [Migrating from Brubeck to Streamr 1.0](../streamr-testnets/testnet-faq.md#migrating-from-brubeck-to-streamr-10).
-- [Migrating from the Mumbai testing environment to Streamr 1.0](../streamr-testnets/testnet-faq.md#migrating-from-the-mumbai-testing-environment-to-stream-10).
+- [Migrating from Brubeck to Streamr 1.0](../help/operator-faq.md#migrating-from-brubeck-to-streamr-10).
+- [Migrating from the Mumbai testing environment to Streamr 1.0](../help/operator-faq.md#migrating-from-the-mumbai-testing-environment-to-stream-10).
 
 ## Operator setup instructions
 Follow these steps below to setup your Operator so that you can participate in the protocol and collect rewards. 
@@ -55,7 +52,7 @@ If you have setup your Streamr node in some other way, you may need to manually 
 
 ![image](@site/static/img/operator-address.png)
 
-The format of your node config file should match [this template](#testnet-node-config).
+The format of your node config file should match [this template](./how-to-run-streamr-node.md#mainnet-node-config).
 - Replace `"YOUR_OPERATOR_CONTRACT_ADDRESS"` with your **Operator address** (keep the quotes).
 - Replace `"NODE_PRIVATE_KEY"` with the **private key** of your **node wallet** (keep the quotes).
 
@@ -80,7 +77,7 @@ All the checkmarks in the Operator status section on your Operator page should n
 
 ![image](@site/static/img/operator-status-green.png)
 
-Be patient, if you're observing issues, [see this FAQ](../streamr-testnets/testnet-faq.md#my-node-appears-to-not-be-running-andor-are-not-reachable-on-the-streamr-hub).
+Be patient, if you're observing issues, [see this FAQ](../help/operator-faq.md#my-node-appears-to-not-be-running-andor-are-not-reachable-on-the-streamr-hub).
 
 #### WebSocket connectivity
 If you're running the node with Docker, then the above guided tutorial will handle the port mapping (`-p 32200:32200`). However, you must also remember to open port `32200` for **external** TCP traffic. Opening ports is environment specific, if you're in a Linux based system, [this guide may be helpful](https://www.digitalocean.com/community/tutorials/opening-a-port-on-linux).
@@ -97,7 +94,7 @@ Running a fleet of nodes is recommended as it will reduce your risk of slashing.
 
 A typical node fleet may have 2 - 10 nodes and use a node [Redundancy Factor](../streamr-network/network-roles/operators#node-redundancy-factor) of 2 - 3, for example. 
 
-Checkout the [Testnet FAQ](../streamr-testnets/testnet-faq#what-is-the-advantage-of-operators-running-multiple-nodes) for more commentary on running multiple nodes.
+Checkout the [Operator FAQ](../help/operator-faq.md#what-is-the-advantage-of-operators-running-multiple-nodes) for more commentary on running multiple nodes.
 
 ## The Mumbai test environment
 The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your Operator before creating it on Polygon with real tokens. You'll need to use the [Mumbai node config](./how-to-run-streamr-node.md#mumbai-node-config).
@@ -108,7 +105,7 @@ You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumb
 Below is the template you can use to override and replace the contents of your config file with. You can copy this snippet or download the [JSON file](../../static/assets/mumbai-default.json). 
 
 :::info
-- This is the Mumbai configuration. If you want to participate in the incentivized testnets, use the [testnet configuration](#testnet-node-config).
+- This is the Mumbai configuration. If you want to participate with real tokens, use the [Mainnet configuration](#mainnet-node-config).
 :::
 
 ```json
@@ -129,7 +126,7 @@ Below is the template you can use to override and replace the contents of your c
 ```
 
 ## Troubleshooting
-Checkout the [testnet FAQ](../streamr-testnets/testnet-faq.md) it covers all the technical and token questions you have been wondering about. 
+Checkout the [Operator FAQ](../help/operator-faq.md) it covers all the technical and token questions you have been wondering about.
 
 ## Choosing a different WebSocket port
 While entirely optional, if the default port is not suitable for you then you can change it by adding a `controlLayer` entry to your node config like so:
@@ -150,12 +147,12 @@ While entirely optional, if the default port is not suitable for you then you ca
 ```
 
 ## Safety
-**Please be aware of some important safety tips during the testnets:**
+**Please be aware of some important safety tips:**
 
 :::info
-Your tokens are at risk by participating in these testnets - [the risks are real](../streamr-network/network-roles/operators.md#operator-risks).
+Your tokens are at risk and [the risks are real!](../streamr-network/network-roles/operators.md#operator-risks).
 :::
 
-- Consider starting small with your stake amount during the testnets and use common sense to never stake more than you can afford to lose. A professional audit of the incentive layer has been completed by Cyfrin, but nothing can be guaranteed of course. 
+- Consider starting small with your stake amount and use common sense to never stake more than you can afford to lose. A professional audit of the incentive layer has been completed by Cyfrin, but nothing can be guaranteed of course. 
 - If you want to stake on a sponsorship, DO NOT click on the "Sponsor". That's for funding the sponsorship, not staking! Instead, go to the sponsorship you want to stake on and click "Join as an operator” and enter the amount. 
-- There may be an increase in activity by scammers during the testnets. A common approach is to pretend to offer help or tech support in direct messages (something we never do). Report any account that is asking you to sign transactions or asking for any sort of credentials such as your private key. These accounts are trying to steal your tokens. It’s advised you disable DMs on Discord. More tips can be found in #server-safety-guide. 
+- There may be an increase in activity by scammers. A common approach is to pretend to offer help or tech support in direct messages (something we never do). Report any account that is asking you to sign transactions or asking for any sort of credentials such as your private key. These accounts are trying to steal your tokens. It’s advised you disable DMs on Discord. More tips can be found in #server-safety-guide. 

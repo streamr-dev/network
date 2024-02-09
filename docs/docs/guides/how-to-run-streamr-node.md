@@ -1,13 +1,13 @@
 ---
-sidebar_position: 4
+sidebar_position: 5
 ---
 
 # How to run a Streamr node
 
 :::info
-These instructions are for running a Streamr node in the "1.0" Network and testnets. If you're looking for instructions on running a Streamr node in the Brubeck network, [go here](../streamr-network/brubeck-network/run-a-node.md).
+These instructions are for running a Streamr node in the "1.0" Network. If you're looking for instructions on running a Streamr node in the Brubeck network, [go here](../streamr-network/brubeck-network/run-a-node.md).
 
-For those looking to earn either from an incentivized testnet or in general- Running a node is part of becoming an earning Operator. If that's new to you, then visit the [Become an Operator Guide](./become-an-operator.md)
+For those looking to earn, running a node is part of becoming an earning Operator. If that's new to you, then visit the [Become an Operator Guide](./become-an-operator.md)
 :::
 
 ### Streamr node hardware recommendations
@@ -69,7 +69,7 @@ docker run -it -v ${pwd}:/home/streamr/.streamr streamr/broker-node:v100.0.0-tes
 
 #### Using the Config Wizard
 1. The Config Wizard will first ask, would you like to generate or import an Ethereum private key. If you're unsure, choose to ***generate***. If you'd like to use an existing wallet that you're familiar with or your are copying a  config from another node then you could choose to ***import***. Node address can be reused in your node fleet, if you choose to run more than one node for redundancy purposes.
-2. Which network? Choose ***Streamr 1.0 testnet + Polygon*** if you'd like to participate in the testnet rewards. If you'd like to test your node operation with fake tokens then opt for ***Mumbai***.
+2. Which network? Choose ***Streamr 1.0 testnet + Polygon*** if you'd like to participate in the rewards. If you'd like to test your node operation with fake tokens then opt for ***Mumbai***.
 3. Do you want to participate in earning? If yes, provide your **Operator address**. This is found at the top of your Operator page:
 
 ![image](@site/static/img/operator-address.png)
@@ -144,14 +144,14 @@ See [Docker's documentation](https://docs.docker.com/engine/reference/commandlin
 :::
 
 ## The Streamr node npm guide
-### Step 1: Install the latest testnet version using npm
+### Step 1: Install the recommended version using npm
 If you don’t have Node.js installed, install it using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) or manually from the [Node.js site](https://nodejs.org/en/download/). The Broker requires at least Node.js version 16.x. Once installed, you can download, configure, and start the Streamr Broker.
 
-- Run `npm install -g streamr-broker@100.0.0-testnet-two.4` to download and install the package. You may need administrative access to run this command. The latest testnet version may be different to the version listed here, if in doubt, check the [npm registry](https://www.npmjs.com/package/streamr-broker?activeTab=versions).
+- Run `npm install -g streamr-broker@100.0.0-testnet-three.3` to download and install the package. You may need administrative access to run this command. The recommended version may be different to the version listed here, if in doubt, check the [npm registry](https://www.npmjs.com/package/streamr-broker?activeTab=versions).
 
 To install the Streamr node, run, 
 ```
-npm install -g streamr-broker@100.0.0-testnet-two.4
+npm install -g streamr-broker@100.0.0-testnet-three.3
 ```
 
 There can be plenty of output from npm. If the installation fails with an error, you should address it before continuing.
@@ -164,7 +164,7 @@ streamr-broker-init
 
 #### Using the Config Wizard
 1. The Config Wizard will first ask, would you like to generate or import an Ethereum private key. If you're unsure, choose to ***generate***. If you'd like to use an existing wallet that you're familiar with or your are copying a  config from another node then you could choose to ***import***. Node address can be reused in your node fleet, if you choose to run more than one node for redundancy purposes.
-2. Which network? Choose ***Streamr 1.0 testnet + Polygon*** if you'd like to participate in the testnet rewards. If you'd like to test your node operation with fake tokens then opt for ***Mumbai***.
+2. Which network? Choose ***Streamr 1.0 testnet + Polygon*** if you'd like to participate in the rewards. If you'd like to test your node operation with fake tokens then opt for ***Mumbai***.
 3. Do you want to participate in earning? If yes, provide your **Operator address**. This is found at the top of your Operator page:
 
 ![image](@site/static/img/operator-address.png)
@@ -193,10 +193,10 @@ INFO [2023-12-08T08:56:54.022] (AutoCertifierClient      ): 2147483647 milliseco
 INFO [2023-12-08T08:56:54.302] (StreamrNode              ): Starting new StreamrNode with id 24c8eb0e9f3a46a98c0
 ```
 
-## Testnet node config
-Below is the template you can use to override and replace the contents of your config file with. The node config file (typically located at `~/.streamrDocker/config/default.json`) contents with the [testnet config](./become-an-operator.md#testnet-node-config) using a text editor like nano.
+## Mainnet node config
+Below is the template you can use to override and replace the contents of your config file with. The node config file (typically located at `~/.streamrDocker/config/default.json`) and can be edited with a text editor like nano.
 
-If you intend to test your Operator in the Mumbai environment, then the above advice applies, but use instead the [Mumbai testnet config](./become-an-operator.md#mumbai-node-config).
+If you intend to test your Operator in the Mumbai environment, then the above advice applies, but use instead the [Mumbai config](./become-an-operator.md#mumbai-node-config).
 
 You can copy this snippet or download the [JSON file](../../static/assets/default.json). 
 
@@ -205,7 +205,8 @@ You can copy this snippet or download the [JSON file](../../static/assets/defaul
     "client": {
         "auth": {
             "privateKey": "NODE_PRIVATE_KEY"
-        }
+        },
+        "environment": "polygon"
     },
     "plugins": {
         "operator": {
@@ -218,7 +219,7 @@ You can copy this snippet or download the [JSON file](../../static/assets/defaul
 ## Troubleshooting
 Ask for help on our [Discord](https://discord.gg/gZAm8P7hK8)! There are many helpul node runners that have encountered the same issues that you have and will warmly offer their peer-to-peer assistance!
 
-Note, The Network Explorer does not yet support the 1.0 testnet network. If you set up your node as an Operator in the testnet, your node will not appear on the map.
+Note, The Network Explorer does not yet support the 1.0 network, your node will not appear on the map.
 
 Also, [ChatGPT](https://chat.openai.com) is a handy resource for debugging networking and Docker related issues.
 
@@ -239,7 +240,7 @@ sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -e LOG
 Below is the template you can use to override and replace the contents of your config file with. You can copy this snippet or download the [JSON file](../../static/assets/mumbai-default.json). 
 
 :::info
-- This is the Mumbai configuration. If you want to participate in the incentivized testnets, use the [testnet configuration](#testnet-node-config).
+- This is the Mumbai configuration. Use the [Mainnet configuration](#mainnet-node-config) if you'd like to stake and earn on Polygon with real tokens.
 :::
 
 ```json

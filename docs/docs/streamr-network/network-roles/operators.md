@@ -45,6 +45,14 @@ To observe your Operator's heartbeat, paste in your Operator contract address in
 ### Node redundancy factor
 The redundancy factor sets the amount of duplicated work when running a fleet of multiple nodes. Doing redundant work protects against slashing in case some of your nodes experience failures. For example, setting this to 1 means that no duplication of work occurs (the feature is off), and setting it to 2 means that each stream assignment will be worked on by 2 nodes in your fleet.
 
+The redundancy factor is a higher level of defense against slashing than simply increasing the node count in your fleet, since nodes will duplicate the required work in real time. Having a fleet of 3 nodes with a Redundancy factor of 2 or 3 is more robust against slashing versus a fleet of 3 nodes with a redundancy factor of 1.
+
+Having a fleet of 3 nodes with a Redundancy factor of 1 is more robust than a fleet of 1 or 2 nodes with a redundancy factor of 1, since the idle fleet nodes will detect the fault and step in, given a brief delay to detect the fallen node and join the stream partition, albeit with the possibility of a gap in real-time data relaying.
+
+If your node is randomly picked for spot inspection at the same time as your node has gone down then you a vulnerable to a slashing event.
+
+Let’s say for example, you are running a 3 node fleet operation with a redundancy factor of 1, then if your data relaying node goes down, at the same time there is a spot check on your fleet’s data relaying capabilities, then you will be slashed. If you had a redundancy factor of 2 or more, then you would have avoided this slash.
+
 ### Owner's cut
 The Operator’s cut is the percentage taken by the Operator from all earnings. This percentage can be changed, but only while the Operator is not staked in any Sponsorships. The remainder percentage is shared among all Delegators, including the Operator's own stake (if the Operator has self-delegated).
 
