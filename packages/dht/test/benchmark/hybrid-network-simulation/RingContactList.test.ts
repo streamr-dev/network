@@ -1,9 +1,11 @@
-import { ConnectivityResponse, PeerDescriptor } from "../../../src/proto/packages/dht/protos/DhtRpc"
-import { createPeerDescriptor } from "../../../src/helpers/createPeerDescriptor"
-import { NatType } from "../../../src/connection/ConnectionManager"
-import { ipv4ToNumber } from "@streamr/utils"
-import { PeerDescriptorDecorator, RingContactList } from "../../../src/dht/contact/RingContactList"
+import { ConnectivityResponse, PeerDescriptor } from '../../../src/proto/packages/dht/protos/DhtRpc'
+import { createPeerDescriptor } from '../../../src/helpers/createPeerDescriptor'
+import { NatType } from '../../../src/connection/ConnectionManager'
+import { ipv4ToNumber, Logger } from '@streamr/utils'
+import { RingContactList } from '../../../src/dht/contact/RingContactList'
+import { getRingIdRawFromPeerDescriptor } from '../../../src/dht/contact/ringIdentifiers'
 
+const logger = new Logger(module)
 
 function ipv4ToString(ip: number): string {
     return [
@@ -11,13 +13,13 @@ function ipv4ToString(ip: number): string {
         (ip >>> 16) & 0xFF,
         (ip >>> 8) & 0xFF,
         ip & 0xFF
-    ].join('.');
+    ].join('.')
 }
 
 class MockNode {
     private readonly peerDescriptor: PeerDescriptor
 
-    constructor(region: number, ipAddress: string) {
+    constructor(_region: number, ipAddress: string) {
 
         const connectivityResponse: ConnectivityResponse = {
             host: 'localhost',
@@ -27,7 +29,7 @@ class MockNode {
 
         }
         this.peerDescriptor = createPeerDescriptor(connectivityResponse)
-        console.log(ipv4ToString(this.peerDescriptor.ipAddress!))
+        logger.info(ipv4ToString(this.peerDescriptor.ipAddress!))
     }
 
     public getPeerDescriptor(): PeerDescriptor {
@@ -55,17 +57,12 @@ const mockData: Array< [number, string] > = [
     [0, '50.23.2.4']
 ]
 
-
 const mockNodes: MockNode[] = mockData.map(([region, ipAddress]) => new MockNode(region, ipAddress))
-
 const referenceNode = mockNodes[5]
-const referenceId = (new PeerDescriptorDecorator(referenceNode.getPeerDescriptor())).getRingId()
-
-const ringContactList: RingContactList<MockNode> = new RingContactList<MockNode>(referenceNode.getPeerDescriptor())
+const ringContactList: RingContactList<MockNode> = new RingContactList<MockNode>(getRingIdRawFromPeerDescriptor(referenceNode.getPeerDescriptor()))
 
 mockNodes.forEach((node) => ringContactList.addContact(node))
 
-
-ringContactList.getLeftNeighbors().forEach((node) => console.log(ipv4ToString(node.getPeerDescriptor().ipAddress!)))
-console.log('reference node: ', ipv4ToString(referenceNode.getPeerDescriptor().ipAddress!))
-ringContactList.getRightNeighbors().forEach((node) => console.log(ipv4ToString(node.getPeerDescriptor().ipAddress!)))
+ringContactList.getClosestContacts().left.forEach((node) => logger.info(ipv4ToString(node.getPeerDescriptor().ipAddress!)))
+logger.info('reference node: ' + ipv4ToString(referenceNode.getPeerDescriptor().ipAddress!))
+ringContactList.getClosestContacts().right.forEach((node) => logger.info(ipv4ToString(node.getPeerDescriptor().ipAddress!)))

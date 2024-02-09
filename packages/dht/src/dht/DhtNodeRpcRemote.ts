@@ -4,6 +4,7 @@ import { v4 } from 'uuid'
 import { DhtAddress, DhtAddressRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../identifiers'
 import {
     ClosestPeersRequest,
+    ClosestRingPeersRequest,
     PeerDescriptor,
     PingRequest
 } from '../proto/packages/dht/protos/DhtRpc'
@@ -11,6 +12,7 @@ import { DhtNodeRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import { ServiceID } from '../types/ServiceID'
 import { RpcRemote } from './contact/RpcRemote'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
+import { RingIdRaw } from './contact/ringIdentifiers'
 
 const logger = new Logger(module)
 
@@ -51,6 +53,21 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
             return peers.peers
         } catch (err) {
             logger.trace(`getClosestPeers error ${this.serviceId}`, { err })
+            throw err
+        }
+    }
+
+    async getClosestRingPeers(ringIdRaw: RingIdRaw): Promise<{ left: PeerDescriptor[], right: PeerDescriptor[] }> {
+        logger.trace(`Requesting getClosestRingPeers on ${this.serviceId} from ${this.getNodeId()}`)
+        const request: ClosestRingPeersRequest = {
+            ringId: ringIdRaw,
+            requestId: v4()
+        }
+        try {
+            const response = await this.getClient().getClosestRingPeers(request, this.formDhtRpcOptions())
+            return { left: response.leftPeers ?? [], right: response.rightPeers ?? [] }
+        } catch (err) {
+            logger.trace(`getClosestRingPeers error ${this.serviceId}`, { err })
             throw err
         }
     }

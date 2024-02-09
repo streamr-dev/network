@@ -1,70 +1,31 @@
-import { PeerDescriptor } from "../../proto/packages/dht/protos/DhtRpc";
-import { OrderedMap } from "@js-sdsl/ordered-map"
-
-type RingId = number & { __ringId: never }
-type RingDistance = number & { __ringDistance: never }
-
-export class PeerDescriptorDecorator {
-
-    private readonly _parent: PeerDescriptor
-    private readonly _ringId: RingId
-
-    constructor(private readonly parent: PeerDescriptor) {
-        this._parent = parent
-
-        const regionAsBuffer = Buffer.alloc(4)
-        regionAsBuffer.writeUInt32BE(this._parent.region!, 0)
-        const ipAsbuffer = Buffer.alloc(4)
-        ipAsbuffer.writeUInt32BE(this._parent.ipAddress!, 0)
-        const keyAsBuffer = Buffer.from(this._parent.nodeId.subarray(this._parent.nodeId.length - 7, this._parent.nodeId.length))
-
-        //console.log('key: ' + keyAsBuffer.toString('hex'))
-
-        const arr = [
-            regionAsBuffer,
-            ipAsbuffer,
-            keyAsBuffer
-        ]
-        const buffer = Buffer.concat(arr)
-        //console.log('buffer: ' + buffer.toString('hex'))
-        this._ringId = Number(this.uint8ArrayToBigInt(buffer)) as RingId
-        //console.log('bigInt: ' + this.uint8ArrayToBigInt(buffer).toString(16))
-        //console.log('ringId: ' + this._ringId.toString(16))
-    }
-
-    private uint8ArrayToBigInt(uint8Array: Uint8Array): BigInt {
-        return uint8Array.reduce((acc, val) => (acc << BigInt(8)) | BigInt(val), BigInt(0));
-    }
-
-    public getRingId(): RingId {
-        return this._ringId
-    }
-
-}
+import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { OrderedMap } from '@js-sdsl/ordered-map'
+import { RingDistance, RingId, RingIdRaw, getLeftDistance, getRightDistance, getRingIdFromPeerDescriptor, getRingIdFromRaw } from './ringIdentifiers'
+import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 export class RingContactList<C extends { getPeerDescriptor(): PeerDescriptor }> {
 
-    private readonly ringSize = 2 ** 120 - 1   // 2^120 - 1
     private readonly numNeighborsPerSide = 2
     private readonly referenceId: RingId
+    private readonly excludedIds: Set<DhtAddress>
     private readonly leftNeighbors: OrderedMap<RingDistance, C>
     private readonly rightNeighbors: OrderedMap<RingDistance, C>
 
-    constructor(referencePeerDescriptor: PeerDescriptor) {
-        this.referenceId = new PeerDescriptorDecorator(referencePeerDescriptor).getRingId()
+    constructor(rawReferenceId: RingIdRaw, excludedIds?: Set<DhtAddress>) {
+        this.referenceId = getRingIdFromRaw(rawReferenceId)
+        this.excludedIds = excludedIds ?? new Set()
         this.leftNeighbors = new OrderedMap<RingDistance, C>()
         this.rightNeighbors = new OrderedMap<RingDistance, C>()
     }
 
-    public addContact(contact: C): void {
-        const id = (new PeerDescriptorDecorator(contact.getPeerDescriptor())).getRingId()
-        console.log(id.toString(16))
-
-        if (id === this.referenceId) {
+    addContact(contact: C): void {
+        const id = getRingIdFromPeerDescriptor(contact.getPeerDescriptor())
+        
+        if (id === this.referenceId || this.excludedIds.has(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))) {
             return
         }
 
-        const leftDistance = this.getLeftDistance(id)
+        const leftDistance = getLeftDistance(this.referenceId, id)
         const lastLeftNeighbor = this.leftNeighbors.back()
 
         if (lastLeftNeighbor === undefined || leftDistance < lastLeftNeighbor[0]) {
@@ -74,7 +35,7 @@ export class RingContactList<C extends { getPeerDescriptor(): PeerDescriptor }> 
             }
         }
 
-        const rightDistance = this.getRightDistance(id)
+        const rightDistance = getRightDistance(this.referenceId, id)
         const lastRightNeighbor = this.rightNeighbors.back()
 
         if (lastRightNeighbor === undefined || rightDistance < lastRightNeighbor[0]) {
@@ -85,87 +46,56 @@ export class RingContactList<C extends { getPeerDescriptor(): PeerDescriptor }> 
         }
     }
 
-    public getAllContacts(): C[] {
-        const ret: C[] = []
-        this.leftNeighbors.forEach(elem => {
-            ret.push(elem[1])
-        })
-        this.rightNeighbors.forEach(elem => {
-            ret.push(elem[1])
-        })
+    getContact(peerDescriptor: PeerDescriptor): C | undefined {
+        const id = getRingIdFromPeerDescriptor(peerDescriptor)
 
-        return ret
+        const leftDistance = getLeftDistance(this.referenceId, id)
+        const rightDistance = getRightDistance(this.referenceId, id)
+
+        if (this.leftNeighbors.getElementByKey(leftDistance)) {
+            return this.leftNeighbors.getElementByKey(leftDistance)
+        }
+
+        if (this.rightNeighbors.getElementByKey(rightDistance)) {
+            return this.rightNeighbors.getElementByKey(rightDistance)
+        }
+
+        return undefined
     }
 
-    public getClosestContacts(limitPerSide: number): C[] {
-        const ret: C[] = []
-        
-        const leftIter = this.leftNeighbors.begin()
+    getClosestContacts(limitPerSide?: number): { left: C[], right: C[] } {
+        const leftContacts: C[] = []
+        const rightContacts: C[] = []
 
-        
-        for (let i = 0; i < limitPerSide; i++) {
-            if (leftIter === this.leftNeighbors.end()) {
+        let leftCount = 0
+        for (const item of this.leftNeighbors) {
+            if (limitPerSide != undefined && leftCount >= limitPerSide) {
                 break
             }
-            ret.push(leftIter.pointer[1])
-            leftIter.next()
-        }
+            leftContacts.push(item[1])
+            leftCount++
+        } 
 
-        const rightIter = this.rightNeighbors.begin()
-
-        for (let i = 0; i < limitPerSide; i++) {
-            if (rightIter === this.rightNeighbors.end()) {
+        let rightCount = 0
+        for (const item of this.rightNeighbors) {
+            if (limitPerSide != undefined && rightCount >= limitPerSide) {
                 break
             }
-            ret.push(rightIter.pointer[1])
-            rightIter.next()
+            rightContacts.push(item[1])
+            rightCount++
         }
 
-        return ret
+        return { left: leftContacts, right: rightContacts }
     }
 
-    public getLeftNeighbors(): C[] {
+    getAllContacts(): C[] {
         const ret: C[] = []
-        this.leftNeighbors.forEach(elem => {
-            ret.push(elem[1])
-        })
-
+        for (const item of this.leftNeighbors) {
+            ret.push(item[1])
+        }
+        for (const item of this.rightNeighbors) {
+            ret.push(item[1])
+        }
         return ret
     }
-
-    public getRightNeighbors(): C[] {
-        const ret: C[] = []
-        this.rightNeighbors.forEach(elem => {
-            ret.push(elem[1])
-        })
-
-        return ret
-    }
-
-    private getLeftDistance(id: RingId): RingDistance {
-       
-        const diff = Math.abs(this.referenceId - id)
-
-        if (this.referenceId > id) {
-             // if id is smaller than referenceId, then the distance is the difference
-            return diff as RingDistance
-        } else {
-            // if id is bigger than referenceId, then the distance is the ringSize - difference
-
-            return this.ringSize - diff as RingDistance
-        }
-    }
-
-    private getRightDistance(id: RingId): RingDistance {
-        const diff = Math.abs(this.referenceId - id)
-        
-        if (this.referenceId > id) {
-            // if id is smaller than referenceId, then the distance is the ringSize - difference
-            return this.ringSize - diff as RingDistance
-        } else {
-            // if id is bigger than referenceId, then the distance is the difference
-            return diff as RingDistance
-        }
-    }
-
 }

@@ -1,21 +1,35 @@
 /* eslint-disable no-console */
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { createMockConnectionDhtNode } from '../utils/utils'
+import { createMockRingNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
 import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { Logger } from '@streamr/utils'
+import { getRingIdRawFromPeerDescriptor } from '../../src/dht/contact/ringIdentifiers'
 
 const logger = new Logger(module)
 
-describe('Kademlia correctness', () => {
+describe('Ring correctness', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     const simulator = new Simulator()
-    const NUM_NODES = 200
 
+    const NUM_NODES = 900
     const nodeIndicesById: Record<DhtAddress, number> = {}
+
+    const regions: Array<number> = []
+    for (let i = 0; i < (NUM_NODES + 1); i++) {
+        regions.push(i)
+    }
+
+    // Shuffle the regions
+    for (let i = regions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        const temp = regions[i]
+        regions[i] = regions[j]
+        regions[j] = temp
+    }
 
     if (!fs.existsSync('test/data/nodeids.json')) {
         console.log('gound truth data does not exist yet, generating..')
@@ -27,14 +41,15 @@ describe('Kademlia correctness', () => {
         = JSON.parse(fs.readFileSync('test/data/orderedneighbors.json').toString())
 
     beforeEach(async () => {
+        jest.setTimeout(60000)
         //Simulator.useFakeTimers(true)
         nodes = []
-        entryPoint = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[0].data)), 8)
+        entryPoint = await createMockRingNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[0].data)), regions[0])
         nodes.push(entryPoint)
         nodeIndicesById[entryPoint.getNodeId()] = 0
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[i].data)))
+            const node = await createMockRingNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[i].data)), regions[i + 1])
             nodeIndicesById[node.getNodeId()] = i
             nodes.push(node)
         }
@@ -60,7 +75,31 @@ describe('Kademlia correctness', () => {
             const startTimestamp = Date.now()
             await nodes[i].joinDht([entryPoint.getLocalPeerDescriptor()])
             const endTimestamp = Date.now()
-            logger.info('Node ' + i + ' joined in ' + (endTimestamp - startTimestamp) + ' ms')  
+            logger.info('Node ' + i + ' joined in ' + (endTimestamp - startTimestamp) + ' ms')
+            const ringStartTimestamp = Date.now()
+            await nodes[i].joinRing()
+            const ringEndTimestamp = Date.now()
+            logger.info('Node ' + i + ' joined ring in ' + (ringEndTimestamp - ringStartTimestamp) + ' ms')
+
+        }
+
+        /*
+        for (let i = 1; i < NUM_NODES; i++) {
+            // time to join the network
+            const ringStartTimestamp = Date.now()
+            await nodes[i].joinRing()
+            const ringEndTimestamp = Date.now()
+            logger.info('Node ' + i + ' joined ring in ' + (ringEndTimestamp - ringStartTimestamp) + ' ms')  
+        }*/
+
+        for (let i = 1; i < NUM_NODES; i++) {
+            logger.info('Node ' + i + ', own region: ' + nodes[i].getLocalPeerDescriptor().region
+                + '. Regions of closest ring peers, left: '
+                + nodes[i].getClosestRingContactsTo(
+                    getRingIdRawFromPeerDescriptor(nodes[i].getLocalPeerDescriptor()), 10).left.map((p) => p.region)
+                + ', right: ' + nodes[i].getClosestRingContactsTo(getRingIdRawFromPeerDescriptor(
+                nodes[i].getLocalPeerDescriptor()), 10).right.map((p) => p.region)
+            )
         }
 
         let minimumCorrectNeighbors = Number.MAX_SAFE_INTEGER
@@ -90,7 +129,7 @@ describe('Kademlia correctness', () => {
                     correctNeighbors++
                 }
             } catch (e) {
-                console.error('Node ' + getNodeIdFromPeerDescriptor(nodes[i].getLocalPeerDescriptor()) + ' had only ' 
+                console.error('Node ' + getNodeIdFromPeerDescriptor(nodes[i].getLocalPeerDescriptor()) + ' had only '
                     + kademliaNeighbors.length + ' kademlia neighbors')
             }
             if (correctNeighbors === 0) {
@@ -116,5 +155,5 @@ describe('Kademlia correctness', () => {
         console.log('Minimum correct neighbors: ' + minimumCorrectNeighbors)
         console.log('Average correct neighbors: ' + avgCorrectNeighbors)
         console.log('Average Kbucket size: ' + avgKbucketSize)
-    }, 120000)
+    }, 240000)
 })

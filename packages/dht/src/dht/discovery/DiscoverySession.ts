@@ -90,7 +90,6 @@ export class DiscoverySession {
         if ( uncontacted.length === 0 ||
             (this.noProgressCounter >= this.config.noProgressLimit
                 && this.config.contactedPeers.size > 10)) {
-            logger.info('uncontacted.length: ' + uncontacted.length + ', noProgressCounter: ' + this.noProgressCounter + ', contact list length: ' + this.config.peerManager.getContactCount())
             this.emitter.emit('discoveryCompleted')
             this.stopped = true
             return

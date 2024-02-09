@@ -17,6 +17,8 @@ import { Any } from '../proto/google/protobuf/any'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
+    ClosestRingPeersRequest,
+    ClosestRingPeersResponse,
     ConnectivityResponse,
     DataEntry,
     ExternalFindDataRequest,
@@ -46,6 +48,7 @@ import { LocalDataStore } from './store/LocalDataStore'
 import { StoreManager } from './store/StoreManager'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
 import { createPeerDescriptor } from '../helpers/createPeerDescriptor'
+import { RingIdRaw } from './contact/ringIdentifiers'
 
 export interface DhtNodeEvents {
     contactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -150,7 +153,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     private validateConfig(): void {
         const expectedNodeIdLength = KADEMLIA_ID_LENGTH_IN_BYTES * 2
-        if (this.config.nodeId !== undefined ) {
+        if (this.config.nodeId !== undefined) {
             if (!/^[0-9a-fA-F]+$/.test(this.config.nodeId)) {
                 throw new Error('Invalid nodeId, the nodeId should be a hex string')
             } else if (this.config.nodeId.length !== expectedNodeIdLength) {
@@ -348,11 +351,16 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 return this.peerManager!.getClosestNeighborsTo(nodeId, limit)
                     .map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor())
             },
+            getClosestRingPeersTo: (ringIdRaw: RingIdRaw, limit: number) => {
+                return this.getClosestRingContactsTo(ringIdRaw, limit)
+            },
             addContact: (contact: PeerDescriptor) => this.peerManager!.addContact([contact]),
             removeContact: (nodeId: DhtAddress) => this.removeContact(nodeId)
         })
         this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers',
             (req: ClosestPeersRequest, context) => dhtNodeRpcLocal.getClosestPeers(req, context))
+        this.rpcCommunicator!.registerRpcMethod(ClosestRingPeersRequest, ClosestRingPeersResponse, 'getClosestRingPeers',
+            (req: ClosestRingPeersRequest, context) => dhtNodeRpcLocal.getClosestRingPeers(req, context))
         this.rpcCommunicator!.registerRpcMethod(PingRequest, PingResponse, 'ping',
             (req: PingRequest, context) => dhtNodeRpcLocal.ping(req, context))
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice',
@@ -402,15 +410,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     public getClosestContacts(limit?: number): PeerDescriptor[] {
         return this.peerManager!.getClosestContactsTo(
             this.getNodeId(),
-            limit).map((peer) => peer.getPeerDescriptor()
-        )
+            limit).map((peer) => peer.getPeerDescriptor())
     }
 
-    public getClosestRingContactsTo(referencePeerDescriptor: PeerDescriptor, limit?: number): PeerDescriptor[] {
-        return this.peerManager!.getClosestRingContactsTo(
-            referencePeerDescriptor,
-            limit).map((peer) => peer.getPeerDescriptor()
-        )
+    public getClosestRingContactsTo(ringIdRaw: RingIdRaw, limit?: number): { left: PeerDescriptor[], right: PeerDescriptor[] } {
+        const closest = this.peerManager!.getClosestRingContactsTo(ringIdRaw, limit)
+        return {
+            left: closest.left.map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor()),
+            right: closest.right.map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor())
+        }
     }
 
     public getNodeId(): DhtAddress {
@@ -447,6 +455,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             throw new Error('Cannot join DHT before calling start() on DhtNode')
         }
         await this.peerDiscovery!.joinDht(entryPointDescriptors, doAdditionalDistantPeerDiscovery, retry)
+    }
+
+    public async joinRing(): Promise<void> {
+        if (!this.started) {
+            throw new Error('Cannot join ring before calling start() on DhtNode')
+        }
+        await this.peerDiscovery!.joinRing()
     }
 
     // TODO make this private and unify the public API of find/fetch/store/delete methods
