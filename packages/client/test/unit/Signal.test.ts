@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { Signal } from '../../src/utils/Signal'
 import { wait } from '@streamr/utils'
 

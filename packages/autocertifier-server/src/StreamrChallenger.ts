@@ -72,9 +72,11 @@ export const runStreamrChallenge = (
                 reject(e)
             }).finally(() => {
                 communicator.stop()
-                // close with leave flag true just in case 
+                // close with leave flag true just in case
                 // any info of the autocertifer is in the network
-                managedConnection.close(true)
+                managedConnection.close(true).catch((err) => {
+                    logger.debug('Encountered error while closing connection: ', { err })
+                })
             })
         })
 

@@ -51,7 +51,10 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         this.storageConfig = await this.startStorageConfig(clusterId, assignmentStream)
         this.messageListener = (msg) => {
             if (isStorableMessage(msg) && this.storageConfig!.hasStreamPart(msg.getStreamPartID())) {
-                this.cassandra!.store(msg)
+                this.cassandra!.store(msg).catch((err) => {
+                    // TODO: warning level would be nice but it would lead to too much noise, rate-limited logging?
+                    logger.debug('Failed to store message', { err })
+                })
             }
         }
         const node = await this.streamrClient.getNode()

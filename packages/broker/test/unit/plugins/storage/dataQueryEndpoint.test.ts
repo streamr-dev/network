@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import express from 'express'
 import request from 'supertest'
 import { toReadableStream } from '@streamr/test-utils'

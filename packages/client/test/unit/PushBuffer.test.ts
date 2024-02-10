@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { wait } from '@streamr/utils'
 import { PushBuffer, pull } from '../../src/utils/PushBuffer'
 import { counterId } from '../../src/utils/utils'

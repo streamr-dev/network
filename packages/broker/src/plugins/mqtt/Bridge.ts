@@ -117,7 +117,9 @@ export class Bridge implements MqttServerListener {
         if (existingSubscription !== undefined) {
             existingSubscription.clientIds = without(existingSubscription.clientIds, clientId)
             if (existingSubscription.clientIds.length === 0) {
-                existingSubscription.streamrClientSubscription.unsubscribe()
+                existingSubscription.streamrClientSubscription.unsubscribe().catch((err) => {
+                    logger.warn('Error encountered while trying to unsubscribe', { err, topic, clientId })
+                })
                 this.subscriptions = without(this.subscriptions, existingSubscription)
             }
         }

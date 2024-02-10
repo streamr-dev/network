@@ -29,8 +29,10 @@ class MsgChainProcessor {
                 const nextMessage = this.inputBuffer.shift()!
                 try {
                     const processedMessage = await this.processMessageFn(nextMessage)
+                    // eslint-disable-next-line @typescript-eslint/no-floating-promises
                     this.outputBuffer.push(processedMessage)
                 } catch (e: any) {
+                    // eslint-disable-next-line @typescript-eslint/no-floating-promises
                     this.onError.trigger(e)
                 }
             }
@@ -58,6 +60,7 @@ export class MsgChainUtil implements AsyncIterable<StreamMessage> {
             processor = new MsgChainProcessor(this.outputBuffer, this.processMessageFn, this.onError)
             this.processors.set(id, processor)
         }
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         processor.addMessage(message) // add a task, but don't wait for it to complete
     }
 

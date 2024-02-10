@@ -109,6 +109,7 @@ export class SubscriptionSession {
 
     private async unsubscribe(node: NetworkNodeStub): Promise<void> {
         this.pipeline.end()
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         this.pipeline.return()
         this.pipeline.onError.end(new Error('done'))
         node.removeMessageListener(this.onMessageInput)

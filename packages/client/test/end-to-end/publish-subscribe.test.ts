@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { DhtAddress, NodeType, getRawFromDhtAddress } from '@streamr/dht'
 import { StreamID, toStreamPartID } from '@streamr/protocol'

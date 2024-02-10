@@ -5,6 +5,7 @@ import { Route53Api } from '../src/Route53Api'
 import { chunk } from 'lodash'
 import { ChangeAction } from '@aws-sdk/client-route-53'
 
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 (async () => {
     const logger = new Logger(module)
     

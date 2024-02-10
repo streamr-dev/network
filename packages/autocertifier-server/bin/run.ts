@@ -5,5 +5,5 @@ const main = async () => {
     await autoCertifierServer.start()
 }
 
-// TODO: catch handling
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 main()

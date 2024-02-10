@@ -4,6 +4,7 @@ import { iteratorFinally } from './iterators'
 import * as G from './GeneratorUtils'
 import { ErrorSignal, Signal } from './Signal'
 import { StreamrClientError } from '../StreamrClientError'
+import { executeSafePromise } from '@streamr/utils'
 
 export type PipelineTransform<InType = any, OutType = any> = (src: AsyncGenerator<InType>) => AsyncGenerator<OutType>
 
@@ -110,10 +111,10 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     }
 
     flow(): this {
-        setImmediate(() => {
+        executeSafePromise(async () => {
             // consume if not already doing so
             if (!this.isIterating) {
-                G.consume(this)
+                await G.consume(this)
             }
         })
 

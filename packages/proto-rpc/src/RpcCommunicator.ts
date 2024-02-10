@@ -15,7 +15,7 @@ import { MethodOptions, ServerRegistry } from './ServerRegistry'
 import EventEmitter from 'eventemitter3'
 import { DeferredState } from '@protobuf-ts/runtime-rpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { Logger } from '@streamr/utils'
+import { executeSafePromise, Logger } from '@streamr/utils'
 import { ProtoCallContext, ProtoRpcOptions } from './ProtoCallContext'
 import { Any } from './proto/google/protobuf/any'
 import { IMessageType } from '@protobuf-ts/runtime'
@@ -207,7 +207,7 @@ export class RpcCommunicator<T extends ProtoCallContext> extends EventEmitter<Rp
         this.emit('outgoingMessage', rpcMessage, rpcMessage.requestId, callContext)
 
         if (this.outgoingMessageListener) {
-            this.outgoingMessageListener(rpcMessage, rpcMessage.requestId, callContext)
+            executeSafePromise(() => this.outgoingMessageListener!(rpcMessage, rpcMessage.requestId, callContext)
                 .catch((clientSideException) => {
                     if (deferredPromises) {
                         if (this.ongoingRequests.has(rpcMessage.requestId)) {
@@ -226,7 +226,8 @@ export class RpcCommunicator<T extends ProtoCallContext> extends EventEmitter<Rp
                         }
                     }
                     return
-                })
+                }))
+
         } else {
             if (deferredPromises) {
                 if (!this.ongoingRequests.has(rpcMessage.requestId)) {

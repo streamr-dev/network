@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { fastPrivateKey, fastWallet } from '@streamr/test-utils'
 import { NetworkOptions } from '@streamr/trackerless-network'
 import merge from 'lodash/merge'

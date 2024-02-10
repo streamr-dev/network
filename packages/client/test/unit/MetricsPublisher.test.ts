@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import 'reflect-metadata'
 
 import { randomEthereumAddress } from '@streamr/test-utils'

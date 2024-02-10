@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { DhtAddress, DhtNode, NodeType, getRawFromDhtAddress } from '@streamr/dht'
 

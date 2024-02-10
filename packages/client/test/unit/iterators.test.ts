@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { Defer, wait } from '@streamr/utils'
 
 import { iteratorFinally, CancelableGenerator, nextValue } from '../../src/utils/iterators'

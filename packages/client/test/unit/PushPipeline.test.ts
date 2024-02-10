@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, toStreamID } from '@streamr/protocol'
 import { collect, toEthereumAddress, wait, utf8ToBinary } from '@streamr/utils'
 import { Authentication } from '../../src/Authentication'

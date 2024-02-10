@@ -1,4 +1,11 @@
-import { EthereumAddress, Logger, scheduleAtInterval, setAbortableInterval, toEthereumAddress } from '@streamr/utils'
+import {
+    EthereumAddress,
+    executeSafePromise,
+    Logger,
+    scheduleAtInterval,
+    setAbortableInterval,
+    toEthereumAddress
+} from '@streamr/utils'
 import { Schema } from 'ajv'
 import { Overrides } from 'ethers'
 import { StreamrClient, SignerWithProvider } from 'streamr-client'
@@ -116,12 +123,10 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         // don't block the startup of Broker
         setImmediate(async () => {
             setAbortableInterval(() => {
-                (async () => {
-                    await announceNodeToStream(
-                        toEthereumAddress(this.pluginConfig.operatorContractAddress),
-                        streamrClient
-                    )
-                })()
+                executeSafePromise(() => announceNodeToStream(
+                    toEthereumAddress(this.pluginConfig.operatorContractAddress),
+                    streamrClient
+                ))
             }, this.pluginConfig.heartbeatUpdateIntervalInMs, this.abortController.signal)
             await scheduleAtInterval(
                 async () => checkOperatorValueBreach(

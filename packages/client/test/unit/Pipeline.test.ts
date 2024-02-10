@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { expected, MAX_ITEMS, IteratorTest } from './IteratorTest'
 import { wait, collect } from '@streamr/utils'
 import { Pipeline } from '../../src/utils/Pipeline'
