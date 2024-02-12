@@ -7,6 +7,7 @@
     "include": [
         "src/**/*",
         "test/benchmark/first-message.ts",
+        "test/benchmark/stream-topology.ts",
         "test/utils/utils.ts",
         "package.json"
     ],

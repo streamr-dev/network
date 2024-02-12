@@ -196,6 +196,7 @@ export class StreamrNode extends EventEmitter<Events> {
         if (discoveryResult.entryPointsFromDht) {
             await entryPointDiscovery.storeSelfAsEntryPointIfNecessary(entryPoints.length)
         }
+        await streamPart.layer1Node.joinRing()
     }
 
     private createLayer1Node(streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): Layer1Node {
@@ -325,10 +326,10 @@ export class StreamrNode extends EventEmitter<Events> {
         return getNodeIdFromPeerDescriptor(this.layer0Node!.getLocalPeerDescriptor())
     }
 
-    getNeighbors(streamPartId: StreamPartID): DhtAddress[] {
+    getNeighbors(streamPartId: StreamPartID): PeerDescriptor[] {
         const streamPart = this.streamParts.get(streamPartId)
         return (streamPart !== undefined) && (streamPart.proxied === false)
-            ? streamPart.node.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
+            ? streamPart.node.getNeighbors()
             : []
     }
 

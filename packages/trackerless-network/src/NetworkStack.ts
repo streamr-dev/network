@@ -24,6 +24,7 @@ const stopInstances = async () => {
 const EXIT_EVENTS = [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`]
 EXIT_EVENTS.forEach((event) => {
     process.on(event, async () => {
+        console.error(event)
         await stopInstances()
         process.exit()
     })

@@ -50,6 +50,8 @@ export interface StrictRandomGraphNodeConfig {
     nodeViewSize: number
     nearbyNodeView: NodeList
     randomNodeView: NodeList
+    leftNodeView: NodeList
+    rightNodeView: NodeList
     neighbors: NodeList
     handshaker: Handshaker
     neighborFinder: NeighborFinder
@@ -130,13 +132,37 @@ export class RandomGraphNode extends EventEmitter<Events> {
             'randomContactAdded',
             (_peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.onRandomContactAdded(randomPeers),
             this.abortController.signal
-        )   
+        )
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
             'randomContactRemoved',
             (_peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.onRandomContactRemoved(randomPeers),
             this.abortController.signal
-        )   
+        )
+        addManagedEventListener<any, any>(
+            this.config.layer1Node as any,
+            'ringContactAdded',
+            (_: PeerDescriptor, peers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => {
+                logger.info('ringContactAdded', { 
+                    left: peers.left.map((peer) => getNodeIdFromPeerDescriptor(peer)),
+                    right: peers.right.map((peer) => getNodeIdFromPeerDescriptor(peer))
+                })
+                this.onRingContactEvent(peers)
+            },
+            this.abortController.signal
+        )
+        addManagedEventListener<any, any>(
+            this.config.layer1Node as any,
+            'ringContactRemoved',
+            (_: PeerDescriptor, peers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => {
+                logger.info('ringContactRemoved', { 
+                    left: peers.left.map((peer) => getNodeIdFromPeerDescriptor(peer)),
+                    right: peers.right.map((peer) => getNodeIdFromPeerDescriptor(peer))
+                })
+                this.onRingContactEvent(peers)
+            },
+            this.abortController.signal
+        )
         addManagedEventListener<any, any>(
             this.config.transport as any,
             'disconnected',
@@ -177,6 +203,31 @@ export class RandomGraphNode extends EventEmitter<Events> {
             (req: TemporaryConnectionRequest, context) => this.config.temporaryConnectionRpcLocal.openConnection(req, context))
         this.config.rpcCommunicator.registerRpcNotification(CloseTemporaryConnection, 'closeConnection',
             (req: TemporaryConnectionRequest, context) => this.config.temporaryConnectionRpcLocal.closeConnection(req, context))
+    }
+
+    private onRingContactEvent(ringPeers: { left: PeerDescriptor[], right: PeerDescriptor[] }): void {
+        logger.trace(`onRingContactAdded`)
+        if (this.isStopped()) {
+            return
+        }
+        this.config.leftNodeView.replaceAll(ringPeers.left.map((peer) => 
+            new DeliveryRpcRemote(
+                this.config.localPeerDescriptor,
+                peer,
+                this.config.rpcCommunicator,
+                DeliveryRpcClient,
+                this.config.rpcRequestTimeout
+            )
+        ))
+        this.config.rightNodeView.replaceAll(ringPeers.right.map((peer) =>
+            new DeliveryRpcRemote(
+                this.config.localPeerDescriptor,
+                peer,
+                this.config.rpcCommunicator,
+                DeliveryRpcClient,
+                this.config.rpcRequestTimeout
+            )
+        ))
     }
 
     private onContactAdded(closestNodes: PeerDescriptor[]): void {

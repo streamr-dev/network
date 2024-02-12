@@ -87,7 +87,7 @@ export class NetworkNode {
         await this.stack.getStreamrNode().leaveStreamPart(streamPartId)
     }
 
-    getNeighbors(streamPartId: StreamPartID): ReadonlyArray<DhtAddress> {
+    getNeighbors(streamPartId: StreamPartID): ReadonlyArray<PeerDescriptor> {
         return this.stack.getStreamrNode().getNeighbors(streamPartId)
     }
 

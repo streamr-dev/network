@@ -23,6 +23,8 @@ interface HandshakerConfig {
     neighbors: NodeList
     nearbyNodeView: NodeList
     randomNodeView: NodeList
+    leftNodeView: NodeList
+    rightNodeView: NodeList
     rpcCommunicator: ListeningRpcCommunicator
     maxNeighborCount: number
     rpcRequestTimeout?: number
@@ -77,14 +79,41 @@ export class Handshaker {
     }
 
     private selectParallelTargets(excludedIds: DhtAddress[]): HandshakeRpcRemote[] {
-        const neighbors = this.config.nearbyNodeView.getFirstAndLast(excludedIds)
-        while (neighbors.length < PARALLEL_HANDSHAKE_COUNT && this.config.randomNodeView.size(excludedIds) > 0) {
-            const random = this.config.randomNodeView.getRandom(excludedIds)
-            if (random) {
-                neighbors.push(random)
+        const neighbors: Map<DhtAddress, DeliveryRpcRemote> = new Map()
+        if (this.config.neighbors.size() < PARALLEL_HANDSHAKE_COUNT) {
+            const left = this.config.leftNodeView.getFirst([excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
+            const right = this.config.rightNodeView.getFirst([excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
+            if (left) {
+                neighbors.set(getNodeIdFromPeerDescriptor(left.getPeerDescriptor()), left)
+            }
+            if (right) {
+                neighbors.set(getNodeIdFromPeerDescriptor(right.getPeerDescriptor()), right)
             }
         }
-        return neighbors.map((neighbor) => this.createRpcRemote(neighbor.getPeerDescriptor()))
+
+        if (neighbors.size < PARALLEL_HANDSHAKE_COUNT) {
+            const first = this.config.nearbyNodeView.getFirst([excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
+            if (first) {
+                neighbors.set(getNodeIdFromPeerDescriptor(first.getPeerDescriptor()), first)
+            }
+        }
+
+        if (neighbors.size < PARALLEL_HANDSHAKE_COUNT) {
+            const last = this.config.nearbyNodeView.getFirst([excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
+            if (last) {
+                neighbors.set(getNodeIdFromPeerDescriptor(last.getPeerDescriptor()), last)
+            }
+        }
+        
+        if (neighbors.size < PARALLEL_HANDSHAKE_COUNT) {
+            while (neighbors.size < PARALLEL_HANDSHAKE_COUNT && this.config.randomNodeView.size([excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[]) > 0) {
+                const random = this.config.randomNodeView.getRandom([excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
+                if (random) {
+                    neighbors.set(getNodeIdFromPeerDescriptor(random.getPeerDescriptor()), random)
+                }
+            }
+        }
+        return Array.from(neighbors.values()).map((neighbor) => this.createRpcRemote(neighbor.getPeerDescriptor()))
     }
 
     private async doParallelHandshakes(targets: HandshakeRpcRemote[], excludedIds: DhtAddress[]): Promise<DhtAddress[]> {
@@ -106,7 +135,7 @@ export class Handshaker {
 
     private async selectNewTargetAndHandshake(excludedIds: DhtAddress[]): Promise<DhtAddress[]> {
         const exclude = excludedIds.concat(this.config.neighbors.getIds())
-        const neighbor = this.config.nearbyNodeView.getFirst(exclude) ?? this.config.randomNodeView.getRandom(exclude)
+        const neighbor = this.config.leftNodeView.getFirst(exclude) ?? this.config.rightNodeView.getFirst(exclude) ?? this.config.nearbyNodeView.getFirst(exclude) ?? this.config.randomNodeView.getRandom(exclude)
         if (neighbor) {
             const accepted = await this.handshakeWithTarget(this.createRpcRemote(neighbor.getPeerDescriptor()))
             if (!accepted) {
