@@ -29,7 +29,7 @@
     "@ethersproject/wallet": "^5.5.0",
     "@snapshot-labs/snapshot.js": "^0.10.1",
     "@streamr/utils": "100.0.0-testnet-three.3",
-    "commander": "^11.1.0",
+    "commander": "^12.0.0",
     "easy-table": "^1.1.1",
     "event-stream": "^4.0.1",
     "lodash": "^4.17.21",
