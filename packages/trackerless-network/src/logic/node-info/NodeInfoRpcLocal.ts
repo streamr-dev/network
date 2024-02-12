@@ -2,6 +2,7 @@ import { NodeInfoRequest, NodeInfoResponse } from '../../proto/packages/trackerl
 import { INodeInfoRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { NetworkStack } from '../../NetworkStack'
 import { ListeningRpcCommunicator } from '@streamr/dht'
+import { version as localVersion } from '../../../package.json'
 
 export const NODE_INFO_RPC_SERVICE_ID = 'system/node-info-rpc'
 
@@ -28,7 +29,8 @@ export class NodeInfoRpcLocal implements INodeInfoRpc {
                 connections: this.stack.getLayer0Node().getConnections(),
                 neighbors: this.stack.getLayer0Node().getNeighbors()
             },
-            streamPartitions: this.stack.getStreamrNode().getNodeInfo()
+            streamPartitions: this.stack.getStreamrNode().getNodeInfo(),
+            version: localVersion
         }
     }
 

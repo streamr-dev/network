@@ -1,12 +1,13 @@
 import 'reflect-metadata'
 
-import { finished } from 'stream/promises'
+import { promises } from 'stream'
 import { WebStreamToNodeStream } from '../../src/utils/WebStreamToNodeStream'
 import { Msg } from '../test-utils/publish'
 import WebStream from 'node:stream/web'
 import Timers from 'node:timers/promises'
+import { describeOnlyInNodeJs } from '@streamr/test-utils'
 
-describe('WebStreamToNodeStream', () => {
+describeOnlyInNodeJs('WebStreamToNodeStream', () => {
     it('works', async () => {
 
         const published: ReturnType<typeof Msg>[] = []
@@ -96,7 +97,7 @@ describe('WebStreamToNodeStream', () => {
                 received.push(msg)
             }
         }).rejects.toThrow(err)
-        await expect(finished(nodeStream)).rejects.toThrow(err)
+        await expect(promises.finished(nodeStream)).rejects.toThrow(err)
         expect(received).toEqual(published.slice(0, 3))
         expect(nodeStream.readable).not.toBeTruthy()
         expect(nodeStream.destroyed).toBeTruthy()

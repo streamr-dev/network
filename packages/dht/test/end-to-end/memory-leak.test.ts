@@ -30,8 +30,8 @@ describe('memory leak', () => {
         })
         await entryPoint.start()
         await entryPoint.joinDht([entryPointDescriptor])
-        let sender: DhtNode | undefined = new DhtNode({})
-        let receiver: DhtNode | undefined = new DhtNode({})
+        let sender: DhtNode | undefined = new DhtNode({ entryPoints: [entryPointDescriptor] })
+        let receiver: DhtNode | undefined = new DhtNode({ entryPoints: [entryPointDescriptor] })
         await Promise.all([
             (async () => {
                 await sender.start()
@@ -77,5 +77,5 @@ describe('memory leak', () => {
         const detector3 = new LeakDetector(receiver)
         receiver = undefined
         expect(await detector3.isLeaking()).toBe(false)
-    })
+    }, 10000)
 })

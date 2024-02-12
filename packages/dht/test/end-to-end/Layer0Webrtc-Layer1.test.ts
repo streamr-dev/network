@@ -28,22 +28,26 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
 
         const layer0Node1Id = createRandomDhtAddress()
         layer0Node1 = new DhtNode({
-            nodeId: layer0Node1Id
+            nodeId: layer0Node1Id,
+            entryPoints: [entrypointDescriptor]
         })
 
         const layer0Node2Id = createRandomDhtAddress()
         layer0Node2 = new DhtNode({
-            nodeId: layer0Node2Id
+            nodeId: layer0Node2Id,
+            entryPoints: [entrypointDescriptor]
         })
 
         const layer0Node3Id = createRandomDhtAddress()
         layer0Node3 = new DhtNode({
-            nodeId: layer0Node3Id
+            nodeId: layer0Node3Id,
+            entryPoints: [entrypointDescriptor]
         })
 
         const layer0Node4Id = createRandomDhtAddress()
         layer0Node4 = new DhtNode({
-            nodeId: layer0Node4Id
+            nodeId: layer0Node4Id,
+            entryPoints: [entrypointDescriptor]
         })
 
         layer1EntryPoint = new DhtNode({

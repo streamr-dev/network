@@ -4,8 +4,6 @@ import { Wallet } from '@ethersproject/wallet'
 import { StreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { collect, waitForCondition } from '@streamr/utils'
-import fs from 'fs'
-import path from 'path'
 import { Message, MessageMetadata } from '../../src/Message'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -14,7 +12,7 @@ import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { Msg, getPublishTestStreamMessages, getWaitForStorage } from '../test-utils/publish'
-import { createTestStream } from '../test-utils/utils'
+import { createTestStream, readUtf8ExampleIndirectly } from '../test-utils/utils'
 import { startFailingStorageNode } from './../test-utils/utils'
 
 const MAX_MESSAGES = 5
@@ -428,9 +426,8 @@ describe('Resends2', () => {
     })
 
     it('decodes resent messages correctly', async () => {
-        const publishedMessage = Msg({
-            content: fs.readFileSync(path.join(__dirname, '../data/utf8Example.txt'), 'utf8')
-        })
+        const content = await readUtf8ExampleIndirectly()
+        const publishedMessage = Msg({ content })
         const publishReq = await publisher.publish(stream, publishedMessage)
 
         await getWaitForStorage(client)(publishReq)
