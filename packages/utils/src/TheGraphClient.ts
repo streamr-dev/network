@@ -142,7 +142,7 @@ class IndexingState {
 
     private blockNumber = 0
     private gates: Set<BlockNumberGate> = new Set()
-    private readonly getCurrentBlockNumber: () => Promise<number>
+    private readonly getCurrentBlockNumber: () => Promise<number | undefined>
     private readonly timeout: number
     private readonly pollInterval: number
     private readonly logger: Logger
@@ -153,7 +153,14 @@ class IndexingState {
         pollInterval: number,
         logger: Logger
     ) {
-        this.getCurrentBlockNumber = getCurrentBlockNumber
+        this.getCurrentBlockNumber = async () => {
+            try {
+                return await getCurrentBlockNumber()
+            } catch (err) {
+                logger.warn('Failed to get current block number', { reason: err?.reason })
+                return undefined
+            }
+        }
         this.timeout = timeout
         this.pollInterval = pollInterval
         this.logger = logger
@@ -193,7 +200,7 @@ class IndexingState {
         this.logger.trace('Start polling')
         while (this.gates.size > 0) {
             const newBlockNumber = await this.getCurrentBlockNumber()
-            if (newBlockNumber !== this.blockNumber) {
+            if (newBlockNumber !== undefined && newBlockNumber !== this.blockNumber) {
                 this.blockNumber = newBlockNumber
                 this.logger.trace('Polled', { blockNumber: this.blockNumber })
                 this.gates.forEach((gate) => {
