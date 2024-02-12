@@ -78,11 +78,11 @@ export class Handshaker {
 
     private selectParallelTargets(excludedIds: DhtAddress[]): HandshakeRpcRemote[] {
         const neighbors = this.config.nearbyNodeView.getFirstAndLast(excludedIds)
-        while (neighbors.length < PARALLEL_HANDSHAKE_COUNT && this.config.randomNodeView.size(excludedIds) > 0) {
-            const random = this.config.randomNodeView.getRandom(excludedIds)
-            if (random) {
-                neighbors.push(random)
-            }
+        const excludeFromRandomView = [...excludedIds, ...neighbors.map((neighbor) => getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor()))]
+        while (neighbors.length < PARALLEL_HANDSHAKE_COUNT && this.config.randomNodeView.size(excludeFromRandomView) > 0) {
+            const random = this.config.randomNodeView.getRandom(excludeFromRandomView)!
+            neighbors.push(random)
+            excludeFromRandomView.push(getNodeIdFromPeerDescriptor(random.getPeerDescriptor()))
         }
         return neighbors.map((neighbor) => this.createRpcRemote(neighbor.getPeerDescriptor()))
     }
