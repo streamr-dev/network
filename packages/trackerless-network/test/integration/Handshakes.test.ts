@@ -92,7 +92,8 @@ describe('Handshakes', () => {
             neighbors,
             connectionLocker: mockConnectionLocker,
             rpcCommunicator: rpcCommunicator2,
-            maxNeighborCount: 4
+            maxNeighborCount: 4,
+            ongoingHandshakes: new Set()
         })
 
     })

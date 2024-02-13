@@ -86,7 +86,7 @@ jobs:
       command: |
         sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser
-  autocertifier-server: 
+  autocertifier-server:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
@@ -128,10 +128,22 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: client
+      command: |
+        sudo apt-get install xvfb
+        xvfb-run --auto-servernum npm run test-browser-unit
+        xvfb-run --auto-servernum npm run test-browser-integration
+  client-browser-e2e:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: client
       docker-services: init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
       run-entry-point: true
       run-brokers: true
-      command: npm run test-browser
+      command: |
+        sudo apt-get install xvfb
+        xvfb-run --auto-servernum npm run test-browser-end-to-end
+        npm run test-browser-smoke
   cli-tools:
     needs: build
     uses: ./.github/workflows/test-setup.yml
