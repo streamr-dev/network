@@ -13,13 +13,14 @@ import { EXISTING_CONNECTION_TIMEOUT } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
 import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { pull } from 'lodash'
+import { RoutingTableCache } from './RoutingTableCache'
 
 const logger = new Logger(module)
 
 const MAX_FAILED_HOPS = 2
-const CONTACT_LIST_MAX_SIZE = 10
+const CONTACT_LIST_MAX_SIZE = 20
 
-class RemoteContact extends Contact {
+export class RoutingRemoteContact extends Contact {
 
     private routerRpcRemote: RouterRpcRemote
     private recursiveOperationRpcRemote: RecursiveOperationRpcRemote
@@ -72,13 +73,14 @@ interface RoutingSessionConfig {
     parallelism: number
     mode: RoutingMode
     excludedNodeIds?: Set<DhtAddress>
+    routingTableCache: RoutingTableCache
 }
 
 export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
     public readonly sessionId = v4()
     private ongoingRequests: Set<DhtAddress> = new Set()
-    private contactList: SortedContactList<RemoteContact>
+    private contactedPeers: Set<DhtAddress> = new Set()
     private failedHopCounter = 0
     private successfulHopCounter = 0
     private stopped = false
@@ -87,16 +89,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     constructor(config: RoutingSessionConfig) {
         super()
         this.config = config
-        const previousPeer = getPreviousPeer(config.routedMessage)
-        const previousId = previousPeer ? getNodeIdFromPeerDescriptor(previousPeer) : undefined
-        this.contactList = new SortedContactList({
-            referenceId: getDhtAddressFromRaw(config.routedMessage.target),
-            maxSize: CONTACT_LIST_MAX_SIZE,
-            allowToContainReferenceId: true,
-            nodeIdDistanceLimit: previousId,
-            excludedNodeIds: config.excludedNodeIds,
-            emitEvents: false
-        })
     }
 
     private onRequestFailed(nodeId: DhtAddress) {
@@ -158,7 +150,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         this.emit('routingSucceeded')
     }
 
-    private async sendRouteMessageRequest(contact: RemoteContact): Promise<boolean> {
+    private async sendRouteMessageRequest(contact: RoutingRemoteContact): Promise<boolean> {
         if (this.stopped) {
             return false
         }
@@ -175,21 +167,32 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
     }
 
-    updateAndGetRoutablePeers(): RemoteContact[] {
+    updateAndGetRoutablePeers(): RoutingRemoteContact[] {
         logger.trace('getRoutablePeers() sessionId: ' + this.sessionId)
-        // Remove stale contacts that may have been removed from connections
-        this.contactList.getContactIds().forEach((nodeId) => {
-            if (!this.config.connections.has(nodeId)) {
-                this.contactList.removeContact(nodeId)
-            }
-        })
-        const contacts = Array.from(this.config.connections.values())
-            .map((peer) => new RemoteContact(peer, this.config.localPeerDescriptor, this.config.rpcCommunicator))
-        this.contactList.addContacts(contacts)
-        return this.contactList.getUncontactedContacts(this.config.parallelism)
+        const previousPeer = getPreviousPeer(this.config.routedMessage)
+        const previousId = previousPeer ? getNodeIdFromPeerDescriptor(previousPeer) : undefined
+        const targetId = getDhtAddressFromRaw(this.config.routedMessage.target)
+            let contactList: SortedContactList<RoutingRemoteContact>
+        if (this.config.routingTableCache.has(targetId, previousId)) {
+            contactList = this.config.routingTableCache.get(targetId, previousId)!
+        } else {
+            contactList =  new SortedContactList<RoutingRemoteContact>({
+                referenceId: getDhtAddressFromRaw(this.config.routedMessage.target),
+                maxSize: CONTACT_LIST_MAX_SIZE,
+                allowToContainReferenceId: true,
+                nodeIdDistanceLimit: previousId,
+                excludedNodeIds: this.config.excludedNodeIds,
+                emitEvents: false
+            })
+            const contacts = Array.from(this.config.connections.values())
+                .map((peer) => new RoutingRemoteContact(peer, this.config.localPeerDescriptor, this.config.rpcCommunicator))
+            contactList.addContacts(contacts)
+            this.config.routingTableCache.set(targetId, contactList, previousId)
+        }
+        return contactList.getAllContacts().filter((contact) => !this.contactedPeers.has(contact.getNodeId()) && !this.config.excludedNodeIds!.has(contact.getNodeId()))
     }
 
-    sendMoreRequests(uncontacted: RemoteContact[]): void {
+    sendMoreRequests(uncontacted: RoutingRemoteContact[]): void {
         logger.trace('sendMoreRequests() sessionId: ' + this.sessionId)
         if (this.stopped) {
             return
@@ -202,7 +205,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             const nextPeer = uncontacted.shift()
             // eslint-disable-next-line max-len
             logger.trace(`Sending routeMessage request to contact: ${getNodeIdFromPeerDescriptor(nextPeer!.getPeerDescriptor())} (sessionId=${this.sessionId})`)
-            this.contactList.setContacted(nextPeer!.getNodeId())
+            this.contactedPeers.add(nextPeer!.getNodeId())
             this.ongoingRequests.add(nextPeer!.getNodeId())
             this.addParallelRootIfSource(nextPeer!.getNodeId())
             setImmediate(async () => {
@@ -242,7 +245,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
     public stop(): void {
         this.stopped = true
-        this.contactList.stop()
         this.emit('stopped')
         this.removeAllListeners()
     }
