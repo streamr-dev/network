@@ -117,8 +117,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         const contacts = this.updateAndGetRoutablePeers()
         if (contacts.length === 0 && this.ongoingRequests.size === 0) {
             logger.trace('routing failed, emitting routingFailed sessionId: ' + this.sessionId)
-            // TODO should call this.stop() so that we do cleanup? (after the emitFailure call)
-            this.stopped = true
             this.emitFailure()
         } else {
             logger.trace('routing failed, retrying to route sessionId: ' + this.sessionId + ' failedHopCounter: ' + this.failedHopCounter)
@@ -141,21 +139,15 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
         this.successfulHopCounter += 1
         if (this.successfulHopCounter >= this.config.parallelism) {
-            this.emitSuccess()
+            this.emit('routingSucceeded')
             return
         }
         const contacts = this.updateAndGetRoutablePeers()
         if (contacts.length === 0) {
-            this.emitSuccess()
+            this.emit('routingSucceeded')
         } else if (contacts.length > 0 && this.ongoingRequests.size === 0) {
             this.sendMoreRequests(contacts)
         }
-    }
-
-    private emitSuccess() {
-        // TODO should call this.stop() so that we do cleanup? (after the routingSucceeded call)
-        this.stopped = true
-        this.emit('routingSucceeded')
     }
 
     private async sendRouteMessageRequest(contact: RemoteContact): Promise<boolean> {
