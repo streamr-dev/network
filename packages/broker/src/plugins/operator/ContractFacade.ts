@@ -469,7 +469,7 @@ export class ContractFacade {
             sponsorship,
             targetOperator,
             voteData,
-            { ...this.getEthersOverrides(), gasLimit: '200000' }
+            { ...this.getEthersOverrides(), gasLimit: '1000000' }
         )).wait()
     }
 

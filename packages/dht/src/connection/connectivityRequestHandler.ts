@@ -11,6 +11,8 @@ import { ServerWebsocket } from './websocket/ServerWebsocket'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
 import { version as localVersion } from '../../package.json'
 
+export const DISABLE_CONNECTIVITY_PROBE = 0
+
 const logger = new Logger(module)
 
 export const attachConnectivityRequestHandler = (connectionToListenTo: ServerWebsocket): void => {
@@ -36,7 +38,18 @@ export const attachConnectivityRequestHandler = (connectionToListenTo: ServerWeb
 const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, connectivityRequest: ConnectivityRequest): Promise<void> => {
     const host = connectivityRequest.host ?? connection.getRemoteAddress()
     const ipAddress = connection.getRemoteIp()
-    const connectivityResponse = await connectivityProbe(connectivityRequest, ipAddress, host)
+    let connectivityResponse: ConnectivityResponse
+    if (connectivityRequest.port !== DISABLE_CONNECTIVITY_PROBE) {
+        connectivityResponse = await connectivityProbe(connectivityRequest, ipAddress, host)
+    } else {
+        logger.trace('ConnectivityRequest port is 0, replying without connectivityProbe')
+        connectivityResponse = {
+            host,
+            natType: NatType.UNKNOWN,
+            ipAddress: ipv4ToNumber(ipAddress),
+            version: localVersion
+        }
+    }
     const msg: Message = {
         serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
         messageType: MessageType.CONNECTIVITY_RESPONSE,

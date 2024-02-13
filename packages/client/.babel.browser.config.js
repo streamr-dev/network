@@ -27,7 +27,6 @@ module.exports = {
     plugins: [
         'transform-typescript-metadata',
          ["@babel/plugin-proposal-decorators", { "legacy": true }],
-        'lodash',
          'add-module-exports',
          "@babel/plugin-transform-modules-commonjs",
     ]

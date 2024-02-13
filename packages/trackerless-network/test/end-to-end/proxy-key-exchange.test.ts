@@ -47,7 +47,7 @@ describe('proxy group key exchange', () => {
         proxyNode.stack.getStreamrNode()!.joinStreamPart(STREAM_PART_ID)
         publisher = createNetworkNode({
             layer0: {
-                entryPoints: [publisherDescriptor],
+                entryPoints: [proxyNodeDescriptor],
                 peerDescriptor: publisherDescriptor,
             }
         })
@@ -55,7 +55,7 @@ describe('proxy group key exchange', () => {
 
         subscriber = createNetworkNode({
             layer0: {
-                entryPoints: [subscriberDescriptor],
+                entryPoints: [proxyNodeDescriptor],
                 peerDescriptor: subscriberDescriptor,
             }
         })
