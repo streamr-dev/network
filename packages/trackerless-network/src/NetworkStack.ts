@@ -1,6 +1,6 @@
 import { ConnectionManager, DhtNode, DhtNodeOptions, ListeningRpcCommunicator, PeerDescriptor, areEqualPeerDescriptors } from '@streamr/dht'
 import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
-import { MetricsContext, waitForCondition } from '@streamr/utils'
+import { Logger, MetricsContext, waitForCondition } from '@streamr/utils'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { NodeInfoResponse, ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
 import { Layer0Node } from './logic/Layer0Node'
@@ -14,6 +14,8 @@ export interface NetworkOptions {
     metricsContext?: MetricsContext
 }
 
+const logger = new Logger(module)
+
 const instances: NetworkStack[] = []
 const stopInstances = async () => {
     // make a clone so that it is ok for each instance.stop() to remove itself from the list (at line 139)
@@ -23,9 +25,13 @@ const stopInstances = async () => {
 }
 const EXIT_EVENTS = [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `unhandledRejection`, `SIGTERM`]
 EXIT_EVENTS.forEach((event) => {
-    process.on(event, async () => {
+    process.on(event, async (eventArg) => {
+        const isError = (event === 'uncaughtException') || (event === 'unhandledRejection')
+        if (isError) {
+            logger.error(`exit event: ${event}`, eventArg)
+        }
         await stopInstances()
-        process.exit()
+        process.exit(isError ? 1 : 0)
     })
 })
 declare let window: any

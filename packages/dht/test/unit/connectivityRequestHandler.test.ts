@@ -15,8 +15,9 @@ describe('connectivityRequestHandler', () => {
 
     let httpServer: HttpServer
     let wsServer: WsServer
+    let connection: any
 
-    beforeAll(async () => {
+    beforeEach(async () => {
         httpServer = createHttpServer()
         wsServer = new WsServer({
             httpServer,
@@ -24,19 +25,18 @@ describe('connectivityRequestHandler', () => {
         })
         httpServer.listen(PORT)
         await once(httpServer, 'listening')
+        connection = new EventEmitter()
+        connection.send = jest.fn()
+        connection.getRemoteIp = () => HOST
     })
 
-    afterAll(async () => {
+    afterEach(async () => {
         wsServer.shutDown()
         httpServer.close()
         await once(httpServer, 'close')
     })
 
     it('happy path', async () => {
-        const connection: any = new EventEmitter()
-        connection.send = jest.fn()
-        connection.getRemoteIp = () => HOST
-        
         attachConnectivityRequestHandler(connection)
         const request: Message = {
             serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
@@ -72,4 +72,37 @@ describe('connectivityRequestHandler', () => {
             serviceId: 'system/connectivity-checker'
         })
     })
+
+    it('disabled connectivity probing', async () => {
+        attachConnectivityRequestHandler(connection)
+        const request: Message = {
+            serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
+            messageType: MessageType.CONNECTIVITY_REQUEST,
+            messageId: 'mock-message-id',
+            body: {
+                oneofKind: 'connectivityRequest',
+                connectivityRequest: { port: 0, host: HOST, tls: false, selfSigned: false }
+            }
+        }
+        connection.emit('data', Message.toBinary(request))
+
+        await waitForCondition(() => connection.send.mock.calls.length > 0)
+
+        const receivedMessage = Message.fromBinary(connection.send.mock.calls[0][0])
+        expect(receivedMessage).toEqual({
+            body: {
+                connectivityResponse: {
+                    host: HOST,
+                    natType: 'unknown',
+                    ipAddress: ipv4ToNumber(HOST),
+                    version
+                },
+                oneofKind: 'connectivityResponse'
+            },
+            messageId: expect.any(String),
+            messageType: MessageType.CONNECTIVITY_RESPONSE,
+            serviceId: 'system/connectivity-checker'
+        })
+    })
+
 })
