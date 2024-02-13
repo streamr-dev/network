@@ -18,7 +18,7 @@ describe('PeerManager', () => {
         manager.addContact(nodeIds.map((n) => ({ nodeId: getRawFromDhtAddress(n), type: NodeType.NODEJS })))
 
         const referenceId = createRandomDhtAddress()
-        const excluded = new Set<DhtAddress>(sampleSize(nodeIds, 2))
+        const excluded = new Set<DhtAddress>(sampleSize(nodeIds, 2)!)
         const actual = manager.getClosestContactsTo(referenceId, 5, excluded)
 
         const expected = sortBy(

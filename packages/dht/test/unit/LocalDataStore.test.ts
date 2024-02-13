@@ -76,14 +76,14 @@ describe('LocalDataStore', () => {
             const storedEntry = createMockDataEntry({ creator: creator1 })
             localDataStore.storeEntry(storedEntry)
             const notDeletedData = Array.from(localDataStore.values(getDhtAddressFromRaw(storedEntry.key)))
-            expect(notDeletedData[0].deleted).toBeFalse()
+            expect(notDeletedData[0]!.deleted).toBeFalse()
             const returnValue = localDataStore.markAsDeleted(
                 getDhtAddressFromRaw(storedEntry.key),
                 creator1
             )
             expect(returnValue).toBe(true)
             const deletedData = Array.from(localDataStore.values(getDhtAddressFromRaw(storedEntry.key)))
-            expect(deletedData[0].deleted).toBeTrue()
+            expect(deletedData[0]!.deleted).toBeTrue()
         })
 
         it('data not stored', () => {

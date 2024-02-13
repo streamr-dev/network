@@ -176,8 +176,8 @@ describe('Route Message With Mock Connections', () => {
                 oneofKind: 'rpcMessage',
                 rpcMessage: closestPeersRequest
             },
-            sourceDescriptor: sourceNode.getLocalPeerDescriptor(),
-            targetDescriptor: destinationNode.getLocalPeerDescriptor()
+            sourceDescriptor: sourceNode.getLocalPeerDescriptor()!,
+            targetDescriptor: destinationNode.getLocalPeerDescriptor()!
         }
 
         const routeMessageWrapper: RouteMessageWrapper = {
@@ -207,15 +207,15 @@ describe('Route Message With Mock Connections', () => {
                 oneofKind: 'rpcMessage',
                 rpcMessage
             },
-            sourceDescriptor: sourceNode.getLocalPeerDescriptor(),
-            targetDescriptor: entryPoint.getLocalPeerDescriptor()
+            sourceDescriptor: sourceNode.getLocalPeerDescriptor()!,
+            targetDescriptor: entryPoint.getLocalPeerDescriptor()!
         }
 
         const forwardedMessage: RouteMessageWrapper = {
             message: requestMessage,
             requestId: v4(),
             sourcePeer: sourceNode.getLocalPeerDescriptor(),
-            target: entryPoint.getLocalPeerDescriptor().nodeId,
+            target: entryPoint.getLocalPeerDescriptor()!.nodeId,
             reachableThrough: [],
             routingPath: [],
             parallelRootNodeIds: []
