@@ -1,6 +1,6 @@
 {
   "name": "@streamr/utils",
-  "version": "100.0.0-testnet-three.4",
+  "version": "100.0.0-testnet-three.5",
   "description": "A collection of shared common utilities",
   "repository": {
     "type": "git",
