@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import pkg from '../package.json'
 import { createFnParseInt } from '../src/common'
 import { createCommand, Options as BaseOptions } from '../src/command'
 import { randomString } from '@streamr/utils'
