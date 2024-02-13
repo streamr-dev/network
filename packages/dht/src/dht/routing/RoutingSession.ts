@@ -108,6 +108,12 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             this.ongoingRequests.delete(nodeId)
         }
         this.deleteParallelRootIfSource(nodeId)
+        this.failedHopCounter += 1
+        if (this.failedHopCounter >= MAX_FAILED_HOPS) {
+            logger.trace(`Stopping routing after ${MAX_FAILED_HOPS} failed attempts for sessionId: ${this.sessionId}`)
+            this.emitFailure()
+            return
+        }
         const contacts = this.updateAndGetRoutablePeers()
         if (contacts.length === 0 && this.ongoingRequests.size === 0) {
             logger.trace('routing failed, emitting routingFailed sessionId: ' + this.sessionId)
@@ -115,7 +121,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             this.stopped = true
             this.emitFailure()
         } else {
-            this.failedHopCounter += 1
             logger.trace('routing failed, retrying to route sessionId: ' + this.sessionId + ' failedHopCounter: ' + this.failedHopCounter)
             this.sendMoreRequests(contacts)
         }
@@ -135,14 +140,22 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             return
         }
         this.successfulHopCounter += 1
+        if (this.successfulHopCounter >= this.config.parallelism) {
+            this.emitSuccess()
+            return
+        }
         const contacts = this.updateAndGetRoutablePeers()
-        if (this.successfulHopCounter >= this.config.parallelism || contacts.length === 0) {
-            // TODO should call this.stop() so that we do cleanup? (after the routingSucceeded call)
-            this.stopped = true
-            this.emit('routingSucceeded')
+        if (contacts.length === 0) {
+            this.emitSuccess()
         } else if (contacts.length > 0 && this.ongoingRequests.size === 0) {
             this.sendMoreRequests(contacts)
         }
+    }
+
+    private emitSuccess() {
+        // TODO should call this.stop() so that we do cleanup? (after the routingSucceeded call)
+        this.stopped = true
+        this.emit('routingSucceeded')
     }
 
     private async sendRouteMessageRequest(contact: RemoteContact): Promise<boolean> {
@@ -182,11 +195,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             return
         }
         if (uncontacted.length === 0) {
-            this.emitFailure()
-            return
-        }
-        if (this.failedHopCounter >= MAX_FAILED_HOPS) {
-            logger.trace(`Stopping routing after ${MAX_FAILED_HOPS} failed attempts for sessionId: ${this.sessionId}`)
             this.emitFailure()
             return
         }
