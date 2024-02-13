@@ -24,6 +24,14 @@ export class RoutingTableCache {
         return this.tables.has(createRoutingTableId(targetId, previousId))
     }
 
+    onNodeDisconnected(targetId: DhtAddress): void {
+        this.tables.forEach((table) => table.removeContact(targetId))
+    }
+
+    onNodeConnected(remote: RoutingRemoteContact): void {
+        this.tables.forEach((table) => table.addContact(remote))
+    }
+
     reset() {
         this.tables.forEach((table) => table.stop())
         this.tables.clear()

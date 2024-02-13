@@ -25,18 +25,18 @@ export class RoutingRemoteContact extends Contact {
     private routerRpcRemote: RouterRpcRemote
     private recursiveOperationRpcRemote: RecursiveOperationRpcRemote
 
-    constructor(peer: DhtNodeRpcRemote, localPeerDescriptor: PeerDescriptor, rpcCommunicator: RoutingRpcCommunicator) {
-        super(peer.getPeerDescriptor())
+    constructor(peer: PeerDescriptor, localPeerDescriptor: PeerDescriptor, rpcCommunicator: RoutingRpcCommunicator) {
+        super(peer)
         this.routerRpcRemote = new RouterRpcRemote(
             localPeerDescriptor,
-            peer.getPeerDescriptor(),
+            peer,
             rpcCommunicator,
             RouterRpcClient,
             EXISTING_CONNECTION_TIMEOUT
         )
         this.recursiveOperationRpcRemote = new RecursiveOperationRpcRemote(
             localPeerDescriptor,
-            peer.getPeerDescriptor(),
+            peer,
             rpcCommunicator,
             RecursiveOperationRpcClient,
             EXISTING_CONNECTION_TIMEOUT
@@ -185,7 +185,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                 emitEvents: false
             })
             const contacts = Array.from(this.config.connections.values())
-                .map((peer) => new RoutingRemoteContact(peer, this.config.localPeerDescriptor, this.config.rpcCommunicator))
+                .map((peer) => new RoutingRemoteContact(peer.getPeerDescriptor(), this.config.localPeerDescriptor, this.config.rpcCommunicator))
             contactList.addContacts(contacts)
             this.config.routingTableCache.set(targetId, contactList, previousId)
         }

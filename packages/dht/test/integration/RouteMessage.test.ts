@@ -86,7 +86,7 @@ describe('Route Message With Mock Connections', () => {
         }], [[destinationNode, 'message']], 20000)
     }, 30000)
 
-    it.only('Receives multiple messages', async () => {
+    it('Receives multiple messages', async () => {
         const messageCount = 20
         let receivedMessages = 0
         destinationNode.on('message', () => {

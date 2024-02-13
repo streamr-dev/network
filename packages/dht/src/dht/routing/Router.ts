@@ -1,5 +1,5 @@
 import { Message, PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
-import { RoutingMode, RoutingSession, RoutingSessionEvents } from './RoutingSession'
+import { RoutingMode, RoutingRemoteContact, RoutingSession, RoutingSessionEvents } from './RoutingSession'
 import { Logger, executeSafePromise, raceEvents3, withTimeout } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { DuplicateDetector } from './DuplicateDetector'
@@ -189,6 +189,15 @@ export class Router {
 
     public removeRoutingSession(sessionId: string): void {
         this.ongoingRoutingSessions.delete(sessionId)
+    }
+
+    onNodeConnected(peerDescriptor: PeerDescriptor): void {
+        const remote = new RoutingRemoteContact(peerDescriptor, this.config.localPeerDescriptor, this.config.rpcCommunicator)
+        this.routingTableCache.onNodeConnected(remote)
+    }
+
+    onNodeDisconnected(peerDescriptor: PeerDescriptor): void {
+        this.routingTableCache.onNodeDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor))
     }
 
     public resetCache(): void {
