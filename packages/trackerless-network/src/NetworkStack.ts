@@ -49,7 +49,7 @@ if (typeof window === 'object') {
     })
 }
 
-export type NodeInfo = NodeInfoResponse
+export type NodeInfo = Required<NodeInfoResponse>
 
 export class NetworkStack {
 

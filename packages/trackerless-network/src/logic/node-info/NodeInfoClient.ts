@@ -15,7 +15,9 @@ export class NodeInfoClient {
 
     async getInfo(node: PeerDescriptor): Promise<NodeInfo> {
         const remote = new NodeInfoRpcRemote(this.ownPeerDescriptor, node, this.rpcCommunicator, NodeInfoRpcClient)
-        return remote.getInfo()
+        // TODO remove casting when we validate NodeInfoResponse messages and therefore can annotate
+        // each of the field as required in the decorated type
+        return remote.getInfo() as unknown as NodeInfo
     }
 
 }
