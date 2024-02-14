@@ -332,7 +332,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         }
     }
 
-    public handleMessageFromTransport(message: Message): boolean {
+    public handleIncomingMessage(message: Message): boolean {
         if (message.serviceId === INTERNAL_SERVICE_ID) {
             this.rpcCommunicator?.handleMessageFromPeer(message)
             return true

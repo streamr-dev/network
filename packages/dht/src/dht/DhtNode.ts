@@ -383,7 +383,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (message.serviceId === this.config.serviceId) {
             logger.trace('calling this.handleMessageFromPeer ' + nodeId + ' ' + message.serviceId + ' ' + message.messageId)
             this.rpcCommunicator?.handleMessageFromPeer(message)
-        } else if (this.connectionManager?.handleMessageFromTransport(message)) {
+        } else if (this.connectionManager?.handleIncomingMessage(message)) {
             // message was handled by connectionManager
         } else {
             logger.trace('emit "message" ' + nodeId + ' ' + message.serviceId + ' ' + message.messageId)
