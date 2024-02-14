@@ -1,6 +1,6 @@
-import { DhtAddress } from "../../identifiers"
-import { SortedContactList } from "../contact/SortedContactList"
-import { RoutingRemoteContact } from "./RoutingSession"
+import { DhtAddress } from '../../identifiers'
+import { SortedContactList } from '../contact/SortedContactList'
+import { RoutingRemoteContact } from './RoutingSession'
 
 type RoutingTableID = string
 
@@ -24,15 +24,15 @@ export class RoutingTableCache {
         return this.tables.has(createRoutingTableId(targetId, previousId))
     }
 
-    onNodeDisconnected(targetId: DhtAddress): void {
-        this.tables.forEach((table) => table.removeContact(targetId))
+    onNodeDisconnected(nodeId: DhtAddress): void {
+        this.tables.forEach((table) => table.removeContact(nodeId))
     }
 
     onNodeConnected(remote: RoutingRemoteContact): void {
         this.tables.forEach((table) => table.addContact(remote))
     }
 
-    reset() {
+    reset(): void {
         this.tables.forEach((table) => table.stop())
         this.tables.clear()
     }

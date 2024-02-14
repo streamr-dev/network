@@ -109,8 +109,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         const contacts = this.updateAndGetRoutablePeers()
         if (contacts.length === 0 && this.ongoingRequests.size === 0) {
             logger.trace('routing failed, emitting routingFailed sessionId: ' + this.sessionId)
-            // TODO should call this.stop() so that we do cleanup? (after the emitFailure call)
-            this.stopped = true
             this.emitFailure()
         } else {
             logger.trace('routing failed, retrying to route sessionId: ' + this.sessionId + ' failedHopCounter: ' + this.failedHopCounter)
@@ -133,21 +131,15 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
         this.successfulHopCounter += 1
         if (this.successfulHopCounter >= this.config.parallelism) {
-            this.emitSuccess()
+            this.emit('routingSucceeded')
             return
         }
         const contacts = this.updateAndGetRoutablePeers()
         if (contacts.length === 0) {
-            this.emitSuccess()
+            this.emit('routingSucceeded')
         } else if (contacts.length > 0 && this.ongoingRequests.size === 0) {
             this.sendMoreRequests(contacts)
         }
-    }
-
-    private emitSuccess() {
-        // TODO should call this.stop() so that we do cleanup? (after the routingSucceeded call)
-        this.stopped = true
-        this.emit('routingSucceeded')
     }
 
     private async sendRouteMessageRequest(contact: RoutingRemoteContact): Promise<boolean> {
@@ -172,11 +164,11 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         const previousPeer = getPreviousPeer(this.config.routedMessage)
         const previousId = previousPeer ? getNodeIdFromPeerDescriptor(previousPeer) : undefined
         const targetId = getDhtAddressFromRaw(this.config.routedMessage.target)
-            let contactList: SortedContactList<RoutingRemoteContact>
+        let contactList: SortedContactList<RoutingRemoteContact>
         if (this.config.routingTableCache.has(targetId, previousId)) {
             contactList = this.config.routingTableCache.get(targetId, previousId)!
         } else {
-            contactList =  new SortedContactList<RoutingRemoteContact>({
+            contactList = new SortedContactList<RoutingRemoteContact>({
                 referenceId: getDhtAddressFromRaw(this.config.routedMessage.target),
                 maxSize: CONTACT_LIST_MAX_SIZE,
                 allowToContainReferenceId: true,
@@ -185,11 +177,16 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                 emitEvents: false
             })
             const contacts = Array.from(this.config.connections.values())
-                .map((peer) => new RoutingRemoteContact(peer.getPeerDescriptor(), this.config.localPeerDescriptor, this.config.rpcCommunicator))
+                .map((peer) => new RoutingRemoteContact(
+                    peer.getPeerDescriptor(),
+                    this.config.localPeerDescriptor,
+                    this.config.rpcCommunicator
+                ))
             contactList.addContacts(contacts)
             this.config.routingTableCache.set(targetId, contactList, previousId)
         }
-        return contactList.getAllContacts().filter((contact) => !this.contactedPeers.has(contact.getNodeId()) && !this.config.excludedNodeIds!.has(contact.getNodeId()))
+        return contactList.getAllContacts()
+            .filter((contact) => !this.contactedPeers.has(contact.getNodeId()) && !this.config.excludedNodeIds!.has(contact.getNodeId()))
     }
 
     sendMoreRequests(uncontacted: RoutingRemoteContact[]): void {
