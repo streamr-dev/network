@@ -1,7 +1,6 @@
 import { CountMetric, LevelMetric, Logger, Metric, MetricsContext, MetricsDefinition, RateMetric, waitForEvent3 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { SortedContactList } from '../dht/contact/SortedContactList'
-import { DuplicateDetector } from '../dht/routing/DuplicateDetector'
 import * as Err from '../helpers/errors'
 import {
     DisconnectMode,
@@ -95,8 +94,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
 
     private config: ConnectionManagerConfig
     private readonly metricsContext: MetricsContext
-    // TODO use config option or named constant?
-    private readonly duplicateMessageDetector: DuplicateDetector = new DuplicateDetector(100000)
     private readonly metrics: ConnectionManagerMetrics
     private locks = new ConnectionLockHandler()
     private connections: Map<DhtAddress, ManagedConnection> = new Map()
@@ -229,7 +226,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
 
         this.state = ConnectionManagerState.STOPPED
         this.rpcCommunicator!.stop()
-        this.duplicateMessageDetector.clear()
         this.locks.clear()
         this.removeAllListeners()
         // TODO would it make sense to move this call to WebrtcConnector#stop()?
@@ -317,12 +313,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             logger.trace('Filtered out non-RPC message of type ' + message.messageType)
             return
         }
-        if (this.duplicateMessageDetector.isMostLikelyDuplicate(message.messageId)) {
-            logger.trace('handleMessage filtered duplicate ' + getNodeIdFromPeerDescriptor(message.sourceDescriptor!)
-                + ' ' + message.serviceId + ' ' + message.messageId)
-            return
-        }
-        this.duplicateMessageDetector.add(message.messageId)
         if (message.serviceId === INTERNAL_SERVICE_ID) {
             this.rpcCommunicator?.handleMessageFromPeer(message)
         } else {
