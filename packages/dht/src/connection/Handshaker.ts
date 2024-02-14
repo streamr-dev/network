@@ -57,6 +57,7 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
                 } else {
                     this.emit('handshakeCompleted', handshake.sourcePeerDescriptor!)
                 }
+                this.connection.off('data', (data: Uint8Array) => this.onData(data))
             }
         } catch (err) {
             logger.error('error while parsing handshake message', err)
