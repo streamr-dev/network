@@ -22,7 +22,7 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
     private static readonly HANDSHAKER_SERVICE_ID = 'system/handshaker'
     private localPeerDescriptor: PeerDescriptor
     private connection: IConnection
-
+    private readonly onDataListener: (data: Uint8Array) => void
     constructor(
         localPeerDescriptor: PeerDescriptor,
         connection: IConnection
@@ -30,7 +30,8 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
         super()
         this.localPeerDescriptor = localPeerDescriptor
         this.connection = connection
-        this.connection.on('data', (data: Uint8Array) => this.onData(data))
+        this.onDataListener = (data: Uint8Array) => this.onData(data)
+        this.connection.on('data', this.onDataListener)
     }
 
     private onData(data: Uint8Array) {
@@ -103,6 +104,6 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
     }
 
     public stop(): void {
-        this.connection.off('data', (data: Uint8Array) => this.onData(data))
+        this.connection.off('data', this.onDataListener)
     }
 }
