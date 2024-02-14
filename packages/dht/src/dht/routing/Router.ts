@@ -1,5 +1,5 @@
 import { Message, PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
-import { RoutingMode, RoutingSession, RoutingSessionEvents } from './RoutingSession'
+import { RoutingMode, RoutingRemoteContact, RoutingSession, RoutingSessionEvents } from './RoutingSession'
 import { Logger, executeSafePromise, raceEvents3, withTimeout } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { DuplicateDetector } from './DuplicateDetector'
@@ -8,6 +8,7 @@ import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { v4 } from 'uuid'
 import { RouterRpcLocal, createRouteMessageAck } from './RouterRpcLocal'
 import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { RoutingTableCache } from './RoutingTableCache'
 
 export interface RouterConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -27,6 +28,7 @@ const logger = new Logger(module)
 export class Router {
 
     private readonly forwardingTable: Map<DhtAddress, ForwardingTableEntry> = new Map()
+    private readonly routingTableCache = new RoutingTableCache()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
     // TODO use config option or named constant?
     private readonly duplicateRequestDetector: DuplicateDetector = new DuplicateDetector(100000)
@@ -168,7 +170,8 @@ export class Router {
             // TODO use config option or named constant?
             parallelism: areEqualPeerDescriptors(this.config.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
             mode,
-            excludedNodeIds
+            excludedNodeIds,
+            routingTableCache: this.routingTableCache
         })
     }
 
@@ -186,6 +189,23 @@ export class Router {
 
     public removeRoutingSession(sessionId: string): void {
         this.ongoingRoutingSessions.delete(sessionId)
+    }
+
+    onNodeConnected(peerDescriptor: PeerDescriptor): void {
+        const remote = new RoutingRemoteContact(peerDescriptor, this.config.localPeerDescriptor, this.config.rpcCommunicator)
+        this.routingTableCache.onNodeConnected(remote)
+        if (this.ongoingRoutingSessions.size > 1000) {
+            logger.warn('Too many ongoing routing sessions, clearing cache')
+            this.resetCache()
+        }
+    }
+
+    onNodeDisconnected(peerDescriptor: PeerDescriptor): void {
+        this.routingTableCache.onNodeDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor))
+    }
+
+    public resetCache(): void {
+        this.routingTableCache.reset()
     }
 
     public stop(): void {
