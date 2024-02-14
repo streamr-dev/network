@@ -6,6 +6,7 @@ import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
 import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
+import { RoutingTableCache } from '../../src/dht/routing/RoutingTableCache'
 
 describe('RoutingSession', () => {
 
@@ -49,7 +50,8 @@ describe('RoutingSession', () => {
             routedMessage,
             connections, 
             parallelism: 2,
-            mode: RoutingMode.ROUTE
+            mode: RoutingMode.ROUTE,
+            routingTableCache: new RoutingTableCache()
         })
     })
 
