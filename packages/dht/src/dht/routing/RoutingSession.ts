@@ -72,7 +72,7 @@ interface RoutingSessionConfig {
     connections: Map<DhtAddress, DhtNodeRpcRemote>
     parallelism: number
     mode: RoutingMode
-    excludedNodeIds?: Set<DhtAddress>
+    excludedNodeIds: Set<DhtAddress>
     routingTableCache: RoutingTableCache
 }
 
@@ -186,7 +186,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             this.config.routingTableCache.set(targetId, contactList, previousId)
         }
         return contactList.getAllContacts()
-            .filter((contact) => !this.contactedPeers.has(contact.getNodeId()) && !this.config.excludedNodeIds!.has(contact.getNodeId()))
+            .filter((contact) => !this.contactedPeers.has(contact.getNodeId()) && !this.config.excludedNodeIds.has(contact.getNodeId()))
     }
 
     sendMoreRequests(uncontacted: RoutingRemoteContact[]): void {

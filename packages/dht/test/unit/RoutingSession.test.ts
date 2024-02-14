@@ -13,6 +13,7 @@ describe('RoutingSession', () => {
     let session: RoutingSession
     let connections: Map<DhtAddress, DhtNodeRpcRemote>
     let rpcCommunicator: RoutingRpcCommunicator
+    let routingTableCache: RoutingTableCache
     const mockPeerDescriptor1 = createMockPeerDescriptor()
     const mockPeerDescriptor2 = createMockPeerDescriptor()
     const rpcWrapper = createWrappedClosestPeersRequest(mockPeerDescriptor1)
@@ -44,6 +45,7 @@ describe('RoutingSession', () => {
     beforeEach(() => {
         rpcCommunicator = new MockRpcCommunicator()
         connections = new Map()
+        routingTableCache = new RoutingTableCache()
         session = new RoutingSession({
             rpcCommunicator: rpcCommunicator,
             localPeerDescriptor: mockPeerDescriptor1,
@@ -51,7 +53,8 @@ describe('RoutingSession', () => {
             connections, 
             parallelism: 2,
             mode: RoutingMode.ROUTE,
-            routingTableCache: new RoutingTableCache()
+            excludedNodeIds: new Set(),
+            routingTableCache
         })
     })
 
@@ -70,6 +73,7 @@ describe('RoutingSession', () => {
         connections.set(getNodeIdFromPeerDescriptor(mockPeerDescriptor2), createMockDhtNodeRpcRemote(mockPeerDescriptor2))
         expect(session.updateAndGetRoutablePeers().length).toBe(1)
         connections.delete(getNodeIdFromPeerDescriptor(mockPeerDescriptor2))
+        routingTableCache.onNodeDisconnected(getNodeIdFromPeerDescriptor(mockPeerDescriptor2))
         expect(session.updateAndGetRoutablePeers().length).toBe(0)
     })
 
