@@ -1,8 +1,8 @@
 import { DhtCallContext, PeerDescriptor } from '@streamr/dht'
-import { NodeInfoResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { NodeInfoRpcRemote } from './NodeInfoRpcRemote'
 import { RpcCommunicator } from '@streamr/proto-rpc'
+import { NodeInfo } from '../../NetworkStack'
 import { NodeInfoRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { NodeInfoRpcRemote } from './NodeInfoRpcRemote'
 
 export class NodeInfoClient {
     private readonly ownPeerDescriptor: PeerDescriptor
@@ -13,7 +13,7 @@ export class NodeInfoClient {
         this.rpcCommunicator = rpcCommunicator
     }
 
-    async getInfo(node: PeerDescriptor): Promise<NodeInfoResponse> {
+    async getInfo(node: PeerDescriptor): Promise<NodeInfo> {
         const remote = new NodeInfoRpcRemote(this.ownPeerDescriptor, node, this.rpcCommunicator, NodeInfoRpcClient)
         return remote.getInfo()
     }

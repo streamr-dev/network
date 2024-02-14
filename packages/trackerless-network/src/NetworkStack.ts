@@ -49,7 +49,7 @@ if (typeof window === 'object') {
     })
 }
 
-type NodeInfo = NodeInfoResponse
+export type NodeInfo = NodeInfoResponse
 
 export class NetworkStack {
 
@@ -152,7 +152,7 @@ export class NetworkStack {
         return this.metricsContext
     }
 
-    async fetchNodeInfo(node: PeerDescriptor): Promise<NodeInfoResponse> {
+    async fetchNodeInfo(node: PeerDescriptor): Promise<NodeInfo> {
         if (!areEqualPeerDescriptors(node, this.getLayer0Node().getLocalPeerDescriptor())) {
             return this.nodeInfoClient!.getInfo(node)
         } else {
