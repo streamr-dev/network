@@ -27,7 +27,7 @@ const DEFAULT_LRU_OPTIONS = {
  * connections and disconnections is hugely beneficial in terms of performance.
 */
 
-export class RoutingTableCache {
+export class RoutingTablesCache {
 
     private readonly tables: LRUCache<RoutingTableID, RoutingTable> = new LRUCache(DEFAULT_LRU_OPTIONS)
 

@@ -8,7 +8,7 @@ import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { v4 } from 'uuid'
 import { RouterRpcLocal, createRouteMessageAck } from './RouterRpcLocal'
 import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { RoutingTableCache } from './RoutingTableCache'
+import { RoutingTablesCache } from './RoutingTableCache'
 
 export interface RouterConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -28,7 +28,7 @@ const logger = new Logger(module)
 export class Router {
 
     private readonly forwardingTable: Map<DhtAddress, ForwardingTableEntry> = new Map()
-    private readonly routingTableCache = new RoutingTableCache()
+    private readonly routingTablesCache = new RoutingTablesCache()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
     // TODO use config option or named constant?
     private readonly duplicateRequestDetector: DuplicateDetector = new DuplicateDetector(100000)
@@ -171,7 +171,7 @@ export class Router {
             parallelism: areEqualPeerDescriptors(this.config.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
             mode,
             excludedNodeIds,
-            routingTableCache: this.routingTableCache
+            routingTablesCache: this.routingTablesCache
         })
     }
 
@@ -193,15 +193,15 @@ export class Router {
 
     onNodeConnected(peerDescriptor: PeerDescriptor): void {
         const remote = new RoutingRemoteContact(peerDescriptor, this.config.localPeerDescriptor, this.config.rpcCommunicator)
-        this.routingTableCache.handleNodeConnected(remote)
+        this.routingTablesCache.handleNodeConnected(remote)
     }
 
     onNodeDisconnected(peerDescriptor: PeerDescriptor): void {
-        this.routingTableCache.handleNodeDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor))
+        this.routingTablesCache.handleNodeDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor))
     }
 
     public resetCache(): void {
-        this.routingTableCache.reset()
+        this.routingTablesCache.reset()
     }
 
     public stop(): void {
@@ -215,7 +215,7 @@ export class Router {
         })
         this.forwardingTable.clear()
         this.duplicateRequestDetector.clear()
-        this.routingTableCache.reset()
+        this.routingTablesCache.reset()
     }
 
     private setForwardingEntries(routedMessage: RouteMessageWrapper): void {

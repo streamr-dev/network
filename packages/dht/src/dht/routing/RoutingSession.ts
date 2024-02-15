@@ -13,7 +13,7 @@ import { EXISTING_CONNECTION_TIMEOUT } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
 import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { pull } from 'lodash'
-import { RoutingTable, RoutingTableCache } from './RoutingTableCache'
+import { RoutingTable, RoutingTablesCache } from './RoutingTableCache'
 
 const logger = new Logger(module)
 
@@ -73,7 +73,7 @@ interface RoutingSessionConfig {
     parallelism: number
     mode: RoutingMode
     excludedNodeIds: Set<DhtAddress>
-    routingTableCache: RoutingTableCache
+    routingTablesCache: RoutingTablesCache
 }
 
 export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
@@ -165,8 +165,8 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         const previousId = previousPeer ? getNodeIdFromPeerDescriptor(previousPeer) : undefined
         const targetId = getDhtAddressFromRaw(this.config.routedMessage.target)
         let routingTable: RoutingTable
-        if (this.config.routingTableCache.has(targetId, previousId)) {
-            routingTable = this.config.routingTableCache.get(targetId, previousId)!
+        if (this.config.routingTablesCache.has(targetId, previousId)) {
+            routingTable = this.config.routingTablesCache.get(targetId, previousId)!
         } else {
             routingTable = new SortedContactList<RoutingRemoteContact>({
                 referenceId: getDhtAddressFromRaw(this.config.routedMessage.target),
@@ -182,7 +182,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                     this.config.rpcCommunicator
                 ))
             routingTable.addContacts(contacts)
-            this.config.routingTableCache.set(targetId, routingTable, previousId)
+            this.config.routingTablesCache.set(targetId, routingTable, previousId)
         }
         return routingTable.getAllContacts()
             .filter((contact) => !this.contactedPeers.has(contact.getNodeId()) && !this.config.excludedNodeIds.has(contact.getNodeId()))
