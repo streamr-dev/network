@@ -173,7 +173,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                 maxSize: ROUTING_TABLE_MAX_SIZE,
                 allowToContainReferenceId: true,
                 nodeIdDistanceLimit: previousId,
-                excludedNodeIds: this.config.excludedNodeIds,
                 emitEvents: false
             })
             const contacts = Array.from(this.config.connections.values())
