@@ -164,11 +164,11 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         const previousPeer = getPreviousPeer(this.config.routedMessage)
         const previousId = previousPeer ? getNodeIdFromPeerDescriptor(previousPeer) : undefined
         const targetId = getDhtAddressFromRaw(this.config.routedMessage.target)
-        let contactList: SortedContactList<RoutingRemoteContact>
+        let routingTable: SortedContactList<RoutingRemoteContact>
         if (this.config.routingTableCache.has(targetId, previousId)) {
-            contactList = this.config.routingTableCache.get(targetId, previousId)!
+            routingTable = this.config.routingTableCache.get(targetId, previousId)!
         } else {
-            contactList = new SortedContactList<RoutingRemoteContact>({
+            routingTable = new SortedContactList<RoutingRemoteContact>({
                 referenceId: getDhtAddressFromRaw(this.config.routedMessage.target),
                 maxSize: CONTACT_LIST_MAX_SIZE,
                 allowToContainReferenceId: true,
@@ -182,10 +182,10 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                     this.config.localPeerDescriptor,
                     this.config.rpcCommunicator
                 ))
-            contactList.addContacts(contacts)
-            this.config.routingTableCache.set(targetId, contactList, previousId)
+            routingTable.addContacts(contacts)
+            this.config.routingTableCache.set(targetId, routingTable, previousId)
         }
-        return contactList.getAllContacts()
+        return routingTable.getAllContacts()
             .filter((contact) => !this.contactedPeers.has(contact.getNodeId()) && !this.config.excludedNodeIds.has(contact.getNodeId()))
     }
 
