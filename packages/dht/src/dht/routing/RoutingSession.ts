@@ -13,7 +13,7 @@ import { EXISTING_CONNECTION_TIMEOUT } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
 import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { pull } from 'lodash'
-import { RoutingTableCache } from './RoutingTableCache'
+import { RoutingTable, RoutingTableCache } from './RoutingTableCache'
 
 const logger = new Logger(module)
 
@@ -164,7 +164,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         const previousPeer = getPreviousPeer(this.config.routedMessage)
         const previousId = previousPeer ? getNodeIdFromPeerDescriptor(previousPeer) : undefined
         const targetId = getDhtAddressFromRaw(this.config.routedMessage.target)
-        let routingTable: SortedContactList<RoutingRemoteContact>
+        let routingTable: RoutingTable
         if (this.config.routingTableCache.has(targetId, previousId)) {
             routingTable = this.config.routingTableCache.get(targetId, previousId)!
         } else {

@@ -4,6 +4,7 @@ import { RoutingRemoteContact } from './RoutingSession'
 import { LRUCache } from 'lru-cache'
 
 type RoutingTableID = string
+export type RoutingTable = Pick<SortedContactList<RoutingRemoteContact>, 'getAllContacts' | 'addContacts' | 'addContact' | 'removeContact' | 'stop'>
 
 const createRoutingTableId = (targetId: DhtAddress, previousId?: DhtAddress): RoutingTableID => {
     return targetId + (previousId ? previousId : '')
@@ -28,13 +29,13 @@ const DEFAULT_LRU_OPTIONS = {
 
 export class RoutingTableCache {
 
-    private readonly tables: LRUCache<RoutingTableID, SortedContactList<RoutingRemoteContact>> = new LRUCache(DEFAULT_LRU_OPTIONS)
+    private readonly tables: LRUCache<RoutingTableID, RoutingTable> = new LRUCache(DEFAULT_LRU_OPTIONS)
 
-    get(targetId: DhtAddress, previousId?: DhtAddress): SortedContactList<RoutingRemoteContact> | undefined {
+    get(targetId: DhtAddress, previousId?: DhtAddress): RoutingTable | undefined {
         return this.tables.get(createRoutingTableId(targetId, previousId))
     }
 
-    set(targetId: DhtAddress, table: SortedContactList<RoutingRemoteContact>, previousId?: DhtAddress): void {
+    set(targetId: DhtAddress, table: RoutingTable, previousId?: DhtAddress): void {
         this.tables.set(createRoutingTableId(targetId, previousId), table)
     }
 
