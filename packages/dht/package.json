@@ -38,10 +38,10 @@
     "ipaddr.js": "^2.0.1",
     "k-bucket": "^5.1.0",
     "lodash": "^4.17.21",
+    "lru-cache": "10.2.0",
     "node-datachannel": "^0.4.3",
     "uuid": "^9.0.1",
-    "websocket": "^1.0.34",
-    "lru-cache": "10.2.0"
+    "websocket": "^1.0.34"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",

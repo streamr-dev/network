@@ -10,10 +10,10 @@ const createRoutingTableId = (targetId: DhtAddress, previousId?: DhtAddress): Ro
 }
 
 const DEFAULT_LRU_OPTIONS = {
-    max: 200,
-    maxAge: 5 * 60 * 1000,
-
+    max: 500,
+    maxAge: 30 * 1000
 }
+
 export class RoutingTableCache {
 
     private readonly tables: LRUCache<RoutingTableID, SortedContactList<RoutingRemoteContact>> = new LRUCache(DEFAULT_LRU_OPTIONS)
