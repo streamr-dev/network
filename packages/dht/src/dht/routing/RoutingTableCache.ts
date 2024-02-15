@@ -17,6 +17,7 @@ const DEFAULT_LRU_OPTIONS = {
 /**
  * RoutingTableCache is a cache for routing tables. 
  * It is used to store the routing tables for a specific targetId and previousId.
+ * Storing the previousId is important as it is used as a minimum distance for the contacts in the table.
  * Calculating a RoutingTable from scratch is an O(n log n) operation (n = number of connections of a node)
  * However,
  * - Adding a contact to a RoutingTable is an O(log n) operation.
