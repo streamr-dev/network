@@ -49,4 +49,13 @@ export class MockRouter implements Methods<Router> {
         return RouteMessageAck.create()
     }
 
+    // eslint-disable-next-line class-methods-use-this
+    onNodeConnected(): void {}
+
+    // eslint-disable-next-line class-methods-use-this
+    onNodeDisconnected(): void {}
+
+    // eslint-disable-next-line class-methods-use-this
+    resetCache(): void {}
+
 }

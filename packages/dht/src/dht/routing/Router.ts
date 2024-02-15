@@ -1,5 +1,5 @@
 import { Message, PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
-import { RoutingMode, RoutingSession, RoutingSessionEvents } from './RoutingSession'
+import { RoutingMode, RoutingRemoteContact, RoutingSession, RoutingSessionEvents } from './RoutingSession'
 import { Logger, executeSafePromise, raceEvents3, withTimeout } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { DuplicateDetector } from './DuplicateDetector'
@@ -7,6 +7,7 @@ import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { v4 } from 'uuid'
 import { RouterRpcLocal, createRouteMessageAck } from './RouterRpcLocal'
 import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { RoutingTablesCache } from './RoutingTablesCache'
 
 export interface RouterConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -26,6 +27,7 @@ const logger = new Logger(module)
 export class Router {
 
     private readonly forwardingTable: Map<DhtAddress, ForwardingTableEntry> = new Map()
+    private readonly routingTablesCache = new RoutingTablesCache()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
     // TODO use config option or named constant?
     private readonly duplicateRequestDetector: DuplicateDetector = new DuplicateDetector(10000)
@@ -167,7 +169,8 @@ export class Router {
             // TODO use config option or named constant?
             parallelism: areEqualPeerDescriptors(this.config.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
             mode,
-            excludedNodeIds
+            excludedNodeIds,
+            routingTablesCache: this.routingTablesCache
         })
     }
 
@@ -187,6 +190,19 @@ export class Router {
         this.ongoingRoutingSessions.delete(sessionId)
     }
 
+    onNodeConnected(peerDescriptor: PeerDescriptor): void {
+        const remote = new RoutingRemoteContact(peerDescriptor, this.config.localPeerDescriptor, this.config.rpcCommunicator)
+        this.routingTablesCache.onNodeConnected(remote)
+    }
+
+    onNodeDisconnected(peerDescriptor: PeerDescriptor): void {
+        this.routingTablesCache.onNodeDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor))
+    }
+
+    public resetCache(): void {
+        this.routingTablesCache.reset()
+    }
+
     public stop(): void {
         this.stopped = true
         this.ongoingRoutingSessions.forEach((session, _id) => {
@@ -198,6 +214,7 @@ export class Router {
         })
         this.forwardingTable.clear()
         this.duplicateRequestDetector.clear()
+        this.routingTablesCache.reset()
     }
 
     private setForwardingEntries(routedMessage: RouteMessageWrapper): void {
