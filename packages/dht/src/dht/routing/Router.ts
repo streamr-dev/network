@@ -191,12 +191,12 @@ export class Router {
         this.ongoingRoutingSessions.delete(sessionId)
     }
 
-    onNodeConnected(peerDescriptor: PeerDescriptor): void {
+    handleNodeConnected(peerDescriptor: PeerDescriptor): void {
         const remote = new RoutingRemoteContact(peerDescriptor, this.config.localPeerDescriptor, this.config.rpcCommunicator)
         this.routingTablesCache.handleNodeConnected(remote)
     }
 
-    onNodeDisconnected(peerDescriptor: PeerDescriptor): void {
+    handleNodeDisconnected(peerDescriptor: PeerDescriptor): void {
         this.routingTablesCache.handleNodeDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor))
     }
 
