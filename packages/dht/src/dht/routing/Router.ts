@@ -193,11 +193,11 @@ export class Router {
 
     onNodeConnected(peerDescriptor: PeerDescriptor): void {
         const remote = new RoutingRemoteContact(peerDescriptor, this.config.localPeerDescriptor, this.config.rpcCommunicator)
-        this.routingTableCache.onNodeConnected(remote)
+        this.routingTableCache.handleNodeConnected(remote)
     }
 
     onNodeDisconnected(peerDescriptor: PeerDescriptor): void {
-        this.routingTableCache.onNodeDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor))
+        this.routingTableCache.handleNodeDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor))
     }
 
     public resetCache(): void {
