@@ -13,7 +13,7 @@ import { EXISTING_CONNECTION_TIMEOUT } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
 import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { pull } from 'lodash'
-import { RoutingTable, RoutingTablesCache } from './RoutingTableCache'
+import { RoutingTable, RoutingTablesCache } from './RoutingTablesCache'
 
 const logger = new Logger(module)
 

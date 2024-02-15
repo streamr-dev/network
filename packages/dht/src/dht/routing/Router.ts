@@ -8,7 +8,7 @@ import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { v4 } from 'uuid'
 import { RouterRpcLocal, createRouteMessageAck } from './RouterRpcLocal'
 import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { RoutingTablesCache } from './RoutingTableCache'
+import { RoutingTablesCache } from './RoutingTablesCache'
 
 export interface RouterConfig {
     rpcCommunicator: RoutingRpcCommunicator

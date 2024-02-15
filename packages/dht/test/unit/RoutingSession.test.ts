@@ -6,7 +6,7 @@ import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
 import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
-import { RoutingTablesCache } from '../../src/dht/routing/RoutingTableCache'
+import { RoutingTablesCache } from '../../src/dht/routing/RoutingTablesCache'
 
 describe('RoutingSession', () => {
 
