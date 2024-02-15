@@ -10,9 +10,20 @@ const createRoutingTableId = (targetId: DhtAddress, previousId?: DhtAddress): Ro
 }
 
 const DEFAULT_LRU_OPTIONS = {
-    max: 500,
-    maxAge: 30 * 1000
+    max: 1000,
+    maxAge: 15 * 1000
 }
+
+/**
+ * RoutingTableCache is a cache for routing tables. 
+ * It is used to store the routing tables for a specific targetId and previousId.
+ * Calculating a RoutingTable from scratch is an O(n log n) operation (n = number of connections of a node)
+ * However,
+ * - Adding a contact to a RoutingTable is an O(log n) operation.
+ * - Deleting a contact from a RoutingTable is an O(1) operation.
+ * Thus, holding the most frequently used routing tables in memory to be updated on 
+ * connections and disconnections is hugely beneficial in terms of performance.
+*/
 
 export class RoutingTableCache {
 
