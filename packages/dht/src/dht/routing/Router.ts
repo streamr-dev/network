@@ -194,10 +194,6 @@ export class Router {
     onNodeConnected(peerDescriptor: PeerDescriptor): void {
         const remote = new RoutingRemoteContact(peerDescriptor, this.config.localPeerDescriptor, this.config.rpcCommunicator)
         this.routingTableCache.onNodeConnected(remote)
-        if (this.ongoingRoutingSessions.size > 1000) {
-            logger.warn('Too many ongoing routing sessions, clearing cache')
-            this.resetCache()
-        }
     }
 
     onNodeDisconnected(peerDescriptor: PeerDescriptor): void {

@@ -1,6 +1,7 @@
 import { DhtAddress } from '../../identifiers'
 import { SortedContactList } from '../contact/SortedContactList'
 import { RoutingRemoteContact } from './RoutingSession'
+import { LRUCache } from 'lru-cache'
 
 type RoutingTableID = string
 
@@ -8,9 +9,14 @@ const createRoutingTableId = (targetId: DhtAddress, previousId?: DhtAddress): Ro
     return targetId + (previousId ? previousId : '')
 }
 
+const DEFAULT_LRU_OPTIONS = {
+    max: 200,
+    maxAge: 5 * 60 * 1000,
+
+}
 export class RoutingTableCache {
 
-    private readonly tables: Map<RoutingTableID, SortedContactList<RoutingRemoteContact>> = new Map()
+    private readonly tables: LRUCache<RoutingTableID, SortedContactList<RoutingRemoteContact>> = new LRUCache(DEFAULT_LRU_OPTIONS)
 
     get(targetId: DhtAddress, previousId?: DhtAddress): SortedContactList<RoutingRemoteContact> | undefined {
         return this.tables.get(createRoutingTableId(targetId, previousId))
