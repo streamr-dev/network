@@ -18,7 +18,7 @@ import { RoutingTableCache } from './RoutingTableCache'
 const logger = new Logger(module)
 
 const MAX_FAILED_HOPS = 2
-const CONTACT_LIST_MAX_SIZE = 20
+const ROUTING_TABLE_MAX_SIZE = 20
 
 export class RoutingRemoteContact extends Contact {
 
@@ -170,7 +170,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         } else {
             routingTable = new SortedContactList<RoutingRemoteContact>({
                 referenceId: getDhtAddressFromRaw(this.config.routedMessage.target),
-                maxSize: CONTACT_LIST_MAX_SIZE,
+                maxSize: ROUTING_TABLE_MAX_SIZE,
                 allowToContainReferenceId: true,
                 nodeIdDistanceLimit: previousId,
                 excludedNodeIds: this.config.excludedNodeIds,
