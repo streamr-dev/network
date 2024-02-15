@@ -215,6 +215,7 @@ export class Router {
         })
         this.forwardingTable.clear()
         this.duplicateRequestDetector.clear()
+        this.routingTableCache.reset()
     }
 
     private setForwardingEntries(routedMessage: RouteMessageWrapper): void {
