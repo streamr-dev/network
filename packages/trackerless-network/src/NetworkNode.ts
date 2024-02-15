@@ -1,9 +1,9 @@
 import { StreamMessage, StreamPartID } from '@streamr/protocol'
 import { DhtAddress, PeerDescriptor } from '@streamr/dht'
 import { StreamMessageTranslator } from './logic/protocol-integration/stream-message/StreamMessageTranslator'
-import { NetworkOptions, NetworkStack } from './NetworkStack'
+import { NetworkOptions, NetworkStack, NodeInfo } from './NetworkStack'
 import { EthereumAddress, Logger, MetricsContext } from '@streamr/utils'
-import { NodeInfoResponse, ProxyDirection } from './proto/packages/trackerless-network/protos/NetworkRpc'
+import { ProxyDirection } from './proto/packages/trackerless-network/protos/NetworkRpc'
 import { pull } from 'lodash'
 
 export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
@@ -120,7 +120,7 @@ export class NetworkNode {
         return this.stack.getStreamrNode().getStreamParts()
     }
 
-    async fetchNodeInfo(node: PeerDescriptor): Promise<NodeInfoResponse> {
+    async fetchNodeInfo(node: PeerDescriptor): Promise<NodeInfo> {
         return this.stack.fetchNodeInfo(node)
     }
 
