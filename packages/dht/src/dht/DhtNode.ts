@@ -231,7 +231,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             { rpcRequestTimeout: this.config.rpcRequestTimeout }
         )
 
-        this.transport.on('message', (message: Message) => this.handleMessage(message))
+        this.transport.on('message', (message: Message) => this.handleMessageFromTransport(message))
 
         this.initPeerManager()
 
@@ -250,7 +250,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             connections: this.peerManager!.connections,
             localPeerDescriptor: this.localPeerDescriptor!,
             addContact: (contact: PeerDescriptor, setActive?: boolean) => this.peerManager!.addContact([contact], setActive),
-            connectionManager: this.connectionManager
+            handleMessage: (message: Message) => this.handleMessageFromRouter(message),
         })
         this.recursiveOperationManager = new RecursiveOperationManager({
             rpcCommunicator: this.rpcCommunicator,
@@ -378,13 +378,18 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         )
     }
 
-    private handleMessage(message: Message): void {
-        const nodeId = getNodeIdFromPeerDescriptor(message.sourceDescriptor!)
+    private handleMessageFromTransport(message: Message): void {
         if (message.serviceId === this.config.serviceId) {
-            logger.trace('calling this.handleMessageFromPeer ' + nodeId + ' ' + message.serviceId + ' ' + message.messageId)
             this.rpcCommunicator?.handleMessageFromPeer(message)
+        } 
+    }
+    
+    private handleMessageFromRouter(message: Message): void {
+        if (message.serviceId === this.config.serviceId) {
+            this.rpcCommunicator?.handleMessageFromPeer(message)
+        } else if (this.connectionManager?.handleIncomingMessage(message)) {
+            // message was handled by connectionManager
         } else {
-            logger.trace('emit "message" ' + nodeId + ' ' + message.serviceId + ' ' + message.messageId)
             this.emit('message', message)
         }
     }

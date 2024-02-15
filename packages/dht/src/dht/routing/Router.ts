@@ -3,7 +3,6 @@ import { RoutingMode, RoutingSession, RoutingSessionEvents } from './RoutingSess
 import { Logger, executeSafePromise, raceEvents3, withTimeout } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { DuplicateDetector } from './DuplicateDetector'
-import { ConnectionManager } from '../../connection/ConnectionManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { v4 } from 'uuid'
 import { RouterRpcLocal, createRouteMessageAck } from './RouterRpcLocal'
@@ -14,7 +13,7 @@ export interface RouterConfig {
     localPeerDescriptor: PeerDescriptor
     connections: Map<DhtAddress, DhtNodeRpcRemote>
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
-    connectionManager?: ConnectionManager
+    handleMessage: (message: Message) => void
 }
 
 interface ForwardingTableEntry {
@@ -45,7 +44,7 @@ export class Router {
             setForwardingEntries: (routedMessage: RouteMessageWrapper) => this.setForwardingEntries(routedMessage),
             duplicateRequestDetector: this.duplicateRequestDetector,
             localPeerDescriptor: this.config.localPeerDescriptor,
-            connectionManager: this.config.connectionManager
+            handleMessage: this.config.handleMessage
         })
         this.config.rpcCommunicator.registerRpcMethod(
             RouteMessageWrapper,

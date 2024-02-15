@@ -311,7 +311,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         return this.locks.isRemoteLocked(nodeId)
     }
 
-    public handleMessage(message: Message): void {
+    private handleMessage(message: Message): void {
         logger.trace('Received message of type ' + message.messageType)
         if (message.messageType !== MessageType.RPC) {
             logger.trace('Filtered out non-RPC message of type ' + message.messageType)
@@ -330,6 +330,14 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
                 + ' ' + message.serviceId + ' ' + message.messageId)
             this.emit('message', message)
         }
+    }
+
+    public handleIncomingMessage(message: Message): boolean {
+        if (message.serviceId === INTERNAL_SERVICE_ID) {
+            this.rpcCommunicator?.handleMessageFromPeer(message)
+            return true
+        }
+        return false
     }
 
     private onData(data: Uint8Array, peerDescriptor: PeerDescriptor): void {
