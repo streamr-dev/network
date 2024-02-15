@@ -50,10 +50,10 @@ export class MockRouter implements Methods<Router> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    handleNodeConnected(): void {}
+    onNodeConnected(): void {}
 
     // eslint-disable-next-line class-methods-use-this
-    handleNodeDisconnected(): void {}
+    onNodeDisconnected(): void {}
 
     // eslint-disable-next-line class-methods-use-this
     resetCache(): void {}

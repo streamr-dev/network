@@ -73,7 +73,7 @@ describe('RoutingSession', () => {
         connections.set(getNodeIdFromPeerDescriptor(mockPeerDescriptor2), createMockDhtNodeRpcRemote(mockPeerDescriptor2))
         expect(session.updateAndGetRoutablePeers().length).toBe(1)
         connections.delete(getNodeIdFromPeerDescriptor(mockPeerDescriptor2))
-        routingTablesCache.handleNodeDisconnected(getNodeIdFromPeerDescriptor(mockPeerDescriptor2))
+        routingTablesCache.onNodeDisconnected(getNodeIdFromPeerDescriptor(mockPeerDescriptor2))
         expect(session.updateAndGetRoutablePeers().length).toBe(0)
     })
 
