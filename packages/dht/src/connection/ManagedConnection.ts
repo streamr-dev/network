@@ -177,6 +177,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
         this.setRemotePeerDescriptor(peerDescriptor)
         this.handshakeCompleted = true
+        this.handshaker!.stop()
 
         while (this.outputBuffer.length > 0) {
             logger.trace('emptying outputBuffer')
