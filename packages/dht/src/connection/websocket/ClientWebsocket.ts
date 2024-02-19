@@ -1,6 +1,6 @@
-import { Logger } from '@streamr/utils'
+import { Logger, binaryToUtf8 } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
-import { ICloseEvent, IMessageEvent, w3cwebsocket as Websocket } from 'websocket'
+import { WebSocket } from 'ws'
 import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from '../IConnection'
 import { createRandomConnectionId } from '../Connection'
 
@@ -18,7 +18,7 @@ const BINARY_TYPE = 'arraybuffer'
 export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements IConnection {
 
     public readonly connectionId: ConnectionID
-    private socket?: Websocket
+    private socket?: WebSocket
     public connectionType = ConnectionType.WEBSOCKET_CLIENT
 
     private destroyed = false
@@ -31,40 +31,41 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
     // TODO explicit default value for "selfSigned" or make it required
     public connect(address: string, selfSigned?: boolean): void {
         if (!this.destroyed) {
-            this.socket = new Websocket(address, undefined, undefined, undefined, { rejectUnauthorized: !selfSigned })
+            // this.socket = new WebSocket(address, undefined, undefined, undefined, { rejectUnauthorized: !selfSigned })
+            this.socket = new WebSocket(address, { rejectUnauthorized: !selfSigned })
             this.socket.binaryType = BINARY_TYPE
-            this.socket.onerror = (error: Error) => {
+            this.socket.on('error', (error: Error) => {
                 if (!this.destroyed) {
                     logger.trace('WebSocket Client error: ' + error?.message, { error })
                     this.emit('error', error.name)
                 }
-            }
+            })
 
-            this.socket.onopen = () => {
+            this.socket.on('open', () => {
                 if (!this.destroyed) {
                     logger.trace('WebSocket Client Connected')
                     if (this.socket && this.socket.readyState === this.socket.OPEN) {
                         this.emit('connected')
                     }
                 }
-            }
+            })
 
-            this.socket.onclose = (event: ICloseEvent) => {
+            this.socket.on('close', (code: number, reason: Buffer) => {
                 if (!this.destroyed) {
                     logger.trace('Websocket Closed')
-                    this.doDisconnect(event.code, event.reason)
+                    this.doDisconnect(code, binaryToUtf8(reason))
                 }
-            }
+            })
 
-            this.socket.onmessage = (message: IMessageEvent) => {
+            this.socket.on('message', (message: Buffer, isBinary: boolean) => {
                 if (!this.destroyed) {
-                    if (typeof message.data === 'string') {
-                        logger.debug('Received string: \'' + message.data + '\'')
+                    if (isBinary === false) {
+                        logger.debug('Received string: \'' + message + '\'')
                     } else {
-                        this.emit('data', new Uint8Array(message.data))
+                        this.emit('data', new Uint8Array(message))
                     }
                 }
-            }
+            })
         } else {
             logger.debug('Tried to connect() a stopped connection')
         }
@@ -104,12 +105,7 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
     }
 
     private stopListening(): void {
-        if (this.socket) {
-            this.socket.onopen = undefined as unknown as (() => void)
-            this.socket.onclose = undefined as unknown as (() => void)
-            this.socket.onerror = undefined as unknown as (() => void)
-            this.socket.onmessage = undefined as unknown as (() => void)
-        }
+        this.socket?.removeAllListeners()
     }
 
     public destroy(): void {
