@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3'
 import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../IConnection'
-import { Message, connection as WsConnection } from 'websocket'
+import WebSocket from 'ws'
 import { Logger } from '@streamr/utils'
 import { Url } from 'url'
 import { CUSTOM_GOING_AWAY, GOING_AWAY } from './ClientWebsocket'
@@ -14,20 +14,16 @@ const logger = new Logger(module)
 
 declare let NodeJsBuffer: BufferConstructor
 
-enum MessageType {
-    UTF8 = 'utf8',
-    BINARY = 'binary'
-}
-
 export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements IConnection {
 
     public readonly connectionId: ConnectionID
     public readonly connectionType = ConnectionType.WEBSOCKET_SERVER
     public readonly resourceURL: Url
-    private socket?: WsConnection
+    public readonly remoteAddress: string
+    private socket?: WebSocket
     private stopped = false
 
-    constructor(socket: WsConnection, resourceURL: Url) {
+    constructor(socket: WebSocket, resourceURL: Url, remoteAddress: string) {
         super()
 
         this.onMessage = this.onMessage.bind(this)
@@ -36,6 +32,7 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
 
         this.resourceURL = resourceURL
         this.connectionId = createRandomConnectionId()
+        this.remoteAddress = remoteAddress
 
         socket.on('message', this.onMessage)
         socket.on('close', this.onClose)
@@ -44,20 +41,17 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         this.socket = socket
     }
 
-    private onMessage(message: Message): void {
+    private onMessage(message: WebSocket.RawData, isBinary: boolean): void {
         logger.trace('ServerWebsocket::onMessage')
-        if (message.type === MessageType.UTF8) {
-            logger.debug('Received string Message: ' + message.utf8Data)
-        } else if (message.type === MessageType.BINARY) {
-            logger.trace('Received Binary Message of ' + message.binaryData.length + ' bytes')
-            this.emit('data',
-                new Uint8Array(message.binaryData.buffer, message.binaryData.byteOffset,
-                    message.binaryData.byteLength / Uint8Array.BYTES_PER_ELEMENT))
+        if (!isBinary) {
+            logger.debug('Received string Message')
+        } else if (message instanceof Buffer) {
+            this.emit('data', new Uint8Array(message))
         }
     }
 
     private onClose(reasonCode: number, description: string): void {
-        logger.trace('Peer ' + this.socket?.remoteAddress + ' disconnected.')
+        // logger.trace('Peer ' + this.socket?.remoteAddress + ' disconnected.')
         this.doDisconnect(reasonCode, description)
     }
 
@@ -86,9 +80,9 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         // TODO: no need to check this.socket as it is always defined when stopped is false?
         if (!this.stopped && this.socket) {
             if (typeof NodeJsBuffer !== 'undefined') {
-                this.socket.sendBytes(NodeJsBuffer.from(data))
+                this.socket.send(NodeJsBuffer.from(data), { binary: true })
             } else {
-                this.socket.sendBytes(Buffer.from(data))
+                this.socket.send(Buffer.from(data), { binary: true })
             }
         } else {
             logger.debug('Tried to call send() on a stopped socket')
@@ -121,25 +115,15 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
         }
     }
 
-    public getRemoteAddress(): string {
-        // TODO: no need to check this.socket as it is always defined when stopped is false?
-        if (!this.stopped && this.socket) {
-            return this.socket.remoteAddress
-        } else {
-            // TODO throw
-            logger.error('Tried to get the remoteAddress of a stopped connection')
-            return ''
-        }
-    }
-
     public getRemoteIp(): string {
         // TODO: no need to check this.socket as it is always defined when stopped is false?
-        if (!this.stopped && this.socket) {
-            return this.socket.socket.remoteAddress!
-        } else {
-            // TODO throw
-            logger.error('Tried to get the remoteAddress of a stopped connection')
-            return ''
-        }
+        // if (!this.stopped && this.socket) {
+        //     return this.socket.socket.remoteAddress!
+        // } else {
+        //     // TODO throw
+        //     logger.error('Tried to get the remoteAddress of a stopped connection')
+        //     return ''
+        // }
+        return ''
     }
 }

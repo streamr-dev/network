@@ -17,7 +17,7 @@ const logger = new Logger(module)
 
 export const attachConnectivityRequestHandler = (connectionToListenTo: ServerWebsocket): void => {
     connectionToListenTo.on('data', async (data: Uint8Array) => {
-        logger.trace('server received data')
+        logger.info('server received data')
         try {
             const message = Message.fromBinary(data)
             if (message.body.oneofKind === 'connectivityRequest') {
@@ -36,11 +36,12 @@ export const attachConnectivityRequestHandler = (connectionToListenTo: ServerWeb
 }
 
 const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, connectivityRequest: ConnectivityRequest): Promise<void> => {
-    const host = connectivityRequest.host ?? connection.getRemoteAddress()
+    const host = connectivityRequest.host ?? connection.remoteAddress
     const ipAddress = connection.getRemoteIp()
     let connectivityResponse: ConnectivityResponse
     if (connectivityRequest.port !== DISABLE_CONNECTIVITY_PROBE) {
         connectivityResponse = await connectivityProbe(connectivityRequest, ipAddress, host)
+
     } else {
         logger.trace('ConnectivityRequest port is 0, replying without connectivityProbe')
         connectivityResponse = {
@@ -49,6 +50,7 @@ const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, co
             ipAddress: ipv4ToNumber(ipAddress),
             version: localVersion
         }
+
     }
     const msg: Message = {
         serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,

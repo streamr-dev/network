@@ -41,7 +41,8 @@
     "lru-cache": "10.2.0",
     "node-datachannel": "^0.4.3",
     "uuid": "^9.0.1",
-    "websocket": "^1.0.34"
+    "websocket": "^1.0.34",
+    "ws": "^8.16.0"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
@@ -53,6 +54,7 @@
     "@types/sinon": "^17.0.3",
     "@types/uuid": "^9.0.8",
     "@types/websocket": "^1.0.10",
+    "@types/ws": "^8.5.10",
     "express": "^4.17.1",
     "jest-leak-detector": "^27.3.1",
     "patch-package": "^8.0.0",
