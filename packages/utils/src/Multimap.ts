@@ -8,14 +8,15 @@
  * TODO: implement some unit tests if this is not just a test helper class.
  **/
 export class Multimap<K, V> {
-    private readonly values: Map<K, V[]> = new Map()
+
+    private readonly delegatee: Map<K, V[]> = new Map()
 
     get(key: K): V[] {
-        return this.values.get(key) ?? []
+        return this.delegatee.get(key) ?? []
     }
 
     has(key: K, value: V): boolean {
-        const items = this.values.get(key)
+        const items = this.delegatee.get(key)
         if (items !== undefined) {
             return items.includes(value)
             // eslint-disable-next-line no-else-return
@@ -25,21 +26,21 @@ export class Multimap<K, V> {
     }
 
     add(key: K, value: V): void {
-        this.values.set(key, this.get(key).concat(value))
+        this.delegatee.set(key, this.get(key).concat(value))
     }
 
     addAll(key: K, values: V[]): void {
-        this.values.set(key, this.get(key).concat(values))
+        this.delegatee.set(key, this.get(key).concat(values))
     }
 
     remove(key: K, value: V): void {
-        const items = this.values.get(key)
+        const items = this.delegatee.get(key)
         if (items !== undefined) {
             const newItems = items.filter((i) => i !== value)
             if (newItems.length > 0) {
-                this.values.set(key, newItems)
+                this.delegatee.set(key, newItems)
             } else {
-                this.values.delete(key)
+                this.delegatee.delete(key)
             }
         }
     }
@@ -48,7 +49,13 @@ export class Multimap<K, V> {
         values.forEach((value) => this.remove(key, value))
     }
 
-    keys(): K[] {
-        return Array.from(this.values.keys())
+    *keys(): Generator<K, undefined, undefined> {
+        yield* this.delegatee.keys()
+    }
+
+    *values(): Generator<V, undefined, undefined> {
+        for (const k of this.keys()) {
+            yield* this.get(k)
+        }
     }
 }
