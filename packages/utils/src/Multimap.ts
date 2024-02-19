@@ -4,8 +4,6 @@
  * -> when we query the data, we get it back in the same order
  * -> an array may contain duplicates, if same value is added multiple times
  *    (we could implement a Multiset class if we need a different kind of duplication handling)
- *
- * TODO: implement some unit tests if this is not just a test helper class.
  **/
 export class Multimap<K, V> {
 
