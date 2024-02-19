@@ -1,11 +1,9 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { 
-    GroupKeyRequest,
     ProxyConnectionRequest,
     ProxyConnectionResponse,
     ProxyDirection,
-    StreamMessage,
-    StreamMessageType
+    StreamMessage
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IProxyConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
@@ -64,9 +62,9 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
     }
 
     getPropagationTargets(msg: StreamMessage): DhtAddress[] {
-        if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
+        if (msg.body.oneofKind === 'groupKeyRequest') {
             try {
-                const recipientId = GroupKeyRequest.fromBinary(msg.content).recipientId
+                const recipientId = msg.body.groupKeyRequest.recipientId
                 return this.getNodeIdsForUserId(toEthereumAddress(binaryToHex(recipientId, true)))
             } catch (err) {
                 logger.trace(`Could not parse GroupKeyRequest: ${err}`)

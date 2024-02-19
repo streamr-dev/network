@@ -113,8 +113,10 @@ export class StreamrNode extends EventEmitter<Events> {
         logger.debug(`Broadcasting to stream part ${streamPartId}`)
         this.joinStreamPart(streamPartId)
         this.streamParts.get(streamPartId)!.broadcast(msg)
-        this.metrics.broadcastMessagesPerSecond.record(1)
-        this.metrics.broadcastBytesPerSecond.record(msg.content.length)
+        if (msg.body.oneofKind === 'contentMessage') {
+            this.metrics.broadcastMessagesPerSecond.record(1)
+            this.metrics.broadcastBytesPerSecond.record(msg.body.contentMessage.content.length)
+        }
     }
 
     async leaveStreamPart(streamPartId: StreamPartID): Promise<void> {
