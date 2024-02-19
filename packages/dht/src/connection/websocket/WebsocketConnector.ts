@@ -19,7 +19,7 @@ import { sendConnectivityRequest } from '../connectivityChecker'
 import { NatType, PortRange, TlsCertificate } from '../ConnectionManager'
 import { ServerWebsocket } from './ServerWebsocket'
 import { Handshaker } from '../Handshaker'
-import { ParsedUrlQuery } from 'querystring'
+import queryString from 'querystring'
 import { range, sample } from 'lodash'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { expectedConnectionType } from '../../helpers/Connectivity'
@@ -144,9 +144,9 @@ export class WebsocketConnector {
         if (!this.abortController.signal.aborted && this.websocketServer) {
             this.websocketServer.on('connected', (connection: IConnection) => {
                 const serverSocket = connection as unknown as ServerWebsocket
-                const query = serverSocket.resourceURL.query as unknown as (ParsedUrlQuery | null)
+                const query = queryString.parse(serverSocket.resourceURL.query as string)
                 const action = query?.action as (Action | undefined)
-                logger.trace('WebSocket client connected', { action, remoteAddress: serverSocket.getRemoteAddress() })
+                logger.trace('WebSocket client connected', { action, remoteAddress: serverSocket.remoteAddress })
                 if (action === 'connectivityRequest') {
                     attachConnectivityRequestHandler(serverSocket)
                 } else if (action === 'connectivityProbe') {
