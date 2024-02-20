@@ -49,7 +49,6 @@ const handleIncomingConnectivityRequest = async (connection: WebsocketServerConn
             ipAddress: ipv4ToNumber(ipAddress),
             version: localVersion
         }
-
     }
     const msg: Message = {
         serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
