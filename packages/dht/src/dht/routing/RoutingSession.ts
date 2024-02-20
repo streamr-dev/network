@@ -13,29 +13,30 @@ import { EXISTING_CONNECTION_TIMEOUT } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
 import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { pull } from 'lodash'
+import { RoutingTable, RoutingTablesCache } from './RoutingTablesCache'
 
 const logger = new Logger(module)
 
 const MAX_FAILED_HOPS = 2
-const CONTACT_LIST_MAX_SIZE = 10
+const ROUTING_TABLE_MAX_SIZE = 20
 
-class RemoteContact extends Contact {
+export class RoutingRemoteContact extends Contact {
 
     private routerRpcRemote: RouterRpcRemote
     private recursiveOperationRpcRemote: RecursiveOperationRpcRemote
 
-    constructor(peer: DhtNodeRpcRemote, localPeerDescriptor: PeerDescriptor, rpcCommunicator: RoutingRpcCommunicator) {
-        super(peer.getPeerDescriptor())
+    constructor(peer: PeerDescriptor, localPeerDescriptor: PeerDescriptor, rpcCommunicator: RoutingRpcCommunicator) {
+        super(peer)
         this.routerRpcRemote = new RouterRpcRemote(
             localPeerDescriptor,
-            peer.getPeerDescriptor(),
+            peer,
             rpcCommunicator,
             RouterRpcClient,
             EXISTING_CONNECTION_TIMEOUT
         )
         this.recursiveOperationRpcRemote = new RecursiveOperationRpcRemote(
             localPeerDescriptor,
-            peer.getPeerDescriptor(),
+            peer,
             rpcCommunicator,
             RecursiveOperationRpcClient,
             EXISTING_CONNECTION_TIMEOUT
@@ -71,14 +72,15 @@ interface RoutingSessionConfig {
     connections: Map<DhtAddress, DhtNodeRpcRemote>
     parallelism: number
     mode: RoutingMode
-    excludedNodeIds?: Set<DhtAddress>
+    excludedNodeIds: Set<DhtAddress>
+    routingTablesCache: RoutingTablesCache
 }
 
 export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
     public readonly sessionId = v4()
     private ongoingRequests: Set<DhtAddress> = new Set()
-    private contactList: SortedContactList<RemoteContact>
+    private contactedPeers: Set<DhtAddress> = new Set()
     private failedHopCounter = 0
     private successfulHopCounter = 0
     private stopped = false
@@ -87,16 +89,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     constructor(config: RoutingSessionConfig) {
         super()
         this.config = config
-        const previousPeer = getPreviousPeer(config.routedMessage)
-        const previousId = previousPeer ? getNodeIdFromPeerDescriptor(previousPeer) : undefined
-        this.contactList = new SortedContactList({
-            referenceId: getDhtAddressFromRaw(config.routedMessage.target),
-            maxSize: CONTACT_LIST_MAX_SIZE,
-            allowToContainReferenceId: true,
-            nodeIdDistanceLimit: previousId,
-            excludedNodeIds: config.excludedNodeIds,
-            emitEvents: false
-        })
     }
 
     private onRequestFailed(nodeId: DhtAddress) {
@@ -117,8 +109,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         const contacts = this.updateAndGetRoutablePeers()
         if (contacts.length === 0 && this.ongoingRequests.size === 0) {
             logger.trace('routing failed, emitting routingFailed sessionId: ' + this.sessionId)
-            // TODO should call this.stop() so that we do cleanup? (after the emitFailure call)
-            this.stopped = true
             this.emitFailure()
         } else {
             logger.trace('routing failed, retrying to route sessionId: ' + this.sessionId + ' failedHopCounter: ' + this.failedHopCounter)
@@ -141,24 +131,18 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
         this.successfulHopCounter += 1
         if (this.successfulHopCounter >= this.config.parallelism) {
-            this.emitSuccess()
+            this.emit('routingSucceeded')
             return
         }
         const contacts = this.updateAndGetRoutablePeers()
         if (contacts.length === 0) {
-            this.emitSuccess()
+            this.emit('routingSucceeded')
         } else if (contacts.length > 0 && this.ongoingRequests.size === 0) {
             this.sendMoreRequests(contacts)
         }
     }
 
-    private emitSuccess() {
-        // TODO should call this.stop() so that we do cleanup? (after the routingSucceeded call)
-        this.stopped = true
-        this.emit('routingSucceeded')
-    }
-
-    private async sendRouteMessageRequest(contact: RemoteContact): Promise<boolean> {
+    private async sendRouteMessageRequest(contact: RoutingRemoteContact): Promise<boolean> {
         if (this.stopped) {
             return false
         }
@@ -175,21 +159,36 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
     }
 
-    updateAndGetRoutablePeers(): RemoteContact[] {
+    updateAndGetRoutablePeers(): RoutingRemoteContact[] {
         logger.trace('getRoutablePeers() sessionId: ' + this.sessionId)
-        // Remove stale contacts that may have been removed from connections
-        this.contactList.getContactIds().forEach((nodeId) => {
-            if (!this.config.connections.has(nodeId)) {
-                this.contactList.removeContact(nodeId)
-            }
-        })
-        const contacts = Array.from(this.config.connections.values())
-            .map((peer) => new RemoteContact(peer, this.config.localPeerDescriptor, this.config.rpcCommunicator))
-        this.contactList.addContacts(contacts)
-        return this.contactList.getUncontactedContacts(this.config.parallelism)
+        const previousPeer = getPreviousPeer(this.config.routedMessage)
+        const previousId = previousPeer ? getNodeIdFromPeerDescriptor(previousPeer) : undefined
+        const targetId = getDhtAddressFromRaw(this.config.routedMessage.target)
+        let routingTable: RoutingTable
+        if (this.config.routingTablesCache.has(targetId, previousId)) {
+            routingTable = this.config.routingTablesCache.get(targetId, previousId)!
+        } else {
+            routingTable = new SortedContactList<RoutingRemoteContact>({
+                referenceId: getDhtAddressFromRaw(this.config.routedMessage.target),
+                maxSize: ROUTING_TABLE_MAX_SIZE,
+                allowToContainReferenceId: true,
+                nodeIdDistanceLimit: previousId,
+                emitEvents: false
+            })
+            const contacts = Array.from(this.config.connections.values())
+                .map((peer) => new RoutingRemoteContact(
+                    peer.getPeerDescriptor(),
+                    this.config.localPeerDescriptor,
+                    this.config.rpcCommunicator
+                ))
+            routingTable.addContacts(contacts)
+            this.config.routingTablesCache.set(targetId, routingTable, previousId)
+        }
+        return routingTable.getAllContacts()
+            .filter((contact) => !this.contactedPeers.has(contact.getNodeId()) && !this.config.excludedNodeIds.has(contact.getNodeId()))
     }
 
-    sendMoreRequests(uncontacted: RemoteContact[]): void {
+    sendMoreRequests(uncontacted: RoutingRemoteContact[]): void {
         logger.trace('sendMoreRequests() sessionId: ' + this.sessionId)
         if (this.stopped) {
             return
@@ -202,7 +201,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             const nextPeer = uncontacted.shift()
             // eslint-disable-next-line max-len
             logger.trace(`Sending routeMessage request to contact: ${getNodeIdFromPeerDescriptor(nextPeer!.getPeerDescriptor())} (sessionId=${this.sessionId})`)
-            this.contactList.setContacted(nextPeer!.getNodeId())
+            this.contactedPeers.add(nextPeer!.getNodeId())
             this.ongoingRequests.add(nextPeer!.getNodeId())
             this.addParallelRootIfSource(nextPeer!.getNodeId())
             setImmediate(async () => {
@@ -242,7 +241,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
 
     public stop(): void {
         this.stopped = true
-        this.contactList.stop()
         this.emit('stopped')
         this.removeAllListeners()
     }
