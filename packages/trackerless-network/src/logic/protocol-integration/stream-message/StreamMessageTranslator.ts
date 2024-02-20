@@ -1,30 +1,26 @@
 import {
-    ContentType as OldContentType,
-    EncryptedGroupKey as OldEncryptedGroupKey,
-    EncryptionType as OldEncryptionType,
     MessageID as OldMessageID,
-    MessageRef as OldMessageRef,
-    SignatureType as OldSignatureType,
     StreamMessage as OldStreamMessage,
     StreamMessageType as OldStreamMessageType,
+    MessageRef as OldMessageRef,
+    EncryptedGroupKey as OldEncryptedGroupKey,
     StreamID,
-    deserializeGroupKeyRequest as deserializeOldGroupKeyRequest,
-    deserializeGroupKeyResponse as deserializeOldGroupKeyResponse,
-    serializeGroupKeyRequest as serializeOldGroupKeyRequest,
-    serializeGroupKeyResponse as serializeOldGroupKeyResponse
+    EncryptionType as OldEncryptionType,
+    SignatureType as OldSignatureType,
+    ContentType as OldContentType
 } from '@streamr/protocol'
-import { binaryToHex, hexToBinary, toEthereumAddress } from '@streamr/utils'
 import {
     ContentType,
-    EncryptionType,
     GroupKey,
-    MessageID,
+    EncryptionType,
+    GroupKeyRequest,
+    GroupKeyResponse,
     MessageRef,
     SignatureType,
-    StreamMessage
+    StreamMessage,
+    MessageID
 } from '../../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { GroupKeyRequestTranslator } from './GroupKeyRequestTranslator'
-import { GroupKeyResponseTranslator } from './GroupKeyResponseTranslator'
+import { toEthereumAddress, binaryToHex, hexToBinary } from '@streamr/utils'
 
 const oldToNewEncryptionType = (type: OldEncryptionType): EncryptionType => {
     if (type === OldEncryptionType.AES) {
@@ -110,12 +106,12 @@ export class StreamMessageTranslator {
         } else if (msg.messageType === OldStreamMessageType.GROUP_KEY_REQUEST) {
             body = {
                 oneofKind: 'groupKeyRequest',
-                groupKeyRequest: GroupKeyRequestTranslator.toProtobuf(deserializeOldGroupKeyRequest(msg.content))
+                groupKeyRequest: GroupKeyRequest.fromBinary(msg.content)
             }
         } else if (msg.messageType === OldStreamMessageType.GROUP_KEY_RESPONSE) {
             body = {
                 oneofKind: 'groupKeyResponse',
-                groupKeyResponse: GroupKeyResponseTranslator.toProtobuf(deserializeOldGroupKeyResponse(msg.content))
+                groupKeyResponse: GroupKeyResponse.fromBinary(msg.content)
             }
         } else {
             throw new Error('invalid message type')
@@ -133,7 +129,7 @@ export class StreamMessageTranslator {
     static toClientProtocol(msg: StreamMessage): OldStreamMessage {
         let messageType: OldStreamMessageType
         let content: Uint8Array
-        let contentType: OldContentType
+        let contentType: OldContentType = OldContentType.BINARY
         let encryptionType: OldEncryptionType = OldEncryptionType.NONE
         let newGroupKey: OldEncryptedGroupKey | undefined = undefined
         let groupKeyId: string | undefined = undefined
@@ -151,19 +147,15 @@ export class StreamMessageTranslator {
             groupKeyId = msg.body.contentMessage.groupKeyId
         } else if (msg.body.oneofKind === 'groupKeyRequest') {
             messageType = OldStreamMessageType.GROUP_KEY_REQUEST
-            contentType = OldContentType.JSON
             try {
-                const oldGroupKeyRequest = GroupKeyRequestTranslator.toClientProtocol(msg.body.groupKeyRequest)
-                content = serializeOldGroupKeyRequest(oldGroupKeyRequest)
+                content = GroupKeyRequest.toBinary(msg.body.groupKeyRequest)
             } catch (err) {
                 throw new Error(`invalid group key request: ${err}`)
             }
         } else if (msg.body.oneofKind === 'groupKeyResponse') {
             messageType = OldStreamMessageType.GROUP_KEY_RESPONSE
-            contentType = OldContentType.JSON
             try {
-                const oldGroupKeyResponse = GroupKeyResponseTranslator.toClientProtocol(msg.body.groupKeyResponse)
-                content = serializeOldGroupKeyResponse(oldGroupKeyResponse)
+                content = GroupKeyResponse.toBinary(msg.body.groupKeyResponse)
             } catch (err) {
                 throw new Error(`invalid group key response: ${err}`)
             }
