@@ -14,7 +14,7 @@ const logger = new Logger(module)
 
 declare let NodeJsBuffer: BufferConstructor
 
-export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> implements IConnection {
+export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements IConnection {
 
     public readonly connectionId: ConnectionID
     public readonly connectionType = ConnectionType.WEBSOCKET_SERVER
