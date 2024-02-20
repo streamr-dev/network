@@ -20,4 +20,20 @@ describe('getLocalRegion', () => {
         expect(typeof region).toBe('number')
         expect(lastTwoDigits).toEqual('99')
     }, 30000)
+
+    it('returns a random region if fetch is mocked to timeout', async () => {
+        // replace fetch with a function that always times out
+
+        global.fetch = jest.fn(() => {
+            return new Promise((_resolve, _reject) => {   
+            })
+        })
+
+        const region = await getLocalRegion()
+        const regionString = region.toString()
+        const lastTwoDigits = regionString.substring(regionString.length - 2)
+        
+        expect(typeof region).toBe('number')
+        expect(lastTwoDigits).toEqual('99')
+    }, 30000)
 })

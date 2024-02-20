@@ -1,13 +1,12 @@
-import { Logger } from '@streamr/utils'
+import { Logger, withTimeout } from '@streamr/utils'
 
 const logger = new Logger(module)
 
 export const fetchAirportCodeFromAmazon: (timeout?: number) => Promise<string> =
     async (timeout = 5000) => {
-        const response = await fetch('https://aws.amazon.com', {
-            method: 'HEAD',
-            signal: AbortSignal.timeout(timeout)
-        })
+        const response = await withTimeout(fetch('https://aws.amazon.com', {
+            method: 'HEAD'
+        }), timeout)
 
         // parse airport code from the first 3 characters of X-Amz-Cf-Pop header
 
@@ -28,10 +27,9 @@ export const fetchAirportCodeFromAmazon: (timeout?: number) => Promise<string> =
 
 export const fetchAirportCodeFromFastly: (timeout?: number) => Promise<string> =
     async (timeout = 5000) => {
-        const response = await fetch('https://www.fastly.com', {
-            method: 'HEAD',
-            signal: AbortSignal.timeout(timeout)
-        })
+        const response = await withTimeout(fetch('https://www.fastly.com', {
+            method: 'HEAD'
+        }), timeout)
 
         // parse airport code from the last 3 characters of X-Served-By header
 
@@ -53,10 +51,9 @@ export const fetchAirportCodeFromFastly: (timeout?: number) => Promise<string> =
 
 export const fetchAirportCodeFromCloudflare: (timeout?: number) => Promise<string> =
     async (timeout = 5000) => {
-        const response = await fetch('https://www.cloudflare.com', {
-            method: 'HEAD',
-            signal: AbortSignal.timeout(timeout)
-        })
+        const response = await withTimeout(fetch('https://www.cloudflare.com', {
+            method: 'HEAD'
+        }), timeout)
 
         // parse airport code from the last 3 characters of CF-RAY header
 
