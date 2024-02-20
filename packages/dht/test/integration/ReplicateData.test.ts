@@ -99,7 +99,7 @@ describe('Replicate data from node to node in DHT', () => {
         }))
 
         const randomNonStoppedNode = sample(nodes.filter((n) => !stoppedNodeIds.includes(n.getNodeId())))!
-        const data = await randomNonStoppedNode.getDataFromDht(getDhtAddressFromRaw(DATA.key))
+        const data = await randomNonStoppedNode.fetchDataFromDht(getDhtAddressFromRaw(DATA.key))
         expect(data).toHaveLength(1)
         expectEqualData(data[0], DATA)
     }, 180000)
