@@ -37,8 +37,8 @@ describe('Find correctness', () => {
 
     it('Entrypoint can find a node from the network (exact match)', async () => {
         const targetId = getRawFromDhtAddress(nodes[45].getNodeId())
-        const results = await entryPoint.executeRecursiveOperation(getDhtAddressFromRaw(targetId), RecursiveOperation.FIND_NODE)
-        expect(results.closestNodes.length).toBeGreaterThanOrEqual(5)
+        const closestNodes = await entryPoint.findClosestNodesFromDht(getDhtAddressFromRaw(targetId), RecursiveOperation.FIND_NODE)
+        expect(closestNodes.length).toBeGreaterThanOrEqual(5)
         expect(getDhtAddressFromRaw(targetId)).toEqual(getNodeIdFromPeerDescriptor(results.closestNodes[0]))
     }, 30000)
 

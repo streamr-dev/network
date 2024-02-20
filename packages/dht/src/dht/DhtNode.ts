@@ -501,6 +501,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return await rpcRemote.externalFindData(key)
     }
 
+    async findClosestNodesFromDht(key: DhtAddress): Promise<PeerDescriptor[]> {
+        const result = await this.executeRecursiveOperation(key, RecursiveOperation.FIND_NODE)
+        return result.closestNodes
+    }
+
     public getTransport(): ITransport {
         return this.transport!
     }

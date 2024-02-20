@@ -64,10 +64,10 @@ describe('Find correctness', () => {
 
         logger.info('starting find')
         const targetId = Uint8Array.from(dhtIds[9].data)
-        const results = await nodes[159].executeRecursiveOperation(getDhtAddressFromRaw(targetId), RecursiveOperation.FIND_NODE)
+        const closestNodes = await nodes[159].findClosestNodesFromDht(getDhtAddressFromRaw(targetId), RecursiveOperation.FIND_NODE)
         logger.info('find over')
-        expect(results.closestNodes).toBeGreaterThanOrEqual(5)
-        expect(getDhtAddressFromRaw(targetId)).toEqual(getNodeIdFromPeerDescriptor(results.closestNodes[0]))
+        expect(closestNodes).toBeGreaterThanOrEqual(5)
+        expect(getDhtAddressFromRaw(targetId)).toEqual(getNodeIdFromPeerDescriptor(closestNodes.closestNodes[0]))
 
     }, 180000)
 })
