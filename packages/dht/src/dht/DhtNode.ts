@@ -469,7 +469,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     public async fetchDataFromDht(key: DhtAddress): Promise<DataEntry[]> {
         const connectedEntryPoints = this.getConnectedEntryPoints()
         if (this.peerDiscovery!.isJoinOngoing() && connectedEntryPoints.length > 0) {
-            return this.findDataViaPeer(key, sample(connectedEntryPoints)!)
+            return this.fetchDataFromDhtViaPeer(key, sample(connectedEntryPoints)!)
         }
         const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FETCH_DATA)
         return result.dataEntries ?? []  // TODO is this fallback needed?
@@ -481,7 +481,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
     }
 
-    public async findDataViaPeer(key: DhtAddress, peer: PeerDescriptor): Promise<DataEntry[]> {
+    public async fetchDataFromDhtViaPeer(key: DhtAddress, peer: PeerDescriptor): Promise<DataEntry[]> {
         const rpcRemote = new ExternalApiRpcRemote(
             this.localPeerDescriptor!,
             peer,
