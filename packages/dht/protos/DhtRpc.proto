@@ -50,7 +50,7 @@ service ConnectionLockRpc {
 }
 
 service ExternalApiRpc {
-  rpc externalFindData (ExternalFindDataRequest) returns (ExternalFindDataResponse);
+  rpc externalFetchData (ExternalFetchDataRequest) returns (ExternalFetchDataResponse);
   rpc externalStoreData (ExternalStoreDataRequest) returns (ExternalStoreDataResponse);
 }
 
@@ -293,10 +293,10 @@ message DisconnectNotice {
   DisconnectMode disconnectMode = 1;
 }
 
-message ExternalFindDataRequest {
+message ExternalFetchDataRequest {
   bytes key = 1;
 }
 
-message ExternalFindDataResponse {
+message ExternalFetchDataResponse {
   repeated DataEntry entries = 1;
 }
