@@ -37,7 +37,7 @@ describe('EntryPointDiscovery', () => {
         deleted: true
     }
 
-    const fakeGetEntryPointData = async (): Promise<DataEntry[]> => {
+    const fakeFetchEntryPointData = async (): Promise<DataEntry[]> => {
         return [fakeData, fakeDeletedData]
     }
 
@@ -46,7 +46,7 @@ describe('EntryPointDiscovery', () => {
         return [peerDescriptor]
     }
 
-    const fakeEmptyGetEntryPointData = async (): Promise<DataEntry[]> => {
+    const fakeEmptyFetchEntryPointData = async (): Promise<DataEntry[]> => {
         return []
     }
 
@@ -70,7 +70,7 @@ describe('EntryPointDiscovery', () => {
             localPeerDescriptor: peerDescriptor,
             streamPartId: STREAM_PART_ID,
             layer1Node,
-            getEntryPointData: fakeGetEntryPointData,
+            fetchEntryPointData: fakeFetchEntryPointData,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
             storeInterval: 2000
@@ -79,7 +79,7 @@ describe('EntryPointDiscovery', () => {
             localPeerDescriptor: peerDescriptor,
             streamPartId: STREAM_PART_ID,
             layer1Node,
-            getEntryPointData: fakeEmptyGetEntryPointData,
+            fetchEntryPointData: fakeEmptyFetchEntryPointData,
             storeEntryPointData: fakeStoreEntryPointData,
             deleteEntryPointData: fakeDeleteEntryPointData,
             storeInterval: 2000

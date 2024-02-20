@@ -138,7 +138,7 @@ export class StreamrNode extends EventEmitter<Events> {
             streamPartId,
             localPeerDescriptor: this.getPeerDescriptor(),
             layer1Node,
-            getEntryPointData: (key) => this.layer0Node!.getDataFromDht(key),
+            fetchEntryPointData: (key) => this.layer0Node!.fetchDataFromDht(key),
             storeEntryPointData: (key, data) => this.layer0Node!.storeDataToDht(key, data),
             deleteEntryPointData: async (key) => this.layer0Node!.deleteDataFromDht(key, false)
         })

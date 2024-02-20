@@ -59,7 +59,7 @@ describe('Storing data in DHT', () => {
         )
         expect(successfulStorers.length).toBeGreaterThan(4)
         const fetchingNode = getRandomNode()
-        const results = await fetchingNode.getDataFromDht(getDhtAddressFromRaw(entry.key))
+        const results = await fetchingNode.fetchDataFromDht(getDhtAddressFromRaw(entry.key))
         results.forEach((result) => {
             expectEqualData(result, entry)
         })
@@ -76,7 +76,7 @@ describe('Storing data in DHT', () => {
         )
         expect(successfulStorers.length).toBeGreaterThan(4)
         const fetchingNode = getRandomNode()
-        const results = await fetchingNode.getDataFromDht(getDhtAddressFromRaw(entry.key))
+        const results = await fetchingNode.fetchDataFromDht(getDhtAddressFromRaw(entry.key))
         results.forEach((result) => {
             expectEqualData(result, entry)
             expect(getDhtAddressFromRaw(result.creator)).toEqual(getNodeIdFromPeerDescriptor(requestor))
