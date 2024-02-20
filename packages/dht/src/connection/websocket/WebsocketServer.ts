@@ -58,7 +58,7 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
     private startServer(port: number, tls: boolean): Promise<void> {
         const requestListener = (request: IncomingMessage, response: ServerResponse<IncomingMessage>) => {
             logger.trace('Received request for ' + request.url)
-            response.writeHead(200)
+            response.writeHead(404)
             response.end()
         }
         return new Promise((resolve, reject) => {
