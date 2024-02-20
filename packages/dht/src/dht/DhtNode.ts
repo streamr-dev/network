@@ -451,12 +451,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     public async storeDataToDht(key: DhtAddress, data: Any, creator?: DhtAddress): Promise<PeerDescriptor[]> {
         const connectedEntryPoints = this.getConnectedEntryPoints()
         if (this.peerDiscovery!.isJoinOngoing() && connectedEntryPoints.length > 0) {
-            return this.storeDataViaPeer(key, data, sample(connectedEntryPoints)!)
+            return this.storeDataToDhtViaPeer(key, data, sample(connectedEntryPoints)!)
         }
         return this.storeManager!.storeDataToDht(key, data, creator ?? this.getNodeId())
     }
 
-    public async storeDataViaPeer(key: DhtAddress, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
+    public async storeDataToDhtViaPeer(key: DhtAddress, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
         const rpcRemote = new ExternalApiRpcRemote(
             this.localPeerDescriptor!,
             peer,

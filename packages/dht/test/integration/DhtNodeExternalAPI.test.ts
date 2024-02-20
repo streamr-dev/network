@@ -39,7 +39,7 @@ describe('DhtNodeExternalApi', () => {
 
     it('external store data happy path', async () => {
         const entry = createMockDataEntry()
-        await remote.storeDataViaPeer(getDhtAddressFromRaw(entry.key), entry.data!, dhtNode1.getLocalPeerDescriptor())
+        await remote.storeDataToDhtViaPeer(getDhtAddressFromRaw(entry.key), entry.data!, dhtNode1.getLocalPeerDescriptor())
         const foundData = await remote.findDataViaPeer(getDhtAddressFromRaw(entry.key), dhtNode1.getLocalPeerDescriptor())
         expectEqualData(foundData[0], entry)
         expect(getDhtAddressFromRaw(foundData[0].creator)).toEqual(getNodeIdFromPeerDescriptor(remote.getLocalPeerDescriptor()))
