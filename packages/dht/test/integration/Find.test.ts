@@ -1,6 +1,6 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerDescriptor, RecursiveOperation } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils/utils'
 import { getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
 
@@ -37,9 +37,9 @@ describe('Find correctness', () => {
 
     it('Entrypoint can find a node from the network (exact match)', async () => {
         const targetId = getRawFromDhtAddress(nodes[45].getNodeId())
-        const closestNodes = await entryPoint.findClosestNodesFromDht(getDhtAddressFromRaw(targetId), RecursiveOperation.FIND_NODE)
+        const closestNodes = await entryPoint.findClosestNodesFromDht(getDhtAddressFromRaw(targetId))
         expect(closestNodes.length).toBeGreaterThanOrEqual(5)
-        expect(getDhtAddressFromRaw(targetId)).toEqual(getNodeIdFromPeerDescriptor(results.closestNodes[0]))
+        expect(getDhtAddressFromRaw(targetId)).toEqual(getNodeIdFromPeerDescriptor(closestNodes[0]))
     }, 30000)
 
 })
