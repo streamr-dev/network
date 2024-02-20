@@ -6,7 +6,7 @@ import {
     Message, MessageType, PeerDescriptor
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ConnectionEvents, IConnection } from './IConnection'
-import { ClientWebsocket } from './websocket/ClientWebsocket'
+import { WebsocketClientConnection } from './websocket/WebsocketClientConnection'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
 import { isCompatibleVersion } from '../helpers/versionCompatibility'
 
@@ -16,7 +16,7 @@ const logger = new Logger(module)
 export const connectAsync = async ({ url, selfSigned, timeoutMs = 1000 }:
     { url: string, selfSigned: boolean, timeoutMs?: number }
 ): Promise<IConnection> => {
-    const socket = new ClientWebsocket()
+    const socket = new WebsocketClientConnection()
     let result: RunAndRaceEventsReturnType<ConnectionEvents>
     try {
         result = await runAndRaceEvents3<ConnectionEvents>([

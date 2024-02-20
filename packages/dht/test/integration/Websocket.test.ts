@@ -2,7 +2,7 @@
 
 import { WebsocketServer } from '../../src/connection/websocket/WebsocketServer'
 import { IConnection } from '../../src/connection/IConnection'
-import { ClientWebsocket } from '../../src/connection/websocket/ClientWebsocket'
+import { WebsocketClientConnection } from '../../src/connection/websocket/WebsocketClientConnection'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
@@ -13,7 +13,7 @@ describe('Websocket', () => {
         portRange: { min: 9977, max: 9977 },
         enableTls: false
     })
-    const clientWebsocket = new ClientWebsocket()
+    const clientWebsocket = new WebsocketClientConnection()
 
     beforeAll(async () => {
         await websocketServer.start()

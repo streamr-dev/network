@@ -15,7 +15,7 @@ export const CUSTOM_GOING_AWAY = 3001
 
 const BINARY_TYPE = 'arraybuffer'
 
-export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements IConnection {
+export class WebsocketClientConnection extends EventEmitter<ConnectionEvents> implements IConnection {
 
     public readonly connectionId: ConnectionID
     private socket?: WebSocket
@@ -31,7 +31,6 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
     // TODO explicit default value for "selfSigned" or make it required
     public connect(address: string, selfSigned?: boolean): void {
         if (!this.destroyed) {
-            // this.socket = new WebSocket(address, undefined, undefined, undefined, { rejectUnauthorized: !selfSigned })
             this.socket = new WebSocket(address, { rejectUnauthorized: !selfSigned })
             this.socket.binaryType = BINARY_TYPE
             this.socket.on('error', (error: Error) => {
