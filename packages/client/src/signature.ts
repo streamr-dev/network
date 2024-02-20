@@ -19,16 +19,16 @@ export const createSignaturePayload = (opts: {
     newGroupKey?: EncryptedGroupKey
 }): Uint8Array => {
     if (opts.signatureType == SignatureType.SECP256K1) {
-        const header = Buffer.from(`${opts.messageId.streamId}${opts.messageId.streamPartition}${opts.messageId.timestamp}`
-            + `${opts.messageId.sequenceNumber}${opts.messageId.publisherId}${opts.messageId.msgChainId}`)
-        const prevMsgRef = (opts.prevMsgRef !== undefined) ? Buffer.from(`${opts.prevMsgRef.timestamp}${opts.prevMsgRef.sequenceNumber}`) : undefined
-        // TODO maybe it would make sense to re-order the prevMsgRef to be before the content
+        const header = Buffer.concat([
+            Buffer.from(`${opts.messageId.streamId}${opts.messageId.streamPartition}${opts.messageId.timestamp}`
+                + `${opts.messageId.sequenceNumber}${opts.messageId.publisherId}${opts.messageId.msgChainId}`), 
+            (opts.prevMsgRef !== undefined) ? Buffer.from(`${opts.prevMsgRef.timestamp}${opts.prevMsgRef.sequenceNumber}`) : new Uint8Array(0)
+        ])
         if (opts.messageType === StreamMessageType.MESSAGE) {
             const newGroupKeyId = opts.newGroupKey ? Buffer.from(opts.newGroupKey.id) : undefined
             return Buffer.concat([
                 header,
                 opts.content,
-                prevMsgRef ?? new Uint8Array(0),
                 newGroupKeyId ?? new Uint8Array(0),
                 opts.newGroupKey?.data ?? new Uint8Array(0),
             ])
@@ -41,8 +41,7 @@ export const createSignaturePayload = (opts: {
                 utf8ToBinary(request.requestId),
                 request.recipientId,
                 request.rsaPublicKey,
-                Buffer.concat(request.groupKeyIds.map((k) => utf8ToBinary(k))),
-                prevMsgRef ?? new Uint8Array(0)
+                Buffer.concat(request.groupKeyIds.map((k) => utf8ToBinary(k)))
             ])
         } else if (opts.messageType === StreamMessageType.GROUP_KEY_RESPONSE) {
             // NOTE: this conversion will be removed in the future when we migrate all usages of
@@ -52,8 +51,7 @@ export const createSignaturePayload = (opts: {
                 header,
                 utf8ToBinary(response.requestId),
                 response.recipientId,
-                Buffer.concat(response.groupKeys.map((k) => Buffer.concat([utf8ToBinary(k.id), k.data]))),
-                prevMsgRef ?? new Uint8Array(0)
+                Buffer.concat(response.groupKeys.map((k) => Buffer.concat([utf8ToBinary(k.id), k.data])))
             ])
         } else {
             throw new Error(`Assertion failed: unknown message type ${opts.messageType}`)
