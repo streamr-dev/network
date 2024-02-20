@@ -360,7 +360,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             (_req: LeaveNotice, context) => dhtNodeRpcLocal.leaveNotice(context))
         const externalApiRpcLocal = new ExternalApiRpcLocal({
             executeRecursiveOperation: (key: DhtAddress, operation: RecursiveOperation, excludedPeer: DhtAddress) => {
-                return this.executeRecursiveOperation(key, operation, excludedPeer)
+                return this.recursiveOperationManager!.execute(key, operation, excludedPeer)
             },
             storeDataToDht: (key: DhtAddress, data: Any, creator?: DhtAddress) => this.storeDataToDht(key, data, creator)
         })
@@ -448,16 +448,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         await this.peerDiscovery!.joinDht(entryPointDescriptors, doAdditionalDistantPeerDiscovery, retry)
     }
 
-    // TODO make this private and unify the public API of find/fetch/store/delete methods
-    // (we already have storeDataToDht etc. here)
-    public async executeRecursiveOperation(
-        key: DhtAddress,
-        operation: RecursiveOperation,
-        excludedPeer?: DhtAddress
-    ): Promise<RecursiveOperationResult> {
-        return this.recursiveOperationManager!.execute(key, operation, excludedPeer)
-    }
-
     public async storeDataToDht(key: DhtAddress, data: Any, creator?: DhtAddress): Promise<PeerDescriptor[]> {
         const connectedEntryPoints = this.getConnectedEntryPoints()
         if (this.peerDiscovery!.isJoinOngoing() && connectedEntryPoints.length > 0) {
@@ -502,7 +492,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     async findClosestNodesFromDht(key: DhtAddress): Promise<PeerDescriptor[]> {
-        const result = await this.executeRecursiveOperation(key, RecursiveOperation.FIND_NODE)
+        const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FIND_NODE)
         return result.closestNodes
     }
 
