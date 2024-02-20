@@ -61,14 +61,12 @@ export const createSignaturePayload = (opts: {
     } else if (opts.signatureType === SignatureType.LEGACY_SECP256K1) {
         const prev = ((opts.prevMsgRef !== undefined) ? `${opts.prevMsgRef.timestamp}${opts.prevMsgRef.sequenceNumber}` : '')
         const newGroupKey = ((opts.newGroupKey !== undefined) ? serializeGroupKey(opts.newGroupKey) : '')
-
         // In the legacy signature type, encrypted content was signed as a hex-encoded string
-        const contentAsString = (opts.encryptionType === EncryptionType.NONE ?
-            binaryToUtf8(opts.content) : binaryToHex(opts.content))
-
+        const contentAsString = (opts.encryptionType === EncryptionType.NONE) 
+            ? binaryToUtf8(opts.content)
+            : binaryToHex(opts.content)
         return Buffer.from(`${opts.messageId.streamId}${opts.messageId.streamPartition}${opts.messageId.timestamp}${opts.messageId.sequenceNumber}`
             + `${opts.messageId.publisherId}${opts.messageId.msgChainId}${prev}${contentAsString}${newGroupKey}`)
-
     } else {
         throw new Error(`Unsupported SignatureType: ${SignatureType}`)
     }

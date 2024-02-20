@@ -110,7 +110,7 @@ export class PublisherKeyExchange {
             return new EncryptedGroupKey(key.id, encryptedGroupKey)
         }))
         const responseContent = new OldGroupKeyResponse({
-            recipient, 
+            recipient,
             requestId,
             encryptedGroupKeys
         })
