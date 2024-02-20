@@ -28,9 +28,9 @@ export const createSignaturePayload = (opts: {
             return Buffer.concat([
                 header,
                 opts.content,
-                prevMsgRef || new Uint8Array(0),
-                newGroupKeyId || new Uint8Array(0),
-                opts.newGroupKey?.data || new Uint8Array(0),
+                prevMsgRef ?? new Uint8Array(0),
+                newGroupKeyId ?? new Uint8Array(0),
+                opts.newGroupKey?.data ?? new Uint8Array(0),
             ])
         } else if (opts.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
             // NOTE: this conversion will be removed in the future when we migrate all usages of
@@ -42,7 +42,7 @@ export const createSignaturePayload = (opts: {
                 request.recipientId,
                 request.rsaPublicKey,
                 Buffer.concat(request.groupKeyIds.map((k) => utf8ToBinary(k))),
-                prevMsgRef || new Uint8Array(0)
+                prevMsgRef ?? new Uint8Array(0)
             ])
         } else if (opts.messageType === StreamMessageType.GROUP_KEY_RESPONSE) {
             // NOTE: this conversion will be removed in the future when we migrate all usages of
@@ -53,7 +53,7 @@ export const createSignaturePayload = (opts: {
                 utf8ToBinary(response.requestId),
                 response.recipientId,
                 Buffer.concat(response.groupKeys.map((k) => Buffer.concat([utf8ToBinary(k.id), k.data]))),
-                prevMsgRef || new Uint8Array(0)
+                prevMsgRef ?? new Uint8Array(0)
             ])
         } else {
             throw new Error(`Assertion failed: unknown message type ${opts.messageType}`)
