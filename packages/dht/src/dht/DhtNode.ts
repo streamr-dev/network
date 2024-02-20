@@ -475,12 +475,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return result.dataEntries ?? []  // TODO is this fallback needed?
     }
 
-    public async deleteDataFromDht(key: DhtAddress, waitForCompletion: boolean): Promise<void> {
-        if (!this.abortController.signal.aborted) {
-            await this.recursiveOperationManager!.execute(key, RecursiveOperation.DELETE_DATA, undefined, waitForCompletion)
-        }
-    }
-
     public async fetchDataFromDhtViaPeer(key: DhtAddress, peer: PeerDescriptor): Promise<DataEntry[]> {
         const rpcRemote = new ExternalApiRpcRemote(
             this.localPeerDescriptor!,
@@ -489,6 +483,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             ExternalApiRpcClient
         )
         return await rpcRemote.externalFindData(key)
+    }
+
+    public async deleteDataFromDht(key: DhtAddress, waitForCompletion: boolean): Promise<void> {
+        if (!this.abortController.signal.aborted) {
+            await this.recursiveOperationManager!.execute(key, RecursiveOperation.DELETE_DATA, undefined, waitForCompletion)
+        }
     }
 
     async findClosestNodesFromDht(key: DhtAddress): Promise<PeerDescriptor[]> {
