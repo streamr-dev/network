@@ -15,13 +15,6 @@ import { parse } from 'url'
 
 const logger = new Logger(module)
 
-// NodeJsWsServer is declared as a global in test-browser Electron tests
-// in preload.js using "window.NodeJsWsServer = require('websocket').server".
-// This is done in order to use the real nodejs websocket server in tests
-// instead of a dummy polyfill.
-
-declare class NodeJsWsServer extends WebSocket.Server { }
-
 interface WebsocketServerConfig {
     portRange: PortRange
     enableTls: boolean
@@ -65,7 +58,7 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
     private startServer(port: number, tls: boolean): Promise<void> {
         const requestListener = (request: IncomingMessage, response: ServerResponse<IncomingMessage>) => {
             logger.trace('Received request for ' + request.url)
-            response.writeHead(200)
+            response.writeHead(404)
             response.end()
         }
         return new Promise((resolve, reject) => {
@@ -159,18 +152,9 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
 
     private createWsServer(): WebSocket.Server {
         const maxPayload = this.config.maxMessageSize ?? 1048576
-        // Use the real nodejs WebSocket server in Electron tests
-        if (typeof NodeJsWsServer !== 'undefined') {
-            return new WebSocket.Server({
-                noServer: true,
-                maxPayload
-
-            })
-        } else {
-            return this.wsServer = new WebSocket.Server({
-                noServer: true,
-                maxPayload
-            })
-        }
+        return this.wsServer = new WebSocket.Server({
+            noServer: true,
+            maxPayload
+        })
     }
 }
