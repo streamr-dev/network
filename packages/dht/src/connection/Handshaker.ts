@@ -1,7 +1,7 @@
 import { Logger } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { v4 } from 'uuid'
-import { Message, HandshakeRequest, HandshakeResponse, MessageType, PeerDescriptor, HandshakeError } from '../proto/packages/dht/protos/DhtRpc'
+import { Message, HandshakeRequest, HandshakeResponse, PeerDescriptor, HandshakeError } from '../proto/packages/dht/protos/DhtRpc'
 import { IConnection } from './IConnection'
 import { version as localVersion } from '../../package.json'
 import { isCompatibleVersion } from '../helpers/versionCompatibility'
@@ -73,7 +73,6 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
         }
         const msg: Message = {
             serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
-            messageType: MessageType.HANDSHAKE_REQUEST,
             messageId: v4(),
             body: {
                 oneofKind: 'handshakeRequest',
@@ -92,7 +91,6 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
         }
         const msg: Message = {
             serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
-            messageType: MessageType.HANDSHAKE_RESPONSE,
             messageId: v4(),
             body: {
                 oneofKind: 'handshakeResponse',

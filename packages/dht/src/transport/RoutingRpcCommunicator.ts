@@ -1,4 +1,4 @@
-import { Message, MessageType, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { Message, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { v4 } from 'uuid'
 import { RpcCommunicator, RpcCommunicatorConfig } from '@streamr/proto-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
@@ -35,7 +35,6 @@ export class RoutingRpcCommunicator extends RpcCommunicator<DhtCallContext> {
                     oneofKind: 'rpcMessage',
                     rpcMessage: msg
                 },
-                messageType: MessageType.RPC, 
                 targetDescriptor
             }
 

@@ -3,7 +3,7 @@ import { v4 } from 'uuid'
 import * as Err from '../helpers/errors'
 import {
     ConnectivityRequest, ConnectivityResponse,
-    Message, MessageType, PeerDescriptor
+    Message, PeerDescriptor
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ConnectionEvents, IConnection } from './IConnection'
 import { ClientWebsocket } from './websocket/ClientWebsocket'
@@ -59,7 +59,7 @@ export const sendConnectivityRequest = async (
     // send connectivity request
     const msg: Message = {
         serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
-        messageType: MessageType.CONNECTIVITY_REQUEST, messageId: v4(),
+        messageId: v4(),
         body: {
             oneofKind: 'connectivityRequest',
             connectivityRequest: request

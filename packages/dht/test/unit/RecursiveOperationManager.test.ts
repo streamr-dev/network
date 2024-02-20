@@ -1,7 +1,6 @@
 import {
     RecursiveOperation,
     Message,
-    MessageType,
     RouteMessageAck,
     RouteMessageError,
     RouteMessageWrapper
@@ -41,7 +40,6 @@ describe('RecursiveOperationManager', () => {
     const message: Message = {
         serviceId: 'unknown',
         messageId: v4(),
-        messageType: MessageType.RPC,
         body: {
             oneofKind: 'recursiveOperationRequest',
             recursiveOperationRequest
@@ -96,7 +94,6 @@ describe('RecursiveOperationManager', () => {
         const badMessage: Message = {
             serviceId: 'unknown',
             messageId: v4(),
-            messageType: MessageType.RPC,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: rpcWrapper
