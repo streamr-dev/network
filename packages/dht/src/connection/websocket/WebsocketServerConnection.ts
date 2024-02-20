@@ -19,7 +19,7 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
     public readonly connectionId: ConnectionID
     public readonly connectionType = ConnectionType.WEBSOCKET_SERVER
     public readonly resourceURL: Url
-    public readonly remoteAddress: string
+    public readonly remoteIpAddress: string
     private socket?: WebSocket
     private stopped = false
 
@@ -32,7 +32,7 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
 
         this.resourceURL = resourceURL
         this.connectionId = createRandomConnectionId()
-        this.remoteAddress = remoteAddress
+        this.remoteIpAddress = remoteAddress
 
         socket.on('message', this.onMessage)
         socket.on('close', this.onClose)
@@ -55,7 +55,7 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
     }
 
     private onClose(reasonCode: number, description: string): void {
-        logger.trace('Peer ' + this.remoteAddress + ' disconnected.')
+        logger.trace('Peer ' + this.remoteIpAddress + ' disconnected.')
         this.doDisconnect(reasonCode, description)
     }
 

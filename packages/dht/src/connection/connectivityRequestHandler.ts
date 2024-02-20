@@ -36,8 +36,8 @@ export const attachConnectivityRequestHandler = (connectionToListenTo: Websocket
 }
 
 const handleIncomingConnectivityRequest = async (connection: WebsocketServerConnection, connectivityRequest: ConnectivityRequest): Promise<void> => {
-    const host = connectivityRequest.host ?? connection.remoteAddress
-    const ipAddress = connection.remoteAddress
+    const host = connectivityRequest.host ?? connection.remoteIpAddress
+    const ipAddress = connection.remoteIpAddress
     let connectivityResponse: ConnectivityResponse
     if (connectivityRequest.port !== DISABLE_CONNECTIVITY_PROBE) {
         connectivityResponse = await connectivityProbe(connectivityRequest, ipAddress, host)
