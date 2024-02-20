@@ -42,16 +42,20 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
     }
 
     private onMessage(message: WebSocket.RawData, isBinary: boolean): void {
-        logger.trace('ServerWebsocket::onMessage')
         if (!isBinary) {
-            logger.debug('Received string Message')
+            logger.trace('Received string Message')
         } else if (message instanceof Buffer) {
+            logger.trace('Received Buffer Message')
+            this.emit('data', new Uint8Array(message))
+        // If in an Karma / Electron test, use the NodeJS implementation
+        } else if (typeof NodeJsBuffer !== 'undefined' && message instanceof NodeJsBuffer) {
+            logger.trace('Received NodeJsBuffer Message')
             this.emit('data', new Uint8Array(message))
         }
     }
 
     private onClose(reasonCode: number, description: string): void {
-        // logger.trace('Peer ' + this.socket?.remoteAddress + ' disconnected.')
+        logger.trace('Peer ' + this.remoteAddress + ' disconnected.')
         this.doDisconnect(reasonCode, description)
     }
 
