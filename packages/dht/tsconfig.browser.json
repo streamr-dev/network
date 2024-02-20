@@ -11,6 +11,7 @@
     "package.json"
   ],
   "exclude": [
-    "src/connection/webrtc/NodeWebrtcConnection.ts"
+    "src/connection/webrtc/NodeWebrtcConnection.ts",
+    "src/connection/websocket/WebSocketClientConnection.ts"
   ]
 }
