@@ -2,7 +2,7 @@ import { createServer as createHttpServer, Server as HttpServer, IncomingMessage
 import { createServer as createHttpsServer, Server as HttpsServer } from 'https'
 import EventEmitter from 'eventemitter3'
 import WebSocket from 'ws'
-import { ServerWebsocket } from './ServerWebsocket'
+import { WebsocketServerConnection } from './WebsocketServerConnection'
 import { ConnectionSourceEvents } from '../IConnectionSource'
 import { Logger, asAbortable } from '@streamr/utils'
 import { createSelfSignedCertificate } from '@streamr/autocertifier-client' 
@@ -92,7 +92,7 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
                     logger.trace('IConnection from origin ' + request.headers.origin + ' rejected.')
                     return
                 }
-                this.emit('connected', new ServerWebsocket(ws, parse(request.url!), request.socket.remoteAddress!))
+                this.emit('connected', new WebsocketServerConnection(ws, parse(request.url!), request.socket.remoteAddress!))
             })
 
             this.httpServer.on('upgrade', (request, socket, head) => {
