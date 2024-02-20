@@ -8,7 +8,8 @@ import {
     SignatureType,
     StreamMessage,
     StreamPartID,
-    StreamPartIDUtils
+    StreamPartIDUtils,
+    StreamMessageType
 } from '@streamr/protocol'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
 import { collect, toEthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
@@ -56,6 +57,7 @@ describe('messagePipeline', () => {
                 toEthereumAddress(publisher.address),
                 'mock-msgChainId'
             ),
+            messageType: StreamMessageType.MESSAGE,
             content: opts.contentType === ContentType.BINARY ? opts.content! : utf8ToBinary(JSON.stringify(CONTENT)),
             authentication: createPrivateKeyAuthentication(publisher.privateKey, undefined as any),
             contentType: opts.contentType ?? ContentType.JSON,
