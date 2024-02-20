@@ -17,6 +17,7 @@
         "packages/browser-test-runner",
         "packages/utils",
         "packages/test-utils",
+        "packages/cdn-location",
         "packages/protocol",
         "packages/proto-rpc",
         "packages/autocertifier-client",
@@ -25,8 +26,7 @@
         "packages/trackerless-network",
         "packages/client",
         "packages/broker",
-        "packages/cli-tools",
-        "packages/cdn-location"
+        "packages/cli-tools"
     ],
     "dependencies": {
         "@manypkg/cli": "^0.21.2",

@@ -74,7 +74,7 @@ export const fetchAirportCodeFromCloudflare: (timeout?: number) => Promise<strin
     }
 
 export const fetchAirportCodeFromCdn: () => Promise<string | undefined> = async () => {
-    const timeout = 5000
+    const timeout = 2000
     
     // try to get airport code from the first CDN that responds
     // if one fails, try the next one
