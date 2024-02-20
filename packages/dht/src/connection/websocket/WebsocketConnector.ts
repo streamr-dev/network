@@ -17,7 +17,7 @@ import { ManagedConnection } from '../ManagedConnection'
 import { WebsocketServer } from './WebsocketServer'
 import { sendConnectivityRequest } from '../connectivityChecker'
 import { NatType, PortRange, TlsCertificate } from '../ConnectionManager'
-import { ServerWebsocket } from './ServerWebsocket'
+import { WebsocketServerConnection } from './WebsocketServerConnection'
 import { Handshaker } from '../Handshaker'
 import queryString from 'querystring'
 import { range, sample } from 'lodash'
@@ -143,7 +143,7 @@ export class WebsocketConnector {
     public async start(): Promise<void> {
         if (!this.abortController.signal.aborted && this.websocketServer) {
             this.websocketServer.on('connected', (connection: IConnection) => {
-                const serverSocket = connection as unknown as ServerWebsocket
+                const serverSocket = connection as unknown as WebsocketServerConnection
                 const query = queryString.parse(serverSocket.resourceURL.query as string)
                 const action = query?.action as (Action | undefined)
                 logger.trace('WebSocket client connected', { action, remoteAddress: serverSocket.remoteAddress })
@@ -299,7 +299,7 @@ export class WebsocketConnector {
 
     private onServerSocketHandshakeRequest(
         sourcePeerDescriptor: PeerDescriptor,
-        serverWebsocket: IConnection,
+        websocketServerConnection: IConnection,
         sourceVersion: string,
         targetPeerDescriptor?: PeerDescriptor
     ) {
@@ -309,7 +309,7 @@ export class WebsocketConnector {
             if (!isCompatibleVersion(sourceVersion, localVersion)) {
                 ongoingConnectRequest.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
             } else {
-                ongoingConnectRequest.attachImplementation(serverWebsocket)
+                ongoingConnectRequest.attachImplementation(websocketServerConnection)
                 ongoingConnectRequest.acceptHandshake()
             }
             this.ongoingConnectRequests.delete(nodeId)
@@ -318,7 +318,7 @@ export class WebsocketConnector {
                 this.localPeerDescriptor!,
                 ConnectionType.WEBSOCKET_SERVER,
                 undefined,
-                serverWebsocket,
+                websocketServerConnection,
                 targetPeerDescriptor
             )
             managedConnection.setRemotePeerDescriptor(sourcePeerDescriptor)

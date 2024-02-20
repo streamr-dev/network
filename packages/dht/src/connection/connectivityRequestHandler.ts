@@ -7,7 +7,7 @@ import {
 import { NatType } from './ConnectionManager'
 import { CONNECTIVITY_CHECKER_SERVICE_ID, connectAsync } from './connectivityChecker'
 import { IConnection } from './IConnection'
-import { ServerWebsocket } from './websocket/ServerWebsocket'
+import { WebsocketServerConnection } from './websocket/WebsocketServerConnection'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
 import { version as localVersion } from '../../package.json'
 
@@ -15,7 +15,7 @@ export const DISABLE_CONNECTIVITY_PROBE = 0
 
 const logger = new Logger(module)
 
-export const attachConnectivityRequestHandler = (connectionToListenTo: ServerWebsocket): void => {
+export const attachConnectivityRequestHandler = (connectionToListenTo: WebsocketServerConnection): void => {
     connectionToListenTo.on('data', async (data: Uint8Array) => {
         logger.trace('server received data')
         try {
@@ -35,7 +35,7 @@ export const attachConnectivityRequestHandler = (connectionToListenTo: ServerWeb
     })
 }
 
-const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, connectivityRequest: ConnectivityRequest): Promise<void> => {
+const handleIncomingConnectivityRequest = async (connection: WebsocketServerConnection, connectivityRequest: ConnectivityRequest): Promise<void> => {
     const host = connectivityRequest.host ?? connection.remoteAddress
     const ipAddress = connection.remoteAddress
     let connectivityResponse: ConnectivityResponse
