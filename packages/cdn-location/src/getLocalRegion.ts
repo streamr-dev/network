@@ -18,20 +18,22 @@ const getRandomRegion: () => number = () => {
     // that random region numbers end with 99
 
     const randomRegion = airportCodeToRegionNumber[randomAirportCode] + 99
-    
+
     logger.warn(`Could not get airport code, using random region: ${randomRegion}`)
     return randomRegion
 }
 
 export const getLocalRegion: () => Promise<number> = async () => {
-    const airportCode = await getLocalAirportCode()
-    if (airportCode === undefined) {
+    let airportCode: string | undefined = undefined
+    try {
+        airportCode = await getLocalAirportCode()
+    } catch (error) {
         return getRandomRegion()
     }
 
-    if (!airportCodeToRegionNumber[airportCode]) {
+    if (!airportCodeToRegionNumber[airportCode!]) {
         return getRandomRegion()
     }
 
-    return airportCodeToRegionNumber[airportCode]
+    return airportCodeToRegionNumber[airportCode!]
 }

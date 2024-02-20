@@ -6,7 +6,7 @@ describe('getLocalRegion', () => {
         expect(typeof region).toBe('number')
     })
 
-    it('returns a random region if fetch is mocked to reject', async () => {
+    it('returns a random region if requests fail', async () => {
         // replace fetch with a function that always times out
 
         global.fetch = jest.fn(() => {
@@ -21,7 +21,7 @@ describe('getLocalRegion', () => {
         expect(lastTwoDigits).toEqual('99')
     }, 30000)
 
-    it('returns a random region if fetch is mocked to timeout', async () => {
+    it('returns a random region if requests timeout', async () => {
         // replace fetch with a function that always times out
 
         global.fetch = jest.fn(() => {

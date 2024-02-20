@@ -2,21 +2,26 @@ import { Logger, withTimeout } from '@streamr/utils'
 
 const logger = new Logger(module)
 
-export const fetchAirportCodeFromAmazon: (timeout?: number) => Promise<string> =
-    async (timeout = 5000) => {
-        const response = await withTimeout(fetch('https://aws.amazon.com', {
+const fetchHeader: (url: string, header: string, timeout: number) =>
+    Promise<string | null> = async (url: string, header: string, timeout: number) => {
+        const response = await withTimeout(fetch(url, {
             method: 'HEAD'
         }), timeout)
+        return response.headers.get(header)
+    }
+
+export const fetchAirportCodeFromAmazon: (timeout: number) => Promise<string> =
+    async (timeout: number) => {
+
+        const header = await fetchHeader('https://aws.amazon.com', 'X-Amz-Cf-Pop', timeout)
 
         // parse airport code from the first 3 characters of X-Amz-Cf-Pop header
 
-        const headers = response.headers
-        const pop = headers.get('X-Amz-Cf-Pop')
-        if (!pop || pop.length < 3) {
+        if (!header || header.length < 3) {
             throw new Error('Could not get airport code from Amazon')
         }
-        
-        const airportCode = pop?.substring(0, 3)
+
+        const airportCode = header.substring(0, 3)
 
         if (!airportCode) {
             throw new Error('Could not get airport code from Amazon')
@@ -25,22 +30,18 @@ export const fetchAirportCodeFromAmazon: (timeout?: number) => Promise<string> =
         return airportCode
     }
 
-export const fetchAirportCodeFromFastly: (timeout?: number) => Promise<string> =
+export const fetchAirportCodeFromFastly: (timeout: number) => Promise<string> =
     async (timeout = 5000) => {
-        const response = await withTimeout(fetch('https://www.fastly.com', {
-            method: 'HEAD'
-        }), timeout)
+
+        const header = await fetchHeader('https://www.fastly.com', 'X-Served-By', timeout)
 
         // parse airport code from the last 3 characters of X-Served-By header
 
-        const headers = response.headers
-        const pop = headers.get('X-Served-By')
-        
-        if (!pop || pop.length < 3) {
+        if (!header || header.length < 3) {
             throw new Error('Could not get airport code from Fastly')
         }
-        
-        const airportCode = pop?.substring(pop.length - 3)
+
+        const airportCode = header.substring(header.length - 3)
 
         if (!airportCode) {
             throw new Error('Could not get airport code from Fastly')
@@ -51,20 +52,16 @@ export const fetchAirportCodeFromFastly: (timeout?: number) => Promise<string> =
 
 export const fetchAirportCodeFromCloudflare: (timeout?: number) => Promise<string> =
     async (timeout = 5000) => {
-        const response = await withTimeout(fetch('https://www.cloudflare.com', {
-            method: 'HEAD'
-        }), timeout)
+
+        const header = await fetchHeader('https://www.cloudflare.com', 'CF-RAY', timeout)
 
         // parse airport code from the last 3 characters of CF-RAY header
 
-        const headers = response.headers
-        const pop = headers.get('CF-RAY')
-        
-        if (!pop || pop.length < 3) {
+        if (!header || header.length < 3) {
             throw new Error('Could not get airport code from Cloudflare')
         }
-        
-        const airportCode = pop?.substring(pop.length - 3)
+
+        const airportCode = header.substring(header.length - 3)
 
         if (!airportCode) {
             throw new Error('Could not get airport code from Cloudflare')
@@ -73,9 +70,9 @@ export const fetchAirportCodeFromCloudflare: (timeout?: number) => Promise<strin
         return airportCode
     }
 
-export const fetchAirportCodeFromCdn: () => Promise<string | undefined> = async () => {
+export const fetchAirportCodeFromCdn: () => Promise<string> = async () => {
     const timeout = 2000
-    
+
     // try to get airport code from the first CDN that responds
     // if one fails, try the next one
 
@@ -97,5 +94,5 @@ export const fetchAirportCodeFromCdn: () => Promise<string | undefined> = async 
         logger.warn(error)
     }
 
-    return undefined
+    throw new Error('Could not get airport code from any CDN')
 }

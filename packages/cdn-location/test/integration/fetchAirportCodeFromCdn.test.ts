@@ -10,13 +10,13 @@ const logger = new Logger(module)
 describe('fetchAirportCodeFromCdn', () => {
     
     it('fetches airport code from Amazon', async () => {
-        const airportCode = await fetchAirportCodeFromAmazon()
+        const airportCode = await fetchAirportCodeFromAmazon(5000)
         logger.info(`Airport code from Amazon: ${airportCode}`)
         expect(typeof airportCodeToRegionNumber[airportCode]).toBe('number')
     })
 
     it('fetches airport code from Fastly', async () => {
-        const airportCode = await fetchAirportCodeFromFastly()
+        const airportCode = await fetchAirportCodeFromFastly(5000)
         logger.info(`Airport code from Fastly: ${airportCode}`)
         expect(typeof airportCodeToRegionNumber[airportCode]).toBe('number')
     })
@@ -30,6 +30,6 @@ describe('fetchAirportCodeFromCdn', () => {
     it('fetches airport code using the external interface', async () => {
         const airportCode = await fetchAirportCodeFromCdn()
         logger.info(`Airport code from CDN: ${airportCode}`)
-        expect(typeof airportCodeToRegionNumber[airportCode!]).toBe('number')
+        expect(typeof airportCodeToRegionNumber[airportCode]).toBe('number')
     })
 })
