@@ -1,15 +1,20 @@
+import LeakDetector from 'jest-leak-detector'
 import { WebsocketServer } from '../../src/connection/websocket/WebsocketServer'
 
 describe('WebsocketServer', () => {
 
     it('starts and stops', async () => {
-        const server = new WebsocketServer({
+        let server: WebsocketServer | undefined = new WebsocketServer({
             portRange: { min: 19792, max: 19792 },
             enableTls: false
         })
         const port = await server.start()
         expect(port).toEqual(19792)
         await server.stop()
+
+        const detector1 = new LeakDetector(server)
+        server = undefined
+        expect(await detector1.isLeaking()).toBe(false)
     })
 
     it('throws if server is already in use', async () => {
