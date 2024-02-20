@@ -118,16 +118,4 @@ export class ServerWebsocket extends EventEmitter<ConnectionEvents> implements I
             logger.debug('Tried to destroy() a stopped connection')
         }
     }
-
-    public getRemoteIp(): string {
-        // TODO: no need to check this.socket as it is always defined when stopped is false?
-        // if (!this.stopped && this.socket) {
-        //     return this.socket.socket.remoteAddress!
-        // } else {
-        //     // TODO throw
-        //     logger.error('Tried to get the remoteAddress of a stopped connection')
-        //     return ''
-        // }
-        return ''
-    }
 }
