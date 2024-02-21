@@ -52,6 +52,7 @@ export class NodeList extends EventEmitter<Events> {
         return this.nodes.has(nodeId)
     }
 
+    // Replace nodes does not emit nodeRemoved events, use with caution
     replaceAll(neighbors: DeliveryRpcRemote[]): void {
         this.nodes.clear()
         const limited = neighbors.splice(0, this.limit)
