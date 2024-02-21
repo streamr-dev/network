@@ -492,7 +492,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     async findClosestNodesFromDht(key: DhtAddress): Promise<PeerDescriptor[]> {
-        const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FIND_NODE)
+        const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FIND_CLOSEST_NODES)
         return result.closestNodes
     }
 

@@ -109,7 +109,7 @@ export const createWrappedClosestPeersRequest = (
 
 export const createFindRequest = (): RecursiveOperationRequest => {
     const request: RecursiveOperationRequest = {
-        operation: RecursiveOperation.FIND_NODE,
+        operation: RecursiveOperation.FIND_CLOSEST_NODES,
         sessionId: v4()
     }
     return request

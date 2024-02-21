@@ -83,9 +83,9 @@ describe('RecursiveOperationManager', () => {
         recursiveOperationManager.stop()
     })
 
-    it('startFind with mode Node returns self if no peers', async () => {
+    it('find closest nodes returns self if no peers', async () => {
         const recursiveOperationManager = createRecursiveOperationManager()
-        const res = await recursiveOperationManager.execute(createRandomDhtAddress(), RecursiveOperation.FIND_NODE)
+        const res = await recursiveOperationManager.execute(createRandomDhtAddress(), RecursiveOperation.FIND_CLOSEST_NODES)
         expect(areEqualPeerDescriptors(res.closestNodes[0], peerDescriptor1)).toEqual(true)
         recursiveOperationManager.stop()
     })

@@ -563,9 +563,9 @@ export interface ExternalFindDataResponse {
  */
 export enum RecursiveOperation {
     /**
-     * @generated from protobuf enum value: FIND_NODE = 0;
+     * @generated from protobuf enum value: FIND_CLOSEST_NODES = 0;
      */
-    FIND_NODE = 0,
+    FIND_CLOSEST_NODES = 0,
     /**
      * @generated from protobuf enum value: FETCH_DATA = 1;
      */
