@@ -35,10 +35,10 @@ export class ExternalApiRpcLocal implements IExternalApiRpc {
         this.config = config
     }
 
-    async externalFetchData(findDataRequest: ExternalFetchDataRequest, context: ServerCallContext): Promise<ExternalFetchDataResponse> {
+    async externalFetchData(request: ExternalFetchDataRequest, context: ServerCallContext): Promise<ExternalFetchDataResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const result = await this.config.executeRecursiveOperation(
-            getDhtAddressFromRaw(findDataRequest.key),
+            getDhtAddressFromRaw(request.key),
             RecursiveOperation.FETCH_DATA,
             getNodeIdFromPeerDescriptor(senderPeerDescriptor)
         )
