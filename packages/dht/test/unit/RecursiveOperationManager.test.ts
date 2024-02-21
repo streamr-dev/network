@@ -4,11 +4,11 @@ import {
     MessageType,
     RouteMessageAck,
     RouteMessageError,
-    RouteMessageWrapper
+    RouteMessageWrapper,
+    RecursiveOperationRequest
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import {
     createWrappedClosestPeersRequest,
-    createFindRequest,
     createMockPeerDescriptor
 } from '../utils/utils'
 import { RecursiveOperationManager } from '../../src/dht/recursive-operation/RecursiveOperationManager'
@@ -33,11 +33,20 @@ const createMockRouter = (error?: RouteMessageError): Partial<Router> => {
         addToDuplicateDetector: () => {}
     }
 }
+
+const createRequest = (): RecursiveOperationRequest => {
+    const request: RecursiveOperationRequest = {
+        operation: RecursiveOperation.FIND_CLOSEST_NODES,
+        sessionId: v4()
+    }
+    return request
+}
+
 describe('RecursiveOperationManager', () => {
 
     const peerDescriptor1 = createMockPeerDescriptor()
     const peerDescriptor2 = createMockPeerDescriptor()
-    const recursiveOperationRequest = createFindRequest()
+    const recursiveOperationRequest = createRequest()
     const message: Message = {
         serviceId: 'unknown',
         messageId: v4(),
