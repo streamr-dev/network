@@ -17,6 +17,7 @@
         "packages/browser-test-runner",
         "packages/utils",
         "packages/test-utils",
+        "packages/cdn-location",
         "packages/protocol",
         "packages/proto-rpc",
         "packages/autocertifier-client",
