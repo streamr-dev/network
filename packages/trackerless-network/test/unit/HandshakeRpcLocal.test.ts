@@ -148,4 +148,21 @@ describe('HandshakeRpcLocal', () => {
         expect(handshakeWithInterleaving).toHaveBeenCalledTimes(0)
     })
 
+    it('rejects handshakes if the requestor has more than maxNeighborCount neighbors', async () => {
+        neighbors.add(createMockDeliveryRpcRemote())
+        neighbors.add(createMockDeliveryRpcRemote())
+        neighbors.add(createMockDeliveryRpcRemote())
+        neighbors.add(createMockDeliveryRpcRemote())
+        neighbors.add(createMockDeliveryRpcRemote())
+        const req = StreamPartHandshakeRequest.create({
+            streamPartId: STREAM_PART_ID,
+            requestId: 'requestId'
+        })
+        const res = await rpcLocal.handshake(req, {
+            incomingSourceDescriptor: createMockPeerDescriptor()
+        } as any)
+        expect(res.accepted).toEqual(false)
+        expect(handshakeWithInterleaving).toHaveBeenCalledTimes(0)
+    })
+
 })
