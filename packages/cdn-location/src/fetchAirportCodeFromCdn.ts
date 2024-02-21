@@ -23,15 +23,11 @@ export const fetchAirportCodeFromAmazon: (timeout: number) => Promise<string> =
 
         const airportCode = header.substring(0, 3)
 
-        if (!airportCode) {
-            throw new Error('Could not get airport code from Amazon')
-        }
-
         return airportCode
     }
 
 export const fetchAirportCodeFromFastly: (timeout: number) => Promise<string> =
-    async (timeout = 5000) => {
+    async (timeout: number) => {
 
         const header = await fetchHeader('https://www.fastly.com', 'X-Served-By', timeout)
 
@@ -43,15 +39,11 @@ export const fetchAirportCodeFromFastly: (timeout: number) => Promise<string> =
 
         const airportCode = header.substring(header.length - 3)
 
-        if (!airportCode) {
-            throw new Error('Could not get airport code from Fastly')
-        }
-
         return airportCode
     }
 
-export const fetchAirportCodeFromCloudflare: (timeout?: number) => Promise<string> =
-    async (timeout = 5000) => {
+export const fetchAirportCodeFromCloudflare: (timeout: number) => Promise<string> =
+    async (timeout: number) => {
 
         const header = await fetchHeader('https://www.cloudflare.com', 'CF-RAY', timeout)
 
@@ -62,10 +54,6 @@ export const fetchAirportCodeFromCloudflare: (timeout?: number) => Promise<strin
         }
 
         const airportCode = header.substring(header.length - 3)
-
-        if (!airportCode) {
-            throw new Error('Could not get airport code from Cloudflare')
-        }
 
         return airportCode
     }
