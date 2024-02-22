@@ -5,7 +5,6 @@ process.once('loaded', () => {
     window.Express = require('express')
     window.HTTP = require('http')
     window.HTTPS = require('https')
-    window.NodeJsBuffer = Buffer
     window.Buffer = require('buffer/').Buffer
     window.QueryString = require('querystring')
     // maybe we can set this karma-setup

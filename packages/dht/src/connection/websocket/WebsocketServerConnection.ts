@@ -8,12 +8,6 @@ import { createRandomConnectionId } from '../Connection'
 
 const logger = new Logger(module)
 
-// NodeJsBuffer is global defined in preload.js of Karma
-// It is used to make Karma/Electron tests to use the NodeJS
-// implementation of Buffer instead of the browser polyfill
-
-declare let NodeJsBuffer: BufferConstructor
-
 export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> implements IConnection {
 
     public readonly connectionId: ConnectionID
@@ -44,13 +38,9 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
     private onMessage(message: WebSocket.RawData, isBinary: boolean): void {
         if (!isBinary) {
             logger.trace('Received string Message')
-        } else if (message instanceof Buffer) {
-            logger.trace('Received Buffer Message')
-            this.emit('data', new Uint8Array(message))
-        // If in an Karma / Electron test, use the NodeJS implementation
-        } else if (typeof NodeJsBuffer !== 'undefined' && message instanceof NodeJsBuffer) {
-            logger.trace('Received NodeJsBuffer Message')
-            this.emit('data', new Uint8Array(message))
+        } else {
+            logger.trace('Websocket server received Message')
+            this.emit('data', new Uint8Array(message as Buffer))
         }
     }
 
@@ -78,16 +68,9 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
     }
 
     public send(data: Uint8Array): void {
-        // If in an Karma / Electron test, use the NodeJS implementation
-        // of Buffer instead of the browser polyfill
-
         // TODO: no need to check this.socket as it is always defined when stopped is false?
         if (!this.stopped && this.socket) {
-            if (typeof NodeJsBuffer !== 'undefined') {
-                this.socket.send(NodeJsBuffer.from(data), { binary: true })
-            } else {
-                this.socket.send(Buffer.from(data), { binary: true })
-            }
+            this.socket.send(data, { binary: true })
         } else {
             logger.debug('Tried to call send() on a stopped socket')
         }
