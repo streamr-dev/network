@@ -9,7 +9,6 @@ import {
     LockRequest,
     LockResponse,
     Message,
-    MessageType,
     PeerDescriptor,
     UnlockRequest
 } from '../proto/packages/dht/protos/DhtRpc'
@@ -312,9 +311,10 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     }
 
     private handleMessage(message: Message): void {
-        logger.trace('Received message of type ' + message.messageType)
-        if (message.messageType !== MessageType.RPC) {
-            logger.trace('Filtered out non-RPC message of type ' + message.messageType)
+        const messageType = message.body.oneofKind
+        logger.trace('Received message of type ' + messageType)
+        if (messageType !== 'rpcMessage') {
+            logger.trace('Filtered out non-RPC message of type ' + messageType)
             return
         }
         if (this.duplicateMessageDetector.isMostLikelyDuplicate(message.messageId)) {

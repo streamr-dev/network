@@ -184,8 +184,6 @@ enum RouteMessageError {
   STOPPED = 2;
 }
 
-// Correspond to the MessageType Enum
-
 message ConnectivityRequest {
   uint32 port = 1;
   bool tls = 2;
@@ -221,28 +219,18 @@ enum HandshakeError {
 
 // Wraps all messages
 
-enum MessageType {
-  RPC = 0;
-  CONNECTIVITY_REQUEST = 1;
-  CONNECTIVITY_RESPONSE = 2;
-  HANDSHAKE_REQUEST = 3;
-  HANDSHAKE_RESPONSE = 4;
-  RECURSIVE_OPERATION_REQUEST = 5;
-}
-
 message Message {
   string messageId = 1;
-  MessageType messageType = 2;
-  PeerDescriptor sourceDescriptor = 3;
-  PeerDescriptor targetDescriptor = 4;
-  string serviceId = 5; // id of the RPC service
+  PeerDescriptor sourceDescriptor = 2;
+  PeerDescriptor targetDescriptor = 3;
+  string serviceId = 4; // id of the RPC service
   oneof body {
+    protorpc.RpcMessage rpcMessage = 5;
     ConnectivityRequest connectivityRequest = 6;
     ConnectivityResponse connectivityResponse = 7;
     HandshakeRequest handshakeRequest = 8;
     HandshakeResponse handshakeResponse = 9;
-    protorpc.RpcMessage rpcMessage = 10;
-    RecursiveOperationRequest recursiveOperationRequest = 11;
+    RecursiveOperationRequest recursiveOperationRequest = 10;
   };
 }
 

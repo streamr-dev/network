@@ -1,6 +1,6 @@
 import { v4 } from 'uuid'
 import { RoutingMode, RoutingSession } from '../../src/dht/routing/RoutingSession'
-import { Message, MessageType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockPeerDescriptor, createWrappedClosestPeersRequest } from '../utils/utils'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
@@ -20,7 +20,6 @@ describe('RoutingSession', () => {
     const message: Message = {
         serviceId: 'unknown',
         messageId: v4(),
-        messageType: MessageType.RPC,
         body: {
             oneofKind: 'rpcMessage',
             rpcMessage: rpcWrapper
