@@ -296,8 +296,6 @@ export interface RouteMessageAck {
      */
     error?: RouteMessageError;
 }
-// Correspond to the MessageType Enum
-
 /**
  * @generated from protobuf message dht.ConnectivityRequest
  */
@@ -539,18 +537,18 @@ export interface DisconnectNotice {
     disconnectMode: DisconnectMode;
 }
 /**
- * @generated from protobuf message dht.ExternalFindDataRequest
+ * @generated from protobuf message dht.ExternalFetchDataRequest
  */
-export interface ExternalFindDataRequest {
+export interface ExternalFetchDataRequest {
     /**
      * @generated from protobuf field: bytes key = 1;
      */
     key: Uint8Array;
 }
 /**
- * @generated from protobuf message dht.ExternalFindDataResponse
+ * @generated from protobuf message dht.ExternalFetchDataResponse
  */
-export interface ExternalFindDataResponse {
+export interface ExternalFetchDataResponse {
     /**
      * @generated from protobuf field: repeated dht.DataEntry entries = 1;
      */
@@ -1081,29 +1079,29 @@ class DisconnectNotice$Type extends MessageType<DisconnectNotice> {
  */
 export const DisconnectNotice = new DisconnectNotice$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class ExternalFindDataRequest$Type extends MessageType<ExternalFindDataRequest> {
+class ExternalFetchDataRequest$Type extends MessageType<ExternalFetchDataRequest> {
     constructor() {
-        super("dht.ExternalFindDataRequest", [
+        super("dht.ExternalFetchDataRequest", [
             { no: 1, name: "key", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.ExternalFindDataRequest
+ * @generated MessageType for protobuf message dht.ExternalFetchDataRequest
  */
-export const ExternalFindDataRequest = new ExternalFindDataRequest$Type();
+export const ExternalFetchDataRequest = new ExternalFetchDataRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class ExternalFindDataResponse$Type extends MessageType<ExternalFindDataResponse> {
+class ExternalFetchDataResponse$Type extends MessageType<ExternalFetchDataResponse> {
     constructor() {
-        super("dht.ExternalFindDataResponse", [
+        super("dht.ExternalFetchDataResponse", [
             { no: 1, name: "entries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.ExternalFindDataResponse
+ * @generated MessageType for protobuf message dht.ExternalFetchDataResponse
  */
-export const ExternalFindDataResponse = new ExternalFindDataResponse$Type();
+export const ExternalFetchDataResponse = new ExternalFetchDataResponse$Type();
 /**
  * @generated ServiceType for protobuf service dht.DhtNodeRpc
  */
@@ -1165,6 +1163,6 @@ export const ConnectionLockRpc = new ServiceType("dht.ConnectionLockRpc", [
  * @generated ServiceType for protobuf service dht.ExternalApiRpc
  */
 export const ExternalApiRpc = new ServiceType("dht.ExternalApiRpc", [
-    { name: "externalFindData", options: {}, I: ExternalFindDataRequest, O: ExternalFindDataResponse },
+    { name: "externalFetchData", options: {}, I: ExternalFetchDataRequest, O: ExternalFetchDataResponse },
     { name: "externalStoreData", options: {}, I: ExternalStoreDataRequest, O: ExternalStoreDataResponse }
 ]);

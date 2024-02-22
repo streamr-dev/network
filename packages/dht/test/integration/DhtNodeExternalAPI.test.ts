@@ -25,14 +25,14 @@ describe('DhtNodeExternalApi', () => {
         simulator.stop()
     })
 
-    it('findData happy path', async () => {
+    it('fetch data happy path', async () => {
         const entry = createMockDataEntry()
         await dhtNode1.storeDataToDht(getDhtAddressFromRaw(entry.key), entry.data!)
         const foundData = await remote.fetchDataFromDhtViaPeer(getDhtAddressFromRaw(entry.key), dhtNode1.getLocalPeerDescriptor())
         expectEqualData(foundData[0], entry)
     })
     
-    it('findData returns empty array if no data found', async () => {
+    it('fetch data returns empty array if no data found', async () => {
         const foundData = await remote.fetchDataFromDhtViaPeer(createRandomDhtAddress(), dhtNode1.getLocalPeerDescriptor())
         expect(foundData).toEqual([])
     })
