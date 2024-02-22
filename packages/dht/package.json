@@ -33,6 +33,7 @@
     "@streamr/autocertifier-client": "100.0.0-testnet-three.3",
     "@streamr/proto-rpc": "100.0.0-testnet-three.3",
     "@streamr/utils": "100.0.0-testnet-three.3",
+    "@streamr/cdn-location": "100.0.0-testnet-three.3",
     "eventemitter3": "^5.0.0",
     "heap": "^0.2.6",
     "ipaddr.js": "^2.0.1",
