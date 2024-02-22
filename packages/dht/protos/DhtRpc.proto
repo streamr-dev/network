@@ -107,7 +107,7 @@ message RecursiveOperationRequest {
 }
 
 enum RecursiveOperation {
-  FIND_NODE = 0;
+  FIND_CLOSEST_NODES = 0;
   FETCH_DATA = 1;
   DELETE_DATA = 2;
 }
