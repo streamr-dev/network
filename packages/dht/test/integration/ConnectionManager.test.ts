@@ -6,7 +6,7 @@ import { Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { createPeerDescriptor } from '../../src/helpers/createPeerDescriptor'
 import { createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
-import { ConnectivityResponse, Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { ConnectivityResponse, Message, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { TransportEvents } from '../../src/transport/ITransport'
 import { createMockPeerDescriptor } from '../utils/utils'
@@ -134,7 +134,6 @@ describe('ConnectionManager', () => {
 
         const msg: Message = {
             serviceId: SERVICE_ID,
-            messageType: MessageType.RPC,
             messageId: '1',
             body: {
                 oneofKind: 'rpcMessage',
@@ -144,7 +143,7 @@ describe('ConnectionManager', () => {
 
         const promise = new Promise<void>((resolve, _reject) => {
             connectionManager2.on('message', async (message: Message) => {
-                expect(message.messageType).toBe(MessageType.RPC)
+                expect(message.body.oneofKind).toBe('rpcMessage')
                 resolve()
             })
         })
@@ -193,7 +192,6 @@ describe('ConnectionManager', () => {
 
         const msg: Message = {
             serviceId: SERVICE_ID,
-            messageType: MessageType.RPC,
             messageId: '1',
             body: {
                 oneofKind: 'rpcMessage',
@@ -217,7 +215,7 @@ describe('ConnectionManager', () => {
 
         const promise = new Promise<void>((resolve, _reject) => {
             connectionManager2.on('message', async (message: Message) => {
-                expect(message.messageType).toBe(MessageType.RPC)
+                expect(message.body.oneofKind).toBe('rpcMessage')
                 resolve()
             })
         })
@@ -244,7 +242,6 @@ describe('ConnectionManager', () => {
 
         const msg: Message = {
             serviceId: SERVICE_ID,
-            messageType: MessageType.RPC,
             messageId: '1',
             body: {
                 oneofKind: 'rpcMessage',
@@ -254,7 +251,7 @@ describe('ConnectionManager', () => {
 
         const dataPromise = new Promise<void>((resolve, _reject) => {
             connectionManager4.on('message', async (message: Message) => {
-                expect(message.messageType).toBe(MessageType.RPC)
+                expect(message.body.oneofKind).toBe('rpcMessage')
                 resolve()
             })
         })
@@ -309,7 +306,6 @@ describe('ConnectionManager', () => {
         peerDescriptor.nodeId = new Uint8Array([12, 12, 12, 12])
         const msg: Message = {
             serviceId: SERVICE_ID,
-            messageType: MessageType.RPC,
             messageId: '1',
             targetDescriptor: peerDescriptor,
             body: {
@@ -360,7 +356,6 @@ describe('ConnectionManager', () => {
 
         const msg: Message = {
             serviceId: SERVICE_ID,
-            messageType: MessageType.RPC,
             messageId: '1',
             targetDescriptor: {
                 // This is not the correct nodeId of peerDescriptor2
