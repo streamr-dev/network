@@ -19,8 +19,8 @@ import {
     ClosestPeersResponse,
     ConnectivityResponse,
     DataEntry,
-    ExternalFindDataRequest,
-    ExternalFindDataResponse,
+    ExternalFetchDataRequest,
+    ExternalFetchDataResponse,
     ExternalStoreDataRequest,
     ExternalStoreDataResponse,
     LeaveNotice,
@@ -373,10 +373,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             storeDataToDht: (key: DhtAddress, data: Any, creator?: DhtAddress) => this.storeDataToDht(key, data, creator)
         })
         this.rpcCommunicator!.registerRpcMethod(
-            ExternalFindDataRequest,
-            ExternalFindDataResponse,
-            'externalFindData',
-            (req: ExternalFindDataRequest, context: ServerCallContext) => externalApiRpcLocal.externalFindData(req, context),
+            ExternalFetchDataRequest,
+            ExternalFetchDataResponse,
+            'externalFetchData',
+            (req: ExternalFetchDataRequest, context: ServerCallContext) => externalApiRpcLocal.externalFetchData(req, context),
             { timeout: 10000 }  // TODO use config option or named constant?
         )
         this.rpcCommunicator!.registerRpcMethod(
@@ -490,7 +490,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.rpcCommunicator!,
             ExternalApiRpcClient
         )
-        return await rpcRemote.externalFindData(key)
+        return await rpcRemote.externalFetchData(key)
     }
 
     public async deleteDataFromDht(key: DhtAddress, waitForCompletion: boolean): Promise<void> {
@@ -500,7 +500,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     async findClosestNodesFromDht(key: DhtAddress): Promise<PeerDescriptor[]> {
-        const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FIND_NODE)
+        const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FIND_CLOSEST_NODES)
         return result.closestNodes
     }
 

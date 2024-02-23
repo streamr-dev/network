@@ -3,7 +3,7 @@
 // tslint:disable
 import { Empty } from "../../../google/protobuf/empty";
 import { ServiceType } from "@protobuf-ts/runtime-rpc";
-import { MessageType as MessageType$ } from "@protobuf-ts/runtime";
+import { MessageType } from "@protobuf-ts/runtime";
 import { RpcMessage } from "../../proto-rpc/protos/ProtoRpc";
 import { Timestamp } from "../../../google/protobuf/timestamp";
 import { Any } from "../../../google/protobuf/any";
@@ -296,8 +296,6 @@ export interface RouteMessageAck {
      */
     error?: RouteMessageError;
 }
-// Correspond to the MessageType Enum
-
 /**
  * @generated from protobuf message dht.ConnectivityRequest
  */
@@ -378,6 +376,8 @@ export interface HandshakeResponse {
      */
     version: string;
 }
+// Wraps all messages
+
 /**
  * @generated from protobuf message dht.Message
  */
@@ -387,25 +387,27 @@ export interface Message {
      */
     messageId: string;
     /**
-     * @generated from protobuf field: dht.MessageType messageType = 2;
-     */
-    messageType: MessageType;
-    /**
-     * @generated from protobuf field: dht.PeerDescriptor sourceDescriptor = 3;
+     * @generated from protobuf field: dht.PeerDescriptor sourceDescriptor = 2;
      */
     sourceDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor targetDescriptor = 4;
+     * @generated from protobuf field: dht.PeerDescriptor targetDescriptor = 3;
      */
     targetDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: string serviceId = 5;
+     * @generated from protobuf field: string serviceId = 4;
      */
     serviceId: string; // id of the RPC service
     /**
      * @generated from protobuf oneof: body
      */
     body: {
+        oneofKind: "rpcMessage";
+        /**
+         * @generated from protobuf field: protorpc.RpcMessage rpcMessage = 5;
+         */
+        rpcMessage: RpcMessage;
+    } | {
         oneofKind: "connectivityRequest";
         /**
          * @generated from protobuf field: dht.ConnectivityRequest connectivityRequest = 6;
@@ -430,15 +432,9 @@ export interface Message {
          */
         handshakeResponse: HandshakeResponse;
     } | {
-        oneofKind: "rpcMessage";
-        /**
-         * @generated from protobuf field: protorpc.RpcMessage rpcMessage = 10;
-         */
-        rpcMessage: RpcMessage;
-    } | {
         oneofKind: "recursiveOperationRequest";
         /**
-         * @generated from protobuf field: dht.RecursiveOperationRequest recursiveOperationRequest = 11;
+         * @generated from protobuf field: dht.RecursiveOperationRequest recursiveOperationRequest = 10;
          */
         recursiveOperationRequest: RecursiveOperationRequest;
     } | {
@@ -541,18 +537,18 @@ export interface DisconnectNotice {
     disconnectMode: DisconnectMode;
 }
 /**
- * @generated from protobuf message dht.ExternalFindDataRequest
+ * @generated from protobuf message dht.ExternalFetchDataRequest
  */
-export interface ExternalFindDataRequest {
+export interface ExternalFetchDataRequest {
     /**
      * @generated from protobuf field: bytes key = 1;
      */
     key: Uint8Array;
 }
 /**
- * @generated from protobuf message dht.ExternalFindDataResponse
+ * @generated from protobuf message dht.ExternalFetchDataResponse
  */
-export interface ExternalFindDataResponse {
+export interface ExternalFetchDataResponse {
     /**
      * @generated from protobuf field: repeated dht.DataEntry entries = 1;
      */
@@ -563,9 +559,9 @@ export interface ExternalFindDataResponse {
  */
 export enum RecursiveOperation {
     /**
-     * @generated from protobuf enum value: FIND_NODE = 0;
+     * @generated from protobuf enum value: FIND_CLOSEST_NODES = 0;
      */
-    FIND_NODE = 0,
+    FIND_CLOSEST_NODES = 0,
     /**
      * @generated from protobuf enum value: FETCH_DATA = 1;
      */
@@ -646,37 +642,6 @@ export enum HandshakeError {
      */
     UNSUPPORTED_VERSION = 2
 }
-// Wraps all messages
-
-/**
- * @generated from protobuf enum dht.MessageType
- */
-export enum MessageType {
-    /**
-     * @generated from protobuf enum value: RPC = 0;
-     */
-    RPC = 0,
-    /**
-     * @generated from protobuf enum value: CONNECTIVITY_REQUEST = 1;
-     */
-    CONNECTIVITY_REQUEST = 1,
-    /**
-     * @generated from protobuf enum value: CONNECTIVITY_RESPONSE = 2;
-     */
-    CONNECTIVITY_RESPONSE = 2,
-    /**
-     * @generated from protobuf enum value: HANDSHAKE_REQUEST = 3;
-     */
-    HANDSHAKE_REQUEST = 3,
-    /**
-     * @generated from protobuf enum value: HANDSHAKE_RESPONSE = 4;
-     */
-    HANDSHAKE_RESPONSE = 4,
-    /**
-     * @generated from protobuf enum value: RECURSIVE_OPERATION_REQUEST = 5;
-     */
-    RECURSIVE_OPERATION_REQUEST = 5
-}
 /**
  * @generated from protobuf enum dht.DisconnectMode
  */
@@ -691,7 +656,7 @@ export enum DisconnectMode {
     LEAVING = 1
 }
 // @generated message type with reflection information, may provide speed optimized methods
-class StoreDataRequest$Type extends MessageType$<StoreDataRequest> {
+class StoreDataRequest$Type extends MessageType<StoreDataRequest> {
     constructor() {
         super("dht.StoreDataRequest", [
             { no: 1, name: "key", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
@@ -707,7 +672,7 @@ class StoreDataRequest$Type extends MessageType$<StoreDataRequest> {
  */
 export const StoreDataRequest = new StoreDataRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class StoreDataResponse$Type extends MessageType$<StoreDataResponse> {
+class StoreDataResponse$Type extends MessageType<StoreDataResponse> {
     constructor() {
         super("dht.StoreDataResponse", []);
     }
@@ -717,7 +682,7 @@ class StoreDataResponse$Type extends MessageType$<StoreDataResponse> {
  */
 export const StoreDataResponse = new StoreDataResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class ExternalStoreDataRequest$Type extends MessageType$<ExternalStoreDataRequest> {
+class ExternalStoreDataRequest$Type extends MessageType<ExternalStoreDataRequest> {
     constructor() {
         super("dht.ExternalStoreDataRequest", [
             { no: 1, name: "key", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
@@ -730,7 +695,7 @@ class ExternalStoreDataRequest$Type extends MessageType$<ExternalStoreDataReques
  */
 export const ExternalStoreDataRequest = new ExternalStoreDataRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class ExternalStoreDataResponse$Type extends MessageType$<ExternalStoreDataResponse> {
+class ExternalStoreDataResponse$Type extends MessageType<ExternalStoreDataResponse> {
     constructor() {
         super("dht.ExternalStoreDataResponse", [
             { no: 1, name: "storers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
@@ -742,7 +707,7 @@ class ExternalStoreDataResponse$Type extends MessageType$<ExternalStoreDataRespo
  */
 export const ExternalStoreDataResponse = new ExternalStoreDataResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class ReplicateDataRequest$Type extends MessageType$<ReplicateDataRequest> {
+class ReplicateDataRequest$Type extends MessageType<ReplicateDataRequest> {
     constructor() {
         super("dht.ReplicateDataRequest", [
             { no: 1, name: "entry", kind: "message", T: () => DataEntry }
@@ -754,7 +719,7 @@ class ReplicateDataRequest$Type extends MessageType$<ReplicateDataRequest> {
  */
 export const ReplicateDataRequest = new ReplicateDataRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class DataEntry$Type extends MessageType$<DataEntry> {
+class DataEntry$Type extends MessageType<DataEntry> {
     constructor() {
         super("dht.DataEntry", [
             { no: 1, name: "key", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
@@ -773,7 +738,7 @@ class DataEntry$Type extends MessageType$<DataEntry> {
  */
 export const DataEntry = new DataEntry$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class ClosestPeersRequest$Type extends MessageType$<ClosestPeersRequest> {
+class ClosestPeersRequest$Type extends MessageType<ClosestPeersRequest> {
     constructor() {
         super("dht.ClosestPeersRequest", [
             { no: 1, name: "nodeId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
@@ -786,7 +751,7 @@ class ClosestPeersRequest$Type extends MessageType$<ClosestPeersRequest> {
  */
 export const ClosestPeersRequest = new ClosestPeersRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class ClosestPeersResponse$Type extends MessageType$<ClosestPeersResponse> {
+class ClosestPeersResponse$Type extends MessageType<ClosestPeersResponse> {
     constructor() {
         super("dht.ClosestPeersResponse", [
             { no: 1, name: "peers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
@@ -799,7 +764,7 @@ class ClosestPeersResponse$Type extends MessageType$<ClosestPeersResponse> {
  */
 export const ClosestPeersResponse = new ClosestPeersResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class RecursiveOperationRequest$Type extends MessageType$<RecursiveOperationRequest> {
+class RecursiveOperationRequest$Type extends MessageType<RecursiveOperationRequest> {
     constructor() {
         super("dht.RecursiveOperationRequest", [
             { no: 1, name: "sessionId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
@@ -812,7 +777,7 @@ class RecursiveOperationRequest$Type extends MessageType$<RecursiveOperationRequ
  */
 export const RecursiveOperationRequest = new RecursiveOperationRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class RecursiveOperationResponse$Type extends MessageType$<RecursiveOperationResponse> {
+class RecursiveOperationResponse$Type extends MessageType<RecursiveOperationResponse> {
     constructor() {
         super("dht.RecursiveOperationResponse", [
             { no: 1, name: "closestConnectedPeers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
@@ -827,7 +792,7 @@ class RecursiveOperationResponse$Type extends MessageType$<RecursiveOperationRes
  */
 export const RecursiveOperationResponse = new RecursiveOperationResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class PingRequest$Type extends MessageType$<PingRequest> {
+class PingRequest$Type extends MessageType<PingRequest> {
     constructor() {
         super("dht.PingRequest", [
             { no: 1, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
@@ -839,7 +804,7 @@ class PingRequest$Type extends MessageType$<PingRequest> {
  */
 export const PingRequest = new PingRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class PingResponse$Type extends MessageType$<PingResponse> {
+class PingResponse$Type extends MessageType<PingResponse> {
     constructor() {
         super("dht.PingResponse", [
             { no: 1, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
@@ -851,7 +816,7 @@ class PingResponse$Type extends MessageType$<PingResponse> {
  */
 export const PingResponse = new PingResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class LeaveNotice$Type extends MessageType$<LeaveNotice> {
+class LeaveNotice$Type extends MessageType<LeaveNotice> {
     constructor() {
         super("dht.LeaveNotice", []);
     }
@@ -861,7 +826,7 @@ class LeaveNotice$Type extends MessageType$<LeaveNotice> {
  */
 export const LeaveNotice = new LeaveNotice$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class PeerDescriptor$Type extends MessageType$<PeerDescriptor> {
+class PeerDescriptor$Type extends MessageType<PeerDescriptor> {
     constructor() {
         super("dht.PeerDescriptor", [
             { no: 1, name: "nodeId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
@@ -881,7 +846,7 @@ class PeerDescriptor$Type extends MessageType$<PeerDescriptor> {
  */
 export const PeerDescriptor = new PeerDescriptor$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class ConnectivityMethod$Type extends MessageType$<ConnectivityMethod> {
+class ConnectivityMethod$Type extends MessageType<ConnectivityMethod> {
     constructor() {
         super("dht.ConnectivityMethod", [
             { no: 1, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
@@ -895,7 +860,7 @@ class ConnectivityMethod$Type extends MessageType$<ConnectivityMethod> {
  */
 export const ConnectivityMethod = new ConnectivityMethod$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class RouteMessageWrapper$Type extends MessageType$<RouteMessageWrapper> {
+class RouteMessageWrapper$Type extends MessageType<RouteMessageWrapper> {
     constructor() {
         super("dht.RouteMessageWrapper", [
             { no: 1, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
@@ -913,7 +878,7 @@ class RouteMessageWrapper$Type extends MessageType$<RouteMessageWrapper> {
  */
 export const RouteMessageWrapper = new RouteMessageWrapper$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class RouteMessageAck$Type extends MessageType$<RouteMessageAck> {
+class RouteMessageAck$Type extends MessageType<RouteMessageAck> {
     constructor() {
         super("dht.RouteMessageAck", [
             { no: 1, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
@@ -926,7 +891,7 @@ class RouteMessageAck$Type extends MessageType$<RouteMessageAck> {
  */
 export const RouteMessageAck = new RouteMessageAck$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class ConnectivityRequest$Type extends MessageType$<ConnectivityRequest> {
+class ConnectivityRequest$Type extends MessageType<ConnectivityRequest> {
     constructor() {
         super("dht.ConnectivityRequest", [
             { no: 1, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
@@ -941,7 +906,7 @@ class ConnectivityRequest$Type extends MessageType$<ConnectivityRequest> {
  */
 export const ConnectivityRequest = new ConnectivityRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class ConnectivityResponse$Type extends MessageType$<ConnectivityResponse> {
+class ConnectivityResponse$Type extends MessageType<ConnectivityResponse> {
     constructor() {
         super("dht.ConnectivityResponse", [
             { no: 1, name: "host", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
@@ -957,7 +922,7 @@ class ConnectivityResponse$Type extends MessageType$<ConnectivityResponse> {
  */
 export const ConnectivityResponse = new ConnectivityResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class HandshakeRequest$Type extends MessageType$<HandshakeRequest> {
+class HandshakeRequest$Type extends MessageType<HandshakeRequest> {
     constructor() {
         super("dht.HandshakeRequest", [
             { no: 1, name: "sourcePeerDescriptor", kind: "message", T: () => PeerDescriptor },
@@ -971,7 +936,7 @@ class HandshakeRequest$Type extends MessageType$<HandshakeRequest> {
  */
 export const HandshakeRequest = new HandshakeRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class HandshakeResponse$Type extends MessageType$<HandshakeResponse> {
+class HandshakeResponse$Type extends MessageType<HandshakeResponse> {
     constructor() {
         super("dht.HandshakeResponse", [
             { no: 1, name: "sourcePeerDescriptor", kind: "message", T: () => PeerDescriptor },
@@ -985,20 +950,19 @@ class HandshakeResponse$Type extends MessageType$<HandshakeResponse> {
  */
 export const HandshakeResponse = new HandshakeResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class Message$Type extends MessageType$<Message> {
+class Message$Type extends MessageType<Message> {
     constructor() {
         super("dht.Message", [
             { no: 1, name: "messageId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "messageType", kind: "enum", T: () => ["dht.MessageType", MessageType] },
-            { no: 3, name: "sourceDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 4, name: "targetDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 5, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "sourceDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 3, name: "targetDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 4, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "rpcMessage", kind: "message", oneof: "body", T: () => RpcMessage },
             { no: 6, name: "connectivityRequest", kind: "message", oneof: "body", T: () => ConnectivityRequest },
             { no: 7, name: "connectivityResponse", kind: "message", oneof: "body", T: () => ConnectivityResponse },
             { no: 8, name: "handshakeRequest", kind: "message", oneof: "body", T: () => HandshakeRequest },
             { no: 9, name: "handshakeResponse", kind: "message", oneof: "body", T: () => HandshakeResponse },
-            { no: 10, name: "rpcMessage", kind: "message", oneof: "body", T: () => RpcMessage },
-            { no: 11, name: "recursiveOperationRequest", kind: "message", oneof: "body", T: () => RecursiveOperationRequest }
+            { no: 10, name: "recursiveOperationRequest", kind: "message", oneof: "body", T: () => RecursiveOperationRequest }
         ]);
     }
 }
@@ -1007,7 +971,7 @@ class Message$Type extends MessageType$<Message> {
  */
 export const Message = new Message$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class WebsocketConnectionRequest$Type extends MessageType$<WebsocketConnectionRequest> {
+class WebsocketConnectionRequest$Type extends MessageType<WebsocketConnectionRequest> {
     constructor() {
         super("dht.WebsocketConnectionRequest", []);
     }
@@ -1017,7 +981,7 @@ class WebsocketConnectionRequest$Type extends MessageType$<WebsocketConnectionRe
  */
 export const WebsocketConnectionRequest = new WebsocketConnectionRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class WebrtcConnectionRequest$Type extends MessageType$<WebrtcConnectionRequest> {
+class WebrtcConnectionRequest$Type extends MessageType<WebrtcConnectionRequest> {
     constructor() {
         super("dht.WebrtcConnectionRequest", []);
     }
@@ -1027,7 +991,7 @@ class WebrtcConnectionRequest$Type extends MessageType$<WebrtcConnectionRequest>
  */
 export const WebrtcConnectionRequest = new WebrtcConnectionRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class RtcOffer$Type extends MessageType$<RtcOffer> {
+class RtcOffer$Type extends MessageType<RtcOffer> {
     constructor() {
         super("dht.RtcOffer", [
             { no: 1, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
@@ -1040,7 +1004,7 @@ class RtcOffer$Type extends MessageType$<RtcOffer> {
  */
 export const RtcOffer = new RtcOffer$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class RtcAnswer$Type extends MessageType$<RtcAnswer> {
+class RtcAnswer$Type extends MessageType<RtcAnswer> {
     constructor() {
         super("dht.RtcAnswer", [
             { no: 1, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
@@ -1053,7 +1017,7 @@ class RtcAnswer$Type extends MessageType$<RtcAnswer> {
  */
 export const RtcAnswer = new RtcAnswer$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class IceCandidate$Type extends MessageType$<IceCandidate> {
+class IceCandidate$Type extends MessageType<IceCandidate> {
     constructor() {
         super("dht.IceCandidate", [
             { no: 1, name: "candidate", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
@@ -1067,7 +1031,7 @@ class IceCandidate$Type extends MessageType$<IceCandidate> {
  */
 export const IceCandidate = new IceCandidate$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class LockRequest$Type extends MessageType$<LockRequest> {
+class LockRequest$Type extends MessageType<LockRequest> {
     constructor() {
         super("dht.LockRequest", [
             { no: 1, name: "lockId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
@@ -1079,7 +1043,7 @@ class LockRequest$Type extends MessageType$<LockRequest> {
  */
 export const LockRequest = new LockRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class UnlockRequest$Type extends MessageType$<UnlockRequest> {
+class UnlockRequest$Type extends MessageType<UnlockRequest> {
     constructor() {
         super("dht.UnlockRequest", [
             { no: 1, name: "lockId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
@@ -1091,7 +1055,7 @@ class UnlockRequest$Type extends MessageType$<UnlockRequest> {
  */
 export const UnlockRequest = new UnlockRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class LockResponse$Type extends MessageType$<LockResponse> {
+class LockResponse$Type extends MessageType<LockResponse> {
     constructor() {
         super("dht.LockResponse", [
             { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
@@ -1103,7 +1067,7 @@ class LockResponse$Type extends MessageType$<LockResponse> {
  */
 export const LockResponse = new LockResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class DisconnectNotice$Type extends MessageType$<DisconnectNotice> {
+class DisconnectNotice$Type extends MessageType<DisconnectNotice> {
     constructor() {
         super("dht.DisconnectNotice", [
             { no: 1, name: "disconnectMode", kind: "enum", T: () => ["dht.DisconnectMode", DisconnectMode] }
@@ -1115,29 +1079,29 @@ class DisconnectNotice$Type extends MessageType$<DisconnectNotice> {
  */
 export const DisconnectNotice = new DisconnectNotice$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class ExternalFindDataRequest$Type extends MessageType$<ExternalFindDataRequest> {
+class ExternalFetchDataRequest$Type extends MessageType<ExternalFetchDataRequest> {
     constructor() {
-        super("dht.ExternalFindDataRequest", [
+        super("dht.ExternalFetchDataRequest", [
             { no: 1, name: "key", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.ExternalFindDataRequest
+ * @generated MessageType for protobuf message dht.ExternalFetchDataRequest
  */
-export const ExternalFindDataRequest = new ExternalFindDataRequest$Type();
+export const ExternalFetchDataRequest = new ExternalFetchDataRequest$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class ExternalFindDataResponse$Type extends MessageType$<ExternalFindDataResponse> {
+class ExternalFetchDataResponse$Type extends MessageType<ExternalFetchDataResponse> {
     constructor() {
-        super("dht.ExternalFindDataResponse", [
+        super("dht.ExternalFetchDataResponse", [
             { no: 1, name: "entries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message dht.ExternalFindDataResponse
+ * @generated MessageType for protobuf message dht.ExternalFetchDataResponse
  */
-export const ExternalFindDataResponse = new ExternalFindDataResponse$Type();
+export const ExternalFetchDataResponse = new ExternalFetchDataResponse$Type();
 /**
  * @generated ServiceType for protobuf service dht.DhtNodeRpc
  */
@@ -1199,6 +1163,6 @@ export const ConnectionLockRpc = new ServiceType("dht.ConnectionLockRpc", [
  * @generated ServiceType for protobuf service dht.ExternalApiRpc
  */
 export const ExternalApiRpc = new ServiceType("dht.ExternalApiRpc", [
-    { name: "externalFindData", options: {}, I: ExternalFindDataRequest, O: ExternalFindDataResponse },
+    { name: "externalFetchData", options: {}, I: ExternalFetchDataRequest, O: ExternalFetchDataResponse },
     { name: "externalStoreData", options: {}, I: ExternalStoreDataRequest, O: ExternalStoreDataResponse }
 ]);

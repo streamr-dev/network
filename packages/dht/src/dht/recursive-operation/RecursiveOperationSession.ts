@@ -8,8 +8,7 @@ import {
     RouteMessageWrapper,
     RouteMessageAck,
     RecursiveOperationRequest,
-    Message,
-    MessageType
+    Message
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
@@ -90,7 +89,6 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             operation: this.config.operation
         }
         const msg: Message = {
-            messageType: MessageType.RECURSIVE_OPERATION_REQUEST,
             messageId: v4(),
             serviceId,
             body: {

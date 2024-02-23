@@ -3,7 +3,7 @@ import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
-import { Message, MessageType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
@@ -12,7 +12,6 @@ import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 const BASE_MESSAGE: Message = {
     serviceId: 'serviceId',
-    messageType: MessageType.RPC,
     messageId: '1',
     body: {
         oneofKind: 'rpcMessage',
@@ -63,13 +62,13 @@ describe('SimultaneousConnections', () => {
 
         const promise1 = new Promise<void>((resolve, _reject) => {
             simTransport1.on('message', async (message: Message) => {
-                expect(message.messageType).toBe(MessageType.RPC)
+                expect(message.body.oneofKind).toBe('rpcMessage')
                 resolve()
             })
         })
         const promise2 = new Promise<void>((resolve, _reject) => {
             simTransport2.on('message', async (message: Message) => {
-                expect(message.messageType).toBe(MessageType.RPC)
+                expect(message.body.oneofKind).toBe('rpcMessage')
                 resolve()
             })
         })
@@ -142,13 +141,13 @@ describe('SimultaneousConnections', () => {
 
             const promise1 = new Promise<void>((resolve, _reject) => {
                 connectionManager1.on('message', async (message: Message) => {
-                    expect(message.messageType).toBe(MessageType.RPC)
+                    expect(message.body.oneofKind).toBe('rpcMessage')
                     resolve()
                 })
             })
             const promise2 = new Promise<void>((resolve, _reject) => {
                 connectionManager2.on('message', async (message: Message) => {
-                    expect(message.messageType).toBe(MessageType.RPC)
+                    expect(message.body.oneofKind).toBe('rpcMessage')
                     resolve()
                 })
             })
@@ -222,13 +221,13 @@ describe('SimultaneousConnections', () => {
 
             const promise1 = new Promise<void>((resolve, _reject) => {
                 connectionManager1.on('message', async (message: Message) => {
-                    expect(message.messageType).toBe(MessageType.RPC)
+                    expect(message.body.oneofKind).toBe('rpcMessage')
                     resolve()
                 })
             })
             const promise2 = new Promise<void>((resolve, _reject) => {
                 connectionManager2.on('message', async (message: Message) => {
-                    expect(message.messageType).toBe(MessageType.RPC)
+                    expect(message.body.oneofKind).toBe('rpcMessage')
                     resolve()
                 })
             })
@@ -290,13 +289,13 @@ describe('SimultaneousConnections', () => {
 
             const promise1 = new Promise<void>((resolve, _reject) => {
                 connectionManager1.on('message', async (message: Message) => {
-                    expect(message.messageType).toBe(MessageType.RPC)
+                    expect(message.body.oneofKind).toBe('rpcMessage')
                     resolve()
                 })
             })
             const promise2 = new Promise<void>((resolve, _reject) => {
                 connectionManager2.on('message', async (message: Message) => {
-                    expect(message.messageType).toBe(MessageType.RPC)
+                    expect(message.body.oneofKind).toBe('rpcMessage')
                     resolve()
                 })
             })
