@@ -179,8 +179,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 this.config.peerDescriptor.websocket = undefined
             }
         }
-        if (this.region === undefined) {
+        if (this.region !== undefined) {
             this.region = this.config.region
+        } else if (this.config.peerDescriptor?.region !== undefined) {
+            this.region = this.config.peerDescriptor.region
         } else {
             this.region = await getLocalRegion()
         }
