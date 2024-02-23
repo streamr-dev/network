@@ -158,7 +158,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
 
         const oldCertifiedSubdomain = JSON.parse(fs.readFileSync(this.configFile, 'utf8')) as CertifiedSubdomain
         const updatedCertifiedSubdomain = await this.restClient.updateCertificate(oldCertifiedSubdomain.fqdn.split('.')[0],
-            this.streamrWebSocketPort, oldCertifiedSubdomain.authenticationToken, sessionId)
+            this.streamrWebSocketPort, sessionId, oldCertifiedSubdomain.authenticationToken)
 
         this.ongoingSessions.delete(sessionId)
 
@@ -196,7 +196,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     // IAutoCertifierRpc implementation
     // TODO: could move to the DHT package or move all rpc related logic here from AutoCertifierClientFacade in DHT 
     async hasSession(request: HasSessionRequest): Promise<HasSessionResponse> {
-        logger.trace('hasSession() called ' + this.ongoingSessions.size + ' ongoing sessions')
+        logger.info('hasSession() called ' + this.ongoingSessions.size + ' ongoing sessions')
         if (this.ongoingSessions.has(request.sessionId)) {
             return { sessionId: request.sessionId }
         } else {
