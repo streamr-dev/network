@@ -1,4 +1,3 @@
-import { getLocalRegion } from '@streamr/cdn-location'
 import { Logger } from '@streamr/utils'
 import {
     ConnectivityResponse,
