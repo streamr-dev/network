@@ -45,7 +45,7 @@ export interface DefaultConnectorFacadeConfig {
     websocketServerEnableTls?: boolean
     autoCertifierUrl?: string
     autoCertifierConfigFile?: string
-    createLocalPeerDescriptor: (connectivityResponse: ConnectivityResponse, region: number) => PeerDescriptor
+    createLocalPeerDescriptor: (connectivityResponse: ConnectivityResponse) => PeerDescriptor
 }
 
 export class DefaultConnectorFacade implements ConnectorFacade {
@@ -99,15 +99,14 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         // DhtNode in each call. 
         // LocalPeerDescriptor could be stored in one place and passed from there to the connectors
         const temporarilySelfSigned = (!this.config.tlsCertificate && this.config.websocketServerEnableTls === true)
-        this.region = await getLocalRegion()
         const connectivityResponse = await this.websocketConnector.checkConnectivity(temporarilySelfSigned)
-        const localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse, this.region)
+        const localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
         this.setLocalPeerDescriptor(localPeerDescriptor)
         if (localPeerDescriptor.websocket && !this.config.tlsCertificate && this.config.websocketServerEnableTls) {
             try {
                 await this.websocketConnector.autoCertify()
                 const connectivityResponse = await this.websocketConnector.checkConnectivity(false)
-                const autocertifiedLocalPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse, this.region)
+                const autocertifiedLocalPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
                 if (autocertifiedLocalPeerDescriptor.websocket !== undefined) {
                     this.setLocalPeerDescriptor(autocertifiedLocalPeerDescriptor)
                 } else {
@@ -138,7 +137,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         this.websocketConnector = new WebsocketConnector(webSocketConnectorConfig)
         await this.websocketConnector.start()
         const connectivityResponse = await this.websocketConnector.checkConnectivity(false)
-        const localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse, this.region!)
+        const localPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
         this.setLocalPeerDescriptor(localPeerDescriptor)
     }
 
