@@ -28,6 +28,7 @@
     "run-kademlia-simulation": "ts-node --project tsconfig.node.json $NODE_DEBUG_OPTION --files test/benchmark/kademlia-simulation/KademliaSimulation.ts"
   },
   "dependencies": {
+    "@js-sdsl/ordered-map": "^4.4.2",
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
     "@streamr/autocertifier-client": "100.0.0-testnet-three.3",
@@ -38,7 +39,7 @@
     "ipaddr.js": "^2.0.1",
     "k-bucket": "^5.1.0",
     "lodash": "^4.17.21",
-    "@js-sdsl/ordered-map": "^4.4.2",
+    "lru-cache": "10.2.0",
     "node-datachannel": "^0.4.3",
     "sinon": "^17.0.1",
     "uuid": "^9.0.1",
@@ -52,7 +53,7 @@
     "@types/k-bucket": "^5.0.1",
     "@types/lodash": "^4.14.202",
     "@types/sinon": "^17.0.3",
-    "@types/uuid": "^9.0.7",
+    "@types/uuid": "^9.0.8",
     "@types/websocket": "^1.0.10",
     "express": "^4.17.1",
     "jest-leak-detector": "^27.3.1",

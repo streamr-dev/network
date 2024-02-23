@@ -4,8 +4,8 @@
 import { ExternalApiRpc } from "./DhtRpc";
 import type { ExternalStoreDataResponse } from "./DhtRpc";
 import type { ExternalStoreDataRequest } from "./DhtRpc";
-import type { ExternalFindDataResponse } from "./DhtRpc";
-import type { ExternalFindDataRequest } from "./DhtRpc";
+import type { ExternalFetchDataResponse } from "./DhtRpc";
+import type { ExternalFetchDataRequest } from "./DhtRpc";
 import { ConnectionLockRpc } from "./DhtRpc";
 import type { DisconnectNotice } from "./DhtRpc";
 import type { UnlockRequest } from "./DhtRpc";
@@ -365,9 +365,9 @@ export class ConnectionLockRpcClient implements IConnectionLockRpcClient, Servic
  */
 export interface IExternalApiRpcClient {
     /**
-     * @generated from protobuf rpc: externalFindData(dht.ExternalFindDataRequest) returns (dht.ExternalFindDataResponse);
+     * @generated from protobuf rpc: externalFetchData(dht.ExternalFetchDataRequest) returns (dht.ExternalFetchDataResponse);
      */
-    externalFindData(input: ExternalFindDataRequest, options?: RpcOptions): UnaryCall<ExternalFindDataRequest, ExternalFindDataResponse>;
+    externalFetchData(input: ExternalFetchDataRequest, options?: RpcOptions): UnaryCall<ExternalFetchDataRequest, ExternalFetchDataResponse>;
     /**
      * @generated from protobuf rpc: externalStoreData(dht.ExternalStoreDataRequest) returns (dht.ExternalStoreDataResponse);
      */
@@ -383,11 +383,11 @@ export class ExternalApiRpcClient implements IExternalApiRpcClient, ServiceInfo 
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: externalFindData(dht.ExternalFindDataRequest) returns (dht.ExternalFindDataResponse);
+     * @generated from protobuf rpc: externalFetchData(dht.ExternalFetchDataRequest) returns (dht.ExternalFetchDataResponse);
      */
-    externalFindData(input: ExternalFindDataRequest, options?: RpcOptions): UnaryCall<ExternalFindDataRequest, ExternalFindDataResponse> {
+    externalFetchData(input: ExternalFetchDataRequest, options?: RpcOptions): UnaryCall<ExternalFetchDataRequest, ExternalFetchDataResponse> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<ExternalFindDataRequest, ExternalFindDataResponse>("unary", this._transport, method, opt, input);
+        return stackIntercept<ExternalFetchDataRequest, ExternalFetchDataResponse>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: externalStoreData(dht.ExternalStoreDataRequest) returns (dht.ExternalStoreDataResponse);

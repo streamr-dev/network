@@ -39,7 +39,7 @@ describe('RecursiveOperationSession', () => {
             targetId: createRandomDhtAddress(),
             localPeerDescriptor,
             waitedRoutingPathCompletions: 3,
-            operation: RecursiveOperation.FIND_NODE,
+            operation: RecursiveOperation.FIND_CLOSEST_NODES,
             doRouteRequest
         })
         const onCompleted = jest.fn()

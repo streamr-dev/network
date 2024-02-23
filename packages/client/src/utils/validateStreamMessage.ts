@@ -2,12 +2,14 @@ import {
     StreamMessage,
     StreamMessageError,
     StreamMessageType,
-    createSignaturePayload,
-    deserializeGroupKeyRequest,
-    deserializeGroupKeyResponse,
 } from '@streamr/protocol'
+import {
+    convertBytesToGroupKeyRequest,
+    convertBytesToGroupKeyResponse
+} from '@streamr/trackerless-network'
 import { verifySignature, EthereumAddress } from '@streamr/utils'
 import { StreamRegistry } from '../registry/StreamRegistry'
+import { createSignaturePayload } from '../signature'
 
 export const validateStreamMessage = async (msg: StreamMessage, streamRegistry: StreamRegistry): Promise<void> => {
     await doValidate(msg, streamRegistry).catch((err: any) => {
@@ -39,7 +41,7 @@ const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry
         case StreamMessageType.GROUP_KEY_REQUEST:
             return validateGroupKeyMessage(
                 streamMessage,
-                deserializeGroupKeyRequest(streamMessage.content).recipient,
+                convertBytesToGroupKeyRequest(streamMessage.content).recipient,
                 streamMessage.getPublisherId(),
                 streamRegistry
             )
@@ -47,7 +49,7 @@ const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry
             return validateGroupKeyMessage(
                 streamMessage,
                 streamMessage.getPublisherId(),
-                deserializeGroupKeyResponse(streamMessage.content).recipient,
+                convertBytesToGroupKeyResponse(streamMessage.content).recipient,
                 streamRegistry
             )
         default:
@@ -64,6 +66,7 @@ const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry
 export const assertSignatureIsValid = (streamMessage: StreamMessage): void => {
     const payload = createSignaturePayload({
         messageId: streamMessage.messageId,
+        messageType: streamMessage.messageType,
         content: streamMessage.content,
         signatureType: streamMessage.signatureType,
         encryptionType: streamMessage.encryptionType,

@@ -60,7 +60,7 @@ interface EntryPointDiscoveryConfig {
     streamPartId: StreamPartID
     localPeerDescriptor: PeerDescriptor
     layer1Node: Layer1Node
-    getEntryPointData: (key: DhtAddress) => Promise<DataEntry[]>
+    fetchEntryPointData: (key: DhtAddress) => Promise<DataEntry[]>
     storeEntryPointData: (key: DhtAddress, data: Any) => Promise<PeerDescriptor[]>
     deleteEntryPointData: (key: DhtAddress) => Promise<void>
     storeInterval?: number
@@ -111,7 +111,7 @@ export class EntryPointDiscovery {
     private async queryEntrypoints(key: DhtAddress): Promise<PeerDescriptor[]> {
         logger.trace(`Finding data from dht node ${getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)}`)
         try {
-            const result = await this.config.getEntryPointData(key)
+            const result = await this.config.fetchEntryPointData(key)
             return parseEntryPointData(result)
         } catch (err) {
             return []
