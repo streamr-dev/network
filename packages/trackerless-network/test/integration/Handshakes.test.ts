@@ -35,6 +35,8 @@ describe('Handshakes', () => {
     let rpcCommunicator3: ListeningRpcCommunicator
     let nodeView: NodeList
     let neighbors: NodeList
+    let leftNodeView: NodeList
+    let rightNodeView: NodeList
     let handshaker: Handshaker
     const streamPartId = StreamPartIDUtils.parse('stream#0')
 
@@ -83,16 +85,21 @@ describe('Handshakes', () => {
 
         const handshakerNodeId = getNodeIdFromPeerDescriptor(peerDescriptor2)
         nodeView = new NodeList(handshakerNodeId, 10)
+        leftNodeView = new NodeList(handshakerNodeId, 10)
+        rightNodeView = new NodeList(handshakerNodeId, 10)
         neighbors = new NodeList(handshakerNodeId, 4)
         handshaker = new Handshaker({
             localPeerDescriptor: peerDescriptor2,
             streamPartId,
             nearbyNodeView: nodeView,
             randomNodeView: nodeView,
+            leftNodeView,
+            rightNodeView,
             neighbors,
             connectionLocker: mockConnectionLocker,
             rpcCommunicator: rpcCommunicator2,
-            maxNeighborCount: 4
+            maxNeighborCount: 4,
+            ongoingHandshakes: new Set()
         })
 
     })

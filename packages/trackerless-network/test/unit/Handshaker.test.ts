@@ -16,6 +16,8 @@ describe('Handshaker', () => {
     let neighbors: NodeList
     let nearbyNodeView: NodeList
     let randomNodeView: NodeList
+    let leftNodeView: NodeList
+    let rightNodeView: NodeList
 
     let simulator: Simulator
     let simulatorTransport: SimulatorTransport
@@ -30,6 +32,8 @@ describe('Handshaker', () => {
         neighbors = new NodeList(nodeId, 10)
         nearbyNodeView = new NodeList(nodeId, 20)
         randomNodeView = new NodeList(nodeId, 20)
+        leftNodeView = new NodeList(nodeId, 20)
+        rightNodeView = new NodeList(nodeId, 20)
 
         handshaker = new Handshaker({
             localPeerDescriptor: peerDescriptor,
@@ -38,9 +42,12 @@ describe('Handshaker', () => {
             neighbors,
             nearbyNodeView,
             randomNodeView,
+            leftNodeView,
+            rightNodeView,
             rpcCommunicator,
             maxNeighborCount,
-            rpcRequestTimeout: 5000
+            rpcRequestTimeout: 5000,
+            ongoingHandshakes: new Set()
         })
     })
 

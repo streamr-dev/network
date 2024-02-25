@@ -3,7 +3,6 @@ import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { Router } from '../../src/dht/routing/Router'
 import { 
     Message,
-    MessageType,
     PeerDescriptor,
     RouteMessageAck,
     RouteMessageError,
@@ -23,7 +22,6 @@ describe('Router', () => {
     const message: Message = {
         serviceId: 'unknown',
         messageId: v4(),
-        messageType: MessageType.RPC,
         body: {
             oneofKind: 'rpcMessage',
             rpcMessage: rpcWrapper
@@ -53,7 +51,8 @@ describe('Router', () => {
             localPeerDescriptor: peerDescriptor1,
             rpcCommunicator: rpcCommunicator as any,
             addContact: (_contact) => {},
-            connections
+            connections,
+            handleMessage: () => {}
         })
     })
 

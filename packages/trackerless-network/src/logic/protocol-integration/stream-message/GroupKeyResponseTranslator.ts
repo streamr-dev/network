@@ -6,7 +6,6 @@ import { toEthereumAddress, binaryToHex, hexToBinary } from '@streamr/utils'
 export class GroupKeyResponseTranslator {
 
     static toProtobuf(msg: OldGroupKeyResponse): GroupKeyResponse {
-
         const groupKeys = msg.encryptedGroupKeys.map((groupKey) => {
             return {
                 data: groupKey.data,

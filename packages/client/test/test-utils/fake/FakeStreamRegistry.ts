@@ -94,7 +94,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         if (registryItem === undefined) {
             return []
         }
-        const targets = registryItem.permissions.keys()
+        const targets = [...registryItem.permissions.keys()]
         return targets.map((target) => {
             const permissions = registryItem.permissions.get(target)
             if (target === PUBLIC_PERMISSION_TARGET) {

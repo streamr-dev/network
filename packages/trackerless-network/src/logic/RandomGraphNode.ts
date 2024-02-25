@@ -143,10 +143,6 @@ export class RandomGraphNode extends EventEmitter<Events> {
             this.config.layer1Node as any,
             'ringContactAdded',
             (_: PeerDescriptor, peers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => {
-                logger.info('ringContactAdded', { 
-                    left: peers.left.map((peer) => getNodeIdFromPeerDescriptor(peer)),
-                    right: peers.right.map((peer) => getNodeIdFromPeerDescriptor(peer))
-                })
                 this.onRingContactEvent(peers)
             },
             this.abortController.signal
@@ -155,10 +151,6 @@ export class RandomGraphNode extends EventEmitter<Events> {
             this.config.layer1Node as any,
             'ringContactRemoved',
             (_: PeerDescriptor, peers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => {
-                logger.info('ringContactRemoved', { 
-                    left: peers.left.map((peer) => getNodeIdFromPeerDescriptor(peer)),
-                    right: peers.right.map((peer) => getNodeIdFromPeerDescriptor(peer))
-                })
                 this.onRingContactEvent(peers)
             },
             this.abortController.signal

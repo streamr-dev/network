@@ -5,13 +5,6 @@ import { StreamMessageType } from './StreamMessage'
 import GroupKeyRequest from './GroupKeyRequest'
 import GroupKeyResponse from './GroupKeyResponse'
 import EncryptedGroupKey from './EncryptedGroupKey'
-import { createSignaturePayload } from './signature'
-import {
-    serializeGroupKeyRequest,
-    serializeGroupKeyResponse,
-    deserializeGroupKeyRequest,
-    deserializeGroupKeyResponse
-} from './groupKeySerialization'
 
 export * from './StreamMessage'
 
@@ -23,10 +16,5 @@ export {
     StreamMessageAESEncrypted,
     GroupKeyRequest,
     GroupKeyResponse,
-    EncryptedGroupKey,
-    createSignaturePayload,
-    serializeGroupKeyRequest,
-    serializeGroupKeyResponse,
-    deserializeGroupKeyRequest,
-    deserializeGroupKeyResponse
+    EncryptedGroupKey
 }

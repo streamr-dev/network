@@ -11,7 +11,7 @@ npm run build
 
 # Build client's webpack bundle
 cd packages/client || exit
-npm run build-browser-production
+npm run build-browser
 if [ $? -ne 0 ]
 then
     echo

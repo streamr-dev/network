@@ -1,7 +1,7 @@
 import LeakDetector from 'jest-leak-detector'
 import { waitForCondition } from '@streamr/utils'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { Message, MessageType } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
@@ -30,8 +30,8 @@ describe('memory leak', () => {
         })
         await entryPoint.start()
         await entryPoint.joinDht([entryPointDescriptor])
-        let sender: DhtNode | undefined = new DhtNode({})
-        let receiver: DhtNode | undefined = new DhtNode({})
+        let sender: DhtNode | undefined = new DhtNode({ entryPoints: [entryPointDescriptor] })
+        let receiver: DhtNode | undefined = new DhtNode({ entryPoints: [entryPointDescriptor] })
         await Promise.all([
             (async () => {
                 await sender.start()
@@ -48,7 +48,6 @@ describe('memory leak', () => {
         const msg: Message = {
             serviceId: 'mock-service-id',
             targetDescriptor: receiver.getLocalPeerDescriptor(),
-            messageType: MessageType.RPC,
             messageId: 'mock-message-id',
             body: {
                 oneofKind: 'rpcMessage',
@@ -77,5 +76,5 @@ describe('memory leak', () => {
         const detector3 = new LeakDetector(receiver)
         receiver = undefined
         expect(await detector3.isLeaking()).toBe(false)
-    })
+    }, 10000)
 })

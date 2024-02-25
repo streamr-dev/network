@@ -1,6 +1,5 @@
 import { Logger, areEqualBinaries } from '@streamr/utils'
-import { ConnectionManager } from '../../connection/ConnectionManager'
-import { PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { Message, PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { IRouterRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { DuplicateDetector } from './DuplicateDetector'
 import { RoutingMode } from './RoutingSession'
@@ -11,9 +10,9 @@ interface RouterRpcLocalConfig {
     doRouteMessage: (routedMessage: RouteMessageWrapper, mode?: RoutingMode) => RouteMessageAck
     addContact: (contact: PeerDescriptor, setActive: boolean) => void
     setForwardingEntries: (routedMessage: RouteMessageWrapper) => void
+    handleMessage: (message: Message) => void
     duplicateRequestDetector: DuplicateDetector
     localPeerDescriptor: PeerDescriptor
-    connectionManager?: ConnectionManager
 }
 
 const logger = new Logger(module)
@@ -45,7 +44,7 @@ export class RouterRpcLocal implements IRouterRpc {
         if (areEqualBinaries(this.config.localPeerDescriptor.nodeId, routedMessage.target)) {
             logger.trace(`routing message targeted to self ${routedMessage.requestId}`)
             this.config.setForwardingEntries(routedMessage)
-            this.config.connectionManager?.handleMessage(routedMessage.message!)
+            this.config.handleMessage(routedMessage.message!)
             return createRouteMessageAck(routedMessage)
         } else {
             return this.config.doRouteMessage(routedMessage)
@@ -71,7 +70,7 @@ export class RouterRpcLocal implements IRouterRpc {
         logger.trace(`Forwarding found message targeted to self ${routedMessage.requestId}`)
         const forwardedMessage = routedMessage.message!
         if (areEqualPeerDescriptors(this.config.localPeerDescriptor, forwardedMessage.targetDescriptor!)) {
-            this.config.connectionManager?.handleMessage(forwardedMessage)
+            this.config.handleMessage(forwardedMessage)
             return createRouteMessageAck(routedMessage)
         }
         return this.config.doRouteMessage({ ...routedMessage, requestId: v4(), target: forwardedMessage.targetDescriptor!.nodeId })

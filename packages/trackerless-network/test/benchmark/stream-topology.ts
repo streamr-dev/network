@@ -33,18 +33,18 @@ const main = async () => {
     await wait(30000)
     const topologyFile = fs.openSync('Topology.csv', 'w')
     let ownRegionNeighborCount = 0
-    nodes.forEach((node) => {
-        let line = `${node.getPeerDescriptor().region}_${node.getNodeId()}`
-        for (let neighbor of node.getNeighbors(streamPartId)) {
-            if (node.getPeerDescriptor().region === neighbor.region) {
-                ownRegionNeighborCount += 1
-            }
-            line = `${line}, ${neighbor.region}_${getNodeIdFromPeerDescriptor(neighbor)}`
-        }
-        line = `${line}\n`
-        console.log(line)
-        fs.writeSync(topologyFile, line)
-    })
+    // nodes.forEach((node) => {
+    //     let line = `${node.getPeerDescriptor().region}_${node.getNodeId()}`
+    //     for (let neighbor of node.getNeighbors(streamPartId)) {
+    //         if (node.getPeerDescriptor().region === neighbor.region) {
+    //             ownRegionNeighborCount += 1
+    //         }
+    //         line = `${line}, ${neighbor.region}_${getNodeIdFromPeerDescriptor(neighbor)}`
+    //     }
+    //     line = `${line}\n`
+    //     console.log(line)
+    //     fs.writeSync(topologyFile, line)
+    // })
 
     console.log("AVG NUMBER OF NODES IN OWN REGION", ownRegionNeighborCount / numOfNodes)
 

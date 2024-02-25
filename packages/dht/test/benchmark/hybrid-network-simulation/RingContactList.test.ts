@@ -59,7 +59,10 @@ const mockData: Array< [number, string] > = [
 
 const mockNodes: MockNode[] = mockData.map(([region, ipAddress]) => new MockNode(region, ipAddress))
 const referenceNode = mockNodes[5]
-const ringContactList: RingContactList<MockNode> = new RingContactList<MockNode>(getRingIdRawFromPeerDescriptor(referenceNode.getPeerDescriptor()))
+const ringContactList: RingContactList<MockNode> = new RingContactList<MockNode>(
+    getRingIdRawFromPeerDescriptor(referenceNode.getPeerDescriptor()),
+    false
+)
 
 mockNodes.forEach((node) => ringContactList.addContact(node))
 

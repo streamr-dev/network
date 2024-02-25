@@ -1,17 +1,19 @@
 import {
     ContentType,
-    deserializeGroupKeyResponse,
     EncryptionType,
-    GroupKeyRequest,
-    GroupKeyResponse,
     MessageID,
+    GroupKeyRequest as OldGroupKeyRequest,
+    GroupKeyResponse as OldGroupKeyResponse,
     SignatureType,
-    serializeGroupKeyRequest,
     StreamMessage,
     StreamMessageType,
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
+import {
+    convertBytesToGroupKeyResponse,
+    convertGroupKeyRequestToBytes
+} from '@streamr/trackerless-network'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
@@ -99,7 +101,7 @@ export class SubscriberKeyExchange {
         rsaPublicKey: string,
         requestId: string
     ): Promise<StreamMessage> {
-        const requestContent = new GroupKeyRequest({
+        const requestContent = new OldGroupKeyRequest({
             recipient: publisherId,
             requestId,
             rsaPublicKey,
@@ -114,20 +116,20 @@ export class SubscriberKeyExchange {
                 await this.authentication.getAddress(),
                 createRandomMsgChainId()
             ),
-            content: serializeGroupKeyRequest(requestContent),
+            content: convertGroupKeyRequestToBytes(requestContent),
+            contentType: ContentType.BINARY,
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
-            contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
             authentication: this.authentication,
-            signatureType: SignatureType.SECP256K1,
+            signatureType: SignatureType.SECP256K1
         })
     }
 
     private async onMessage(msg: StreamMessage): Promise<void> {
-        if (GroupKeyResponse.is(msg)) {
+        if (OldGroupKeyResponse.is(msg)) {
             try {
                 const authenticatedUser = await this.authentication.getAddress()
-                const { requestId, recipient, encryptedGroupKeys } = deserializeGroupKeyResponse(msg.content)
+                const { requestId, recipient, encryptedGroupKeys } = convertBytesToGroupKeyResponse(msg.content)
                 if ((recipient === authenticatedUser) && (this.pendingRequests.has(requestId))) {
                     this.logger.debug('Handle group key response', { requestId })
                     this.pendingRequests.delete(requestId)

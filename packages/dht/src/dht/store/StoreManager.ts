@@ -98,7 +98,7 @@ export class StoreManager {
 
     public async storeDataToDht(key: DhtAddress, data: Any, creator: DhtAddress): Promise<PeerDescriptor[]> {
         logger.debug(`Storing data to DHT ${this.config.serviceId}`)
-        const result = await this.config.recursiveOperationManager.execute(key, RecursiveOperation.FIND_NODE)
+        const result = await this.config.recursiveOperationManager.execute(key, RecursiveOperation.FIND_CLOSEST_NODES)
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
         const ttl = this.config.highestTtl // ToDo: make TTL decrease according to some nice curve

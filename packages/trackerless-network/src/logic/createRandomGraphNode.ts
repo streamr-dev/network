@@ -39,6 +39,7 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const leftNodeView = config.leftNodeView ?? new NodeList(ownNodeId, maxContactCount)
     const rightNodeView = config.rightNodeView ?? new NodeList(ownNodeId, maxContactCount)
     const neighbors = config.neighbors ?? new NodeList(ownNodeId, maxContactCount)
+    const ongoingHandshakes = new Set<DhtAddress>()
 
     const temporaryConnectionRpcLocal = new TemporaryConnectionRpcLocal({
         rpcCommunicator,
@@ -74,7 +75,8 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         rightNodeView,
         neighbors,
         maxNeighborCount: neighborTargetCount,
-        rpcRequestTimeout: config.rpcRequestTimeout
+        rpcRequestTimeout: config.rpcRequestTimeout,
+        ongoingHandshakes
     })
     const neighborFinder = config.neighborFinder ?? new NeighborFinder({
         neighbors,
@@ -91,7 +93,8 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         rpcCommunicator,
         neighborUpdateInterval,
         neighborTargetCount,
-        connectionLocker: config.connectionLocker
+        connectionLocker: config.connectionLocker,
+        ongoingHandshakes
     })
     const inspector = config.inspector ?? new Inspector({
         localPeerDescriptor: config.localPeerDescriptor,

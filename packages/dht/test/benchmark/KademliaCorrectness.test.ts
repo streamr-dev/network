@@ -27,7 +27,6 @@ describe('Kademlia correctness', () => {
         = JSON.parse(fs.readFileSync('test/data/orderedneighbors.json').toString())
 
     beforeEach(async () => {
-        //Simulator.useFakeTimers(true)
         nodes = []
         entryPoint = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[0].data)), 8)
         nodes.push(entryPoint)
@@ -45,15 +44,10 @@ describe('Kademlia correctness', () => {
             entryPoint.stop(),
             ...nodes.map((node) => node.stop())
         ])
-        //Simulator.useFakeTimers(false)
     })
 
     it('Can find correct neighbors', async () => {
         await entryPoint.joinDht([entryPoint.getLocalPeerDescriptor()])
-
-        //await Promise.all(
-        //    nodes.map((node) => node.joinDht([entryPoint.getLocalPeerDescriptor()]))
-        //)
 
         for (let i = 1; i < NUM_NODES; i++) {
             // time to join the network

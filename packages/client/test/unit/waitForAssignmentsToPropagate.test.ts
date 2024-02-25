@@ -5,7 +5,8 @@ import {
     StreamID,
     StreamMessage,
     toStreamID,
-    toStreamPartID
+    toStreamPartID,
+    StreamMessageType
 } from '@streamr/protocol'
 import range from 'lodash/range'
 import shuffle from 'lodash/shuffle'
@@ -19,6 +20,7 @@ const authentication = createRandomAuthentication()
 async function makeMsg(ts: number, content: unknown): Promise<StreamMessage> {
     return createSignedMessage({
         messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await authentication.getAddress(), 'msgChain'),
+        messageType: StreamMessageType.MESSAGE,
         content: utf8ToBinary(JSON.stringify(content)),
         authentication,
         contentType: ContentType.JSON,
