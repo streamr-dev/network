@@ -42,7 +42,6 @@ describe('Ring correctness', () => {
 
     beforeEach(async () => {
         jest.setTimeout(60000)
-        //Simulator.useFakeTimers(true)
         nodes = []
         entryPoint = await createMockRingNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[0].data)), regions[0])
         nodes.push(entryPoint)
@@ -60,7 +59,6 @@ describe('Ring correctness', () => {
             entryPoint.stop(),
             ...nodes.map((node) => node.stop())
         ])
-        //Simulator.useFakeTimers(false)
     })
 
     it('Can find correct neighbors', async () => {
