@@ -67,7 +67,6 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const handshaker = config.handshaker ?? new Handshaker({
         localPeerDescriptor: config.localPeerDescriptor,
         streamPartId: config.streamPartId,
-        connectionLocker: config.connectionLocker,
         rpcCommunicator,
         nearbyNodeView,
         randomNodeView,
@@ -93,7 +92,6 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         rpcCommunicator,
         neighborUpdateInterval,
         neighborTargetCount,
-        connectionLocker: config.connectionLocker,
         ongoingHandshakes
     })
     const inspector = config.inspector ?? new Inspector({

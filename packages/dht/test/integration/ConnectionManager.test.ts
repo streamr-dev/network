@@ -10,6 +10,7 @@ import { ConnectivityResponse, Message, NodeType, PeerDescriptor } from '../../s
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { TransportEvents } from '../../src/transport/ITransport'
 import { createMockPeerDescriptor } from '../utils/utils'
+import { getRandomRegion } from '../../src/connection/simulator/pings'
 
 const SERVICE_ID = 'demo'
 
@@ -40,7 +41,7 @@ describe('ConnectionManager', () => {
     }
 
     beforeEach(() => {
-        createLocalPeerDescriptor = jest.fn().mockImplementation((response) => createPeerDescriptor(response))
+        createLocalPeerDescriptor = jest.fn().mockImplementation((response) => createPeerDescriptor(response, getRandomRegion()))
     })
 
     beforeAll(async () => {

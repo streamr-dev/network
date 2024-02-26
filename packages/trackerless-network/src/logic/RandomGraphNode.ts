@@ -100,7 +100,6 @@ export class RandomGraphNode extends EventEmitter<Events> {
                     this.config.layer1Node.removeContact(sourceId)
                     this.config.neighbors.remove(sourceId)
                     this.config.nearbyNodeView.remove(sourceId)
-                    this.config.connectionLocker.unlockConnection(contact.getPeerDescriptor(), this.config.streamPartId)
                     this.config.neighborFinder.start([sourceId])
                     this.config.proxyConnectionRpcLocal?.removeConnection(sourceId)
                 }
@@ -164,9 +163,18 @@ export class RandomGraphNode extends EventEmitter<Events> {
         addManagedEventListener(
             this.config.neighbors,
             'nodeAdded',
-            (id, _remote) => {
+            (id, remote) => {
                 this.config.propagation.onNeighborJoined(id)
+                this.config.connectionLocker.lockConnection(remote.getPeerDescriptor(), this.config.streamPartId)
                 this.emit('neighborConnected', id)
+            },
+            this.abortController.signal
+        )
+        addManagedEventListener(
+            this.config.neighbors,
+            'nodeRemoved',
+            (_id, remote) => {
+                this.config.connectionLocker.unlockConnection(remote.getPeerDescriptor(), this.config.streamPartId)
             },
             this.abortController.signal
         )
@@ -306,7 +314,6 @@ export class RandomGraphNode extends EventEmitter<Events> {
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
         if (this.config.neighbors.has(nodeId)) {
             this.config.neighbors.remove(nodeId)
-            this.config.connectionLocker.unlockConnection(peerDescriptor, this.config.streamPartId)
             this.config.neighborFinder.start([nodeId])
             this.config.temporaryConnectionRpcLocal.removeNode(nodeId)
         }

@@ -1,4 +1,4 @@
-import { ConnectionLocker, DhtAddress, PeerDescriptor, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { DhtAddress, PeerDescriptor, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { NodeList } from '../NodeList'
 import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
 import {
@@ -19,7 +19,6 @@ import { StreamPartID } from '@streamr/protocol'
 interface HandshakerConfig {
     localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
-    connectionLocker: ConnectionLocker
     neighbors: NodeList
     nearbyNodeView: NodeList
     randomNodeView: NodeList
@@ -45,7 +44,6 @@ export class Handshaker {
         this.rpcLocal = new HandshakeRpcLocal({
             streamPartId: this.config.streamPartId,
             neighbors: this.config.neighbors,
-            connectionLocker: this.config.connectionLocker,
             ongoingHandshakes: this.config.ongoingHandshakes,
             ongoingInterleaves: new Set(),
             maxNeighborCount: this.config.maxNeighborCount,
@@ -162,7 +160,6 @@ export class Handshaker {
         )
         if (result.accepted) {
             this.config.neighbors.add(this.createDeliveryRpcRemote(neighbor.getPeerDescriptor()))
-            this.config.connectionLocker.lockConnection(neighbor.getPeerDescriptor(), this.config.streamPartId)
         }
         if (result.interleaveTargetDescriptor) {
             await this.handshakeWithInterleaving(result.interleaveTargetDescriptor, targetNodeId)
@@ -183,7 +180,6 @@ export class Handshaker {
         )
         if (result.accepted) {
             this.config.neighbors.add(this.createDeliveryRpcRemote(neighbor.getPeerDescriptor()))
-            this.config.connectionLocker.lockConnection(neighbor.getPeerDescriptor(), this.config.streamPartId)
         }
         this.config.ongoingHandshakes.delete(targetNodeId)
         return result.accepted

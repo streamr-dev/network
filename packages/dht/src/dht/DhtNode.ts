@@ -49,6 +49,7 @@ import { StoreManager } from './store/StoreManager'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
 import { createPeerDescriptor } from '../helpers/createPeerDescriptor'
 import { RingIdRaw } from './contact/ringIdentifiers'
+import { getLocalRegion } from '@streamr/cdn-location'
 
 export interface DhtNodeEvents {
     contactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -72,6 +73,7 @@ export interface DhtNodeOptions {
     storeMaxTtl?: number
     networkConnectivityTimeout?: number
     storageRedundancyFactor?: number
+    region?: number
 
     transport?: ITransport
     peerDescriptor?: PeerDescriptor
@@ -128,9 +130,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private peerDiscovery?: PeerDiscovery
     private peerManager?: PeerManager
     public connectionManager?: ConnectionManager
+    private region?: number
     private started = false
     private abortController = new AbortController()
-
     constructor(conf: DhtNodeOptions) {
         super()
         this.config = merge({
@@ -182,6 +184,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 this.config.peerDescriptor.websocket = undefined
             }
         }
+        if (this.region !== undefined) {
+            this.region = this.config.region
+        } else if (this.config.peerDescriptor?.region !== undefined) {
+            this.region = this.config.peerDescriptor.region
+        } else {
+            this.region = await getLocalRegion()
+        }
+            
         // If transport is given, do not create a ConnectionManager
         if (this.config.transport) {
             this.transport = this.config.transport
@@ -420,7 +430,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.config.peerDescriptor !== undefined) {
             this.localPeerDescriptor = this.config.peerDescriptor
         } else {
-            this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, this.config.nodeId)
+            this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, this.region!, this.config.nodeId)
         }
         return this.localPeerDescriptor
     }
