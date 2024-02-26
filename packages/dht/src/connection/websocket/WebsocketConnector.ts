@@ -144,7 +144,7 @@ export class WebsocketConnector {
         if (!this.abortController.signal.aborted && this.websocketServer) {
             this.websocketServer.on('connected', (connection: IConnection) => {
                 const serverSocket = connection as unknown as WebsocketServerConnection
-                const query = queryString.parse(serverSocket.resourceURL.query ?? '')
+                const query = queryString.parse(serverSocket.resourceURL.query as string)
                 const action = query.action as (Action | undefined)
                 logger.trace('WebSocket client connected', { action, remoteAddress: serverSocket.remoteIpAddress })
                 if (action === 'connectivityRequest') {
