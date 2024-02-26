@@ -4,6 +4,7 @@ import { NatType } from '../../../src/connection/ConnectionManager'
 import { ipv4ToNumber, Logger } from '@streamr/utils'
 import { RingContactList } from '../../../src/dht/contact/RingContactList'
 import { getRingIdRawFromPeerDescriptor } from '../../../src/dht/contact/ringIdentifiers'
+import { getRandomRegion } from '../../../src/connection/simulator/pings'
 
 const logger = new Logger(module)
 
@@ -28,7 +29,7 @@ class MockNode {
             version: '0.0.0'
 
         }
-        this.peerDescriptor = createPeerDescriptor(connectivityResponse)
+        this.peerDescriptor = createPeerDescriptor(connectivityResponse, getRandomRegion())
         logger.info(ipv4ToString(this.peerDescriptor.ipAddress!))
     }
 
