@@ -46,7 +46,7 @@ describe('Storing data in DHT', () => {
         // Wait for the delete operation to propagate
         await wait(500)
         const fetchingNode = getRandomNode()
-        const results = await fetchingNode.getDataFromDht(getDhtAddressFromRaw(entry.key))
+        const results = await fetchingNode.fetchDataFromDht(getDhtAddressFromRaw(entry.key))
         results.forEach((result) => {
             expect(result.deleted).toBeTrue()
             expectEqualData(result, entry)
@@ -62,14 +62,14 @@ describe('Storing data in DHT', () => {
         // Wait for the delete operation to propagate
         await wait(500)
         const fetchingNode = getRandomNode()
-        const results1 = await fetchingNode.getDataFromDht(getDhtAddressFromRaw(entry.key))
+        const results1 = await fetchingNode.fetchDataFromDht(getDhtAddressFromRaw(entry.key))
         results1.forEach((result) => {
             expect(result.deleted).toBeTrue()
             expectEqualData(result, entry)
         })
         const successfulStorers2 = await storingNode.storeDataToDht(getDhtAddressFromRaw(entry.key), entry.data!)
         expect(successfulStorers2.length).toBeGreaterThan(4)
-        const results2 = await fetchingNode.getDataFromDht(getDhtAddressFromRaw(entry.key))
+        const results2 = await fetchingNode.fetchDataFromDht(getDhtAddressFromRaw(entry.key))
         results2.forEach((result) => {
             expect(result.deleted).toBeFalse()
             expectEqualData(result, entry)

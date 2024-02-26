@@ -5,7 +5,7 @@ import { Logger } from '@streamr/utils'
 const logger = new Logger(module)
 
 export const getLocalAirportCode: () => Promise<string | undefined> = async () => {
-    var airportCode: string
+    let airportCode: string
     try {
         airportCode = await fetchAirportCodeFromCdn()
     } catch (error) {

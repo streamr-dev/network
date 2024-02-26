@@ -22,7 +22,7 @@ describe('fetchAirportCodeFromCdn', () => {
     })
 
     it('fetches airport code from Cloudflare', async () => {
-        const airportCode = await fetchAirportCodeFromCloudflare()
+        const airportCode = await fetchAirportCodeFromCloudflare(5000)
         logger.info(`Airport code from Cloudflare: ${airportCode}`)
         expect(typeof airportCodeToRegionNumber[airportCode]).toBe('number')
     })

@@ -1,7 +1,7 @@
 import { IExternalApiRpc } from '../proto/packages/dht/protos/DhtRpc.server'
 import {
-    ExternalFindDataRequest,
-    ExternalFindDataResponse,
+    ExternalFetchDataRequest,
+    ExternalFetchDataResponse,
     ExternalStoreDataRequest,
     ExternalStoreDataResponse,
     RecursiveOperation,
@@ -35,14 +35,14 @@ export class ExternalApiRpcLocal implements IExternalApiRpc {
         this.config = config
     }
 
-    async externalFindData(findDataRequest: ExternalFindDataRequest, context: ServerCallContext): Promise<ExternalFindDataResponse> {
+    async externalFetchData(request: ExternalFetchDataRequest, context: ServerCallContext): Promise<ExternalFetchDataResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const result = await this.config.executeRecursiveOperation(
-            getDhtAddressFromRaw(findDataRequest.key),
+            getDhtAddressFromRaw(request.key),
             RecursiveOperation.FETCH_DATA,
             getNodeIdFromPeerDescriptor(senderPeerDescriptor)
         )
-        return ExternalFindDataResponse.create({ entries: result.dataEntries ?? [] })
+        return ExternalFetchDataResponse.create({ entries: result.dataEntries ?? [] })
     }
 
     async externalStoreData(request: ExternalStoreDataRequest, context: ServerCallContext): Promise<ExternalStoreDataResponse> {
