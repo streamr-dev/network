@@ -159,7 +159,6 @@ describe('Layer1', () => {
     //                 const message: Message = {
     //                     serviceId: 'service',
     //                     messageId: v4(),
-    //                     messageType: MessageType.RPC,
     //                     body: {
     //                         oneofKind: 'rpcMessage',
     //                         rpcMessage: rpcWrapper

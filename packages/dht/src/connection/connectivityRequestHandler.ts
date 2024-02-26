@@ -1,8 +1,9 @@
 import { ipv4ToNumber, Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
 import {
-    ConnectivityRequest, ConnectivityResponse,
-    Message, MessageType
+    ConnectivityRequest,
+    ConnectivityResponse,
+    Message
 } from '../proto/packages/dht/protos/DhtRpc'
 import { NatType } from './ConnectionManager'
 import { CONNECTIVITY_CHECKER_SERVICE_ID, connectAsync } from './connectivityChecker'
@@ -52,7 +53,6 @@ const handleIncomingConnectivityRequest = async (connection: WebsocketServerConn
     }
     const msg: Message = {
         serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
-        messageType: MessageType.CONNECTIVITY_RESPONSE,
         messageId: v4(),
         body: {
             oneofKind: 'connectivityResponse',

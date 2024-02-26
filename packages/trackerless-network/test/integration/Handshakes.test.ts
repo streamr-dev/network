@@ -11,7 +11,6 @@ import {
     HandshakeRpcClient
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { NodeList } from '../../src/logic/NodeList'
-import { mockConnectionLocker } from '../utils/utils'
 import { StreamPartHandshakeRequest, StreamPartHandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
 import { StreamPartIDUtils } from '@streamr/protocol'
@@ -90,7 +89,6 @@ describe('Handshakes', () => {
             nearbyNodeView: nodeView,
             randomNodeView: nodeView,
             neighbors,
-            connectionLocker: mockConnectionLocker,
             rpcCommunicator: rpcCommunicator2,
             maxNeighborCount: 4,
             ongoingHandshakes: new Set()

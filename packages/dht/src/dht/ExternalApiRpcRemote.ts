@@ -1,13 +1,13 @@
 import { DhtAddress, getRawFromDhtAddress } from '../identifiers'
 import { Any } from '../proto/google/protobuf/any'
-import { DataEntry, ExternalFindDataRequest, ExternalStoreDataRequest, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { DataEntry, ExternalFetchDataRequest, ExternalStoreDataRequest, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { ExternalApiRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import { RpcRemote } from './contact/RpcRemote'
 
 export class ExternalApiRpcRemote extends RpcRemote<ExternalApiRpcClient> {
 
-    async externalFindData(key: DhtAddress): Promise<DataEntry[]> {
-        const request: ExternalFindDataRequest = {
+    async externalFetchData(key: DhtAddress): Promise<DataEntry[]> {
+        const request: ExternalFetchDataRequest = {
             key: getRawFromDhtAddress(key)
         }
         const options = this.formDhtRpcOptions({
@@ -15,7 +15,7 @@ export class ExternalApiRpcRemote extends RpcRemote<ExternalApiRpcClient> {
             timeout: 10000
         })
         try {
-            const data = await this.getClient().externalFindData(request, options)
+            const data = await this.getClient().externalFetchData(request, options)
             return data.entries
         } catch (err) {
             return []
