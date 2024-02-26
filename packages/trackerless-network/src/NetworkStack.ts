@@ -1,12 +1,20 @@
-import { ConnectionManager, DhtNode, DhtNodeOptions, ListeningRpcCommunicator, PeerDescriptor, areEqualPeerDescriptors } from '@streamr/dht'
-import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
-import { Logger, MetricsContext, waitForCondition } from '@streamr/utils'
+import {
+    ConnectionManager,
+    DhtNode,
+    DhtNodeOptions,
+    ListeningRpcCommunicator,
+    PeerDescriptor,
+    areEqualPeerDescriptors
+} from '@streamr/dht'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
-import { NodeInfoResponse, ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
-import { Layer0Node } from './logic/Layer0Node'
+import { Logger, MetricsContext, waitForCondition } from '@streamr/utils'
 import { pull } from 'lodash'
-import { NODE_INFO_RPC_SERVICE_ID, NodeInfoRpcLocal } from './logic/node-info/NodeInfoRpcLocal'
+import { version as localVersion } from '../package.json'
+import { Layer0Node } from './logic/Layer0Node'
+import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
 import { NodeInfoClient } from './logic/node-info/NodeInfoClient'
+import { NODE_INFO_RPC_SERVICE_ID, NodeInfoRpcLocal } from './logic/node-info/NodeInfoRpcLocal'
+import { NodeInfoResponse, ProxyDirection, StreamMessage } from './proto/packages/trackerless-network/protos/NetworkRpc'
 
 export interface NetworkOptions {
     layer0?: DhtNodeOptions
@@ -40,6 +48,8 @@ if (typeof window === 'object') {
         await stopInstances()
     })
 }
+
+export type NodeInfo = Required<NodeInfoResponse>
 
 export class NetworkStack {
 
@@ -80,7 +90,7 @@ export class NetworkStack {
 
     async broadcast(msg: StreamMessage): Promise<void> {
         const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
-        if (this.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && (msg.messageType === StreamMessageType.MESSAGE)) {
+        if (this.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && (msg.body.oneofKind === 'contentMessage')) {
             throw new Error(`Cannot broadcast to ${streamPartId} as proxy subscribe connections have been set`)
         }
         // TODO could combine these two calls to isProxiedStreamPart?
@@ -142,8 +152,24 @@ export class NetworkStack {
         return this.metricsContext
     }
 
-    async fetchNodeInfo(node: PeerDescriptor): Promise<NodeInfoResponse> {
-        return this.nodeInfoClient!.getInfo(node)
+    async fetchNodeInfo(node: PeerDescriptor): Promise<NodeInfo> {
+        if (!areEqualPeerDescriptors(node, this.getLayer0Node().getLocalPeerDescriptor())) {
+            return this.nodeInfoClient!.getInfo(node)
+        } else {
+            return this.createNodeInfo()
+        }
+    }
+
+    createNodeInfo(): NodeInfo {
+        return {
+            peerDescriptor: this.getLayer0Node().getLocalPeerDescriptor(),
+            controlLayer: {
+                connections: this.getLayer0Node().getConnections(),
+                neighbors: this.getLayer0Node().getNeighbors()
+            },
+            streamPartitions: this.getStreamrNode().getNodeInfo(),
+            version: localVersion
+        }
     }
 
     getOptions(): NetworkOptions {

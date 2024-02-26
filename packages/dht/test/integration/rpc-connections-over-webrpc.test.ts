@@ -133,14 +133,13 @@ describe('RPC connections over WebRTC', () => {
 
         const msg: Message = {
             serviceId,
-            messageType: MessageType.RPC,
             messageId: '1',
             body: RpcMessage.toBinary(rpcMessage)
         }
 
         const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
             manager1.on('disconnected', () => {
-                //expect(message.messageType).toBe(MessageType.RPC)
+                //expect(message.body.oneofKind).toBe('rpcMessage')
                 resolve()
             })
         })

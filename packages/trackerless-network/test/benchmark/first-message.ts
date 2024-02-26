@@ -155,7 +155,7 @@ run().then(() => {
     console.error(err)
     const streamrNode = currentNode.stack.getStreamrNode()
     const streamParts = streamrNode.getStreamParts()
-    const foundData = nodes[0].stack.getLayer0Node().getDataFromDht(streamPartIdToDataKey(streamParts[0]))
+    const foundData = nodes[0].stack.getLayer0Node().fetchDataFromDht(streamPartIdToDataKey(streamParts[0]))
     console.log(foundData)
     const layer0Node = currentNode.stack.getLayer0Node() as DhtNode
     console.log(layer0Node.getNeighbors().length)
