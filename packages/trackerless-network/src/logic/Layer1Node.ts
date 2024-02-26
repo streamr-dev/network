@@ -13,9 +13,18 @@ export interface Layer1Node {
     on<T extends keyof Layer1NodeEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, peers: PeerDescriptor[]) => void): void
     once<T extends keyof Layer1NodeEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, peers: PeerDescriptor[]) => void): void
     off<T extends keyof Layer1NodeEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, peers: PeerDescriptor[]) => void): void
-    on<T extends keyof Layer1NodeEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, peers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => void): void
-    once<T extends keyof Layer1NodeEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, peers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => void): void
-    off<T extends keyof Layer1NodeEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, peers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => void): void
+    on<T extends keyof Layer1NodeEvents>(
+        eventName: T,
+        listener: (peerDescriptor: PeerDescriptor, peers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => void
+    ): void
+    once<T extends keyof Layer1NodeEvents>(
+        eventName: T, 
+        listener: (peerDescriptor: PeerDescriptor, peers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => void
+    ): void
+    off<T extends keyof Layer1NodeEvents>(
+        eventName: T,
+        listener: (peerDescriptor: PeerDescriptor, peers: { left: PeerDescriptor[], right: PeerDescriptor[] }
+    ) => void): void
     removeContact: (nodeId: DhtAddress) => void
     getClosestContacts: (maxCount?: number) => PeerDescriptor[]
     getNeighbors: () => PeerDescriptor[]

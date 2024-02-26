@@ -139,7 +139,10 @@ export class Handshaker {
 
     private async selectNewTargetAndHandshake(excludedIds: DhtAddress[]): Promise<DhtAddress[]> {
         const exclude = excludedIds.concat(this.config.neighbors.getIds())
-        const neighbor = this.config.leftNodeView.getFirst(exclude) ?? this.config.rightNodeView.getFirst(exclude) ?? this.config.nearbyNodeView.getFirst(exclude) ?? this.config.randomNodeView.getRandom(exclude)
+        const neighbor = this.config.leftNodeView.getFirst(exclude) 
+            ?? this.config.rightNodeView.getFirst(exclude)
+            ?? this.config.nearbyNodeView.getFirst(exclude)
+            ?? this.config.randomNodeView.getRandom(exclude)
         if (neighbor) {
             const accepted = await this.handshakeWithTarget(this.createRpcRemote(neighbor.getPeerDescriptor()))
             if (!accepted) {
