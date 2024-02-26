@@ -34,11 +34,11 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const minPropagationTargets = config.minPropagationTargets ?? 2
     const acceptProxyConnections = config.acceptProxyConnections ?? false
     const neighborUpdateInterval = config.neighborUpdateInterval ?? 10000
-    const nearbyNodeView = config.nearbyNodeView ?? new NodeList(ownNodeId, maxContactCount)
-    const randomNodeView = config.randomNodeView ?? new NodeList(ownNodeId, maxContactCount)
+    const neighbors = config.neighbors ?? new NodeList(ownNodeId, maxContactCount)
     const leftNodeView = config.leftNodeView ?? new NodeList(ownNodeId, maxContactCount)
     const rightNodeView = config.rightNodeView ?? new NodeList(ownNodeId, maxContactCount)
-    const neighbors = config.neighbors ?? new NodeList(ownNodeId, maxContactCount)
+    const nearbyNodeView = config.nearbyNodeView ?? new NodeList(ownNodeId, maxContactCount)
+    const randomNodeView = config.randomNodeView ?? new NodeList(ownNodeId, maxContactCount)
     const ongoingHandshakes = new Set<DhtAddress>()
 
     const temporaryConnectionRpcLocal = new TemporaryConnectionRpcLocal({
@@ -68,11 +68,11 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         localPeerDescriptor: config.localPeerDescriptor,
         streamPartId: config.streamPartId,
         rpcCommunicator,
-        nearbyNodeView,
-        randomNodeView,
+        neighbors,
         leftNodeView,
         rightNodeView,
-        neighbors,
+        nearbyNodeView,
+        randomNodeView,
         maxNeighborCount: neighborTargetCount,
         rpcRequestTimeout: config.rpcRequestTimeout,
         ongoingHandshakes
@@ -102,11 +102,11 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     })
     return {
         ...config,
-        nearbyNodeView,
-        randomNodeView,
+        neighbors,
         leftNodeView,
         rightNodeView,
-        neighbors,
+        nearbyNodeView,
+        randomNodeView,
         rpcCommunicator,
         handshaker,
         neighborFinder,
