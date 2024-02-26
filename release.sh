@@ -54,7 +54,7 @@ npm publish --access public --tag $NPM_TAG
 cd ../..
 
 cd packages/client/dist || exit # Notice: dist folder
-npm publish --tag $NPM_TAG
+npm publish --access public --tag $NPM_TAG
 cd ../../..
 
 cd packages/broker || exit
