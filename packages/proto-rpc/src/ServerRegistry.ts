@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/prefer-function-type */
-
 import { RpcMessage } from './proto/ProtoRpc'
 import { BinaryReadOptions, BinaryWriteOptions, IMessageType } from '@protobuf-ts/runtime'
 import { promiseTimeout } from './common'
@@ -9,7 +7,6 @@ import { Empty } from './proto/google/protobuf/empty'
 import { Logger } from '@streamr/utils'
 import { ProtoCallContext } from './ProtoCallContext'
 import { Any } from './proto/google/protobuf/any'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 export interface Parser<Target> { fromBinary: (data: Uint8Array, options?: Partial<BinaryReadOptions>) => Target }
 export interface Serializer<Target> { toBinary: (message: Target, options?: Partial<BinaryWriteOptions>) => Uint8Array }
@@ -89,34 +86,21 @@ export class ServerRegistry {
         await promiseTimeout(timeout, implementation.fn(rpcMessage.body!, callContext ? callContext : new ProtoCallContext()))
     }
 
-    public registerRpcMethod<
+    public registerRpcMethod<RequestClass extends IMessageType<RequestType>,
+        ReturnClass extends IMessageType<ReturnType>,
         RequestType extends object,
-        ReturnType extends object,
-        DecoratorType = 'none'>(
-        requestClass: IMessageType<RequestType>,
-        returnClass: IMessageType<ReturnType>,
+        ReturnType extends object>(
+        requestClass: RequestClass,
+        returnClass: ReturnClass,
         name: string,
-
-        fn: DecoratorType extends 'none'
-        ? (req: RequestType, _context: ServerCallContext) => Promise<ReturnType>
-        : (req: (DecoratorType & RequestType), _context: ServerCallContext) => Promise<ReturnType>,
-
-        opts: MethodOptions = {},
-        requestDecorator?: { new(req: RequestType): DecoratorType }
+        fn: (rq: RequestType, _context: ProtoCallContext) => Promise<ReturnType>,
+        opts: MethodOptions = {}
     ): void {
         const options = parseOptions(opts)
         const method = {
             fn: async (data: Any, callContext: ProtoCallContext) => {
                 const request = parseWrapper(() => Any.unpack(data, requestClass))
-
-                if (requestDecorator !== undefined) {
-                    const dec = new requestDecorator(request)
-                    Object.assign(request, dec)
-                    Object.setPrototypeOf(request, Object.getPrototypeOf(dec))
-                }
-                const req: (DecoratorType & RequestType) = request as (DecoratorType & RequestType)
-
-                const response = await fn(req, callContext)
+                const response = await fn(request, callContext)
                 return Any.pack(response, returnClass)
             },
             options
@@ -124,40 +108,19 @@ export class ServerRegistry {
         this.methods.set(name, method)
     }
 
-    public registerRpcNotification<
-        RequestType extends object,
-        DecoratorType = 'none'
-    >(
-        requestClass: IMessageType<RequestType>,
+    public registerRpcNotification<RequestClass extends IMessageType<RequestType>, 
+        RequestType extends object>(
+        requestClass: RequestClass,
         name: string,
-
-        fn: DecoratorType extends 'none'
-            ? (req: RequestType, _context: ServerCallContext) => Promise<Empty>
-            : (req: (DecoratorType & RequestType), _context: ServerCallContext) => Promise<Empty>,
-
-        opts: MethodOptions = {},
-        requestDecorator?: { new(req: RequestType): DecoratorType }
+        fn: (rq: RequestType, _context: ProtoCallContext) => Promise<Empty>,
+        opts: MethodOptions = {}
     ): void {
         const options = parseOptions(opts)
         const notification = {
-            fn: async (data: Any, callContext: ProtoCallContext) => {
-                const request = parseWrapper(() => Any.unpack(data, requestClass))
-
-                if (requestDecorator !== undefined) {
-                    const dec = new requestDecorator(request)
-                    Object.assign(request, dec)
-                    Object.setPrototypeOf(request, Object.getPrototypeOf(dec))
-                }
-                const req: (DecoratorType & RequestType) = request as (DecoratorType & RequestType)
-
-                await fn(req, callContext)
-            },
-            /*
             fn: async (data: Any, callContext: ProtoCallContext): Promise<void> => {
                 const request = parseWrapper(() => Any.unpack(data, requestClass))
                 await fn(request, callContext)
             },
-            */
             options
         }
         this.notifications.set(name, notification)

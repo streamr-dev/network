@@ -1,4 +1,4 @@
-/* eslint-disable promise/catch-or-return, @typescript-eslint/prefer-function-type */
+/* eslint-disable promise/catch-or-return */
 
 import * as Err from './errors'
 import { ErrorCode } from './errors'
@@ -49,7 +49,7 @@ class OngoingRequest {
                 timeoutConfig.onTimeout()
             }, timeoutConfig.timeout)
         }
-
+        
     }
 
     public resolveRequest(response: RpcMessage) {
@@ -150,40 +150,27 @@ export class RpcCommunicator<T extends ProtoCallContext> extends EventEmitter<Rp
         return this.onIncomingMessage(message, callContext)
     }
 
-    public registerRpcMethod<
+    public registerRpcMethod<RequestClass extends IMessageType<RequestType>,
+        ReturnClass extends IMessageType<ReturnType>,
         RequestType extends object,
-        ReturnType extends object,
-        DecoratorType = 'none',
-    >(
-        requestClass: IMessageType<RequestType>,
-        returnClass: IMessageType<ReturnType>,
+        ReturnType extends object>(
+        requestClass: RequestClass,
+        returnClass: ReturnClass,
         name: string,
-
-        fn: DecoratorType extends 'none'
-            ? (req: RequestType, _context: ServerCallContext) => Promise<ReturnType>
-            : (req: (DecoratorType & RequestType), _context: ServerCallContext) => Promise<ReturnType>,
-
-        options: MethodOptions = {},
-        requestDecorator?: { new(req: RequestType): DecoratorType }
+        fn: (rq: RequestType, _context: ServerCallContext) => Promise<ReturnType>,
+        options: MethodOptions = {}
     ): void {
-        this.rpcServerRegistry.registerRpcMethod(requestClass, returnClass, name, fn, options, requestDecorator)
+        this.rpcServerRegistry.registerRpcMethod(requestClass, returnClass, name, fn, options)
     }
 
-    public registerRpcNotification<
-        RequestType extends object,
-        DecoratorType = 'none',
-    >(
-        requestClass: IMessageType<RequestType>,
+    public registerRpcNotification<RequestClass extends IMessageType<RequestType>,
+        RequestType extends object>(
+        requestClass: RequestClass,
         name: string,
-
-        fn: DecoratorType extends 'none'
-            ? (req: RequestType, _context: ServerCallContext) => Promise<Empty>
-            : (req: (DecoratorType & RequestType), _context: ServerCallContext) => Promise<Empty>,
-
-        options: MethodOptions = {},
-        requestDecorator?: { new(req: RequestType): DecoratorType }
+        fn: (rq: RequestType, _context: ServerCallContext) => Promise<Empty>,
+        options: MethodOptions = {}
     ): void {
-        this.rpcServerRegistry.registerRpcNotification(requestClass, name, fn, options, requestDecorator)
+        this.rpcServerRegistry.registerRpcNotification(requestClass, name, fn, options)
     }
 
     public getRpcClientTransport(): ClientTransport {
@@ -320,10 +307,10 @@ export class RpcCommunicator<T extends ProtoCallContext> extends EventEmitter<Rp
         }
 
         const ongoingRequest = new OngoingRequest(
-            deferredPromises,
-            {
+            deferredPromises, 
+            { 
                 timeout,
-                onTimeout: () => this.ongoingRequests.delete(requestId)
+                onTimeout: () => this.ongoingRequests.delete(requestId) 
             }
         )
 

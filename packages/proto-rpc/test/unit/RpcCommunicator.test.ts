@@ -3,27 +3,25 @@ import {
     RpcMessage,
     RpcErrorType
 } from '../../src/proto/ProtoRpc'
-import { PingRequest, PingResponse } from '../proto/TestProtos'
+import { PingRequest, PingResponse } from '../proto/TestProtos' 
 import { ResultParts } from '../../src/ClientTransport'
-import { Deferred, RpcMetadata, RpcStatus, ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { Deferred, RpcMetadata, RpcStatus } from '@protobuf-ts/runtime-rpc'
 import * as Err from '../../src/errors'
-import { MockDhtRpc, PingRequestDecorator } from '../utils'
+import { MockDhtRpc, clearMockTimeouts } from '../utils'
 import { ProtoCallContext } from '../../src/ProtoCallContext'
 import { waitForCondition } from '@streamr/utils'
 import { Any } from '../../src/proto/google/protobuf/any'
-import { Empty } from '../proto/google/protobuf/empty'
 
 describe('RpcCommunicator', () => {
     let rpcCommunicator: RpcCommunicator<ProtoCallContext>
 
-    let mockDhtRpc: MockDhtRpc
     let promises: ResultParts
     let request: RpcMessage
     let responseRpcMessage: RpcMessage
 
     beforeEach(() => {
         rpcCommunicator = new RpcCommunicator({ rpcRequestTimeout: 1000 })
-
+        
         const deferredParser = (bytes: Uint8Array) => PingResponse.fromBinary(bytes)
         promises = {
             header: new Deferred<RpcMetadata>(),
@@ -48,18 +46,21 @@ describe('RpcCommunicator', () => {
             },
             body: Any.pack({ requestId: 'requestId' }, PingResponse),
         }
+        /*
+        response = {
+            appId,
+            messageId: 'aaaa',
+            body: RpcMessage.toBinary(responseRpcMessage),
+            messageType: MessageType.RPC
+        } */ 
     })
 
     afterEach(() => {
         rpcCommunicator.stop()
     })
 
-    beforeAll(() => {
-        mockDhtRpc = new MockDhtRpc()
-    })
-
     afterAll(() => {
-        MockDhtRpc.clearMockTimeouts()
+        clearMockTimeouts()
     })
 
     it('Resolves Promises', async () => {
@@ -143,81 +144,41 @@ describe('RpcCommunicator', () => {
 
     it('Success responses to requests', async () => {
         let successCounter = 0
-        rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', mockDhtRpc.ping)
-        rpcCommunicator.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: ProtoCallContext) => {
-            if (!message.errorType) {
-                successCounter += 1
-            }
-        })
-
-        rpcCommunicator.handleIncomingMessage(request)
-        await waitForCondition(() => successCounter === 1)
-    })
-
-    it('Success responses to new registration method', async () => {
-        let successCounter = 0
-        rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', mockDhtRpc.ping)
+        rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
         rpcCommunicator.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: ProtoCallContext) => {
             //const pongWrapper = RpcMessage.fromBinary(message)
             if (!message.errorType) {
                 successCounter += 1
             }
         })
-
-        rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
+        
+        rpcCommunicator.handleIncomingMessage(request)
         await waitForCondition(() => successCounter === 1)
     })
 
-    it('Can use request decorator', async () => {
+    it('Success responses to new registration method', async () => {
         let successCounter = 0
-        // Note that trying to register a decorated method without passing 
-        // the decorator constructor causes a compiler error as expected:  
-        // rpcCommunicator.registerRpcMethod(PingRequest, PingResponse,
-        // 'ping', MockDhtRpc.decoratedPing, {})
-
-        rpcCommunicator.registerRpcMethod(PingRequest, PingResponse,
-            'ping', mockDhtRpc.decoratedPing, {}, PingRequestDecorator)
+        rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
         rpcCommunicator.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: ProtoCallContext) => {
-            if (!message.errorType &&
-                Any.unpack(message.body!, PingResponse).requestId === 'decorated:requestId') {
+            //const pongWrapper = RpcMessage.fromBinary(message)
+            if (!message.errorType) {
                 successCounter += 1
             }
         })
-
+        
         rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
         await waitForCondition(() => successCounter === 1)
-    })
-
-    it('Can use notification decorator', async () => {
-        let decoratedResult = ''
-        const pingNotification = async (request: PingRequestDecorator, _context: ServerCallContext): Promise<Empty> => {
-            decoratedResult = request.getRequestId()
-            return {}
-        }
-        const notificationRequest = {
-            requestId: 'message',
-            header: {
-                method: 'pingNotification',
-                request: 'request',
-                notification: 'true'
-            },
-            body: Any.pack({ requestId: 'requestId' }, PingRequest)
-        }
-        rpcCommunicator.registerRpcNotification(PingRequest,
-            'pingNotification', pingNotification, {}, PingRequestDecorator)
-
-        rpcCommunicator.handleIncomingMessage(notificationRequest, new ProtoCallContext())
-        await waitForCondition(() => decoratedResult === 'decorated:requestId')
     })
 
     it('Error response on unknown method', async () => {
         let errorCounter = 0
         rpcCommunicator.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: ProtoCallContext) => {
+            //const pongWrapper = RpcMessage.fromBinary(message)
             if (message.errorType && message.errorType === RpcErrorType.UNKNOWN_RPC_METHOD) {
                 errorCounter += 1
             }
         })
-
+       
         rpcCommunicator.handleIncomingMessage(request)
         await waitForCondition(() => errorCounter === 1)
     })
@@ -232,21 +193,21 @@ describe('RpcCommunicator', () => {
                 errorCounter += 1
             }
         })
-
+       
         rpcCommunicator.handleIncomingMessage(request)
         await waitForCondition(() => errorCounter === 1)
     })
 
     it('Error response on server timeout', async () => {
         let errorCounter = 0
-        rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', mockDhtRpc.throwPingError)
+        rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.throwPingError)
         rpcCommunicator.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: ProtoCallContext) => {
             //const pongWrapper = RpcMessage.fromBinary(message)
             if (message.errorType !== undefined && message.errorType === RpcErrorType.SERVER_ERROR) {
                 errorCounter += 1
             }
         })
-
+       
         rpcCommunicator.handleIncomingMessage(request)
         await waitForCondition(() => errorCounter === 1)
     })

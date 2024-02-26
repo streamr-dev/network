@@ -1,5 +1,3 @@
-/* eslint-disable no-underscore-dangle */
-
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import EventEmitter from 'eventemitter3'
 import { RpcCommunicator } from '../../src/RpcCommunicator'
@@ -16,27 +14,6 @@ import { RpcMessage } from '../../src/proto/ProtoRpc'
 import { IOptionalService } from '../proto/TestProtos.server'
 import { OptionalRequest, OptionalResponse } from '../proto/TestProtos'
 import { OptionalServiceClient } from '../proto/TestProtos.client'
-
-export class HelloResponseDecorator {
-    // It is important to name the memeber variables of the decorator class
-    // in a way that does not conflict with the member variables of the decorated class
-    // that is why the member variable is named _parent with a leading underscore
-
-    private _parent: HelloResponse
-    
-    // The only requirement for a decorator class is that it has a constructor
-    // that takes the decorated class as its single parameter. It is
-    // for example not required to store the decorated class in a member variable
-    // like we do here.
-
-    constructor(request: HelloResponse) {
-        this._parent = request
-    }
-
-    public getDecoratedGreeting(): string {
-        return 'decorated:' + this._parent.greeting
-    }
-}
 
 // Rpc call service
 /* eslint-disable class-methods-use-this */
@@ -86,33 +63,6 @@ describe('toProtoRpcClient', () => {
 
         const { greeting } = await helloClient.sayHello({ myName: 'Alice' })
         expect(greeting).toBe('Hello Alice!')
-
-        communicator1.stop()
-        communicator2.stop()
-    })
-
-    it('can make a rpc call with decorated response', async () => {
-        // Setup server
-        const communicator1 = new RpcCommunicator()
-        const helloService = new HelloService()
-        communicator1.registerRpcMethod(HelloRequest, HelloResponse, 'sayHello', helloService.sayHello)
-
-        // Setup client
-        const communicator2 = new RpcCommunicator()
-        const helloClient = toProtoRpcClient(new HelloRpcServiceClient(communicator2.getRpcClientTransport()), 
-            { 'sayHello': HelloResponseDecorator })
-
-        // Simulate a network connection, in real life the message blobs would be transferred over a network
-        communicator1.on('outgoingMessage', (msg: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
-            communicator2.handleIncomingMessage(msg)
-        })
-        communicator2.on('outgoingMessage', (msg: RpcMessage, _requestId: string, _callContext?: ProtoCallContext) => {
-            communicator1.handleIncomingMessage(msg)
-        })
-
-        const result = await helloClient.sayHello({ myName: 'Alice' })
-        
-        expect(result.getDecoratedGreeting()).toBe('decorated:Hello Alice!')
 
         communicator1.stop()
         communicator2.stop()

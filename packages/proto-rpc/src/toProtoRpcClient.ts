@@ -1,5 +1,5 @@
 /* eslint-disable prefer-spread, @typescript-eslint/consistent-indexed-object-style, 
-@typescript-eslint/ban-types, @typescript-eslint/no-invalid-void-type, @typescript-eslint/prefer-function-type */
+@typescript-eslint/ban-types, @typescript-eslint/no-invalid-void-type */
 
 import type { ServiceInfo } from '@protobuf-ts/runtime-rpc'
 import { Empty } from './proto/google/protobuf/empty'
@@ -8,17 +8,7 @@ interface Indexable {
     [key: string]: any
 }
 
-type ReplaceReturnTypes<T, Replacements extends DecoratorMapType<T>> = {
-    [K in keyof T]:
-        T[K] extends (...args: infer A) => Promise<infer P>
-            ? K extends keyof Replacements
-                ? (...args: A) => Promise<InstanceType<Replacements[K]> & P>
-            : T[K]
-        : T[K]
-}
-
 export type ClassType = Record<any | symbol | number, (...args: any) => any> & object | Indexable
-
 type ProtoRpcRealApi<T extends ClassType> = {
     [k in keyof T as T[k] extends Function
         ? k
@@ -43,27 +33,9 @@ type ProtoRpcRealApi<T extends ClassType> = {
         : never
 }
 
-interface DecoratorType<T, L > { new(parent: T): L }
+export type ProtoRpcClient<T> = ProtoRpcRealApi<T & ClassType>
 
-type DecoratorMapType<T> = { [k in keyof T as
-    T[k] extends (...args: any) => infer R
-        ? R extends { response: Promise<infer _P> }
-            ? k
-            : never        
-        : never ]:
-    T[k] extends (...args: any) => infer R 
-        ? R extends { response: Promise<infer P> }
-            //? { new(parent: P): any }
-            ? DecoratorType<P, any>
-            : never
-        : never       
-}
-
-export type ProtoRpcClient<T, M extends DecoratorMapType<T> = Object> = ReplaceReturnTypes<ProtoRpcRealApi<T & ClassType>, M>
-
-export function toProtoRpcClient<T extends ServiceInfo & ClassType, 
-    O extends DecoratorMapType<T>>(orig: T,
-    returnTypeDecorators?: O): ProtoRpcClient<T, O> {
+export function toProtoRpcClient<T extends ServiceInfo & ClassType>(orig: T): ProtoRpcClient<T> {
     const ret: ClassType = {}
     Object.assign(ret, orig)
 
@@ -89,30 +61,18 @@ export function toProtoRpcClient<T extends ServiceInfo & ClassType,
         return obj[methodName].apply(obj, args)
     }
 
-    function objIsDecorator<T>(obj: { new(parent: T): any } | any): obj is { new(parent: T): any } {
-        return obj !== undefined
-    }
-
     orig.methods.forEach((method) => {
         if (method.O.typeName === Empty.typeName) {
-            ret[method.name] = async (...args: any[]) => {
-                return await notify(method.name, orig, args)
+            ret[method.name] = (...args: any[]) => {
+                return notify(method.name, orig, args)
             }
         } else {
-            ret[method.name] = async (...args: any[]) => {
-                if (returnTypeDecorators && objIsDecorator((returnTypeDecorators as Indexable)[method.name])) {
-                    const ret = await callRpc(method.name, orig, args).response
-                    const dec = new (returnTypeDecorators as Indexable)[method.name](ret)
-                    Object.assign(ret, dec)
-                    Object.setPrototypeOf(ret, Object.getPrototypeOf(dec))
-                    return ret
-                } else {
-                    return await callRpc(method.name, orig, args).response
-                }
+            ret[method.name] = (...args: any[]) => {
+                return callRpc(method.name, orig, args).response
             }
         }
     })
 
-    return ret as ProtoRpcClient<T, O>
+    return ret as ProtoRpcClient<T>
 }
 

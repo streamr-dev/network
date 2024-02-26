@@ -36,7 +36,7 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
     async getClosestPeers(request: ClosestPeersRequest, context: ServerCallContext): Promise<ClosestPeersResponse> {
         this.config.addContact((context as DhtCallContext).incomingSourceDescriptor!)
         const response = {
-            peers: this.config.getClosestPeersTo(getDhtAddressFromRaw(request.nodeId), 7), //this.config.peerDiscoveryQueryBatchSize),
+            peers: this.config.getClosestPeersTo(getDhtAddressFromRaw(request.nodeId), this.config.peerDiscoveryQueryBatchSize),
             requestId: request.requestId
         }
         return response
@@ -44,13 +44,12 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
 
     async getClosestRingPeers(request: ClosestRingPeersRequest, context: ServerCallContext): Promise<ClosestRingPeersResponse> {
         this.config.addContact((context as DhtCallContext).incomingSourceDescriptor!)
-        const closestPeers = this.config.getClosestRingPeersTo(request.ringId as RingIdRaw, 7)
+        const closestPeers = this.config.getClosestRingPeersTo(request.ringId as RingIdRaw, this.config.peerDiscoveryQueryBatchSize)
         const response = {
             leftPeers: closestPeers.left,
             rightPeers: closestPeers.right,
             requestId: request.requestId
         }
-        //logger.info('getClosestRingPeers returning', { peers: response.peers })
         return response
     }
 

@@ -41,7 +41,6 @@ import { executeSafePromise } from './executeSafePromise'
 import { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary, areEqualBinaries } from './binaryUtils'
 import { filePathToNodeFormat } from './filePathToNodeFormat'
 import { retry } from './retry'
-import { sF, sI } from './strictly'
 import { toLengthPrefixedFrame, LengthPrefixedFrameDecoder } from './lengthPrefixedFrameUtils'
 import { verifySignature, createSignature, hash } from './signingUtils'
 import { ipv4ToNumber } from './ipv4ToNumber'
@@ -99,8 +98,6 @@ export {
     areEqualBinaries,
     filePathToNodeFormat,
     retry,
-    sF,
-    sI,
     LengthPrefixedFrameDecoder,
     toLengthPrefixedFrame,
     createSignature,
