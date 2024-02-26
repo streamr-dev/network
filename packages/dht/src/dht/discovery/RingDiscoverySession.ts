@@ -46,7 +46,6 @@ export class RingDiscoverySession {
     }
 
     private async getClosestPeersFromContact(contact: DhtNodeRpcRemote): Promise<{ left: PeerDescriptor[], right: PeerDescriptor[] }> {
-        //logger.info('RingDiscoverySession.getClosestPeersFromContact')
         if (this.stopped) {
             return { left: [], right: [] }
         }
@@ -62,7 +61,6 @@ export class RingDiscoverySession {
         if (!this.ongoingClosestPeersRequests.has(nodeId)) {
             return
         }
-        //logger.info(`RingDiscoverySession.onClosestPeersRequestSucceeded: ${contacts.length} contacts`)
         this.ongoingClosestPeersRequests.delete(nodeId)
 
         const oldClosestContacts = this.config.peerManager.getClosestRingContactsTo(this.config.targetId, 1)
@@ -97,35 +95,21 @@ export class RingDiscoverySession {
         if (this.stopped) {
             return
         }
-
         const uncontacted = this.config.peerManager.getClosestRingContactsTo(
             this.config.targetId,
             this.config.parallelism,
             this.config.contactedPeers
         )
-
-        if ((uncontacted.left.length === 0 && uncontacted.right.length === 0) ||
-            this.noProgressCounter >= this.config.noProgressLimit) {
-
-            if (this.noProgressCounter >= this.config.noProgressLimit) {
-                logger.info('Ring discovery completed because of noProgressLimit. Contacted ' + this.numContactedPeers + ' peers before completing')
-            } if (uncontacted.left.length === 0 && uncontacted.right.length === 0) {
-                logger.info('Ring discovery completed because there are no more contacts to discover. Contacted '
-                    + this.numContactedPeers + ' peers before completing')
-            }
-
+        if ((uncontacted.left.length === 0 && uncontacted.right.length === 0)
+            || this.noProgressCounter >= this.config.noProgressLimit) {
             this.emitter.emit('discoveryCompleted')
             this.stopped = true
             return
         }
-
         // ask from both sides equally
-        
         const merged = []
         const alreadyInMerged: Set<DhtAddress> = new Set()
-
         const length = Math.max(uncontacted.left.length, uncontacted.right.length)
-
         for (let i = 0; i < length; i++) {
             if (i < uncontacted.left.length) {
                 if (!alreadyInMerged.has(uncontacted.left[i].getNodeId())) {
