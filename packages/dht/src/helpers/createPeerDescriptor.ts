@@ -29,7 +29,7 @@ const calculateNodeIdRaw = (ipAddress: number, privateKey: Uint8Array): DhtAddre
     return nodeIdRaw
 }
 
-export const createPeerDescriptor = (connectivityResponse: ConnectivityResponse, nodeId?: DhtAddress): PeerDescriptor => {
+export const createPeerDescriptor = (connectivityResponse: ConnectivityResponse, region: number, nodeId?: DhtAddress): PeerDescriptor => {
     const privateKey = crypto.randomBytes(32)
     const publicKey = crypto.randomBytes(20)  // TODO calculate publicKey from privateKey
     let nodeIdRaw: DhtAddressRaw
@@ -42,6 +42,7 @@ export const createPeerDescriptor = (connectivityResponse: ConnectivityResponse,
         nodeId: nodeIdRaw,
         type: isBrowserEnvironment() ? NodeType.BROWSER : NodeType.NODEJS,
         ipAddress: connectivityResponse.ipAddress,
+        region,
         publicKey 
     }
     if (connectivityResponse.websocket) {
