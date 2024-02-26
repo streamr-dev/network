@@ -57,7 +57,10 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
             return this.acceptHandshake(request, senderDescriptor)
         } else if (this.config.neighbors.size() + this.config.ongoingHandshakes.size < this.config.maxNeighborCount) {
             return this.acceptHandshake(request, senderDescriptor)
-        } else if (this.config.neighbors.size(getInterleaveSourceIds()) - this.config.ongoingInterleaves.size >= 2) {
+        } else if (
+            this.config.neighbors.size(getInterleaveSourceIds()) - this.config.ongoingInterleaves.size >= 2
+            && this.config.neighbors.size() <= this.config.maxNeighborCount
+        ) {
             // Do not accept the handshakes requests if the target neighbor count can potentially drop below 2 
             // due to interleaving. This ensures that a stable number of connections is kept during high churn.
             return this.acceptHandshakeWithInterleaving(request, senderDescriptor)
@@ -127,9 +130,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
         const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
         try {
             await this.config.handshakeWithInterleaving(message.interleaveTargetDescriptor!, senderId)
-            if (this.config.neighbors.has(senderId)) {
-                this.config.neighbors.remove(senderId)
-            }
+            this.config.neighbors.remove(senderId)
             return { accepted: true }
         } catch (err) {
             logger.debug(`interleaveRequest to ${getNodeIdFromPeerDescriptor(message.interleaveTargetDescriptor!)} failed: ${err}`)
