@@ -1,14 +1,13 @@
 import {
     RecursiveOperation,
     Message,
-    MessageType,
     RouteMessageAck,
     RouteMessageError,
-    RouteMessageWrapper
+    RouteMessageWrapper,
+    RecursiveOperationRequest
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import {
     createWrappedClosestPeersRequest,
-    createFindRequest,
     createMockPeerDescriptor
 } from '../utils/utils'
 import { RecursiveOperationManager } from '../../src/dht/recursive-operation/RecursiveOperationManager'
@@ -33,15 +32,23 @@ const createMockRouter = (error?: RouteMessageError): Partial<Router> => {
         addToDuplicateDetector: () => {}
     }
 }
+
+const createRequest = (): RecursiveOperationRequest => {
+    const request: RecursiveOperationRequest = {
+        operation: RecursiveOperation.FIND_CLOSEST_NODES,
+        sessionId: v4()
+    }
+    return request
+}
+
 describe('RecursiveOperationManager', () => {
 
     const peerDescriptor1 = createMockPeerDescriptor()
     const peerDescriptor2 = createMockPeerDescriptor()
-    const recursiveOperationRequest = createFindRequest()
+    const recursiveOperationRequest = createRequest()
     const message: Message = {
         serviceId: 'unknown',
         messageId: v4(),
-        messageType: MessageType.RPC,
         body: {
             oneofKind: 'recursiveOperationRequest',
             recursiveOperationRequest
@@ -83,9 +90,9 @@ describe('RecursiveOperationManager', () => {
         recursiveOperationManager.stop()
     })
 
-    it('startFind with mode Node returns self if no peers', async () => {
+    it('find closest nodes returns self if no peers', async () => {
         const recursiveOperationManager = createRecursiveOperationManager()
-        const res = await recursiveOperationManager.execute(createRandomDhtAddress(), RecursiveOperation.FIND_NODE)
+        const res = await recursiveOperationManager.execute(createRandomDhtAddress(), RecursiveOperation.FIND_CLOSEST_NODES)
         expect(areEqualPeerDescriptors(res.closestNodes[0], peerDescriptor1)).toEqual(true)
         recursiveOperationManager.stop()
     })
@@ -96,7 +103,6 @@ describe('RecursiveOperationManager', () => {
         const badMessage: Message = {
             serviceId: 'unknown',
             messageId: v4(),
-            messageType: MessageType.RPC,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: rpcWrapper

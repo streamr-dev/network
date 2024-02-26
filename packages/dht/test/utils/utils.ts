@@ -9,9 +9,7 @@ import {
     RouteMessageAck,
     RouteMessageWrapper,
     StoreDataRequest,
-    StoreDataResponse,
-    RecursiveOperationRequest, 
-    RecursiveOperation
+    StoreDataResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import {
@@ -105,14 +103,6 @@ export const createWrappedClosestPeersRequest = (
         requestId: v4()
     }
     return rpcWrapper
-}
-
-export const createFindRequest = (): RecursiveOperationRequest => {
-    const request: RecursiveOperationRequest = {
-        operation: RecursiveOperation.FIND_NODE,
-        sessionId: v4()
-    }
-    return request
 }
 
 interface IDhtRpcWithError extends IDhtNodeRpc {
