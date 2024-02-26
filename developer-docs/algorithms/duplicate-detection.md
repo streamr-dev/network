@@ -110,7 +110,7 @@ message has a lower or equal number, we deem it a duplicate and drop it. Otherwi
 latest known message.
 
 ## Comparison with OrderingUtil
-The [OrderingUtil](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/utils/OrderingUtil.js)
+The OrderingUtil](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/utils/OrderingUtil.js)
 used by streamr-client SDKs and broker adapters has parallels to the duplicate detection and avoidance mechanisms
 presented here. They both revolve around message numbering, gap detection, and gap filling. That being said, they cater
 to different needs.

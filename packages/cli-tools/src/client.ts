@@ -1,6 +1,6 @@
 import omit from 'lodash/omit'
 import merge from 'lodash/merge'
-import { StreamrClientConfig, StreamrClient, CONFIG_TEST } from 'streamr-client'
+import { StreamrClientConfig, StreamrClient, CONFIG_TEST } from '@streamr/sdk'
 import { Options } from './command'
 import { getConfig } from './config'
 

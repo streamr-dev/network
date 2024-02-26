@@ -1,7 +1,7 @@
 {
-  "name": "streamr-broker",
+  "name": "@streamr/node",
   "version": "100.0.0-testnet-three.3",
-  "description": "A full-featured broker node implementation for the Streamr Network",
+  "description": "A full-featured node implementation for the Streamr Network",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streamr-dev/network.git",
@@ -33,6 +33,7 @@
     "@streamr/config": "^5.1.2",
     "@streamr/network-contracts": "^7.0.8",
     "@streamr/protocol": "100.0.0-testnet-three.3",
+    "@streamr/sdk": "100.0.0-testnet-three.3",
     "@streamr/utils": "100.0.0-testnet-three.3",
     "aedes": "^0.51.0",
     "ajv": "^8.8.2",
@@ -51,7 +52,6 @@
     "node-fetch": "^2.7.0",
     "p-limit": "^3.1.0",
     "qs": "^6.10.1",
-    "streamr-client": "100.0.0-testnet-three.3",
     "uuid": "^9.0.1",
     "ws": "^8.16.0",
     "zod": "^3.22.4"

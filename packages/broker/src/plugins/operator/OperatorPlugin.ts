@@ -1,7 +1,7 @@
 import { EthereumAddress, Logger, scheduleAtInterval, setAbortableInterval, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { Overrides } from 'ethers'
-import { StreamrClient, SignerWithProvider } from 'streamr-client'
+import { StreamrClient, SignerWithProvider } from '@streamr/sdk'
 import { Plugin } from '../../Plugin'
 import { maintainOperatorValue } from './maintainOperatorValue'
 import { MaintainTopologyService } from './MaintainTopologyService'

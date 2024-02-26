@@ -1,6 +1,6 @@
 import cassandra, { Client } from 'cassandra-driver'
 import pLimit, { Limit } from 'p-limit'
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient } from '@streamr/sdk'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)

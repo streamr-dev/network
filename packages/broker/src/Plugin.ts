@@ -1,7 +1,7 @@
 import { StrictConfig } from './config/config'
 import { validateConfig } from './config/validateConfig'
 import { Schema } from 'ajv'
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient } from '@streamr/sdk'
 import { Endpoint } from './httpServer'
 import { ApiAuthentication } from './apiAuthentication'
 

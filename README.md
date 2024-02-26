@@ -17,8 +17,8 @@ Monorepo containing the main components of Streamr Network.
 ## Packages
 
 ### User-Facing
-* [broker](packages/broker/README.md) (streamr-broker)
-* [client](packages/client/README.md) (streamr-client)
+* [node](packages/broker/README.md) (@streamr/node)
+* [sdk](packages/client/README.md) (@streamr/sdk)
 * [cli-tools](packages/cli-tools/README.md) (@streamr/cli-tools)
 
 ### Internal

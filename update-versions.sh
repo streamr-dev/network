@@ -28,9 +28,9 @@ PKG_NAMES="@streamr/utils
 @streamr/dht
 @streamr/autocertifier-server
 @streamr/trackerless-network
-streamr-client
+@streamr/sdk
 @streamr/cli-tools
-streamr-broker
+@streamr/node
 "
 
 # Update package versions

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { NetworkNodeType, NetworkPeerDescriptor } from 'streamr-client'
+import { NetworkNodeType, NetworkPeerDescriptor } from '@streamr/sdk'
 
 export const HeartbeatMessageSchema = z.object({
     msgType: z.enum(['heartbeat']),

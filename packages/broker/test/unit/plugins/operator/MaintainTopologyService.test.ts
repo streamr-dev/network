@@ -1,7 +1,7 @@
 import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
 import { StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { mock, MockProxy } from 'jest-mock-extended'
-import { StreamrClient, Subscription } from 'streamr-client'
+import { StreamrClient, Subscription } from '@streamr/sdk'
 import { wait, waitForCondition } from '@streamr/utils'
 import { StreamPartAssignmentEvents } from '../../../../src/plugins/operator/StreamPartAssignments'
 import EventEmitter3 from 'eventemitter3'

@@ -12,7 +12,7 @@ import {
 import { Contract, Overrides } from 'ethers'
 import sample from 'lodash/sample'
 import fetch from 'node-fetch'
-import { NetworkPeerDescriptor } from 'streamr-client'
+import { NetworkPeerDescriptor } from '@streamr/sdk'
 import { OperatorServiceConfig } from './OperatorPlugin'
 
 interface RawResult {
