@@ -2,7 +2,7 @@ import { DhtAddress, NodeType, getNodeIdFromPeerDescriptor, getRawFromDhtAddress
 import { NodeList } from '../../src/logic/NodeList'
 import { HandshakeRpcLocal } from '../../src/logic/neighbor-discovery/HandshakeRpcLocal'
 import { InterleaveRequest, StreamPartHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { createMockPeerDescriptor, createMockHandshakeRpcRemote, createMockDeliveryRpcRemote, mockConnectionLocker } from '../utils/utils'
+import { createMockPeerDescriptor, createMockHandshakeRpcRemote, createMockDeliveryRpcRemote } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
@@ -26,7 +26,6 @@ describe('HandshakeRpcLocal', () => {
 
         rpcLocal = new HandshakeRpcLocal({
             streamPartId: STREAM_PART_ID,
-            connectionLocker: mockConnectionLocker,
             ongoingHandshakes,
             ongoingInterleaves,
             createRpcRemote: (_p) => createMockHandshakeRpcRemote(),

@@ -2,7 +2,7 @@ import { ListeningRpcCommunicator, Simulator, SimulatorTransport, getNodeIdFromP
 import { range } from 'lodash'
 import { NodeList } from '../../src/logic/NodeList'
 import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
-import { createMockPeerDescriptor, createMockDeliveryRpcRemote, mockConnectionLocker } from '../utils/utils'
+import { createMockPeerDescriptor, createMockDeliveryRpcRemote } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('Handshaker', () => {
@@ -34,7 +34,6 @@ describe('Handshaker', () => {
         handshaker = new Handshaker({
             localPeerDescriptor: peerDescriptor,
             streamPartId,
-            connectionLocker: mockConnectionLocker,
             neighbors,
             nearbyNodeView,
             randomNodeView,
