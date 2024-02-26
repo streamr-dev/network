@@ -20,10 +20,10 @@ interface HandshakerConfig {
     localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     neighbors: NodeList
-    nearbyNodeView: NodeList
-    randomNodeView: NodeList
     leftNodeView: NodeList
     rightNodeView: NodeList
+    nearbyNodeView: NodeList
+    randomNodeView: NodeList
     rpcCommunicator: ListeningRpcCommunicator
     maxNeighborCount: number
     ongoingHandshakes: Set<DhtAddress>
@@ -78,6 +78,7 @@ export class Handshaker {
 
     private selectParallelTargets(excludedIds: DhtAddress[]): HandshakeRpcRemote[] {
         const neighbors: Map<DhtAddress, DeliveryRpcRemote> = new Map()
+        // First add the most left and then right contacts from the ring if possible.
         if (this.config.neighbors.size() < PARALLEL_HANDSHAKE_COUNT) {
             const left = this.config.leftNodeView.getFirst([excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
             const right = this.config.rightNodeView.getFirst([excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
@@ -88,24 +89,18 @@ export class Handshaker {
                 neighbors.set(getNodeIdFromPeerDescriptor(right.getPeerDescriptor()), right)
             }
         }
-
+        // If there is still room add the closest contact based on the kademlia metric
         if (neighbors.size < PARALLEL_HANDSHAKE_COUNT) {
             const first = this.config.nearbyNodeView.getFirst([excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
             if (first) {
                 neighbors.set(getNodeIdFromPeerDescriptor(first.getPeerDescriptor()), first)
             }
         }
-
-        if (neighbors.size < PARALLEL_HANDSHAKE_COUNT) {
-            const last = this.config.nearbyNodeView.getFirst([excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
-            if (last) {
-                neighbors.set(getNodeIdFromPeerDescriptor(last.getPeerDescriptor()), last)
-            }
-        }
         const getExcludedFromRandomView = () => [
             ...excludedIds,
             ...Array.from(neighbors.values()).map((neighbor) => getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor()))
         ]
+        // If there is still room add a random contact until PARALLEL_HANDSHAKE_COUNT is reached
         while (
             neighbors.size < PARALLEL_HANDSHAKE_COUNT 
             && this.config.randomNodeView.size(getExcludedFromRandomView()) > 0

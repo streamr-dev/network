@@ -14,10 +14,10 @@ describe('Handshaker', () => {
     const streamPartId = StreamPartIDUtils.parse('stream#0')
 
     let neighbors: NodeList
-    let nearbyNodeView: NodeList
-    let randomNodeView: NodeList
     let leftNodeView: NodeList
     let rightNodeView: NodeList
+    let nearbyNodeView: NodeList
+    let randomNodeView: NodeList
 
     let simulator: Simulator
     let simulatorTransport: SimulatorTransport
@@ -39,10 +39,10 @@ describe('Handshaker', () => {
             localPeerDescriptor: peerDescriptor,
             streamPartId,
             neighbors,
-            nearbyNodeView,
-            randomNodeView,
             leftNodeView,
             rightNodeView,
+            nearbyNodeView,
+            randomNodeView,
             rpcCommunicator,
             maxNeighborCount,
             rpcRequestTimeout: 5000,

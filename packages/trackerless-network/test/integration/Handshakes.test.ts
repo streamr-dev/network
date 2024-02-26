@@ -32,10 +32,10 @@ describe('Handshakes', () => {
     let rpcCommunicator1: ListeningRpcCommunicator
     let rpcCommunicator2: ListeningRpcCommunicator
     let rpcCommunicator3: ListeningRpcCommunicator
-    let nodeView: NodeList
     let neighbors: NodeList
     let leftNodeView: NodeList
     let rightNodeView: NodeList
+    let nodeView: NodeList
     let handshaker: Handshaker
     const streamPartId = StreamPartIDUtils.parse('stream#0')
 
@@ -83,9 +83,9 @@ describe('Handshakes', () => {
         rpcCommunicator3 = new ListeningRpcCommunicator(streamPartId, simulatorTransport3)
 
         const handshakerNodeId = getNodeIdFromPeerDescriptor(peerDescriptor2)
-        nodeView = new NodeList(handshakerNodeId, 10)
         leftNodeView = new NodeList(handshakerNodeId, 10)
         rightNodeView = new NodeList(handshakerNodeId, 10)
+        nodeView = new NodeList(handshakerNodeId, 10)
         neighbors = new NodeList(handshakerNodeId, 4)
         handshaker = new Handshaker({
             localPeerDescriptor: peerDescriptor2,
