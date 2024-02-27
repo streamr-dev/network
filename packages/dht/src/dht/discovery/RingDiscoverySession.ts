@@ -63,22 +63,21 @@ export class RingDiscoverySession {
             return
         }
         this.ongoingClosestPeersRequests.delete(nodeId)
-
         const oldClosestContacts = this.config.peerManager.getClosestRingContactsTo(this.config.targetId, 1)
-
-        const oldClosestLeftDistance = getLeftDistance(this.targetIdAsRingId,
-            getRingIdFromPeerDescriptor(oldClosestContacts.left[0].getPeerDescriptor()))
-        const oldClosestRightDistance = getLeftDistance(this.targetIdAsRingId,
-            getRingIdFromPeerDescriptor(oldClosestContacts.right[0].getPeerDescriptor()))
-
+        const oldClosestLeftDistance = getLeftDistance(
+            this.targetIdAsRingId,
+            getRingIdFromPeerDescriptor(oldClosestContacts.left[0].getPeerDescriptor())
+        )
+        const oldClosestRightDistance = getLeftDistance(
+            this.targetIdAsRingId,
+            getRingIdFromPeerDescriptor(oldClosestContacts.right[0].getPeerDescriptor())
+        )
         this.addContacts(contacts.left.concat(contacts.right))
-
         const newClosestContacts = this.config.peerManager.getClosestRingContactsTo(this.config.targetId, 1)
         const newClosestLeftDistance = getLeftDistance(this.targetIdAsRingId,
             getRingIdFromPeerDescriptor(newClosestContacts.left[0].getPeerDescriptor()))
         const newClosestRightDistance = getLeftDistance(this.targetIdAsRingId,
             getRingIdFromPeerDescriptor(newClosestContacts.right[0].getPeerDescriptor()))
-
         if (newClosestLeftDistance >= oldClosestLeftDistance && newClosestRightDistance >= oldClosestRightDistance) {
             this.noProgressCounter++
         }

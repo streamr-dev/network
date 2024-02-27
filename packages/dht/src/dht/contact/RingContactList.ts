@@ -32,17 +32,14 @@ export class RingContactList<C extends { getPeerDescriptor(): PeerDescriptor }> 
 
     addContact(contact: C): void {
         const id = getRingIdFromPeerDescriptor(contact.getPeerDescriptor())
-        
         if (id === this.referenceId || this.excludedIds.has(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))) {
             return
         }
-
         let elementAdded = false
         let elementRemoved = false
 
         const leftDistance = getLeftDistance(this.referenceId, id)
         const lastLeftNeighbor = this.leftNeighbors.back()
-
         if (lastLeftNeighbor === undefined || leftDistance < lastLeftNeighbor[0]) {
             this.leftNeighbors.setElement(leftDistance, contact)
             elementAdded = true
@@ -54,7 +51,6 @@ export class RingContactList<C extends { getPeerDescriptor(): PeerDescriptor }> 
 
         const rightDistance = getRightDistance(this.referenceId, id)
         const lastRightNeighbor = this.rightNeighbors.back()
-
         if (lastRightNeighbor === undefined || rightDistance < lastRightNeighbor[0]) {
             this.rightNeighbors.setElement(rightDistance, contact)
             elementAdded = true
@@ -66,9 +62,10 @@ export class RingContactList<C extends { getPeerDescriptor(): PeerDescriptor }> 
 
         if (this.emitEvents && (elementAdded || elementRemoved)) {
             const closestContacts = this.getClosestContacts()
-            const closestDescriptors = { left: closestContacts.left.map((c) => c.getPeerDescriptor()), 
-                right: closestContacts.right.map((c) => c.getPeerDescriptor()) }
-
+            const closestDescriptors = { 
+                left: closestContacts.left.map((c) => c.getPeerDescriptor()), 
+                right: closestContacts.right.map((c) => c.getPeerDescriptor())
+            }
             if (elementAdded) {
                 this.emit('ringContactAdded', contact.getPeerDescriptor(), closestDescriptors)
             }
@@ -105,18 +102,14 @@ export class RingContactList<C extends { getPeerDescriptor(): PeerDescriptor }> 
 
     getContact(peerDescriptor: PeerDescriptor): C | undefined {
         const id = getRingIdFromPeerDescriptor(peerDescriptor)
-
         const leftDistance = getLeftDistance(this.referenceId, id)
         const rightDistance = getRightDistance(this.referenceId, id)
-
         if (this.leftNeighbors.getElementByKey(leftDistance)) {
             return this.leftNeighbors.getElementByKey(leftDistance)
         }
-
         if (this.rightNeighbors.getElementByKey(rightDistance)) {
             return this.rightNeighbors.getElementByKey(rightDistance)
         }
-
         return undefined
     }
 
