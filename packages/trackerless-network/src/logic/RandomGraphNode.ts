@@ -5,7 +5,8 @@ import {
     ITransport,
     ConnectionLocker,
     DhtAddress,
-    getNodeIdFromPeerDescriptor
+    getNodeIdFromPeerDescriptor,
+    RingContacts
 } from '@streamr/dht'
 import {
     StreamMessage,
@@ -141,7 +142,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
             'ringContactAdded',
-            (_: PeerDescriptor, peers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => {
+            (_: PeerDescriptor, peers: RingContacts) => {
                 this.onRingContactEvent(peers)
             },
             this.abortController.signal
@@ -149,7 +150,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
             'ringContactRemoved',
-            (_: PeerDescriptor, peers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => {
+            (_: PeerDescriptor, peers: RingContacts) => {
                 this.onRingContactEvent(peers)
             },
             this.abortController.signal
@@ -205,7 +206,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
             (req: TemporaryConnectionRequest, context) => this.config.temporaryConnectionRpcLocal.closeConnection(req, context))
     }
 
-    private onRingContactEvent(ringPeers: { left: PeerDescriptor[], right: PeerDescriptor[] }): void {
+    private onRingContactEvent(ringPeers: RingContacts): void {
         logger.trace(`onRingContactAdded`)
         if (this.isStopped()) {
             return
