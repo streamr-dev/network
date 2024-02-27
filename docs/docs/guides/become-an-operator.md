@@ -13,6 +13,7 @@ sidebar_position: 7
 See these helpful FAQs advice on:
 - [Migrating from Brubeck to Streamr 1.0](../help/operator-faq.md#migrating-from-brubeck-to-streamr-10).
 - [Migrating from the Mumbai testing environment to Streamr 1.0](../help/operator-faq.md#migrating-from-the-mumbai-testing-environment-to-stream-10).
+- [Migrating from Streamr 1.0 testnets to Streamr 1.0](../help/operator-faq.md#migrating-from-streamr-10-testnet-to-streamr-10)
 
 ## Operator setup instructions
 Follow these steps below to setup your Operator so that you can participate in the protocol and collect rewards. 

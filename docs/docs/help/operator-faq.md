@@ -21,6 +21,39 @@ If you've created your node in the Mumbai testing environment and you want to pa
 
 - **Mainnet node config:** Your node config should resemble the [Mainnet config template](../guides/how-to-run-streamr-node.md#mainnet-node-config).
 
+#### Migrating from Streamr 1.0 testnet to Streamr 1.0
+If you participated in the Streamr 1.0 testnets as an Operator, your Operator smart contract is the testnet version. There is a new version available, the 1.0 mainnet version.
+
+**Upgrading is optional but recommended** - you can continue using your current Operator contract, however there is a new feature, minimum delegation period, which is only available on the newer version. This article describes how to upgrade and why.
+
+Note that you own your Operator. No one else - including the Streamr team - has any power over it. This is why upgrading it is also completely up to you.
+
+##### Why upgrade?
+The 1.0 mainnet Operator contract supports the minimum delegation period feature introduced as part of [SIP-20](https://vote.streamr.network/#/proposal/0x12f43b57d6f636875197bbadfff2b75de05bf866332353aa0cf11b993aaffc5d). While it sounds like a relatively minor new feature, it was introduced for a good reason, so upgrading is recommended.
+
+In the testnet version of the Operator contract, an abusive pattern is possible whereby a Delegator first delegates, then collects earnings to update the Operator value, then immediately undelegates, creating an instantaneous profit. Repeating this pattern in rapid succession across many Operators allows the abusive Delegator to potentially create excessive earnings compared to delegating normally. Those excessive earnings reduce the earnings of the Operators and other Delegators.
+
+The minimum delegation period prevents Delegators from rapidly cycling through Operators and taking advantage of the above pattern. By disrupting the loop and slowing it down, the abusive pattern becomes less attractive and no longer gives a meaningful advantage.
+
+##### Should I upgrade now?
+If you want to get protection against the above abusive behavior, then yes. We recommend doing so. You can also upgrade at any time in the future.
+
+##### How to upgrade?
+Newly created Operators support the minimum delegation period feature, while Operators created during the testnets don’t. So in short, you just need to create a new Operator, move your nodes and tokens there, and abandon the old Operator.
+
+The [docs](../guides/become-an-operator.md) detail the general process of becoming an Operator, but here is a quick summary specifically for this case:
+
+1. Unstake your old Operator from all Sponsorships and withdraw all your tokens from it.
+2. Use the Edit Operator feature to rename your old Operator. Please indicate in the name that it’s no longer active. For example if your Operator is called “Goofy”, you can rename it to “Goofy (old)”.
+3. Create a new owner wallet (you can not create a new Operator using the old owner wallet).
+4. Transfer your DATA tokens from the old owner wallet to the new owner wallet.
+5. Create a new Operator using the new owner wallet and the Streamr Hub.
+6. Add your node addresses to the new Operator (you don’t need to change the node addresses)
+7. Update the operatorContractAddress in your node config files to point to the new Operator and restart your nodes.
+8. Use the new owner wallet to Fund the new Operator using the Hub UI.
+
+If you have any questions or need help, please turn to the #node-operators channel on the project [Discord](https://discord.com/invite/gZAm8P7hK8).
+
 #### What are the differences between the Brubeck network and the 1.0 network?
 In the old Brubeck network, people would cram multiple Streamr nodes into the cheapest possible VMs to optimize earnings vs. costs, but that only made sense because the nodes weren't doing much in terms of actual work. Now the nodes will be doing actual work by relaying data in the streams that the node Operator stakes on, and this has a few consequences:
 - One node per VM is now the only pattern that makes sense really - there's nothing to gain (but redundancy to lose) by running multiple nodes on the same VM
