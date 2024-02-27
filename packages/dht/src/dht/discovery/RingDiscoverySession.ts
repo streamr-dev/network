@@ -6,6 +6,7 @@ import { PeerManager } from '../PeerManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { RingId, RingIdRaw, getLeftDistance, getRingIdFromPeerDescriptor, getRingIdFromRaw } from '../contact/ringIdentifiers'
+import { RingContacts } from '../contact/RingContactList'
 
 const logger = new Logger(module)
 
@@ -45,7 +46,7 @@ export class RingDiscoverySession {
         this.config.peerManager.addContact(contacts)
     }
 
-    private async getClosestPeersFromContact(contact: DhtNodeRpcRemote): Promise<{ left: PeerDescriptor[], right: PeerDescriptor[] }> {
+    private async getClosestPeersFromContact(contact: DhtNodeRpcRemote): Promise<RingContacts> {
         if (this.stopped) {
             return { left: [], right: [] }
         }
@@ -57,7 +58,7 @@ export class RingDiscoverySession {
         return returnedContacts
     }
 
-    private onClosestPeersRequestSucceeded(nodeId: DhtAddress, contacts: { left: PeerDescriptor[], right: PeerDescriptor[] }) {
+    private onClosestPeersRequestSucceeded(nodeId: DhtAddress, contacts: RingContacts) {
         if (!this.ongoingClosestPeersRequests.has(nodeId)) {
             return
         }
