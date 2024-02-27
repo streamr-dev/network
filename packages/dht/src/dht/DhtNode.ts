@@ -50,14 +50,15 @@ import { StoreRpcRemote } from './store/StoreRpcRemote'
 import { createPeerDescriptor } from '../helpers/createPeerDescriptor'
 import { RingIdRaw } from './contact/ringIdentifiers'
 import { getLocalRegion } from '@streamr/cdn-location'
+import { RingContacts } from './contact/RingContactList'
 
 export interface DhtNodeEvents {
     contactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     contactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     randomContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     randomContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    ringContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => void
-    ringContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => void
+    ringContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: RingContacts) => void
+    ringContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: RingContacts) => void
 }
 
 export interface DhtNodeOptions {
@@ -328,11 +329,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.emit('randomContactAdded', peerDescriptor, activeContacts)
         )
         this.peerManager.on('ringContactRemoved', (peerDescriptor: PeerDescriptor,
-            activeContacts: { left: PeerDescriptor[], right: PeerDescriptor[] }) => {
+            activeContacts: RingContacts) => {
             this.emit('ringContactRemoved', peerDescriptor, activeContacts)
         })
         this.peerManager.on('ringContactAdded', (peerDescriptor: PeerDescriptor, 
-            activeContacts: { left: PeerDescriptor[], right: PeerDescriptor[] }) => {
+            activeContacts: RingContacts) => {
             this.emit('ringContactAdded', peerDescriptor, activeContacts)
         })
 
@@ -441,7 +442,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             limit).map((peer) => peer.getPeerDescriptor())
     }
 
-    public getClosestRingContactsTo(ringIdRaw: RingIdRaw, limit?: number): { left: PeerDescriptor[], right: PeerDescriptor[] } {
+    public getClosestRingContactsTo(ringIdRaw: RingIdRaw, limit?: number): RingContacts {
         const closest = this.peerManager!.getClosestRingContactsTo(ringIdRaw, limit)
         return {
             left: closest.left.map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor()),

@@ -14,11 +14,12 @@ import { IDhtNodeRpc } from '../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { RingIdRaw } from './contact/ringIdentifiers'
+import { RingContacts } from './contact/RingContactList'
 
 interface DhtNodeRpcLocalConfig {
     peerDiscoveryQueryBatchSize: number
     getClosestPeersTo: (nodeId: DhtAddress, limit: number) => PeerDescriptor[]
-    getClosestRingPeersTo: (id: RingIdRaw, limit: number) => { left: PeerDescriptor[], right: PeerDescriptor[] }
+    getClosestRingPeersTo: (id: RingIdRaw, limit: number) => RingContacts
     addContact: (contact: PeerDescriptor) => void
     removeContact: (nodeId: DhtAddress) => void
 }

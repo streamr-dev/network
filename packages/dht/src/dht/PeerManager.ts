@@ -11,7 +11,7 @@ import { SortedContactList } from './contact/SortedContactList'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import EventEmitter from 'eventemitter3'
 import { DhtAddress, DhtAddressRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../identifiers'
-import { RingContactList } from './contact/RingContactList'
+import { RingContactList, RingContacts } from './contact/RingContactList'
 import { RingIdRaw, getRingIdRawFromPeerDescriptor } from './contact/ringIdentifiers'
 
 const logger = new Logger(module)
@@ -32,8 +32,8 @@ export interface PeerManagerEvents {
     contactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     randomContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     randomContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    ringContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => void
-    ringContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => void
+    ringContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: RingContacts) => void
+    ringContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: RingContacts) => void
     kBucketEmpty: () => void
 }
 
@@ -73,12 +73,12 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.ringContacts = new RingContactList<DhtNodeRpcRemote>(getRingIdRawFromPeerDescriptor(this.config.localPeerDescriptor), true)
 
         this.ringContacts.on('ringContactAdded', (peerDescriptor: PeerDescriptor, 
-            closestPeers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => {
+            closestPeers: RingContacts) => {
             this.emit('ringContactAdded', peerDescriptor, closestPeers)
         })
 
         this.ringContacts.on('ringContactRemoved', (peerDescriptor: PeerDescriptor, 
-            closestPeers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => {
+            closestPeers: RingContacts) => {
             this.emit('ringContactRemoved', peerDescriptor, closestPeers)
         })
 

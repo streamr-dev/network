@@ -13,6 +13,7 @@ import { ServiceID } from '../types/ServiceID'
 import { RpcRemote } from './contact/RpcRemote'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { RingIdRaw } from './contact/ringIdentifiers'
+import { RingContacts } from './contact/RingContactList'
 
 const logger = new Logger(module)
 
@@ -57,7 +58,7 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
         }
     }
 
-    async getClosestRingPeers(ringIdRaw: RingIdRaw): Promise<{ left: PeerDescriptor[], right: PeerDescriptor[] }> {
+    async getClosestRingPeers(ringIdRaw: RingIdRaw): Promise<RingContacts> {
         logger.trace(`Requesting getClosestRingPeers on ${this.serviceId} from ${this.getNodeId()}`)
         const request: ClosestRingPeersRequest = {
             ringId: ringIdRaw,

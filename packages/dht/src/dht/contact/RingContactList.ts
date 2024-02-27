@@ -4,9 +4,13 @@ import { RingDistance, RingId, RingIdRaw, getLeftDistance, getRightDistance, get
 import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import EventEmitter from 'eventemitter3'
 
+export interface RingContacts { 
+    left: PeerDescriptor[]
+    right: PeerDescriptor[]
+}
 export interface RingContactListEvents {  
-    ringContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => void
-    ringContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: { left: PeerDescriptor[], right: PeerDescriptor[] }) => void
+    ringContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: RingContacts) => void
+    ringContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: RingContacts) => void
 }
 export class RingContactList<C extends { getPeerDescriptor(): PeerDescriptor }> extends EventEmitter<RingContactListEvents> {
 
