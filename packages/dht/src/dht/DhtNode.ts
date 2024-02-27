@@ -328,15 +328,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.peerManager.on('randomContactAdded', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
             this.emit('randomContactAdded', peerDescriptor, activeContacts)
         )
-        this.peerManager.on('ringContactRemoved', (peerDescriptor: PeerDescriptor,
-            activeContacts: RingContacts) => {
+        this.peerManager.on('ringContactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: RingContacts) => {
             this.emit('ringContactRemoved', peerDescriptor, activeContacts)
         })
-        this.peerManager.on('ringContactAdded', (peerDescriptor: PeerDescriptor, 
-            activeContacts: RingContacts) => {
+        this.peerManager.on('ringContactAdded', (peerDescriptor: PeerDescriptor, activeContacts: RingContacts) => {
             this.emit('ringContactAdded', peerDescriptor, activeContacts)
         })
-
         this.peerManager.on('kBucketEmpty', () => {
             if (!this.peerDiscovery!.isJoinOngoing()
                 && this.config.entryPoints

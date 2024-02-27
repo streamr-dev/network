@@ -10,14 +10,11 @@ export type RingDistance = number & { __ringDistance: never }
 
 export const RING_SIZE = 2 ** 120 - 1   // 2^120 - 1
 
-const uint8ArrayToBigInt = (uint8Array: Uint8Array): bigint => {
-    return uint8Array.reduce((acc, val) => (acc << BigInt(8)) | BigInt(val), BigInt(0))
+const binaryToBigInt = (binary: Uint8Array): bigint => {
+    return binary.reduce((acc, val) => (acc << BigInt(8)) | BigInt(val), BigInt(0))
 }
 
-export const getRingIdFromRaw = (raw: RingIdRaw): RingId => {
-    return Number(uint8ArrayToBigInt(raw)) as RingId
-
-}
+export const getRingIdFromRaw = (raw: RingIdRaw): RingId => Number(binaryToBigInt(raw)) as RingId
 
 export const getRingIdRawFromPeerDescriptor = (peerDescriptor: PeerDescriptor): RingIdRaw => {
     const regionAsBuffer = Buffer.alloc(4)
@@ -39,26 +36,22 @@ export const getRingIdRawFromPeerDescriptor = (peerDescriptor: PeerDescriptor): 
 
 export const getRingIdFromPeerDescriptor = (peerDescriptor: PeerDescriptor): RingId => {
     const raw = getRingIdRawFromPeerDescriptor(peerDescriptor)
-    return Number(uint8ArrayToBigInt(raw)) as RingId    
+    return Number(binaryToBigInt(raw)) as RingId    
 }
 
 export const getLeftDistance = (referenceId: RingId, id: RingId): RingDistance =>{
-
     const diff = Math.abs(referenceId - id)
-
     if (referenceId > id) {
         // if id is smaller than referenceId, then the distance is the difference
         return diff as RingDistance
     } else {
         // if id is bigger than referenceId, then the distance is the ringSize - difference
-
         return RING_SIZE - diff as RingDistance
     }
 }
 
 export const getRightDistance = (referenceId: RingId, id: RingId): RingDistance => {
     const diff = Math.abs(referenceId - id)
-
     if (referenceId > id) {
         // if id is smaller than referenceId, then the distance is the ringSize - difference
         return RING_SIZE - diff as RingDistance
