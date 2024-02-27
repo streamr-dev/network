@@ -3,7 +3,7 @@ import path from 'path'
 import cloneDeep from 'lodash/cloneDeep'
 import { ConfigFile, getDefaultFile, getLegacyDefaultFile } from './config'
 
-export const CURRENT_CONFIGURATION_VERSION = 2
+export const CURRENT_CONFIGURATION_VERSION = 3
 
 export const formSchemaUrl = (version: number): string => {
     return `https://schema.streamr.network/config-v${version}.schema.json`
@@ -104,6 +104,13 @@ const convertV1ToV2 = (source: any): ConfigFile => {
     return target as ConfigFile
 }
 
+const convertV2ToV3 = (source: any): ConfigFile => {
+    const TARGET_VERSION = 3
+    const target = cloneDeep(source)
+    target.$schema = formSchemaUrl(TARGET_VERSION)
+    return target as ConfigFile
+}
+
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const createMigratedConfig = (source: any): ConfigFile | never => {
     let config = source
@@ -111,6 +118,8 @@ export const createMigratedConfig = (source: any): ConfigFile | never => {
         const version = getVersion(config)
         if (version === 1) {
             config = convertV1ToV2(config)
+        } else if (version === 2) {
+            config = convertV2ToV3(config)
         } else {
             throw new Error(`Unable to migrate the config: version=${version}`)
         }
