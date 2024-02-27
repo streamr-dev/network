@@ -80,8 +80,8 @@ export class Handshaker {
         const neighbors: Map<DhtAddress, DeliveryRpcRemote> = new Map()
         // First add the most left and then right contacts from the ring if possible.
         if (this.config.neighbors.size() < PARALLEL_HANDSHAKE_COUNT) {
-            const left = this.config.leftNodeView.getFirst([excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
-            const right = this.config.rightNodeView.getFirst([excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
+            const left = this.config.leftNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
+            const right = this.config.rightNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
             if (left) {
                 neighbors.set(getNodeIdFromPeerDescriptor(left.getPeerDescriptor()), left)
             }
@@ -91,7 +91,7 @@ export class Handshaker {
         }
         // If there is still room add the closest contact based on the kademlia metric
         if (neighbors.size < PARALLEL_HANDSHAKE_COUNT) {
-            const first = this.config.nearbyNodeView.getFirst([excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
+            const first = this.config.nearbyNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
             if (first) {
                 neighbors.set(getNodeIdFromPeerDescriptor(first.getPeerDescriptor()), first)
             }
@@ -105,7 +105,7 @@ export class Handshaker {
             neighbors.size < PARALLEL_HANDSHAKE_COUNT 
             && this.config.randomNodeView.size(getExcludedFromRandomView()) > 0
         ) {
-            const random = this.config.randomNodeView.getRandom([excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
+            const random = this.config.randomNodeView.getRandom([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
             if (random) {
                 neighbors.set(getNodeIdFromPeerDescriptor(random.getPeerDescriptor()), random)
             }
