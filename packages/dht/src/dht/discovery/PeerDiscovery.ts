@@ -93,7 +93,6 @@ export class PeerDiscovery {
     async joinRing(): Promise<void> {
         const contactedPeers = new Set<DhtAddress>()
         const sessions = [this.createRingSession(getRingIdRawFromPeerDescriptor(this.config.localPeerDescriptor), contactedPeers)]
-        
         await this.runRingSessions(sessions)
     }
 
