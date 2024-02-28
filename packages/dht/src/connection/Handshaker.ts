@@ -6,9 +6,6 @@ import { IConnection } from './IConnection'
 import { version as localVersion } from '../../package.json'
 import { isCompatibleVersion } from '../helpers/versionCompatibility'
 
-// Used for backwards compatibility with older versions of the protocol that do not send version in handshakes
-const BEFORE_TESTNET_TWO_VERSION = '100.0.0-before-testnet-two.0'
-
 const logger = new Logger(module)
 
 interface HandshakerEvents {
@@ -43,15 +40,14 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
                 this.emit(
                     'handshakeRequest',
                     handshake.sourcePeerDescriptor!, 
-                    handshake.version ?? BEFORE_TESTNET_TWO_VERSION,
+                    handshake.version,
                     handshake.targetPeerDescriptor
                 )
             }
             if (message.body.oneofKind === 'handshakeResponse') {
                 logger.trace('handshake response received')
                 const handshake = message.body.handshakeResponse
-                const sourceVersion = handshake.version ?? BEFORE_TESTNET_TWO_VERSION
-                const error = !isCompatibleVersion(sourceVersion, localVersion) ? HandshakeError.UNSUPPORTED_VERSION : undefined
+                const error = !isCompatibleVersion(localVersion, handshake.version) ? HandshakeError.UNSUPPORTED_VERSION : undefined
                     ?? handshake.error
                 if (error !== undefined) {
                     this.emit('handshakeFailed', error)

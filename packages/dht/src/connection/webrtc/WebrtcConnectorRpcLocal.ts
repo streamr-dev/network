@@ -84,11 +84,11 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         connection!.setConnectionId(request.connectionId as ConnectionID)
         connection!.setRemoteDescription(request.description, 'offer')
 
-        managedConnection.on('handshakeRequest', (_sourceDescriptor: PeerDescriptor, sourceVersion: string) => {
+        managedConnection.on('handshakeRequest', (_sourceDescriptor: PeerDescriptor, remoteVersion: string) => {
             if (this.config.ongoingConnectAttempts.has(nodeId)) {
                 this.config.ongoingConnectAttempts.delete(nodeId)
             }
-            if (!isCompatibleVersion(sourceVersion, localVersion)) {
+            if (!isCompatibleVersion(localVersion, remoteVersion)) {
                 managedConnection!.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
             } else {
                 managedConnection!.acceptHandshake()
