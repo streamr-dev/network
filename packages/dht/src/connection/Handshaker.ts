@@ -46,8 +46,7 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
             if (message.body.oneofKind === 'handshakeResponse') {
                 logger.trace('handshake response received')
                 const handshake = message.body.handshakeResponse
-                const error = !isCompatibleVersion(handshake.version) ? HandshakeError.UNSUPPORTED_VERSION : undefined
-                    ?? handshake.error
+                const error = !isCompatibleVersion(handshake.version) ? HandshakeError.UNSUPPORTED_VERSION : handshake.error
                 if (error !== undefined) {
                     this.emit('handshakeFailed', error)
                 } else {
