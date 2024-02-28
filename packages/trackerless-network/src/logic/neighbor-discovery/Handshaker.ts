@@ -78,16 +78,14 @@ export class Handshaker {
 
     private selectParallelTargets(excludedIds: DhtAddress[]): HandshakeRpcRemote[] {
         const neighbors: Map<DhtAddress, DeliveryRpcRemote> = new Map()
-        // First add the most left and then right contacts from the ring if possible.
-        if (this.config.neighbors.size() < PARALLEL_HANDSHAKE_COUNT) {
-            const left = this.config.leftNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
-            const right = this.config.rightNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
-            if (left) {
-                neighbors.set(getNodeIdFromPeerDescriptor(left.getPeerDescriptor()), left)
-            }
-            if (right) {
-                neighbors.set(getNodeIdFromPeerDescriptor(right.getPeerDescriptor()), right)
-            }
+        // First add the closest left and then right contacts from the ring if possible.
+        const left = this.config.leftNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
+        const right = this.config.rightNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
+        if (left) {
+            neighbors.set(getNodeIdFromPeerDescriptor(left.getPeerDescriptor()), left)
+        }
+        if (right) {
+            neighbors.set(getNodeIdFromPeerDescriptor(right.getPeerDescriptor()), right)
         }
         // If there is still room add the closest contact based on the kademlia metric
         if (neighbors.size < PARALLEL_HANDSHAKE_COUNT) {
