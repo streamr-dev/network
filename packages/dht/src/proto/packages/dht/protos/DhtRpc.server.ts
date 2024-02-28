@@ -24,6 +24,8 @@ import { Empty } from "../../../google/protobuf/empty";
 import { LeaveNotice } from "./DhtRpc";
 import { PingResponse } from "./DhtRpc";
 import { PingRequest } from "./DhtRpc";
+import { ClosestRingPeersResponse } from "./DhtRpc";
+import { ClosestRingPeersRequest } from "./DhtRpc";
 import { ClosestPeersResponse } from "./DhtRpc";
 import { ClosestPeersRequest } from "./DhtRpc";
 import { ServerCallContext } from "@protobuf-ts/runtime-rpc";
@@ -35,6 +37,10 @@ export interface IDhtNodeRpc<T = ServerCallContext> {
      * @generated from protobuf rpc: getClosestPeers(dht.ClosestPeersRequest) returns (dht.ClosestPeersResponse);
      */
     getClosestPeers(request: ClosestPeersRequest, context: T): Promise<ClosestPeersResponse>;
+    /**
+     * @generated from protobuf rpc: getClosestRingPeers(dht.ClosestRingPeersRequest) returns (dht.ClosestRingPeersResponse);
+     */
+    getClosestRingPeers(request: ClosestRingPeersRequest, context: T): Promise<ClosestRingPeersResponse>;
     /**
      * @generated from protobuf rpc: ping(dht.PingRequest) returns (dht.PingResponse);
      */

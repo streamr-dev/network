@@ -10,6 +10,7 @@ import "packages/proto-rpc/protos/ProtoRpc.proto";
 
 service DhtNodeRpc {
   rpc getClosestPeers (ClosestPeersRequest) returns (ClosestPeersResponse);
+  rpc getClosestRingPeers (ClosestRingPeersRequest) returns (ClosestRingPeersResponse);
   rpc ping (PingRequest) returns (PingResponse);
   rpc leaveNotice (LeaveNotice) returns (google.protobuf.Empty);
 }
@@ -99,6 +100,17 @@ message ClosestPeersRequest {
 message ClosestPeersResponse {
   repeated PeerDescriptor peers = 1;
   string requestId = 2;
+}
+
+message ClosestRingPeersRequest {
+  bytes ringId = 1;
+  string requestId = 2;
+}
+
+message ClosestRingPeersResponse {
+  repeated PeerDescriptor leftPeers = 1;
+  repeated PeerDescriptor rightPeers = 2;
+  string requestId = 3;
 }
 
 message RecursiveOperationRequest {
