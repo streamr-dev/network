@@ -81,7 +81,10 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     })
     const neighborFinder = config.neighborFinder ?? new NeighborFinder({
         neighbors,
+        leftNodeView,
+        rightNodeView,
         nearbyNodeView,
+        randomNodeView,
         doFindNeighbors: (excludedIds) => handshaker.attemptHandshakesOnContacts(excludedIds),
         minCount: neighborTargetCount
     })

@@ -101,6 +101,9 @@ export class RandomGraphNode extends EventEmitter<Events> {
                     this.config.layer1Node.removeContact(sourceId)
                     this.config.neighbors.remove(sourceId)
                     this.config.nearbyNodeView.remove(sourceId)
+                    this.config.randomNodeView.remove(sourceId)
+                    this.config.leftNodeView.remove(sourceId)
+                    this.config.rightNodeView.remove(sourceId)
                     this.config.neighborFinder.start([sourceId])
                     this.config.proxyConnectionRpcLocal?.removeConnection(sourceId)
                 }
