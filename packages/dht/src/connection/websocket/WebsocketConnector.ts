@@ -29,7 +29,7 @@ import { DISABLE_CONNECTIVITY_PROBE, attachConnectivityRequestHandler } from '..
 import * as Err from '../../helpers/errors'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { LOCAL_PROTOCOL_VERSION, isCompatibleVersion } from '../../helpers/version'
+import { LOCAL_PROTOCOL_VERSION, isMaybeSupportedVersion } from '../../helpers/version'
 
 const logger = new Logger(module)
 
@@ -305,7 +305,7 @@ export class WebsocketConnector {
         const nodeId = getNodeIdFromPeerDescriptor(sourcePeerDescriptor)
         if (this.ongoingConnectRequests.has(nodeId)) {
             const ongoingConnectRequest = this.ongoingConnectRequests.get(nodeId)!
-            if (!isCompatibleVersion(remoteVersion)) {
+            if (!isMaybeSupportedVersion(remoteVersion)) {
                 ongoingConnectRequest.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
             } else {
                 ongoingConnectRequest.attachImplementation(websocketServerConnection)
@@ -321,7 +321,7 @@ export class WebsocketConnector {
                 targetPeerDescriptor
             )
             managedConnection.setRemotePeerDescriptor(sourcePeerDescriptor)
-            if (!isCompatibleVersion(remoteVersion)) {
+            if (!isMaybeSupportedVersion(remoteVersion)) {
                 managedConnection.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 managedConnection.rejectHandshake(HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)

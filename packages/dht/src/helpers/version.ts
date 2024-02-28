@@ -1,15 +1,32 @@
 export const LOCAL_PROTOCOL_VERSION = '1.0'
 
-// Is able to compare versions such as 1.2.3 and 1.2.4
-// can also compare versions such as 100.0.0-pretestnet.0 and 100.0.0-pretestnet.40
-export const isCompatibleVersion = (remoteVersion: string): boolean => {
-    const minorVersion1 = excludePatchVersion(LOCAL_PROTOCOL_VERSION)
-    const minorVersion2 = excludePatchVersion(remoteVersion)
-    return minorVersion1 === minorVersion2
+/*
+ * When two nodes negotiate whether they are compatible of not, it is up to the
+ * newer version to decide if it supports the old version or not.
+ * 
+ * The older version assumes optimistically that it may be supported by the newer
+ * version. It can't know for sure, but the other node will tell if it is not
+ * supported (e.g. rejecting the handshake with UNSUPPORTED_VERSION error)
+ */
+export const isMaybeSupportedVersion = (remoteVersion: string): boolean => {
+    const localMajor = parseVersion(LOCAL_PROTOCOL_VERSION)!.major
+    const remoteMajor = parseVersion(remoteVersion)?.major
+    if ((remoteMajor === undefined) || (remoteMajor < localMajor)) {
+        return false
+    } else {
+        // TODO implement proper checking when there are new protocol versions
+        return true
+    }
 }
 
-export const excludePatchVersion = (version: string): string => {
-    const versionParts = version.split('.')
-    versionParts.pop()
-    return versionParts.join('.')
+export const parseVersion = (version: string): { major: number, minor: number } | undefined => {
+    const parts = version.split('.')
+    if (parts.length === 2) {
+        const values = parts.map((p) => Number(p))
+        if (!values.some((v) => isNaN(v))) {
+            return { major: values[0], minor: values[1] }
+        }
+    } else {
+        return undefined
+    }
 }

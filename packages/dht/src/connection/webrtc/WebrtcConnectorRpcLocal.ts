@@ -18,7 +18,7 @@ import { ManagedWebrtcConnection } from '../ManagedWebrtcConnection'
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'
 import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
 import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { isCompatibleVersion } from '../../helpers/version'
+import { isMaybeSupportedVersion } from '../../helpers/version'
 import { ConnectionID } from '../IConnection'
 
 const logger = new Logger(module)
@@ -87,7 +87,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
             if (this.config.ongoingConnectAttempts.has(nodeId)) {
                 this.config.ongoingConnectAttempts.delete(nodeId)
             }
-            if (!isCompatibleVersion(remoteVersion)) {
+            if (!isMaybeSupportedVersion(remoteVersion)) {
                 managedConnection!.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
             } else {
                 managedConnection!.acceptHandshake()
