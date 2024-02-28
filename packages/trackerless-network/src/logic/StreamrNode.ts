@@ -333,7 +333,7 @@ export class StreamrNode extends EventEmitter<Events> {
     getNeighbors(streamPartId: StreamPartID): DhtAddress[] {
         const streamPart = this.streamParts.get(streamPartId)
         return (streamPart !== undefined) && (streamPart.proxied === false)
-            ? streamPart.node.getNeighbors().map((node) => getNodeIdFromPeerDescriptor(node))
+            ? streamPart.node.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
             : []
     }
 
