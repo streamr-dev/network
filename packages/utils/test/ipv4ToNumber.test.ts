@@ -1,10 +1,11 @@
-import { ipv4ToNumber } from '../src/ipv4ToNumber'
+import { ipv4ToNumber, numberToIpv4 } from '../src/ipv4ToNumber'
 
 describe('ipv4ToNumber', () => {
-    it('converts a valid IPv4 address to a number', () => {
-        const ip = '192.168.1.1'
-        const expected = 3232235777
-        const result = ipv4ToNumber(ip)
-        expect(result).toEqual(expected)
+
+    it('happy path', () => {
+        const stringValue = '192.168.1.1'
+        const numberValue = 3232235777
+        expect(ipv4ToNumber(stringValue)).toEqual(numberValue)
+        expect(numberToIpv4(numberValue)).toEqual(stringValue)
     })
 })

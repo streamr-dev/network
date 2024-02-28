@@ -43,7 +43,9 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
 
     const temporaryConnectionRpcLocal = new TemporaryConnectionRpcLocal({
         rpcCommunicator,
-        localPeerDescriptor: config.localPeerDescriptor
+        localPeerDescriptor: config.localPeerDescriptor,
+        streamPartId: config.streamPartId,
+        connectionLocker: config.connectionLocker
     })
     const proxyConnectionRpcLocal = acceptProxyConnections ? new ProxyConnectionRpcLocal({
         localPeerDescriptor: config.localPeerDescriptor,

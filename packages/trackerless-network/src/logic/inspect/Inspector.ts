@@ -48,7 +48,7 @@ export class Inspector {
             TemporaryConnectionRpcClient
         )
         await rpcRemote.openConnection()
-        this.connectionLocker.lockConnection(peerDescriptor, lockId)
+        this.connectionLocker.weakLockConnection(getNodeIdFromPeerDescriptor(peerDescriptor), lockId)
     }
 
     async defaultCloseInspectConnection(peerDescriptor: PeerDescriptor, lockId: LockID): Promise<void> {
@@ -59,7 +59,7 @@ export class Inspector {
             TemporaryConnectionRpcClient
         )
         await rpcRemote.closeConnection()
-        this.connectionLocker.unlockConnection(peerDescriptor, lockId)
+        this.connectionLocker.weakUnlockConnection(getNodeIdFromPeerDescriptor(peerDescriptor), lockId)
     }
 
     async inspect(peerDescriptor: PeerDescriptor): Promise<boolean> {
