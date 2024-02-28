@@ -27,3 +27,4 @@ export {
     areEqualPeerDescriptors,
     getNodeIdFromPeerDescriptor
 } from './identifiers'
+export { LOCAL_PROTOCOL_VERSION } from './helpers/version'

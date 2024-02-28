@@ -4,7 +4,7 @@ import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
 import { MockTransport } from '../utils/mock/Transport'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { sendConnectivityRequest } from '../../src/connection/connectivityChecker'
-import { version } from '../../package.json'
+import { LOCAL_PROTOCOL_VERSION } from '../../src/exports'
 
 describe('ConnectivityChecking', () => {
 
@@ -46,19 +46,7 @@ describe('ConnectivityChecking', () => {
             tls: false,
             selfSigned: false
         }
-        const response = await sendConnectivityRequest(request, server.getLocalPeerDescriptor(), version)
-        expect(response.version).toEqual(version)
+        const response = await sendConnectivityRequest(request, server.getLocalPeerDescriptor())
+        expect(response.version).toEqual(LOCAL_PROTOCOL_VERSION)
     })
-
-    it('connectivityCheck with incompatible version', async () => {
-        const request = {
-            host: HOST,
-            port: PORT,
-            tls: false,
-            selfSigned: false
-        }
-        await expect(sendConnectivityRequest(request, server.getLocalPeerDescriptor(), '0.0.1'))
-            .toReject()
-    })
-
 })
