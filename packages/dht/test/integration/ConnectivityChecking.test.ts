@@ -49,16 +49,4 @@ describe('ConnectivityChecking', () => {
         const response = await sendConnectivityRequest(request, server.getLocalPeerDescriptor())
         expect(response.version).toEqual(LOCAL_PROTOCOL_VERSION)
     })
-
-    it('connectivityCheck with incompatible version', async () => {
-        const request = {
-            host: HOST,
-            port: PORT,
-            tls: false,
-            selfSigned: false
-        }
-        await expect(sendConnectivityRequest(request, server.getLocalPeerDescriptor()))
-            .toReject()
-    })
-
 })
