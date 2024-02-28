@@ -14,6 +14,8 @@ describe('Handshaker', () => {
     const streamPartId = StreamPartIDUtils.parse('stream#0')
 
     let neighbors: NodeList
+    let leftNodeView: NodeList
+    let rightNodeView: NodeList
     let nearbyNodeView: NodeList
     let randomNodeView: NodeList
 
@@ -28,6 +30,8 @@ describe('Handshaker', () => {
 
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
         neighbors = new NodeList(nodeId, 10)
+        leftNodeView = new NodeList(nodeId, 20)
+        rightNodeView = new NodeList(nodeId, 20)
         nearbyNodeView = new NodeList(nodeId, 20)
         randomNodeView = new NodeList(nodeId, 20)
 
@@ -35,6 +39,8 @@ describe('Handshaker', () => {
             localPeerDescriptor: peerDescriptor,
             streamPartId,
             neighbors,
+            leftNodeView,
+            rightNodeView,
             nearbyNodeView,
             randomNodeView,
             rpcCommunicator,
@@ -55,7 +61,7 @@ describe('Handshaker', () => {
     })
 
     it('attemptHandshakesOnContact with known nodes that cannot be connected to', async () => {
-        range(2).forEach(() => nearbyNodeView.add(createMockDeliveryRpcRemote()))
+        range(2).forEach(() => randomNodeView.add(createMockDeliveryRpcRemote()))
         const res = await handshaker.attemptHandshakesOnContacts([])
         expect(res.length).toEqual(2)
     })
