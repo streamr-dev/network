@@ -27,7 +27,7 @@ describe('connectivityRequestHandler', () => {
         await once(httpServer, 'listening')
         connection = new EventEmitter()
         connection.send = jest.fn()
-        connection.getRemoteIp = () => HOST
+        connection.remoteIpAddress = HOST
     })
 
     afterEach(async () => {

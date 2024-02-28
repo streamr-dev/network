@@ -92,7 +92,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 const contact = this.config.nearbyNodeView.get(sourceId)
                 || this.config.randomNodeView.get(sourceId)
                 || this.config.neighbors.get(sourceId)
-                || this.config.proxyConnectionRpcLocal?.getConnection(sourceId )?.remote
+                || this.config.proxyConnectionRpcLocal?.getConnection(sourceId)?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
                     this.config.layer1Node.removeContact(sourceId)
@@ -147,7 +147,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
             'nodeAdded',
             (id, remote) => {
                 this.config.propagation.onNeighborJoined(id)
-                this.config.connectionLocker.lockConnection(remote.getPeerDescriptor(), this.config.streamPartId)
+                this.config.connectionLocker.weakLockConnection(remote.getPeerDescriptor(), this.config.streamPartId)
                 this.emit('neighborConnected', id)
             },
             this.abortController.signal
@@ -156,7 +156,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
             this.config.neighbors,
             'nodeRemoved',
             (_id, remote) => {
-                this.config.connectionLocker.unlockConnection(remote.getPeerDescriptor(), this.config.streamPartId)
+                this.config.connectionLocker.weakUnlockConnection(remote.getPeerDescriptor(), this.config.streamPartId)
             },
             this.abortController.signal
         )
