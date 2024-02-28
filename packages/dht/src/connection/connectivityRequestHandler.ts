@@ -10,7 +10,7 @@ import { CONNECTIVITY_CHECKER_SERVICE_ID, connectAsync } from './connectivityChe
 import { IConnection } from './IConnection'
 import { WebsocketServerConnection } from './websocket/WebsocketServerConnection'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
-import { version as localVersion } from '../../package.json'
+import { LOCAL_PROTOCOL_VERSION } from '../helpers/version'
 
 export const DISABLE_CONNECTIVITY_PROBE = 0
 
@@ -48,7 +48,7 @@ const handleIncomingConnectivityRequest = async (connection: WebsocketServerConn
             host,
             natType: NatType.UNKNOWN,
             ipAddress: ipv4ToNumber(ipAddress),
-            version: localVersion
+            version: LOCAL_PROTOCOL_VERSION
         }
     }
     const msg: Message = {
@@ -84,7 +84,7 @@ const connectivityProbe = async (connectivityRequest: ConnectivityRequest, ipAdd
             natType: NatType.OPEN_INTERNET,
             websocket: { host, port: connectivityRequest.port, tls: connectivityRequest.tls },
             ipAddress: ipv4ToNumber(ipAddress),
-            version: localVersion
+            version: LOCAL_PROTOCOL_VERSION
         }
     } catch (err) {
         logger.debug('error', { err })
@@ -92,7 +92,7 @@ const connectivityProbe = async (connectivityRequest: ConnectivityRequest, ipAdd
             host,
             natType: NatType.UNKNOWN,
             ipAddress: ipv4ToNumber(ipAddress),
-            version: localVersion
+            version: LOCAL_PROTOCOL_VERSION
         }
     }
     if (outgoingConnection) {
