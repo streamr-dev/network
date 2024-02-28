@@ -1,8 +1,8 @@
 import { createServer as createHttpServer, Server as HttpServer, IncomingMessage, ServerResponse } from 'http'
 import { createServer as createHttpsServer, Server as HttpsServer } from 'https'
 import EventEmitter from 'eventemitter3'
-import { server as WsServer } from 'websocket'
-import { ServerWebsocket } from './ServerWebsocket'
+import WebSocket from 'ws'
+import { WebsocketServerConnection } from './WebsocketServerConnection'
 import { ConnectionSourceEvents } from '../IConnectionSource'
 import { Logger, asAbortable } from '@streamr/utils'
 import { createSelfSignedCertificate } from '@streamr/autocertifier-client' 
@@ -11,15 +11,9 @@ import { PortRange, TlsCertificate } from '../ConnectionManager'
 import { range } from 'lodash'
 import fs from 'fs'
 import { v4 as uuid } from 'uuid'
+import { parse } from 'url'
 
 const logger = new Logger(module)
-
-// NodeJsWsServer is declared as a global in test-browser Electron tests
-// in preload.js using "window.NodeJsWsServer = require('websocket').server".
-// This is done in order to use the real nodejs websocket server in tests
-// instead of a dummy polyfill.
-
-declare class NodeJsWsServer extends WsServer { }
 
 interface WebsocketServerConfig {
     portRange: PortRange
@@ -31,7 +25,7 @@ interface WebsocketServerConfig {
 export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
 
     private httpServer?: HttpServer | HttpsServer
-    private wsServer?: WsServer
+    private wsServer?: WebSocket.Server
     private readonly abortController = new AbortController()
     private readonly config: WebsocketServerConfig
 
@@ -88,28 +82,26 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
                 return true
             }
 
-            this.wsServer = this.createWsServer(this.httpServer)
+            this.wsServer = this.createWsServer()
             
-            this.wsServer.on('request', (request) => {
+            this.wsServer.on('connection', (ws: WebSocket, request: IncomingMessage) => {
+                logger.trace(`New connection from ${request.socket.remoteAddress}`)
                 if (!originIsAllowed()) {
                     // Make sure we only accept requests from an allowed origin
-                    request.reject()
-                    logger.trace('IConnection from origin ' + request.origin + ' rejected.')
+                    ws.close()
+                    logger.trace('IConnection from origin ' + request.headers.origin + ' rejected.')
                     return
                 }
-                
-                let connection
-                try {
-                    connection = request.accept(undefined, request.origin)
-                    logger.trace('Connection accepted.', { remoteAddress: request.remoteAddress })
-                } catch (err) {
-                    logger.debug('Accepting websocket connection failed', { remoteAddress: request.remoteAddress, err })
-                }
-
-                if (connection) {
-                    this.emit('connected', new ServerWebsocket(connection, request.resourceURL))
-                }
+                this.emit('connected', new WebsocketServerConnection(ws, parse(request.url!), request.socket.remoteAddress!))
             })
+
+            this.httpServer.on('upgrade', (request, socket, head) => {
+                logger.trace('Received upgrade request for ' + request.url)
+                this.wsServer!.handleUpgrade(request, socket, head, (ws: WebSocket) => {
+                    this.wsServer!.emit('connection', ws, request)
+                })
+            })
+
             this.httpServer.once('error', (err: Error) => {
                 reject(new WebsocketServerStartError('Starting Websocket server failed', err))
             })
@@ -139,7 +131,10 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
         this.abortController.abort()
         this.removeAllListeners()
         return new Promise((resolve, _reject) => {
-            this.wsServer?.shutDown()
+            this.wsServer!.close()
+            for (const ws of this.wsServer!.clients) {
+                ws.terminate()
+            }
             this.httpServer?.once('close', () => {
                 // removeAllListeners is maybe not needed?
                 this.httpServer?.removeAllListeners()
@@ -155,21 +150,11 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
         })
     }
 
-    private createWsServer(httpServer: HttpServer | HttpsServer): WsServer {
-        const maxReceivedMessageSize = this.config.maxMessageSize ?? 1048576
-        // Use the real nodejs WebSocket server in Electron tests
-        if (typeof NodeJsWsServer !== 'undefined') {
-            return new NodeJsWsServer({
-                httpServer,
-                autoAcceptConnections: false,
-                maxReceivedMessageSize
-            })
-        } else {
-            return this.wsServer = new WsServer({
-                httpServer,
-                autoAcceptConnections: false,
-                maxReceivedMessageSize
-            })
-        }
+    private createWsServer(): WebSocket.Server {
+        const maxPayload = this.config.maxMessageSize ?? 1048576
+        return this.wsServer = new WebSocket.Server({
+            noServer: true,
+            maxPayload
+        })
     }
 }
