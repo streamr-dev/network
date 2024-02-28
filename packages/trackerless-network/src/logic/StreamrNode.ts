@@ -198,7 +198,6 @@ export class StreamrNode extends EventEmitter<Events> {
             streamPart.layer1Node.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT)),
             streamPart.layer1Node.joinRing()
         ])
-
         if (discoveryResult.entryPointsFromDht) {
             await entryPointDiscovery.storeSelfAsEntryPointIfNecessary(entryPoints.length)
         }
