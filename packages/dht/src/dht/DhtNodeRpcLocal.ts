@@ -4,6 +4,8 @@ import { Empty } from '../proto/google/protobuf/empty'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
+    ClosestRingPeersRequest,
+    ClosestRingPeersResponse,
     PeerDescriptor,
     PingRequest,
     PingResponse
@@ -11,10 +13,13 @@ import {
 import { IDhtNodeRpc } from '../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { RingIdRaw } from './contact/ringIdentifiers'
+import { RingContacts } from './contact/RingContactList'
 
 interface DhtNodeRpcLocalConfig {
     peerDiscoveryQueryBatchSize: number
     getClosestPeersTo: (nodeId: DhtAddress, limit: number) => PeerDescriptor[]
+    getClosestRingPeersTo: (id: RingIdRaw, limit: number) => RingContacts
     addContact: (contact: PeerDescriptor) => void
     removeContact: (nodeId: DhtAddress) => void
 }
@@ -33,6 +38,17 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
         this.config.addContact((context as DhtCallContext).incomingSourceDescriptor!)
         const response = {
             peers: this.config.getClosestPeersTo(getDhtAddressFromRaw(request.nodeId), this.config.peerDiscoveryQueryBatchSize),
+            requestId: request.requestId
+        }
+        return response
+    }
+
+    async getClosestRingPeers(request: ClosestRingPeersRequest, context: ServerCallContext): Promise<ClosestRingPeersResponse> {
+        this.config.addContact((context as DhtCallContext).incomingSourceDescriptor!)
+        const closestPeers = this.config.getClosestRingPeersTo(request.ringId as RingIdRaw, this.config.peerDiscoveryQueryBatchSize)
+        const response = {
+            leftPeers: closestPeers.left,
+            rightPeers: closestPeers.right,
             requestId: request.requestId
         }
         return response

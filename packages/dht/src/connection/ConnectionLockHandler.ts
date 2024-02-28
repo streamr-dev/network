@@ -11,7 +11,7 @@ export class ConnectionLockHandler {
     private remoteLocks: Map<DhtAddress, Set<LockID>> = new Map()
     // TODO: remove weakLocks use localLocks instead. When opening weakLocks from the ConnectioManager,
     // simply do not send lock requests.
-    private weakLocks: Set<DhtAddress> = new Set()
+    private weakLocks: Map<DhtAddress, Set<LockID>> = new Map()
 
     public getLocalLockedConnectionCount(): number {
         return this.localLocks.size
@@ -67,8 +67,11 @@ export class ConnectionLockHandler {
         this.remoteLocks.get(id)!.add(lockId)
     }
 
-    public addWeakLocked(id: DhtAddress): void {
-        this.weakLocks.add(id)
+    public addWeakLocked(id: DhtAddress, lockId: LockID): void {
+        if (!this.weakLocks.has(id)) {
+            this.weakLocks.set(id, new Set())
+        }
+        this.weakLocks.get(id)!.add(lockId)
     }
 
     public removeLocalLocked(id: DhtAddress, lockId: LockID): void {
@@ -89,8 +92,13 @@ export class ConnectionLockHandler {
         }
     }
 
-    public removeWeakLocked(id: DhtAddress): void {
-        this.weakLocks.delete(id)
+    public removeWeakLocked(id: DhtAddress, lockId: LockID): void {
+        if (this.weakLocks.has(id)) {
+            this.weakLocks.get(id)?.delete(lockId)
+            if (this.weakLocks.get(id)?.size === 0) {
+                this.weakLocks.delete(id)
+            }
+        }
     }
 
     public clearAllLocks(id: DhtAddress): void {

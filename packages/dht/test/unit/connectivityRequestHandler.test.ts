@@ -5,7 +5,7 @@ import { Server as HttpServer, createServer as createHttpServer } from 'http'
 import { server as WsServer } from 'websocket'
 import { CONNECTIVITY_CHECKER_SERVICE_ID } from '../../src/connection/connectivityChecker'
 import { attachConnectivityRequestHandler } from '../../src/connection/connectivityRequestHandler'
-import { Message, MessageType } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { version } from '../../package.json'
 
 const HOST = '127.0.0.1'
@@ -27,7 +27,7 @@ describe('connectivityRequestHandler', () => {
         await once(httpServer, 'listening')
         connection = new EventEmitter()
         connection.send = jest.fn()
-        connection.getRemoteIp = () => HOST
+        connection.remoteIpAddress = HOST
     })
 
     afterEach(async () => {
@@ -40,7 +40,6 @@ describe('connectivityRequestHandler', () => {
         attachConnectivityRequestHandler(connection)
         const request: Message = {
             serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
-            messageType: MessageType.CONNECTIVITY_REQUEST,
             messageId: 'mock-message-id',
             body: {
                 oneofKind: 'connectivityRequest',
@@ -68,7 +67,6 @@ describe('connectivityRequestHandler', () => {
                 oneofKind: 'connectivityResponse'
             },
             messageId: expect.any(String),
-            messageType: MessageType.CONNECTIVITY_RESPONSE,
             serviceId: 'system/connectivity-checker'
         })
     })
@@ -77,7 +75,6 @@ describe('connectivityRequestHandler', () => {
         attachConnectivityRequestHandler(connection)
         const request: Message = {
             serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
-            messageType: MessageType.CONNECTIVITY_REQUEST,
             messageId: 'mock-message-id',
             body: {
                 oneofKind: 'connectivityRequest',
@@ -100,7 +97,6 @@ describe('connectivityRequestHandler', () => {
                 oneofKind: 'connectivityResponse'
             },
             messageId: expect.any(String),
-            messageType: MessageType.CONNECTIVITY_RESPONSE,
             serviceId: 'system/connectivity-checker'
         })
     })

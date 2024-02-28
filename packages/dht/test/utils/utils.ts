@@ -10,8 +10,7 @@ import {
     RouteMessageWrapper,
     StoreDataRequest,
     StoreDataResponse,
-    RecursiveOperationRequest, 
-    RecursiveOperation
+    ClosestRingPeersResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import {
@@ -36,6 +35,40 @@ export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'no
         type: NodeType.NODEJS,
         ...opts
     }
+}
+
+export const createMockRingNode = async (
+    simulator: Simulator,
+    nodeId: DhtAddress,
+    region: number
+): Promise<DhtNode> => {
+    const maxConnections = 80
+    const dhtJoinTimeout = 45000
+
+    const peerDescriptor: PeerDescriptor = {
+        nodeId: getRawFromDhtAddress(nodeId ?? createRandomDhtAddress()),
+        type: NodeType.NODEJS,
+        region
+        //ipAddress: ipv4ToNumber(ipAddress)
+    }
+    const mockConnectionManager = new SimulatorTransport(peerDescriptor, simulator)
+    await mockConnectionManager.start()
+    const opts = {
+        peerDescriptor: peerDescriptor,
+        transport: mockConnectionManager,
+        numberOfNodesPerKBucket: 8,
+        maxConnections: maxConnections,
+        dhtJoinTimeout,
+        rpcRequestTimeout: 5000
+    }
+    const node = new class extends DhtNode {
+        async stop(): Promise<void> {
+            await super.stop()
+            await mockConnectionManager.stop()
+        }
+    }(opts)
+    await node.start()
+    return node
 }
 
 export const createMockConnectionDhtNode = async (
@@ -107,14 +140,6 @@ export const createWrappedClosestPeersRequest = (
     return rpcWrapper
 }
 
-export const createFindRequest = (): RecursiveOperationRequest => {
-    const request: RecursiveOperationRequest = {
-        operation: RecursiveOperation.FIND_NODE,
-        sessionId: v4()
-    }
-    return request
-}
-
 interface IDhtRpcWithError extends IDhtNodeRpc {
     throwPingError: (request: PingRequest) => Promise<PingResponse>
     respondPingWithTimeout: (request: PingRequest) => Promise<PingResponse>
@@ -126,6 +151,14 @@ export const createMockDhtRpc = (neighbors: PeerDescriptor[]): IDhtRpcWithError 
         async getClosestPeers(): Promise<ClosestPeersResponse> {
             const response: ClosestPeersResponse = {
                 peers: neighbors,
+                requestId: 'why am i still here'
+            }
+            return response
+        },
+        async getClosestRingPeers(): Promise<ClosestRingPeersResponse> {
+            const response: ClosestRingPeersResponse = {
+                leftPeers: neighbors,
+                rightPeers: neighbors,
                 requestId: 'why am i still here'
             }
             return response

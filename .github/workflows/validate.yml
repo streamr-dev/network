@@ -43,6 +43,11 @@ jobs:
       command: |
         npm run test
         xvfb-run --auto-servernum npm run test-browser
+  cdn-location:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: cdn-location
   protocol:
     needs: build
     uses: ./.github/workflows/test-setup.yml

@@ -41,7 +41,9 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
 
     const temporaryConnectionRpcLocal = new TemporaryConnectionRpcLocal({
         rpcCommunicator,
-        localPeerDescriptor: config.localPeerDescriptor
+        localPeerDescriptor: config.localPeerDescriptor,
+        streamPartId: config.streamPartId,
+        connectionLocker: config.connectionLocker
     })
     const proxyConnectionRpcLocal = acceptProxyConnections ? new ProxyConnectionRpcLocal({
         localPeerDescriptor: config.localPeerDescriptor,
@@ -65,7 +67,6 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const handshaker = config.handshaker ?? new Handshaker({
         localPeerDescriptor: config.localPeerDescriptor,
         streamPartId: config.streamPartId,
-        connectionLocker: config.connectionLocker,
         rpcCommunicator,
         nearbyNodeView,
         randomNodeView,
@@ -89,7 +90,6 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         rpcCommunicator,
         neighborUpdateInterval,
         neighborTargetCount,
-        connectionLocker: config.connectionLocker,
         ongoingHandshakes
     })
     const inspector = config.inspector ?? new Inspector({

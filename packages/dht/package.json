@@ -28,9 +28,11 @@
     "run-kademlia-simulation": "ts-node --project tsconfig.node.json $NODE_DEBUG_OPTION --files test/benchmark/kademlia-simulation/KademliaSimulation.ts"
   },
   "dependencies": {
+    "@js-sdsl/ordered-map": "^4.4.2",
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
     "@streamr/autocertifier-client": "100.0.0-testnet-three.3",
+    "@streamr/cdn-location": "100.0.0-testnet-three.3",
     "@streamr/proto-rpc": "100.0.0-testnet-three.3",
     "@streamr/utils": "100.0.0-testnet-three.3",
     "eventemitter3": "^5.0.0",
@@ -40,8 +42,10 @@
     "lodash": "^4.17.21",
     "lru-cache": "10.2.0",
     "node-datachannel": "^0.4.3",
+    "querystring": "0.2.1",
     "uuid": "^9.0.1",
-    "websocket": "^1.0.34"
+    "websocket": "^1.0.34",
+    "ws": "^8.16.0"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
@@ -50,9 +54,9 @@
     "@types/heap": "^0.2.34",
     "@types/k-bucket": "^5.0.1",
     "@types/lodash": "^4.14.202",
-    "@types/sinon": "^17.0.3",
     "@types/uuid": "^9.0.8",
     "@types/websocket": "^1.0.10",
+    "@types/ws": "^8.5.10",
     "express": "^4.17.1",
     "jest-leak-detector": "^27.3.1",
     "patch-package": "^8.0.0",

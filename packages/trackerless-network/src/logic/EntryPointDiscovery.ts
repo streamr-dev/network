@@ -13,7 +13,7 @@ import { Any } from '../proto/google/protobuf/any'
 import { Layer1Node } from './Layer1Node'
 
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): DhtAddress => {
-    return getDhtAddressFromRaw(new Uint8Array(createHash('md5').update(streamPartId).digest()))
+    return getDhtAddressFromRaw(new Uint8Array((createHash('sha1').update(streamPartId).digest())))
 }
 
 const parseEntryPointData = (dataEntries: DataEntry[]): PeerDescriptor[] => {
