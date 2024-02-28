@@ -4,7 +4,7 @@ import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
 import { MockTransport } from '../utils/mock/Transport'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { sendConnectivityRequest } from '../../src/connection/connectivityChecker'
-import { LOCAL_PROTOCOL_VERSION } from '../../src/exports'
+import { LOCAL_PROTOCOL_VERSION } from '../../src/helpers/version'
 
 describe('ConnectivityChecking', () => {
 
