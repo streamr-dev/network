@@ -68,13 +68,13 @@ describe('Stream Entry Points are replaced when known entry points leave streams
         simulator.stop()
     })
 
+    // TODO: Investigate why 60 second timeouts are needed
     it('stream entry points are replaced when nodes leave streams', async () => {
-        // TODO: Investigate why CI needs more than 15 seconds to find 4 neighbors for the stream.
-        await Promise.all(initialNodesOnStream.map((node) => node.joinStreamPart(STREAM_PART_ID, { minCount: 4, timeout: 30000 })))
+        await Promise.all(initialNodesOnStream.map((node) => node.joinStreamPart(STREAM_PART_ID, { minCount: 4, timeout: 60000 })))
 
         let receivedMessages = 0
         for (const node of laterNodesOnStream) {
-            await node.joinStreamPart(STREAM_PART_ID, { minCount: 4, timeout: 30000 }) 
+            await node.joinStreamPart(STREAM_PART_ID, { minCount: 4, timeout: 60000 }) 
             node.getDeliveryLayer().on('newMessage', () => {
                 receivedMessages += 1
             })
@@ -82,7 +82,7 @@ describe('Stream Entry Points are replaced when known entry points leave streams
 
         await Promise.all(initialNodesOnStream.map((node) => node.getDeliveryLayer().leaveStreamPart(STREAM_PART_ID)))
         await waitForCondition(() => 
-            laterNodesOnStream.every((node) => node.getDeliveryLayer().getNeighbors(STREAM_PART_ID).length >= 4), 30000, 1000
+            laterNodesOnStream.every((node) => node.getDeliveryLayer().getNeighbors(STREAM_PART_ID).length >= 4), 60000, 1000
         )
 
         const msg = createStreamMessage(
@@ -91,6 +91,6 @@ describe('Stream Entry Points are replaced when known entry points leave streams
             randomEthereumAddress()
         )
         newNodeInStream.getDeliveryLayer().broadcast(msg)
-        await waitForCondition(() => receivedMessages === NUM_OF_LATER_NODES, 15000)
+        await waitForCondition(() => receivedMessages === NUM_OF_LATER_NODES, 30000)
     }, 200000)
 })

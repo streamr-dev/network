@@ -1,7 +1,7 @@
 import { collect, waitForCondition } from '@streamr/utils'
 import { spawn } from 'child_process'
 import merge2 from 'merge2'
-import { CONFIG_TEST, Stream, StreamrClient } from 'streamr-client'
+import { CONFIG_TEST, Stream, StreamrClient } from '@streamr/sdk'
 
 export const DOCKER_DEV_STORAGE_NODE = '0xde1112f631486CfC759A50196853011528bC5FA0'
 

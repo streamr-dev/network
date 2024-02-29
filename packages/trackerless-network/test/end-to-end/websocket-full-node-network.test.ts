@@ -30,8 +30,8 @@ describe('Full node network with WebSocket connections only', () => {
             }
         })
         await entryPoint.start()
-        entryPoint.getDeliveryLayer()!.setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
-        entryPoint.getDeliveryLayer()!.joinStreamPart(streamPartId)
+        entryPoint.getDeliveryLayer().setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
+        entryPoint.getDeliveryLayer().joinStreamPart(streamPartId)
 
         await Promise.all(range(NUM_OF_NODES).map(async (i) => {
             const node = new NetworkStack({
@@ -60,15 +60,15 @@ describe('Full node network with WebSocket connections only', () => {
     it('happy path', async () => {
         await Promise.all(nodes.map((node) =>
             waitForCondition(() => {
-                return node.getDeliveryLayer()!.getNeighbors(streamPartId).length >= 4
+                return node.getDeliveryLayer().getNeighbors(streamPartId).length >= 4
             }
             , 30000)
         ))
         let receivedMessageCount = 0
         const successIds: string[] = []
         nodes.forEach((node) => {
-            node.getDeliveryLayer()!.on('newMessage', () => {
-                successIds.push(getNodeIdFromPeerDescriptor(node.getDeliveryLayer()!.getPeerDescriptor()))
+            node.getDeliveryLayer().on('newMessage', () => {
+                successIds.push(getNodeIdFromPeerDescriptor(node.getDeliveryLayer().getPeerDescriptor()))
                 receivedMessageCount += 1
             })
         })
@@ -78,7 +78,7 @@ describe('Full node network with WebSocket connections only', () => {
             streamPartId,
             randomEthereumAddress()
         )
-        entryPoint.getDeliveryLayer()!.broadcast(msg)
+        entryPoint.getDeliveryLayer().broadcast(msg)
         await waitForCondition(() => receivedMessageCount === NUM_OF_NODES)
     }, 220000)
 

@@ -73,7 +73,8 @@ module.exports = function({ entry, libraryName, alias = {} }) {
                 'https': 'HTTPS',
                 'express': 'Express',
                 'process': 'process',
-                'ws': 'WebSocket'
+                'ws': 'WebSocket',
+                'querystring': 'QueryString',
             }
         }
     }

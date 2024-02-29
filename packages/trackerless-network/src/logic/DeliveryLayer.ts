@@ -1,10 +1,10 @@
 import {
     ConnectionLocker,
+    DhtAddress,
     DhtNode,
+    EXISTING_CONNECTION_TIMEOUT,
     ITransport,
     PeerDescriptor,
-    EXISTING_CONNECTION_TIMEOUT,
-    DhtAddress,
     getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
 import { StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
@@ -18,11 +18,11 @@ import {
 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
-import { ProxyDirection, StreamPartitionInfo, StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { ProxyDirection, StreamMessage, StreamPartitionInfo } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { EntryPointDiscovery, NETWORK_SPLIT_AVOIDANCE_LIMIT } from './EntryPointDiscovery'
 import { Layer0Node } from './Layer0Node'
 import { Layer1Node } from './Layer1Node'
 import { RandomGraphNode } from './RandomGraphNode'
-import { NETWORK_SPLIT_AVOIDANCE_LIMIT, EntryPointDiscovery } from './EntryPointDiscovery'
 import { createRandomGraphNode } from './createRandomGraphNode'
 import { ProxyClient } from './proxy/ProxyClient'
 
@@ -112,8 +112,10 @@ export class DeliveryLayer extends EventEmitter<Events> {
         logger.debug(`Broadcasting to stream part ${streamPartId}`)
         this.joinStreamPart(streamPartId)
         this.streamParts.get(streamPartId)!.broadcast(msg)
-        this.metrics.broadcastMessagesPerSecond.record(1)
-        this.metrics.broadcastBytesPerSecond.record(msg.content.length)
+        if (msg.body.oneofKind === 'contentMessage') {
+            this.metrics.broadcastMessagesPerSecond.record(1)
+            this.metrics.broadcastBytesPerSecond.record(msg.body.contentMessage.content.length)
+        }
     }
 
     async leaveStreamPart(streamPartId: StreamPartID): Promise<void> {
@@ -135,7 +137,7 @@ export class DeliveryLayer extends EventEmitter<Events> {
             streamPartId,
             localPeerDescriptor: this.getPeerDescriptor(),
             layer1Node,
-            getEntryPointData: (key) => this.layer0Node!.getDataFromDht(key),
+            fetchEntryPointData: (key) => this.layer0Node!.fetchDataFromDht(key),
             storeEntryPointData: (key, data) => this.layer0Node!.storeDataToDht(key, data),
             deleteEntryPointData: async (key) => this.layer0Node!.deleteDataFromDht(key, false)
         })
@@ -191,7 +193,10 @@ export class DeliveryLayer extends EventEmitter<Events> {
             entryPoints.length
         )
         entryPoints = entryPoints.concat(discoveryResult.discoveredEntryPoints)
-        await streamPart.layer1Node.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT))
+        await Promise.all([
+            streamPart.layer1Node.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT)),
+            streamPart.layer1Node.joinRing()
+        ])
         if (discoveryResult.entryPointsFromDht) {
             await entryPointDiscovery.storeSelfAsEntryPointIfNecessary(entryPoints.length)
         }

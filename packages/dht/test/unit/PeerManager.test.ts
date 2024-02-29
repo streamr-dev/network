@@ -1,16 +1,19 @@
 import { PeerManager, getDistance } from '../../src/dht/PeerManager'
-import { DhtAddress, createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
+import { DhtAddress, createRandomDhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { range, sampleSize, sortBy, without } from 'lodash'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('PeerManager', () => {
 
     it('getClosestContactsTo', () => {
         const nodeIds = range(10).map(() => createRandomDhtAddress())
+        const peerDescriptor = createMockPeerDescriptor()
         const manager = new PeerManager({
-            localNodeId: createRandomDhtAddress(),
+            localNodeId: getNodeIdFromPeerDescriptor(peerDescriptor),
+            localPeerDescriptor: peerDescriptor,
             createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => {
                 return new DhtNodeRpcRemote(undefined as any, peerDescriptor, undefined as any, new MockRpcCommunicator())
             }
@@ -18,7 +21,7 @@ describe('PeerManager', () => {
         manager.addContact(nodeIds.map((n) => ({ nodeId: getRawFromDhtAddress(n), type: NodeType.NODEJS })))
 
         const referenceId = createRandomDhtAddress()
-        const excluded = new Set<DhtAddress>(sampleSize(nodeIds, 2)!)
+        const excluded = new Set<DhtAddress>(sampleSize(nodeIds, 2))
         const actual = manager.getClosestContactsTo(referenceId, 5, excluded)
 
         const expected = sortBy(

@@ -1,6 +1,6 @@
 import { EthereumAddress, Logger, randomString } from '@streamr/utils'
 import { StreamPartAssignments } from './StreamPartAssignments'
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient } from '@streamr/sdk'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { findTarget } from './inspectionUtils'
 import { ContractFacade } from './ContractFacade'

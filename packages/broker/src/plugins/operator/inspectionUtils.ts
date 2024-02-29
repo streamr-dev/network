@@ -1,5 +1,5 @@
 import { shuffle } from 'lodash'
-import { NetworkPeerDescriptor, StreamrClient } from 'streamr-client'
+import { NetworkPeerDescriptor, StreamrClient } from '@streamr/sdk'
 import { OperatorFleetState } from './OperatorFleetState'
 import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { EthereumAddress, Logger } from '@streamr/utils'

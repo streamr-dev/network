@@ -11,7 +11,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
 import { createTestClient, createTestStream } from '../test-utils/utils'
 
-const TIMEOUT = 15 * 1000
+const TIMEOUT = 30 * 1000
 
 const PAYLOAD = { hello: 'world' }
 

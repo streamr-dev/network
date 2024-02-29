@@ -1,4 +1,4 @@
-import { ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { DhtAddress, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { NeighborFinder } from '../../src/logic/neighbor-discovery/NeighborFinder'
 import { NeighborUpdateRpcLocal } from '../../src/logic/neighbor-discovery/NeighborUpdateRpcLocal'
 import { createMockPeerDescriptor } from '../utils/utils'
@@ -20,6 +20,7 @@ describe('NeighborUpdateRpcLocal', () => {
     let nearbyNodeView: NodeList
     let neighborFinder: NeighborFinder
     let rpcCommunicator: ListeningRpcCommunicator
+    let ongoingHandshakes: Set<DhtAddress>
 
     const addNeighbors = (count: number) => {
         for (let i = 0; i < count; i++) {
@@ -39,9 +40,7 @@ describe('NeighborUpdateRpcLocal', () => {
         neighborFinder = {
             start: jest.fn()
         } as any
-        const connectionLocker = {
-            unlockConnection: jest.fn()
-        } as any
+        ongoingHandshakes = new Set()
 
         rpcLocal = new NeighborUpdateRpcLocal({
             localPeerDescriptor,
@@ -51,7 +50,7 @@ describe('NeighborUpdateRpcLocal', () => {
             streamPartId,
             rpcCommunicator,
             neighborTargetCount,
-            connectionLocker
+            ongoingHandshakes
         })
     })
 
@@ -124,6 +123,17 @@ describe('NeighborUpdateRpcLocal', () => {
         }, { incomingSourceDescriptor: caller } as any)
         expect(res.removeMe).toEqual(true)
         expect(neighbors.has(getNodeIdFromPeerDescriptor(caller))).toEqual(false)
+    })
+
+    it('does not ask to be removed if there is an ongoing handshake to the caller', async () => {
+        const caller = createMockPeerDescriptor()
+        ongoingHandshakes.add(getNodeIdFromPeerDescriptor(caller))
+        const res = await rpcLocal.neighborUpdate({
+            streamPartId,
+            neighborDescriptors: [localPeerDescriptor],
+            removeMe: false
+        }, { incomingSourceDescriptor: caller } as any)
+        expect(res.removeMe).toEqual(false)
     })
 
 })

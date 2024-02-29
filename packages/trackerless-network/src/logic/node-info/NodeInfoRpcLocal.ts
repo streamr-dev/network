@@ -22,14 +22,7 @@ export class NodeInfoRpcLocal implements INodeInfoRpc {
     }
  
     async getInfo(): Promise<NodeInfoResponse> {
-        return {
-            peerDescriptor: this.stack.getLayer0Node().getLocalPeerDescriptor(),
-            controlLayer: {
-                connections: this.stack.getLayer0Node().getConnections(),
-                neighbors: this.stack.getLayer0Node().getNeighbors()
-            },
-            streamPartitions: this.stack.getDeliveryLayer().getNodeInfo()
-        }
+        return this.stack.createNodeInfo()
     }
 
 }

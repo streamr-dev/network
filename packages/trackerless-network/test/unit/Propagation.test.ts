@@ -3,8 +3,7 @@ import {
     EncryptionType,
     MessageID,
     SignatureType,
-    StreamMessage,
-    StreamMessageType,
+    StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { Propagation } from '../../src/logic/propagation/Propagation'
 import { hexToBinary, toEthereumAddress, utf8ToBinary, wait } from '@streamr/utils'
@@ -23,12 +22,16 @@ function makeMsg(streamId: string, partition: number, ts: number, msgNo: number)
     }
     return {
         messageId,
-        content: new Uint8Array([1]),
-        contentType: ContentType.JSON,
-        encryptionType: EncryptionType.NONE,
         signature: hexToBinary('0x1111'),
-        messageType: StreamMessageType.MESSAGE,
-        signatureType: SignatureType.SECP256K1
+        signatureType: SignatureType.SECP256K1,
+        body: {
+            oneofKind: 'contentMessage',
+            contentMessage: {
+                content: new Uint8Array([1]),
+                contentType: ContentType.JSON,
+                encryptionType: EncryptionType.NONE
+            }
+        }
     }
 }
 

@@ -65,11 +65,11 @@ describe('proxy and full node', () => {
             }
         })
         await proxyNode.start()
-        proxyNode.stack.getDeliveryLayer()!.joinStreamPart(proxiedStreamPart)
-        proxyNode.stack.getDeliveryLayer()!.joinStreamPart(regularStreamPart1)
-        proxyNode.stack.getDeliveryLayer()!.joinStreamPart(regularStreamPart2)
-        proxyNode.stack.getDeliveryLayer()!.joinStreamPart(regularStreamPart3)
-        proxyNode.stack.getDeliveryLayer()!.joinStreamPart(regularStreamPart4)
+        proxyNode.stack.getDeliveryLayer().joinStreamPart(proxiedStreamPart)
+        proxyNode.stack.getDeliveryLayer().joinStreamPart(regularStreamPart1)
+        proxyNode.stack.getDeliveryLayer().joinStreamPart(regularStreamPart2)
+        proxyNode.stack.getDeliveryLayer().joinStreamPart(regularStreamPart3)
+        proxyNode.stack.getDeliveryLayer().joinStreamPart(regularStreamPart4)
 
         proxiedNode = createNetworkNode({
             layer0: {
@@ -90,14 +90,14 @@ describe('proxy and full node', () => {
         expect(proxiedNode.stack.getLayer0Node().hasJoined()).toBe(false)
 
         await Promise.all([
-            waitForEvent3(proxyNode.stack.getDeliveryLayer()! as any, 'newMessage'),
+            waitForEvent3(proxyNode.stack.getDeliveryLayer() as any, 'newMessage'),
             proxiedNode.broadcast(createMessage(regularStreamPart1))
         ])
 
         expect(proxiedNode.stack.getLayer0Node().hasJoined()).toBe(true)
 
         await Promise.all([
-            waitForEvent3(proxyNode.stack.getDeliveryLayer()! as any, 'newMessage'),
+            waitForEvent3(proxyNode.stack.getDeliveryLayer() as any, 'newMessage'),
             proxiedNode.broadcast(createMessage(proxiedStreamPart))
         ])
 
@@ -110,13 +110,13 @@ describe('proxy and full node', () => {
         expect(proxiedNode.stack.getLayer0Node().hasJoined()).toBe(false)
 
         await Promise.all([
-            waitForEvent3(proxyNode.stack.getDeliveryLayer()! as any, 'newMessage', 5000, 
+            waitForEvent3(proxyNode.stack.getDeliveryLayer() as any, 'newMessage', 5000, 
                 (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart1)),
-            waitForEvent3(proxyNode.stack.getDeliveryLayer()! as any, 'newMessage', 5000, 
+            waitForEvent3(proxyNode.stack.getDeliveryLayer() as any, 'newMessage', 5000, 
                 (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart2)),
-            waitForEvent3(proxyNode.stack.getDeliveryLayer()! as any, 'newMessage', 5000, 
+            waitForEvent3(proxyNode.stack.getDeliveryLayer() as any, 'newMessage', 5000, 
                 (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart3)),
-            waitForEvent3(proxyNode.stack.getDeliveryLayer()! as any, 'newMessage', 5000, 
+            waitForEvent3(proxyNode.stack.getDeliveryLayer() as any, 'newMessage', 5000, 
                 (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart4)),
             proxiedNode.broadcast(createMessage(regularStreamPart1)),
             proxiedNode.broadcast(createMessage(regularStreamPart2)),
@@ -127,7 +127,7 @@ describe('proxy and full node', () => {
         expect(proxiedNode.stack.getLayer0Node().hasJoined()).toBe(true)
 
         await Promise.all([
-            waitForEvent3(proxyNode.stack.getDeliveryLayer()! as any, 'newMessage'),
+            waitForEvent3(proxyNode.stack.getDeliveryLayer() as any, 'newMessage'),
             proxiedNode.broadcast(createMessage(proxiedStreamPart))
         ])
 

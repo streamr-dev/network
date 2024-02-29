@@ -3,8 +3,8 @@
 // tslint:disable
 import { ExternalStoreDataResponse } from "./DhtRpc";
 import { ExternalStoreDataRequest } from "./DhtRpc";
-import { ExternalFindDataResponse } from "./DhtRpc";
-import { ExternalFindDataRequest } from "./DhtRpc";
+import { ExternalFetchDataResponse } from "./DhtRpc";
+import { ExternalFetchDataRequest } from "./DhtRpc";
 import { DisconnectNotice } from "./DhtRpc";
 import { UnlockRequest } from "./DhtRpc";
 import { LockResponse } from "./DhtRpc";
@@ -24,6 +24,8 @@ import { Empty } from "../../../google/protobuf/empty";
 import { LeaveNotice } from "./DhtRpc";
 import { PingResponse } from "./DhtRpc";
 import { PingRequest } from "./DhtRpc";
+import { ClosestRingPeersResponse } from "./DhtRpc";
+import { ClosestRingPeersRequest } from "./DhtRpc";
 import { ClosestPeersResponse } from "./DhtRpc";
 import { ClosestPeersRequest } from "./DhtRpc";
 import { ServerCallContext } from "@protobuf-ts/runtime-rpc";
@@ -35,6 +37,10 @@ export interface IDhtNodeRpc<T = ServerCallContext> {
      * @generated from protobuf rpc: getClosestPeers(dht.ClosestPeersRequest) returns (dht.ClosestPeersResponse);
      */
     getClosestPeers(request: ClosestPeersRequest, context: T): Promise<ClosestPeersResponse>;
+    /**
+     * @generated from protobuf rpc: getClosestRingPeers(dht.ClosestRingPeersRequest) returns (dht.ClosestRingPeersResponse);
+     */
+    getClosestRingPeers(request: ClosestRingPeersRequest, context: T): Promise<ClosestRingPeersResponse>;
     /**
      * @generated from protobuf rpc: ping(dht.PingRequest) returns (dht.PingResponse);
      */
@@ -140,9 +146,9 @@ export interface IConnectionLockRpc<T = ServerCallContext> {
  */
 export interface IExternalApiRpc<T = ServerCallContext> {
     /**
-     * @generated from protobuf rpc: externalFindData(dht.ExternalFindDataRequest) returns (dht.ExternalFindDataResponse);
+     * @generated from protobuf rpc: externalFetchData(dht.ExternalFetchDataRequest) returns (dht.ExternalFetchDataResponse);
      */
-    externalFindData(request: ExternalFindDataRequest, context: T): Promise<ExternalFindDataResponse>;
+    externalFetchData(request: ExternalFetchDataRequest, context: T): Promise<ExternalFetchDataResponse>;
     /**
      * @generated from protobuf rpc: externalStoreData(dht.ExternalStoreDataRequest) returns (dht.ExternalStoreDataResponse);
      */

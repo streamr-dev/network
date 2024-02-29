@@ -1,5 +1,5 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { ConnectionLocker, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { DhtAddress, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { DeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { INeighborUpdateRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
@@ -14,9 +14,9 @@ interface NeighborUpdateRpcLocalConfig {
     neighbors: NodeList
     nearbyNodeView: NodeList
     neighborFinder: NeighborFinder
-    connectionLocker: ConnectionLocker
     rpcCommunicator: ListeningRpcCommunicator
     neighborTargetCount: number
+    ongoingHandshakes: Set<DhtAddress>
 }
 
 export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
@@ -56,7 +56,7 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
         this.updateContacts(message.neighborDescriptors)
-        if (!this.config.neighbors.has(senderId)) {
+        if (!this.config.neighbors.has(senderId) && !this.config.ongoingHandshakes.has(senderId)) {
             return this.createResponse(true)
         } else {
             const isOverNeighborCount = this.config.neighbors.size() > this.config.neighborTargetCount
@@ -68,7 +68,6 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
                 this.config.neighborFinder.start()
             } else {
                 this.config.neighbors.remove(senderId)
-                this.config.connectionLocker.unlockConnection(senderPeerDescriptor, this.config.streamPartId)
             }
             return this.createResponse(isOverNeighborCount)
         }

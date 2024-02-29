@@ -1,6 +1,6 @@
 import http from 'http'
 import { Wallet } from 'ethers'
-import { StreamrClient, Stream } from 'streamr-client'
+import { StreamrClient, Stream } from '@streamr/sdk'
 import {
     createClient,
     createTestStream,

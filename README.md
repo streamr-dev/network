@@ -17,8 +17,8 @@ Monorepo containing the main components of Streamr Network.
 ## Packages
 
 ### User-Facing
-* [broker](packages/broker/README.md) (streamr-broker)
-* [client](packages/client/README.md) (streamr-client)
+* [node](packages/broker/README.md) (@streamr/node)
+* [sdk](packages/client/README.md) (@streamr/sdk)
 * [cli-tools](packages/cli-tools/README.md) (@streamr/cli-tools)
 
 ### Internal
@@ -208,21 +208,21 @@ always refer to the latest _stable_ version.
 
 To update `latest` do the following.
 
-1. Remove potentially existing latest tag _locally_ with `docker manifest rm streamr/broker-node:latest`
+1. Remove potentially existing latest tag _locally_ with `docker manifest rm streamr/node:latest`
 
 1. Find out the sha256 digests of both the amd64 and arm64 builds for a `vX.Y.Z` tag. This can be
-done via command-line `docker buildx imagetools inspect streamr/broker-node:vX.Y.Z` or you can check
-this from docker hub website under https://hub.docker.com/r/streamr/broker-node/tags.
+done via command-line `docker buildx imagetools inspect stream/node:vX.Y.Z` or you can check
+this from docker hub website under https://hub.docker.com/r/stream/node/tags.
 2. Then we shall create the manifest by running the below. Remember to replace `<SHA-AMD64>` and `<SHA-ARM64>`
 with real values.
 ```
-docker manifest create streamr/broker-node:latest \
-    --amend streamr/broker-node@sha256:<SHA-AMD64> \
-    --amend streamr/broker-node@sha256:<SHA-ARM64>
+docker manifest create stream/node:latest \
+    --amend stream/node@sha256:<SHA-AMD64> \
+    --amend stream/node@sha256:<SHA-ARM64>
 ```
 3. Then we publish the manifest with
 ```
-docker manifest push streamr/broker-node:latest
+docker manifest push stream/node:latest
 ```
 4. Then we are ready. It would be wise to double-check this by checking
-https://hub.docker.com/r/streamr/broker-node/tags.
+https://hub.docker.com/r/stream/node/tags.

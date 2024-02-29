@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import pkg from '../package.json'
 import { createFnParseInt } from '../src/common'
 import { createCommand, Options as BaseOptions } from '../src/command'
 import { randomString } from '@streamr/utils'
@@ -33,7 +32,6 @@ export const generate = (rate: number): void => {
 createCommand()
     .description('generate and print semi-random JSON data to stdout')
     .option('-r, --rate <n>', 'rate in milliseconds', createFnParseInt('--rate'), 500)
-    .version(pkg.version)
     .action((options: Options) => {
         generate(options.rate)
     })
