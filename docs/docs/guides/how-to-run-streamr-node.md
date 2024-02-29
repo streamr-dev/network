@@ -145,7 +145,7 @@ See [Docker's documentation](https://docs.docker.com/engine/reference/commandlin
 
 ## The Streamr node npm guide
 ### Step 1: Install the recommended version using npm
-If you don’t have Node.js installed, install it using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) or manually from the [Node.js site](https://nodejs.org/en/download/). The Broker requires at least Node.js version 16.x. Once installed, you can download, configure, and start the Streamr Broker.
+If you don’t have Node.js installed, install it using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) or manually from the [Node.js site](https://nodejs.org/en/download/). The Streamr node requires at least Node.js version 16.x. Once installed, you can download, configure, and start the Streamr node.
 
 - Run `npm install -g streamr-broker@100.0.0-testnet-three.3` to download and install the package. You may need administrative access to run this command. The recommended version may be different to the version listed here, if in doubt, check the [npm registry](https://www.npmjs.com/package/streamr-broker?activeTab=versions).
 

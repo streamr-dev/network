@@ -6,7 +6,7 @@ sidebar_position: 3
 :::caution
 This information is provided for the Brubeck Network - the predecessor to the Streamr 1.0 network that's being released over Q4 2023 and Q1 2024. 
 
-Streamr 1.0 Network includes Streamr (Broker) node versions 34 and above. Streamr SDK versions 9 and above. And also any dev-tatum tagged releases.
+Streamr 1.0 Network includes Streamr node versions 34 and above. Streamr SDK versions 9 and above. And also any dev-tatum tagged releases.
 :::
 
 :::tip
@@ -65,7 +65,7 @@ sudo sh get-docker.sh
 
 Docker's install script also installs all required dependencies.
 
-When you have Docker installed, you can download, configure, and start the Streamr Broker node.
+When you have Docker installed, you can download, configure, and start the Streamr node.
 
 ### Step 1: Create a folder for your node
 
@@ -91,7 +91,7 @@ sudo chmod -R 777 ~/.streamrDocker*/
 
 ### Step 3: Run the Config Wizard to create and configure your Streamr node
 
-Start the Config Wizard with the below command. Docker will download the Broker image unless you have it already.
+Start the Config Wizard with the below command. Docker will download the Streamr node image unless you have it already.
 
 **Linux / macOS**
 
@@ -171,7 +171,7 @@ Add the Beneficiary Address's public key within the curly brackets after `"brube
 
 Press `CTRL+S` to save. Close the editor.
 
-### Step 5: Start your Streamr Broker Node using Docker
+### Step 5: Start your Streamr Node using Docker
 
 **Linux / macOS**
 
@@ -263,7 +263,7 @@ docker logs --tail 100 streamr1
 See [Docker's documentation](https://docs.docker.com/engine/reference/commandline/logs/) to learn more about how to use the `docker logs` command.
 
 ## The npm approach
-If you don’t have Node.js installed, install it using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) or manually from the [Node.js site](https://nodejs.org/en/download/). The Broker requires at least Node.js version 18.x. Once installed, you can download, configure, and start the Streamr Broker.
+If you don’t have Node.js installed, install it using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) or manually from the [Node.js site](https://nodejs.org/en/download/). The Streamr Node requires at least Node.js version 18.x. Once installed, you can download, configure, and start the Streamr Node.
 
 ### Step 1: Install the latest version using npm
 -   Run `npm install -g streamr-broker@latest` to download and install the package. You may need administrative access to run this command.
@@ -282,7 +282,7 @@ There can be plenty of output from npm. If the installation fails with an error,
 
 Towards the end, the wizard asks if you would like it to display your Ethereum private key. From here, you should copy-paste it to a safe place! You can also find it later in the configuration file, which is saved by default to `.streamr/broker-config.json` under your home directory.
 
-### Step 3: Start the Broker node
+### Step 3: Start the Streamr Node
 -   Run `streamr-broker` to start the node! You should start to see logging similar to this:
 
 ```
