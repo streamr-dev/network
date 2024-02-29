@@ -1,21 +1,22 @@
 import { ipv4ToNumber, Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
 import {
-    ConnectivityRequest, ConnectivityResponse,
-    Message, MessageType
+    ConnectivityRequest,
+    ConnectivityResponse,
+    Message
 } from '../proto/packages/dht/protos/DhtRpc'
 import { NatType } from './ConnectionManager'
 import { CONNECTIVITY_CHECKER_SERVICE_ID, connectAsync } from './connectivityChecker'
 import { IConnection } from './IConnection'
-import { ServerWebsocket } from './websocket/ServerWebsocket'
+import { WebsocketServerConnection } from './websocket/WebsocketServerConnection'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
-import { version as localVersion } from '../../package.json'
+import { LOCAL_PROTOCOL_VERSION } from '../helpers/version'
 
 export const DISABLE_CONNECTIVITY_PROBE = 0
 
 const logger = new Logger(module)
 
-export const attachConnectivityRequestHandler = (connectionToListenTo: ServerWebsocket): void => {
+export const attachConnectivityRequestHandler = (connectionToListenTo: WebsocketServerConnection): void => {
     connectionToListenTo.on('data', async (data: Uint8Array) => {
         logger.trace('server received data')
         try {
@@ -35,9 +36,9 @@ export const attachConnectivityRequestHandler = (connectionToListenTo: ServerWeb
     })
 }
 
-const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, connectivityRequest: ConnectivityRequest): Promise<void> => {
-    const host = connectivityRequest.host ?? connection.getRemoteAddress()
-    const ipAddress = connection.getRemoteIp()
+const handleIncomingConnectivityRequest = async (connection: WebsocketServerConnection, connectivityRequest: ConnectivityRequest): Promise<void> => {
+    const host = connectivityRequest.host ?? connection.remoteIpAddress
+    const ipAddress = connection.remoteIpAddress
     let connectivityResponse: ConnectivityResponse
     if (connectivityRequest.port !== DISABLE_CONNECTIVITY_PROBE) {
         connectivityResponse = await connectivityProbe(connectivityRequest, ipAddress, host)
@@ -47,12 +48,11 @@ const handleIncomingConnectivityRequest = async (connection: ServerWebsocket, co
             host,
             natType: NatType.UNKNOWN,
             ipAddress: ipv4ToNumber(ipAddress),
-            version: localVersion
+            version: LOCAL_PROTOCOL_VERSION
         }
     }
     const msg: Message = {
         serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
-        messageType: MessageType.CONNECTIVITY_RESPONSE,
         messageId: v4(),
         body: {
             oneofKind: 'connectivityResponse',
@@ -84,7 +84,7 @@ const connectivityProbe = async (connectivityRequest: ConnectivityRequest, ipAdd
             natType: NatType.OPEN_INTERNET,
             websocket: { host, port: connectivityRequest.port, tls: connectivityRequest.tls },
             ipAddress: ipv4ToNumber(ipAddress),
-            version: localVersion
+            version: LOCAL_PROTOCOL_VERSION
         }
     } catch (err) {
         logger.debug('error', { err })
@@ -92,7 +92,7 @@ const connectivityProbe = async (connectivityRequest: ConnectivityRequest, ipAdd
             host,
             natType: NatType.UNKNOWN,
             ipAddress: ipv4ToNumber(ipAddress),
-            version: localVersion
+            version: LOCAL_PROTOCOL_VERSION
         }
     }
     if (outgoingConnection) {

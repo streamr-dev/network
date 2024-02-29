@@ -43,7 +43,7 @@ import { filePathToNodeFormat } from './filePathToNodeFormat'
 import { retry } from './retry'
 import { toLengthPrefixedFrame, LengthPrefixedFrameDecoder } from './lengthPrefixedFrameUtils'
 import { verifySignature, createSignature, hash } from './signingUtils'
-import { ipv4ToNumber } from './ipv4ToNumber'
+import { ipv4ToNumber, numberToIpv4 } from './ipv4ToNumber'
 
 export {
     BrandedString,
@@ -103,6 +103,7 @@ export {
     createSignature,
     verifySignature,
     ipv4ToNumber,
+    numberToIpv4,
     hash
 }
 

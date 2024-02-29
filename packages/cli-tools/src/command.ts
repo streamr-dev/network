@@ -1,5 +1,5 @@
 import commander, { Command } from 'commander'
-import { StreamrClientConfig } from 'streamr-client'
+import { StreamrClientConfig } from '@streamr/sdk'
 import pkg from '../package.json'
 import { createClient } from './client'
 

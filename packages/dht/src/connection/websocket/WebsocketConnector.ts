@@ -17,9 +17,9 @@ import { ManagedConnection } from '../ManagedConnection'
 import { WebsocketServer } from './WebsocketServer'
 import { sendConnectivityRequest } from '../connectivityChecker'
 import { NatType, PortRange, TlsCertificate } from '../ConnectionManager'
-import { ServerWebsocket } from './ServerWebsocket'
+import { WebsocketServerConnection } from './WebsocketServerConnection'
 import { Handshaker } from '../Handshaker'
-import { ParsedUrlQuery } from 'querystring'
+import queryString from 'querystring'
 import { range, sample } from 'lodash'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { expectedConnectionType } from '../../helpers/Connectivity'
@@ -29,8 +29,7 @@ import { DISABLE_CONNECTIVITY_PROBE, attachConnectivityRequestHandler } from '..
 import * as Err from '../../helpers/errors'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { version as localVersion } from '../../../package.json'
-import { isCompatibleVersion } from '../../helpers/versionCompatibility'
+import { LOCAL_PROTOCOL_VERSION, isMaybeSupportedVersion } from '../../helpers/version'
 
 const logger = new Logger(module)
 
@@ -143,10 +142,10 @@ export class WebsocketConnector {
     public async start(): Promise<void> {
         if (!this.abortController.signal.aborted && this.websocketServer) {
             this.websocketServer.on('connected', (connection: IConnection) => {
-                const serverSocket = connection as unknown as ServerWebsocket
-                const query = serverSocket.resourceURL.query as unknown as (ParsedUrlQuery | null)
-                const action = query?.action as (Action | undefined)
-                logger.trace('WebSocket client connected', { action, remoteAddress: serverSocket.getRemoteAddress() })
+                const serverSocket = connection as unknown as WebsocketServerConnection
+                const query = queryString.parse(serverSocket.resourceURL.query as string ?? '')
+                const action = query.action as (Action | undefined)
+                logger.trace('WebSocket client connected', { action, remoteAddress: serverSocket.remoteIpAddress })
                 if (action === 'connectivityRequest') {
                     attachConnectivityRequestHandler(serverSocket)
                 } else if (action === 'connectivityProbe') {
@@ -175,7 +174,7 @@ export class WebsocketConnector {
                 host: '127.0.0.1',
                 natType: NatType.UNKNOWN,
                 ipAddress: ipv4ToNumber('127.0.0.1'),
-                version: localVersion
+                version: LOCAL_PROTOCOL_VERSION
             }
         }
         if (!this.config.entrypoints || this.config.entrypoints.length === 0) {
@@ -190,7 +189,7 @@ export class WebsocketConnector {
                 },
                 // TODO: Resolve the given host name or or use as is if IP was given. 
                 ipAddress: ipv4ToNumber('127.0.0.1'),
-                version: localVersion
+                version: LOCAL_PROTOCOL_VERSION
             }
         }
         for (const reattempt of range(ENTRY_POINT_CONNECTION_ATTEMPTS)) {
@@ -204,7 +203,7 @@ export class WebsocketConnector {
                     selfSigned
                 }
                 if (!this.abortController.signal.aborted) {
-                    return await sendConnectivityRequest(connectivityRequest, entryPoint, localVersion)
+                    return await sendConnectivityRequest(connectivityRequest, entryPoint)
                 } else {
                     throw new Err.ConnectionFailed('ConnectivityChecker is destroyed')
                 }
@@ -299,17 +298,17 @@ export class WebsocketConnector {
 
     private onServerSocketHandshakeRequest(
         sourcePeerDescriptor: PeerDescriptor,
-        serverWebsocket: IConnection,
-        sourceVersion: string,
+        websocketServerConnection: IConnection,
+        remoteVersion: string,
         targetPeerDescriptor?: PeerDescriptor
     ) {
         const nodeId = getNodeIdFromPeerDescriptor(sourcePeerDescriptor)
         if (this.ongoingConnectRequests.has(nodeId)) {
             const ongoingConnectRequest = this.ongoingConnectRequests.get(nodeId)!
-            if (!isCompatibleVersion(sourceVersion, localVersion)) {
+            if (!isMaybeSupportedVersion(remoteVersion)) {
                 ongoingConnectRequest.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
             } else {
-                ongoingConnectRequest.attachImplementation(serverWebsocket)
+                ongoingConnectRequest.attachImplementation(websocketServerConnection)
                 ongoingConnectRequest.acceptHandshake()
             }
             this.ongoingConnectRequests.delete(nodeId)
@@ -318,11 +317,11 @@ export class WebsocketConnector {
                 this.localPeerDescriptor!,
                 ConnectionType.WEBSOCKET_SERVER,
                 undefined,
-                serverWebsocket,
+                websocketServerConnection,
                 targetPeerDescriptor
             )
             managedConnection.setRemotePeerDescriptor(sourcePeerDescriptor)
-            if (!isCompatibleVersion(sourceVersion, localVersion)) {
+            if (!isMaybeSupportedVersion(remoteVersion)) {
                 managedConnection.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 managedConnection.rejectHandshake(HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)

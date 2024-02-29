@@ -17,10 +17,12 @@ import { Any } from '../proto/google/protobuf/any'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
+    ClosestRingPeersRequest,
+    ClosestRingPeersResponse,
     ConnectivityResponse,
     DataEntry,
-    ExternalFindDataRequest,
-    ExternalFindDataResponse,
+    ExternalFetchDataRequest,
+    ExternalFetchDataResponse,
     ExternalStoreDataRequest,
     ExternalStoreDataResponse,
     LeaveNotice,
@@ -40,18 +42,23 @@ import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
 import { ExternalApiRpcRemote } from './ExternalApiRpcRemote'
 import { PeerManager } from './PeerManager'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
-import { RecursiveOperationManager, RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'
+import { RecursiveOperationManager } from './recursive-operation/RecursiveOperationManager'
 import { Router } from './routing/Router'
 import { LocalDataStore } from './store/LocalDataStore'
 import { StoreManager } from './store/StoreManager'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
 import { createPeerDescriptor } from '../helpers/createPeerDescriptor'
+import { RingIdRaw } from './contact/ringIdentifiers'
+import { getLocalRegion } from '@streamr/cdn-location'
+import { RingContacts } from './contact/RingContactList'
 
 export interface DhtNodeEvents {
     contactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     contactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     randomContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     randomContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
+    ringContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: RingContacts) => void
+    ringContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: RingContacts) => void
 }
 
 export interface DhtNodeOptions {
@@ -67,6 +74,7 @@ export interface DhtNodeOptions {
     storeMaxTtl?: number
     networkConnectivityTimeout?: number
     storageRedundancyFactor?: number
+    region?: number
 
     transport?: ITransport
     peerDescriptor?: PeerDescriptor
@@ -123,9 +131,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private peerDiscovery?: PeerDiscovery
     private peerManager?: PeerManager
     public connectionManager?: ConnectionManager
+    private region?: number
     private started = false
     private abortController = new AbortController()
-
     constructor(conf: DhtNodeOptions) {
         super()
         this.config = merge({
@@ -150,7 +158,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     private validateConfig(): void {
         const expectedNodeIdLength = KADEMLIA_ID_LENGTH_IN_BYTES * 2
-        if (this.config.nodeId !== undefined ) {
+        if (this.config.nodeId !== undefined) {
             if (!/^[0-9a-fA-F]+$/.test(this.config.nodeId)) {
                 throw new Error('Invalid nodeId, the nodeId should be a hex string')
             } else if (this.config.nodeId.length !== expectedNodeIdLength) {
@@ -177,6 +185,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 this.config.peerDescriptor.websocket = undefined
             }
         }
+        if (this.region !== undefined) {
+            this.region = this.config.region
+        } else if (this.config.peerDescriptor?.region !== undefined) {
+            this.region = this.config.peerDescriptor.region
+        } else {
+            this.region = await getLocalRegion()
+        }
+            
         // If transport is given, do not create a ConnectionManager
         if (this.config.transport) {
             this.transport = this.config.transport
@@ -294,10 +310,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             numberOfNodesPerKBucket: this.config.numberOfNodesPerKBucket,
             maxContactListSize: this.config.maxNeighborListSize,
             localNodeId: this.getNodeId(),
+            localPeerDescriptor: this.localPeerDescriptor!,
             connectionManager: this.connectionManager!,
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
             isLayer0: (this.connectionManager !== undefined),
-            createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => this.createDhtNodeRpcRemote(peerDescriptor)
+            createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => this.createDhtNodeRpcRemote(peerDescriptor),
+            lockId: this.config.serviceId
         })
         this.peerManager.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) => {
             this.emit('contactRemoved', peerDescriptor, activeContacts)
@@ -311,6 +329,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.peerManager.on('randomContactAdded', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
             this.emit('randomContactAdded', peerDescriptor, activeContacts)
         )
+        this.peerManager.on('ringContactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: RingContacts) => {
+            this.emit('ringContactRemoved', peerDescriptor, activeContacts)
+        })
+        this.peerManager.on('ringContactAdded', (peerDescriptor: PeerDescriptor, activeContacts: RingContacts) => {
+            this.emit('ringContactAdded', peerDescriptor, activeContacts)
+        })
         this.peerManager.on('kBucketEmpty', () => {
             if (!this.peerDiscovery!.isJoinOngoing()
                 && this.config.entryPoints
@@ -349,26 +373,31 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 return this.peerManager!.getClosestNeighborsTo(nodeId, limit)
                     .map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor())
             },
+            getClosestRingPeersTo: (ringIdRaw: RingIdRaw, limit: number) => {
+                return this.getClosestRingContactsTo(ringIdRaw, limit)
+            },
             addContact: (contact: PeerDescriptor) => this.peerManager!.addContact([contact]),
             removeContact: (nodeId: DhtAddress) => this.removeContact(nodeId)
         })
         this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers',
             (req: ClosestPeersRequest, context) => dhtNodeRpcLocal.getClosestPeers(req, context))
+        this.rpcCommunicator!.registerRpcMethod(ClosestRingPeersRequest, ClosestRingPeersResponse, 'getClosestRingPeers',
+            (req: ClosestRingPeersRequest, context) => dhtNodeRpcLocal.getClosestRingPeers(req, context))
         this.rpcCommunicator!.registerRpcMethod(PingRequest, PingResponse, 'ping',
             (req: PingRequest, context) => dhtNodeRpcLocal.ping(req, context))
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice',
             (_req: LeaveNotice, context) => dhtNodeRpcLocal.leaveNotice(context))
         const externalApiRpcLocal = new ExternalApiRpcLocal({
             executeRecursiveOperation: (key: DhtAddress, operation: RecursiveOperation, excludedPeer: DhtAddress) => {
-                return this.executeRecursiveOperation(key, operation, excludedPeer)
+                return this.recursiveOperationManager!.execute(key, operation, excludedPeer)
             },
             storeDataToDht: (key: DhtAddress, data: Any, creator?: DhtAddress) => this.storeDataToDht(key, data, creator)
         })
         this.rpcCommunicator!.registerRpcMethod(
-            ExternalFindDataRequest,
-            ExternalFindDataResponse,
-            'externalFindData',
-            (req: ExternalFindDataRequest, context: ServerCallContext) => externalApiRpcLocal.externalFindData(req, context),
+            ExternalFetchDataRequest,
+            ExternalFetchDataResponse,
+            'externalFetchData',
+            (req: ExternalFetchDataRequest, context: ServerCallContext) => externalApiRpcLocal.externalFetchData(req, context),
             { timeout: 10000 }  // TODO use config option or named constant?
         )
         this.rpcCommunicator!.registerRpcMethod(
@@ -400,7 +429,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.config.peerDescriptor !== undefined) {
             this.localPeerDescriptor = this.config.peerDescriptor
         } else {
-            this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, this.config.nodeId)
+            this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, this.region!, this.config.nodeId)
         }
         return this.localPeerDescriptor
     }
@@ -408,8 +437,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     public getClosestContacts(limit?: number): PeerDescriptor[] {
         return this.peerManager!.getClosestContactsTo(
             this.getNodeId(),
-            limit).map((peer) => peer.getPeerDescriptor()
-        )
+            limit).map((peer) => peer.getPeerDescriptor())
+    }
+
+    public getClosestRingContactsTo(ringIdRaw: RingIdRaw, limit?: number): RingContacts {
+        const closest = this.peerManager!.getClosestRingContactsTo(ringIdRaw, limit)
+        return {
+            left: closest.left.map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor()),
+            right: closest.right.map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor())
+        }
     }
 
     public getNodeId(): DhtAddress {
@@ -448,25 +484,22 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         await this.peerDiscovery!.joinDht(entryPointDescriptors, doAdditionalDistantPeerDiscovery, retry)
     }
 
-    // TODO make this private and unify the public API of find/fetch/store/delete methods
-    // (we already have storeDataToDht etc. here)
-    public async executeRecursiveOperation(
-        key: DhtAddress,
-        operation: RecursiveOperation,
-        excludedPeer?: DhtAddress
-    ): Promise<RecursiveOperationResult> {
-        return this.recursiveOperationManager!.execute(key, operation, excludedPeer)
+    public async joinRing(): Promise<void> {
+        if (!this.started) {
+            throw new Error('Cannot join ring before calling start() on DhtNode')
+        }
+        await this.peerDiscovery!.joinRing()
     }
 
     public async storeDataToDht(key: DhtAddress, data: Any, creator?: DhtAddress): Promise<PeerDescriptor[]> {
         const connectedEntryPoints = this.getConnectedEntryPoints()
         if (this.peerDiscovery!.isJoinOngoing() && connectedEntryPoints.length > 0) {
-            return this.storeDataViaPeer(key, data, sample(connectedEntryPoints)!)
+            return this.storeDataToDhtViaPeer(key, data, sample(connectedEntryPoints)!)
         }
         return this.storeManager!.storeDataToDht(key, data, creator ?? this.getNodeId())
     }
 
-    public async storeDataViaPeer(key: DhtAddress, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
+    public async storeDataToDhtViaPeer(key: DhtAddress, data: Any, peer: PeerDescriptor): Promise<PeerDescriptor[]> {
         const rpcRemote = new ExternalApiRpcRemote(
             this.localPeerDescriptor!,
             peer,
@@ -476,13 +509,23 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return await rpcRemote.storeData(key, data)
     }
 
-    public async getDataFromDht(key: DhtAddress): Promise<DataEntry[]> {
+    public async fetchDataFromDht(key: DhtAddress): Promise<DataEntry[]> {
         const connectedEntryPoints = this.getConnectedEntryPoints()
         if (this.peerDiscovery!.isJoinOngoing() && connectedEntryPoints.length > 0) {
-            return this.findDataViaPeer(key, sample(connectedEntryPoints)!)
+            return this.fetchDataFromDhtViaPeer(key, sample(connectedEntryPoints)!)
         }
         const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FETCH_DATA)
         return result.dataEntries ?? []  // TODO is this fallback needed?
+    }
+
+    public async fetchDataFromDhtViaPeer(key: DhtAddress, peer: PeerDescriptor): Promise<DataEntry[]> {
+        const rpcRemote = new ExternalApiRpcRemote(
+            this.localPeerDescriptor!,
+            peer,
+            this.rpcCommunicator!,
+            ExternalApiRpcClient
+        )
+        return await rpcRemote.externalFetchData(key)
     }
 
     public async deleteDataFromDht(key: DhtAddress, waitForCompletion: boolean): Promise<void> {
@@ -491,14 +534,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
     }
 
-    public async findDataViaPeer(key: DhtAddress, peer: PeerDescriptor): Promise<DataEntry[]> {
-        const rpcRemote = new ExternalApiRpcRemote(
-            this.localPeerDescriptor!,
-            peer,
-            this.rpcCommunicator!,
-            ExternalApiRpcClient
-        )
-        return await rpcRemote.externalFindData(key)
+    async findClosestNodesFromDht(key: DhtAddress): Promise<PeerDescriptor[]> {
+        const result = await this.recursiveOperationManager!.execute(key, RecursiveOperation.FIND_CLOSEST_NODES)
+        return result.closestNodes
     }
 
     public getTransport(): ITransport {

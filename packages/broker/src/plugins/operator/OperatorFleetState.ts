@@ -4,7 +4,7 @@ import { Gate, Logger, setAbortableInterval, setAbortableTimeout } from '@stream
 import { EventEmitter } from 'eventemitter3'
 import min from 'lodash/min'
 import once from 'lodash/once'
-import { NetworkPeerDescriptor, StreamrClient, Subscription } from 'streamr-client'
+import { NetworkPeerDescriptor, StreamrClient, Subscription } from '@streamr/sdk'
 import { HeartbeatMessage, HeartbeatMessageSchema } from './heartbeatUtils'
 
 const logger = new Logger(module)

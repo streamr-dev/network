@@ -1,5 +1,5 @@
 import WebSocket from 'ws'
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient } from '@streamr/sdk'
 import { Logger } from '@streamr/utils'
 import { ParsedQs } from 'qs'
 import { v4 as uuid } from 'uuid'

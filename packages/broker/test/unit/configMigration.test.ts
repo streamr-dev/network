@@ -35,7 +35,7 @@ describe('Config migration', () => {
         expect(() => createMigratedConfig(source)).toThrow('Unable to migrate the config')
     })
 
-    describe('from v1 to v2', () => {
+    describe('from v1 to v3', () => {
 
         const createConfig = (version: number, customConfig: any) => {
             const minimalConfig = {
@@ -54,13 +54,13 @@ describe('Config migration', () => {
 
         it('minimal', () => {
             const v1 = createConfig(1, {})
-            const v2 = createConfig(2, {
+            const v3 = createConfig(3, {
                 client: {
                     metrics: false
                 }
             })
-            expect(createMigratedConfig(v1)).toEqual(v2)
-            validateTargetConfig(v2)
+            expect(createMigratedConfig(v1)).toEqual(v3)
+            validateTargetConfig(v3)
         })
 
         it('null values', () => {
@@ -97,7 +97,7 @@ describe('Config migration', () => {
                     }
                 }
             })
-            const v2 = createConfig(2, {
+            const v3 = createConfig(3, {
                 client: {
                     metrics: false
                 },
@@ -126,8 +126,8 @@ describe('Config migration', () => {
                     }
                 }
             })
-            expect(createMigratedConfig(v1)).toEqual(v2)
-            validateTargetConfig(v2)
+            expect(createMigratedConfig(v1)).toEqual(v3)
+            validateTargetConfig(v3)
         })
 
         it('ssl certificate', () => {
@@ -138,7 +138,7 @@ describe('Config migration', () => {
                     privateKeyFileName: 'mock-private-key'
                 }
             })
-            const v2 = createConfig(2, {
+            const v3 = createConfig(3, {
                 client: {
                     metrics: false
                 },
@@ -150,8 +150,8 @@ describe('Config migration', () => {
                     }
                 }
             })
-            expect(createMigratedConfig(v1)).toEqual(v2)
-            validateTargetConfig(v2)
+            expect(createMigratedConfig(v1)).toEqual(v3)
+            validateTargetConfig(v3)
         })
 
         it('metrics: default', () => {
@@ -160,8 +160,8 @@ describe('Config migration', () => {
                     metrics: {}
                 }
             })
-            const v2 = createConfig(2, {})
-            expect(createMigratedConfig(v1)).toEqual(v2)
+            const v3 = createConfig(3, {})
+            expect(createMigratedConfig(v1)).toEqual(v3)
         })
 
         it('metrics: disabled', () => {
@@ -172,12 +172,12 @@ describe('Config migration', () => {
                     }
                 }
             })
-            const v2 = createConfig(2, {
+            const v3 = createConfig(3, {
                 client: {
                     metrics: false
                 }
             })
-            expect(createMigratedConfig(v1)).toEqual(v2)
+            expect(createMigratedConfig(v1)).toEqual(v3)
         })
 
         it('metrics: custom stream', () => {
@@ -190,7 +190,7 @@ describe('Config migration', () => {
                     }
                 }
             })
-            const v2 = createConfig(2, {
+            const v3 = createConfig(3, {
                 client: {
                     metrics: {
                         periods: [
@@ -210,7 +210,7 @@ describe('Config migration', () => {
                     }
                 }
             })
-            expect(createMigratedConfig(v1)).toEqual(v2)
+            expect(createMigratedConfig(v1)).toEqual(v3)
         })
 
         it('unknown plugin', async () => {

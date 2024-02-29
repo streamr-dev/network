@@ -29,6 +29,10 @@ cd packages/test-utils || exit
 npm publish --access public --tag $NPM_TAG
 cd ../..
 
+cd packages/cdn-location || exit
+npm publish --access public --tag $NPM_TAG
+cd ../..
+
 cd packages/protocol || exit
 npm publish --access public --tag $NPM_TAG
 cd ../..
@@ -54,7 +58,7 @@ npm publish --access public --tag $NPM_TAG
 cd ../..
 
 cd packages/client/dist || exit # Notice: dist folder
-npm publish --tag $NPM_TAG
+npm publish --access public --tag $NPM_TAG
 cd ../../..
 
 cd packages/broker || exit

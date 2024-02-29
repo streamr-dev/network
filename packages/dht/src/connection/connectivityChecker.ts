@@ -3,12 +3,12 @@ import { v4 } from 'uuid'
 import * as Err from '../helpers/errors'
 import {
     ConnectivityRequest, ConnectivityResponse,
-    Message, MessageType, PeerDescriptor
+    Message, PeerDescriptor
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ConnectionEvents, IConnection } from './IConnection'
 import { ClientWebsocket } from './websocket/ClientWebsocket'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
-import { isCompatibleVersion } from '../helpers/versionCompatibility'
+import { isMaybeSupportedVersion } from '../helpers/version'
 
 const logger = new Logger(module)
 
@@ -37,8 +37,7 @@ const CONNECTIVITY_CHECKER_TIMEOUT = 5000
 
 export const sendConnectivityRequest = async (
     request: ConnectivityRequest,
-    entryPoint: PeerDescriptor,
-    localVersion: string
+    entryPoint: PeerDescriptor
 ): Promise<ConnectivityResponse> => {
     let outgoingConnection: IConnection
     const wsServerInfo = {
@@ -59,7 +58,7 @@ export const sendConnectivityRequest = async (
     // send connectivity request
     const msg: Message = {
         serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
-        messageType: MessageType.CONNECTIVITY_REQUEST, messageId: v4(),
+        messageId: v4(),
         body: {
             oneofKind: 'connectivityRequest',
             connectivityRequest: request
@@ -83,10 +82,10 @@ export const sendConnectivityRequest = async (
                         const remoteVersion = connectivityResponseMessage.version
                         outgoingConnection!.off('data', listener)
                         clearTimeout(timeoutId)
-                        if (isCompatibleVersion(localVersion, remoteVersion)) {
+                        if (isMaybeSupportedVersion(remoteVersion)) {
                             resolve(connectivityResponseMessage)
                         } else {
-                            reject(`Invalid version: ${remoteVersion}`)
+                            reject(`Unsupported version: ${remoteVersion}`)
                         }
                     } else {
                         return

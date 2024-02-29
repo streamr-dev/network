@@ -4,7 +4,6 @@ import { toEthereumAddress } from '@streamr/utils'
 import { Wallet } from '@ethersproject/wallet'
 import {
     ContentType,
-    deserializeGroupKeyResponse,
     EncryptionType,
     StreamMessage,
     StreamMessageType,
@@ -20,6 +19,7 @@ import {
     createRelativeTestStreamId,
     startPublisherKeyExchangeSubscription
 } from '../test-utils/utils'
+import { convertBytesToGroupKeyResponse } from '@streamr/trackerless-network'
 
 describe('PublisherKeyExchange', () => {
 
@@ -56,11 +56,11 @@ describe('PublisherKeyExchange', () => {
                 publisherId: toEthereumAddress(publisherWallet.address),
             },
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
-            contentType: ContentType.JSON,
+            contentType: ContentType.BINARY,
             encryptionType: EncryptionType.NONE,
             signature: expect.any(Uint8Array)
         })
-        const encryptedGroupKeys = deserializeGroupKeyResponse(actualResponse.content).encryptedGroupKeys
+        const encryptedGroupKeys = convertBytesToGroupKeyResponse(actualResponse.content).encryptedGroupKeys
         expect(encryptedGroupKeys).toMatchObject([{
             id: expectedGroupKey.id,
             data: expect.any(Uint8Array)

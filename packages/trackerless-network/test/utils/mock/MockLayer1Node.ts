@@ -32,6 +32,9 @@ export class MockLayer1Node extends EventEmitter implements Layer1Node {
     async joinDht(): Promise<void> {}
 
     // eslint-disable-next-line class-methods-use-this
+    async joinRing(): Promise<void> {}
+
+    // eslint-disable-next-line class-methods-use-this
     async start(): Promise<void> {}
 
     // eslint-disable-next-line class-methods-use-this

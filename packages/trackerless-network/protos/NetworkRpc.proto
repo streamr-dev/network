@@ -69,17 +69,24 @@ enum SignatureType {
 }
 
 message StreamMessage {
-  StreamMessageType messageType = 1;
+  // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
+  MessageID messageId = 1;
+  optional MessageRef previousMessageRef = 2;
+  bytes signature = 3;
+  SignatureType signatureType = 4;
+  oneof body {
+    ContentMessage contentMessage = 5;
+    GroupKeyRequest groupKeyRequest = 6;
+    GroupKeyResponse groupKeyResponse = 7;
+  }
+}
+
+message ContentMessage {
+  bytes content = 1;
   ContentType contentType = 2;
   EncryptionType encryptionType = 3;
-  bytes content = 4;
-  SignatureType signatureType = 5;
-  bytes signature = 6;
-  // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
-  MessageID messageId = 7;
-  optional MessageRef previousMessageRef = 8;
-  optional string groupKeyId = 9;
-  optional GroupKey newGroupKey = 10;
+  optional string groupKeyId = 4;
+  optional GroupKey newGroupKey = 5;
 }
 
 message GroupKeyRequest {

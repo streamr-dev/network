@@ -1,6 +1,6 @@
 import { Queue } from '@streamr/test-utils'
 import { wait, waitForEvent } from '@streamr/utils'
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient } from '@streamr/sdk'
 import WebSocket from 'ws'
 import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'
 import { WebsocketServer } from '../../../../src/plugins/websocket/WebsocketServer'
