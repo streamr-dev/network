@@ -7,7 +7,39 @@ const PATH = './configs'
 describe('Config', () => {
 
     it('start with minimal config', async () => {
-        const broker = await createBroker({})
+        const broker = await createBroker({
+            client: {
+                environment: 'dev2',
+                network: {
+                    controlLayer: {
+                        websocketServerEnableTls: false
+                    }
+                }
+            }
+        })
+        await broker.start()
+        await broker.stop()
+    })
+
+    it('temporary compatibility', async () => {
+        const broker = await createBroker({
+            client: {
+                environment: 'dev2',
+                network: {
+                    controlLayer: {
+                        entryPoints: [{
+                            id: 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                            websocket: {
+                                'host': '10.200.10.1',
+                                'port': 40500,
+                                'tls': false
+                            }
+                        }],
+                        websocketServerEnableTls: false
+                    }
+                }
+            }
+        } as any)
         await broker.start()
         await broker.stop()
     })

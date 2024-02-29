@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { describeOnlyInNodeJs, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Defer, wait } from '@streamr/utils'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
@@ -23,6 +23,7 @@ import { MessageMetadata } from '../../src/Message'
 import { AuthenticationInjectionToken, createAuthentication } from '../../src/Authentication'
 import { merge, TheGraphClient } from '@streamr/utils'
 import { StreamrClientEventEmitter } from '../../src/events'
+import { config as CHAIN_CONFIG } from '@streamr/config'
 
 const Dependencies = {
     NetworkNodeFacade,
@@ -47,13 +48,14 @@ function snapshot(): string {
 const MAX_MESSAGES = 5
 const TIMEOUT = 30000
 
-describe('MemoryLeaks', () => {
+describeOnlyInNodeJs('MemoryLeaks', () => { // LeaksDetector is not supported in Electron
     let leaksDetector: LeaksDetector
 
     beforeEach(() => {
         leaksDetector = new LeaksDetector()
         leaksDetector.ignoreAll(rootContainer)
         leaksDetector.ignoreAll(ethersAbi)
+        leaksDetector.ignoreAll(CHAIN_CONFIG)
         snapshot()
     })
 
@@ -61,7 +63,7 @@ describe('MemoryLeaks', () => {
         expect(leaksDetector).toBeTruthy()
         if (!leaksDetector) { return }
         const detector = leaksDetector
-        await wait(1000)
+        await wait(5000)
         snapshot()
         await detector.checkNoLeaks() // this is very slow
         detector.clear()
@@ -146,8 +148,8 @@ describe('MemoryLeaks', () => {
             test('connect + destroy', async () => {
                 const client = await createClient()
                 await client.connect()
-                leaksDetector.addAll(instanceId(client), client)
                 await client.destroy()
+                leaksDetector.addAll(instanceId(client), client)
             })
         })
 

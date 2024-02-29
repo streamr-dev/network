@@ -1,13 +1,15 @@
 import {
-    GroupKeyMessage,
     StreamMessage,
     StreamMessageError,
     StreamMessageType,
-    createSignaturePayload,
 } from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
+import {
+    convertBytesToGroupKeyRequest,
+    convertBytesToGroupKeyResponse
+} from '@streamr/trackerless-network'
+import { verifySignature, EthereumAddress } from '@streamr/utils'
 import { StreamRegistry } from '../registry/StreamRegistry'
-import { verify } from '../utils/signingUtils'
+import { createSignaturePayload } from '../signature'
 
 export const validateStreamMessage = async (msg: StreamMessage, streamRegistry: StreamRegistry): Promise<void> => {
     await doValidate(msg, streamRegistry).catch((err: any) => {
@@ -39,7 +41,7 @@ const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry
         case StreamMessageType.GROUP_KEY_REQUEST:
             return validateGroupKeyMessage(
                 streamMessage,
-                GroupKeyMessage.fromStreamMessage(streamMessage).recipient,
+                convertBytesToGroupKeyRequest(streamMessage.content).recipient,
                 streamMessage.getPublisherId(),
                 streamRegistry
             )
@@ -47,7 +49,7 @@ const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry
             return validateGroupKeyMessage(
                 streamMessage,
                 streamMessage.getPublisherId(),
-                GroupKeyMessage.fromStreamMessage(streamMessage).recipient,
+                convertBytesToGroupKeyResponse(streamMessage.content).recipient,
                 streamRegistry
             )
         default:
@@ -61,16 +63,19 @@ const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry
  *
  * @param streamMessage the StreamMessage to validate.
  */
-const assertSignatureIsValid = (streamMessage: StreamMessage): void => {
+export const assertSignatureIsValid = (streamMessage: StreamMessage): void => {
     const payload = createSignaturePayload({
-        messageId: streamMessage.getMessageID(),
-        serializedContent: streamMessage.getSerializedContent(),
+        messageId: streamMessage.messageId,
+        messageType: streamMessage.messageType,
+        content: streamMessage.content,
+        signatureType: streamMessage.signatureType,
+        encryptionType: streamMessage.encryptionType,
         prevMsgRef: streamMessage.prevMsgRef ?? undefined,
         newGroupKey: streamMessage.newGroupKey ?? undefined
     })
     let success
     try {
-        success = verify(streamMessage.getPublisherId(), payload, streamMessage.signature)
+        success = verifySignature(streamMessage.getPublisherId(), payload, streamMessage.signature)
     } catch (err) {
         throw new StreamMessageError(`An error occurred during address recovery from signature: ${err}`, streamMessage)
     }

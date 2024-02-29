@@ -8,4 +8,10 @@ program
     .name('broker-config-wizard')
     .description('Run the configuration wizard for the broker')
 
-start()
+;(async () => {
+    try {
+        await start()
+    } catch (e) {
+        console.error('Streamr Node Config Wizard encountered an error:\n', e)
+    }
+})()

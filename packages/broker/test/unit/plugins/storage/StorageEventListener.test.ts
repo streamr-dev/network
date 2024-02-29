@@ -1,6 +1,6 @@
 import { toStreamID } from '@streamr/protocol'
 import { StorageEventListener } from '../../../../src/plugins/storage/StorageEventListener'
-import { StorageNodeAssignmentEvent, Stream, StreamrClient, StreamrClientEvents } from 'streamr-client'
+import { StorageNodeAssignmentEvent, Stream, StreamrClient, StreamrClientEvents } from '@streamr/sdk'
 import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
 
 const MOCK_STREAM = {
@@ -38,13 +38,13 @@ describe(StorageEventListener, () => {
 
     it('start() registers storage event listener on client', async () => {
         expect(storageEventListeners.size).toBe(0)
-        await listener.start()
+        listener.start()
         expect(storageEventListeners.size).toBe(2)
     })
 
     it('destroy() unregisters storage event listener on client', async () => {
         expect(stubClient.off).toHaveBeenCalledTimes(0)
-        await listener.destroy()
+        listener.destroy()
         expect(stubClient.off).toHaveBeenCalledTimes(2)
     })
 
@@ -57,7 +57,7 @@ describe(StorageEventListener, () => {
     }
 
     it('storage node assignment event gets passed to onEvent', async () => {
-        await listener.start()
+        listener.start()
         addToStorageNode(clusterId)
         await wait(0)
         expect(onEvent).toHaveBeenCalledTimes(1)
@@ -69,7 +69,7 @@ describe(StorageEventListener, () => {
     })
 
     it('storage node assignment events meant for another recipient are ignored', async () => {
-        await listener.start()
+        listener.start()
         addToStorageNode(otherClusterId)
         await wait(0)
         expect(onEvent).toHaveBeenCalledTimes(0)

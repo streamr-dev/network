@@ -1,4 +1,4 @@
-import { StreamrClientConfig } from 'streamr-client'
+import { StreamrClientConfig } from '@streamr/sdk'
 import path from 'path'
 import * as os from 'os'
 import camelCase from 'lodash/camelCase'
@@ -7,6 +7,7 @@ import { ApiAuthentication } from '../apiAuthentication'
 
 export interface Config {
     client?: StreamrClientConfig
+    environment?: 'mumbai' | 'polygon'
     httpServer?: {
         port: number
         sslCertificate?: {
@@ -24,10 +25,6 @@ export type StrictConfig = Config & {
     client: Exclude<Config['client'], undefined>
     plugins: Exclude<Config['plugins'], undefined>
     httpServer: Exclude<Config['httpServer'], undefined>
-}
-
-export interface ConfigFile extends Config {
-    $schema?: string
 }
 
 export interface ConfigFile extends Config {

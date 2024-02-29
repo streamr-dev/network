@@ -21,6 +21,7 @@ import {
     createRelativeTestStreamId,
     getLocalGroupKeyStore
 } from '../test-utils/utils'
+import { convertBytesToGroupKeyRequest } from '@streamr/trackerless-network'
 
 describe('SubscriberKeyExchange', () => {
 
@@ -41,31 +42,30 @@ describe('SubscriberKeyExchange', () => {
 
     const triggerGroupKeyRequest = async (key: GroupKey, publisher: StreamrClient): Promise<void> => {
         const publisherNode = await publisher.getNode()
-        publisherNode.publish(await createMockMessage({
+        await publisherNode.broadcast(await createMockMessage({
             streamPartId,
             publisher: publisherWallet,
             encryptionKey: key
         }))
     }
 
-    const assertGroupKeyRequest = async (request: StreamMessage, expectedRequestedKeyIds: string[]): Promise<void> => {
-        expect(request).toMatchObject({
+    const assertGroupKeyRequest = async (message: StreamMessage, expectedRequestedKeyIds: string[]): Promise<void> => {
+        expect(message).toMatchObject({
             messageId: {
                 streamId: StreamPartIDUtils.getStreamID(streamPartId),
                 streamPartition:  StreamPartIDUtils.getStreamPartition(streamPartId),
                 publisherId: toEthereumAddress(subscriberWallet.address)
             },
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
-            contentType: ContentType.JSON,
+            contentType: ContentType.BINARY,
             encryptionType: EncryptionType.NONE,
-            signature: expect.any(String)
+            signature: expect.any(Uint8Array)
         })
-        expect(request.getParsedContent()).toEqual([
-            expect.any(String),
-            expect.toEqualCaseInsensitive(publisherWallet.address),
-            expect.any(String),
-            expectedRequestedKeyIds
-        ])
+        const request = convertBytesToGroupKeyRequest(message.content)
+        expect(request.requestId).toBeString()
+        expect(request.recipient).toEqualCaseInsensitive(publisherWallet.address)
+        expect(request.rsaPublicKey).toBeString()
+        expect(request.groupKeyIds).toEqual(expectedRequestedKeyIds)
     }
 
     beforeEach(async () => {

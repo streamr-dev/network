@@ -1,15 +1,9 @@
 import { StrictConfig } from './config/config'
 import { validateConfig } from './config/validateConfig'
 import { Schema } from 'ajv'
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient } from '@streamr/sdk'
 import { Endpoint } from './httpServer'
 import { ApiAuthentication } from './apiAuthentication'
-
-export interface PluginOptions {
-    name: string
-    streamrClient: StreamrClient
-    brokerConfig: StrictConfig
-}
 
 export interface ApiPluginConfig {
     apiAuthentication?: ApiAuthentication | null
@@ -20,16 +14,14 @@ export type HttpServerEndpoint = Omit<Endpoint, 'apiAuthentication'>
 export abstract class Plugin<T extends object> {
 
     readonly name: string
-    readonly streamrClient: StreamrClient
-    readonly brokerConfig: StrictConfig
     readonly pluginConfig: T
+    readonly brokerConfig: StrictConfig
     private readonly httpServerEndpoints: HttpServerEndpoint[] = []
 
-    constructor(options: PluginOptions) {
-        this.name = options.name
-        this.streamrClient = options.streamrClient
-        this.brokerConfig = options.brokerConfig
-        this.pluginConfig = options.brokerConfig.plugins[this.name]
+    constructor(name: string, brokerConfig: StrictConfig) {
+        this.name = name
+        this.brokerConfig = brokerConfig
+        this.pluginConfig = brokerConfig.plugins[this.name]
         const configSchema = this.getConfigSchema()
         if (configSchema !== undefined) {
             validateConfig(this.pluginConfig, configSchema, `${this.name} plugin`)
@@ -55,7 +47,7 @@ export abstract class Plugin<T extends object> {
     /**
      * This lifecycle method is called once when Broker starts
      */
-    abstract start(): Promise<unknown>
+    abstract start(streamrClient: StreamrClient): Promise<unknown>
 
     /**
      * This lifecycle method is called once when Broker stops
@@ -66,5 +58,10 @@ export abstract class Plugin<T extends object> {
     // eslint-disable-next-line class-methods-use-this
     getConfigSchema(): Schema | undefined {
         return undefined
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    getClientConfig(): { path: string, value: any }[] {
+        return []
     }
 }

@@ -43,7 +43,7 @@ If you have created your own stream, set the `SUBSCRIBE` permission to public or
 :::
 
 ```ts
-import StreamrClient from "streamr-client"
+import { StreamrClient } from "streamr-client"
 declare var window: any
 
 export const startSubscribing = () => {

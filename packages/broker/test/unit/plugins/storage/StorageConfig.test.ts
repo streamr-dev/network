@@ -1,5 +1,5 @@
 import { StorageConfig } from '../../../../src/plugins/storage/StorageConfig'
-import { StorageNodeAssignmentEvent, Stream, StreamrClient, StreamrClientEvents } from 'streamr-client'
+import { StorageNodeAssignmentEvent, Stream, StreamrClient, StreamrClientEvents } from '@streamr/sdk'
 import { StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
 import range from 'lodash/range'

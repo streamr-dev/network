@@ -1,12 +1,6 @@
-import { expect } from '@jest/globals'
 import { printExpected, printReceived } from 'jest-matcher-utils'
 import isFunction from 'lodash/isFunction'
 import { StreamrClientError, StreamrClientErrorCode } from './../../src/StreamrClientError'
-
-interface ExpectationResult {
-    pass: boolean
-    message: () => string
-}
 
 interface PartialStreamrClientError {
     code: StreamrClientErrorCode
@@ -31,7 +25,7 @@ const formErrorMessage = (description: string, expected: string, actual: string)
 const toThrowStreamrError = (
     actual: unknown, // should be (() => StreamrClientError) | StreamrClientError
     expectedError: PartialStreamrClientError
-): ExpectationResult => {
+): jest.CustomMatcherResult => {
     let actualError
     if (isFunction(actual)) {
         try {

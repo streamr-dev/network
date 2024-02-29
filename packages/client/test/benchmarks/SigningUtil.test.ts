@@ -1,7 +1,7 @@
 import { verifyMessage, Wallet } from '@ethersproject/wallet'
-import { randomString, toEthereumAddress } from '@streamr/utils'
+import { randomString, toEthereumAddress, hexToBinary, areEqualBinaries } from '@streamr/utils'
 import { fastWallet } from '@streamr/test-utils'
-import { sign, verify } from '../../src/utils/signingUtils'
+import { createSignature, verifySignature } from '@streamr/utils'
 
 /*
  * Benchmarking SigningUtil against ether.js implementation. This test is skipped
@@ -28,13 +28,15 @@ describe('SigningUtil', () => {
     describe.each(PAYLOAD_SIZES)('payload size: %s', (payloadSize: number) => {
 
         let wallet: Wallet
-        let signature: string
-        let payload: string
+        let hexSignature: string
+        let binarySignature: Uint8Array
+        let payload: Uint8Array
 
         beforeEach(async () => {
             wallet = fastWallet()
-            payload = randomString(payloadSize)
-            signature = await wallet.signMessage(payload)
+            payload = Buffer.from(randomString(payloadSize))
+            hexSignature = await wallet.signMessage(payload)
+            binarySignature = hexToBinary(hexSignature)  
         })
 
         const run = async <T>(
@@ -48,7 +50,7 @@ describe('SigningUtil', () => {
         
             for (let i = 0; i < ITERATIONS; i++) {
                 const result = await functionToTest()
-                if (result !== expectedResult) {
+                if (!((expectedResult instanceof Uint8Array && areEqualBinaries(expectedResult, result as Uint8Array)) || result === expectedResult)) {
                     throw new Error(`invalid result in ${name}`)
                 }
             }
@@ -67,13 +69,14 @@ describe('SigningUtil', () => {
         }
         
         it('sign', async () => {
+            const privateKey = hexToBinary(wallet.privateKey)
             const elapsedTimeOur = await run(async () => {
-                return sign(payload, wallet.privateKey)
-            }, signature, 'Sign-our')
+                return createSignature(payload, privateKey)
+            }, binarySignature, 'Sign-our')
     
             const elapsedTimeEthers = await run(async () => {
                 return await wallet.signMessage(payload)
-            }, signature, 'Sign-ethers.js')
+            }, hexSignature, 'Sign-ethers.js')
     
             expect(elapsedTimeOur).toBeLessThan(elapsedTimeEthers)
     
@@ -83,11 +86,11 @@ describe('SigningUtil', () => {
     
         it('verify', async () => {
             const elapsedTimeOur = await run(async () => {
-                return verify(toEthereumAddress(wallet.address), payload, signature)
+                return verifySignature(toEthereumAddress(wallet.address), payload, binarySignature)
             }, true, 'Verify-our')
     
             const elapsedTimeEthers = await run(async () => {
-                return toEthereumAddress(verifyMessage(payload, signature)) === toEthereumAddress(wallet.address)
+                return toEthereumAddress(verifyMessage(payload, binarySignature)) === toEthereumAddress(wallet.address)
             }, true, 'Verify-ethers.js')
     
             expect(elapsedTimeOur).toBeLessThan(elapsedTimeEthers)

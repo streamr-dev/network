@@ -1,14 +1,19 @@
 import {
+    ContentType,
     EncryptionType,
-    GroupKeyRequest,
-    GroupKeyRequestSerialized,
-    GroupKeyResponse,
     MessageID,
+    GroupKeyRequest as OldGroupKeyRequest,
+    GroupKeyResponse as OldGroupKeyResponse,
+    SignatureType,
     StreamMessage,
     StreamMessageType,
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
+import {
+    convertBytesToGroupKeyResponse,
+    convertGroupKeyRequestToBytes
+} from '@streamr/trackerless-network'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
@@ -80,7 +85,7 @@ export class SubscriberKeyExchange {
             this.rsaKeyPair!.getPublicKey(),
             requestId)
         const node = await this.networkNodeFacade.getNode()
-        node.publish(request)
+        await node.broadcast(request)
         this.pendingRequests.add(requestId)
         this.logger.debug('Sent group key request (waiting for response)', {
             groupKeyId,
@@ -95,14 +100,14 @@ export class SubscriberKeyExchange {
         publisherId: EthereumAddress,
         rsaPublicKey: string,
         requestId: string
-    ): Promise<StreamMessage<GroupKeyRequestSerialized>> {
-        const requestContent = new GroupKeyRequest({
+    ): Promise<StreamMessage> {
+        const requestContent = new OldGroupKeyRequest({
             recipient: publisherId,
             requestId,
             rsaPublicKey,
             groupKeyIds: [groupKeyId],
-        }).toArray()
-        return createSignedMessage<GroupKeyRequestSerialized>({
+        })
+        return createSignedMessage({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(streamPartId),
                 StreamPartIDUtils.getStreamPartition(streamPartId),
@@ -111,18 +116,20 @@ export class SubscriberKeyExchange {
                 await this.authentication.getAddress(),
                 createRandomMsgChainId()
             ),
-            serializedContent: JSON.stringify(requestContent),
+            content: convertGroupKeyRequestToBytes(requestContent),
+            contentType: ContentType.BINARY,
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
             encryptionType: EncryptionType.NONE,
-            authentication: this.authentication
+            authentication: this.authentication,
+            signatureType: SignatureType.SECP256K1
         })
     }
 
     private async onMessage(msg: StreamMessage): Promise<void> {
-        if (GroupKeyResponse.is(msg)) {
+        if (OldGroupKeyResponse.is(msg)) {
             try {
                 const authenticatedUser = await this.authentication.getAddress()
-                const { requestId, recipient, encryptedGroupKeys } = GroupKeyResponse.fromStreamMessage(msg) as GroupKeyResponse
+                const { requestId, recipient, encryptedGroupKeys } = convertBytesToGroupKeyResponse(msg.content)
                 if ((recipient === authenticatedUser) && (this.pendingRequests.has(requestId))) {
                     this.logger.debug('Handle group key response', { requestId })
                     this.pendingRequests.delete(requestId)

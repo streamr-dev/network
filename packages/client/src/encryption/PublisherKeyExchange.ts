@@ -1,15 +1,20 @@
 import {
+    ContentType,
     EncryptedGroupKey,
     EncryptionType,
-    GroupKeyRequest,
-    GroupKeyResponse,
-    GroupKeyResponseSerialized,
     MessageID,
+    GroupKeyRequest as OldGroupKeyRequest,
+    GroupKeyResponse as OldGroupKeyResponse,
+    SignatureType,
     StreamMessage,
     StreamMessageType,
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
+import {
+    convertBytesToGroupKeyRequest,
+    convertGroupKeyResponseToBytes
+} from '@streamr/trackerless-network'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import without from 'lodash/without'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -57,10 +62,10 @@ export class PublisherKeyExchange {
     }
 
     private async onMessage(request: StreamMessage): Promise<void> {
-        if (GroupKeyRequest.is(request)) {
+        if (OldGroupKeyRequest.is(request)) {
             try {
                 const authenticatedUser = await this.authentication.getAddress()
-                const { recipient, requestId, rsaPublicKey, groupKeyIds } = GroupKeyRequest.fromStreamMessage(request) as GroupKeyRequest
+                const { recipient, requestId, rsaPublicKey, groupKeyIds } = convertBytesToGroupKeyRequest(request.content)
                 if (recipient === authenticatedUser) {
                     this.logger.debug('Handling group key request', { requestId })
                     await validateStreamMessage(request, this.streamRegistry)
@@ -75,7 +80,7 @@ export class PublisherKeyExchange {
                             request.getPublisherId(),
                             requestId)
                         const node = await this.networkNodeFacade.getNode()
-                        node.publish(response)
+                        await node.broadcast(response)
                         this.logger.debug('Handled group key request (found keys)', {
                             groupKeyIds: keys.map((k) => k.id).join(),
                             recipient: request.getPublisherId()
@@ -99,17 +104,17 @@ export class PublisherKeyExchange {
         rsaPublicKey: string,
         recipient: EthereumAddress,
         requestId: string
-    ): Promise<StreamMessage<GroupKeyResponseSerialized>> {
+    ): Promise<StreamMessage> {
         const encryptedGroupKeys = await Promise.all(keys.map((key) => {
-            const encryptedGroupKeyHex = EncryptionUtil.encryptWithRSAPublicKey(key.data, rsaPublicKey, true)
-            return new EncryptedGroupKey(key.id, encryptedGroupKeyHex)
+            const encryptedGroupKey = EncryptionUtil.encryptWithRSAPublicKey(key.data, rsaPublicKey)
+            return new EncryptedGroupKey(key.id, encryptedGroupKey)
         }))
-        const responseContent = new GroupKeyResponse({
+        const responseContent = new OldGroupKeyResponse({
             recipient,
             requestId,
             encryptedGroupKeys
         })
-        const response = createSignedMessage<GroupKeyResponseSerialized>({
+        const response = createSignedMessage({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(streamPartId),
                 StreamPartIDUtils.getStreamPartition(streamPartId),
@@ -118,10 +123,12 @@ export class PublisherKeyExchange {
                 await this.authentication.getAddress(),
                 createRandomMsgChainId()
             ),
-            serializedContent: JSON.stringify(responseContent.toArray()),
+            content: convertGroupKeyResponseToBytes(responseContent),
+            contentType: ContentType.BINARY,
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
-            encryptionType: EncryptionType.RSA,
-            authentication: this.authentication
+            encryptionType: EncryptionType.NONE,
+            authentication: this.authentication,
+            signatureType: SignatureType.SECP256K1,
         })
         return response
     }

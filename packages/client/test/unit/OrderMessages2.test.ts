@@ -1,17 +1,19 @@
 import {
+    ContentType, EncryptionType,
     MessageID,
-    MessageRef,
+    MessageRef, SignatureType,
     StreamMessage,
     StreamPartID,
     StreamPartIDUtils,
     toStreamID
 } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, wait, waitForCondition, hexToBinary } from '@streamr/utils'
 import { shuffle } from 'lodash'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
 import { PushPipeline } from '../../src/utils/PushPipeline'
+import { MOCK_CONTENT } from '../test-utils/utils'
 
 const MESSAGES_PER_PUBLISHER = 1000
 const NUM_OF_DUPLICATE_MESSAGES = 500
@@ -41,9 +43,9 @@ interface MessageInfo {
     delivery: Delivery
 }
 
-function duplicateElements<T>(arr: readonly T[], numOfDuplicates: number): T[] {
+function duplicateElements<T>(arr: readonly T[], duplicateCount: number): T[] {
     const newArr = Array.from(arr)
-    for (let i = 0; i < numOfDuplicates; ++i) {
+    for (let i = 0; i < duplicateCount; ++i) {
         newArr.push(arr[Math.floor(Math.random() * arr.length)])
     }
     return newArr
@@ -85,16 +87,19 @@ function formChainOfMessages(publisherId: EthereumAddress): Array<MessageInfo> {
 
 function createMsg({ publisherId, timestamp }: MessageInfo): StreamMessage {
     const messageId = new MessageID(toStreamID('streamId'), 0, timestamp, 0, publisherId, '')
-    const prevMsgRef = timestamp > 1 ? new MessageRef(timestamp - 1, 0) : null
+    const prevMsgRef = timestamp > 1 ? new MessageRef(timestamp - 1, 0) : undefined
     return new StreamMessage({
         messageId,
         prevMsgRef,
-        content: {},
-        signature: 'signature'
+        content: MOCK_CONTENT,
+        signature: hexToBinary('0x1234'),
+        contentType: ContentType.JSON,
+        encryptionType: EncryptionType.NONE,
+        signatureType: SignatureType.SECP256K1
     })
 }
 
-function calculateNumberOfUnfillableGaps(messageInfosInOrder: MessageInfo[]): number {
+function calculateUnfillableGapCount(messageInfosInOrder: MessageInfo[]): number {
     let lastMessageUnavailable = false
     let gaps = 0
     messageInfosInOrder.forEach((messageInfo) => {
@@ -124,7 +129,7 @@ describe.skip('OrderMessages2', () => {
         }
 
         const totalUnfillableGaps = PUBLISHER_IDS.reduce((sum, publisherId) => (
-            sum + calculateNumberOfUnfillableGaps(groundTruthMessages[publisherId])
+            sum + calculateUnfillableGapCount(groundTruthMessages[publisherId])
         ), 0)
 
         const inOrderHandler = (msg: StreamMessage) => {

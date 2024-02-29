@@ -2,38 +2,29 @@ import { Client, types as cassandraTypes } from 'cassandra-driver'
 import { BatchManager } from '../../../../src/plugins/storage/BatchManager'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { InsertRecord } from '../../../../src/plugins/storage/Batch'
 const { TimeUuid } = cassandraTypes
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
-const defaultPublisherId = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
-const publisherOne = toEthereumAddress('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
-
-function buildMsg(
+function buildRecord(
     streamId: string,
-    streamPartition: number,
+    partition: number,
     timestamp: number,
-    sequenceNumber: number,
-    publisherId = defaultPublisherId,
-    msgChainId = '1',
-    content: any = {}
-) {
-    return new StreamMessage({
-        messageId: new MessageID(
-            toStreamID(streamId),
-            streamPartition,
-            timestamp,
-            sequenceNumber,
-            publisherId,
-            msgChainId
-        ),
-        content: JSON.stringify(content),
-        signature: 'signature'
-    })
+    sequenceNo: number
+): InsertRecord {
+    return {
+        streamId,
+        partition,
+        timestamp,
+        sequenceNo,
+        publisherId: toEthereumAddress('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'),
+        msgChainId: 'msgChainId',
+        payload: Buffer.from(new Uint8Array([1, 2]))
+    }
 }
 
 describe('BatchManager', () => {
@@ -53,7 +44,7 @@ describe('BatchManager', () => {
         await cassandraClient.connect()
         batchManager = new BatchManager(cassandraClient, {
             batchMaxSize: 10000,
-            batchMaxRecords: 10,
+            batchMaxRecordCount: 10,
             batchCloseTimeout: 1000,
             batchMaxRetries: 64
         })
@@ -73,33 +64,33 @@ describe('BatchManager', () => {
         expect(Object.values(batchManager.pendingBatches)).toHaveLength(0)
 
         let i = 0
-        let msg = buildMsg(streamId, 0, (i + 1) * 1000, i, publisherOne)
+        let msg = buildRecord(streamId, 0, (i + 1) * 1000, i)
         batchManager.store(bucketId, msg)
 
         expect(Object.values(batchManager.batches)).toHaveLength(1)
         expect(Object.values(batchManager.pendingBatches)).toHaveLength(0)
 
         for (i = 1; i < 11; i++) {
-            msg = buildMsg(streamId, 0, (i + 1) * 1000, i, publisherOne)
+            msg = buildRecord(streamId, 0, (i + 1) * 1000, i)
             batchManager.store(bucketId, msg)
         }
 
         expect(Object.values(batchManager.batches)).toHaveLength(1)
         expect(Object.values(batchManager.pendingBatches)).toHaveLength(1)
 
-        expect(Object.values(batchManager.batches)[0].streamMessages).toHaveLength(1)
-        expect(Object.values(batchManager.pendingBatches)[0].streamMessages).toHaveLength(10)
+        expect(Object.values(batchManager.batches)[0].records).toHaveLength(1)
+        expect(Object.values(batchManager.pendingBatches)[0].records).toHaveLength(10)
     })
 
     test('pendingBatches are inserted', (done) => {
-        const msg = buildMsg(streamId, 0, 1000, 0, publisherOne)
+        const msg = buildRecord(streamId, 0, 1000, 0)
         batchManager.store(bucketId, msg)
 
         const batch = batchManager.batches[bucketId]
 
         batch.on('locked', () => {
             expect(Object.values(batchManager.pendingBatches)).toHaveLength(1)
-            expect(Object.values(batchManager.pendingBatches)[0].streamMessages).toHaveLength(1)
+            expect(Object.values(batchManager.pendingBatches)[0].records).toHaveLength(1)
         })
 
         batch.on('inserted', async () => {
@@ -115,7 +106,7 @@ describe('BatchManager', () => {
     })
 
     test('batch emits states: locked => pending => inserted', (done) => {
-        const msg = buildMsg(streamId, 0, 1000, 0, publisherOne)
+        const msg = buildRecord(streamId, 0, 1000, 0)
         batchManager.store(bucketId, msg)
 
         const batch = batchManager.batches[bucketId]
@@ -130,14 +121,14 @@ describe('BatchManager', () => {
     })
 
     test('when failed to insert, increase retry and try again after timeout', async () => {
-        const msg = buildMsg(streamId, 0, 1000, 0, publisherOne)
+        const msg = buildRecord(streamId, 0, 1000, 0)
         batchManager.store(bucketId, msg)
 
         const batch = batchManager.batches[bucketId]
         expect(batch.retries).toEqual(0)
 
         const mockBatch = jest.fn().mockImplementation(() => {
-            throw Error('Throw not inserted')
+            throw new Error('Throw not inserted')
         })
         batchManager.cassandraClient.batch = mockBatch
 
@@ -152,13 +143,13 @@ describe('BatchManager', () => {
     test('drops batch after batch reached maximum retires', async () => {
         batchManager.opts.batchMaxRetries = 2
 
-        const msg = buildMsg(streamId, 0, 1000, 0, publisherOne)
+        const msg = buildRecord(streamId, 0, 1000, 0)
         batchManager.store(bucketId, msg)
 
         const batch = batchManager.batches[bucketId]
 
         const mockBatch = jest.fn().mockImplementation(() => {
-            throw Error('Throw not inserted')
+            throw new Error('Throw not inserted')
         })
         batchManager.cassandraClient.batch = mockBatch
 

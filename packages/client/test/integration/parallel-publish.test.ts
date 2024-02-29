@@ -37,7 +37,7 @@ describe('parallel publish', () => {
     it('messages in order and in same chain', async () => {
         const publishTasks = []
         for (let i = 0; i < MESSAGE_COUNT; i++) {
-            const task = publisher.publish(stream.id, {
+            const task = await publisher.publish(stream.id, {
                 mockId: i
             })
             publishTasks.push(task)
@@ -56,10 +56,10 @@ describe('parallel publish', () => {
             return (timestampDiff !== 0) ? timestampDiff : (m1.getSequenceNumber() - m2.getSequenceNumber())
         })
         expect(uniq(sortedMessages.map((m) => m.getMsgChainId()))).toHaveLength(1)
-        expect(sortedMessages[0].prevMsgRef).toBeNull()
+        expect(sortedMessages[0].prevMsgRef).toBeUndefined()
         expect(sortedMessages.every((m, i) => {
             if (i === 0) {
-                return m.prevMsgRef === null
+                return m.prevMsgRef === undefined
             } else {
                 const previous = sortedMessages[i - 1]
                 return (m.prevMsgRef!.timestamp === previous.getTimestamp()) && (m.prevMsgRef!.sequenceNumber === previous.getSequenceNumber())

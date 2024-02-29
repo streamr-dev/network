@@ -8,14 +8,13 @@ import {
 } from '../../../../src/plugins/storage/dataQueryEndpoint'
 import { toObject } from '../../../../src/plugins/storage/DataQueryFormat'
 import { Storage } from '../../../../src/plugins/storage/Storage'
-import { PassThrough } from 'stream'
-import { MessageID, StreamMessage, toStreamID } from '@streamr/protocol'
-import { MetricsContext, toEthereumAddress } from '@streamr/utils'
+import { Readable } from 'stream'
+import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, toStreamID } from '@streamr/protocol'
+import { MetricsContext, toEthereumAddress, hexToBinary, utf8ToBinary, toLengthPrefixedFrame } from '@streamr/utils'
+import { convertStreamMessageToBytes } from '@streamr/trackerless-network'
 
-const createEmptyStream = () => {
-    const stream = new PassThrough()
-    stream.push(null)
-    return stream
+const createOutputStream = (msg: StreamMessage[]): Readable => {
+    return toReadableStream(...msg.map(convertStreamMessageToBytes))
 }
 
 describe('dataQueryEndpoint', () => {
@@ -25,7 +24,6 @@ describe('dataQueryEndpoint', () => {
     function testGetRequest(url: string, sessionToken = 'mock-session-token') {
         return request(app)
             .get(url)
-            .set('Accept', 'application/json')
             .set('Authorization', `Bearer ${sessionToken}`)
     }
 
@@ -39,8 +37,11 @@ describe('dataQueryEndpoint', () => {
                 toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
                 'msgChainId'
             ),
-            content,
-            signature: 'signature'
+            content: utf8ToBinary(JSON.stringify(content)),
+            signature: hexToBinary('0x1234'),
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE,
+            signatureType: SignatureType.SECP256K1
         })
     }
 
@@ -63,7 +64,7 @@ describe('dataQueryEndpoint', () => {
                     world: 2,
                 }),
             ]
-            storage.requestLast = jest.fn().mockReturnValue(toReadableStream(...streamMessages))
+            storage.requestLast = jest.fn().mockReturnValue(createOutputStream(streamMessages))
         })
 
         describe('user errors', () => {
@@ -118,20 +119,10 @@ describe('dataQueryEndpoint', () => {
                     .expect(streamMessages.map((m) => toObject(m)), done)
             })
 
-            it('responds with latest version protocol serialization of messages given format=protocol', (done) => {
-                testGetRequest('/streams/streamId/data/partitions/0/last?format=protocol')
-                    .expect(streamMessages.map((msg) => msg.serialize(StreamMessage.LATEST_VERSION)), done)
-            })
-
-            it('responds with specific version protocol serialization of messages given format=protocol&version=32', (done) => {
-                testGetRequest('/streams/streamId/data/partitions/0/last?format=protocol&version=32')
-                    .expect(streamMessages.map((msg) => msg.serialize(32)), done)
-            })
-
             it('responds with raw format', (done) => {
-                testGetRequest('/streams/streamId/data/partitions/0/last?count=2&format=raw&version=32')
-                    .expect('Content-Type', 'text/plain')
-                    .expect(streamMessages.map((msg) => msg.serialize(32)).join('\n'), done)
+                testGetRequest('/streams/streamId/data/partitions/0/last?count=2&format=raw')
+                    .expect('Content-Type', 'application/octet-stream')
+                    .expect(Buffer.concat(streamMessages.map(convertStreamMessageToBytes).map(toLengthPrefixedFrame)), done)
             })
 
             it('invokes storage#requestLast once with correct arguments', async () => {
@@ -177,7 +168,7 @@ describe('dataQueryEndpoint', () => {
                     z: 'z',
                 }),
             ]
-            storage.requestFrom = () => toReadableStream(...streamMessages)
+            storage.requestFrom = () => createOutputStream(streamMessages)
         })
 
         describe('?fromTimestamp=1496408255672', () => {
@@ -193,7 +184,7 @@ describe('dataQueryEndpoint', () => {
             })
 
             it('invokes storage#requestFrom once with correct arguments', async () => {
-                storage.requestFrom = jest.fn().mockReturnValue(createEmptyStream())
+                storage.requestFrom = jest.fn().mockReturnValue(createOutputStream([]))
 
                 await testGetRequest('/streams/streamId/data/partitions/0/from?fromTimestamp=1496408255672')
 
@@ -233,7 +224,7 @@ describe('dataQueryEndpoint', () => {
             })
 
             it('invokes storage#requestFrom once with correct arguments', async () => {
-                storage.requestFrom = jest.fn().mockReturnValue(createEmptyStream())
+                storage.requestFrom = jest.fn().mockReturnValue(createOutputStream([]))
 
                 await testGetRequest(`/streams/streamId/data/partitions/0/from?${query}`)
 
@@ -309,7 +300,7 @@ describe('dataQueryEndpoint', () => {
                         '6': '6',
                     }),
                 ]
-                storage.requestRange = () => toReadableStream(...streamMessages)
+                storage.requestRange = () => createOutputStream(streamMessages)
             })
 
             it('responds 200 and Content-Type JSON', (done) => {
@@ -326,7 +317,7 @@ describe('dataQueryEndpoint', () => {
             })
 
             it('invokes storage#requestRange once with correct arguments', async () => {
-                storage.requestRange = jest.fn().mockReturnValue(createEmptyStream())
+                storage.requestRange = jest.fn().mockReturnValue(createOutputStream([]))
 
                 // eslint-disable-next-line max-len
                 await testGetRequest('/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
@@ -360,7 +351,7 @@ describe('dataQueryEndpoint', () => {
 
             const query = '?fromTimestamp=1000&toTimestamp=2000&fromSequenceNumber=1&toSequenceNumber=2'
             it('invokes storage#requestRange once with correct arguments', async () => {
-                storage.requestRange = jest.fn().mockReturnValue(createEmptyStream())
+                storage.requestRange = jest.fn().mockReturnValue(createOutputStream([]))
 
                 await testGetRequest(`/streams/streamId/data/partitions/0/range${query}`)
                 expect(storage.requestRange).toHaveBeenCalledTimes(1)
@@ -391,7 +382,7 @@ describe('dataQueryEndpoint', () => {
                         '6': '6',
                     }),
                 ]
-                storage.requestRange = () => toReadableStream(...streamMessages)
+                storage.requestRange = () => createOutputStream(streamMessages)
             })
 
             it('responds 200 and Content-Type JSON', (done) => {
@@ -406,7 +397,7 @@ describe('dataQueryEndpoint', () => {
             })
 
             it('invokes storage#requestRange once with correct arguments', async () => {
-                storage.requestRange = jest.fn().mockReturnValue(createEmptyStream())
+                storage.requestRange = jest.fn().mockReturnValue(createOutputStream([]))
 
                 await testGetRequest(`/streams/streamId/data/partitions/0/range?${query}`)
                 expect(storage.requestRange).toHaveBeenCalledTimes(1)

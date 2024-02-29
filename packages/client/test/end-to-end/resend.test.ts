@@ -1,33 +1,30 @@
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { createTestStream } from '../test-utils/utils'
+import { createTestStream, createTestClient } from '../test-utils/utils'
 import range from 'lodash/range'
-import { CONFIG_TEST, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { wait, waitForCondition } from '@streamr/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
+import { randomBytes } from 'crypto'
+import shuffle from 'lodash/shuffle'
+import random from 'lodash/random'
 
 const NUM_OF_MESSAGES = 20
-const MESSAGE_STORE_TIMEOUT = 9 * 1000
-const TIMEOUT = 30 * 1000
+const MESSAGE_STORE_TIMEOUT = 10 * 1000
+const TIMEOUT = 60 * 1000
 
 describe('resend', () => {
     let publisherClient: StreamrClient
     let resendClient: StreamrClient
+    let payloads: Array<Uint8Array | { idx: number }>
 
     beforeEach(async () => {
-        publisherClient = new StreamrClient({
-            ...CONFIG_TEST,
-            auth: {
-                privateKey: await fetchPrivateKeyWithGas()
-            }
-        })
-        resendClient = new StreamrClient({
-            ...CONFIG_TEST,
-            auth: {
-                privateKey: fastPrivateKey()
-            }
-        })
+        publisherClient = createTestClient(await fetchPrivateKeyWithGas(), 43232)
+        resendClient = createTestClient(fastPrivateKey(), 43233)
+        const binaryPayloads = range(NUM_OF_MESSAGES / 2).map(() => randomBytes(random(0, 256)))
+        const jsonPayloads = range(NUM_OF_MESSAGES / 2).map((idx) => ({ idx }))
+        payloads = shuffle([...binaryPayloads, ...jsonPayloads])
     }, TIMEOUT)
 
     afterEach(async () => {
@@ -47,14 +44,8 @@ describe('resend', () => {
                 user: await resendClient.getAddress()
             })
             await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-
-            for (const idx of range(NUM_OF_MESSAGES)) {
-                await publisherClient.publish({
-                    id: stream.id,
-                    partition: 0,
-                }, {
-                    messageNo: idx
-                })
+            for (const payload of payloads) {
+                await publisherClient.publish({ id: stream.id, partition: 0 }, payload)
             }
             await wait(MESSAGE_STORE_TIMEOUT)
         }, TIMEOUT)
@@ -75,6 +66,7 @@ describe('resend', () => {
                 () => `messages array length was ${messages.length}`
             )
             expect(messages).toHaveLength(NUM_OF_MESSAGES)
+            expect(messages).toEqual(payloads)
         }, TIMEOUT)
     })
 })

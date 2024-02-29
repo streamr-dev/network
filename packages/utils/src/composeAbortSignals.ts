@@ -2,6 +2,13 @@ export type ComposedAbortSignal = AbortSignal & { destroy: () => void }
 
 /**
  * Compose a single AbortSignal from multiple AbortSignals with "OR" logic.
+ *
+ * WARNING: be aware of a potential memory leak that can occur if the composed
+ * AbortSignal is never destroyed. This can happen if an instance of AbortSignal
+ * is composed over and over with this utility but the composed AbortSignal (or
+ * the other passed AbortSignal(s)) never abort. In this situation the
+ * aforementioned instance of AbortSignal will have more and more listeners added
+ * but never cleaned.
  */
 export function composeAbortSignals(...signals: AbortSignal[]): ComposedAbortSignal {
     if (signals.length === 0) {

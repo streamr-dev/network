@@ -1,6 +1,6 @@
 import { Queue } from '@streamr/test-utils'
 import { wait, waitForEvent } from '@streamr/utils'
-import StreamrClient from 'streamr-client'
+import { StreamrClient } from '@streamr/sdk'
 import WebSocket from 'ws'
 import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'
 import { WebsocketServer } from '../../../../src/plugins/websocket/WebsocketServer'
@@ -29,7 +29,7 @@ describe('ping', () => {
         })
 
         beforeEach(async () => {
-            client = new WebSocket(`ws://localhost:${WEBSOCKET_PORT}/streams/${encodeURIComponent(STREAM_ID)}/publish`)
+            client = new WebSocket(`ws://127.0.0.1:${WEBSOCKET_PORT}/streams/${encodeURIComponent(STREAM_ID)}/publish`)
             await waitForEvent(client, 'open')
         })
 
@@ -82,7 +82,7 @@ describe('ping', () => {
             const PING_SEND_INTERVAL = 200
             const DISCONNECT_TIMEOUT = 400
             await startServer(PING_SEND_INTERVAL, DISCONNECT_TIMEOUT)
-            const client = new WebSocket(`ws://localhost:${WEBSOCKET_PORT}/streams/${encodeURIComponent(STREAM_ID)}/publish`)
+            const client = new WebSocket(`ws://127.0.0.1:${WEBSOCKET_PORT}/streams/${encodeURIComponent(STREAM_ID)}/publish`)
             await waitForEvent(client, 'open')
             let receivedCount = 0
             let disconnected = false
@@ -126,7 +126,7 @@ describe('ping', () => {
 
         it('no messages', async () => {
             await startServer(50, 100)
-            const client = new WebSocket(`ws://localhost:${WEBSOCKET_PORT}/streams/${encodeURIComponent(STREAM_ID)}/publish`)
+            const client = new WebSocket(`ws://127.0.0.1:${WEBSOCKET_PORT}/streams/${encodeURIComponent(STREAM_ID)}/publish`)
             await waitForEvent(client, 'open')
             client.pause()
             const onClose = jest.fn()
@@ -140,7 +140,7 @@ describe('ping', () => {
 
         it('disable ping', async () => {
             await startServer(0, 0)
-            const client = new WebSocket(`ws://localhost:${WEBSOCKET_PORT}/streams/${encodeURIComponent(STREAM_ID)}/publish`)
+            const client = new WebSocket(`ws://127.0.0.1:${WEBSOCKET_PORT}/streams/${encodeURIComponent(STREAM_ID)}/publish`)
             await waitForEvent(client, 'open')
             const onPing = jest.fn()
             client.on('ping', onPing)
@@ -150,7 +150,7 @@ describe('ping', () => {
 
         it('disable disconnect', async () => {
             await startServer(20, 0)
-            const client = new WebSocket(`ws://localhost:${WEBSOCKET_PORT}/streams/${encodeURIComponent(STREAM_ID)}/publish`)
+            const client = new WebSocket(`ws://127.0.0.1:${WEBSOCKET_PORT}/streams/${encodeURIComponent(STREAM_ID)}/publish`)
             await waitForEvent(client, 'open')
             const onClose = jest.fn()
             client.on('close', onClose)

@@ -40,7 +40,7 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
       - name: Cache Docker layers
-        uses: actions/cache@v3.3.2
+        uses: actions/cache@v4.0.0
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-v1-${{ github.sha }}
@@ -70,7 +70,7 @@ jobs:
 
       - name: Docker meta
         id: docker_meta_success
-        uses: docker/metadata-action@v5.0.0
+        uses: docker/metadata-action@v5.5.1
         if: ${{inputs.push_image}}
         with:
           images: ${{inputs.image_name}}
@@ -79,11 +79,11 @@ jobs:
           tags: |
             type=match,pattern=broker/(v.*),group=1,value=${{ env.broker_head_tag }}
             type=raw,value=dev,enable=${{ inputs.branch == 'main' }}
-            type=raw,value=dev-tatum,enable=${{ inputs.branch == 'streamr-1.0' }}
+            type=raw,value=${{ inputs.branch }},enable=${{ inputs.branch != 'main' }}
 
       - name: Build
         if: ${{!inputs.push_image}}
-        uses: docker/build-push-action@v5.0.0
+        uses: docker/build-push-action@v5.1.0
         with:
           context: .
           file: ${{inputs.docker_file}}
@@ -108,7 +108,7 @@ jobs:
 
       - name: Build & Push
         if: ${{inputs.push_image}}
-        uses: docker/build-push-action@v5.0.0
+        uses: docker/build-push-action@v5.1.0
         with:
           context: .
           file: ${{inputs.docker_file}}
@@ -124,13 +124,13 @@ jobs:
 
       - name: Collect docker logs on failure
         if: failure()
-        uses: jwalton/gh-docker-logs@v2.2.1
+        uses: jwalton/gh-docker-logs@v2.2.2
         with:
           dest: 'logs'
 
       - name: Upload logs to GitHub
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: docker-logs-node${{ matrix.node-version }}--${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
           path: 'logs'

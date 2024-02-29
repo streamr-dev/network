@@ -1,11 +1,12 @@
 import 'reflect-metadata'
 
-import { GroupKeyMessage, GroupKeyRequest, StreamMessageType } from '@streamr/protocol'
+import { StreamMessageType } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { GroupKey } from '../../src/encryption/GroupKey'
-import { StreamPermission } from '../../src/permission'
+import { convertBytesToGroupKeyRequest } from '@streamr/trackerless-network'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
+import { GroupKey } from '../../src/encryption/GroupKey'
+import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { createMockMessage, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
@@ -37,7 +38,7 @@ describe('resend and subscribe', () => {
             permissions: [StreamPermission.PUBLISH]
         })
         storageNode = await environment.startStorageNode()
-        subscriber.addStreamToStorageNode(stream.id, storageNode.id)
+        subscriber.addStreamToStorageNode(stream.id, storageNode.getAddress())
     })
 
     afterAll(async () => {
@@ -95,6 +96,6 @@ describe('resend and subscribe', () => {
             messageType: StreamMessageType.GROUP_KEY_REQUEST
         })
         expect(groupKeyRequests.length).toBe(1)
-        expect((GroupKeyMessage.fromStreamMessage(groupKeyRequests[0]) as GroupKeyRequest).groupKeyIds).toEqual([groupKey.id])
+        expect(convertBytesToGroupKeyRequest(groupKeyRequests[0].content).groupKeyIds).toEqual([groupKey.id])
     })
 })

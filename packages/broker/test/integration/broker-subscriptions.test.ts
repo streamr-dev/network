@@ -1,20 +1,18 @@
 import { Wallet } from '@ethersproject/wallet'
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
-import StreamrClient, { Stream, StreamPermission } from 'streamr-client'
-import { Tracker } from '@streamr/network-tracker'
+import { StreamrClient, Stream, StreamPartID, StreamPermission } from '@streamr/sdk'
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { wait, waitForCondition } from '@streamr/utils'
 import { Broker } from '../../src/broker'
-import { startBroker, createClient, createTestStream, getStreamParts, startTestTracker } from '../utils'
+import { startBroker, createClient, createTestStream } from '../utils'
 
 jest.setTimeout(50000)
 
-const trackerPort = 13410
 const mqttPort1 = 13551
 const mqttPort2 = 13552
 
 const createMqttClient = (mqttPort: number) => {
-    return mqtt.connectAsync(`mqtt://localhost:${mqttPort}`)
+    return mqtt.connectAsync(`mqtt://127.0.0.1:${mqttPort}`)
 }
 
 const grantPermissions = async (streams: Stream[], brokerUsers: Wallet[]) => {
@@ -26,8 +24,13 @@ const grantPermissions = async (streams: Stream[], brokerUsers: Wallet[]) => {
     }
 }
 
+export const getStreamParts = async (broker: Broker): Promise<StreamPartID[]> => {
+    const client = broker.getStreamrClient()
+    const subs = await client.getSubscriptions()
+    return subs.map((s) => s.streamPartId)
+}
+
 describe('broker subscriptions', () => {
-    let tracker: Tracker
     let broker1: Broker
     let broker2: Broker
     let client1: StreamrClient
@@ -40,10 +43,8 @@ describe('broker subscriptions', () => {
     beforeEach(async () => {
         const broker1User = fastWallet()
         const broker2User = fastWallet()
-        tracker = await startTestTracker(trackerPort)
         broker1 = await startBroker({
             privateKey: broker1User.privateKey,
-            trackerPort,
             extraPlugins: {
                 mqtt: {
                     port: mqttPort1
@@ -52,7 +53,6 @@ describe('broker subscriptions', () => {
         })
         broker2 = await startBroker({
             privateKey: broker2User.privateKey,
-            trackerPort,
             extraPlugins: {
                 mqtt: {
                     port: mqttPort2
@@ -60,8 +60,8 @@ describe('broker subscriptions', () => {
             }
         })
 
-        client1 = await createClient(tracker, await fetchPrivateKeyWithGas())
-        client2 = await createClient(tracker, await fetchPrivateKeyWithGas())
+        client1 = createClient(await fetchPrivateKeyWithGas())
+        client2 = createClient(await fetchPrivateKeyWithGas())
 
         mqttClient1 = await createMqttClient(mqttPort1)
         mqttClient2 = await createMqttClient(mqttPort2)
@@ -80,7 +80,6 @@ describe('broker subscriptions', () => {
             client2?.destroy(),
             broker1?.stop(),
             broker2?.stop(),
-            tracker?.stop()
         ])
 
     })

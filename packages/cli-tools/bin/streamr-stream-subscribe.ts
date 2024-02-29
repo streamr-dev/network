@@ -2,9 +2,10 @@
 import '../src/logLevel'
 import omit from 'lodash/omit'
 import isString from 'lodash/isString'
-import StreamrClient, { MessageMetadata } from 'streamr-client'
+import { StreamrClient, MessageMetadata } from '@streamr/sdk'
 import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { createFnParseInt } from '../src/common'
+import { binaryToHex } from '@streamr/utils'
 
 interface Options extends BaseOptions {
     partition: number
@@ -14,15 +15,16 @@ interface Options extends BaseOptions {
 }
 
 createClientCommand(async (client: StreamrClient, streamId: string, options: Options) => {
+    const formContent = (content: unknown) => options.raw ? binaryToHex(content as Uint8Array) : content
     const formMessage = options.withMetadata
-        ? (message: unknown, metadata: MessageMetadata) => ({ message, metadata: omit(metadata, 'streamMessage') })
-        : (message: unknown) => message
+        ? (content: unknown, metadata: MessageMetadata) => ({ content: formContent(content), metadata: omit(metadata, 'streamMessage') })
+        : (content: unknown) => formContent(content)
     await client.subscribe({
         streamId,
         partition: options.partition,
         raw: options.raw
-    }, (message, metadata) => {
-        const output = formMessage(message, metadata)
+    }, (content, metadata) => {
+        const output = formMessage(content, metadata)
         console.info(isString(output) ? output : JSON.stringify(output))
     })
 }, {

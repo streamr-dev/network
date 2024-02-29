@@ -1,40 +1,36 @@
-import StreamrClient, {
-    CONFIG_TEST,
-    Stream,
-    StreamPermission,
-    StreamMetadata,
-    StreamrClientConfig
-} from 'streamr-client'
-import padEnd from 'lodash/padEnd'
+import { EthereumAddress, merge, toEthereumAddress } from '@streamr/utils'
 import { Wallet } from 'ethers'
-import { Tracker, startTracker } from '@streamr/network-tracker'
+import padEnd from 'lodash/padEnd'
+import { StreamrClient,
+    CONFIG_TEST,
+    NetworkPeerDescriptor,
+    Stream,
+    StreamMetadata,
+    StreamPermission,
+    StreamrClientConfig
+} from '@streamr/sdk'
 import { Broker, createBroker } from '../src/broker'
 import { Config } from '../src/config/config'
-import { StreamPartID } from '@streamr/protocol'
-import { EthereumAddress, MetricsContext, toEthereumAddress } from '@streamr/utils'
-import { TEST_CONFIG } from '@streamr/network-node'
-import { merge } from '@streamr/utils'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 
 interface TestConfig {
-    trackerPort: number
     privateKey: string
     httpPort?: number
     extraPlugins?: Record<string, unknown>
     apiAuthentication?: Config['apiAuthentication']
     enableCassandra?: boolean
     storageConfigRefreshInterval?: number
+    entryPoints?: NetworkPeerDescriptor[]
 }
 
 export const formConfig = ({
-    trackerPort,
     privateKey,
     httpPort,
     extraPlugins = {},
     apiAuthentication,
     enableCassandra = false,
-    storageConfigRefreshInterval = 0,
+    storageConfigRefreshInterval = 0
 }: TestConfig): Config => {
     const plugins: Record<string, any> = { ...extraPlugins }
     if (httpPort) {
@@ -61,22 +57,11 @@ export const formConfig = ({
                 privateKey
             },
             network: {
-                id: toEthereumAddress(new Wallet(privateKey).address),
-                trackers: [
-                    {
-                        id: createEthereumAddress(trackerPort),
-                        ws: `ws://127.0.0.1:${trackerPort}`,
-                        http: `http://127.0.0.1:${trackerPort}`
-                    }
-                ],
-                location: {
-                    latitude: 60.19,
-                    longitude: 24.95,
-                    country: 'Finland',
-                    city: 'Helsinki'
-                },
-                webrtcDisallowPrivateAddresses: false,
-            }
+                ...CONFIG_TEST.network,
+                node: {
+                    id: toEthereumAddress(new Wallet(privateKey).address),
+                }
+            },
         },
         httpServer: {
             port: httpPort ? httpPort : 7171
@@ -84,18 +69,6 @@ export const formConfig = ({
         apiAuthentication,
         plugins
     }
-}
-
-export const startTestTracker = async (port: number): Promise<Tracker> => {
-    return await startTracker({
-        id: createEthereumAddress(port),
-        listen: {
-            hostname: '127.0.0.1',
-            port
-        },
-        metricsContext: new MetricsContext(),
-        trackerPingInterval: TEST_CONFIG.trackerPingInterval
-    })
 }
 
 export const startBroker = async (testConfig: TestConfig): Promise<Broker> => {
@@ -108,24 +81,24 @@ export const createEthereumAddress = (id: number): EthereumAddress => {
     return toEthereumAddress('0x' + padEnd(String(id), 40, '0'))
 }
 
-export const createClient = async (
-    tracker: Tracker,
+export const createClient = (
     privateKey: string,
     clientOptions?: StreamrClientConfig
-): Promise<StreamrClient> => {
+): StreamrClient => {
     const opts = merge(
         CONFIG_TEST,
         {
             auth: {
                 privateKey
             },
-            network: merge(
-                CONFIG_TEST?.network,
-                { 
-                    trackers: [tracker.getConfigRecord()]
-                },
-                clientOptions?.network
-            )
+            network: {
+                controlLayer: CONFIG_TEST.network!.controlLayer,
+                node:
+                    merge(
+                        CONFIG_TEST.network!.node,
+                        clientOptions?.network?.node
+                    )
+            }
         },
         clientOptions
     )
@@ -151,25 +124,21 @@ export const createTestStream = async (
     return stream
 }
 
-export const getStreamParts = async (broker: Broker): Promise<StreamPartID[]> => {
-    const node = await broker.getNode()
-    return Array.from(node.getStreamParts())
-}
-
 export async function startStorageNode(
     storageNodePrivateKey: string,
     httpPort: number,
-    trackerPort: number
+    entryPoints?: NetworkPeerDescriptor[],
+    extraPlugins = {}
 ): Promise<Broker> {
     const client = new StreamrClient({
         ...CONFIG_TEST,
         auth: {
             privateKey: storageNodePrivateKey
-        },
+        }
     })
     try {
         await client.setStorageNodeMetadata({
-            http: `http://127.0.0.1:${httpPort}`
+            urls: [`http://127.0.0.1:${httpPort}`]
         })
         await createAssignmentStream(client)
     } finally {
@@ -177,9 +146,10 @@ export async function startStorageNode(
     }
     return startBroker({
         privateKey: storageNodePrivateKey,
-        trackerPort,
         httpPort,
         enableCassandra: true,
+        entryPoints,
+        extraPlugins
     })
 }
 

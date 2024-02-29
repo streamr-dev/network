@@ -1,6 +1,16 @@
-import { MessageID, MessageRef, StreamID, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
+import {
+    ContentType,
+    EncryptionType,
+    MessageID,
+    MessageRef, SignatureType,
+    StreamID,
+    StreamMessage,
+    StreamPartID,
+    StreamPartIDUtils,
+    toStreamID
+} from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, collect, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, collect, waitForCondition, hexToBinary } from '@streamr/utils'
 import last from 'lodash/last'
 import range from 'lodash/range'
 import without from 'lodash/without'
@@ -8,6 +18,7 @@ import { ResendOptions, ResendRangeOptions, Resends } from '../../src/subscribe/
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
 import { fromArray } from '../../src/utils/GeneratorUtils'
 import { PushPipeline } from '../../src/utils/PushPipeline'
+import { MOCK_CONTENT } from '../test-utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 const PUBLISHER_ID = randomEthereumAddress()
@@ -44,8 +55,11 @@ const createMessage = (timestamp: number) => {
     return new StreamMessage({
         messageId: new MessageID(toStreamID('streamId'), 0, timestamp, 0, PUBLISHER_ID, MSG_CHAIN_ID),
         prevMsgRef: new MessageRef(timestamp - 1000, 0),
-        content: {},
-        signature: 'signature'
+        content: MOCK_CONTENT,
+        signature: hexToBinary('0x1234'),
+        contentType: ContentType.JSON,
+        encryptionType: EncryptionType.NONE,
+        signatureType: SignatureType.SECP256K1
     })
 }
 

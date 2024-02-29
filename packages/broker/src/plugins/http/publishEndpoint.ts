@@ -1,5 +1,5 @@
 import express, { Request, RequestHandler, Response } from 'express'
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient } from '@streamr/sdk'
 import { Logger } from '@streamr/utils'
 import { v4 as uuid } from 'uuid'
 import { parseQueryParameter, parsePositiveInteger, parseTimestamp } from '../../helpers/parser'

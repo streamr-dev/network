@@ -7,7 +7,7 @@ import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { ContractFactory } from '../ContractFactory'
-import { getStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
+import { getStreamRegistryChainProviders, getEthersOverrides } from '../Ethereum'
 import { Stream, StreamMetadata } from '../Stream'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamrClientError } from '../StreamrClientError'
@@ -181,7 +181,7 @@ export class StreamRegistry {
     }
 
     async createStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
-        const ethersOverrides = getStreamRegistryOverrides(this.config)
+        const ethersOverrides = getEthersOverrides(this.config)
 
         const domainAndPath = StreamIDUtils.getDomainAndPath(streamId)
         if (domainAndPath === undefined) {
@@ -228,7 +228,7 @@ export class StreamRegistry {
     // Most likely the contract doesn't make any merging (like we do in Stream#update)?
     async updateStream(streamId: StreamID, metadata: Partial<StreamMetadata>): Promise<Stream> {
         await this.connectToContract()
-        const ethersOverrides = getStreamRegistryOverrides(this.config)
+        const ethersOverrides = getEthersOverrides(this.config)
         await waitForTx(this.streamRegistryContract!.updateStreamMetadata(
             streamId,
             JSON.stringify(metadata),
@@ -240,7 +240,7 @@ export class StreamRegistry {
     async deleteStream(streamIdOrPath: string): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         await this.connectToContract()
-        const ethersOverrides = getStreamRegistryOverrides(this.config)
+        const ethersOverrides = getEthersOverrides(this.config)
         await waitForTx(this.streamRegistryContract!.deleteStream(
             streamId,
             ethersOverrides
@@ -316,7 +316,7 @@ export class StreamRegistry {
     ): GraphQLQuery {
         const query = `
         {
-            permissions (
+            streamPermissions (
                 first: ${pageSize}
                 orderBy: "id"
                 where: {
@@ -412,16 +412,16 @@ export class StreamRegistry {
     async grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
         return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: EthereumAddress | undefined, solidityType: BigNumber) => {
             return (user === undefined)
-                ? this.streamRegistryContract!.grantPublicPermission(streamId, solidityType, getStreamRegistryOverrides(this.config))
-                : this.streamRegistryContract!.grantPermission(streamId, user, solidityType, getStreamRegistryOverrides(this.config))
+                ? this.streamRegistryContract!.grantPublicPermission(streamId, solidityType, getEthersOverrides(this.config))
+                : this.streamRegistryContract!.grantPermission(streamId, user, solidityType, getEthersOverrides(this.config))
         }, ...assignments)
     }
 
     async revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
         return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: EthereumAddress | undefined, solidityType: BigNumber) => {
             return (user === undefined)
-                ? this.streamRegistryContract!.revokePublicPermission(streamId, solidityType, getStreamRegistryOverrides(this.config))
-                : this.streamRegistryContract!.revokePermission(streamId, user, solidityType, getStreamRegistryOverrides(this.config))
+                ? this.streamRegistryContract!.revokePublicPermission(streamId, solidityType, getEthersOverrides(this.config))
+                : this.streamRegistryContract!.revokePermission(streamId, user, solidityType, getEthersOverrides(this.config))
         }, ...assignments)
     }
 
@@ -464,7 +464,7 @@ export class StreamRegistry {
             }))
         }
         await this.connectToContract()
-        const ethersOverrides = getStreamRegistryOverrides(this.config)
+        const ethersOverrides = getEthersOverrides(this.config)
         const txToSubmit = this.streamRegistryContract!.setPermissionsMultipleStreams(
             streamIds,
             targets,

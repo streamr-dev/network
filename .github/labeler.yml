@@ -1,38 +1,52 @@
 ---
-test:
-  - '*test*'
 ci:
-  - '.github/*'
-  - '.github/**/*'
+- changed-files:
+  - any-glob-to-any-file: '.github/*'
+  - any-glob-to-any-file: '.github/**/*'
 docs:
-  - '**.md'
-  - '*.md'
+- changed-files:
+  - any-glob-to-any-file: '**.md'
+  - any-glob-to-any-file: '*.md'
 broker:
-  - 'packages/broker/*'
-  - 'packages/broker/**/*'
+- changed-files:
+  - any-glob-to-any-file: 'packages/broker/*'
+  - any-glob-to-any-file: 'packages/broker/**/*'
 browser-test-runner:
-  - 'package/browser-test-runner/*'
-  - 'package/browser-test-runner/**/*'
+- changed-files:
+  - any-glob-to-any-file: 'package/browser-test-runner/*'
+  - any-glob-to-any-file: 'package/browser-test-runner/**/*'
 network:
-  - 'packages/network/*'
-  - 'packages/network/**/*'
-tracker:
-  - 'packages/network-tracker/*'
-  - 'packages/network-tracker/**/*'
+- changed-files:
+  - any-glob-to-any-file: 'packages/trackerless-network/*'
+  - any-glob-to-any-file: 'packages/trackerless-network/**/*'
+dht:
+- changed-files:
+  - any-glob-to-any-file: 'packages/dht/*'
+  - any-glob-to-any-file: 'packages/dht/**/*'
+proto-rpc:
+- changed-files:
+  - any-glob-to-any-file: 'packages/proto-rpc/*'
+  - any-glob-to-any-file: 'packages/proto-rpc/**/*'
 client:
-  - 'packages/client/*'
-  - 'packages/client/**/*'
+- changed-files:
+  - any-glob-to-any-file: 'packages/client/*'
+  - any-glob-to-any-file: 'packages/client/**/*'
 protocol:
-  - 'packages/protocol/*'
-  - 'packages/protocol/**/*'
+- changed-files:
+  - any-glob-to-any-file: 'packages/protocol/*'
+  - any-glob-to-any-file: 'packages/protocol/**/*'
 test-utils:
-  - 'packages/test-utils/*'
-  - 'packages/test-utils/**/*'
+- changed-files:
+  - any-glob-to-any-file: 'packages/test-utils/*'
+  - any-glob-to-any-file: 'packages/test-utils/**/*'
 utils:
-  - 'packages/utils/*'
-  - 'packages/utils/**/*'
+- changed-files:
+  - any-glob-to-any-file: 'packages/utils/*'
+  - any-glob-to-any-file: 'packages/utils/**/*'
 cli-tools:
-  - 'packages/cli-tools/*'
-  - 'packages/cli-tools/**/*'
+- changed-files:
+  - any-glob-to-any-file: 'packages/cli-tools/*'
+  - any-glob-to-any-file: 'packages/cli-tools/**/*'
 changelog:
-  - 'packages/*/CHANGELOG.md'
+- changed-files:
+  - any-glob-to-any-file: 'packages/*/CHANGELOG.md'

@@ -1,0 +1,11 @@
+.DS_Store
+node_modules
+lerna-debug.log
+*.tsbuildinfo
+*.heapprofile
+*.heapsnapshot
+oldsrc
+dist
+coverage
+test/simulation/data/nodeids.json
+test/simulation/data/orderedneighbors.json

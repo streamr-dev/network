@@ -1,8 +1,8 @@
 import 'reflect-metadata'
 
-import { MessageID, StreamID, StreamMessage } from '@streamr/protocol'
+import { ContentType, EncryptionType, MessageID, SignatureType, StreamID, StreamMessage, StreamMessageType } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { Defer, collect, waitForCondition } from '@streamr/utils'
+import { Defer, collect, waitForCondition, utf8ToBinary } from '@streamr/utils'
 import sample from 'lodash/sample'
 import shuffle from 'lodash/shuffle'
 import { Authentication, createPrivateKeyAuthentication } from '../../src/Authentication'
@@ -49,11 +49,15 @@ describe('Subscriber', () => {
         return subcriptions.length
     }
 
-    const createMockMessage = async (serializedContent: string, timestamp: number) => {
+    const createMockMessage = async (content: Uint8Array, timestamp: number) => {
         return await createSignedMessage({
             messageId: new MessageID(streamId, 0, timestamp, 0, await publisher.getAddress(), 'msgChainId'),
-            serializedContent,
-            authentication: publisherAuthentication
+            messageType: StreamMessageType.MESSAGE,
+            content,
+            authentication: publisherAuthentication,
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE,
+            signatureType: SignatureType.SECP256K1
         })
     }
 
@@ -332,12 +336,12 @@ describe('Subscriber', () => {
                 sub.on('error', onSubscriptionError)
 
                 const published = []
-                const nodeId = (await publisher.getNode()).getNodeId()
+                const nodeId = await publisher.getNodeId()
                 const node = environment.getNetwork().getNode(nodeId)!
                 for (let i = 0; i < NUM_MESSAGES; i++) {
-                    const serializedContent = (i === MAX_ITEMS) ? 'invalid-json' : JSON.stringify({ foo: i })
-                    const msg = await createMockMessage(serializedContent, i)
-                    node.publish(msg)
+                    const content = (i === MAX_ITEMS) ? 'invalid-json' : JSON.stringify({ foo: i })
+                    const msg = await createMockMessage(utf8ToBinary(content), i)
+                    await node.broadcast(msg)
                     published.push(msg)
                 }
 

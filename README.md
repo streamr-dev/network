@@ -6,7 +6,7 @@
 
 # Network
 
-Monorepo containing all the main components of Streamr Network.
+Monorepo containing the main components of Streamr Network.
 
 ## Table of Contents
 - [Packages](#packages)
@@ -17,21 +17,23 @@ Monorepo containing all the main components of Streamr Network.
 ## Packages
 
 ### User-Facing
-* [broker](packages/broker/README.md) (streamr-broker)
-* [client](packages/client/README.md) (streamr-client)
+* [node](packages/broker/README.md) (@streamr/node)
+* [sdk](packages/client/README.md) (@streamr/sdk)
 * [cli-tools](packages/cli-tools/README.md) (@streamr/cli-tools)
 
 ### Internal
-* [network-node](packages/network/README.md) (@streamr/network-node)
-* [network-tracker](packages/network-tracker/README.md) (@streamr/network-tracker)
-* [protocol](packages/protocol/README.md) (@streamr/protocol)
+* [browser-test-runner](packages/browser-test-runner/index.js) (@streamr/browser-test-runner)
 * [utils](packages/utils/README.md) (@streamr/utils)
 * [test-utils](packages/test-utils/README.md) (@streamr/test-utils)
-* [browser-test-runner](packages/browser-test-runner/index.js) (@streamr/browser-test-runner)
+* [protocol](packages/protocol/README.md) (@streamr/protocol)
+* [proto-rpc](packages/proto-rpc/README.md) (@streamr/proto-rpc)
+* [autocertifier-client](packages/autocertifier-client/README.md) (@streamr/autocertifier-client)
+* [dht](packages/dht/README.md) (@streamr/dht)
+* [autocertifier-server](packages/autocertifier-server/README.md) (@streamr/autocertifier-server)
+* [trackerless-network](packages/trackerless-network/README.md) (@streamr/trackerless-network)
 
 ## NPM scripts
-| Node.js `16.13.x` is the minimum required version. Node.js `18.12.x`, NPM `8.x` and later versions are recommended. |
-|---------------------------------------------------------------------------------------------------------------------|
+Node.js version 20 is recommended.
 
 The monorepo is managed using [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces).
 
@@ -145,7 +147,7 @@ npm install
 
 | Variable                     | Description                                                                            | Packages                                    |
 |------------------------------|----------------------------------------------------------------------------------------|---------------------------------------------|
-| `BROWSER_TEST_DEBUG_MODE`    | Leaves the Electron window open while running browser tests                            | utils, network-node, client |
+| `BROWSER_TEST_DEBUG_MODE`    | Leaves the Electron window open while running browser tests                            | utils, proto-rpc, dht, network-node, client |
 | `STREAMR_DOCKER_DEV_HOST`    | Sets an alternative IP address for streamr-docker-dev in end-to-end tests              | client, broker                              |
 | `LOG_LEVEL`                  | Adjust logging level                                                                   | _all_                                       |
 | `DISABLE_PRETTY_LOG`         | Set to true to disable pretty printing of logs and print JSONL instead                 | _all_                                       |
@@ -157,74 +159,70 @@ npm install
 
 ## Release
 
-### utils, test-utils, protocol, network-tracker, network-node, client, cli-tools
+All packages are released at the same time under the same version.
 
-All the above packages are released at the same time.
+### Step 1: Edit the CHANGELOG
+You can skip this step if releasing a beta version.
 
-1. `git checkout main && git pull`
-2. (skip if beta) Read [CHANGELOG](CHANGELOG.md), decide new version, and edit file.
-3. `./update-versions.sh <SEMVER>` E.g. `./update-versions.sh 7.1.1`
-4. `npm run clean && npm install && npm run build && npm run versions`
-   - Ensure output does not contain yellow or red markers
-5. Add files to staging `git add . -p`
-6. `./release-git-tags.sh <SEMVER>` E.g. `./release-git-tags.sh 7.1.1`
-7. Wait for pushed commit to pass CI validation
-8. Publish packages `./release.sh <NPM_TAG>`
-    - Use argument `beta` if publishing a beta version
-    - Use argument `latest` if publishing a stable version
-9. Update client API docs if major or minor change:
+Read and edit [CHANGELOG.md](CHANGELOG.md). Create a new section for the new version, move items from under
+"Unreleased" to this new section. Add any additional changes worth mentioning that may be missing from "Unreleased".
+
+
+### Step 2: Creating and pushing the version and tag
+In the bash commands below, replace `<SEMVER>` with the version to be published _without_ the letter "v" infront.
+
+```
+git checkout main
+git pull
+./update-versions.sh <SEMVER>                                        # e.g. ./update-versions.sh 7.1.1
+npm run clean && npm install && npm run build && npm run versions    # Check that the output has not red or yellow markers
+git add -p .                                                         # or "git add -all"
+./release-git-tags.sh <SEMVER>                                       # e.g. `./release-git-tags.sh 7.1.1`
+```
+
+### Step 3: Publish NPM and release Docker image
+
+Firstly, wait for all tests to pass in GitHub Actions.
+
+To publish the NPM packages, use [publish-npm workflow](https://github.com/streamr-dev/network/actions/workflows/publish-npm.yml).
+Click button "Run Workflow". Select the right branch and NPM tag to be used.
+
+To publish the Docker image, use [release-docker workflow](https://github.com/streamr-dev/network/actions/workflows/release-docker.yml).
+Click button "Run Workflow". Select the right branch and you are good to go. The Docker tags are automatically chosen based on
+the associated Git branch and tag.
+
+### Step 4: Update API docs
+
+Are we still doing this?
+
 ```bash
 cd packages/client
 npm run docs
 aws s3 cp ./docs s3://api-docs.streamr.network/client/vX.Y --recursive --profile streamr-api-docs-upload
 ```
 
-### broker
-
-Broker is released independently of other packages because it follows its own versioning
-for the time being.
-
-```shell
-git checkout main && git pull
-cd packages/broker
-# Read CHANGELOG.md, decide new version, and edit file
-npm version <SEMVER_OPTION>
-git add package.json ../../package-lock.json CHANGELOG.md
-git commit -m "release(broker): vX.Y.Z"
-git tag broker/vX.Y.Z
-git push --atomic origin main broker/vX.Y.Z
-
-npm run build
-npm publish
-```
-
-#### Docker release
-
-After pushing the broker tag, GitHub Actions will build and publish the Docker image automatically if
-tests pass.
-
-##### Tag `latest`
+### Step 5: (optional) Docker image tag `latest`
 
 GitHub Actions will not update the `latest` tag. This must be done manually. Keep in mind that `latest` should
 always refer to the latest _stable_ version.
 
 To update `latest` do the following.
 
-1. Remove potentially existing latest tag _locally_ with `docker manifest rm streamr/broker-node:latest`
+1. Remove potentially existing latest tag _locally_ with `docker manifest rm streamr/node:latest`
 
 1. Find out the sha256 digests of both the amd64 and arm64 builds for a `vX.Y.Z` tag. This can be
-done via command-line `docker buildx imagetools inspect streamr/broker-node:vX.Y.Z` or you can check
-this from docker hub website under https://hub.docker.com/r/streamr/broker-node/tags.
+done via command-line `docker buildx imagetools inspect stream/node:vX.Y.Z` or you can check
+this from docker hub website under https://hub.docker.com/r/stream/node/tags.
 2. Then we shall create the manifest by running the below. Remember to replace `<SHA-AMD64>` and `<SHA-ARM64>`
 with real values.
 ```
-docker manifest create streamr/broker-node:latest \
-    --amend streamr/broker-node@sha256:<SHA-AMD64> \
-    --amend streamr/broker-node@sha256:<SHA-ARM64>
+docker manifest create stream/node:latest \
+    --amend stream/node@sha256:<SHA-AMD64> \
+    --amend stream/node@sha256:<SHA-ARM64>
 ```
 3. Then we publish the manifest with
 ```
-docker manifest push streamr/broker-node:latest
+docker manifest push stream/node:latest
 ```
 4. Then we are ready. It would be wise to double-check this by checking
-https://hub.docker.com/r/streamr/broker-node/tags.
+https://hub.docker.com/r/stream/node/tags.
