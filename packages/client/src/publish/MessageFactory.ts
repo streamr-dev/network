@@ -1,6 +1,5 @@
-import random from 'lodash/random'
 import {
-    createSignaturePayload,
+    ContentType,
     EncryptedGroupKey,
     EncryptionType,
     MessageID,
@@ -9,18 +8,21 @@ import {
     StreamID,
     StreamMessage,
     StreamMessageOptions,
-    ContentType
+    StreamMessageType
 } from '@streamr/protocol'
-import { EncryptionUtil } from '../encryption/EncryptionUtil'
-import { createMessageRef, createRandomMsgChainId } from './messageChain'
-import { PublishMetadata } from './Publisher'
 import { keyToArrayIndex, utf8ToBinary } from '@streamr/utils'
-import { GroupKeyQueue } from './GroupKeyQueue'
-import { Mapping } from '../utils/Mapping'
+import random from 'lodash/random'
+import { MarkRequired } from 'ts-essentials'
 import { Authentication } from '../Authentication'
-import { StreamRegistry } from '../registry/StreamRegistry'
-import { formLookupKey } from '../utils/utils'
 import { StreamrClientError } from '../StreamrClientError'
+import { EncryptionUtil } from '../encryption/EncryptionUtil'
+import { StreamRegistry } from '../registry/StreamRegistry'
+import { createSignaturePayload } from '../signature'
+import { Mapping } from '../utils/Mapping'
+import { formLookupKey } from '../utils/utils'
+import { GroupKeyQueue } from './GroupKeyQueue'
+import { PublishMetadata } from './Publisher'
+import { createMessageRef, createRandomMsgChainId } from './messageChain'
 
 export interface MessageFactoryOptions {
     streamId: StreamID
@@ -30,10 +32,11 @@ export interface MessageFactoryOptions {
 }
 
 export const createSignedMessage = async (
-    opts: Omit<StreamMessageOptions, 'signature'> & { authentication: Authentication }
+    opts: MarkRequired<Omit<StreamMessageOptions, 'signature'>, 'messageType'> & { authentication: Authentication }
 ): Promise<StreamMessage> => {
     const signature = await opts.authentication.createMessageSignature(createSignaturePayload({
         messageId: opts.messageId,
+        messageType: opts.messageType,
         content: opts.content,
         signatureType: opts.signatureType,
         encryptionType: opts.encryptionType,
@@ -126,6 +129,7 @@ export class MessageFactory {
 
         return createSignedMessage({
             messageId,
+            messageType: StreamMessageType.MESSAGE,
             content: rawContent,
             prevMsgRef,
             encryptionType,

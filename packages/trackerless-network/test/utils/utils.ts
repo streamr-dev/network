@@ -1,13 +1,11 @@
-import { randomBytes } from 'crypto'
 import { 
     ConnectionLocker,
-    DhtAddress,
     DhtNode,
     NodeType,
     PeerDescriptor,
     Simulator,
     SimulatorTransport,
-    getDhtAddressFromRaw,
+    createRandomDhtAddress,
     getRandomRegion,
     getRawFromDhtAddress
 } from '@streamr/dht'
@@ -17,8 +15,7 @@ import {
     EncryptionType,
     MessageID,
     SignatureType,
-    StreamMessage,
-    StreamMessageType
+    StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { DeliveryRpcRemote } from '../../src/logic/DeliveryRpcRemote'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
@@ -80,25 +77,25 @@ export const createStreamMessage = (
         messageChainId: 'messageChain0',
     }
     const msg: StreamMessage = {
-        messageType: StreamMessageType.MESSAGE,
-        encryptionType: EncryptionType.NONE,
-        content: utf8ToBinary(content),
-        contentType: ContentType.JSON,
         messageId,
-        signature: hexToBinary('0x1234'),
         signatureType: SignatureType.SECP256K1,
+        signature: hexToBinary('0x1234'),
+        body: {
+            oneofKind: 'contentMessage',
+            contentMessage: {
+                encryptionType: EncryptionType.NONE,
+                contentType: ContentType.JSON,
+                content: utf8ToBinary(content)
+            }
+        }
     }
     return msg
-}
-
-export const createRandomNodeId = (): DhtAddress => {
-    return getDhtAddressFromRaw(randomBytes(10))
 }
 
 export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'nodeId' | 'type'>): PeerDescriptor => {
     return {
         ...opts,
-        nodeId: getRawFromDhtAddress(createRandomNodeId()),
+        nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }

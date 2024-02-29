@@ -1,6 +1,6 @@
 import { RpcCommunicator } from '@streamr/proto-rpc'
 import { RouterRpcRemote } from '../../src/dht/routing/RouterRpcRemote'
-import { Message, MessageType, RouteMessageAck, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message, RouteMessageAck, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RouterRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { createMockPeerDescriptor, createWrappedClosestPeersRequest, mockRouterRpc } from '../utils/utils'
@@ -34,7 +34,6 @@ describe('RemoteRouter', () => {
         const routed: Message = {
             serviceId: SERVICE_ID,
             messageId: 'routed',
-            messageType: MessageType.RPC,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: rpcWrapper
@@ -58,7 +57,6 @@ describe('RemoteRouter', () => {
         const routed: Message = {
             serviceId: SERVICE_ID,
             messageId: 'routed',
-            messageType: MessageType.RPC,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: rpcWrapper

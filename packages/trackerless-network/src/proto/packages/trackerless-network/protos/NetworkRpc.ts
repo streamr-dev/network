@@ -52,9 +52,56 @@ export interface MessageRef {
  */
 export interface StreamMessage {
     /**
-     * @generated from protobuf field: StreamMessageType messageType = 1;
+     * this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
+     *
+     * @generated from protobuf field: MessageID messageId = 1;
      */
-    messageType: StreamMessageType;
+    messageId?: MessageID;
+    /**
+     * @generated from protobuf field: optional MessageRef previousMessageRef = 2;
+     */
+    previousMessageRef?: MessageRef;
+    /**
+     * @generated from protobuf field: bytes signature = 3;
+     */
+    signature: Uint8Array;
+    /**
+     * @generated from protobuf field: SignatureType signatureType = 4;
+     */
+    signatureType: SignatureType;
+    /**
+     * @generated from protobuf oneof: body
+     */
+    body: {
+        oneofKind: "contentMessage";
+        /**
+         * @generated from protobuf field: ContentMessage contentMessage = 5;
+         */
+        contentMessage: ContentMessage;
+    } | {
+        oneofKind: "groupKeyRequest";
+        /**
+         * @generated from protobuf field: GroupKeyRequest groupKeyRequest = 6;
+         */
+        groupKeyRequest: GroupKeyRequest;
+    } | {
+        oneofKind: "groupKeyResponse";
+        /**
+         * @generated from protobuf field: GroupKeyResponse groupKeyResponse = 7;
+         */
+        groupKeyResponse: GroupKeyResponse;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * @generated from protobuf message ContentMessage
+ */
+export interface ContentMessage {
+    /**
+     * @generated from protobuf field: bytes content = 1;
+     */
+    content: Uint8Array;
     /**
      * @generated from protobuf field: ContentType contentType = 2;
      */
@@ -64,33 +111,11 @@ export interface StreamMessage {
      */
     encryptionType: EncryptionType;
     /**
-     * @generated from protobuf field: bytes content = 4;
-     */
-    content: Uint8Array;
-    /**
-     * @generated from protobuf field: SignatureType signatureType = 5;
-     */
-    signatureType: SignatureType;
-    /**
-     * @generated from protobuf field: bytes signature = 6;
-     */
-    signature: Uint8Array;
-    /**
-     * this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
-     *
-     * @generated from protobuf field: MessageID messageId = 7;
-     */
-    messageId?: MessageID;
-    /**
-     * @generated from protobuf field: optional MessageRef previousMessageRef = 8;
-     */
-    previousMessageRef?: MessageRef;
-    /**
-     * @generated from protobuf field: optional string groupKeyId = 9;
+     * @generated from protobuf field: optional string groupKeyId = 4;
      */
     groupKeyId?: string;
     /**
-     * @generated from protobuf field: optional GroupKey newGroupKey = 10;
+     * @generated from protobuf field: optional GroupKey newGroupKey = 5;
      */
     newGroupKey?: GroupKey;
 }
@@ -329,6 +354,10 @@ export interface NodeInfoResponse {
      * @generated from protobuf field: optional ControlLayerInfo controlLayer = 3;
      */
     controlLayer?: ControlLayerInfo;
+    /**
+     * @generated from protobuf field: string version = 4;
+     */
+    version: string;
 }
 /**
  * @generated from protobuf enum StreamMessageType
@@ -433,16 +462,13 @@ export const MessageRef = new MessageRef$Type();
 class StreamMessage$Type extends MessageType<StreamMessage> {
     constructor() {
         super("StreamMessage", [
-            { no: 1, name: "messageType", kind: "enum", T: () => ["StreamMessageType", StreamMessageType] },
-            { no: 2, name: "contentType", kind: "enum", T: () => ["ContentType", ContentType] },
-            { no: 3, name: "encryptionType", kind: "enum", T: () => ["EncryptionType", EncryptionType] },
-            { no: 4, name: "content", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 5, name: "signatureType", kind: "enum", T: () => ["SignatureType", SignatureType] },
-            { no: 6, name: "signature", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 7, name: "messageId", kind: "message", T: () => MessageID },
-            { no: 8, name: "previousMessageRef", kind: "message", T: () => MessageRef },
-            { no: 9, name: "groupKeyId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
-            { no: 10, name: "newGroupKey", kind: "message", T: () => GroupKey }
+            { no: 1, name: "messageId", kind: "message", T: () => MessageID },
+            { no: 2, name: "previousMessageRef", kind: "message", T: () => MessageRef },
+            { no: 3, name: "signature", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 4, name: "signatureType", kind: "enum", T: () => ["SignatureType", SignatureType] },
+            { no: 5, name: "contentMessage", kind: "message", oneof: "body", T: () => ContentMessage },
+            { no: 6, name: "groupKeyRequest", kind: "message", oneof: "body", T: () => GroupKeyRequest },
+            { no: 7, name: "groupKeyResponse", kind: "message", oneof: "body", T: () => GroupKeyResponse }
         ]);
     }
 }
@@ -450,6 +476,22 @@ class StreamMessage$Type extends MessageType<StreamMessage> {
  * @generated MessageType for protobuf message StreamMessage
  */
 export const StreamMessage = new StreamMessage$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ContentMessage$Type extends MessageType<ContentMessage> {
+    constructor() {
+        super("ContentMessage", [
+            { no: 1, name: "content", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 2, name: "contentType", kind: "enum", T: () => ["ContentType", ContentType] },
+            { no: 3, name: "encryptionType", kind: "enum", T: () => ["EncryptionType", EncryptionType] },
+            { no: 4, name: "groupKeyId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "newGroupKey", kind: "message", T: () => GroupKey }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ContentMessage
+ */
+export const ContentMessage = new ContentMessage$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class GroupKeyRequest$Type extends MessageType<GroupKeyRequest> {
     constructor() {
@@ -673,7 +715,8 @@ class NodeInfoResponse$Type extends MessageType<NodeInfoResponse> {
         super("NodeInfoResponse", [
             { no: 1, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
             { no: 2, name: "streamPartitions", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => StreamPartitionInfo },
-            { no: 3, name: "controlLayer", kind: "message", T: () => ControlLayerInfo }
+            { no: 3, name: "controlLayer", kind: "message", T: () => ControlLayerInfo },
+            { no: 4, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }

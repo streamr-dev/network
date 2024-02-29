@@ -42,7 +42,7 @@ export default class ServerPersistence implements PersistenceContext {
         onInit
     }: ServerPersistenceOptions) {
         this.logger = loggerFactory.createLogger(module)
-        const paths = envPaths('streamr-client')
+        const paths = envPaths('streamr-sdk')
         this.dbFilePath = resolve(paths.data, join('./', clientId, `GroupKeys.db`))
         this.migrationsPath = migrationsPath
         this.onInit = onInit

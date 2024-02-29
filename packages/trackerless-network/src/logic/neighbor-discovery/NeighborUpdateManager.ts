@@ -1,5 +1,5 @@
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { DhtAddress, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { NeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { Logger, scheduleAtInterval } from '@streamr/utils'
 import { NeighborFinder } from './NeighborFinder'
@@ -17,6 +17,7 @@ interface NeighborUpdateManagerConfig {
     rpcCommunicator: ListeningRpcCommunicator
     neighborUpdateInterval: number
     neighborTargetCount: number
+    ongoingHandshakes: Set<DhtAddress>
 }
 
 const logger = new Logger(module)

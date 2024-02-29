@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const chromedriver = require('chromedriver')
 module.exports = {
     live_output: true,

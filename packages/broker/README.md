@@ -4,7 +4,7 @@
   </a>
 </p>
 
-# streamr-broker
+# @streamr/node
 Broker nodes are Streamr Network nodes that run external to your application. You start up a broker node locally or on a
 server, and interface with it remotely using one of the supported protocols.
 
@@ -22,10 +22,8 @@ Broker nodes can also perform other tasks in addition to (or instead of) serving
 
 ## Install
 ```
-npm install -g streamr-broker
+npm install -g @streamr/node
 ```
-
-Node.js `16.13.x` is the minimum required version. Node.js `18.12.x`, NPM `8.x` and later versions are recommended.
 
 For more information on the different ways of setting up a broker node, see
 [setting up a Broker node](https://streamr.network/docs/streamr-network/installing-broker-node).

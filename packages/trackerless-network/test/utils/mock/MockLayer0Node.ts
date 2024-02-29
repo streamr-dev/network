@@ -26,7 +26,7 @@ export class MockLayer0Node extends EventEmitter implements Layer0Node {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async getDataFromDht(): Promise<DataEntry[]> {
+    async fetchDataFromDht(): Promise<DataEntry[]> {
         return []
     }
 

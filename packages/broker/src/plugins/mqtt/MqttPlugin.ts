@@ -1,5 +1,5 @@
 import { Schema } from 'ajv'
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient } from '@streamr/sdk'
 import { ApiPluginConfig, Plugin } from '../../Plugin'
 import { getPayloadFormat } from '../../helpers/PayloadFormat'
 import { Bridge } from './Bridge'

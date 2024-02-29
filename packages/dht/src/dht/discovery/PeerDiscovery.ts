@@ -6,6 +6,8 @@ import { ConnectionManager } from '../../connection/ConnectionManager'
 import { PeerManager } from '../PeerManager'
 import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
 import { ServiceID } from '../../types/ServiceID'
+import { RingDiscoverySession } from './RingDiscoverySession'
+import { RingIdRaw, getRingIdRawFromPeerDescriptor } from '../contact/ringIdentifiers'
 
 interface PeerDiscoveryConfig {
     localPeerDescriptor: PeerDescriptor
@@ -29,6 +31,8 @@ const logger = new Logger(module)
 export class PeerDiscovery {
 
     private ongoingDiscoverySessions: Map<string, DiscoverySession> = new Map()
+    private ongoingRingDiscoverySessions: Map<string, RingDiscoverySession> = new Map()
+    
     private rejoinOngoing = false
     private joinCalled = false
     private readonly abortController: AbortController
@@ -75,7 +79,7 @@ export class PeerDiscovery {
             return
         }
         this.config.connectionManager?.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
-        this.config.peerManager.handleNewPeers([entryPointDescriptor])
+        this.config.peerManager.addContact([entryPointDescriptor])
         const targetId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
         const sessions = [this.createSession(targetId, contactedPeers)]
         if (additionalDistantJoin.enabled) {
@@ -84,6 +88,12 @@ export class PeerDiscovery {
         await this.runSessions(sessions, entryPointDescriptor, retry)
         this.config.connectionManager?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
 
+    }
+
+    async joinRing(): Promise<void> {
+        const contactedPeers = new Set<DhtAddress>()
+        const sessions = [this.createRingSession(getRingIdRawFromPeerDescriptor(this.config.localPeerDescriptor), contactedPeers)]
+        await this.runRingSessions(sessions)
     }
 
     private createSession(targetId: DhtAddress, contactedPeers: Set<DhtAddress>): DiscoverySession {
@@ -95,6 +105,17 @@ export class PeerDiscovery {
             contactedPeers
         }
         return new DiscoverySession(sessionOptions)
+    }
+
+    private createRingSession(targetId: RingIdRaw, contactedPeers: Set<DhtAddress>): RingDiscoverySession {
+        const sessionOptions = {
+            targetId,
+            parallelism: this.config.parallelism,
+            noProgressLimit: this.config.joinNoProgressLimit,
+            peerManager: this.config.peerManager,
+            contactedPeers
+        }
+        return new RingDiscoverySession(sessionOptions)
     }
 
     private async runSessions(sessions: DiscoverySession[], entryPointDescriptor: PeerDescriptor, retry: boolean): Promise<void> {
@@ -117,6 +138,19 @@ export class PeerDiscovery {
                     await this.ensureRecoveryIntervalIsRunning()
                 }
             }
+            sessions.forEach((session) => this.ongoingDiscoverySessions.delete(session.id))
+        }
+    }
+
+    private async runRingSessions(sessions: RingDiscoverySession[]): Promise<void> {
+        try {
+            for (const session of sessions) {
+                this.ongoingRingDiscoverySessions.set(session.id, session)
+                await session.findClosestNodes(this.config.joinTimeout)
+            }
+        } catch (_e) {
+            logger.debug(`Ring join on ${this.config.serviceId} timed out`)
+        } finally {
             sessions.forEach((session) => this.ongoingDiscoverySessions.delete(session.id))
         }
     }
@@ -162,7 +196,7 @@ export class PeerDiscovery {
         await Promise.allSettled(
             nodes.map(async (peer: DhtNodeRpcRemote) => {
                 const contacts = await peer.getClosestPeers(localNodeId)
-                this.config.peerManager.handleNewPeers(contacts)
+                this.config.peerManager.addContact(contacts)
             })
         )
     }
@@ -182,6 +216,9 @@ export class PeerDiscovery {
     public stop(): void {
         this.abortController.abort()
         this.ongoingDiscoverySessions.forEach((session) => {
+            session.stop()
+        })
+        this.ongoingRingDiscoverySessions.forEach((session) => {
             session.stop()
         })
     }

@@ -1,4 +1,4 @@
-import { fastPrivateKey } from '@streamr/test-utils'
+import { fastPrivateKey, isRunningInElectron } from '@streamr/test-utils'
 import { CONFIG_TEST, StreamrClient } from '../../src'
 
 describe('StreamrClient', () => {
@@ -21,7 +21,7 @@ describe('StreamrClient', () => {
         const descriptor = await client.getPeerDescriptor()
         expect(descriptor).toMatchObject({
             nodeId: expect.toBeString(),
-            type: 'nodejs',
+            type: isRunningInElectron() ? 'browser' : 'nodejs',
         })
         expect(descriptor.nodeId).toEqual(await client.getNodeId())
     }, 30 * 1000)

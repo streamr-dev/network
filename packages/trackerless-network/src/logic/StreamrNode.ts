@@ -113,8 +113,10 @@ export class StreamrNode extends EventEmitter<Events> {
         logger.debug(`Broadcasting to stream part ${streamPartId}`)
         this.joinStreamPart(streamPartId)
         this.streamParts.get(streamPartId)!.broadcast(msg)
-        this.metrics.broadcastMessagesPerSecond.record(1)
-        this.metrics.broadcastBytesPerSecond.record(msg.content.length)
+        if (msg.body.oneofKind === 'contentMessage') {
+            this.metrics.broadcastMessagesPerSecond.record(1)
+            this.metrics.broadcastBytesPerSecond.record(msg.body.contentMessage.content.length)
+        }
     }
 
     async leaveStreamPart(streamPartId: StreamPartID): Promise<void> {
@@ -136,7 +138,7 @@ export class StreamrNode extends EventEmitter<Events> {
             streamPartId,
             localPeerDescriptor: this.getPeerDescriptor(),
             layer1Node,
-            getEntryPointData: (key) => this.layer0Node!.getDataFromDht(key),
+            fetchEntryPointData: (key) => this.layer0Node!.fetchDataFromDht(key),
             storeEntryPointData: (key, data) => this.layer0Node!.storeDataToDht(key, data),
             deleteEntryPointData: async (key) => this.layer0Node!.deleteDataFromDht(key, false)
         })
@@ -192,7 +194,10 @@ export class StreamrNode extends EventEmitter<Events> {
             entryPoints.length
         )
         entryPoints = entryPoints.concat(discoveryResult.discoveredEntryPoints)
-        await streamPart.layer1Node.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT))
+        await Promise.all([
+            streamPart.layer1Node.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT)),
+            streamPart.layer1Node.joinRing()
+        ])
         if (discoveryResult.entryPointsFromDht) {
             await entryPointDiscovery.storeSelfAsEntryPointIfNecessary(entryPoints.length)
         }

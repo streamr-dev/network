@@ -1,6 +1,6 @@
 import { createClient } from '../../../utils'
 import { SubscriberPlugin } from '../../../../src/plugins/subscriber/SubscriberPlugin'
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient } from '@streamr/sdk'
 import { fastWallet } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
 

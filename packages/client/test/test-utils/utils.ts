@@ -31,6 +31,8 @@ import { counterId } from '../../src/utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
 import { addAfterFn } from './jest-utils'
+import path from 'path'
+import fetch from 'node-fetch'
 
 const logger = new Logger(module)
 
@@ -45,8 +47,9 @@ export const uid = (prefix?: string): string => counterId(`p${process.pid}${pref
 
 const getTestName = (module: NodeModule): string => {
     const fileNamePattern = new RegExp('.*/(.*).test\\...')
-    const groups = module.filename.match(fileNamePattern)
-    return (groups !== null) ? groups[1] : module.filename
+    const moduleFilename = (module.filename ?? module.id) // browser has no filename
+    const groups = moduleFilename.match(fileNamePattern)
+    return (groups !== null) ? groups[1] : moduleFilename
 }
 
 const randomTestRunId = process.pid != null ? process.pid : crypto.randomBytes(4).toString('hex')
@@ -285,4 +288,22 @@ export const startFailingStorageNode = async (error: Error, environment: FakeEnv
     }(wallet, environment.getNetwork(), environment.getChain())
     await node.start()
     return node
+}
+
+/**
+ * We can't read the file directly from the file system when running in the browser (Karma) environment.
+ * Hence, we need to read the file indirectly via an Express server.
+ */
+export const readUtf8ExampleIndirectly = async (): Promise<string> => {
+    return new Promise((resolve) => {
+        const app = express()
+        app.use('/static', express.static(path.join(__dirname, '/../data')))
+        const server = app.listen(8134, async () => {
+            const response = await fetch('http://localhost:8134/static/utf8.txt')
+            const content = await response.text()
+            server.close(() => {
+                resolve(content)
+            })
+        })
+    })
 }

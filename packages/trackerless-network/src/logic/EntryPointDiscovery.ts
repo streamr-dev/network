@@ -13,7 +13,7 @@ import { Any } from '../proto/google/protobuf/any'
 import { Layer1Node } from './Layer1Node'
 
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): DhtAddress => {
-    return getDhtAddressFromRaw(new Uint8Array(createHash('md5').update(streamPartId).digest()))
+    return getDhtAddressFromRaw(new Uint8Array((createHash('sha1').update(streamPartId).digest())))
 }
 
 const parseEntryPointData = (dataEntries: DataEntry[]): PeerDescriptor[] => {
@@ -60,7 +60,7 @@ interface EntryPointDiscoveryConfig {
     streamPartId: StreamPartID
     localPeerDescriptor: PeerDescriptor
     layer1Node: Layer1Node
-    getEntryPointData: (key: DhtAddress) => Promise<DataEntry[]>
+    fetchEntryPointData: (key: DhtAddress) => Promise<DataEntry[]>
     storeEntryPointData: (key: DhtAddress, data: Any) => Promise<PeerDescriptor[]>
     deleteEntryPointData: (key: DhtAddress) => Promise<void>
     storeInterval?: number
@@ -111,7 +111,7 @@ export class EntryPointDiscovery {
     private async queryEntrypoints(key: DhtAddress): Promise<PeerDescriptor[]> {
         logger.trace(`Finding data from dht node ${getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)}`)
         try {
-            const result = await this.config.getEntryPointData(key)
+            const result = await this.config.fetchEntryPointData(key)
             return parseEntryPointData(result)
         } catch (err) {
             return []

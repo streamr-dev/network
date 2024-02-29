@@ -1,5 +1,5 @@
 import WebSocket from 'ws'
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient } from '@streamr/sdk'
 import { PayloadFormat } from '../../helpers/PayloadFormat'
 import { Logger } from '@streamr/utils'
 

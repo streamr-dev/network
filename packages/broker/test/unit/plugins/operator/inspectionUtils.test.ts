@@ -1,5 +1,5 @@
 import { mock, MockProxy } from 'jest-mock-extended'
-import { StreamrClient, Subscription } from 'streamr-client'
+import { StreamrClient, Subscription } from '@streamr/sdk'
 import { StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { findTarget, inspectTarget } from '../../../../src/plugins/operator/inspectionUtils'

@@ -1,13 +1,9 @@
 import { Logger } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { v4 } from 'uuid'
-import { Message, HandshakeRequest, HandshakeResponse, MessageType, PeerDescriptor, HandshakeError } from '../proto/packages/dht/protos/DhtRpc'
+import { Message, HandshakeRequest, HandshakeResponse, PeerDescriptor, HandshakeError } from '../proto/packages/dht/protos/DhtRpc'
 import { IConnection } from './IConnection'
-import { version as localVersion } from '../../package.json'
-import { isCompatibleVersion } from '../helpers/versionCompatibility'
-
-// Used for backwards compatibility with older versions of the protocol that do not send version in handshakes
-const BEFORE_TESTNET_TWO_VERSION = '100.0.0-before-testnet-two.0'
+import { LOCAL_PROTOCOL_VERSION, isMaybeSupportedVersion } from '../helpers/version'
 
 const logger = new Logger(module)
 
@@ -22,7 +18,7 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
     private static readonly HANDSHAKER_SERVICE_ID = 'system/handshaker'
     private localPeerDescriptor: PeerDescriptor
     private connection: IConnection
-
+    private readonly onDataListener: (data: Uint8Array) => void
     constructor(
         localPeerDescriptor: PeerDescriptor,
         connection: IConnection
@@ -30,7 +26,8 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
         super()
         this.localPeerDescriptor = localPeerDescriptor
         this.connection = connection
-        this.connection.on('data', (data: Uint8Array) => this.onData(data))
+        this.onDataListener = (data: Uint8Array) => this.onData(data)
+        this.connection.on('data', this.onDataListener)
     }
 
     private onData(data: Uint8Array) {
@@ -42,16 +39,14 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
                 this.emit(
                     'handshakeRequest',
                     handshake.sourcePeerDescriptor!, 
-                    handshake.version ?? BEFORE_TESTNET_TWO_VERSION,
+                    handshake.version,
                     handshake.targetPeerDescriptor
                 )
             }
             if (message.body.oneofKind === 'handshakeResponse') {
                 logger.trace('handshake response received')
                 const handshake = message.body.handshakeResponse
-                const sourceVersion = handshake.version ?? BEFORE_TESTNET_TWO_VERSION
-                const error = !isCompatibleVersion(sourceVersion, localVersion) ? HandshakeError.UNSUPPORTED_VERSION : undefined
-                    ?? handshake.error
+                const error = !isMaybeSupportedVersion(handshake.version) ? HandshakeError.UNSUPPORTED_VERSION : handshake.error
                 if (error !== undefined) {
                     this.emit('handshakeFailed', error)
                 } else {
@@ -68,11 +63,10 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
         const outgoingHandshake: HandshakeRequest = {
             sourcePeerDescriptor: this.localPeerDescriptor,
             targetPeerDescriptor: remotePeerDescriptor,
-            version: localVersion
+            version: LOCAL_PROTOCOL_VERSION
         }
         const msg: Message = {
             serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
-            messageType: MessageType.HANDSHAKE_REQUEST,
             messageId: v4(),
             body: {
                 oneofKind: 'handshakeRequest',
@@ -87,11 +81,10 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
         const outgoingHandshakeResponse: HandshakeResponse = {
             sourcePeerDescriptor: this.localPeerDescriptor,
             error,
-            version: localVersion
+            version: LOCAL_PROTOCOL_VERSION
         }
         const msg: Message = {
             serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
-            messageType: MessageType.HANDSHAKE_RESPONSE,
             messageId: v4(),
             body: {
                 oneofKind: 'handshakeResponse',
@@ -100,5 +93,9 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
         }
         this.connection.send(Message.toBinary(msg))
         logger.trace('handshake response sent')
+    }
+
+    public stop(): void {
+        this.connection.off('data', this.onDataListener)
     }
 }
