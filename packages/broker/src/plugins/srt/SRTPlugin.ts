@@ -3,7 +3,7 @@ import { ApiPluginConfig, Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { AsyncSRT } from '@eyevinn/srt'
 import { Logger } from '@streamr/utils'
-import StreamrClient from 'streamr-client'
+import StreamrClient from '@streamr/sdk'
 import fetch from 'node-fetch';
 import * as _ from "lodash";
 
