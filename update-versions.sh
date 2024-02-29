@@ -10,6 +10,7 @@ fi
 
 PKG_DIRS="utils
 test-utils
+cdn-location
 protocol
 proto-rpc
 autocertifier-client
@@ -22,6 +23,7 @@ broker"
 
 PKG_NAMES="@streamr/utils
 @streamr/test-utils
+@streamr/cdn-location
 @streamr/protocol
 @streamr/proto-rpc
 @streamr/autocertifier-client
