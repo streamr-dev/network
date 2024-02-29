@@ -1,6 +1,6 @@
 import { EthereumAddress, Logger, randomString, setAbortableTimeout } from '@streamr/utils'
 import { ContractFacade } from './ContractFacade'
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient } from '@streamr/sdk'
 import { CreateOperatorFleetStateFn } from './OperatorFleetState'
 import { toStreamPartID } from '@streamr/protocol'
 import random from 'lodash/random'

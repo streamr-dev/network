@@ -2,9 +2,9 @@ FROM node:20-bullseye as build
 WORKDIR /usr/src/network
 COPY . .
 RUN --mount=type=cache,target=/root/.npm \
-	npm run bootstrap-pkg --package=streamr-client && \
-	npm run bootstrap-pkg --package=streamr-broker && \
-	npm run prune-pkg -- streamr-broker
+	npm run bootstrap-pkg --package=@streamr/sdk && \
+	npm run bootstrap-pkg --package=@streamr/node && \
+	npm run prune-pkg -- @streamr/node
 
 FROM node:18-bullseye-slim
 ARG NODE_ENV

@@ -1,6 +1,6 @@
 import { Schema } from 'ajv'
 import { Request, Response } from 'express'
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient } from '@streamr/sdk'
 import { ApiPluginConfig, HttpServerEndpoint, Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 

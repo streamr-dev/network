@@ -1,7 +1,7 @@
 import { StreamPartID } from '@streamr/protocol'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { Stream, StreamrClient } from 'streamr-client'
+import { Stream, StreamrClient } from '@streamr/sdk'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { createClient, createTestStream } from '../../../utils'
 import {

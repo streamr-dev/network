@@ -8,7 +8,7 @@
   Streamr JavaScript Client
 </h1>
 
-![latest npm package version](https://img.shields.io/npm/v/streamr-client?label=latest)
+![latest npm package version](https://img.shields.io/npm/v/@streamr/sdk?label=latest)
 ![GitHub stars](https://img.shields.io/github/stars/streamr-dev/network-monorepo?style=social)
 [![Discord Chat](https://img.shields.io/discord/801574432350928907.svg?label=Discord&logo=Discord&colorB=7289da)](https://discord.gg/FVtAph9cvz)
 
@@ -18,20 +18,20 @@ JavaScript-based environments, such as browsers and [Node.js](https://nodejs.org
 **[Checkout our documentation](https://docs.streamr.network) for the full usage instructions.**
 
 ## Quickstart
-The client is available on [NPM](https://www.npmjs.com/package/streamr-client) and can be installed simply by:
+The client is available on [NPM](https://www.npmjs.com/package/@streamr/sdk) and can be installed simply by:
 
 ```
-npm install streamr-client
+npm install @streamr/sdk
 ```
 
 If using TypeScript you can import the library with:
 ```js
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient } from '@streamr/sdk'
 ```
 If using Node.js you can import the library with:
 
 ```js
-const { StreamrClient } = require('streamr-client')
+const { StreamrClient } = require('@streamr/sdk')
 ```
 
 ## Environments and frameworks
@@ -41,7 +41,7 @@ const { StreamrClient } = require('streamr-client')
 **Browser (Website/WebApps)**
 - To use with react please see [streamr-client-react](https://github.com/streamr-dev/streamr-client-react)
 - For usage in the browser include the latest build, e.g. by including a `<script>` tag pointing at a CDN:
-- `<script src="https://unpkg.com/streamr-client@latest/streamr-client.web.min.js"></script>`
+- `<script src="https://unpkg.com/@streamr/sdk@latest/streamr-sdk.web.min.js"></script>`
 
 **Browser extension**
 - Due to the stricter security rules inside browser extensions you must use the web build version of the Streamr Client.

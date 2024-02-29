@@ -1,6 +1,6 @@
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import range from 'lodash/range'
-import { Message, Stream } from 'streamr-client'
+import { Message, Stream } from '@streamr/sdk'
 import { DOCKER_DEV_STORAGE_NODE, createTestClient, runCommand } from './utils'
 import { wait } from '@streamr/utils'
 

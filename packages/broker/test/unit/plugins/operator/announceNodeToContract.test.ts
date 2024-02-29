@@ -1,6 +1,6 @@
 import { DhtAddress } from '@streamr/dht'
 import { MockProxy, mock } from 'jest-mock-extended'
-import { NetworkNodeType, StreamrClient } from 'streamr-client'
+import { NetworkNodeType, StreamrClient } from '@streamr/sdk'
 import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 import { announceNodeToContract } from '../../../../src/plugins/operator/announceNodeToContract'
 

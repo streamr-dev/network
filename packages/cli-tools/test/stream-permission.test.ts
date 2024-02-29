@@ -1,6 +1,6 @@
 import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
 import 'jest-extended'
-import { StreamPermission } from 'streamr-client'
+import { StreamPermission } from '@streamr/sdk'
 import { createTestClient, runCommand } from './utils'
 
 describe('permission', () => {

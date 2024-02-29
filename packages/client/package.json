@@ -1,7 +1,7 @@
 {
-  "name": "streamr-client",
+  "name": "@streamr/sdk",
   "version": "100.0.0-testnet-three.3",
-  "description": "JavaScript client library for Streamr",
+  "description": "JavaScript / TypeScript SDK for Streamr",
   "private": true,
   "repository": {
     "type": "git",
@@ -10,9 +10,9 @@
   },
   "types": "./dist/types/src/index.d.ts",
   "main": "./dist/src/exports-commonjs.js",
-  "browser": "./dist/streamr-client.web.js",
+  "browser": "./dist/streamr-sdk.web.js",
   "exports": {
-    "browser": "./dist/streamr-client.web.js",
+    "browser": "./dist/streamr-sdk.web.js",
     "default": {
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/src/exports-esm.mjs",
