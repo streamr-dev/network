@@ -30,7 +30,7 @@ sudo docker rmi IMAGE_ID
 Run your updated node with the new node version,
 
 ```
-sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/broker-node:v100.0.0-testnet-three.3
+sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/node:v100.0.0-rc.0
 ```
 
 Your updated node will now be running. As usual, you can checkup on it with 

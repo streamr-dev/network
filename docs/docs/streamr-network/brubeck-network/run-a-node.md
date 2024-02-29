@@ -96,7 +96,7 @@ Start the Config Wizard with the below command. Docker will download the Streamr
 **Linux / macOS**
 
 ```
-sudo docker run -it -v $(cd ~/.streamrDocker1 && pwd):/home/streamr/.streamr streamr/broker-node:latest bin/config-wizard
+sudo docker run -it -v $(cd ~/.streamrDocker1 && pwd):/home/streamr/.streamr streamr/node:latest bin/config-wizard
 ```
 
 **Windows PowerShell**
@@ -110,7 +110,7 @@ cd ~/.streamrDocker1
 Then run the Config Wizard:
 
 ```
-docker run -it -v ${pwd}:/home/streamr/.streamr streamr/broker-node:latest bin/config-wizard
+docker run -it -v ${pwd}:/home/streamr/.streamr streamr/node:latest bin/config-wizard
 ```
 
 **Using the Config Wizard**
@@ -176,7 +176,7 @@ Press `CTRL+S` to save. Close the editor.
 **Linux / macOS**
 
 ```
-sudo docker run --name streamr1 --restart unless-stopped -d -v $(cd ~/.streamrDocker1 && pwd):/home/streamr/.streamr streamr/broker-node:latest
+sudo docker run --name streamr1 --restart unless-stopped -d -v $(cd ~/.streamrDocker1 && pwd):/home/streamr/.streamr streamr/node:latest
 ```
 
 **Windows PowerShell**
@@ -190,7 +190,7 @@ cd ~/.streamrDocker1
 Start your node:
 
 ```
-docker run --name streamr1 --restart unless-stopped -d -v ${pwd}:/home/streamr/.streamr streamr/broker-node:latest
+docker run --name streamr1 --restart unless-stopped -d -v ${pwd}:/home/streamr/.streamr streamr/node:latest
 ```
 
 **The `docker run` command, deconstructed:**
