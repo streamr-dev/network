@@ -235,6 +235,10 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             this.bucket.remove(rpcRemote.id)
         })
         this.bucket.removeAllListeners()
+        this.ringContacts.getAllContacts().forEach((rpcRemote) => {
+            rpcRemote.leaveNotice()
+            this.ringContacts.removeContact(rpcRemote)
+        })
         this.contacts.stop()
         this.randomPeers.stop()
         this.connections.clear()
