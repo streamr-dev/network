@@ -21,7 +21,7 @@ If you have a Helium setup, you may benefit from reading this blog post first, [
 You'll need to run a [Streamr node](../streamr-network/streamr-nodes.md) to connect your app to.
 
 ```shell
-$ npm i -g streamr-broker
+$ npm i -g @streamr/node
 ```
 
 Before the Streamr node can be started, its configuration files need to be created using the following command:
@@ -58,10 +58,10 @@ Create a folder cd into it and create a package.json by running
 $ npm init
 ```
 
-The Streamr SDK is available on [NPM](https://www.npmjs.com/package/streamr-client) and can be installed simply with:
+The Streamr SDK is available on [NPM](https://www.npmjs.com/package/@streamr/sdk) and can be installed simply with:
 
 ```shell
-$ npm install streamr-client
+$ npm install @streamr/sdk
 ```
 
 Having trouble installing the client? Maybe our [troubleshooting](../usage/streamr-js-client/how-to-use#Troubleshooting) section will help.
@@ -74,7 +74,7 @@ TODO: ** Create a stream widget **
 
 ```ts
 // Import the Streamr client
-import { StreamrClient } from "streamr-client"
+import { StreamrClient } from "@streamr/sdk"
 
 const PRIVATE_KEY = ""
 

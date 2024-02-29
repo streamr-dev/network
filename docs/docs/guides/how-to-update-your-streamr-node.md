@@ -52,7 +52,7 @@ pm2 stop streamr
 
 Next, globally install the node upgrade:
 ```
-npm install -g streamr-broker@100.0.0-testnet-three.3
+npm install -g @streamr/node
 ```
 
 And then you can run the node:

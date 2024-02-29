@@ -16,7 +16,7 @@ To retrieve data from storage, a key exchange between the publisher and subscrib
 const {
   StreamrClient,
   STREAMR_STORAGE_NODE_GERMANY,
-} = require('streamr-client');
+} = require('@streamr/sdk');
 
 // assign a stream to a storage node
 await stream.addToStorageNode(STREAMR_STORAGE_NODE_GERMANY);

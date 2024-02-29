@@ -12,10 +12,10 @@ This is a quickstart guide on creating your first stream using the Streamr TypeS
 -   A small amount of `MATIC` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
 
 ## Streamr SDK
-The Streamr SDK is available on [NPM](https://www.npmjs.com/package/streamr-client) and can be installed simply with:
+The Streamr SDK is available on [NPM](https://www.npmjs.com/package/@streamr/node) and can be installed simply with:
 
 ```shell
-$ npm install streamr-client
+$ npm install @streamr/sdk
 ```
 
 Having trouble installing the SDK? Maybe our [troubleshooting](../usage/streamr-js-client/how-to-use#Troubleshooting) section will help.
@@ -23,8 +23,8 @@ Having trouble installing the SDK? Maybe our [troubleshooting](../usage/streamr-
 ### Initialize the SDK
 ```ts
 // Import Streamr
-const Streamr = require("streamr-client")
-const { StreamrClient } = require('streamr-client')
+const Streamr = require("@streamr/sdk")
+const { StreamrClient } = require('@streamr/sdk')
 
 // Initialize the client with an Ethereum account
 const streamr = new Streamr({

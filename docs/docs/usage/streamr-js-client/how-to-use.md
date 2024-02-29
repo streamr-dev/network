@@ -8,10 +8,10 @@ The Streamr SDK, is the main TypeScript library for interacting with the Streamr
 <!-- TODO explainer on what the SDK is, and how it fits into the network. API ref and so on. Link to Streams section. -->
 
 ## Setup
-The SDK is available on [npm](https://www.npmjs.com/package/streamr-client) and can be installed simply by:
+The SDK is available on [npm](https://www.npmjs.com/package/@streamr/sdk) and can be installed simply by:
 
 ```
-npm install streamr-client
+npm install @streamr/sdk
 ```
 
 ### Importing streamr-client
@@ -20,13 +20,13 @@ To use with react please see [streamr-client-react](https://github.com/streamr-d
 If using TypeScript you can import the library with:
 
 ```js
-import { StreamrClient } from 'streamr-client';
+import { StreamrClient } from '@streamr/sdk';
 ```
 
 If using Node.js you can import the library with:
 
 ```js
-const { StreamrClient } = require('streamr-client');
+const { StreamrClient } = require('@streamr/sdk');
 ```
 
 ### Environments and frameworks
@@ -38,7 +38,7 @@ NodeJS `18.13.x` is the minimum required version, ideally version 20 and later. 
 For usage in the browser include the latest build, e.g. by including a `<script>` tag pointing at a CDN:
 
 ```html
-<script src="https://unpkg.com/streamr-client@latest/streamr-client.web.js"></script>
+<script src="https://unpkg.com/@streamr/sdk@latest/streamr-sdk.web.js"></script>
 ```
 
 #### Browser extension
@@ -90,4 +90,4 @@ export OPENSSL_ROOT_DIR="/opt/homebrew/opt/openssl@1.1"
 
 Make sure to restart your terminal as the system variables then reload into your zsh terminal
 
-Run `npm install streamr-client` in your project folder
+Run `npm install @streamr/sdk` in your project folder
