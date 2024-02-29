@@ -1,6 +1,6 @@
 {
   "name": "@streamr/cdn-location",
-  "version": "100.0.0-testnet-three.3",
+  "version": "100.0.0-rc.0",
   "description": "Library for getting own approximate location by querying CDN servers",
   "repository": {
     "type": "git",
@@ -20,8 +20,6 @@
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration"
   },
-  "dependencies": {
-  },
-  "devDependencies": {
-  }
+  "dependencies": {},
+  "devDependencies": {}
 }
