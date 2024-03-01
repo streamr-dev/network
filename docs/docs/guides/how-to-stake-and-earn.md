@@ -21,7 +21,7 @@ To earn DATA tokens on Polygon you must be willing to hold and stake DATA tokens
 :::
 
 ### Current node software version
-Use node version: `v100.0.0-testnet-three.3`. Do not use the `latest` tag release.
+Use node version: `v100.0.0-rc.0`. Do not use the `latest` tag release.
 
 ### Sponsorships
 Sponsorships are the source of incentivization. These are visible on [The Hub](https://streamr.network/hub/network/sponsorships).
