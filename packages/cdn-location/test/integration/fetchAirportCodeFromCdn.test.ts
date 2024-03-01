@@ -10,7 +10,7 @@ const logger = new Logger(module)
 describe('fetchAirportCodeFromCdn', () => {
     
     it('fetches airport code from Amazon', async () => {
-        const airportCode = await fetchAirportCodeFromAmazon(5000)
+        const airportCode = await fetchAirportCodeFromAmazon('https://aws.amazon.com', 5000)
         logger.info(`Airport code from Amazon: ${airportCode}`)
         expect(typeof airportCodeToRegionNumber[airportCode]).toBe('number')
     })
