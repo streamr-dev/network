@@ -6,7 +6,7 @@ sidebar_position: 3
 :::caution
 This information is provided for the Brubeck Network - the predecessor to the Streamr 1.0 network that's being released over Q4 2023 and Q1 2024. 
 
-Streamr 1.0 Network includes Streamr (Broker) node versions 34 and above. Streamr SDK versions 9 and above. And also any dev-tatum tagged releases.
+Streamr 1.0 Network includes Streamr node versions 34 and above. Streamr SDK versions 9 and above. And also any dev-tatum tagged releases.
 :::
 
 :::tip
@@ -65,7 +65,7 @@ sudo sh get-docker.sh
 
 Docker's install script also installs all required dependencies.
 
-When you have Docker installed, you can download, configure, and start the Streamr Broker node.
+When you have Docker installed, you can download, configure, and start the Streamr node.
 
 ### Step 1: Create a folder for your node
 
@@ -89,14 +89,14 @@ Change the permissions on the node's folder:
 sudo chmod -R 777 ~/.streamrDocker*/
 ```
 
-### Step 3: Run the config wizard to create and configure your Streamr node
+### Step 3: Run the Config Wizard to create and configure your Streamr node
 
-Start the config wizard with the below command. Docker will download the Broker image unless you have it already.
+Start the Config Wizard with the below command. Docker will download the Streamr node image unless you have it already.
 
 **Linux / macOS**
 
 ```
-sudo docker run -it -v $(cd ~/.streamrDocker1 && pwd):/home/streamr/.streamr streamr/broker-node:latest bin/config-wizard
+sudo docker run -it -v $(cd ~/.streamrDocker1 && pwd):/home/streamr/.streamr streamr/node:latest bin/config-wizard
 ```
 
 **Windows PowerShell**
@@ -107,17 +107,17 @@ Change the working directory (move into your node's folder):
 cd ~/.streamrDocker1
 ```
 
-Then run the config wizard:
+Then run the Config Wizard:
 
 ```
-docker run -it -v ${pwd}:/home/streamr/.streamr streamr/broker-node:latest bin/config-wizard
+docker run -it -v ${pwd}:/home/streamr/.streamr streamr/node:latest bin/config-wizard
 ```
 
-**Using the config wizard**
+**Using the Config Wizard**
 
 _"Generate or import Ethereum private key"_
 
-You can generate a new private key or use one you already have. You can avoid having the private key of the wallet with your soon-to-be staked DATA stored in a plain text file by generating a new private key in this step and adding your staking wallet's public key as a *beneficiary address* once you are done configuring the node via the config wizard (highly recommended).
+You can generate a new private key or use one you already have. You can avoid having the private key of the wallet with your soon-to-be staked DATA stored in a plain text file by generating a new private key in this step and adding your staking wallet's public key as a *beneficiary address* once you are done configuring the node via the Config Wizard (highly recommended).
 
 _"Plugins to enable"_
 
@@ -129,7 +129,7 @@ Press 'enter' to use the default path.
 
 :::caution
 
-The path to the config file in the `docker run` command and the path defined via the config wizard differs and tend to cause some confusion. They are different for a reason. The path in the `docker run` command (`/home/streamr/.streamr`) refers to the path _inside_ the Docker container, whereas the path you define via the config wizard refers to the path _outside_ the Docker container. Hence, you need to use the default path as mentioned above.
+The path to the config file in the `docker run` command and the path defined via the Config Wizard differs and tend to cause some confusion. They are different for a reason. The path in the `docker run` command (`/home/streamr/.streamr`) refers to the path _inside_ the Docker container, whereas the path you define via the Config Wizard refers to the path _outside_ the Docker container. Hence, you need to use the default path as mentioned above.
 
 :::
 
@@ -171,12 +171,12 @@ Add the Beneficiary Address's public key within the curly brackets after `"brube
 
 Press `CTRL+S` to save. Close the editor.
 
-### Step 5: Start your Streamr Broker Node using Docker
+### Step 5: Start your Streamr Node using Docker
 
 **Linux / macOS**
 
 ```
-sudo docker run --name streamr1 --restart unless-stopped -d -v $(cd ~/.streamrDocker1 && pwd):/home/streamr/.streamr streamr/broker-node:latest
+sudo docker run --name streamr1 --restart unless-stopped -d -v $(cd ~/.streamrDocker1 && pwd):/home/streamr/.streamr streamr/node:latest
 ```
 
 **Windows PowerShell**
@@ -190,7 +190,7 @@ cd ~/.streamrDocker1
 Start your node:
 
 ```
-docker run --name streamr1 --restart unless-stopped -d -v ${pwd}:/home/streamr/.streamr streamr/broker-node:latest
+docker run --name streamr1 --restart unless-stopped -d -v ${pwd}:/home/streamr/.streamr streamr/node:latest
 ```
 
 **The `docker run` command, deconstructed:**
@@ -263,13 +263,13 @@ docker logs --tail 100 streamr1
 See [Docker's documentation](https://docs.docker.com/engine/reference/commandline/logs/) to learn more about how to use the `docker logs` command.
 
 ## The npm approach
-If you don’t have Node.js installed, install it using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) or manually from the [Node.js site](https://nodejs.org/en/download/). The Broker requires at least Node.js version 14.x. Once installed, you can download, configure, and start the Streamr Broker.
+If you don’t have Node.js installed, install it using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) or manually from the [Node.js site](https://nodejs.org/en/download/). The Streamr Node requires at least Node.js version 18.x. Once installed, you can download, configure, and start the Streamr Node.
 
 ### Step 1: Install the latest version using npm
--   Run `npm install -g streamr-broker@latest` to download and install the package. You may need administrative access to run this command.
+-   Run `npm install -g @streamr/node@latest` to download and install the package. You may need administrative access to run this command.
 
 ```
-npm install -g streamr-broker@latest
+npm install -g @streamr/node@latest
 ```
 
 There can be plenty of output from npm. If the installation fails with an error, you should address it before continuing.
@@ -282,7 +282,7 @@ There can be plenty of output from npm. If the installation fails with an error,
 
 Towards the end, the wizard asks if you would like it to display your Ethereum private key. From here, you should copy-paste it to a safe place! You can also find it later in the configuration file, which is saved by default to `.streamr/broker-config.json` under your home directory.
 
-### Step 3: Start the Broker node
+### Step 3: Start the Streamr Node
 -   Run `streamr-broker` to start the node! You should start to see logging similar to this:
 
 ```
