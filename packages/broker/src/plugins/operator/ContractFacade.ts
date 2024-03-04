@@ -329,11 +329,11 @@ export class ContractFacade {
 
     private async getOperatorAddresses(requiredBlockNumber: number): Promise<EthereumAddress[]> {
         // TODO: use pagination or find a clever efficient way of selecting a random operator (NET-1113)
-        const createQuery = () => {
+        const createQuery = (lastId: string, pageSize: number) => {
             return {
                 query: `
                     {
-                        operators(first: 1000) {
+                        operators(where: {id_gt: "${lastId}"}, first: ${pageSize}) {
                             id
                         }
                     }
