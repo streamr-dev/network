@@ -24,6 +24,7 @@ import { ConnectionID } from '../IConnection'
 const logger = new Logger(module)
 
 interface WebrtcConnectorRpcLocalConfig {
+    createConnection: (targetPeerDescriptor: PeerDescriptor) => NodeWebrtcConnection 
     connect: (targetPeerDescriptor: PeerDescriptor) => ManagedConnection 
     onNewConnection: (connection: ManagedConnection) => boolean
     // TODO pass accessor methods instead of passing a mutable entity
@@ -59,7 +60,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         let connection = managedConnection?.getWebrtcConnection()
 
         if (!managedConnection) {
-            connection = new NodeWebrtcConnection({ remotePeerDescriptor: remotePeer })
+            connection = this.config.createConnection(remotePeer)
             managedConnection = new ManagedWebrtcConnection(this.config.getLocalPeerDescriptor(), undefined, connection)
             managedConnection.setRemotePeerDescriptor(remotePeer)
             this.config.ongoingConnectAttempts.set(nodeId, managedConnection)

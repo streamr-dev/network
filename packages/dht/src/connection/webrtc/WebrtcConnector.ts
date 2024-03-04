@@ -75,6 +75,7 @@ export class WebrtcConnector {
         onNewConnection: (connection: ManagedConnection) => boolean
     ) {
         const localRpc = new WebrtcConnectorRpcLocal({
+            createConnection: (targetPeerDescriptor: PeerDescriptor) => this.createConnection(targetPeerDescriptor),
             connect: (targetPeerDescriptor: PeerDescriptor) => this.connect(targetPeerDescriptor),
             onNewConnection,
             ongoingConnectAttempts: this.ongoingConnectAttempts,
@@ -133,14 +134,7 @@ export class WebrtcConnector {
             return existingConnection
         }
 
-        const connection = new NodeWebrtcConnection({
-            remotePeerDescriptor: targetPeerDescriptor,
-            iceServers: this.config.iceServers,
-            bufferThresholdLow: this.config.bufferThresholdLow,
-            bufferThresholdHigh: this.config.bufferThresholdHigh,
-            connectingTimeout: this.config.connectionTimeout,
-            portRange: this.config.portRange
-        })
+        const connection = this.createConnection(targetPeerDescriptor)
 
         const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor!)
         const targetNodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
@@ -197,6 +191,18 @@ export class WebrtcConnector {
         }
 
         return managedConnection
+    }
+
+    private createConnection(targetPeerDescriptor: PeerDescriptor): NodeWebrtcConnection {
+        return new NodeWebrtcConnection({
+            remotePeerDescriptor: targetPeerDescriptor,
+            iceServers: this.config.iceServers,
+            bufferThresholdLow: this.config.bufferThresholdLow,
+            bufferThresholdHigh: this.config.bufferThresholdHigh,
+            connectingTimeout: this.config.connectionTimeout,
+            portRange: this.config.portRange
+            // TODO should we pass maxMessageSize?
+        })
     }
 
     setLocalPeerDescriptor(peerDescriptor: PeerDescriptor): void {

@@ -26,7 +26,7 @@ export interface Params {
     bufferThresholdLow?: number
     connectingTimeout?: number
     maxMessageSize?: number
-    iceServers?: IceServer[]
+    iceServers?: IceServer[]  // TODO make this parameter required (empty array is a good fallback which can be set by the caller if needed)
     portRange?: PortRange
 }
 
