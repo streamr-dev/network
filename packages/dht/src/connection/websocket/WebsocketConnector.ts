@@ -192,8 +192,15 @@ export class WebsocketConnector {
                 version: LOCAL_PROTOCOL_VERSION
             }
         }
+        const entrypoints = new Map<DhtAddress, PeerDescriptor>()
+        for (const entrypoint of this.config.entrypoints) {
+            entrypoints.set(getNodeIdFromPeerDescriptor(entrypoint), entrypoint)
+        }
+        const exclude: DhtAddress[] = []
         for (const reattempt of range(ENTRY_POINT_CONNECTION_ATTEMPTS)) {
-            const entryPoint = sample(this.config.entrypoints)!
+            const excludedIds = Array.from(entrypoints.keys()).filter((key) => !exclude.includes(key))
+            const entryPointId = sample(excludedIds)!
+            const entryPoint = entrypoints.get(entryPointId)!
             try {
                 // Do real connectivity checking
                 const connectivityRequest = {
@@ -212,6 +219,7 @@ export class WebsocketConnector {
                     const error = `Failed to connect to entrypoint with id ${getNodeIdFromPeerDescriptor(entryPoint)} `
                         + `and URL ${connectivityMethodToWebsocketUrl(entryPoint.websocket!)}`
                     logger.error(error, { error: err })
+                    exclude.push(entryPointId)
                     await wait(2000)
                 }
             }
