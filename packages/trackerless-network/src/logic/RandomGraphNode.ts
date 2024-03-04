@@ -169,7 +169,10 @@ export class RandomGraphNode extends EventEmitter<Events> {
             'nodeAdded',
             (id, remote) => {
                 this.config.propagation.onNeighborJoined(id)
-                this.config.connectionLocker.weakLockConnection(remote.getPeerDescriptor(), this.config.streamPartId)
+                this.config.connectionLocker.weakLockConnection(
+                    getNodeIdFromPeerDescriptor(remote.getPeerDescriptor()),
+                    this.config.streamPartId
+                )
                 this.emit('neighborConnected', id)
             },
             this.abortController.signal
@@ -178,7 +181,10 @@ export class RandomGraphNode extends EventEmitter<Events> {
             this.config.neighbors,
             'nodeRemoved',
             (_id, remote) => {
-                this.config.connectionLocker.weakUnlockConnection(remote.getPeerDescriptor(), this.config.streamPartId)
+                this.config.connectionLocker.weakUnlockConnection(
+                    getNodeIdFromPeerDescriptor(remote.getPeerDescriptor()),
+                    this.config.streamPartId
+                )
             },
             this.abortController.signal
         )
@@ -347,9 +353,13 @@ export class RandomGraphNode extends EventEmitter<Events> {
         }
         this.abortController.abort()
         this.config.proxyConnectionRpcLocal?.stop()
-        this.config.neighbors.getAll().map(
-            (remote) => remote.leaveStreamPartNotice(this.config.streamPartId, this.config.isLocalNodeEntryPoint())
-        )
+        this.config.neighbors.getAll().map((remote) => {
+            remote.leaveStreamPartNotice(this.config.streamPartId, this.config.isLocalNodeEntryPoint())
+            this.config.connectionLocker.weakUnlockConnection(
+                getNodeIdFromPeerDescriptor(remote.getPeerDescriptor()),
+                this.config.streamPartId
+            )
+        })
         this.config.rpcCommunicator.destroy()
         this.removeAllListeners()
         this.config.nearbyNodeView.stop()
