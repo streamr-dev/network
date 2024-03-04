@@ -52,7 +52,7 @@ pm2 stop streamr
 
 Next, globally install the node upgrade:
 ```
-npm install -g @streamr/node
+npm install -g @streamr/node@100.0.0-rc.1
 ```
 
 And then you can run the node:

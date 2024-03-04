@@ -266,10 +266,10 @@ See [Docker's documentation](https://docs.docker.com/engine/reference/commandlin
 If you don’t have Node.js installed, install it using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) or manually from the [Node.js site](https://nodejs.org/en/download/). The Streamr Node requires at least Node.js version 18.x. Once installed, you can download, configure, and start the Streamr Node.
 
 ### Step 1: Install the latest version using npm
--   Run `npm install -g @streamr/node@latest` to download and install the package. You may need administrative access to run this command.
+-   Run `npm install -g @streamr/node@100.0.0-rc.1` to download and install the package. You may need administrative access to run this command.
 
 ```
-npm install -g @streamr/node@latest
+npm install -g @streamr/node@100.0.0-rc.1
 ```
 
 There can be plenty of output from npm. If the installation fails with an error, you should address it before continuing.

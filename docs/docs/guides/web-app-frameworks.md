@@ -24,7 +24,7 @@ First you need to install the Streamr SDK in your application:
 The SDK is available on [NPM](https://www.npmjs.com/package/@streamr/sdk) and can be installed simply with:
 
 ```shell
-$ npm install @streamr/sdk
+$ npm install @streamr/sdk@100.0.0-rc.1 
 ```
 
 Having trouble installing the SDK? Maybe our [troubleshooting](../usage/streamr-js-client/how-to-use#Troubleshooting) section will help.
