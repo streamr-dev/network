@@ -333,7 +333,7 @@ export class ContractFacade {
             return {
                 query: `
                     {
-                        operators(where: {id_gt: "${lastId}"}, first: ${pageSize}) {
+                        operators(where: {totalStakeInSponsorshipsWei_gt: "0", id_gt: "${lastId}"}, first: ${pageSize}) {
                             id
                         }
                     }
