@@ -101,7 +101,7 @@
     "@ethersproject/web": "^5.5.0",
     "@lit-protocol/core": "^2.2.5",
     "@lit-protocol/uint8arrays": "^3.2.2",
-    "@streamr/config": "^5.2.0",
+    "@streamr/config": "^5.2.1",
     "@streamr/dht": "100.0.0-rc.0",
     "@streamr/protocol": "100.0.0-rc.0",
     "@streamr/trackerless-network": "100.0.0-rc.0",
