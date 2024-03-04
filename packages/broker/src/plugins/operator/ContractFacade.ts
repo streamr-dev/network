@@ -328,7 +328,7 @@ export class ContractFacade {
     }
 
     private async getOperatorAddresses(requiredBlockNumber: number): Promise<EthereumAddress[]> {
-        // TODO: use pagination or find a clever efficient way of selecting a random operator (NET-1113)
+        // TODO: find a clever more efficient way of selecting a random operator? (NET-1113)
         const createQuery = (lastId: string, pageSize: number) => {
             return {
                 query: `
