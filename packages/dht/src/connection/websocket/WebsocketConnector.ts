@@ -197,8 +197,9 @@ export class WebsocketConnector {
             entrypoints.set(getNodeIdFromPeerDescriptor(entrypoint), entrypoint)
         }
         const exclude: DhtAddress[] = []
-        for (const reattempt of range(ENTRY_POINT_CONNECTION_ATTEMPTS)) {
-            const excludedIds = Array.from(entrypoints.keys()).filter((key) => !exclude.includes(key))
+        const getExcludedIds = () => Array.from(entrypoints.keys()).filter((key) => !exclude.includes(key))
+        while (getExcludedIds().length > 0) {
+            const excludedIds = getExcludedIds()
             const entryPointId = sample(excludedIds)!
             const entryPoint = entrypoints.get(entryPointId)!
             try {
@@ -215,7 +216,7 @@ export class WebsocketConnector {
                     throw new Err.ConnectionFailed('ConnectivityChecker is destroyed')
                 }
             } catch (err) {
-                if (reattempt < ENTRY_POINT_CONNECTION_ATTEMPTS) {
+                if (getExcludedIds().length > 1) {
                     const error = `Failed to connect to entrypoint with id ${getNodeIdFromPeerDescriptor(entryPoint)} `
                         + `and URL ${connectivityMethodToWebsocketUrl(entryPoint.websocket!)}`
                     logger.error(error, { error: err })
