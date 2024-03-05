@@ -10,7 +10,7 @@ const TEST_PATHS = [
 
 const NodeWebrtcConnection = path.resolve(__dirname, 'src/connection/webrtc/NodeWebrtcConnection.ts')
 const BrowserWebrtcConnection = path.resolve(__dirname, 'src/connection/webrtc/BrowserWebrtcConnection.ts')
-const NodeWebsocketClientConnection = path.resolve(__dirname, 'src/connection/websocket/WebsocketClientConnection.ts')
+const NodeWebsocketClientConnection = path.resolve(__dirname, 'src/connection/websocket/NodeWebsocketClientConnection.ts')
 const BrowserWebsocketClientConnection = path.resolve(__dirname, 'src/connection/websocket/BrowserWebsocketClientConnection.ts')
 
 module.exports = createKarmaConfig(

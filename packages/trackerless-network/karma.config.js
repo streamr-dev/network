@@ -14,7 +14,7 @@ module.exports = createKarmaConfig(TEST_PATHS, createWebpackConfig({
     alias: {
         [path.resolve(__dirname, '../dht/src/connection/webrtc/NodeWebrtcConnection.ts')]:
             path.resolve(__dirname, '../dht/src/connection/webrtc/BrowserWebrtcConnection.ts'),
-        [path.resolve(__dirname, '../dht/src/connection/websocket/WebsocketClientConnection.ts')]:
+        [path.resolve(__dirname, '../dht/src/connection/websocket/NodeWebsocketClientConnection.ts')]:
             path.resolve(__dirname, '../dht/src/connection/websocket/BrowserWebsocketClientConnection.ts'),
         '@streamr/dht': path.resolve('../dht/src/exports.ts'),
         '@streamr/proto-rpc': path.resolve('../proto-rpc/src/exports.ts'),
