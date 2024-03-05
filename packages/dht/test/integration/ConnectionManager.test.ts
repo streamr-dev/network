@@ -87,7 +87,7 @@ describe('ConnectionManager', () => {
         await connectionManager.stop()
     }, 15000)
 
-    it.only('Succesfully connectivityChecks if at least one entry point is online', async () => {
+    it('Succesfully connectivityChecks if at least one entry point is online', async () => {
         // Create offline PeerDescriptors
         const entryPoints = range(4).map((i) => {
             return createMockPeerDescriptor({
@@ -95,11 +95,11 @@ describe('ConnectionManager', () => {
             })
         })
         entryPoints.push(createMockPeerDescriptor({
-            websocket: { host: '127.0.0.1', port: 9992, tls: false }
+            websocket: { host: '127.0.0.1', port: 9998, tls: false }
         }))
         const connectionManager = createConnectionManager({
             transport: mockTransport,
-            websocketPortRange: { min: 9992, max: 9992 },
+            websocketPortRange: { min: 9998, max: 9998 },
             entryPoints
         })
         await connectionManager.start()
