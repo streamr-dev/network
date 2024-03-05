@@ -13,7 +13,7 @@ import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryCon
 import { formStreamPartDeliveryServiceId } from './formStreamPartDeliveryServiceId'
 
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
-    'nearbyNodeView' | 'randomNodeView' | 'neighbors' | 'propagation'
+    'nearbyNodeView' | 'randomNodeView' | 'neighbors' | 'leftNodeView' | 'rightNodeView' | 'propagation'
     | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'neighborTargetCount'
     | 'rpcCommunicator' | 'nodeViewSize'
     | 'inspector' | 'temporaryConnectionRpcLocal'> & {
@@ -34,14 +34,18 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const minPropagationTargets = config.minPropagationTargets ?? 2
     const acceptProxyConnections = config.acceptProxyConnections ?? false
     const neighborUpdateInterval = config.neighborUpdateInterval ?? 10000
+    const neighbors = config.neighbors ?? new NodeList(ownNodeId, maxContactCount)
+    const leftNodeView = config.leftNodeView ?? new NodeList(ownNodeId, maxContactCount)
+    const rightNodeView = config.rightNodeView ?? new NodeList(ownNodeId, maxContactCount)
     const nearbyNodeView = config.nearbyNodeView ?? new NodeList(ownNodeId, maxContactCount)
     const randomNodeView = config.randomNodeView ?? new NodeList(ownNodeId, maxContactCount)
-    const neighbors = config.neighbors ?? new NodeList(ownNodeId, maxContactCount)
     const ongoingHandshakes = new Set<DhtAddress>()
 
     const temporaryConnectionRpcLocal = new TemporaryConnectionRpcLocal({
         rpcCommunicator,
-        localPeerDescriptor: config.localPeerDescriptor
+        localPeerDescriptor: config.localPeerDescriptor,
+        streamPartId: config.streamPartId,
+        connectionLocker: config.connectionLocker
     })
     const proxyConnectionRpcLocal = acceptProxyConnections ? new ProxyConnectionRpcLocal({
         localPeerDescriptor: config.localPeerDescriptor,
@@ -65,18 +69,22 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     const handshaker = config.handshaker ?? new Handshaker({
         localPeerDescriptor: config.localPeerDescriptor,
         streamPartId: config.streamPartId,
-        connectionLocker: config.connectionLocker,
         rpcCommunicator,
+        neighbors,
+        leftNodeView,
+        rightNodeView,
         nearbyNodeView,
         randomNodeView,
-        neighbors,
         maxNeighborCount: neighborTargetCount,
         rpcRequestTimeout: config.rpcRequestTimeout,
         ongoingHandshakes
     })
     const neighborFinder = config.neighborFinder ?? new NeighborFinder({
         neighbors,
+        leftNodeView,
+        rightNodeView,
         nearbyNodeView,
+        randomNodeView,
         doFindNeighbors: (excludedIds) => handshaker.attemptHandshakesOnContacts(excludedIds),
         minCount: neighborTargetCount
     })
@@ -89,7 +97,6 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
         rpcCommunicator,
         neighborUpdateInterval,
         neighborTargetCount,
-        connectionLocker: config.connectionLocker,
         ongoingHandshakes
     })
     const inspector = config.inspector ?? new Inspector({
@@ -100,9 +107,11 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     })
     return {
         ...config,
+        neighbors,
+        leftNodeView,
+        rightNodeView,
         nearbyNodeView,
         randomNodeView,
-        neighbors,
         rpcCommunicator,
         handshaker,
         neighborFinder,

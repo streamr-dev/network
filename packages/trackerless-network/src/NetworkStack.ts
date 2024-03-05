@@ -1,4 +1,4 @@
-import { 
+import {
     ConnectionManager,
     DhtNode,
     DhtNodeOptions,
@@ -6,15 +6,15 @@ import {
     PeerDescriptor,
     areEqualPeerDescriptors
 } from '@streamr/dht'
-import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
-import { Logger, MetricsContext, waitForCondition } from '@streamr/utils'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
-import { NodeInfoResponse, ProxyDirection, StreamMessage, StreamMessageType } from './proto/packages/trackerless-network/protos/NetworkRpc'
-import { Layer0Node } from './logic/Layer0Node'
+import { Logger, MetricsContext, waitForCondition } from '@streamr/utils'
 import { pull } from 'lodash'
-import { NODE_INFO_RPC_SERVICE_ID, NodeInfoRpcLocal } from './logic/node-info/NodeInfoRpcLocal'
+import { version as applicationVersion } from '../package.json'
+import { Layer0Node } from './logic/Layer0Node'
+import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
 import { NodeInfoClient } from './logic/node-info/NodeInfoClient'
-import { version as localVersion } from '../package.json'
+import { NODE_INFO_RPC_SERVICE_ID, NodeInfoRpcLocal } from './logic/node-info/NodeInfoRpcLocal'
+import { NodeInfoResponse, ProxyDirection, StreamMessage } from './proto/packages/trackerless-network/protos/NetworkRpc'
 
 export interface NetworkOptions {
     layer0?: DhtNodeOptions
@@ -90,7 +90,7 @@ export class NetworkStack {
 
     async broadcast(msg: StreamMessage): Promise<void> {
         const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
-        if (this.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && (msg.messageType === StreamMessageType.MESSAGE)) {
+        if (this.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && (msg.body.oneofKind === 'contentMessage')) {
             throw new Error(`Cannot broadcast to ${streamPartId} as proxy subscribe connections have been set`)
         }
         // TODO could combine these two calls to isProxiedStreamPart?
@@ -168,7 +168,7 @@ export class NetworkStack {
                 neighbors: this.getLayer0Node().getNeighbors()
             },
             streamPartitions: this.getStreamrNode().getNodeInfo(),
-            version: localVersion
+            version: applicationVersion
         }
     }
 

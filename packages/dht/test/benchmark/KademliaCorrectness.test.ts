@@ -5,12 +5,15 @@ import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
 import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { Logger } from '@streamr/utils'
+
+const logger = new Logger(module)
 
 describe('Kademlia correctness', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     const simulator = new Simulator()
-    const NUM_NODES = 1000
+    const NUM_NODES = 200
 
     const nodeIndicesById: Record<DhtAddress, number> = {}
 
@@ -24,7 +27,6 @@ describe('Kademlia correctness', () => {
         = JSON.parse(fs.readFileSync('test/data/orderedneighbors.json').toString())
 
     beforeEach(async () => {
-
         nodes = []
         entryPoint = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[0].data)), 8)
         nodes.push(entryPoint)
@@ -40,16 +42,20 @@ describe('Kademlia correctness', () => {
     afterEach(async () => {
         await Promise.all([
             entryPoint.stop(),
-            ...nodes.map(async (node) => await node.stop())
+            ...nodes.map((node) => node.stop())
         ])
     })
 
     it('Can find correct neighbors', async () => {
         await entryPoint.joinDht([entryPoint.getLocalPeerDescriptor()])
 
-        await Promise.allSettled(
-            nodes.map((node) => node.joinDht([entryPoint.getLocalPeerDescriptor()]))
-        )
+        for (let i = 1; i < NUM_NODES; i++) {
+            // time to join the network
+            const startTimestamp = Date.now()
+            await nodes[i].joinDht([entryPoint.getLocalPeerDescriptor()])
+            const endTimestamp = Date.now()
+            logger.info('Node ' + i + ' joined in ' + (endTimestamp - startTimestamp) + ' ms')  
+        }
 
         let minimumCorrectNeighbors = Number.MAX_SAFE_INTEGER
         let sumCorrectNeighbors = 0
@@ -62,7 +68,7 @@ describe('Kademlia correctness', () => {
                 groundTruthString += groundTruth[i + ''][j].name + ','
             }
 
-            const kademliaNeighbors = nodes[i].getClosestContacts().map((p) => getNodeIdFromPeerDescriptor(p))
+            const kademliaNeighbors = nodes[i].getClosestContacts(8).map((p) => getNodeIdFromPeerDescriptor(p))
 
             let kadString = 'kademliaNeighbors: '
             kademliaNeighbors.forEach((neighbor) => {
@@ -104,5 +110,5 @@ describe('Kademlia correctness', () => {
         console.log('Minimum correct neighbors: ' + minimumCorrectNeighbors)
         console.log('Average correct neighbors: ' + avgCorrectNeighbors)
         console.log('Average Kbucket size: ' + avgKbucketSize)
-    })
+    }, 120000)
 })

@@ -43,6 +43,11 @@ jobs:
       command: |
         npm run test
         xvfb-run --auto-servernum npm run test-browser
+  cdn-location:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: cdn-location
   protocol:
     needs: build
     uses: ./.github/workflows/test-setup.yml
@@ -157,7 +162,7 @@ jobs:
     uses: ./.github/workflows/docker-build.yml
     with:
       docker_file: Dockerfile.broker
-      image_name: streamr/broker-node
+      image_name: streamr/node
       test_services_to_start: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain broker-node-storage-1 entry-point
       build_platforms: linux/amd64
       test_script: bash ./.github/healthcheck.sh http://localhost:8891/info streamr-dev-broker-node-storage-1

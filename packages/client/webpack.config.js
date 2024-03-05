@@ -22,10 +22,10 @@ module.exports = (env, argv) => {
         cache: {
             type: 'filesystem',
         },
-        name: 'streamr-client',
+        name: 'streamr-sdk',
         mode: isProduction ? 'production' : 'development',
         entry: {
-            'streamr-client': path.join(__dirname, 'src', 'exports-browser.ts'),
+            'streamr-sdk': path.join(__dirname, 'src', 'exports-browser.ts'),
         },
         devtool: 'source-map',
         output: {

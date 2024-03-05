@@ -5,8 +5,8 @@ import { Server as HttpServer, createServer as createHttpServer } from 'http'
 import { server as WsServer } from 'websocket'
 import { CONNECTIVITY_CHECKER_SERVICE_ID } from '../../src/connection/connectivityChecker'
 import { attachConnectivityRequestHandler } from '../../src/connection/connectivityRequestHandler'
-import { Message, MessageType } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { version } from '../../package.json'
+import { Message } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { LOCAL_PROTOCOL_VERSION } from '../../src/helpers/version'
 
 const HOST = '127.0.0.1'
 const PORT = 15001
@@ -40,7 +40,6 @@ describe('connectivityRequestHandler', () => {
         attachConnectivityRequestHandler(connection)
         const request: Message = {
             serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
-            messageType: MessageType.CONNECTIVITY_REQUEST,
             messageId: 'mock-message-id',
             body: {
                 oneofKind: 'connectivityRequest',
@@ -63,12 +62,11 @@ describe('connectivityRequestHandler', () => {
                         tls: false
                     },
                     ipAddress: ipv4ToNumber(HOST),
-                    version
+                    version: LOCAL_PROTOCOL_VERSION
                 },
                 oneofKind: 'connectivityResponse'
             },
             messageId: expect.any(String),
-            messageType: MessageType.CONNECTIVITY_RESPONSE,
             serviceId: 'system/connectivity-checker'
         })
     })
@@ -77,7 +75,6 @@ describe('connectivityRequestHandler', () => {
         attachConnectivityRequestHandler(connection)
         const request: Message = {
             serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
-            messageType: MessageType.CONNECTIVITY_REQUEST,
             messageId: 'mock-message-id',
             body: {
                 oneofKind: 'connectivityRequest',
@@ -95,12 +92,11 @@ describe('connectivityRequestHandler', () => {
                     host: HOST,
                     natType: 'unknown',
                     ipAddress: ipv4ToNumber(HOST),
-                    version
+                    version: LOCAL_PROTOCOL_VERSION
                 },
                 oneofKind: 'connectivityResponse'
             },
             messageId: expect.any(String),
-            messageType: MessageType.CONNECTIVITY_RESPONSE,
             serviceId: 'system/connectivity-checker'
         })
     })

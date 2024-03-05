@@ -31,6 +31,9 @@ describe('NeighborFinder', () => {
         neighborFinder = new NeighborFinder({
             neighbors,
             nearbyNodeView,
+            leftNodeView: new NodeList(nodeId, 30),
+            rightNodeView: new NodeList(nodeId, 30),
+            randomNodeView: new NodeList(nodeId, 30),
             doFindNeighbors: (excluded) => mockDoFindNeighbors(excluded),
             minCount
         })

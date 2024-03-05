@@ -12,7 +12,7 @@ The DHT also provides an interface for sending messages from peer to peer with t
 
 Running a bare DhtNode in the Streamr Network is heavily discouraged as it requires advanced configuration. However, if you do wish to run a node here are some recommended configurations.
 
-(the following values are examples. For working production or test values check the streamr-client's default network configuration)
+(the following values are examples. For working production or test values check the @streamr/sdk default network configuration)
 
 ```js
 const DhtNode = new DhtNode({

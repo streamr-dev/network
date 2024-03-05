@@ -53,7 +53,6 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     private localPeerDescriptor?: PeerDescriptor
     private websocketConnector?: WebsocketConnector
     private webrtcConnector?: WebrtcConnector
-
     constructor(config: DefaultConnectorFacadeConfig) {
         this.config = config
     }

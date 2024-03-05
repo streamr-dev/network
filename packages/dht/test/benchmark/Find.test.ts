@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { RecursiveOperation } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
@@ -64,10 +63,10 @@ describe('Find correctness', () => {
 
         logger.info('starting find')
         const targetId = Uint8Array.from(dhtIds[9].data)
-        const results = await nodes[159].executeRecursiveOperation(getDhtAddressFromRaw(targetId), RecursiveOperation.FIND_NODE)
+        const closestNodes = await nodes[159].findClosestNodesFromDht(getDhtAddressFromRaw(targetId))
         logger.info('find over')
-        expect(results.closestNodes).toBeGreaterThanOrEqual(5)
-        expect(getDhtAddressFromRaw(targetId)).toEqual(getNodeIdFromPeerDescriptor(results.closestNodes[0]))
+        expect(closestNodes).toBeGreaterThanOrEqual(5)
+        expect(getDhtAddressFromRaw(targetId)).toEqual(getNodeIdFromPeerDescriptor(closestNodes[0]))
 
     }, 180000)
 })

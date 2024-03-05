@@ -1,3 +1,4 @@
+import { StreamPartIDUtils } from '@streamr/protocol'
 import { TemporaryConnectionRpcLocal } from '../../src/logic/temporary-connection/TemporaryConnectionRpcLocal'
 import { MockTransport } from '../utils/mock/Transport'
 import { createMockPeerDescriptor } from '../utils/utils'
@@ -13,7 +14,12 @@ describe('TemporaryConnectionRpcLocal', () => {
         rpcCommunicator = new ListeningRpcCommunicator('mock', new MockTransport())
         rpcLocal = new TemporaryConnectionRpcLocal({
             localPeerDescriptor: peerDescriptor,
-            rpcCommunicator
+            rpcCommunicator,
+            streamPartId: StreamPartIDUtils.parse('mock#0'),
+            connectionLocker: {
+                weakLockConnection: jest.fn(),
+                weakUnlockConnection: jest.fn()
+            } as any
         })
     })
 

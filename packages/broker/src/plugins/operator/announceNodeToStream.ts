@@ -1,5 +1,5 @@
 import { EthereumAddress, Logger } from '@streamr/utils'
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient } from '@streamr/sdk'
 import { createHeartbeatMessage } from './heartbeatUtils'
 import { formCoordinationStreamId } from './formCoordinationStreamId'
 

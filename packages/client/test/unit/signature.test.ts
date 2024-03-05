@@ -22,7 +22,7 @@ describe('signature', () => {
                     0,
                     1704972511765,
                     0,
-                    toEthereumAddress('0x27dfD6a6Da01d10626e2391337Ca8e15Ea085686'),
+                    toEthereumAddress('0x7e5f4552091a69125d5dfcb7b8c2659029395bdf'),
                     '401zi3b84sd64qn31fte'
                 ),
                 prevMsgRef: new MessageRef(1704972444019, 0),
@@ -31,7 +31,7 @@ describe('signature', () => {
                 contentType: ContentType.JSON,
                 encryptionType: EncryptionType.NONE,
                 // eslint-disable-next-line max-len
-                signature: hexToBinary('8c24d09ea136c51dc9988c74d17eb3bfb8ab84d375605b0307e50a4bbe962365054914808e96ceec98ba1f0bcfe4bbc9a57ea18c0bace40b7ba691f8dcdb209b1c'),
+                signature: hexToBinary('e53045adef4e01f7fe11d4b3073c6053688912e4db0ee780c189cd0d128c923457e1f6cbc1e47d9cd57e115afa9eb8524288887777c1056d638b193cae112dda1b'),
                 signatureType: SignatureType.SECP256K1
             })
             expect(() => assertSignatureIsValid(message)).not.toThrow()
@@ -44,7 +44,7 @@ describe('signature', () => {
                     0,
                     1704972170055,
                     0,
-                    toEthereumAddress('0x27dfD6a6Da01d10626e2391337Ca8e15Ea085686'),
+                    toEthereumAddress('0x7e5f4552091a69125d5dfcb7b8c2659029395bdf'),
                     'vGDg4KzqASGpHCrG6Qao'
                 ),
                 prevMsgRef: new MessageRef(1704972169554, 0),
@@ -54,7 +54,7 @@ describe('signature', () => {
                 contentType: ContentType.JSON,
                 encryptionType: EncryptionType.AES,
                 // eslint-disable-next-line max-len
-                signature: hexToBinary('7df1335e0951ca3fa0dfec0e54bac904bd4e63d56d18292c221e9f095fa6067e58d7fc2851e044fac4673442e14ded35dda9295a7a92a939df5abe1ffb27a6401b'),
+                signature: hexToBinary('05a9a8f63f56cbb9f3cb716825c5b262182addcb8d2824047b375939d6e91f1904ac823357901f409e56a382b57a23fef03746652ff67d9e99b7d415b81d4cc91c'),
                 groupKeyId: '4717fdf7-3cb7-4819-95fc-21122409e630-GroupKey1',
                 signatureType: SignatureType.SECP256K1
             })

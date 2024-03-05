@@ -29,8 +29,7 @@ import { DISABLE_CONNECTIVITY_PROBE, attachConnectivityRequestHandler } from '..
 import * as Err from '../../helpers/errors'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { version as localVersion } from '../../../package.json'
-import { isCompatibleVersion } from '../../helpers/versionCompatibility'
+import { LOCAL_PROTOCOL_VERSION, isMaybeSupportedVersion } from '../../helpers/version'
 
 const logger = new Logger(module)
 
@@ -144,7 +143,7 @@ export class WebsocketConnector {
         if (!this.abortController.signal.aborted && this.websocketServer) {
             this.websocketServer.on('connected', (connection: IConnection) => {
                 const serverSocket = connection as unknown as WebsocketServerConnection
-                const query = queryString.parse(serverSocket.resourceURL.query as string)
+                const query = queryString.parse(serverSocket.resourceURL.query as string ?? '')
                 const action = query.action as (Action | undefined)
                 logger.trace('WebSocket client connected', { action, remoteAddress: serverSocket.remoteIpAddress })
                 if (action === 'connectivityRequest') {
@@ -175,7 +174,7 @@ export class WebsocketConnector {
                 host: '127.0.0.1',
                 natType: NatType.UNKNOWN,
                 ipAddress: ipv4ToNumber('127.0.0.1'),
-                version: localVersion
+                version: LOCAL_PROTOCOL_VERSION
             }
         }
         if (!this.config.entrypoints || this.config.entrypoints.length === 0) {
@@ -190,7 +189,7 @@ export class WebsocketConnector {
                 },
                 // TODO: Resolve the given host name or or use as is if IP was given. 
                 ipAddress: ipv4ToNumber('127.0.0.1'),
-                version: localVersion
+                version: LOCAL_PROTOCOL_VERSION
             }
         }
         for (const reattempt of range(ENTRY_POINT_CONNECTION_ATTEMPTS)) {
@@ -204,7 +203,7 @@ export class WebsocketConnector {
                     selfSigned
                 }
                 if (!this.abortController.signal.aborted) {
-                    return await sendConnectivityRequest(connectivityRequest, entryPoint, localVersion)
+                    return await sendConnectivityRequest(connectivityRequest, entryPoint)
                 } else {
                     throw new Err.ConnectionFailed('ConnectivityChecker is destroyed')
                 }
@@ -300,13 +299,13 @@ export class WebsocketConnector {
     private onServerSocketHandshakeRequest(
         sourcePeerDescriptor: PeerDescriptor,
         websocketServerConnection: IConnection,
-        sourceVersion: string,
+        remoteVersion: string,
         targetPeerDescriptor?: PeerDescriptor
     ) {
         const nodeId = getNodeIdFromPeerDescriptor(sourcePeerDescriptor)
         if (this.ongoingConnectRequests.has(nodeId)) {
             const ongoingConnectRequest = this.ongoingConnectRequests.get(nodeId)!
-            if (!isCompatibleVersion(sourceVersion, localVersion)) {
+            if (!isMaybeSupportedVersion(remoteVersion)) {
                 ongoingConnectRequest.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
             } else {
                 ongoingConnectRequest.attachImplementation(websocketServerConnection)
@@ -322,7 +321,7 @@ export class WebsocketConnector {
                 targetPeerDescriptor
             )
             managedConnection.setRemotePeerDescriptor(sourcePeerDescriptor)
-            if (!isCompatibleVersion(sourceVersion, localVersion)) {
+            if (!isMaybeSupportedVersion(remoteVersion)) {
                 managedConnection.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 managedConnection.rejectHandshake(HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)

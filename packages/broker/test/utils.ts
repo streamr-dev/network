@@ -8,7 +8,7 @@ import { StreamrClient,
     StreamMetadata,
     StreamPermission,
     StreamrClientConfig
-} from 'streamr-client'
+} from '@streamr/sdk'
 import { Broker, createBroker } from '../src/broker'
 import { Config } from '../src/config/config'
 

@@ -1,15 +1,16 @@
 import { ipv4ToNumber, Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
 import {
-    ConnectivityRequest, ConnectivityResponse,
-    Message, MessageType
+    ConnectivityRequest,
+    ConnectivityResponse,
+    Message
 } from '../proto/packages/dht/protos/DhtRpc'
 import { NatType } from './ConnectionManager'
 import { CONNECTIVITY_CHECKER_SERVICE_ID, connectAsync } from './connectivityChecker'
 import { IConnection } from './IConnection'
 import { WebsocketServerConnection } from './websocket/WebsocketServerConnection'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
-import { version as localVersion } from '../../package.json'
+import { LOCAL_PROTOCOL_VERSION } from '../helpers/version'
 
 export const DISABLE_CONNECTIVITY_PROBE = 0
 
@@ -47,12 +48,11 @@ const handleIncomingConnectivityRequest = async (connection: WebsocketServerConn
             host,
             natType: NatType.UNKNOWN,
             ipAddress: ipv4ToNumber(ipAddress),
-            version: localVersion
+            version: LOCAL_PROTOCOL_VERSION
         }
     }
     const msg: Message = {
         serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
-        messageType: MessageType.CONNECTIVITY_RESPONSE,
         messageId: v4(),
         body: {
             oneofKind: 'connectivityResponse',
@@ -84,7 +84,7 @@ const connectivityProbe = async (connectivityRequest: ConnectivityRequest, ipAdd
             natType: NatType.OPEN_INTERNET,
             websocket: { host, port: connectivityRequest.port, tls: connectivityRequest.tls },
             ipAddress: ipv4ToNumber(ipAddress),
-            version: localVersion
+            version: LOCAL_PROTOCOL_VERSION
         }
     } catch (err) {
         logger.debug('error', { err })
@@ -92,7 +92,7 @@ const connectivityProbe = async (connectivityRequest: ConnectivityRequest, ipAdd
             host,
             natType: NatType.UNKNOWN,
             ipAddress: ipv4ToNumber(ipAddress),
-            version: localVersion
+            version: LOCAL_PROTOCOL_VERSION
         }
     }
     if (outgoingConnection) {

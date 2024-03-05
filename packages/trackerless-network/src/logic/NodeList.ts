@@ -4,7 +4,8 @@ import { DeliveryRpcRemote } from './DeliveryRpcRemote'
 import { EventEmitter } from 'eventemitter3'
 
 export interface Events {
-    nodeAdded: (id: DhtAddress, remote: DeliveryRpcRemote) => any
+    nodeAdded: (id: DhtAddress, remote: DeliveryRpcRemote) => void
+    nodeRemoved: (id: DhtAddress, remote: DeliveryRpcRemote) => void
 }
 
 const getValuesOfIncludedKeys = (nodes: Map<DhtAddress, DeliveryRpcRemote>, exclude: DhtAddress[]): DeliveryRpcRemote[] => {
@@ -40,13 +41,18 @@ export class NodeList extends EventEmitter<Events> {
     }
 
     remove(nodeId: DhtAddress): void {
-        this.nodes.delete(nodeId)
+        if (this.nodes.has(nodeId)) {
+            const remote = this.nodes.get(nodeId)!
+            this.nodes.delete(nodeId)
+            this.emit('nodeRemoved', nodeId, remote)
+        }   
     }
 
     has(nodeId: DhtAddress): boolean {
         return this.nodes.has(nodeId)
     }
 
+    // Replace nodes does not emit nodeRemoved events, use with caution
     replaceAll(neighbors: DeliveryRpcRemote[]): void {
         this.nodes.clear()
         const limited = neighbors.splice(0, this.limit)
@@ -94,7 +100,7 @@ export class NodeList extends EventEmitter<Events> {
     }
 
     stop(): void {
-        this.nodes.clear()
+        this.nodes.forEach((node) => this.remove(getNodeIdFromPeerDescriptor(node.getPeerDescriptor())))
         this.removeAllListeners()
     }
 }

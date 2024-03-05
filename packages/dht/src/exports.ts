@@ -17,6 +17,7 @@ export { WebsocketClientConnection } from './connection/websocket/WebsocketClien
 export { ManagedConnection } from './connection/ManagedConnection'
 export { ConnectionType } from './connection/IConnection'
 export { ServiceID } from './types/ServiceID'
+export { RingContacts } from './dht/contact/RingContactList'
 export { 
     DhtAddress,
     DhtAddressRaw,
