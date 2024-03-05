@@ -12,6 +12,6 @@
   ],
   "exclude": [
     "src/connection/webrtc/NodeWebrtcConnection.ts",
-    "src/connection/websocket/WebSocketClientConnection.ts"
+    "src/connection/websocket/NodeWebSocketClientConnection.ts"
   ]
 }
