@@ -1,13 +1,12 @@
 import { Logger, binaryToUtf8 } from '@streamr/utils'
 import { WebSocket } from 'ws'
-import { IConnection } from '../IConnection'
 import { AbstractWebsocketClientConnection } from './AbstractWebsocketClientConnection'
 
 const logger = new Logger(module)
 
 const BINARY_TYPE = 'nodebuffer'
 
-export class WebsocketClientConnection extends AbstractWebsocketClientConnection implements IConnection {
+export class WebsocketClientConnection extends AbstractWebsocketClientConnection {
 
     declare protected socket?: WebSocket
 

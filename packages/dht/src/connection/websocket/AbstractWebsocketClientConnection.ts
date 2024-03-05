@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3'
 import { createRandomConnectionId } from '../Connection'
-import { ConnectionEvents, ConnectionID, ConnectionType } from '../IConnection'
+import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from '../IConnection'
 import { Logger } from '@streamr/utils'
 
 export interface Socket {
@@ -21,7 +21,7 @@ const OPEN = 1
 
 const logger = new Logger(module)
 
-export abstract class AbstractWebsocketClientConnection extends EventEmitter<ConnectionEvents> {
+export abstract class AbstractWebsocketClientConnection extends EventEmitter<ConnectionEvents> implements IConnection {
     public readonly connectionId: ConnectionID
     protected socket?: Socket
     public connectionType = ConnectionType.WEBSOCKET_CLIENT

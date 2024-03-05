@@ -7,7 +7,7 @@ const logger = new Logger(module)
 
 const BINARY_TYPE = 'arraybuffer'
 
-export class WebsocketClientConnection extends AbstractWebsocketClientConnection implements IConnection {
+export class WebsocketClientConnection extends AbstractWebsocketClientConnection {
 
     declare protected socket?: Websocket 
 
