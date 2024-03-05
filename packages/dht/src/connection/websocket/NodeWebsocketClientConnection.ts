@@ -8,7 +8,7 @@ const BINARY_TYPE = 'nodebuffer'
 
 export class WebsocketClientConnection extends AbstractWebsocketClientConnection {
 
-    declare protected socket?: WebSocket
+    protected socket?: WebSocket
 
     // TODO explicit default value for "selfSigned" or make it required
     public connect(address: string, selfSigned?: boolean): void {

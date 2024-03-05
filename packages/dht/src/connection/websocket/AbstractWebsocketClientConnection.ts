@@ -22,8 +22,9 @@ const OPEN = 1
 const logger = new Logger(module)
 
 export abstract class AbstractWebsocketClientConnection extends EventEmitter<ConnectionEvents> implements IConnection {
+
     public readonly connectionId: ConnectionID
-    protected socket?: Socket
+    protected abstract socket?: Socket
     public connectionType = ConnectionType.WEBSOCKET_CLIENT
     protected destroyed = false
     
