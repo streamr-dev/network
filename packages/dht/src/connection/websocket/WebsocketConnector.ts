@@ -193,7 +193,7 @@ export class WebsocketConnector {
             }
         }
         const shuffledEntrypoints = shuffle(this.config.entrypoints)
-        while (shuffledEntrypoints.length > 0) {
+        while (shuffledEntrypoints.length > 0 && !this.abortController.signal.aborted) {
             const entryPoint = shuffledEntrypoints[0]
             try {
                 // Do real connectivity checking
@@ -213,7 +213,7 @@ export class WebsocketConnector {
                     + `and URL ${connectivityMethodToWebsocketUrl(entryPoint.websocket!)}`
                 logger.error(error, { error: err })
                 shuffledEntrypoints.shift()
-                await wait(2000)
+                await wait(2000, this.abortController.signal)
             }
         }
         throw new WebsocketServerStartError(`Failed to connect to the entrypoints after ${ENTRY_POINT_CONNECTION_ATTEMPTS} attempts`)
