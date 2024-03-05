@@ -21,7 +21,7 @@ If you have a Helium setup, you may benefit from reading this blog post first, [
 You'll need to run a [Streamr node](../streamr-network/streamr-nodes.md) to connect your app to.
 
 ```shell
-$ npm i -g @streamr/node@100.0.0-rc.1
+$ npm i -g @streamr/node
 ```
 
 Before the Streamr node can be started, its configuration files need to be created using the following command:
@@ -61,7 +61,7 @@ $ npm init
 The Streamr SDK is available on [NPM](https://www.npmjs.com/package/@streamr/sdk) and can be installed simply with:
 
 ```shell
-$ npm install @streamr/sdk@100.0.0-rc.1 
+$ npm install @streamr/sdk
 ```
 
 Having trouble installing the client? Maybe our [troubleshooting](../usage/streamr-js-client/how-to-use#Troubleshooting) section will help.

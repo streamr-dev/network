@@ -10,7 +10,7 @@ Keeping your node up to date is very important as new releases contain bug fixes
 This guide is meant for Linux and MacOS. Windows Powershell commands will be slightly different.
 :::
 
-To update your Streamr node from `v100.0.0-testnet-three.6` to `v100.0.0-rc.1` (for example), run:
+To update your Streamr node from `v100.0.0-testnet-three.6` to `latest` (for example), run:
 
 ```
 sudo docker stop streamr && sudo docker rm streamr && sudo docker container prune --force
@@ -30,7 +30,7 @@ sudo docker rmi IMAGE_ID
 Run your updated node with the new node version,
 
 ```
-sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/node:v100.0.0-rc.1
+sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/node
 ```
 
 Your updated node will now be running. As usual, you can checkup on it with 
@@ -52,7 +52,7 @@ pm2 stop streamr
 
 Next, globally install the node upgrade:
 ```
-npm install -g @streamr/node@100.0.0-rc.1
+npm install -g @streamr/node
 ```
 
 And then you can run the node:
