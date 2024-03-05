@@ -2,7 +2,7 @@
 
 import { WebsocketServer } from '../../src/connection/websocket/WebsocketServer'
 import { IConnection } from '../../src/connection/IConnection'
-import { WebsocketClientConnection } from '../../src/connection/websocket/WebsocketClientConnection'
+import { WebsocketClientConnection } from '../../src/connection/websocket/NodeWebsocketClientConnection'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)

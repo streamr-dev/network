@@ -1,4 +1,4 @@
-import { WebsocketClientConnection } from './WebsocketClientConnection'
+import { WebsocketClientConnection } from './NodeWebsocketClientConnection'
 import { IConnection, ConnectionType } from '../IConnection'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
@@ -32,13 +32,6 @@ import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from
 import { LOCAL_PROTOCOL_VERSION, isMaybeSupportedVersion } from '../../helpers/version'
 
 const logger = new Logger(module)
-
-// https://kapeli.com/cheat_sheets/WebSocket_Status_Codes.docset/Contents/Resources/Documents/index
-// Browsers send this automatically when closing a tab
-export const GOING_AWAY = 1001
-// The GOING_AWAY is a reserved code and we shouldn't send that from the application. Therefore
-// we have a custom counterpart
-export const CUSTOM_GOING_AWAY = 3001
 
 export type Action = 'connectivityRequest' | 'connectivityProbe'
 

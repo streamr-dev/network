@@ -3,7 +3,7 @@ import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../
 import WebSocket from 'ws'
 import { Logger } from '@streamr/utils'
 import { Url } from 'url'
-import { CUSTOM_GOING_AWAY, GOING_AWAY } from './WebsocketConnector'
+import { CUSTOM_GOING_AWAY, GOING_AWAY } from './AbstractWebsocketClientConnection'
 import { createRandomConnectionId } from '../Connection'
 
 const logger = new Logger(module)
