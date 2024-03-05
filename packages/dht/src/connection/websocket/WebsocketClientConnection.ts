@@ -3,24 +3,17 @@ import EventEmitter from 'eventemitter3'
 import { WebSocket } from 'ws'
 import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from '../IConnection'
 import { createRandomConnectionId } from '../Connection'
+import { CUSTOM_GOING_AWAY, GOING_AWAY } from './WebsocketConnector'
 
 const logger = new Logger(module)
 
-// https://kapeli.com/cheat_sheets/WebSocket_Status_Codes.docset/Contents/Resources/Documents/index
-// Browsers send this automatically when closing a tab
-export const GOING_AWAY = 1001
-// The GOING_AWAY is a reserved code and we shouldn't send that from the application. Therefore
-// we have a custom counterpart
-export const CUSTOM_GOING_AWAY = 3001
-
-const BINARY_TYPE = 'arraybuffer'
+const BINARY_TYPE = 'nodebuffer'
 
 export class WebsocketClientConnection extends EventEmitter<ConnectionEvents> implements IConnection {
 
     public readonly connectionId: ConnectionID
     private socket?: WebSocket
     public connectionType = ConnectionType.WEBSOCKET_CLIENT
-
     private destroyed = false
 
     constructor() {
@@ -39,7 +32,6 @@ export class WebsocketClientConnection extends EventEmitter<ConnectionEvents> im
                     this.emit('error', error.name)
                 }
             })
-
             this.socket.on('open', () => {
                 if (!this.destroyed) {
                     logger.trace('WebSocket Client Connected')
@@ -48,14 +40,12 @@ export class WebsocketClientConnection extends EventEmitter<ConnectionEvents> im
                     }
                 }
             })
-
             this.socket.on('close', (code: number, reason: Buffer) => {
                 if (!this.destroyed) {
                     logger.trace('Websocket Closed')
                     this.doDisconnect(code, binaryToUtf8(reason))
                 }
             })
-
             this.socket.on('message', (message: Buffer, isBinary: boolean) => {
                 if (!this.destroyed) {
                     if (isBinary === false) {
@@ -83,7 +73,7 @@ export class WebsocketClientConnection extends EventEmitter<ConnectionEvents> im
         if (!this.destroyed) {
             if (this.socket && this.socket.readyState === this.socket.OPEN) {
                 logger.trace(`Sending data with size ${data.byteLength}`)
-                this.socket?.send(data.buffer)
+                this.socket?.send(data)
             } else {
                 logger.debug('Tried to send data on a non-open connection')
             }
