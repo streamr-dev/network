@@ -1,6 +1,5 @@
 import { Logger } from '@streamr/utils'
 import { ICloseEvent, IMessageEvent, w3cwebsocket as Websocket } from 'websocket'
-import { IConnection } from '../IConnection'
 import { AbstractWebsocketClientConnection } from './AbstractWebsocketClientConnection'
 
 const logger = new Logger(module)
