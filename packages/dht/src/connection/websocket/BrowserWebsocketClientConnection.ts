@@ -9,7 +9,7 @@ const BINARY_TYPE = 'arraybuffer'
 
 export class WebsocketClientConnection extends AbstractWebsocketClientConnection {
 
-    declare protected socket?: Websocket 
+    protected socket?: Websocket 
 
     // TODO explicit default value for "selfSigned" or make it required
     public connect(address: string, selfSigned?: boolean): void {
