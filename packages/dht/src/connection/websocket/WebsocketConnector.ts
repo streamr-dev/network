@@ -20,7 +20,7 @@ import { NatType, PortRange, TlsCertificate } from '../ConnectionManager'
 import { WebsocketServerConnection } from './WebsocketServerConnection'
 import { Handshaker } from '../Handshaker'
 import queryString from 'querystring'
-import { sample } from 'lodash'
+import { shuffle } from 'lodash'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { expectedConnectionType } from '../../helpers/Connectivity'
 import { WebsocketServerStartError } from '../../helpers/errors'
@@ -192,16 +192,9 @@ export class WebsocketConnector {
                 version: LOCAL_PROTOCOL_VERSION
             }
         }
-        const entrypoints = new Map<DhtAddress, PeerDescriptor>()
-        for (const entrypoint of this.config.entrypoints) {
-            entrypoints.set(getNodeIdFromPeerDescriptor(entrypoint), entrypoint)
-        }
-        const exclude: DhtAddress[] = []
-        const getExcludedIds = () => Array.from(entrypoints.keys()).filter((key) => !exclude.includes(key))
-        while (getExcludedIds().length > 0) {
-            const excludedIds = getExcludedIds()
-            const entryPointId = sample(excludedIds)!
-            const entryPoint = entrypoints.get(entryPointId)!
+        const shuffledEntrypoints = shuffle(this.config.entrypoints)
+        while (shuffledEntrypoints.length > 0) {
+            const entryPoint = shuffledEntrypoints[0]
             try {
                 // Do real connectivity checking
                 const connectivityRequest = {
@@ -216,13 +209,11 @@ export class WebsocketConnector {
                     throw new Err.ConnectionFailed('ConnectivityChecker is destroyed')
                 }
             } catch (err) {
-                if (getExcludedIds().length > 0) {
-                    const error = `Failed to connect to entrypoint with id ${getNodeIdFromPeerDescriptor(entryPoint)} `
-                        + `and URL ${connectivityMethodToWebsocketUrl(entryPoint.websocket!)}`
-                    logger.error(error, { error: err })
-                    exclude.push(entryPointId)
-                    await wait(2000)
-                }
+                const error = `Failed to connect to entrypoint with id ${getNodeIdFromPeerDescriptor(entryPoint)} `
+                    + `and URL ${connectivityMethodToWebsocketUrl(entryPoint.websocket!)}`
+                logger.error(error, { error: err })
+                shuffledEntrypoints.shift()
+                await wait(2000)
             }
         }
         throw new WebsocketServerStartError(`Failed to connect to the entrypoints after ${ENTRY_POINT_CONNECTION_ATTEMPTS} attempts`)
