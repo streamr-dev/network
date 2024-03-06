@@ -28,4 +28,4 @@ EXPOSE 32200/tcp
 WORKDIR /home/streamr/network/packages/broker
 
 # start broker from default config (needs mounted volume, e.g. docker run -v $(cd ~/.streamr/config;pwd):/home/streamr/.streamr/config IMAGE
-CMD ["/usr/local/bin/npm", "exec", "streamr-broker"]
+CMD ["/usr/local/bin/npm", "exec", "-c", "streamr-broker"]
