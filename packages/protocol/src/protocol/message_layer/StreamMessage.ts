@@ -27,7 +27,8 @@ export enum EncryptionType {
 
 export enum SignatureType {
     LEGACY_SECP256K1,   // Brubeck payload signed with secp256k1 curve
-    SECP256K1,      // Streamr 1.0 payload signed with secp256k1 curve
+    SECP256K1,          // Streamr 1.0 payload signed with secp256k1 curve
+    EIP_1271            // EIP-1271 with secp256k1 curve implementation
 }
 
 export interface StreamMessageOptions {
