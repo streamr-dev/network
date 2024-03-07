@@ -258,7 +258,7 @@ async function getEnvironmentId(): Promise<EnvironmentId> {
         message:
             'Which network do you want to configure your node to connect to?',
         choices: [
-            { value: 'polygon', name: 'Streamr 1.0 testnet + Polygon' },
+            { value: 'polygon', name: 'Streamr 1.0 mainnet + Polygon' },
             {
                 value: 'mumbai',
                 name: 'Streamr 1.0 testing environment + Mumbai',

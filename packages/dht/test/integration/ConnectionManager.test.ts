@@ -11,6 +11,7 @@ import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { TransportEvents } from '../../src/transport/ITransport'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
+import { range } from 'lodash'
 
 const SERVICE_ID = 'demo'
 
@@ -85,6 +86,27 @@ describe('ConnectionManager', () => {
 
         await connectionManager.stop()
     }, 15000)
+
+    it('Succesfully connectivityChecks if at least one entry point is online', async () => {
+        // Create offline PeerDescriptors
+        const entryPoints = range(4).map((i) => {
+            return createMockPeerDescriptor({
+                websocket: { host: '127.0.0.1', port: 12345 + i, tls: false }
+            })
+        })
+        entryPoints.push(createMockPeerDescriptor({
+            websocket: { host: '127.0.0.1', port: 9998, tls: false }
+        }))
+        const connectionManager = createConnectionManager({
+            transport: mockTransport,
+            websocketPortRange: { min: 9998, max: 9998 },
+            entryPoints
+        })
+        await connectionManager.start()
+        expect(createLocalPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
+
+        await connectionManager.stop()
+    }, 20000)
 
     it('Can probe connectivity in open internet', async () => {
         const connectionManager1 = createConnectionManager({

@@ -23,4 +23,4 @@ The AES key need not stay the same over time. There are two operations which the
 **Re-key**: is needed to revoke a subscriber's access to the stream. The publisher generates a new key and sends it (proactively or via the key exchange) to everyone else except the parties to be removed. Therefore re-keying is a more heavyweight operation than key rotation.
 
 ## The Streamr SDK
-The [Streamr SDK](https://www.npmjs.com/package/streamr-client) library automatically encrypts messages published to non-public streams. Messages published to public streams are not encrypted, as it would be unnecessary. The library fully supports the automatic key exchange, and also provides methods for key rotation and re-key.
+The [Streamr SDK](https://www.npmjs.com/package/@streamr/node) library automatically encrypts messages published to non-public streams. Messages published to public streams are not encrypted, as it would be unnecessary. The library fully supports the automatic key exchange, and also provides methods for key rotation and re-key.

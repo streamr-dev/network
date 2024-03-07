@@ -54,7 +54,7 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
                 }
             }
         } catch (err) {
-            logger.error('error while parsing handshake message', err)
+            logger.debug('error while parsing handshake message', err)
         }
         
     }

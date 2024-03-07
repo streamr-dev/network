@@ -87,3 +87,7 @@ thead {
     color: var(--ifm-color-emphasis-700) !important;  
     left: 0 !important;
 }
+
+.hidden-content {
+    display: none;
+}
