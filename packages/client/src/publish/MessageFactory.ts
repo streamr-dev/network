@@ -10,7 +10,7 @@ import {
     StreamMessageOptions,
     StreamMessageType
 } from '@streamr/protocol'
-import { keyToArrayIndex, utf8ToBinary } from '@streamr/utils'
+import { EthereumAddress, keyToArrayIndex, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import random from 'lodash/random'
 import { MarkRequired } from 'ts-essentials'
 import { Authentication } from '../Authentication'
@@ -76,7 +76,7 @@ export class MessageFactory {
         metadata: PublishMetadata & { timestamp: number },
         explicitPartition?: number
     ): Promise<StreamMessage> {
-        const publisherId = await this.authentication.getAddress()
+        const publisherId = await this.getPublisherId(metadata)
         const isPublisher = await this.streamRegistry.isStreamPublisher(this.streamId, publisherId)
         if (!isPublisher) {
             this.streamRegistry.clearStreamCache(this.streamId)
@@ -137,8 +137,16 @@ export class MessageFactory {
             newGroupKey,
             authentication: this.authentication,
             contentType,
-            signatureType: SignatureType.SECP256K1,
+            signatureType: metadata.eip1271Contract ? SignatureType.EIP_1271 : SignatureType.SECP256K1,
         })
+    }
+
+    private async getPublisherId(metadata: PublishMetadata): Promise<EthereumAddress> {
+        if (metadata.eip1271Contract !== undefined) {
+            return toEthereumAddress(metadata.eip1271Contract)
+        } else {
+            return this.authentication.getAddress()
+        }
     }
 
     private getDefaultPartition(partitionCount: number): number {

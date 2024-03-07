@@ -18,7 +18,7 @@ export const createSignaturePayload = (opts: {
     prevMsgRef?: MessageRef
     newGroupKey?: EncryptedGroupKey
 }): Uint8Array => {
-    if (opts.signatureType == SignatureType.SECP256K1) {
+    if (opts.signatureType == SignatureType.SECP256K1 || opts.signatureType == SignatureType.EIP_1271) { // TODO: any special handling for EIP_1271?
         const header = Buffer.concat([
             Buffer.from(`${opts.messageId.streamId}${opts.messageId.streamPartition}${opts.messageId.timestamp}`
                 + `${opts.messageId.sequenceNumber}${opts.messageId.publisherId}${opts.messageId.msgChainId}`), 

@@ -1,0 +1,2 @@
+- Should we verify when publishing that the EIP-XXXX is actually compatible
+  with our signature mechanism?

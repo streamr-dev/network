@@ -1,7 +1,15 @@
 import { keyToArrayIndex, toEthereumAddress } from '@streamr/utils'
 import random from 'lodash/random'
-import { ContentType, EncryptionType, MAX_PARTITION_COUNT, StreamMessage, StreamMessageType, toStreamID } from '@streamr/protocol'
-import { fastWallet } from '@streamr/test-utils'
+import {
+    ContentType,
+    EncryptionType,
+    MAX_PARTITION_COUNT,
+    SignatureType,
+    StreamMessage,
+    StreamMessageType,
+    toStreamID
+} from '@streamr/protocol'
+import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { PublishMetadata } from '../../src/publish/Publisher'
@@ -73,9 +81,46 @@ describe('MessageFactory', () => {
             groupKeyId: GROUP_KEY.id,
             newGroupKey: undefined,
             signature: expect.any(Uint8Array),
+            signatureType: SignatureType.SECP256K1,
             contentType: ContentType.JSON,
             content: expect.any(Uint8Array)
         })
+    })
+
+    it('happy path: EIP-1271', async () => {
+        const contractAddress = randomEthereumAddress()
+        const messageFactory = await createMessageFactory()
+        const msg = await createMessage({
+            eip1271Contract: contractAddress
+        }, messageFactory)
+        expect(msg).toMatchObject({
+            messageId: {
+                msgChainId: expect.any(String),
+                publisherId: contractAddress,
+                sequenceNumber: 0,
+                streamId: STREAM_ID,
+                streamPartition: expect.toBeWithin(0, PARTITION_COUNT),
+                timestamp: TIMESTAMP
+            },
+            prevMsgRef: undefined,
+            messageType: StreamMessageType.MESSAGE,
+            encryptionType: EncryptionType.AES,
+            groupKeyId: GROUP_KEY.id,
+            newGroupKey: undefined,
+            signature: expect.any(Uint8Array),
+            signatureType: SignatureType.EIP_1271,
+            contentType: ContentType.JSON,
+            content: expect.any(Uint8Array)
+        })
+    })
+
+    it('throws if given non-ethereum address as eip1271Contract', async () => {
+        const messageFactory = await createMessageFactory()
+        await expect(() =>
+            createMessage({
+                eip1271Contract: 'not-an-ethereum-address'
+            }, messageFactory)
+        ).rejects.toThrow('not a valid Ethereum address: "not-an-ethereum-address"')
     })
 
     it('public stream', async () => {

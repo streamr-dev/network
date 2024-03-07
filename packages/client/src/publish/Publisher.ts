@@ -17,6 +17,7 @@ export interface PublishMetadata {
     timestamp?: string | number | Date
     partitionKey?: string | number
     msgChainId?: string
+    eip1271Contract?: string
 }
 
 const parseTimestamp = (metadata?: PublishMetadata): number => {
