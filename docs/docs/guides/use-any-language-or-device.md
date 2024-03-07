@@ -9,7 +9,7 @@ This tutorial will show you how to publish data into the Streamr Network from in
 **Prerequisites:**
 
 -   NPM v8 or greater
--   NodeJS 16.13.x or greater
+-   NodeJS 18.x or greater (Ideally v20+)
 -   MacOS/Linux environments (Windows environments may require minor adjustments)
 -   A small amount of `MATIC` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
 -   A MQTT library of your choice (this tutorial uses [MQTT.js](https://www.npmjs.com/package/mqtt))
@@ -21,7 +21,7 @@ If you have a Helium setup, you may benefit from reading this blog post first, [
 You'll need to run a [Streamr node](../streamr-network/streamr-nodes.md) to connect your app to.
 
 ```shell
-$ npm i -g streamr-broker
+$ npm i -g @streamr/node@100.0.0-rc.1
 ```
 
 Before the Streamr node can be started, its configuration files need to be created using the following command:
@@ -58,10 +58,10 @@ Create a folder cd into it and create a package.json by running
 $ npm init
 ```
 
-The Streamr SDK is available on [NPM](https://www.npmjs.com/package/streamr-client) and can be installed simply with:
+The Streamr SDK is available on [NPM](https://www.npmjs.com/package/@streamr/sdk) and can be installed simply with:
 
 ```shell
-$ npm install streamr-client
+$ npm install @streamr/sdk@100.0.0-rc.1 
 ```
 
 Having trouble installing the client? Maybe our [troubleshooting](../usage/streamr-js-client/how-to-use#Troubleshooting) section will help.
@@ -74,7 +74,7 @@ TODO: ** Create a stream widget **
 
 ```ts
 // Import the Streamr client
-import { StreamrClient } from "streamr-client"
+import { StreamrClient } from "@streamr/sdk"
 
 const PRIVATE_KEY = ""
 

@@ -211,18 +211,18 @@ To update `latest` do the following.
 1. Remove potentially existing latest tag _locally_ with `docker manifest rm streamr/node:latest`
 
 1. Find out the sha256 digests of both the amd64 and arm64 builds for a `vX.Y.Z` tag. This can be
-done via command-line `docker buildx imagetools inspect stream/node:vX.Y.Z` or you can check
-this from docker hub website under https://hub.docker.com/r/stream/node/tags.
+done via command-line `docker buildx imagetools inspect streamr/node:vX.Y.Z` or you can check
+this from docker hub website under https://hub.docker.com/r/streamr/node/tags.
 2. Then we shall create the manifest by running the below. Remember to replace `<SHA-AMD64>` and `<SHA-ARM64>`
 with real values.
 ```
-docker manifest create stream/node:latest \
-    --amend stream/node@sha256:<SHA-AMD64> \
-    --amend stream/node@sha256:<SHA-ARM64>
+docker manifest create streamr/node:latest \
+    --amend streamr/node@sha256:<SHA-AMD64> \
+    --amend streamr/node@sha256:<SHA-ARM64>
 ```
 3. Then we publish the manifest with
 ```
-docker manifest push stream/node:latest
+docker manifest push streamr/node:latest
 ```
 4. Then we are ready. It would be wise to double-check this by checking
-https://hub.docker.com/r/stream/node/tags.
+https://hub.docker.com/r/streamr/node/tags.

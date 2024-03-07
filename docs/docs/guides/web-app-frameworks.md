@@ -9,7 +9,7 @@ In this quickstart guide, you'll be using Streamr in a **ReactJS** web applicati
 **Prerequisites:**
 
 -   NPM v8 or greater
--   NodeJS 16.13.x or greater
+-   NodeJS 18.x or greater (Ideally v20+)
 -   A basic understanding of ReactJS or NextJS
 -   A small amount of `MATIC` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
 
@@ -21,10 +21,10 @@ First you need to install the Streamr SDK in your application:
 
 <!-- TODO: add hub video tutorial -->
 
-The SDK is available on [NPM](https://www.npmjs.com/package/streamr-client) and can be installed simply with:
+The SDK is available on [NPM](https://www.npmjs.com/package/@streamr/sdk) and can be installed simply with:
 
 ```shell
-$ npm install streamr-client
+$ npm install @streamr/sdk@100.0.0-rc.1 
 ```
 
 Having trouble installing the SDK? Maybe our [troubleshooting](../usage/streamr-js-client/how-to-use#Troubleshooting) section will help.
@@ -43,7 +43,7 @@ If you have created your own stream, set the `SUBSCRIBE` permission to public or
 :::
 
 ```ts
-import { StreamrClient } from "streamr-client"
+import { StreamrClient } from "@streamr/sdk"
 declare var window: any
 
 export const startSubscribing = () => {
@@ -69,7 +69,7 @@ export const startSubscribing = () => {
 Simply install the following packages in your application:
 
 ```shell
-$ npm install streamr-client streamr-client-react@hkt
+$ npm install streamr-client-react@latest
 ```
 
 The `Provider` component holds its own StreamrClient instance and makes it available to all its children components.
