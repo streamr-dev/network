@@ -24,6 +24,10 @@ on:
       build_platforms:
         type: string
         required: true
+      include_latest_tag:
+        type: boolean
+        required: false
+        default: false
 
     secrets:
       dockerhub_username:
@@ -78,8 +82,9 @@ jobs:
             latest=false
           tags: |
             type=match,pattern=broker/(v.*),group=1,value=${{ env.broker_head_tag }}
-            type=raw,value=dev,enable=${{ inputs.branch == 'main' }}
             type=raw,value=${{ inputs.branch }},enable=${{ inputs.branch != 'main' }}
+            type=raw,value=dev,enable=${{ inputs.branch == 'main' }}
+            type=raw,value=latest,enable=${{ inputs.include_latest_tag }}
 
       - name: Build
         if: ${{!inputs.push_image}}
