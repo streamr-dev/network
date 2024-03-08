@@ -65,15 +65,15 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
                         this.makingOffer = true
                         try {
                             await this.peerConnection.setLocalDescription()
-                        } catch (err) {
-                            logger.warn('error', { err })
+                        } catch (error) {
+                            logger.warn('error', { error })
                         }
                         if (this.peerConnection.localDescription !== null) {
                             this.emit('localDescription', this.peerConnection.localDescription?.sdp, this.peerConnection.localDescription?.type)
                         }
                     }
-                } catch (err) {
-                    logger.error('error', { err })
+                } catch (error) {
+                    logger.error('error', { error })
                 } finally {
                     this.makingOffer = false
                 }
@@ -98,15 +98,15 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         }
         try {
             await this.peerConnection?.setRemoteDescription({ sdp: description, type: type.toLowerCase() as RTCSdpType })
-        } catch (err) {
-            logger.warn('error', { err })
+        } catch (error) {
+            logger.warn('Failed to setRemoteDescription', { error })
         }
 
         if ((type.toLowerCase() === RtcDescription.OFFER) && (this.peerConnection !== undefined)) {
             try {
                 await this.peerConnection.setLocalDescription()
-            } catch (err) {
-                logger.warn('error', { err })
+            } catch (error) {
+                logger.warn('Failed to setLocalDescription', { error })
             }
             if (this.peerConnection.localDescription !== null) {
                 this.emit('localDescription', this.peerConnection.localDescription.sdp, this.peerConnection.localDescription.type)
@@ -115,13 +115,11 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     }
 
     public addRemoteCandidate(candidate: string, mid: string): void {
-        try {
-            this.peerConnection?.addIceCandidate({ candidate: candidate, sdpMid: mid }).then(() => { return }).catch((err: any) => {
-                logger.warn('error', { err })
+        this.peerConnection?.addIceCandidate({ candidate: candidate, sdpMid: mid })
+            .then(() => { return })
+            .catch((error) => {
+                logger.warn('Failed to addIceCandidate', { error })
             })
-        } catch (err) {
-            logger.warn('error', { err })
-        }
     }
 
     public isOpen(): boolean {
@@ -147,8 +145,8 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
             if (this.dataChannel !== undefined) {
                 try {
                     this.dataChannel.close()
-                } catch (e) {
-                    logger.warn(`dc.close() errored: ${e}`)
+                } catch (error) {
+                    logger.warn('dc.close() errored', { error })
                 }
             }
 
@@ -157,8 +155,8 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
             if (this.peerConnection !== undefined) {
                 try {
                     this.peerConnection.close()
-                } catch (e) {
-                    logger.warn(`conn.close() errored: ${e}`)
+                } catch (error) {
+                    logger.warn('conn.close() errored', { error })
                 }
             }
             this.peerConnection = undefined
@@ -191,8 +189,8 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
             this.doClose(false)
         }
 
-        dataChannel.onerror = (err) => {
-            logger.warn(`dc.onError: ${err}`)
+        dataChannel.onerror = (error) => {
+            logger.warn('dc.onError', { error })
         }
 
         dataChannel.onmessage = (msg) => {
