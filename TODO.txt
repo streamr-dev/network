@@ -1,2 +1,4 @@
 - Should we verify when publishing that the EIP-XXXX is actually compatible
   with our signature mechanism?
+- Rename EIP-1271 to ERC-1271 everywhere in code
+- Write integration tests for EIP1271Contract.ts (against mock contract)
