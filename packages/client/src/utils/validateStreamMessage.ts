@@ -8,7 +8,7 @@ import {
     convertBytesToGroupKeyResponse
 } from '@streamr/trackerless-network'
 import { verifySignature, EthereumAddress } from '@streamr/utils'
-import { StreamRegistry } from '../registry/StreamRegistry'
+import { StreamRegistry } from '../contracts/StreamRegistry'
 import { createSignaturePayload } from '../signature'
 
 export const validateStreamMessage = async (msg: StreamMessage, streamRegistry: StreamRegistry): Promise<void> => {

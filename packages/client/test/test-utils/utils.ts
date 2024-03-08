@@ -25,7 +25,7 @@ import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchang
 import { StreamrClientEventEmitter } from '../../src/events'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { MessageFactory } from '../../src/publish/MessageFactory'
-import { StreamRegistry } from '../../src/registry/StreamRegistry'
+import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { LoggerFactory } from '../../src/utils/LoggerFactory'
 import { counterId } from '../../src/utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'

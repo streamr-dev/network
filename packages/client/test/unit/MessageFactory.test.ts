@@ -15,7 +15,7 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { PublishMetadata } from '../../src/publish/Publisher'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { MessageFactory, MessageFactoryOptions } from '../../src/publish/MessageFactory'
-import { StreamRegistry } from '../../src/registry/StreamRegistry'
+import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
 import { merge, utf8ToBinary } from '@streamr/utils'
 
