@@ -37,7 +37,7 @@ const validate = async (messageOptions: MessageOptions) => {
             return userAddress === toEthereumAddress(publisherWallet.address)
         }
     }
-    await validateStreamMessage(msg, streamRegistry as any)
+    await validateStreamMessage(msg, streamRegistry as any, undefined as any)
 }
 
 describe('Validator', () => {

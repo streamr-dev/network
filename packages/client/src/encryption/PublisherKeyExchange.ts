@@ -28,6 +28,7 @@ import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
+import { EIP1271ContractFacade } from '../contracts/EIP1271ContractFacade'
 
 /*
  * Sends group key responses
@@ -38,6 +39,7 @@ export class PublisherKeyExchange {
 
     private readonly networkNodeFacade: NetworkNodeFacade
     private readonly streamRegistry: StreamRegistry
+    private readonly eip1271ContractFacade: EIP1271ContractFacade
     private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
     private readonly logger: Logger
@@ -45,12 +47,14 @@ export class PublisherKeyExchange {
     constructor(
         networkNodeFacade: NetworkNodeFacade,
         streamRegistry: StreamRegistry,
+        eip1271ContractFacade: EIP1271ContractFacade,
         store: LocalGroupKeyStore,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         loggerFactory: LoggerFactory
     ) {
         this.networkNodeFacade = networkNodeFacade
         this.streamRegistry = streamRegistry
+        this.eip1271ContractFacade = eip1271ContractFacade
         this.store = store
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
@@ -68,7 +72,7 @@ export class PublisherKeyExchange {
                 const { recipient, requestId, rsaPublicKey, groupKeyIds } = convertBytesToGroupKeyRequest(request.content)
                 if (recipient === authenticatedUser) {
                     this.logger.debug('Handling group key request', { requestId })
-                    await validateStreamMessage(request, this.streamRegistry)
+                    await validateStreamMessage(request, this.streamRegistry, this.eip1271ContractFacade)
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
                         undefined) as GroupKey[]

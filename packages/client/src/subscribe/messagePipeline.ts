@@ -19,12 +19,14 @@ import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { MsgChainUtil } from './MsgChainUtil'
 import { Resends } from './Resends'
 import { OrderMessages } from './ordering/OrderMessages'
+import { EIP1271ContractFacade } from '../contracts/EIP1271ContractFacade'
 
 export interface MessagePipelineOptions {
     streamPartId: StreamPartID
     getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
     resends: Resends
     streamRegistry: StreamRegistry
+    eip1271ContractFacade: EIP1271ContractFacade
     groupKeyManager: GroupKeyManager
     // eslint-disable-next-line max-len
     config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
@@ -52,7 +54,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
 
     const messageStream = new PushPipeline<StreamMessage, StreamMessage>
     const msgChainUtil = new MsgChainUtil(async (msg) => {
-        await validateStreamMessage(msg, opts.streamRegistry)
+        await validateStreamMessage(msg, opts.streamRegistry, opts.eip1271ContractFacade)
         let decrypted
         if (StreamMessage.isAESEncrypted(msg)) {
             try {

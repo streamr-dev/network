@@ -1,18 +1,16 @@
-import {
-    StreamMessage,
-    StreamMessageError,
-    StreamMessageType,
-} from '@streamr/protocol'
-import {
-    convertBytesToGroupKeyRequest,
-    convertBytesToGroupKeyResponse
-} from '@streamr/trackerless-network'
-import { verifySignature, EthereumAddress } from '@streamr/utils'
+import { SignatureType, StreamMessage, StreamMessageError, StreamMessageType, } from '@streamr/protocol'
+import { convertBytesToGroupKeyRequest, convertBytesToGroupKeyResponse } from '@streamr/trackerless-network'
+import { EthereumAddress, verifySignature } from '@streamr/utils'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { createSignaturePayload } from '../signature'
+import { EIP1271ContractFacade } from '../contracts/EIP1271ContractFacade'
 
-export const validateStreamMessage = async (msg: StreamMessage, streamRegistry: StreamRegistry): Promise<void> => {
-    await doValidate(msg, streamRegistry).catch((err: any) => {
+export const validateStreamMessage = async (
+    msg: StreamMessage,
+    streamRegistry: StreamRegistry,
+    eip1271ContractFacade: EIP1271ContractFacade
+): Promise<void> => {
+    await doValidate(msg, streamRegistry, eip1271ContractFacade).catch((err: any) => {
         // all StreamMessageError already have this streamMessage, maybe this is 
         // here if e.g. contract call fails? TODO is this really needed as
         // the onError callback in messagePipeline knows which message
@@ -33,8 +31,12 @@ export const validateStreamMessage = async (msg: StreamMessage, streamRegistry: 
  *
  * @param streamMessage the StreamMessage to validate.
  */
-const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry): Promise<void> => {
-    assertSignatureIsValid(streamMessage)
+const doValidate = async (
+    streamMessage: StreamMessage,
+    streamRegistry: StreamRegistry,
+    eip1271ContractFacade: EIP1271ContractFacade
+): Promise<void> => {
+    await assertSignatureIsValid(streamMessage, eip1271ContractFacade)
     switch (streamMessage.messageType) {
         case StreamMessageType.MESSAGE:
             return validateMessage(streamMessage, streamRegistry)
@@ -60,10 +62,8 @@ const doValidate = (streamMessage: StreamMessage, streamRegistry: StreamRegistry
 /**
  * Checks that the signature in the given StreamMessage is cryptographically valid.
  * Resolves if valid, rejects otherwise.
- *
- * @param streamMessage the StreamMessage to validate.
  */
-export const assertSignatureIsValid = (streamMessage: StreamMessage): void => {
+export const assertSignatureIsValid = async (streamMessage: StreamMessage, eip1271ContractFacade: EIP1271ContractFacade): Promise<void> => {
     const payload = createSignaturePayload({
         messageId: streamMessage.messageId,
         messageType: streamMessage.messageType,
@@ -73,9 +73,17 @@ export const assertSignatureIsValid = (streamMessage: StreamMessage): void => {
         prevMsgRef: streamMessage.prevMsgRef ?? undefined,
         newGroupKey: streamMessage.newGroupKey ?? undefined
     })
-    let success
+    let success: boolean
     try {
-        success = verifySignature(streamMessage.getPublisherId(), payload, streamMessage.signature)
+        if (streamMessage.signatureType === SignatureType.EIP_1271) {
+            success = await eip1271ContractFacade.isValidSignature(
+                streamMessage.getPublisherId(),
+                payload,
+                streamMessage.signature
+            )
+        } else {
+            success = verifySignature(streamMessage.getPublisherId(), payload, streamMessage.signature)
+        }
     } catch (err) {
         throw new StreamMessageError(`An error occurred during address recovery from signature: ${err}`, streamMessage)
     }
