@@ -20,6 +20,8 @@ import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
 import { FakeStreamRegistry } from './FakeStreamRegistry'
 import { FakeStreamStorageRegistry } from './FakeStreamStorageRegistry'
 import { FakeOperatorRegistry } from './FakeOperatorRegistry'
+import { EIP1271ContractFacade } from '../../../src/contracts/EIP1271ContractFacade'
+import { FakeEIP1271ContractFacade } from './FakeEIP1271ContractFacade'
 
 const DEFAULT_CLIENT_OPTIONS: StreamrClientConfig = {
     encryption: {
@@ -49,6 +51,7 @@ export class FakeEnvironment {
         this.dependencyContainer.register(NetworkNodeFactory, FakeNetworkNodeFactory)
         this.dependencyContainer.register(StreamRegistry, FakeStreamRegistry as any)
         this.dependencyContainer.register(StreamStorageRegistry, FakeStreamStorageRegistry as any)
+        this.dependencyContainer.register(EIP1271ContractFacade, FakeEIP1271ContractFacade as any)
         this.dependencyContainer.register(StorageNodeRegistry, FakeStorageNodeRegistry as any)
         this.dependencyContainer.register(OperatorRegistry, FakeOperatorRegistry as any)
     }
