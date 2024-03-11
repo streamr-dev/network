@@ -328,12 +328,12 @@ export class ContractFacade {
     }
 
     private async getOperatorAddresses(requiredBlockNumber: number): Promise<EthereumAddress[]> {
-        // TODO: use pagination or find a clever efficient way of selecting a random operator (NET-1113)
-        const createQuery = () => {
+        // TODO: find a clever more efficient way of selecting a random operator? (NET-1113)
+        const createQuery = (lastId: string, pageSize: number) => {
             return {
                 query: `
                     {
-                        operators(first: 1000) {
+                        operators(where: {totalStakeInSponsorshipsWei_gt: "0", id_gt: "${lastId}"}, first: ${pageSize}) {
                             id
                         }
                     }
@@ -469,7 +469,7 @@ export class ContractFacade {
             sponsorship,
             targetOperator,
             voteData,
-            { ...this.getEthersOverrides(), gasLimit: '1000000' }
+            { ...this.getEthersOverrides(), gasLimit: '1300000' }
         )).wait()
     }
 
