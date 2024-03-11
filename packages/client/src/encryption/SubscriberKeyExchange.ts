@@ -55,7 +55,7 @@ export class SubscriberKeyExchange {
     constructor(
         networkNodeFacade: NetworkNodeFacade,
         streamRegistry: StreamRegistry,
-        eip1271ContractFacade: EIP1271ContractFacade,
+        @inject(EIP1271ContractFacade) eip1271ContractFacade: EIP1271ContractFacade,
         store: LocalGroupKeyStore,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,

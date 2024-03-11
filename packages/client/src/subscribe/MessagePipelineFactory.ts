@@ -39,7 +39,7 @@ export class MessagePipelineFactory {
         @inject(delay(() => Resends)) resends: Resends,
         streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StreamRegistry)) streamRegistry: StreamRegistry,
-        eip1271ContractFacade: EIP1271ContractFacade,
+        @inject(EIP1271ContractFacade) eip1271ContractFacade: EIP1271ContractFacade,
         @inject(delay(() => GroupKeyManager)) groupKeyManager: GroupKeyManager,
         @inject(ConfigInjectionToken) config: MessagePipelineOptions['config'],
         destroySignal: DestroySignal,
