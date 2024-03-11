@@ -109,7 +109,7 @@ export interface ControlLayerConfig {
      * The server is used by the network layer to accept incoming connections
      * over the public internet to improve the network node's connectivity.
      */
-    websocketPortRange?: PortRange
+    websocketPortRange?: PortRange | null
 
     /**
      * The host name or IP address of the WebSocket server used to connect to it over the internet.
