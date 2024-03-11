@@ -75,14 +75,14 @@ describe('Stream Entry Points are replaced when known entry points leave streams
         let receivedMessages = 0
         for (const node of laterNodesOnStream) {
             await node.joinStreamPart(STREAM_PART_ID, { minCount: 4, timeout: 60000 }) 
-            node.getDeliveryLayer().on('newMessage', () => {
+            node.getContentDeliveryManager().on('newMessage', () => {
                 receivedMessages += 1
             })
         }
 
-        await Promise.all(initialNodesOnStream.map((node) => node.getDeliveryLayer().leaveStreamPart(STREAM_PART_ID)))
+        await Promise.all(initialNodesOnStream.map((node) => node.getContentDeliveryManager().leaveStreamPart(STREAM_PART_ID)))
         await waitForCondition(() => 
-            laterNodesOnStream.every((node) => node.getDeliveryLayer().getNeighbors(STREAM_PART_ID).length >= 4), 60000, 1000
+            laterNodesOnStream.every((node) => node.getContentDeliveryManager().getNeighbors(STREAM_PART_ID).length >= 4), 60000, 1000
         )
 
         const msg = createStreamMessage(
@@ -90,7 +90,7 @@ describe('Stream Entry Points are replaced when known entry points leave streams
             STREAM_PART_ID,
             randomEthereumAddress()
         )
-        newNodeInStream.getDeliveryLayer().broadcast(msg)
+        newNodeInStream.getContentDeliveryManager().broadcast(msg)
         await waitForCondition(() => receivedMessages === NUM_OF_LATER_NODES, 30000)
     }, 200000)
 })

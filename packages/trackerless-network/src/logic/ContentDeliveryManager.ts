@@ -50,7 +50,7 @@ interface Metrics extends MetricsDefinition {
     broadcastBytesPerSecond: Metric
 }
 
-export interface DeliveryLayerConfig {
+export interface ContentDeliveryManagerConfig {
     metricsContext?: MetricsContext
     streamPartitionNeighborTargetCount?: number
     streamPartitionMinPropagationTargets?: number
@@ -58,20 +58,20 @@ export interface DeliveryLayerConfig {
     rpcRequestTimeout?: number
 }
 
-export class DeliveryLayer extends EventEmitter<Events> {
+export class ContentDeliveryManager extends EventEmitter<Events> {
 
     private transport?: ITransport
     private connectionLocker?: ConnectionLocker
     private layer0Node?: Layer0Node
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
-    private readonly config: DeliveryLayerConfig
+    private readonly config: ContentDeliveryManagerConfig
     private readonly streamParts: Map<StreamPartID, StreamPartDelivery>
     private readonly knownStreamPartEntryPoints: Map<StreamPartID, PeerDescriptor[]> = new Map()
     private started = false
     private destroyed = false
 
-    constructor(config: DeliveryLayerConfig) {
+    constructor(config: ContentDeliveryManagerConfig) {
         super()
         this.config = config
         this.streamParts = new Map()

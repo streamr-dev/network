@@ -67,15 +67,15 @@ describe('NetworkStack NodeInfoRpc', () => {
     it('happy path', async () => {
         const streamPartId1 = StreamPartIDUtils.parse('stream1#0')
         const streamPartId2 = StreamPartIDUtils.parse('stream2#0')
-        requesteStack.getDeliveryLayer().joinStreamPart(streamPartId1)
-        otherStack.getDeliveryLayer().joinStreamPart(streamPartId1)
-        requesteStack.getDeliveryLayer().joinStreamPart(streamPartId2)
-        otherStack.getDeliveryLayer().joinStreamPart(streamPartId2)
+        requesteStack.getContentDeliveryManager().joinStreamPart(streamPartId1)
+        otherStack.getContentDeliveryManager().joinStreamPart(streamPartId1)
+        requesteStack.getContentDeliveryManager().joinStreamPart(streamPartId2)
+        otherStack.getContentDeliveryManager().joinStreamPart(streamPartId2)
         await waitForCondition(() => 
-            requesteStack.getDeliveryLayer().getNeighbors(streamPartId1).length === 1 
-            && otherStack.getDeliveryLayer().getNeighbors(streamPartId1).length === 1
-            && requesteStack.getDeliveryLayer().getNeighbors(streamPartId2).length === 1
-            && otherStack.getDeliveryLayer().getNeighbors(streamPartId2).length === 1
+            requesteStack.getContentDeliveryManager().getNeighbors(streamPartId1).length === 1 
+            && otherStack.getContentDeliveryManager().getNeighbors(streamPartId1).length === 1
+            && requesteStack.getContentDeliveryManager().getNeighbors(streamPartId2).length === 1
+            && otherStack.getContentDeliveryManager().getNeighbors(streamPartId2).length === 1
         )
         const result = await nodeInfoClient.getInfo(requesteePeerDescriptor)
         expect(result).toMatchObject({

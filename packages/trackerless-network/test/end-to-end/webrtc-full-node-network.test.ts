@@ -33,8 +33,8 @@ describe('Full node network with WebRTC connections', () => {
             }
         })
         await entryPoint.start()
-        entryPoint.getDeliveryLayer().setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
-        entryPoint.getDeliveryLayer().joinStreamPart(streamPartId)
+        entryPoint.getContentDeliveryManager().setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
+        entryPoint.getContentDeliveryManager().joinStreamPart(streamPartId)
 
         await Promise.all(range(NUM_OF_NODES).map(async () => {
             const peerDescriptor = createMockPeerDescriptor()
@@ -46,8 +46,8 @@ describe('Full node network with WebRTC connections', () => {
             })
             nodes.push(node)
             await node.start()
-            node.getDeliveryLayer().setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
-            node.getDeliveryLayer().joinStreamPart(streamPartId)
+            node.getContentDeliveryManager().setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
+            node.getContentDeliveryManager().joinStreamPart(streamPartId)
         }))
 
     }, 90000)
@@ -62,15 +62,15 @@ describe('Full node network with WebRTC connections', () => {
     it('happy path', async () => {
         await Promise.all(nodes.map((node) =>
             waitForCondition(() => {
-                return node.getDeliveryLayer().getNeighbors(streamPartId).length >= 3
+                return node.getContentDeliveryManager().getNeighbors(streamPartId).length >= 3
             }
             , 30000)
         ))
         let receivedMessageCount = 0
         const successIds: string[] = []
         nodes.forEach((node) => {
-            node.getDeliveryLayer().on('newMessage', () => {
-                successIds.push(getNodeIdFromPeerDescriptor(node.getDeliveryLayer().getPeerDescriptor()))
+            node.getContentDeliveryManager().on('newMessage', () => {
+                successIds.push(getNodeIdFromPeerDescriptor(node.getContentDeliveryManager().getPeerDescriptor()))
                 receivedMessageCount += 1
             })
         })
@@ -79,7 +79,7 @@ describe('Full node network with WebRTC connections', () => {
             streamPartId,
             randomEthereumAddress()
         )
-        entryPoint.getDeliveryLayer().broadcast(msg)
+        entryPoint.getContentDeliveryManager().broadcast(msg)
         await waitForCondition(() => receivedMessageCount === NUM_OF_NODES)
     }, 120000)
 

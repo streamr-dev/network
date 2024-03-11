@@ -47,7 +47,7 @@ describe('proxy group key exchange', () => {
         })
         await proxyNode.start()
         proxyNode.setStreamPartEntryPoints(STREAM_PART_ID, [proxyNodeDescriptor])
-        proxyNode.stack.getDeliveryLayer().joinStreamPart(STREAM_PART_ID)
+        proxyNode.stack.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
         publisher = createNetworkNode({
             layer0: {
                 entryPoints: [proxyNodeDescriptor],
@@ -101,7 +101,7 @@ describe('proxy group key exchange', () => {
         })
 
         await Promise.all([
-            waitForEvent3(publisher.stack.getDeliveryLayer() as any, 'newMessage'),
+            waitForEvent3(publisher.stack.getContentDeliveryManager() as any, 'newMessage'),
             subscriber.broadcast(request)
         ])
     })
@@ -133,7 +133,7 @@ describe('proxy group key exchange', () => {
         })
 
         await Promise.all([
-            waitForEvent3(subscriber.stack.getDeliveryLayer() as any, 'newMessage'),
+            waitForEvent3(subscriber.stack.getContentDeliveryManager() as any, 'newMessage'),
             publisher.broadcast(response)
         ])
     })

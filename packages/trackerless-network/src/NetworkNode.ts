@@ -23,7 +23,7 @@ export class NetworkNode {
     /** @internal */
     constructor(stack: NetworkStack) {
         this.stack = stack
-        this.stack.getDeliveryLayer().on('newMessage', (msg) => {
+        this.stack.getContentDeliveryManager().on('newMessage', (msg) => {
             if (this.messageListeners.length > 0) {
                 try {
                     const translated = StreamMessageTranslator.toClientProtocol(msg)
@@ -42,7 +42,7 @@ export class NetworkNode {
     }
 
     async inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
-        return this.stack.getDeliveryLayer().inspect(node, streamPartId)
+        return this.stack.getContentDeliveryManager().inspect(node, streamPartId)
     }
 
     async broadcast(streamMessage: StreamMessage): Promise<void> {
@@ -61,11 +61,11 @@ export class NetworkNode {
         userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
-        await this.stack.getDeliveryLayer().setProxies(streamPartId, nodes, direction, userId, connectionCount)
+        await this.stack.getContentDeliveryManager().setProxies(streamPartId, nodes, direction, userId, connectionCount)
     }
 
     isProxiedStreamPart(streamPartId: StreamPartID): boolean {
-        return this.stack.getDeliveryLayer().isProxiedStreamPart(streamPartId)
+        return this.stack.getContentDeliveryManager().isProxiedStreamPart(streamPartId)
     }
 
     addMessageListener(cb: (msg: StreamMessage) => void): void {
@@ -73,7 +73,7 @@ export class NetworkNode {
     }
 
     setStreamPartEntryPoints(streamPartId: StreamPartID, contactPeerDescriptors: PeerDescriptor[]): void {
-        this.stack.getDeliveryLayer().setStreamPartEntryPoints(streamPartId, contactPeerDescriptors)
+        this.stack.getContentDeliveryManager().setStreamPartEntryPoints(streamPartId, contactPeerDescriptors)
     }
 
     removeMessageListener(cb: (msg: StreamMessage) => void): void {
@@ -84,15 +84,15 @@ export class NetworkNode {
         if (this.stopped) {
             return
         }
-        await this.stack.getDeliveryLayer().leaveStreamPart(streamPartId)
+        await this.stack.getContentDeliveryManager().leaveStreamPart(streamPartId)
     }
 
     getNeighbors(streamPartId: StreamPartID): ReadonlyArray<DhtAddress> {
-        return this.stack.getDeliveryLayer().getNeighbors(streamPartId)
+        return this.stack.getContentDeliveryManager().getNeighbors(streamPartId)
     }
 
     hasStreamPart(streamPartId: StreamPartID): boolean {
-        return this.stack.getDeliveryLayer().hasStreamPart(streamPartId)
+        return this.stack.getContentDeliveryManager().hasStreamPart(streamPartId)
     }
 
     async stop(): Promise<void> {
@@ -109,7 +109,7 @@ export class NetworkNode {
     }
 
     getNodeId(): DhtAddress {
-        return this.stack.getDeliveryLayer().getNodeId()
+        return this.stack.getContentDeliveryManager().getNodeId()
     }
 
     getOptions(): NetworkOptions {
@@ -117,7 +117,7 @@ export class NetworkNode {
     }
 
     getStreamParts(): StreamPartID[] {
-        return this.stack.getDeliveryLayer().getStreamParts()
+        return this.stack.getContentDeliveryManager().getStreamParts()
     }
 
     async fetchNodeInfo(node: PeerDescriptor): Promise<NodeInfo> {

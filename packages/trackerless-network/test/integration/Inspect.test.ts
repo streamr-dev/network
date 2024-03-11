@@ -75,12 +75,12 @@ describe('inspect', () => {
                 123123,
                 sequenceNumber
             )
-            publisherNode.getDeliveryLayer().broadcast(msg)
+            publisherNode.getContentDeliveryManager().broadcast(msg)
             sequenceNumber += 1
         }, 200)
 
         for (const node of inspectedNodes) {
-            const result = await inspectorNode.getDeliveryLayer().inspect(node.getLayer0Node().getLocalPeerDescriptor(), streamPartId)
+            const result = await inspectorNode.getContentDeliveryManager().inspect(node.getLayer0Node().getLocalPeerDescriptor(), streamPartId)
             expect(result).toEqual(true)
         }
     }, 25000)

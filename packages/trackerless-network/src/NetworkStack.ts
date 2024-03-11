@@ -11,7 +11,7 @@ import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { Logger, MetricsContext, waitForCondition } from '@streamr/utils'
 import { pull } from 'lodash'
 import { version as applicationVersion } from '../package.json'
-import { DeliveryLayer, DeliveryLayerConfig } from './logic/DeliveryLayer'
+import { ContentDeliveryManager, ContentDeliveryManagerConfig } from './logic/ContentDeliveryManager'
 import { Layer0Node } from './logic/Layer0Node'
 import { NodeInfoClient } from './logic/node-info/NodeInfoClient'
 import { NODE_INFO_RPC_SERVICE_ID, NodeInfoRpcLocal } from './logic/node-info/NodeInfoRpcLocal'
@@ -19,7 +19,7 @@ import { NodeInfoResponse, ProxyDirection, StreamMessage } from './proto/package
 
 export interface NetworkOptions {
     layer0?: DhtNodeOptions
-    networkNode?: DeliveryLayerConfig
+    networkNode?: ContentDeliveryManagerConfig
     metricsContext?: MetricsContext
 }
 
@@ -55,7 +55,7 @@ export type NodeInfo = Required<NodeInfoResponse>
 export class NetworkStack {
 
     private layer0Node?: Layer0Node
-    private deliveryLayer?: DeliveryLayer
+    private contentDeliveryManager?: ContentDeliveryManager
     private stopped = false
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
@@ -69,7 +69,7 @@ export class NetworkStack {
             ...options.layer0,
             metricsContext: this.metricsContext
         })
-        this.deliveryLayer = new DeliveryLayer({
+        this.contentDeliveryManager = new ContentDeliveryManager({
             ...options.networkNode,
             metricsContext: this.metricsContext
         })
@@ -77,28 +77,28 @@ export class NetworkStack {
     }
 
     async joinStreamPart(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }): Promise<void> {
-        if (this.getDeliveryLayer().isProxiedStreamPart(streamPartId)) {
+        if (this.getContentDeliveryManager().isProxiedStreamPart(streamPartId)) {
             throw new Error(`Cannot join to ${streamPartId} as proxy connections have been set`)
         }
         await this.ensureConnectedToControlLayer()
-        this.getDeliveryLayer().joinStreamPart(streamPartId)
+        this.getContentDeliveryManager().joinStreamPart(streamPartId)
         if (neighborRequirement !== undefined) {
             await waitForCondition(() => {
-                return this.getDeliveryLayer().getNeighbors(streamPartId).length >= neighborRequirement.minCount
+                return this.getContentDeliveryManager().getNeighbors(streamPartId).length >= neighborRequirement.minCount
             }, neighborRequirement.timeout)
         }
     }
 
     async broadcast(msg: StreamMessage): Promise<void> {
         const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
-        if (this.getDeliveryLayer().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && (msg.body.oneofKind === 'contentMessage')) {
+        if (this.getContentDeliveryManager().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && (msg.body.oneofKind === 'contentMessage')) {
             throw new Error(`Cannot broadcast to ${streamPartId} as proxy subscribe connections have been set`)
         }
         // TODO could combine these two calls to isProxiedStreamPart?
-        if (!this.deliveryLayer!.isProxiedStreamPart(streamPartId)) {
+        if (!this.contentDeliveryManager!.isProxiedStreamPart(streamPartId)) {
             await this.ensureConnectedToControlLayer()
         }
-        this.getDeliveryLayer().broadcast(msg)
+        this.getContentDeliveryManager().broadcast(msg)
     }
 
     async start(doJoin = true): Promise<void> {
@@ -116,8 +116,8 @@ export class NetworkStack {
             }
         }
         // TODO: remove undefined checks here. Assume that start is approproately awaited before stop is called.
-        await this.deliveryLayer?.start(this.layer0Node!, connectionManager, connectionManager)
-        if (this.deliveryLayer) {
+        await this.contentDeliveryManager?.start(this.layer0Node!, connectionManager, connectionManager)
+        if (this.contentDeliveryManager) {
             const infoRpcCommunicator = new ListeningRpcCommunicator(NODE_INFO_RPC_SERVICE_ID, this.getConnectionManager())
             this.nodeInfoRpcLocal = new NodeInfoRpcLocal(this, infoRpcCommunicator)
             this.nodeInfoClient = new NodeInfoClient(
@@ -142,8 +142,8 @@ export class NetworkStack {
         }
     }
 
-    getDeliveryLayer(): DeliveryLayer {
-        return this.deliveryLayer!
+    getContentDeliveryManager(): ContentDeliveryManager {
+        return this.contentDeliveryManager!
     }
 
     getLayer0Node(): Layer0Node {
@@ -169,7 +169,7 @@ export class NetworkStack {
                 connections: this.getLayer0Node().getConnections(),
                 neighbors: this.getLayer0Node().getNeighbors()
             },
-            streamPartitions: this.getDeliveryLayer().getNodeInfo(),
+            streamPartitions: this.getContentDeliveryManager().getNodeInfo(),
             version: applicationVersion
         }
     }
@@ -186,9 +186,9 @@ export class NetworkStack {
         if (!this.stopped) {
             this.stopped = true
             pull(instances, this)
-            await this.deliveryLayer!.destroy()
+            await this.contentDeliveryManager!.destroy()
             await this.layer0Node!.stop()
-            this.deliveryLayer = undefined
+            this.contentDeliveryManager = undefined
             this.layer0Node = undefined
         }
     }
