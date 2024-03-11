@@ -4,7 +4,7 @@ import { EthereumAddress } from '@streamr/utils'
 
 export class FakeEIP1271ContractFacade implements Methods<EIP1271ContractFacade> {
     // eslint-disable-next-line class-methods-use-this
-    async isValidSignature(_contractAddress: EthereumAddress, _data: string, _signature: string): Promise<boolean> {
+    async isValidSignature(_contractAddress: EthereumAddress, _data: Uint8Array, _signature: Uint8Array): Promise<boolean> {
         throw new Error('not implemented')
     }
 }
