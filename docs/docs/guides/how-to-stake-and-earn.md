@@ -20,9 +20,6 @@ To earn DATA tokens on Polygon you must be willing to hold and stake DATA tokens
 - **Do NOT** create or sponsor Sponsorships. If you do tokens will be irreversibly sent to that Sponsorship contract. There is no undo for this.
 :::
 
-### Current node software version
-Use node version: `v100.0.0-rc.1`. Do not use the `latest` tag release.
-
 ### Sponsorships
 Sponsorships are the source of incentivization. These are visible on [The Hub](https://streamr.network/hub/network/sponsorships).
 
