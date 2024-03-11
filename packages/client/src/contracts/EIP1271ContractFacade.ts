@@ -7,9 +7,11 @@ import type { IERC1271 as ERC1271Contract } from '../ethereumArtifacts/IERC1271'
 import { StrictStreamrClientConfig } from '../Config'
 import { queryAllReadonlyContracts } from '../utils/contract'
 import { Mapping } from '../utils/Mapping'
+import { Lifecycle, scoped } from 'tsyringe'
 
 const SUCCESS_MAGIC_VALUE = '0x1626ba7e' // Magic value for success as defined by ERC-1271
 
+@scoped(Lifecycle.ContainerScoped)
 export class EIP1271ContractFacade {
     private readonly contractsByAddress: Mapping<[EthereumAddress], ERC1271Contract[]>
 
