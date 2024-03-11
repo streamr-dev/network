@@ -187,10 +187,10 @@ streamr-broker PATH_TO_CONFIG_FILE
 You should start to see logging similar to this:
 
 ```
-INFO [2023-12-08T08:56:52.131] (StreamrNode              ): Start Streamr node version x
+INFO [2023-12-08T08:56:52.131] (broker                   ): Start Streamr node version x
 INFO [2023-12-08T08:56:53.438] (AutoCertifierClient      ): updateSubdomainIp() called for xyz.streamr-nodes.xyz
 INFO [2023-12-08T08:56:54.022] (AutoCertifierClient      ): 2147483647 milliseconds until certificate update
-INFO [2023-12-08T08:56:54.302] (StreamrNode              ): Starting new StreamrNode with id 24c8eb0e9f3a46a98c0
+INFO [2023-12-08T08:56:54.302] (NetworkStack             ): Starting node with id 24c8eb0e9f3a46a98c0
 ```
 
 ## Mainnet node config
