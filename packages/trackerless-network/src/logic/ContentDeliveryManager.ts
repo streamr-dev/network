@@ -97,7 +97,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         if (!this.started || this.destroyed) {
             return
         }
-        logger.trace('Destroying delivery layer')
+        logger.trace('Destroying ContentDeliveryManager')
         this.destroyed = true
         await Promise.all(Array.from(this.streamParts.values()).map((streamPart) => streamPart.stop()))
         this.streamParts.clear()
