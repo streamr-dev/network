@@ -46,7 +46,7 @@ export function createSignature(payload: Uint8Array, privateKey: Uint8Array): Ui
     return result
 }
 
-function recoverSignature(signature: Uint8Array, payload: Uint8Array): string {
+export function recoverSignature(signature: Uint8Array, payload: Uint8Array): string {
     const publicKey = recoverPublicKey(signature, payload)
     const pubKeyWithoutFirstByte = publicKey.subarray(1, publicKey.length)
     keccak.reset()
