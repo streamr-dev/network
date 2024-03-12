@@ -54,11 +54,16 @@ const main = async () => {
     await wait(10000) // garbage collect connections
 
     const node = new NetworkNode(stack)
-    const result = await node.fetchNodeInfo({
-        nodeId: hexToBinary(nodeId),
-        type: NodeType.BROWSER       
-    })
-    console.log(result)
+
+    for (let i = 0; i < 100; i++) {
+        const result = await node.fetchNodeInfo({
+            nodeId: hexToBinary(nodeId),
+            type: NodeType.BROWSER       
+        })
+        console.log(result)
+        console.log("Num of connections:", result.controlLayer.connections.length)
+        await wait(10000)
+    }
     await node.stop()
 }
 
