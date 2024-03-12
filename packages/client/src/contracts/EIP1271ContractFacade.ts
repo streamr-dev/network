@@ -42,15 +42,15 @@ export class EIP1271ContractFacade {
         this.contractsByAddress = new Mapping<[EthereumAddress], ERC1271Contract[]>(instantiateContracts)
     }
 
-    async isValidSignature(contractAddress: EthereumAddress, hash: Uint8Array, signature: Uint8Array): Promise<boolean> {
-        const clientWalletAddress = toEthereumAddress(recoverSignature(signature, hash))
+    async isValidSignature(contractAddress: EthereumAddress, payloadHash: Uint8Array, signature: Uint8Array): Promise<boolean> {
+        const clientWalletAddress = toEthereumAddress(recoverSignature(signature, payloadHash))
         const cachedValue = this.publisherCache.get(formKey(contractAddress, clientWalletAddress))
         if (cachedValue !== undefined) {
             return cachedValue
         } else {
             const contracts = await this.contractsByAddress.get(contractAddress)
             const result = await queryAllReadonlyContracts((contract) => {
-                return contract.isValidSignature(hash, signature) // TODO: do we need to convert hash and signature to hex?
+                return contract.isValidSignature(payloadHash, signature) // TODO: do we need to convert hash and signature to hex?
             }, contracts)
             const validSignature = result === SUCCESS_MAGIC_VALUE
             this.publisherCache.set(formKey(contractAddress, clientWalletAddress), validSignature)
