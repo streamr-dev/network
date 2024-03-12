@@ -49,6 +49,8 @@ const main = async () => {
         }
     })
     await stack.start()
+    await wait(30000) // garbage collect connections
+    
     const node = new NetworkNode(stack)
     const result = await node.fetchNodeInfo({
         nodeId: hexToBinary(nodeId),
