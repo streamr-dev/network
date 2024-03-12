@@ -107,7 +107,10 @@ export class NetworkNodeFacade {
             layer0: {
                 ...this.config.network.controlLayer,
                 entryPoints: entryPoints.map(peerDescriptorTranslator),
-                peerDescriptor: localPeerDescriptor
+                peerDescriptor: localPeerDescriptor,
+                websocketPortRange: (this.config.network.controlLayer.websocketPortRange !== null) 
+                    ? this.config.network.controlLayer.websocketPortRange
+                    : undefined
             },
             networkNode: this.config.network.node,
             metricsContext: new MetricsContext()
