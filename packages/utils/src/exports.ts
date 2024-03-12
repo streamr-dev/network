@@ -44,6 +44,7 @@ import { retry } from './retry'
 import { toLengthPrefixedFrame, LengthPrefixedFrameDecoder } from './lengthPrefixedFrameUtils'
 import { verifySignature, createSignature, recoverSignature, hash } from './signingUtils'
 import { ipv4ToNumber, numberToIpv4 } from './ipv4ToNumber'
+import { MapWithTtl } from './MapWithTtl'
 
 export {
     BrandedString,
@@ -105,7 +106,8 @@ export {
     recoverSignature,
     ipv4ToNumber,
     numberToIpv4,
-    hash
+    hash,
+    MapWithTtl
 }
 
 export {
