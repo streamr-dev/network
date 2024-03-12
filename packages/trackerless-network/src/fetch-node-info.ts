@@ -6,6 +6,7 @@ import { NetworkStack } from "./NetworkStack"
 const nodeId = 'f3724dcc79ad77fe5aabe3fcf679c44f0612101b'
 
 const main = async () => {
+    console.log("Finding node", nodeId)
     const entryPoints = [{
         nodeId: hexToBinary("e5f87a7ee99b3c91e7b795b70f87ef8ba5497596"),
         type: NodeType.NODEJS,
@@ -49,14 +50,16 @@ const main = async () => {
         }
     })
     await stack.start()
-    await wait(30000) // garbage collect connections
-    
+    console.log("has websocket…", !!stack.getLayer0Node().getLocalPeerDescriptor().websocket)
+    await wait(10000) // garbage collect connections
+
     const node = new NetworkNode(stack)
     const result = await node.fetchNodeInfo({
         nodeId: hexToBinary(nodeId),
         type: NodeType.BROWSER       
     })
     console.log(result)
+    await node.stop()
 }
 
 main()
