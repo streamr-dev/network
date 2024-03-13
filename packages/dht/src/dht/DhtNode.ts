@@ -49,7 +49,7 @@ import { StoreManager } from './store/StoreManager'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
 import { createPeerDescriptor } from '../helpers/createPeerDescriptor'
 import { RingIdRaw } from './contact/ringIdentifiers'
-import { getLocalRegion } from '@streamr/cdn-location'
+import { getLocalRegion, getLocalRegionByCoordinates } from '@streamr/cdn-location'
 import { RingContacts } from './contact/RingContactList'
 
 export interface DhtNodeEvents {
@@ -74,7 +74,6 @@ export interface DhtNodeOptions {
     storeMaxTtl?: number
     networkConnectivityTimeout?: number
     storageRedundancyFactor?: number
-    region?: number
 
     transport?: ITransport
     peerDescriptor?: PeerDescriptor
@@ -83,6 +82,7 @@ export interface DhtNodeOptions {
     websocketPortRange?: PortRange
     websocketServerEnableTls?: boolean
     nodeId?: DhtAddress
+    region?: number
 
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
@@ -131,7 +131,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private peerDiscovery?: PeerDiscovery
     private peerManager?: PeerManager
     public connectionManager?: ConnectionManager
-    private region?: number
     private started = false
     private abortController = new AbortController()
     constructor(conf: DhtNodeOptions) {
@@ -184,13 +183,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             if (this.config.peerDescriptor) {
                 this.config.peerDescriptor.websocket = undefined
             }
-        }
-        if (this.region !== undefined) {
-            this.region = this.config.region
-        } else if (this.config.peerDescriptor?.region !== undefined) {
-            this.region = this.config.peerDescriptor.region
-        } else {
-            this.region = await getLocalRegion()
         }
             
         // If transport is given, do not create a ConnectionManager
@@ -429,7 +421,18 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         if (this.config.peerDescriptor !== undefined) {
             this.localPeerDescriptor = this.config.peerDescriptor
         } else {
-            this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, this.region!, this.config.nodeId)
+            let region: number | undefined = undefined
+            if (this.config.region !== undefined) {
+                region = this.config.region
+            } else if (connectivityResponse.latitude !== undefined && connectivityResponse.longitude !== undefined) {
+                region = getLocalRegionByCoordinates(connectivityResponse.latitude, connectivityResponse.longitude)
+            } else {
+                // as a fallback get the region from the CDN
+                // and if it's not available, use a random region
+                region = await getLocalRegion()
+            }
+            
+            this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, region, this.config.nodeId)
         }
         return this.localPeerDescriptor
     }
