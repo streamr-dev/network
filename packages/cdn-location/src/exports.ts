@@ -1,6 +1,13 @@
-import { getLocalRegion, getLocalAirportCode } from './getLocalRegion'
+import {
+    getLocalRegion,
+    getLocalAirportCode,
+    getLocalRegionByCoordinates,
+    getLocalAirportCodeByCoordinates
+} from './getLocalRegion'
 
 export {
     getLocalRegion,
-    getLocalAirportCode
+    getLocalRegionByCoordinates,
+    getLocalAirportCode,
+    getLocalAirportCodeByCoordinates
 }

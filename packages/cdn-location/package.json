@@ -21,6 +21,10 @@
     "prepare-for-tsp-solver": "./data-generation/prepareForTSPSolver.sh",
     "generate-data-from-tsp-solution": "./data-generation/generateDataFromTSPSolverResult.sh"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "haversine": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/haversine": "^1.1.8"
+  }
 }

@@ -1,6 +1,7 @@
 import { airportCodeToRegionNumber } from './airportCodeToRegionNumber'
 import { fetchAirportCodeFromCdn } from './fetchAirportCodeFromCdn'
 import { Logger } from '@streamr/utils'
+import haversine from 'haversine' 
 
 const logger = new Logger(module)
 
@@ -12,6 +13,21 @@ export const getLocalAirportCode: () => Promise<string | undefined> = async () =
         return undefined
     }
     return airportCode
+}
+
+export const getLocalAirportCodeByCoordinates: (latitude: number, longitude: number) => string = (latitude, longitude) => {    
+    const distances: Array<[airportCode: string, distance: number]> = []
+
+    Object.keys(airportCodeToRegionNumber).forEach((key) => {
+        const airport = airportCodeToRegionNumber[key]
+        const distance = haversine({ latitude, longitude }, { latitude: airport[1], longitude: airport[2] })
+        distances.push([key, distance])
+    })
+
+    // find the closest region
+    distances.sort((a, b) => a[1] - b[1])
+
+    return distances[0][0]
 }
 
 const getRandomRegion: () => number = () => {
@@ -31,15 +47,27 @@ const getRandomRegion: () => number = () => {
 
 export const getLocalRegion: () => Promise<number> = async () => {
     let airportCode: string | undefined = undefined
-    try {
-        airportCode = await getLocalAirportCode()
-    } catch (error) {
+    
+    airportCode = await getLocalAirportCode()
+   
+    if (airportCode === undefined || !airportCodeToRegionNumber[airportCode]) {
         return getRandomRegion()
     }
 
-    if (!airportCodeToRegionNumber[airportCode!][0]) {
-        return getRandomRegion()
-    }
+    return airportCodeToRegionNumber[airportCode][0]
+}
 
-    return airportCodeToRegionNumber[airportCode!][0]
+export const getLocalRegionByCoordinates: (latitude: number, longitude: number) => number = (latitude, longitude) => {    
+    const distances: Array<[regionNumber: number, distance: number]> = []
+
+    Object.keys(airportCodeToRegionNumber).forEach((key) => {
+        const airport = airportCodeToRegionNumber[key]
+        const distance = haversine({ latitude, longitude }, { latitude: airport[1], longitude: airport[2] })
+        distances.push([airport[0], distance])
+    })
+
+    // find the closest region
+    distances.sort((a, b) => a[1] - b[1])
+
+    return distances[0][0]
 }
