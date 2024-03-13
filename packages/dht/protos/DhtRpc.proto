@@ -209,6 +209,8 @@ message ConnectivityResponse {
   ConnectivityMethod websocket = 3;
   uint32 ipAddress = 4;
   string version = 5;
+  optional double latitude = 6;
+  optional double longitude = 7;
 }
 
 message HandshakeRequest {
