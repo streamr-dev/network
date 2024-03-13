@@ -23,7 +23,7 @@ const getRandomRegion: () => number = () => {
     // indicate that the region is random by adding 99, the convention is
     // that random region numbers end with 99
 
-    const randomRegion = airportCodeToRegionNumber[randomAirportCode] + 99
+    const randomRegion = airportCodeToRegionNumber[randomAirportCode][0] + 99
 
     logger.warn(`Could not get airport code, using random region: ${randomRegion}`)
     return randomRegion
@@ -37,9 +37,9 @@ export const getLocalRegion: () => Promise<number> = async () => {
         return getRandomRegion()
     }
 
-    if (!airportCodeToRegionNumber[airportCode!]) {
+    if (!airportCodeToRegionNumber[airportCode!][0]) {
         return getRandomRegion()
     }
 
-    return airportCodeToRegionNumber[airportCode!]
+    return airportCodeToRegionNumber[airportCode!][0]
 }
