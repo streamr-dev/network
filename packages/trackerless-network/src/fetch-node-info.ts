@@ -3,7 +3,7 @@ import { DhtNode, DhtAddress, NodeType } from "@streamr/dht"
 import { NetworkNode } from "./NetworkNode"
 import { NetworkStack } from "./NetworkStack"
 
-const nodeId = 'f3724dcc79ad77fe5aabe3fcf679c44f0612101b'
+const nodeId = 'f3724dcc79ad77fe5aabe3fcf66487402c26cf1c'
 
 const main = async () => {
     console.log("Finding node", nodeId)

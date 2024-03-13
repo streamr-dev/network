@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+    <link rel="icon" href="data:;base64,=">
+    <script src="dist/streamr-sdk.web.js"></script>
+    <script>
+        const main = async () => {
+            console.log('Start')
+            const client = new StreamrClient({
+                network: {
+                    controlLayer: {
+                        entryPointDiscovery: {
+                            enabled: false
+                        }
+                    }
+                }
+            })
+            const node = await client.getNode()
+            console.log('MAIN Node id: ' + node.getNodeId())
+            let receivedMessageCount = 0
+            client.subscribe('eth-watch.eth/ethereum/events', (content, metadata) => {
+                receivedMessageCount++
+            })
+            let latestReportedMessageCount = 0
+            setInterval(async () => {
+                const info = await node.stack.fetchNodeInfo(node.getPeerDescriptor())
+                const newMessages = (receivedMessageCount - latestReportedMessageCount)
+                const controlLayerConnectionsLength = info.controlLayer.connections.length
+                let streamPartsNeighborCount = 0
+                for (const sp of info.streamPartitions) {
+                    streamPartsNeighborCount = sp.deliveryLayerNeighbors.length
+                }
+                const controlLayerNeighborsLength = info.controlLayer.neighbors.length
+                const cmConnections = (node.stack.getLayer0Node().getTransport()).getConnections().length
+                console.log('MAIN ' + new Date().toISOString() + ': ' + JSON.stringify({
+                    controlLayerConnectionsLength,
+                    cmConnections,
+                    controlLayerNeighborsLength,
+                    streamPartsNeighborCount,
+                    newMessages
+                }, undefined, 4))
+                latestReportedMessageCount = receivedMessageCount
+            }, 10 * 1000)
+        }
+        main()
+    </script>
+</html>
