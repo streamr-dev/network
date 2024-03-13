@@ -30,6 +30,7 @@ import * as Err from '../../helpers/errors'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { LOCAL_PROTOCOL_VERSION, isMaybeSupportedVersion } from '../../helpers/version'
+import { GeoIpLocator } from '../../helpers/GeoIpLocator'
 
 const logger = new Logger(module)
 
@@ -53,6 +54,7 @@ export interface WebsocketConnectorConfig {
     autoCertifierUrl: string
     autoCertifierConfigFile: string
     serverEnableTls: boolean
+    geoIpDatabasePath?: string
 }
 
 export class WebsocketConnector {
@@ -60,6 +62,7 @@ export class WebsocketConnector {
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly websocketServer?: WebsocketServer
+    private readonly geoIpLocator?: GeoIpLocator
     private readonly ongoingConnectRequests: Map<DhtAddress, ManagedConnection> = new Map()
     private host?: string
     private autoCertifierClient?: AutoCertifierClientFacade
@@ -77,6 +80,7 @@ export class WebsocketConnector {
             maxMessageSize: config.maxMessageSize,
             enableTls: config.serverEnableTls
         }) : undefined
+        this.geoIpLocator = config.geoIpDatabasePath ? new GeoIpLocator(config.geoIpDatabasePath) : undefined
         this.host = config.host
         this.rpcCommunicator = new ListeningRpcCommunicator(WebsocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, config.transport, {
             rpcRequestTimeout: 15000  // TODO use config option or named constant?
