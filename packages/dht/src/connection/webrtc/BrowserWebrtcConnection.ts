@@ -5,6 +5,12 @@ import { Logger } from '@streamr/utils'
 import { IceServer } from './WebrtcConnector'
 import { createRandomConnectionId } from '../Connection'
 
+enum DisconnectedRtcPeerConnectionStateEnum {
+    DISCONNECTED = 'disconnected',
+    FAILED = 'failed',
+    CLOSED = 'closed',
+}
+
 const logger = new Logger(module)
 
 export const WEBRTC_CLEANUP = new class {
@@ -57,6 +63,8 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         this.peerConnection.onicegatheringstatechange = () => {
             logger.trace(`conn.onGatheringStateChange: ${this.peerConnection?.iceGatheringState}`)
         }
+
+        this.peerConnection.onconnectionstatechange = () => this.onStateChange()
 
         if (isOffering) {
             this.peerConnection.onnegotiationneeded = async () => {
@@ -211,6 +219,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         }
 
         if (this.peerConnection !== undefined) {
+            this.peerConnection.onconnectionstatechange = null
             this.peerConnection.onicecandidate = null
             this.peerConnection.onicegatheringstatechange = null
             this.peerConnection.onnegotiationneeded = null
@@ -221,6 +230,15 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     private onDataChannelOpen(): void {
         this.lastState = 'connected'
         this.emit('connected')
+    }
+
+    private onStateChange(): void {
+        if (this.peerConnection!.connectionState === DisconnectedRtcPeerConnectionStateEnum.CLOSED
+            || this.peerConnection!.connectionState === DisconnectedRtcPeerConnectionStateEnum.DISCONNECTED
+            || this.peerConnection!.connectionState === DisconnectedRtcPeerConnectionStateEnum.FAILED
+        ) {
+            this.doClose(false)
+        }
     }
 
     public setConnectionId(connectionId: ConnectionID): void {
