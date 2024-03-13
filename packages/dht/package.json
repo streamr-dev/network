@@ -41,6 +41,7 @@
     "k-bucket": "^5.1.0",
     "lodash": "^4.17.21",
     "lru-cache": "10.2.0",
+    "mmdb-lib": "^2.1.0",
     "node-datachannel": "^0.4.3",
     "querystring": "0.2.1",
     "uuid": "^9.0.1",
@@ -48,6 +49,7 @@
     "ws": "^8.16.0"
   },
   "devDependencies": {
+    "geolite2-redist": "^3.0.4",
     "@streamr/browser-test-runner": "^0.0.1",
     "@streamr/test-utils": "100.0.0",
     "@types/express": "^4.17.21",
