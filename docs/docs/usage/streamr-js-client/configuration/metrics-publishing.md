@@ -27,7 +27,7 @@ By default, the Streamr SDK is configured to publish metrics to the Streamr Netw
 If you don't want to publish metrics, you can turn it off in the constructor configuration:
 
 ```ts
-const Streamr = require('streamr-client')
+const Streamr = require('@streamr/sdk')
 
 const streamr = new Streamr({
     ...
@@ -38,7 +38,7 @@ const streamr = new Streamr({
 If you want to use custom stream and/or reporting periods, you can specify the details like this:
 
 ```ts
-const Streamr = require('streamr-client')
+const Streamr = require('@streamr/sdk')
 const streamr = new Streamr({
     ...
     metrics: {

@@ -9,7 +9,7 @@ import {
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { Logger, MetricsContext, waitForCondition } from '@streamr/utils'
 import { pull } from 'lodash'
-import { version as localVersion } from '../package.json'
+import { version as applicationVersion } from '../package.json'
 import { Layer0Node } from './logic/Layer0Node'
 import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
 import { NodeInfoClient } from './logic/node-info/NodeInfoClient'
@@ -168,7 +168,7 @@ export class NetworkStack {
                 neighbors: this.getLayer0Node().getNeighbors()
             },
             streamPartitions: this.getStreamrNode().getNodeInfo(),
-            version: localVersion
+            version: applicationVersion
         }
     }
 

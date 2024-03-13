@@ -1,6 +1,6 @@
 {
   "name": "@streamr/cdn-location",
-  "version": "100.0.0-testnet-three.3",
+  "version": "100.0.0",
   "description": "Library for getting own approximate location by querying CDN servers",
   "repository": {
     "type": "git",
@@ -21,8 +21,6 @@
     "prepare-for-tsp-solver": "./data-generation/prepareForTSPSolver.sh",
     "generate-data-from-tsp-solution": "./data-generation/generateDataFromTSPSolverResult.sh"
   },
-  "dependencies": {
-  },
-  "devDependencies": {
-  }
+  "dependencies": {},
+  "devDependencies": {}
 }

@@ -57,8 +57,8 @@ enum ConnectionManagerState {
 export interface ConnectionLocker {
     lockConnection(targetDescriptor: PeerDescriptor, lockId: LockID): void
     unlockConnection(targetDescriptor: PeerDescriptor, lockId: LockID): void
-    weakLockConnection(nodeId: DhtAddress): void
-    weakUnlockConnection(nodeId: DhtAddress): void
+    weakLockConnection(nodeId: DhtAddress, lockId: LockID): void
+    weakUnlockConnection(nodeId: DhtAddress, lockId: LockID): void
 }
 
 export interface PortRange {
@@ -484,18 +484,18 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         }
     }
 
-    public weakLockConnection(nodeId: DhtAddress): void {
+    public weakLockConnection(nodeId: DhtAddress, lockId: LockID): void {
         if (this.state === ConnectionManagerState.STOPPED || (nodeId === getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor()))) {
             return
         }
-        this.locks.addWeakLocked(nodeId)
+        this.locks.addWeakLocked(nodeId, lockId)
     }
 
-    public weakUnlockConnection(nodeId: DhtAddress): void {
+    public weakUnlockConnection(nodeId: DhtAddress, lockId: LockID): void {
         if (this.state === ConnectionManagerState.STOPPED || (nodeId === getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor()))) {
             return
         }
-        this.locks.removeWeakLocked(nodeId)
+        this.locks.removeWeakLocked(nodeId, lockId)
     }
 
     private async gracefullyDisconnectAsync(targetDescriptor: PeerDescriptor, disconnectMode: DisconnectMode): Promise<void> {

@@ -1,4 +1,4 @@
-import { StreamrClient, ResendOptions } from 'streamr-client'
+import { StreamrClient, ResendOptions } from '@streamr/sdk'
 
 export const assertBothOrNoneDefined = <T extends object>(
     option1: keyof T,

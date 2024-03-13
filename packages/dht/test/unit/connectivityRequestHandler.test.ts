@@ -6,7 +6,7 @@ import { server as WsServer } from 'websocket'
 import { CONNECTIVITY_CHECKER_SERVICE_ID } from '../../src/connection/connectivityChecker'
 import { attachConnectivityRequestHandler } from '../../src/connection/connectivityRequestHandler'
 import { Message } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { version } from '../../package.json'
+import { LOCAL_PROTOCOL_VERSION } from '../../src/helpers/version'
 
 const HOST = '127.0.0.1'
 const PORT = 15001
@@ -27,7 +27,7 @@ describe('connectivityRequestHandler', () => {
         await once(httpServer, 'listening')
         connection = new EventEmitter()
         connection.send = jest.fn()
-        connection.getRemoteIp = () => HOST
+        connection.remoteIpAddress = HOST
     })
 
     afterEach(async () => {
@@ -62,7 +62,7 @@ describe('connectivityRequestHandler', () => {
                         tls: false
                     },
                     ipAddress: ipv4ToNumber(HOST),
-                    version
+                    version: LOCAL_PROTOCOL_VERSION
                 },
                 oneofKind: 'connectivityResponse'
             },
@@ -92,7 +92,7 @@ describe('connectivityRequestHandler', () => {
                     host: HOST,
                     natType: 'unknown',
                     ipAddress: ipv4ToNumber(HOST),
-                    version
+                    version: LOCAL_PROTOCOL_VERSION
                 },
                 oneofKind: 'connectivityResponse'
             },

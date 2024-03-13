@@ -18,13 +18,13 @@ import { ManagedWebrtcConnection } from '../ManagedWebrtcConnection'
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'
 import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
 import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { version as localVersion } from '../../../package.json'
-import { isCompatibleVersion } from '../../helpers/versionCompatibility'
+import { isMaybeSupportedVersion } from '../../helpers/version'
 import { ConnectionID } from '../IConnection'
 
 const logger = new Logger(module)
 
 interface WebrtcConnectorRpcLocalConfig {
+    createConnection: (targetPeerDescriptor: PeerDescriptor) => NodeWebrtcConnection 
     connect: (targetPeerDescriptor: PeerDescriptor) => ManagedConnection 
     onNewConnection: (connection: ManagedConnection) => boolean
     // TODO pass accessor methods instead of passing a mutable entity
@@ -60,7 +60,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         let connection = managedConnection?.getWebrtcConnection()
 
         if (!managedConnection) {
-            connection = new NodeWebrtcConnection({ remotePeerDescriptor: remotePeer })
+            connection = this.config.createConnection(remotePeer)
             managedConnection = new ManagedWebrtcConnection(this.config.getLocalPeerDescriptor(), undefined, connection)
             managedConnection.setRemotePeerDescriptor(remotePeer)
             this.config.ongoingConnectAttempts.set(nodeId, managedConnection)
@@ -84,11 +84,11 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         connection!.setConnectionId(request.connectionId as ConnectionID)
         connection!.setRemoteDescription(request.description, 'offer')
 
-        managedConnection.on('handshakeRequest', (_sourceDescriptor: PeerDescriptor, sourceVersion: string) => {
+        managedConnection.on('handshakeRequest', (_sourceDescriptor: PeerDescriptor, remoteVersion: string) => {
             if (this.config.ongoingConnectAttempts.has(nodeId)) {
                 this.config.ongoingConnectAttempts.delete(nodeId)
             }
-            if (!isCompatibleVersion(sourceVersion, localVersion)) {
+            if (!isMaybeSupportedVersion(remoteVersion)) {
                 managedConnection!.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
             } else {
                 managedConnection!.acceptHandshake()

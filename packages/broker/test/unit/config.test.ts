@@ -1,4 +1,4 @@
-import { NetworkNodeType } from 'streamr-client'
+import { NetworkNodeType } from '@streamr/sdk'
 import { overrideConfigToEnvVarsIfGiven } from '../../src/config/config'
 
 describe('overrideConfigToEnvVarsIfGiven', () => {
