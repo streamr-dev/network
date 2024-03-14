@@ -11,7 +11,6 @@ import {
     StreamPartHandshakeResponse
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Logger } from '@streamr/utils'
-import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { HandshakeRpcRemote, INTERLEAVE_REQUEST_TIMEOUT } from './HandshakeRpcRemote'
 import { HandshakeRpcLocal } from './HandshakeRpcLocal'
 import { StreamPartID } from '@streamr/protocol'
@@ -37,7 +36,7 @@ const PARALLEL_HANDSHAKE_COUNT = 2
 export class Handshaker {
 
     private config: HandshakerConfig
-    private readonly rpcLocal: IHandshakeRpc
+    private readonly rpcLocal: HandshakeRpcLocal
 
     constructor(config: HandshakerConfig) {
         this.config = config

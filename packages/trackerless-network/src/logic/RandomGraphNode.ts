@@ -20,7 +20,6 @@ import {
 import { NodeList } from './NodeList'
 import { ContentDeliveryRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { ContentDeliveryRpcRemote } from './ContentDeliveryRpcRemote'
-import { IContentDeliveryRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { DuplicateMessageDetector } from './DuplicateMessageDetector'
 import { Logger, addManagedEventListener } from '@streamr/utils'
 import { Handshaker } from './neighbor-discovery/Handshaker'
@@ -75,7 +74,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
     private started = false
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector>
     private config: StrictRandomGraphNodeConfig
-    private readonly contentDeliveryRpcLocal: IContentDeliveryRpc
+    private readonly contentDeliveryRpcLocal: ContentDeliveryRpcLocal
     private abortController: AbortController = new AbortController()
 
     constructor(config: StrictRandomGraphNodeConfig) {
