@@ -119,7 +119,7 @@ const measureJoiningTime = async () => {
     await streamSubscriber.start()
 
     await Promise.all([
-        waitForEvent3(streamSubscriber.stack.getStreamrNode() as any, 'newMessage', 60000),
+        waitForEvent3(streamSubscriber.stack.getContentDeliveryManager() as any, 'newMessage', 60000),
         streamSubscriber.join(stream)
     ])
 
@@ -153,14 +153,14 @@ run().then(() => {
     console.log('done')
 }).catch((err) => {
     console.error(err)
-    const streamrNode = currentNode.stack.getStreamrNode()
-    const streamParts = streamrNode.getStreamParts()
+    const contentDeliveryManager = currentNode.stack.getContentDeliveryManager()
+    const streamParts = contentDeliveryManager.getStreamParts()
     const foundData = nodes[0].stack.getLayer0Node().fetchDataFromDht(streamPartIdToDataKey(streamParts[0]))
     console.log(foundData)
     const layer0Node = currentNode.stack.getLayer0Node() as DhtNode
     console.log(layer0Node.getNeighbors().length)
     console.log(layer0Node.getConnectionCount())
-    const streamPartDelivery = streamrNode.getStreamPartDelivery(streamParts[0])! as { layer1Node: Layer1Node, node: RandomGraphNode }
+    const streamPartDelivery = contentDeliveryManager.getStreamPartDelivery(streamParts[0])! as { layer1Node: Layer1Node, node: RandomGraphNode }
     console.log(streamPartDelivery.layer1Node.getNeighbors())
     console.log(streamPartDelivery.node.getNeighbors())
     console.log(nodes[nodes.length - 1])
