@@ -12,6 +12,8 @@ import { StreamDefinition } from '../types'
 import { Mapping } from '../utils/Mapping'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { MessageFactory } from './MessageFactory'
+import { PublisherKeyExchange } from '../encryption/PublisherKeyExchange'
+import { toEthereumAddress } from '@streamr/utils'
 
 export interface PublishMetadata {
     timestamp?: string | number | Date
@@ -42,18 +44,21 @@ export class Publisher {
     private readonly streamRegistry: StreamRegistry
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
+    private readonly publisherKeyExchange: PublisherKeyExchange
 
     constructor(
         node: NetworkNodeFacade,
         streamRegistry: StreamRegistry,
         groupKeyManager: GroupKeyManager,
         streamIdBuilder: StreamIDBuilder,
-        @inject(AuthenticationInjectionToken) authentication: Authentication
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        publisherKeyExchange: PublisherKeyExchange
     ) {
         this.node = node
         this.streamRegistry = streamRegistry
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
+        this.publisherKeyExchange = publisherKeyExchange
         this.messageFactories = new Mapping(async (streamId: StreamID) => {
             return this.createMessageFactory(streamId)
         })
@@ -68,6 +73,9 @@ export class Publisher {
         metadata?: PublishMetadata
     ): Promise<StreamMessage> {
         const timestamp = parseTimestamp(metadata)
+        if (metadata?.eip1271Contract !== undefined) {
+            this.publisherKeyExchange.addEip1271ContractAddress(toEthereumAddress(metadata.eip1271Contract))
+        }
         /*
          * There are some steps in the publish process which need to be done sequentially:
          * - message chaining

@@ -2,22 +2,19 @@ import {
     ContentType,
     EncryptedGroupKey,
     EncryptionType,
-    MessageID,
     GroupKeyRequest as OldGroupKeyRequest,
     GroupKeyResponse as OldGroupKeyResponse,
+    MessageID,
     SignatureType,
     StreamMessage,
     StreamMessageType,
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import {
-    convertBytesToGroupKeyRequest,
-    convertGroupKeyResponseToBytes
-} from '@streamr/trackerless-network'
+import { convertBytesToGroupKeyRequest, convertGroupKeyResponseToBytes } from '@streamr/trackerless-network'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import without from 'lodash/without'
-import { Lifecycle, inject, scoped } from 'tsyringe'
+import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { createSignedMessage } from '../publish/MessageFactory'
@@ -34,6 +31,12 @@ import { EIP1271ContractFacade } from '../contracts/EIP1271ContractFacade'
  * Sends group key responses
  */
 
+enum PublisherMatchType {
+    NONE,
+    NORMAL,
+    EIP1271
+}
+
 @scoped(Lifecycle.ContainerScoped)
 export class PublisherKeyExchange {
 
@@ -43,6 +46,7 @@ export class PublisherKeyExchange {
     private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
     private readonly logger: Logger
+    private readonly eip1271ContractAddresses = new Set<EthereumAddress>()
 
     constructor(
         networkNodeFacade: NetworkNodeFacade,
@@ -65,24 +69,43 @@ export class PublisherKeyExchange {
         })
     }
 
+    addEip1271ContractAddress(address: EthereumAddress): void {
+        this.eip1271ContractAddresses.add(address)
+    }
+
+    private async matchPublisherType(publisher: EthereumAddress): Promise<PublisherMatchType> {
+        const authenticatedUser = await this.authentication.getAddress()
+        if (publisher === authenticatedUser) {
+            return PublisherMatchType.NORMAL
+        } else if (this.eip1271ContractAddresses.has(publisher)) {
+            return PublisherMatchType.EIP1271
+        } else {
+            return PublisherMatchType.NONE
+        }
+    }
+
     private async onMessage(request: StreamMessage): Promise<void> {
         if (OldGroupKeyRequest.is(request)) {
             try {
-                const authenticatedUser = await this.authentication.getAddress()
                 const { recipient, requestId, rsaPublicKey, groupKeyIds } = convertBytesToGroupKeyRequest(request.content)
-                if (recipient === authenticatedUser) {
+                const matchType = await this.matchPublisherType(recipient)
+                if (matchType !== PublisherMatchType.NONE) {
                     this.logger.debug('Handling group key request', { requestId })
                     await validateStreamMessage(request, this.streamRegistry, this.eip1271ContractFacade)
+                    const authenticatedUser = await this.authentication.getAddress()
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
                         undefined) as GroupKey[]
                     if (keys.length > 0) {
                         const response = await this.createResponse(
                             keys,
+                            matchType,
+                            recipient,
                             request.getStreamPartID(),
                             rsaPublicKey,
                             request.getPublisherId(),
-                            requestId)
+                            requestId
+                        )
                         const node = await this.networkNodeFacade.getNode()
                         await node.broadcast(response)
                         this.logger.debug('Handled group key request (found keys)', {
@@ -104,6 +127,8 @@ export class PublisherKeyExchange {
 
     private async createResponse(
         keys: GroupKey[],
+        matchType: PublisherMatchType,
+        publisher: EthereumAddress,
         streamPartId: StreamPartID,
         rsaPublicKey: string,
         recipient: EthereumAddress,
@@ -124,7 +149,7 @@ export class PublisherKeyExchange {
                 StreamPartIDUtils.getStreamPartition(streamPartId),
                 Date.now(),
                 0,
-                await this.authentication.getAddress(),
+                publisher,
                 createRandomMsgChainId()
             ),
             content: convertGroupKeyResponseToBytes(responseContent),
@@ -132,7 +157,7 @@ export class PublisherKeyExchange {
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             encryptionType: EncryptionType.NONE,
             authentication: this.authentication,
-            signatureType: SignatureType.SECP256K1,
+            signatureType: matchType === PublisherMatchType.NORMAL ? SignatureType.SECP256K1 : SignatureType.EIP_1271,
         })
         return response
     }
