@@ -168,6 +168,7 @@ enum ProxyDirection {
 message StreamPartitionInfo {
   string id = 1;
   repeated dht.PeerDescriptor controlLayerNeighbors = 2;
+  // could be "contentDelivery" instead of "deliveryLayer", but that is a breaking change
   repeated dht.PeerDescriptor deliveryLayerNeighbors = 3;
 }
 
