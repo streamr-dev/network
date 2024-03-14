@@ -1,26 +1,26 @@
 import {
-    MessageID as OldMessageID,
-    StreamMessage as OldStreamMessage,
-    StreamMessageType as OldStreamMessageType,
-    MessageRef as OldMessageRef,
+    ContentType as OldContentType,
     EncryptedGroupKey as OldEncryptedGroupKey,
-    StreamID,
     EncryptionType as OldEncryptionType,
+    MessageID as OldMessageID,
+    MessageRef as OldMessageRef,
     SignatureType as OldSignatureType,
-    ContentType as OldContentType
+    StreamID,
+    StreamMessage as OldStreamMessage,
+    StreamMessageType as OldStreamMessageType
 } from '@streamr/protocol'
 import {
     ContentType,
-    GroupKey,
     EncryptionType,
+    GroupKey,
     GroupKeyRequest,
     GroupKeyResponse,
+    MessageID,
     MessageRef,
     SignatureType,
-    StreamMessage,
-    MessageID
+    StreamMessage
 } from '../../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { toEthereumAddress, binaryToHex, hexToBinary } from '@streamr/utils'
+import { binaryToHex, hexToBinary, toEthereumAddress } from '@streamr/utils'
 
 const oldToNewEncryptionType = (type: OldEncryptionType): EncryptionType => {
     if (type === OldEncryptionType.AES) {
@@ -54,12 +54,18 @@ const oldToNewSignatureType = (type: OldSignatureType): SignatureType => {
     if (type === OldSignatureType.LEGACY_SECP256K1) {
         return SignatureType.LEGACY_SECP256K1
     }
+    if (type === OldSignatureType.EIP_1271) {
+        return SignatureType.EIP_1271
+    }
     return SignatureType.SECP256K1
 }
 
 const newToOldSignatureType = (type: SignatureType): OldSignatureType => {
     if (type === SignatureType.LEGACY_SECP256K1) {
         return OldSignatureType.LEGACY_SECP256K1
+    }
+    if (type === SignatureType.EIP_1271) {
+        return OldSignatureType.EIP_1271
     }
     return OldSignatureType.SECP256K1
 

@@ -413,7 +413,11 @@ export enum SignatureType {
     /**
      * @generated from protobuf enum value: SECP256K1 = 1;
      */
-    SECP256K1 = 1
+    SECP256K1 = 1,
+    /**
+     * @generated from protobuf enum value: EIP_1271 = 2;
+     */
+    EIP_1271 = 2
 }
 /**
  * @generated from protobuf enum ProxyDirection
