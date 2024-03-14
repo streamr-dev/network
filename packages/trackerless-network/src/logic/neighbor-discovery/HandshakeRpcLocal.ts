@@ -16,7 +16,7 @@ import {
 } from '@streamr/dht'
 import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { HandshakeRpcRemote } from './HandshakeRpcRemote'
-import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
+import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 import { Logger } from '@streamr/utils'
 import { StreamPartID } from '@streamr/protocol'
 
@@ -27,7 +27,7 @@ interface HandshakeRpcLocalConfig {
     ongoingInterleaves: Set<DhtAddress>
     maxNeighborCount: number
     createRpcRemote: (target: PeerDescriptor) => HandshakeRpcRemote
-    createDeliveryRpcRemote: (peerDescriptor: PeerDescriptor) => DeliveryRpcRemote
+    createContentDeliveryRpcRemote: (peerDescriptor: PeerDescriptor) => ContentDeliveryRpcRemote
     handshakeWithInterleaving: (target: PeerDescriptor, senderId: DhtAddress) => Promise<boolean>
 }
 
@@ -74,7 +74,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
             requestId: request.requestId,
             accepted: true
         }
-        this.config.neighbors.add(this.config.createDeliveryRpcRemote(requester))
+        this.config.neighbors.add(this.config.createContentDeliveryRpcRemote(requester))
         return res
     }
 
@@ -117,7 +117,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
                 this.config.ongoingInterleaves.delete(nodeId)
             })
         }
-        this.config.neighbors.add(this.config.createDeliveryRpcRemote(requester))
+        this.config.neighbors.add(this.config.createContentDeliveryRpcRemote(requester))
         return {
             requestId: request.requestId,
             accepted: true,

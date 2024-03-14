@@ -6,11 +6,11 @@ import {
     MessageRef,
     StreamMessage
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { IDeliveryRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
+import { IContentDeliveryRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { StreamPartID } from '@streamr/protocol'
 
-export interface DeliveryRpcLocalConfig {
+export interface ContentDeliveryRpcLocalConfig {
     localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     markAndCheckDuplicate: (messageId: MessageID, previousMessageRef?: MessageRef) => boolean
@@ -20,11 +20,11 @@ export interface DeliveryRpcLocalConfig {
     rpcCommunicator: ListeningRpcCommunicator
 }
 
-export class DeliveryRpcLocal implements IDeliveryRpc {
+export class ContentDeliveryRpcLocal implements IContentDeliveryRpc {
     
-    private readonly config: DeliveryRpcLocalConfig
+    private readonly config: ContentDeliveryRpcLocalConfig
 
-    constructor(config: DeliveryRpcLocalConfig) {
+    constructor(config: ContentDeliveryRpcLocalConfig) {
         this.config = config
     }
 

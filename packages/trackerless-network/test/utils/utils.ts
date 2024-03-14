@@ -17,14 +17,14 @@ import {
     SignatureType,
     StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { DeliveryRpcRemote } from '../../src/logic/DeliveryRpcRemote'
+import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
 import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
 import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { Layer1Node } from '../../src/logic/Layer1Node'
-import { DeliveryRpcClient, HandshakeRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { ContentDeliveryRpcClient, HandshakeRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RpcCommunicator } from '@streamr/proto-rpc'
 
 export const mockConnectionLocker: ConnectionLocker = {
@@ -101,12 +101,12 @@ export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'n
     }
 }
 
-export const createMockDeliveryRpcRemote = (remotePeerDescriptor?: PeerDescriptor): DeliveryRpcRemote => {
-    return new DeliveryRpcRemote(
+export const createMockContentDeliveryRpcRemote = (remotePeerDescriptor?: PeerDescriptor): ContentDeliveryRpcRemote => {
+    return new ContentDeliveryRpcRemote(
         createMockPeerDescriptor(),
         remotePeerDescriptor ?? createMockPeerDescriptor(),
         new RpcCommunicator(),
-        DeliveryRpcClient
+        ContentDeliveryRpcClient
     )
 }
 

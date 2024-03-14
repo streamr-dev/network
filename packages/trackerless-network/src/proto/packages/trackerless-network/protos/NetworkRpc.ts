@@ -725,9 +725,9 @@ class NodeInfoResponse$Type extends MessageType<NodeInfoResponse> {
  */
 export const NodeInfoResponse = new NodeInfoResponse$Type();
 /**
- * @generated ServiceType for protobuf service DeliveryRpc
+ * @generated ServiceType for protobuf service ContentDeliveryRpc
  */
-export const DeliveryRpc = new ServiceType("DeliveryRpc", [
+export const ContentDeliveryRpc = new ServiceType("ContentDeliveryRpc", [
     { name: "sendStreamMessage", options: {}, I: StreamMessage, O: Empty },
     { name: "leaveStreamPartNotice", options: {}, I: LeaveStreamPartNotice, O: Empty }
 ]);

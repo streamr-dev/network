@@ -6,7 +6,7 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
 import "packages/dht/protos/DhtRpc.proto";
 
-service DeliveryRpc {
+service ContentDeliveryRpc {
   rpc sendStreamMessage (StreamMessage) returns (google.protobuf.Empty);
   rpc leaveStreamPartNotice (LeaveStreamPartNotice) returns (google.protobuf.Empty);
 }
