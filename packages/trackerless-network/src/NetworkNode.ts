@@ -31,7 +31,7 @@ export class NetworkNode {
                         listener(translated)
                     }
                 } catch (err) {
-                    logger.trace(`Could not translate message: ${err}`)
+                    logger.trace(`Could not translate message`, { err })
                 }
             }
         })

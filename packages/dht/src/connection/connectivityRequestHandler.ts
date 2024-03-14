@@ -26,12 +26,12 @@ export const attachConnectivityRequestHandler = (connectionToListenTo: Websocket
                 try {
                     await handleIncomingConnectivityRequest(connectionToListenTo, message.body.connectivityRequest)
                     logger.trace('handleIncomingConnectivityRequest ok')
-                } catch (e) {
-                    logger.error('handleIncomingConnectivityRequest', { error: e })
+                } catch (err1) {
+                    logger.error('handleIncomingConnectivityRequest', { err: err1 })
                 }
             }
-        } catch (err) {
-            logger.trace(`Could not parse message: ${err}`)
+        } catch (err2) {
+            logger.trace('Could not parse message', { err: err2 })
         }
     })
 }

@@ -67,7 +67,7 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
                 const recipientId = msg.body.groupKeyRequest.recipientId
                 return this.getNodeIdsForUserId(toEthereumAddress(binaryToHex(recipientId, true)))
             } catch (err) {
-                logger.trace(`Could not parse GroupKeyRequest: ${err}`)
+                logger.trace(`Could not parse GroupKeyRequest`, { err })
                 return []
             }
         } else {

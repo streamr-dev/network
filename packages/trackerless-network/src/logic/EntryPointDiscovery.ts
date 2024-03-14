@@ -46,7 +46,7 @@ const exponentialRunOff = async (
         try { // Abort controller throws unexpected errors in destroy?
             await wait(delay, abortSignal)
         } catch (err) {
-            logger.trace(`${err}`)
+            logger.trace(`${err}`)  // TODO Do we need logging?
         }
     }
 }
