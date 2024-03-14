@@ -279,7 +279,6 @@ export class RandomGraphNode extends EventEmitter<Events> {
                     this.config.rpcCommunicator,
                     ContentDeliveryRpcClient,
                     this.config.rpcRequestTimeout
-
                 )
             )
         }
