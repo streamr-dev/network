@@ -6,6 +6,7 @@ import { createTestStream, createTestClient } from '../test-utils/utils'
 import { StreamPermission } from '../../src/permission'
 import { deployMockERC1271Contract } from '../test-utils/deployMockERC1271Contract'
 import { StreamID } from '@streamr/protocol'
+import { MessageMetadata } from '../../src'
 
 const PAYLOAD = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 const TIMEOUT = 30 * 1000
@@ -58,11 +59,14 @@ describe('ERC-1271: publish and subscribe', () => {
 
         it('ERC-1271 signed published message is received by subscriber', async () => {
             const messages: unknown[] = []
-            await subscriber.subscribe(streamId, (msg: any) => {
+            const metadatas: MessageMetadata[] = []
+            await subscriber.subscribe(streamId, (msg: any, metadata) => {
                 messages.push(msg)
+                metadatas.push(metadata)
             })
             await publisher.publish(streamId, PAYLOAD, { eip1271Contract: erc1271ContractAddress })
             await waitForCondition(() => messages.length > 0, TIMEOUT)
+            expect(metadatas[0].signatureType).toEqual('EIP_1271')
             expect(areEqualBinaries(messages[0] as Uint8Array, PAYLOAD)).toEqual(true)
         }, TIMEOUT)
     })
@@ -85,11 +89,14 @@ describe('ERC-1271: publish and subscribe', () => {
 
         it('ERC-1271 signed published message is received by subscriber', async () => {
             const messages: unknown[] = []
-            await subscriber.subscribe(streamId, (msg: any) => {
+            const metadatas: MessageMetadata[] = []
+            await subscriber.subscribe(streamId, (msg: any, metadata) => {
                 messages.push(msg)
+                metadatas.push(metadata)
             })
             await publisher.publish(streamId, PAYLOAD, { eip1271Contract: erc1271ContractAddress })
             await waitForCondition(() => messages.length > 0, TIMEOUT)
+            expect(metadatas[0].signatureType).toEqual('EIP_1271')
             expect(areEqualBinaries(messages[0] as Uint8Array, PAYLOAD)).toEqual(true)
         }, TIMEOUT)
     })
