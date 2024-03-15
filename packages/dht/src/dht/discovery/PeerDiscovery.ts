@@ -155,14 +155,18 @@ export class PeerDiscovery {
         }
     }
 
-    public async rejoinDht(entryPoint: PeerDescriptor): Promise<void> {
+    public async rejoinDht(
+        entryPoint: PeerDescriptor,
+        contactedPeers: Set<DhtAddress> = new Set(),
+        distantJoinContactPeers: Set<DhtAddress> = new Set()
+    ): Promise<void> {
         if (this.isStopped() || this.rejoinOngoing) {
             return
         }
         logger.debug(`Rejoining DHT ${this.config.serviceId}`)
         this.rejoinOngoing = true
         try {
-            await this.joinThroughEntryPoint(entryPoint, new Set(), { enabled: false })
+            await this.joinThroughEntryPoint(entryPoint, contactedPeers, { enabled: true, contactedPeers: distantJoinContactPeers })
             logger.debug(`Rejoined DHT successfully ${this.config.serviceId}!`)
         } catch (err) {
             logger.warn(`Rejoining DHT ${this.config.serviceId} failed`)
