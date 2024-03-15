@@ -1,10 +1,10 @@
 import {
     ConnectionLocker,
+    DhtAddress,
     DhtNode,
+    EXISTING_CONNECTION_TIMEOUT,
     ITransport,
     PeerDescriptor,
-    EXISTING_CONNECTION_TIMEOUT,
-    DhtAddress,
     getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
 import { StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
@@ -18,11 +18,11 @@ import {
 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
-import { ProxyDirection, StreamPartitionInfo, StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { ProxyDirection, StreamMessage, StreamPartitionInfo } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { EntryPointDiscovery, NETWORK_SPLIT_AVOIDANCE_LIMIT } from './EntryPointDiscovery'
 import { Layer0Node } from './Layer0Node'
 import { Layer1Node } from './Layer1Node'
 import { RandomGraphNode } from './RandomGraphNode'
-import { NETWORK_SPLIT_AVOIDANCE_LIMIT, EntryPointDiscovery } from './EntryPointDiscovery'
 import { createRandomGraphNode } from './createRandomGraphNode'
 import { ProxyClient } from './proxy/ProxyClient'
 
@@ -50,7 +50,7 @@ interface Metrics extends MetricsDefinition {
     broadcastBytesPerSecond: Metric
 }
 
-export interface StreamrNodeConfig {
+export interface ContentDeliveryManagerConfig {
     metricsContext?: MetricsContext
     streamPartitionNeighborTargetCount?: number
     streamPartitionMinPropagationTargets?: number
@@ -58,20 +58,20 @@ export interface StreamrNodeConfig {
     rpcRequestTimeout?: number
 }
 
-// TODO rename class?
-export class StreamrNode extends EventEmitter<Events> {
+export class ContentDeliveryManager extends EventEmitter<Events> {
+
     private transport?: ITransport
     private connectionLocker?: ConnectionLocker
     private layer0Node?: Layer0Node
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
-    private readonly config: StreamrNodeConfig
+    private readonly config: ContentDeliveryManagerConfig
     private readonly streamParts: Map<StreamPartID, StreamPartDelivery>
     private readonly knownStreamPartEntryPoints: Map<StreamPartID, PeerDescriptor[]> = new Map()
     private started = false
     private destroyed = false
 
-    constructor(config: StreamrNodeConfig) {
+    constructor(config: ContentDeliveryManagerConfig) {
         super()
         this.config = config
         this.streamParts = new Map()
@@ -87,7 +87,6 @@ export class StreamrNode extends EventEmitter<Events> {
         if (this.started || this.destroyed) {
             return
         }
-        logger.info(`Starting new StreamrNode with id ${getNodeIdFromPeerDescriptor(startedAndJoinedLayer0Node.getLocalPeerDescriptor())}`)
         this.started = true
         this.layer0Node = startedAndJoinedLayer0Node
         this.transport = transport
@@ -98,7 +97,7 @@ export class StreamrNode extends EventEmitter<Events> {
         if (!this.started || this.destroyed) {
             return
         }
-        logger.trace('Destroying StreamrNode...')
+        logger.trace('Destroying ContentDeliveryManager')
         this.destroyed = true
         await Promise.all(Array.from(this.streamParts.values()).map((streamPart) => streamPart.stop()))
         this.streamParts.clear()
