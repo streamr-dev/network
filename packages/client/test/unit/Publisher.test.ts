@@ -3,6 +3,8 @@ import 'reflect-metadata'
 import { Publisher } from '../../src/publish/Publisher'
 import { StreamIDBuilder } from '../../src/StreamIDBuilder'
 import { createGroupKeyManager, createRandomAuthentication } from '../test-utils/utils'
+import { PublisherKeyExchange } from '../../src/encryption/PublisherKeyExchange'
+import { mock } from 'jest-mock-extended'
 
 describe('Publisher', () => {
     it('error message', async () => {
@@ -17,7 +19,8 @@ describe('Publisher', () => {
             streamRegistry as any,
             createGroupKeyManager(undefined, authentication),
             streamIdBuilder,
-            authentication
+            authentication,
+            mock<PublisherKeyExchange>()
         )
         const streamId = await streamIdBuilder.toStreamID('/test')
         await expect(async () => {
