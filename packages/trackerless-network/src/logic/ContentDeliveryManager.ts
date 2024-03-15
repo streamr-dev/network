@@ -174,7 +174,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             try {
                 await this.startLayersAndJoinDht(streamPartId, entryPointDiscovery)
             } catch (err) {
-                logger.warn(`Failed to join to stream part ${streamPartId} with error: ${err}`)
+                logger.warn(`Failed to join to stream part ${streamPartId}`, { err })
             }
         })
     }

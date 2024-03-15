@@ -210,8 +210,8 @@ export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGa
                 value: parseEther('1')
             })).wait()
         },
-        (message: string, error: any) => {
-            logger.debug(message, { error })
+        (message: string, err: any) => {
+            logger.debug(message, { err })
         },
         'Token minting',
         10,

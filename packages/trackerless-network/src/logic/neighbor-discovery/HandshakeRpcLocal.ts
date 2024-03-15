@@ -133,7 +133,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
             this.config.neighbors.remove(senderId)
             return { accepted: true }
         } catch (err) {
-            logger.debug(`interleaveRequest to ${getNodeIdFromPeerDescriptor(message.interleaveTargetDescriptor!)} failed: ${err}`)
+            logger.debug(`interleaveRequest to ${getNodeIdFromPeerDescriptor(message.interleaveTargetDescriptor!)} failed`, { err })
             return { accepted: false }
         }
     }

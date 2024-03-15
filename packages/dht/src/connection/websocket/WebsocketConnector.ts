@@ -211,7 +211,7 @@ export class WebsocketConnector {
             } catch (err) {
                 const error = `Failed to connect to entrypoint with id ${getNodeIdFromPeerDescriptor(entryPoint)} `
                     + `and URL ${connectivityMethodToWebsocketUrl(entryPoint.websocket!)}`
-                logger.error(error, { error: err })
+                logger.error(error, { err })
                 shuffledEntrypoints.shift()
                 await wait(2000, this.abortController.signal)
             }
