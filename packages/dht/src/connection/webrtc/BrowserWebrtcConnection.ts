@@ -60,23 +60,18 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
 
         if (isOffering) {
             this.peerConnection.onnegotiationneeded = async () => {
-                try {
-                    if (this.peerConnection !== undefined) {
-                        this.makingOffer = true
-                        try {
-                            await this.peerConnection.setLocalDescription()
-                        } catch (error) {
-                            logger.warn('error', { error })
-                        }
-                        if (this.peerConnection.localDescription !== null) {
-                            this.emit('localDescription', this.peerConnection.localDescription?.sdp, this.peerConnection.localDescription?.type)
-                        }
+                if (this.peerConnection !== undefined) {
+                    this.makingOffer = true
+                    try {
+                        await this.peerConnection.setLocalDescription()
+                    } catch (err) {
+                        logger.warn('Failed to set local description', { err })
                     }
-                } catch (error) {
-                    logger.error('error', { error })
-                } finally {
-                    this.makingOffer = false
+                    if (this.peerConnection.localDescription !== null) {
+                        this.emit('localDescription', this.peerConnection.localDescription?.sdp, this.peerConnection.localDescription?.type)
+                    }
                 }
+                this.makingOffer = false
             }
 
             const dataChannel = this.peerConnection.createDataChannel('streamrDataChannel')
@@ -98,15 +93,15 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         }
         try {
             await this.peerConnection?.setRemoteDescription({ sdp: description, type: type.toLowerCase() as RTCSdpType })
-        } catch (error) {
-            logger.warn('Failed to setRemoteDescription', { error })
+        } catch (err) {
+            logger.warn('Failed to set remote description', { err })
         }
 
         if ((type.toLowerCase() === RtcDescription.OFFER) && (this.peerConnection !== undefined)) {
             try {
                 await this.peerConnection.setLocalDescription()
-            } catch (error) {
-                logger.warn('Failed to setLocalDescription', { error })
+            } catch (err) {
+                logger.warn('Failed to set local description', { err })
             }
             if (this.peerConnection.localDescription !== null) {
                 this.emit('localDescription', this.peerConnection.localDescription.sdp, this.peerConnection.localDescription.type)
@@ -117,8 +112,8 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     public addRemoteCandidate(candidate: string, mid: string): void {
         this.peerConnection?.addIceCandidate({ candidate: candidate, sdpMid: mid })
             .then(() => { return })
-            .catch((error) => {
-                logger.warn('Failed to addIceCandidate', { error })
+            .catch((err) => {
+                logger.warn('Failed to add ICE candidate', { err })
             })
     }
 
@@ -145,8 +140,8 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
             if (this.dataChannel !== undefined) {
                 try {
                     this.dataChannel.close()
-                } catch (error) {
-                    logger.warn('dc.close() errored', { error })
+                } catch (err) {
+                    logger.warn('Failed to close data channel', { err })
                 }
             }
 
@@ -155,8 +150,8 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
             if (this.peerConnection !== undefined) {
                 try {
                     this.peerConnection.close()
-                } catch (error) {
-                    logger.warn('conn.close() errored', { error })
+                } catch (err) {
+                    logger.warn('Failed to close connection', { err })
                 }
             }
             this.peerConnection = undefined
@@ -189,8 +184,8 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
             this.doClose(false)
         }
 
-        dataChannel.onerror = (error) => {
-            logger.warn('dc.onError', { error })
+        dataChannel.onerror = (err) => {
+            logger.warn('Data channel error', { err })
         }
 
         dataChannel.onmessage = (msg) => {
