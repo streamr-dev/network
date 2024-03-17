@@ -265,7 +265,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             rpcCommunicator: this.rpcCommunicator,
             connections: this.peerManager!.connections,
             localPeerDescriptor: this.localPeerDescriptor!,
-            addContact: (contact: PeerDescriptor, setActive?: boolean) => this.peerManager!.addContact(contact, setActive),
             handleMessage: (message: Message) => this.handleMessageFromRouter(message),
         })
         this.recursiveOperationManager = new RecursiveOperationManager({
