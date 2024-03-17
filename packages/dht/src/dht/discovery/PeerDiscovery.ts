@@ -79,7 +79,7 @@ export class PeerDiscovery {
             return
         }
         this.config.connectionManager?.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
-        this.config.peerManager.addContact([entryPointDescriptor])
+        this.config.peerManager.addContact(entryPointDescriptor)
         const targetId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
         const sessions = [this.createSession(targetId, contactedPeers)]
         if (additionalDistantJoin.enabled) {
@@ -196,7 +196,9 @@ export class PeerDiscovery {
         await Promise.allSettled(
             nodes.map(async (peer: DhtNodeRpcRemote) => {
                 const contacts = await peer.getClosestPeers(localNodeId)
-                this.config.peerManager.addContact(contacts)
+                for (const contact of contacts) {
+                    this.config.peerManager.addContact(contact)
+                }
             })
         )
     }

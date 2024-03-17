@@ -175,7 +175,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         }
         const closest = this.getClosestActiveContactNotInBucket()
         if (closest) {
-            this.addContact([closest.getPeerDescriptor()])
+            this.addContact(closest.getPeerDescriptor())
         }
     }
 
@@ -305,35 +305,33 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.contacts.setActive(nodeId)
     }
 
-    addContact(peerDescriptors: PeerDescriptor[], setActive?: boolean): void {
+    addContact(peerDescriptor: PeerDescriptor, setActive?: boolean): void {
         if (this.stopped) {
             return
         }
-        peerDescriptors.forEach((contact) => {
-            const nodeId = getNodeIdFromPeerDescriptor(contact)
-            if (nodeId !== this.config.localNodeId) {
-                logger.trace(`Adding new contact ${nodeId}`)
-                const remote = this.config.createDhtNodeRpcRemote(contact)
-                const isInBucket = (this.bucket.get(contact.nodeId) !== null)
-                const isInContacts = (this.contacts.getContact(nodeId) !== undefined)
-                const isInRingContacts = this.ringContacts.getContact(contact) !== undefined
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        if (nodeId !== this.config.localNodeId) {
+            logger.trace(`Adding new contact ${nodeId}`)
+            const remote = this.config.createDhtNodeRpcRemote(peerDescriptor)
+            const isInBucket = (this.bucket.get(peerDescriptor.nodeId) !== null)
+            const isInContacts = (this.contacts.getContact(nodeId) !== undefined)
+            const isInRingContacts = this.ringContacts.getContact(peerDescriptor) !== undefined
 
-                if (isInBucket || isInContacts) {
-                    this.randomPeers.addContact(remote)
-                }
-                if (!isInBucket) {
-                    this.bucket.add(remote)
-                }
-                if (!isInContacts) {
-                    this.contacts.addContact(remote)
-                }
-                if (setActive) {
-                    this.contacts.setActive(nodeId)
-                }
-                if (!isInRingContacts) {
-                    this.ringContacts.addContact(remote)
-                }
+            if (isInBucket || isInContacts) {
+                this.randomPeers.addContact(remote)
             }
-        })
+            if (!isInBucket) {
+                this.bucket.add(remote)
+            }
+            if (!isInContacts) {
+                this.contacts.addContact(remote)
+            }
+            if (setActive) {
+                this.contacts.setActive(nodeId)
+            }
+            if (!isInRingContacts) {
+                this.ringContacts.addContact(remote)
+            }
+        }
     }
 }

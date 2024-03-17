@@ -43,7 +43,9 @@ export class RingDiscoverySession {
         if (this.stopped) {
             return
         }
-        this.config.peerManager.addContact(contacts)
+        for (const contact of contacts) {
+            this.config.peerManager.addContact(contact)
+        }
     }
 
     private async getClosestPeersFromContact(contact: DhtNodeRpcRemote): Promise<RingContacts> {
