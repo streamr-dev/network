@@ -305,7 +305,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.contacts.setActive(nodeId)
     }
 
-    addContact(peerDescriptor: PeerDescriptor, setActive?: boolean): void {
+    addContact(peerDescriptor: PeerDescriptor): void {
         if (this.stopped) {
             return
         }
@@ -325,9 +325,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             }
             if (!isInContacts) {
                 this.contacts.addContact(remote)
-            }
-            if (setActive) {
-                this.contacts.setActive(nodeId)
             }
             if (!isInRingContacts) {
                 this.ringContacts.addContact(remote)
