@@ -50,7 +50,7 @@ describe('PublisherKeyExchange', () => {
         actualResponse: StreamMessage,
         expectedGroupKey: GroupKey,
         expectedPublisherId: EthereumAddress,
-        signatureType: SignatureType
+        expectedSignatureType: SignatureType
     ): Promise<void> => {
         expect(actualResponse).toMatchObject({
             messageId: {
@@ -62,7 +62,7 @@ describe('PublisherKeyExchange', () => {
             contentType: ContentType.BINARY,
             encryptionType: EncryptionType.NONE,
             signature: expect.any(Uint8Array),
-            signatureType
+            signatureType: expectedSignatureType
         })
         const encryptedGroupKeys = convertBytesToGroupKeyResponse(actualResponse.content).encryptedGroupKeys
         expect(encryptedGroupKeys).toMatchObject([{
