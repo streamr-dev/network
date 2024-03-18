@@ -31,7 +31,10 @@ export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
     unlockConnection: () => {},
     weakLockConnection: () => {},
-    weakUnlockConnection: () => {}
+    weakUnlockConnection: () => {},
+    getLocalLockedConnectionCount: () => 0,
+    getRemoteLockedConnectionCount: () => 0,
+    getWeakLockedConnectionCount: () => 0,
 }
 
 export const createMockRandomGraphNodeAndDhtNode = async (

@@ -8,7 +8,7 @@ import {
 import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 import { RandomContactList } from './contact/RandomContactList'
 import { SortedContactList } from './contact/SortedContactList'
-import { ConnectionManager } from '../connection/ConnectionManager'
+import { ConnectionLocker } from '../connection/ConnectionManager'
 import EventEmitter from 'eventemitter3'
 import { DhtAddress, DhtAddressRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../identifiers'
 import { RingContactList, RingContacts } from './contact/RingContactList'
@@ -23,7 +23,7 @@ interface PeerManagerConfig {
     peerDiscoveryQueryBatchSize: number
     localNodeId: DhtAddress
     localPeerDescriptor: PeerDescriptor
-    connectionManager: ConnectionManager
+    connectionLocker?: ConnectionLocker
     isLayer0: boolean
     lockId: LockID
     createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => DhtNodeRpcRemote
@@ -121,7 +121,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         sortingList.addContacts(oldContacts)
         const sortedContacts = sortingList.getAllContacts()
         const removableNodeId = sortedContacts[sortedContacts.length - 1].getNodeId()
-        this.config.connectionManager?.weakUnlockConnection(removableNodeId, this.config.lockId)
+        this.config.connectionLocker?.weakUnlockConnection(removableNodeId, this.config.lockId)
         this.bucket.remove(getRawFromDhtAddress(removableNodeId))
         this.bucket.add(newContact)
     }
@@ -130,7 +130,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         if (this.stopped) {
             return
         }
-        this.config.connectionManager?.weakUnlockConnection(nodeId, this.config.lockId)
+        this.config.connectionLocker?.weakUnlockConnection(nodeId, this.config.lockId)
         logger.trace(`Removed contact ${nodeId}`)
         if (this.bucket.count() === 0) {
             this.emit('kBucketEmpty')
@@ -145,7 +145,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             const peerDescriptor = contact.getPeerDescriptor()
             const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
             // Important to lock here, before the ping result is known
-            this.config.connectionManager?.weakLockConnection(nodeId, this.config.lockId)
+            this.config.connectionLocker?.weakLockConnection(nodeId, this.config.lockId)
             if (this.connections.has(contact.getNodeId())) {
                 logger.trace(`Added new contact ${nodeId}`)
             } else {    // open connection by pinging
@@ -155,13 +155,13 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
                         logger.trace(`Added new contact ${nodeId}`)
                     } else {
                         logger.trace('ping failed ' + nodeId)
-                        this.config.connectionManager?.weakUnlockConnection(nodeId, this.config.lockId)
+                        this.config.connectionLocker?.weakUnlockConnection(nodeId, this.config.lockId)
                         this.removeContact(nodeId)
                         this.addClosestContactToBucket()
                     }
                     return
                 }).catch((_e) => {
-                    this.config.connectionManager?.weakUnlockConnection(nodeId, this.config.lockId)
+                    this.config.connectionLocker?.weakUnlockConnection(nodeId, this.config.lockId)
                     this.removeContact(nodeId)
                     this.addClosestContactToBucket()
                 })

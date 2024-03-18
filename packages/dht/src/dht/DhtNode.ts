@@ -8,7 +8,7 @@ import {
 import { EventEmitter } from 'eventemitter3'
 import { sample } from 'lodash'
 import { MarkRequired } from 'ts-essentials'
-import { ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
+import { ConnectionLocker, ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
 import { IceServer } from '../connection/webrtc/WebrtcConnector'
 import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
@@ -130,7 +130,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private recursiveOperationManager?: RecursiveOperationManager
     private peerDiscovery?: PeerDiscovery
     private peerManager?: PeerManager
-    public connectionManager?: ConnectionManager
+    public connectionLocker?: ConnectionLocker
     private region?: number
     private started = false
     private abortController = new AbortController()
@@ -198,7 +198,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.transport = this.config.transport
             this.localPeerDescriptor = this.transport.getLocalPeerDescriptor()
             if (this.config.transport instanceof ConnectionManager) {
-                this.connectionManager = this.config.transport
+                this.connectionLocker = this.config.transport
             }
         } else {
             const connectorFacadeConfig: DefaultConnectorFacadeConfig = {
@@ -237,7 +237,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 metricsContext: this.config.metricsContext
             })
             await connectionManager.start()
-            this.connectionManager = connectionManager
+            this.connectionLocker = connectionManager
             this.transport = connectionManager
         }
 
@@ -258,7 +258,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             joinTimeout: this.config.dhtJoinTimeout,
             serviceId: this.config.serviceId,
             parallelism: this.config.joinParallelism,
-            connectionManager: this.connectionManager,
+            connectionLocker: this.connectionLocker,
             peerManager: this.peerManager!
         })
         this.router = new Router({
@@ -310,9 +310,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             maxContactListSize: this.config.maxNeighborListSize,
             localNodeId: this.getNodeId(),
             localPeerDescriptor: this.localPeerDescriptor!,
-            connectionManager: this.connectionManager!,
+            connectionLocker: this.connectionLocker!,
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
-            isLayer0: (this.connectionManager !== undefined),
+            isLayer0: (this.connectionLocker !== undefined),
             createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => this.createDhtNodeRpcRemote(peerDescriptor),
             lockId: this.config.serviceId
         })
@@ -417,8 +417,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private handleMessageFromRouter(message: Message): void {
         if (message.serviceId === this.config.serviceId) {
             this.rpcCommunicator?.handleMessageFromPeer(message)
-        } else if (this.connectionManager?.handleIncomingMessage(message)) {
-            // message was handled by connectionManager
         } else {
             this.emit('message', message)
         }
@@ -559,15 +557,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public getLocalLockedConnectionCount(): number {
-        return this.connectionManager!.getLocalLockedConnectionCount()
+        return this.connectionLocker!.getLocalLockedConnectionCount()
     }
 
     public getRemoteLockedConnectionCount(): number {
-        return this.connectionManager!.getRemoteLockedConnectionCount()
+        return this.connectionLocker!.getRemoteLockedConnectionCount()
     }
 
     public getWeakLockedConnectionCount(): number {
-        return this.connectionManager!.getWeakLockedConnectionCount()
+        return this.connectionLocker!.getWeakLockedConnectionCount()
     }
 
     public async waitForNetworkConnectivity(): Promise<void> {
@@ -603,7 +601,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             await this.transport!.stop()
         }
         this.transport = undefined
-        this.connectionManager = undefined
+        this.connectionLocker = undefined
         this.removeAllListeners()
     }
 
