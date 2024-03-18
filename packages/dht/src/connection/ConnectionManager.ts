@@ -15,7 +15,7 @@ import {
 import { ConnectionLockRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import { DEFAULT_SEND_OPTIONS, ITransport, SendOptions, TransportEvents } from '../transport/ITransport'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
-import { ConnectionLockHandler, LockID } from './ConnectionLockHandler'
+import { ConnectionLockStates, LockID } from './ConnectionLockStates'
 import { ConnectorFacade } from './ConnectorFacade'
 import { ManagedConnection, Events as ManagedConnectionEvents } from './ManagedConnection'
 import { ConnectionLockRpcRemote } from './ConnectionLockRpcRemote'
@@ -97,7 +97,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     // TODO use config option or named constant?
     private readonly duplicateMessageDetector: DuplicateDetector = new DuplicateDetector(10000)
     private readonly metrics: ConnectionManagerMetrics
-    private locks = new ConnectionLockHandler()
+    private locks = new ConnectionLockStates()
     private connections: Map<DhtAddress, ManagedConnection> = new Map()
     private readonly connectorFacade: ConnectorFacade
     private rpcCommunicator?: RoutingRpcCommunicator
