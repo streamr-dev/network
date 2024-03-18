@@ -40,7 +40,7 @@ export interface Message {
     /**
      * Signature method used to sign message.
      */
-    signatureType: 'LEGACY_SECP256K1' | 'SECP256K1' | 'EIP_1271'
+    signatureType: 'LEGACY_SECP256K1' | 'SECP256K1' | 'ERC_1271'
 
     /**
      * Publisher of message.
@@ -58,14 +58,14 @@ export interface Message {
 
 export type MessageMetadata = Omit<Message, 'content'>
 
-function signatureTypeToString(signatureType: SignatureType): 'LEGACY_SECP256K1' | 'SECP256K1' | 'EIP_1271' {
+function signatureTypeToString(signatureType: SignatureType): 'LEGACY_SECP256K1' | 'SECP256K1' | 'ERC_1271' {
     switch (signatureType) {
         case SignatureType.LEGACY_SECP256K1:
             return 'LEGACY_SECP256K1'
         case SignatureType.SECP256K1:
             return 'SECP256K1'
-        case SignatureType.EIP_1271:
-            return 'EIP_1271'
+        case SignatureType.ERC_1271:
+            return 'ERC_1271'
         default:
             throw new Error(`Unknown signature type: ${signatureType}`)
     }

@@ -106,7 +106,7 @@ describe('messagePipeline', () => {
             getStorageNodes: undefined as any,
             resends: undefined as any,
             streamRegistry: streamRegistry as any,
-            eip1271ContractFacade: undefined as any,
+            erc1271ContractFacade: undefined as any,
             groupKeyManager: new GroupKeyManager(
                 mock<SubscriberKeyExchange>(),
                 mock<LitProtocolFacade>(),

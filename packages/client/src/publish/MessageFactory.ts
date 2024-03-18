@@ -137,13 +137,13 @@ export class MessageFactory {
             newGroupKey,
             authentication: this.authentication,
             contentType,
-            signatureType: metadata.eip1271Contract ? SignatureType.EIP_1271 : SignatureType.SECP256K1,
+            signatureType: metadata.erc1271Contract ? SignatureType.ERC_1271 : SignatureType.SECP256K1,
         })
     }
 
     private async getPublisherId(metadata: PublishMetadata): Promise<EthereumAddress> {
-        if (metadata.eip1271Contract !== undefined) {
-            return toEthereumAddress(metadata.eip1271Contract)
+        if (metadata.erc1271Contract !== undefined) {
+            return toEthereumAddress(metadata.erc1271Contract)
         } else {
             return this.authentication.getAddress()
         }

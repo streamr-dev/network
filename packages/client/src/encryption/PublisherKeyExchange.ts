@@ -25,7 +25,7 @@ import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
-import { EIP1271ContractFacade } from '../contracts/EIP1271ContractFacade'
+import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
 
 /*
  * Sends group key responses
@@ -34,7 +34,7 @@ import { EIP1271ContractFacade } from '../contracts/EIP1271ContractFacade'
 enum PublisherMatchType {
     NONE,
     NORMAL,
-    EIP1271
+    ERC1271
 }
 
 @scoped(Lifecycle.ContainerScoped)
@@ -42,23 +42,23 @@ export class PublisherKeyExchange {
 
     private readonly networkNodeFacade: NetworkNodeFacade
     private readonly streamRegistry: StreamRegistry
-    private readonly eip1271ContractFacade: EIP1271ContractFacade
+    private readonly erc1271ContractFacade: ERC1271ContractFacade
     private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
     private readonly logger: Logger
-    private readonly eip1271ContractAddresses = new Set<EthereumAddress>()
+    private readonly erc1271ContractAddresses = new Set<EthereumAddress>()
 
     constructor(
         networkNodeFacade: NetworkNodeFacade,
         streamRegistry: StreamRegistry,
-        @inject(EIP1271ContractFacade) eip1271ContractFacade: EIP1271ContractFacade,
+        @inject(ERC1271ContractFacade) erc1271ContractFacade: ERC1271ContractFacade,
         store: LocalGroupKeyStore,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         loggerFactory: LoggerFactory
     ) {
         this.networkNodeFacade = networkNodeFacade
         this.streamRegistry = streamRegistry
-        this.eip1271ContractFacade = eip1271ContractFacade
+        this.erc1271ContractFacade = erc1271ContractFacade
         this.store = store
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
@@ -69,16 +69,16 @@ export class PublisherKeyExchange {
         })
     }
 
-    addEip1271ContractAddress(address: EthereumAddress): void {
-        this.eip1271ContractAddresses.add(address)
+    addErc1271ContractAddress(address: EthereumAddress): void {
+        this.erc1271ContractAddresses.add(address)
     }
 
     private async matchPublisherType(publisher: EthereumAddress): Promise<PublisherMatchType> {
         const authenticatedUser = await this.authentication.getAddress()
         if (publisher === authenticatedUser) {
             return PublisherMatchType.NORMAL
-        } else if (this.eip1271ContractAddresses.has(publisher)) {
-            return PublisherMatchType.EIP1271
+        } else if (this.erc1271ContractAddresses.has(publisher)) {
+            return PublisherMatchType.ERC1271
         } else {
             return PublisherMatchType.NONE
         }
@@ -91,7 +91,7 @@ export class PublisherKeyExchange {
                 const matchType = await this.matchPublisherType(recipient)
                 if (matchType !== PublisherMatchType.NONE) {
                     this.logger.debug('Handling group key request', { requestId })
-                    await validateStreamMessage(request, this.streamRegistry, this.eip1271ContractFacade)
+                    await validateStreamMessage(request, this.streamRegistry, this.erc1271ContractFacade)
                     const authenticatedUser = await this.authentication.getAddress()
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
@@ -157,7 +157,7 @@ export class PublisherKeyExchange {
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             encryptionType: EncryptionType.NONE,
             authentication: this.authentication,
-            signatureType: matchType === PublisherMatchType.NORMAL ? SignatureType.SECP256K1 : SignatureType.EIP_1271,
+            signatureType: matchType === PublisherMatchType.NORMAL ? SignatureType.SECP256K1 : SignatureType.ERC_1271,
         })
         return response
     }

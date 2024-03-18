@@ -87,11 +87,11 @@ describe('MessageFactory', () => {
         })
     })
 
-    it('happy path: EIP-1271', async () => {
+    it('happy path: ERC-1271', async () => {
         const contractAddress = randomEthereumAddress()
         const messageFactory = await createMessageFactory()
         const msg = await createMessage({
-            eip1271Contract: contractAddress
+            erc1271Contract: contractAddress
         }, messageFactory)
         expect(msg).toMatchObject({
             messageId: {
@@ -108,17 +108,17 @@ describe('MessageFactory', () => {
             groupKeyId: GROUP_KEY.id,
             newGroupKey: undefined,
             signature: expect.any(Uint8Array),
-            signatureType: SignatureType.EIP_1271,
+            signatureType: SignatureType.ERC_1271,
             contentType: ContentType.JSON,
             content: expect.any(Uint8Array)
         })
     })
 
-    it('throws if given non-ethereum address as eip1271Contract', async () => {
+    it('throws if given non-ethereum address as erc1271Contract', async () => {
         const messageFactory = await createMessageFactory()
         await expect(() =>
             createMessage({
-                eip1271Contract: 'not-an-ethereum-address'
+                erc1271Contract: 'not-an-ethereum-address'
             }, messageFactory)
         ).rejects.toThrow('not a valid Ethereum address: "not-an-ethereum-address"')
     })

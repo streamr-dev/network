@@ -19,7 +19,7 @@ export interface PublishMetadata {
     timestamp?: string | number | Date
     partitionKey?: string | number
     msgChainId?: string
-    eip1271Contract?: string
+    erc1271Contract?: string
 }
 
 const parseTimestamp = (metadata?: PublishMetadata): number => {
@@ -73,8 +73,8 @@ export class Publisher {
         metadata?: PublishMetadata
     ): Promise<StreamMessage> {
         const timestamp = parseTimestamp(metadata)
-        if (metadata?.eip1271Contract !== undefined) {
-            this.publisherKeyExchange.addEip1271ContractAddress(toEthereumAddress(metadata.eip1271Contract))
+        if (metadata?.erc1271Contract !== undefined) {
+            this.publisherKeyExchange.addErc1271ContractAddress(toEthereumAddress(metadata.erc1271Contract))
         }
         /*
          * There are some steps in the publish process which need to be done sequentially:

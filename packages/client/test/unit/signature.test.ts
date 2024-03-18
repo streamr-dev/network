@@ -10,7 +10,7 @@ import {
 } from '@streamr/protocol'
 import { hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import { assertSignatureIsValid } from '../../src/utils/validateStreamMessage'
-import { EIP1271ContractFacade } from '../../src/contracts/EIP1271ContractFacade'
+import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { createSignaturePayload } from '../../src/signature'
 
@@ -132,9 +132,9 @@ describe('signature', () => {
         })
     })
 
-    describe('EIP1271 message validation', () => {
+    describe('ERC1271 message validation', () => {
         let message: StreamMessage
-        let eip1271ContractFacade: MockProxy<EIP1271ContractFacade>
+        let erc1271ContractFacade: MockProxy<ERC1271ContractFacade>
 
         beforeEach(() => {
             message = new StreamMessage({
@@ -153,15 +153,15 @@ describe('signature', () => {
                 encryptionType: EncryptionType.NONE,
                 // eslint-disable-next-line max-len
                 signature: hexToBinary('e53045adef4e01f7fe11d4b3073c6053688912e4db0ee780c189cd0d128c923457e1f6cbc1e47d9cd57e115afa9eb8524288887777c1056d638b193cae112dda1b'),
-                signatureType: SignatureType.EIP_1271
+                signatureType: SignatureType.ERC_1271
             })
-            eip1271ContractFacade = mock<EIP1271ContractFacade>()
+            erc1271ContractFacade = mock<ERC1271ContractFacade>()
         })
 
         it('passing signature validation scenario', async () => {
-            eip1271ContractFacade.isValidSignature.mockResolvedValueOnce(true)
-            await assertSignatureIsValid(message, eip1271ContractFacade)
-            expect(eip1271ContractFacade.isValidSignature).toHaveBeenCalledWith(
+            erc1271ContractFacade.isValidSignature.mockResolvedValueOnce(true)
+            await assertSignatureIsValid(message, erc1271ContractFacade)
+            expect(erc1271ContractFacade.isValidSignature).toHaveBeenCalledWith(
                 message.getPublisherId(),
                 createSignaturePayload(message),
                 message.signature
@@ -169,11 +169,11 @@ describe('signature', () => {
         })
 
         it('not passing signature validation scenario', async () => {
-            eip1271ContractFacade.isValidSignature.mockResolvedValueOnce(false)
-            await expect(assertSignatureIsValid(message, eip1271ContractFacade)).rejects.toEqual(
+            erc1271ContractFacade.isValidSignature.mockResolvedValueOnce(false)
+            await expect(assertSignatureIsValid(message, erc1271ContractFacade)).rejects.toEqual(
                 new Error('Signature validation failed')
             )
-            expect(eip1271ContractFacade.isValidSignature).toHaveBeenCalledWith(
+            expect(erc1271ContractFacade.isValidSignature).toHaveBeenCalledWith(
                 message.getPublisherId(),
                 createSignaturePayload(message),
                 message.signature
@@ -181,11 +181,11 @@ describe('signature', () => {
         })
 
         it('failing signature validation scenario', async () => {
-            eip1271ContractFacade.isValidSignature.mockRejectedValueOnce(new Error('random issue'))
-            await expect(assertSignatureIsValid(message, eip1271ContractFacade)).rejects.toEqual(
+            erc1271ContractFacade.isValidSignature.mockRejectedValueOnce(new Error('random issue'))
+            await expect(assertSignatureIsValid(message, erc1271ContractFacade)).rejects.toEqual(
                 new Error('An error occurred during address recovery from signature: Error: random issue')
             )
-            expect(eip1271ContractFacade.isValidSignature).toHaveBeenCalledWith(
+            expect(erc1271ContractFacade.isValidSignature).toHaveBeenCalledWith(
                 message.getPublisherId(),
                 createSignaturePayload(message),
                 message.signature

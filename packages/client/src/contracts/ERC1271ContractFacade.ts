@@ -21,7 +21,7 @@ function formKey(contractAddress: EthereumAddress, clientWalletAddress: Ethereum
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export class EIP1271ContractFacade {
+export class ERC1271ContractFacade {
     private readonly contractFactory: ContractFactory
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
     private readonly contractsByAddress: Mapping<[EthereumAddress], ERC1271Contract[]>

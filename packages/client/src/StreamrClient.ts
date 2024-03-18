@@ -49,7 +49,6 @@ import { StreamDefinition } from './types'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
-import { EIP1271ContractFacade } from './contracts/EIP1271ContractFacade'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -82,7 +81,6 @@ export class StreamrClient {
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
     private readonly operatorRegistry: OperatorRegistry
-    private readonly eip1271ContractFacade: EIP1271ContractFacade
     private readonly localGroupKeyStore: LocalGroupKeyStore
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly config: StrictStreamrClientConfig
@@ -115,7 +113,6 @@ export class StreamrClient {
         this.streamStorageRegistry = container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
         this.storageNodeRegistry = container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
         this.operatorRegistry = container.resolve<OperatorRegistry>(OperatorRegistry)
-        this.eip1271ContractFacade = container.resolve<EIP1271ContractFacade>(EIP1271ContractFacade)
         this.localGroupKeyStore = container.resolve<LocalGroupKeyStore>(LocalGroupKeyStore)
         this.streamIdBuilder = container.resolve<StreamIDBuilder>(StreamIDBuilder)
         this.eventEmitter = container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)

@@ -36,14 +36,14 @@ describe('PublisherKeyExchange', () => {
         return stream
     }
 
-    const triggerGroupKeyRequest = async (eip1271Contract?: string): Promise<void> => {
+    const triggerGroupKeyRequest = async (erc1271Contract?: string): Promise<void> => {
         const subscriberClient = environment.createClient({
             auth: {
                 privateKey: subscriberWallet.privateKey
             }
         })
         await subscriberClient.subscribe(streamPartId)
-        await publisherClient.publish(streamPartId, {}, { eip1271Contract })
+        await publisherClient.publish(streamPartId, {}, { erc1271Contract })
     }
 
     const assertValidResponse = async (
@@ -118,7 +118,7 @@ describe('PublisherKeyExchange', () => {
             permissions: [StreamPermission.PUBLISH],
             user: erc1271ContractAddress
         })
-        environment.getEip1271ContractFacade().addAllowedAddress(erc1271ContractAddress, toEthereumAddress(publisherWallet.address))
+        environment.getErc1271ContractFacade().addAllowedAddress(erc1271ContractAddress, toEthereumAddress(publisherWallet.address))
 
         const key = GroupKey.generate()
         await publisherClient.updateEncryptionKey({
@@ -132,6 +132,6 @@ describe('PublisherKeyExchange', () => {
         const response = await environment.getNetwork().waitForSentMessage({
             messageType: StreamMessageType.GROUP_KEY_RESPONSE
         })
-        await assertValidResponse(response, key, erc1271ContractAddress, SignatureType.EIP_1271)
+        await assertValidResponse(response, key, erc1271ContractAddress, SignatureType.ERC_1271)
     })
 })

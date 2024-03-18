@@ -20,8 +20,8 @@ import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
 import { FakeStreamRegistry } from './FakeStreamRegistry'
 import { FakeStreamStorageRegistry } from './FakeStreamStorageRegistry'
 import { FakeOperatorRegistry } from './FakeOperatorRegistry'
-import { EIP1271ContractFacade } from '../../../src/contracts/EIP1271ContractFacade'
-import { FakeEIP1271ContractFacade } from './FakeEIP1271ContractFacade'
+import { ERC1271ContractFacade } from '../../../src/contracts/ERC1271ContractFacade'
+import { FakeERC1271ContractFacade } from './FakeERC1271ContractFacade'
 
 const DEFAULT_CLIENT_OPTIONS: StreamrClientConfig = {
     encryption: {
@@ -34,7 +34,7 @@ export class FakeEnvironment {
     private network: FakeNetwork
     private chain: FakeChain
     private logger: FakeLogger
-    private eip1271ContractFacade: FakeEIP1271ContractFacade
+    private erc1271ContractFacade: FakeERC1271ContractFacade
     private dependencyContainer: DependencyContainer
     private clients: StreamrClient[] = []
 
@@ -42,7 +42,7 @@ export class FakeEnvironment {
         this.network = new FakeNetwork()
         this.chain = new FakeChain()
         this.logger = new FakeLogger()
-        this.eip1271ContractFacade = new FakeEIP1271ContractFacade()
+        this.erc1271ContractFacade = new FakeERC1271ContractFacade()
         this.dependencyContainer = container.createChildContainer()
         const loggerFactory = {
             createLogger: () => this.logger
@@ -50,7 +50,7 @@ export class FakeEnvironment {
         this.dependencyContainer.register(FakeNetwork, { useValue: this.network })
         this.dependencyContainer.register(FakeChain, { useValue: this.chain })
         this.dependencyContainer.register(LoggerFactory, { useValue: loggerFactory } as any)
-        this.dependencyContainer.register(EIP1271ContractFacade, { useValue: this.eip1271ContractFacade } as any)
+        this.dependencyContainer.register(ERC1271ContractFacade, { useValue: this.erc1271ContractFacade } as any)
         this.dependencyContainer.register(NetworkNodeFactory, FakeNetworkNodeFactory)
         this.dependencyContainer.register(StreamRegistry, FakeStreamRegistry as any)
         this.dependencyContainer.register(StreamStorageRegistry, FakeStreamStorageRegistry as any)
@@ -98,8 +98,8 @@ export class FakeEnvironment {
         return this.logger
     }
 
-    getEip1271ContractFacade(): FakeEIP1271ContractFacade {
-        return this.eip1271ContractFacade
+    getErc1271ContractFacade(): FakeERC1271ContractFacade {
+        return this.erc1271ContractFacade
     }
 
     async destroy(): Promise<void> {

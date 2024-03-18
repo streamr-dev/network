@@ -3,14 +3,14 @@ import { convertBytesToGroupKeyRequest, convertBytesToGroupKeyResponse } from '@
 import { EthereumAddress, verifySignature } from '@streamr/utils'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { createSignaturePayload } from '../signature'
-import { EIP1271ContractFacade } from '../contracts/EIP1271ContractFacade'
+import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
 
 export const validateStreamMessage = async (
     msg: StreamMessage,
     streamRegistry: StreamRegistry,
-    eip1271ContractFacade: EIP1271ContractFacade
+    erc1271ContractFacade: ERC1271ContractFacade
 ): Promise<void> => {
-    await doValidate(msg, streamRegistry, eip1271ContractFacade).catch((err: any) => {
+    await doValidate(msg, streamRegistry, erc1271ContractFacade).catch((err: any) => {
         // all StreamMessageError already have this streamMessage, maybe this is 
         // here if e.g. contract call fails? TODO is this really needed as
         // the onError callback in messagePipeline knows which message
@@ -34,9 +34,9 @@ export const validateStreamMessage = async (
 const doValidate = async (
     streamMessage: StreamMessage,
     streamRegistry: StreamRegistry,
-    eip1271ContractFacade: EIP1271ContractFacade
+    erc1271ContractFacade: ERC1271ContractFacade
 ): Promise<void> => {
-    await assertSignatureIsValid(streamMessage, eip1271ContractFacade)
+    await assertSignatureIsValid(streamMessage, erc1271ContractFacade)
     switch (streamMessage.messageType) {
         case StreamMessageType.MESSAGE:
             return validateMessage(streamMessage, streamRegistry)
@@ -63,7 +63,7 @@ const doValidate = async (
  * Checks that the signature in the given StreamMessage is cryptographically valid.
  * Resolves if valid, rejects otherwise.
  */
-export const assertSignatureIsValid = async (streamMessage: StreamMessage, eip1271ContractFacade: EIP1271ContractFacade): Promise<void> => {
+export const assertSignatureIsValid = async (streamMessage: StreamMessage, erc1271ContractFacade: ERC1271ContractFacade): Promise<void> => {
     const payload = createSignaturePayload({
         messageId: streamMessage.messageId,
         messageType: streamMessage.messageType,
@@ -75,8 +75,8 @@ export const assertSignatureIsValid = async (streamMessage: StreamMessage, eip12
     })
     let success: boolean
     try {
-        if (streamMessage.signatureType === SignatureType.EIP_1271) {
-            success = await eip1271ContractFacade.isValidSignature(
+        if (streamMessage.signatureType === SignatureType.ERC_1271) {
+            success = await erc1271ContractFacade.isValidSignature(
                 streamMessage.getPublisherId(),
                 payload,
                 streamMessage.signature

@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { EIP1271ContractFacade } from '../../src/contracts/EIP1271ContractFacade'
+import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { StrictStreamrClientConfig } from '../../src'
 import type { IERC1271 as ERC1271Contract } from '../../src/ethereumArtifacts/IERC1271'
@@ -12,13 +12,13 @@ const SIGNATURE = createSignature(PAYLOAD, hexToBinary(PRIVATE_KEY))
 
 const CONTRACT_ADDRESS = randomEthereumAddress()
 
-describe('EIP1271ContractFacade', () => {
+describe('ERC1271ContractFacade', () => {
     let contract: MockProxy<ERC1271Contract>
-    let contractFacade: EIP1271ContractFacade
+    let contractFacade: ERC1271ContractFacade
 
     beforeEach(() => {
         contract = mock<ERC1271Contract>()
-        contractFacade = new EIP1271ContractFacade(
+        contractFacade = new ERC1271ContractFacade(
             undefined as any,
             { } as StrictStreamrClientConfig,
         )
@@ -64,7 +64,7 @@ describe('EIP1271ContractFacade', () => {
 
     it('differentiates between different contracts based on contract address', async () => {
         const contract2 = mock<ERC1271Contract>()
-        contractFacade = new EIP1271ContractFacade(
+        contractFacade = new ERC1271ContractFacade(
             undefined as any,
             { } as StrictStreamrClientConfig
         )

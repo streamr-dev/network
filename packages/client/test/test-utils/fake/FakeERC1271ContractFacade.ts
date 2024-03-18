@@ -1,10 +1,10 @@
 import { Methods } from '@streamr/test-utils'
-import { EIP1271ContractFacade } from '../../../src/contracts/EIP1271ContractFacade'
+import { ERC1271ContractFacade } from '../../../src/contracts/ERC1271ContractFacade'
 import { EthereumAddress, recoverSignature, toEthereumAddress } from '@streamr/utils'
 import { Promise } from 'ts-toolbelt/out/Any/Promise'
 import { IERC1271 } from '../../../src/ethereumArtifacts/IERC1271'
 
-export class FakeEIP1271ContractFacade implements Methods<EIP1271ContractFacade> {
+export class FakeERC1271ContractFacade implements Methods<ERC1271ContractFacade> {
 
     private readonly allowedAddresses = new Map<EthereumAddress, Set<EthereumAddress>>
 
