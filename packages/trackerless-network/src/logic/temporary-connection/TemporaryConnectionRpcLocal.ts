@@ -20,8 +20,7 @@ interface TemporaryConnectionRpcLocalConfig {
     connectionLocker: ConnectionLocker
 } 
 
-// could be "content-delivery" instead of "delivery", but that is a breaking change
-const LOCK_ID_BASE = 'system/delivery/temporary-connection/'
+const LOCK_ID_BASE = 'system/content-delivery/temporary-connection/'
 
 export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
 
