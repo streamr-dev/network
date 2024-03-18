@@ -142,7 +142,11 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             (req: DisconnectNotice, context: ServerCallContext) => lockRpcLocal.gracefulDisconnect(req, context))
     }
 
-    public garbageCollectConnections(maxConnections: number, lastUsedLimit: number): void {
+    /*
+     * Removes connections if there are more than maxConnections: in that case we remove unlocked connections
+     * which hasn't been used within maxIdleTime.
+     */
+    public garbageCollectConnections(maxConnections: number, maxIdleTime: number): void {
         if (this.connections.size <= maxConnections) {
             return
         }
@@ -160,7 +164,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
                 logger.trace(`Attempting to disconnect a hanging connection to ${getNodeIdFromPeerDescriptor(connection.getPeerDescriptor()!)}`)
                 connection.close(false).catch(() => {})
                 this.connections.delete(key)
-            } else if (!this.locks.isLocked(connection.getNodeId()) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
+            } else if (!this.locks.isLocked(connection.getNodeId()) && Date.now() - connection.getLastUsedTimestamp() > maxIdleTime) {
                 logger.trace('disconnecting in timeout interval: ' + getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()))
                 disconnectionCandidates.addContact(connection)
             }
