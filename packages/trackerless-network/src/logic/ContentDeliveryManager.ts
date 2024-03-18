@@ -296,7 +296,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             return {
                 id: streamPartId,
                 controlLayerNeighbors: stream.layer1Node.getNeighbors(),
-                deliveryLayerNeighbors: stream.node.getNeighbors()
+                contentDeliveryLayerNeighbors: stream.node.getNeighbors()
             }
         })
 

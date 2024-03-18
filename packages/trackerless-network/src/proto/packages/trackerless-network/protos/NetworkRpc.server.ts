@@ -18,9 +18,9 @@ import { Empty } from "../../../google/protobuf/empty";
 import { StreamMessage } from "./NetworkRpc";
 import { ServerCallContext } from "@protobuf-ts/runtime-rpc";
 /**
- * @generated from protobuf service DeliveryRpc
+ * @generated from protobuf service ContentDeliveryRpc
  */
-export interface IDeliveryRpc<T = ServerCallContext> {
+export interface IContentDeliveryRpc<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: sendStreamMessage(StreamMessage) returns (google.protobuf.Empty);
      */

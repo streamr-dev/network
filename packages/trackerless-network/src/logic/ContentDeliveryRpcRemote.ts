@@ -4,12 +4,12 @@ import {
     LeaveStreamPartNotice,
     StreamMessage
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { DeliveryRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { ContentDeliveryRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { StreamPartID } from '@streamr/protocol'
 
 const logger = new Logger(module)
 
-export class DeliveryRpcRemote extends RpcRemote<DeliveryRpcClient> {
+export class ContentDeliveryRpcRemote extends RpcRemote<ContentDeliveryRpcClient> {
 
     async sendStreamMessage(msg: StreamMessage): Promise<void> {
         const options = this.formDhtRpcOptions({

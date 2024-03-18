@@ -6,7 +6,7 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
 import "packages/dht/protos/DhtRpc.proto";
 
-service DeliveryRpc {
+service ContentDeliveryRpc {
   rpc sendStreamMessage (StreamMessage) returns (google.protobuf.Empty);
   rpc leaveStreamPartNotice (LeaveStreamPartNotice) returns (google.protobuf.Empty);
 }
@@ -168,7 +168,7 @@ enum ProxyDirection {
 message StreamPartitionInfo {
   string id = 1;
   repeated dht.PeerDescriptor controlLayerNeighbors = 2;
-  repeated dht.PeerDescriptor deliveryLayerNeighbors = 3;
+  repeated dht.PeerDescriptor contentDeliveryLayerNeighbors = 3;
 }
 
 message ControlLayerInfo {

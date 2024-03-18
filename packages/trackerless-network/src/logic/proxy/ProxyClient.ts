@@ -17,15 +17,15 @@ import {
     ProxyDirection,
     StreamMessage
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { DeliveryRpcClient, ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { ContentDeliveryRpcClient, ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
 import { NodeList } from '../NodeList'
-import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
-import { DeliveryRpcLocal } from '../DeliveryRpcLocal'
+import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
+import { ContentDeliveryRpcLocal } from '../ContentDeliveryRpcLocal'
 import { Propagation } from '../propagation/Propagation'
 import { markAndCheckDuplicate } from '../utils'
 import { ProxyConnectionRpcRemote } from './ProxyConnectionRpcRemote'
-import { formStreamPartDeliveryServiceId } from '../formStreamPartDeliveryServiceId'
+import { formStreamPartContentDeliveryServiceId } from '../formStreamPartDeliveryServiceId'
 
 // TODO use config option or named constant?
 export const retry = async <T>(task: () => Promise<T>, description: string, abortSignal: AbortSignal, delay = 10000): Promise<T> => {
@@ -74,7 +74,7 @@ const SERVICE_ID = 'system/proxy-client'
 export class ProxyClient extends EventEmitter<Events> {
 
     private readonly rpcCommunicator: ListeningRpcCommunicator
-    private readonly deliveryRpcLocal: DeliveryRpcLocal
+    private readonly contentDeliveryRpcLocal: ContentDeliveryRpcLocal
     private readonly config: ProxyClientConfig
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector> = new Map()
     private definition?: ProxyDefinition
@@ -86,10 +86,10 @@ export class ProxyClient extends EventEmitter<Events> {
     constructor(config: ProxyClientConfig) {
         super()
         this.config = config
-        this.rpcCommunicator = new ListeningRpcCommunicator(formStreamPartDeliveryServiceId(config.streamPartId), config.transport)
+        this.rpcCommunicator = new ListeningRpcCommunicator(formStreamPartContentDeliveryServiceId(config.streamPartId), config.transport)
         // TODO use config option or named constant?
         this.neighbors = new NodeList(getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor), 1000)
-        this.deliveryRpcLocal = new DeliveryRpcLocal({
+        this.contentDeliveryRpcLocal = new ContentDeliveryRpcLocal({
             localPeerDescriptor: this.config.localPeerDescriptor,
             streamPartId: this.config.streamPartId,
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
@@ -121,9 +121,9 @@ export class ProxyClient extends EventEmitter<Events> {
 
     private registerDefaultServerMethods(): void {
         this.rpcCommunicator.registerRpcNotification(StreamMessage, 'sendStreamMessage',
-            (msg: StreamMessage, context) => this.deliveryRpcLocal.sendStreamMessage(msg, context))
+            (msg: StreamMessage, context) => this.contentDeliveryRpcLocal.sendStreamMessage(msg, context))
         this.rpcCommunicator.registerRpcNotification(LeaveStreamPartNotice, 'leaveStreamPartNotice',
-            (req: LeaveStreamPartNotice, context) => this.deliveryRpcLocal.leaveStreamPartNotice(req, context))
+            (req: LeaveStreamPartNotice, context) => this.contentDeliveryRpcLocal.leaveStreamPartNotice(req, context))
     }
 
     async setProxies(
@@ -189,11 +189,11 @@ export class ProxyClient extends EventEmitter<Events> {
         if (accepted) {
             this.config.connectionLocker.lockConnection(peerDescriptor, SERVICE_ID)
             this.connections.set(nodeId, { peerDescriptor, direction })
-            const remote = new DeliveryRpcRemote(
+            const remote = new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,
                 peerDescriptor,
                 this.rpcCommunicator,
-                DeliveryRpcClient
+                ContentDeliveryRpcClient
             )
             this.neighbors.add(remote)
             this.propagation.onNeighborJoined(nodeId)
