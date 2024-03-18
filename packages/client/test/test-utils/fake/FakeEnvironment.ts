@@ -34,6 +34,7 @@ export class FakeEnvironment {
     private network: FakeNetwork
     private chain: FakeChain
     private logger: FakeLogger
+    private eip1271ContractFacade: FakeEIP1271ContractFacade
     private dependencyContainer: DependencyContainer
     private clients: StreamrClient[] = []
 
@@ -41,6 +42,7 @@ export class FakeEnvironment {
         this.network = new FakeNetwork()
         this.chain = new FakeChain()
         this.logger = new FakeLogger()
+        this.eip1271ContractFacade = new FakeEIP1271ContractFacade()
         this.dependencyContainer = container.createChildContainer()
         const loggerFactory = {
             createLogger: () => this.logger
@@ -48,10 +50,10 @@ export class FakeEnvironment {
         this.dependencyContainer.register(FakeNetwork, { useValue: this.network })
         this.dependencyContainer.register(FakeChain, { useValue: this.chain })
         this.dependencyContainer.register(LoggerFactory, { useValue: loggerFactory } as any)
+        this.dependencyContainer.register(EIP1271ContractFacade, { useValue: this.eip1271ContractFacade } as any)
         this.dependencyContainer.register(NetworkNodeFactory, FakeNetworkNodeFactory)
         this.dependencyContainer.register(StreamRegistry, FakeStreamRegistry as any)
         this.dependencyContainer.register(StreamStorageRegistry, FakeStreamStorageRegistry as any)
-        this.dependencyContainer.register(EIP1271ContractFacade, FakeEIP1271ContractFacade as any)
         this.dependencyContainer.register(StorageNodeRegistry, FakeStorageNodeRegistry as any)
         this.dependencyContainer.register(OperatorRegistry, FakeOperatorRegistry as any)
     }
@@ -94,6 +96,10 @@ export class FakeEnvironment {
 
     getLogger(): FakeLogger {
         return this.logger
+    }
+
+    getEip1271ContractFacade(): FakeEIP1271ContractFacade {
+        return this.eip1271ContractFacade
     }
 
     async destroy(): Promise<void> {
