@@ -59,6 +59,9 @@ export interface ConnectionLocker {
     unlockConnection(targetDescriptor: PeerDescriptor, lockId: LockID): void
     weakLockConnection(nodeId: DhtAddress, lockId: LockID): void
     weakUnlockConnection(nodeId: DhtAddress, lockId: LockID): void
+    getLocalLockedConnectionCount(): number
+    getRemoteLockedConnectionCount(): number
+    getWeakLockedConnectionCount(): number
 }
 
 export interface PortRange {
@@ -334,14 +337,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
                 + ' ' + message.serviceId + ' ' + message.messageId)
             this.emit('message', message)
         }
-    }
-
-    public handleIncomingMessage(message: Message): boolean {
-        if (message.serviceId === INTERNAL_SERVICE_ID) {
-            this.rpcCommunicator?.handleMessageFromPeer(message)
-            return true
-        }
-        return false
     }
 
     private onData(data: Uint8Array, peerDescriptor: PeerDescriptor): void {
