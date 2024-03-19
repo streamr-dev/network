@@ -13,7 +13,7 @@ import EventEmitter from 'eventemitter3'
 import { DhtAddress, DhtAddressRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../identifiers'
 import { RingContactList, RingContacts } from './contact/RingContactList'
 import { RingIdRaw, getRingIdRawFromPeerDescriptor } from './contact/ringIdentifiers'
-import { LockID } from '../connection/ConnectionLockHandler'
+import { LockID } from '../connection/ConnectionLockStates'
 
 const logger = new Logger(module)
 

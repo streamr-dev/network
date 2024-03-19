@@ -7,7 +7,7 @@ export { getRandomRegion, getRegionDelayMatrix } from './connection/simulator/pi
 export { PeerDescriptor, Message, NodeType, DataEntry } from './proto/packages/dht/protos/DhtRpc'
 export { ITransport } from './transport/ITransport'
 export { ConnectionManager, ConnectionLocker, PortRange, TlsCertificate } from './connection/ConnectionManager'
-export { LockID } from './connection/ConnectionLockHandler'
+export { LockID } from './connection/ConnectionLockStates'
 export { DefaultConnectorFacade } from './connection/ConnectorFacade'
 export { DhtRpcOptions } from './rpc-protocol/DhtRpcOptions'
 export { RpcRemote, EXISTING_CONNECTION_TIMEOUT } from './dht/contact/RpcRemote'
