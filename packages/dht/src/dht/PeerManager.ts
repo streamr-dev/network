@@ -249,10 +249,11 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             referenceId,
             allowToContainReferenceId: true,
             emitEvents: false,
-            excludedNodeIds
+            excludedNodeIds,
+            maxSize: limit
         })
         this.bucket.toArray().forEach((contact) => closest.addContact(contact))
-        return closest.getClosestContacts(limit)
+        return closest.getAllContacts()
     }
 
     // TODO reduce copy-paste?
@@ -261,11 +262,11 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             referenceId,
             allowToContainReferenceId: true,
             emitEvents: false,
-            excludedNodeIds
+            excludedNodeIds,
+            maxSize: limit
         })
         this.contacts.getAllContacts().map((contact) => closest.addContact(contact))
-        // TODO should set the excludeSet and limit to SortedContactList constructor and remove these line
-        return closest.getClosestContacts(limit)
+        return closest.getAllContacts()
     }
 
     getClosestRingContactsTo(
