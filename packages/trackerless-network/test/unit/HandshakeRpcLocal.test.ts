@@ -2,7 +2,7 @@ import { DhtAddress, NodeType, getNodeIdFromPeerDescriptor, getRawFromDhtAddress
 import { NodeList } from '../../src/logic/NodeList'
 import { HandshakeRpcLocal } from '../../src/logic/neighbor-discovery/HandshakeRpcLocal'
 import { InterleaveRequest, StreamPartHandshakeRequest } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { createMockPeerDescriptor, createMockHandshakeRpcRemote, createMockDeliveryRpcRemote } from '../utils/utils'
+import { createMockPeerDescriptor, createMockHandshakeRpcRemote, createMockContentDeliveryRpcRemote } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
@@ -29,7 +29,7 @@ describe('HandshakeRpcLocal', () => {
             ongoingHandshakes,
             ongoingInterleaves,
             createRpcRemote: (_p) => createMockHandshakeRpcRemote(),
-            createDeliveryRpcRemote: (_p) => createMockDeliveryRpcRemote(),
+            createContentDeliveryRpcRemote: (_p) => createMockContentDeliveryRpcRemote(),
             handshakeWithInterleaving: async (_p, _t) => {
                 handshakeWithInterleaving()
                 return true
@@ -53,10 +53,10 @@ describe('HandshakeRpcLocal', () => {
     })
 
     it('handshake interleave', async () => {
-        neighbors.add(createMockDeliveryRpcRemote())
-        neighbors.add(createMockDeliveryRpcRemote())
-        neighbors.add(createMockDeliveryRpcRemote())
-        neighbors.add(createMockDeliveryRpcRemote())
+        neighbors.add(createMockContentDeliveryRpcRemote())
+        neighbors.add(createMockContentDeliveryRpcRemote())
+        neighbors.add(createMockContentDeliveryRpcRemote())
+        neighbors.add(createMockContentDeliveryRpcRemote())
         const req = StreamPartHandshakeRequest.create({
             streamPartId: STREAM_PART_ID,
             requestId: 'requestId'
@@ -110,10 +110,10 @@ describe('HandshakeRpcLocal', () => {
     })
 
     it('rejects handshakes if interleaving to the requestor is ongoing', async () => {
-        neighbors.add(createMockDeliveryRpcRemote())
-        neighbors.add(createMockDeliveryRpcRemote())
-        neighbors.add(createMockDeliveryRpcRemote())
-        neighbors.add(createMockDeliveryRpcRemote())
+        neighbors.add(createMockContentDeliveryRpcRemote())
+        neighbors.add(createMockContentDeliveryRpcRemote())
+        neighbors.add(createMockContentDeliveryRpcRemote())
+        neighbors.add(createMockContentDeliveryRpcRemote())
         const requestor = createMockPeerDescriptor()
         ongoingInterleaves.add(getNodeIdFromPeerDescriptor(requestor))
         const req = StreamPartHandshakeRequest.create({
@@ -130,10 +130,10 @@ describe('HandshakeRpcLocal', () => {
         const interleavingPeer1 = createMockPeerDescriptor()
         const interleavingPeer2 = createMockPeerDescriptor()
         const interleavingPeer3 = createMockPeerDescriptor()
-        neighbors.add(createMockDeliveryRpcRemote(interleavingPeer1))
-        neighbors.add(createMockDeliveryRpcRemote(interleavingPeer2))
-        neighbors.add(createMockDeliveryRpcRemote(interleavingPeer3))
-        neighbors.add(createMockDeliveryRpcRemote())
+        neighbors.add(createMockContentDeliveryRpcRemote(interleavingPeer1))
+        neighbors.add(createMockContentDeliveryRpcRemote(interleavingPeer2))
+        neighbors.add(createMockContentDeliveryRpcRemote(interleavingPeer3))
+        neighbors.add(createMockContentDeliveryRpcRemote())
         ongoingInterleaves.add(getNodeIdFromPeerDescriptor(interleavingPeer1))
         ongoingInterleaves.add(getNodeIdFromPeerDescriptor(interleavingPeer2))
         ongoingInterleaves.add(getNodeIdFromPeerDescriptor(interleavingPeer3))
@@ -149,11 +149,11 @@ describe('HandshakeRpcLocal', () => {
     })
 
     it('rejects handshakes if the requestor has more than maxNeighborCount neighbors', async () => {
-        neighbors.add(createMockDeliveryRpcRemote())
-        neighbors.add(createMockDeliveryRpcRemote())
-        neighbors.add(createMockDeliveryRpcRemote())
-        neighbors.add(createMockDeliveryRpcRemote())
-        neighbors.add(createMockDeliveryRpcRemote())
+        neighbors.add(createMockContentDeliveryRpcRemote())
+        neighbors.add(createMockContentDeliveryRpcRemote())
+        neighbors.add(createMockContentDeliveryRpcRemote())
+        neighbors.add(createMockContentDeliveryRpcRemote())
+        neighbors.add(createMockContentDeliveryRpcRemote())
         const req = StreamPartHandshakeRequest.create({
             streamPartId: STREAM_PART_ID,
             requestId: 'requestId'

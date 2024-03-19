@@ -5,8 +5,8 @@ import {
     SimulatorTransport,
     NodeType
 } from '@streamr/dht'
-import { DeliveryRpcRemote } from '../../src/logic/DeliveryRpcRemote'
-import { DeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
+import { ContentDeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import {
     LeaveStreamPartNotice,
     StreamMessage
@@ -17,10 +17,10 @@ import { createStreamMessage } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 
-describe('DeliveryRpcRemote', () => {
+describe('ContentDeliveryRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator
     let clientRpc: ListeningRpcCommunicator
-    let rpcRemote: DeliveryRpcRemote
+    let rpcRemote: ContentDeliveryRpcRemote
 
     const clientNode: PeerDescriptor = {
         nodeId: new Uint8Array([1, 1, 1]),
@@ -66,11 +66,11 @@ describe('DeliveryRpcRemote', () => {
             }
         )
 
-        rpcRemote = new DeliveryRpcRemote(
+        rpcRemote = new ContentDeliveryRpcRemote(
             clientNode,
             serverNode,
             clientRpc,
-            DeliveryRpcClient
+            ContentDeliveryRpcClient
         )
     })
 

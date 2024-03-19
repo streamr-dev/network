@@ -13,7 +13,6 @@ export interface RouterConfig {
     rpcCommunicator: RoutingRpcCommunicator
     localPeerDescriptor: PeerDescriptor
     connections: Map<DhtAddress, DhtNodeRpcRemote>
-    addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     handleMessage: (message: Message) => void
 }
 
@@ -42,7 +41,6 @@ export class Router {
     private registerLocalRpcMethods() {
         const rpcLocal = new RouterRpcLocal({
             doRouteMessage: (routedMessage: RouteMessageWrapper, mode?: RoutingMode) => this.doRouteMessage(routedMessage, mode),
-            addContact: (contact: PeerDescriptor, setActive: boolean) => this.config.addContact(contact, setActive),
             setForwardingEntries: (routedMessage: RouteMessageWrapper) => this.setForwardingEntries(routedMessage),
             duplicateRequestDetector: this.duplicateRequestDetector,
             localPeerDescriptor: this.config.localPeerDescriptor,

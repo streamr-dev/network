@@ -26,7 +26,7 @@ export class NeighborUpdateRpcRemote extends RpcRemote<NeighborUpdateRpcClient> 
                 removeMe: response.removeMe
             }
         } catch (err: any) {
-            logger.debug(`updateNeighbors to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
+            logger.debug(`updateNeighbors to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed`, { err })
             return {
                 peerDescriptors: [],
                 removeMe: true

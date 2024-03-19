@@ -115,7 +115,7 @@ export class RecursiveOperationManager {
                     15000
                 )
             } catch (err) {
-                logger.debug(`start failed with error ${err}`)
+                logger.debug('start failed', { err })
             }
         } else {
             session.start(this.config.serviceId)

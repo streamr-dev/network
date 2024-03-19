@@ -2,7 +2,7 @@ import { ListeningRpcCommunicator, Simulator, SimulatorTransport, getNodeIdFromP
 import { range } from 'lodash'
 import { NodeList } from '../../src/logic/NodeList'
 import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
-import { createMockPeerDescriptor, createMockDeliveryRpcRemote } from '../utils/utils'
+import { createMockPeerDescriptor, createMockContentDeliveryRpcRemote } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('Handshaker', () => {
@@ -61,7 +61,7 @@ describe('Handshaker', () => {
     })
 
     it('attemptHandshakesOnContact with known nodes that cannot be connected to', async () => {
-        range(2).forEach(() => randomNodeView.add(createMockDeliveryRpcRemote()))
+        range(2).forEach(() => randomNodeView.add(createMockContentDeliveryRpcRemote()))
         const res = await handshaker.attemptHandshakesOnContacts([])
         expect(res.length).toEqual(2)
     })

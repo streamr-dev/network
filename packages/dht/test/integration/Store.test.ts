@@ -3,7 +3,7 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
-import { createMockConnectionDhtNode, createMockPeerDescriptor, waitConnectionManagersReadyForTesting } from '../utils/utils'
+import { createMockConnectionDhtNode, createMockPeerDescriptor, waitForStableTopology } from '../utils/utils'
 
 const NUM_NODES = 100
 const MAX_CONNECTIONS = 20
@@ -33,7 +33,7 @@ describe('Storing data in DHT', () => {
             nodes.push(node)
         }
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
-        await waitConnectionManagersReadyForTesting(nodes.map((node) => node.connectionManager!), MAX_CONNECTIONS)
+        await waitForStableTopology(nodes, MAX_CONNECTIONS)
     }, 90000)
 
     afterEach(async () => {
