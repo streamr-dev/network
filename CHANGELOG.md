@@ -26,7 +26,7 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
-- Add support for publishing on behalf of an ERC-1271 contract
+- Add support for publishing messages on behalf of an [ERC-1271 contract](https://eips.ethereum.org/EIPS/eip-1271)
 
 #### Changed
 
