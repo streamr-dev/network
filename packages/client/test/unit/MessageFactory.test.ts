@@ -18,6 +18,8 @@ import { MessageFactory, MessageFactoryOptions } from '../../src/publish/Message
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
 import { merge, utf8ToBinary } from '@streamr/utils'
+import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
+import { mock } from 'jest-mock-extended'
 
 const WALLET = fastWallet()
 const STREAM_ID = toStreamID('/path', toEthereumAddress(WALLET.address))
@@ -29,6 +31,7 @@ const GROUP_KEY = GroupKey.generate()
 const createMessageFactory = async (opts?: {
     streamRegistry?: StreamRegistry
     groupKeyQueue?: GroupKeyQueue
+    erc1271ContractFacade?: ERC1271ContractFacade
 }) => {
     const authentication = createPrivateKeyAuthentication(WALLET.privateKey, undefined as any)
     return new MessageFactory(
@@ -41,7 +44,8 @@ const createMessageFactory = async (opts?: {
                     isPublicStream: false,
                     isStreamPublisher: true
                 }),
-                groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY)
+                groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY),
+                erc1271ContractFacade: mock<ERC1271ContractFacade>()
             },
             opts
         )
@@ -89,7 +93,11 @@ describe('MessageFactory', () => {
 
     it('happy path: ERC-1271', async () => {
         const contractAddress = randomEthereumAddress()
-        const messageFactory = await createMessageFactory()
+        const erc1271ContractFacade = mock<ERC1271ContractFacade>()
+        erc1271ContractFacade.isValidSignature.mockResolvedValueOnce(true)
+        const messageFactory = await createMessageFactory({
+            erc1271ContractFacade
+        })
         const msg = await createMessage({
             erc1271Contract: contractAddress
         }, messageFactory)
