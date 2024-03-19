@@ -23,12 +23,15 @@ import { formLookupKey } from '../utils/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { PublishMetadata } from './Publisher'
 import { createMessageRef, createRandomMsgChainId } from './messageChain'
+import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
+import { assertSignatureIsValid } from '../utils/validateStreamMessage'
 
 export interface MessageFactoryOptions {
     streamId: StreamID
     authentication: Authentication
     streamRegistry: Pick<StreamRegistry, 'getStream' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'clearStreamCache'>
     groupKeyQueue: GroupKeyQueue
+    erc1271ContractFacade: ERC1271ContractFacade
 }
 
 export const createSignedMessage = async (
@@ -59,12 +62,15 @@ export class MessageFactory {
     private readonly prevMsgRefs: Map<string, MessageRef> = new Map()
     private readonly streamRegistry: Pick<StreamRegistry, 'getStream' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'clearStreamCache'>
     private readonly groupKeyQueue: GroupKeyQueue
+    private readonly erc1271ContractFacade: ERC1271ContractFacade
+    private firstMessage = true
 
     constructor(opts: MessageFactoryOptions) {
         this.streamId = opts.streamId
         this.authentication = opts.authentication
         this.streamRegistry = opts.streamRegistry
         this.groupKeyQueue = opts.groupKeyQueue
+        this.erc1271ContractFacade = opts.erc1271ContractFacade
         this.defaultMessageChainIds = new Mapping(async () => {
             return createRandomMsgChainId()
         })
@@ -127,7 +133,7 @@ export class MessageFactory {
             }
         }
 
-        return createSignedMessage({
+        const msg = await createSignedMessage({
             messageId,
             messageType: StreamMessageType.MESSAGE,
             content: rawContent,
@@ -139,6 +145,15 @@ export class MessageFactory {
             contentType,
             signatureType: metadata.erc1271Contract ? SignatureType.ERC_1271 : SignatureType.SECP256K1,
         })
+
+        // Assert the signature is valid for the first message. This is done here to improve user experience
+        // in case the client signer is not authorized for the ERC-1271 contract.
+        if (this.firstMessage) {
+            this.firstMessage = false
+            await assertSignatureIsValid(msg, this.erc1271ContractFacade)
+        }
+
+        return msg
     }
 
     private async getPublisherId(metadata: PublishMetadata): Promise<EthereumAddress> {

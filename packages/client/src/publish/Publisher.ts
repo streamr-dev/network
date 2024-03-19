@@ -14,6 +14,7 @@ import { GroupKeyQueue } from './GroupKeyQueue'
 import { MessageFactory } from './MessageFactory'
 import { PublisherKeyExchange } from '../encryption/PublisherKeyExchange'
 import { toEthereumAddress } from '@streamr/utils'
+import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
 
 export interface PublishMetadata {
     timestamp?: string | number | Date
@@ -50,6 +51,7 @@ export class Publisher {
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
     private readonly publisherKeyExchange: PublisherKeyExchange
+    private readonly erc1271ContractFacade: ERC1271ContractFacade
 
     constructor(
         node: NetworkNodeFacade,
@@ -57,13 +59,15 @@ export class Publisher {
         groupKeyManager: GroupKeyManager,
         streamIdBuilder: StreamIDBuilder,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        publisherKeyExchange: PublisherKeyExchange
+        publisherKeyExchange: PublisherKeyExchange,
+        erc1271ContractFacade: ERC1271ContractFacade
     ) {
         this.node = node
         this.streamRegistry = streamRegistry
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
         this.publisherKeyExchange = publisherKeyExchange
+        this.erc1271ContractFacade = erc1271ContractFacade
         this.messageFactories = new Mapping(async (streamId: StreamID) => {
             return this.createMessageFactory(streamId)
         })
@@ -127,7 +131,8 @@ export class Publisher {
             streamId,
             authentication: this.authentication,
             streamRegistry: this.streamRegistry,
-            groupKeyQueue: await this.groupKeyQueues.get(streamId)
+            groupKeyQueue: await this.groupKeyQueues.get(streamId),
+            erc1271ContractFacade: this.erc1271ContractFacade
         })
     }
 }
