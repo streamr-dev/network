@@ -71,7 +71,6 @@ export class SimulationNode {
 
     private findMoreContacts(contactList: Contact[], shortlist: SortedContactList<Contact>) {
         contactList.forEach((contact) => {
-            shortlist.setContacted(contact.getNodeId())
             shortlist.setActive(contact.getNodeId())
             this.outgoingRpcCallCount++
             const returnedContacts = contact.dhtNode!.getClosestNodesTo(this.ownId, this)
@@ -97,7 +96,7 @@ export class SimulationNode {
         /* eslint-disable no-constant-condition */
         while (true) {
             let oldClosestContactId = this.neighborList.getClosestContactId()
-            let uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
+            let uncontacted = this.neighborList.getActiveContacts(this.ALPHA)
             if (uncontacted.length === 0) {
                 return
             }
@@ -105,7 +104,7 @@ export class SimulationNode {
             this.findMoreContacts(uncontacted, this.neighborList)
 
             if (oldClosestContactId === this.neighborList.getClosestContactId()) {
-                uncontacted = this.neighborList.getUncontactedContacts(this.K)
+                uncontacted = this.neighborList.getActiveContacts(this.K)
                 if (uncontacted.length === 0) {
                     return
                 }
@@ -118,7 +117,7 @@ export class SimulationNode {
                         (oldClosestContactId === this.neighborList.getClosestContactId())) {
                         return
                     }
-                    uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
+                    uncontacted = this.neighborList.getActiveContacts(this.ALPHA)
                     if (uncontacted.length === 0) {
                         return
                     }
