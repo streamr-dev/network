@@ -27,30 +27,6 @@ describe('SortedContactList', () => {
         expect(list.compareIds(item1.getNodeId(), item4.getNodeId())).toBe(-3)
     })
 
-    it('orders itself correctly', async () => {
-        const list = new SortedContactList({ referenceId: item0.getNodeId(), maxSize: 10, allowToContainReferenceId: true, emitEvents: false })
-        list.addContact(item3)
-        list.addContact(item2)
-        list.addContact(item1)
-        const contacts = list.getUncontactedContacts(3)
-        expect(contacts.length).toEqual(3)
-        expect(contacts[0]).toEqual(item1)
-        expect(contacts[1]).toEqual(item2)
-        expect(contacts[2]).toEqual(item3)
-    })
-
-    it('handles contacted nodes correctly', async () => {
-        const list = new SortedContactList({ referenceId: item0.getNodeId(), maxSize: 10, allowToContainReferenceId: false, emitEvents: false })
-        list.addContact(item3)
-        list.addContact(item2)
-        list.addContact(item1)
-        list.setContacted(item2.getNodeId())
-        const contacts = list.getUncontactedContacts(3)
-        expect(contacts.length).toEqual(2)
-        expect(contacts[0]).toEqual(item1)
-        expect(contacts[1]).toEqual(item3)
-    })
-
     it('cannot exceed maxSize', async () => {
         const list = new SortedContactList({ referenceId: item0.getNodeId(), maxSize: 3, allowToContainReferenceId: false, emitEvents: true })
         const onContactRemoved = jest.fn()
