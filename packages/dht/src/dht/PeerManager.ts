@@ -281,13 +281,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     }
 
     getContactCount(excludedNodeIds?: Set<DhtAddress>): number {
-        return this.contacts.getAllContacts().filter((contact) => {
-            if (!excludedNodeIds) {
-                return true
-            } else {
-                return !excludedNodeIds.has(contact.getNodeId())
-            }
-        }).length
+        return this.contacts.getSize(excludedNodeIds)
     }
 
     getConnectionCount(): number {
