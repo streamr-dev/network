@@ -36,7 +36,7 @@ describe('PublisherKeyExchange', () => {
         return stream
     }
 
-    const triggerGroupKeyRequest = async (erc1271Contract?: string): Promise<void> => {
+    const triggerGroupKeyRequest = async (erc1271Contract?: EthereumAddress): Promise<void> => {
         const subscriberClient = environment.createClient({
             auth: {
                 privateKey: subscriberWallet.privateKey
