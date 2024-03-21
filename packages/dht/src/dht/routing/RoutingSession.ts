@@ -212,8 +212,8 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                     } else {
                         this.onRequestFailed(nextPeer!.getNodeId())
                     }
-                } catch (e) {
-                    logger.debug('Unable to route message ', { error: e })
+                } catch (err) {
+                    logger.debug('Unable to route message ', { err })
                 } finally {
                     logger.trace('sendRouteMessageRequest returned')
                 }

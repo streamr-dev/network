@@ -33,10 +33,10 @@ export class ClientWebsocket extends EventEmitter<ConnectionEvents> implements I
         if (!this.destroyed) {
             this.socket = new Websocket(address, undefined, undefined, undefined, { rejectUnauthorized: !selfSigned })
             this.socket.binaryType = BINARY_TYPE
-            this.socket.onerror = (error: Error) => {
+            this.socket.onerror = (err: Error) => {
                 if (!this.destroyed) {
-                    logger.trace('WebSocket Client error: ' + error?.message, { error })
-                    this.emit('error', error.name)
+                    logger.trace('WebSocket Client error', { err })
+                    this.emit('error', err.name)
                 }
             }
 

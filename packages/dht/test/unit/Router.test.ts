@@ -50,7 +50,6 @@ describe('Router', () => {
         router = new Router({
             localPeerDescriptor: peerDescriptor1,
             rpcCommunicator: rpcCommunicator as any,
-            addContact: (_contact) => {},
             connections,
             handleMessage: () => {}
         })
