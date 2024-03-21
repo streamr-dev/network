@@ -33,6 +33,7 @@ export abstract class AbstractWebsocketClientConnection extends EventEmitter<Con
         this.connectionId = createRandomConnectionId()
     }
 
+    // TODO explicit default value for "selfSigned" or make it required
     public abstract connect(address: string, selfSigned?: boolean): void
     
     protected abstract stopListening(): void
