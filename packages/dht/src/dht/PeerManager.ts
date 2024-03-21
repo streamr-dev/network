@@ -13,7 +13,7 @@ import EventEmitter from 'eventemitter3'
 import { DhtAddress, DhtAddressRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../identifiers'
 import { RingContactList, RingContacts } from './contact/RingContactList'
 import { RingIdRaw, getRingIdRawFromPeerDescriptor } from './contact/ringIdentifiers'
-import { LockID } from '../connection/ConnectionLockHandler'
+import { LockID } from '../connection/ConnectionLockStates'
 
 const logger = new Logger(module)
 
@@ -249,10 +249,11 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             referenceId,
             allowToContainReferenceId: true,
             emitEvents: false,
-            excludedNodeIds
+            excludedNodeIds,
+            maxSize: limit
         })
         this.bucket.toArray().forEach((contact) => closest.addContact(contact))
-        return closest.getClosestContacts(limit)
+        return closest.getAllContacts()
     }
 
     // TODO reduce copy-paste?
@@ -261,11 +262,11 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             referenceId,
             allowToContainReferenceId: true,
             emitEvents: false,
-            excludedNodeIds
+            excludedNodeIds,
+            maxSize: limit
         })
         this.contacts.getAllContacts().map((contact) => closest.addContact(contact))
-        // TODO should set the excludeSet and limit to SortedContactList constructor and remove these line
-        return closest.getClosestContacts(limit)
+        return closest.getAllContacts()
     }
 
     getClosestRingContactsTo(
@@ -280,13 +281,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     }
 
     getContactCount(excludedNodeIds?: Set<DhtAddress>): number {
-        return this.contacts.getAllContacts().filter((contact) => {
-            if (!excludedNodeIds) {
-                return true
-            } else {
-                return !excludedNodeIds.has(contact.getNodeId())
-            }
-        }).length
+        return this.contacts.getSize(excludedNodeIds)
     }
 
     getConnectionCount(): number {

@@ -92,6 +92,10 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
         return this.contactsById.get(id)
     }
 
+    has(id: DhtAddress): boolean {
+        return this.contactsById.has(id)
+    }
+
     public setContacted(contactId: DhtAddress): void {
         if (this.contactsById.has(contactId)) {
             this.contactsById.get(contactId)!.contacted = true
@@ -105,25 +109,17 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
     }
 
     public getClosestContacts(limit?: number): C[] {
-        const ret: C[] = []
-        this.contactIds.forEach((contactId) => {
-            const contact = this.contactsById.get(contactId)
-            if (contact) {
-                ret.push(contact.contact)
-            }
-        })
-        if (limit === undefined) {
-            return ret
-        } else {
-            return ret.slice(0, limit)
-        }
+        const ret = this.getAllContacts()
+        return (limit === undefined) 
+            ? ret 
+            : ret.slice(0, limit)
     }
 
     public getUncontactedContacts(num: number): C[] {
         const ret: C[] = []
         for (const contactId of this.contactIds) {
-            const contact = this.contactsById.get(contactId)
-            if (contact && !contact.contacted) {
+            const contact = this.contactsById.get(contactId)!
+            if (!contact.contacted) {
                 ret.push(contact.contact)
                 if (ret.length >= num) {
                     return ret
@@ -136,8 +132,8 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
     public getActiveContacts(limit?: number): C[] {
         const ret: C[] = []
         this.contactIds.forEach((contactId) => {
-            const contact = this.contactsById.get(contactId)
-            if (contact && contact.active) {
+            const contact = this.contactsById.get(contactId)!
+            if (contact.active) {
                 ret.push(contact.contact)
             }
         })
@@ -187,8 +183,16 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
         return this.contactIds.map((nodeId) => this.contactsById.get(nodeId)!.contact)
     }
 
-    public getSize(): number {
-        return this.contactIds.length
+    public getSize(excludedNodeIds?: Set<DhtAddress>): number {
+        let excludedCount = 0
+        if (excludedNodeIds !== undefined) {
+            for (const nodeId of excludedNodeIds) {
+                if (this.has(nodeId)) {
+                    excludedCount++
+                }
+            }
+        }
+        return this.contactIds.length - excludedCount
     }
 
     public clear(): void {
