@@ -7,7 +7,9 @@
     "properties": {
         "rewardStreamIds": {
             "type": "array",
-            "items": { "type": "string" },
+            "items": {
+                "type": "string"
+            },
             "uniqueItems": true,
             "default": [
                 "streamr.eth/brubeck-mainnet/rewards/001ae9",
