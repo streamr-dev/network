@@ -13,6 +13,7 @@ import { assertSignatureIsValid } from '../../src/utils/validateStreamMessage'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { createSignaturePayload } from '../../src/signature'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('signature', () => {
     describe('SECP256K1', () => {
@@ -137,13 +138,14 @@ describe('signature', () => {
         let erc1271ContractFacade: MockProxy<ERC1271ContractFacade>
 
         beforeEach(() => {
+            const contractAddress = randomEthereumAddress()
             message = new StreamMessage({
                 messageId: new MessageID(
                     toStreamID('streamr.eth/foo/bar'),
                     0,
                     1704972511765,
                     0,
-                    toEthereumAddress('0x7e5f4552091a69125d5dfcb7b8c2659029395bdf'),
+                    contractAddress,
                     '401zi3b84sd64qn31fte'
                 ),
                 prevMsgRef: new MessageRef(1704972444019, 0),
@@ -152,7 +154,7 @@ describe('signature', () => {
                 contentType: ContentType.JSON,
                 encryptionType: EncryptionType.NONE,
                 // eslint-disable-next-line max-len
-                signature: hexToBinary('e53045adef4e01f7fe11d4b3073c6053688912e4db0ee780c189cd0d128c923457e1f6cbc1e47d9cd57e115afa9eb8524288887777c1056d638b193cae112dda1b'),
+                signature: hexToBinary('aaaaaaaaaaaaaaaaaaaa'),
                 signatureType: SignatureType.ERC_1271
             })
             erc1271ContractFacade = mock<ERC1271ContractFacade>()
