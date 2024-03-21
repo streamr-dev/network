@@ -10,7 +10,7 @@
     ],
     "exclude": [
         "src/connection/webrtc/BrowserWebrtcConnection.ts",
-        "src/connection/websocket/BrowserWebSocketClientConnection.ts"
+        "src/connection/websocket/BrowserWebsocketClientConnection.ts"
     ],
     "references": [
         { "path": "../utils/tsconfig.node.json" },
