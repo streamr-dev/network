@@ -150,7 +150,9 @@ export class MessageFactory {
         // in case the client signer is not authorized for the ERC-1271 contract.
         if (this.firstMessage) {
             this.firstMessage = false
-            await assertSignatureIsValid(msg, this.erc1271ContractFacade)
+            if (metadata.erc1271Contract !== undefined) {
+                await assertSignatureIsValid(msg, this.erc1271ContractFacade)
+            }
         }
 
         return msg
