@@ -16,4 +16,5 @@ export class FakeChain {
     readonly streams: Map<StreamID, StreamRegistryItem> = new Map()
     readonly storageAssignments: Multimap<StreamID, EthereumAddress> = new Multimap()
     readonly storageNodeMetadatas: Map<EthereumAddress, StorageNodeMetadata> = new Map()
+    readonly erc1271AllowedAddresses: Multimap<EthereumAddress, EthereumAddress> = new Multimap()
 }

@@ -34,7 +34,6 @@ export class FakeEnvironment {
     private network: FakeNetwork
     private chain: FakeChain
     private logger: FakeLogger
-    private erc1271ContractFacade: FakeERC1271ContractFacade
     private dependencyContainer: DependencyContainer
     private clients: StreamrClient[] = []
 
@@ -42,7 +41,6 @@ export class FakeEnvironment {
         this.network = new FakeNetwork()
         this.chain = new FakeChain()
         this.logger = new FakeLogger()
-        this.erc1271ContractFacade = new FakeERC1271ContractFacade()
         this.dependencyContainer = container.createChildContainer()
         const loggerFactory = {
             createLogger: () => this.logger
@@ -50,7 +48,7 @@ export class FakeEnvironment {
         this.dependencyContainer.register(FakeNetwork, { useValue: this.network })
         this.dependencyContainer.register(FakeChain, { useValue: this.chain })
         this.dependencyContainer.register(LoggerFactory, { useValue: loggerFactory } as any)
-        this.dependencyContainer.register(ERC1271ContractFacade, { useValue: this.erc1271ContractFacade } as any)
+        this.dependencyContainer.register(ERC1271ContractFacade, FakeERC1271ContractFacade as any)
         this.dependencyContainer.register(NetworkNodeFactory, FakeNetworkNodeFactory)
         this.dependencyContainer.register(StreamRegistry, FakeStreamRegistry as any)
         this.dependencyContainer.register(StreamStorageRegistry, FakeStreamStorageRegistry as any)
@@ -96,10 +94,6 @@ export class FakeEnvironment {
 
     getLogger(): FakeLogger {
         return this.logger
-    }
-
-    getErc1271ContractFacade(): FakeERC1271ContractFacade {
-        return this.erc1271ContractFacade
     }
 
     async destroy(): Promise<void> {

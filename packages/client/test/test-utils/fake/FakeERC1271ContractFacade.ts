@@ -3,27 +3,25 @@ import { ERC1271ContractFacade } from '../../../src/contracts/ERC1271ContractFac
 import { EthereumAddress, recoverSignature, toEthereumAddress } from '@streamr/utils'
 import { Promise } from 'ts-toolbelt/out/Any/Promise'
 import { IERC1271 } from '../../../src/ethereumArtifacts/IERC1271'
+import { FakeChain } from './FakeChain'
+import { Lifecycle, scoped } from 'tsyringe'
 
+@scoped(Lifecycle.ContainerScoped)
 export class FakeERC1271ContractFacade implements Methods<ERC1271ContractFacade> {
+    private readonly chain: FakeChain
 
-    private readonly allowedAddresses = new Map<EthereumAddress, Set<EthereumAddress>>
+    constructor(chain: FakeChain) {
+        this.chain = chain
+    }
 
     // eslint-disable-next-line class-methods-use-this
     async isValidSignature(contractAddress: EthereumAddress, payload: Uint8Array, signature: Uint8Array): Promise<boolean> {
-        const addresses = this.allowedAddresses.get(contractAddress)
         const clientWalletAddress = toEthereumAddress(recoverSignature(signature, payload))
-        return addresses !== undefined && addresses.has(clientWalletAddress)
+        return this.chain.erc1271AllowedAddresses.has(contractAddress, clientWalletAddress)
     }
 
     // eslint-disable-next-line class-methods-use-this
     setInstantiateContracts(_instantiateContracts: (address: EthereumAddress) => IERC1271[]): void {
         throw new Error('Not implemented')
-    }
-
-    addAllowedAddress(contractAddress: EthereumAddress, clientWalletAddresses: EthereumAddress): void {
-        if (!this.allowedAddresses.has(contractAddress)) {
-            this.allowedAddresses.set(contractAddress, new Set())
-        }
-        this.allowedAddresses.get(contractAddress)!.add(clientWalletAddresses)
     }
 }

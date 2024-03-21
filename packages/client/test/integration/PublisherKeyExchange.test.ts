@@ -118,7 +118,7 @@ describe('PublisherKeyExchange', () => {
             permissions: [StreamPermission.PUBLISH],
             user: erc1271ContractAddress
         })
-        environment.getErc1271ContractFacade().addAllowedAddress(erc1271ContractAddress, toEthereumAddress(publisherWallet.address))
+        environment.getChain().erc1271AllowedAddresses.add(erc1271ContractAddress, toEthereumAddress(publisherWallet.address))
 
         const key = GroupKey.generate()
         await publisherClient.updateEncryptionKey({
