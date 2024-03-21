@@ -1,6 +1,6 @@
 import { Methods } from '@streamr/test-utils'
 import { ERC1271ContractFacade } from '../../../src/contracts/ERC1271ContractFacade'
-import { EthereumAddress, recoverSignature, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, recoverAddress, toEthereumAddress } from '@streamr/utils'
 import { Promise } from 'ts-toolbelt/out/Any/Promise'
 import { IERC1271 } from '../../../src/ethereumArtifacts/IERC1271'
 import { FakeChain } from './FakeChain'
@@ -16,7 +16,7 @@ export class FakeERC1271ContractFacade implements Methods<ERC1271ContractFacade>
 
     // eslint-disable-next-line class-methods-use-this
     async isValidSignature(contractAddress: EthereumAddress, payload: Uint8Array, signature: Uint8Array): Promise<boolean> {
-        const clientWalletAddress = toEthereumAddress(recoverSignature(signature, payload))
+        const clientWalletAddress = toEthereumAddress(recoverAddress(signature, payload))
         return this.chain.erc1271AllowedAddresses.has(contractAddress, clientWalletAddress)
     }
 

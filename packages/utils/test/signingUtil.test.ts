@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 import assert from 'assert'
-import { createSignature, recoverSignature, verifySignature } from '../src/signingUtils'
+import { createSignature, recoverAddress, verifySignature } from '../src/signingUtils'
 import { toEthereumAddress } from '../src/EthereumAddress'
 import { hexToBinary } from '../src/binaryUtils'
 
@@ -14,12 +14,12 @@ describe('createSignature', () => {
     })
 })
 
-describe('recoverSignature', () => {
+describe('recoverAddress', () => {
     it('recovers correct address', async () => {
         const address = '0x752C8dCAC0788759aCB1B4BB7A9103596BEe3e6c'
         const payload = Buffer.from('ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
         const signature = hexToBinary('0xc97f1fbb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
-        const recoveredAddress = recoverSignature(signature, payload)
+        const recoveredAddress = recoverAddress(signature, payload)
         assert.strictEqual(recoveredAddress.toLowerCase(), address.toLowerCase())
     })
 
@@ -27,21 +27,21 @@ describe('recoverSignature', () => {
         const address = '0x752C8dCAC0788759aCB1B4BB7A9103596BEe3e6c'
         const payload = Buffer.from('ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
         const signature = hexToBinary('c97f1fbb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
-        const recoveredAddress = recoverSignature(signature, payload)
+        const recoveredAddress = recoverAddress(signature, payload)
         assert.strictEqual(recoveredAddress.toLowerCase(), address.toLowerCase())
     })
 
     it('throws if the address can not be recovered (invalid signature)', async () => {
         const payload = Buffer.from('ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
         const signature = hexToBinary('0xf00f00bb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
-        expect(() => recoverSignature(signature, payload)).toThrowError()
+        expect(() => recoverAddress(signature, payload)).toThrowError()
     })
 
     it('returns a different address if the content is tampered', async () => {
         const address = '0x752C8dCAC0788759aCB1B4BB7A9103596BEe3e6c'
         const payload = Buffer.from('foo_ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
         const signature = hexToBinary('0xc97f1fbb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
-        const recoveredAddress = recoverSignature(signature, payload)
+        const recoveredAddress = recoverAddress(signature, payload)
         assert.notStrictEqual(recoveredAddress.toLowerCase(), address.toLowerCase())
     })
 })

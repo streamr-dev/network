@@ -46,7 +46,7 @@ export function createSignature(payload: Uint8Array, privateKey: Uint8Array): Ui
     return result
 }
 
-export function recoverSignature(signature: Uint8Array, payload: Uint8Array): string {
+export function recoverAddress(signature: Uint8Array, payload: Uint8Array): string {
     const publicKey = recoverPublicKey(signature, payload)
     const pubKeyWithoutFirstByte = publicKey.subarray(1, publicKey.length)
     keccak.reset()
@@ -57,7 +57,7 @@ export function recoverSignature(signature: Uint8Array, payload: Uint8Array): st
 
 export function verifySignature(address: EthereumAddress, payload: Uint8Array, signature: Uint8Array): boolean {
     try {
-        const recoveredAddress = toEthereumAddress(recoverSignature(signature, payload))
+        const recoveredAddress = toEthereumAddress(recoverAddress(signature, payload))
         return recoveredAddress === address
     } catch (err) {
         return false

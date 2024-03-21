@@ -8,7 +8,7 @@ import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { queryAllReadonlyContracts } from '../utils/contract'
 import { Mapping } from '../utils/Mapping'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { recoverSignature, hash } from '@streamr/utils'
+import { recoverAddress, hash } from '@streamr/utils'
 
 const SUCCESS_MAGIC_VALUE = '0x1626ba7e' // Magic value for success as defined by ERC-1271
 
@@ -54,7 +54,7 @@ export class ERC1271ContractFacade {
     }
 
     async isValidSignature(contractAddress: EthereumAddress, payload: Uint8Array, signature: Uint8Array): Promise<boolean> {
-        const clientWalletAddress = toEthereumAddress(recoverSignature(signature, payload))
+        const clientWalletAddress = toEthereumAddress(recoverAddress(signature, payload))
         const cachedValue = this.publisherCache.get(formKey(contractAddress, clientWalletAddress))
         if (cachedValue !== undefined) {
             return cachedValue

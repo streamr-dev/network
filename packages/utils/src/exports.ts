@@ -42,7 +42,7 @@ import { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary, areEqualBinaries 
 import { filePathToNodeFormat } from './filePathToNodeFormat'
 import { retry } from './retry'
 import { toLengthPrefixedFrame, LengthPrefixedFrameDecoder } from './lengthPrefixedFrameUtils'
-import { verifySignature, createSignature, recoverSignature, hash } from './signingUtils'
+import { verifySignature, createSignature, recoverAddress, hash } from './signingUtils'
 import { ipv4ToNumber, numberToIpv4 } from './ipv4ToNumber'
 import { MapWithTtl } from './MapWithTtl'
 
@@ -103,7 +103,7 @@ export {
     toLengthPrefixedFrame,
     createSignature,
     verifySignature,
-    recoverSignature,
+    recoverAddress,
     ipv4ToNumber,
     numberToIpv4,
     hash,
