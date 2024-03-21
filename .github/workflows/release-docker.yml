@@ -1,6 +1,13 @@
 name: release docker
 on:
   workflow_dispatch:
+    inputs:
+      include_latest_tag:
+        type: choice
+        required: true
+        description: 'Include "latest" as one of the tags to be published'
+        default: 'false'
+        options: ['false', 'true']
 jobs:
   broker-docker-image:
     uses: ./.github/workflows/docker-build.yml
@@ -11,6 +18,7 @@ jobs:
       build_platforms: linux/amd64,linux/arm64
       branch: ${{ github.ref_name }}
       push_image: true
+      include_latest_tag: ${{ github.event.inputs.include_latest_tag == 'true' }}
     secrets:
       dockerhub_username: ${{secrets.DOCKERHUB_USERNAME}}
       dockerhub_token: ${{secrets.DOCKERHUB_TOKEN}}

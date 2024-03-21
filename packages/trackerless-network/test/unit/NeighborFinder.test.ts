@@ -3,7 +3,7 @@ import { NodeList } from '../../src/logic/NodeList'
 import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { expect } from 'expect'
-import { createMockDeliveryRpcRemote } from '../utils/utils'
+import { createMockContentDeliveryRpcRemote } from '../utils/utils'
 import { DhtAddress, createRandomDhtAddress, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 
 describe('NeighborFinder', () => {
@@ -18,7 +18,7 @@ describe('NeighborFinder', () => {
     beforeEach(() => {
         neighbors = new NodeList(nodeId, 15)
         nearbyNodeView = new NodeList(nodeId, 30)
-        range(30).forEach(() => nearbyNodeView.add(createMockDeliveryRpcRemote()))
+        range(30).forEach(() => nearbyNodeView.add(createMockContentDeliveryRpcRemote()))
         const mockDoFindNeighbors = async (excluded: DhtAddress[]) => {
             const target = nearbyNodeView.getRandom(excluded)
             if (Math.random() < 0.5) {

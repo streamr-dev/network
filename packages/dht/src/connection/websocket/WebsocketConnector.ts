@@ -20,7 +20,7 @@ import { NatType, PortRange, TlsCertificate } from '../ConnectionManager'
 import { WebsocketServerConnection } from './WebsocketServerConnection'
 import { Handshaker } from '../Handshaker'
 import queryString from 'querystring'
-import { range, sample } from 'lodash'
+import { shuffle } from 'lodash'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { expectedConnectionType } from '../../helpers/Connectivity'
 import { WebsocketServerStartError } from '../../helpers/errors'
@@ -192,8 +192,9 @@ export class WebsocketConnector {
                 version: LOCAL_PROTOCOL_VERSION
             }
         }
-        for (const reattempt of range(ENTRY_POINT_CONNECTION_ATTEMPTS)) {
-            const entryPoint = sample(this.config.entrypoints)!
+        const shuffledEntrypoints = shuffle(this.config.entrypoints)
+        while (shuffledEntrypoints.length > 0 && !this.abortController.signal.aborted) {
+            const entryPoint = shuffledEntrypoints[0]
             try {
                 // Do real connectivity checking
                 const connectivityRequest = {
@@ -208,12 +209,11 @@ export class WebsocketConnector {
                     throw new Err.ConnectionFailed('ConnectivityChecker is destroyed')
                 }
             } catch (err) {
-                if (reattempt < ENTRY_POINT_CONNECTION_ATTEMPTS) {
-                    const error = `Failed to connect to entrypoint with id ${getNodeIdFromPeerDescriptor(entryPoint)} `
-                        + `and URL ${connectivityMethodToWebsocketUrl(entryPoint.websocket!)}`
-                    logger.error(error, { error: err })
-                    await wait(2000)
-                }
+                const error = `Failed to connect to entrypoint with id ${getNodeIdFromPeerDescriptor(entryPoint)} `
+                    + `and URL ${connectivityMethodToWebsocketUrl(entryPoint.websocket!)}`
+                logger.error(error, { err })
+                shuffledEntrypoints.shift()
+                await wait(2000, this.abortController.signal)
             }
         }
         throw new WebsocketServerStartError(`Failed to connect to the entrypoints after ${ENTRY_POINT_CONNECTION_ATTEMPTS} attempts`)

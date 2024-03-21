@@ -91,7 +91,7 @@ export const sendConnectivityRequest = async (
                         return
                     }
                 } catch (err) {
-                    logger.trace(`Could not parse message: ${err}`)
+                    logger.trace('Could not parse message', { err })
                 }
             }
             outgoingConnection!.on('data', listener)
