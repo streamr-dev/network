@@ -31,10 +31,10 @@ import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
  * Sends group key responses
  */
 
-enum PublisherMatchType {
+enum ResponseType {
     NONE,
     NORMAL,
-    ERC1271
+    ERC_1271
 }
 
 @scoped(Lifecycle.ContainerScoped)
@@ -73,24 +73,13 @@ export class PublisherKeyExchange {
         this.erc1271ContractAddresses.add(address)
     }
 
-    private async matchPublisherType(publisher: EthereumAddress): Promise<PublisherMatchType> {
-        const authenticatedUser = await this.authentication.getAddress()
-        if (publisher === authenticatedUser) {
-            return PublisherMatchType.NORMAL
-        } else if (this.erc1271ContractAddresses.has(publisher)) {
-            return PublisherMatchType.ERC1271
-        } else {
-            return PublisherMatchType.NONE
-        }
-    }
-
     private async onMessage(request: StreamMessage): Promise<void> {
         if (OldGroupKeyRequest.is(request)) {
             try {
                 const { recipient, requestId, rsaPublicKey, groupKeyIds } = convertBytesToGroupKeyRequest(request.content)
-                const matchType = await this.matchPublisherType(recipient)
-                if (matchType !== PublisherMatchType.NONE) {
-                    this.logger.debug('Handling group key request', { requestId })
+                const responseType = await this.getResponseType(recipient)
+                if (responseType !== ResponseType.NONE) {
+                    this.logger.debug('Handling group key request', { requestId, responseType })
                     await validateStreamMessage(request, this.streamRegistry, this.erc1271ContractFacade)
                     const authenticatedUser = await this.authentication.getAddress()
                     const keys = without(
@@ -99,7 +88,7 @@ export class PublisherKeyExchange {
                     if (keys.length > 0) {
                         const response = await this.createResponse(
                             keys,
-                            matchType,
+                            responseType,
                             recipient,
                             request.getStreamPartID(),
                             rsaPublicKey,
@@ -125,9 +114,20 @@ export class PublisherKeyExchange {
         }
     }
 
+    private async getResponseType(publisher: EthereumAddress): Promise<ResponseType> {
+        const authenticatedUser = await this.authentication.getAddress()
+        if (publisher === authenticatedUser) {
+            return ResponseType.NORMAL
+        } else if (this.erc1271ContractAddresses.has(publisher)) {
+            return ResponseType.ERC_1271
+        } else {
+            return ResponseType.NONE
+        }
+    }
+
     private async createResponse(
         keys: GroupKey[],
-        matchType: PublisherMatchType,
+        responseType: ResponseType,
         publisher: EthereumAddress,
         streamPartId: StreamPartID,
         rsaPublicKey: string,
@@ -157,7 +157,7 @@ export class PublisherKeyExchange {
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             encryptionType: EncryptionType.NONE,
             authentication: this.authentication,
-            signatureType: matchType === PublisherMatchType.NORMAL ? SignatureType.SECP256K1 : SignatureType.ERC_1271,
+            signatureType: responseType === ResponseType.NORMAL ? SignatureType.SECP256K1 : SignatureType.ERC_1271,
         })
         return response
     }
