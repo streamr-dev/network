@@ -21,7 +21,7 @@ export class WebsocketClientConnection extends AbstractWebsocketClientConnection
             this.socket.on('message', (message: Buffer, isBinary: boolean) => {
                 if (!this.destroyed) {
                     if (isBinary === false) {
-                        logger.debug('Received string: \'' + message + '\'')
+                        logger.debug('Received string data, only binary data is supported')
                     } else {
                         this.onMessage(new Uint8Array(message))
                     }
