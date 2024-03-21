@@ -143,7 +143,7 @@ export class MessageFactory {
             newGroupKey,
             authentication: this.authentication,
             contentType,
-            signatureType: metadata.erc1271Contract ? SignatureType.ERC_1271 : SignatureType.SECP256K1,
+            signatureType: metadata.erc1271Contract !== undefined ? SignatureType.ERC_1271 : SignatureType.SECP256K1,
         })
 
         // Assert the signature is valid for the first message. This is done here to improve user experience
