@@ -64,9 +64,9 @@ export class ERC1271ContractFacade {
             const result = await queryAllReadonlyContracts((contract) => {
                 return contract.isValidSignature(hash(payload), signature)
             }, contracts)
-            const validSignature = result === SUCCESS_MAGIC_VALUE
-            this.publisherCache.set(cacheKey, validSignature)
-            return validSignature
+            const isValid = result === SUCCESS_MAGIC_VALUE
+            this.publisherCache.set(cacheKey, isValid)
+            return isValid
         }
 
     }
