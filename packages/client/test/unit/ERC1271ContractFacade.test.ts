@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
+import { ERC1271ContractFacade, SUCCESS_MAGIC_VALUE } from '../../src/contracts/ERC1271ContractFacade'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { StrictStreamrClientConfig } from '../../src'
 import type { IERC1271 as ERC1271Contract } from '../../src/ethereumArtifacts/IERC1271'
@@ -37,7 +37,7 @@ describe('ERC1271ContractFacade', () => {
     })
 
     it('isValidSignature: valid case', async () => {
-        contract.isValidSignature.mockResolvedValue('0x1626ba7e')
+        contract.isValidSignature.mockResolvedValue(SUCCESS_MAGIC_VALUE)
         const result = await contractFacade.isValidSignature(CONTRACT_ADDRESS, PAYLOAD, SIGNATURE)
         expect(result).toEqual(true)
     })
@@ -49,7 +49,7 @@ describe('ERC1271ContractFacade', () => {
     })
 
     it('isValidSignature: caches the valid result', async () => {
-        contract.isValidSignature.mockResolvedValue('0x1626ba7e')
+        contract.isValidSignature.mockResolvedValue(SUCCESS_MAGIC_VALUE)
         await contractFacade.isValidSignature(CONTRACT_ADDRESS, PAYLOAD, SIGNATURE)
         await contractFacade.isValidSignature(CONTRACT_ADDRESS, PAYLOAD, SIGNATURE)
         expect(contract.isValidSignature).toHaveBeenCalledTimes(1)
@@ -77,7 +77,7 @@ describe('ERC1271ContractFacade', () => {
                 throw new Error('test: should not be here')
             }
         })
-        contract.isValidSignature.mockResolvedValue('0x1626ba7e')
+        contract.isValidSignature.mockResolvedValue(SUCCESS_MAGIC_VALUE)
         contract2.isValidSignature.mockResolvedValue('0xaaaaaaaa')
         await contractFacade.isValidSignature(CONTRACT_ADDRESS, PAYLOAD, SIGNATURE)
         await contractFacade.isValidSignature(CONTRACT_ADDRESS_2, PAYLOAD, SIGNATURE)

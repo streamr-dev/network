@@ -10,7 +10,7 @@ import { Mapping } from '../utils/Mapping'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { recoverAddress, hash } from '@streamr/utils'
 
-const SUCCESS_MAGIC_VALUE = '0x1626ba7e' // Magic value for success as defined by ERC-1271
+export const SUCCESS_MAGIC_VALUE = '0x1626ba7e' // Magic value for success as defined by ERC-1271
 
 export type CacheKey = BrandedString<string>
 
