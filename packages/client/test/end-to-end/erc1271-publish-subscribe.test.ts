@@ -4,7 +4,7 @@ import { waitForCondition, areEqualBinaries, toEthereumAddress, EthereumAddress 
 import { StreamrClient } from '../../src/StreamrClient'
 import { createTestStream, createTestClient } from '../test-utils/utils'
 import { StreamPermission } from '../../src/permission'
-import { deployMockERC1271Contract } from '../test-utils/deployMockERC1271Contract'
+import { deployTestERC1271Contract } from '../test-utils/deployTestERC1271Contract'
 import { StreamID } from '@streamr/protocol'
 import { MessageMetadata } from '../../src'
 
@@ -19,7 +19,7 @@ describe('ERC-1271: publish and subscribe', () => {
     beforeAll(async () => {
         subscriberWallet = fastWallet()
         publisherWallet = new Wallet(await fetchPrivateKeyWithGas())
-        erc1271ContractAddress = await deployMockERC1271Contract([toEthereumAddress(publisherWallet.address)])
+        erc1271ContractAddress = await deployTestERC1271Contract([toEthereumAddress(publisherWallet.address)])
     }, TIMEOUT)
 
     async function createStream(publicSubscribePermission: boolean): Promise<StreamID> {
@@ -67,7 +67,7 @@ describe('ERC-1271: publish and subscribe', () => {
             await publisher.publish(streamId, PAYLOAD, { erc1271Contract: erc1271ContractAddress })
             await waitForCondition(() => messages.length > 0, TIMEOUT)
             expect(metadatas[0].signatureType).toEqual('ERC_1271')
-            expect(areEqualBinaries(messages[0] as Uint8Array, PAYLOAD)).toEqual(true)
+            expect(areEqualBinaries(messages[0] as Uint8Array, PAYLOAD)).toBe(true)
         }, TIMEOUT)
     })
 
@@ -97,7 +97,7 @@ describe('ERC-1271: publish and subscribe', () => {
             await publisher.publish(streamId, PAYLOAD, { erc1271Contract: erc1271ContractAddress })
             await waitForCondition(() => messages.length > 0, TIMEOUT)
             expect(metadatas[0].signatureType).toEqual('ERC_1271')
-            expect(areEqualBinaries(messages[0] as Uint8Array, PAYLOAD)).toEqual(true)
+            expect(areEqualBinaries(messages[0] as Uint8Array, PAYLOAD)).toBe(true)
         }, TIMEOUT)
     })
 })

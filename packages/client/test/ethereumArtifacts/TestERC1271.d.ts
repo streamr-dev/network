@@ -23,7 +23,7 @@ import type {
   PromiseOrValue,
 } from "../../common";
 
-export interface MockERC1271Interface extends utils.Interface {
+export interface TestERC1271Interface extends utils.Interface {
   functions: {
     "addressList(uint256)": FunctionFragment;
     "getAddresses()": FunctionFragment;
@@ -76,12 +76,12 @@ export interface MockERC1271Interface extends utils.Interface {
   events: {};
 }
 
-export interface MockERC1271 extends BaseContract {
+export interface TestERC1271 extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
 
-  interface: MockERC1271Interface;
+  interface: TestERC1271Interface;
 
   queryFilter<TEvent extends TypedEvent>(
     event: TypedEventFilter<TEvent>,

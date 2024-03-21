@@ -1,8 +1,8 @@
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { createTestClient } from './utils'
 import { ContractFactory } from '@ethersproject/contracts'
-import MockERC1271Json from '../ethereumArtifacts/MockERC1271Abi.json'
-import { MockERC1271 } from '../ethereumArtifacts/MockERC1271'
+import TestERC1271Abi from '../ethereumArtifacts/TestERC1271Abi.json'
+import { TestERC1271 } from '../ethereumArtifacts/TestERC1271'
 import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 
 // eslint-disable-next-line max-len
@@ -10,16 +10,16 @@ const MOCK_ERC1271_BYTECODE = '0x608060405234801561001057600080fd5b5061073e80610
 
 const logger = new Logger(module)
 
-export async function deployMockERC1271Contract(allowedAddresses: EthereumAddress[]): Promise<EthereumAddress> {
+export async function deployTestERC1271Contract(allowedAddresses: EthereumAddress[]): Promise<EthereumAddress> {
     const privateKey = await fetchPrivateKeyWithGas()
     const client = createTestClient(privateKey)
     try {
         const deployerWallet = await client.getSigner()
-        const factory = new ContractFactory(MockERC1271Json, MOCK_ERC1271_BYTECODE, deployerWallet)
-        const contract = await factory.deploy() as MockERC1271
+        const factory = new ContractFactory(TestERC1271Abi, MOCK_ERC1271_BYTECODE, deployerWallet)
+        const contract = await factory.deploy() as TestERC1271
         await contract.deployed()
         await (await contract.setAddresses(allowedAddresses)).wait()
-        logger.info('Deployed MockERC1271 contract', { contractAddress: contract.address, allowedAddresses })
+        logger.info('Deployed TestERC1271 contract', { contractAddress: contract.address, allowedAddresses })
         return toEthereumAddress(contract.address)
     } finally {
         await client.destroy()
