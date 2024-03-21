@@ -10,6 +10,7 @@ const PRIVATE_KEY = fastPrivateKey()
 const PAYLOAD = new Uint8Array([1, 2, 3])
 const SIGNATURE = createSignature(PAYLOAD, hexToBinary(PRIVATE_KEY))
 const CONTRACT_ADDRESS = randomEthereumAddress()
+const CONTRACT_ADDRESS_2 = randomEthereumAddress()
 
 describe('ERC1271ContractFacade', () => {
     let contract: MockProxy<ERC1271Contract>
@@ -25,7 +26,7 @@ describe('ERC1271ContractFacade', () => {
             if (address === CONTRACT_ADDRESS) {
                 return [contract]
             } else {
-                return []
+                throw new Error('test: should not be here')
             }
         })
     })
@@ -70,14 +71,16 @@ describe('ERC1271ContractFacade', () => {
         contractFacade.setInstantiateContracts((address: EthereumAddress) => {
             if (address === CONTRACT_ADDRESS) {
                 return [contract]
-            } else {
+            } else if (address === CONTRACT_ADDRESS_2) {
                 return [contract2]
+            } else {
+                throw new Error('test: should not be here')
             }
         })
         contract.isValidSignature.mockResolvedValue('0x1626ba7e')
         contract2.isValidSignature.mockResolvedValue('0xaaaaaaaa')
         await contractFacade.isValidSignature(CONTRACT_ADDRESS, PAYLOAD, SIGNATURE)
-        await contractFacade.isValidSignature(randomEthereumAddress(), PAYLOAD, SIGNATURE)
+        await contractFacade.isValidSignature(CONTRACT_ADDRESS_2, PAYLOAD, SIGNATURE)
         expect(contract.isValidSignature).toHaveBeenCalledTimes(1)
         expect(contract2.isValidSignature).toHaveBeenCalledTimes(1)
     })
