@@ -16,7 +16,7 @@ export type CacheKey = BrandedString<string>
 
 const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
 
-function formKey(contractAddress: EthereumAddress, clientWalletAddress: EthereumAddress): CacheKey {
+function formCacheKey(contractAddress: EthereumAddress, clientWalletAddress: EthereumAddress): CacheKey {
     return `${contractAddress}_${clientWalletAddress}` as CacheKey
 }
 
@@ -55,7 +55,8 @@ export class ERC1271ContractFacade {
 
     async isValidSignature(contractAddress: EthereumAddress, payload: Uint8Array, signature: Uint8Array): Promise<boolean> {
         const clientWalletAddress = toEthereumAddress(recoverAddress(signature, payload))
-        const cachedValue = this.publisherCache.get(formKey(contractAddress, clientWalletAddress))
+        const cacheKey = formCacheKey(contractAddress, clientWalletAddress)
+        const cachedValue = this.publisherCache.get(cacheKey)
         if (cachedValue !== undefined) {
             return cachedValue
         } else {
@@ -64,7 +65,7 @@ export class ERC1271ContractFacade {
                 return contract.isValidSignature(hash(payload), signature)
             }, contracts)
             const validSignature = result === SUCCESS_MAGIC_VALUE
-            this.publisherCache.set(formKey(contractAddress, clientWalletAddress), validSignature)
+            this.publisherCache.set(cacheKey, validSignature)
             return validSignature
         }
 
