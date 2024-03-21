@@ -9,7 +9,6 @@ import { createSignature, EthereumAddress, hexToBinary, hash } from '@streamr/ut
 const PRIVATE_KEY = fastPrivateKey()
 const PAYLOAD = new Uint8Array([1, 2, 3])
 const SIGNATURE = createSignature(PAYLOAD, hexToBinary(PRIVATE_KEY))
-
 const CONTRACT_ADDRESS = randomEthereumAddress()
 
 describe('ERC1271ContractFacade', () => {
