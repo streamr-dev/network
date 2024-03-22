@@ -3,11 +3,12 @@ import { wait } from '@streamr/utils'
 
 describe('CacheAsyncFn', () => {
 
-    let plainFn: jest.Mock<(key1: string, key2: string) => Promise<string>>
+    let plainFn: jest.Mock<Promise<string>, [key1: string, key2: string]>
     let cachedFn: (key1: string, key2: string) => Promise<string>
 
     beforeEach(() => {
-        plainFn = jest.fn().mockImplementation(async (key1: string, key2: string) => {
+        plainFn = jest.fn()
+        plainFn.mockImplementation(async (key1: string, key2: string) => {
             await wait(100)
             return `${key1}${key2}`.toUpperCase()
         })
@@ -40,5 +41,25 @@ describe('CacheAsyncFn', () => {
         expect(result1).toBe('FOOBAR')
         expect(result2).toBe('FOOBAR')
         expect(plainFn).toBeCalledTimes(1)
+    })
+
+    it('rejections are not cached', async () => {
+        plainFn.mockImplementation(async (key1: string, key2: string) => {
+            throw new Error(`error ${key1}-${key2}`)
+        })
+        await expect(cachedFn('foo', 'x')).rejects.toEqual(new Error('error foo-x'))
+        await expect(cachedFn('foo', 'x')).rejects.toEqual(new Error('error foo-x'))
+
+        expect(plainFn).toBeCalledTimes(2) // would be 1 if rejections were cached
+    })
+
+    it('throws are not cached', async () => {
+        plainFn.mockImplementation((key1: string, key2: string) => {
+            throw new Error(`error ${key1}-${key2}`)
+        })
+        await expect(cachedFn('foo', 'x')).rejects.toEqual(new Error('error foo-x'))
+        await expect(cachedFn('foo', 'x')).rejects.toEqual(new Error('error foo-x'))
+
+        expect(plainFn).toBeCalledTimes(2) // would be 1 if throws were cached
     })
 })
