@@ -26,6 +26,7 @@ import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
+import { StreamrClientEventEmitter } from '../events'
 
 /*
  * Sends group key responses
@@ -36,6 +37,8 @@ enum ResponseType {
     NORMAL,
     ERC_1271
 }
+
+const logger = new Logger(module)
 
 @scoped(Lifecycle.ContainerScoped)
 export class PublisherKeyExchange {
@@ -54,6 +57,7 @@ export class PublisherKeyExchange {
         @inject(ERC1271ContractFacade) erc1271ContractFacade: ERC1271ContractFacade,
         store: LocalGroupKeyStore,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
+        eventEmitter: StreamrClientEventEmitter,
         loggerFactory: LoggerFactory
     ) {
         this.networkNodeFacade = networkNodeFacade
@@ -67,10 +71,15 @@ export class PublisherKeyExchange {
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.logger.debug('Started')
         })
-    }
-
-    addErc1271ContractAddress(address: EthereumAddress): void {
-        this.erc1271ContractAddresses.add(address)
+        eventEmitter.on('publish', (msg) => {
+            if (msg.signatureType === SignatureType.ERC_1271) {
+                const address = msg.getPublisherId()
+                if (!this.erc1271ContractAddresses.has(address)) {
+                    logger.info('Add new ERC-1271 publisher', { address })
+                    this.erc1271ContractAddresses.add(address)
+                }
+            }
+        })
     }
 
     private async onMessage(request: StreamMessage): Promise<void> {

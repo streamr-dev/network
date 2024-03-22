@@ -12,8 +12,6 @@ import { StreamDefinition } from '../types'
 import { Mapping } from '../utils/Mapping'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { MessageFactory } from './MessageFactory'
-import { PublisherKeyExchange } from '../encryption/PublisherKeyExchange'
-import { toEthereumAddress } from '@streamr/utils'
 import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
 
 export interface PublishMetadata {
@@ -50,7 +48,6 @@ export class Publisher {
     private readonly streamRegistry: StreamRegistry
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
-    private readonly publisherKeyExchange: PublisherKeyExchange
     private readonly erc1271ContractFacade: ERC1271ContractFacade
 
     constructor(
@@ -59,14 +56,12 @@ export class Publisher {
         groupKeyManager: GroupKeyManager,
         streamIdBuilder: StreamIDBuilder,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        publisherKeyExchange: PublisherKeyExchange,
         erc1271ContractFacade: ERC1271ContractFacade
     ) {
         this.node = node
         this.streamRegistry = streamRegistry
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
-        this.publisherKeyExchange = publisherKeyExchange
         this.erc1271ContractFacade = erc1271ContractFacade
         this.messageFactories = new Mapping(async (streamId: StreamID) => {
             return this.createMessageFactory(streamId)
@@ -82,9 +77,6 @@ export class Publisher {
         metadata?: PublishMetadata
     ): Promise<StreamMessage> {
         const timestamp = parseTimestamp(metadata)
-        if (metadata?.erc1271Contract !== undefined) {
-            this.publisherKeyExchange.addErc1271ContractAddress(toEthereumAddress(metadata.erc1271Contract))
-        }
         /*
          * There are some steps in the publish process which need to be done sequentially:
          * - message chaining

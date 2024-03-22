@@ -142,7 +142,7 @@ export class StreamrClient {
         metadata?: PublishMetadata
     ): Promise<Message> {
         const result = await this.publisher.publish(streamDefinition, content, metadata)
-        this.eventEmitter.emit('publish', undefined)
+        this.eventEmitter.emit('publish', result)
         return convertStreamMessageToMessage(result)
     }
 

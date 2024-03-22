@@ -3,6 +3,7 @@ import { ObservableEventEmitter } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { StreamCreationEvent } from './contracts/StreamRegistry'
 import { StorageNodeAssignmentEvent } from './contracts/StreamStorageRegistry'
+import { StreamMessage } from '@streamr/protocol'
 
 export interface StreamrClientEvents {
     createStream: (payload: StreamCreationEvent) => void
@@ -16,7 +17,7 @@ export interface StreamrClientEvents {
 
 // events for internal communication between StreamrClient components
 export interface InternalEvents {
-    publish: () => void
+    publish: (message: StreamMessage) => void
     subscribe: () => void
 }
 

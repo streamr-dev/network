@@ -280,7 +280,7 @@ export class Stream {
      */
     async publish(content: unknown, metadata?: PublishMetadata): Promise<Message> {
         const result = await this._publisher.publish(this.id, content, metadata)
-        this._eventEmitter.emit('publish', undefined)
+        this._eventEmitter.emit('publish', result)
         return convertStreamMessageToMessage(result)
     }
 
