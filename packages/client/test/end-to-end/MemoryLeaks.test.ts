@@ -24,6 +24,11 @@ import { AuthenticationInjectionToken, createAuthentication } from '../../src/Au
 import { merge, TheGraphClient } from '@streamr/utils'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { config as CHAIN_CONFIG } from '@streamr/config'
+import {
+    createNewInstantiateContractsFn,
+    InstantiateERC1271ContractsToken
+} from '../../src/contracts/ERC1271ContractFacade'
+import { ContractFactory } from '../../src/ContractFactory'
 
 const Dependencies = {
     NetworkNodeFacade,
@@ -90,6 +95,9 @@ describeOnlyInNodeJs('MemoryLeaks', () => { // LeaksDetector is not supported in
                 const childContainer = rootContainer.createChildContainer()
                 childContainer.register(AuthenticationInjectionToken, { useValue: createAuthentication(config) })
                 childContainer.register(ConfigInjectionToken, { useValue: config })
+                childContainer.register(InstantiateERC1271ContractsToken, {
+                    useValue: createNewInstantiateContractsFn(childContainer.resolve<ContractFactory>(ContractFactory), config)
+                })
                 childContainer.register(TheGraphClient, { useValue:
                     createTheGraphClient(childContainer.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), config)
                 })
