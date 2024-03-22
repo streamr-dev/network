@@ -75,14 +75,14 @@ export const assertSignatureIsValid = async (streamMessage: StreamMessage, erc12
     })
     let success: boolean
     try {
-        if (streamMessage.signatureType === SignatureType.ERC_1271) {
+        if (streamMessage.signatureType !== SignatureType.ERC_1271) {
+            success = verifySignature(streamMessage.getPublisherId(), payload, streamMessage.signature)
+        } else {
             success = await erc1271ContractFacade.isValidSignature(
                 streamMessage.getPublisherId(),
                 payload,
                 streamMessage.signature
             )
-        } else {
-            success = verifySignature(streamMessage.getPublisherId(), payload, streamMessage.signature)
         }
     } catch (err) {
         throw new StreamMessageError(`An error occurred during address recovery from signature: ${err}`, streamMessage)
