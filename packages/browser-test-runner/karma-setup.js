@@ -56,6 +56,8 @@ expect.extend(jestExtendedMatchers)
 window.test = window.it
 window.test.each = (inputs) => (testName, test) =>
     inputs.forEach((args) => window.it(format(testName, args), () => test(args)))
+window.describe.each = (inputs) => (testName, test) =>
+    inputs.forEach((args) => window.describe(format(testName, args), () => test(args)))
 window.test.todo = function() {
     return undefined
 }
