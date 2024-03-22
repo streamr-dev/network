@@ -122,6 +122,20 @@ describe('MessageFactory', () => {
         })
     })
 
+    it('throws if given erc1271Contract that is not signer for', async () => {
+        const contractAddress = randomEthereumAddress()
+        const erc1271ContractFacade = mock<ERC1271ContractFacade>()
+        erc1271ContractFacade.isValidSignature.mockResolvedValueOnce(false)
+        const messageFactory = await createMessageFactory({
+            erc1271ContractFacade
+        })
+        await expect(() =>
+            createMessage({
+                erc1271Contract: contractAddress
+            }, messageFactory)
+        ).rejects.toThrow('Signature validation failed')
+    })
+
     it('throws if given non-ethereum address as erc1271Contract', async () => {
         const messageFactory = await createMessageFactory()
         await expect(() =>
