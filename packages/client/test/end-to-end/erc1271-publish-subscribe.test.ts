@@ -41,7 +41,7 @@ describe('ERC-1271: publish and subscribe', () => {
         return stream.id
     }
 
-    describe('public stream', () => {
+    describe.each(['public', 'private'])('%s stream', (publicOrPrivate) => {
         let publisher: StreamrClient
         let subscriber: StreamrClient
         let streamId: StreamID
@@ -49,7 +49,7 @@ describe('ERC-1271: publish and subscribe', () => {
         beforeEach(async () => {
             subscriber = createTestClient(subscriberWallet.privateKey)
             publisher = createTestClient(publisherWallet.privateKey)
-            streamId = await createStream(true)
+            streamId = await createStream(publicOrPrivate === 'public')
         }, TIMEOUT)
 
         afterEach(async () => {
@@ -67,36 +67,11 @@ describe('ERC-1271: publish and subscribe', () => {
             await publisher.publish(streamId, PAYLOAD, { erc1271Contract: erc1271ContractAddress })
             await waitForCondition(() => messages.length > 0, TIMEOUT)
             expect(metadatas[0].signatureType).toEqual('ERC_1271')
-            expect(areEqualBinaries(messages[0] as Uint8Array, PAYLOAD)).toBe(true)
-        }, TIMEOUT)
-    })
-
-    describe('private stream', () => {
-        let publisher: StreamrClient
-        let subscriber: StreamrClient
-        let streamId: StreamID
-
-        beforeEach(async () => {
-            subscriber = createTestClient(subscriberWallet.privateKey)
-            publisher = createTestClient(publisherWallet.privateKey)
-            streamId = await createStream(false)
-        }, TIMEOUT)
-
-        afterEach(async () => {
-            await subscriber.destroy()
-            await publisher.destroy()
-        })
-
-        it('ERC-1271 signed published message is received by subscriber', async () => {
-            const messages: unknown[] = []
-            const metadatas: MessageMetadata[] = []
-            await subscriber.subscribe(streamId, (msg: any, metadata) => {
-                messages.push(msg)
-                metadatas.push(metadata)
-            })
-            await publisher.publish(streamId, PAYLOAD, { erc1271Contract: erc1271ContractAddress })
-            await waitForCondition(() => messages.length > 0, TIMEOUT)
-            expect(metadatas[0].signatureType).toEqual('ERC_1271')
+            if (publicOrPrivate === 'public') {
+                expect(metadatas[0].groupKeyId).toEqual(undefined)
+            } else {
+                expect(metadatas[0].groupKeyId).toBeString()
+            }
             expect(areEqualBinaries(messages[0] as Uint8Array, PAYLOAD)).toBe(true)
         }, TIMEOUT)
     })
