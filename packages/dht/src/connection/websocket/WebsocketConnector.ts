@@ -62,7 +62,7 @@ export class WebsocketConnector {
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly websocketServer?: WebsocketServer
-    private readonly geoIpLocator?: GeoIpLocator
+    private geoIpLocator?: GeoIpLocator
     private readonly ongoingConnectRequests: Map<DhtAddress, ManagedConnection> = new Map()
     private host?: string
     private autoCertifierClient?: AutoCertifierClientFacade
@@ -80,7 +80,7 @@ export class WebsocketConnector {
             maxMessageSize: config.maxMessageSize,
             enableTls: config.serverEnableTls
         }) : undefined
-        this.geoIpLocator = config.geoIpDatabasePath ? new GeoIpLocator(config.geoIpDatabasePath) : undefined
+
         this.host = config.host
         this.rpcCommunicator = new ListeningRpcCommunicator(WebsocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, config.transport, {
             rpcRequestTimeout: 15000  // TODO use config option or named constant?
@@ -151,7 +151,7 @@ export class WebsocketConnector {
                 const action = query.action as (Action | undefined)
                 logger.trace('WebSocket client connected', { action, remoteAddress: serverSocket.remoteIpAddress })
                 if (action === 'connectivityRequest') {
-                    attachConnectivityRequestHandler(serverSocket)
+                    attachConnectivityRequestHandler(serverSocket, this.geoIpLocator)
                 } else if (action === 'connectivityProbe') {
                     // no-op
                 } else {
@@ -162,12 +162,22 @@ export class WebsocketConnector {
                         this.attachHandshaker(connection)
                     } else {
                         logger.trace('incoming Websocket connection before localPeerDescriptor was set, closing connection')
-                        connection.close(false).catch(() => {})
+                        connection.close(false).catch(() => { })
                     }
                 }
             })
             const port = await this.websocketServer.start()
             this.selectedPort = port
+
+            if (this.config.geoIpDatabasePath) {
+                const geoIpLocator = new GeoIpLocator(this.config.geoIpDatabasePath)
+                try {
+                    await geoIpLocator.start()
+                    this.geoIpLocator = geoIpLocator
+                } catch (e) {
+                    console.error('Failed to start GeoIpLocator', e)
+                }
+            }
         }
     }
 
@@ -186,9 +196,9 @@ export class WebsocketConnector {
             return {
                 host: this.host!,
                 natType: NatType.OPEN_INTERNET,
-                websocket: { 
-                    host: this.host!, 
-                    port: this.selectedPort!, 
+                websocket: {
+                    host: this.host!,
+                    port: this.selectedPort!,
                     tls: this.config.tlsCertificate !== undefined
                 },
                 // TODO: Resolve the given host name or or use as is if IP was given. 
@@ -351,5 +361,6 @@ export class WebsocketConnector {
         const attempts = Array.from(this.connectingConnections.values())
         await Promise.allSettled(attempts.map((conn) => conn.close(false)))
         await this.websocketServer?.stop()
+        await this.geoIpLocator?.stop()
     }
 }

@@ -97,6 +97,7 @@ export interface DhtNodeOptions {
     externalIp?: string
     autoCertifierUrl?: string
     autoCertifierConfigFile?: string
+    geoIpDatabasePath?: string
 }
 
 type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
@@ -183,8 +184,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             if (this.config.peerDescriptor) {
                 this.config.peerDescriptor.websocket = undefined
             }
-        }
-            
+        } 
+          
         // If transport is given, do not create a ConnectionManager
         if (this.config.transport) {
             this.transport = this.config.transport
@@ -208,6 +209,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 externalIp: this.config.externalIp,
                 autoCertifierUrl: this.config.autoCertifierUrl,
                 autoCertifierConfigFile: this.config.autoCertifierConfigFile,
+                geoIpDatabasePath: this.config.geoIpDatabasePath,
                 createLocalPeerDescriptor: (connectivityResponse: ConnectivityResponse) => this.generatePeerDescriptorCallBack(connectivityResponse)
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
