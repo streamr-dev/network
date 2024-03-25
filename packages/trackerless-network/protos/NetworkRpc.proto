@@ -66,6 +66,7 @@ enum EncryptionType {
 enum SignatureType {
   LEGACY_SECP256K1 = 0;
   SECP256K1 = 1;
+  ERC_1271 = 2;
 }
 
 message StreamMessage {
