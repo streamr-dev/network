@@ -75,7 +75,7 @@ export class PublisherKeyExchange {
             if (msg.signatureType === SignatureType.ERC_1271) {
                 const address = msg.getPublisherId()
                 if (!this.erc1271ContractAddresses.has(address)) {
-                    logger.info('Add new ERC-1271 publisher', { address })
+                    logger.debug('Add ERC-1271 publisher', { address })
                     this.erc1271ContractAddresses.add(address)
                 }
             }
