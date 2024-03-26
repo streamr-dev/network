@@ -1,7 +1,7 @@
 import { StreamPartID } from '@streamr/protocol'
 import { MessageStream } from './MessageStream'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { Logger } from '@streamr/utils'
+import { EthereumAddress, Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 
 /**
@@ -29,14 +29,22 @@ export class Subscription extends MessageStream {
     readonly streamPartId: StreamPartID
     /** @internal */
     readonly isRaw: boolean
+    readonly erc1271ContractAddress: EthereumAddress | undefined
     private readonly eventEmitter: EventEmitter<SubscriptionEvents>
     private readonly logger: Logger
 
     /** @internal */
-    constructor(streamPartId: StreamPartID, isRaw: boolean, eventEmitter: EventEmitter<SubscriptionEvents>, loggerFactory: LoggerFactory) {
+    constructor(
+        streamPartId: StreamPartID,
+        isRaw: boolean,
+        erc1271ContractAddress: EthereumAddress | undefined,
+        eventEmitter: EventEmitter<SubscriptionEvents>,
+        loggerFactory: LoggerFactory
+    ) {
         super()
         this.streamPartId = streamPartId
         this.isRaw = isRaw
+        this.erc1271ContractAddress = erc1271ContractAddress
         this.eventEmitter = eventEmitter
         this.logger = loggerFactory.createLogger(module)
         this.onError.listen((err) => {
