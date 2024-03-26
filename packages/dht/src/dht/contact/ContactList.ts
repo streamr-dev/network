@@ -2,7 +2,7 @@ import EventEmitter from 'eventemitter3'
 import { DhtAddress } from '../../identifiers'
 
 export class ContactState<C> {
-    public contacted = false
+
     public active = false
     public contact: C
 

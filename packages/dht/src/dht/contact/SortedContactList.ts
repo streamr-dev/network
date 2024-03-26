@@ -96,12 +96,6 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
         return this.contactsById.has(id)
     }
 
-    public setContacted(contactId: DhtAddress): void {
-        if (this.contactsById.has(contactId)) {
-            this.contactsById.get(contactId)!.contacted = true
-        }
-    }
-
     public setActive(contactId: DhtAddress): void {
         if (this.contactsById.has(contactId)) {
             this.contactsById.get(contactId)!.active = true
@@ -113,20 +107,6 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
         return (limit === undefined) 
             ? ret 
             : ret.slice(0, limit)
-    }
-
-    public getUncontactedContacts(num: number): C[] {
-        const ret: C[] = []
-        for (const contactId of this.contactIds) {
-            const contact = this.contactsById.get(contactId)!
-            if (!contact.contacted) {
-                ret.push(contact.contact)
-                if (ret.length >= num) {
-                    return ret
-                }
-            }
-        }
-        return ret
     }
 
     public getActiveContacts(limit?: number): C[] {
