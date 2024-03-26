@@ -10,9 +10,12 @@ import {
 } from '@streamr/protocol'
 import { hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import { assertSignatureIsValid } from '../../src/utils/validateStreamMessage'
+import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
+import { mock, MockProxy } from 'jest-mock-extended'
+import { createSignaturePayload } from '../../src/signature'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('signature', () => {
-
     describe('SECP256K1', () => {
 
         it('unencrypted message passes signature validation', () => {
@@ -34,7 +37,7 @@ describe('signature', () => {
                 signature: hexToBinary('e53045adef4e01f7fe11d4b3073c6053688912e4db0ee780c189cd0d128c923457e1f6cbc1e47d9cd57e115afa9eb8524288887777c1056d638b193cae112dda1b'),
                 signatureType: SignatureType.SECP256K1
             })
-            expect(() => assertSignatureIsValid(message)).not.toThrow()
+            expect(() => assertSignatureIsValid(message, undefined as any)).not.toThrow()
         })
 
         it('encrypted message passes signature validation', () => {
@@ -58,7 +61,7 @@ describe('signature', () => {
                 groupKeyId: '4717fdf7-3cb7-4819-95fc-21122409e630-GroupKey1',
                 signatureType: SignatureType.SECP256K1
             })
-            expect(() => assertSignatureIsValid(message)).not.toThrow()
+            expect(() => assertSignatureIsValid(message, undefined as any)).not.toThrow()
         })
   
     })
@@ -102,7 +105,7 @@ describe('signature', () => {
                 signature: hexToBinary('0x738f682914f224522030fb6520f51cff14581904d981268d182936f0f42d832935e970f775f78ccbba053261916215b7742407aae4bdd49777a7bcf8954ee8401c'),
                 signatureType: SignatureType.LEGACY_SECP256K1
             })
-            expect(() => assertSignatureIsValid(message)).not.toThrow()
+            expect(() => assertSignatureIsValid(message, undefined as any)).not.toThrow()
         })
 
         it('encrypted message passes signature validation', () => {
@@ -126,7 +129,69 @@ describe('signature', () => {
                 groupKeyId: '4717fdf7-3cb7-4819-95fc-21122409e630-GroupKey1',
                 signatureType: SignatureType.LEGACY_SECP256K1
             })
-            expect(() => assertSignatureIsValid(message)).not.toThrow()
+            expect(() => assertSignatureIsValid(message, undefined as any)).not.toThrow()
+        })
+    })
+
+    describe('ERC1271 message validation', () => {
+        let message: StreamMessage
+        let erc1271ContractFacade: MockProxy<ERC1271ContractFacade>
+
+        beforeEach(() => {
+            const contractAddress = randomEthereumAddress()
+            message = new StreamMessage({
+                messageId: new MessageID(
+                    toStreamID('streamr.eth/foo/bar'),
+                    0,
+                    1704972511765,
+                    0,
+                    contractAddress,
+                    '401zi3b84sd64qn31fte'
+                ),
+                prevMsgRef: new MessageRef(1704972444019, 0),
+                content: utf8ToBinary('{"foo":"bar"}'),
+                messageType: StreamMessageType.MESSAGE,
+                contentType: ContentType.JSON,
+                encryptionType: EncryptionType.NONE,
+                // eslint-disable-next-line max-len
+                signature: hexToBinary('aaaaaaaaaaaaaaaaaaaa'),
+                signatureType: SignatureType.ERC_1271
+            })
+            erc1271ContractFacade = mock<ERC1271ContractFacade>()
+        })
+
+        it('passing signature validation scenario', async () => {
+            erc1271ContractFacade.isValidSignature.mockResolvedValueOnce(true)
+            await assertSignatureIsValid(message, erc1271ContractFacade)
+            expect(erc1271ContractFacade.isValidSignature).toHaveBeenCalledWith(
+                message.getPublisherId(),
+                createSignaturePayload(message),
+                message.signature
+            )
+        })
+
+        it('not passing signature validation scenario', async () => {
+            erc1271ContractFacade.isValidSignature.mockResolvedValueOnce(false)
+            await expect(assertSignatureIsValid(message, erc1271ContractFacade)).rejects.toEqual(
+                new Error('Signature validation failed')
+            )
+            expect(erc1271ContractFacade.isValidSignature).toHaveBeenCalledWith(
+                message.getPublisherId(),
+                createSignaturePayload(message),
+                message.signature
+            )
+        })
+
+        it('failing signature validation scenario', async () => {
+            erc1271ContractFacade.isValidSignature.mockRejectedValueOnce(new Error('random issue'))
+            await expect(assertSignatureIsValid(message, erc1271ContractFacade)).rejects.toEqual(
+                new Error('An error occurred during address recovery from signature: Error: random issue')
+            )
+            expect(erc1271ContractFacade.isValidSignature).toHaveBeenCalledWith(
+                message.getPublisherId(),
+                createSignaturePayload(message),
+                message.signature
+            )
         })
     })
 })

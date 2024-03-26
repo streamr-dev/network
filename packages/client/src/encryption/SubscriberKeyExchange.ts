@@ -22,7 +22,7 @@ import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { createSignedMessage } from '../publish/MessageFactory'
 import { createRandomMsgChainId } from '../publish/messageChain'
-import { StreamRegistry } from '../registry/StreamRegistry'
+import { StreamRegistry } from '../contracts/StreamRegistry'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { pOnce, withThrottling } from '../utils/promises'
 import { MaxSizedSet } from '../utils/utils'
@@ -30,6 +30,7 @@ import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { RSAKeyPair } from './RSAKeyPair'
+import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
 
 const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed
 
@@ -44,6 +45,7 @@ export class SubscriberKeyExchange {
     private readonly pendingRequests: MaxSizedSet<string> = new MaxSizedSet(MAX_PENDING_REQUEST_COUNT)
     private readonly networkNodeFacade: NetworkNodeFacade
     private readonly streamRegistry: StreamRegistry
+    private readonly erc1271ContractFacade: ERC1271ContractFacade
     private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
     private readonly logger: Logger
@@ -53,6 +55,7 @@ export class SubscriberKeyExchange {
     constructor(
         networkNodeFacade: NetworkNodeFacade,
         streamRegistry: StreamRegistry,
+        @inject(ERC1271ContractFacade) erc1271ContractFacade: ERC1271ContractFacade,
         store: LocalGroupKeyStore,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
@@ -60,6 +63,7 @@ export class SubscriberKeyExchange {
     ) {
         this.networkNodeFacade = networkNodeFacade
         this.streamRegistry = streamRegistry
+        this.erc1271ContractFacade = erc1271ContractFacade
         this.store = store
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
@@ -133,7 +137,7 @@ export class SubscriberKeyExchange {
                 if ((recipient === authenticatedUser) && (this.pendingRequests.has(requestId))) {
                     this.logger.debug('Handle group key response', { requestId })
                     this.pendingRequests.delete(requestId)
-                    await validateStreamMessage(msg, this.streamRegistry)
+                    await validateStreamMessage(msg, this.streamRegistry, this.erc1271ContractFacade)
                     await Promise.all(encryptedGroupKeys.map(async (encryptedKey) => {
                         const key = GroupKey.decryptRSAEncrypted(encryptedKey, this.rsaKeyPair!.getPrivateKey())
                         await this.store.set(key.id, msg.getPublisherId(), key.data)

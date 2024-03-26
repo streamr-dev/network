@@ -2,7 +2,7 @@ import { Logger } from '@streamr/utils'
 import { RpcRemote } from '../dht/contact/RpcRemote'
 import { DisconnectMode, DisconnectNotice, LockRequest, UnlockRequest } from '../proto/packages/dht/protos/DhtRpc'
 import { ConnectionLockRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
-import { LockID } from './ConnectionLockHandler'
+import { LockID } from './ConnectionLockStates'
 import { getNodeIdFromPeerDescriptor } from '../identifiers'
 
 const logger = new Logger(module)

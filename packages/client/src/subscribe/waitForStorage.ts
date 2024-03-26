@@ -2,7 +2,7 @@ import { StreamID, StreamMessage, toStreamPartID } from '@streamr/protocol'
 import { Logger, collect, wait, areEqualBinaries } from '@streamr/utils'
 import { Message, convertStreamMessageToMessage } from '../Message'
 import { StreamrClientError } from '../StreamrClientError'
-import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
+import { StreamStorageRegistry } from '../contracts/StreamStorageRegistry'
 import { Resends } from './Resends'
 
 const logger = new Logger(module)

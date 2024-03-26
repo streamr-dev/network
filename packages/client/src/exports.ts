@@ -19,10 +19,10 @@ export {
     UserPermissionAssignment,
     PublicPermissionAssignment
 } from './permission'
-export { StreamCreationEvent } from './registry/StreamRegistry'
-export { StorageNodeAssignmentEvent } from './registry/StreamStorageRegistry'
-export { StorageNodeMetadata } from './registry/StorageNodeRegistry'
-export { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './registry/searchStreams'
+export { StreamCreationEvent } from './contracts/StreamRegistry'
+export { StorageNodeAssignmentEvent } from './contracts/StreamStorageRegistry'
+export { StorageNodeMetadata } from './contracts/StorageNodeRegistry'
+export { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './contracts/searchStreams'
 export {
     StreamrClientConfig,
     ChainConnectionInfo,
