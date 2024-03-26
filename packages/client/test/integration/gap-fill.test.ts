@@ -10,6 +10,8 @@ import { createGroupKeyQueue, createStreamRegistry, createTestStream, startFaili
 import { createPrivateKeyAuthentication } from './../../src/Authentication'
 import { Stream } from './../../src/Stream'
 import { MessageFactory } from './../../src/publish/MessageFactory'
+import { mock } from 'jest-mock-extended'
+import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 
 const GROUP_KEY = GroupKey.generate()
 
@@ -41,7 +43,8 @@ describe('gap fill', () => {
             authentication,
             streamId: stream.id,
             streamRegistry: createStreamRegistry(),
-            groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY)
+            groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY),
+            erc1271ContractFacade: mock<ERC1271ContractFacade>()
         })
     })
 

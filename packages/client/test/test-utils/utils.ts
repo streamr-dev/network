@@ -25,7 +25,7 @@ import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchang
 import { StreamrClientEventEmitter } from '../../src/events'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { MessageFactory } from '../../src/publish/MessageFactory'
-import { StreamRegistry } from '../../src/registry/StreamRegistry'
+import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { LoggerFactory } from '../../src/utils/LoggerFactory'
 import { counterId } from '../../src/utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
@@ -33,6 +33,7 @@ import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
 import { addAfterFn } from './jest-utils'
 import path from 'path'
 import fetch from 'node-fetch'
+import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 
 const logger = new Logger(module)
 
@@ -126,7 +127,8 @@ export const createMockMessage = async (
             isPublicStream: (opts.encryptionKey === undefined),
             isStreamPublisher: true
         }),
-        groupKeyQueue: await createGroupKeyQueue(authentication, opts.encryptionKey, opts.nextEncryptionKey)
+        groupKeyQueue: await createGroupKeyQueue(authentication, opts.encryptionKey, opts.nextEncryptionKey),
+        erc1271ContractFacade: mock<ERC1271ContractFacade>()
     })
     const DEFAULT_CONTENT = {}
     const plainContent = opts.content ?? DEFAULT_CONTENT

@@ -10,7 +10,7 @@ import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { ConfigInjectionToken, NetworkPeerDescriptor, StrictStreamrClientConfig } from './Config'
 import { DestroySignal } from './DestroySignal'
-import { OperatorRegistry } from './registry/OperatorRegistry'
+import { OperatorRegistry } from './contracts/OperatorRegistry'
 import { pOnce } from './utils/promises'
 import { peerDescriptorTranslator } from './utils/utils'
 

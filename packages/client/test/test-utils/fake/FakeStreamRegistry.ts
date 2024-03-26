@@ -13,8 +13,8 @@ import {
     isPublicPermissionAssignment,
     isPublicPermissionQuery
 } from '../../../src/permission'
-import { StreamRegistry } from '../../../src/registry/StreamRegistry'
-import { SearchStreamsPermissionFilter } from '../../../src/registry/searchStreams'
+import { StreamRegistry } from '../../../src/contracts/StreamRegistry'
+import { SearchStreamsPermissionFilter } from '../../../src/contracts/searchStreams'
 import { FakeChain, PUBLIC_PERMISSION_TARGET, PublicPermissionTarget, StreamRegistryItem } from './FakeChain'
 
 @scoped(Lifecycle.ContainerScoped)

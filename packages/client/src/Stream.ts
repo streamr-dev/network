@@ -15,8 +15,8 @@ import { StreamrClientError } from './StreamrClientError'
 import { StreamrClientEventEmitter } from './events'
 import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
 import { Publisher } from './publish/Publisher'
-import { StreamRegistry } from './registry/StreamRegistry'
-import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
+import { StreamRegistry } from './contracts/StreamRegistry'
+import { StreamStorageRegistry } from './contracts/StreamStorageRegistry'
 import { Resends } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
 import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
@@ -280,7 +280,7 @@ export class Stream {
      */
     async publish(content: unknown, metadata?: PublishMetadata): Promise<Message> {
         const result = await this._publisher.publish(this.id, content, metadata)
-        this._eventEmitter.emit('publish', undefined)
+        this._eventEmitter.emit('publish', result)
         return convertStreamMessageToMessage(result)
     }
 

@@ -8,6 +8,21 @@ Changes before Tatum release are not documented in this file.
 
 ## [Unreleased]
 
+### @streamr/sdk
+
+#### Added
+
+#### Changed
+
+#### Deprecated
+
+#### Removed
+
+#### Fixed
+
+#### Security
+
+
 ### @streamr/node
 
 #### Added
@@ -22,19 +37,6 @@ Changes before Tatum release are not documented in this file.
 
 #### Security
 
-### @streamr/sdk
-
-#### Added
-
-#### Changed
-
-#### Deprecated
-
-#### Removed
-
-#### Fixed
-
-#### Security
 
 ### @streamr/cli-tools
 
@@ -51,4 +53,28 @@ Changes before Tatum release are not documented in this file.
 #### Security
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/client/v8.5.5...HEAD
+## [100.1.1] - 2024-03-26
+
+### @streamr/node
+
+#### Fixed
+- Update internal list of JSON RPC urls for Polygon
+
+
+## [100.1.0] - 2024-03-25
+
+### @streamr/sdk
+
+#### Added
+
+- Add support for publishing messages on behalf of an [ERC-1271 contract](https://eips.ethereum.org/EIPS/eip-1271) (https://github.com/streamr-dev/network/pull/2423)
+- Add fields `signatureType` and `groupKeyId` to `Message` interface (https://github.com/streamr-dev/network/pull/2423)
+- Add ability to disable websocket server (https://github.com/streamr-dev/network/pull/2425)
+
+#### Changed
+- Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
+
+
+[Unreleased]: https://github.com/streamr-dev/network/compare/v100.1.1...HEAD
+[100.1.1]: https://github.com/streamr-dev/network/compare/v100.1.0...v100.1.1
+[100.1.0]: https://github.com/streamr-dev/network/compare/v100.0.0...v100.1.0

@@ -3,7 +3,7 @@ import 'reflect-metadata'
 import { toStreamID } from '@streamr/protocol'
 import { Stream } from '../../src/Stream'
 import { StreamFactory } from '../../src/StreamFactory'
-import { StreamRegistry } from '../../src/registry/StreamRegistry'
+import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 
 const createStreamFactory = (streamRegistry?: StreamRegistry) => {
     return new StreamFactory(
