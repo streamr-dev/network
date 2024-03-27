@@ -102,18 +102,6 @@ describe('SortedContactList', () => {
         expect(list.getFurthestContacts(-2)).toEqual([])
     })
 
-    it('get active contacts', () => {
-        const list = new SortedContactList({ referenceId: item0.getNodeId(), maxSize: 8, allowToContainReferenceId: false, emitEvents: false })
-        list.addContact(item1)
-        list.addContact(item3)
-        list.addContact(item4)
-        list.addContact(item2)
-        list.setActive(item2.getNodeId())
-        list.setActive(item3.getNodeId())
-        list.setActive(item4.getNodeId())
-        expect(list.getActiveContacts()).toEqual([item2, item3, item4])
-    })
-
     it('does not emit contactAdded if contact did not fit the structure', () => {
         const list = new SortedContactList({ referenceId: item0.getNodeId(), maxSize: 2, allowToContainReferenceId: false, emitEvents: true })
         const onContactAdded = jest.fn()

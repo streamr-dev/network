@@ -96,12 +96,6 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
         return this.contactsById.has(id)
     }
 
-    public setActive(contactId: DhtAddress): void {
-        if (this.contactsById.has(contactId)) {
-            this.contactsById.get(contactId)!.active = true
-        }
-    }
-
     /*
      * Closest first then others in ascending distance order
      */
@@ -120,21 +114,6 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
         return (limit === undefined) 
             ? ret 
             : ret.slice(0, Math.max(limit, 0))
-    }
-
-    public getActiveContacts(limit?: number): C[] {
-        const ret: C[] = []
-        this.contactIds.forEach((contactId) => {
-            const contact = this.contactsById.get(contactId)!
-            if (contact.active) {
-                ret.push(contact.contact)
-            }
-        })
-        if (limit !== undefined) {
-            return ret.slice(0, limit)
-        } else {
-            return ret
-        }
     }
 
     public compareIds(id1: DhtAddress, id2: DhtAddress): number {
@@ -166,10 +145,6 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
             return true
         }
         return false
-    }
-
-    public isActive(id: DhtAddress): boolean {
-        return this.contactsById.has(id) ? this.contactsById.get(id)!.active : false
     }
 
     public getAllContacts(): C[] {

@@ -1,9 +1,8 @@
 import EventEmitter from 'eventemitter3'
 import { DhtAddress } from '../../identifiers'
 
-export class ContactState<C> {
+export class ContactState<C> {  // TODO remove this wrapper
 
-    public active = false
     public contact: C
 
     constructor(contact: C) {
