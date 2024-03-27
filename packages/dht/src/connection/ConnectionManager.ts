@@ -171,10 +171,9 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
                 disconnectionCandidates.addContact(connection)
             }
         })
-        const sortedCandidates = disconnectionCandidates.getAllContacts()
-        const targetNum = this.connections.size - maxConnections
-        for (let i = 0; i < sortedCandidates.length && i < targetNum; i++) {
-            const peerDescriptor = sortedCandidates[sortedCandidates.length - 1 - i].getPeerDescriptor()!
+        const disconnectables = disconnectionCandidates.getFurthestContacts(this.connections.size - maxConnections)
+        for (const disconnectable of disconnectables) {
+            const peerDescriptor = disconnectable.getPeerDescriptor()!
             logger.trace('garbageCollecting ' + getNodeIdFromPeerDescriptor(peerDescriptor))
             this.gracefullyDisconnectAsync(peerDescriptor, DisconnectMode.NORMAL).catch((_e) => { })
         }

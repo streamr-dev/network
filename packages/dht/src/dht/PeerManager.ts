@@ -57,6 +57,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     public readonly connections: Map<DhtAddress, DhtNodeRpcRemote> = new Map()
     // All nodes that we know about
     private contacts: SortedContactList<DhtNodeRpcRemote>
+    private activeContacts: Set<DhtAddress>
     private randomPeers: RandomContactList<DhtNodeRpcRemote>
     private ringContacts: RingContactList<DhtNodeRpcRemote>
     private stopped: boolean = false
@@ -98,6 +99,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.contacts.on('contactAdded', (contactAdded: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) =>
             this.emit('contactAdded', contactAdded.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
         )
+        this.activeContacts = new Set()
         this.randomPeers = new RandomContactList(this.config.localNodeId, this.config.maxContactListSize)
         this.randomPeers.on('contactRemoved', (removedContact: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) =>
             this.emit('randomContactRemoved', removedContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
@@ -117,8 +119,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             allowToContainReferenceId: false
         })
         sortingList.addContacts(oldContacts)
-        const sortedContacts = sortingList.getAllContacts()
-        const removableNodeId = sortedContacts[sortedContacts.length - 1].getNodeId()
+        const removableNodeId = sortingList.getFurthestContacts(1)[0].getNodeId()
         this.config.connectionLocker?.weakUnlockConnection(removableNodeId, this.config.lockId)
         this.bucket.remove(getRawFromDhtAddress(removableNodeId))
         this.bucket.add(newContact)
@@ -179,7 +180,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
 
     private getClosestActiveContactNotInBucket(): DhtNodeRpcRemote | undefined {
         for (const contactId of this.contacts.getContactIds()) {
-            if (!this.bucket.get(getRawFromDhtAddress(contactId)) && this.contacts.isActive(contactId)) {
+            if (!this.bucket.get(getRawFromDhtAddress(contactId)) && this.activeContacts.has(contactId)) {
                 return this.contacts.getContact(contactId)!.contact
             }
         }
@@ -223,6 +224,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.ringContacts.removeContact(this.contacts.getContact(nodeId)?.contact)
         this.bucket.remove(getRawFromDhtAddress(nodeId))
         this.contacts.removeContact(nodeId)
+        this.activeContacts.delete(nodeId)
         this.randomPeers.removeContact(nodeId)
     }
 
@@ -293,7 +295,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     }
 
     setContactActive(nodeId: DhtAddress): void {
-        this.contacts.setActive(nodeId)
+        this.activeContacts.add(nodeId)
     }
 
     addContact(peerDescriptor: PeerDescriptor): void {
