@@ -184,7 +184,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
             routingTable.addContacts(contacts)
             this.config.routingTablesCache.set(targetId, routingTable, previousId)
         }
-        return routingTable.getAllContacts()
+        return routingTable.getClosestContacts()
             .filter((contact) => !this.contactedPeers.has(contact.getNodeId()) && !this.config.excludedNodeIds.has(contact.getNodeId()))
     }
 

@@ -4,7 +4,9 @@ import { RoutingRemoteContact } from './RoutingSession'
 import { LRUCache } from 'lru-cache'
 
 type RoutingTableID = string
-export type RoutingTable = Pick<SortedContactList<RoutingRemoteContact>, 'getAllContacts' | 'addContacts' | 'addContact' | 'removeContact' | 'stop'>
+export type RoutingTable = Pick<
+    SortedContactList<RoutingRemoteContact>,
+    'getClosestContacts' | 'addContacts' | 'addContact' | 'removeContact' | 'stop'>
 
 const createRoutingTableId = (targetId: DhtAddress, previousId?: DhtAddress): RoutingTableID => {
     return targetId + (previousId ? previousId : '')
