@@ -30,7 +30,7 @@
   "dependencies": {
     "@ethersproject/hdnode": "^5.4.0",
     "@inquirer/prompts": "^4.2.1",
-    "@streamr/config": "^5.2.4",
+    "@streamr/config": "^5.2.5",
     "@streamr/network-contracts": "^7.1.1",
     "@streamr/protocol": "100.1.1",
     "@streamr/sdk": "100.1.1",
