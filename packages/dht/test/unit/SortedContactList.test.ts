@@ -80,7 +80,26 @@ describe('SortedContactList', () => {
         list.addContact(item4)
         list.addContact(item2)
         expect(list.getClosestContacts(2)).toEqual([item1, item2])
+        expect(list.getClosestContacts(10)).toEqual([item1, item2, item3, item4])
         expect(list.getClosestContacts()).toEqual([item1, item2, item3, item4])
+        expect(list.getClosestContacts(-2)).toEqual([])
+    })
+
+    it('get furthest contacts', () => {
+        const list = new SortedContactList({
+            referenceId: item0.getNodeId(), 
+            maxSize: 8, 
+            allowToContainReferenceId: false, 
+            emitEvents: false 
+        })
+        list.addContact(item1)
+        list.addContact(item3)
+        list.addContact(item4)
+        list.addContact(item2)
+        expect(list.getFurthestContacts(2)).toEqual([item4, item3])
+        expect(list.getFurthestContacts(10)).toEqual([item4, item3, item2, item1])
+        expect(list.getFurthestContacts()).toEqual([item4, item3, item2, item1])
+        expect(list.getFurthestContacts(-2)).toEqual([])
     })
 
     it('get active contacts', () => {

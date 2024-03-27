@@ -102,11 +102,24 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
         }
     }
 
+    /*
+     * Closest first then others in ascending distance order
+     */
     public getClosestContacts(limit?: number): C[] {
         const ret = this.getAllContacts()
         return (limit === undefined) 
             ? ret 
-            : ret.slice(0, limit)
+            : ret.slice(0, Math.max(limit, 0))
+    }
+
+    /*
+     * Furthest first then others in descending distance order
+     */
+    getFurthestContacts(limit?: number): C[] {
+        const ret = this.getClosestContacts().toReversed()
+        return (limit === undefined) 
+            ? ret 
+            : ret.slice(0, Math.max(limit, 0))
     }
 
     public getActiveContacts(limit?: number): C[] {

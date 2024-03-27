@@ -119,8 +119,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             emitEvents: false
         })
         sortingList.addContacts(oldContacts)
-        const sortedContacts = sortingList.getAllContacts()
-        const removableNodeId = sortedContacts[sortedContacts.length - 1].getNodeId()
+        const removableNodeId = sortingList.getFurthestContacts(1)[0].getNodeId()
         this.config.connectionLocker?.weakUnlockConnection(removableNodeId, this.config.lockId)
         this.bucket.remove(getRawFromDhtAddress(removableNodeId))
         this.bucket.add(newContact)
