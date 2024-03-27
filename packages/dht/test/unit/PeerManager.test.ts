@@ -1,18 +1,31 @@
-import { PeerManager, getDistance } from '../../src/dht/PeerManager'
-import { DhtAddress, createRandomDhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { waitForCondition } from '@streamr/utils'
 import { range, sample, sampleSize, sortBy, without } from 'lodash'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
+import { PeerManager, getDistance } from '../../src/dht/PeerManager'
+import { Contact } from '../../src/dht/contact/Contact'
+import { SortedContactList } from '../../src/dht/contact/SortedContactList'
+import { DhtAddress, createRandomDhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
+import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 import { createMockPeerDescriptor } from '../utils/utils'
 
-const createPeerManager = (nodeIds: DhtAddress[]) => {
-    const peerDescriptor = createMockPeerDescriptor()
+const createPeerManager = (
+    nodeIds: DhtAddress[], 
+    localPeerDescriptor = createMockPeerDescriptor(),
+    pingFailures: Set<DhtAddress> = new Set()
+) => {
     const manager = new PeerManager({
-        localNodeId: getNodeIdFromPeerDescriptor(peerDescriptor),
-        localPeerDescriptor: peerDescriptor,
+        localNodeId: getNodeIdFromPeerDescriptor(localPeerDescriptor),
+        localPeerDescriptor: localPeerDescriptor,
+        isLayer0: true,
         createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => {
-            return new DhtNodeRpcRemote(undefined as any, peerDescriptor, undefined as any, new MockRpcCommunicator())
+            const remote = new class extends DhtNodeRpcRemote {
+                // eslint-disable-next-line class-methods-use-this
+                async ping(): Promise<boolean> {
+                    return !pingFailures.has(getNodeIdFromPeerDescriptor(peerDescriptor))
+                }
+            }(localPeerDescriptor, peerDescriptor, undefined as any, new MockRpcCommunicator())
+            return remote
         }
     } as any)
     const contacts = nodeIds.map((n) => ({ nodeId: getRawFromDhtAddress(n), type: NodeType.NODEJS }))
@@ -20,6 +33,22 @@ const createPeerManager = (nodeIds: DhtAddress[]) => {
         manager.addContact(contact)
     }
     return manager
+}
+
+const getClosestContact = (contacts: PeerDescriptor[], referenceId: DhtAddress): PeerDescriptor | undefined => {
+    const list = new SortedContactList({
+        referenceId,
+        allowToContainReferenceId: false
+    })
+    for (const contact of contacts) {
+        list.addContact(new Contact(contact))
+    }
+    const id = list.getClosestContactId()
+    if (id !== undefined) {
+        return contacts.find((c) => getNodeIdFromPeerDescriptor(c) === id)
+    } else {
+        return undefined
+    }
 }
 
 describe('PeerManager', () => {
@@ -60,5 +89,25 @@ describe('PeerManager', () => {
         expect(manager.getContactCount()).toBe(10)
         expect(manager.getContactCount(new Set(sampleSize(nodeIds, 2)))).toBe(8)
         expect(manager.getContactCount(new Set([sample(nodeIds)!, createRandomDhtAddress()]))).toBe(9)
+    })
+
+    it('addContact: ping fails', async () => {
+        const localPeerDescriptor = createMockPeerDescriptor()
+        const successContacts = range(5).map(() => createMockPeerDescriptor())
+        const failureContact = createMockPeerDescriptor()
+        const manager = createPeerManager([], localPeerDescriptor, new Set([getNodeIdFromPeerDescriptor(failureContact)]))
+        for (const successContact of successContacts) {
+            manager.addContact(successContact)
+            manager.setContactActive(getNodeIdFromPeerDescriptor(successContact))
+            manager.onContactDisconnected(getNodeIdFromPeerDescriptor(successContact), false)
+        }
+        expect(manager.getNeighborCount()).toBe(0)
+        manager.addContact(failureContact)
+        const closesSuccessContact = getClosestContact(successContacts, getNodeIdFromPeerDescriptor(localPeerDescriptor))!
+        await waitForCondition(() => {
+            const neighborNodeIds = manager.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
+            return neighborNodeIds.includes(getNodeIdFromPeerDescriptor(closesSuccessContact))
+        })
+        expect(manager.getNeighbors()).toEqual([closesSuccessContact])
     })
 })

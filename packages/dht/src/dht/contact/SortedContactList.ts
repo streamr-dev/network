@@ -7,9 +7,6 @@ import { DhtAddress, getRawFromDhtAddress } from '../../identifiers'
 export interface SortedContactListConfig {
     referenceId: DhtAddress  // all contacts in this list are in sorted by the distance to this ID
     allowToContainReferenceId: boolean
-    // TODO could maybe optimize this by removing the flag and then we'd check whether we have 
-    // any listeners before we emit the event
-    emitEvents: boolean
     maxSize?: number
     // if set, the list can't contain any contacts which are futher away than this limit
     nodeIdDistanceLimit?: DhtAddress
@@ -53,7 +50,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
                 this.contactsById.set(contactId, new ContactState(contact))
                 const index = sortedIndexBy(this.contactIds, contactId, (id: DhtAddress) => { return this.distanceToReferenceId(id) })
                 this.contactIds.splice(index, 0, contactId)
-                if (this.config.emitEvents) {
+                if (this.hasEventListeners()) {
                     this.emit(
                         'contactAdded',
                         contact,
@@ -67,7 +64,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
                 this.contactsById.set(contactId, new ContactState(contact))
                 const index = sortedIndexBy(this.contactIds, contactId, (id: DhtAddress) => { return this.distanceToReferenceId(id) })
                 this.contactIds.splice(index, 0, contactId)
-                if (this.config.emitEvents) {
+                if (this.hasEventListeners()) {
                     const closestContacts = this.getClosestContacts()
                     this.emit(
                         'contactRemoved',
@@ -96,32 +93,24 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
         return this.contactsById.has(id)
     }
 
-    public setActive(contactId: DhtAddress): void {
-        if (this.contactsById.has(contactId)) {
-            this.contactsById.get(contactId)!.active = true
-        }
-    }
-
+    /*
+     * Closest first then others in ascending distance order
+     */
     public getClosestContacts(limit?: number): C[] {
         const ret = this.getAllContacts()
         return (limit === undefined) 
             ? ret 
-            : ret.slice(0, limit)
+            : ret.slice(0, Math.max(limit, 0))
     }
 
-    public getActiveContacts(limit?: number): C[] {
-        const ret: C[] = []
-        this.contactIds.forEach((contactId) => {
-            const contact = this.contactsById.get(contactId)!
-            if (contact.active) {
-                ret.push(contact.contact)
-            }
-        })
-        if (limit !== undefined) {
-            return ret.slice(0, limit)
-        } else {
-            return ret
-        }
+    /*
+     * Furthest first then others in descending distance order
+     */
+    getFurthestContacts(limit?: number): C[] {
+        const ret = this.getClosestContacts().toReversed()
+        return (limit === undefined) 
+            ? ret 
+            : ret.slice(0, Math.max(limit, 0))
     }
 
     public compareIds(id1: DhtAddress, id2: DhtAddress): number {
@@ -143,7 +132,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
             const index = this.contactIds.findIndex((nodeId) => (nodeId === id))
             this.contactIds.splice(index, 1)
             this.contactsById.delete(id)
-            if (this.config.emitEvents) {
+            if (this.hasEventListeners()) {
                 this.emit(
                     'contactRemoved',
                     removed,
@@ -153,10 +142,6 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
             return true
         }
         return false
-    }
-
-    public isActive(id: DhtAddress): boolean {
-        return this.contactsById.has(id) ? this.contactsById.get(id)!.active : false
     }
 
     public getAllContacts(): C[] {
@@ -183,5 +168,9 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
     public stop(): void {
         this.removeAllListeners()
         this.clear()
+    }
+
+    private hasEventListeners(): boolean {
+        return this.eventNames().length > 0
     }
 }
