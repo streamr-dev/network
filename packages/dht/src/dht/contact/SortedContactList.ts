@@ -109,7 +109,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
         const ret = this.getAllContacts()
         return (limit === undefined) 
             ? ret 
-            : ret.slice(0, limit)
+            : ret.slice(0, Math.max(limit, 0))
     }
 
     /*
@@ -119,7 +119,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
         const ret = this.getClosestContacts().reverse()
         return (limit === undefined) 
             ? ret 
-            : ret.slice(0, limit)
+            : ret.slice(0, Math.max(limit, 0))
     }
 
     public getActiveContacts(limit?: number): C[] {

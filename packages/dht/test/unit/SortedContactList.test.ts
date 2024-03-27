@@ -82,6 +82,7 @@ describe('SortedContactList', () => {
         expect(list.getClosestContacts(2)).toEqual([item1, item2])
         expect(list.getClosestContacts(10)).toEqual([item1, item2, item3, item4])
         expect(list.getClosestContacts()).toEqual([item1, item2, item3, item4])
+        expect(list.getClosestContacts(-2)).toEqual([])
     })
 
     it('get furthest contacts', () => {
@@ -98,6 +99,7 @@ describe('SortedContactList', () => {
         expect(list.getFurthestContacts(2)).toEqual([item4, item3])
         expect(list.getFurthestContacts(10)).toEqual([item4, item3, item2, item1])
         expect(list.getFurthestContacts()).toEqual([item4, item3, item2, item1])
+        expect(list.getFurthestContacts(-2)).toEqual([])
     })
 
     it('get active contacts', () => {
