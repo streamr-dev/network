@@ -181,7 +181,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     private getClosestActiveContactNotInBucket(): DhtNodeRpcRemote | undefined {
         for (const contactId of this.contacts.getContactIds()) {
             if (!this.bucket.get(getRawFromDhtAddress(contactId)) && this.activeContacts.has(contactId)) {
-                return this.contacts.getContact(contactId)!.contact
+                return this.contacts.getContact(contactId)!
             }
         }
         return undefined
@@ -221,7 +221,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             return
         }
         logger.trace(`Removing contact ${nodeId}`)
-        this.ringContacts.removeContact(this.contacts.getContact(nodeId)?.contact)
+        this.ringContacts.removeContact(this.contacts.getContact(nodeId))
         this.bucket.remove(getRawFromDhtAddress(nodeId))
         this.contacts.removeContact(nodeId)
         this.activeContacts.delete(nodeId)

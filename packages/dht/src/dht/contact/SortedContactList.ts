@@ -1,4 +1,4 @@
-import { ContactState, Events } from './ContactList'
+import { Events } from './ContactList'
 import { sortedIndexBy } from 'lodash'
 import EventEmitter from 'eventemitter3'
 import { getDistance } from '../PeerManager'
@@ -17,7 +17,7 @@ export interface SortedContactListConfig {
 export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extends EventEmitter<Events<C>> {
 
     private config: SortedContactListConfig
-    private contactsById: Map<DhtAddress, ContactState<C>> = new Map()
+    private contactsById: Map<DhtAddress, C> = new Map()
     private contactIds: DhtAddress[] = []
 
     constructor(
@@ -47,7 +47,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
         }
         if (!this.contactsById.has(contactId)) {
             if ((this.config.maxSize === undefined) || (this.contactIds.length < this.config.maxSize)) {
-                this.contactsById.set(contactId, new ContactState(contact))
+                this.contactsById.set(contactId, contact)
                 const index = sortedIndexBy(this.contactIds, contactId, (id: DhtAddress) => { return this.distanceToReferenceId(id) })
                 this.contactIds.splice(index, 0, contactId)
                 if (this.hasEventListeners()) {
@@ -59,9 +59,9 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
                 }
             } else if (this.compareIds(this.contactIds[this.config.maxSize - 1], contactId) > 0) {
                 const removedId = this.contactIds.pop()
-                const removedContact = this.contactsById.get(removedId!)!.contact
+                const removedContact = this.contactsById.get(removedId!)!
                 this.contactsById.delete(removedId!)
-                this.contactsById.set(contactId, new ContactState(contact))
+                this.contactsById.set(contactId, contact)
                 const index = sortedIndexBy(this.contactIds, contactId, (id: DhtAddress) => { return this.distanceToReferenceId(id) })
                 this.contactIds.splice(index, 0, contactId)
                 if (this.hasEventListeners()) {
@@ -85,7 +85,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
         contacts.forEach((contact) => this.addContact(contact))
     }
 
-    public getContact(id: DhtAddress): ContactState<C> | undefined {
+    public getContact(id: DhtAddress): C | undefined {
         return this.contactsById.get(id)
     }
 
@@ -127,7 +127,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
 
     public removeContact(id: DhtAddress): boolean {
         if (this.contactsById.has(id)) {
-            const removed = this.contactsById.get(id)!.contact
+            const removed = this.contactsById.get(id)!
             // TODO use sortedIndexBy?
             const index = this.contactIds.findIndex((nodeId) => (nodeId === id))
             this.contactIds.splice(index, 1)
@@ -145,7 +145,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
     }
 
     public getAllContacts(): C[] {
-        return this.contactIds.map((nodeId) => this.contactsById.get(nodeId)!.contact)
+        return this.contactIds.map((nodeId) => this.contactsById.get(nodeId)!)
     }
 
     public getSize(excludedNodeIds?: Set<DhtAddress>): number {
