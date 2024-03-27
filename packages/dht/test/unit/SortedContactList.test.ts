@@ -16,7 +16,7 @@ describe('SortedContactList', () => {
     const item4 = createItem(new Uint8Array([0, 0, 0, 4]))
 
     it('compares Ids correctly', async () => {
-        const list = new SortedContactList({ referenceId: item0.getNodeId(), maxSize: 10, allowToContainReferenceId: true, emitEvents: false })
+        const list = new SortedContactList({ referenceId: item0.getNodeId(), maxSize: 10, allowToContainReferenceId: true })
         expect(list.compareIds(item0.getNodeId(), item0.getNodeId())).toBe(0)
         expect(list.compareIds(item1.getNodeId(), item1.getNodeId())).toBe(0)
         expect(list.compareIds(item0.getNodeId(), item1.getNodeId())).toBe(-1)
@@ -28,7 +28,7 @@ describe('SortedContactList', () => {
     })
 
     it('cannot exceed maxSize', async () => {
-        const list = new SortedContactList({ referenceId: item0.getNodeId(), maxSize: 3, allowToContainReferenceId: false, emitEvents: true })
+        const list = new SortedContactList({ referenceId: item0.getNodeId(), maxSize: 3, allowToContainReferenceId: false })
         const onContactRemoved = jest.fn()
         list.on('contactRemoved', onContactRemoved)
         list.addContact(item1)
@@ -43,7 +43,7 @@ describe('SortedContactList', () => {
     })
 
     it('removing contacts', async () => {
-        const list = new SortedContactList({ referenceId: item0.getNodeId(), maxSize: 8, allowToContainReferenceId: false, emitEvents: true })
+        const list = new SortedContactList({ referenceId: item0.getNodeId(), maxSize: 8, allowToContainReferenceId: false })
         const onContactRemoved = jest.fn()
         list.on('contactRemoved', onContactRemoved)
         list.removeContact(createRandomDhtAddress())
@@ -72,8 +72,7 @@ describe('SortedContactList', () => {
         const list = new SortedContactList({
             referenceId: item0.getNodeId(), 
             maxSize: 8, 
-            allowToContainReferenceId: false, 
-            emitEvents: false 
+            allowToContainReferenceId: false
         })
         list.addContact(item1)
         list.addContact(item3)
@@ -89,8 +88,7 @@ describe('SortedContactList', () => {
         const list = new SortedContactList({
             referenceId: item0.getNodeId(), 
             maxSize: 8, 
-            allowToContainReferenceId: false, 
-            emitEvents: false 
+            allowToContainReferenceId: false
         })
         list.addContact(item1)
         list.addContact(item3)
@@ -103,7 +101,7 @@ describe('SortedContactList', () => {
     })
 
     it('does not emit contactAdded if contact did not fit the structure', () => {
-        const list = new SortedContactList({ referenceId: item0.getNodeId(), maxSize: 2, allowToContainReferenceId: false, emitEvents: true })
+        const list = new SortedContactList({ referenceId: item0.getNodeId(), maxSize: 2, allowToContainReferenceId: false })
         const onContactAdded = jest.fn()
         list.on('contactAdded', onContactAdded)
         list.addContact(item1)

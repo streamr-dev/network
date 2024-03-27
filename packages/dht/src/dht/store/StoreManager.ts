@@ -64,8 +64,7 @@ export class StoreManager {
         const sortedList = new SortedContactList<Contact>({
             referenceId: key, 
             maxSize: this.config.redundancyFactor,
-            allowToContainReferenceId: true,
-            emitEvents: false
+            allowToContainReferenceId: true
         })
         sortedList.addContact(new Contact(this.config.localPeerDescriptor))
         closestToData.forEach((neighbor) => {
@@ -173,9 +172,8 @@ export class StoreManager {
         const closestToData = this.config.getClosestNeighborsTo(key, 10)
         const sortedList = new SortedContactList<Contact>({
             referenceId: key, 
-            maxSize: this.config.redundancyFactor, 
-            allowToContainReferenceId: true, 
-            emitEvents: false
+            maxSize: this.config.redundancyFactor,
+            allowToContainReferenceId: true
         })
         sortedList.addContact(new Contact(this.config.localPeerDescriptor))
         closestToData.forEach((neighbor) => {

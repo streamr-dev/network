@@ -56,8 +56,7 @@ describe('Replicate data from node to node in DHT', () => {
         const sortedList = new SortedContactList<DhtNode>({ 
             referenceId: getDhtAddressFromRaw(DATA.key),
             maxSize: 10000, 
-            allowToContainReferenceId: true, 
-            emitEvents: false 
+            allowToContainReferenceId: true
         })
         nodes.forEach((node) => sortedList.addContact(node))
 

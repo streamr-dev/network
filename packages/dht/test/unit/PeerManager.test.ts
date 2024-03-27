@@ -38,8 +38,7 @@ const createPeerManager = (
 const getClosestContact = (contacts: PeerDescriptor[], referenceId: DhtAddress): PeerDescriptor | undefined => {
     const list = new SortedContactList({
         referenceId,
-        allowToContainReferenceId: false,
-        emitEvents: false
+        allowToContainReferenceId: false
     })
     for (const contact of contacts) {
         list.addContact(new Contact(contact))
