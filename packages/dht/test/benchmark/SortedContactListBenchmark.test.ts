@@ -81,19 +81,6 @@ describe('SortedContactListBenchmark', () => {
         }
         console.timeEnd('SortedContactList.getClosestContacts()')
 
-        console.time('SortedContactList.getClosestContacts() and lodash')
-        for (let i = 0; i < NUM_ADDS; i++) {
-            const closest = new SortedContactList<Item>({
-                referenceId: createRandomDhtAddress(),
-                allowToContainReferenceId: true
-            })
-
-            const arrayFromBucket = kBucket.toArray()
-            arrayFromBucket.forEach((contact) => closest.addContact(contact))
-            closest.getClosestContacts(20)
-        }
-        console.timeEnd('SortedContactList.getClosestContacts() and lodash')
-
         console.time('SortedContactList.getClosestContacts() and addContacts()')
         for (let i = 0; i < NUM_ADDS; i++) {
             const closest = new SortedContactList<Item>({
