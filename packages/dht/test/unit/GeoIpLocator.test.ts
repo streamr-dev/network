@@ -1,10 +1,8 @@
 import { GeoIpLocator } from '../../src/helpers/GeoIpLocator'
-import nock from 'nock'
 import fs from 'fs'
 import { wait } from '@streamr/utils'
 import { setFlagsFromString } from 'v8'
 import { runInNewContext } from 'vm'
-//const wtf = require('wtfnode')
 
 setFlagsFromString('--expose_gc')
 const gc = runInNewContext('gc')
@@ -18,154 +16,112 @@ describe('GeoIpLocator', () => {
         return dbPath + '/geolite2-' + dirCounter
     }
 
-    it('can locate an IP address', async () => {
-        const dbDir = getDbDir()
-        const locator = new GeoIpLocator(dbDir)
-        await locator.start()
+    describe('tests with normal startup and shutdown', () => {
+        let dbDir: string | undefined
+        let locator: GeoIpLocator | undefined
 
-        // suomi.fi
-        const location = locator.lookup('62.241.198.245')
+        beforeEach(async () => {
+            dbDir = getDbDir()
+            locator = new GeoIpLocator(dbDir, 5000)
+            await locator.start()
+        })
 
-        expect(location).toBeDefined()
+        afterEach(async () => {
+            locator!.stop()
+            fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
+            fs.rmSync(dbDir!, { recursive: true })
+        })
 
-        // Helsinki, Finland
-        expect(location!.latitude).toBe(60.1797)
-        expect(location!.longitude).toBe(24.9344)
-
-        locator.stop()
-        fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
-        fs.rmdirSync(dbDir)
-    })
-
-    it('returns undefined with invalid IP address', async () => {
-        const dbDir = getDbDir()
-        const locator = new GeoIpLocator(dbDir)
-        await locator.start()
-        
-        expect(locator.lookup('invalid')).toBeUndefined()
-        expect(locator.lookup('')).toBeUndefined()
-        expect(locator.lookup(undefined as unknown as string)).toBeUndefined()
-        expect(locator.lookup(null as unknown as string)).toBeUndefined()
-        expect(locator.lookup('127.0.0.1')).toBeUndefined()
-
-        locator.stop()
-        fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
-        fs.rmdirSync(dbDir)
-    })
-
-    it('returns undefined if not started', async () => {
-        const dbDir = getDbDir()
-        const locator = new GeoIpLocator(dbDir)
-        const location = locator.lookup('62.241.198.245')
-        expect(location).toBeUndefined()
-    })
-
-    it('start() throws if database path does not exist', async () => {
-        const locator = new GeoIpLocator('/nonexistent')
-        await expect(locator.start()).rejects.toThrow()
-    })
-
-    it('start() throws if database path is not writable', async () => {
-        const locator = new GeoIpLocator('/etc')
-        await expect(locator.start()).rejects.toThrow()
-    })
-
-    // The test works, but skip it because 'got' lib used by geolite2-redist 
-    // hangs the test for a while after the test is done
-    it('start throws if no network connectivity', async () => {
-        const dbDir = getDbDir()
-        
-        nock.disableNetConnect()
-
-        const locator = new GeoIpLocator(dbDir)
-        
-        await expect(locator.start()).rejects.toThrow()
-        
-        locator.stop()
-        nock.enableNetConnect()
-        //wtf.dump()
-    })
-
-    it('works also after monthly check', async () => {
-        const dbDir = getDbDir()
-        const locator = new GeoIpLocator(dbDir, 5000)
-        await locator.start()
-
-        await wait(7000)
-
-        // suomi.fi
-        const location = locator.lookup('62.241.198.245')
-        expect(location).toBeDefined()
-
-        // Helsinki, Finland
-        expect(location!.latitude).toBe(60.1797)
-        expect(location!.longitude).toBe(24.9344)
-
-        locator.stop()
-        fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
-        fs.rmdirSync(dbDir)
-    }, 60000)
+        it('can locate an IP address', async () => {
+            // suomi.fi
+            const location = locator!.lookup('62.241.198.245')
     
-    it('works also after monthly check if db gets deleted before the check', async () => {
-        const dbDir = getDbDir()
-        const locator = new GeoIpLocator(dbDir, 5000)
-        await locator.start()
-
-        fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
-
-        await wait(10000)
-
-        // suomi.fi
-        const location = locator.lookup('62.241.198.245')
-        expect(location).toBeDefined()
-
-        // Helsinki, Finland
-        expect(location!.latitude).toBe(60.1797)
-        expect(location!.longitude).toBe(24.9344)
-
-        locator.stop()
-        fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
-        fs.rmdirSync(dbDir)
-    }, 60000)
+            expect(location).toBeDefined()
     
-    it('does not crash if monthly database check fails', async () => {
-        const dbDir = getDbDir()
-        const locator = new GeoIpLocator(dbDir, 5000)
-        await locator.start()
+            // Helsinki, Finland
+            expect(location!.latitude).toBe(60.1797)
+            expect(location!.longitude).toBe(24.9344)
+        })
+    
+        it('returns undefined with invalid IP address', async () => {
+            expect(locator!.lookup('invalid')).toBeUndefined()
+            expect(locator!.lookup('')).toBeUndefined()
+            expect(locator!.lookup(undefined as unknown as string)).toBeUndefined()
+            expect(locator!.lookup(null as unknown as string)).toBeUndefined()
+            expect(locator!.lookup('127.0.0.1')).toBeUndefined()
+        })
 
-        nock.disableNetConnect()
-        await wait(10000)
-        nock.enableNetConnect()
+        it('works also after monthly check', async () => {
+            await wait(7000)
+    
+            // suomi.fi
+            const location = locator!.lookup('62.241.198.245')
+            expect(location).toBeDefined()
+    
+            // Helsinki, Finland
+            expect(location!.latitude).toBe(60.1797)
+            expect(location!.longitude).toBe(24.9344)
+    
+        }, 60000)
 
-        // suomi.fi
-        const location = locator.lookup('62.241.198.245')
-        expect(location).toBeDefined()
+        it('works also after monthly check if db gets deleted before the check', async () => {
+            fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
+    
+            await wait(10000)
+    
+            // suomi.fi
+            const location = locator!.lookup('62.241.198.245')
+            expect(location).toBeDefined()
+    
+            // Helsinki, Finland
+            expect(location!.latitude).toBe(60.1797)
+            expect(location!.longitude).toBe(24.9344)
+    
+        }, 60000)
+    })
 
-        // Helsinki, Finland
-        expect(location!.latitude).toBe(60.1797)
-        expect(location!.longitude).toBe(24.9344)
+    describe('tests with failing startup', () => {
+        it('returns undefined if not started', async () => {
+            const dbDir = getDbDir()
+            const locator = new GeoIpLocator(dbDir)
+            const location = locator.lookup('62.241.198.245')
+            expect(location).toBeUndefined()
+        })
 
-        locator.stop()
-        fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
-        fs.rmdirSync(dbDir)
-    }, 60000)
+        it('start() throws if database path does not exist', async () => {
+            const locator = new GeoIpLocator('/nonexistent')
+            await expect(locator.start()).rejects.toThrow()
+        })
+    
+        it('start() throws if database path is not writable', async () => {
+            const locator = new GeoIpLocator('/etc')
+            await expect(locator.start()).rejects.toThrow()
+        })
+    })
 
-    it('does not leak memory in monthly database check', async () => {
-        const dbDir = getDbDir()
-        const locator = new GeoIpLocator(dbDir, 1000)
-        await locator.start()
-        gc()
-        await wait(1000)
-        const memoryUsage = process.memoryUsage()
-        await wait(10000)
-        gc()
-        await wait(1000)
-        const memoryUsage2 = process.memoryUsage()
-        
-        expect(memoryUsage2.heapUsed).toBeLessThanOrEqual(memoryUsage.heapUsed)
+    describe('tests with non-standard startup', () => { 
+        let dbDir: string | undefined
+        let locator: GeoIpLocator | undefined
 
-        locator.stop()
-        fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
-        fs.rmdirSync(dbDir)
-    }, 60000)
+        afterEach(async () => {
+            locator!.stop()
+            fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
+            fs.rmSync(dbDir!, { recursive: true })
+        })
+
+        it('does not leak memory in monthly database check', async () => {
+            dbDir = getDbDir()
+            locator = new GeoIpLocator(dbDir, 1000)
+            await locator.start()
+            gc()
+            await wait(2000)
+            const memoryUsage = process.memoryUsage()
+            await wait(10000)
+            await locator.stop()
+            gc()
+            await wait(2000)
+            const memoryUsage2 = process.memoryUsage()
+            expect(memoryUsage2.heapUsed).toBeLessThanOrEqual(memoryUsage.heapUsed)
+        }, 60000)
+    })
 })

@@ -1,7 +1,7 @@
 import { Logger, filePathToNodeFormat } from '@streamr/utils'
-import fs from 'fs'
 import { CityResponse, Reader } from 'mmdb-lib'
 import LongTimeout from 'long-timeout'
+import { downloadGeoIpDatabase } from './downloadGeoIpDatabase'
 
 const logger = new Logger(module)
 interface GeoIpLookupResult {
@@ -9,16 +9,21 @@ interface GeoIpLookupResult {
     longitude: number
 }
 export class GeoIpLocator {
-    private geolite?: typeof import('geolite2-redist', { with: { "resolution-mode": "import" } })
+    private abortController: AbortController
     private readonly geoiIpDatabasePath: string
-    private readonly dbCheckIntervalLength: number
+    private readonly dbCheckInterval: number
+    private readonly dbCheckErrorInterval: number
     private reader?: Reader<CityResponse>
-    private dbCheckInterval?: LongTimeout.Timeout
+    private dbCheckTimeout?: LongTimeout.Timeout
 
     // By default, check the database every 30 days
+    // If the check fails, retry after 24 hours
 
-    constructor(geoiIpDatabasePath: string, dbCheckIntervalLength: number = 30 * 24 * 60 * 60 * 1000) {
-        this.dbCheckIntervalLength = dbCheckIntervalLength
+    constructor(geoiIpDatabasePath: string, dbCheckInterval: number = 30 * 24 * 60 * 60 * 1000,
+        dbCheckErrorInterval: number = 24 * 60 * 60 * 1000) {
+        this.abortController = new AbortController()
+        this.dbCheckInterval = dbCheckInterval
+        this.dbCheckErrorInterval = dbCheckErrorInterval
         if (!geoiIpDatabasePath.endsWith('/')) {
             geoiIpDatabasePath += '/'
         }
@@ -26,44 +31,42 @@ export class GeoIpLocator {
     }
 
     private checkDatabase: () => Promise<void> = async () => {
-        await this.geolite!.downloadDbs({ path: this.geoiIpDatabasePath, dbList: [this.geolite!.GeoIpDbName.City] })
-        this.reader = new Reader<CityResponse>(fs.readFileSync(this.geoiIpDatabasePath + '/' + this.geolite!.GeoIpDbName.City + '.mmdb'))
+        if (this.reader !== undefined) {
+            this.reader = await downloadGeoIpDatabase(this.geoiIpDatabasePath, true, this.abortController.signal)
+        } else {
+            const newReader = await downloadGeoIpDatabase(this.geoiIpDatabasePath, false, this.abortController.signal)
+            if (newReader !== undefined) {
+                this.reader = newReader
+            }
+        }
+    }
+
+    private scheduleCheck: (timeout: number) => void = async (timeout: number) => {
+        this.dbCheckTimeout = LongTimeout.setTimeout(async () => {
+            try {
+                await this.checkDatabase()
+                this.scheduleCheck(this.dbCheckInterval)
+            } catch (err) {
+                logger.warn('GeoIpLocator: monthly GeoIP database check failed', { err })
+                this.scheduleCheck(this.dbCheckErrorInterval)
+            } 
+        }, timeout)
     }
 
     async start(): Promise<void> {
-        if (this.geolite !== undefined) {
+        if (this.dbCheckTimeout !== undefined) {
             return
         }
 
-        // use dynamic import because geoip2-redist is an esm module
-        this.geolite = await import('geolite2-redist')
-        /*
-        try {
-            fs.accessSync(this.geoiIpDatabasePath, fs.constants.F_OK | fs.constants.W_OK)
-        } catch (err) {
-            if (err.code === 'ENOENT') {
-                throw new Error('geoiIpDatabasePath directory does not exist')
-            } else {
-                throw new Error('geoiIpDatabasePath directory is not writable')
-            }
-        }
-        */
-
         await this.checkDatabase()
-        
-        this.dbCheckInterval = LongTimeout.setInterval(async () => {
-            try {
-                await this.checkDatabase()
-            } catch (e) {
-                logger.warn('GeoIpLocator: monthly GeoIP database check failed', { error: e })
-            }
-        }, this.dbCheckIntervalLength)
+        this.scheduleCheck(this.dbCheckInterval)
     }
 
     stop(): void {
-        if (this.dbCheckInterval !== undefined) {
-            LongTimeout.clearInterval(this.dbCheckInterval)
+        if (this.dbCheckTimeout !== undefined) {
+            LongTimeout.clearTimeout(this.dbCheckTimeout)
         }
+        this.abortController.abort()
     }
 
     lookup(ip: string): GeoIpLookupResult | undefined {
