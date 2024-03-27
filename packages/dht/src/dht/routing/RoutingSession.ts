@@ -172,8 +172,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                 referenceId: getDhtAddressFromRaw(this.config.routedMessage.target),
                 maxSize: ROUTING_TABLE_MAX_SIZE,
                 allowToContainReferenceId: true,
-                nodeIdDistanceLimit: previousId,
-                emitEvents: false
+                nodeIdDistanceLimit: previousId
             })
             const contacts = Array.from(this.config.connections.values())
                 .map((peer) => new RoutingRemoteContact(

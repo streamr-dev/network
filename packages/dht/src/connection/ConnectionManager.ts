@@ -156,8 +156,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const disconnectionCandidates = new SortedContactList<ManagedConnection>({
             referenceId: getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor()), 
             maxSize: 100000,  // TODO use config option or named constant?
-            allowToContainReferenceId: false,
-            emitEvents: false
+            allowToContainReferenceId: false
         })
         this.connections.forEach((connection, key) => {
             // TODO: Investigate why multiple invalid WS client connections to the same

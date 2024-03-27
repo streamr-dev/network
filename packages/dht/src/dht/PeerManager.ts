@@ -70,7 +70,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             numberOfNodesPerKBucket: this.config.numberOfNodesPerKBucket,
             numberOfNodesToPing: this.config.numberOfNodesPerKBucket
         })
-        this.ringContacts = new RingContactList<DhtNodeRpcRemote>(getRingIdRawFromPeerDescriptor(this.config.localPeerDescriptor), true)
+        this.ringContacts = new RingContactList<DhtNodeRpcRemote>(getRingIdRawFromPeerDescriptor(this.config.localPeerDescriptor))
         this.ringContacts.on('ringContactAdded', (peerDescriptor: PeerDescriptor, closestPeers: RingContacts) => {
             this.emit('ringContactAdded', peerDescriptor, closestPeers)
         })
@@ -86,8 +86,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.contacts = new SortedContactList({
             referenceId: this.config.localNodeId,
             maxSize: this.config.maxContactListSize,
-            allowToContainReferenceId: false,
-            emitEvents: true
+            allowToContainReferenceId: false
         })
         this.contacts.on('contactRemoved', (removedContact: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) => {
             if (this.stopped) {
@@ -115,8 +114,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         const sortingList: SortedContactList<DhtNodeRpcRemote> = new SortedContactList({
             referenceId: this.config.localNodeId,
             maxSize: 100,  // TODO use config option or named constant?
-            allowToContainReferenceId: false,
-            emitEvents: false
+            allowToContainReferenceId: false
         })
         sortingList.addContacts(oldContacts)
         const sortedContacts = sortingList.getAllContacts()
@@ -248,7 +246,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         const closest = new SortedContactList<DhtNodeRpcRemote>({
             referenceId,
             allowToContainReferenceId: true,
-            emitEvents: false,
             excludedNodeIds,
             maxSize: limit
         })
@@ -261,7 +258,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         const closest = new SortedContactList<DhtNodeRpcRemote>({
             referenceId,
             allowToContainReferenceId: true,
-            emitEvents: false,
             excludedNodeIds,
             maxSize: limit
         })
@@ -274,7 +270,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         limit?: number,
         excludedIds?: Set<DhtAddress>
     ): { left: DhtNodeRpcRemote[], right: DhtNodeRpcRemote[] } {
-        const closest = new RingContactList<DhtNodeRpcRemote>(ringIdRaw, false, excludedIds)
+        const closest = new RingContactList<DhtNodeRpcRemote>(ringIdRaw, excludedIds)
         this.contacts.getAllContacts().map((contact) => closest.addContact(contact))
         this.ringContacts.getAllContacts().map((contact) => closest.addContact(contact))
         return closest.getClosestContacts(limit ?? 8)

@@ -19,12 +19,10 @@ export class RingContactList<C extends { getPeerDescriptor(): PeerDescriptor }> 
     private readonly excludedIds: Set<DhtAddress>
     private readonly leftNeighbors: OrderedMap<RingDistance, C>
     private readonly rightNeighbors: OrderedMap<RingDistance, C>
-    private readonly emitEvents: boolean
 
-    constructor(rawReferenceId: RingIdRaw, emitEvents: boolean, excludedIds?: Set<DhtAddress>) {
+    constructor(rawReferenceId: RingIdRaw, excludedIds?: Set<DhtAddress>) {
         super()
         this.referenceId = getRingIdFromRaw(rawReferenceId)
-        this.emitEvents = emitEvents
         this.excludedIds = excludedIds ?? new Set()
         this.leftNeighbors = new OrderedMap<RingDistance, C>()
         this.rightNeighbors = new OrderedMap<RingDistance, C>()
@@ -60,7 +58,7 @@ export class RingContactList<C extends { getPeerDescriptor(): PeerDescriptor }> 
             }
         }
 
-        if (this.emitEvents && (elementAdded || elementRemoved)) {
+        if (this.hasEventListeners() && (elementAdded || elementRemoved)) {
             const closestContacts = this.getClosestContacts()
             const closestDescriptors = { 
                 left: closestContacts.left.map((c) => c.getPeerDescriptor()), 
@@ -92,7 +90,7 @@ export class RingContactList<C extends { getPeerDescriptor(): PeerDescriptor }> 
             elementRemoved = true
         }
 
-        if (this.emitEvents && elementRemoved) {
+        if (this.hasEventListeners() && elementRemoved) {
             const closestContacts = this.getClosestContacts()
             const closestDescriptors = { left: closestContacts.left.map((c) => c.getPeerDescriptor()), 
                 right: closestContacts.right.map((c) => c.getPeerDescriptor()) }
@@ -147,5 +145,9 @@ export class RingContactList<C extends { getPeerDescriptor(): PeerDescriptor }> 
             ret.push(item[1])
         }
         return ret
+    }
+
+    private hasEventListeners(): boolean {
+        return this.eventNames().length > 0
     }
 }
