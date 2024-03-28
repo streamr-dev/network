@@ -152,9 +152,9 @@ export class SubscriberKeyExchange {
 
     private async isAssignedToMe(streamPartId: StreamPartID, recipient: EthereumAddress, requestId: string): Promise<boolean> {
         if (this.pendingRequests.has(requestId)) {
-            const erc1271Contract = this.subscriber.getERC1271ContractAddress(streamPartId)
             const authenticatedUser = await this.authentication.getAddress()
-            return recipient === authenticatedUser || (recipient === erc1271Contract && erc1271Contract !== undefined)
+            const erc1271Contract = this.subscriber.getERC1271ContractAddress(streamPartId)
+            return (recipient === authenticatedUser) || (recipient === erc1271Contract)
         }
         return false
     }
