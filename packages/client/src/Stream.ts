@@ -236,7 +236,13 @@ export class Stream {
         let assignmentSubscription
         try {
             const streamPartId = toStreamPartID(formStorageNodeAssignmentStreamId(normalizedNodeAddress), DEFAULT_PARTITION)
-            assignmentSubscription = new Subscription(streamPartId, false, new EventEmitter<SubscriptionEvents>(), this._loggerFactory)
+            assignmentSubscription = new Subscription(
+                streamPartId,
+                false,
+                undefined,
+                new EventEmitter<SubscriptionEvents>(),
+                this._loggerFactory
+            )
             await this._subscriber.add(assignmentSubscription)
             const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, {
                 id: this.id,
