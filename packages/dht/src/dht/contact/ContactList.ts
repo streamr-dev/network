@@ -1,15 +1,6 @@
 import EventEmitter from 'eventemitter3'
 import { DhtAddress } from '../../identifiers'
 
-export class ContactState<C> {  // TODO remove this wrapper
-
-    public contact: C
-
-    constructor(contact: C) {
-        this.contact = contact
-    }
-}
-
 export interface Events<C> {
     contactRemoved: (removedContact: C, closestContacts: C[]) => void
     contactAdded: (contactAdded: C, closestContacts: C[]) => void
@@ -17,7 +8,7 @@ export interface Events<C> {
 
 export class ContactList<C extends { getNodeId: () => DhtAddress }> extends EventEmitter<Events<C>> {
 
-    protected contactsById: Map<DhtAddress, ContactState<C>> = new Map()
+    protected contactsById: Map<DhtAddress, C> = new Map()
     // TODO move this to SortedContactList
     protected contactIds: DhtAddress[] = []
     protected localNodeId: DhtAddress
@@ -35,7 +26,7 @@ export class ContactList<C extends { getNodeId: () => DhtAddress }> extends Even
         this.defaultContactQueryLimit = defaultContactQueryLimit
     }
 
-    public getContact(id: DhtAddress): ContactState<C> | undefined {
+    public getContact(id: DhtAddress): C | undefined {
         return this.contactsById.get(id)
     }
 
