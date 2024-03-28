@@ -60,7 +60,7 @@ export class PeerDiscovery {
         )))
     }
 
-    async joinThroughEntryPoint(
+    private async joinThroughEntryPoint(
         entryPointDescriptor: PeerDescriptor,
         // Note that this set is mutated by DiscoverySession
         contactedPeers: Set<DhtAddress>,
