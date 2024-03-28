@@ -50,6 +50,6 @@ export class RandomContactList<C extends { getNodeId: () => DhtAddress }> extend
     }
 
     public getContacts(limit = this.defaultContactQueryLimit): C[] {
-        return this.contactIds.map((contactId) => this.contactsById.get(contactId)!).slice(0, limit)
+        return this.contactIds.slice(0, limit).map((contactId) => this.contactsById.get(contactId)!)
     }
 }
