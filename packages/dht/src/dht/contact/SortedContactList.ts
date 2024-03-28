@@ -97,7 +97,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
      * Closest first then others in ascending distance order
      */
     public getClosestContacts(limit?: number): C[] {
-        const ret = this.getAllContacts()
+        const ret = this.contactIds.map((nodeId) => this.contactsById.get(nodeId)!)
         return (limit === undefined) 
             ? ret 
             : ret.slice(0, Math.max(limit, 0))
@@ -144,8 +144,8 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
         return false
     }
 
-    public getAllContacts(): C[] {
-        return this.contactIds.map((nodeId) => this.contactsById.get(nodeId)!)
+    public getAllContactsInUndefinedOrder(): IterableIterator<C> {
+        return this.contactsById.values()
     }
 
     public getSize(excludedNodeIds?: Set<DhtAddress>): number {
