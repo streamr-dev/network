@@ -105,7 +105,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
      * Furthest first then others in descending distance order
      */
     getFurthestContacts(limit?: number): C[] {
-        const ret = this.getClosestContacts().toReversed()
+        const ret = this.getClosestContacts().reverse()
         return (limit === undefined) 
             ? ret 
             : ret.slice(0, Math.max(limit, 0))
