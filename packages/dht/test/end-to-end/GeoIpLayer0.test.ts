@@ -7,14 +7,12 @@ const WEBSOCKET_PORT_RANGE = { min: 10012, max: 10015 }
 const testIp = '51.120.98.194'
 const testRegion = 7900
 
-jest.spyOn(WebsocketServerConnection.prototype, 'remoteIpAddress', 'get')
-    .mockReturnValue(testIp)
-
 describe('Layer0', () => {
 
     let epDhtNode: DhtNode
     let node1: DhtNode
-
+    let mock: jest.SpyInstance<string, [], any> | undefined 
+    
     beforeEach(async () => {
 
         epDhtNode = new DhtNode({
@@ -35,9 +33,12 @@ describe('Layer0', () => {
             node1.start()
         ])
 
+        mock = jest.spyOn(WebsocketServerConnection.prototype, 'remoteIpAddress', 'get').mockReturnValue(testIp)
+
     }, 10000)
 
     afterEach(async () => {
+        mock?.mockRestore()
         await Promise.all([
             epDhtNode.stop(),
             node1.stop()

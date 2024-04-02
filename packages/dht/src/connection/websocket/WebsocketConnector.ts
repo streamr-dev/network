@@ -30,7 +30,7 @@ import * as Err from '../../helpers/errors'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { LOCAL_PROTOCOL_VERSION, isMaybeSupportedVersion } from '../../helpers/version'
-import { GeoIpLocator } from '../../helpers/GeoIpLocator'
+import { GeoIpLocator } from '@streamr/geoip-location'
 
 const logger = new Logger(module)
 

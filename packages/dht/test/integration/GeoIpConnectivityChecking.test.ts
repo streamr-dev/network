@@ -15,14 +15,12 @@ const testIp = '164.151.129.20'
 const testLatitude = -25.7599
 const testLongitude = 28.2604
 
-jest.spyOn(WebsocketServerConnection.prototype, 'remoteIpAddress', 'get')
-    .mockReturnValue(testIp)
-
 describe('ConnectivityChecking', () => {
 
     let server: ConnectionManager
     const PORT = 15001
     const HOST = '127.0.0.1'
+    let mock: jest.SpyInstance<string, [], any> | undefined 
 
     beforeEach(async () => {
         server = new ConnectionManager({
@@ -46,9 +44,11 @@ describe('ConnectivityChecking', () => {
             metricsContext: new MetricsContext()
         })
         await server.start()
+        jest.spyOn(WebsocketServerConnection.prototype, 'remoteIpAddress', 'get').mockReturnValue(testIp)
     })
 
     afterEach(async () => {
+        mock?.mockRestore()
         await server.stop()
         fs.unlinkSync('/tmp/tmpPath/GeoLite2-City.mmdb')
         fs.rmdirSync('/tmp/tmpPath')

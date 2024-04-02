@@ -1,4 +1,4 @@
-import { GeoIpLocator } from '../../src/helpers/GeoIpLocator'
+import { GeoIpLocator } from '../../src/GeoIpLocator'
 
 describe('GeoIpLocator', () => {
     let dirCounter = 0

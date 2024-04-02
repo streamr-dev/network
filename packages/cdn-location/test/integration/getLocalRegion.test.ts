@@ -52,6 +52,4 @@ describe('getLocalRegion', () => {
         expect(getLocalAirportCodeByCoordinates(-37, -175)).toEqual('AKL')
         expect(getLocalAirportCodeByCoordinates(-25, -57)).toEqual('ASU')
     })
-
-
 })

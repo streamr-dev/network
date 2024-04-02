@@ -1,4 +1,4 @@
-import { GeoIpLocator } from '../../src/helpers/GeoIpLocator'
+import { GeoIpLocator } from '../../src/GeoIpLocator'
 import { wait } from '@streamr/utils'
 import fs from 'fs'
 

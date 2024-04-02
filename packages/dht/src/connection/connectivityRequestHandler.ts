@@ -11,7 +11,7 @@ import { IConnection } from './IConnection'
 import { WebsocketServerConnection } from './websocket/WebsocketServerConnection'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
 import { LOCAL_PROTOCOL_VERSION } from '../helpers/version'
-import { GeoIpLocator } from '../helpers/GeoIpLocator'
+import { GeoIpLocator } from '@streamr/geoip-location'
 
 export const DISABLE_CONNECTIVITY_PROBE = 0
 

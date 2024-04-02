@@ -48,6 +48,11 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: cdn-location
+  geoip-location:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: geoip-location
   protocol:
     needs: build
     uses: ./.github/workflows/test-setup.yml
