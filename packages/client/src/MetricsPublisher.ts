@@ -87,8 +87,15 @@ export class MetricsPublisher {
 
     private async publish(report: MetricsReport, streamId: string, partitionKey: string): Promise<void> {
         await wait(Math.random() * this.config.maxPublishDelay)
+        const message = {
+            ...report,
+            node: { 
+                ...report.node,
+                id: await this.node.getNodeId()
+            }
+        }
         try {
-            await this.publisher.publish(streamId, report, {
+            await this.publisher.publish(streamId, message, {
                 timestamp: report.period.end,
                 partitionKey
             })
