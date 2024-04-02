@@ -69,7 +69,7 @@ Changes before Tatum release are not documented in this file.
 
 ## [100.2.0] - 2024-03-28
 
-### @streamr/node
+### @streamr/sdk
 
 #### Added
 
@@ -78,7 +78,7 @@ Changes before Tatum release are not documented in this file.
 
 ## [100.1.2] - 2024-03-27
 
-### @streamr/node
+### @streamr/sdk
 
 #### Fixed
 
@@ -87,7 +87,7 @@ Changes before Tatum release are not documented in this file.
 
 ## [100.1.1] - 2024-03-26
 
-### @streamr/node
+### @streamr/sdk
 
 #### Fixed
 - Update internal list of JSON RPC urls for Polygon
