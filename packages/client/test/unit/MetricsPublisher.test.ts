@@ -1,12 +1,13 @@
 import 'reflect-metadata'
 
+import { DhtAddress } from '@streamr/dht'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { LevelMetric, MetricsContext, wait } from '@streamr/utils'
 import { StreamrClientConfig } from '../../src/Config'
 import { DestroySignal } from '../../src/DestroySignal'
-import { StreamrClientEventEmitter } from '../../src/events'
-import { MetricsPublisher, DEFAULTS } from '../../src/MetricsPublisher'
+import { DEFAULTS, MetricsPublisher } from '../../src/MetricsPublisher'
 import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
+import { StreamrClientEventEmitter } from '../../src/events'
 import { Publisher } from '../../src/publish/Publisher'
 import { waitForCalls } from '../test-utils/utils'
 
@@ -23,11 +24,11 @@ describe('MetricsPublisher', () => {
         const publisher: Pick<Publisher, 'publish'> = {
             publish: publishReportMessage
         }
-        const node: Pick<NetworkNodeFacade, 'getNode'> = {
+        const node: Pick<NetworkNodeFacade, 'getNode' | 'getNodeId'> = {
             getNode: async () => ({
                 getMetricsContext: () => metricsContext,
-                getNodeId: () => nodeAddress + '#mock-session-id'
-            }) as any
+            }) as any,
+            getNodeId: async () => '12345678' as DhtAddress
         }
         const authentication = {
             getAddress: async () => nodeAddress

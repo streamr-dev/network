@@ -56,6 +56,7 @@ export const createMockRingNode = async (
     const opts = {
         peerDescriptor: peerDescriptor,
         transport: mockConnectionManager,
+        connectionLocker: mockConnectionManager,
         numberOfNodesPerKBucket: 8,
         maxConnections: maxConnections,
         dhtJoinTimeout,
@@ -88,6 +89,7 @@ export const createMockConnectionDhtNode = async (
     const opts = {
         peerDescriptor: peerDescriptor,
         transport: mockConnectionManager,
+        connectionLocker: mockConnectionManager,
         numberOfNodesPerKBucket,
         maxConnections: maxConnections,
         dhtJoinTimeout,

@@ -76,6 +76,7 @@ export interface DhtNodeOptions {
     storageRedundancyFactor?: number
 
     transport?: ITransport
+    connectionLocker?: ConnectionLocker
     peerDescriptor?: PeerDescriptor
     entryPoints?: PeerDescriptor[]
     websocketHost?: string
@@ -189,10 +190,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         // If transport is given, do not create a ConnectionManager
         if (this.config.transport) {
             this.transport = this.config.transport
+            this.connectionLocker = this.config.connectionLocker
             this.localPeerDescriptor = this.transport.getLocalPeerDescriptor()
-            if (this.config.transport instanceof ConnectionManager) {
-                this.connectionLocker = this.config.transport
-            }
         } else {
             const connectorFacadeConfig: DefaultConnectorFacadeConfig = {
                 transport: this,
@@ -304,7 +303,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             maxContactListSize: this.config.maxNeighborListSize,
             localNodeId: this.getNodeId(),
             localPeerDescriptor: this.localPeerDescriptor!,
-            connectionLocker: this.connectionLocker!,
+            connectionLocker: this.connectionLocker,
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
             isLayer0: (this.connectionLocker !== undefined),
             createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => this.createDhtNodeRpcRemote(peerDescriptor),
