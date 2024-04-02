@@ -59,7 +59,7 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
-- Add node ID to metrics messages (https://github.com/streamr-dev/network/pull/2468)
+- Add node ID to metrics messages (https://github.com/streamr-dev/network/pull/2464)
 
 #### Changed
 
@@ -108,7 +108,7 @@ Changes before Tatum release are not documented in this file.
 
 
 [Unreleased]: https://github.com/streamr-dev/network/compare/v100.2.1...HEAD
-[100.2.1]: https://github.com/streamr-dev/network/compare/v100.2.0...v100.2.1
+[100.2.1]: https://github.com/streamr-dev/network/compare/v100.2.1...v100.2.1
 [100.2.0]: https://github.com/streamr-dev/network/compare/v100.1.2...v100.2.0
 [100.1.2]: https://github.com/streamr-dev/network/compare/v100.1.1...v100.1.2
 [100.1.1]: https://github.com/streamr-dev/network/compare/v100.1.0...v100.1.1
