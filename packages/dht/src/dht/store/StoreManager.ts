@@ -158,7 +158,7 @@ export class StoreManager {
                 try {
                     await rpcRemote.replicateData({ entry: dataEntry })
                 } catch (err) {
-                    logger.trace('Failed to replicate data in replicateDataToClosestNodes', { error: err })
+                    logger.trace('Failed to replicate data in replicateDataToClosestNodes', { err })
                 }
             }))
         }))

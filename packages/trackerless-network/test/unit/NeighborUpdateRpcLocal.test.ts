@@ -5,8 +5,8 @@ import { createMockPeerDescriptor } from '../utils/utils'
 import { NodeList } from '../../src/logic/NodeList'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { MockTransport } from '../utils/mock/Transport'
-import { DeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { DeliveryRpcRemote } from '../../src/logic/DeliveryRpcRemote'
+import { ContentDeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
 import { range } from 'lodash'
 
 describe('NeighborUpdateRpcLocal', () => {
@@ -24,11 +24,11 @@ describe('NeighborUpdateRpcLocal', () => {
 
     const addNeighbors = (count: number) => {
         for (let i = 0; i < count; i++) {
-            neighbors.add(new DeliveryRpcRemote(
+            neighbors.add(new ContentDeliveryRpcRemote(
                 localPeerDescriptor,
                 createMockPeerDescriptor(),
                 rpcCommunicator,
-                DeliveryRpcClient
+                ContentDeliveryRpcClient
             ))
         }
     }
@@ -81,11 +81,11 @@ describe('NeighborUpdateRpcLocal', () => {
 
     it('does not ask to be removed if caller is a neighbor', async () => {
         const caller = createMockPeerDescriptor()
-        const neighbor = new DeliveryRpcRemote(
+        const neighbor = new ContentDeliveryRpcRemote(
             localPeerDescriptor,
             caller,
             rpcCommunicator,
-            DeliveryRpcClient
+            ContentDeliveryRpcClient
         )
         neighbors.add(neighbor)
         const res = await rpcLocal.neighborUpdate({
@@ -108,11 +108,11 @@ describe('NeighborUpdateRpcLocal', () => {
 
     it('asks to be removed if caller is a neighbor and both have too many neighbors', async () => {
         const caller = createMockPeerDescriptor()
-        const neighbor = new DeliveryRpcRemote(
+        const neighbor = new ContentDeliveryRpcRemote(
             localPeerDescriptor,
             caller,
             rpcCommunicator,
-            DeliveryRpcClient
+            ContentDeliveryRpcClient
         )
         neighbors.add(neighbor)
         addNeighbors(neighborTargetCount)

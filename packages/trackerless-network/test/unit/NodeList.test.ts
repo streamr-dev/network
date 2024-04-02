@@ -8,10 +8,10 @@ import {
 } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { expect } from 'expect'
-import { DeliveryRpcRemote } from '../../src/logic/DeliveryRpcRemote'
+import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
 import { NodeList } from '../../src/logic/NodeList'
-import { formStreamPartDeliveryServiceId } from '../../src/logic/formStreamPartDeliveryServiceId'
-import { DeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { formStreamPartContentDeliveryServiceId } from '../../src/logic/formStreamPartDeliveryServiceId'
+import { ContentDeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { MockTransport } from '../utils/mock/Transport'
 
@@ -30,12 +30,12 @@ describe('NodeList', () => {
     let nodeList: NodeList
 
     const createRemoteGraphNode = (peerDescriptor: PeerDescriptor) => {
-        const mockCommunicator = new ListeningRpcCommunicator(formStreamPartDeliveryServiceId(streamPartId), new MockTransport())
-        return new DeliveryRpcRemote(
+        const mockCommunicator = new ListeningRpcCommunicator(formStreamPartContentDeliveryServiceId(streamPartId), new MockTransport())
+        return new ContentDeliveryRpcRemote(
             createMockPeerDescriptor(),
             peerDescriptor,
             mockCommunicator,
-            DeliveryRpcClient
+            ContentDeliveryRpcClient
         )
     }
 

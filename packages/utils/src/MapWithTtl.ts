@@ -4,7 +4,6 @@ interface ValueWrapper<V> {
 }
 
 export class MapWithTtl<K, V> {
-
     private readonly delegate: Map<K, ValueWrapper<V>> = new Map()
     private readonly getTtl: (value: V) => number
 

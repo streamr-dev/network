@@ -1,6 +1,6 @@
 import { DataEntry } from '../../proto/packages/dht/protos/DhtRpc'
-import { MapWithTtl } from '../../helpers/MapWithTtl'
 import { DhtAddress, getDhtAddressFromRaw } from '../../identifiers'
+import { MapWithTtl } from '@streamr/utils'
 
 export class LocalDataStore {
 

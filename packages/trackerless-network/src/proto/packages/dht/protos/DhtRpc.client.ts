@@ -35,6 +35,8 @@ import type { Empty } from "../../../google/protobuf/empty";
 import type { LeaveNotice } from "./DhtRpc";
 import type { PingResponse } from "./DhtRpc";
 import type { PingRequest } from "./DhtRpc";
+import type { ClosestRingPeersResponse } from "./DhtRpc";
+import type { ClosestRingPeersRequest } from "./DhtRpc";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { ClosestPeersResponse } from "./DhtRpc";
 import type { ClosestPeersRequest } from "./DhtRpc";
@@ -48,6 +50,10 @@ export interface IDhtNodeRpcClient {
      * @generated from protobuf rpc: getClosestPeers(dht.ClosestPeersRequest) returns (dht.ClosestPeersResponse);
      */
     getClosestPeers(input: ClosestPeersRequest, options?: RpcOptions): UnaryCall<ClosestPeersRequest, ClosestPeersResponse>;
+    /**
+     * @generated from protobuf rpc: getClosestRingPeers(dht.ClosestRingPeersRequest) returns (dht.ClosestRingPeersResponse);
+     */
+    getClosestRingPeers(input: ClosestRingPeersRequest, options?: RpcOptions): UnaryCall<ClosestRingPeersRequest, ClosestRingPeersResponse>;
     /**
      * @generated from protobuf rpc: ping(dht.PingRequest) returns (dht.PingResponse);
      */
@@ -74,17 +80,24 @@ export class DhtNodeRpcClient implements IDhtNodeRpcClient, ServiceInfo {
         return stackIntercept<ClosestPeersRequest, ClosestPeersResponse>("unary", this._transport, method, opt, input);
     }
     /**
+     * @generated from protobuf rpc: getClosestRingPeers(dht.ClosestRingPeersRequest) returns (dht.ClosestRingPeersResponse);
+     */
+    getClosestRingPeers(input: ClosestRingPeersRequest, options?: RpcOptions): UnaryCall<ClosestRingPeersRequest, ClosestRingPeersResponse> {
+        const method = this.methods[1], opt = this._transport.mergeOptions(options);
+        return stackIntercept<ClosestRingPeersRequest, ClosestRingPeersResponse>("unary", this._transport, method, opt, input);
+    }
+    /**
      * @generated from protobuf rpc: ping(dht.PingRequest) returns (dht.PingResponse);
      */
     ping(input: PingRequest, options?: RpcOptions): UnaryCall<PingRequest, PingResponse> {
-        const method = this.methods[1], opt = this._transport.mergeOptions(options);
+        const method = this.methods[2], opt = this._transport.mergeOptions(options);
         return stackIntercept<PingRequest, PingResponse>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: leaveNotice(dht.LeaveNotice) returns (google.protobuf.Empty);
      */
     leaveNotice(input: LeaveNotice, options?: RpcOptions): UnaryCall<LeaveNotice, Empty> {
-        const method = this.methods[2], opt = this._transport.mergeOptions(options);
+        const method = this.methods[3], opt = this._transport.mergeOptions(options);
         return stackIntercept<LeaveNotice, Empty>("unary", this._transport, method, opt, input);
     }
 }

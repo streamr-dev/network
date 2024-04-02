@@ -5,7 +5,7 @@ import { DhtAddress } from '../identifiers'
 
 export type LockID = string
 
-export class ConnectionLockHandler {
+export class ConnectionLockStates {
 
     private localLocks: Map<DhtAddress, Set<LockID>> = new Map()
     private remoteLocks: Map<DhtAddress, Set<LockID>> = new Map()

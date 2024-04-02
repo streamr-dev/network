@@ -242,42 +242,22 @@ export const createMockPeers = (): PeerDescriptor[] => {
     ]
 }
 
-export const waitConnectionManagersReadyForTesting = async (connectionManagers: ConnectionManager[], limit: number): Promise<void> => {
-    connectionManagers.forEach((connectionManager) => garbageCollectConnections(connectionManager, limit))
-    try {
-        await Promise.all(connectionManagers.map((connectionManager) => waitReadyForTesting(connectionManager, limit)))
-    } catch (_err) {
-        // did not successfully meet condition but network should be in a stable non-star state
-    }
-}
-
-export const waitNodesReadyForTesting = async (nodes: DhtNode[], limit: number = 10000): Promise<void> => {
-    return waitConnectionManagersReadyForTesting(
-        nodes.map((node) => {
-            return (node.getTransport() as ConnectionManager)
-        }), limit)
-}
-
-function garbageCollectConnections(connectionManager: ConnectionManager, limit: number): void {
-    const LAST_USED_LIMIT = 100
-    connectionManager.garbageCollectConnections(limit, LAST_USED_LIMIT)
-}
-
-async function waitReadyForTesting(connectionManager: ConnectionManager, limit: number): Promise<void> {
-    const LAST_USED_LIMIT = 100
-    connectionManager.garbageCollectConnections(limit, LAST_USED_LIMIT)
-    try {
-        await waitForCondition(() => {
-            return (connectionManager.getLocalLockedConnectionCount() === 0 &&
-                connectionManager.getRemoteLockedConnectionCount() === 0 &&
-                connectionManager.getConnections().length <= limit)
-        }, 20000)
-    } catch (err) {
-        if (connectionManager.getLocalLockedConnectionCount() > 0
-            && connectionManager.getRemoteLockedConnectionCount() > 0) {
-            throw new Error('Connections are still locked')
-        } else if (connectionManager.getConnections().length > limit) {
-            throw new Error(`ConnectionManager has more than ${limit}`)
+/*
+ * When we start multiple nodes, most of the nodes have unlocked connections. This promise will resolve when some of those 
+ * unlocked connections have been garbage collected, i.e. we typically have connections only to the nodes which
+ * are neighbors.
+ */
+export const waitForStableTopology = async (nodes: DhtNode[], maxConnectionCount: number = 10000): Promise<void> => {
+    const MAX_IDLE_TIME = 100
+    const connectionManagers = nodes.map((n) => n.getTransport() as ConnectionManager)
+    await Promise.all(connectionManagers.map(async (connectionManager) => {
+        connectionManager.garbageCollectConnections(maxConnectionCount, MAX_IDLE_TIME)
+        try {
+            await waitForCondition(() => connectionManager.getConnections().length <= maxConnectionCount, 20000)
+        } catch (err) {
+            // the topology is very likely stable, but we can't be sure (maybe the node has more than maxConnectionCount
+            // locked connections and therefore it is ok to that garbage collector was not able to remove any of those
+            // connections
         }
-    }
+    }))
 }

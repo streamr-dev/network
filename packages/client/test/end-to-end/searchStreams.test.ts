@@ -4,7 +4,7 @@ import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
-import { SearchStreamsPermissionFilter } from '../../src/registry/searchStreams'
+import { SearchStreamsPermissionFilter } from '../../src/contracts/searchStreams'
 
 const TIMEOUT = 2 * 60 * 1000
 

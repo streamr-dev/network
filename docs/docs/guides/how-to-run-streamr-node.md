@@ -50,7 +50,7 @@ Start the Config Wizard with the below command. Docker will download the node im
 #### Run the config wizard (Linux / macOS instructions)
 
 ```
-sudo docker run -it -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/node:v100.0.0-rc.1 bin/config-wizard
+sudo docker run -it -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/node bin/config-wizard
 ```
 
 #### **Windows PowerShell instructions**
@@ -64,7 +64,7 @@ cd ~/.streamrDocker
 Then run the Config Wizard:
 
 ```
-docker run -it -v ${pwd}:/home/streamr/.streamr streamr/node:v100.0.0-rc.1 bin/config-wizard
+docker run -it -v ${pwd}:/home/streamr/.streamr streamr/node bin/config-wizard
 ```
 
 #### Using the Config Wizard
@@ -88,7 +88,7 @@ If you're running a node to become an Operator, then you could now jump back to 
 #### Linux / macOS instructions
 
 ```
-sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/node:v100.0.0-rc.1
+sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/node
 ```
 
 #### Windows PowerShell instructions
@@ -99,7 +99,7 @@ First move into your node's folder:
 cd ~/.streamrDocker
 ```
 ```
-docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v ${pwd}:/home/streamr/.streamr streamr/node:v100.0.0-rc.1
+docker run -p 32200:32200 --name streamr --restart unless-stopped -d -v ${pwd}:/home/streamr/.streamr streamr/node
 ```
 
 **The `docker run` command, deconstructed:**
@@ -147,11 +147,11 @@ See [Docker's documentation](https://docs.docker.com/engine/reference/commandlin
 ### Step 1: Install the recommended version using npm
 If you don’t have Node.js installed, install it using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) or manually from the [Node.js site](https://nodejs.org/en/download/). The Streamr node requires at least Node.js version 16.x. Once installed, you can download, configure, and start the Streamr node.
 
-- Run `npm install -g @streamr/node@100.0.0-rc.1` to download and install the package. You may need administrative access to run this command. The recommended version may be different to the version listed here, if in doubt, check the [npm registry](https://www.npmjs.com/package/@streamr/node?activeTab=versions).
+- Run `npm install -g @streamr/node` to download and install the package. You may need administrative access to run this command. The recommended version may be different to the version listed here, if in doubt, check the [npm registry](https://www.npmjs.com/package/@streamr/node?activeTab=versions).
 
 To install the Streamr node, run, 
 ```
-npm install -g @streamr/node@100.0.0-rc.1
+npm install -g @streamr/node
 ```
 
 There can be plenty of output from npm. If the installation fails with an error, you should address it before continuing.
@@ -187,10 +187,10 @@ streamr-broker PATH_TO_CONFIG_FILE
 You should start to see logging similar to this:
 
 ```
-INFO [2023-12-08T08:56:52.131] (StreamrNode              ): Start Streamr node version x
+INFO [2023-12-08T08:56:52.131] (broker                   ): Start Streamr node version x
 INFO [2023-12-08T08:56:53.438] (AutoCertifierClient      ): updateSubdomainIp() called for xyz.streamr-nodes.xyz
 INFO [2023-12-08T08:56:54.022] (AutoCertifierClient      ): 2147483647 milliseconds until certificate update
-INFO [2023-12-08T08:56:54.302] (StreamrNode              ): Starting new StreamrNode with id 24c8eb0e9f3a46a98c0
+INFO [2023-12-08T08:56:54.302] (NetworkStack             ): Starting node with id 24c8eb0e9f3a46a98c0
 ```
 
 ## Mainnet node config
@@ -233,7 +233,7 @@ For extra logging on your Streamr node, add the `LOG_LEVEL` environmental variab
 
 For example,
 ```shell
-sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -e LOG_LEVEL=trace -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/node:v100.0.0-rc.1
+sudo docker run -p 32200:32200 --name streamr --restart unless-stopped -d -e LOG_LEVEL=trace -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/node
 ```
 
 ## Mumbai node config

@@ -15,7 +15,7 @@ import {
 import { ConnectionLockRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import { DEFAULT_SEND_OPTIONS, ITransport, SendOptions, TransportEvents } from '../transport/ITransport'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
-import { ConnectionLockHandler, LockID } from './ConnectionLockHandler'
+import { ConnectionLockStates, LockID } from './ConnectionLockStates'
 import { ConnectorFacade } from './ConnectorFacade'
 import { ManagedConnection, Events as ManagedConnectionEvents } from './ManagedConnection'
 import { ConnectionLockRpcRemote } from './ConnectionLockRpcRemote'
@@ -59,6 +59,9 @@ export interface ConnectionLocker {
     unlockConnection(targetDescriptor: PeerDescriptor, lockId: LockID): void
     weakLockConnection(nodeId: DhtAddress, lockId: LockID): void
     weakUnlockConnection(nodeId: DhtAddress, lockId: LockID): void
+    getLocalLockedConnectionCount(): number
+    getRemoteLockedConnectionCount(): number
+    getWeakLockedConnectionCount(): number
 }
 
 export interface PortRange {
@@ -97,7 +100,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     // TODO use config option or named constant?
     private readonly duplicateMessageDetector: DuplicateDetector = new DuplicateDetector(10000)
     private readonly metrics: ConnectionManagerMetrics
-    private locks = new ConnectionLockHandler()
+    private locks = new ConnectionLockStates()
     private connections: Map<DhtAddress, ManagedConnection> = new Map()
     private readonly connectorFacade: ConnectorFacade
     private rpcCommunicator?: RoutingRpcCommunicator
@@ -142,7 +145,11 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             (req: DisconnectNotice, context: ServerCallContext) => lockRpcLocal.gracefulDisconnect(req, context))
     }
 
-    public garbageCollectConnections(maxConnections: number, lastUsedLimit: number): void {
+    /*
+     * Removes connections if there are more than maxConnections: in that case we remove unlocked connections
+     * which hasn't been used within maxIdleTime.
+     */
+    public garbageCollectConnections(maxConnections: number, maxIdleTime: number): void {
         if (this.connections.size <= maxConnections) {
             return
         }
@@ -160,7 +167,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
                 logger.trace(`Attempting to disconnect a hanging connection to ${getNodeIdFromPeerDescriptor(connection.getPeerDescriptor()!)}`)
                 connection.close(false).catch(() => {})
                 this.connections.delete(key)
-            } else if (!this.locks.isLocked(connection.getNodeId()) && Date.now() - connection.getLastUsed() > lastUsedLimit) {
+            } else if (!this.locks.isLocked(connection.getNodeId()) && Date.now() - connection.getLastUsedTimestamp() > maxIdleTime) {
                 logger.trace('disconnecting in timeout interval: ' + getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()))
                 disconnectionCandidates.addContact(connection)
             }
@@ -330,14 +337,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
                 + ' ' + message.serviceId + ' ' + message.messageId)
             this.emit('message', message)
         }
-    }
-
-    public handleIncomingMessage(message: Message): boolean {
-        if (message.serviceId === INTERNAL_SERVICE_ID) {
-            this.rpcCommunicator?.handleMessageFromPeer(message)
-            return true
-        }
-        return false
     }
 
     private onData(data: Uint8Array, peerDescriptor: PeerDescriptor): void {

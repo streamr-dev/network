@@ -85,7 +85,7 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
                 return true
             }
         } catch (err) {
-            logger.trace(`ping failed on ${this.serviceId} to ${this.getNodeId()}: ${err}`)
+            logger.trace(`ping failed on ${this.serviceId} to ${this.getNodeId()}`, { err })
         }
         return false
     }

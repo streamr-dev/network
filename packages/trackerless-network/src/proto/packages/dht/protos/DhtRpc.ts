@@ -134,6 +134,36 @@ export interface ClosestPeersResponse {
     requestId: string;
 }
 /**
+ * @generated from protobuf message dht.ClosestRingPeersRequest
+ */
+export interface ClosestRingPeersRequest {
+    /**
+     * @generated from protobuf field: bytes ringId = 1;
+     */
+    ringId: Uint8Array;
+    /**
+     * @generated from protobuf field: string requestId = 2;
+     */
+    requestId: string;
+}
+/**
+ * @generated from protobuf message dht.ClosestRingPeersResponse
+ */
+export interface ClosestRingPeersResponse {
+    /**
+     * @generated from protobuf field: repeated dht.PeerDescriptor leftPeers = 1;
+     */
+    leftPeers: PeerDescriptor[];
+    /**
+     * @generated from protobuf field: repeated dht.PeerDescriptor rightPeers = 2;
+     */
+    rightPeers: PeerDescriptor[];
+    /**
+     * @generated from protobuf field: string requestId = 3;
+     */
+    requestId: string;
+}
+/**
  * @generated from protobuf message dht.RecursiveOperationRequest
  */
 export interface RecursiveOperationRequest {
@@ -764,6 +794,33 @@ class ClosestPeersResponse$Type extends MessageType<ClosestPeersResponse> {
  */
 export const ClosestPeersResponse = new ClosestPeersResponse$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class ClosestRingPeersRequest$Type extends MessageType<ClosestRingPeersRequest> {
+    constructor() {
+        super("dht.ClosestRingPeersRequest", [
+            { no: 1, name: "ringId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.ClosestRingPeersRequest
+ */
+export const ClosestRingPeersRequest = new ClosestRingPeersRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ClosestRingPeersResponse$Type extends MessageType<ClosestRingPeersResponse> {
+    constructor() {
+        super("dht.ClosestRingPeersResponse", [
+            { no: 1, name: "leftPeers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 2, name: "rightPeers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 3, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.ClosestRingPeersResponse
+ */
+export const ClosestRingPeersResponse = new ClosestRingPeersResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class RecursiveOperationRequest$Type extends MessageType<RecursiveOperationRequest> {
     constructor() {
         super("dht.RecursiveOperationRequest", [
@@ -1107,6 +1164,7 @@ export const ExternalFetchDataResponse = new ExternalFetchDataResponse$Type();
  */
 export const DhtNodeRpc = new ServiceType("dht.DhtNodeRpc", [
     { name: "getClosestPeers", options: {}, I: ClosestPeersRequest, O: ClosestPeersResponse },
+    { name: "getClosestRingPeers", options: {}, I: ClosestRingPeersRequest, O: ClosestRingPeersResponse },
     { name: "ping", options: {}, I: PingRequest, O: PingResponse },
     { name: "leaveNotice", options: {}, I: LeaveNotice, O: Empty }
 ]);

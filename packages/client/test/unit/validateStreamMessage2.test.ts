@@ -65,7 +65,7 @@ describe('Validator2', () => {
                 getStream,
                 isStreamPublisher: (streamId: string, address: EthereumAddress) => isPublisher(address, streamId),
                 isStreamSubscriber: (streamId: string, address: EthereumAddress) => isSubscriber(address, streamId)
-            } as any)
+            } as any, undefined as any)
         }
     }
 

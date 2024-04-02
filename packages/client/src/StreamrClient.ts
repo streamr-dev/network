@@ -34,11 +34,11 @@ import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
 import { PermissionAssignment, PermissionQuery } from './permission'
 import { Publisher } from './publish/Publisher'
-import { OperatorRegistry } from './registry/OperatorRegistry'
-import { StorageNodeMetadata, StorageNodeRegistry } from './registry/StorageNodeRegistry'
-import { StreamRegistry } from './registry/StreamRegistry'
-import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
-import { SearchStreamsOrderBy, SearchStreamsPermissionFilter } from './registry/searchStreams'
+import { OperatorRegistry } from './contracts/OperatorRegistry'
+import { StorageNodeMetadata, StorageNodeRegistry } from './contracts/StorageNodeRegistry'
+import { StreamRegistry } from './contracts/StreamRegistry'
+import { StreamStorageRegistry } from './contracts/StreamStorageRegistry'
+import { SearchStreamsOrderBy, SearchStreamsPermissionFilter } from './contracts/searchStreams'
 import { MessageListener, MessageStream } from './subscribe/MessageStream'
 import { ResendOptions, Resends } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
@@ -49,6 +49,8 @@ import { StreamDefinition } from './types'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
+import { createNewInstantiateContractsFn, InstantiateERC1271ContractsToken } from './contracts/ERC1271ContractFacade'
+import { ContractFactory } from './ContractFactory'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -100,6 +102,9 @@ export class StreamrClient {
         const container = parentContainer.createChildContainer()
         container.register(AuthenticationInjectionToken, { useValue: authentication })
         container.register(ConfigInjectionToken, { useValue: strictConfig })
+        container.register(InstantiateERC1271ContractsToken, {
+            useValue: createNewInstantiateContractsFn(container.resolve<ContractFactory>(ContractFactory), strictConfig)
+        })
         // eslint-disable-next-line max-len
         container.register(TheGraphClient, { useValue: createTheGraphClient(container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig) })
         this.id = strictConfig.id
@@ -142,7 +147,7 @@ export class StreamrClient {
         metadata?: PublishMetadata
     ): Promise<Message> {
         const result = await this.publisher.publish(streamDefinition, content, metadata)
-        this.eventEmitter.emit('publish', undefined)
+        this.eventEmitter.emit('publish', result)
         return convertStreamMessageToMessage(result)
     }
 
