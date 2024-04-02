@@ -65,6 +65,15 @@ Changes before Tatum release are not documented in this file.
 
 - Change the way in which the partition of the metrics stream is calculated (based on node ID) (https://github.com/streamr-dev/network/pull/2468)
 
+#### Fixed
+
+- Fix NodeJS v18 compatibility (https://github.com/streamr-dev/network/pull/2462)
+
+### @streamr/node
+
+#### Changed
+
+- Update Docker runtime to NodeJS v20 (https://github.com/streamr-dev/network/pull/2466)
 
 
 ## [100.2.0] - 2024-03-28
