@@ -1,4 +1,4 @@
-import { ClientWebsocket } from './ClientWebsocket'
+import { WebsocketClientConnection } from './NodeWebsocketClientConnection'
 import { IConnection, ConnectionType } from '../IConnection'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
@@ -211,7 +211,7 @@ export class WebsocketConnector {
             } catch (err) {
                 const error = `Failed to connect to entrypoint with id ${getNodeIdFromPeerDescriptor(entryPoint)} `
                     + `and URL ${connectivityMethodToWebsocketUrl(entryPoint.websocket!)}`
-                logger.error(error, { error: err })
+                logger.error(error, { err })
                 shuffledEntrypoints.shift()
                 await wait(2000, this.abortController.signal)
             }
@@ -234,7 +234,7 @@ export class WebsocketConnector {
         if (this.localPeerDescriptor!.websocket && !targetPeerDescriptor.websocket) {
             return this.requestConnectionFromPeer(this.localPeerDescriptor!, targetPeerDescriptor)
         } else {
-            const socket = new ClientWebsocket()
+            const socket = new WebsocketClientConnection()
 
             const url = connectivityMethodToWebsocketUrl(targetPeerDescriptor.websocket!)
 

@@ -18,16 +18,15 @@ import {
     CloseTemporaryConnection,
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { NodeList } from './NodeList'
-import { DeliveryRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { DeliveryRpcRemote } from './DeliveryRpcRemote'
-import { IDeliveryRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
+import { ContentDeliveryRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { ContentDeliveryRpcRemote } from './ContentDeliveryRpcRemote'
 import { DuplicateMessageDetector } from './DuplicateMessageDetector'
 import { Logger, addManagedEventListener } from '@streamr/utils'
 import { Handshaker } from './neighbor-discovery/Handshaker'
 import { Propagation } from './propagation/Propagation'
 import { NeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
-import { DeliveryRpcLocal } from './DeliveryRpcLocal'
+import { ContentDeliveryRpcLocal } from './ContentDeliveryRpcLocal'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { Inspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
@@ -75,14 +74,14 @@ export class RandomGraphNode extends EventEmitter<Events> {
     private started = false
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector>
     private config: StrictRandomGraphNodeConfig
-    private readonly deliveryRpcLocal: IDeliveryRpc
+    private readonly contentDeliveryRpcLocal: ContentDeliveryRpcLocal
     private abortController: AbortController = new AbortController()
 
     constructor(config: StrictRandomGraphNodeConfig) {
         super()
         this.config = config
         this.duplicateDetectors = new Map()
-        this.deliveryRpcLocal = new DeliveryRpcLocal({
+        this.contentDeliveryRpcLocal = new ContentDeliveryRpcLocal({
             localPeerDescriptor: this.config.localPeerDescriptor,
             streamPartId: this.config.streamPartId,
             rpcCommunicator: this.config.rpcCommunicator,
@@ -206,9 +205,9 @@ export class RandomGraphNode extends EventEmitter<Events> {
 
     private registerDefaultServerMethods(): void {
         this.config.rpcCommunicator.registerRpcNotification(StreamMessage, 'sendStreamMessage',
-            (msg: StreamMessage, context) => this.deliveryRpcLocal.sendStreamMessage(msg, context))
+            (msg: StreamMessage, context) => this.contentDeliveryRpcLocal.sendStreamMessage(msg, context))
         this.config.rpcCommunicator.registerRpcNotification(LeaveStreamPartNotice, 'leaveStreamPartNotice',
-            (req: LeaveStreamPartNotice, context) => this.deliveryRpcLocal.leaveStreamPartNotice(req, context))
+            (req: LeaveStreamPartNotice, context) => this.contentDeliveryRpcLocal.leaveStreamPartNotice(req, context))
         this.config.rpcCommunicator.registerRpcMethod(TemporaryConnectionRequest, TemporaryConnectionResponse, 'openConnection',
             (req: TemporaryConnectionRequest, context) => this.config.temporaryConnectionRpcLocal.openConnection(req, context))
         this.config.rpcCommunicator.registerRpcNotification(CloseTemporaryConnection, 'closeConnection',
@@ -221,20 +220,20 @@ export class RandomGraphNode extends EventEmitter<Events> {
             return
         }
         this.config.leftNodeView.replaceAll(ringPeers.left.map((peer) => 
-            new DeliveryRpcRemote(
+            new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,
                 peer,
                 this.config.rpcCommunicator,
-                DeliveryRpcClient,
+                ContentDeliveryRpcClient,
                 this.config.rpcRequestTimeout
             )
         ))
         this.config.rightNodeView.replaceAll(ringPeers.right.map((peer) =>
-            new DeliveryRpcRemote(
+            new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,
                 peer,
                 this.config.rpcCommunicator,
-                DeliveryRpcClient,
+                ContentDeliveryRpcClient,
                 this.config.rpcRequestTimeout
             )
         ))
@@ -261,11 +260,11 @@ export class RandomGraphNode extends EventEmitter<Events> {
 
     private updateNearbyNodeView(nodes: PeerDescriptor[]) {
         this.config.nearbyNodeView.replaceAll(Array.from(nodes).map((descriptor) =>
-            new DeliveryRpcRemote(
+            new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,
                 descriptor,
                 this.config.rpcCommunicator,
-                DeliveryRpcClient,
+                ContentDeliveryRpcClient,
                 this.config.rpcRequestTimeout
             )
         ))
@@ -274,13 +273,12 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 break
             }
             this.config.nearbyNodeView.add(
-                new DeliveryRpcRemote(
+                new ContentDeliveryRpcRemote(
                     this.config.localPeerDescriptor,
                     descriptor,
                     this.config.rpcCommunicator,
-                    DeliveryRpcClient,
+                    ContentDeliveryRpcClient,
                     this.config.rpcRequestTimeout
-
                 )
             )
         }
@@ -291,11 +289,11 @@ export class RandomGraphNode extends EventEmitter<Events> {
             return
         }
         this.config.randomNodeView.replaceAll(randomNodes.map((descriptor) =>
-            new DeliveryRpcRemote(
+            new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,
                 descriptor,
                 this.config.rpcCommunicator,
-                DeliveryRpcClient,
+                ContentDeliveryRpcClient,
                 this.config.rpcRequestTimeout
             )
         ))
@@ -310,11 +308,11 @@ export class RandomGraphNode extends EventEmitter<Events> {
             return
         }
         this.config.randomNodeView.replaceAll(randomNodes.map((descriptor) =>
-            new DeliveryRpcRemote(
+            new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,
                 descriptor,
                 this.config.rpcCommunicator,
-                DeliveryRpcClient,
+                ContentDeliveryRpcClient,
                 this.config.rpcRequestTimeout
             )
         ))

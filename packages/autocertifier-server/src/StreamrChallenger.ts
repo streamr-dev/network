@@ -2,7 +2,7 @@ import {
     Message,
     NodeType,
     PeerDescriptor,
-    ClientWebsocket,
+    WebsocketClientConnection,
     ManagedConnection,
     RoutingRpcCommunicator,
     createRandomDhtAddress,
@@ -38,7 +38,7 @@ export const runStreamrChallenge = (
                 tls: true
             }
         }
-        const socket = new ClientWebsocket()
+        const socket = new WebsocketClientConnection()
         const address = 'wss://' + remotePeerDescriptor.websocket!.host + ':' +
         remotePeerDescriptor.websocket!.port
 

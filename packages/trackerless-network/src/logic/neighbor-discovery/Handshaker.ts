@@ -1,8 +1,8 @@
 import { DhtAddress, PeerDescriptor, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { NodeList } from '../NodeList'
-import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
+import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 import {
-    DeliveryRpcClient, HandshakeRpcClient
+    ContentDeliveryRpcClient, HandshakeRpcClient
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import {
     InterleaveRequest,
@@ -11,7 +11,6 @@ import {
     StreamPartHandshakeResponse
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { Logger } from '@streamr/utils'
-import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { HandshakeRpcRemote, INTERLEAVE_REQUEST_TIMEOUT } from './HandshakeRpcRemote'
 import { HandshakeRpcLocal } from './HandshakeRpcLocal'
 import { StreamPartID } from '@streamr/protocol'
@@ -37,7 +36,7 @@ const PARALLEL_HANDSHAKE_COUNT = 2
 export class Handshaker {
 
     private config: HandshakerConfig
-    private readonly rpcLocal: IHandshakeRpc
+    private readonly rpcLocal: HandshakeRpcLocal
 
     constructor(config: HandshakerConfig) {
         this.config = config
@@ -49,7 +48,7 @@ export class Handshaker {
             maxNeighborCount: this.config.maxNeighborCount,
             handshakeWithInterleaving: (target: PeerDescriptor, senderId: DhtAddress) => this.handshakeWithInterleaving(target, senderId),
             createRpcRemote: (target: PeerDescriptor) => this.createRpcRemote(target),
-            createDeliveryRpcRemote: (target: PeerDescriptor) => this.createDeliveryRpcRemote(target)
+            createContentDeliveryRpcRemote: (target: PeerDescriptor) => this.createContentDeliveryRpcRemote(target)
         })
         this.config.rpcCommunicator.registerRpcMethod(InterleaveRequest, InterleaveResponse, 'interleaveRequest',
             (req: InterleaveRequest, context) => this.rpcLocal.interleaveRequest(req, context), { timeout: INTERLEAVE_REQUEST_TIMEOUT })
@@ -77,7 +76,7 @@ export class Handshaker {
     }
 
     private selectParallelTargets(excludedIds: DhtAddress[]): HandshakeRpcRemote[] {
-        const neighbors: Map<DhtAddress, DeliveryRpcRemote> = new Map()
+        const neighbors: Map<DhtAddress, ContentDeliveryRpcRemote> = new Map()
         // First add the closest left and then right contacts from the ring if possible.
         const left = this.config.leftNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
         const right = this.config.rightNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
@@ -152,7 +151,7 @@ export class Handshaker {
             concurrentNodeId
         )
         if (result.accepted) {
-            this.config.neighbors.add(this.createDeliveryRpcRemote(neighbor.getPeerDescriptor()))
+            this.config.neighbors.add(this.createContentDeliveryRpcRemote(neighbor.getPeerDescriptor()))
         }
         if (result.interleaveTargetDescriptor) {
             await this.handshakeWithInterleaving(result.interleaveTargetDescriptor, targetNodeId)
@@ -172,7 +171,7 @@ export class Handshaker {
             interleaveSourceId
         )
         if (result.accepted) {
-            this.config.neighbors.add(this.createDeliveryRpcRemote(neighbor.getPeerDescriptor()))
+            this.config.neighbors.add(this.createContentDeliveryRpcRemote(neighbor.getPeerDescriptor()))
         }
         this.config.ongoingHandshakes.delete(targetNodeId)
         return result.accepted
@@ -188,12 +187,12 @@ export class Handshaker {
         )
     }
 
-    private createDeliveryRpcRemote(targetPeerDescriptor: PeerDescriptor): DeliveryRpcRemote {
-        return new DeliveryRpcRemote(
+    private createContentDeliveryRpcRemote(targetPeerDescriptor: PeerDescriptor): ContentDeliveryRpcRemote {
+        return new ContentDeliveryRpcRemote(
             this.config.localPeerDescriptor,
             targetPeerDescriptor,
             this.config.rpcCommunicator,
-            DeliveryRpcClient,
+            ContentDeliveryRpcClient,
             this.config.rpcRequestTimeout
         )
     }

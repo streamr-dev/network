@@ -53,8 +53,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         this.results = new SortedContactList({
             referenceId: config.targetId, 
             maxSize: 10,  // TODO use config option or named constant?
-            allowToContainReferenceId: true,
-            emitEvents: false
+            allowToContainReferenceId: true
         })
         this.rpcCommunicator = new ListeningRpcCommunicator(this.id, config.transport, {
             rpcRequestTimeout: 15000  // TODO use config option or named constant?
@@ -212,7 +211,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
 
     public getResults(): RecursiveOperationResult {
         return {
-            closestNodes: this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()),
+            closestNodes: this.results.getClosestContacts().map((contact) => contact.getPeerDescriptor()),
             dataEntries: Array.from(this.foundData.values())
         }
     }

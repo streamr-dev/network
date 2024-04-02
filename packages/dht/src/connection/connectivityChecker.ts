@@ -6,7 +6,7 @@ import {
     Message, PeerDescriptor
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ConnectionEvents, IConnection } from './IConnection'
-import { ClientWebsocket } from './websocket/ClientWebsocket'
+import { WebsocketClientConnection } from './websocket/NodeWebsocketClientConnection'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
 import { isMaybeSupportedVersion } from '../helpers/version'
 
@@ -16,7 +16,7 @@ const logger = new Logger(module)
 export const connectAsync = async ({ url, selfSigned, timeoutMs = 1000 }:
     { url: string, selfSigned: boolean, timeoutMs?: number }
 ): Promise<IConnection> => {
-    const socket = new ClientWebsocket()
+    const socket = new WebsocketClientConnection()
     let result: RunAndRaceEventsReturnType<ConnectionEvents>
     try {
         result = await runAndRaceEvents3<ConnectionEvents>([
@@ -91,7 +91,7 @@ export const sendConnectivityRequest = async (
                         return
                     }
                 } catch (err) {
-                    logger.trace(`Could not parse message: ${err}`)
+                    logger.trace('Could not parse message', { err })
                 }
             }
             outgoingConnection!.on('data', listener)

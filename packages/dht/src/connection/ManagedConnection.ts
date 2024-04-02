@@ -35,7 +35,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     public connectionType: ConnectionType
     private handshaker?: Handshaker
     private handshakeCompleted = false
-    private lastUsed: number = Date.now()
+    private lastUsedTimestamp: number = Date.now()
     private stopped = false
     private bufferSentbyOtherConnection = false
     private closing = false
@@ -160,8 +160,8 @@ export class ManagedConnection extends EventEmitter<Events> {
         return getNodeIdFromPeerDescriptor(this.remotePeerDescriptor!)
     }
 
-    public getLastUsed(): number {
-        return this.lastUsed
+    public getLastUsedTimestamp(): number {
+        return this.lastUsedTimestamp
     }
 
     public setRemotePeerDescriptor(peerDescriptor: PeerDescriptor): void {
@@ -173,7 +173,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     private onHandshakeCompleted(peerDescriptor: PeerDescriptor) {
-        this.lastUsed = Date.now()
+        this.lastUsedTimestamp = Date.now()
 
         this.setRemotePeerDescriptor(peerDescriptor)
         this.handshakeCompleted = true
@@ -193,7 +193,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.implementation = impl
 
         impl.on('data', (bytes: Uint8Array) => {
-            this.lastUsed = Date.now()
+            this.lastUsedTimestamp = Date.now()
             if (this.listenerCount('managedData') === 0) {
                 this.inputBuffer.push(bytes)
             } else {
@@ -205,7 +205,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             this.emit('error', name)
         })
         impl.on('connected', () => {
-            this.lastUsed = Date.now()
+            this.lastUsedTimestamp = Date.now()
             logger.trace('connected emitted')
             this.emit('connected')
         })
@@ -231,7 +231,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         if (this.closing) {
             throw new Err.SendFailed('ManagedConnection is closing')
         }
-        this.lastUsed = Date.now()
+        this.lastUsedTimestamp = Date.now()
 
         if (!connect && !this.implementation) {
             throw new Err.ConnectionNotOpen('Connection not open when calling send() with connect flag as false')
@@ -263,7 +263,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     public sendNoWait(data: Uint8Array): void {
-        this.lastUsed = Date.now()
+        this.lastUsedTimestamp = Date.now()
         if (this.implementation) {
             this.implementation.send(data)
         } else {

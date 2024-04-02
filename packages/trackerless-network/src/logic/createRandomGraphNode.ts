@@ -10,7 +10,7 @@ import { MarkOptional } from 'ts-essentials'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { Inspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
-import { formStreamPartDeliveryServiceId } from './formStreamPartDeliveryServiceId'
+import { formStreamPartContentDeliveryServiceId } from './formStreamPartDeliveryServiceId'
 
 type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
     'nearbyNodeView' | 'randomNodeView' | 'neighbors' | 'leftNodeView' | 'rightNodeView' | 'propagation'
@@ -26,7 +26,7 @@ type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
 const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGraphNodeConfig => {
     const ownNodeId = getNodeIdFromPeerDescriptor(config.localPeerDescriptor)
     const rpcCommunicator = config.rpcCommunicator ?? new ListeningRpcCommunicator(
-        formStreamPartDeliveryServiceId(config.streamPartId),
+        formStreamPartContentDeliveryServiceId(config.streamPartId),
         config.transport
     )
     const neighborTargetCount = config.neighborTargetCount ?? 4

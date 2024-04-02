@@ -4,21 +4,22 @@ import {
     DhtNodeOptions,
     ListeningRpcCommunicator,
     PeerDescriptor,
-    areEqualPeerDescriptors
+    areEqualPeerDescriptors,
+    getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
 import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { Logger, MetricsContext, waitForCondition } from '@streamr/utils'
 import { pull } from 'lodash'
 import { version as applicationVersion } from '../package.json'
+import { ContentDeliveryManager, ContentDeliveryManagerConfig } from './logic/ContentDeliveryManager'
 import { Layer0Node } from './logic/Layer0Node'
-import { StreamrNode, StreamrNodeConfig } from './logic/StreamrNode'
 import { NodeInfoClient } from './logic/node-info/NodeInfoClient'
 import { NODE_INFO_RPC_SERVICE_ID, NodeInfoRpcLocal } from './logic/node-info/NodeInfoRpcLocal'
 import { NodeInfoResponse, ProxyDirection, StreamMessage } from './proto/packages/trackerless-network/protos/NetworkRpc'
 
 export interface NetworkOptions {
     layer0?: DhtNodeOptions
-    networkNode?: StreamrNodeConfig
+    networkNode?: ContentDeliveryManagerConfig
     metricsContext?: MetricsContext
 }
 
@@ -54,7 +55,7 @@ export type NodeInfo = Required<NodeInfoResponse>
 export class NetworkStack {
 
     private layer0Node?: Layer0Node
-    private streamrNode?: StreamrNode
+    private contentDeliveryManager?: ContentDeliveryManager
     private stopped = false
     private readonly metricsContext: MetricsContext
     private readonly options: NetworkOptions
@@ -68,7 +69,7 @@ export class NetworkStack {
             ...options.layer0,
             metricsContext: this.metricsContext
         })
-        this.streamrNode = new StreamrNode({
+        this.contentDeliveryManager = new ContentDeliveryManager({
             ...options.networkNode,
             metricsContext: this.metricsContext
         })
@@ -76,32 +77,37 @@ export class NetworkStack {
     }
 
     async joinStreamPart(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }): Promise<void> {
-        if (this.getStreamrNode().isProxiedStreamPart(streamPartId)) {
+        if (this.getContentDeliveryManager().isProxiedStreamPart(streamPartId)) {
             throw new Error(`Cannot join to ${streamPartId} as proxy connections have been set`)
         }
         await this.ensureConnectedToControlLayer()
-        this.getStreamrNode().joinStreamPart(streamPartId)
+        this.getContentDeliveryManager().joinStreamPart(streamPartId)
         if (neighborRequirement !== undefined) {
             await waitForCondition(() => {
-                return this.getStreamrNode().getNeighbors(streamPartId).length >= neighborRequirement.minCount
+                return this.getContentDeliveryManager().getNeighbors(streamPartId).length >= neighborRequirement.minCount
             }, neighborRequirement.timeout)
         }
     }
 
     async broadcast(msg: StreamMessage): Promise<void> {
         const streamPartId = toStreamPartID(msg.messageId!.streamId as StreamID, msg.messageId!.streamPartition)
-        if (this.getStreamrNode().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && (msg.body.oneofKind === 'contentMessage')) {
+        if (
+            this.getContentDeliveryManager().isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) 
+            && (msg.body.oneofKind === 'contentMessage')
+        ) {
             throw new Error(`Cannot broadcast to ${streamPartId} as proxy subscribe connections have been set`)
         }
         // TODO could combine these two calls to isProxiedStreamPart?
-        if (!this.streamrNode!.isProxiedStreamPart(streamPartId)) {
+        if (!this.contentDeliveryManager!.isProxiedStreamPart(streamPartId)) {
             await this.ensureConnectedToControlLayer()
         }
-        this.getStreamrNode().broadcast(msg)
+        this.getContentDeliveryManager().broadcast(msg)
     }
 
     async start(doJoin = true): Promise<void> {
+        logger.info('Starting a Streamr Network Node')
         await this.layer0Node!.start()
+        logger.info(`Node id is ${getNodeIdFromPeerDescriptor(this.layer0Node!.getLocalPeerDescriptor())}`)
         const connectionManager = this.layer0Node!.getTransport() as ConnectionManager
         if ((this.options.layer0?.entryPoints !== undefined) && (this.options.layer0.entryPoints.some((entryPoint) => 
             areEqualPeerDescriptors(entryPoint, this.layer0Node!.getLocalPeerDescriptor())
@@ -114,8 +120,8 @@ export class NetworkStack {
             }
         }
         // TODO: remove undefined checks here. Assume that start is approproately awaited before stop is called.
-        await this.streamrNode?.start(this.layer0Node!, connectionManager, connectionManager)
-        if (this.streamrNode) {
+        await this.contentDeliveryManager?.start(this.layer0Node!, connectionManager, connectionManager)
+        if (this.contentDeliveryManager) {
             const infoRpcCommunicator = new ListeningRpcCommunicator(NODE_INFO_RPC_SERVICE_ID, this.getConnectionManager())
             this.nodeInfoRpcLocal = new NodeInfoRpcLocal(this, infoRpcCommunicator)
             this.nodeInfoClient = new NodeInfoClient(
@@ -140,8 +146,8 @@ export class NetworkStack {
         }
     }
 
-    getStreamrNode(): StreamrNode {
-        return this.streamrNode!
+    getContentDeliveryManager(): ContentDeliveryManager {
+        return this.contentDeliveryManager!
     }
 
     getLayer0Node(): Layer0Node {
@@ -167,7 +173,7 @@ export class NetworkStack {
                 connections: this.getLayer0Node().getConnections(),
                 neighbors: this.getLayer0Node().getNeighbors()
             },
-            streamPartitions: this.getStreamrNode().getNodeInfo(),
+            streamPartitions: this.getContentDeliveryManager().getNodeInfo(),
             version: applicationVersion
         }
     }
@@ -184,9 +190,9 @@ export class NetworkStack {
         if (!this.stopped) {
             this.stopped = true
             pull(instances, this)
-            await this.streamrNode!.destroy()
+            await this.contentDeliveryManager!.destroy()
             await this.layer0Node!.stop()
-            this.streamrNode = undefined
+            this.contentDeliveryManager = undefined
             this.layer0Node = undefined
         }
     }

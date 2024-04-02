@@ -1,10 +1,10 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtAddress, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { DeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { ContentDeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { INeighborUpdateRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { NodeList } from '../NodeList'
-import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
+import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 import { NeighborFinder } from './NeighborFinder'
 import { StreamPartID } from '@streamr/protocol'
 
@@ -34,11 +34,11 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
             return nodeId !== ownNodeId && !this.config.neighbors.getIds().includes(nodeId)
         })
         newPeerDescriptors.forEach((peerDescriptor) => this.config.nearbyNodeView.add(
-            new DeliveryRpcRemote(
+            new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,
                 peerDescriptor,
                 this.config.rpcCommunicator,
-                DeliveryRpcClient
+                ContentDeliveryRpcClient
             ))
         )
     }

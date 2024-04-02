@@ -20,7 +20,7 @@ import type { ProxyConnectionResponse } from "./NetworkRpc";
 import type { ProxyConnectionRequest } from "./NetworkRpc";
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
-import { DeliveryRpc } from "./NetworkRpc";
+import { ContentDeliveryRpc } from "./NetworkRpc";
 import type { LeaveStreamPartNotice } from "./NetworkRpc";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { Empty } from "../../../google/protobuf/empty";
@@ -28,9 +28,9 @@ import type { StreamMessage } from "./NetworkRpc";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
- * @generated from protobuf service DeliveryRpc
+ * @generated from protobuf service ContentDeliveryRpc
  */
-export interface IDeliveryRpcClient {
+export interface IContentDeliveryRpcClient {
     /**
      * @generated from protobuf rpc: sendStreamMessage(StreamMessage) returns (google.protobuf.Empty);
      */
@@ -41,12 +41,12 @@ export interface IDeliveryRpcClient {
     leaveStreamPartNotice(input: LeaveStreamPartNotice, options?: RpcOptions): UnaryCall<LeaveStreamPartNotice, Empty>;
 }
 /**
- * @generated from protobuf service DeliveryRpc
+ * @generated from protobuf service ContentDeliveryRpc
  */
-export class DeliveryRpcClient implements IDeliveryRpcClient, ServiceInfo {
-    typeName = DeliveryRpc.typeName;
-    methods = DeliveryRpc.methods;
-    options = DeliveryRpc.options;
+export class ContentDeliveryRpcClient implements IContentDeliveryRpcClient, ServiceInfo {
+    typeName = ContentDeliveryRpc.typeName;
+    methods = ContentDeliveryRpc.methods;
+    options = ContentDeliveryRpc.options;
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
