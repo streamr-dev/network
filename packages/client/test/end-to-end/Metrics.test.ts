@@ -65,6 +65,7 @@ describe('NodeMetrics', () => {
         await waitForCondition(() => report !== undefined, 10000)
         expect(report!).toMatchObject({
             node: {
+                id: await generatorClient.getNodeId(),
                 broadcastMessagesPerSecond: expect.any(Number),
                 broadcastBytesPerSecond: expect.any(Number),
                 sendMessagesPerSecond: expect.any(Number),
