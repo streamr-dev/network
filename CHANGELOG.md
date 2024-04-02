@@ -16,7 +16,7 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
-- The partition of the metrics streams is calculated from the node ID
+- Change the way in which the partition of the metrics stream is calculated (based on node ID)
 
 #### Deprecated
 
