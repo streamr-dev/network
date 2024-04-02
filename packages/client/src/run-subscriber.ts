@@ -23,8 +23,10 @@ const main = async () => {
         StreamPartIDUtils.parse('eth-watch.eth/ethereum/events#1'),
         StreamPartIDUtils.parse('eth-watch.eth/ethereum/events#2'),
         StreamPartIDUtils.parse('eth-watch.eth/ethereum/events#3'),
-        StreamPartIDUtils.parse('eth-watch.eth/ethereum/events#4')
-
+        StreamPartIDUtils.parse('eth-watch.eth/ethereum/events#4'),
+        StreamPartIDUtils.parse('binance-streamr.eth/DATAUSDT/trades#0'),
+        StreamPartIDUtils.parse('binance-streamr.eth/DATAUSDT/ticker#0'),
+        StreamPartIDUtils.parse('0xd37dc4d7e2c1bdf3edd89db0e505394ea69af43d/gas-station/polygon#0'),
     ]
 
     setInterval(() => {
@@ -66,9 +68,12 @@ const main = async () => {
     }, 5000)
 
     for (const streamPart of streamParts) {
-        await client.subscribe(streamPart, () => {
+        const sub =await client.subscribe(streamPart, () => {
             numOfMessagesPerTenSeconds += 1
             numOfMessagesPerMinute += 1
+        })
+        sub.on('error', (err) => {
+            console.log(err)
         })
     }
 }
