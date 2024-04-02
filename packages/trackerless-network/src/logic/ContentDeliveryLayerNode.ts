@@ -41,7 +41,7 @@ export interface Events {
     entryPointLeaveDetected: () => void
 }
 
-export interface StrictRandomGraphNodeConfig {
+export interface StrictContentDeliveryLayerNodeConfig {
     streamPartId: StreamPartID
     layer1Node: Layer1Node
     transport: ITransport
@@ -69,15 +69,15 @@ export interface StrictRandomGraphNodeConfig {
 
 const logger = new Logger(module)
 
-export class RandomGraphNode extends EventEmitter<Events> {
+export class ContentDeliveryLayerNode extends EventEmitter<Events> {
 
     private started = false
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector>
-    private config: StrictRandomGraphNodeConfig
+    private config: StrictContentDeliveryLayerNodeConfig
     private readonly contentDeliveryRpcLocal: ContentDeliveryRpcLocal
     private abortController: AbortController = new AbortController()
 
-    constructor(config: StrictRandomGraphNodeConfig) {
+    constructor(config: StrictContentDeliveryLayerNodeConfig) {
         super()
         this.config = config
         this.duplicateDetectors = new Map()

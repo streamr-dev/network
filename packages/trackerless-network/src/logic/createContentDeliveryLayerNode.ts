@@ -2,7 +2,7 @@ import { DhtAddress, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } fro
 import { Handshaker } from './neighbor-discovery/Handshaker'
 import { NeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
-import { StrictRandomGraphNodeConfig, RandomGraphNode } from './RandomGraphNode'
+import { StrictContentDeliveryLayerNodeConfig, ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
 import { NodeList } from './NodeList'
 import { Propagation } from './propagation/Propagation'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
@@ -12,7 +12,7 @@ import { Inspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { formStreamPartContentDeliveryServiceId } from './formStreamPartDeliveryServiceId'
 
-type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
+type ContentDeliveryLayerNodeConfig = MarkOptional<StrictContentDeliveryLayerNodeConfig,
     'nearbyNodeView' | 'randomNodeView' | 'neighbors' | 'leftNodeView' | 'rightNodeView' | 'propagation'
     | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'neighborTargetCount'
     | 'rpcCommunicator' | 'nodeViewSize'
@@ -23,7 +23,7 @@ type RandomGraphNodeConfig = MarkOptional<StrictRandomGraphNodeConfig,
         neighborUpdateInterval?: number
     }
 
-const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGraphNodeConfig => {
+const createConfigWithDefaults = (config: ContentDeliveryLayerNodeConfig): StrictContentDeliveryLayerNodeConfig => {
     const ownNodeId = getNodeIdFromPeerDescriptor(config.localPeerDescriptor)
     const rpcCommunicator = config.rpcCommunicator ?? new ListeningRpcCommunicator(
         formStreamPartContentDeliveryServiceId(config.streamPartId),
@@ -125,6 +125,6 @@ const createConfigWithDefaults = (config: RandomGraphNodeConfig): StrictRandomGr
     }
 }
 
-export const createRandomGraphNode = (config: RandomGraphNodeConfig): RandomGraphNode => {
-    return new RandomGraphNode(createConfigWithDefaults(config))
+export const createContentDeliveryLayerNode = (config: ContentDeliveryLayerNodeConfig): ContentDeliveryLayerNode => {
+    return new ContentDeliveryLayerNode(createConfigWithDefaults(config))
 }
