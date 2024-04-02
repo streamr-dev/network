@@ -105,8 +105,9 @@ export class NetworkStack {
     }
 
     async start(doJoin = true): Promise<void> {
+        logger.info('Starting a Streamr Network Node')
         await this.layer0Node!.start()
-        logger.info(`Starting node with id ${getNodeIdFromPeerDescriptor(this.layer0Node!.getLocalPeerDescriptor())}`)
+        logger.info(`Node id is ${getNodeIdFromPeerDescriptor(this.layer0Node!.getLocalPeerDescriptor())}`)
         const connectionManager = this.layer0Node!.getTransport() as ConnectionManager
         if ((this.options.layer0?.entryPoints !== undefined) && (this.options.layer0.entryPoints.some((entryPoint) => 
             areEqualPeerDescriptors(entryPoint, this.layer0Node!.getLocalPeerDescriptor())

@@ -179,7 +179,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     private getClosestActiveContactNotInBucket(): DhtNodeRpcRemote | undefined {
         for (const contactId of this.closestContacts.getContactIds()) {
             if (!this.neighbors.get(getRawFromDhtAddress(contactId)) && this.activeContacts.has(contactId)) {
-                return this.closestContacts.getContact(contactId)!.contact
+                return this.closestContacts.getContact(contactId)!
             }
         }
         return undefined
@@ -219,7 +219,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             return
         }
         logger.trace(`Removing contact ${nodeId}`)
-        this.ringContacts.removeContact(this.closestContacts.getContact(nodeId)?.contact)
+        this.ringContacts.removeContact(this.closestContacts.getContact(nodeId))
         this.neighbors.remove(getRawFromDhtAddress(nodeId))
         this.closestContacts.removeContact(nodeId)
         this.activeContacts.delete(nodeId)
@@ -250,7 +250,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             maxSize: limit
         })
         this.neighbors.toArray().forEach((contact) => closest.addContact(contact))
-        return closest.getAllContacts()
+        return closest.getClosestContacts()
     }
 
     // TODO reduce copy-paste?
@@ -261,8 +261,10 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             excludedNodeIds,
             maxSize: limit
         })
-        this.closestContacts.getAllContacts().map((contact) => closest.addContact(contact))
-        return closest.getAllContacts()
+        for (const contact of this.closestContacts.getAllContactsInUndefinedOrder()) {
+            closest.addContact(contact)
+        }
+        return closest.getClosestContacts()
     }
 
     getClosestRingContactsTo(
@@ -271,7 +273,9 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         excludedIds?: Set<DhtAddress>
     ): { left: DhtNodeRpcRemote[], right: DhtNodeRpcRemote[] } {
         const closest = new RingContactList<DhtNodeRpcRemote>(ringIdRaw, excludedIds)
-        this.closestContacts.getAllContacts().map((contact) => closest.addContact(contact))
+        for (const contact of this.closestContacts.getAllContactsInUndefinedOrder()) {
+            closest.addContact(contact)
+        }
         this.ringContacts.getAllContacts().map((contact) => closest.addContact(contact))
         return closest.getClosestContacts(limit ?? 8)
     }

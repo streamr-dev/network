@@ -53,7 +53,22 @@ Changes before Tatum release are not documented in this file.
 #### Security
 
 
+## [100.2.0] - 2024-03-28
+
+### @streamr/node
+
+#### Added
+
+- Add support for subscribing to a stream on behalf of an [ERC-1271 contract](https://eips.ethereum.org/EIPS/eip-1271) (https://github.com/streamr-dev/network/pull/2454)
+
+
 ## [100.1.2] - 2024-03-27
+
+### @streamr/node
+
+#### Fixed
+
+- Update internal list of JSON RPC urls for Mumbai testnet
 
 
 ## [100.1.1] - 2024-03-26
@@ -78,7 +93,8 @@ Changes before Tatum release are not documented in this file.
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v100.1.2...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v100.2.0...HEAD
+[100.2.0]: https://github.com/streamr-dev/network/compare/v100.1.2...v100.2.0
 [100.1.2]: https://github.com/streamr-dev/network/compare/v100.1.1...v100.1.2
 [100.1.1]: https://github.com/streamr-dev/network/compare/v100.1.0...v100.1.1
 [100.1.0]: https://github.com/streamr-dev/network/compare/v100.0.0...v100.1.0
