@@ -15,6 +15,8 @@ const testIp = '164.151.129.20'
 const testLatitude = -25.7599
 const testLongitude = 28.2604
 
+const dbPath = '/tmp/geoipdatabasesintegration'
+
 describe('ConnectivityChecking', () => {
 
     let server: ConnectionManager
@@ -39,7 +41,7 @@ describe('ConnectivityChecking', () => {
                 websocketPortRange: { min: PORT, max: PORT },
                 websocketServerEnableTls: false,
                 transport: new MockTransport(),
-                geoIpDatabasePath: '/tmp/tmpPath'
+                geoIpDatabasePath: dbPath
             }),
             metricsContext: new MetricsContext()
         })
@@ -50,8 +52,8 @@ describe('ConnectivityChecking', () => {
     afterEach(async () => {
         mock?.mockRestore()
         await server.stop()
-        fs.unlinkSync('/tmp/tmpPath/GeoLite2-City.mmdb')
-        fs.rmdirSync('/tmp/tmpPath')
+        fs.unlinkSync(dbPath + '/GeoLite2-City.mmdb')
+        fs.rmSync(dbPath, { recursive: true })
     })
 
     it('connectivityCheck replies with correct latitude and longitude', async () => {

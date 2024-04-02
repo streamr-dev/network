@@ -1,7 +1,7 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils/utils'
+import { createMockConnectionDhtNode, waitForStableTopology } from '../utils/utils'
 import { getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
 
 const NUM_NODES = 100
@@ -25,7 +25,7 @@ describe('Find correctness', () => {
         }
         await entryPoint.joinDht([entrypointDescriptor])
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
-        await waitConnectionManagersReadyForTesting(nodes.map((node) => node.connectionManager!), 20)
+        await waitForStableTopology(nodes, 20)
     }, 90000)
 
     afterEach(async () => {

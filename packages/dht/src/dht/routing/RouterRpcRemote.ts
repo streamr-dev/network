@@ -39,7 +39,7 @@ export class RouterRpcRemote extends RpcRemote<RouterRpcClient> {
                 ? getNodeIdFromPeerDescriptor(previousPeer)
                 : getNodeIdFromPeerDescriptor(params.sourcePeer!)
             const toNode = getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
-            logger.trace(`Failed to send routeMessage from ${fromNode} to ${toNode} with: ${err}`)
+            logger.trace(`Failed to send routeMessage from ${fromNode} to ${toNode}`, { err })
             return false
         }
         return true
@@ -69,7 +69,7 @@ export class RouterRpcRemote extends RpcRemote<RouterRpcClient> {
                 ? getNodeIdFromPeerDescriptor(previousPeer)
                 : getNodeIdFromPeerDescriptor(params.sourcePeer!)
             const toNode = getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
-            logger.trace(`Failed to send forwardMessage from ${fromNode} to ${toNode} with: ${err}`)
+            logger.trace(`Failed to send forwardMessage from ${fromNode} to ${toNode}`, { err })
             return false
         }
         return true

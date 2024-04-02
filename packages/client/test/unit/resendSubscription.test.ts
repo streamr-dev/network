@@ -11,6 +11,8 @@ import { initResendSubscription } from '../../src/subscribe/resendSubscription'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { createGroupKeyQueue, createRandomAuthentication, createStreamRegistry, mockLoggerFactory } from '../test-utils/utils'
 import { isEqual } from 'lodash'
+import { mock } from 'jest-mock-extended'
+import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 const MAX_GAP_REQUESTS = 2
@@ -55,7 +57,8 @@ describe('resend subscription', () => {
             streamRegistry: createStreamRegistry({
                 isPublicStream: true
             }),
-            groupKeyQueue: await createGroupKeyQueue(authentication)
+            groupKeyQueue: await createGroupKeyQueue(authentication),
+            erc1271ContractFacade: mock<ERC1271ContractFacade>()
         })
     })
 
@@ -96,7 +99,7 @@ describe('resend subscription', () => {
         gapFill = true
     ) => {
         const eventEmitter = new EventEmitter<SubscriptionEvents>()
-        sub = new Subscription(STREAM_PART_ID, false, eventEmitter, mockLoggerFactory())
+        sub = new Subscription(STREAM_PART_ID, false, undefined, eventEmitter, mockLoggerFactory())
         initResendSubscription(
             sub,
             undefined as any,

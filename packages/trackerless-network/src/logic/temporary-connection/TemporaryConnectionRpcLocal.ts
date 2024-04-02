@@ -6,9 +6,9 @@ import {
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ITemporaryConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { ConnectionLocker, DhtAddress, DhtCallContext, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '@streamr/dht'
-import { DeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { ContentDeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { NodeList } from '../NodeList'
-import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
+import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { StreamPartID } from '@streamr/protocol'
@@ -20,7 +20,7 @@ interface TemporaryConnectionRpcLocalConfig {
     connectionLocker: ConnectionLocker
 } 
 
-const LOCK_ID_BASE = 'system/delivery/temporary-connection/'
+const LOCK_ID_BASE = 'system/content-delivery/temporary-connection/'
 
 export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
 
@@ -52,11 +52,11 @@ export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
         context: ServerCallContext
     ): Promise<TemporaryConnectionResponse> {
         const sender = (context as DhtCallContext).incomingSourceDescriptor!
-        const remote = new DeliveryRpcRemote(
+        const remote = new ContentDeliveryRpcRemote(
             this.config.localPeerDescriptor,
             sender,
             this.config.rpcCommunicator,
-            DeliveryRpcClient
+            ContentDeliveryRpcClient
         )
         this.temporaryNodes.add(remote)
         this.config.connectionLocker.weakLockConnection(getNodeIdFromPeerDescriptor(sender), this.lockId)

@@ -115,7 +115,7 @@ export class RecursiveOperationManager {
                     15000
                 )
             } catch (err) {
-                logger.debug(`start failed with error ${err}`)
+                logger.debug('start failed', { err })
             }
         } else {
             session.start(this.config.serviceId)
@@ -222,8 +222,7 @@ export class RecursiveOperationManager {
         const closestPeers = new SortedContactList<DhtNodeRpcRemote>({
             referenceId,
             maxSize: limit,
-            allowToContainReferenceId: true,
-            emitEvents: false
+            allowToContainReferenceId: true
         })
         closestPeers.addContacts(connectedPeers)
         return closestPeers.getClosestContacts(limit).map((peer) => peer.getPeerDescriptor())

@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { createMockConnectionDhtNode, waitNodesReadyForTesting } from '../utils/utils'
+import { createMockConnectionDhtNode, waitForStableTopology } from '../utils/utils'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
 import { DhtAddress, createRandomDhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
@@ -56,12 +56,11 @@ describe('Replicate data from node to node in DHT', () => {
         const sortedList = new SortedContactList<DhtNode>({ 
             referenceId: getDhtAddressFromRaw(DATA.key),
             maxSize: 10000, 
-            allowToContainReferenceId: true, 
-            emitEvents: false 
+            allowToContainReferenceId: true
         })
         nodes.forEach((node) => sortedList.addContact(node))
 
-        const closest = sortedList.getAllContacts()
+        const closest = sortedList.getClosestContacts()
         const successfulStorers = await nodes[0].storeDataToDht(getDhtAddressFromRaw(DATA.key), DATA.data!)
         expect(successfulStorers.length).toBe(1)
 
@@ -72,7 +71,7 @@ describe('Replicate data from node to node in DHT', () => {
                 }
             })
         )
-        await waitNodesReadyForTesting(nodes)
+        await waitForStableTopology(nodes)
 
         const data = getDataEntries(closest[0])
         expect(data).toHaveLength(1)
@@ -87,7 +86,7 @@ describe('Replicate data from node to node in DHT', () => {
                 }
             })
         )
-        await waitNodesReadyForTesting(nodes)
+        await waitForStableTopology(nodes)
 
         const randomIndex = Math.floor(Math.random() * nodes.length)
         const storerDescriptors = await nodes[randomIndex].storeDataToDht(getDhtAddressFromRaw(DATA.key), DATA.data!)

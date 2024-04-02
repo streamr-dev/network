@@ -8,7 +8,6 @@ import { v4 } from 'uuid'
 
 interface RouterRpcLocalConfig {
     doRouteMessage: (routedMessage: RouteMessageWrapper, mode?: RoutingMode) => RouteMessageAck
-    addContact: (contact: PeerDescriptor, setActive: boolean) => void
     setForwardingEntries: (routedMessage: RouteMessageWrapper) => void
     handleMessage: (message: Message) => void
     duplicateRequestDetector: DuplicateDetector

@@ -2,7 +2,7 @@ import { Wallet } from '@ethersproject/wallet'
 import { EthereumAddress, toEthereumAddress, hexToBinary } from '@streamr/utils'
 import { StreamMessage, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { StreamRegistry } from '../../src/registry/StreamRegistry'
+import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { Stream } from '../../src/Stream'
 import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
 import { createMockMessage } from '../test-utils/utils'
@@ -37,7 +37,7 @@ const validate = async (messageOptions: MessageOptions) => {
             return userAddress === toEthereumAddress(publisherWallet.address)
         }
     }
-    await validateStreamMessage(msg, streamRegistry as any)
+    await validateStreamMessage(msg, streamRegistry as any, undefined as any)
 }
 
 describe('Validator', () => {

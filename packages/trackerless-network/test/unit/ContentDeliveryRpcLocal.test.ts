@@ -1,14 +1,14 @@
 import { ListeningRpcCommunicator } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { DeliveryRpcLocal } from '../../src/logic/DeliveryRpcLocal'
+import { ContentDeliveryRpcLocal } from '../../src/logic/ContentDeliveryRpcLocal'
 import { LeaveStreamPartNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { MockTransport } from '../utils/mock/Transport'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 
-describe('DeliveryRpcLocal', () => {
+describe('ContentDeliveryRpcLocal', () => {
 
-    let rpcLocal: DeliveryRpcLocal
+    let rpcLocal: ContentDeliveryRpcLocal
     const peerDescriptor = createMockPeerDescriptor()
 
     const mockSender = createMockPeerDescriptor()
@@ -30,7 +30,7 @@ describe('DeliveryRpcLocal', () => {
         mockOnLeaveNotice = jest.fn((_m) => {})
         mockMarkForInspection = jest.fn((_m) => {})
 
-        rpcLocal = new DeliveryRpcLocal({
+        rpcLocal = new ContentDeliveryRpcLocal({
             markAndCheckDuplicate: mockDuplicateCheck,
             broadcast: mockBroadcast,
             onLeaveNotice: mockOnLeaveNotice,
