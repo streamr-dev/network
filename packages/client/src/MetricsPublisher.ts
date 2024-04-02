@@ -1,6 +1,5 @@
 import { MetricsReport, merge, wait } from '@streamr/utils'
 import { scoped, Lifecycle, inject } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { ConfigInjectionToken, StreamrClientConfig, ProviderAuthConfig } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { StreamrClientEventEmitter } from './events'
@@ -59,7 +58,6 @@ export class MetricsPublisher {
     constructor(
         publisher: Publisher,
         node: NetworkNodeFacade,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(ConfigInjectionToken) config: Pick<StreamrClientConfig, 'metrics' | 'auth'>,
         eventEmitter: StreamrClientEventEmitter,
         destroySignal: DestroySignal
@@ -72,10 +70,10 @@ export class MetricsPublisher {
         const ensureStarted = pOnce(async () => {
             const node = await this.node.getNode()
             const metricsContext = node.getMetricsContext()
-            const partitionKey = await authentication.getAddress()
+            const nodeId = node.getNodeId()
             this.config.periods.forEach((config) => {
                 return metricsContext.createReportProducer(async (report: MetricsReport) => {
-                    await this.publish(report, config.streamId, partitionKey)
+                    await this.publish(report, config.streamId, nodeId)
                 }, config.duration, this.destroySignal.abortSignal)
             })
         })
@@ -85,19 +83,19 @@ export class MetricsPublisher {
         }
     }
 
-    private async publish(report: MetricsReport, streamId: string, partitionKey: string): Promise<void> {
+    private async publish(report: MetricsReport, streamId: string, nodeId: string): Promise<void> {
         await wait(Math.random() * this.config.maxPublishDelay)
         const message = {
             ...report,
             node: { 
                 ...report.node,
-                id: await this.node.getNodeId()
+                id: nodeId
             }
         }
         try {
             await this.publisher.publish(streamId, message, {
                 timestamp: report.period.end,
-                partitionKey
+                partitionKey: nodeId
             })
         } catch (e: any) {
             console.warn(`Unable to publish metrics: ${e.message}`)

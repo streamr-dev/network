@@ -12,7 +12,11 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- Add node ID to metrics messages
+
 #### Changed
+
+- Change the way in which the partition of the metrics stream is calculated (based on node ID)
 
 #### Deprecated
 

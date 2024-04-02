@@ -1,7 +1,6 @@
 import 'reflect-metadata'
 
 import { DhtAddress } from '@streamr/dht'
-import { randomEthereumAddress } from '@streamr/test-utils'
 import { LevelMetric, MetricsContext, wait } from '@streamr/utils'
 import { StreamrClientConfig } from '../../src/Config'
 import { DestroySignal } from '../../src/DestroySignal'
@@ -11,7 +10,7 @@ import { StreamrClientEventEmitter } from '../../src/events'
 import { Publisher } from '../../src/publish/Publisher'
 import { waitForCalls } from '../test-utils/utils'
 
-const nodeAddress = randomEthereumAddress()
+const NODE_ID = '12345678' as DhtAddress
 const DEFAULT_DURATIONS = DEFAULTS.periods.map((p) => p.duration)
 
 describe('MetricsPublisher', () => {
@@ -20,24 +19,20 @@ describe('MetricsPublisher', () => {
     let metricsContext: MetricsContext
     let destroySignal: DestroySignal
 
-    const startMetricsPublisher = (config: Pick<StreamrClientConfig, 'metrics' | 'auth'>) => {
+    const startMetricsPublisher = (config: Pick<StreamrClientConfig, 'metrics'>) => {
         const publisher: Pick<Publisher, 'publish'> = {
             publish: publishReportMessage
         }
-        const node: Pick<NetworkNodeFacade, 'getNode' | 'getNodeId'> = {
+        const node: Pick<NetworkNodeFacade, 'getNode'> = {
             getNode: async () => ({
                 getMetricsContext: () => metricsContext,
+                getNodeId: () => NODE_ID
             }) as any,
-            getNodeId: async () => '12345678' as DhtAddress
-        }
-        const authentication = {
-            getAddress: async () => nodeAddress
         }
         const eventEmitter = new StreamrClientEventEmitter()
         new MetricsPublisher(
             publisher as any,
             node as any,
-            authentication as any,
             config,
             eventEmitter,
             destroySignal
@@ -48,7 +43,7 @@ describe('MetricsPublisher', () => {
     }
 
     const assertPublisherEnabled = async (
-        config: Pick<StreamrClientConfig, 'metrics' | 'auth'>,
+        config: Pick<StreamrClientConfig, 'metrics'>,
         expectedDurations: number[]
     ) => {
         startMetricsPublisher(config)
@@ -107,7 +102,7 @@ describe('MetricsPublisher', () => {
             }
         })
         expect(publishMetadata).toMatchObject({
-            partitionKey: nodeAddress,
+            partitionKey: NODE_ID,
             timestamp: expect.toBeNumber()
         })
     })
