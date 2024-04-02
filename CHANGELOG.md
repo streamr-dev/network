@@ -12,7 +12,7 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
-- Metrics stream messages contain the node ID
+- Add node ID to metrics messages
 
 #### Changed
 
