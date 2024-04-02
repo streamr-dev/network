@@ -12,11 +12,11 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
-- Add node ID to metrics messages
+- Add node ID to metrics messages (https://github.com/streamr-dev/network/pull/2468)
 
 #### Changed
 
-- Change the way in which the partition of the metrics stream is calculated (based on node ID)
+- Change the way in which the partition of the metrics stream is calculated (based on node ID) (https://github.com/streamr-dev/network/pull/2468)
 
 #### Deprecated
 
