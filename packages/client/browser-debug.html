@@ -27,7 +27,7 @@
                 const controlLayerConnectionsLength = info.controlLayer.connections.length
                 let streamPartsNeighborCount = 0
                 for (const sp of info.streamPartitions) {
-                    streamPartsNeighborCount = sp.deliveryLayerNeighbors.length
+                    streamPartsNeighborCount = sp.contentDeliveryLayerNeighbors.length
                 }
                 const controlLayerNeighborsLength = info.controlLayer.neighbors.length
                 const cmConnections = (node.stack.getLayer0Node().getTransport()).getConnections().length
