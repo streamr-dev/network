@@ -20,7 +20,12 @@ describe('Propagation', () => {
         totalReceived = 0
         layer1Nodes = []
         contentDeliveryLayerNodes = []
-        const [entryPoint, node1] = await createMockContentDeliveryLayerNodeAndDhtNode(entryPointDescriptor, entryPointDescriptor, STREAM_PART_ID, simulator)
+        const [entryPoint, node1] = await createMockContentDeliveryLayerNodeAndDhtNode(
+            entryPointDescriptor,
+            entryPointDescriptor,
+            STREAM_PART_ID,
+            simulator
+        )
         await entryPoint.start()
         await entryPoint.joinDht([entryPointDescriptor])
         await node1.start()
