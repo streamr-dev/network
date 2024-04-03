@@ -67,7 +67,6 @@ export const runStreamrChallenge = (
             // eslint-disable-next-line promise/catch-or-return
             rpcClient.hasSession({ sessionId }).then(() => {
                 resolve()
-                return
             }).catch((e) => {
                 reject(e)
             }).finally(() => {

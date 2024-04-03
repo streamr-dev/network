@@ -120,7 +120,7 @@ export class RestServer {
             sendResponse(res, session)
         } catch (err) {
             sendError(res, err)
-            return
+            
         }
     }
 
@@ -147,7 +147,7 @@ export class RestServer {
             sendResponse(res, certifiedSubdomain)
         } catch (err) {
             sendError(res, err)
-            return
+            
         }
     }
 
@@ -181,7 +181,7 @@ export class RestServer {
             sendResponse(res, certifiedSubdomain)
         } catch (err) {
             sendError(res, err)
-            return
+            
         }
     }
 

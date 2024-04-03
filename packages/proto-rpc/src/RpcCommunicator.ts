@@ -225,7 +225,6 @@ export class RpcCommunicator<T extends ProtoCallContext> extends EventEmitter<Rp
                             ongoingRequest.resolveNotification()
                         }
                     }
-                    return
                 })
         } else {
             if (deferredPromises) {

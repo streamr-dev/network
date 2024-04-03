@@ -156,7 +156,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
                         this.removeContact(nodeId)
                         this.addClosestContactToBucket()
                     }
-                    return
                 }).catch((_e) => {
                     this.config.connectionLocker?.weakUnlockConnection(nodeId, this.config.lockId)
                     this.removeContact(nodeId)

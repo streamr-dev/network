@@ -177,7 +177,7 @@ describe(OperatorFleetState, () => {
 
         beforeEach(() => {
             ready = false
-            // eslint-disable-next-line promise/always-return,promise/catch-or-return
+            // eslint-disable-next-line promise/catch-or-return
             state.waitUntilReady().then(() => {
                 ready = true
             })

@@ -119,7 +119,6 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
 
     public addRemoteCandidate(candidate: string, mid: string): void {
         this.peerConnection?.addIceCandidate({ candidate: candidate, sdpMid: mid })
-            .then(() => { return })
             .catch((err) => {
                 logger.warn('Failed to add ICE candidate', { err })
             })

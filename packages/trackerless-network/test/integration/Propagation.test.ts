@@ -38,7 +38,6 @@ describe('Propagation', () => {
             )
             await layer1.start()
             await randomGraphNode.start()
-            // eslint-disable-next-line promise/always-return
             await layer1.joinDht([entryPointDescriptor]).then(() => {
                 randomGraphNode.on('message', () => { totalReceived += 1 })
                 layer1Nodes.push(layer1)

@@ -509,7 +509,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             // eslint-disable-next-line promise/catch-or-return
             waitForEvent3<ManagedConnectionEvents>(connection, 'disconnected', 2000).then(() => {
                 logger.trace('disconnected event received in gracefullyDisconnectAsync()')
-                return
             })
                 .catch((e) => {
                     logger.trace('force-closing connection after timeout ' + e)
