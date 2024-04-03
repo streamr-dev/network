@@ -1,27 +1,27 @@
 import { ConnectionManager, DhtNode, PeerDescriptor, Simulator, SimulatorTransport, getNodeIdFromPeerDescriptor, getRandomRegion } from '@streamr/dht'
 import { Logger, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
-import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
-import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
+import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
+import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { Layer1Node } from '../../src/logic/Layer1Node'
 
 const logger = new Logger(module)
 
-describe('RandomGraphNode-DhtNode', () => {
-    const nodeCount = 64
-    let layer1Nodes: Layer1Node[]
-    let dhtEntryPoint: Layer1Node
-    let entryPointRandomGraphNode: RandomGraphNode
-    let graphNodes: RandomGraphNode[]
+describe('ContentDeliveryLayerNode-DhtNode', () => {
+    const otherNodeCount = 64
+    let entryPointLayer1Node: Layer1Node
+    let otherLayer1Nodes: Layer1Node[]
+    let entryPointContentDeliveryLayerNode: ContentDeliveryLayerNode
+    let otherContentDeliveryLayerNodes: ContentDeliveryLayerNode[]
 
     const streamPartId = StreamPartIDUtils.parse('stream#0')
     const entrypointDescriptor = createMockPeerDescriptor({
         region: getRandomRegion()
     })
 
-    const peerDescriptors: PeerDescriptor[] = range(nodeCount).map(() => {
+    const peerDescriptors: PeerDescriptor[] = range(otherNodeCount).map(() => {
         return createMockPeerDescriptor({
             region: getRandomRegion()
         })
@@ -34,7 +34,7 @@ describe('RandomGraphNode-DhtNode', () => {
         )
         await entrypointCm.start()
 
-        const cms: ConnectionManager[] = range(nodeCount).map((i) =>
+        const cms: ConnectionManager[] = range(otherNodeCount).map((i) =>
             new SimulatorTransport(
                 peerDescriptors[i],
                 simulator
@@ -42,21 +42,21 @@ describe('RandomGraphNode-DhtNode', () => {
         )
         await Promise.all(cms.map((cm) => cm.start()))
 
-        dhtEntryPoint = new DhtNode({
+        entryPointLayer1Node = new DhtNode({
             transport: entrypointCm,
             peerDescriptor: entrypointDescriptor,
             serviceId: streamPartId
         })
 
-        layer1Nodes = range(nodeCount).map((i) => new DhtNode({
+        otherLayer1Nodes = range(otherNodeCount).map((i) => new DhtNode({
             transport: cms[i],
             peerDescriptor: peerDescriptors[i],
             serviceId: streamPartId
         }))
 
-        graphNodes = range(nodeCount).map((i) => createRandomGraphNode({
+        otherContentDeliveryLayerNodes = range(otherNodeCount).map((i) => createContentDeliveryLayerNode({
             streamPartId,
-            layer1Node: layer1Nodes[i],
+            layer1Node: otherLayer1Nodes[i],
             transport: cms[i],
             connectionLocker: cms[i],
             localPeerDescriptor: peerDescriptors[i],
@@ -64,9 +64,9 @@ describe('RandomGraphNode-DhtNode', () => {
             isLocalNodeEntryPoint: () => false
         }))
 
-        entryPointRandomGraphNode = createRandomGraphNode({
+        entryPointContentDeliveryLayerNode = createContentDeliveryLayerNode({
             streamPartId,
-            layer1Node: dhtEntryPoint,
+            layer1Node: entryPointLayer1Node,
             transport: entrypointCm,
             connectionLocker: entrypointCm,
             localPeerDescriptor: entrypointDescriptor,
@@ -74,45 +74,45 @@ describe('RandomGraphNode-DhtNode', () => {
             isLocalNodeEntryPoint: () => false
         })
 
-        await dhtEntryPoint.start()
-        await dhtEntryPoint.joinDht([entrypointDescriptor])
-        await Promise.all(layer1Nodes.map((node) => node.start()))
+        await entryPointLayer1Node.start()
+        await entryPointLayer1Node.joinDht([entrypointDescriptor])
+        await Promise.all(otherLayer1Nodes.map((node) => node.start()))
     })
 
     afterEach(async () => {
-        await dhtEntryPoint.stop()
-        entryPointRandomGraphNode.stop()
-        await Promise.all(layer1Nodes.map((node) => node.stop()))
-        await Promise.all(graphNodes.map((node) => node.stop()))
+        await entryPointLayer1Node.stop()
+        entryPointContentDeliveryLayerNode.stop()
+        await Promise.all(otherLayer1Nodes.map((node) => node.stop()))
+        await Promise.all(otherContentDeliveryLayerNodes.map((node) => node.stop()))
     })
 
     it('happy path single node ', async () => {
-        await entryPointRandomGraphNode.start()
-        await layer1Nodes[0].joinDht([entrypointDescriptor])
+        await entryPointContentDeliveryLayerNode.start()
+        await otherLayer1Nodes[0].joinDht([entrypointDescriptor])
 
-        await graphNodes[0].start()
+        await otherContentDeliveryLayerNodes[0].start()
 
-        await waitForCondition(() => graphNodes[0].getNeighbors().length === 1)
-        expect(graphNodes[0].getNearbyNodeView().getIds().length).toEqual(1)
-        expect(graphNodes[0].getNeighbors().length).toEqual(1)
+        await waitForCondition(() => otherContentDeliveryLayerNodes[0].getNeighbors().length === 1)
+        expect(otherContentDeliveryLayerNodes[0].getNearbyNodeView().getIds().length).toEqual(1)
+        expect(otherContentDeliveryLayerNodes[0].getNeighbors().length).toEqual(1)
     })
 
     it('happy path 4 nodes', async () => {
-        entryPointRandomGraphNode.start()
-        range(4).forEach((i) => graphNodes[i].start())
+        entryPointContentDeliveryLayerNode.start()
+        range(4).forEach((i) => otherContentDeliveryLayerNodes[i].start())
         await Promise.all(range(4).map(async (i) => {
-            await layer1Nodes[i].joinDht([entrypointDescriptor])
+            await otherLayer1Nodes[i].joinDht([entrypointDescriptor])
         }))
 
-        await waitForCondition(() => range(4).every((i) => graphNodes[i].getNeighbors().length === 4))
+        await waitForCondition(() => range(4).every((i) => otherContentDeliveryLayerNodes[i].getNeighbors().length === 4))
         range(4).forEach((i) => {
-            expect(graphNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)
-            expect(graphNodes[i].getNeighbors().length).toBeGreaterThanOrEqual(4)
+            expect(otherContentDeliveryLayerNodes[i].getNearbyNodeView().getIds().length).toBeGreaterThanOrEqual(4)
+            expect(otherContentDeliveryLayerNodes[i].getNeighbors().length).toBeGreaterThanOrEqual(4)
         })
 
         // Check bidirectionality
-        const allNodes = graphNodes
-        allNodes.push(entryPointRandomGraphNode)
+        const allNodes = otherContentDeliveryLayerNodes
+        allNodes.push(entryPointContentDeliveryLayerNode)
         range(5).forEach((i) => {
             allNodes[i].getNearbyNodeView().getIds().forEach((nodeId) => {
                 const neighbor = allNodes.find((node) => {
@@ -125,30 +125,30 @@ describe('RandomGraphNode-DhtNode', () => {
     }, 10000)
 
     it('happy path 64 nodes', async () => {
-        await Promise.all(range(nodeCount).map((i) => graphNodes[i].start()))
-        await Promise.all(range(nodeCount).map((i) => {
-            layer1Nodes[i].joinDht([entrypointDescriptor])
+        await Promise.all(range(otherNodeCount).map((i) => otherContentDeliveryLayerNodes[i].start()))
+        await Promise.all(range(otherNodeCount).map((i) => {
+            otherLayer1Nodes[i].joinDht([entrypointDescriptor])
         }))
-        await Promise.all(graphNodes.map((node) =>
+        await Promise.all(otherContentDeliveryLayerNodes.map((node) =>
             waitForCondition(() => node.getNeighbors().length >= 4, 10000)
         ))
 
-        const avg = graphNodes.reduce((acc, curr) => {
+        const avg = otherContentDeliveryLayerNodes.reduce((acc, curr) => {
             return acc + curr.getNeighbors().length
-        }, 0) / nodeCount
+        }, 0) / otherNodeCount
 
         logger.info(`AVG Number of neighbors: ${avg}`)
-        await Promise.all(graphNodes.map((node) =>
+        await Promise.all(otherContentDeliveryLayerNodes.map((node) =>
             waitForCondition(() => node.getOutgoingHandshakeCount() === 0)
         ))
         await waitForCondition(() => {
             let mismatchCounter = 0
-            graphNodes.forEach((node) => {
+            otherContentDeliveryLayerNodes.forEach((node) => {
                 const nodeId = node.getOwnNodeId()
                 node.getNeighbors().forEach((neighbor) => {
                     const neighborId = getNodeIdFromPeerDescriptor(neighbor)
-                    if (neighborId !== entryPointRandomGraphNode.getOwnNodeId()) {
-                        const neighbor = graphNodes.find((n) => n.getOwnNodeId() === neighborId)
+                    if (neighborId !== entryPointContentDeliveryLayerNode.getOwnNodeId()) {
+                        const neighbor = otherContentDeliveryLayerNodes.find((n) => n.getOwnNodeId() === neighborId)
                         const neighborIds = neighbor!.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
                         if (!neighborIds.includes(nodeId)) {
                             mismatchCounter += 1
