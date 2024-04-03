@@ -5,6 +5,9 @@ import { getNodeIdFromPeerDescriptor, ConnectionManager, PeerDescriptor } from '
 const main = async () => {
     let numOfMessagesPerTenSeconds = 0
     let numOfMessagesPerMinute = 0
+    let networkNumOfMessagesPerTenSeconds = 0
+    let networkNumOfMessagesPerMinute = 0
+
     const client = new StreamrClient({
         // environment: "mumbai",
         metrics: false
@@ -30,13 +33,15 @@ const main = async () => {
     ]
 
     setInterval(() => {
-        console.log('Num of messages in the last ten seconds ' + numOfMessagesPerTenSeconds)
+        console.log('Num of messages in the last ten seconds ' + numOfMessagesPerTenSeconds + ' (network): ' + networkNumOfMessagesPerTenSeconds)
         numOfMessagesPerTenSeconds = 0
+        networkNumOfMessagesPerTenSeconds = 0
     }, 10000)
 
     setInterval(() => {
-        console.log('Num of messages in the last minute ' + numOfMessagesPerMinute)
+        console.log('Num of messages in the last minute ' + numOfMessagesPerMinute + ' (network): ' + networkNumOfMessagesPerMinute)
         numOfMessagesPerMinute = 0
+        networkNumOfMessagesPerMinute
     }, 60000)
 
     setInterval(async () => {
@@ -65,10 +70,11 @@ const main = async () => {
         streamParts.forEach((stream) => {
             console.log('total stream neighbors on ' + stream.toString() + ': ' + node.getNeighbors(stream).length)
         })
+
     }, 5000)
 
     for (const streamPart of streamParts) {
-        const sub =await client.subscribe(streamPart, () => {
+        const sub = await client.subscribe(streamPart, () => {
             numOfMessagesPerTenSeconds += 1
             numOfMessagesPerMinute += 1
         })
@@ -76,6 +82,15 @@ const main = async () => {
             console.log(err)
         })
     }
+    const node = await client.getNode()
+    // @ts-expect-error private
+    node.stack.contentDeliveryManager.on('newMessage', (msg) => {
+        if (msg.body.oneofKind === 'contentMessage') {
+            networkNumOfMessagesPerTenSeconds += 1
+            networkNumOfMessagesPerMinute += 1
+        }
+    })
+    
 }
 
 main().catch((err) => console.error(err))
