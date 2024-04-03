@@ -11,7 +11,6 @@ import { SimulatorConnector } from './simulator/SimulatorConnector'
 import { IceServer, WebrtcConnector } from './webrtc/WebrtcConnector'
 import { WebsocketConnector, WebsocketConnectorConfig } from './websocket/WebsocketConnector'
 import { DhtAddress } from '../identifiers'
-
 export interface ConnectorFacade {
     createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection
     getLocalPeerDescriptor: () => PeerDescriptor | undefined
@@ -152,8 +151,8 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     }
 
     async stop(): Promise<void> {
-        await this.websocketConnector!.destroy()
-        await this.webrtcConnector!.stop()
+        await this.websocketConnector?.destroy()
+        await this.webrtcConnector?.stop()
     }
 }
 

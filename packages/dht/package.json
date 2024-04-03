@@ -20,10 +20,10 @@
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "npm run test-unit && npm run test-integration && npm run test-end-to-end",
     "test-browser": "karma start karma.config.js",
-    "test-unit": "jest test/unit",
-    "test-integration": "jest --bail test/integration",
-    "test-end-to-end": "jest --bail test/end-to-end",
-    "benchmark": "jest test/benchmark"
+    "test-unit": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest test/unit",
+    "test-integration": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest --bail test/integration",
+    "test-end-to-end": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest --bail test/end-to-end",
+    "benchmark": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest test/benchmark"
   },
   "dependencies": {
     "@js-sdsl/ordered-map": "^4.4.2",
@@ -39,7 +39,7 @@
     "k-bucket": "^5.1.0",
     "lodash": "^4.17.21",
     "lru-cache": "10.2.0",
-    "node-datachannel": "^0.4.3",
+    "node-datachannel": "^0.5.5",
     "querystring": "0.2.1",
     "uuid": "^9.0.1",
     "websocket": "^1.0.34",

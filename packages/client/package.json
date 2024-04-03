@@ -33,7 +33,7 @@
     "test": "npm run test-unit && npm run test-integration && npm run test-end-to-end",
     "test-unit": "jest --useStderr --forceExit test/unit",
     "test-integration": "jest --bail --useStderr --forceExit --testTimeout=40000 test/integration/*.test.*",
-    "test-end-to-end": "jest --bail --useStderr --forceExit --testTimeout=40000 test/end-to-end/*.test.*",
+    "test-end-to-end": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest --bail --useStderr --forceExit --testTimeout=40000 test/end-to-end/*.test.*",
     "test-browser-unit": "karma start karma-unit.config.js",
     "test-browser-integration": "karma start karma-integration.config.js",
     "test-browser-end-to-end": "karma start karma-end-to-end.config.js",

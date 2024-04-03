@@ -2,7 +2,6 @@ import { IWebrtcConnection, WebrtcConnectionEvents } from './IWebrtcConnection'
 import { ConnectionType, IConnection, ConnectionID, ConnectionEvents } from '../IConnection'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import EventEmitter from 'eventemitter3'
-import nodeDatachannel, { DataChannel, DescriptionType, PeerConnection } from 'node-datachannel'
 import { Logger } from '@streamr/utils'
 import { IllegalRtcPeerConnectionState } from '../../helpers/errors'
 import { iceServerAsString } from './iceServerAsString'
@@ -10,13 +9,16 @@ import { IceServer } from './WebrtcConnector'
 import { PortRange } from '../ConnectionManager'
 import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { createRandomConnectionId } from '../Connection'
+import { EsmLoader, NodeDataChannel } from '../../helpers/EsmLoader'
 
 const logger = new Logger(module)
 
 export const WEBRTC_CLEANUP = new class {
     // eslint-disable-next-line class-methods-use-this
     cleanUp(): void {
-        nodeDatachannel.cleanup()
+        if (EsmLoader.nodeDataChannel) {
+            EsmLoader.nodeDataChannel.cleanup()
+        }
     }
 }
 
@@ -42,8 +44,6 @@ enum RtcPeerConnectionStateEnum {
     new = 'new'
 }
 
-nodeDatachannel.initLogger('Fatal')
-
 type RtcPeerConnectionState = keyof typeof RtcPeerConnectionStateEnum
 
 type Events = WebrtcConnectionEvents & ConnectionEvents
@@ -51,8 +51,8 @@ type Events = WebrtcConnectionEvents & ConnectionEvents
 export class NodeWebrtcConnection extends EventEmitter<Events> implements IConnection, IWebrtcConnection {
 
     public connectionId: ConnectionID
-    private connection?: PeerConnection
-    private dataChannel?: DataChannel
+    private connection?: NodeDataChannel.PeerConnection
+    private dataChannel?: NodeDataChannel.DataChannel
     private lastState: RtcPeerConnectionState = 'connecting'
     private remoteDescriptionSet = false
     private connectingTimeoutRef?: NodeJS.Timeout
@@ -82,7 +82,8 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
     public start(isOffering: boolean): void {
         const nodeId = getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)
         logger.trace(`Starting new connection for peer ${nodeId}`, { isOffering })
-        this.connection = new PeerConnection(nodeId, {
+       
+        this.connection = new EsmLoader.nodeDataChannel.PeerConnection(nodeId, {
             iceServers: this.iceServers.map(iceServerAsString),
             maxMessageSize: this.maxMessageSize,
             portRangeBegin: this.portRange?.min,
@@ -97,7 +98,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
         this.connection.onStateChange((state: string) => this.onStateChange(state))
         this.connection.onGatheringStateChange(() => {})
 
-        this.connection.onLocalDescription((description: string, type: DescriptionType) => {
+        this.connection.onLocalDescription((description: string, type: NodeDataChannel.DescriptionType) => {
             this.emit('localDescription', description, type.toString())
         })
         this.connection.onLocalCandidate((candidate: string, mid: string) => {
@@ -116,7 +117,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
             const remoteNodeId = getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)
             try {
                 logger.trace(`Setting remote descriptor for peer: ${remoteNodeId}`)
-                this.connection.setRemoteDescription(description, type as DescriptionType)
+                this.connection.setRemoteDescription(description, type as NodeDataChannel.DescriptionType)
                 this.remoteDescriptionSet = true
             } catch (err) {
                 logger.debug(`Failed to set remote descriptor for peer ${remoteNodeId}`)
@@ -200,7 +201,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
         this.doClose(false)
     }
 
-    private setupDataChannel(dataChannel: DataChannel): void {
+    private setupDataChannel(dataChannel: NodeDataChannel.DataChannel): void {
         this.dataChannel = dataChannel
         dataChannel.setBufferedAmountLowThreshold(this.bufferThresholdLow)
         dataChannel.onOpen(() => {

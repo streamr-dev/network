@@ -10,7 +10,7 @@ module.exports = function({ entry, libraryName, alias = {} }) {
             },
             mode: 'development',
             entry,
-            devtool: 'source-map',
+            devtool: 'eval-source-map',
             module: {
                 rules: [
                     {
@@ -67,8 +67,10 @@ module.exports = function({ entry, libraryName, alias = {} }) {
                 umdNamedDefine: true,
             },
             externals: {
+                /*
                 'geoip-lite': 'commonjs geoip-lite',
                 'node-datachannel': 'commonjs node-datachannel',
+                */
                 'http': 'HTTP',
                 'https': 'HTTPS',
                 'express': 'Express',

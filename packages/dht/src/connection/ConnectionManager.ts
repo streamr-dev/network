@@ -24,6 +24,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ConnectionLockRpcLocal } from './ConnectionLockRpcLocal'
 import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { getOfferer } from '../helpers/offering'
+import { EsmLoader } from '../helpers/EsmLoader'
 
 export interface ConnectionManagerConfig {
     maxConnections?: number
@@ -184,6 +185,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             throw new Err.CouldNotStart(`Cannot start already ${this.state} module`)
         }
         this.state = ConnectionManagerState.RUNNING
+        await EsmLoader.init()
         logger.trace(`Starting ConnectionManager...`)
         await this.connectorFacade.start(
             (connection: ManagedConnection) => this.onNewConnection(connection),

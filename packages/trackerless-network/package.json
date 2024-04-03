@@ -22,8 +22,8 @@
     "test": "npm run test-unit && npm run test-integration && npm run test-end-to-end",
     "test-browser": "karma start karma.config.js",
     "test-unit": "jest test/unit",
-    "test-integration": "jest --bail test/integration",
-    "test-end-to-end": "jest --bail test/end-to-end",
+    "test-integration": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest --bail test/integration",
+    "test-end-to-end": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest --bail test/end-to-end",
     "network": "ts-node bin/network",
     "run-joining-benchmark": "node --max-old-space-size=24288 dist/test/benchmark/first-message.js"
   },
