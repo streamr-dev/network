@@ -10,7 +10,25 @@ const main = async () => {
 
     const client = new StreamrClient({
         // environment: "mumbai",
-        metrics: false
+        metrics: false,
+        contracts: {
+            streamRegistryChainRPCs: {
+                chainId: 137,
+                name: 'polygon',
+                rpcs: [
+                    {
+                        "url": "https://polygon-rpc.com"
+                    },
+                    {
+                        "url": "https://polygon.gateway.tenderly.co"
+                    },
+                    {
+                        "url": "https://polygon-pokt.nodies.app"
+                    }
+                ]
+
+            }
+        }
     })
 
     const streamParts = [
@@ -41,7 +59,7 @@ const main = async () => {
     setInterval(() => {
         console.log('Num of messages in the last minute ' + numOfMessagesPerMinute + ' (network): ' + networkNumOfMessagesPerMinute)
         numOfMessagesPerMinute = 0
-        networkNumOfMessagesPerMinute
+        networkNumOfMessagesPerMinute = 0
     }, 60000)
 
     setInterval(async () => {
