@@ -20,9 +20,9 @@
     "check": "tsc -p ./tsconfig.jest.json --noEmit",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-    "test": "jest test/unit test/integration",
-    "test-unit": "jest test/unit",
-    "test-integration": "jest test/integration"
+    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest test/unit test/integration",
+    "test-unit": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest test/unit",
+    "test-integration": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest test/integration"
   },
   "dependencies": {
     "@aws-sdk/client-route-53": "^3.529.1",
