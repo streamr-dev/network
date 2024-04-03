@@ -43,7 +43,6 @@ describe('Propagation', () => {
             )
             await layer1.start()
             await contentDeliveryLayerNode.start()
-            // eslint-disable-next-line promise/always-return
             await layer1.joinDht([entryPointDescriptor]).then(() => {
                 contentDeliveryLayerNode.on('message', () => { totalReceived += 1 })
                 layer1Nodes.push(layer1)
