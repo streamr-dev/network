@@ -1,68 +1,84 @@
-import { areEqualBinaries } from '@streamr/utils'
-import KBucket from 'k-bucket'
-import { range, sortBy } from 'lodash'
+import { Multimap, wait } from '@streamr/utils'
+import { sampleSize } from 'lodash'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
-import { SortedContactList } from '../../src/dht/contact/SortedContactList'
+import { PeerManager, getDistance } from '../../src/dht/PeerManager'
 import { DiscoverySession } from '../../src/dht/discovery/DiscoverySession'
-import { PeerID } from '../../src/exports'
-import { createRandomKademliaId } from '../../src/helpers/kademliaId'
-import { peerIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
+import { DhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { createTestTopology } from '../utils/topology'
 
-const REMOTE_NODE_COUNT = 5
+const NODE_COUNT = 40
+const MIN_NEIGHBOR_COUNT = 2  // nodes can get more neighbors when we merge network partitions
+const PARALLELISM = 1
+const NO_PROGRESS_LIMIT = 1
+const QUERY_BATCH_SIZE = 5  // the default value in DhtNode's config, not relevant in this test
 
-const createMockPeerDescriptor = (kademliaId: Uint8Array): PeerDescriptor => {
+const createPeerDescriptor = (nodeId: DhtAddress): PeerDescriptor => {
     return {
-        kademliaId,
+        nodeId: getRawFromDhtAddress(nodeId),
         type: NodeType.NODEJS
     }
 }
 
 describe('DiscoverySession', () => {
 
-    const localPeerDescriptor = createMockPeerDescriptor(createRandomKademliaId())
-    const remotePeerDescriptors = range(REMOTE_NODE_COUNT).map(() => createMockPeerDescriptor(createRandomKademliaId()))
+    let topology: Multimap<DhtAddress, DhtAddress>
+    const queriedNodes: DhtAddress[] = []
 
-    const getClosestPeerDescriptors = (thisId: Uint8Array) => {
-        return sortBy(
-            remotePeerDescriptors
-                .filter((p) => areEqualBinaries(p.kademliaId, thisId))
-                .concat([localPeerDescriptor]),
-            (p: PeerDescriptor) => KBucket.distance(p.kademliaId, thisId)
-        )
+    beforeAll(() => {
+        topology = createTestTopology(NODE_COUNT, MIN_NEIGHBOR_COUNT)
+    })
+
+    const createPeerManager = (localNodeId: DhtAddress): PeerManager => {
+        const peerManager = new PeerManager({
+            localNodeId,
+            localPeerDescriptor: createPeerDescriptor(localNodeId),
+            isLayer0: true,
+            createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => createMockRpcRemote(peerDescriptor) as any
+        } as any)
+        for (const neighbor of topology.get(localNodeId)) {
+            peerManager.addContact(createPeerDescriptor(neighbor))
+        }
+        return peerManager
     }
 
-    const createMockRpcRemote = (kademliaId: Uint8Array): Partial<DhtNodeRpcRemote> => {
-        return { 
-            getPeerDescriptor: () => createMockPeerDescriptor(kademliaId),
-            getPeerId: () => PeerID.fromValue(kademliaId),
-            getClosestPeers: async () => {
-                // in this test implementation all nodes are connected to all other nodes
-                return getClosestPeerDescriptors(kademliaId)
-            }
+    const createMockRpcRemote = (peerDescriptor: PeerDescriptor): Partial<DhtNodeRpcRemote> => {
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        return {
+            id: getRawFromDhtAddress(nodeId),
+            getPeerDescriptor: () => peerDescriptor,
+            getNodeId: () => nodeId,
+            getClosestPeers: async (referenceId: DhtAddress) => {
+                queriedNodes.push(nodeId)
+                await wait(10)
+                const peerManager = createPeerManager(nodeId)
+                return peerManager.getClosestContactsTo(referenceId, QUERY_BATCH_SIZE).map((remote) => remote.getPeerDescriptor())
+            },
+            ping: async () => true
         }
     }
 
     it('happy path', async () => {
-        const newContactListener = jest.fn()
-        const targetId = createRandomKademliaId()
-        const neighborList = new SortedContactList<DhtNodeRpcRemote>(peerIdFromPeerDescriptor(localPeerDescriptor), 100)
-        // TODO would be ok if we'd start by only with one random remote in the neighborList?
-        remotePeerDescriptors.forEach((p) => neighborList.addContact(createMockRpcRemote(p.kademliaId) as any))
+        const nodeIds = [...topology.keys()]
+        const [localNodeId, targetId] = sampleSize(nodeIds, 2)
+        const contactedPeers = new Set<DhtAddress>()
+        const peerManager = createPeerManager(localNodeId)
         const session = new DiscoverySession({
-            newContactListener,
             targetId,
-            neighborList: neighborList as any,
-            localPeerDescriptor,
-            parallelism: 1,
-            bucket: undefined as any,
-            noProgressLimit: 100,
-            createRpcRemote: (peerDescriptor: PeerDescriptor) => createMockRpcRemote(peerDescriptor.kademliaId) as any
+            parallelism: PARALLELISM,
+            noProgressLimit: NO_PROGRESS_LIMIT,
+            peerManager,
+            contactedPeers
         })
         await session.findClosestNodes(1000)
-        expect(newContactListener).toHaveBeenCalledTimes(REMOTE_NODE_COUNT)
-        // TODO can we assert somethinng about the order of newContactListener calls? (i.e. that the globally closest node
-        // is the first item and so on)
+        expect(queriedNodes.length).toBeGreaterThanOrEqual(1)
+        // Each queried node should closer to the target than the previous queried node, because we
+        // use parallelism=1 and noProgressLimit=1
+        const distancesToTarget = queriedNodes
+            .map((nodeId) => getDistance(getRawFromDhtAddress(nodeId), getRawFromDhtAddress(targetId)))
+        for (let i = 1; i < distancesToTarget.length ; i++) {
+            expect(distancesToTarget[i]).toBeLessThan(distancesToTarget[i - 1])
+        }
         session.stop()
     })
 })
