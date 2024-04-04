@@ -3,14 +3,14 @@ import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
-import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
-import { createMockPeerDescriptor, createMockRandomGraphNodeAndDhtNode, createStreamMessage } from '../utils/utils'
+import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
+import { createMockPeerDescriptor, createMockContentDeliveryLayerNodeAndDhtNode, createStreamMessage } from '../utils/utils'
 import { Layer1Node } from '../../src/logic/Layer1Node'
 
 describe('Propagation', () => {
     const entryPointDescriptor = createMockPeerDescriptor()
     let layer1Nodes: Layer1Node[]
-    let randomGraphNodes: RandomGraphNode[]
+    let contentDeliveryLayerNodes: ContentDeliveryLayerNode[]
     const STREAM_PART_ID = StreamPartIDUtils.parse('testingtesting#0')
     let totalReceived: number
     const NUM_OF_NODES = 256
@@ -19,46 +19,51 @@ describe('Propagation', () => {
         const simulator = new Simulator()
         totalReceived = 0
         layer1Nodes = []
-        randomGraphNodes = []
-        const [entryPoint, node1] = await createMockRandomGraphNodeAndDhtNode(entryPointDescriptor, entryPointDescriptor, STREAM_PART_ID, simulator)
+        contentDeliveryLayerNodes = []
+        const [entryPoint, node1] = await createMockContentDeliveryLayerNodeAndDhtNode(
+            entryPointDescriptor,
+            entryPointDescriptor,
+            STREAM_PART_ID,
+            simulator
+        )
         await entryPoint.start()
         await entryPoint.joinDht([entryPointDescriptor])
         await node1.start()
         node1.on('message', () => {totalReceived += 1})
         layer1Nodes.push(entryPoint)
-        randomGraphNodes.push(node1)
+        contentDeliveryLayerNodes.push(node1)
 
         await Promise.all(range(NUM_OF_NODES).map(async (_i) => {
             const descriptor = createMockPeerDescriptor()
-            const [layer1, randomGraphNode] = await createMockRandomGraphNodeAndDhtNode(
+            const [layer1, contentDeliveryLayerNode] = await createMockContentDeliveryLayerNodeAndDhtNode(
                 descriptor,
                 entryPointDescriptor,
                 STREAM_PART_ID,
                 simulator
             )
             await layer1.start()
-            await randomGraphNode.start()
+            await contentDeliveryLayerNode.start()
             await layer1.joinDht([entryPointDescriptor]).then(() => {
-                randomGraphNode.on('message', () => { totalReceived += 1 })
+                contentDeliveryLayerNode.on('message', () => { totalReceived += 1 })
                 layer1Nodes.push(layer1)
-                randomGraphNodes.push(randomGraphNode)
+                contentDeliveryLayerNodes.push(contentDeliveryLayerNode)
             })
         }))
     }, 45000)
 
     afterEach(async () => {
-        await Promise.all(randomGraphNodes.map((node) => node.stop()))
+        await Promise.all(contentDeliveryLayerNodes.map((node) => node.stop()))
         await Promise.all(layer1Nodes.map((node) => node.stop()))
     })
 
     it('All nodes receive messages', async () => {
         await waitForCondition(
-            () => randomGraphNodes.every((node) => node.getNeighbors().length >= 3), 30000
+            () => contentDeliveryLayerNodes.every((node) => node.getNeighbors().length >= 3), 30000
         )
         await waitForCondition(() => {
-            const avg = randomGraphNodes.reduce((acc, curr) => {
+            const avg = contentDeliveryLayerNodes.reduce((acc, curr) => {
                 return acc + curr.getNeighbors().length
-            }, 0) / randomGraphNodes.length
+            }, 0) / contentDeliveryLayerNodes.length
             return avg >= 4
         }, 20000)
         const msg = createStreamMessage(
@@ -66,7 +71,7 @@ describe('Propagation', () => {
             STREAM_PART_ID,
             randomEthereumAddress()
         )
-        randomGraphNodes[0].broadcast(msg)
+        contentDeliveryLayerNodes[0].broadcast(msg)
         await waitForCondition(() => totalReceived >= NUM_OF_NODES, 10000)
     }, 45000)
 })

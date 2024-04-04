@@ -1,7 +1,7 @@
 import { waitForCondition } from '@streamr/utils'
 import { NodeList } from '../../src/logic/NodeList'
-import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
-import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
+import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
+import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
 import { MockHandshaker } from '../utils/mock/MockHandshaker'
 import { MockLayer1Node } from '../utils/mock/MockLayer1Node'
 import { MockNeighborFinder } from '../utils/mock/MockNeighborFinder'
@@ -11,9 +11,9 @@ import { createMockPeerDescriptor, createMockContentDeliveryRpcRemote, mockConne
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { getNodeIdFromPeerDescriptor } from '@streamr/dht'
 
-describe('RandomGraphNode', () => {
+describe('ContentDeliveryLayerNode', () => {
 
-    let randomGraphNode: RandomGraphNode
+    let contentDeliveryLayerNode: ContentDeliveryLayerNode
     const peerDescriptor = createMockPeerDescriptor()
 
     let neighbors: NodeList
@@ -30,7 +30,7 @@ describe('RandomGraphNode', () => {
         nearbyNodeView = new NodeList(nodeId, 10)
         layer1Node = new MockLayer1Node()
 
-        randomGraphNode = createRandomGraphNode({
+        contentDeliveryLayerNode = createContentDeliveryLayerNode({
             neighbors,
             randomNodeView,
             nearbyNodeView,
@@ -45,24 +45,24 @@ describe('RandomGraphNode', () => {
             isLocalNodeEntryPoint: () => false
 
         })
-        await randomGraphNode.start()
+        await contentDeliveryLayerNode.start()
     })
 
     afterEach(() => {
-        randomGraphNode.stop()
+        contentDeliveryLayerNode.stop()
     })
 
     it('getNeighbors', () => {
         const mockRemote = createMockContentDeliveryRpcRemote()
         neighbors.add(mockRemote)
-        const result = randomGraphNode.getNeighbors()
+        const result = contentDeliveryLayerNode.getNeighbors()
         expect(getNodeIdFromPeerDescriptor(result[0])).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
     })
 
     it('getNearbyNodeView', () => {
         const mockRemote = createMockContentDeliveryRpcRemote()
         nearbyNodeView.add(mockRemote)
-        const ids = randomGraphNode.getNearbyNodeView().getIds()
+        const ids = contentDeliveryLayerNode.getNearbyNodeView().getIds()
         expect(ids[0]).toEqual(getNodeIdFromPeerDescriptor(mockRemote.getPeerDescriptor()))
     })
 
