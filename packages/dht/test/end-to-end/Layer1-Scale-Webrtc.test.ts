@@ -1,24 +1,17 @@
 import { DhtNode } from '../../src/dht/DhtNode'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { PeerID } from '../../src/helpers/PeerID'
+import { createMockPeerDescriptor } from '../utils/utils'
 
+const STREAM_ID = 'stream'
+const NUM_OF_NODES = 16
 const NUM_OF_NODES_PER_KBUCKET = 8
 
 describe('Layer1 Scale', () => {
-    const epPeerDescriptor: PeerDescriptor = {
-        kademliaId: PeerID.fromString('0').value,
-        type: NodeType.NODEJS,
+
+    const epPeerDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 43228, tls: false }
-    }
-
-    const STREAM_ID = 'stream'
-
-    const NUM_OF_NODES = 16
-
+    })
     let layer0Nodes: DhtNode[]
-
     let layer1Nodes: DhtNode[]
-
     let epLayer0Node: DhtNode
     let epLayer1Node: DhtNode
 
@@ -65,10 +58,10 @@ describe('Layer1 Scale', () => {
 
     it('bucket sizes', async () => {
         layer0Nodes.forEach((node) => {
-            expect(node.getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET - 1)
+            expect(node.getNeighborCount()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET - 1)
         })
         layer1Nodes.forEach((node) => {
-            expect(node.getBucketSize()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
+            expect(node.getNeighborCount()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
         })
     })
 })

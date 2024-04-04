@@ -1,14 +1,21 @@
 import {
+    ContentType,
     EncryptedGroupKey,
-    GroupKeyMessage,
     GroupKeyRequest,
     GroupKeyResponse,
     MessageID,
     MessageRef,
     StreamMessage,
     ValidationError,
-    toStreamID
+    toStreamID,
+    StreamMessageType,
+    EncryptionType,
+    SignatureType
 } from '@streamr/protocol'
+import {
+    convertGroupKeyRequestToBytes,
+    convertGroupKeyResponseToBytes
+} from '@streamr/trackerless-network'
 import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
 import { Authentication } from '../../src/Authentication'
@@ -18,16 +25,23 @@ import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { createRandomAuthentication, MOCK_CONTENT } from '../test-utils/utils'
 
 const groupKeyMessageToStreamMessage = async (
-    groupKeyMessage: GroupKeyMessage,
+    groupKeyMessage: GroupKeyRequest | GroupKeyResponse,
     messageId: MessageID,
-    prevMsgRef: MessageRef | null,
+    prevMsgRef: MessageRef | undefined,
     authentication: Authentication
 ): Promise<StreamMessage> => {
     return createSignedMessage({
         messageId,
         prevMsgRef,
-        serializedContent: utf8ToBinary(groupKeyMessage.serialize()),
-        messageType: groupKeyMessage.messageType,
+        content: groupKeyMessage instanceof GroupKeyRequest
+            ? convertGroupKeyRequestToBytes(groupKeyMessage)
+            : convertGroupKeyResponseToBytes(groupKeyMessage),
+        messageType: groupKeyMessage instanceof GroupKeyRequest
+            ? StreamMessageType.GROUP_KEY_REQUEST
+            : StreamMessageType.GROUP_KEY_RESPONSE,
+        contentType: ContentType.JSON,
+        encryptionType: EncryptionType.NONE,
+        signatureType: SignatureType.SECP256K1,
         authentication
     })
 }
@@ -51,7 +65,7 @@ describe('Validator2', () => {
                 getStream,
                 isStreamPublisher: (streamId: string, address: EthereumAddress) => isPublisher(address, streamId),
                 isStreamSubscriber: (streamId: string, address: EthereumAddress) => isSubscriber(address, streamId)
-            } as any)
+            } as any, undefined as any)
         }
     }
 
@@ -75,23 +89,35 @@ describe('Validator2', () => {
 
         msg = await createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
-            serializedContent: MOCK_CONTENT,
-            authentication: publisherAuthentication
+            messageType: StreamMessageType.MESSAGE,
+            content: MOCK_CONTENT,
+            authentication: publisherAuthentication,
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE,
+            signatureType: SignatureType.SECP256K1
         })
 
         msgWithNewGroupKey = await createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
-            serializedContent: MOCK_CONTENT,
+            messageType: StreamMessageType.MESSAGE,
+            content: MOCK_CONTENT,
             newGroupKey: new EncryptedGroupKey('groupKeyId', hexToBinary('0x1111')),
-            authentication: publisherAuthentication
+            authentication: publisherAuthentication,
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE,
+            signatureType: SignatureType.SECP256K1
         })
         assert.notStrictEqual(msg.signature, msgWithNewGroupKey.signature)
 
         msgWithPrevMsgRef = await createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 2000, 0, publisher, 'msgChainId'),
-            serializedContent: MOCK_CONTENT,
+            messageType: StreamMessageType.MESSAGE,
+            content: MOCK_CONTENT,
             prevMsgRef: new MessageRef(1000, 0),
-            authentication: publisherAuthentication
+            authentication: publisherAuthentication,
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE,
+            signatureType: SignatureType.SECP256K1
         })
         assert.notStrictEqual(msg.signature, msgWithPrevMsgRef.signature)
 
@@ -100,7 +126,7 @@ describe('Validator2', () => {
             recipient: publisher,
             rsaPublicKey: 'rsaPublicKey',
             groupKeyIds: ['groupKeyId1', 'groupKeyId2']
-        }), new MessageID(toStreamID('streamId'), 0, 0, 0, subscriber, 'msgChainId'), null, subscriberAuthentication)
+        }), new MessageID(toStreamID('streamId'), 0, 0, 0, subscriber, 'msgChainId'), undefined, subscriberAuthentication)
 
         groupKeyResponse = await groupKeyMessageToStreamMessage(new GroupKeyResponse({
             requestId: 'requestId',
@@ -109,14 +135,14 @@ describe('Validator2', () => {
                 new EncryptedGroupKey('groupKeyId1', hexToBinary('0x1111')),
                 new EncryptedGroupKey('groupKeyId2', hexToBinary('0x2222'))
             ],
-        }), new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'), null, publisherAuthentication)
+        }), new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'), undefined, publisherAuthentication)
     })
 
     describe('validate(unknown message type)', () => {
         it('throws on unknown message type', async () => {
             (msg as any).messageType = 666
             await assert.rejects(getValidator().validate(msg), (err: Error) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
+                assert(err instanceof Error, err.message)
                 return true
             })
         })
@@ -136,27 +162,36 @@ describe('Validator2', () => {
         })
 
         it('rejects invalid signatures', async () => {
-            msg.signature = Buffer.from(msg.signature).reverse()
+            const invalidMsg = new StreamMessage({
+                ...msg,
+                signature: Buffer.from(msg.signature).reverse()
+            })
 
-            await assert.rejects(getValidator().validate(msg), (err: Error) => {
+            await assert.rejects(getValidator().validate(invalidMsg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
         })
 
         it('rejects tampered content', async () => {
-            msg.serializedContent = utf8ToBinary('{"attack":true}')
+            const invalidMsg = new StreamMessage({
+                ...msg,
+                content: utf8ToBinary('{"attack":true}')
+            })
 
-            await assert.rejects(getValidator().validate(msg), (err: Error) => {
+            await assert.rejects(getValidator().validate(invalidMsg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
         })
 
         it('rejects tampered newGroupKey', async () => {
-            msgWithNewGroupKey.newGroupKey!.groupKeyId = 'foo'
+            const invalidMsg = new StreamMessage({
+                ...msg,
+                newGroupKey: new EncryptedGroupKey('foo', msgWithNewGroupKey.newGroupKey!.data)
+            })
 
-            await assert.rejects(getValidator().validate(msgWithNewGroupKey), (err: Error) => {
+            await assert.rejects(getValidator().validate(invalidMsg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -207,9 +242,12 @@ describe('Validator2', () => {
         })
 
         it('rejects invalid signatures', async () => {
-            groupKeyRequest.signature = Buffer.from(groupKeyRequest.signature).reverse()
+            const invalidGroupKeyRequest = new StreamMessage({
+                ...groupKeyRequest,
+                signature: Buffer.from(groupKeyRequest.signature).reverse()
+            })
 
-            await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
+            await assert.rejects(getValidator().validate(invalidGroupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
@@ -262,9 +300,12 @@ describe('Validator2', () => {
         })
 
         it('rejects invalid signatures', async () => {
-            groupKeyResponse.signature = Buffer.from(groupKeyResponse.signature).reverse()
+            const invalidGroupKeyResponse = new StreamMessage({
+                ...groupKeyResponse,
+                signature: Buffer.from(groupKeyResponse.signature).reverse()
+            })
 
-            await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
+            await assert.rejects(getValidator().validate(invalidGroupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })

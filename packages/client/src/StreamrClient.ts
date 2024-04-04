@@ -1,8 +1,10 @@
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
+import type { Overrides } from '@ethersproject/contracts'
+import { DhtAddress } from '@streamr/dht'
 import { StreamID } from '@streamr/protocol'
-import { NodeID, ProxyDirection } from '@streamr/trackerless-network'
+import { ProxyDirection } from '@streamr/trackerless-network'
 import { EthereumAddress, TheGraphClient, toEthereumAddress } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
@@ -19,7 +21,7 @@ import {
     redactConfig
 } from './Config'
 import { DestroySignal } from './DestroySignal'
-import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
+import { generateEthereumAccount as _generateEthereumAccount, getEthersOverrides as _getEthersOverrides } from './Ethereum'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { MetricsPublisher } from './MetricsPublisher'
 import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
@@ -32,10 +34,11 @@ import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
 import { PermissionAssignment, PermissionQuery } from './permission'
 import { Publisher } from './publish/Publisher'
-import { StorageNodeMetadata, StorageNodeRegistry } from './registry/StorageNodeRegistry'
-import { StreamRegistry } from './registry/StreamRegistry'
-import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
-import { SearchStreamsOrderBy, SearchStreamsPermissionFilter } from './registry/searchStreams'
+import { OperatorRegistry } from './contracts/OperatorRegistry'
+import { StorageNodeMetadata, StorageNodeRegistry } from './contracts/StorageNodeRegistry'
+import { StreamRegistry } from './contracts/StreamRegistry'
+import { StreamStorageRegistry } from './contracts/StreamStorageRegistry'
+import { SearchStreamsOrderBy, SearchStreamsPermissionFilter } from './contracts/searchStreams'
 import { MessageListener, MessageStream } from './subscribe/MessageStream'
 import { ResendOptions, Resends } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
@@ -46,6 +49,8 @@ import { StreamDefinition } from './types'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
+import { createNewInstantiateContractsFn, InstantiateERC1271ContractsToken } from './contracts/ERC1271ContractFacade'
+import { ContractFactory } from './ContractFactory'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -59,6 +64,12 @@ export interface ExtraSubscribeOptions {
      * and decryption _disabled_.
      */
     raw?: boolean
+
+    /**
+     * Subscribe on behalf of a contract implementing the [ERC-1271](https://eips.ethereum.org/EIPS/eip-1271) standard.
+     * The streamr client wallet address must be an authorized signer for the contract.
+     */
+    erc1271Contract?: string
 }
 
 /**
@@ -77,6 +88,7 @@ export class StreamrClient {
     private readonly streamRegistry: StreamRegistry
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
+    private readonly operatorRegistry: OperatorRegistry
     private readonly localGroupKeyStore: LocalGroupKeyStore
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly config: StrictStreamrClientConfig
@@ -96,6 +108,9 @@ export class StreamrClient {
         const container = parentContainer.createChildContainer()
         container.register(AuthenticationInjectionToken, { useValue: authentication })
         container.register(ConfigInjectionToken, { useValue: strictConfig })
+        container.register(InstantiateERC1271ContractsToken, {
+            useValue: createNewInstantiateContractsFn(container.resolve<ContractFactory>(ContractFactory), strictConfig)
+        })
         // eslint-disable-next-line max-len
         container.register(TheGraphClient, { useValue: createTheGraphClient(container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig) })
         this.id = strictConfig.id
@@ -108,6 +123,7 @@ export class StreamrClient {
         this.streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
         this.streamStorageRegistry = container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
         this.storageNodeRegistry = container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
+        this.operatorRegistry = container.resolve<OperatorRegistry>(OperatorRegistry)
         this.localGroupKeyStore = container.resolve<LocalGroupKeyStore>(LocalGroupKeyStore)
         this.streamIdBuilder = container.resolve<StreamIDBuilder>(StreamIDBuilder)
         this.eventEmitter = container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
@@ -137,7 +153,7 @@ export class StreamrClient {
         metadata?: PublishMetadata
     ): Promise<Message> {
         const result = await this.publisher.publish(streamDefinition, content, metadata)
-        this.eventEmitter.emit('publish', undefined)
+        this.eventEmitter.emit('publish', result)
         return convertStreamMessageToMessage(result)
     }
 
@@ -195,7 +211,13 @@ export class StreamrClient {
         }
         const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
         const eventEmitter = new EventEmitter<SubscriptionEvents>()
-        const sub = new Subscription(streamPartId, options.raw ?? false, eventEmitter, this.loggerFactory)
+        const sub = new Subscription(
+            streamPartId,
+            options.raw ?? false,
+            options.erc1271Contract !== undefined ? toEthereumAddress(options.erc1271Contract) : undefined,
+            eventEmitter,
+            this.loggerFactory
+        )
         if (options.resend !== undefined) {
             initResendSubscription(
                 sub,
@@ -647,7 +669,7 @@ export class StreamrClient {
     /**
      * Get the network-level node id of the client.
      */
-    async getNodeId(): Promise<NodeID> {
+    async getNodeId(): Promise<DhtAddress> {
         return this.node.getNodeId()
     }
 
@@ -665,6 +687,14 @@ export class StreamrClient {
      */
     getConfig(): StrictStreamrClientConfig {
         return this.config
+    }
+
+    /**
+     * Get overrides for transaction options. Use as a parameter when submitting
+     * transactions via ethers library.
+     */
+    getEthersOverrides(): Overrides {
+        return _getEthersOverrides(this.config)
     }
 
     // --------------------------------------------------------------------------------------------

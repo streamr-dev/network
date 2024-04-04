@@ -1,7 +1,7 @@
 import { StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { Logger } from '@streamr/utils'
 import without from 'lodash/without'
-import { MessageMetadata, StreamrClient, Subscription } from 'streamr-client'
+import { MessageMetadata, StreamrClient, Subscription } from '@streamr/sdk'
 import { Message, PayloadFormat } from '../../helpers/PayloadFormat'
 import { parsePositiveInteger, parseQueryAndBase, parseQueryParameter } from '../../helpers/parser'
 import { PublishPartitionDefinition, getPartitionKey, parsePublishPartitionDefinition } from '../../helpers/partitions'

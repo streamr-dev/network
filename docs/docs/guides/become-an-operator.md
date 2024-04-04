@@ -1,83 +1,114 @@
 ---
-sidebar_position: 5
+sidebar_position: 7
 ---
 
 # How to become an Operator
-**TL;DR Do these things to become an earning Streamr node Operator:**
-
+**TL;DR 👨‍💻 Do these things to become an earning Streamr node Operator:**
 - Deploy an Operator smart contract. 
-- Run a Streamr node and pair it with your Operator. 
-- Stake `DATA` tokens on your Operator and give your nodes some `MATIC`
+- Run Streamr node(s) and pair them with your Operator.
+- Stake `DATA` tokens on your Operator and give your node address a few `MATIC`
 - Join Sponsorships through your Operator that will earn you DATA tokens.
 
-## Migrating from Brubeck
-If you’ve been running a Streamr node in the past you might be familiar with a two step process– run some software and stake some tokens, i.e. a software step and a blockchain step. Behind the scenes, the Streamr core team would validate user’s stake and transfer tokens to node runner wallets at the end of each month. This has worked, but its been highly centralized. With the introduction of stream Sponsorships, Operators, Sponsors and Delegators we now have everything we need for a peer to peer decentralized and market based incentivization on Streamr. The most important role is the Operator, so let's learn how to become one.
-
-:::tip Streamr 1.0 network versus the Brubeck (older) network
-- You can run ~~up to 5 nodes per IP address~~ any number of nodes from the same IP address, although one node per machine is recommended
-- Rewards are ~~automatically paid out at the beginning of the following month~~ claimed from active Sponsorships periodically
-- You can stake ~~up to 20K DATA per node~~ as much as you want. Note that at least 5% of Operator stake must come from the owner, and therefore delegations can not exceed 95%.
-- To participate in the testnets, use specific versions/tags of the Streamr node software, such as `100.0.0-pretestnet.0`. The `latest` tag still points to the previous milestone (Brubeck) software.
-- There is no need for a "beneficiary address" in Streamr 1.0. Instead, the node configuration contains the Operator contract address.
-:::
+### Migrating from an older network
+See these helpful FAQs advice on:
+- [Migrating from Brubeck to Streamr 1.0](../help/operator-faq.md#migrating-from-brubeck-to-streamr-10).
+- [Migrating from the Mumbai testing environment to Streamr 1.0](../help/operator-faq.md#migrating-from-the-mumbai-testing-environment-to-stream-10).
+- [Migrating from Streamr 1.0 testnets to Streamr 1.0](../help/operator-faq.md#migrating-from-streamr-10-testnet-to-streamr-10)
 
 ## Operator setup instructions
 Follow these steps below to setup your Operator so that you can participate in the protocol and collect rewards. 
 
-### Step 1: Deploy your Operator Contract
-Currently you can practice your Operator deployment in the Mumbai pre-testnet. Go the the [Mumbai Streamr Hub](https://mumbai.streamr.network/hub), Navigate to Network -> Operators, then click "Become an Operator" and complete the dialog. The [Operator contract](../streamr-network/network-roles/operators#the-operator-contract) is deployed on the Polygon Mumbai blockchain.
+### Step 1: Deploy your Operator
+In the [Streamr Hub](https://streamr.network/hub/network/operators), connect your wallet (top-right corner), navigate to Network -> Operators, then click "Become an Operator" and complete the dialog. The [Operator contract](../streamr-network/network-roles/operators.md#the-operator-contract) is deployed on the Polygon blockchain.
 
 The wallet/account that you use to make the Operator creation transaction will be known as the **Owner wallet**. It's the wallet you'll use to control your Operator business. The owner wallet controls the Operator and is able to stake and unstake on Sponsorships, update the Operator settings, and withdraw the owner's share of the Operator's stake and earnings. This should be a very secure wallet as it controls the whole Operator. A hardware wallet (Ledger, etc) is recommended, although a software wallet (Metamask) will work too - just be sure to keep the account private and never share your private key or seed phrase with anyone.
 
-You'll need to decide on your [owner's cut](../streamr-network/network-roles/operators#owners-cut) at the time of deployment. You'll be able to change this value later on, as long as you unstake from all Sponsorships first.
+You'll need to decide on your [owner's cut](../streamr-network/network-roles/operators.md#owners-cut) at the time of your Operator deployment. You'll be able to change this value later on, as long as you unstake from all Sponsorships first. The average cut Operators are choosing appears to be around 10%.
+
+You can also practice your Operator deployment in the Mumbai environment with the [Mumbai Streamr Hub](https://mumbai.streamr.network/hub) (rather than switching networks on the Streamr Hub). You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
 ### Step 2: Run a Streamr node
-Spin up a Streamr node using this [guide](./how-to-run-streamr-node.md). 
+Spin up a Streamr node using the **[How to run a Streamr node guide](./how-to-run-streamr-node.md#streamr-node-hardware-recommendations)**. 
 
-Nodes will consume resources, mainly bandwidth and CPU. RAM usage is moderate and disk usage in negligible. 
+During this node setup process you'll be generating a **node address** that will be needed for [Step 3](#step-3-pair-your-operator-to-your-streamr-node). 
 
-Running multiple nodes on the same virtual machine (VM) is not in your best interest. The point of running multiple nodes is redundancy as well as load balancing/horizontal scaling, neither of which are really achieved if multiple nodes run on the same VM. Ideally each VM would run on separate physical hardware or geographical location.
+#### **Streamr node hardware recommendations**
+Nodes will consume resources, mainly bandwidth and CPU. RAM usage is moderate and disk usage in negligible. While there are no strict hardware recommendations, 4-8GB of RAM, 3-4 virtual cores, and ideally 1Gbps bandwidth would be a safe bet for participating in most [stream Sponsorships](../streamr-network/incentives/stream-sponsorships.md).
 
-While there are no strict hardware recommendations, 8GB of RAM, 3-4 virtual cores, and ideally 1Gbps bandwidth would be a safe bet for participating in most [stream Sponsorships](../streamr-network/incentives/stream-sponsorships.md).
+- A public IP is necessary.
+- A TCP port for [WebSocket connectivity](./how-to-run-streamr-node#websocket-connectivity) must be open. The port is configurable and the default is `32200`.
 
-:::caution Important
-- A public IP is a must
--  A TCP port for WebSocket connectivity must be open. The port is configurable and the default is 32200.
-:::
+### Step 3: Pair your Operator to your Streamr Node
+Your Operator smart contract (that you created in [Step 1](#step-1-deploy-your-operator)) needs to be made aware of your Streamr node address. If you plan to run several nodes, they can all share the same node address.
 
-### Step 3: Pair your node with your Operator contract
-To pair your node(s) with your Operator contract, you must make them aware about each other. For this, you need two things:
+You should have a node address after following the **[How to run a Streamr node guide](./how-to-run-streamr-node.md)**. We will now add it to your Operator smart contract. 
 
-- Your **Operator address** (found near the top of your Operator page in the Streamr Hub).
-- Your **node wallet**, which consists of an Ethereum private key and address. You might already have created one with the config wizard when setting up the node. Alternatively, you can use any method, such as create a new account in Metamask and export the private key, or use [vanity-eth](https://vanity-eth.tk/).
+Firstly, visit your [Operator page](https://streamr.network/hub/network/operators) and find the "Operator's node addresses" section (towards the bottom of the page). Click the ***Add node address*** button, paste in your **node address** (the Ethereum public address, not its private key!), click the button in the dialog and remember to click the ***Save*** button.
 
-First, scroll down on your Operator page and find the "Operator's node addresses" section. Click the "Add node address" button, paste in the **address** of your **node wallet** (not its private key!), click the button in the dialog and then don't forget to click the Save button.
+![image](@site/static/img/node-addresses.png)
 
-Then, update your node's config file. For Mumbai pre-testnet, copy and paste [this config snippet](#mumbai-testing-environment-node-config). In that snippet:
+[If you had no issues, you can now start (or restart) your Streamr node and move on to Step 4](#step-4-fund-your-node-address). 
+
+If you have setup your Streamr node in some other way, you may need to manually edit the node's Config file to include your **Operator address** (found near the top of your Operator page in the Streamr Hub).
+
+![image](@site/static/img/operator-address.png)
+
+The format of your node config file should match [this template](./how-to-run-streamr-node.md#mainnet-node-config).
 - Replace `"YOUR_OPERATOR_CONTRACT_ADDRESS"` with your **Operator address** (keep the quotes).
 - Replace `"NODE_PRIVATE_KEY"` with the **private key** of your **node wallet** (keep the quotes).
 
-After the config file changes, restart your node(s). If you run several nodes, you can use the same config file for all of them.
+**Reminder:** Your node private key is not your node address (the address is the public address that matches with the private key). You should not hold significant value on this address.
 
-### Step 4: Fund your nodes
-You’ll need a bit of `MATIC` (the gas token of Polygon) in your node’s wallets as Streamr nodes that participate in sponsored streams will periodically make transactions. 1 to 5 `MATIC` is recommended since the nodes will be making a few transactions per day. If the node runs out of gas while they’re a part of an active Sponsorship, then a penalty may be applied to your unclaimed earnings. See [Operator value maintenance](../streamr-network/network-roles/operators#operator-maintenance).
+After any config file change you should restart your node. If you're building your Operator in Mumbai (for testing purposes), copy and paste [this config snippet](#mumbai-node-config) instead.
+
+### Step 4: Fund your Node address
+You’ll need a some `MATIC` (the gas token of Polygon) in your node address since the node(s) will periodically make transactions. 5 to 10 `MATIC` is recommended since the nodes will be making a few transactions per day. 
+
+If the node runs out of gas while they’re a part of an active Sponsorship, then a penalty may be applied to your unclaimed earnings. See [Operator value maintenance](../streamr-network/network-roles/operators.md#operator-maintenance).
 
 ### Step 5: Fund your Operator
-Now, on your Operator page in the Streamr Hub UI, fund your Operator with DATA tokens (on Mumbai, TEST tokens). There's no minimum amount, but note that the more you fund, the more you can accept delegations. The owner (you) must have at least a 5% stake in the Operator.
+On your [Operator page](https://streamr.network/hub/network/operators), fund your Operator with `DATA` tokens (or if you're in Mumbai, then it's `TEST` tokens). There's no minimum amount, but note that the more tokens you fund your Operator with, the more you can accept delegations. The owner (you) must have at least a 5% stake in the Operator. Also be aware the there is a global minimum of 5k `DATA` tokens to join Sponsorships. Joining Sponsorships is required to earn tokens as an Operator.
 
-### Step 6: Join sponsorships
-All the checkmarks in the Operator status section on your Operator page should now be green, and you’re ready to join Sponsorships! In the Hub, go to Network -> Sponsorships and find a Sponsorship you want your Operator to start working on. Click the "Join as Operator" button and select your stake. Note there is a minimum stake of 5000 `DATA` tokens for each Sponsorship that you join.
+### Step 6: Check your Operator status
+All the checkmarks in the Operator status section on your Operator page should now be green, and you’re ready to join Sponsorships!
+
+:::info
+- There's a known connectivity issue using Brave browser. Your node connectivity status may report incorrectly on the Streamr Hub.
+:::
+
+![image](@site/static/img/operator-status-green.png)
+
+Be patient, if you're observing issues, [see this FAQ](../help/operator-faq.md#my-node-appears-to-not-be-running-andor-are-not-reachable-on-the-streamr-hub).
+
+#### WebSocket connectivity
+If you're running the node with Docker, then the above guided tutorial will handle the port mapping (`-p 32200:32200`). However, you must also remember to open port `32200` for **external** TCP traffic. Opening ports is environment specific, if you're in a Linux based system, [this guide may be helpful](https://www.digitalocean.com/community/tutorials/opening-a-port-on-linux).
+
+### Step 7: Join sponsorships
+Visit the [Sponsorships page](https://streamr.network/hub/network/sponsorships) and find a Sponsorship you want your Operator to start working on. Click the **"Join as Operator"** button and select your stake. Note there is a minimum stake of 5000 `DATA` tokens for each Sponsorship that you join. Joining Sponsorships may lock your tokens for a period of time, defined in the Sponsorship contract.
+
+:::info Warning
+- **Do NOT** create or sponsor Sponsorships. If you do tokens will be irreversibly sent to that Sponsorship contract. There is no undo for this.
+:::
+
+## Running a node fleet
+Running a fleet of nodes is recommended as it will reduce your risk of slashing. Node private keys can be shared among all your nodes so there is no need to create a unique node address key pair for each node, i.e. You only need to add one node address for *N* nodes if you wish.
+
+A typical node fleet may have 2 - 10 nodes and use a node [Redundancy Factor](../streamr-network/network-roles/operators#node-redundancy-factor) of 2 - 3, for example. 
+
+Checkout the [Operator FAQ](../help/operator-faq.md#what-is-the-advantage-of-operators-running-multiple-nodes) for more commentary on running multiple nodes.
 
 ## The Mumbai test environment
-You can configure your node to connect with the Mumbai testnet (not to be confused with the Streamr incentivized testnets that will run on Polygon with real tokens). The Mumbai environment is handy for testing Operator..operations with fake tokens.
+The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your Operator before creating it on Polygon with real tokens. You'll need to use the [Mumbai node config](./how-to-run-streamr-node.md#mumbai-node-config).
 
-Mumbai has it's own UI - the [Mumbai Hub](https://mumbai.streamr.network). Your node will need to be configured with the [Mumbai config](#mumbai-testing-environment-node-config)
+You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
-You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need `TEST` tokens (the Mumbai network's worthless `DATA` tokens) - you can ask for those on the [Streamr Discord](https://discord.gg/gZAm8P7hK8) and a community admin will send you some to your address. 
+## Mumbai node config
+Below is the template you can use to override and replace the contents of your config file with. You can copy this snippet or download the [JSON file](../../static/assets/mumbai-default.json). 
 
-The only information they will need from you is your address. Please do not engage with any accounts claiming to be Support, Admin or Help. Report any account that is asking you to sign transactions or asking for any sort of credentials such as your private key. These accounts are trying to steal your tokens.
+:::info
+- This is the Mumbai configuration. If you want to participate with real tokens, use the [Mainnet configuration](#mainnet-node-config).
+:::
 
-### Mumbai testing environment node config:
 ```json
 {
     "client": {
@@ -85,52 +116,7 @@ The only information they will need from you is your address. Please do not enga
         "auth": {
             "privateKey": "NODE_PRIVATE_KEY"
         },
-        "network": {
-            "controlLayer": {
-                "entryPoints": [
-                    {
-                        "id": "e1",
-                        "websocket": {
-                            "host": "entrypoint-1.streamr.network",
-                            "port": 40401,
-                            "tls": true
-                        }
-                    },
-                    {
-                        "id": "e2",
-                        "websocket": {
-                            "host": "entrypoint-2.streamr.network",
-                            "port": 40401,
-                            "tls": true
-                        }
-                    }
-                ]
-            }
-        },
-        "contracts": {
-            "streamRegistryChainAddress": "0x4F0779292bd0aB33B9EBC1DBE8e0868f3940E3F2",
-            "streamStorageRegistryChainAddress": "0xA5a2298c9b48C08DaBF5D76727620d898FD2BEc1",
-            "storageNodeRegistryChainAddress": "0xE6D449A7Ef200C0e50418c56F84079B9fe625199",
-            "mainChainRPCs": {
-                "name": "mumbai",
-                "chainId": 80001,
-                "rpcs": [
-                    {
-                        "url": "https://rpc-mumbai.maticvigil.com"
-                    }
-                ]
-            },
-            "streamRegistryChainRPCs": {
-                "name": "mumbai",
-                "chainId": 80001,
-                "rpcs": [
-                    {
-                        "url": "https://rpc-mumbai.maticvigil.com"
-                    }
-                ]
-            },
-            "theGraphUrl": "https://api.thegraph.com/subgraphs/name/samt1803/network-subgraphs"
-        }
+        "environment": "mumbai"
     },
     "plugins": {
         "operator": {
@@ -139,3 +125,35 @@ The only information they will need from you is your address. Please do not enga
     }
 }
 ```
+
+## Troubleshooting
+Checkout the [Operator FAQ](../help/operator-faq.md) it covers all the technical and token questions you have been wondering about.
+
+## Choosing a different WebSocket port
+While entirely optional, if the default port is not suitable for you then you can change it by adding a `controlLayer` entry to your node config like so:
+
+```json
+"client": {
+    ...
+    "network": {
+        "controlLayer": {
+            "websocketPortRange": {
+                "min": 16100,
+                "max": 16100
+            }
+        }
+    },
+    ...
+}
+```
+
+## Safety
+**Please be aware of some important safety tips:**
+
+:::info
+Your tokens are at risk and [the risks are real!](../streamr-network/network-roles/operators.md#operator-risks).
+:::
+
+- Consider starting small with your stake amount and use common sense to never stake more than you can afford to lose. A professional audit of the incentive layer has been completed by Cyfrin, but nothing can be guaranteed of course. 
+- If you want to stake on a sponsorship, DO NOT click on the "Sponsor". That's for funding the sponsorship, not staking! Instead, go to the sponsorship you want to stake on and click "Join as an operator” and enter the amount. 
+- There may be an increase in activity by scammers. A common approach is to pretend to offer help or tech support in direct messages (something we never do). Report any account that is asking you to sign transactions or asking for any sort of credentials such as your private key. These accounts are trying to steal your tokens. It’s advised you disable DMs on Discord. More tips can be found in #server-safety-guide. 

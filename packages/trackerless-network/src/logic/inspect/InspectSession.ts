@@ -1,14 +1,14 @@
 import { EventEmitter } from 'eventemitter3'
-import { NodeID } from '../../identifiers'
 import { MessageID } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { binaryToHex } from '@streamr/utils'
+import { DhtAddress } from '@streamr/dht'
 
 export interface Events {
     done: () => void
 }
 
 interface InspectSessionConfig {
-    inspectedNode: NodeID
+    inspectedNode: DhtAddress
 }
 
 const createMessageKey = (messageId: MessageID): string => {
@@ -18,14 +18,14 @@ export class InspectSession extends EventEmitter<Events> {
     
     // Boolean indicates if the message has been received by the inspected node
     private readonly inspectionMessages: Map<string, boolean> = new Map()
-    private readonly inspectedNode: NodeID
+    private readonly inspectedNode: DhtAddress
 
     constructor(config: InspectSessionConfig) {
         super()
         this.inspectedNode = config.inspectedNode
     }
 
-    markMessage(senderId: NodeID, messageId: MessageID): void {
+    markMessage(senderId: DhtAddress, messageId: MessageID): void {
         const messageKey = createMessageKey(messageId)
         if (!this.inspectionMessages.has(messageKey)) {
             this.inspectionMessages.set(messageKey, senderId === this.inspectedNode)
@@ -42,6 +42,10 @@ export class InspectSession extends EventEmitter<Events> {
 
     getInspectedMessageCount(): number {
         return this.inspectionMessages.size
+    }
+
+    onlyMarkedByInspectedNode(): boolean {
+        return Array.from(this.inspectionMessages.values()).every((value) => value === true)
     }
 
     stop(): void {

@@ -1,17 +1,18 @@
-import { EncryptionType, StreamMessage } from '@streamr/protocol'
-import { binaryToHex } from '@streamr/utils'
+import { StreamMessage } from '@streamr/protocol'
+import { convertBytesToStreamMessage } from '@streamr/trackerless-network'
+import { binaryToHex, toLengthPrefixedFrame } from '@streamr/utils'
 
 export interface Format {
-    getMessageAsString: (streamMessage: StreamMessage) => string
+    formatMessage: ((bytes: Uint8Array) => string) | ((bytes: Uint8Array) => Uint8Array)
     contentType: string
-    delimiter: string
-    header: string
-    footer: string
+    delimiter?: string
+    header?: string
+    footer?: string
 }
 
-const createJsonFormat = (getMessageAsString: (streamMessage: StreamMessage) => string): Format => {
+const createJsonFormat = (formatMessage: (bytes: Uint8Array) => string): Format => {
     return {
-        getMessageAsString,
+        formatMessage,
         contentType: 'application/json',
         delimiter: ',',
         header: '[',
@@ -19,18 +20,16 @@ const createJsonFormat = (getMessageAsString: (streamMessage: StreamMessage) => 
     }
 }
 
-const createPlainTextFormat = (getMessageAsString: (streamMessage: StreamMessage) => string): Format => {
+const createBinaryFormat = (formatMessage: (bytes: Uint8Array) => Uint8Array): Format => {
     return {
-        getMessageAsString,
-        contentType: 'text/plain',
-        delimiter: '\n',
-        header: '',
-        footer: ''
+        formatMessage,
+        contentType: 'application/octet-stream'
     }
 }
 
 export const toObject = (msg: StreamMessage): any => {
-    return {
+    const parsedContent = msg.getParsedContent()
+    const result: any = {
         streamId: msg.getStreamId(),
         streamPartition: msg.getStreamPartition(),
         timestamp: msg.getTimestamp(),
@@ -40,23 +39,18 @@ export const toObject = (msg: StreamMessage): any => {
         messageType: msg.messageType,
         contentType: msg.contentType,
         encryptionType: msg.encryptionType,
-        groupKeyId: msg.groupKeyId,
-        content: (msg.encryptionType === EncryptionType.NONE ? msg.getParsedContent() : msg.getSerializedContent()),
+        content: parsedContent instanceof Uint8Array ? binaryToHex(parsedContent) : parsedContent,
         signature: binaryToHex(msg.signature),
     }
+    if (msg.groupKeyId !== undefined) {
+        result.groupKeyId = msg.groupKeyId
+    }
+    return result
 }
 
 const FORMATS: Record<string, Format> = {
-    // TODO could we deprecate protocol format?
-    // eslint-disable-next-line max-len
-    'protocol': createJsonFormat((streamMessage: StreamMessage) => JSON.stringify(streamMessage.serialize())),
-    'object': createJsonFormat((streamMessage: StreamMessage) => JSON.stringify(toObject(streamMessage))),
-    // the raw format message is the same string which we have we have stored to Cassandra (if the version numbers match)
-    // -> TODO we could optimize the reading if we'd fetch the data from Cassandra as plain text
-    // currently we:
-    // 1) deserialize the string to an object in Storage._parseRow
-    // 2) serialize the same object to string here
-    'raw': createPlainTextFormat((streamMessage: StreamMessage) => streamMessage.serialize())
+    'object': createJsonFormat((bytes: Uint8Array) => JSON.stringify(toObject(convertBytesToStreamMessage(bytes)))),
+    'raw': createBinaryFormat(toLengthPrefixedFrame)
 }
 
 export const getFormat = (id: string | undefined): Format | undefined => {

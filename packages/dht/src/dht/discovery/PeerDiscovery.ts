@@ -1,50 +1,72 @@
 import { DiscoverySession } from './DiscoverySession'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
-import { areEqualPeerDescriptors, getNodeIdFromPeerDescriptor, peerIdFromPeerDescriptor } from '../../helpers/peerIdFromPeerDescriptor'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
-import KBucket from 'k-bucket'
-import { SortedContactList } from '../contact/SortedContactList'
-import { ConnectionManager } from '../../connection/ConnectionManager'
-import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { createRandomKademliaId } from '../../helpers/kademliaId'
+import { ConnectionLocker } from '../../connection/ConnectionManager'
+import { PeerManager } from '../PeerManager'
+import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
 import { ServiceID } from '../../types/ServiceID'
-import { DhtNodeRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { toProtoRpcClient } from '@streamr/proto-rpc'
+import { RingDiscoverySession } from './RingDiscoverySession'
+import { RingIdRaw, getRingIdRawFromPeerDescriptor } from '../contact/ringIdentifiers'
 
 interface PeerDiscoveryConfig {
-    rpcCommunicator: RoutingRpcCommunicator
     localPeerDescriptor: PeerDescriptor
-    bucket: KBucket<DhtNodeRpcRemote>
-    neighborList: SortedContactList<DhtNodeRpcRemote>
     joinNoProgressLimit: number
     peerDiscoveryQueryBatchSize: number
     serviceId: ServiceID
     parallelism: number
     joinTimeout: number
-    addContact: (contact: PeerDescriptor, setActive?: boolean) => void
-    connectionManager?: ConnectionManager
-    rpcRequestTimeout?: number
+    connectionLocker?: ConnectionLocker
+    peerManager: PeerManager
+}
+
+export const createDistantDhtAddress = (address: DhtAddress): DhtAddress => {
+    const raw = getRawFromDhtAddress(address)
+    const flipped = raw.map((val) => ~val)
+    return getDhtAddressFromRaw(flipped)
 }
 
 const logger = new Logger(module)
 
 export class PeerDiscovery {
 
-    private readonly config: PeerDiscoveryConfig
     private ongoingDiscoverySessions: Map<string, DiscoverySession> = new Map()
+    private ongoingRingDiscoverySessions: Map<string, RingDiscoverySession> = new Map()
+    
     private rejoinOngoing = false
     private joinCalled = false
-    private rejoinTimeoutRef?: NodeJS.Timeout
     private readonly abortController: AbortController
     private recoveryIntervalStarted = false
+    private readonly config: PeerDiscoveryConfig
 
     constructor(config: PeerDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
     }
 
-    async joinDht(entryPointDescriptor: PeerDescriptor, doAdditionalRandomPeerDiscovery = true, retry = true): Promise<void> {
+    async joinDht(
+        entryPoints: PeerDescriptor[],
+        doAdditionalDistantPeerDiscovery = true,
+        retry = true
+    ): Promise<void> {
+        const contactedPeers = new Set<DhtAddress>()
+        const distantJoinConfig = doAdditionalDistantPeerDiscovery 
+            ? { enabled: true, contactedPeers: new Set<DhtAddress>() } : { enabled: false } as const
+        await Promise.all(entryPoints.map((entryPoint) => this.joinThroughEntryPoint(
+            entryPoint,
+            contactedPeers,
+            distantJoinConfig,
+            retry
+        )))
+    }
+
+    private async joinThroughEntryPoint(
+        entryPointDescriptor: PeerDescriptor,
+        // Note that this set is mutated by DiscoverySession
+        contactedPeers: Set<DhtAddress>,
+        additionalDistantJoin: { enabled: true, contactedPeers: Set<DhtAddress> } | { enabled: false },
+        retry = true
+    ): Promise<void> {
         if (this.isStopped()) {
             return
         }
@@ -56,75 +78,101 @@ export class PeerDiscovery {
         if (areEqualPeerDescriptors(entryPointDescriptor, this.config.localPeerDescriptor)) {
             return
         }
-        this.config.connectionManager?.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
-        this.config.addContact(entryPointDescriptor)
-        const targetId = peerIdFromPeerDescriptor(this.config.localPeerDescriptor).value
-        const closest = this.config.bucket.closest(targetId, this.config.peerDiscoveryQueryBatchSize)
-        this.config.neighborList.addContacts(closest)
-        const sessions = [this.createSession(targetId)]
-        if (doAdditionalRandomPeerDiscovery) {
-            sessions.push(this.createSession(createRandomKademliaId()))
+        this.config.connectionLocker?.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
+        this.config.peerManager.addContact(entryPointDescriptor)
+        const targetId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
+        const sessions = [this.createSession(targetId, contactedPeers)]
+        if (additionalDistantJoin.enabled) {
+            sessions.push(this.createSession(createDistantDhtAddress(targetId), additionalDistantJoin.contactedPeers))
         }
         await this.runSessions(sessions, entryPointDescriptor, retry)
-        this.config.connectionManager?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
+        this.config.connectionLocker?.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
 
     }
 
-    private createSession(targetId: Uint8Array): DiscoverySession {
+    async joinRing(): Promise<void> {
+        const contactedPeers = new Set<DhtAddress>()
+        const sessions = [this.createRingSession(getRingIdRawFromPeerDescriptor(this.config.localPeerDescriptor), contactedPeers)]
+        await this.runRingSessions(sessions)
+    }
+
+    private createSession(targetId: DhtAddress, contactedPeers: Set<DhtAddress>): DiscoverySession {
         const sessionOptions = {
-            bucket: this.config.bucket,
-            neighborList: this.config.neighborList,
             targetId,
-            localPeerDescriptor: this.config.localPeerDescriptor,
             parallelism: this.config.parallelism,
             noProgressLimit: this.config.joinNoProgressLimit,
-            newContactListener: (newPeer: DhtNodeRpcRemote) => this.config.addContact(newPeer.getPeerDescriptor()),
-            createRpcRemote: (peerDescriptor: PeerDescriptor) => new DhtNodeRpcRemote(
-                this.config.localPeerDescriptor,
-                peerDescriptor,
-                toProtoRpcClient(new DhtNodeRpcClient(this.config.rpcCommunicator.getRpcClientTransport())),
-                this.config.serviceId,
-                this.config.rpcRequestTimeout
-            )
+            peerManager: this.config.peerManager,
+            contactedPeers
         }
         return new DiscoverySession(sessionOptions)
+    }
+
+    private createRingSession(targetId: RingIdRaw, contactedPeers: Set<DhtAddress>): RingDiscoverySession {
+        const sessionOptions = {
+            targetId,
+            parallelism: this.config.parallelism,
+            noProgressLimit: this.config.joinNoProgressLimit,
+            peerManager: this.config.peerManager,
+            contactedPeers
+        }
+        return new RingDiscoverySession(sessionOptions)
     }
 
     private async runSessions(sessions: DiscoverySession[], entryPointDescriptor: PeerDescriptor, retry: boolean): Promise<void> {
         try {
             for (const session of sessions) {
-                this.ongoingDiscoverySessions.set(session.sessionId, session)
+                this.ongoingDiscoverySessions.set(session.id, session)
                 await session.findClosestNodes(this.config.joinTimeout)
             }
         } catch (_e) {
             logger.debug(`DHT join on ${this.config.serviceId} timed out`)
         } finally {
             if (!this.isStopped()) {
-                if (this.config.bucket.count() === 0) {
+                if (this.config.peerManager.getNeighborCount() === 0) {
                     if (retry) {
+                        // TODO should we catch possible promise rejection?
+                        // TODO use config option or named constant?
                         setAbortableTimeout(() => this.rejoinDht(entryPointDescriptor), 1000, this.abortController.signal)
                     }
                 } else {
                     await this.ensureRecoveryIntervalIsRunning()
                 }
             }
-            sessions.forEach((session) => this.ongoingDiscoverySessions.delete(session.sessionId))
+            sessions.forEach((session) => this.ongoingDiscoverySessions.delete(session.id))
         }
     }
 
-    public async rejoinDht(entryPoint: PeerDescriptor): Promise<void> {
+    private async runRingSessions(sessions: RingDiscoverySession[]): Promise<void> {
+        try {
+            for (const session of sessions) {
+                this.ongoingRingDiscoverySessions.set(session.id, session)
+                await session.findClosestNodes(this.config.joinTimeout)
+            }
+        } catch (_e) {
+            logger.debug(`Ring join on ${this.config.serviceId} timed out`)
+        } finally {
+            sessions.forEach((session) => this.ongoingDiscoverySessions.delete(session.id))
+        }
+    }
+
+    public async rejoinDht(
+        entryPoint: PeerDescriptor,
+        contactedPeers: Set<DhtAddress> = new Set(),
+        distantJoinContactPeers: Set<DhtAddress> = new Set()
+    ): Promise<void> {
         if (this.isStopped() || this.rejoinOngoing) {
             return
         }
         logger.debug(`Rejoining DHT ${this.config.serviceId}`)
         this.rejoinOngoing = true
         try {
-            this.config.neighborList.clear()
-            await this.joinDht(entryPoint)
+            await this.joinThroughEntryPoint(entryPoint, contactedPeers, { enabled: true, contactedPeers: distantJoinContactPeers })
             logger.debug(`Rejoined DHT successfully ${this.config.serviceId}!`)
         } catch (err) {
             logger.warn(`Rejoining DHT ${this.config.serviceId} failed`)
             if (!this.isStopped()) {
+                // TODO should we catch possible promise rejection?
+                // TODO use config option or named constant?
                 setAbortableTimeout(() => this.rejoinDht(entryPoint), 5000, this.abortController.signal)
             }
         } finally {
@@ -135,6 +183,7 @@ export class PeerDiscovery {
     private async ensureRecoveryIntervalIsRunning(): Promise<void> {
         if (!this.recoveryIntervalStarted) {
             this.recoveryIntervalStarted = true
+            // TODO use config option or named constant?
             await scheduleAtInterval(() => this.fetchClosestPeersFromBucket(), 60000, true, this.abortController.signal)
         }
     }
@@ -143,13 +192,19 @@ export class PeerDiscovery {
         if (this.isStopped()) {
             return
         }
-        const nodes = this.config.bucket.closest(peerIdFromPeerDescriptor(this.config.localPeerDescriptor).value, this.config.parallelism)
-        await Promise.allSettled(nodes.map(async (peer: DhtNodeRpcRemote) => {
-            const contacts = await peer.getClosestPeers(this.config.localPeerDescriptor.kademliaId)
-            contacts.forEach((contact) => {
-                this.config.addContact(contact)
+        const localNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
+        const nodes = this.config.peerManager.getClosestNeighborsTo(
+            localNodeId,
+            this.config.parallelism
+        )
+        await Promise.allSettled(
+            nodes.map(async (peer: DhtNodeRpcRemote) => {
+                const contacts = await peer.getClosestPeers(localNodeId)
+                for (const contact of contacts) {
+                    this.config.peerManager.addContact(contact)
+                }
             })
-        }))
+        )
     }
 
     public isJoinOngoing(): boolean {
@@ -166,11 +221,10 @@ export class PeerDiscovery {
 
     public stop(): void {
         this.abortController.abort()
-        if (this.rejoinTimeoutRef) {
-            clearTimeout(this.rejoinTimeoutRef)
-            this.rejoinTimeoutRef = undefined
-        }
-        this.ongoingDiscoverySessions.forEach((session, _id) => {
+        this.ongoingDiscoverySessions.forEach((session) => {
+            session.stop()
+        })
+        this.ongoingRingDiscoverySessions.forEach((session) => {
             session.stop()
         })
     }

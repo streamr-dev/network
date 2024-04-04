@@ -1,21 +1,21 @@
 /* eslint-disable no-console */
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerID } from '../../src/helpers/PeerID'
-import { getNodeIdFromPeerDescriptor } from '../../src/helpers/peerIdFromPeerDescriptor'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
+import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { Logger } from '@streamr/utils'
+
+const logger = new Logger(module)
 
 describe('Kademlia correctness', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
-    let entrypointDescriptor: PeerDescriptor
     const simulator = new Simulator()
-    const NUM_NODES = 1000
+    const NUM_NODES = 200
 
-    const nodeIndicesById: Record<string, number> = {}
+    const nodeIndicesById: Record<DhtAddress, number> = {}
 
     if (!fs.existsSync('test/data/nodeids.json')) {
         console.log('gound truth data does not exist yet, generating..')
@@ -27,22 +27,14 @@ describe('Kademlia correctness', () => {
         = JSON.parse(fs.readFileSync('test/data/orderedneighbors.json').toString())
 
     beforeEach(async () => {
-
         nodes = []
-        const entryPointId = '0'
-        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, Uint8Array.from(dhtIds[0].data), 8)
+        entryPoint = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[0].data)), 8)
         nodes.push(entryPoint)
-        nodeIndicesById[entryPoint.getNodeId().toKey()] = 0
-        entrypointDescriptor = {
-            kademliaId: entryPoint.getNodeId().value,
-            type: NodeType.NODEJS
-        }
+        nodeIndicesById[entryPoint.getNodeId()] = 0
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const nodeId = `${i}`
-
-            const node = await createMockConnectionDhtNode(nodeId, simulator, Uint8Array.from(dhtIds[i].data))
-            nodeIndicesById[node.getNodeId().toKey()] = i
+            const node = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[i].data)))
+            nodeIndicesById[node.getNodeId()] = i
             nodes.push(node)
         }
     })
@@ -50,16 +42,20 @@ describe('Kademlia correctness', () => {
     afterEach(async () => {
         await Promise.all([
             entryPoint.stop(),
-            ...nodes.map(async (node) => await node.stop())
+            ...nodes.map((node) => node.stop())
         ])
     })
 
     it('Can find correct neighbors', async () => {
-        await entryPoint.joinDht([entrypointDescriptor])
+        await entryPoint.joinDht([entryPoint.getLocalPeerDescriptor()])
 
-        await Promise.allSettled(
-            nodes.map((node) => node.joinDht([entrypointDescriptor]))
-        )
+        for (let i = 1; i < NUM_NODES; i++) {
+            // time to join the network
+            const startTimestamp = Date.now()
+            await nodes[i].joinDht([entryPoint.getLocalPeerDescriptor()])
+            const endTimestamp = Date.now()
+            logger.info('Node ' + i + ' joined in ' + (endTimestamp - startTimestamp) + ' ms')  
+        }
 
         let minimumCorrectNeighbors = Number.MAX_SAFE_INTEGER
         let sumCorrectNeighbors = 0
@@ -72,17 +68,17 @@ describe('Kademlia correctness', () => {
                 groundTruthString += groundTruth[i + ''][j].name + ','
             }
 
-            const kademliaNeighbors = nodes[i].getClosestContacts().map((p) => PeerID.fromValue(p.kademliaId))
+            const kademliaNeighbors = nodes[i].getClosestContacts(8).map((p) => getNodeIdFromPeerDescriptor(p))
 
             let kadString = 'kademliaNeighbors: '
             kademliaNeighbors.forEach((neighbor) => {
-                kadString += nodeIndicesById[neighbor.toKey()] + ','
+                kadString += nodeIndicesById[neighbor] + ','
             })
 
             let correctNeighbors = 0
             try {
                 for (let j = 0; j < groundTruth[i + ''].length; j++) {
-                    if (groundTruth[i + ''][j].name != (nodeIndicesById[kademliaNeighbors[j].toKey()] + '')) {
+                    if (groundTruth[i + ''][j].name != (nodeIndicesById[kademliaNeighbors[j]] + '')) {
                         break
                     }
                     correctNeighbors++
@@ -102,7 +98,7 @@ describe('Kademlia correctness', () => {
             }
 
             if (i > 0) {
-                sumKbucketSize += nodes[i].getBucketSize()
+                sumKbucketSize += nodes[i].getNeighborCount()
                 sumCorrectNeighbors += correctNeighbors
             }
         }
@@ -114,5 +110,5 @@ describe('Kademlia correctness', () => {
         console.log('Minimum correct neighbors: ' + minimumCorrectNeighbors)
         console.log('Average correct neighbors: ' + avgCorrectNeighbors)
         console.log('Average Kbucket size: ' + avgKbucketSize)
-    })
+    }, 120000)
 })

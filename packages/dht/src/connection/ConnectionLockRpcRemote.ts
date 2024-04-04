@@ -1,23 +1,13 @@
 import { Logger } from '@streamr/utils'
-import { ProtoRpcClient } from '@streamr/proto-rpc'
-import { IConnectionLockRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
-import { LockRequest, UnlockRequest, PeerDescriptor, DisconnectNotice, DisconnectMode } from '../proto/packages/dht/protos/DhtRpc'
-import * as Err from '../helpers/errors'
-import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
-import { Remote } from '../dht/contact/Remote'
-import { LockID } from './ConnectionLockHandler'
+import { RpcRemote } from '../dht/contact/RpcRemote'
+import { DisconnectMode, DisconnectNotice, LockRequest, UnlockRequest } from '../proto/packages/dht/protos/DhtRpc'
+import { ConnectionLockRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { LockID } from './ConnectionLockStates'
+import { getNodeIdFromPeerDescriptor } from '../identifiers'
 
 const logger = new Logger(module)
 
-export class ConnectionLockRpcRemote extends Remote<IConnectionLockRpcClient> {
-
-    constructor(
-        localPeerDescriptor: PeerDescriptor,
-        targetPeerDescriptor: PeerDescriptor,
-        client: ProtoRpcClient<IConnectionLockRpcClient>
-    ) {
-        super(localPeerDescriptor, targetPeerDescriptor, 'DUMMY', client)
-    }
+export class ConnectionLockRpcRemote extends RpcRemote<ConnectionLockRpcClient> {
 
     public async lockRequest(lockId: LockID): Promise<boolean> {
         logger.trace(`Requesting locked connection to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
@@ -29,7 +19,7 @@ export class ConnectionLockRpcRemote extends Remote<IConnectionLockRpcClient> {
             const res = await this.getClient().lockRequest(request, options)
             return res.accepted
         } catch (err) {
-            logger.debug(new Err.ConnectionLocker('Connection lock rejected', err).stack!)
+            logger.debug('Connection lock rejected', { err })
             return false
         }
     }
@@ -53,9 +43,9 @@ export class ConnectionLockRpcRemote extends Remote<IConnectionLockRpcClient> {
             disconnectMode
         }
         const options = this.formDhtRpcOptions({
-            doNotConnect: true,
-            doNotMindStopped: true,
-            timeout: 2000
+            connect: false,
+            sendIfStopped: true,
+            timeout: 2000  // TODO use config option or named constant?
         })
         await this.getClient().gracefulDisconnect(request, options)
     }

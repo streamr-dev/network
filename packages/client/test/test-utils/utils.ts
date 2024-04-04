@@ -25,12 +25,15 @@ import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchang
 import { StreamrClientEventEmitter } from '../../src/events'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { MessageFactory } from '../../src/publish/MessageFactory'
-import { StreamRegistry } from '../../src/registry/StreamRegistry'
+import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { LoggerFactory } from '../../src/utils/LoggerFactory'
 import { counterId } from '../../src/utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
 import { addAfterFn } from './jest-utils'
+import path from 'path'
+import fetch from 'node-fetch'
+import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 
 const logger = new Logger(module)
 
@@ -45,8 +48,9 @@ export const uid = (prefix?: string): string => counterId(`p${process.pid}${pref
 
 const getTestName = (module: NodeModule): string => {
     const fileNamePattern = new RegExp('.*/(.*).test\\...')
-    const groups = module.filename.match(fileNamePattern)
-    return (groups !== null) ? groups[1] : module.filename
+    const moduleFilename = (module.filename ?? module.id) // browser has no filename
+    const groups = moduleFilename.match(fileNamePattern)
+    return (groups !== null) ? groups[1] : moduleFilename
 }
 
 const randomTestRunId = process.pid != null ? process.pid : crypto.randomBytes(4).toString('hex')
@@ -123,7 +127,8 @@ export const createMockMessage = async (
             isPublicStream: (opts.encryptionKey === undefined),
             isStreamPublisher: true
         }),
-        groupKeyQueue: await createGroupKeyQueue(authentication, opts.encryptionKey, opts.nextEncryptionKey)
+        groupKeyQueue: await createGroupKeyQueue(authentication, opts.encryptionKey, opts.nextEncryptionKey),
+        erc1271ContractFacade: mock<ERC1271ContractFacade>()
     })
     const DEFAULT_CONTENT = {}
     const plainContent = opts.content ?? DEFAULT_CONTENT
@@ -263,7 +268,7 @@ export const startTestServer = async (
     await once(server, 'listening')
     const port = (server.address() as AddressInfo).port
     return {
-        url: `http://localhost:${port}`,
+        url: `http://127.0.0.1:${port}`,
         stop: async () => {
             server.close()
             await once(server, 'close')
@@ -285,4 +290,22 @@ export const startFailingStorageNode = async (error: Error, environment: FakeEnv
     }(wallet, environment.getNetwork(), environment.getChain())
     await node.start()
     return node
+}
+
+/**
+ * We can't read the file directly from the file system when running in the browser (Karma) environment.
+ * Hence, we need to read the file indirectly via an Express server.
+ */
+export const readUtf8ExampleIndirectly = async (): Promise<string> => {
+    return new Promise((resolve) => {
+        const app = express()
+        app.use('/static', express.static(path.join(__dirname, '/../data')))
+        const server = app.listen(8134, async () => {
+            const response = await fetch('http://localhost:8134/static/utf8.txt')
+            const content = await response.text()
+            server.close(() => {
+                resolve(content)
+            })
+        })
+    })
 }

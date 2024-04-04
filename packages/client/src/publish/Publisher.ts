@@ -7,16 +7,23 @@ import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamrClientError } from '../StreamrClientError'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
-import { StreamRegistry } from '../registry/StreamRegistry'
+import { StreamRegistry } from '../contracts/StreamRegistry'
 import { StreamDefinition } from '../types'
 import { Mapping } from '../utils/Mapping'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { MessageFactory } from './MessageFactory'
+import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
 
 export interface PublishMetadata {
     timestamp?: string | number | Date
     partitionKey?: string | number
     msgChainId?: string
+
+    /**
+     * Publish a message on behalf of a contract implementing the [ERC-1271](https://eips.ethereum.org/EIPS/eip-1271)
+     * standard. The streamr client wallet address must be an authorized signer for the contract.
+     */
+    erc1271Contract?: string
 }
 
 const parseTimestamp = (metadata?: PublishMetadata): number => {
@@ -41,18 +48,21 @@ export class Publisher {
     private readonly streamRegistry: StreamRegistry
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
+    private readonly erc1271ContractFacade: ERC1271ContractFacade
 
     constructor(
         node: NetworkNodeFacade,
         streamRegistry: StreamRegistry,
         groupKeyManager: GroupKeyManager,
         streamIdBuilder: StreamIDBuilder,
-        @inject(AuthenticationInjectionToken) authentication: Authentication
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        erc1271ContractFacade: ERC1271ContractFacade
     ) {
         this.node = node
         this.streamRegistry = streamRegistry
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
+        this.erc1271ContractFacade = erc1271ContractFacade
         this.messageFactories = new Mapping(async (streamId: StreamID) => {
             return this.createMessageFactory(streamId)
         })
@@ -113,7 +123,8 @@ export class Publisher {
             streamId,
             authentication: this.authentication,
             streamRegistry: this.streamRegistry,
-            groupKeyQueue: await this.groupKeyQueues.get(streamId)
+            groupKeyQueue: await this.groupKeyQueues.get(streamId),
+            erc1271ContractFacade: this.erc1271ContractFacade
         })
     }
 }

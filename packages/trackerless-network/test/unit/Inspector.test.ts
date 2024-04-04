@@ -1,9 +1,8 @@
-import { ListeningRpcCommunicator } from '@streamr/dht'
+import { ListeningRpcCommunicator, createRandomDhtAddress, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { utf8ToBinary } from '@streamr/utils'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { Inspector } from '../../src/logic/inspect/Inspector'
 import { MockTransport } from '../utils/mock/Transport'
-import { createMockPeerDescriptor, createRandomNodeId, mockConnectionLocker } from '../utils/utils'
+import { createMockPeerDescriptor, mockConnectionLocker } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('Inspector', () => {
@@ -13,7 +12,7 @@ describe('Inspector', () => {
 
     const inspectedDescriptor = createMockPeerDescriptor()
 
-    const nodeId = createRandomNodeId()
+    const nodeId = createRandomDhtAddress()
     let mockConnect: jest.Mock
 
     const messageRef = {

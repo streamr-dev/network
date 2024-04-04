@@ -1,7 +1,7 @@
 import { Logger, MetricsReport } from '@streamr/utils'
 import { Schema } from 'ajv'
 import omit from 'lodash/omit'
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient } from '@streamr/sdk'
 import { Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 

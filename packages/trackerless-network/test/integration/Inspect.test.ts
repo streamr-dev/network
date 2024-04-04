@@ -38,7 +38,6 @@ describe('inspect', () => {
     }
 
     beforeEach(async () => {
-        Simulator.useFakeTimers()
         simulator = new Simulator(LatencyType.REAL)
 
         publisherNode = await initiateNode(publisherDescriptor, simulator)
@@ -65,7 +64,6 @@ describe('inspect', () => {
             inspectorNode.stop(),
             ...inspectedNodes.map((node) => node.stop())
         ])
-        Simulator.useFakeTimers(false)
     })
 
     it('gets successful inspections from all suspects', async () => {
@@ -77,12 +75,12 @@ describe('inspect', () => {
                 123123,
                 sequenceNumber
             )
-            publisherNode.getStreamrNode().broadcast(msg)
+            publisherNode.getContentDeliveryManager().broadcast(msg)
             sequenceNumber += 1
         }, 200)
 
         for (const node of inspectedNodes) {
-            const result = await inspectorNode.getStreamrNode().inspect(node.getLayer0Node().getLocalPeerDescriptor(), streamPartId)
+            const result = await inspectorNode.getContentDeliveryManager().inspect(node.getLayer0Node().getLocalPeerDescriptor(), streamPartId)
             expect(result).toEqual(true)
         }
     }, 25000)

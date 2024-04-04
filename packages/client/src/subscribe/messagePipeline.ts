@@ -12,19 +12,21 @@ import { StrictStreamrClientConfig } from '../Config'
 import { DestroySignal } from '../DestroySignal'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
 import { decrypt } from '../encryption/decrypt'
-import { StreamRegistry } from '../registry/StreamRegistry'
+import { StreamRegistry } from '../contracts/StreamRegistry'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { PushPipeline } from '../utils/PushPipeline'
 import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { MsgChainUtil } from './MsgChainUtil'
 import { Resends } from './Resends'
 import { OrderMessages } from './ordering/OrderMessages'
+import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
 
 export interface MessagePipelineOptions {
     streamPartId: StreamPartID
     getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
     resends: Resends
     streamRegistry: StreamRegistry
+    erc1271ContractFacade: ERC1271ContractFacade
     groupKeyManager: GroupKeyManager
     // eslint-disable-next-line max-len
     config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
@@ -52,14 +54,14 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
 
     const messageStream = new PushPipeline<StreamMessage, StreamMessage>
     const msgChainUtil = new MsgChainUtil(async (msg) => {
-        await validateStreamMessage(msg, opts.streamRegistry)
+        await validateStreamMessage(msg, opts.streamRegistry, opts.erc1271ContractFacade)
         let decrypted
         if (StreamMessage.isAESEncrypted(msg)) {
             try {
                 decrypted = await decrypt(msg, opts.groupKeyManager, opts.destroySignal)
             } catch (err) {
                 // TODO log this in onError? if we want to log all errors?
-                logger.debug('Failed to decrypt', { messageId: msg.getMessageID(), err })
+                logger.debug('Failed to decrypt', { messageId: msg.messageId, err })
                 // clear cached permissions if cannot decrypt, likely permissions need updating
                 opts.streamRegistry.clearStreamCache(msg.getStreamId())
                 throw err

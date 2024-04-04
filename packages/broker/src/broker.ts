@@ -1,7 +1,7 @@
 import { Logger, toEthereumAddress } from '@streamr/utils'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
-import StreamrClient from 'streamr-client'
+import StreamrClient from '@streamr/sdk'
 import { version as CURRENT_VERSION } from '../package.json'
 import { HttpServerEndpoint, Plugin } from './Plugin'
 import { Config } from './config/config'
@@ -33,7 +33,7 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
             return streamrClient
         },
         start: async () => {
-            logger.info(`Start broker version ${CURRENT_VERSION}`)
+            logger.info(`Start Streamr node version ${CURRENT_VERSION}`)
             await Promise.all(plugins.map((plugin) => plugin.start(streamrClient)))
             const httpServerEndpoints = plugins.flatMap((plugin: Plugin<any>) => {
                 return plugin.getHttpServerEndpoints().map((endpoint: HttpServerEndpoint) => {
@@ -48,9 +48,8 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
             const mnemonic = generateMnemonicFromAddress(toEthereumAddress(brokerAddress))
 
             logger.info(`Welcome to the Streamr Network. Your node's generated name is ${mnemonic}.`)
-            logger.info(`View your node in the Network Explorer: https://streamr.network/network-explorer/nodes/${encodeURIComponent(nodeId)}`)
             logger.info(`Network node ${nodeId} running`)
-            logger.info(`Ethereum address ${brokerAddress}`)
+            logger.info(`Node address ${brokerAddress}`)
 
             logger.info(`Plugins: ${JSON.stringify(plugins.map((p) => p.name))}`)
 

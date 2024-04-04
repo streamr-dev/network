@@ -1,38 +1,30 @@
 import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { expectedConnectionType } from '../../src/helpers/Connectivity'
 import { ConnectionType } from '../../src/connection/IConnection'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('Connectivity helpers', () => {
 
-    const tlsServerPeerDescriptor = {
-        kademliaId: new Uint8Array(1),
-        type: NodeType.NODEJS,
+    const tlsServerPeerDescriptor = createMockPeerDescriptor({
         websocket: {
             host: 'mock',
             port: 1234,
             tls: true
         }
-    }
-
-    const noTlsServerPeerDescriptor = {
-        kademliaId: new Uint8Array(1),
-        type: NodeType.NODEJS,
+    })
+    const noTlsServerPeerDescriptor = createMockPeerDescriptor({
         websocket: {
             host: 'mock',
             port: 1234,
             tls: false
         }
-    }
-
-    const browserPeerDescriptor = {
-        kademliaId: new Uint8Array(2),
+    })
+    const browserPeerDescriptor = createMockPeerDescriptor({
         type: NodeType.BROWSER
-    }
-
-    const noServerPeerDescriptor = {
-        kademliaId: new Uint8Array(3),
+    })
+    const noServerPeerDescriptor = createMockPeerDescriptor({
         type: NodeType.NODEJS
-    }
+    })
 
     it('two server peers', () => {
         expect(expectedConnectionType(tlsServerPeerDescriptor, tlsServerPeerDescriptor)).toBe(ConnectionType.WEBSOCKET_CLIENT)

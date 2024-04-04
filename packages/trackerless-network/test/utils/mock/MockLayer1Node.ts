@@ -16,11 +16,11 @@ export class MockLayer1Node extends EventEmitter implements Layer1Node {
         return []
     }
 
-    getKBucketPeers(): PeerDescriptor[] {
+    getNeighbors(): PeerDescriptor[] {
         return this.kbucketPeers
     }
 
-    getBucketSize(): number {
+    getNeighborCount(): number {
         return this.kbucketPeers.length
     }
 
@@ -30,6 +30,9 @@ export class MockLayer1Node extends EventEmitter implements Layer1Node {
 
     // eslint-disable-next-line class-methods-use-this
     async joinDht(): Promise<void> {}
+
+    // eslint-disable-next-line class-methods-use-this
+    async joinRing(): Promise<void> {}
 
     // eslint-disable-next-line class-methods-use-this
     async start(): Promise<void> {}

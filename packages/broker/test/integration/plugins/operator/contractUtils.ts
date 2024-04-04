@@ -70,6 +70,7 @@ export async function setupOperatorContract(
     const operatorConfig = {
         operatorContractAddress: toEthereumAddress(operatorContract.address),
         theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl,
+        getEthersOverrides: () => ({})
     }
     return { operatorWallet, operatorContract, operatorServiceConfig: operatorConfig, nodeWallets }
 }
@@ -209,8 +210,8 @@ export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGa
                 value: parseEther('1')
             })).wait()
         },
-        (message: string, error: any) => {
-            logger.debug(message, { error })
+        (message: string, err: any) => {
+            logger.debug(message, { err })
         },
         'Token minting',
         10,

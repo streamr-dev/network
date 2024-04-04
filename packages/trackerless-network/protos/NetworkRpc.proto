@@ -6,7 +6,7 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
 import "packages/dht/protos/DhtRpc.proto";
 
-service DeliveryRpc {
+service ContentDeliveryRpc {
   rpc sendStreamMessage (StreamMessage) returns (google.protobuf.Empty);
   rpc leaveStreamPartNotice (LeaveStreamPartNotice) returns (google.protobuf.Empty);
 }
@@ -17,7 +17,7 @@ service ProxyConnectionRpc {
 
 service HandshakeRpc {
   rpc handshake (StreamPartHandshakeRequest) returns (StreamPartHandshakeResponse);
-  rpc interleaveNotice (InterleaveNotice) returns (google.protobuf.Empty);
+  rpc interleaveRequest (InterleaveRequest) returns (InterleaveResponse);
 }
 
 service NeighborUpdateRpc {
@@ -26,6 +26,11 @@ service NeighborUpdateRpc {
 
 service TemporaryConnectionRpc {
   rpc openConnection (TemporaryConnectionRequest) returns (TemporaryConnectionResponse);
+  rpc closeConnection (CloseTemporaryConnection) returns (google.protobuf.Empty);
+}
+
+service NodeInfoRpc {
+  rpc getInfo (NodeInfoRequest) returns (NodeInfoResponse);
 }
 
 message MessageID {
@@ -58,17 +63,31 @@ enum EncryptionType {
   AES = 1;
 }
 
+enum SignatureType {
+  LEGACY_SECP256K1 = 0;
+  SECP256K1 = 1;
+  ERC_1271 = 2;
+}
+
 message StreamMessage {
-  StreamMessageType messageType = 1;
+  // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
+  MessageID messageId = 1;
+  optional MessageRef previousMessageRef = 2;
+  bytes signature = 3;
+  SignatureType signatureType = 4;
+  oneof body {
+    ContentMessage contentMessage = 5;
+    GroupKeyRequest groupKeyRequest = 6;
+    GroupKeyResponse groupKeyResponse = 7;
+  }
+}
+
+message ContentMessage {
+  bytes content = 1;
   ContentType contentType = 2;
   EncryptionType encryptionType = 3;
-  bytes content = 4;
-  bytes signature = 5;
-  // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
-  MessageID messageId = 6;
-  optional MessageRef previousMessageRef = 7;
-  optional string groupKeyId = 8;
-  optional GroupKey newGroupKey = 9;
+  optional string groupKeyId = 4;
+  optional GroupKey newGroupKey = 5;
 }
 
 message GroupKeyRequest {
@@ -103,14 +122,18 @@ message StreamPartHandshakeResponse {
   optional dht.PeerDescriptor interleaveTargetDescriptor = 3;
 }
 
-message InterleaveNotice {
-  string streamPartId = 1;
+message InterleaveRequest {
   // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
-  dht.PeerDescriptor interleaveTargetDescriptor = 2;
+  dht.PeerDescriptor interleaveTargetDescriptor = 1;
+}
+
+message InterleaveResponse {
+  bool accepted = 1;
 }
 
 message LeaveStreamPartNotice {
   string streamPartId = 1;
+  bool isEntryPoint = 2;
 }
 
 message NeighborUpdate {
@@ -135,7 +158,30 @@ message TemporaryConnectionResponse {
   bool accepted = 1;
 }
 
+message CloseTemporaryConnection {
+}
+
 enum ProxyDirection {
   PUBLISH = 0;
   SUBSCRIBE = 1;
+}
+
+message StreamPartitionInfo {
+  string id = 1;
+  repeated dht.PeerDescriptor controlLayerNeighbors = 2;
+  repeated dht.PeerDescriptor contentDeliveryLayerNeighbors = 3;
+}
+
+message ControlLayerInfo {
+  repeated dht.PeerDescriptor neighbors = 1;
+  repeated dht.PeerDescriptor connections = 2;
+}
+
+message NodeInfoRequest {}
+
+message NodeInfoResponse {
+  dht.PeerDescriptor peerDescriptor = 1;
+  repeated StreamPartitionInfo streamPartitions = 2;
+  optional ControlLayerInfo controlLayer = 3;
+  string version = 4;
 }

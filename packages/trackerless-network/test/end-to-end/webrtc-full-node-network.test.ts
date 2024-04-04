@@ -1,10 +1,9 @@
-import { getRandomRegion } from '@streamr/dht'
+import { getNodeIdFromPeerDescriptor, getRandomRegion } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkStack } from '../../src/NetworkStack'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 
 describe('Full node network with WebRTC connections', () => {
@@ -34,8 +33,8 @@ describe('Full node network with WebRTC connections', () => {
             }
         })
         await entryPoint.start()
-        entryPoint.getStreamrNode()!.setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
-        entryPoint.getStreamrNode()!.joinStreamPart(streamPartId)
+        entryPoint.getContentDeliveryManager().setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
+        entryPoint.getContentDeliveryManager().joinStreamPart(streamPartId)
 
         await Promise.all(range(NUM_OF_NODES).map(async () => {
             const peerDescriptor = createMockPeerDescriptor()
@@ -47,8 +46,8 @@ describe('Full node network with WebRTC connections', () => {
             })
             nodes.push(node)
             await node.start()
-            node.getStreamrNode().setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
-            node.getStreamrNode().joinStreamPart(streamPartId)
+            node.getContentDeliveryManager().setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
+            node.getContentDeliveryManager().joinStreamPart(streamPartId)
         }))
 
     }, 90000)
@@ -63,16 +62,16 @@ describe('Full node network with WebRTC connections', () => {
     it('happy path', async () => {
         await Promise.all(nodes.map((node) =>
             waitForCondition(() => {
-                return node.getStreamrNode()!.getNeighbors(streamPartId).length >= 3
+                return node.getContentDeliveryManager().getNeighbors(streamPartId).length >= 3
             }
-            , 120000)
+            , 30000)
         ))
-        let numOfMessagesReceived = 0
+        let receivedMessageCount = 0
         const successIds: string[] = []
         nodes.forEach((node) => {
-            node.getStreamrNode()!.on('newMessage', () => {
-                successIds.push(getNodeIdFromPeerDescriptor(node.getStreamrNode()!.getPeerDescriptor()))
-                numOfMessagesReceived += 1
+            node.getContentDeliveryManager().on('newMessage', () => {
+                successIds.push(getNodeIdFromPeerDescriptor(node.getContentDeliveryManager().getPeerDescriptor()))
+                receivedMessageCount += 1
             })
         })
         const msg = createStreamMessage(
@@ -80,8 +79,8 @@ describe('Full node network with WebRTC connections', () => {
             streamPartId,
             randomEthereumAddress()
         )
-        entryPoint.getStreamrNode()!.broadcast(msg)
-        await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
+        entryPoint.getContentDeliveryManager().broadcast(msg)
+        await waitForCondition(() => receivedMessageCount === NUM_OF_NODES)
     }, 120000)
 
 })

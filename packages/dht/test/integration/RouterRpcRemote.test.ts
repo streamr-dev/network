@@ -1,24 +1,20 @@
-import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
+import { RpcCommunicator } from '@streamr/proto-rpc'
 import { RouterRpcRemote } from '../../src/dht/routing/RouterRpcRemote'
-import { Message, MessageType, NodeType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message, RouteMessageAck, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RouterRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
-import { createWrappedClosestPeersRequest, generateId, mockRouterRpc } from '../utils/utils'
+import { createMockPeerDescriptor, createWrappedClosestPeersRequest, mockRouterRpc } from '../utils/utils'
+import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
+
+const SERVICE_ID = 'test'
 
 describe('RemoteRouter', () => {
 
     let remoteRouter: RouterRpcRemote
-    let clientRpcCommunicator: RpcCommunicator
-    let serverRpcCommunicator: RpcCommunicator
-    const serviceId = 'test'
-    const clientPeerDescriptor: PeerDescriptor = {
-        kademliaId: generateId('client'),
-        type: NodeType.NODEJS
-    }
-    const serverPeerDescriptor: PeerDescriptor = {
-        kademliaId: generateId('server'),
-        type: NodeType.NODEJS
-    }
+    let clientRpcCommunicator: RpcCommunicator<DhtCallContext>
+    let serverRpcCommunicator: RpcCommunicator<DhtCallContext>
+    const clientPeerDescriptor = createMockPeerDescriptor()
+    const serverPeerDescriptor = createMockPeerDescriptor()
 
     beforeEach(() => {
         clientRpcCommunicator = new RpcCommunicator()
@@ -30,16 +26,14 @@ describe('RemoteRouter', () => {
         serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
-        const client = toProtoRpcClient(new RouterRpcClient(clientRpcCommunicator.getRpcClientTransport()))
-        remoteRouter = new RouterRpcRemote(clientPeerDescriptor, serverPeerDescriptor, serviceId, client)
+        remoteRouter = new RouterRpcRemote(clientPeerDescriptor, serverPeerDescriptor, clientRpcCommunicator, RouterRpcClient)
     })
 
     it('routeMessage happy path', async () => {
         const rpcWrapper = createWrappedClosestPeersRequest(clientPeerDescriptor)
         const routed: Message = {
-            serviceId,
+            serviceId: SERVICE_ID,
             messageId: 'routed',
-            messageType: MessageType.RPC,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: rpcWrapper
@@ -49,9 +43,10 @@ describe('RemoteRouter', () => {
             requestId: 'routed',
             message: routed,
             sourcePeer: clientPeerDescriptor,
-            destinationPeer: serverPeerDescriptor,
+            target: serverPeerDescriptor.nodeId,
             reachableThrough: [],
-            routingPath: []
+            routingPath: [],
+            parallelRootNodeIds: []
         })
         expect(routable).toEqual(true)
     })
@@ -60,9 +55,8 @@ describe('RemoteRouter', () => {
         serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', mockRouterRpc.throwRouteMessageError)
         const rpcWrapper = createWrappedClosestPeersRequest(clientPeerDescriptor)
         const routed: Message = {
-            serviceId,
+            serviceId: SERVICE_ID,
             messageId: 'routed',
-            messageType: MessageType.RPC,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: rpcWrapper
@@ -72,9 +66,10 @@ describe('RemoteRouter', () => {
             requestId: 'routed',
             message: routed,
             sourcePeer: clientPeerDescriptor,
-            destinationPeer: serverPeerDescriptor,
+            target: serverPeerDescriptor.nodeId,
             reachableThrough: [],
-            routingPath: []
+            routingPath: [],
+            parallelRootNodeIds: []
         })
         expect(routable).toEqual(false)
     })

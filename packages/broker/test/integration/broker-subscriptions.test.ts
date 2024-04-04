@@ -1,6 +1,6 @@
 import { Wallet } from '@ethersproject/wallet'
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
-import { StreamrClient, Stream, StreamPartID, StreamPermission } from 'streamr-client'
+import { StreamrClient, Stream, StreamPartID, StreamPermission } from '@streamr/sdk'
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { wait, waitForCondition } from '@streamr/utils'
 import { Broker } from '../../src/broker'
@@ -12,7 +12,7 @@ const mqttPort1 = 13551
 const mqttPort2 = 13552
 
 const createMqttClient = (mqttPort: number) => {
-    return mqtt.connectAsync(`mqtt://localhost:${mqttPort}`)
+    return mqtt.connectAsync(`mqtt://127.0.0.1:${mqttPort}`)
 }
 
 const grantPermissions = async (streams: Stream[], brokerUsers: Wallet[]) => {

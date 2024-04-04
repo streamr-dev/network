@@ -1,266 +1,564 @@
-import inquirer, { Answers } from 'inquirer'
-import { Wallet } from 'ethers'
-import path from 'path'
-import { writeFileSync, existsSync, mkdirSync, chmodSync } from 'fs'
-import chalk from 'chalk'
-import { v4 as uuid } from 'uuid'
-
-import * as WebsocketConfigSchema from '../plugins/websocket/config.schema.json'
-import * as MqttConfigSchema from '../plugins/mqtt/config.schema.json'
-import * as BrokerConfigSchema from './config.schema.json'
-import { getDefaultFile } from './config'
-import { CURRENT_CONFIGURATION_VERSION, formSchemaUrl } from '../config/migration'
-import { generateMnemonicFromAddress } from '../helpers/generateMnemonicFromAddress'
+import { checkbox, confirm, input, password, select } from '@inquirer/prompts'
+import { config as streamrConfig } from '@streamr/config'
 import { toEthereumAddress } from '@streamr/utils'
+import chalk from 'chalk'
+import { BigNumber, Wallet, providers, utils } from 'ethers'
+import { isAddress } from 'ethers/lib/utils'
+import { chmodSync, existsSync, mkdirSync, writeFileSync } from 'fs'
+import capitalize from 'lodash/capitalize'
+import omit from 'lodash/omit'
+import path from 'path'
+import { v4 as uuid } from 'uuid'
+import { z } from 'zod'
+import {
+    CURRENT_CONFIGURATION_VERSION,
+    formSchemaUrl,
+} from '../config/migration'
+import { generateMnemonicFromAddress } from '../helpers/generateMnemonicFromAddress'
+import * as MqttConfigSchema from '../plugins/mqtt/config.schema.json'
+import * as WebsocketConfigSchema from '../plugins/websocket/config.schema.json'
+import { ConfigFile, getDefaultFile } from './config'
+import * as BrokerConfigSchema from './config.schema.json'
 
-export interface PrivateKeyAnswers extends Answers {
-    generateOrImportPrivateKey: 'Import' | 'Generate'
-    importPrivateKey?: string
-}
+const MIN_BALANCE = utils.parseEther('0.1')
 
-export interface PluginAnswers extends Answers {
-    enabledApiPlugins: string[]
-    websocketPort?: string
-    mqttPort?: string
-    httpPort?: string
-}
+type EnvironmentId = 'polygon' | 'mumbai'
 
-export interface StorageAnswers extends Answers {
-    storagePath: string
-}
+export async function start(): Promise<void> {
+    log(`
+        >
+        > ***Welcome to the Streamr Network!***
+        > This Config Wizard will help you setup your node.
+        >
+        > The steps are documented here:
+        > *https://docs.streamr.network/guides/how-to-run-streamr-node#config-wizard*
+        >
+    `)
 
-const createLogger = () => {
-    return {
-        info: (...args: any[]) => {
-            console.info(chalk.bgWhite.black(':'), ...args)
-        },
-        error: (...args: any[]) => {
-            console.error(chalk.bgRed.black('!'), ...args)
+    try {
+        const privateKey = await getPrivateKey()
+
+        const nodeAddress = new Wallet(privateKey).address
+
+        const environmentId = await getEnvironmentId()
+
+        const operator = await getOperatorAddress()
+
+        const operatorPlugins = operator ? {
+            operator: {
+                operatorContractAddress: operator,
+            },
+        } : {}
+
+        const { http, ...pubsubPlugins } = await getPubsubPlugins()
+
+        /**
+         * Port number for the `http` plugin has to be defined within
+         * the `httpServer` object in the config's root. See below.
+         */
+        if (http) {
+            Object.assign(pubsubPlugins, {
+                http: omit(http, 'port'),
+            })
         }
-    }
-}
 
-const generateApiKey = (): string => {
-    const hex = uuid().split('-').join('')
-    return Buffer.from(hex).toString('base64').replace(/[^0-9a-z]/gi, '')
-}
+        const httpServer = http?.port ? { port: http.port } : undefined
 
-export const DEFAULT_CONFIG_PORTS: Record<string, number> = {
-    WS: WebsocketConfigSchema.properties.port.default,
-    MQTT: MqttConfigSchema.properties.port.default,
-    HTTP: BrokerConfigSchema.properties.httpServer.properties.port.default
-}
+        const storagePath = await getStoragePath()
 
-const PLUGIN_NAMES: Record<string, string> = {
-    WS: 'websocket',
-    MQTT: 'mqtt',
-    HTTP: 'http'
-}
+        const apiKey = Buffer.from(uuid().replace(/-/g, ''))
+            .toString('base64')
+            .replace(/[^\da-z]/gi, '')
 
-const PRIVATE_KEY_SOURCE_GENERATE = 'Generate'
-const PRIVATE_KEY_SOURCE_IMPORT = 'Import'
+        const config: ConfigFile = {
+            $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
+            client: {
+                auth: {
+                    privateKey,
+                },
+                environment: environmentId,
+            },
+            plugins: {
+                ...operatorPlugins,
+                ...pubsubPlugins,
+            },
+            httpServer,
+            apiAuthentication: {
+                keys: [apiKey],
+            },
+        }
 
-export const CONFIG_TEMPLATE: any = {
-    $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
-    client: {
-        auth: {}
-    },
-    plugins: {},
-    apiAuthentication: {
-        keys: [generateApiKey()]
-    }
-}
+        persistConfig(storagePath, config)
 
-const PRIVATE_KEY_PROMPTS: Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> = [
-    {
-        type: 'list',
-        name:'generateOrImportPrivateKey',
-        message: 'Do you want to generate a new Ethereum private key or import an existing one?',
-        choices: [PRIVATE_KEY_SOURCE_GENERATE, PRIVATE_KEY_SOURCE_IMPORT]
-    },
-    {
-        type: 'password',
-        name:'importPrivateKey',
-        message: 'Please provide the private key to import',
-        when: (answers: inquirer.Answers): boolean => {
-            return answers.generateOrImportPrivateKey === PRIVATE_KEY_SOURCE_IMPORT
-        },
-        validate: (input: string): string | boolean => {
+        log(`
+            >
+            > ~ *Congratulations, you've setup your Streamr node!*
+            > Your node address is ${chalk.greenBright(nodeAddress)}
+            > Your node's generated name is ${chalk.greenBright(getNodeMnemonic(privateKey))}
+        `)
+
+        if (operator) {
+            const resume = animateLine((spinner) =>
+                style(
+                    `> Your node address has *${spinner} MATIC* _– checking balance…_`
+                )
+            )
+
             try {
-                new Wallet(input)
-                return true
-            } catch (e: any) {
-                return 'Invalid private key provided.'
-            }
-        }
-    },
-    {
-        type: 'confirm',
-        name: 'revealGeneratedPrivateKey',
-        // eslint-disable-next-line max-len
-        message: 'We strongly recommend backing up your private key. It will be written into the config file, but would you also like to see this sensitive information on screen now?',
-        default: false,
-        when: (answers: inquirer.Answers): boolean => {
-            return answers.generateOrImportPrivateKey === PRIVATE_KEY_SOURCE_GENERATE
-        }
-    }
-]
+                const balance = await getNativeBalance(
+                    environmentId,
+                    nodeAddress
+                )
 
-const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> => {
-    const selectApiPluginsPrompt: inquirer.CheckboxQuestion = {
-        type: 'checkbox',
-        name: 'enabledApiPlugins',
-        message: 'Select the plugins to enable',
-        choices: Object.values(PLUGIN_NAMES)
-    }
+                const content = `Your node address has *${Number(
+                    utils.formatEther(balance)
+                ).toFixed(2)} MATIC*`
 
-    const portPrompts: Array<inquirer.Question> = Object.keys(DEFAULT_CONFIG_PORTS).map((key) => {
-        const name = PLUGIN_NAMES[key]
-        const defaultPort = DEFAULT_CONFIG_PORTS[key]
-        return {
-            type: 'input',
-            name: `${name}Port`,
-            message: `Provide a port for the ${name} Plugin [Enter for default: ${defaultPort}]`,
-            when: (answers: inquirer.Answers) => {
-                return answers.enabledApiPlugins.includes(name)
-            },
-            validate: (input: string | number): string | boolean => {
-                const MIN_PORT_VALUE = 1024
-                const MAX_PORT_VALUE = 49151
-                const portNumber = (typeof input === 'string') ? Number(input) : input
-                if (Number.isNaN(portNumber)) {
-                    return `Non-numeric value provided`
-                }
+                resume()
 
-                if (!Number.isInteger(portNumber)) {
-                    return `Non-integer value provided`
-                }
-
-                if (portNumber < MIN_PORT_VALUE || portNumber > MAX_PORT_VALUE) {
-                    return `Out of range port ${portNumber} provided (valid range ${MIN_PORT_VALUE}-${MAX_PORT_VALUE})`
-                }
-                return true
-            },
-            default: defaultPort
-        }
-    })
-
-    return [
-        selectApiPluginsPrompt,
-        ...portPrompts
-    ]
-}
-
-export const PROMPTS = {
-    privateKey: PRIVATE_KEY_PROMPTS,
-    plugins: createPluginPrompts(),
-}
-
-export const storagePathPrompts = [{
-    type: 'input',
-    name: 'storagePath',
-    message: 'Select a path to store the generated config in',
-    default: getDefaultFile()
-},
-{
-    type: 'confirm',
-    name: 'overwrite',
-    message: (answers: inquirer.Answers): string => `The selected destination ${answers.storagePath} already exists, do you want to overwrite it?`,
-    default: false,
-    when: (answers: inquirer.Answers): boolean => existsSync(answers.storagePath)
-}]
-
-export const getConfig = (privateKey: string, pluginsAnswers: PluginAnswers): any => {
-    const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
-    config.client.auth.privateKey = privateKey
-
-    const pluginKeys = Object.keys(PLUGIN_NAMES)
-    pluginKeys.forEach((pluginKey) => {
-        const pluginName = PLUGIN_NAMES[pluginKey]
-        const defaultPort = DEFAULT_CONFIG_PORTS[pluginKey]
-        if (pluginsAnswers.enabledApiPlugins && pluginsAnswers.enabledApiPlugins.includes(pluginName)) {
-            let pluginConfig = {}
-            const portNumber = parseInt(pluginsAnswers[`${pluginName}Port`])
-            if (portNumber !== defaultPort) {
-                const portObject = { port: portNumber }
-                if (pluginName === PLUGIN_NAMES.HTTP) {
-                    // the http plugin is special, it needs to be added to the config after the other plugins
-                    config.httpServer = portObject
+                if (balance.lt(MIN_BALANCE)) {
+                    log(`
+                        > ! ${content}. You'll need to fund it with a small amount of MATIC tokens.
+                    `)
                 } else {
-                    // user provided a custom value, fill in
-                    pluginConfig = portObject
+                    log(`> ${content}`)
                 }
+            } catch (e) {
+                resume()
+
+                log('> x Failed to fetch node\'s balance')
             }
-            config.plugins![pluginName] = pluginConfig
         }
+
+        if (operator) {
+            log('> ')
+
+            const resume = animateLine((spinner) =>
+                style(`
+                    > _Checking if your node has been paired with your Operator… ${spinner}_
+                `)
+            )
+
+            try {
+                const nodes = await getOperatorNodeAddresses(
+                    environmentId,
+                    operator
+                )
+
+                resume()
+
+                const hub =
+                    environmentId === 'polygon'
+                        ? 'https://streamr.network/hub'
+                        : 'https://mumbai.streamr.network/hub'
+
+                if (nodes !== undefined) {
+                    if (!nodes.includes(nodeAddress.toLowerCase())) {
+                        log(
+                            '> ! You will need to pair your node with your Operator:'
+                        )
+                    } else {
+                        log('> Your node has been paired with your Operator:')
+                    }
+                } else {
+                    log(`
+                        > x Your Operator could not be found on the **${capitalize(environmentId)}** network, see
+                    `)
+                }
+
+                log(`> *${hub}/network/operators/${operator}*`)
+            } catch (e) {
+                resume()
+
+                log('> x Failed to fetch operator nodes')
+            }
+        }
+
+        log(`
+            >
+            > You can start your Streamr node now with
+            > *streamr-broker ${storagePath}*
+            >
+            > For environment specific run instructions, see
+            > *https://docs.streamr.network/guides/how-to-run-streamr-node*
+            >
+        `)
+    } catch (e: any) {
+        if (typeof e.message === 'string' && /force closed/i.test(e.message)) {
+            /**
+             * Hitting ctrl+c key combination causes the `inquirer` library to throw
+             * the "User force closed the prompt" exception. Let's ignore it.
+             */
+            return
+        }
+
+        throw e
+    }
+}
+
+/**
+ * Generates a mnemonic for a given private key.
+ */
+export function getNodeMnemonic(privateKey: string): string {
+    return generateMnemonicFromAddress(
+        toEthereumAddress(new Wallet(privateKey).address)
+    )
+}
+
+/**
+ * Lets the user generate a private key or import an existing private key.
+ */
+async function getPrivateKey(): Promise<string> {
+    const privateKeySource = await select<'Generate' | 'Import'>({
+        message:
+            'Do you want to generate a new Ethereum private key or import an existing one?',
+        choices: [{ value: 'Generate' }, { value: 'Import' }],
     })
 
-    return config
-}
+    const privateKey = await (async () => {
+        if (privateKeySource === 'Generate') {
+            return Wallet.createRandom().privateKey
+        }
 
-const selectStoragePath = async (): Promise<StorageAnswers> => {
-    let answers
-    do {
-        answers = await inquirer.prompt(storagePathPrompts)
-    } while (answers.overwrite === false)
-    return answers as any
-}
+        return password({
+            message: 'Please provide the private key to import',
+            validate(value) {
+                try {
+                    new Wallet(value)
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const createStorageFile = (config: any, answers: StorageAnswers): string => {
-    const dirPath = path.dirname(answers.storagePath)
-    const dirExists = existsSync(dirPath)
-    if (!dirExists) {
-        mkdirSync(dirPath, {
-            recursive: true
+                    return true
+                } catch (_) {
+                    return 'Invalid private key provided.'
+                }
+            },
+        })
+    })()
+
+    if (privateKeySource === 'Generate') {
+        await confirm({
+            message:
+                // eslint-disable-next-line max-len
+                'We strongly recommend backing up your private key. It will be written into the config file, but would you also like to see this sensitive information on screen now?',
+            default: false,
+            transformer(value) {
+                return value ? `Your node's private key: ${privateKey}` : 'no'
+            },
         })
     }
-    writeFileSync(answers.storagePath, JSON.stringify(config, null, 4))
-    chmodSync(answers.storagePath, '600')
-    return answers.storagePath
+
+    return privateKey
 }
 
-export const getPrivateKey = (answers: PrivateKeyAnswers): string => {
-    return (answers.generateOrImportPrivateKey === PRIVATE_KEY_SOURCE_IMPORT) ? answers.importPrivateKey! : Wallet.createRandom().privateKey
+/**
+ * Lets the user decide the desired network for their node.
+ */
+async function getEnvironmentId(): Promise<EnvironmentId> {
+    return select<EnvironmentId>({
+        message:
+            'Which network do you want to configure your node to connect to?',
+        choices: [
+            { value: 'polygon', name: 'Streamr 1.0 mainnet + Polygon' },
+            {
+                value: 'mumbai',
+                name: 'Streamr 1.0 testing environment + Mumbai',
+            },
+        ],
+        default: 'polygon',
+    })
 }
 
-export const getNodeIdentity = (privateKey: string): {
-    mnemonic: string
-    networkExplorerUrl: string
-} => {
-    const nodeAddress = new Wallet(privateKey).address
-    const mnemonic = generateMnemonicFromAddress(toEthereumAddress(nodeAddress))
-    const networkExplorerUrl = `https://streamr.network/network-explorer/nodes/${nodeAddress}`
-    return {
-        mnemonic,
-        networkExplorerUrl
+/**
+ * Lets the user gather and configure desired operator plugins.
+ * @returns A valid Ethereum address if the user decide to participate
+ * in earning rewards, and `undefined` otherwise.
+ */
+async function getOperatorAddress(): Promise<string | undefined> {
+    const setupOperator = await confirm({
+        message:
+            'Do you wish to participate in earning rewards by staking on stream Sponsorships?',
+        default: true,
+    })
+
+    if (!setupOperator) {
+        return undefined
     }
+
+    const operator = await input({
+        message: 'Enter your Operator address:',
+        validate(value) {
+            return isAddress(value) ? true : 'Invalid ethereum address'
+        },
+    })
+
+    return operator.toLowerCase()
 }
 
-export const start = async (
-    getPrivateKeyAnswers = (): Promise<PrivateKeyAnswers> => inquirer.prompt(PRIVATE_KEY_PROMPTS) as any,
-    getPluginAnswers = (): Promise<PluginAnswers> => inquirer.prompt(createPluginPrompts()) as any,
-    getStorageAnswers = selectStoragePath,
-    logger = createLogger()
-): Promise<void> => {
-    try {
-        const privateKeyAnswers = await getPrivateKeyAnswers()
-        const privateKey = getPrivateKey(privateKeyAnswers)
-        if (privateKeyAnswers.revealGeneratedPrivateKey) {
-            logger.info(`This is your node's private key: ${privateKey}`)
+interface PubsubPlugin {
+    port?: number
+}
+
+type PubsubPluginKey = 'websocket' | 'mqtt' | 'http'
+
+const DEFAULT_PORTS: Record<PubsubPluginKey, number> = {
+    websocket: WebsocketConfigSchema.properties.port.default,
+    mqtt: MqttConfigSchema.properties.port.default,
+    http: BrokerConfigSchema.properties.httpServer.properties.port.default,
+}
+
+/**
+ * Lets the user select and configure desired pub/sub plugins.
+ */
+async function getPubsubPlugins(): Promise<Partial<Record<PubsubPluginKey, PubsubPlugin>>> {
+    const setupPubsub = await confirm({
+        message:
+            'Do you wish to use your node for data publishing/subscribing?',
+        default: true,
+    })
+
+    if (!setupPubsub) {
+        return {}
+    }
+
+    const keys = await checkbox<PubsubPluginKey>({
+        message: 'Select the plugins to enable',
+        choices: [
+            { value: 'websocket', name: 'WebSocket' },
+            { value: 'mqtt', name: 'MQTT' },
+            { value: 'http', name: 'HTTP' },
+        ],
+    })
+
+    const pubsubPlugins: Awaited<ReturnType<typeof getPubsubPlugins>> = {}
+
+    for (const key of keys) {
+        const defaultPort = DEFAULT_PORTS[key]
+
+        const port = Number(
+            await input({
+                message: `Provide a port for the ${key} plugin`,
+                default: defaultPort.toString(),
+                validate(value) {
+                    try {
+                        z.coerce
+                            .number({
+                                invalid_type_error:
+                                    'Non-numeric value provided',
+                            })
+                            .int('Non-integer value provided')
+                            .min(1024)
+                            .max(49151)
+                            .superRefine((value, ctx) => {
+                                const [pluginKey] =
+                                    Object.entries(pubsubPlugins).find(
+                                        ([pluginKey, plugin]) =>
+                                            value ===
+                                            (plugin.port ||
+                                                DEFAULT_PORTS[
+                                                    pluginKey as PubsubPluginKey
+                                                ])
+                                    ) || []
+
+                                if (pluginKey) {
+                                    ctx.addIssue({
+                                        code: z.ZodIssueCode.custom,
+                                        message: `Port ${value} is taken by ${pluginKey}`,
+                                    })
+                                }
+                            })
+                            .parse(value)
+
+                        return true
+                    } catch (e: unknown) {
+                        return (e as z.ZodError).issues
+                            .map(({ message }) => message)
+                            .join(', ')
+                    }
+                },
+            })
+        )
+
+        pubsubPlugins[key] = port !== defaultPort ? { port } : {}
+    }
+
+    return pubsubPlugins
+}
+
+/**
+ * Lets the user decide where to write the config file.
+ */
+async function getStoragePath(): Promise<string> {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+        const path = await input({
+            message: 'Select a path to store the generated config in',
+            default: getDefaultFile(),
+        })
+
+        const proceed =
+            !existsSync(path) ||
+            (await confirm({
+                message: `The selected destination ${path} already exists. Do you want to overwrite it?`,
+                default: false,
+            }))
+
+        if (proceed) {
+            return path
         }
-        const pluginsAnswers = await getPluginAnswers()
-        const config = getConfig(privateKey, pluginsAnswers)
-        const storageAnswers = await getStorageAnswers()
-        const storagePath = createStorageFile(config, storageAnswers)
-        logger.info('Welcome to the Streamr Network')
-        const { mnemonic, networkExplorerUrl } = getNodeIdentity(privateKey)
-        logger.info(`Your node's generated name is ${mnemonic}.`)
-        logger.info('View your node in the Network Explorer:')
-        logger.info(networkExplorerUrl)
-        logger.info('You can start the broker now with')
-        logger.info(`streamr-broker ${storagePath}`)
-    } catch (e: any) {
-        logger.error(`Broker Config Wizard encountered an error:\n${e.message}`)
     }
+}
+
+/**
+ * Writes the config into a file.
+ */
+function persistConfig(storagePath: string, config: ConfigFile): void {
+    const dirPath = path.dirname(storagePath)
+
+    if (!existsSync(dirPath)) {
+        mkdirSync(dirPath, {
+            recursive: true,
+        })
+    }
+
+    writeFileSync(storagePath, JSON.stringify(config, null, 4))
+
+    chmodSync(storagePath, '600')
+}
+
+/**
+ * Gets a wallet balance of the network-native token for the given
+ * wallet address.
+ */
+async function getNativeBalance(
+    environmentId: EnvironmentId,
+    address: string
+): Promise<BigNumber> {
+    const url = streamrConfig[environmentId].rpcEndpoints[0]?.url
+
+    if (!url || !/^https?:/i.test(url)) {
+        throw new Error('Invalid RPC')
+    }
+
+    return new providers.JsonRpcProvider(url).getBalance(address)
+}
+
+/**
+ * Gets an array of node addresses associated with the given operator
+ * contract address on the given network.
+ */
+async function getOperatorNodeAddresses(
+    environmentId: EnvironmentId,
+    operatorAddress: string
+): Promise<string[] | undefined> {
+    const url = streamrConfig[environmentId].theGraphUrl
+
+    const resp = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({
+            query: `query { operator(id: "${operatorAddress}") { nodes } }`,
+        }),
+    })
+
+    const { data } = z
+        .object({
+            data: z.object({
+                operator: z.union([
+                    z.null(),
+                    z.object({ nodes: z.array(z.string()) }),
+                ]),
+            }),
+        })
+        .parse(await resp.json())
+
+    return data.operator ? data.operator.nodes : undefined
+}
+
+/**
+ * Prints out an animated busyness indicator and does not move on
+ * to the next line until torn down.
+ * @returns A teardown callback that cleans up the line and brings
+ * the cursor to BOL.
+ */
+function animateLine(fn: (spinner: string) => string): () => void {
+    const frames = '◢◣◤◥'
+
+    let frameNo = 0
+
+    function tick() {
+        /**
+         * `isTTY` is false in CI which also means `clearLine` and
+         * `cursorTo` are not functions.
+         */
+        if (process.stdout.isTTY) {
+            process.stdout.clearLine(0)
+
+            process.stdout.cursorTo(0)
+        }
+
+        process.stdout.write(fn(frames[frameNo]))
+
+        frameNo = (frameNo + 1) % frames.length
+    }
+
+    tick()
+
+    const intervalId = setInterval(tick, 400)
+
+    return () => {
+        clearInterval(intervalId)
+
+        /**
+         * `isTTY` is false in CI which also means `clearLine` and
+         * `cursorTo` are not functions.
+         */
+        if (process.stdout.isTTY) {
+            process.stdout.clearLine(0)
+
+            process.stdout.cursorTo(0)
+        }
+    }
+}
+
+/**
+ * Formats the given message with colors and styles with the use
+ * of a markdown-ish syntax, like:
+ * - \*\*bold\*\*,
+ * - \_dim\_,
+ * - \*bright white\*,
+ * - \> indent normally,
+ * - \> ! indent as a warning,
+ * - \> x indent as an error, and
+ * - \> ~ indent as a confirmation or success.
+ */
+function style(message: string): string {
+    let result = message
+
+    const filters: [RegExp, chalk.Chalk][] = [
+        [/\*\*([^*]+)\*\*/g, chalk.bold],
+        [/\*([^*]+)\*/g, chalk.whiteBright],
+        [/_([^_]+)_/g, chalk.gray],
+    ]
+
+    for (const [regexp, colorer] of filters) {
+        result = result.replace(regexp, (_, m) => colorer(m))
+    }
+
+    return result
+        .replace(
+            /^[^\S\r\n]*(>?)[^\S\r\n]*([!x~]?)[^\S\r\n]*/gim,
+            (_, indent, decorator) =>
+                [
+                    indent && chalk.bgGray(' '),
+                    decorator === '!' && chalk.yellowBright.bold(' ! '),
+                    decorator === 'x' && chalk.redBright.bold(' ✗ '),
+                    decorator === '~' && chalk.greenBright.bold(' ✓ '),
+                    decorator === '' && '   ',
+                ]
+                    .filter(Boolean)
+                    .join('')
+        )
+        .trim()
+}
+
+function log(message = ''): void {
+    console.info(style(message))
 }

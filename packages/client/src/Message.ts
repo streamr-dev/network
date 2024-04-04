@@ -1,5 +1,5 @@
 import { EthereumAddress } from '@streamr/utils'
-import { StreamID, StreamMessage } from '@streamr/protocol'
+import { SignatureType, StreamID, StreamMessage } from '@streamr/protocol'
 
 /**
  * Represents a message in the Streamr Network.
@@ -8,7 +8,7 @@ import { StreamID, StreamMessage } from '@streamr/protocol'
  */
 export interface Message {
     /**
-     * The message contents / payload.
+     * The message contents / payload. Given as JSON or Uint8Array
      */
     content: unknown
 
@@ -38,6 +38,11 @@ export interface Message {
     signature: Uint8Array
 
     /**
+     * Signature method used to sign message.
+     */
+    signatureType: 'LEGACY_SECP256K1' | 'SECP256K1' | 'ERC_1271'
+
+    /**
      * Publisher of message.
      */
     publisherId: EthereumAddress
@@ -47,11 +52,29 @@ export interface Message {
      */
     msgChainId: string
 
+    /**
+     * Identifiers group key used to encrypt the message.
+     */
+    groupKeyId: string | undefined
+
     /** @internal */
     streamMessage: StreamMessage // TODO remove this field if possible
 }
 
 export type MessageMetadata = Omit<Message, 'content'>
+
+function signatureTypeToString(signatureType: SignatureType): 'LEGACY_SECP256K1' | 'SECP256K1' | 'ERC_1271' {
+    switch (signatureType) {
+        case SignatureType.LEGACY_SECP256K1:
+            return 'LEGACY_SECP256K1'
+        case SignatureType.SECP256K1:
+            return 'SECP256K1'
+        case SignatureType.ERC_1271:
+            return 'ERC_1271'
+        default:
+            throw new Error(`Unknown signature type: ${signatureType}`)
+    }
+}
 
 export const convertStreamMessageToMessage = (msg: StreamMessage): Message => {
     return {
@@ -61,8 +84,10 @@ export const convertStreamMessageToMessage = (msg: StreamMessage): Message => {
         timestamp: msg.getTimestamp(),
         sequenceNumber: msg.getSequenceNumber(),
         signature: msg.signature,
+        signatureType: signatureTypeToString(msg.signatureType),
         publisherId: msg.getPublisherId(),
         msgChainId: msg.getMsgChainId(),
+        groupKeyId: msg.groupKeyId,
         streamMessage: msg
         // TODO add other relevant fields (could update some test assertions to
         // use those keys instead of getting the fields via from streamMessage property)

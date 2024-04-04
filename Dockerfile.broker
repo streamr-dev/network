@@ -1,12 +1,13 @@
-FROM node:18-bullseye as build
+ARG NODE_VERSION=20
+FROM node:${NODE_VERSION}-bullseye as build
 WORKDIR /usr/src/network
 COPY . .
 RUN --mount=type=cache,target=/root/.npm \
-	npm run bootstrap-pkg --package=streamr-client && \
-	npm run bootstrap-pkg --package=streamr-broker && \
-	npm run prune-pkg -- streamr-broker
+	npm run bootstrap-pkg --package=@streamr/sdk && \
+	npm run bootstrap-pkg --package=@streamr/node && \
+	npm run prune-pkg -- @streamr/node
 
-FROM node:18-bullseye-slim
+FROM node:${NODE_VERSION}-bullseye-slim
 ARG NODE_ENV
 ENV NODE_ENV=${NODE_ENV:-production}
 RUN apt-get update && apt-get --assume-yes --no-install-recommends install \
@@ -28,4 +29,4 @@ EXPOSE 32200/tcp
 WORKDIR /home/streamr/network/packages/broker
 
 # start broker from default config (needs mounted volume, e.g. docker run -v $(cd ~/.streamr/config;pwd):/home/streamr/.streamr/config IMAGE
-CMD ["/usr/local/bin/npm", "exec", "streamr-broker"]
+CMD ["/usr/local/bin/npm", "exec", "-c", "streamr-broker"]

@@ -1,9 +1,8 @@
-import { ListeningRpcCommunicator, Simulator, SimulatorTransport } from '@streamr/dht'
+import { ListeningRpcCommunicator, Simulator, SimulatorTransport, getNodeIdFromPeerDescriptor } from '@streamr/dht'
 import { range } from 'lodash'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { NodeList } from '../../src/logic/NodeList'
 import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
-import { createMockPeerDescriptor, createMockDeliveryRpcRemote, mockConnectionLocker } from '../utils/utils'
+import { createMockPeerDescriptor, createMockContentDeliveryRpcRemote } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('Handshaker', () => {
@@ -14,7 +13,9 @@ describe('Handshaker', () => {
     const maxNeighborCount = 4
     const streamPartId = StreamPartIDUtils.parse('stream#0')
 
-    let targetNeighbors: NodeList
+    let neighbors: NodeList
+    let leftNodeView: NodeList
+    let rightNodeView: NodeList
     let nearbyNodeView: NodeList
     let randomNodeView: NodeList
 
@@ -28,20 +29,24 @@ describe('Handshaker', () => {
         const rpcCommunicator = new ListeningRpcCommunicator(streamPartId, simulatorTransport)
 
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
-        targetNeighbors = new NodeList(nodeId, 10)
+        neighbors = new NodeList(nodeId, 10)
+        leftNodeView = new NodeList(nodeId, 20)
+        rightNodeView = new NodeList(nodeId, 20)
         nearbyNodeView = new NodeList(nodeId, 20)
         randomNodeView = new NodeList(nodeId, 20)
 
         handshaker = new Handshaker({
             localPeerDescriptor: peerDescriptor,
             streamPartId,
-            connectionLocker: mockConnectionLocker,
-            targetNeighbors,
+            neighbors,
+            leftNodeView,
+            rightNodeView,
             nearbyNodeView,
             randomNodeView,
             rpcCommunicator,
             maxNeighborCount,
-            rpcRequestTimeout: 5000
+            rpcRequestTimeout: 5000,
+            ongoingHandshakes: new Set()
         })
     })
 
@@ -56,7 +61,7 @@ describe('Handshaker', () => {
     })
 
     it('attemptHandshakesOnContact with known nodes that cannot be connected to', async () => {
-        range(2).forEach(() => nearbyNodeView.add(createMockDeliveryRpcRemote()))
+        range(2).forEach(() => randomNodeView.add(createMockContentDeliveryRpcRemote()))
         const res = await handshaker.attemptHandshakesOnContacts([])
         expect(res.length).toEqual(2)
     })

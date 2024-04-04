@@ -1,5 +1,5 @@
 import { Logger } from '@streamr/utils'
-import StreamrClient from 'streamr-client'
+import StreamrClient from '@streamr/sdk'
 import { ContractFacade } from './ContractFacade'
 
 const logger = new Logger(module)

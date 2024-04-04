@@ -1,8 +1,8 @@
 import { createServer as createHttpServer, Server as HttpServer, IncomingMessage, ServerResponse } from 'http'
 import { createServer as createHttpsServer, Server as HttpsServer } from 'https'
 import EventEmitter from 'eventemitter3'
-import { server as WsServer } from 'websocket'
-import { ServerWebsocket } from './ServerWebsocket'
+import WebSocket from 'ws'
+import { WebsocketServerConnection } from './WebsocketServerConnection'
 import { ConnectionSourceEvents } from '../IConnectionSource'
 import { Logger, asAbortable } from '@streamr/utils'
 import { createSelfSignedCertificate } from '@streamr/autocertifier-client' 
@@ -10,16 +10,10 @@ import { WebsocketServerStartError } from '../../helpers/errors'
 import { PortRange, TlsCertificate } from '../ConnectionManager'
 import { range } from 'lodash'
 import fs from 'fs'
-import { UUID } from '../../helpers/UUID'
+import { v4 as uuid } from 'uuid'
+import { parse } from 'url'
 
 const logger = new Logger(module)
-
-// NodeJsWsServer is declared as a global in test-browser Electron tests
-// in preload.js using "window.NodeJsWsServer = require('websocket').server".
-// This is done in order to use the real nodejs websocket server in tests
-// instead of a dummy polyfill.
-
-declare class NodeJsWsServer extends WsServer { }
 
 interface WebsocketServerConfig {
     portRange: PortRange
@@ -31,26 +25,20 @@ interface WebsocketServerConfig {
 export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
 
     private httpServer?: HttpServer | HttpsServer
-    private wsServer?: WsServer
+    private wsServer?: WebSocket.Server
     private readonly abortController = new AbortController()
-    private readonly portRange: PortRange
-    private readonly tlsCertificate?: TlsCertificate
-    private readonly enableTls: boolean
-    private readonly maxMessageSize: number
+    private readonly config: WebsocketServerConfig
 
     constructor(config: WebsocketServerConfig) {
         super()
-        this.portRange = config.portRange
-        this.enableTls = config.enableTls
-        this.tlsCertificate = config.tlsCertificate
-        this.maxMessageSize = config.maxMessageSize ?? 1048576
+        this.config = config
     }
 
     public async start(): Promise<number> {
-        const ports = range(this.portRange.min, this.portRange.max + 1)
+        const ports = range(this.config.portRange.min, this.config.portRange.max + 1)
         for (const port of ports) {
             try {
-                await asAbortable(this.startServer(port, this.enableTls), this.abortController.signal)
+                await asAbortable(this.startServer(port, this.config.enableTls), this.abortController.signal)
                 return port
             } catch (err) {
                 if (err.originalError?.code === 'EADDRINUSE') {
@@ -60,7 +48,9 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
                 }
             }
         }
-        throw new WebsocketServerStartError(`Failed to start WebSocket server on any port in range: ${this.portRange.min}-${this.portRange.min}`)
+        throw new WebsocketServerStartError(
+            `Failed to start WebSocket server on any port in range: ${this.config.portRange.min}-${this.config.portRange.min}`
+        )
     }
 
     // If tlsCertificate has been given the tls boolean is ignored
@@ -72,15 +62,16 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
             response.end()
         }
         return new Promise((resolve, reject) => {
-            if (this.tlsCertificate) {
+            if (this.config.tlsCertificate) {
                 this.httpServer = createHttpsServer({
-                    key: fs.readFileSync(this.tlsCertificate.privateKeyFileName),
-                    cert: fs.readFileSync(this.tlsCertificate.certFileName)
+                    key: fs.readFileSync(this.config.tlsCertificate.privateKeyFileName),
+                    cert: fs.readFileSync(this.config.tlsCertificate.certFileName)
                 }, requestListener)
             } else if (!tls) {
                 this.httpServer = createHttpServer(requestListener)
             } else {
-                const certificate = createSelfSignedCertificate('streamr-self-signed-' + new UUID().toString(), 1000)
+                // TODO use config option or named constant?
+                const certificate = createSelfSignedCertificate('streamr-self-signed-' + uuid(), 1000)
                 this.httpServer = createHttpsServer({
                     key: certificate.serverKey,
                     cert: certificate.serverCert
@@ -91,22 +82,26 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
                 return true
             }
 
-            this.wsServer = this.createWsServer(this.httpServer)
+            this.wsServer = this.createWsServer()
             
-            this.wsServer.on('request', (request) => {
+            this.wsServer.on('connection', (ws: WebSocket, request: IncomingMessage) => {
+                logger.trace(`New connection from ${request.socket.remoteAddress}`)
                 if (!originIsAllowed()) {
                     // Make sure we only accept requests from an allowed origin
-                    request.reject()
-                    logger.trace('IConnection from origin ' + request.origin + ' rejected.')
+                    ws.close()
+                    logger.trace('IConnection from origin ' + request.headers.origin + ' rejected.')
                     return
                 }
-                
-                const connection = request.accept(undefined, request.origin)
-                
-                logger.trace('IConnection accepted.')
-
-                this.emit('connected', new ServerWebsocket(connection, request.resourceURL))
+                this.emit('connected', new WebsocketServerConnection(ws, parse(request.url!), request.socket.remoteAddress!))
             })
+
+            this.httpServer.on('upgrade', (request, socket, head) => {
+                logger.trace('Received upgrade request for ' + request.url)
+                this.wsServer!.handleUpgrade(request, socket, head, (ws: WebSocket) => {
+                    this.wsServer!.emit('connection', ws, request)
+                })
+            })
+
             this.httpServer.once('error', (err: Error) => {
                 reject(new WebsocketServerStartError('Starting Websocket server failed', err))
             })
@@ -136,28 +131,30 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
         this.abortController.abort()
         this.removeAllListeners()
         return new Promise((resolve, _reject) => {
-            this.wsServer?.shutDown()
-            this.httpServer?.close(() => {
+            this.wsServer!.close()
+            for (const ws of this.wsServer!.clients) {
+                ws.terminate()
+            }
+            this.httpServer?.once('close', () => {
+                // removeAllListeners is maybe not needed?
+                this.httpServer?.removeAllListeners()
                 resolve()
             })
+            this.httpServer?.close()
+            // the close method "Stops the server from accepting new connections and closes all 
+            // connections connected to this server which are not sending a request or waiting for a 
+            // response." (https://nodejs.org/api/http.html#serverclosecallback)
+            // i.e. we need to call closeAllConnections() to close the rest of the connections
+            // (in practice this closes the active websocket connections)
+            this.httpServer?.closeAllConnections()
         })
     }
 
-    private createWsServer(httpServer: HttpServer | HttpsServer): WsServer {
-        // Use the real nodejs WebSocket server in Electron tests
-
-        if (typeof NodeJsWsServer !== 'undefined') {
-            return new NodeJsWsServer({
-                httpServer,
-                autoAcceptConnections: false,
-                maxReceivedMessageSize: this.maxMessageSize
-            })
-        } else {
-            return this.wsServer = new WsServer({
-                httpServer,
-                autoAcceptConnections: false,
-                maxReceivedMessageSize: this.maxMessageSize
-            })
-        }
+    private createWsServer(): WebSocket.Server {
+        const maxPayload = this.config.maxMessageSize ?? 1048576
+        return this.wsServer = new WebSocket.Server({
+            noServer: true,
+            maxPayload
+        })
     }
 }

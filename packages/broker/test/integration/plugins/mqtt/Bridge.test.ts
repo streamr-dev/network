@@ -1,4 +1,4 @@
-import { Stream, StreamrClient } from 'streamr-client'
+import { Stream, StreamrClient } from '@streamr/sdk'
 import mqtt from 'async-mqtt'
 import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
 import { Broker } from '../../../../src/broker'
@@ -11,7 +11,7 @@ const MQTT_PLUGIN_PORT = 12470
 jest.setTimeout(30000)
 
 const createMqttClient = () => {
-    return mqtt.connectAsync(`mqtt://localhost:${MQTT_PLUGIN_PORT}`)
+    return mqtt.connectAsync(`mqtt://127.0.0.1:${MQTT_PLUGIN_PORT}`)
 }
 
 describe('MQTT Bridge', () => {

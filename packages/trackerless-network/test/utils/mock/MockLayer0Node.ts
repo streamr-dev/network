@@ -26,7 +26,7 @@ export class MockLayer0Node extends EventEmitter implements Layer0Node {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async getDataFromDht(): Promise<DataEntry[]> {
+    async fetchDataFromDht(): Promise<DataEntry[]> {
         return []
     }
 
@@ -41,11 +41,15 @@ export class MockLayer0Node extends EventEmitter implements Layer0Node {
 
     // eslint-disable-next-line class-methods-use-this
     async send(): Promise<void> {
-        return
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getAllConnectionPeerDescriptors(): PeerDescriptor[] {
+    getConnections(): PeerDescriptor[] {
+        return []
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    getNeighbors(): PeerDescriptor[] {
         return []
     }
 

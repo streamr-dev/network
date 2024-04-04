@@ -1,10 +1,9 @@
 import { StreamMessage, StreamPartID } from '@streamr/protocol'
-import { PeerDescriptor } from '@streamr/dht'
+import { DhtAddress, PeerDescriptor } from '@streamr/dht'
 import { StreamMessageTranslator } from './logic/protocol-integration/stream-message/StreamMessageTranslator'
-import { NetworkOptions, NetworkStack } from './NetworkStack'
+import { NetworkOptions, NetworkStack, NodeInfo } from './NetworkStack'
 import { EthereumAddress, Logger, MetricsContext } from '@streamr/utils'
 import { ProxyDirection } from './proto/packages/trackerless-network/protos/NetworkRpc'
-import { NodeID } from './identifiers'
 import { pull } from 'lodash'
 
 export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
@@ -24,7 +23,7 @@ export class NetworkNode {
     /** @internal */
     constructor(stack: NetworkStack) {
         this.stack = stack
-        this.stack.getStreamrNode().on('newMessage', (msg) => {
+        this.stack.getContentDeliveryManager().on('newMessage', (msg) => {
             if (this.messageListeners.length > 0) {
                 try {
                     const translated = StreamMessageTranslator.toClientProtocol(msg)
@@ -32,7 +31,7 @@ export class NetworkNode {
                         listener(translated)
                     }
                 } catch (err) {
-                    logger.trace(`Could not translate message: ${err}`)
+                    logger.trace(`Could not translate message`, { err })
                 }
             }
         })
@@ -43,7 +42,7 @@ export class NetworkNode {
     }
 
     async inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
-        return this.stack.getStreamrNode().inspect(node, streamPartId)
+        return this.stack.getContentDeliveryManager().inspect(node, streamPartId)
     }
 
     async broadcast(streamMessage: StreamMessage): Promise<void> {
@@ -62,11 +61,11 @@ export class NetworkNode {
         userId: EthereumAddress,
         connectionCount?: number
     ): Promise<void> {
-        await this.stack.getStreamrNode().setProxies(streamPartId, nodes, direction, userId, connectionCount)
+        await this.stack.getContentDeliveryManager().setProxies(streamPartId, nodes, direction, userId, connectionCount)
     }
 
     isProxiedStreamPart(streamPartId: StreamPartID): boolean {
-        return this.stack.getStreamrNode().isProxiedStreamPart(streamPartId)
+        return this.stack.getContentDeliveryManager().isProxiedStreamPart(streamPartId)
     }
 
     addMessageListener(cb: (msg: StreamMessage) => void): void {
@@ -74,7 +73,7 @@ export class NetworkNode {
     }
 
     setStreamPartEntryPoints(streamPartId: StreamPartID, contactPeerDescriptors: PeerDescriptor[]): void {
-        this.stack.getStreamrNode()!.setStreamPartEntryPoints(streamPartId, contactPeerDescriptors)
+        this.stack.getContentDeliveryManager().setStreamPartEntryPoints(streamPartId, contactPeerDescriptors)
     }
 
     removeMessageListener(cb: (msg: StreamMessage) => void): void {
@@ -85,15 +84,15 @@ export class NetworkNode {
         if (this.stopped) {
             return
         }
-        await this.stack.getStreamrNode().leaveStreamPart(streamPartId)
+        await this.stack.getContentDeliveryManager().leaveStreamPart(streamPartId)
     }
 
-    getNeighbors(streamPartId: StreamPartID): ReadonlyArray<NodeID> {
-        return this.stack.getStreamrNode().getNeighbors(streamPartId)
+    getNeighbors(streamPartId: StreamPartID): ReadonlyArray<DhtAddress> {
+        return this.stack.getContentDeliveryManager().getNeighbors(streamPartId)
     }
 
     hasStreamPart(streamPartId: StreamPartID): boolean {
-        return this.stack.getStreamrNode().hasStreamPart(streamPartId)
+        return this.stack.getContentDeliveryManager().hasStreamPart(streamPartId)
     }
 
     async stop(): Promise<void> {
@@ -109,12 +108,20 @@ export class NetworkNode {
         return this.stack.getMetricsContext()
     }
 
-    getNodeId(): NodeID {
-        return this.stack.getStreamrNode().getNodeId()
+    getNodeId(): DhtAddress {
+        return this.stack.getContentDeliveryManager().getNodeId()
+    }
+
+    getOptions(): NetworkOptions {
+        return this.stack.getOptions()
     }
 
     getStreamParts(): StreamPartID[] {
-        return this.stack.getStreamrNode().getStreamParts()
+        return this.stack.getContentDeliveryManager().getStreamParts()
+    }
+
+    async fetchNodeInfo(node: PeerDescriptor): Promise<NodeInfo> {
+        return this.stack.fetchNodeInfo(node)
     }
 
     // eslint-disable-next-line class-methods-use-this

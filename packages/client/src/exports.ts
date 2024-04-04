@@ -19,10 +19,10 @@ export {
     UserPermissionAssignment,
     PublicPermissionAssignment
 } from './permission'
-export { StreamCreationEvent } from './registry/StreamRegistry'
-export { StorageNodeAssignmentEvent } from './registry/StreamStorageRegistry'
-export { StorageNodeMetadata } from './registry/StorageNodeRegistry'
-export { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './registry/searchStreams'
+export { StreamCreationEvent } from './contracts/StreamRegistry'
+export { StorageNodeAssignmentEvent } from './contracts/StreamStorageRegistry'
+export { StorageNodeMetadata } from './contracts/StorageNodeRegistry'
+export { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './contracts/searchStreams'
 export {
     StreamrClientConfig,
     ChainConnectionInfo,
@@ -36,7 +36,9 @@ export {
     NetworkPeerDescriptor,
     ConnectivityMethod,
     NetworkNodeType,
-    StrictStreamrClientConfig
+    StrictStreamrClientConfig,
+    EnvironmentId,
+    EntryPointDiscovery
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
@@ -47,7 +49,8 @@ export { formStorageNodeAssignmentStreamId } from './utils/utils'
 export { SignerWithProvider } from './Authentication'
 
 export type { StreamID, StreamPartID } from '@streamr/protocol'
-export { NodeID, ProxyDirection } from '@streamr/trackerless-network'
+export { DhtAddress } from '@streamr/dht'
+export { ProxyDirection } from '@streamr/trackerless-network'
 export type { BrandedString, EthereumAddress, LogLevel, Metric, MetricsContext, MetricsDefinition, MetricsReport } from '@streamr/utils'
 
 // These are currently exported because NetworkNodeStub uses methods which operate on StreamMessage.
@@ -70,3 +73,4 @@ export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht'
 export type { ConnectionInfo } from '@ethersproject/web'
 export type { Signer } from '@ethersproject/abstract-signer'
 export type { ExternalProvider, Provider } from '@ethersproject/providers'
+export type { Overrides } from '@ethersproject/contracts'

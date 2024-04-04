@@ -1,11 +1,12 @@
 import { createIsLeaderFn } from '../../../../src/plugins/operator/createIsLeaderFn'
-import { NodeID, StreamrClient } from 'streamr-client'
+import { StreamrClient } from '@streamr/sdk'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { Logger } from '@streamr/utils'
+import { DhtAddress } from '@streamr/dht'
 
-const MY_NODE_ID = '0x1111' as NodeID
-const LEADER_NODE_ID = '0x2222' as NodeID
+const MY_NODE_ID = '0x1111' as DhtAddress
+const LEADER_NODE_ID = '0x2222' as DhtAddress
 
 describe(createIsLeaderFn, () => {
     let client: MockProxy<StreamrClient>
@@ -34,7 +35,7 @@ describe(createIsLeaderFn, () => {
         const logger = mock<Logger>()
         const isLeader = await createIsLeaderFn(client, operatorFleetState, logger)
 
-        operatorFleetState.getLeaderNodeId.mockReturnValueOnce('leaderNodeId' as NodeID)
+        operatorFleetState.getLeaderNodeId.mockReturnValueOnce('leaderNodeId' as DhtAddress)
         isLeader()
         expect(logger.debug).toHaveBeenCalled()
     })

@@ -18,6 +18,24 @@ export type HasSession = (request: HasSessionRequest, context: ServerCallContext
 
 const logger = new Logger(module)
 
+const ensureConfigFileWritable = (directory: string): void => {
+    const baseDirectory = getBaseDirectory(directory)
+    fs.accessSync(baseDirectory, fs.constants.W_OK | fs.constants.R_OK)
+    logger.trace(`Directory ${baseDirectory} is readable and writable`)
+}
+
+const getBaseDirectory = (directory: string): string => {
+    const subDirs = directory.split(path.sep)
+    do {
+        const current = subDirs.join(path.sep)
+        if (fs.existsSync(current)) {
+            return current
+        }
+        subDirs.pop()
+    } while (subDirs.length > 0)
+    return path.sep
+}
+
 export const SERVICE_ID = 'system/auto-certificer'
 const ONE_DAY = 1000 * 60 * 60 * 24
 const MAX_INT_32 = 2147483647
@@ -104,10 +122,13 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
 
         logger.info(updateIn + ' milliseconds until certificate update')
         // TODO: use tooling from @streamr/utils to set the timeout with an abortController.
-        this.updateTimeout = setTimeout(this.ensureCertificateValidity, updateIn)
+        this.updateTimeout = setTimeout(() => this.ensureCertificateValidity(), updateIn)
     }
 
     private createCertificate = async (): Promise<void> => {
+        const dir = path.dirname(this.configFile)
+        ensureConfigFileWritable(dir)
+
         const sessionId = await this.restClient.createSession()
         let certifiedSubdomain: CertifiedSubdomain
 
@@ -118,7 +139,6 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
         } finally {
             this.ongoingSessions.delete(sessionId)
         }
-        const dir = path.dirname(this.configFile)
         // TODO: use async fs methods?
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true })
@@ -138,7 +158,7 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
 
         const oldCertifiedSubdomain = JSON.parse(fs.readFileSync(this.configFile, 'utf8')) as CertifiedSubdomain
         const updatedCertifiedSubdomain = await this.restClient.updateCertificate(oldCertifiedSubdomain.fqdn.split('.')[0],
-            this.streamrWebSocketPort, oldCertifiedSubdomain.authenticationToken, sessionId)
+            this.streamrWebSocketPort, sessionId, oldCertifiedSubdomain.authenticationToken)
 
         this.ongoingSessions.delete(sessionId)
 
@@ -176,11 +196,11 @@ export class AutoCertifierClient extends EventEmitter<AutoCertifierClientEvents>
     // IAutoCertifierRpc implementation
     // TODO: could move to the DHT package or move all rpc related logic here from AutoCertifierClientFacade in DHT 
     async hasSession(request: HasSessionRequest): Promise<HasSessionResponse> {
-        logger.trace('hasSession() called ' + this.ongoingSessions.size + ' ongoing sessions')
+        logger.info('hasSession() called ' + this.ongoingSessions.size + ' ongoing sessions')
         if (this.ongoingSessions.has(request.sessionId)) {
             return { sessionId: request.sessionId }
         } else {
-            throw `Session not found ${request.sessionId}`
+            throw new Error(`Session not found ${request.sessionId}`)
         }
     }
 }

@@ -1,7 +1,7 @@
 // check esm works, as native and via webpack + babel. Also see typescript.ts
-import DefaultExport, * as NamedExports from 'streamr-client'
+import DefaultExport, * as NamedExports from '@streamr/sdk'
 
-console.info('import DefaultExport, * as NamedExports from \'streamr-client\':', { DefaultExport, NamedExports })
+console.info('import DefaultExport, * as NamedExports from \'@streamr/sdk\':', { DefaultExport, NamedExports })
 
 const StreamrClient = DefaultExport
 

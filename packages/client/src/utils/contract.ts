@@ -1,4 +1,4 @@
-import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
+import { Contract, ContractReceipt, ContractTransaction } from 'ethers'
 import { initEventGateway } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import shuffle from 'lodash/shuffle'
@@ -139,8 +139,16 @@ export const createDecoratedContract = <T extends Contract>(
     const result: any = {
         eventEmitter
     }
+
+    function getAllPropertyNames(obj: object): string[] {
+        const proto = Object.getPrototypeOf(obj)
+        const inherited = (proto) ? getAllPropertyNames(proto) : []
+        return [...new Set(Object.getOwnPropertyNames(obj).concat(inherited))]
+    }
+
     // copy own properties and inherited properties (e.g. contract.removeAllListeners)
-    for (const key in contract) {
+    // eslint-disable-next-line no-prototype-builtins
+    for (const key of getAllPropertyNames(contract)) {
         result[key] = methods[key] !== undefined ? methods[key] : contract[key]
     }
     return result

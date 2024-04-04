@@ -1,15 +1,25 @@
 import { keyToArrayIndex, toEthereumAddress } from '@streamr/utils'
 import random from 'lodash/random'
-import { ContentType, EncryptionType, MAX_PARTITION_COUNT, StreamMessage, StreamMessageType, toStreamID } from '@streamr/protocol'
-import { fastWallet } from '@streamr/test-utils'
+import {
+    ContentType,
+    EncryptionType,
+    MAX_PARTITION_COUNT,
+    SignatureType,
+    StreamMessage,
+    StreamMessageType,
+    toStreamID
+} from '@streamr/protocol'
+import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { PublishMetadata } from '../../src/publish/Publisher'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { MessageFactory, MessageFactoryOptions } from '../../src/publish/MessageFactory'
-import { StreamRegistry } from '../../src/registry/StreamRegistry'
+import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
 import { merge, utf8ToBinary } from '@streamr/utils'
+import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
+import { mock } from 'jest-mock-extended'
 
 const WALLET = fastWallet()
 const STREAM_ID = toStreamID('/path', toEthereumAddress(WALLET.address))
@@ -21,6 +31,7 @@ const GROUP_KEY = GroupKey.generate()
 const createMessageFactory = async (opts?: {
     streamRegistry?: StreamRegistry
     groupKeyQueue?: GroupKeyQueue
+    erc1271ContractFacade?: ERC1271ContractFacade
 }) => {
     const authentication = createPrivateKeyAuthentication(WALLET.privateKey, undefined as any)
     return new MessageFactory(
@@ -33,7 +44,8 @@ const createMessageFactory = async (opts?: {
                     isPublicStream: false,
                     isStreamPublisher: true
                 }),
-                groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY)
+                groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY),
+                erc1271ContractFacade: mock<ERC1271ContractFacade>()
             },
             opts
         )
@@ -42,9 +54,10 @@ const createMessageFactory = async (opts?: {
 
 const createMessage = async (
     opts: Omit<PublishMetadata, 'timestamp'> & { timestamp?: number, explicitPartition?: number },
-    messageFactory: MessageFactory
+    messageFactory: MessageFactory,
+    content: unknown | Uint8Array = CONTENT
 ): Promise<StreamMessage> => {
-    return messageFactory.createMessage(CONTENT, merge(
+    return messageFactory.createMessage(content, merge(
         {
             timestamp: TIMESTAMP
         },
@@ -66,15 +79,70 @@ describe('MessageFactory', () => {
                 streamPartition: expect.toBeWithin(0, PARTITION_COUNT),
                 timestamp: TIMESTAMP
             },
-            prevMsgRef: null,
+            prevMsgRef: undefined,
             messageType: StreamMessageType.MESSAGE,
             encryptionType: EncryptionType.AES,
             groupKeyId: GROUP_KEY.id,
-            newGroupKey: null,
+            newGroupKey: undefined,
             signature: expect.any(Uint8Array),
+            signatureType: SignatureType.SECP256K1,
             contentType: ContentType.JSON,
-            serializedContent: expect.any(Uint8Array)
+            content: expect.any(Uint8Array)
         })
+    })
+
+    it('happy path: ERC-1271', async () => {
+        const contractAddress = randomEthereumAddress()
+        const erc1271ContractFacade = mock<ERC1271ContractFacade>()
+        erc1271ContractFacade.isValidSignature.mockResolvedValueOnce(true)
+        const messageFactory = await createMessageFactory({
+            erc1271ContractFacade
+        })
+        const msg = await createMessage({
+            erc1271Contract: contractAddress
+        }, messageFactory)
+        expect(msg).toMatchObject({
+            messageId: {
+                msgChainId: expect.any(String),
+                publisherId: contractAddress,
+                sequenceNumber: 0,
+                streamId: STREAM_ID,
+                streamPartition: expect.toBeWithin(0, PARTITION_COUNT),
+                timestamp: TIMESTAMP
+            },
+            prevMsgRef: undefined,
+            messageType: StreamMessageType.MESSAGE,
+            encryptionType: EncryptionType.AES,
+            groupKeyId: GROUP_KEY.id,
+            newGroupKey: undefined,
+            signature: expect.any(Uint8Array),
+            signatureType: SignatureType.ERC_1271,
+            contentType: ContentType.JSON,
+            content: expect.any(Uint8Array)
+        })
+    })
+
+    it('throws if given erc1271Contract that is not signer for', async () => {
+        const contractAddress = randomEthereumAddress()
+        const erc1271ContractFacade = mock<ERC1271ContractFacade>()
+        erc1271ContractFacade.isValidSignature.mockResolvedValueOnce(false)
+        const messageFactory = await createMessageFactory({
+            erc1271ContractFacade
+        })
+        await expect(() =>
+            createMessage({
+                erc1271Contract: contractAddress
+            }, messageFactory)
+        ).rejects.toThrow('Signature validation failed')
+    })
+
+    it('throws if given non-ethereum address as erc1271Contract', async () => {
+        const messageFactory = await createMessageFactory()
+        await expect(() =>
+            createMessage({
+                erc1271Contract: 'not-an-ethereum-address'
+            }, messageFactory)
+        ).rejects.toThrow('not a valid Ethereum address: "not-an-ethereum-address"')
     })
 
     it('public stream', async () => {
@@ -86,8 +154,8 @@ describe('MessageFactory', () => {
         const msg = await createMessage({}, messageFactory)
         expect(msg).toMatchObject({
             encryptionType: EncryptionType.NONE,
-            groupKeyId: null,
-            serializedContent: utf8ToBinary(JSON.stringify(CONTENT))
+            groupKeyId: undefined,
+            content: utf8ToBinary(JSON.stringify(CONTENT))
         })
     })
 
@@ -115,7 +183,7 @@ describe('MessageFactory', () => {
         const msg = await createMessage({}, messageFactory)
         expect(msg.groupKeyId).toBe(GROUP_KEY.id)
         expect(msg.newGroupKey).toMatchObject({
-            groupKeyId: nextGroupKey.id,
+            id: nextGroupKey.id,
             data: expect.any(Uint8Array)
         })    
         expect(GROUP_KEY.decryptNextGroupKey(msg.newGroupKey!)).toEqual(nextGroupKey)
@@ -130,6 +198,14 @@ describe('MessageFactory', () => {
         return expect(() =>
             createMessage({}, messageFactory)
         ).rejects.toThrow(/You don't have permission to publish to this stream/)
+    })
+
+    it('detects binary content', async () => {
+        const messageFactory = await createMessageFactory()
+        const msg = await createMessage({}, messageFactory, utf8ToBinary('mock-content'))
+        expect(msg).toMatchObject({
+            contentType: ContentType.BINARY
+        })
     })
 
     describe('partitions', () => {
@@ -200,8 +276,8 @@ describe('MessageFactory', () => {
             const messageFactory = await createMessageFactory()
             const msg1 = await createMessage({}, messageFactory)
             const msg2 = await createMessage({}, messageFactory)
-            expect(msg2.getMessageID().msgChainId).toBe(msg1.getMessageID().msgChainId)
-            expect(msg2.getPreviousMessageRef()).toEqual(msg1.getMessageRef())
+            expect(msg2.messageId.msgChainId).toBe(msg1.messageId.msgChainId)
+            expect(msg2.prevMsgRef).toEqual(msg1.getMessageRef())
         })
 
         it('partitions have separate chains', async () => {
@@ -209,10 +285,10 @@ describe('MessageFactory', () => {
             const msg1 = await createMessage({ explicitPartition: 10 }, messageFactory)
             const msg2 = await createMessage({ partitionKey: 'mock-key' }, messageFactory)
             const msg3 = await createMessage({ msgChainId: msg2.getMsgChainId(), explicitPartition: 20 }, messageFactory)
-            expect(msg2.getMessageID().msgChainId).not.toBe(msg1.getMessageID().msgChainId)
-            expect(msg3.getMessageID().msgChainId).not.toBe(msg1.getMessageID().msgChainId)
-            expect(msg2.getPreviousMessageRef()).toBe(null)
-            expect(msg3.getPreviousMessageRef()).toBe(null)
+            expect(msg2.messageId.msgChainId).not.toBe(msg1.messageId.msgChainId)
+            expect(msg3.messageId.msgChainId).not.toBe(msg1.messageId.msgChainId)
+            expect(msg2.prevMsgRef).toBe(undefined)
+            expect(msg3.prevMsgRef).toBe(undefined)
         })
 
         it('explicit msgChainId', async () => {
@@ -220,11 +296,11 @@ describe('MessageFactory', () => {
             const msg1 = await createMessage({ msgChainId: 'mock-id' }, messageFactory)
             const msg2 = await createMessage({}, messageFactory)
             const msg3 = await createMessage({ msgChainId: 'mock-id' }, messageFactory)
-            expect(msg1.getMessageID().msgChainId).toBe('mock-id')
-            expect(msg2.getMessageID().msgChainId).not.toBe('mock-id')
-            expect(msg2.getPreviousMessageRef()).toBe(null)
-            expect(msg3.getMessageID().msgChainId).toBe('mock-id')
-            expect(msg3.getPreviousMessageRef()).toEqual(msg1.getMessageRef())
+            expect(msg1.messageId.msgChainId).toBe('mock-id')
+            expect(msg2.messageId.msgChainId).not.toBe('mock-id')
+            expect(msg2.prevMsgRef).toBe(undefined)
+            expect(msg3.messageId.msgChainId).toBe('mock-id')
+            expect(msg3.prevMsgRef).toEqual(msg1.getMessageRef())
         })
 
         it('backdated', async () => {
@@ -234,7 +310,7 @@ describe('MessageFactory', () => {
                 return createMessage({ timestamp: 1000 }, messageFactory)
             }).rejects.toThrow('prevMessageRef must come before current')
             const msg3 = await createMessage({}, messageFactory)
-            expect(msg3.getPreviousMessageRef()).toEqual(msg1.getMessageRef())
+            expect(msg3.prevMsgRef).toEqual(msg1.getMessageRef())
         })
     })
 })

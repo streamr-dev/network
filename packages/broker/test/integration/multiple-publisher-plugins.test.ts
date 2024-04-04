@@ -1,7 +1,7 @@
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import WebSocket from 'ws'
 import fetch from 'node-fetch'
-import { StreamPermission } from 'streamr-client'
+import { StreamPermission } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
 import { Broker } from '../../src/broker'
 import { startBroker, createClient, createTestStream } from '../utils'
@@ -32,7 +32,7 @@ interface PluginPublisher {
 class MqttPluginPublisher implements PluginPublisher {
     client: AsyncMqttClient | undefined
     async connect(): Promise<void> {
-        this.client = await mqtt.connectAsync(`mqtt://localhost:${mqttPort}`)
+        this.client = await mqtt.connectAsync(`mqtt://127.0.0.1:${mqttPort}`)
     }
     publish(msg: object, streamId: string): Promise<unknown> {
         return this.client!.publish(streamId, JSON.stringify(msg))
@@ -45,7 +45,7 @@ class MqttPluginPublisher implements PluginPublisher {
 class WebsocketPluginPublisher implements PluginPublisher {
     client: WebSocket | undefined
     async connect(streamId: string): Promise<void> {
-        this.client = new WebSocket(`ws://localhost:${wsPort}/streams/${encodeURIComponent(streamId)}/publish`)
+        this.client = new WebSocket(`ws://127.0.0.1:${wsPort}/streams/${encodeURIComponent(streamId)}/publish`)
         await waitForEvent(this.client, 'open')
     }
     async publish(msg: object): Promise<unknown> {
@@ -61,7 +61,7 @@ class HttpPluginPublisher implements PluginPublisher {
     async connect(): Promise<void> {
     }
     async publish(msg: object, streamId: string): Promise<unknown> {
-        return sendPostRequest(`http://localhost:${httpPort}/streams/${encodeURIComponent(streamId)}`, msg)
+        return sendPostRequest(`http://127.0.0.1:${httpPort}/streams/${encodeURIComponent(streamId)}`, msg)
     }
     async close(): Promise<void> {
     }
@@ -153,7 +153,7 @@ describe('multiple publisher plugins', () => {
     it('subscribe by websocket plugin', async () => {
 
         const receivedMessages: Queue<object> = new Queue()
-        const subscriber = new WebSocket(`ws://localhost:${wsPort}/streams/${encodeURIComponent(streamId)}/subscribe`)
+        const subscriber = new WebSocket(`ws://127.0.0.1:${wsPort}/streams/${encodeURIComponent(streamId)}/subscribe`)
         subscriber.on('message', (data: WebSocket.RawData) => {
             const message = data.toString()
             receivedMessages.push(JSON.parse(message))
@@ -170,7 +170,7 @@ describe('multiple publisher plugins', () => {
     it('subscribe by mqtt plugin', async () => {
 
         const receivedMessages: Queue<object> = new Queue()
-        const subscriber = await mqtt.connectAsync(`mqtt://localhost:${mqttPort}`)
+        const subscriber = await mqtt.connectAsync(`mqtt://127.0.0.1:${mqttPort}`)
         subscriber.on('message', (topic: string, message: Buffer) => {
             if (topic === streamId) {
                 receivedMessages.push(JSON.parse(message.toString()))

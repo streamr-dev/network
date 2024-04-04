@@ -15,31 +15,38 @@ import { ModernFakeTimers } from '@jest/fake-timers'
 // prevents tests failing due to global.expect not being set
 import * as jestExtendedMatchers from 'jest-extended'
 
+import { format } from 'util'
+
 let jest = jestMock
-const timers = new ModernFakeTimers({ global: window, config: null })
+const timers = new ModernFakeTimers({ global: window, config: {} })
 
 // prevent navigation
 // without this karma fails the suite with "Some of your tests did a full page reload!"
 // not clear what is causing the reload.
 window.onbeforeunload = () => 'unload prevented'
 
-jest.advanceTimersByTime = timers.advanceTimersByTime
-jest.advanceTimersToNextTimer = timers.advanceTimersToNextTimer
-jest.clearAllTimers = timers.clearAllTimers
-jest.dispose = timers.dispose
-jest.getRealSystemTime = timers.getRealSystemTime
-jest.getTimerCount = timers.getTimerCount
-jest.reset = timers.reset
-jest.runAllTicks = timers.runAllTicks
-jest.runAllTimers = timers.runAllTimers
-jest.runOnlyPendingTimers = timers.runOnlyPendingTimers
-jest.setSystemTime = timers.setSystemTime
-jest.useFakeTimers = timers.useFakeTimers
-jest.useRealTimers = timers.useRealTimers
+jest.advanceTimersByTime = timers.advanceTimersByTime.bind(timers)
+jest.advanceTimersToNextTimer = timers.advanceTimersToNextTimer.bind(timers)
+jest.clearAllTimers = timers.clearAllTimers.bind(timers)
+jest.dispose = timers.dispose.bind(timers)
+jest.getRealSystemTime = timers.getRealSystemTime.bind(timers)
+jest.getTimerCount = timers.getTimerCount.bind(timers)
+jest.reset = timers.reset.bind(timers)
+jest.runAllTicks = timers.runAllTicks.bind(timers)
+jest.runAllTimers = timers.runAllTimers.bind(timers)
+jest.runOnlyPendingTimers = timers.runOnlyPendingTimers.bind(timers)
+jest.setSystemTime = timers.setSystemTime.bind(timers)
+jest.useFakeTimers = timers.useFakeTimers.bind(timers)
+jest.useRealTimers = timers.useRealTimers.bind(timers)
+
 // eslint-disable-next-line no-undef
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000
+
 // eslint-disable-next-line no-underscore-dangle
-jest._checkFakeTimers = timers._checkFakeTimers
+jest._checkFakeTimers = timers._checkFakeTimers.bind(timers)
+
+// eslint-disable-next-line no-undef
+jasmine.getEnv().configure({ random: false }) // disable random test order
 
 Object.assign(jest, timers)
 
@@ -48,10 +55,14 @@ expect.extend(jestExtendedMatchers)
 // Add missing Jest functions
 window.test = window.it
 window.test.each = (inputs) => (testName, test) =>
-    inputs.forEach((args) => window.it(testName, () => test(...args)))
+    inputs.forEach((args) => window.it(format(testName, args), () => test(args)))
+window.describe.each = (inputs) => (testName, test) =>
+    inputs.forEach((args) => window.describe(format(testName, args), () => test(args)))
 window.test.todo = function() {
     return undefined
 }
+window.it.skip = window.xit
+window.describe.skip = window.xdescribe
 
 window.expect = expect
 window.setImmediate = setTimeout

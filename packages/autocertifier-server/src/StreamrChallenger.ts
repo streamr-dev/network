@@ -1,7 +1,16 @@
-import { Message, NodeType, PeerDescriptor, PeerID, ClientWebsocket, ManagedConnection, RoutingRpcCommunicator } from '@streamr/dht'
+import {
+    Message,
+    NodeType,
+    PeerDescriptor,
+    WebsocketClientConnection,
+    ManagedConnection,
+    RoutingRpcCommunicator,
+    createRandomDhtAddress,
+    getRawFromDhtAddress,
+    ConnectionType
+} from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
-import { ConnectionType } from '@streamr/dht'
 import { FailedToConnectToStreamrWebSocket, AutoCertifierRpcClient, SERVICE_ID } from '@streamr/autocertifier-client'
 
 const logger = new Logger(module)
@@ -9,7 +18,7 @@ const logger = new Logger(module)
 // This is a dummy peer descriptor that is used to connect to the streamr websocket
 // To ensure that the autocertified subdomain is used for the Streamr Network
 const LOCAL_PEER_DESCRIPTOR: PeerDescriptor = {
-    kademliaId: PeerID.fromString('AutoCertifierServer').value, // TODO: random kademlia id here
+    nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
     type: NodeType.NODEJS,
 }
 
@@ -21,7 +30,7 @@ export const runStreamrChallenge = (
 ): Promise<void> => {
     return new Promise((resolve, reject) => {
         const remotePeerDescriptor: PeerDescriptor = {
-            kademliaId: PeerID.fromString('AutoCertifierClient').value, // TODO: should use real kademlia id
+            nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
             type: NodeType.NODEJS,
             websocket: {
                 host: streamrWebSocketIp,
@@ -29,13 +38,13 @@ export const runStreamrChallenge = (
                 tls: true
             }
         }
-        const socket = new ClientWebsocket()
+        const socket = new WebsocketClientConnection()
         const address = 'wss://' + remotePeerDescriptor.websocket!.host + ':' +
         remotePeerDescriptor.websocket!.port
 
         const managedConnection = new ManagedConnection(LOCAL_PEER_DESCRIPTOR,
             ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
-        managedConnection.setRemotePeerDescriptor(remotePeerDescriptor!)
+        managedConnection.setRemotePeerDescriptor(remotePeerDescriptor)
 
         const onDisconnected = () => {
             reject(new FailedToConnectToStreamrWebSocket('Autocertifier failed to connect to '
@@ -58,11 +67,13 @@ export const runStreamrChallenge = (
             // eslint-disable-next-line promise/catch-or-return
             rpcClient.hasSession({ sessionId }).then(() => {
                 resolve()
-                return
             }).catch((e) => {
                 reject(e)
             }).finally(() => {
                 communicator.stop()
+                // close with leave flag true just in case 
+                // any info of the autocertifer is in the network
+                managedConnection.close(true)
             })
         })
 

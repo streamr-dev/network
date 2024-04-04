@@ -10,13 +10,14 @@ import { Simulator } from './simulator/Simulator'
 import { SimulatorConnector } from './simulator/SimulatorConnector'
 import { IceServer, WebrtcConnector } from './webrtc/WebrtcConnector'
 import { WebsocketConnector, WebsocketConnectorConfig } from './websocket/WebsocketConnector'
+import { DhtAddress } from '../identifiers'
 
 export interface ConnectorFacade {
     createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection
     getLocalPeerDescriptor: () => PeerDescriptor | undefined
     start: (
         onNewConnection: (connection: ManagedConnection) => boolean,
-        canConnect: (peerDescriptor: PeerDescriptor) => boolean,
+        hasConnection: (nodeId: DhtAddress) => boolean,
         autoCertifierTransport: ITransport
     ) => Promise<void>
     stop: () => Promise<void>
@@ -52,22 +53,21 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     private localPeerDescriptor?: PeerDescriptor
     private websocketConnector?: WebsocketConnector
     private webrtcConnector?: WebrtcConnector
-
     constructor(config: DefaultConnectorFacadeConfig) {
         this.config = config
     }
 
     async start(
         onNewConnection: (connection: ManagedConnection) => boolean,
-        canConnect: (peerDescriptor: PeerDescriptor) => boolean,
+        hasConnection: (nodeId: DhtAddress) => boolean,
         autoCertifierTransport: ITransport
     ): Promise<void> {
         logger.trace(`Creating WebsocketConnectorRpcLocal`)
         const webSocketConnectorConfig = {
-            transport: this.config.transport!,
+            transport: this.config.transport,
             // TODO should we use canConnect also for WebrtcConnector? (NET-1142)
-            canConnect: (peerDescriptor: PeerDescriptor) => canConnect(peerDescriptor),
             onNewConnection,
+            hasConnection,
             portRange: this.config.websocketPortRange,
             host: this.config.websocketHost,
             entrypoints: this.config.entryPoints,
@@ -81,7 +81,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         this.websocketConnector = new WebsocketConnector(webSocketConnectorConfig)
         logger.trace(`Creating WebRtcConnectorRpcLocal`)
         this.webrtcConnector = new WebrtcConnector({
-            transport: this.config.transport!,
+            transport: this.config.transport,
             iceServers: this.config.iceServers,
             allowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
             bufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
@@ -102,8 +102,8 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         this.setLocalPeerDescriptor(localPeerDescriptor)
         if (localPeerDescriptor.websocket && !this.config.tlsCertificate && this.config.websocketServerEnableTls) {
             try {
-                await this.websocketConnector!.autoCertify()
-                const connectivityResponse = await this.websocketConnector!.checkConnectivity(false)
+                await this.websocketConnector.autoCertify()
+                const connectivityResponse = await this.websocketConnector.checkConnectivity(false)
                 const autocertifiedLocalPeerDescriptor = this.config.createLocalPeerDescriptor(connectivityResponse)
                 if (autocertifiedLocalPeerDescriptor.websocket !== undefined) {
                     this.setLocalPeerDescriptor(autocertifiedLocalPeerDescriptor)
@@ -115,7 +115,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
                     })
                 }
             } catch (err) {
-                logger.warn('Failed to auto-certify, disabling WebSocket server TLS')
+                logger.warn('Failed to auto-certify, disabling WebSocket server TLS', { err })
                 await this.restartWebsocketConnector({
                     ...webSocketConnectorConfig,
                     serverEnableTls: false

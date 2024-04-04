@@ -6,9 +6,9 @@
     },
     "include": [
         "src/**/*",
-        "package.json",
         "test/benchmark/first-message.ts",
-        "test/utils/utils.ts"
+        "test/utils/utils.ts",
+        "package.json"
     ],
     "references": [
         { "path": "../protocol/tsconfig.node.json" },

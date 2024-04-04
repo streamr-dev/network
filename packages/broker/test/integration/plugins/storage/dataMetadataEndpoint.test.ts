@@ -1,6 +1,6 @@
 import http from 'http'
 import { Wallet } from 'ethers'
-import { StreamrClient, Stream } from 'streamr-client'
+import { StreamrClient, Stream } from '@streamr/sdk'
 import {
     createClient,
     createTestStream,
@@ -10,7 +10,6 @@ import { Broker } from '../../../../src/broker'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
 
-jest.setTimeout(30000)
 const httpPort1 = 12371
 
 const httpGet = (url: string): Promise<[number, string]> => { // return tuple is of form [statusCode, body]
@@ -45,7 +44,7 @@ describe('dataMetadataEndpoints', () => {
     })
 
     it('returns http error 400 if given non-numeric partition', async () => {
-        const url = `http://localhost:${httpPort1}/streams/stream/metadata/partitions/non-numeric`
+        const url = `http://127.0.0.1:${httpPort1}/streams/stream/metadata/partitions/non-numeric`
         const [status, json] = await httpGet(url)
         const res = JSON.parse(json)
 
@@ -56,7 +55,7 @@ describe('dataMetadataEndpoints', () => {
     })
 
     it('returns zero values for non-existing stream', async () => {
-        const url = `http://localhost:${httpPort1}/streams/non-existing-stream/metadata/partitions/0`
+        const url = `http://127.0.0.1:${httpPort1}/streams/non-existing-stream/metadata/partitions/0`
         const [status, json] = await httpGet(url)
         const res = JSON.parse(json)
 
@@ -89,17 +88,19 @@ describe('dataMetadataEndpoints', () => {
         })
         await client1.waitForStorage(lastItem)
 
-        const url = `http://localhost:${httpPort1}/streams/${encodeURIComponent(stream.id)}/metadata/partitions/0`
+        const url = `http://127.0.0.1:${httpPort1}/streams/${encodeURIComponent(stream.id)}/metadata/partitions/0`
         const [status, json] = await httpGet(url)
         const res = JSON.parse(json)
 
         expect(status).toEqual(200)
-        expect(res.totalBytes).toEqual(1763)
         expect(res.totalMessages).toEqual(4)
+        // 282 is the lower bound of the size of a single messages, the size will be non-deterministic
+        // due to the possibility of sequence number being != 0
+        expect(res.totalBytes).toBeGreaterThan(4 * 282)
         expect(
             new Date(res.firstMessage).getTime()
         ).toBeLessThan(
             new Date(res.lastMessage).getTime()
         )
-    })
+    }, 30 * 1000)
 })

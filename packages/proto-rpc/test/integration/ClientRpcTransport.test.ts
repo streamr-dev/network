@@ -31,7 +31,7 @@ describe('DhtClientRpcTransport', () => {
         const client = toProtoRpcClient(new DhtRpcServiceClient(rpcCommunicator.getRpcClientTransport()))
 
         const peerDescriptor: PeerDescriptor = {
-            peerId: new Uint8Array([56, 59, 77]),
+            nodeId: new Uint8Array([56, 59, 77]),
             type: NodeType.NODEJS
         }
         const res = await client.getClosestPeers({ peerDescriptor, requestId: '1' })

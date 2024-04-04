@@ -1,26 +1,27 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '@streamr/utils'
-import KBucket from 'k-bucket'
-import { getNodeIdFromPeerDescriptor } from '../helpers/peerIdFromPeerDescriptor'
 import { Empty } from '../proto/google/protobuf/empty'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
-    LeaveNotice,
+    ClosestRingPeersRequest,
+    ClosestRingPeersResponse,
     PeerDescriptor,
     PingRequest,
     PingResponse
 } from '../proto/packages/dht/protos/DhtRpc'
 import { IDhtNodeRpc } from '../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
-import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
+import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { RingIdRaw } from './contact/ringIdentifiers'
+import { RingContacts } from './contact/RingContactList'
 
 interface DhtNodeRpcLocalConfig {
-    bucket: KBucket<DhtNodeRpcRemote>
-    serviceId: string
     peerDiscoveryQueryBatchSize: number
-    addNewContact: (contact: PeerDescriptor) => void
-    removeContact: (contact: PeerDescriptor) => void
+    getClosestPeersTo: (nodeId: DhtAddress, limit: number) => PeerDescriptor[]
+    getClosestRingPeersTo: (id: RingIdRaw, limit: number) => RingContacts
+    addContact: (contact: PeerDescriptor) => void
+    removeContact: (nodeId: DhtAddress) => void
 }
 
 const logger = new Logger(module)
@@ -34,23 +35,29 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
     }
 
     async getClosestPeers(request: ClosestPeersRequest, context: ServerCallContext): Promise<ClosestPeersResponse> {
-        this.config.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
+        this.config.addContact((context as DhtCallContext).incomingSourceDescriptor!)
         const response = {
-            peers: this.getClosestPeerDescriptors(request.kademliaId, this.config.peerDiscoveryQueryBatchSize),
+            peers: this.config.getClosestPeersTo(getDhtAddressFromRaw(request.nodeId), this.config.peerDiscoveryQueryBatchSize),
             requestId: request.requestId
         }
         return response
     }
 
-    private getClosestPeerDescriptors(kademliaId: Uint8Array, limit: number): PeerDescriptor[] {
-        const closestPeers = this.config.bucket.closest(kademliaId, limit)
-        return closestPeers.map((rpcRemote: DhtNodeRpcRemote) => rpcRemote.getPeerDescriptor())
+    async getClosestRingPeers(request: ClosestRingPeersRequest, context: ServerCallContext): Promise<ClosestRingPeersResponse> {
+        this.config.addContact((context as DhtCallContext).incomingSourceDescriptor!)
+        const closestPeers = this.config.getClosestRingPeersTo(request.ringId as RingIdRaw, this.config.peerDiscoveryQueryBatchSize)
+        const response = {
+            leftPeers: closestPeers.left,
+            rightPeers: closestPeers.right,
+            requestId: request.requestId
+        }
+        return response
     }
 
     async ping(request: PingRequest, context: ServerCallContext): Promise<PingResponse> {
         logger.trace('received ping request: ' + getNodeIdFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!))
         setImmediate(() => {
-            this.config.addNewContact((context as DhtCallContext).incomingSourceDescriptor!)
+            this.config.addContact((context as DhtCallContext).incomingSourceDescriptor!)
         })
         const response: PingResponse = {
             requestId: request.requestId
@@ -58,11 +65,12 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
         return response
     }
 
-    async leaveNotice(_request: LeaveNotice, context: ServerCallContext): Promise<Empty> {
+    async leaveNotice(context: ServerCallContext): Promise<Empty> {
         // TODO check signature??
         const sender = (context as DhtCallContext).incomingSourceDescriptor!
-        logger.trace('received leave notice: ' + getNodeIdFromPeerDescriptor(sender))
-        this.config.removeContact(sender)
+        const senderNodeId = getNodeIdFromPeerDescriptor(sender)
+        logger.trace('received leave notice: ' + senderNodeId)
+        this.config.removeContact(senderNodeId)
         return {}
     }
 }

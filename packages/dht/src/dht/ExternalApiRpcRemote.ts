@@ -1,31 +1,34 @@
+import { DhtAddress, getRawFromDhtAddress } from '../identifiers'
 import { Any } from '../proto/google/protobuf/any'
-import { DataEntry, ExternalStoreDataRequest, ExternalFindDataRequest, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
-import { IExternalApiRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
-import { Remote } from './contact/Remote'
+import { DataEntry, ExternalFetchDataRequest, ExternalStoreDataRequest, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { ExternalApiRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
+import { RpcRemote } from './contact/RpcRemote'
 
-export class ExternalApiRpcRemote extends Remote<IExternalApiRpcClient> {
+export class ExternalApiRpcRemote extends RpcRemote<ExternalApiRpcClient> {
 
-    async externalFindData(idToFind: Uint8Array): Promise<DataEntry[]> {
-        const request: ExternalFindDataRequest = {
-            kademliaId: idToFind
+    async externalFetchData(key: DhtAddress): Promise<DataEntry[]> {
+        const request: ExternalFetchDataRequest = {
+            key: getRawFromDhtAddress(key)
         }
         const options = this.formDhtRpcOptions({
+            // TODO use config option or named constant?
             timeout: 10000
         })
         try {
-            const data = await this.getClient().externalFindData(request, options)
-            return data.dataEntries
+            const data = await this.getClient().externalFetchData(request, options)
+            return data.entries
         } catch (err) {
             return []
         }
     }
 
-    async storeData(key: Uint8Array, data: Any): Promise<PeerDescriptor[]> {
+    async storeData(key: DhtAddress, data: Any): Promise<PeerDescriptor[]> {
         const request: ExternalStoreDataRequest = {
-            key,
+            key: getRawFromDhtAddress(key),
             data
         }
         const options = this.formDhtRpcOptions({
+            // TODO use config option or named constant?
             timeout: 10000
         })
         try {

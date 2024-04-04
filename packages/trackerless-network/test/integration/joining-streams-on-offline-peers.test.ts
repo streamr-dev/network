@@ -1,9 +1,9 @@
-import { NodeType, PeerDescriptor, Simulator, SimulatorTransport, LatencyType, getRandomRegion } from '@streamr/dht'
+import { PeerDescriptor, Simulator, SimulatorTransport, LatencyType } from '@streamr/dht'
 import { NetworkStack } from '../../src/NetworkStack'
 import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { Any } from '../../src/proto/google/protobuf/any'
-import { createStreamMessage } from '../utils/utils'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { waitForCondition } from '@streamr/utils'
 import { randomEthereumAddress } from '@streamr/test-utils'
 
@@ -11,35 +11,11 @@ const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 
 describe('Joining stream parts on offline nodes', () => {
 
-    const entryPointPeerDescriptor: PeerDescriptor = {
-        kademliaId: new Uint8Array([1, 2, 3]),
-        type: NodeType.NODEJS,
-        region: getRandomRegion()
-    }
-
-    const node1PeerDescriptor: PeerDescriptor = {
-        kademliaId: new Uint8Array([1, 1, 1]),
-        type: NodeType.NODEJS,
-        region: getRandomRegion()
-    }
-
-    const node2PeerDescriptor: PeerDescriptor = {
-        kademliaId: new Uint8Array([2, 2, 2]),
-        type: NodeType.NODEJS,
-        region: getRandomRegion()
-    }
-
-    const offlineDescriptor1: PeerDescriptor = {
-        kademliaId: new Uint8Array([3, 3, 3]),
-        type: NodeType.NODEJS,
-        region: getRandomRegion()
-    }
-
-    const offlineDescriptor2: PeerDescriptor = {
-        kademliaId: new Uint8Array([4, 4, 4]),
-        type: NodeType.NODEJS,
-        region: getRandomRegion()
-    }
+    const entryPointPeerDescriptor: PeerDescriptor = createMockPeerDescriptor()
+    const node1PeerDescriptor: PeerDescriptor = createMockPeerDescriptor()
+    const node2PeerDescriptor: PeerDescriptor = createMockPeerDescriptor()
+    const offlineDescriptor1: PeerDescriptor = createMockPeerDescriptor()
+    const offlineDescriptor2: PeerDescriptor = createMockPeerDescriptor()
 
     let entryPoint: NetworkStack
     let node1: NetworkStack
@@ -94,10 +70,10 @@ describe('Joining stream parts on offline nodes', () => {
         await entryPoint.getLayer0Node().storeDataToDht(streamPartIdToDataKey(STREAM_PART_ID), Any.pack(offlineDescriptor1, PeerDescriptor))
         await entryPoint.getLayer0Node().storeDataToDht(streamPartIdToDataKey(STREAM_PART_ID), Any.pack(offlineDescriptor2, PeerDescriptor))
         
-        node1.getStreamrNode().joinStreamPart(STREAM_PART_ID)
-        node1.getStreamrNode().on('newMessage', () => { messageReceived = true })
+        node1.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
+        node1.getContentDeliveryManager().on('newMessage', () => { messageReceived = true })
         const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), STREAM_PART_ID, randomEthereumAddress())
-        node2.getStreamrNode().broadcast(msg)
+        node2.getContentDeliveryManager().broadcast(msg)
         await waitForCondition(() => messageReceived, 40000)
     }, 60000)
 

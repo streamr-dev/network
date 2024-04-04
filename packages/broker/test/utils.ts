@@ -8,7 +8,7 @@ import { StreamrClient,
     StreamMetadata,
     StreamPermission,
     StreamrClientConfig
-} from 'streamr-client'
+} from '@streamr/sdk'
 import { Broker, createBroker } from '../src/broker'
 import { Config } from '../src/config/config'
 
@@ -138,7 +138,7 @@ export async function startStorageNode(
     })
     try {
         await client.setStorageNodeMetadata({
-            http: `http://127.0.0.1:${httpPort}`
+            urls: [`http://127.0.0.1:${httpPort}`]
         })
         await createAssignmentStream(client)
     } finally {

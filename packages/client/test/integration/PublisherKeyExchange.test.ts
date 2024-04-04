@@ -1,25 +1,23 @@
 import 'reflect-metadata'
 
-import { toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { Wallet } from '@ethersproject/wallet'
 import {
     ContentType,
     EncryptionType,
-    GroupKeyResponse,
+    SignatureType,
     StreamMessage,
     StreamMessageType,
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { fastWallet } from '@streamr/test-utils'
+import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import {
-    createRelativeTestStreamId,
-    startPublisherKeyExchangeSubscription
-} from '../test-utils/utils'
+import { createRelativeTestStreamId, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
+import { convertBytesToGroupKeyResponse } from '@streamr/trackerless-network'
 
 describe('PublisherKeyExchange', () => {
 
@@ -38,31 +36,37 @@ describe('PublisherKeyExchange', () => {
         return stream
     }
 
-    const triggerGroupKeyRequest = async (): Promise<void> => {
+    const triggerGroupKeyRequest = async (erc1271Contract?: EthereumAddress): Promise<void> => {
         const subscriberClient = environment.createClient({
             auth: {
                 privateKey: subscriberWallet.privateKey
             }
         })
         await subscriberClient.subscribe(streamPartId)
-        await publisherClient.publish(streamPartId, {})
+        await publisherClient.publish(streamPartId, {}, { erc1271Contract })
     }
 
-    const assertValidResponse = async (actualResponse: StreamMessage, expectedGroupKey: GroupKey): Promise<void> => {
+    const assertValidResponse = async (
+        actualResponse: StreamMessage,
+        expectedGroupKey: GroupKey,
+        expectedPublisherId: EthereumAddress,
+        expectedSignatureType: SignatureType
+    ): Promise<void> => {
         expect(actualResponse).toMatchObject({
             messageId: {
                 streamId: StreamPartIDUtils.getStreamID(streamPartId),
                 streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
-                publisherId: toEthereumAddress(publisherWallet.address),
+                publisherId: expectedPublisherId,
             },
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
-            contentType: ContentType.JSON,
-            encryptionType: EncryptionType.RSA,
-            signature: expect.any(Uint8Array)
+            contentType: ContentType.BINARY,
+            encryptionType: EncryptionType.NONE,
+            signature: expect.any(Uint8Array),
+            signatureType: expectedSignatureType
         })
-        const encryptedGroupKeys = (GroupKeyResponse.fromStreamMessage(actualResponse) as GroupKeyResponse).encryptedGroupKeys
+        const encryptedGroupKeys = convertBytesToGroupKeyResponse(actualResponse.content).encryptedGroupKeys
         expect(encryptedGroupKeys).toMatchObject([{
-            groupKeyId: expectedGroupKey.id,
+            id: expectedGroupKey.id,
             data: expect.any(Uint8Array)
         }])
     }
@@ -104,7 +108,30 @@ describe('PublisherKeyExchange', () => {
             const response = await environment.getNetwork().waitForSentMessage({
                 messageType: StreamMessageType.GROUP_KEY_RESPONSE
             })
-            await assertValidResponse(response, key)
+            await assertValidResponse(response, key, toEthereumAddress(publisherWallet.address), SignatureType.SECP256K1)
         })
+    })
+
+    it('happy path: ERC-1271', async () => {
+        const erc1271ContractAddress = randomEthereumAddress()
+        await publisherClient.grantPermissions(StreamPartIDUtils.getStreamID(streamPartId), {
+            permissions: [StreamPermission.PUBLISH],
+            user: erc1271ContractAddress
+        })
+        environment.getChain().erc1271AllowedAddresses.add(erc1271ContractAddress, toEthereumAddress(publisherWallet.address))
+
+        const key = GroupKey.generate()
+        await publisherClient.updateEncryptionKey({
+            key,
+            distributionMethod: 'rekey',
+            streamId: StreamPartIDUtils.getStreamID(streamPartId)
+        })
+
+        await triggerGroupKeyRequest(erc1271ContractAddress)
+
+        const response = await environment.getNetwork().waitForSentMessage({
+            messageType: StreamMessageType.GROUP_KEY_RESPONSE
+        })
+        await assertValidResponse(response, key, erc1271ContractAddress, SignatureType.ERC_1271)
     })
 })

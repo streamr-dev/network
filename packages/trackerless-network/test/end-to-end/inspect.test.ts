@@ -1,4 +1,13 @@
-import { MessageID, MessageRef, StreamMessage, StreamMessageType, StreamPartIDUtils } from '@streamr/protocol'
+import {
+    ContentType,
+    EncryptionType,
+    MessageID,
+    MessageRef,
+    SignatureType,
+    StreamMessage,
+    StreamMessageType,
+    StreamPartIDUtils
+} from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
@@ -52,6 +61,9 @@ describe('inspect', () => {
             hello: 'world'
         })),
         messageType: StreamMessageType.MESSAGE,
+        contentType: ContentType.JSON,
+        encryptionType: EncryptionType.NONE,
+        signatureType: SignatureType.SECP256K1,
         signature: hexToBinary('0x1234'),
     })
     
@@ -84,14 +96,14 @@ describe('inspect', () => {
         await inspectedNode.start()
         await inspectorNode.start()
 
-        publisherNode.stack.getStreamrNode()!.joinStreamPart(STREAM_PART_ID)
-        inspectedNode.stack.getStreamrNode()!.joinStreamPart(STREAM_PART_ID)
-        inspectorNode.stack.getStreamrNode()!.joinStreamPart(STREAM_PART_ID)
+        publisherNode.stack.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
+        inspectedNode.stack.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
+        inspectorNode.stack.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
 
         await waitForCondition(() => 
-            publisherNode.stack.getStreamrNode().getNeighbors(STREAM_PART_ID).length === 2 
-            && inspectedNode.stack.getStreamrNode().getNeighbors(STREAM_PART_ID).length === 2 
-            && inspectorNode.stack.getStreamrNode().getNeighbors(STREAM_PART_ID).length === 2
+            publisherNode.stack.getContentDeliveryManager().getNeighbors(STREAM_PART_ID).length === 2 
+            && inspectedNode.stack.getContentDeliveryManager().getNeighbors(STREAM_PART_ID).length === 2 
+            && inspectorNode.stack.getContentDeliveryManager().getNeighbors(STREAM_PART_ID).length === 2
         )
     }, 30000)
 

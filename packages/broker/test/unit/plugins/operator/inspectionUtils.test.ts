@@ -1,11 +1,10 @@
 import { mock, MockProxy } from 'jest-mock-extended'
-import { NetworkPeerDescriptor, NodeID, StreamrClient, Subscription } from 'streamr-client'
+import { StreamrClient, Subscription } from '@streamr/sdk'
 import { StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { findNodesForTarget, findTarget, inspectTarget } from '../../../../src/plugins/operator/inspectionUtils'
+import { findTarget, inspectTarget } from '../../../../src/plugins/operator/inspectionUtils'
 import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
-import { EthereumAddress, Logger, wait } from '@streamr/utils'
-import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
+import { EthereumAddress, Logger } from '@streamr/utils'
 import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 
 const MY_OPERATOR_ADDRESS = randomEthereumAddress()
@@ -19,9 +18,9 @@ const target = Object.freeze({
     streamPart: toStreamPartID(STREAM_ID, 4),
 })
 
-const PEER_DESCRIPTOR_ONE = { id: '0x1111' }
-const PEER_DESCRIPTOR_TWO = { id: '0x2222' }
-const PEER_DESCRIPTOR_THREE = { id: '0x3333' }
+const PEER_DESCRIPTOR_ONE = { nodeId: '0x1111' }
+const PEER_DESCRIPTOR_TWO = { nodeId: '0x2222' }
+const PEER_DESCRIPTOR_THREE = { nodeId: '0x3333' }
 
 const logger = new Logger(module)
 
@@ -103,78 +102,6 @@ describe(findTarget, () => {
     // TODO: few edge-cases where state changes during asynchronicity
 })
 
-describe(findNodesForTarget, () => {
-    let getRedundancyFactorFn: jest.MockedFn<(operatorContractAddress: EthereumAddress) => Promise<number | undefined>>
-    let operatorFleetState: MockProxy<OperatorFleetState>
-    let abortController: AbortController
-    let resultPromise: Promise<NetworkPeerDescriptor[]>
-    let onlineNodes: NodeID[]
-
-    beforeEach(() => {
-        getRedundancyFactorFn = jest.fn()
-        onlineNodes = []
-        operatorFleetState = mock<OperatorFleetState>()
-        operatorFleetState.start.mockImplementation(() => wait(0))
-        operatorFleetState.getNodeIds.mockImplementation(() => onlineNodes)
-        operatorFleetState.getPeerDescriptor.mockImplementation((nodeId) => {
-            if (nodeId === PEER_DESCRIPTOR_ONE.id) {
-                return PEER_DESCRIPTOR_ONE
-            } else if (nodeId === PEER_DESCRIPTOR_TWO.id) {
-                return PEER_DESCRIPTOR_TWO
-            } else if (nodeId === PEER_DESCRIPTOR_THREE.id) {
-                return PEER_DESCRIPTOR_THREE
-            } else {
-                return undefined
-            }
-        })
-        abortController = new AbortController()
-        resultPromise = findNodesForTarget(target, getRedundancyFactorFn, () => operatorFleetState, 100, abortController.signal, logger)
-    })
-
-    afterEach(() => {
-        abortController.abort()
-    })
-
-    function comeOnline(peerDescriptors: NetworkPeerDescriptor[]): void {
-        onlineNodes = peerDescriptors.map(({ id }) => id as NodeID)
-    }
-
-    it('returns empty array if no nodes found', async () => {
-        const result = await resultPromise
-        expect(result).toEqual([])
-    })
-
-    it('returns empty array if redundancy factor is undefined', async () => {
-        getRedundancyFactorFn.mockResolvedValueOnce(undefined)
-        const result = await resultPromise
-        expect(result).toEqual([])
-    })
-
-    it('returns the single node if single node found', async () => {
-        getRedundancyFactorFn.mockResolvedValueOnce(1)
-        comeOnline([PEER_DESCRIPTOR_ONE])
-        const result = await resultPromise
-        expect(result).toEqual([PEER_DESCRIPTOR_ONE])
-    })
-
-    it('returns one of the nodes if multiple nodes found (replicationFactor=1)', async () => {
-        getRedundancyFactorFn.mockResolvedValueOnce(1)
-        comeOnline([PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO, PEER_DESCRIPTOR_THREE])
-        const result = await resultPromise
-        expect(result.length).toEqual(1)
-        expect(result).toIncludeAnyMembers([PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO, PEER_DESCRIPTOR_THREE])
-    })
-
-    it('returns two of the nodes if multiple nodes found (replicationFactor=2)', async () => {
-        getRedundancyFactorFn.mockResolvedValueOnce(2)
-        comeOnline([PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO, PEER_DESCRIPTOR_THREE])
-        const result = await resultPromise
-        expect(result.length).toEqual(2)
-        expect(result).toIncludeAnyMembers([PEER_DESCRIPTOR_ONE, PEER_DESCRIPTOR_TWO, PEER_DESCRIPTOR_THREE])
-        expect(result[0]).not.toEqual(result[1])
-    })
-})
-
 describe(inspectTarget, () => {
     let streamrClient: MockProxy<StreamrClient>
     let abortController: AbortController
@@ -200,7 +127,8 @@ describe(inspectTarget, () => {
         expect(result).toEqual(false)
     })
 
-    it('returns false if no online nodes pass inspection', async () => {
+    // TODO: re-enable when full inspection re-enabled
+    it.skip('returns false if no online nodes pass inspection', async () => {
         streamrClient.inspect.mockResolvedValue(false)
         const result = await inspectTarget({
             target,
@@ -216,7 +144,8 @@ describe(inspectTarget, () => {
         expect(streamrClient.inspect).toHaveBeenCalledWith(PEER_DESCRIPTOR_THREE, target.streamPart)
     })
 
-    it('returns true if at least one online node passes inspection', async () => {
+    // TODO: re-enable when full inspection re-enabled
+    it.skip('returns true if at least one online node passes inspection', async () => {
         streamrClient.inspect.mockResolvedValueOnce(false)
         streamrClient.inspect.mockResolvedValueOnce(true)
         const result = await inspectTarget({
