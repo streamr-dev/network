@@ -98,7 +98,6 @@ export class LitProtocolFacade {
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>
     private readonly authentication: Authentication
     private readonly logger: Logger
-    private connectLitNodeClient?: () => Promise<void>
 
     /* eslint-disable indent */
     constructor(
@@ -117,10 +116,8 @@ export class LitProtocolFacade {
                 alertWhenUnauthorized: false,
                 debug: this.config.encryption.litProtocolLogging
             })
-            // Add a rate limiter to avoid calling `connect` each time we want to use lit protocol as this would cause an unnecessary handshake.
-            this.connectLitNodeClient = withRateLimit(() => this.litNodeClient!.connect(), LIT_PROTOCOL_CONNECT_INTERVAL)
+            await this.litNodeClient.connect()
         }
-        await this.connectLitNodeClient!()
         return this.litNodeClient
     }
 
