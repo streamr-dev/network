@@ -84,7 +84,7 @@
   "dependencies": {
     "@babel/runtime": "^7.24.7",
     "@babel/runtime-corejs3": "^7.24.7",
-    "@lit-protocol/core": "2.2.5",
+    "@lit-protocol/lit-node-client": "2.2.5",
     "@lit-protocol/uint8arrays": "^6.1.0",
     "@streamr/config": "^5.3.13",
     "@streamr/dht": "101.0.1",

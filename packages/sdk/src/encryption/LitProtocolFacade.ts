@@ -1,6 +1,5 @@
-import { LitCore } from '@lit-protocol/core'
-import { uint8arrayToString } from '@lit-protocol/uint8arrays'
-import { Logger, StreamID, randomString, withRateLimit } from '@streamr/utils'
+import { LitNodeClient } from '@lit-protocol/lit-node-client'
+import { binaryToHex, Logger, StreamID, randomString } from '@streamr/utils'
 import { ethers } from 'ethers'
 import * as siwe from 'lit-siwe'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -14,7 +13,7 @@ const logger = new Logger(module)
 
 const chain = 'polygon'
 
-const LIT_PROTOCOL_CONNECT_INTERVAL = 60 * 60 * 1000 // 1h
+const GROUP_KEY_ID_SEPARATOR = '::'
 
 const formEvmContractConditions = (streamRegistryChainAddress: string, streamId: StreamID) => ([
     {
@@ -55,27 +54,39 @@ const formEvmContractConditions = (streamRegistryChainAddress: string, streamId:
     }
 ])
 
-const signAuthMessage = async (authentication: Authentication) => {
-    const domain = 'dummy.com'
-    const uri = 'https://dummy.com'
+const signAuthMessage = async (litNodeClient: LitNodeClient, authentication: Authentication) => {
+    const domain = 'localhost'
+    const uri = 'https://localhost/login'
     const statement = 'dummy'
     const addressInChecksumCase = ethers.getAddress(await authentication.getAddress())
+    const nonce = litNodeClient.getLatestBlockhash()
+    const expirationTime = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString()
     const siweMessage = new siwe.SiweMessage({
         domain,
         uri,
         statement,
         address: addressInChecksumCase,
         version: '1',
-        chainId: 1
+        chainId: 1,
+        expirationTime,
+        nonce
     })
     const messageToSign = siweMessage.prepareMessage()
     const signature = await authentication.createMessageSignature(Buffer.from(messageToSign))
     return {
-        sig: signature,
+        sig: binaryToHex(signature, true),
         derivedVia: 'web3.eth.personal.sign',
         signedMessage: messageToSign,
         address: addressInChecksumCase
     }
+}
+
+function splitGroupKeyId(groupKeyId: string): { ciphertext: string, dataToEncryptHash: string } | undefined {
+    const [ciphertext, dataToEncryptHash] = groupKeyId.split(GROUP_KEY_ID_SEPARATOR)
+    if (ciphertext !== undefined && dataToEncryptHash !== undefined) {
+        return { ciphertext, dataToEncryptHash }
+    }
+    return undefined
 }
 
 /**
@@ -84,11 +95,10 @@ const signAuthMessage = async (authentication: Authentication) => {
 @scoped(Lifecycle.ContainerScoped)
 export class LitProtocolFacade {
 
-    private litNodeClient?: LitCore
+    private litNodeClient?: LitNodeClient
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>
     private readonly authentication: Authentication
     private readonly logger: Logger
-    private connectLitNodeClient?: () => Promise<void>
 
     /* eslint-disable indent */
     constructor(
@@ -101,16 +111,14 @@ export class LitProtocolFacade {
         this.logger = loggerFactory.createLogger(module)
     }
 
-    async getLitNodeClient(): Promise<LitCore> {
+    async getLitNodeClient(): Promise<LitNodeClient> {
         if (this.litNodeClient === undefined) {
-            this.litNodeClient = new LitCore({
+            this.litNodeClient = new LitNodeClient({
                 alertWhenUnauthorized: false,
                 debug: this.config.encryption.litProtocolLogging
             })
-            // Add a rate limiter to avoid calling `connect` each time we want to use lit protocol as this would cause an unnecessary handshake.
-            this.connectLitNodeClient = withRateLimit(() => this.litNodeClient!.connect(), LIT_PROTOCOL_CONNECT_INTERVAL)
+            await this.litNodeClient.connect()
         }
-        await this.connectLitNodeClient!()
         return this.litNodeClient
     }
 
@@ -118,18 +126,18 @@ export class LitProtocolFacade {
         const traceId = randomString(5)
         this.logger.debug('Storing key', { streamId, traceId })
         try {
-            const authSig = await signAuthMessage(this.authentication)
             const client = await this.getLitNodeClient()
-            const encryptedSymmetricKey = await client.saveEncryptionKey({
+            const authSig = await signAuthMessage(client, this.authentication)
+            const { ciphertext, dataToEncryptHash } = await client.encrypt({
                 evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
-                symmetricKey,
+                dataToEncrypt: symmetricKey,
                 authSig,
                 chain
             })
-            if (encryptedSymmetricKey === undefined) {
+            if (ciphertext === undefined || dataToEncryptHash === undefined) {
                 return undefined
             }
-            const groupKeyId = uint8arrayToString(encryptedSymmetricKey, 'base16')
+            const groupKeyId = ciphertext + GROUP_KEY_ID_SEPARATOR + dataToEncryptHash
             this.logger.debug('Stored key', { traceId, streamId, groupKeyId })
             return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
         } catch (err) {
@@ -141,19 +149,24 @@ export class LitProtocolFacade {
     async get(streamId: StreamID, groupKeyId: string): Promise<GroupKey | undefined> {
         this.logger.debug('Getting key', { groupKeyId, streamId })
         try {
-            const authSig = await signAuthMessage(this.authentication)
+            const splitResult = splitGroupKeyId(groupKeyId)
+            if (splitResult === undefined) {
+                return undefined
+            }
             const client = await this.getLitNodeClient()
-            const symmetricKey = await client.getEncryptionKey({
+            const authSig = await signAuthMessage(client, this.authentication)
+            const decryptResponse = await client.decrypt({
                 evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
-                toDecrypt: groupKeyId,
+                ciphertext: splitResult.ciphertext,
+                dataToEncryptHash: splitResult.dataToEncryptHash,
                 chain,
                 authSig
             })
-            if (symmetricKey === undefined) {
+            if (decryptResponse?.decryptedData === undefined) {
                 return undefined
             }
             this.logger.debug('Got key', { groupKeyId, streamId })
-            return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
+            return new GroupKey(groupKeyId, Buffer.from(decryptResponse.decryptedData))
         } catch (err) {
             logger.warn('Failed to get key', { err, streamId, groupKeyId })
             return undefined
