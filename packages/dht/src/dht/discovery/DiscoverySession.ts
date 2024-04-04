@@ -88,7 +88,7 @@ export class DiscoverySession {
             this.config.parallelism,
             this.config.contactedPeers
         )
-        if (uncontacted.length === 0 || this.noProgressCounter >= this.config.noProgressLimit) {
+        if ((uncontacted.length === 0 && this.ongoingClosestPeersRequests.size === 0) || (this.noProgressCounter >= this.config.noProgressLimit)) {
             this.emitter.emit('discoveryCompleted')
             this.stopped = true
             return
