@@ -151,8 +151,8 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     }
 
     async stop(): Promise<void> {
-        await this.websocketConnector?.destroy()
-        await this.webrtcConnector?.stop()
+        await this.websocketConnector!.destroy()
+        await this.webrtcConnector!.stop()
     }
 }
 
