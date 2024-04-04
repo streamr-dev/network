@@ -1,5 +1,4 @@
-import { LitCore } from '@lit-protocol/core'
-import { uint8arrayToString } from '@lit-protocol/uint8arrays'
+import { LitNodeClient } from '@lit-protocol/lit-node-client'
 import { StreamID } from '@streamr/protocol'
 import { Logger, randomString, withRateLimit } from '@streamr/utils'
 import { ethers } from 'ethers'
@@ -16,6 +15,8 @@ const logger = new Logger(module)
 const chain = 'polygon'
 
 const LIT_PROTOCOL_CONNECT_INTERVAL = 60 * 60 * 1000 // 1h
+
+const GROUP_KEY_ID_SEPARATOR = '::'
 
 const formEvmContractConditions = (streamRegistryChainAddress: string, streamId: StreamID) => ([
     {
@@ -79,13 +80,21 @@ const signAuthMessage = async (authentication: Authentication) => {
     }
 }
 
+function splitGroupKeyId(groupKeyId: string): { ciphertext: string, dataToEncryptHash: string } | undefined {
+    const [ciphertext, dataToEncryptHash] = groupKeyId.split(GROUP_KEY_ID_SEPARATOR)
+    if (ciphertext !== undefined && dataToEncryptHash !== undefined) {
+        return { ciphertext, dataToEncryptHash }
+    }
+    return undefined
+}
+
 /**
  * This class only operates with Polygon production network and therefore ignores contracts config.
  */
 @scoped(Lifecycle.ContainerScoped)
 export class LitProtocolFacade {
 
-    private litNodeClient?: LitCore
+    private litNodeClient?: LitNodeClient
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>
     private readonly authentication: Authentication
     private readonly logger: Logger
@@ -102,9 +111,9 @@ export class LitProtocolFacade {
         this.logger = loggerFactory.createLogger(module)
     }
 
-    async getLitNodeClient(): Promise<LitCore> {
+    async getLitNodeClient(): Promise<LitNodeClient> {
         if (this.litNodeClient === undefined) {
-            this.litNodeClient = new LitCore({
+            this.litNodeClient = new LitNodeClient({
                 alertWhenUnauthorized: false,
                 debug: this.config.encryption.litProtocolLogging
             })
@@ -121,16 +130,16 @@ export class LitProtocolFacade {
         try {
             const authSig = await signAuthMessage(this.authentication)
             const client = await this.getLitNodeClient()
-            const encryptedSymmetricKey = await client.saveEncryptionKey({
+            const { ciphertext, dataToEncryptHash } = await client.encrypt({
                 evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
-                symmetricKey,
+                dataToEncrypt: symmetricKey,
                 authSig,
                 chain
             })
-            if (encryptedSymmetricKey === undefined) {
+            if (ciphertext === undefined || dataToEncryptHash === undefined) {
                 return undefined
             }
-            const groupKeyId = uint8arrayToString(encryptedSymmetricKey, 'base16')
+            const groupKeyId = ciphertext + GROUP_KEY_ID_SEPARATOR + dataToEncryptHash
             this.logger.debug('Stored key', { traceId, streamId, groupKeyId })
             return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
         } catch (err) {
@@ -142,19 +151,24 @@ export class LitProtocolFacade {
     async get(streamId: StreamID, groupKeyId: string): Promise<GroupKey | undefined> {
         this.logger.debug('Getting key', { groupKeyId, streamId })
         try {
+            const splitResult = splitGroupKeyId(groupKeyId)
+            if (splitResult === undefined) {
+                return undefined
+            }
             const authSig = await signAuthMessage(this.authentication)
             const client = await this.getLitNodeClient()
-            const symmetricKey = await client.getEncryptionKey({
+            const decryptResponse = await client.decrypt({
                 evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
-                toDecrypt: groupKeyId,
+                ciphertext: splitResult.ciphertext,
+                dataToEncryptHash: splitResult.dataToEncryptHash,
                 chain,
                 authSig
             })
-            if (symmetricKey === undefined) {
+            if (decryptResponse?.decryptedData === undefined) {
                 return undefined
             }
             this.logger.debug('Got key', { groupKeyId, streamId })
-            return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
+            return new GroupKey(groupKeyId, Buffer.from(decryptResponse.decryptedData))
         } catch (err) {
             logger.warn('Failed to get key', { err, streamId, groupKeyId })
             return undefined
