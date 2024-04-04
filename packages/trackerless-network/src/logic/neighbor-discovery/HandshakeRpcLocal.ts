@@ -110,7 +110,6 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
                 if (response.accepted) {
                     this.config.neighbors.remove(getNodeIdFromPeerDescriptor(lastPeerDescriptor!))
                 }
-                return
             }).catch(() => {
                 // no-op: InterleaveRequest cannot reject
             }).finally(() => {

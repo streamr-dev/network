@@ -64,6 +64,12 @@ export interface ExtraSubscribeOptions {
      * and decryption _disabled_.
      */
     raw?: boolean
+
+    /**
+     * Subscribe on behalf of a contract implementing the [ERC-1271](https://eips.ethereum.org/EIPS/eip-1271) standard.
+     * The streamr client wallet address must be an authorized signer for the contract.
+     */
+    erc1271Contract?: string
 }
 
 /**
@@ -205,7 +211,13 @@ export class StreamrClient {
         }
         const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
         const eventEmitter = new EventEmitter<SubscriptionEvents>()
-        const sub = new Subscription(streamPartId, options.raw ?? false, eventEmitter, this.loggerFactory)
+        const sub = new Subscription(
+            streamPartId,
+            options.raw ?? false,
+            options.erc1271Contract !== undefined ? toEthereumAddress(options.erc1271Contract) : undefined,
+            eventEmitter,
+            this.loggerFactory
+        )
         if (options.resend !== undefined) {
             initResendSubscription(
                 sub,

@@ -56,12 +56,11 @@ describe('Replicate data from node to node in DHT', () => {
         const sortedList = new SortedContactList<DhtNode>({ 
             referenceId: getDhtAddressFromRaw(DATA.key),
             maxSize: 10000, 
-            allowToContainReferenceId: true, 
-            emitEvents: false 
+            allowToContainReferenceId: true
         })
         nodes.forEach((node) => sortedList.addContact(node))
 
-        const closest = sortedList.getAllContacts()
+        const closest = sortedList.getClosestContacts()
         const successfulStorers = await nodes[0].storeDataToDht(getDhtAddressFromRaw(DATA.key), DATA.data!)
         expect(successfulStorers.length).toBe(1)
 

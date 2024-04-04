@@ -64,8 +64,7 @@ export class StoreManager {
         const sortedList = new SortedContactList<Contact>({
             referenceId: key, 
             maxSize: this.config.redundancyFactor,
-            allowToContainReferenceId: true,
-            emitEvents: false
+            allowToContainReferenceId: true
         })
         sortedList.addContact(new Contact(this.config.localPeerDescriptor))
         closestToData.forEach((neighbor) => {
@@ -173,20 +172,20 @@ export class StoreManager {
         const closestToData = this.config.getClosestNeighborsTo(key, 10)
         const sortedList = new SortedContactList<Contact>({
             referenceId: key, 
-            maxSize: this.config.redundancyFactor, 
-            allowToContainReferenceId: true, 
-            emitEvents: false
+            maxSize: this.config.redundancyFactor,
+            allowToContainReferenceId: true
         })
         sortedList.addContact(new Contact(this.config.localPeerDescriptor))
         closestToData.forEach((neighbor) => {
             sortedList.addContact(new Contact(neighbor))
         })
         const selfIsPrimaryStorer = (sortedList.getClosestContactId() === localNodeId)
-        const targets = selfIsPrimaryStorer
+        const targetLimit = selfIsPrimaryStorer
             // if we are the closest to the data, replicate to all storageRedundancyFactor nearest
-            ? sortedList.getAllContacts()
+            ? undefined
             // if we are not the closest node to the data, replicate only to the closest one to the data
-            : [sortedList.getAllContacts()[0]]
+            : 1
+        const targets = sortedList.getClosestContacts(targetLimit)
         targets.forEach((contact) => {
             const contactNodeId = contact.getNodeId()
             if ((incomingNodeId !== contactNodeId) && (localNodeId !== contactNodeId)) {

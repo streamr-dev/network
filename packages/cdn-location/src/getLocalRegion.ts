@@ -5,7 +5,13 @@ import { Logger } from '@streamr/utils'
 const logger = new Logger(module)
 
 export const getLocalAirportCode: () => Promise<string | undefined> = async () => {
-    return fetchAirportCodeFromCdn()
+    let airportCode: string
+    try {
+        airportCode = await fetchAirportCodeFromCdn()
+    } catch (error) {
+        return undefined
+    }
+    return airportCode
 }
 
 const getRandomRegion: () => number = () => {

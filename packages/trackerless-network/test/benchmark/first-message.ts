@@ -148,7 +148,7 @@ const run = async () => {
     await shutdownNetwork()
 } 
 
-// eslint-disable-next-line promise/catch-or-return, promise/always-return
+// eslint-disable-next-line promise/catch-or-return
 run().then(() => {
     console.log('done')
 }).catch((err) => {

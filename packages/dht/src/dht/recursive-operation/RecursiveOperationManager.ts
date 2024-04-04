@@ -222,8 +222,7 @@ export class RecursiveOperationManager {
         const closestPeers = new SortedContactList<DhtNodeRpcRemote>({
             referenceId,
             maxSize: limit,
-            allowToContainReferenceId: true,
-            emitEvents: false
+            allowToContainReferenceId: true
         })
         closestPeers.addContacts(connectedPeers)
         return closestPeers.getClosestContacts(limit).map((peer) => peer.getPeerDescriptor())

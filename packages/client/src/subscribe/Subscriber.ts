@@ -1,5 +1,5 @@
 import { StreamPartID } from '@streamr/protocol'
-import { Logger } from '@streamr/utils'
+import { EthereumAddress, Logger } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { LoggerFactory } from '../utils/LoggerFactory'
@@ -71,6 +71,10 @@ export class Subscriber {
             o.push(...s.subscriptions)
             return o
         }, [])
+    }
+
+    getERC1271ContractAddress(streamPartId: StreamPartID): EthereumAddress | undefined {
+        return this.subSessions.get(streamPartId)?.getERC1271ContractAddress()
     }
 
     /**
