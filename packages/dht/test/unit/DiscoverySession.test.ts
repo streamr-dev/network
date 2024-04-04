@@ -68,7 +68,8 @@ describe('DiscoverySession', () => {
             parallelism: PARALLELISM,
             noProgressLimit: NO_PROGRESS_LIMIT,
             peerManager,
-            contactedPeers
+            contactedPeers,
+            abortSignal: new AbortController().signal
         })
         await session.findClosestNodes(1000)
         expect(queriedNodes.length).toBeGreaterThanOrEqual(1)
@@ -79,6 +80,5 @@ describe('DiscoverySession', () => {
         for (let i = 1; i < distancesToTarget.length ; i++) {
             expect(distancesToTarget[i]).toBeLessThan(distancesToTarget[i - 1])
         }
-        session.stop()
     })
 })

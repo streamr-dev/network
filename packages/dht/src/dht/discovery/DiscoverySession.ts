@@ -1,16 +1,11 @@
-import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
-import EventEmitter from 'eventemitter3'
+import { Gate, Logger, wait } from '@streamr/utils'
 import { v4 } from 'uuid'
-import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { PeerManager, getDistance } from '../PeerManager'
-import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { DhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
+import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
+import { PeerManager, getDistance } from '../PeerManager'
 
 const logger = new Logger(module)
-
-interface DiscoverySessionEvents {
-    discoveryCompleted: () => void
-}
 
 interface DiscoverySessionConfig {
     targetId: DhtAddress
@@ -19,16 +14,15 @@ interface DiscoverySessionConfig {
     peerManager: PeerManager
     // Note that contacted peers will be mutated by the DiscoverySession or other parallel sessions
     contactedPeers: Set<DhtAddress>
+    abortSignal: AbortSignal
 }
 
 export class DiscoverySession {
 
     public readonly id = v4()
-    private stopped = false
-    // TODO could we use a Gate to check if we have completed? 
-    private emitter = new EventEmitter<DiscoverySessionEvents>()
     private noProgressCounter = 0
     private ongoingClosestPeersRequests: Set<DhtAddress> = new Set()
+    private doneGate = new Gate(false)
     private readonly config: DiscoverySessionConfig
 
     constructor(config: DiscoverySessionConfig) {
@@ -36,7 +30,7 @@ export class DiscoverySession {
     }
 
     private addContacts(contacts: PeerDescriptor[]): void {
-        if (this.stopped) {
+        if (this.config.abortSignal.aborted || this.doneGate.isOpen()) {
             return
         }
         for (const contact of contacts) {
@@ -45,7 +39,7 @@ export class DiscoverySession {
     }
 
     private async getClosestPeersFromContact(contact: DhtNodeRpcRemote): Promise<PeerDescriptor[]> {
-        if (this.stopped) {
+        if (this.config.abortSignal.aborted || this.doneGate.isOpen()) {
             return []
         }
         logger.trace(`Getting closest peers from contact: ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
@@ -80,7 +74,7 @@ export class DiscoverySession {
     }
 
     private findMoreContacts(): void {
-        if (this.stopped) {
+        if (this.config.abortSignal.aborted || this.doneGate.isOpen()) {
             return
         }
         const uncontacted = this.config.peerManager.getClosestContactsTo(
@@ -89,8 +83,7 @@ export class DiscoverySession {
             this.config.contactedPeers
         )
         if (uncontacted.length === 0 || this.noProgressCounter >= this.config.noProgressLimit) {
-            this.emitter.emit('discoveryCompleted')
-            this.stopped = true
+            this.doneGate.open()
             return
         }
         for (const nextPeer of uncontacted) {
@@ -112,17 +105,13 @@ export class DiscoverySession {
         if (this.config.peerManager.getContactCount(this.config.contactedPeers) === 0) {
             return
         }
-        // TODO add abortController and signal it in stop()
-        await runAndWaitForEvents3<DiscoverySessionEvents>(
-            [this.findMoreContacts.bind(this)],
-            [[this.emitter, 'discoveryCompleted']],
-            timeout
-        )
-    }
 
-    public stop(): void {
-        this.stopped = true
-        this.emitter.emit('discoveryCompleted')
-        this.emitter.removeAllListeners()
+        setImmediate(() => {
+            this.findMoreContacts()
+        })
+        await Promise.race([
+            this.doneGate.waitUntilOpen(),
+            wait(timeout, this.config.abortSignal)
+        ])
     }
 }
