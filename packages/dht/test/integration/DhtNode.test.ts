@@ -77,5 +77,5 @@ describe('DhtNode', () => {
         const expectedNodeIds = without(getAllPeerDescriptors(), localPeerDescriptor).map((n) => getNodeIdFromPeerDescriptor(n))
         const actualNodeIds = localNode.getClosestContacts().map((n) => getNodeIdFromPeerDescriptor(n))
         expect(actualNodeIds).toIncludeSameMembers(expectedNodeIds)
-    }, 20 * 1000)
+    })
 })
