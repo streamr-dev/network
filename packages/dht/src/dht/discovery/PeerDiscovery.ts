@@ -12,7 +12,6 @@ import { RingIdRaw, getRingIdRawFromPeerDescriptor } from '../contact/ringIdenti
 interface PeerDiscoveryConfig {
     localPeerDescriptor: PeerDescriptor
     joinNoProgressLimit: number
-    peerDiscoveryQueryBatchSize: number
     serviceId: ServiceID
     parallelism: number
     joinTimeout: number
