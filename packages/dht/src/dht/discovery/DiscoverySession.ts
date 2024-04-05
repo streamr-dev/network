@@ -1,4 +1,4 @@
-import { Gate, Logger, wait } from '@streamr/utils'
+import { Gate, Logger, withTimeout } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { DhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
@@ -105,13 +105,9 @@ export class DiscoverySession {
         if (this.config.peerManager.getContactCount(this.config.contactedPeers) === 0) {
             return
         }
-
         setImmediate(() => {
             this.findMoreContacts()
         })
-        await Promise.race([
-            this.doneGate.waitUntilOpen(),
-            wait(timeout, this.config.abortSignal)
-        ])
+        await withTimeout(this.doneGate.waitUntilOpen(), timeout, 'discovery session timed out', this.config.abortSignal)
     }
 }
