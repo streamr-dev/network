@@ -241,7 +241,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
         this.rpcCommunicator = new RoutingRpcCommunicator(
             this.config.serviceId,
-            this.transport.send,
+            (msg, opts) => this.transport!.send(msg, opts),
             { rpcRequestTimeout: this.config.rpcRequestTimeout }
         )
 
