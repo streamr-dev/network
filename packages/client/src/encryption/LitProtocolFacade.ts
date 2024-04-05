@@ -61,16 +61,14 @@ const signAuthMessage = async (litNodeClient: LitNodeClient, authentication: Aut
     const statement = 'dummy'
     const addressInChecksumCase = ethers.utils.getAddress(await authentication.getAddress())
     const nonce = litNodeClient.getLatestBlockhash()
-    const expirationTime = new Date(
-        Date.now() + 1000 * 60 * 60 * 24 * 7 * 10000
-    ).toISOString()
+    const expirationTime = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString()
     const siweMessage = new siwe.SiweMessage({
         domain,
         uri,
         statement,
         address: addressInChecksumCase,
         version: '1',
-        chainId: 1,
+        chainId: 137,
         expirationTime,
         nonce
     })
