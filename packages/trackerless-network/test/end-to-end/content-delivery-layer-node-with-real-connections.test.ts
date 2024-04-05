@@ -1,14 +1,14 @@
 import { ConnectionManager, DhtNode, PeerDescriptor } from '@streamr/dht'
-import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
+import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { waitForCondition } from '@streamr/utils'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
-import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
+import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { Layer0Node } from '../../src/logic/Layer0Node'
 import { Layer1Node } from '../../src/logic/Layer1Node'
 
-describe('random graph with real connections', () => {
+describe('content delivery layer node with real connections', () => {
 
     const epPeerDescriptor: PeerDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 12221, tls: false }
@@ -23,11 +23,11 @@ describe('random graph with real connections', () => {
     let dhtNode2: Layer0Node & Layer1Node
     let dhtNode3: Layer0Node & Layer1Node
     let dhtNode4: Layer0Node & Layer1Node
-    let randomGraphNode1: RandomGraphNode
-    let randomGraphNode2: RandomGraphNode
-    let randomGraphNode3: RandomGraphNode
-    let randomGraphNode4: RandomGraphNode
-    let randomGraphNode5: RandomGraphNode
+    let contentDeliveryLayerNode1: ContentDeliveryLayerNode
+    let contentDeliveryLayerNode2: ContentDeliveryLayerNode
+    let contentDeliveryLayerNode3: ContentDeliveryLayerNode
+    let contentDeliveryLayerNode4: ContentDeliveryLayerNode
+    let contentDeliveryLayerNode5: ContentDeliveryLayerNode
     const websocketPortRange = { min: 12222, max: 12225 } 
 
     beforeEach(async () => {
@@ -42,7 +42,7 @@ describe('random graph with real connections', () => {
         await dhtNode3.start()
         await dhtNode4.start()
 
-        randomGraphNode1 = createRandomGraphNode(
+        contentDeliveryLayerNode1 = createContentDeliveryLayerNode(
             {
                 streamPartId,
                 layer1Node: epDhtNode,
@@ -52,7 +52,7 @@ describe('random graph with real connections', () => {
                 isLocalNodeEntryPoint: () => false
             }
         )
-        randomGraphNode2 = createRandomGraphNode({
+        contentDeliveryLayerNode2 = createContentDeliveryLayerNode({
             streamPartId,
             layer1Node: dhtNode1,
             transport: dhtNode1.getTransport(),
@@ -60,7 +60,7 @@ describe('random graph with real connections', () => {
             localPeerDescriptor: dhtNode1.getLocalPeerDescriptor(),
             isLocalNodeEntryPoint: () => false
         })
-        randomGraphNode3 = createRandomGraphNode({
+        contentDeliveryLayerNode3 = createContentDeliveryLayerNode({
             streamPartId,
             layer1Node: dhtNode2,
             transport: dhtNode2.getTransport(),
@@ -68,7 +68,7 @@ describe('random graph with real connections', () => {
             localPeerDescriptor: dhtNode2.getLocalPeerDescriptor(),
             isLocalNodeEntryPoint: () => false
         })
-        randomGraphNode4 = createRandomGraphNode({
+        contentDeliveryLayerNode4 = createContentDeliveryLayerNode({
             streamPartId,
             layer1Node: dhtNode3,
             transport: dhtNode3.getTransport(),
@@ -76,7 +76,7 @@ describe('random graph with real connections', () => {
             localPeerDescriptor: dhtNode3.getLocalPeerDescriptor(),
             isLocalNodeEntryPoint: () => false
         })
-        randomGraphNode5 = createRandomGraphNode({
+        contentDeliveryLayerNode5 = createContentDeliveryLayerNode({
             streamPartId,
             layer1Node: dhtNode4,
             transport: dhtNode4.getTransport(),
@@ -92,11 +92,11 @@ describe('random graph with real connections', () => {
             dhtNode4.joinDht([epPeerDescriptor])
         ])
         await Promise.all([
-            randomGraphNode1.start(),
-            randomGraphNode2.start(),
-            randomGraphNode3.start(),
-            randomGraphNode4.start(),
-            randomGraphNode5.start()
+            contentDeliveryLayerNode1.start(),
+            contentDeliveryLayerNode2.start(),
+            contentDeliveryLayerNode3.start(),
+            contentDeliveryLayerNode4.start(),
+            contentDeliveryLayerNode5.start()
         ])
     })
 
@@ -107,11 +107,11 @@ describe('random graph with real connections', () => {
             dhtNode2.stop(),
             dhtNode3.stop(),
             dhtNode4.stop(),
-            randomGraphNode1.stop(),
-            randomGraphNode2.stop(),
-            randomGraphNode3.stop(),
-            randomGraphNode4.stop(),
-            randomGraphNode5.stop(),
+            contentDeliveryLayerNode1.stop(),
+            contentDeliveryLayerNode2.stop(),
+            contentDeliveryLayerNode3.stop(),
+            contentDeliveryLayerNode4.stop(),
+            contentDeliveryLayerNode5.stop(),
             (epDhtNode.getTransport() as ConnectionManager).stop(),
             (dhtNode1.getTransport() as ConnectionManager).stop(),
             (dhtNode2.getTransport() as ConnectionManager).stop(),
@@ -122,32 +122,32 @@ describe('random graph with real connections', () => {
 
     it('can fully connected topologies ', async () => {
         await waitForCondition(() => {
-            return randomGraphNode1.getNeighbors().length >= 3
-                && randomGraphNode2.getNeighbors().length >= 3
-                && randomGraphNode3.getNeighbors().length >= 3
-                && randomGraphNode4.getNeighbors().length >= 3
-                && randomGraphNode5.getNeighbors().length >= 3
+            return contentDeliveryLayerNode1.getNeighbors().length >= 3
+                && contentDeliveryLayerNode2.getNeighbors().length >= 3
+                && contentDeliveryLayerNode3.getNeighbors().length >= 3
+                && contentDeliveryLayerNode4.getNeighbors().length >= 3
+                && contentDeliveryLayerNode5.getNeighbors().length >= 3
         }, 10000)
-        expect(randomGraphNode1.getNeighbors().length).toBeGreaterThanOrEqual(3)
-        expect(randomGraphNode2.getNeighbors().length).toBeGreaterThanOrEqual(3)
-        expect(randomGraphNode3.getNeighbors().length).toBeGreaterThanOrEqual(3)
-        expect(randomGraphNode4.getNeighbors().length).toBeGreaterThanOrEqual(3)
-        expect(randomGraphNode5.getNeighbors().length).toBeGreaterThanOrEqual(3)
+        expect(contentDeliveryLayerNode1.getNeighbors().length).toBeGreaterThanOrEqual(3)
+        expect(contentDeliveryLayerNode2.getNeighbors().length).toBeGreaterThanOrEqual(3)
+        expect(contentDeliveryLayerNode3.getNeighbors().length).toBeGreaterThanOrEqual(3)
+        expect(contentDeliveryLayerNode4.getNeighbors().length).toBeGreaterThanOrEqual(3)
+        expect(contentDeliveryLayerNode5.getNeighbors().length).toBeGreaterThanOrEqual(3)
     })
 
     it('can propagate messages', async () => {
         let receivedMessageCount = 0
-        randomGraphNode2.on('message', () => receivedMessageCount += 1)
-        randomGraphNode3.on('message', () => receivedMessageCount += 1)
-        randomGraphNode4.on('message', () => receivedMessageCount += 1)
-        randomGraphNode5.on('message', () => receivedMessageCount += 1)
+        contentDeliveryLayerNode2.on('message', () => receivedMessageCount += 1)
+        contentDeliveryLayerNode3.on('message', () => receivedMessageCount += 1)
+        contentDeliveryLayerNode4.on('message', () => receivedMessageCount += 1)
+        contentDeliveryLayerNode5.on('message', () => receivedMessageCount += 1)
 
         await waitForCondition(() => {
-            return randomGraphNode1.getNeighbors().length >= 3
-                && randomGraphNode2.getNeighbors().length >= 3
-                && randomGraphNode3.getNeighbors().length >= 3
-                && randomGraphNode4.getNeighbors().length >= 3
-                && randomGraphNode5.getNeighbors().length >= 3
+            return contentDeliveryLayerNode1.getNeighbors().length >= 3
+                && contentDeliveryLayerNode2.getNeighbors().length >= 3
+                && contentDeliveryLayerNode3.getNeighbors().length >= 3
+                && contentDeliveryLayerNode4.getNeighbors().length >= 3
+                && contentDeliveryLayerNode5.getNeighbors().length >= 3
         }, 10000)
 
         const msg = createStreamMessage(
@@ -155,7 +155,7 @@ describe('random graph with real connections', () => {
             streamPartId,
             randomEthereumAddress()
         )
-        randomGraphNode1.broadcast(msg)
+        contentDeliveryLayerNode1.broadcast(msg)
         await waitForCondition(() => receivedMessageCount >= 4)
     })
 })

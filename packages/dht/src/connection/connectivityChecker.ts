@@ -87,8 +87,6 @@ export const sendConnectivityRequest = async (
                         } else {
                             reject(`Unsupported version: ${remoteVersion}`)
                         }
-                    } else {
-                        return
                     }
                 } catch (err) {
                     logger.trace('Could not parse message', { err })
