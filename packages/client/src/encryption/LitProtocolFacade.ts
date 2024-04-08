@@ -1,6 +1,6 @@
 import { LitNodeClient } from '@lit-protocol/lit-node-client'
 import { StreamID } from '@streamr/protocol'
-import { Logger, randomString } from '@streamr/utils'
+import { binaryToHex, Logger, randomString } from '@streamr/utils'
 import { ethers } from 'ethers'
 import * as siwe from 'lit-siwe'
 import { inject, Lifecycle, scoped } from 'tsyringe'
@@ -74,7 +74,7 @@ const signAuthMessage = async (litNodeClient: LitNodeClient, authentication: Aut
     const messageToSign = siweMessage.prepareMessage()
     const signature = await authentication.createMessageSignature(Buffer.from(messageToSign))
     return {
-        sig: signature,
+        sig: binaryToHex(signature, true),
         derivedVia: 'web3.eth.personal.sign',
         signedMessage: messageToSign,
         address: addressInChecksumCase
