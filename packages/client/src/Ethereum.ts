@@ -2,7 +2,7 @@
  * Config and utilities for interating with identity & Ethereum chain.
  */
 import { Wallet } from '@ethersproject/wallet'
-import { JsonRpcProvider } from '@ethersproject/providers'
+import { StaticJsonRpcProvider } from '@ethersproject/providers'
 import type { Provider } from '@ethersproject/providers'
 import type { ConnectionInfo } from '@ethersproject/web'
 import type { Overrides } from '@ethersproject/contracts'
@@ -23,7 +23,7 @@ export const getStreamRegistryChainProviders = (config: Pick<StrictStreamrClient
 
 const getRpcProviders = (connectionInfo: ChainConnectionInfo, pollInterval?: number): Provider[] => {
     return connectionInfo.rpcs.map((c: ConnectionInfo) => {
-        const provider = new JsonRpcProvider(c)
+        const provider = new StaticJsonRpcProvider(c)
         if (pollInterval !== undefined) {
             provider.pollingInterval = pollInterval
         }
