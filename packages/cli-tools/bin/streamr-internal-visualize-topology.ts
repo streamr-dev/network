@@ -75,6 +75,14 @@ const createGraph = (topology: Topology) => {
     return lines.join('\n')
 }
 
+const readStdin = async (): Promise<string> => {
+    let text = ''
+    for await (const chunk of process.stdin) {
+        text += chunk
+    }
+    return text
+}
+
 const description = `Generates a DOT graph to visualize a network topology.
 To render the output you can use e.g.:
 - web site https://dreampuf.github.io/GraphvizOnline/
@@ -103,10 +111,12 @@ contain labels and/or a route definition. Format:
 
 createCommand()
     .description(description)
-    .arguments('<topologyDefinitionFile>')
-    .action((topologyDefinitionFile: string) => {
+    .arguments('[topologyDefinitionFile]')
+    .action(async (topologyDefinitionFile?: string) => {
+        const topologyDefinition = (topologyDefinitionFile !== undefined)
+            ? fs.readFileSync(topologyDefinitionFile, 'utf-8')
+            : await readStdin()
         // TODO could validate the content
-        const topology = JSON.parse(fs.readFileSync(topologyDefinitionFile, 'utf-8')) as Topology
-        console.log(createGraph(topology))
+        console.log(createGraph(JSON.parse(topologyDefinition) as Topology))
     })
     .parse()
