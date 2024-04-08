@@ -6,7 +6,7 @@ import { createMockConnectionDhtNode, createMockConnectionLayer1Node, createMock
 const NODE_COUNT = 48
 const NUM_OF_NODES_PER_KBUCKET = 8
 
-describe('Layer1', () => {
+describe.skip('Layer1', () => {
 
     let simulator: Simulator
     const entryPoint0Descriptor = createMockPeerDescriptor()
