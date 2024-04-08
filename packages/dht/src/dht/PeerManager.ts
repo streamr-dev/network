@@ -20,7 +20,6 @@ const logger = new Logger(module)
 interface PeerManagerConfig {
     numberOfNodesPerKBucket: number
     maxContactListSize: number
-    peerDiscoveryQueryBatchSize: number
     localNodeId: DhtAddress
     localPeerDescriptor: PeerDescriptor
     connectionLocker?: ConnectionLocker
