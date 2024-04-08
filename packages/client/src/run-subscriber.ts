@@ -18,6 +18,9 @@ const main = async () => {
                 rpcs: [
                     {
                         "url": "https://polygon-rpc.com"
+                    },
+                    {
+                        "url": "https://polygon.gateway.tenderly.co"
                     }
                 ]
 
