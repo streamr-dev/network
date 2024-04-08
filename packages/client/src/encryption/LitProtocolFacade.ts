@@ -60,7 +60,7 @@ const signAuthMessage = async (litNodeClient: LitNodeClient, authentication: Aut
     const uri = 'https://localhost/login'
     const statement = 'dummy'
     const addressInChecksumCase = ethers.utils.getAddress(await authentication.getAddress())
-    //const nonce = litNodeClient.getLatestBlockhash()
+    const nonce = litNodeClient.getLatestBlockhash()
     const expirationTime = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString()
     const siweMessage = new siwe.SiweMessage({
         domain,
@@ -70,6 +70,7 @@ const signAuthMessage = async (litNodeClient: LitNodeClient, authentication: Aut
         version: '1',
         chainId: 1,
         expirationTime,
+        nonce
     })
     const messageToSign = siweMessage.prepareMessage()
     const signature = await authentication.createMessageSignature(Buffer.from(messageToSign))
