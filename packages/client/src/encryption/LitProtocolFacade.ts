@@ -68,7 +68,7 @@ const signAuthMessage = async (litNodeClient: LitNodeClient, authentication: Aut
         statement,
         address: addressInChecksumCase,
         version: '1',
-        chainId: 137,
+        chainId: 1,
         expirationTime,
         nonce
     })
