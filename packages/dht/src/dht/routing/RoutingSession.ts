@@ -1,4 +1,3 @@
-import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { SortedContactList } from '../contact/SortedContactList'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
@@ -69,11 +68,11 @@ interface RoutingSessionConfig {
     rpcCommunicator: RoutingRpcCommunicator
     localPeerDescriptor: PeerDescriptor
     routedMessage: RouteMessageWrapper
-    connections: Map<DhtAddress, DhtNodeRpcRemote>
     parallelism: number
     mode: RoutingMode
     excludedNodeIds: Set<DhtAddress>
     routingTablesCache: RoutingTablesCache
+    getConnections: () => PeerDescriptor[]
 }
 
 export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
@@ -174,9 +173,9 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                 allowToContainReferenceId: true,
                 nodeIdDistanceLimit: previousId
             })
-            const contacts = Array.from(this.config.connections.values())
+            const contacts = this.config.getConnections()
                 .map((peer) => new RoutingRemoteContact(
-                    peer.getPeerDescriptor(),
+                    peer,
                     this.config.localPeerDescriptor,
                     this.config.rpcCommunicator
                 ))

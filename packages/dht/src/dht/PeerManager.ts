@@ -26,6 +26,7 @@ interface PeerManagerConfig {
     isLayer0: boolean
     lockId: LockID
     createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => DhtNodeRpcRemote
+    hasConnection: (nodeId: DhtAddress) => boolean
 }
 
 export interface PeerManagerEvents {
@@ -51,8 +52,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     // * 'contacts' are all non-unresponsive nodes that we know about
 
     private neighbors: KBucket<DhtNodeRpcRemote>
-    // Nodes that are connected to this node on Layer0
-    public readonly connections: Map<DhtAddress, DhtNodeRpcRemote> = new Map()
     private closestContacts: SortedContactList<DhtNodeRpcRemote>
     private activeContacts: Set<DhtAddress>
     private ringContacts: RingContactList<DhtNodeRpcRemote>
@@ -142,7 +141,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
             // Important to lock here, before the ping result is known
             this.config.connectionLocker?.weakLockConnection(nodeId, this.config.lockId)
-            if (this.connections.has(contact.getNodeId())) {
+            if (this.config.hasConnection(contact.getNodeId())) {
                 logger.trace(`Added new contact ${nodeId}`)
             } else {    // open connection by pinging
                 logger.trace('starting ping ' + nodeId)
@@ -183,24 +182,8 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         return undefined
     }
 
-    onContactConnected(peerDescriptor: PeerDescriptor): void {
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
-        if (nodeId === this.config.localNodeId) {
-            logger.error('handleConnected() to self')
-        }
-        const rpcRemote = this.config.createDhtNodeRpcRemote(peerDescriptor)
-        if (!this.connections.has(nodeId)) {
-            this.connections.set(nodeId, rpcRemote)
-            logger.trace('connectionschange add ' + this.connections.size)
-        } else {
-            logger.trace('new connection not set to connections, there is already a connection with the peer ID')
-        }
-        logger.trace('connected: ' + nodeId + ' ' + this.connections.size)
-    }
-
+    // TODO inline this method
     onContactDisconnected(nodeId: DhtAddress, gracefulLeave: boolean): void {
-        logger.trace('disconnected: ' + nodeId)
-        this.connections.delete(nodeId)
         if (this.config.isLayer0) {
             this.neighbors.remove(getRawFromDhtAddress(nodeId))
             if (gracefulLeave === true) {
@@ -237,7 +220,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         })
         this.closestContacts.stop()
         this.randomContacts.stop()
-        this.connections.clear()
     }
 
     getClosestNeighborsTo(referenceId: DhtAddress, limit?: number, excludedNodeIds?: Set<DhtAddress>): DhtNodeRpcRemote[] {
@@ -280,10 +262,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
 
     getContactCount(excludedNodeIds?: Set<DhtAddress>): number {
         return this.closestContacts.getSize(excludedNodeIds)
-    }
-
-    getConnectionCount(): number {
-        return this.connections.size
     }
 
     getNeighborCount(): number {

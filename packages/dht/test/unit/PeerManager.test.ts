@@ -26,7 +26,8 @@ const createPeerManager = (
                 }
             }(localPeerDescriptor, peerDescriptor, undefined as any, new MockRpcCommunicator())
             return remote
-        }
+        },
+        hasConnection: () => false
     } as any)
     const contacts = nodeIds.map((n) => ({ nodeId: getRawFromDhtAddress(n), type: NodeType.NODEJS }))
     for (const contact of contacts) {
