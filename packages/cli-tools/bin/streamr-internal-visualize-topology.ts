@@ -1,36 +1,5 @@
-/* 
- * Creates a DOT graph from a given topology definition.
- * 
- * The render the output you can use e.g.:
- * - web site https://dreampuf.github.io/GraphvizOnline/
- * - Graphwiz application (https://formulae.brew.sh/formula/graphviz)
- *   (dot -Tsvg topology.dot -o topology.svg)
- *
- * Usage: npx ts-node visualize-topology.ts topology.json
- * 
- * The topology.json must contain neighbor definitions. It may optionally
- * contain labels and/or a route definition.
- * {
- *    "neighbors": {
- *       "1111": ["2222", "3333"],
- *       "2222": ["3333", "4444"],
- *       "3333": ["2222", "4444", "5555"],
- *       "4444": ["5555", "8888"],
- *       "5555": ["6666", "7777", "9999"],
- *       "6666": ["8888", "9999"],
- *       "7777": ["1111"],
- *       "8888": ["9999", "3333"]
- *    },
- *    "labels": {
- *       "1111": "Foo",
- *       "5555": "Bar"
- *    },
- *    "route": ["3333", "4444", "5555", "6666", "8888"]
- * }
- * 
- * The node IDs are truncated to 4 characters.
- */
-
+#!/usr/bin/env node
+import { createCommand } from '../src/command'
 import fs from 'fs'
 
 interface Topology {
@@ -106,7 +75,38 @@ const createGraph = (topology: Topology) => {
     return lines.join('\n')
 }
 
-const fileName = process.argv[2]
-// TODO could validate the content
-const topology = JSON.parse(fs.readFileSync(fileName, 'utf-8')) as Topology
-console.log(createGraph(topology))
+const description = `Generates a DOT graph to visualize a network topology.
+To render the output you can use e.g.:
+- web site https://dreampuf.github.io/GraphvizOnline/
+- Graphwiz application (https://formulae.brew.sh/formula/graphviz)
+  (dot -Tsvg topology.dot -o topology.svg)
+
+The definition JSON must contain neighbor definitions. It may optionally
+contain labels and/or a route definition. Format:
+{
+   "neighbors": {
+      "1111": ["2222", "3333"],
+      "2222": ["3333", "4444"],
+      "3333": ["2222", "4444", "5555"],
+      "4444": ["5555", "8888"],
+      "5555": ["6666", "7777", "9999"],
+      "6666": ["8888", "9999"],
+      "7777": ["1111"],
+      "8888": ["9999", "3333"]
+   },
+   "labels": {
+      "1111": "Foo",
+      "5555": "Bar"
+   },
+   "route": ["3333", "4444", "5555", "6666", "8888"]
+}`
+
+createCommand()
+    .description(description)
+    .arguments('<topologyDefinitionFile>')
+    .action((topologyDefinitionFile: string) => {
+        // TODO could validate the content
+        const topology = JSON.parse(fs.readFileSync(topologyDefinitionFile, 'utf-8')) as Topology
+        console.log(createGraph(topology))
+    })
+    .parse()
