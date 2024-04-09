@@ -370,7 +370,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 return this.peerManager!.getClosestNeighborsTo(nodeId, limit)
                     .map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor())
             },
-            getClosestRingPeersTo: (ringIdRaw: RingIdRaw, limit: number) => {
+            getClosestRingContactsTo: (ringIdRaw: RingIdRaw, limit: number) => {
                 return this.getClosestRingContactsTo(ringIdRaw, limit)
             },
             addContact: (contact: PeerDescriptor) => this.peerManager!.addContact(contact),
