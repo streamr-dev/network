@@ -49,7 +49,7 @@ import { StoreManager } from './store/StoreManager'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
 import { createPeerDescriptor } from '../helpers/createPeerDescriptor'
 import { RingIdRaw } from './contact/ringIdentifiers'
-import { getLocalRegion, getLocalRegionByCoordinates } from '@streamr/cdn-location'
+import { getLocalRegionByCoordinates, getLocalRegionWithCache } from '@streamr/cdn-location'
 import { RingContacts } from './contact/RingContactList'
 
 export interface DhtNodeEvents {
@@ -429,7 +429,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             } else {
                 // as a fallback get the region from the CDN
                 // and if it's not available, use a random region
-                region = await getLocalRegion()
+                region = await getLocalRegionWithCache(1000 * 60 * 60)
             }
             
             this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, region, this.config.nodeId)

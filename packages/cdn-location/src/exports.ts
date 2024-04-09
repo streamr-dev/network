@@ -1,5 +1,6 @@
 import {
     getLocalRegion,
+    getLocalRegionWithCache,
     getLocalAirportCode,
     getLocalRegionByCoordinates,
     getLocalAirportCodeByCoordinates
@@ -7,6 +8,7 @@ import {
 
 export {
     getLocalRegion,
+    getLocalRegionWithCache,
     getLocalRegionByCoordinates,
     getLocalAirportCode,
     getLocalAirportCodeByCoordinates

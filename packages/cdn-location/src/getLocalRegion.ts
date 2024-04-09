@@ -1,9 +1,12 @@
 import { airportCodeToRegion } from './airportCodeToRegion'
 import { fetchAirportCodeFromCdn } from './fetchAirportCodeFromCdn'
 import { Logger } from '@streamr/utils'
-import haversine from 'haversine' 
+import haversine from 'haversine'
 
 const logger = new Logger(module)
+
+let cachedLocalRegion: number | undefined = undefined
+let cachedLocalRegionFetchTime: number | undefined = undefined
 
 export const getLocalAirportCode: () => Promise<string | undefined> = async () => {
     let airportCode: string
@@ -15,7 +18,7 @@ export const getLocalAirportCode: () => Promise<string | undefined> = async () =
     return airportCode
 }
 
-export const getLocalAirportCodeByCoordinates: (latitude: number, longitude: number) => string = (latitude, longitude) => {    
+export const getLocalAirportCodeByCoordinates: (latitude: number, longitude: number) => string = (latitude, longitude) => {
     const distances: Array<[airportCode: string, distance: number]> = []
 
     Object.keys(airportCodeToRegion).forEach((key) => {
@@ -45,19 +48,33 @@ const getRandomRegion: () => number = () => {
     return randomRegion
 }
 
+export const getLocalRegionWithCache: (maxCacheAge: number) => Promise<number> =
+    async (maxCacheAge: number) => {
+        if (cachedLocalRegion === undefined || cachedLocalRegionFetchTime === undefined ||
+            Date.now() - cachedLocalRegionFetchTime > maxCacheAge) {
+
+            return getLocalRegion()
+        }
+
+        return cachedLocalRegion
+    }
+
 export const getLocalRegion: () => Promise<number> = async () => {
     let airportCode: string | undefined = undefined
-    
+
     airportCode = await getLocalAirportCode()
-   
+
     if (airportCode === undefined || !airportCodeToRegion[airportCode]) {
         return getRandomRegion()
     }
 
+    cachedLocalRegion = airportCodeToRegion[airportCode][0]
+    cachedLocalRegionFetchTime = Date.now()
+
     return airportCodeToRegion[airportCode][0]
 }
 
-export const getLocalRegionByCoordinates: (latitude: number, longitude: number) => number = (latitude, longitude) => {    
+export const getLocalRegionByCoordinates: (latitude: number, longitude: number) => number = (latitude, longitude) => {
     const distances: Array<[regionNumber: number, distance: number]> = []
 
     Object.keys(airportCodeToRegion).forEach((key) => {
