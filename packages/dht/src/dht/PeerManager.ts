@@ -7,11 +7,11 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 import { RandomContactList } from './contact/RandomContactList'
-import { SortedContactList } from './contact/SortedContactList'
+import { ReadonlySortedContactList, SortedContactList } from './contact/SortedContactList'
 import { ConnectionLocker } from '../connection/ConnectionManager'
 import EventEmitter from 'eventemitter3'
 import { DhtAddress, DhtAddressRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../identifiers'
-import { RingContactList, RingContacts } from './contact/RingContactList'
+import { RingContactList } from './contact/RingContactList'
 import { RingIdRaw, getRingIdRawFromPeerDescriptor } from './contact/ringIdentifiers'
 import { LockID } from '../connection/ConnectionLockStates'
 
@@ -29,12 +29,12 @@ interface PeerManagerConfig {
 }
 
 export interface PeerManagerEvents {
-    contactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    contactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    randomContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    randomContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    ringContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: RingContacts) => void
-    ringContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: RingContacts) => void
+    closestContactAdded: (peerDescriptor: PeerDescriptor) => void
+    closestContactRemoved: (peerDescriptor: PeerDescriptor) => void
+    randomContactAdded: (peerDescriptor: PeerDescriptor) => void
+    randomContactRemoved: (peerDescriptor: PeerDescriptor) => void
+    ringContactAdded: (peerDescriptor: PeerDescriptor) => void
+    ringContactRemoved: (peerDescriptor: PeerDescriptor) => void
     kBucketEmpty: () => void
 }
 
@@ -69,11 +69,11 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             numberOfNodesToPing: this.config.numberOfNodesPerKBucket
         })
         this.ringContacts = new RingContactList<DhtNodeRpcRemote>(getRingIdRawFromPeerDescriptor(this.config.localPeerDescriptor))
-        this.ringContacts.on('ringContactAdded', (peerDescriptor: PeerDescriptor, closestPeers: RingContacts) => {
-            this.emit('ringContactAdded', peerDescriptor, closestPeers)
+        this.ringContacts.on('contactAdded', (contact: DhtNodeRpcRemote) => {
+            this.emit('ringContactAdded', contact.getPeerDescriptor())
         })
-        this.ringContacts.on('ringContactRemoved', (peerDescriptor: PeerDescriptor, closestPeers: RingContacts) => {
-            this.emit('ringContactRemoved', peerDescriptor, closestPeers)
+        this.ringContacts.on('contactRemoved', (contact: DhtNodeRpcRemote) => {
+            this.emit('ringContactRemoved', contact.getPeerDescriptor())
         })
         this.neighbors.on('ping', (oldContacts: DhtNodeRpcRemote[], newContact: DhtNodeRpcRemote) => this.onKBucketPing(oldContacts, newContact))
         this.neighbors.on('removed', (contact: DhtNodeRpcRemote) => this.onKBucketRemoved(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())))
@@ -86,23 +86,23 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             maxSize: this.config.maxContactListSize,
             allowToContainReferenceId: false
         })
-        this.closestContacts.on('contactRemoved', (removedContact: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) => {
+        this.closestContacts.on('contactRemoved', (contact: DhtNodeRpcRemote) => {
             if (this.stopped) {
                 return
             }
-            this.emit('contactRemoved', removedContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
-            this.randomContacts.addContact(this.config.createDhtNodeRpcRemote(removedContact.getPeerDescriptor()))
+            this.emit('closestContactRemoved', contact.getPeerDescriptor())
+            this.randomContacts.addContact(this.config.createDhtNodeRpcRemote(contact.getPeerDescriptor()))
         })
-        this.closestContacts.on('contactAdded', (contactAdded: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) =>
-            this.emit('contactAdded', contactAdded.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
+        this.closestContacts.on('contactAdded', (contact: DhtNodeRpcRemote) =>
+            this.emit('closestContactAdded', contact.getPeerDescriptor())
         )
         this.activeContacts = new Set()
         this.randomContacts = new RandomContactList(this.config.localNodeId, this.config.maxContactListSize)
-        this.randomContacts.on('contactRemoved', (removedContact: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) =>
-            this.emit('randomContactRemoved', removedContact.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
+        this.randomContacts.on('contactRemoved', (removedContact: DhtNodeRpcRemote) =>
+            this.emit('randomContactRemoved', removedContact.getPeerDescriptor())
         )
-        this.randomContacts.on('contactAdded', (contactAdded: DhtNodeRpcRemote, activeContacts: DhtNodeRpcRemote[]) =>
-            this.emit('randomContactAdded', contactAdded.getPeerDescriptor(), activeContacts.map((c) => c.getPeerDescriptor()))
+        this.randomContacts.on('contactAdded', (contactAdded: DhtNodeRpcRemote) =>
+            this.emit('randomContactAdded', contactAdded.getPeerDescriptor())
         )
     }
 
@@ -251,18 +251,8 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         return closest.getClosestContacts()
     }
 
-    // TODO reduce copy-paste?
-    getClosestContactsTo(referenceId: DhtAddress, limit?: number, excludedNodeIds?: Set<DhtAddress>): DhtNodeRpcRemote[] {
-        const closest = new SortedContactList<DhtNodeRpcRemote>({
-            referenceId,
-            allowToContainReferenceId: true,
-            excludedNodeIds,
-            maxSize: limit
-        })
-        for (const contact of this.closestContacts.getAllContactsInUndefinedOrder()) {
-            closest.addContact(contact)
-        }
-        return closest.getClosestContacts()
+    getClosestContacts(): ReadonlySortedContactList<DhtNodeRpcRemote> {
+        return this.closestContacts
     }
 
     getClosestRingContactsTo(
@@ -277,7 +267,16 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.ringContacts.getAllContacts().map((contact) => closest.addContact(contact))
         return closest.getClosestContacts(limit ?? 8)
     }
+    
+    getRandomContacts(): RandomContactList<DhtNodeRpcRemote> {
+        return this.randomContacts
+    }
+    
+    getRingContacts(): RingContactList<DhtNodeRpcRemote> {
+        return this.ringContacts
+    }
 
+    // TODO rename getNearbyContactsCount
     getContactCount(excludedNodeIds?: Set<DhtAddress>): number {
         return this.closestContacts.getSize(excludedNodeIds)
     }

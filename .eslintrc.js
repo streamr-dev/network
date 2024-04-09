@@ -72,6 +72,7 @@ module.exports = {
         'default-case': ['error'],
         'no-useless-return': 'error',
         'promise/always-return': ['error', { ignoreLastCallback: true }],
+        'no-unneeded-ternary': 'error',
         'no-lonely-if': 'error',
         // TODO: in follow up PRs, select which rules we should enable and fix the code. When all recommended rules
         //  have been enabled, consider enabling the "strict" preset.
