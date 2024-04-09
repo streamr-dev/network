@@ -54,7 +54,7 @@ export interface WebsocketConnectorConfig {
     autoCertifierUrl: string
     autoCertifierConfigFile: string
     serverEnableTls: boolean
-    geoIpDatabasePath?: string
+    geoIpDatabaseFolder?: string
 }
 
 export class WebsocketConnector {
@@ -169,8 +169,8 @@ export class WebsocketConnector {
             const port = await this.websocketServer.start()
             this.selectedPort = port
 
-            if (this.config.geoIpDatabasePath) {
-                const geoIpLocator = new GeoIpLocator(this.config.geoIpDatabasePath)
+            if (this.config.geoIpDatabaseFolder) {
+                const geoIpLocator = new GeoIpLocator(this.config.geoIpDatabaseFolder)
                 try {
                     await geoIpLocator.start()
                     this.geoIpLocator = geoIpLocator

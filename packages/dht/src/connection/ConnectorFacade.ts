@@ -44,7 +44,7 @@ export interface DefaultConnectorFacadeConfig {
     websocketServerEnableTls?: boolean
     autoCertifierUrl?: string
     autoCertifierConfigFile?: string
-    geoIpDatabasePath?: string
+    geoIpDatabaseFolder?: string
     createLocalPeerDescriptor: (connectivityResponse: ConnectivityResponse) => Promise<PeerDescriptor>
 }
 
@@ -78,7 +78,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             autoCertifierConfigFile: this.config.autoCertifierConfigFile!,
             autoCertifierTransport,
             maxMessageSize: this.config.maxMessageSize,
-            geoIpDatabasePath: this.config.geoIpDatabasePath
+            geoIpDatabaseFolder: this.config.geoIpDatabaseFolder
         }
         this.websocketConnector = new WebsocketConnector(webSocketConnectorConfig)
         logger.trace(`Creating WebRtcConnectorRpcLocal`)

@@ -10,7 +10,7 @@ interface GeoIpLookupResult {
 }
 export class GeoIpLocator {
     private abortController: AbortController
-    private readonly geoiIpDatabasePath: string
+    private readonly geoIpDatabaseFolder: string
     private readonly dbCheckInterval: number
     private readonly dbCheckErrorInterval: number
     private reader?: Reader<CityResponse>
@@ -19,24 +19,24 @@ export class GeoIpLocator {
     // By default, check the database every 30 days
     // If the check fails, retry after 24 hours
 
-    constructor(geoiIpDatabasePath: string, dbCheckInterval: number = 30 * 24 * 60 * 60 * 1000,
+    constructor(geoIpDatabaseFolder: string, dbCheckInterval: number = 30 * 24 * 60 * 60 * 1000,
         dbCheckErrorInterval: number = 24 * 60 * 60 * 1000) {
         this.abortController = new AbortController()
         this.dbCheckInterval = dbCheckInterval
         this.dbCheckErrorInterval = dbCheckErrorInterval
-        if (!geoiIpDatabasePath.endsWith('/')) {
-            geoiIpDatabasePath += '/'
+        if (!geoIpDatabaseFolder.endsWith('/')) {
+            geoIpDatabaseFolder += '/'
         }
-        this.geoiIpDatabasePath = filePathToNodeFormat(geoiIpDatabasePath)
+        this.geoIpDatabaseFolder = filePathToNodeFormat(geoIpDatabaseFolder)
     }
 
     private checkDatabase: () => Promise<void> = async () => {
         if (this.reader === undefined) {
             // if we do not have a reader, create a new one in any case
-            this.reader = await downloadGeoIpDatabase(this.geoiIpDatabasePath, true, this.abortController.signal)
+            this.reader = await downloadGeoIpDatabase(this.geoIpDatabaseFolder, true, this.abortController.signal)
         } else {
             // if we already have a reader, create a new one only if db has changed
-            const newReader = await downloadGeoIpDatabase(this.geoiIpDatabasePath, false, this.abortController.signal)
+            const newReader = await downloadGeoIpDatabase(this.geoIpDatabaseFolder, false, this.abortController.signal)
             if (newReader !== undefined) {
                 this.reader = newReader
             }
