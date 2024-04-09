@@ -84,19 +84,19 @@ describe('content delivery layer node with real connections', () => {
             localPeerDescriptor: dhtNode4.getLocalPeerDescriptor(),
             isLocalNodeEntryPoint: () => false
         })
-        await epDhtNode.joinDht([epPeerDescriptor])
-        await Promise.all([
-            dhtNode1.joinDht([epPeerDescriptor]),
-            dhtNode2.joinDht([epPeerDescriptor]),
-            dhtNode3.joinDht([epPeerDescriptor]),
-            dhtNode4.joinDht([epPeerDescriptor])
-        ])
         await Promise.all([
             contentDeliveryLayerNode1.start(),
             contentDeliveryLayerNode2.start(),
             contentDeliveryLayerNode3.start(),
             contentDeliveryLayerNode4.start(),
             contentDeliveryLayerNode5.start()
+        ])
+        await epDhtNode.joinDht([epPeerDescriptor])
+        await Promise.all([
+            dhtNode1.joinDht([epPeerDescriptor]),
+            dhtNode2.joinDht([epPeerDescriptor]),
+            dhtNode3.joinDht([epPeerDescriptor]),
+            dhtNode4.joinDht([epPeerDescriptor])
         ])
     })
 
