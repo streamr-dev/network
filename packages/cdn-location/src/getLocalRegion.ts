@@ -1,4 +1,4 @@
-import { airportCodeToRegionNumber } from './airportCodeToRegionNumber'
+import { airportCodeToRegion } from './airportCodeToRegion'
 import { fetchAirportCodeFromCdn } from './fetchAirportCodeFromCdn'
 import { Logger } from '@streamr/utils'
 import haversine from 'haversine' 
@@ -18,8 +18,8 @@ export const getLocalAirportCode: () => Promise<string | undefined> = async () =
 export const getLocalAirportCodeByCoordinates: (latitude: number, longitude: number) => string = (latitude, longitude) => {    
     const distances: Array<[airportCode: string, distance: number]> = []
 
-    Object.keys(airportCodeToRegionNumber).forEach((key) => {
-        const airport = airportCodeToRegionNumber[key]
+    Object.keys(airportCodeToRegion).forEach((key) => {
+        const airport = airportCodeToRegion[key]
         const distance = haversine({ latitude, longitude }, { latitude: airport[1], longitude: airport[2] })
         distances.push([key, distance])
     })
@@ -33,13 +33,13 @@ export const getLocalAirportCodeByCoordinates: (latitude: number, longitude: num
 const getRandomRegion: () => number = () => {
     // randomize the region form airpotCodeToRegionNumber
 
-    const airportCodes = Object.keys(airportCodeToRegionNumber)
+    const airportCodes = Object.keys(airportCodeToRegion)
     const randomAirportCode = airportCodes[Math.floor(Math.random() * airportCodes.length)]
 
     // indicate that the region is random by adding 99, the convention is
     // that random region numbers end with 99
 
-    const randomRegion = airportCodeToRegionNumber[randomAirportCode][0] + 99
+    const randomRegion = airportCodeToRegion[randomAirportCode][0] + 99
 
     logger.warn(`Could not get airport code, using random region: ${randomRegion}`)
     return randomRegion
@@ -50,18 +50,18 @@ export const getLocalRegion: () => Promise<number> = async () => {
     
     airportCode = await getLocalAirportCode()
    
-    if (airportCode === undefined || !airportCodeToRegionNumber[airportCode]) {
+    if (airportCode === undefined || !airportCodeToRegion[airportCode]) {
         return getRandomRegion()
     }
 
-    return airportCodeToRegionNumber[airportCode][0]
+    return airportCodeToRegion[airportCode][0]
 }
 
 export const getLocalRegionByCoordinates: (latitude: number, longitude: number) => number = (latitude, longitude) => {    
     const distances: Array<[regionNumber: number, distance: number]> = []
 
-    Object.keys(airportCodeToRegionNumber).forEach((key) => {
-        const airport = airportCodeToRegionNumber[key]
+    Object.keys(airportCodeToRegion).forEach((key) => {
+        const airport = airportCodeToRegion[key]
         const distance = haversine({ latitude, longitude }, { latitude: airport[1], longitude: airport[2] })
         distances.push([airport[0], distance])
     })

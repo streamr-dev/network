@@ -2,5 +2,5 @@ node_modules/**
 dist/**
 .idea/**
 src/proto/**
-data-generation/final-data/airportCodeToRegionNumber.ts
-src/airportCodeToRegionNumber.ts
+data-generation/final-data/airportCodeToRegion.ts
+src/airportCodeToRegion.ts

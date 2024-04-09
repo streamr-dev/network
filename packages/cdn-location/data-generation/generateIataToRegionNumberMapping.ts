@@ -181,13 +181,13 @@ for (const airportLine of airportsWithCoordinatesTuples) {
 }
 
 // write the airportCodeToIndex to a generated typescript file 
-// at src/airportCodeToRegionNumber.ts and data-generation/final-data/airportCodeToRegionNumber.ts
+// at src/airportCodeToRegion.ts and data-generation/final-data/airportCodeToRegion.ts
 
-const airportCodeToIndexFile = fs.createWriteStream('./src/airportCodeToRegionNumber.ts')
-const airportCodeToIndexFile2 = fs.createWriteStream('./data-generation/final-data/airportCodeToRegionNumber.ts')
+const airportCodeToIndexFile = fs.createWriteStream('./src/airportCodeToRegion.ts')
+const airportCodeToIndexFile2 = fs.createWriteStream('./data-generation/final-data/airportCodeToRegion.ts')
 
 // eslint-disable-next-line max-len
-const airportCodeToIndexFileHeader = 'export const airportCodeToRegionNumber: Record<string, [regionNumber: number, latitude: number, longitude: number]> = {\n'
+const airportCodeToIndexFileHeader = 'export const airportCodeToRegion: Record<string, [regionNumber: number, latitude: number, longitude: number]> = {\n'
 airportCodeToIndexFile.write(airportCodeToIndexFileHeader)
 airportCodeToIndexFile2.write(airportCodeToIndexFileHeader)
 
