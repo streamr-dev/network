@@ -308,7 +308,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             localNodeId: this.getNodeId(),
             localPeerDescriptor: this.localPeerDescriptor!,
             connectionLocker: this.connectionLocker,
-            isLayer0: (this.connectionLocker !== undefined),
             lockId: this.config.serviceId,
             createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => this.createDhtNodeRpcRemote(peerDescriptor),
             hasConnection: (nodeId: DhtAddress) => this.transport!.hasConnection(nodeId)
@@ -351,7 +350,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.emit('connected', peerDescriptor)
         })
         this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => {
-            this.peerManager!.onContactDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor), gracefulLeave)
+            const isLayer0 = (this.connectionLocker !== undefined)
+            if (isLayer0) {
+                const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+                // TODO could create else block for this?
+                this.peerManager!.removeNeighbor(nodeId)
+                if (gracefulLeave) {
+                    this.peerManager!.removeContact(nodeId)
+                }
+            }
             this.router!.onNodeDisconnected(peerDescriptor)
             this.emit('disconnected', peerDescriptor, gracefulLeave)
         })

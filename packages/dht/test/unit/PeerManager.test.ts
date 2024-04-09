@@ -100,7 +100,7 @@ describe('PeerManager', () => {
         for (const successContact of successContacts) {
             manager.addContact(successContact)
             manager.setContactActive(getNodeIdFromPeerDescriptor(successContact))
-            manager.onContactDisconnected(getNodeIdFromPeerDescriptor(successContact), false)
+            manager.removeNeighbor(getNodeIdFromPeerDescriptor(successContact))
         }
         expect(manager.getNeighborCount()).toBe(0)
         manager.addContact(failureContact)

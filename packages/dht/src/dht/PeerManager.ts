@@ -23,7 +23,6 @@ interface PeerManagerConfig {
     localNodeId: DhtAddress
     localPeerDescriptor: PeerDescriptor
     connectionLocker?: ConnectionLocker
-    isLayer0: boolean
     lockId: LockID
     createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => DhtNodeRpcRemote
     hasConnection: (nodeId: DhtAddress) => boolean
@@ -182,19 +181,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         return undefined
     }
 
-    // TODO inline this method
-    onContactDisconnected(nodeId: DhtAddress, gracefulLeave: boolean): void {
-        if (this.config.isLayer0) {
-            this.neighbors.remove(getRawFromDhtAddress(nodeId))
-            if (gracefulLeave === true) {
-                logger.trace(nodeId + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
-                this.removeContact(nodeId)
-            } else {
-                logger.trace(nodeId + ' ' + 'onTransportDisconnected with gracefulLeave ' + gracefulLeave)
-            }
-        }
-    }
-
     removeContact(nodeId: DhtAddress): void {
         if (this.stopped) {
             return
@@ -205,6 +191,10 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.closestContacts.removeContact(nodeId)
         this.activeContacts.delete(nodeId)
         this.randomContacts.removeContact(nodeId)
+    }
+
+    removeNeighbor(nodeId: DhtAddress): void {
+        this.neighbors.remove(getRawFromDhtAddress(nodeId))
     }
 
     stop(): void {
