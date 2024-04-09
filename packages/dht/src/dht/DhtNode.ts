@@ -98,6 +98,8 @@ export interface DhtNodeOptions {
     externalIp?: string
     autoCertifierUrl?: string
     autoCertifierConfigFile?: string
+
+    geoIpDatabaseFolder?: string
 }
 
 type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
@@ -155,6 +157,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.validateConfig()
         this.localDataStore = new LocalDataStore(this.config.storeMaxTtl)
         this.send = this.send.bind(this)
+        console.log('TESTING VALUE', this.config.geoIpDatabaseFolder) // TODO: remove me
     }
 
     private validateConfig(): void {
