@@ -7,7 +7,7 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 import { RandomContactList } from './contact/RandomContactList'
-import { SortedContactList } from './contact/SortedContactList'
+import { ReadonlySortedContactList, SortedContactList } from './contact/SortedContactList'
 import { ConnectionLocker } from '../connection/ConnectionManager'
 import EventEmitter from 'eventemitter3'
 import { DhtAddress, DhtAddressRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../identifiers'
@@ -251,18 +251,8 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         return closest.getClosestContacts()
     }
 
-    // TODO reduce copy-paste?
-    getClosestContactsTo(referenceId: DhtAddress, limit?: number, excludedNodeIds?: Set<DhtAddress>): DhtNodeRpcRemote[] {
-        const closest = new SortedContactList<DhtNodeRpcRemote>({
-            referenceId,
-            allowToContainReferenceId: true,
-            excludedNodeIds,
-            maxSize: limit
-        })
-        for (const contact of this.closestContacts.getAllContactsInUndefinedOrder()) {
-            closest.addContact(contact)
-        }
-        return closest.getClosestContacts()
+    getClosestContacts(): ReadonlySortedContactList<DhtNodeRpcRemote> {
+        return this.closestContacts
     }
 
     getClosestRingContactsTo(

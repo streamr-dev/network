@@ -5,6 +5,7 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerManager, getDistance } from '../PeerManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { DhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
+import { getClosestContacts } from '../contact/getClosestContacts'
 
 const logger = new Logger(module)
 
@@ -82,10 +83,13 @@ export class DiscoverySession {
         if (this.stopped) {
             return
         }
-        const uncontacted = this.config.peerManager.getClosestContactsTo(
+        const uncontacted = getClosestContacts(
             this.config.targetId,
-            this.config.parallelism,
-            this.config.contactedPeers
+            this.config.peerManager.getClosestContacts().getAllContactsInUndefinedOrder(),
+            {
+                maxCount: this.config.parallelism,
+                excludedNodeIds: this.config.contactedPeers
+            }
         )
         if (uncontacted.length === 0 || this.noProgressCounter >= this.config.noProgressLimit) {
             this.emitter.emit('discoveryCompleted')

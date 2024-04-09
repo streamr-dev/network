@@ -53,21 +53,6 @@ const getClosestContact = (contacts: PeerDescriptor[], referenceId: DhtAddress):
 
 describe('PeerManager', () => {
 
-    it('getClosestContactsTo', () => {
-        const nodeIds = range(10).map(() => createRandomDhtAddress())
-        const manager = createPeerManager(nodeIds)
-        const referenceId = createRandomDhtAddress()
-        const excluded = new Set<DhtAddress>(sampleSize(nodeIds, 2))
-
-        const actual = manager.getClosestContactsTo(referenceId, 5, excluded)
-
-        const expected = sortBy(
-            without(nodeIds, ...Array.from(excluded.values())),
-            (n: DhtAddress) => getDistance(getRawFromDhtAddress(n), getRawFromDhtAddress(referenceId))
-        ).slice(0, 5)
-        expect(actual.map((n) => n.getNodeId())).toEqual(expected)
-    })
-
     it('getClosestNeighborsTo', () => {
         const nodeIds = range(10).map(() => createRandomDhtAddress())
         const manager = createPeerManager(nodeIds)
