@@ -6,21 +6,29 @@ import { createMockPeerDescriptor } from '../utils'
 export class MockLayer1Node extends EventEmitter implements Layer1Node {
 
     private readonly kbucketPeers: PeerDescriptor[] = []
+    private closestContacts: PeerDescriptor[] = []
+    private randomContacts: PeerDescriptor[] = []
 
     // eslint-disable-next-line class-methods-use-this
     removeContact(): void {
     }
 
-    // eslint-disable-next-line class-methods-use-this
     getClosestContacts(): PeerDescriptor[] {
-        return []
+        return this.closestContacts 
     }
 
-    // eslint-disable-next-line class-methods-use-this
+    setClosestContacts(contacts: PeerDescriptor[]): void {
+        this.closestContacts = contacts
+    }
+
     getRandomContacts(): PeerDescriptor[] {
-        return []
+        return this.randomContacts 
     }
 
+    setRandomContacts(contacts: PeerDescriptor[]): void {
+        this.randomContacts = contacts
+    }
+    
     // eslint-disable-next-line class-methods-use-this
     getRingContacts(): RingContacts {
         return { left: [], right: [] }
