@@ -236,7 +236,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
         this.rpcCommunicator = new RoutingRpcCommunicator(
             this.config.serviceId,
-            this.transport.send,
+            (msg, opts) => this.transport!.send(msg, opts),
             { rpcRequestTimeout: this.config.rpcRequestTimeout }
         )
 
@@ -247,7 +247,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.peerDiscovery = new PeerDiscovery({
             localPeerDescriptor: this.localPeerDescriptor!,
             joinNoProgressLimit: this.config.joinNoProgressLimit,
-            peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
             joinTimeout: this.config.dhtJoinTimeout,
             serviceId: this.config.serviceId,
             parallelism: this.config.joinParallelism,
@@ -304,7 +303,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             localNodeId: this.getNodeId(),
             localPeerDescriptor: this.localPeerDescriptor!,
             connectionLocker: this.connectionLocker,
-            peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
             isLayer0: (this.connectionLocker !== undefined),
             createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => this.createDhtNodeRpcRemote(peerDescriptor),
             lockId: this.config.serviceId
@@ -367,7 +365,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 return this.peerManager!.getClosestNeighborsTo(nodeId, limit)
                     .map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor())
             },
-            getClosestRingPeersTo: (ringIdRaw: RingIdRaw, limit: number) => {
+            getClosestRingContactsTo: (ringIdRaw: RingIdRaw, limit: number) => {
                 return this.getClosestRingContactsTo(ringIdRaw, limit)
             },
             addContact: (contact: PeerDescriptor) => this.peerManager!.addContact(contact),
@@ -438,9 +436,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public getClosestContacts(limit?: number): PeerDescriptor[] {
-        return this.peerManager!.getClosestContactsTo(
-            this.getNodeId(),
-            limit).map((peer) => peer.getPeerDescriptor())
+        return this.peerManager!.getClosestContacts()
+            .getClosestContacts(limit)
+            .map((peer) => peer.getPeerDescriptor())
     }
 
     public getClosestRingContactsTo(ringIdRaw: RingIdRaw, limit?: number): RingContacts {

@@ -41,7 +41,7 @@ export interface Events {
     entryPointLeaveDetected: () => void
 }
 
-export interface StrictRandomGraphNodeConfig {
+export interface StrictContentDeliveryLayerNodeConfig {
     streamPartId: StreamPartID
     layer1Node: Layer1Node
     transport: ITransport
@@ -69,15 +69,15 @@ export interface StrictRandomGraphNodeConfig {
 
 const logger = new Logger(module)
 
-export class RandomGraphNode extends EventEmitter<Events> {
+export class ContentDeliveryLayerNode extends EventEmitter<Events> {
 
     private started = false
     private readonly duplicateDetectors: Map<string, DuplicateMessageDetector>
-    private config: StrictRandomGraphNodeConfig
+    private config: StrictContentDeliveryLayerNodeConfig
     private readonly contentDeliveryRpcLocal: ContentDeliveryRpcLocal
     private abortController: AbortController = new AbortController()
 
-    constructor(config: StrictRandomGraphNodeConfig) {
+    constructor(config: StrictContentDeliveryLayerNodeConfig) {
         super()
         this.config = config
         this.duplicateDetectors = new Map()
@@ -214,12 +214,12 @@ export class RandomGraphNode extends EventEmitter<Events> {
             (req: TemporaryConnectionRequest, context) => this.config.temporaryConnectionRpcLocal.closeConnection(req, context))
     }
 
-    private onRingContactEvent(ringPeers: RingContacts): void {
+    private onRingContactEvent(ringContacts: RingContacts): void {
         logger.trace(`onRingContactAdded`)
         if (this.isStopped()) {
             return
         }
-        this.config.leftNodeView.replaceAll(ringPeers.left.map((peer) => 
+        this.config.leftNodeView.replaceAll(ringContacts.left.map((peer) => 
             new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,
                 peer,
@@ -228,7 +228,7 @@ export class RandomGraphNode extends EventEmitter<Events> {
                 this.config.rpcRequestTimeout
             )
         ))
-        this.config.rightNodeView.replaceAll(ringPeers.right.map((peer) =>
+        this.config.rightNodeView.replaceAll(ringContacts.right.map((peer) =>
             new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,
                 peer,

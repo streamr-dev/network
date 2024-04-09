@@ -6,17 +6,14 @@ export class MockRouter implements Methods<Router> {
 
     // eslint-disable-next-line class-methods-use-this
     addRoutingSession(): void {
-        return
     }
 
     // eslint-disable-next-line class-methods-use-this
     removeRoutingSession(): void {
-        return
     }
 
     // eslint-disable-next-line class-methods-use-this
     addToDuplicateDetector(): void {
-        return
     }
 
     // eslint-disable-next-line class-methods-use-this

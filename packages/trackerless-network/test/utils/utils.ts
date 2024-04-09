@@ -9,7 +9,7 @@ import {
     getRandomRegion,
     getRawFromDhtAddress
 } from '@streamr/dht'
-import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
+import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import {
     ContentType,
     EncryptionType,
@@ -18,7 +18,7 @@ import {
     StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
-import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
+import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
 import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
@@ -37,12 +37,12 @@ export const mockConnectionLocker: ConnectionLocker = {
     getWeakLockedConnectionCount: () => 0,
 }
 
-export const createMockRandomGraphNodeAndDhtNode = async (
+export const createMockContentDeliveryLayerNodeAndDhtNode = async (
     localPeerDescriptor: PeerDescriptor,
     entryPointDescriptor: PeerDescriptor,
     streamPartId: StreamPartID,
     simulator: Simulator
-): Promise<[ Layer1Node, RandomGraphNode ]> => {
+): Promise<[ Layer1Node, ContentDeliveryLayerNode ]> => {
     const mockCm = new SimulatorTransport(localPeerDescriptor, simulator)
     await mockCm.start()
     const layer1Node = new DhtNode({
@@ -52,7 +52,7 @@ export const createMockRandomGraphNodeAndDhtNode = async (
         entryPoints: [entryPointDescriptor],
         rpcRequestTimeout: 5000
     })
-    const randomGraphNode = createRandomGraphNode({
+    const contentDeliveryLayerNode = createContentDeliveryLayerNode({
         streamPartId,
         transport: mockCm,
         layer1Node,
@@ -61,7 +61,7 @@ export const createMockRandomGraphNodeAndDhtNode = async (
         rpcRequestTimeout: 5000,
         isLocalNodeEntryPoint: () => false
     })
-    return [layer1Node, randomGraphNode]
+    return [layer1Node, contentDeliveryLayerNode]
 }
 
 export const createStreamMessage = (

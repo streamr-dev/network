@@ -22,8 +22,8 @@ import { ProxyDirection, StreamMessage, StreamPartitionInfo } from '../proto/pac
 import { EntryPointDiscovery, NETWORK_SPLIT_AVOIDANCE_LIMIT } from './EntryPointDiscovery'
 import { Layer0Node } from './Layer0Node'
 import { Layer1Node } from './Layer1Node'
-import { RandomGraphNode } from './RandomGraphNode'
-import { createRandomGraphNode } from './createRandomGraphNode'
+import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
+import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode'
 import { ProxyClient } from './proxy/ProxyClient'
 
 export type StreamPartDelivery = {
@@ -32,7 +32,7 @@ export type StreamPartDelivery = {
 } & ({ 
     proxied: false
     layer1Node: Layer1Node
-    node: RandomGraphNode
+    node: ContentDeliveryLayerNode
     entryPointDiscovery: EntryPointDiscovery
 } | {
     proxied: true
@@ -141,7 +141,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             storeEntryPointData: (key, data) => this.layer0Node!.storeDataToDht(key, data),
             deleteEntryPointData: async (key) => this.layer0Node!.deleteDataFromDht(key, false)
         })
-        const node = this.createRandomGraphNode(
+        const node = this.createContentDeliveryLayerNode(
             streamPartId,
             layer1Node, 
             () => entryPointDiscovery.isLocalNodeEntryPoint()
@@ -214,12 +214,12 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         })
     }
 
-    private createRandomGraphNode(
+    private createContentDeliveryLayerNode(
         streamPartId: StreamPartID,
         layer1Node: Layer1Node,
         isLocalNodeEntryPoint: () => boolean
     ) {
-        return createRandomGraphNode({
+        return createContentDeliveryLayerNode({
             streamPartId,
             transport: this.transport!,
             layer1Node,
@@ -292,7 +292,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
     getNodeInfo(): StreamPartitionInfo[] {
         const streamParts = Array.from(this.streamParts.entries()).filter(([_, node]) => node.proxied === false)
         return streamParts.map(([streamPartId]) => {
-            const stream = this.streamParts.get(streamPartId)! as { node: RandomGraphNode, layer1Node: Layer1Node }
+            const stream = this.streamParts.get(streamPartId)! as { node: ContentDeliveryLayerNode, layer1Node: Layer1Node }
             return {
                 id: streamPartId,
                 controlLayerNeighbors: stream.layer1Node.getNeighbors(),

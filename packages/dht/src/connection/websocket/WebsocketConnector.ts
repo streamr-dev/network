@@ -289,7 +289,6 @@ export class WebsocketConnector {
             )
             remoteConnector.requestConnection().then(() => {
                 logger.trace('Sent WebsocketConnectionRequest notification to peer', { targetPeerDescriptor })
-                return
             }, (err) => {
                 logger.debug('Failed to send WebsocketConnectionRequest notification to peer ', {
                     error: err, targetPeerDescriptor

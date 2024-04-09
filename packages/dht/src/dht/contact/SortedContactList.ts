@@ -4,6 +4,10 @@ import EventEmitter from 'eventemitter3'
 import { getDistance } from '../PeerManager'
 import { DhtAddress, getRawFromDhtAddress } from '../../identifiers'
 
+// add other getters in the future if needed
+export type ReadonlySortedContactList<C extends { getNodeId: () => DhtAddress }> =
+    Pick<SortedContactList<C>, 'getClosestContacts' | 'getAllContactsInUndefinedOrder'>
+
 export interface SortedContactListConfig {
     referenceId: DhtAddress  // all contacts in this list are in sorted by the distance to this ID
     allowToContainReferenceId: boolean
@@ -142,7 +146,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
         return false
     }
 
-    public getAllContactsInUndefinedOrder(): IterableIterator<C> {
+    public getAllContactsInUndefinedOrder(): Iterable<C> {
         return this.contactsById.values()
     }
 

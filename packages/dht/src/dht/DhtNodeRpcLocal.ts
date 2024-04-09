@@ -19,7 +19,7 @@ import { RingContacts } from './contact/RingContactList'
 interface DhtNodeRpcLocalConfig {
     peerDiscoveryQueryBatchSize: number
     getClosestPeersTo: (nodeId: DhtAddress, limit: number) => PeerDescriptor[]
-    getClosestRingPeersTo: (id: RingIdRaw, limit: number) => RingContacts
+    getClosestRingContactsTo: (id: RingIdRaw, limit: number) => RingContacts
     addContact: (contact: PeerDescriptor) => void
     removeContact: (nodeId: DhtAddress) => void
 }
@@ -43,9 +43,10 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
         return response
     }
 
+    // TODO rename to getClosestRingContacts
     async getClosestRingPeers(request: ClosestRingPeersRequest, context: ServerCallContext): Promise<ClosestRingPeersResponse> {
         this.config.addContact((context as DhtCallContext).incomingSourceDescriptor!)
-        const closestPeers = this.config.getClosestRingPeersTo(request.ringId as RingIdRaw, this.config.peerDiscoveryQueryBatchSize)
+        const closestPeers = this.config.getClosestRingContactsTo(request.ringId as RingIdRaw, this.config.peerDiscoveryQueryBatchSize)
         const response = {
             leftPeers: closestPeers.left,
             rightPeers: closestPeers.right,

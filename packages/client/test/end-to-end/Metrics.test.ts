@@ -48,9 +48,7 @@ describe('NodeMetrics', () => {
     it('should retrieve a metrics report', async () => {
         let report: MetricsReport | undefined
 
-        const nodeAddress = await generatorClient.getAddress()
-        const partition = keyToArrayIndex(NUM_OF_PARTITIONS, nodeAddress)
-
+        const partition = keyToArrayIndex(NUM_OF_PARTITIONS, await generatorClient.getNodeId())
         await subscriberClient.subscribe({ id: stream.id, partition }, (content: any) => {
             const isReady = content.node.connectionAverageCount > 0
             if (isReady && (report === undefined)) {
