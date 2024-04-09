@@ -30,8 +30,7 @@ export class RandomContactList<C extends { getNodeId: () => DhtAddress }> extend
                 this.contactsById.set(contact.getNodeId(), contact)
                 this.emit(
                     'contactAdded',
-                    contact,
-                    this.getContacts()
+                    contact
                 )
             }
         }
@@ -43,7 +42,7 @@ export class RandomContactList<C extends { getNodeId: () => DhtAddress }> extend
             const index = this.contactIds.findIndex((nodeId) => (nodeId === id))
             this.contactIds.splice(index, 1)
             this.contactsById.delete(id)
-            this.emit('contactRemoved', removed, this.getContacts())
+            this.emit('contactRemoved', removed)
             return true
         }
         return false
