@@ -37,7 +37,7 @@ describe('DhtNode', () => {
         const dhtNodeRpcLocal = new DhtNodeRpcLocal({
             peerDiscoveryQueryBatchSize: undefined as any,
             getClosestPeersTo: (nodeId: DhtAddress, maxCount: number) => getClosestNodes(nodeId, getAllPeerDescriptors(), maxCount, true),
-            getClosestRingPeersTo: undefined as any,
+            getClosestRingContactsTo: undefined as any,
             addContact: () => {},
             removeContact: undefined as any,
         })
