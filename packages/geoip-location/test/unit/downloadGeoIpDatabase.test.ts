@@ -1,19 +1,42 @@
+import { t } from 'tar'
 import { downloadGeoIpDatabase } from '../../src/downloadGeoIpDatabase'
-import fs from 'fs'
+import fs, { mkdirSync } from 'fs'
 
 describe('downloadGeoIpDatabase', () => {
     const abortController = new AbortController()
     const path = '/tmp/downloadGeoIpDatabaseTest/'
 
-    it('downloads the database', async () => {
+    beforeEach(() => {
+        try {
+            fs.rmSync(path, { recursive: true })
+        } catch (e) {
+            // ignore error when removing the test
+        }
+    })
+
+    it('downloads the database with correct file permissions', async () => {
+        const reader = await downloadGeoIpDatabase(path, false, abortController.signal)
+
+        expect(fs.existsSync(path)).toBe(true)
+        expect(fs.existsSync(path + '.download')).toBe(false)
+        expect(fs.existsSync(path + '/GeoLite2-City.mmdb')).toBe(true)
+
+        // https://www.martin-brennan.com/nodejs-file-permissions-fstat/
+        const permissions = fs.statSync(path + '/GeoLite2-City.mmdb').mode & 0o777
+        
+        // on windows the permissions might be 0o666
+        expect(permissions === 0o600 || permissions === 0o666).toBe(true)
+        expect(reader).toBeDefined()
+    })
+
+    it('downloads the database even if temp download folder already exists', async () => {
+        mkdirSync(path + '.download', { recursive: true })
         const reader = await downloadGeoIpDatabase(path, false, abortController.signal)
 
         expect(reader).toBeDefined()
         expect(fs.existsSync(path)).toBe(true)
         expect(fs.existsSync(path + '.download')).toBe(false)
         expect(fs.existsSync(path + '/GeoLite2-City.mmdb')).toBe(true)
-    
-        fs.rmSync(path, { recursive: true })
     })
 
     it('throws if the path is not writable', async () => {
@@ -37,7 +60,5 @@ describe('downloadGeoIpDatabase', () => {
         
         const newReader3 = await downloadGeoIpDatabase(path, true, abortController.signal)
         expect(newReader3).toBeDefined()
-        
-        fs.rmSync(path, { recursive: true })
     })
 })
