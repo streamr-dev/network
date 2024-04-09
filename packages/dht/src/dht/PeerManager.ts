@@ -267,7 +267,16 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.ringContacts.getAllContacts().map((contact) => closest.addContact(contact))
         return closest.getClosestContacts(limit ?? 8)
     }
+    
+    getRandomContacts(): RandomContactList<DhtNodeRpcRemote> {
+        return this.randomContacts
+    }
+    
+    getRingContacts(): RingContactList<DhtNodeRpcRemote> {
+        return this.ringContacts
+    }
 
+    // TODO rename getNearbyContactsCount
     getContactCount(excludedNodeIds?: Set<DhtAddress>): number {
         return this.closestContacts.getSize(excludedNodeIds)
     }

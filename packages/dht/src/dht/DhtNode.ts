@@ -435,6 +435,19 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             .map((peer) => peer.getPeerDescriptor())
     }
 
+    // TODO remove defaultContactQueryLimit parameter from RandomContactList#getContacts and use explicit value here?
+    getRandomContacts(): PeerDescriptor[] {
+        return this.peerManager!.getRandomContacts().getContacts().map((c) => c.getPeerDescriptor())
+    }
+
+    getRingContacts(): RingContacts {
+        const contacts = this.peerManager!.getRingContacts().getClosestContacts()
+        return {
+            left: contacts.left.map((c) => c.getPeerDescriptor()),
+            right: contacts.right.map((c) => c.getPeerDescriptor())
+        }
+    }
+
     public getClosestRingContactsTo(ringIdRaw: RingIdRaw, limit?: number): RingContacts {
         const closest = this.peerManager!.getClosestRingContactsTo(ringIdRaw, limit)
         return {
