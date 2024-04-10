@@ -547,6 +547,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return result.closestNodes
     }
 
+    async checkIfOnline(node: PeerDescriptor): Promise<boolean> {
+        const remote = this.createDhtNodeRpcRemote(node)
+        const isOnline = await remote.ping()
+        return isOnline
+    }
+
     public getTransport(): ITransport {
         return this.transport!
     }
