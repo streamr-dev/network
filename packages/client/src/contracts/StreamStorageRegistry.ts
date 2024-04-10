@@ -6,7 +6,7 @@ import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { ContractFactory } from '../ContractFactory'
-import { getStreamRegistryChainProviders, getEthersOverrides } from '../Ethereum'
+import { getEthersOverrides } from '../ethereumUtils'
 import { Stream } from '../Stream'
 import { StreamFactory } from '../StreamFactory'
 import { StreamIDBuilder } from '../StreamIDBuilder'
@@ -15,6 +15,7 @@ import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageReg
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { initContractEventGateway, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
+import { RpcProviderFactory } from '../RpcProviderFactory'
 
 export interface StorageNodeAssignmentEvent {
     readonly streamId: StreamID
@@ -39,6 +40,7 @@ export class StreamStorageRegistry {
     private readonly streamFactory: StreamFactory
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly contractFactory: ContractFactory
+    private readonly rpcProviderFactory: RpcProviderFactory
     private readonly theGraphClient: TheGraphClient
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     private readonly authentication: Authentication
@@ -49,6 +51,7 @@ export class StreamStorageRegistry {
         @inject(delay(() => StreamFactory)) streamFactory: StreamFactory,
         streamIdBuilder: StreamIDBuilder,
         contractFactory: ContractFactory,
+        rpcProviderFactory: RpcProviderFactory,
         theGraphClient: TheGraphClient,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
@@ -58,11 +61,12 @@ export class StreamStorageRegistry {
         this.streamFactory = streamFactory
         this.streamIdBuilder = streamIdBuilder
         this.contractFactory = contractFactory
+        this.rpcProviderFactory = rpcProviderFactory
         this.theGraphClient = theGraphClient
         this.config = config
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
-        this.streamStorageRegistryContractsReadonly = getStreamRegistryChainProviders(config).map((provider: Provider) => {
+        this.streamStorageRegistryContractsReadonly = rpcProviderFactory.getProviders().map((provider: Provider) => {
             return this.contractFactory.createReadContract(
                 toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress),
                 StreamStorageRegistryArtifact,
@@ -100,7 +104,7 @@ export class StreamStorageRegistry {
 
     private async connectToContract() {
         if (!this.streamStorageRegistryContract) {
-            const chainSigner = await this.authentication.getStreamRegistryChainSigner()
+            const chainSigner = await this.authentication.getStreamRegistryChainSigner(this.rpcProviderFactory)
             this.streamStorageRegistryContract = this.contractFactory.createWriteContract<StreamStorageRegistryContract>(
                 toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress),
                 StreamStorageRegistryArtifact,
@@ -114,7 +118,7 @@ export class StreamStorageRegistry {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.logger.debug('Add stream to storage node', { streamId, nodeAddress })
         await this.connectToContract()
-        const ethersOverrides = getEthersOverrides(this.config)
+        const ethersOverrides = getEthersOverrides(this.rpcProviderFactory, this.config)
         await waitForTx(this.streamStorageRegistryContract!.addStorageNode(streamId, nodeAddress, ethersOverrides))
     }
 
@@ -122,7 +126,7 @@ export class StreamStorageRegistry {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.logger.debug('Remove stream from storage node', { streamId, nodeAddress })
         await this.connectToContract()
-        const ethersOverrides = getEthersOverrides(this.config)
+        const ethersOverrides = getEthersOverrides(this.rpcProviderFactory, this.config)
         await waitForTx(this.streamStorageRegistryContract!.removeStorageNode(streamId, nodeAddress, ethersOverrides))
     }
 

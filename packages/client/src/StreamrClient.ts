@@ -21,7 +21,7 @@ import {
     redactConfig
 } from './Config'
 import { DestroySignal } from './DestroySignal'
-import { generateEthereumAccount as _generateEthereumAccount, getEthersOverrides as _getEthersOverrides } from './Ethereum'
+import { generateEthereumAccount as _generateEthereumAccount, getEthersOverrides as _getEthersOverrides } from './ethereumUtils'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { MetricsPublisher } from './MetricsPublisher'
 import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
@@ -51,6 +51,7 @@ import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
 import { createNewInstantiateContractsFn, InstantiateERC1271ContractsToken } from './contracts/ERC1271ContractFacade'
 import { ContractFactory } from './ContractFactory'
+import { RpcProviderFactory } from './RpcProviderFactory'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -85,6 +86,7 @@ export class StreamrClient {
     private readonly subscriber: Subscriber
     private readonly resends: Resends
     private readonly node: NetworkNodeFacade
+    private readonly rpcProviderFactory: RpcProviderFactory
     private readonly streamRegistry: StreamRegistry
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
@@ -109,7 +111,10 @@ export class StreamrClient {
         container.register(AuthenticationInjectionToken, { useValue: authentication })
         container.register(ConfigInjectionToken, { useValue: strictConfig })
         container.register(InstantiateERC1271ContractsToken, {
-            useValue: createNewInstantiateContractsFn(container.resolve<ContractFactory>(ContractFactory), strictConfig)
+            useValue: createNewInstantiateContractsFn(
+                container.resolve<ContractFactory>(ContractFactory),
+                container.resolve<RpcProviderFactory>(RpcProviderFactory)
+            )
         })
         // eslint-disable-next-line max-len
         container.register(TheGraphClient, { useValue: createTheGraphClient(container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig) })
@@ -120,6 +125,7 @@ export class StreamrClient {
         this.subscriber = container.resolve<Subscriber>(Subscriber)
         this.resends = container.resolve<Resends>(Resends)
         this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
+        this.rpcProviderFactory = container.resolve(RpcProviderFactory)
         this.streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
         this.streamStorageRegistry = container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
         this.storageNodeRegistry = container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
@@ -572,7 +578,7 @@ export class StreamrClient {
      * Gets the Signer associated with the current {@link StreamrClient} instance.
      */
     getSigner(): Promise<SignerWithProvider> {
-        return this.authentication.getStreamRegistryChainSigner()
+        return this.authentication.getStreamRegistryChainSigner(this.rpcProviderFactory)
     }
 
     /**
@@ -694,7 +700,7 @@ export class StreamrClient {
      * transactions via ethers library.
      */
     getEthersOverrides(): Overrides {
-        return _getEthersOverrides(this.config)
+        return _getEthersOverrides(this.rpcProviderFactory, this.config)
     }
 
     // --------------------------------------------------------------------------------------------

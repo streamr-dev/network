@@ -1,14 +1,13 @@
 import { ContractFactory } from '../ContractFactory'
-import { getStreamRegistryChainProviders } from '../Ethereum'
 import { Provider } from '@ethersproject/providers'
 import { BrandedString, EthereumAddress, MapWithTtl, toEthereumAddress } from '@streamr/utils'
 import ERC1271ContractArtifact from '../ethereumArtifacts/IERC1271Abi.json'
 import type { IERC1271 as ERC1271Contract } from '../ethereumArtifacts/IERC1271'
-import { StrictStreamrClientConfig } from '../Config'
 import { queryAllReadonlyContracts } from '../utils/contract'
 import { Mapping } from '../utils/Mapping'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { recoverAddress, hash } from '@streamr/utils'
+import { RpcProviderFactory } from '../RpcProviderFactory'
 
 export const SUCCESS_MAGIC_VALUE = '0x1626ba7e' // Magic value for success as defined by ERC-1271
 
@@ -22,11 +21,13 @@ function formCacheKey(contractAddress: EthereumAddress, clientWalletAddress: Eth
 
 export const InstantiateERC1271ContractsToken = Symbol('InstantiateERC1271ContractsToken')
 
+// TODO: refactor so that we would inline this function as part of ERC1271ContractFacade and then inject
+// rpcProviderFactory directly to ERC1271ContractFacade
 export function createNewInstantiateContractsFn(
     contractFactory: ContractFactory,
-    config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
+    rpcProviderFactory: RpcProviderFactory
 ): (address: EthereumAddress) => ERC1271Contract[] {
-    return (address) => getStreamRegistryChainProviders(config).map((provider: Provider) => {
+    return (address) => rpcProviderFactory.getProviders().map((provider: Provider) => {
         return contractFactory.createReadContract(
             address,
             ERC1271ContractArtifact,

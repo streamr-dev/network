@@ -29,6 +29,7 @@ import {
     InstantiateERC1271ContractsToken
 } from '../../src/contracts/ERC1271ContractFacade'
 import { ContractFactory } from '../../src/ContractFactory'
+import { RpcProviderFactory } from '../../src/RpcProviderFactory'
 
 const Dependencies = {
     NetworkNodeFacade,
@@ -96,7 +97,10 @@ describeOnlyInNodeJs('MemoryLeaks', () => { // LeaksDetector is not supported in
                 childContainer.register(AuthenticationInjectionToken, { useValue: createAuthentication(config) })
                 childContainer.register(ConfigInjectionToken, { useValue: config })
                 childContainer.register(InstantiateERC1271ContractsToken, {
-                    useValue: createNewInstantiateContractsFn(childContainer.resolve<ContractFactory>(ContractFactory), config)
+                    useValue: createNewInstantiateContractsFn(
+                        childContainer.resolve<ContractFactory>(ContractFactory),
+                        childContainer.resolve<RpcProviderFactory>(RpcProviderFactory)
+                    )
                 })
                 childContainer.register(TheGraphClient, { useValue:
                     createTheGraphClient(childContainer.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), config)

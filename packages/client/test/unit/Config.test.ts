@@ -1,7 +1,7 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { NetworkNodeType, NetworkPeerDescriptor, createStrictConfig, redactConfig, DEFAULT_ENVIRONMENT } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
-import { generateEthereumAccount } from '../../src/Ethereum'
+import { generateEthereumAccount } from '../../src/ethereumUtils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 describe('Config', () => {
