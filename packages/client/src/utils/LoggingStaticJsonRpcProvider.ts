@@ -13,7 +13,7 @@ export class LoggingStaticJsonRpcProvider extends StaticJsonRpcProvider {
             params,
             connection: this.connection
         }
-        this.logger.debug('Sending request', logContext)
+        this.logger.debug('Send request', logContext)
         let result
         try {
             result = await super.send(method, params)
