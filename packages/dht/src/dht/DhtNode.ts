@@ -237,6 +237,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             await connectionManager.start()
             this.connectionLocker = connectionManager
             this.transport = connectionManager
+            if (this.connectionLocker) {
+                setInterval(async () => {
+                    await this.peerManager!.pingLeastRecentlySeenContacts()
+                }, 15 * 1000) 
+            }
         }
 
         this.rpcCommunicator = new RoutingRpcCommunicator(

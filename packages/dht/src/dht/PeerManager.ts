@@ -297,6 +297,18 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.activeContacts.add(nodeId)
     }
 
+    async pingLeastRecentlySeenContacts(): Promise<void> {
+        const lastPingedLimit = 10 * 60 * 1000 // 10 minutes
+        const closestPeersToPing = this.closestContacts.getClosestContacts().filter((contact) => Date.now() - contact.getLastPingTimestamp() < lastPingedLimit)
+        await Promise.allSettled(closestPeersToPing.map(async (contact) => {
+            const isOnline = await contact.ping()
+            if (!isOnline) {
+                logger.warn("REMOVING: Contact is offline, removing from contact list", contact.getNodeId())
+                this.removeContact(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))
+            }
+        }))
+    }
+
     addContact(peerDescriptor: PeerDescriptor): void {
         if (this.stopped) {
             return
