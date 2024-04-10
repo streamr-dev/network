@@ -5,9 +5,6 @@ import express, { Request, Response } from 'express'
 import { StreamrClient } from '../../src/StreamrClient'
 
 const MOCK_CHAIN_ID = 5555
-const MOCK_GAS_PRICE = 1000000
-const MOCK_ESTIMATED_GAS = 1000000
-const MOCK_BLOCK_NUMBER = 1000
 const TRUE = '0x0000000000000000000000000000000000000000000000000000000000000001'
 const SERVER_PORT = 9999
 
@@ -44,22 +41,6 @@ const startServer = async (): Promise<{ getRequests: () => JsonRpcRequest[], sto
         requests.push({ method })
         if (method === 'eth_chainId') {
             sendResponse(toHex(MOCK_CHAIN_ID))
-        } else if (method === 'eth_gasPrice') {
-            sendResponse(toHex(MOCK_GAS_PRICE))
-        } else if (method === 'eth_getBlockByNumber') {
-            sendResponse({})
-        } else if (method === 'eth_getTransactionCount') {
-            sendResponse(toHex(0))
-        } else if (method === 'eth_estimateGas') {
-            sendResponse(toHex(MOCK_ESTIMATED_GAS))
-        } else if (method === 'eth_blockNumber') {
-            sendResponse(toHex(MOCK_BLOCK_NUMBER))
-        } else if (method === 'eth_sendRawTransaction') {
-            const rawTx = req.body.params[0]
-            const txHash = ethers.utils.keccak256(rawTx)
-            sendResponse(txHash)
-        } else if (method == 'eth_getTransactionReceipt') {
-            sendResponse({})
         } else if (method === 'eth_call') {
             const data = req.body.params[0].data
             const contractMethodHash = data.substring(2, 10)
@@ -84,7 +65,8 @@ const startServer = async (): Promise<{ getRequests: () => JsonRpcRequest[], sto
 }
 
 describe('use StaticJsonRpcProvider', () => {
-    it('happy path', async () => {
+
+    it('reading information from contract doesn\'t cause multiple chainId requests', async () => {
         const server = await startServer()
         const client = new StreamrClient({
             contracts: {
@@ -104,16 +86,6 @@ describe('use StaticJsonRpcProvider', () => {
         await client.isStreamPublisher('/stream1', '0x0000000000000000000000000000000000000030')
         const chainIdRequestCountAfterAllReads = server.getRequests().filter((r) => r.method === 'eth_chainId').length
         expect(chainIdRequestCountAfterFirstRead).toEqual(chainIdRequestCountAfterAllReads)
-
-        /*
-        TODO can this be asserted:
-        await client.createStream('/stream2')
-        const chainIdRequestCountAfterFirstWrite = server.getRequests().filter((r) => r.method === 'eth_chainId').length
-        await client.createStream('/stream3')
-        await client.createStream('/stream3')
-        const chainIdRequestCountAfterAllWrites = server.getRequests().filter((r) => r.method === 'eth_chainId').length
-        expect(chainIdRequestCountAfterFirstWrite).toEqual(chainIdRequestCountAfterAllWrites)
-        */
 
         await client.destroy()
         await server.stop()
