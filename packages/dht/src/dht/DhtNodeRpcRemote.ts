@@ -21,6 +21,7 @@ const logger = new Logger(module)
 export interface KBucketContact {
     id: DhtAddressRaw
     vectorClock: number
+    lastPingTimestamp: number
 }
 
 export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBucketContact {
@@ -29,6 +30,7 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
     public vectorClock: number
     public readonly id: DhtAddressRaw
     private readonly serviceId: ServiceID
+    private lastPingTimestamp: number
 
     constructor(
         localPeerDescriptor: PeerDescriptor,
@@ -41,6 +43,7 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
         this.id = this.getPeerDescriptor().nodeId
         this.vectorClock = DhtNodeRpcRemote.counter++
         this.serviceId = serviceId
+        this.lastPingTimestamp = 0
     }
 
     async getClosestPeers(nodeId: DhtAddress): Promise<PeerDescriptor[]> {
@@ -58,6 +61,7 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
         }
     }
 
+    // TODO rename to getClosestRingContacts (breaking change)
     async getClosestRingPeers(ringIdRaw: RingIdRaw): Promise<RingContacts> {
         logger.trace(`Requesting getClosestRingPeers on ${this.serviceId} from ${this.getNodeId()}`)
         const request: ClosestRingPeersRequest = {
@@ -82,6 +86,7 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
         try {
             const pong = await this.getClient().ping(request, options)
             if (pong.requestId === request.requestId) {
+                this.lastPingTimestamp = Date.now()
                 return true
             }
         } catch (err) {
@@ -102,5 +107,9 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
 
     getNodeId(): DhtAddress {
         return getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
+    }
+
+    getLastPingTimestamp(): number {
+        return this.lastPingTimestamp
     }
 }
