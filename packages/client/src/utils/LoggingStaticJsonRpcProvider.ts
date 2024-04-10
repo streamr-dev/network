@@ -18,7 +18,7 @@ export class LoggingStaticJsonRpcProvider extends StaticJsonRpcProvider {
         try {
             result = await super.send(method, params)
         } catch (err) {
-            this.logger.warn('Encountered error while requesting', {
+            this.logger.debug('Encountered error while requesting', {
                 ...logContext,
                 reason: err?.reason,
                 elapsedTime: Date.now() - startTime
