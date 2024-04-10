@@ -17,13 +17,17 @@ export const generateEthereumAccount = (): { address: string, privateKey: string
     }
 }
 
-export const getStreamRegistryChainProviders = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Provider[] => {
-    return getRpcProviders(config.contracts.streamRegistryChainRPCs, config.contracts.pollInterval)
+export const getStreamRegistryChainProviders = (config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>): Provider[] => {
+    // eslint-disable-next-line no-underscore-dangle
+    return getRpcProviders(config.contracts.streamRegistryChainRPCs, config.contracts.pollInterval, config._timeouts.jsonRpcTimeout)
 }
 
-const getRpcProviders = (connectionInfo: ChainConnectionInfo, pollInterval?: number): Provider[] => {
+const getRpcProviders = (connectionInfo: ChainConnectionInfo, pollInterval: number | undefined, timeout: number): Provider[] => {
     return connectionInfo.rpcs.map((c: ConnectionInfo) => {
-        const provider = new LoggingStaticJsonRpcProvider(c)
+        const provider = new LoggingStaticJsonRpcProvider({
+            ...c,
+            timeout
+        })
         if (pollInterval !== undefined) {
             provider.pollingInterval = pollInterval
         }
@@ -35,7 +39,7 @@ const getRpcProviders = (connectionInfo: ChainConnectionInfo, pollInterval?: num
  * Apply the gasPriceStrategy to the estimated gas price, if given
  * Ethers.js will resolve the gas price promise before sending the tx
  */
-export const getEthersOverrides = (config: Pick<StrictStreamrClientConfig, 'contracts'>): Overrides => {
+export const getEthersOverrides = (config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>): Overrides => {
     const chainConfig = config.contracts.ethereumNetwork
     const overrides = chainConfig.overrides ?? {}
     if ((chainConfig.highGasPriceStrategy) && (chainConfig.overrides?.gasPrice === undefined)) {
