@@ -30,7 +30,7 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
     public vectorClock: number
     public readonly id: DhtAddressRaw
     private readonly serviceId: ServiceID
-    private lastPingTimestamp: number
+    public lastPingTimestamp: number
 
     constructor(
         localPeerDescriptor: PeerDescriptor,
@@ -77,7 +77,7 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
         }
     }
 
-    async ping(): Promise<boolean> {
+    async ping(timeout?: number): Promise<boolean> {
         logger.trace(`Requesting ping on ${this.serviceId} from ${this.getNodeId()}`)
         const request: PingRequest = {
             requestId: v4()

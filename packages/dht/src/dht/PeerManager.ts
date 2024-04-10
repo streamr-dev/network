@@ -297,13 +297,24 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.activeContacts.add(nodeId)
     }
 
-    async pingLeastRecentlySeenContacts(): Promise<void> {
+    async pingLeastRecentlySeenContacts(): Promise<void> { 
         const lastPingedLimit = 10 * 60 * 1000 // 10 minutes
-        const closestPeersToPing = this.closestContacts.getClosestContacts().filter((contact) => Date.now() - contact.getLastPingTimestamp() < lastPingedLimit)
-        await Promise.allSettled(closestPeersToPing.map(async (contact) => {
+        const closestPeersToPing = this.closestContacts.getClosestContacts().filter((contact) => Date.now() - contact.getLastPingTimestamp() > lastPingedLimit)
+        const randomPeersToPing = this.randomContacts.getContacts().filter((contact) => Date.now() - contact.getLastPingTimestamp() > lastPingedLimit)
+        const ringPeersToPing = this.ringContacts.getAllContacts().filter((contact) => Date.now() - contact.getLastPingTimestamp() > lastPingedLimit)
+        const allPeersToPing = [...closestPeersToPing, ...randomPeersToPing, ...ringPeersToPing]
+        const totalPeerCount = this.closestContacts.getSize() + this.randomContacts.getSize() + this.ringContacts.getAllContacts().length
+        logger.info("PINGING: Pinging least recently seen contacts", { 
+            totalContactCount: totalPeerCount,
+            closestContacts: this.closestContacts.getSize(),
+            randomContacts: this.randomContacts.getSize(),
+            ringContacts: this.ringContacts.getAllContacts().length,
+            count: allPeersToPing.length,
+        })
+        await Promise.allSettled(allPeersToPing.map(async (contact) => {
             const isOnline = await contact.ping()
             if (!isOnline) {
-                logger.warn("REMOVING: Contact is offline, removing from contact list", contact.getNodeId())
+                logger.warn("REMOVING: Contact is offline, removing from contact list", { nodeId: contact.getNodeId() })
                 this.removeContact(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))
             }
         }))
