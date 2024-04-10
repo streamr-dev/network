@@ -426,6 +426,7 @@ export interface StreamrClientConfig {
             timeout?: number
             retryInterval?: number
         }
+        jsonRpcTimeout?: number
     }
 }
 
