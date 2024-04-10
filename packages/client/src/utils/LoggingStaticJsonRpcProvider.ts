@@ -11,7 +11,10 @@ export class LoggingStaticJsonRpcProvider extends StaticJsonRpcProvider {
             traceId,
             method,
             params,
-            connection: this.connection
+            connection: {
+                url: this.connection.url,
+                timeout: this.connection.timeout
+            }
         }
         this.logger.debug('Send request', logContext)
         let result
