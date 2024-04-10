@@ -1,6 +1,5 @@
-import { t } from 'tar'
 import { downloadGeoIpDatabase } from '../../src/downloadGeoIpDatabase'
-import fs, { mkdirSync } from 'fs'
+import fs from 'fs'
 
 describe('downloadGeoIpDatabase', () => {
     const abortController = new AbortController()
@@ -30,7 +29,7 @@ describe('downloadGeoIpDatabase', () => {
     })
 
     it('downloads the database even if temp download folder already exists', async () => {
-        mkdirSync(path + '.download', { recursive: true })
+        fs.mkdirSync(path + '.download', { recursive: true })
         const reader = await downloadGeoIpDatabase(path, false, abortController.signal)
 
         expect(reader).toBeDefined()

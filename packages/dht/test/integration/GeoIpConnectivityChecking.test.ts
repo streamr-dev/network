@@ -41,7 +41,7 @@ describe('ConnectivityChecking', () => {
                 websocketPortRange: { min: PORT, max: PORT },
                 websocketServerEnableTls: false,
                 transport: new MockTransport(),
-                geoIpDatabasePath: dbPath
+                geoIpDatabaseFolder: dbPath
             }),
             metricsContext: new MetricsContext()
         })
