@@ -32,7 +32,7 @@ export class StoreRpcLocal implements IStoreRpc {
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
         logger.trace('storeData()')
         const key = getDhtAddressFromRaw(request.key)
-        const selfIsOneOfClosestPeers = this.config.selfIsWithinRedundancyFactor(key)
+        const selfIsWithinRedundancyFactor = this.config.selfIsWithinRedundancyFactor(key)
         this.config.localDataStore.storeEntry({ 
             key: request.key,
             data: request.data,
@@ -40,10 +40,10 @@ export class StoreRpcLocal implements IStoreRpc {
             createdAt: request.createdAt,
             storedAt: Timestamp.now(),
             ttl: request.ttl,
-            stale: !selfIsOneOfClosestPeers,
+            stale: !selfIsWithinRedundancyFactor,
             deleted: false
         })
-        if (!selfIsOneOfClosestPeers) {
+        if (!selfIsWithinRedundancyFactor) {
             this.config.localDataStore.setAllEntriesAsStale(key)
         }
         return {}
