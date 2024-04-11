@@ -183,12 +183,11 @@ export class PeerDiscovery {
         if (!this.recoveryIntervalStarted) {
             this.recoveryIntervalStarted = true
             // TODO use config option or named constant?
-            await scheduleAtInterval(() => this.fetchClosestNeighborsFromBucket(), 60000, true, this.abortController.signal)
+            await scheduleAtInterval(() => this.fetchClosestNeighbors(), 60000, true, this.abortController.signal)
         }
     }
 
-    // TODO rename the method (the bucket is not relevant abstraction for this class)
-    private async fetchClosestNeighborsFromBucket(): Promise<void> {
+    private async fetchClosestNeighbors(): Promise<void> {
         if (this.isStopped()) {
             return
         }
