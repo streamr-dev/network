@@ -3,6 +3,7 @@ import {
     Logger,
     MetricsContext,
     merge,
+    scheduleAtInterval,
     waitForCondition
 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
@@ -75,6 +76,7 @@ export interface DhtNodeOptions {
     networkConnectivityTimeout?: number
     storageRedundancyFactor?: number
     region?: number
+    periodicallyPingLeastRecentlySeenContacts?: boolean
 
     transport?: ITransport
     connectionLocker?: ConnectionLocker
@@ -300,10 +302,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.storeManager!.onContactAdded(peerDescriptor)
         })
         this.bindRpcLocalMethods()
-        if (this.connectionLocker === undefined) {
-            setInterval(async () => {
-                await this.peerManager!.pingLeastRecentlySeenContacts()
-            }, 20 * 1000) 
+        if (this.config.periodicallyPingLeastRecentlySeenContacts === true) {
+            await scheduleAtInterval(
+                () => this.peerManager!.pingLeastRecentlySeenContacts(),
+                60 * 1000,
+                false,
+                this.abortController.signal
+            )
         }
     }
 
