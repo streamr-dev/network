@@ -197,15 +197,13 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
                 clearTimeout(this.timeoutTask)
                 this.timeoutTask = undefined
             }
-        } else {
-            if (!this.timeoutTask && !this.completionEventEmitted) {
-                this.timeoutTask = setTimeout(() => {
-                    if (!this.completionEventEmitted) {
-                        this.emit('completed')
-                        this.completionEventEmitted = true
-                    }
-                }, 4000)  // TODO use config option or named constant?
-            }
+        } else if (!this.timeoutTask && !this.completionEventEmitted) {
+            this.timeoutTask = setTimeout(() => {
+                if (!this.completionEventEmitted) {
+                    this.emit('completed')
+                    this.completionEventEmitted = true
+                }
+            }, 4000)  // TODO use config option or named constant?
         }
     }
 

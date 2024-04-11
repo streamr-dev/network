@@ -23,12 +23,12 @@ export class StorageNodeRegistry {
     private nodeRegistryContract?: NodeRegistryContract
     private readonly nodeRegistryContractsReadonly: NodeRegistryContract[]
     private readonly contractFactory: ContractFactory
-    private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
+    private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     private readonly authentication: Authentication
 
     constructor(
         contractFactory: ContractFactory,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
     ) {
         this.contractFactory = contractFactory

@@ -53,12 +53,12 @@ import { getLocalRegion } from '@streamr/cdn-location'
 import { RingContacts } from './contact/RingContactList'
 
 export interface DhtNodeEvents {
-    contactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    contactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    randomContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    randomContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
-    ringContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: RingContacts) => void
-    ringContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: RingContacts) => void
+    closestContactAdded: (peerDescriptor: PeerDescriptor) => void
+    closestContactRemoved: (peerDescriptor: PeerDescriptor) => void
+    randomContactAdded: (peerDescriptor: PeerDescriptor) => void
+    randomContactRemoved: (peerDescriptor: PeerDescriptor) => void
+    ringContactAdded: (peerDescriptor: PeerDescriptor) => void
+    ringContactRemoved: (peerDescriptor: PeerDescriptor) => void
 }
 
 export interface DhtNodeOptions {
@@ -295,7 +295,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 )
             }
         })
-        this.on('contactAdded', (peerDescriptor: PeerDescriptor) => {
+        this.on('closestContactAdded', (peerDescriptor: PeerDescriptor) => {
             this.storeManager!.onContactAdded(peerDescriptor)
         })
         this.bindRpcLocalMethods()
@@ -312,23 +312,23 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => this.createDhtNodeRpcRemote(peerDescriptor),
             lockId: this.config.serviceId
         })
-        this.peerManager.on('contactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) => {
-            this.emit('contactRemoved', peerDescriptor, activeContacts)
+        this.peerManager.on('closestContactRemoved', (peerDescriptor: PeerDescriptor) => {
+            this.emit('closestContactRemoved', peerDescriptor)
         })
-        this.peerManager.on('contactAdded', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('contactAdded', peerDescriptor, activeContacts)
+        this.peerManager.on('closestContactAdded', (peerDescriptor: PeerDescriptor) =>
+            this.emit('closestContactAdded', peerDescriptor)
         )
-        this.peerManager.on('randomContactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('randomContactRemoved', peerDescriptor, activeContacts)
+        this.peerManager.on('randomContactRemoved', (peerDescriptor: PeerDescriptor) =>
+            this.emit('randomContactRemoved', peerDescriptor)
         )
-        this.peerManager.on('randomContactAdded', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
-            this.emit('randomContactAdded', peerDescriptor, activeContacts)
+        this.peerManager.on('randomContactAdded', (peerDescriptor: PeerDescriptor) =>
+            this.emit('randomContactAdded', peerDescriptor)
         )
-        this.peerManager.on('ringContactRemoved', (peerDescriptor: PeerDescriptor, activeContacts: RingContacts) => {
-            this.emit('ringContactRemoved', peerDescriptor, activeContacts)
+        this.peerManager.on('ringContactRemoved', (peerDescriptor: PeerDescriptor) => {
+            this.emit('ringContactRemoved', peerDescriptor)
         })
-        this.peerManager.on('ringContactAdded', (peerDescriptor: PeerDescriptor, activeContacts: RingContacts) => {
-            this.emit('ringContactAdded', peerDescriptor, activeContacts)
+        this.peerManager.on('ringContactAdded', (peerDescriptor: PeerDescriptor) => {
+            this.emit('ringContactAdded', peerDescriptor)
         })
         this.peerManager.on('kBucketEmpty', () => {
             if (!this.peerDiscovery!.isJoinOngoing()
@@ -433,6 +433,19 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.peerManager!.getClosestContacts()
             .getClosestContacts(limit)
             .map((peer) => peer.getPeerDescriptor())
+    }
+
+    // TODO remove defaultContactQueryLimit parameter from RandomContactList#getContacts and use explicit value here?
+    getRandomContacts(): PeerDescriptor[] {
+        return this.peerManager!.getRandomContacts().getContacts().map((c) => c.getPeerDescriptor())
+    }
+
+    getRingContacts(): RingContacts {
+        const contacts = this.peerManager!.getRingContacts().getClosestContacts()
+        return {
+            left: contacts.left.map((c) => c.getPeerDescriptor()),
+            right: contacts.right.map((c) => c.getPeerDescriptor())
+        }
     }
 
     public getClosestRingContactsTo(ringIdRaw: RingIdRaw, limit?: number): RingContacts {
