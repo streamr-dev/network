@@ -34,10 +34,14 @@ import { ServerCallContext } from "@protobuf-ts/runtime-rpc";
  */
 export interface IDhtNodeRpc<T = ServerCallContext> {
     /**
+     * TODO rename to getClosestNeighbors (breaking change)
+     *
      * @generated from protobuf rpc: getClosestPeers(dht.ClosestPeersRequest) returns (dht.ClosestPeersResponse);
      */
     getClosestPeers(request: ClosestPeersRequest, context: T): Promise<ClosestPeersResponse>;
     /**
+     * TODO rename to getClosestRingContacts (breaking change)
+     *
      * @generated from protobuf rpc: getClosestRingPeers(dht.ClosestRingPeersRequest) returns (dht.ClosestRingPeersResponse);
      */
     getClosestRingPeers(request: ClosestRingPeersRequest, context: T): Promise<ClosestRingPeersResponse>;
