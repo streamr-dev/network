@@ -92,7 +92,7 @@ export class DiscoverySession {
                 excludedNodeIds: this.config.contactedPeers
             }
         )
-        if (uncontacted.length === 0 || this.noProgressCounter >= this.config.noProgressLimit) {
+        if ((uncontacted.length === 0 && this.ongoingRequests.size === 0) || (this.noProgressCounter >= this.config.noProgressLimit)) {
             this.emitter.emit('discoveryCompleted')
             this.stopped = true
             return
