@@ -19,7 +19,16 @@ export class MockTransport extends EventEmitter implements ITransport {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    stop(): void {
+    getConnectionCount(): number {
+        return 0
+    }
 
+    // eslint-disable-next-line class-methods-use-this
+    hasConnection(): boolean {
+        return false
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    stop(): void {
     }
 }

@@ -72,15 +72,13 @@ describe('Layer0MixedConnectionTypes', () => {
 
     it('2 non-server peers join first', async () => {
 
-        const promise = Promise.all([
+        await Promise.all([
             waitForEvent3<TransportEvents>((node3.getTransport() as ConnectionManager), 'connected'),
             waitForEvent3<TransportEvents>((node4.getTransport() as ConnectionManager), 'connected'),
+            node3.joinDht([epPeerDescriptor]),
+            node4.joinDht([epPeerDescriptor])
         ])
 
-        node3.joinDht([epPeerDescriptor])
-        node4.joinDht([epPeerDescriptor])
-
-        await promise
         await Promise.all([
             node1.joinDht([epPeerDescriptor]),
             node2.joinDht([epPeerDescriptor]),

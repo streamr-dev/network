@@ -29,12 +29,12 @@ import { getDistance } from '../PeerManager'
 interface RecursiveOperationManagerConfig {
     rpcCommunicator: RoutingRpcCommunicator
     sessionTransport: ITransport
-    connections: Map<DhtAddress, DhtNodeRpcRemote>
     router: Router
     localPeerDescriptor: PeerDescriptor
     serviceId: ServiceID
     localDataStore: LocalDataStore
     addContact: (contact: PeerDescriptor) => void
+    createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => DhtNodeRpcRemote
 }
 
 export interface RecursiveOperationResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
@@ -87,14 +87,14 @@ export class RecursiveOperationManager {
             targetId,
             localPeerDescriptor: this.config.localPeerDescriptor,
             // TODO use config option or named constant?
-            waitedRoutingPathCompletions: this.config.connections.size > 1 ? 2 : 1,
+            waitedRoutingPathCompletions: this.config.sessionTransport.getConnectionCount() > 1 ? 2 : 1,
             operation,
             // TODO would it make sense to give excludedPeer as one of the fields RecursiveOperationSession?
             doRouteRequest: (routedMessage: RouteMessageWrapper) => {
                 return this.doRouteRequest(routedMessage, excludedPeer)
             }
         })
-        if (this.config.connections.size === 0) {
+        if (this.config.sessionTransport.getConnectionCount() === 0) {
             const dataEntries = Array.from(this.config.localDataStore.values(targetId))
             session.onResponseReceived(
                 getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor),
@@ -218,7 +218,7 @@ export class RecursiveOperationManager {
     }
 
     private getClosestConnectedNodes(referenceId: DhtAddress, limit: number): PeerDescriptor[] {
-        const connectedNodes = Array.from(this.config.connections.values())
+        const connectedNodes = this.config.sessionTransport.getConnections().map((c) => this.config.createDhtNodeRpcRemote(c))
         const sorted = new SortedContactList<DhtNodeRpcRemote>({
             referenceId,
             maxSize: limit,
