@@ -1,16 +1,14 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { 
-    GroupKeyRequest,
     ProxyConnectionRequest,
     ProxyConnectionResponse,
     ProxyDirection,
-    StreamMessage,
-    StreamMessageType
+    StreamMessage
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IProxyConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
-import { DeliveryRpcRemote } from '../DeliveryRpcRemote'
+import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 import { DhtAddress, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
-import { DeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { ContentDeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { EventEmitter } from 'eventemitter3'
 import { EthereumAddress, Logger, binaryToHex, toEthereumAddress } from '@streamr/utils'
 import { StreamPartID } from '@streamr/protocol'
@@ -20,7 +18,7 @@ const logger = new Logger(module)
 interface ProxyConnection {
     direction: ProxyDirection // Direction is from the client's point of view
     userId: EthereumAddress
-    remote: DeliveryRpcRemote
+    remote: ContentDeliveryRpcRemote
 }
 
 interface ProxyConnectionRpcLocalConfig {
@@ -64,12 +62,12 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
     }
 
     getPropagationTargets(msg: StreamMessage): DhtAddress[] {
-        if (msg.messageType === StreamMessageType.GROUP_KEY_REQUEST) {
+        if (msg.body.oneofKind === 'groupKeyRequest') {
             try {
-                const recipientId = GroupKeyRequest.fromBinary(msg.content).recipientId
+                const recipientId = msg.body.groupKeyRequest.recipientId
                 return this.getNodeIdsForUserId(toEthereumAddress(binaryToHex(recipientId, true)))
             } catch (err) {
-                logger.trace(`Could not parse GroupKeyRequest: ${err}`)
+                logger.trace(`Could not parse GroupKeyRequest`, { err })
                 return []
             }
         } else {
@@ -92,11 +90,11 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
         this.connections.set(senderId, {
             direction: request.direction,
             userId: toEthereumAddress(binaryToHex(request.userId, true)),
-            remote: new DeliveryRpcRemote(
+            remote: new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,
                 senderPeerDescriptor,
                 this.config.rpcCommunicator,
-                DeliveryRpcClient
+                ContentDeliveryRpcClient
             )
         })
         const response: ProxyConnectionResponse = {

@@ -11,7 +11,7 @@ import {
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { hexToBinary, utf8ToBinary, wait, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
+import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { ProxyClient } from '../../src/logic/proxy/ProxyClient'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
@@ -46,14 +46,14 @@ describe('Proxy connections', () => {
     let proxiedNode: NetworkNode
 
     const hasConnectionFromProxy = (proxyNode: NetworkNode): boolean => {
-        const delivery = proxyNode.stack.getStreamrNode()!.getStreamPartDelivery(STREAM_PART_ID)
+        const delivery = proxyNode.stack.getContentDeliveryManager().getStreamPartDelivery(STREAM_PART_ID)
         return (delivery !== undefined)
-            ? ((delivery as { node: RandomGraphNode }).node).hasProxyConnection(proxiedNode.getNodeId())
+            ? ((delivery as { node: ContentDeliveryLayerNode }).node).hasProxyConnection(proxiedNode.getNodeId())
             : false
     }
     
     const hasConnectionToProxy = (proxyNodeId: DhtAddress, direction: ProxyDirection): boolean => {
-        const client = (proxiedNode.stack.getStreamrNode()!.getStreamPartDelivery(STREAM_PART_ID) as { client: ProxyClient }).client
+        const client = (proxiedNode.stack.getContentDeliveryManager().getStreamPartDelivery(STREAM_PART_ID) as { client: ProxyClient }).client
         return client.hasConnection(proxyNodeId, direction)
     }
 
@@ -77,7 +77,7 @@ describe('Proxy connections', () => {
         })
         await proxyNode1.start()
         proxyNode1.setStreamPartEntryPoints(STREAM_PART_ID, [proxyNodeDescriptor1])
-        proxyNode1.stack.getStreamrNode()!.joinStreamPart(STREAM_PART_ID)
+        proxyNode1.stack.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
         proxyNode2 = createNetworkNode({
             layer0: {
                 entryPoints: [proxyNodeDescriptor1],
@@ -90,7 +90,7 @@ describe('Proxy connections', () => {
         })
         await proxyNode2.start()
         proxyNode2.setStreamPartEntryPoints(STREAM_PART_ID, [proxyNodeDescriptor1])
-        proxyNode2.stack.getStreamrNode()!.joinStreamPart(STREAM_PART_ID)
+        proxyNode2.stack.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
         proxiedNode = createNetworkNode({
             layer0: {
                 entryPoints: [proxyNode1.getPeerDescriptor()],
@@ -109,7 +109,7 @@ describe('Proxy connections', () => {
     it('happy path publishing', async () => {
         await proxiedNode.setProxies(STREAM_PART_ID, [proxyNode1.getPeerDescriptor()], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 1)
         await Promise.all([
-            waitForEvent3(proxyNode1.stack.getStreamrNode()! as any, 'newMessage'),
+            waitForEvent3(proxyNode1.stack.getContentDeliveryManager() as any, 'newMessage'),
             proxiedNode.broadcast(MESSAGE)
         ])
     })
@@ -117,7 +117,7 @@ describe('Proxy connections', () => {
     it('happy path subscribing', async () => {
         await proxiedNode.setProxies(STREAM_PART_ID, [proxyNode1.getPeerDescriptor()], ProxyDirection.SUBSCRIBE, PROXIED_NODE_USER_ID, 1)
         await Promise.all([
-            waitForEvent3(proxiedNode.stack.getStreamrNode()! as any, 'newMessage'),
+            waitForEvent3(proxiedNode.stack.getContentDeliveryManager() as any, 'newMessage'),
             proxyNode1.broadcast(MESSAGE)
         ])
     })
@@ -196,7 +196,7 @@ describe('Proxy connections', () => {
         await proxyNode1.leave(STREAM_PART_ID)
         await waitForCondition(() => hasConnectionToProxy(proxyNode1.getNodeId(), ProxyDirection.SUBSCRIBE))
         expect(hasConnectionFromProxy(proxyNode1)).toBe(false)
-        proxyNode1.stack.getStreamrNode()!.joinStreamPart(STREAM_PART_ID)
+        proxyNode1.stack.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
         await waitForCondition(() => hasConnectionToProxy(proxyNode1.getNodeId(), ProxyDirection.SUBSCRIBE), 25000)
         // TODO why wait is needed?
         await wait(100)

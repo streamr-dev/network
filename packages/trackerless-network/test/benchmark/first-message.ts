@@ -26,7 +26,7 @@ import { NetworkNode } from '../../src/NetworkNode'
 import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
 import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
 import { Layer1Node } from '../../src/logic/Layer1Node'
-import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
+import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 
 const numNodes = 10000
 
@@ -119,7 +119,7 @@ const measureJoiningTime = async () => {
     await streamSubscriber.start()
 
     await Promise.all([
-        waitForEvent3(streamSubscriber.stack.getStreamrNode() as any, 'newMessage', 60000),
+        waitForEvent3(streamSubscriber.stack.getContentDeliveryManager() as any, 'newMessage', 60000),
         streamSubscriber.join(stream)
     ])
 
@@ -148,21 +148,22 @@ const run = async () => {
     await shutdownNetwork()
 } 
 
-// eslint-disable-next-line promise/catch-or-return, promise/always-return
+// eslint-disable-next-line promise/catch-or-return
 run().then(() => {
     console.log('done')
 }).catch((err) => {
     console.error(err)
-    const streamrNode = currentNode.stack.getStreamrNode()
-    const streamParts = streamrNode.getStreamParts()
-    const foundData = nodes[0].stack.getLayer0Node().getDataFromDht(streamPartIdToDataKey(streamParts[0]))
+    const contentDeliveryManager = currentNode.stack.getContentDeliveryManager()
+    const streamParts = contentDeliveryManager.getStreamParts()
+    const foundData = nodes[0].stack.getLayer0Node().fetchDataFromDht(streamPartIdToDataKey(streamParts[0]))
     console.log(foundData)
     const layer0Node = currentNode.stack.getLayer0Node() as DhtNode
     console.log(layer0Node.getNeighbors().length)
     console.log(layer0Node.getConnectionCount())
-    const streamPartDelivery = streamrNode.getStreamPartDelivery(streamParts[0])! as { layer1Node: Layer1Node, node: RandomGraphNode }
+    const streamPartDelivery = contentDeliveryManager
+        .getStreamPartDelivery(streamParts[0])! as { layer1Node: Layer1Node, node: ContentDeliveryLayerNode }
     console.log(streamPartDelivery.layer1Node.getNeighbors())
-    console.log(streamPartDelivery.node.getNeighborIds())
+    console.log(streamPartDelivery.node.getNeighbors())
     console.log(nodes[nodes.length - 1])
     if (publishInterval) {
         clearInterval(publishInterval)

@@ -1,7 +1,7 @@
 import { EthereumAddress, Logger, scheduleAtInterval, setAbortableInterval, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { Overrides } from 'ethers'
-import { StreamrClient, SignerWithProvider } from 'streamr-client'
+import { StreamrClient, SignerWithProvider } from '@streamr/sdk'
 import { Plugin } from '../../Plugin'
 import { maintainOperatorValue } from './maintainOperatorValue'
 import { MaintainTopologyService } from './MaintainTopologyService'
@@ -80,7 +80,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         logger.info('Fetched my redundancy factor', { redundancyFactor })
 
         const contractFacade = ContractFacade.createInstance(serviceConfig)
-        const maintainTopologyHelper = new MaintainTopologyHelper(serviceConfig)
+        const maintainTopologyHelper = new MaintainTopologyHelper(contractFacade)
         const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
             streamrClient,
             this.pluginConfig.heartbeatUpdateIntervalInMs,

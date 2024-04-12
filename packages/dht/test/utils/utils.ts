@@ -10,8 +10,7 @@ import {
     RouteMessageWrapper,
     StoreDataRequest,
     StoreDataResponse,
-    RecursiveOperationRequest, 
-    RecursiveOperation
+    ClosestRingPeersResponse
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import {
@@ -38,6 +37,41 @@ export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'no
     }
 }
 
+export const createMockRingNode = async (
+    simulator: Simulator,
+    nodeId: DhtAddress,
+    region: number
+): Promise<DhtNode> => {
+    const maxConnections = 80
+    const dhtJoinTimeout = 45000
+
+    const peerDescriptor: PeerDescriptor = {
+        nodeId: getRawFromDhtAddress(nodeId ?? createRandomDhtAddress()),
+        type: NodeType.NODEJS,
+        region
+        //ipAddress: ipv4ToNumber(ipAddress)
+    }
+    const mockConnectionManager = new SimulatorTransport(peerDescriptor, simulator)
+    await mockConnectionManager.start()
+    const opts = {
+        peerDescriptor: peerDescriptor,
+        transport: mockConnectionManager,
+        connectionLocker: mockConnectionManager,
+        numberOfNodesPerKBucket: 8,
+        maxConnections: maxConnections,
+        dhtJoinTimeout,
+        rpcRequestTimeout: 5000
+    }
+    const node = new class extends DhtNode {
+        async stop(): Promise<void> {
+            await super.stop()
+            await mockConnectionManager.stop()
+        }
+    }(opts)
+    await node.start()
+    return node
+}
+
 export const createMockConnectionDhtNode = async (
     simulator: Simulator,
     nodeId?: DhtAddress,
@@ -55,6 +89,7 @@ export const createMockConnectionDhtNode = async (
     const opts = {
         peerDescriptor: peerDescriptor,
         transport: mockConnectionManager,
+        connectionLocker: mockConnectionManager,
         numberOfNodesPerKBucket,
         maxConnections: maxConnections,
         dhtJoinTimeout,
@@ -107,14 +142,6 @@ export const createWrappedClosestPeersRequest = (
     return rpcWrapper
 }
 
-export const createFindRequest = (): RecursiveOperationRequest => {
-    const request: RecursiveOperationRequest = {
-        operation: RecursiveOperation.FIND_NODE,
-        sessionId: v4()
-    }
-    return request
-}
-
 interface IDhtRpcWithError extends IDhtNodeRpc {
     throwPingError: (request: PingRequest) => Promise<PingResponse>
     respondPingWithTimeout: (request: PingRequest) => Promise<PingResponse>
@@ -126,6 +153,14 @@ export const createMockDhtRpc = (neighbors: PeerDescriptor[]): IDhtRpcWithError 
         async getClosestPeers(): Promise<ClosestPeersResponse> {
             const response: ClosestPeersResponse = {
                 peers: neighbors,
+                requestId: 'why am i still here'
+            }
+            return response
+        },
+        async getClosestRingPeers(): Promise<ClosestRingPeersResponse> {
+            const response: ClosestRingPeersResponse = {
+                leftPeers: neighbors,
+                rightPeers: neighbors,
                 requestId: 'why am i still here'
             }
             return response
@@ -209,42 +244,22 @@ export const createMockPeers = (): PeerDescriptor[] => {
     ]
 }
 
-export const waitConnectionManagersReadyForTesting = async (connectionManagers: ConnectionManager[], limit: number): Promise<void> => {
-    connectionManagers.forEach((connectionManager) => garbageCollectConnections(connectionManager, limit))
-    try {
-        await Promise.all(connectionManagers.map((connectionManager) => waitReadyForTesting(connectionManager, limit)))
-    } catch (_err) {
-        // did not successfully meet condition but network should be in a stable non-star state
-    }
-}
-
-export const waitNodesReadyForTesting = async (nodes: DhtNode[], limit: number = 10000): Promise<void> => {
-    return waitConnectionManagersReadyForTesting(
-        nodes.map((node) => {
-            return (node.getTransport() as ConnectionManager)
-        }), limit)
-}
-
-function garbageCollectConnections(connectionManager: ConnectionManager, limit: number): void {
-    const LAST_USED_LIMIT = 100
-    connectionManager.garbageCollectConnections(limit, LAST_USED_LIMIT)
-}
-
-async function waitReadyForTesting(connectionManager: ConnectionManager, limit: number): Promise<void> {
-    const LAST_USED_LIMIT = 100
-    connectionManager.garbageCollectConnections(limit, LAST_USED_LIMIT)
-    try {
-        await waitForCondition(() => {
-            return (connectionManager.getLocalLockedConnectionCount() === 0 &&
-                connectionManager.getRemoteLockedConnectionCount() === 0 &&
-                connectionManager.getAllConnectionPeerDescriptors().length <= limit)
-        }, 20000)
-    } catch (err) {
-        if (connectionManager.getLocalLockedConnectionCount() > 0
-            && connectionManager.getRemoteLockedConnectionCount() > 0) {
-            throw new Error('Connections are still locked')
-        } else if (connectionManager.getAllConnectionPeerDescriptors().length > limit) {
-            throw new Error(`ConnectionManager has more than ${limit}`)
+/*
+ * When we start multiple nodes, most of the nodes have unlocked connections. This promise will resolve when some of those 
+ * unlocked connections have been garbage collected, i.e. we typically have connections only to the nodes which
+ * are neighbors.
+ */
+export const waitForStableTopology = async (nodes: DhtNode[], maxConnectionCount: number = 10000): Promise<void> => {
+    const MAX_IDLE_TIME = 100
+    const connectionManagers = nodes.map((n) => n.getTransport() as ConnectionManager)
+    await Promise.all(connectionManagers.map(async (connectionManager) => {
+        connectionManager.garbageCollectConnections(maxConnectionCount, MAX_IDLE_TIME)
+        try {
+            await waitForCondition(() => connectionManager.getConnections().length <= maxConnectionCount, 20000)
+        } catch (err) {
+            // the topology is very likely stable, but we can't be sure (maybe the node has more than maxConnectionCount
+            // locked connections and therefore it is ok to that garbage collector was not able to remove any of those
+            // connections
         }
-    }
+    }))
 }

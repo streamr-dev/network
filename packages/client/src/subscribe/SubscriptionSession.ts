@@ -5,6 +5,7 @@ import { Scaffold } from '../utils/Scaffold'
 import { Signal } from '../utils/Signal'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
 import { Subscription } from './Subscription'
+import { EthereumAddress } from '@streamr/utils'
 
 /**
  * Manages adding & removing subscriptions to node as needed.
@@ -158,6 +159,12 @@ export class SubscriptionSession {
 
     async add(sub: Subscription): Promise<void> {
         if (!sub || this.subscriptions.has(sub) || this.pendingRemoval.has(sub)) { return } // already has
+
+        const activeErc1271ContractAddress = this.getERC1271ContractAddress()
+        if (this.subscriptions.size > 0 && activeErc1271ContractAddress !== sub.erc1271ContractAddress) {
+            throw new Error('Subscription ERC-1271 mismatch')
+        }
+
         this.subscriptions.add(sub)
 
         sub.onBeforeFinally.listen(() => {
@@ -186,6 +193,15 @@ export class SubscriptionSession {
         } finally {
             await this.updateSubscriptions()
         }
+    }
+
+    getERC1271ContractAddress(): EthereumAddress | undefined {
+        for (const sub of this.subscriptions) {
+            if (sub.erc1271ContractAddress !== undefined) {
+                return sub.erc1271ContractAddress
+            }
+        }
+        return undefined
     }
 
     /**

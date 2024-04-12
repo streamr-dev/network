@@ -1,7 +1,7 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerDescriptor, RecursiveOperation } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { createMockConnectionDhtNode, waitConnectionManagersReadyForTesting } from '../utils/utils'
+import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { createMockConnectionDhtNode, waitForStableTopology } from '../utils/utils'
 import { getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
 
 const NUM_NODES = 100
@@ -25,7 +25,7 @@ describe('Find correctness', () => {
         }
         await entryPoint.joinDht([entrypointDescriptor])
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
-        await waitConnectionManagersReadyForTesting(nodes.map((node) => node.connectionManager!), 20)
+        await waitForStableTopology(nodes, 20)
     }, 90000)
 
     afterEach(async () => {
@@ -37,9 +37,9 @@ describe('Find correctness', () => {
 
     it('Entrypoint can find a node from the network (exact match)', async () => {
         const targetId = getRawFromDhtAddress(nodes[45].getNodeId())
-        const results = await entryPoint.executeRecursiveOperation(getDhtAddressFromRaw(targetId), RecursiveOperation.FIND_NODE)
-        expect(results.closestNodes.length).toBeGreaterThanOrEqual(5)
-        expect(getDhtAddressFromRaw(targetId)).toEqual(getNodeIdFromPeerDescriptor(results.closestNodes[0]))
+        const closestNodes = await entryPoint.findClosestNodesFromDht(getDhtAddressFromRaw(targetId))
+        expect(closestNodes.length).toBeGreaterThanOrEqual(5)
+        expect(getDhtAddressFromRaw(targetId)).toEqual(getNodeIdFromPeerDescriptor(closestNodes[0]))
     }, 30000)
 
 })

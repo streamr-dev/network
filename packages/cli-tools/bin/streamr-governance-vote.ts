@@ -3,7 +3,7 @@ import { createCommand } from '../src/command'
 import { getClientConfig } from '../src/client'
 import snapshot from '@snapshot-labs/snapshot.js'
 import { Wallet } from '@ethersproject/wallet'
-import { PrivateKeyAuthConfig } from 'streamr-client'
+import { PrivateKeyAuthConfig } from '@streamr/sdk'
 
 const hub = 'https://hub.snapshot.org'
 const snapshotClient = new snapshot.Client712(hub)

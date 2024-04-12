@@ -9,7 +9,6 @@ import {
 } from '@streamr/protocol'
 import { binaryToHex, binaryToUtf8, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import { StreamMessageTranslator } from '../../src/logic/protocol-integration/stream-message/StreamMessageTranslator'
-import { StreamMessageType } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createStreamMessage } from '../utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('TEST#0')
@@ -49,10 +48,10 @@ describe('StreamMessageTranslator', () => {
         expect(translated.messageId!.sequenceNumber).toEqual(0)
         expect(binaryToHex(translated.messageId!.publisherId, true)).toEqual('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
         expect(translated.previousMessageRef).toEqual(undefined)
-        expect(translated.messageType).toEqual(StreamMessageType.MESSAGE)
-        expect(translated.groupKeyId).toEqual(undefined)
+        expect(translated.body.oneofKind).toEqual('contentMessage')
+        expect((translated.body as any).contentMessage.groupKeyId).toEqual(undefined)
         expect(translated.signature).toStrictEqual(signature)
-        expect(JSON.parse(binaryToUtf8(translated.content))).toEqual({ hello: 'WORLD' })
+        expect(JSON.parse(binaryToUtf8((translated.body as any).contentMessage.content))).toEqual({ hello: 'WORLD' })
     })
 
     it('translates protobuf to old protocol', () => {

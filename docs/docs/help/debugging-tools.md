@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 4
 ---
 
 # Debugging streams
@@ -9,7 +9,7 @@ Turning up the log level is a good way to diagnose tricky connectivity problems.
 You can pass the logging level in the Streamr constructor as follows:
 
 ```ts
-const Streamr = require('streamr-client')
+const Streamr = require('@streamr/sdk')
 
 const streamr = new Streamr({
   logLevel: 'debug',

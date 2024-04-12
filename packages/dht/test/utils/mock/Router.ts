@@ -6,17 +6,14 @@ export class MockRouter implements Methods<Router> {
 
     // eslint-disable-next-line class-methods-use-this
     addRoutingSession(): void {
-        return
     }
 
     // eslint-disable-next-line class-methods-use-this
     removeRoutingSession(): void {
-        return
     }
 
     // eslint-disable-next-line class-methods-use-this
     addToDuplicateDetector(): void {
-        return
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -48,5 +45,14 @@ export class MockRouter implements Methods<Router> {
     async forwardMessage(): Promise<RouteMessageAck> {
         return RouteMessageAck.create()
     }
+
+    // eslint-disable-next-line class-methods-use-this
+    onNodeConnected(): void {}
+
+    // eslint-disable-next-line class-methods-use-this
+    onNodeDisconnected(): void {}
+
+    // eslint-disable-next-line class-methods-use-this
+    resetCache(): void {}
 
 }

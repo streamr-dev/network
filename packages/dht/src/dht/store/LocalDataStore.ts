@@ -1,6 +1,6 @@
 import { DataEntry } from '../../proto/packages/dht/protos/DhtRpc'
-import { MapWithTtl } from '../../helpers/MapWithTtl'
 import { DhtAddress, getDhtAddressFromRaw } from '../../identifiers'
+import { MapWithTtl } from '@streamr/utils'
 
 export class LocalDataStore {
 
@@ -57,11 +57,8 @@ export class LocalDataStore {
         }
     }
 
-    public setStale(key: DhtAddress, creator: DhtAddress, stale: boolean): void {
-        const storedEntry = this.store.get(key)?.get(creator)
-        if (storedEntry) {
-            storedEntry.stale = stale
-        }
+    public keys(): IterableIterator<DhtAddress> {
+        return this.store.keys()
     }
 
     public setAllEntriesAsStale(key: DhtAddress): void {

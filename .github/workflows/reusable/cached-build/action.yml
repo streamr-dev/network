@@ -4,14 +4,15 @@ description: "build monorepo and cache result, or restore from cache if present"
 runs:
   using: "composite"
   steps:
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v4
       with:
         node-version-file: '.nvmrc'
         cache: 'npm'
         cache-dependency-path: package-lock.json
+        registry-url: 'https://registry.npmjs.org'
     - name: cache node_modules
       id: cache-node-modules
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         key: cache-node-modules-${{ hashFiles('package-lock.json') }}
         path: |
@@ -19,7 +20,7 @@ runs:
           packages/*/node_modules
     - name: cache build
       id: cache-build
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         key: cache-build-${{ github.sha }}
         path: |

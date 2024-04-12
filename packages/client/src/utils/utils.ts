@@ -12,7 +12,6 @@ import {
 } from '@streamr/utils'
 import compact from 'lodash/compact'
 import fetch, { Response } from 'node-fetch'
-import { AbortSignal as FetchAbortSignal } from 'node-fetch/externals'
 import { Readable } from 'stream'
 import LRU from '../../vendor/quick-lru'
 import { NetworkNodeType, NetworkPeerDescriptor, StrictStreamrClientConfig } from '../Config'
@@ -148,10 +147,12 @@ export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescr
 }
 
 export function convertPeerDescriptorToNetworkPeerDescriptor(descriptor: PeerDescriptor): NetworkPeerDescriptor {
+    // TODO maybe we should copy most/all fields of PeerDescription (NET-1255)
     return {
-        ...descriptor,
         nodeId: getDhtAddressFromRaw(descriptor.nodeId),
-        type: descriptor.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER
+        type: descriptor.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER,
+        websocket: descriptor.websocket,
+        region: descriptor.region
     }
 }
 
@@ -207,12 +208,11 @@ export const fetchLengthPrefixedFrameHttpBinaryStream = async function*(
     url: string,
     abortSignal?: AbortSignal
 ): AsyncGenerator<Uint8Array, void, undefined> {
-    logger.debug('Send HTTP request', { url }) 
+    logger.debug('Send HTTP request', { url })
     const abortController = new AbortController()
     const fetchAbortSignal = composeAbortSignals(...compact([abortController.signal, abortSignal]))
     const response: Response = await fetch(url, {
-        // cast is needed until this is fixed: https://github.com/node-fetch/node-fetch/issues/1652
-        signal: fetchAbortSignal as FetchAbortSignal
+        signal: fetchAbortSignal
     })
     logger.debug('Received HTTP response', {
         url,

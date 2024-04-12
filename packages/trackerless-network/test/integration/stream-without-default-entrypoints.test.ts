@@ -1,4 +1,4 @@
-import { LatencyType, NodeType, PeerDescriptor, Simulator, SimulatorTransport, getRandomRegion } from '@streamr/dht'
+import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import {
     ContentType,
     EncryptionType,
@@ -22,11 +22,7 @@ describe('stream without default entrypoints', () => {
     let entrypoint: NetworkNode
     let nodes: NetworkNode[]
     let receivedMessageCount: number
-    const entryPointPeerDescriptor: PeerDescriptor = {
-        nodeId: new Uint8Array([1, 2, 3]),
-        type: NodeType.NODEJS,
-        region: getRandomRegion()
-    }
+    const entryPointPeerDescriptor: PeerDescriptor = createMockPeerDescriptor()
 
     const streamMessage = new StreamMessage({
         messageId: new MessageID(
@@ -123,7 +119,7 @@ describe('stream without default entrypoints', () => {
             await nodes[i].join(STREAM_PART_ID, { minCount: (i > 0) ? 1 : 0, timeout: 15000 })
         }
         await waitForCondition(async () => {
-            const entryPointData = await nodes[15].stack.getLayer0Node().getDataFromDht(streamPartIdToDataKey(STREAM_PART_ID))
+            const entryPointData = await nodes[15].stack.getLayer0Node().fetchDataFromDht(streamPartIdToDataKey(STREAM_PART_ID))
             return entryPointData.length >= 7
         }, 15000)
         

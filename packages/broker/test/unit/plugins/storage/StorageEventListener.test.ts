@@ -1,6 +1,6 @@
 import { toStreamID } from '@streamr/protocol'
 import { StorageEventListener } from '../../../../src/plugins/storage/StorageEventListener'
-import { StorageNodeAssignmentEvent, Stream, StreamrClient, StreamrClientEvents } from 'streamr-client'
+import { StorageNodeAssignmentEvent, Stream, StreamrClient, StreamrClientEvents } from '@streamr/sdk'
 import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
 
 const MOCK_STREAM = {

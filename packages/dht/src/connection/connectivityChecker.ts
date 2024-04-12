@@ -3,11 +3,12 @@ import { v4 } from 'uuid'
 import * as Err from '../helpers/errors'
 import {
     ConnectivityRequest, ConnectivityResponse,
-    Message, MessageType, PeerDescriptor
+    Message, PeerDescriptor
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ConnectionEvents, IConnection } from './IConnection'
-import { ClientWebsocket } from './websocket/ClientWebsocket'
+import { WebsocketClientConnection } from './websocket/NodeWebsocketClientConnection'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
+import { isMaybeSupportedVersion } from '../helpers/version'
 
 const logger = new Logger(module)
 
@@ -15,7 +16,7 @@ const logger = new Logger(module)
 export const connectAsync = async ({ url, selfSigned, timeoutMs = 1000 }:
     { url: string, selfSigned: boolean, timeoutMs?: number }
 ): Promise<IConnection> => {
-    const socket = new ClientWebsocket()
+    const socket = new WebsocketClientConnection()
     let result: RunAndRaceEventsReturnType<ConnectionEvents>
     try {
         result = await runAndRaceEvents3<ConnectionEvents>([
@@ -57,7 +58,7 @@ export const sendConnectivityRequest = async (
     // send connectivity request
     const msg: Message = {
         serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
-        messageType: MessageType.CONNECTIVITY_REQUEST, messageId: v4(),
+        messageId: v4(),
         body: {
             oneofKind: 'connectivityRequest',
             connectivityRequest: request
@@ -78,14 +79,17 @@ export const sendConnectivityRequest = async (
                     if (message.body.oneofKind === 'connectivityResponse') {
                         logger.debug('ConnectivityResponse received: ' + JSON.stringify(Message.toJson(message)))
                         const connectivityResponseMessage = message.body.connectivityResponse
+                        const remoteVersion = connectivityResponseMessage.version
                         outgoingConnection!.off('data', listener)
                         clearTimeout(timeoutId)
-                        resolve(connectivityResponseMessage)
-                    } else {
-                        return
+                        if (isMaybeSupportedVersion(remoteVersion)) {
+                            resolve(connectivityResponseMessage)
+                        } else {
+                            reject(`Unsupported version: ${remoteVersion}`)
+                        }
                     }
                 } catch (err) {
-                    logger.trace(`Could not parse message: ${err}`)
+                    logger.trace('Could not parse message', { err })
                 }
             }
             outgoingConnection!.on('data', listener)

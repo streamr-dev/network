@@ -8,7 +8,8 @@ import {
     SignatureType,
     StreamMessage,
     StreamPartID,
-    StreamPartIDUtils
+    StreamPartIDUtils,
+    StreamMessageType
 } from '@streamr/protocol'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
 import { collect, toEthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
@@ -24,7 +25,7 @@ import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
-import { StreamRegistry } from '../../src/registry/StreamRegistry'
+import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { createMessagePipeline } from '../../src/subscribe/messagePipeline'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { mockLoggerFactory } from '../test-utils/utils'
@@ -56,6 +57,7 @@ describe('messagePipeline', () => {
                 toEthereumAddress(publisher.address),
                 'mock-msgChainId'
             ),
+            messageType: StreamMessageType.MESSAGE,
             content: opts.contentType === ContentType.BINARY ? opts.content! : utf8ToBinary(JSON.stringify(CONTENT)),
             authentication: createPrivateKeyAuthentication(publisher.privateKey, undefined as any),
             contentType: opts.contentType ?? ContentType.JSON,
@@ -104,6 +106,7 @@ describe('messagePipeline', () => {
             getStorageNodes: undefined as any,
             resends: undefined as any,
             streamRegistry: streamRegistry as any,
+            erc1271ContractFacade: undefined as any,
             groupKeyManager: new GroupKeyManager(
                 mock<SubscriberKeyExchange>(),
                 mock<LitProtocolFacade>(),

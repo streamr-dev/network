@@ -1,6 +1,6 @@
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import 'jest-extended'
-import { StreamID } from 'streamr-client'
+import { StreamID } from '@streamr/sdk'
 import { DOCKER_DEV_STORAGE_NODE, createTestClient, runCommand } from './utils'
 import { waitForCondition } from '@streamr/utils'
 

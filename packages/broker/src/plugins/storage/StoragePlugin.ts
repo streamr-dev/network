@@ -1,7 +1,7 @@
 import { StreamMessage, StreamMessageType } from '@streamr/protocol'
 import { EthereumAddress, Logger, MetricsContext, executeSafePromise } from '@streamr/utils'
 import { Schema } from 'ajv'
-import { Stream, StreamrClient, formStorageNodeAssignmentStreamId } from 'streamr-client'
+import { Stream, StreamrClient, formStorageNodeAssignmentStreamId } from '@streamr/sdk'
 import { ApiPluginConfig, Plugin } from '../../Plugin'
 import { Storage, startCassandraStorage } from './Storage'
 import { StorageConfig } from './StorageConfig'

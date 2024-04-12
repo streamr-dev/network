@@ -17,8 +17,8 @@ Applications publish and subscribe to streams via Streamr nodes. In other words,
 
 ```ts
 // Run a Streamr node right inside your JS app
-const Streamr = require('streamr-client')
-const { StreamrClient } = require('streamr-client')
+const Streamr = require('@streamr/sdk')
+const { StreamrClient } = require('@streamr/sdk')
 
 // Initialize the Streamr SDK with an Ethereum account
 // If the stream is private then this account will need

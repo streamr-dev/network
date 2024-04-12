@@ -1,8 +1,8 @@
 // check ts esm works via tsc
 
-import DefaultExport, * as NamedExports from 'streamr-client'
+import DefaultExport, * as NamedExports from '@streamr/sdk'
 
-console.info('import DefaultExport, * as NamedExports from \'streamr-client\':', { DefaultExport, NamedExports })
+console.info('import DefaultExport, * as NamedExports from \'@streamr/sdk\':', { DefaultExport, NamedExports })
 
 const StreamrClient = DefaultExport
 

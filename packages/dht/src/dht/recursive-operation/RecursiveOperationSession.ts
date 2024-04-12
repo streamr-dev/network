@@ -8,8 +8,7 @@ import {
     RouteMessageWrapper,
     RouteMessageAck,
     RecursiveOperationRequest,
-    Message,
-    MessageType
+    Message
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
@@ -54,8 +53,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         this.results = new SortedContactList({
             referenceId: config.targetId, 
             maxSize: 10,  // TODO use config option or named constant?
-            allowToContainReferenceId: true,
-            emitEvents: false
+            allowToContainReferenceId: true
         })
         this.rpcCommunicator = new ListeningRpcCommunicator(this.id, config.transport, {
             rpcRequestTimeout: 15000  // TODO use config option or named constant?
@@ -68,11 +66,11 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             onResponseReceived: (
                 sourceId: DhtAddress,
                 routingPath: PeerDescriptor[],
-                nodes: PeerDescriptor[],
+                closestConnectedNodes: PeerDescriptor[],
                 dataEntries: DataEntry[],
                 noCloserNodesFound: boolean
             ) => {
-                this.onResponseReceived(sourceId, routingPath, nodes, dataEntries, noCloserNodesFound)
+                this.onResponseReceived(sourceId, routingPath, closestConnectedNodes, dataEntries, noCloserNodesFound)
             }
         })
         this.rpcCommunicator.registerRpcNotification(RecursiveOperationResponse, 'sendResponse',
@@ -90,7 +88,6 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             operation: this.config.operation
         }
         const msg: Message = {
-            messageType: MessageType.RECURSIVE_OPERATION_REQUEST,
             messageId: v4(),
             serviceId,
             body: {
@@ -134,7 +131,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     public onResponseReceived(
         sourceId: DhtAddress,
         routingPath: PeerDescriptor[],
-        nodes: PeerDescriptor[],
+        closestConnectedNodes: PeerDescriptor[],
         dataEntries: DataEntry[],
         noCloserNodesFound: boolean
     ): void {
@@ -142,7 +139,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         if (routingPath.length >= 1) {
             this.setHopAsReported(routingPath[routingPath.length - 1])
         }
-        nodes.forEach((descriptor: PeerDescriptor) => {
+        closestConnectedNodes.forEach((descriptor: PeerDescriptor) => {
             this.results.addContact(new Contact(descriptor))
         })
         this.processFoundData(dataEntries)
@@ -200,21 +197,19 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
                 clearTimeout(this.timeoutTask)
                 this.timeoutTask = undefined
             }
-        } else {
-            if (!this.timeoutTask && !this.completionEventEmitted) {
-                this.timeoutTask = setTimeout(() => {
-                    if (!this.completionEventEmitted) {
-                        this.emit('completed')
-                        this.completionEventEmitted = true
-                    }
-                }, 4000)  // TODO use config option or named constant?
-            }
+        } else if (!this.timeoutTask && !this.completionEventEmitted) {
+            this.timeoutTask = setTimeout(() => {
+                if (!this.completionEventEmitted) {
+                    this.emit('completed')
+                    this.completionEventEmitted = true
+                }
+            }, 4000)  // TODO use config option or named constant?
         }
     }
 
     public getResults(): RecursiveOperationResult {
         return {
-            closestNodes: this.results.getAllContacts().map((contact) => contact.getPeerDescriptor()),
+            closestNodes: this.results.getClosestContacts().map((contact) => contact.getPeerDescriptor()),
             dataEntries: Array.from(this.foundData.values())
         }
     }

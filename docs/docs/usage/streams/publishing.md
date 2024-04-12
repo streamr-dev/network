@@ -22,7 +22,7 @@ Learn more about [stream permissions](./permissions.md)
 
 ```ts
 // Run a Streamr node right inside your JS app
-const Streamr = require('streamr-client');
+const Streamr = require('@streamr/sdk');
 
 // Initialize the SDK with an Ethereum account
 // This account will need the publish permission on this stream to publish

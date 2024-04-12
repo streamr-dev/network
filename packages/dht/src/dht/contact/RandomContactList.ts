@@ -1,5 +1,5 @@
 import { DhtAddress } from '../../identifiers'
-import { ContactList, ContactState } from './ContactList'
+import { ContactList } from './ContactList'
 
 export class RandomContactList<C extends { getNodeId: () => DhtAddress }> extends ContactList<C> {
 
@@ -27,11 +27,10 @@ export class RandomContactList<C extends { getNodeId: () => DhtAddress }> extend
                     this.removeContact(toRemove)
                 }
                 this.contactIds.push(contact.getNodeId())
-                this.contactsById.set(contact.getNodeId(), new ContactState(contact))
+                this.contactsById.set(contact.getNodeId(), contact)
                 this.emit(
-                    'newContact',
-                    contact,
-                    this.getContacts()
+                    'contactAdded',
+                    contact
                 )
             }
         }
@@ -39,24 +38,17 @@ export class RandomContactList<C extends { getNodeId: () => DhtAddress }> extend
 
     removeContact(id: DhtAddress): boolean {
         if (this.contactsById.has(id)) {
-            const removed = this.contactsById.get(id)!.contact
+            const removed = this.contactsById.get(id)!
             const index = this.contactIds.findIndex((nodeId) => (nodeId === id))
             this.contactIds.splice(index, 1)
             this.contactsById.delete(id)
-            this.emit('contactRemoved', removed, this.getContacts())
+            this.emit('contactRemoved', removed)
             return true
         }
         return false
     }
 
     public getContacts(limit = this.defaultContactQueryLimit): C[] {
-        const ret: C[] = []
-        this.contactIds.forEach((contactId) => {
-            const contact = this.contactsById.get(contactId)
-            if (contact) {
-                ret.push(contact.contact)
-            }
-        })
-        return ret.slice(0, limit)
+        return this.contactIds.slice(0, limit).map((contactId) => this.contactsById.get(contactId)!)
     }
 }

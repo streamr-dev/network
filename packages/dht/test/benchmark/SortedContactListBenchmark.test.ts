@@ -39,27 +39,14 @@ describe('SortedContactListBenchmark', () => {
         }
         const list = new SortedContactList({
             referenceId: createRandomDhtAddress(),
-            allowToContainReferenceId: true,
-            emitEvents: true
+            allowToContainReferenceId: true
         })
 
-        console.time('SortedContactList.addContact() with emitEvents=true')
+        console.time('SortedContactList.addContact()')
         for (let i = 0; i < NUM_ADDS; i++) {
             list.addContact(randomIds[i])
         }
-        console.timeEnd('SortedContactList.addContact() with emitEvents=true')
-
-        const list2 = new SortedContactList({
-            referenceId: createRandomDhtAddress(),
-            allowToContainReferenceId: true,
-            emitEvents: false
-        })
-
-        console.time('SortedContactList.addContact() with emitEvents=false')
-        for (let i = 0; i < NUM_ADDS; i++) {
-            list2.addContact(randomIds[i])
-        }
-        console.timeEnd('SortedContactList.addContact() with emitEvents=false')
+        console.timeEnd('SortedContactList.addContact()')
 
         const kBucket = new KBucket<Item>({ localNodeId: getRawFromDhtAddress(createRandomDhtAddress()) })
         console.time('KBucket.add()')
@@ -81,61 +68,31 @@ describe('SortedContactListBenchmark', () => {
         }
         console.timeEnd('kBucket closest()')
 
-        console.time('SortedContactList.getClosestContacts() with emitEvents=true')
+        console.time('SortedContactList.getClosestContacts()')
         for (let i = 0; i < NUM_ADDS; i++) {
             const closest = new SortedContactList<Item>({
                 referenceId: createRandomDhtAddress(),
-                allowToContainReferenceId: true,
-                emitEvents: true
+                allowToContainReferenceId: true
             })
 
             const arrayFromBucket = kBucket.toArray()
             arrayFromBucket.forEach((contact) => closest.addContact(contact))
             closest.getClosestContacts(20)
         }
-        console.timeEnd('SortedContactList.getClosestContacts() with emitEvents=true')
+        console.timeEnd('SortedContactList.getClosestContacts()')
 
-        console.time('SortedContactList.getClosestContacts() with emitEvents=false')
+        console.time('SortedContactList.getClosestContacts() and addContacts()')
         for (let i = 0; i < NUM_ADDS; i++) {
             const closest = new SortedContactList<Item>({
                 referenceId: createRandomDhtAddress(),
-                allowToContainReferenceId: true,
-                emitEvents: false
-            })
-
-            const arrayFromBucket = kBucket.toArray()
-            arrayFromBucket.forEach((contact) => closest.addContact(contact))
-            closest.getClosestContacts(20)
-        }
-        console.timeEnd('SortedContactList.getClosestContacts() with emitEvents=false')
-
-        console.time('SortedContactList.getClosestContacts() with emitEvents=false and lodash')
-        for (let i = 0; i < NUM_ADDS; i++) {
-            const closest = new SortedContactList<Item>({
-                referenceId: createRandomDhtAddress(),
-                allowToContainReferenceId: true,
-                emitEvents: false
-            })
-
-            const arrayFromBucket = kBucket.toArray()
-            arrayFromBucket.forEach((contact) => closest.addContact(contact))
-            closest.getClosestContacts(20)
-        }
-        console.timeEnd('SortedContactList.getClosestContacts() with emitEvents=false and lodash')
-
-        console.time('SortedContactList.getClosestContacts() with emitEvents=false and addContacts()')
-        for (let i = 0; i < NUM_ADDS; i++) {
-            const closest = new SortedContactList<Item>({
-                referenceId: createRandomDhtAddress(),
-                allowToContainReferenceId: true,
-                emitEvents: false
+                allowToContainReferenceId: true
             })
 
             const arrayFromBucket = kBucket.toArray()
             closest.addContacts(arrayFromBucket)
             closest.getClosestContacts(20)
         }
-        console.timeEnd('SortedContactList.getClosestContacts() with emitEvents=false and addContacts()')
+        console.timeEnd('SortedContactList.getClosestContacts() and addContacts()')
 
         const shuffled = shuffleArray(kBucket.toArray())
         console.time('kbucket add and closest')

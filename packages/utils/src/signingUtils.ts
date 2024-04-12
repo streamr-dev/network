@@ -1,6 +1,6 @@
 import secp256k1 from 'secp256k1'
 import { Keccak } from 'sha3'
-import { hexToBinary, binaryToHex } from './binaryUtils'
+import { binaryToHex } from './binaryUtils'
 import { EthereumAddress, toEthereumAddress } from './EthereumAddress'
 
 const SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
@@ -18,7 +18,7 @@ const keccak = new Keccak(256)
  * https://github.com/streamr-dev/streamr-client-protocol-js/pull/35
  */
 
-function hash(message: Uint8Array): Buffer {
+export function hash(message: Uint8Array): Buffer {
     const prefixString = SIGN_MAGIC + message.length
     const merged = Buffer.concat([Buffer.from(prefixString), message])
     keccak.reset()
@@ -38,9 +38,7 @@ function recoverPublicKey(signature: Uint8Array, payload: Uint8Array): Uint8Arra
     )
 }
 
-export function createSignature(payload: Uint8Array, privateKeyAsHex: string): Uint8Array {
-    const privateKey = hexToBinary(privateKeyAsHex)
-
+export function createSignature(payload: Uint8Array, privateKey: Uint8Array): Uint8Array {
     const msgHash = hash(payload)
     const sigObj = secp256k1.ecdsaSign(msgHash, privateKey)
     const result = Buffer.alloc(sigObj.signature.length + 1, Buffer.from(sigObj.signature))
@@ -48,7 +46,7 @@ export function createSignature(payload: Uint8Array, privateKeyAsHex: string): U
     return result
 }
 
-function recoverSignature(signature: Uint8Array, payload: Uint8Array): string {
+export function recoverAddress(signature: Uint8Array, payload: Uint8Array): string {
     const publicKey = recoverPublicKey(signature, payload)
     const pubKeyWithoutFirstByte = publicKey.subarray(1, publicKey.length)
     keccak.reset()
@@ -59,7 +57,7 @@ function recoverSignature(signature: Uint8Array, payload: Uint8Array): string {
 
 export function verifySignature(address: EthereumAddress, payload: Uint8Array, signature: Uint8Array): boolean {
     try {
-        const recoveredAddress = toEthereumAddress(recoverSignature(signature, payload))
+        const recoveredAddress = toEthereumAddress(recoverAddress(signature, payload))
         return recoveredAddress === address
     } catch (err) {
         return false

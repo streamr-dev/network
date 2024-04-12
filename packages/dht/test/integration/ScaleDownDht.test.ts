@@ -54,7 +54,7 @@ describe('Scaling down a Dht network', () => {
             const stoppingPeerDescriptor = nodes[nodeIndex].getLocalPeerDescriptor()
             await nodes[nodeIndex].stop()
             const nodeIsCleaned = nodes.every((node) =>
-                node.getAllConnectionPeerDescriptors().every((peer) => {
+                node.getConnections().every((peer) => {
                     if (areEqualPeerDescriptors(peer, stoppingPeerDescriptor)) {
                         logger.error(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + ', ' 
                             + getNodeIdFromPeerDescriptor(stoppingPeerDescriptor) + ' cleaning up failed')

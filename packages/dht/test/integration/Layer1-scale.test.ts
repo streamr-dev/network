@@ -65,7 +65,7 @@ describe('Layer1', () => {
             expect(layer1Node.getNodeId()).toEqual(layer0Node.getNodeId())
             expect(layer1Node.getConnectionCount()).toEqual(layer0Node.getConnectionCount())
             expect(layer1Node.getNeighborCount()).toBeGreaterThanOrEqual(NUM_OF_NODES_PER_KBUCKET / 2)
-            expect(layer1Node.getAllConnectionPeerDescriptors()).toEqual(layer0Node.getAllConnectionPeerDescriptors())
+            expect(layer1Node.getConnections()).toEqual(layer0Node.getConnections())
         }
     }, 120000)
 
@@ -159,7 +159,6 @@ describe('Layer1', () => {
     //                 const message: Message = {
     //                     serviceId: 'service',
     //                     messageId: v4(),
-    //                     messageType: MessageType.RPC,
     //                     body: {
     //                         oneofKind: 'rpcMessage',
     //                         rpcMessage: rpcWrapper

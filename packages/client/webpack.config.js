@@ -1,13 +1,9 @@
-/* eslint-disable prefer-template */
-
 process.env.NODE_ENV = process.env.NODE_ENV || 'development' // set a default NODE_ENV
 
 const path = require('path')
-const fs = require('fs')
 
 const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
-const LodashWebpackPlugin = require('lodash-webpack-plugin')
 const { merge } = require('webpack-merge')
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 const { GitRevisionPlugin } = require('git-revision-webpack-plugin')
@@ -17,10 +13,8 @@ const pkg = require('./package.json')
 
 const gitRevisionPlugin = new GitRevisionPlugin()
 
-const libraryName = pkg.name
-
 module.exports = (env, argv) => {
-    const isProduction = argv.mode === 'production' || process.env.NODE_ENV === 'production'
+    const isProduction = argv?.mode === 'production' || process.env.NODE_ENV === 'production'
 
     const analyze = !!process.env.BUNDLE_ANALYSIS
 
@@ -28,10 +22,10 @@ module.exports = (env, argv) => {
         cache: {
             type: 'filesystem',
         },
-        name: 'streamr-client',
+        name: 'streamr-sdk',
         mode: isProduction ? 'production' : 'development',
         entry: {
-            'streamr-client': path.join(__dirname, 'src', 'exports-browser.ts'),
+            'streamr-sdk': path.join(__dirname, 'src', 'exports-browser.ts'),
         },
         devtool: 'source-map',
         output: {
@@ -107,15 +101,18 @@ module.exports = (env, argv) => {
                 http: path.resolve('./src/shim/http-https.ts'),
                 '@ethersproject/wordlists': require.resolve('@ethersproject/wordlists/lib/browser-wordlists.js'),
                 https: path.resolve('./src/shim/http-https.ts'),
-                crypto: require.resolve('crypto-browserify'),
                 buffer: require.resolve('buffer/'),
                 'node-fetch': path.resolve('./src/shim/node-fetch.ts'),
+                '@streamr/test-utils': path.resolve('../test-utils/src/index.ts'),
+                '@streamr/utils': path.resolve('../utils/src/exports.ts'),
                 '@streamr/protocol': path.resolve('../protocol/src/exports.ts'),
                 '@streamr/trackerless-network': path.resolve('../trackerless-network/src/exports.ts'),
                 '@streamr/dht': path.resolve('../dht/src/exports.ts'),
                 '@streamr/autocertifier-client': false,
                 [path.resolve(__dirname, '../dht/src/connection/webrtc/NodeWebrtcConnection.ts')]:
                     path.resolve(__dirname, '../dht/src/connection/webrtc/BrowserWebrtcConnection.ts'),
+                [path.resolve(__dirname, '../dht/src/connection/websocket/NodeWebsocketClientConnection.ts')]:
+                    path.resolve(__dirname, '../dht/src/connection/websocket/BrowserWebsocketClientConnection.ts'),
                 [path.resolve(__dirname, '../dht/src/helpers/browser/isBrowserEnvironment.ts')]:
                     path.resolve(__dirname, '../dht/src/helpers/browser/isBrowserEnvironment_override.ts'),
                 // swap out ServerPersistence for BrowserPersistence
@@ -131,6 +128,8 @@ module.exports = (env, argv) => {
                 https: false,
                 express: false,
                 ws: false,
+                'jest-leak-detector': false,
+                'v8': false,
                 '@web3modal/standalone': false
             }
         },
@@ -138,7 +137,6 @@ module.exports = (env, argv) => {
             new NodePolyfillPlugin({
                 excludeAliases: ['console'],
             }),
-            new LodashWebpackPlugin(),
             ...(analyze ? [
                 new BundleAnalyzerPlugin({
                     analyzerMode: 'static',
@@ -147,22 +145,29 @@ module.exports = (env, argv) => {
                 })
             ] : []),
             new webpack.ProvidePlugin({
-                process: "process/browser",
-                Buffer: ["buffer", "Buffer"],
+                process: 'process/browser',
+                Buffer: ['buffer', 'Buffer'],
             }),
             new webpack.NormalModuleReplacementPlugin(/node:/, (resource) => {
-                const library = resource.request.replace(/^node:/, '');
-                if (library === "buffer") {
-                        resource.request = 'buffer'
+                const library = resource.request.replace(/^node:/, '')
+                if (library === 'buffer') {
+                    resource.request = 'buffer'
+                } else if (library === 'stream/web') {
+                    resource.request = false
                 }
             })
-        ]
+        ],
+        externals: {
+            'express': 'Express',
+            'node:stream/web': 'stream/web',
+            'node:timers/promises': 'timers/promises'
+        }
     })
 
-    let clientMinifiedConfig
-
-    if (isProduction) {
-        clientMinifiedConfig = merge({}, clientConfig, {
+    if (!isProduction) {
+        return clientConfig
+    } else {
+        return merge({}, clientConfig, {
             cache: false,
             optimization: {
                 minimize: true,
@@ -183,5 +188,4 @@ module.exports = (env, argv) => {
             },
         })
     }
-    return [clientConfig, clientMinifiedConfig].filter(Boolean)
 }

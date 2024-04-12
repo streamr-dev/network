@@ -105,11 +105,11 @@ export interface ControlLayerConfig {
 
     /**
      * The port range used to find a free port for the client's network layer WebSocket server.
-     * If not specified, a server will not be started.
+     * If set to `null`, a server will not be started.
      * The server is used by the network layer to accept incoming connections
      * over the public internet to improve the network node's connectivity.
      */
-    websocketPortRange?: PortRange
+    websocketPortRange?: PortRange | null
 
     /**
      * The host name or IP address of the WebSocket server used to connect to it over the internet.
@@ -167,7 +167,7 @@ export interface NetworkNodeConfig {
      * The number of connections the client's network node should have
      * on each stream partition.
     */
-    streamPartitionNeighborCount?: number
+    streamPartitionNeighborTargetCount?: number
 
     /**
      * The minimum number of peers in a stream partition that the client's network node
@@ -426,6 +426,7 @@ export interface StreamrClientConfig {
             timeout?: number
             retryInterval?: number
         }
+        jsonRpcTimeout?: number
     }
 }
 
@@ -478,15 +479,6 @@ const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrCli
             highGasPriceStrategy: true,
             ...config.contracts.ethereumNetwork
         }
-    }
-    if (environmentId === 'dev2') {
-        // TODO config the 30s default for "dev2 in" @streamr/config and remove this explicit timeout
-        const toNumber = (value: any): number | undefined => {
-            return (value !== undefined) ? Number(value) : undefined
-        }
-        config.contracts.streamRegistryChainRPCs.rpcs.forEach((rpc: ConnectionInfo) => {
-            rpc.timeout = toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
-        })
     }
     return config
 }
