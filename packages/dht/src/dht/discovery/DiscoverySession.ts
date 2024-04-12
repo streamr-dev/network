@@ -5,6 +5,7 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { PeerManager, getDistance } from '../PeerManager'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { DhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
+import { getClosestContacts } from '../contact/getClosestContacts'
 
 const logger = new Logger(module)
 
@@ -28,7 +29,7 @@ export class DiscoverySession {
     // TODO could we use a Gate to check if we have completed? 
     private emitter = new EventEmitter<DiscoverySessionEvents>()
     private noProgressCounter = 0
-    private ongoingClosestPeersRequests: Set<DhtAddress> = new Set()
+    private ongoingRequests: Set<DhtAddress> = new Set()
     private readonly config: DiscoverySessionConfig
 
     constructor(config: DiscoverySessionConfig) {
@@ -44,22 +45,22 @@ export class DiscoverySession {
         }
     }
 
-    private async getClosestPeersFromContact(contact: DhtNodeRpcRemote): Promise<PeerDescriptor[]> {
+    private async fetchClosestNeighborsFromRemote(contact: DhtNodeRpcRemote): Promise<PeerDescriptor[]> {
         if (this.stopped) {
             return []
         }
-        logger.trace(`Getting closest peers from contact: ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
+        logger.trace(`Getting closest neighbors from remote: ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
         this.config.contactedPeers.add(contact.getNodeId())
         const returnedContacts = await contact.getClosestPeers(this.config.targetId)
         this.config.peerManager.setContactActive(contact.getNodeId())
         return returnedContacts
     }
 
-    private onClosestPeersRequestSucceeded(nodeId: DhtAddress, contacts: PeerDescriptor[]) {
-        if (!this.ongoingClosestPeersRequests.has(nodeId)) {
+    private onRequestSucceeded(nodeId: DhtAddress, contacts: PeerDescriptor[]) {
+        if (!this.ongoingRequests.has(nodeId)) {
             return
         }
-        this.ongoingClosestPeersRequests.delete(nodeId)
+        this.ongoingRequests.delete(nodeId)
         const targetId = getRawFromDhtAddress(this.config.targetId)
         const oldClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
         const oldClosestDistance = getDistance(targetId, getRawFromDhtAddress(oldClosestNeighbor.getNodeId()))
@@ -71,11 +72,11 @@ export class DiscoverySession {
         }
     }
 
-    private onClosestPeersRequestFailed(peer: DhtNodeRpcRemote) {
-        if (!this.ongoingClosestPeersRequests.has(peer.getNodeId())) {
+    private onRequestFailed(peer: DhtNodeRpcRemote) {
+        if (!this.ongoingRequests.has(peer.getNodeId())) {
             return
         }
-        this.ongoingClosestPeersRequests.delete(peer.getNodeId())
+        this.ongoingRequests.delete(peer.getNodeId())
         this.config.peerManager.removeContact(peer.getNodeId())
     }
 
@@ -83,25 +84,28 @@ export class DiscoverySession {
         if (this.stopped) {
             return
         }
-        const uncontacted = this.config.peerManager.getClosestContactsTo(
+        const uncontacted = getClosestContacts(
             this.config.targetId,
-            this.config.parallelism,
-            this.config.contactedPeers
+            this.config.peerManager.getClosestContacts().getAllContactsInUndefinedOrder(),
+            {
+                maxCount: this.config.parallelism,
+                excludedNodeIds: this.config.contactedPeers
+            }
         )
-        if ((uncontacted.length === 0 && this.ongoingClosestPeersRequests.size === 0) || (this.noProgressCounter >= this.config.noProgressLimit)) {
+        if ((uncontacted.length === 0 && this.ongoingRequests.size === 0) || (this.noProgressCounter >= this.config.noProgressLimit)) {
             this.emitter.emit('discoveryCompleted')
             this.stopped = true
             return
         }
         for (const nextPeer of uncontacted) {
-            if (this.ongoingClosestPeersRequests.size >= this.config.parallelism) {
+            if (this.ongoingRequests.size >= this.config.parallelism) {
                 break
             }
-            this.ongoingClosestPeersRequests.add(nextPeer.getNodeId())
+            this.ongoingRequests.add(nextPeer.getNodeId())
             // eslint-disable-next-line promise/catch-or-return
-            this.getClosestPeersFromContact(nextPeer)
-                .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer.getNodeId(), contacts))
-                .catch(() => this.onClosestPeersRequestFailed(nextPeer))
+            this.fetchClosestNeighborsFromRemote(nextPeer)
+                .then((contacts) => this.onRequestSucceeded(nextPeer.getNodeId(), contacts))
+                .catch(() => this.onRequestFailed(nextPeer))
                 .finally(() => {
                     this.findMoreContacts()
                 })

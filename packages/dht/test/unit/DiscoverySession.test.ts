@@ -52,7 +52,7 @@ describe('DiscoverySession', () => {
                 queriedNodes.push(nodeId)
                 await wait(10)
                 const peerManager = createPeerManager(nodeId)
-                return peerManager.getClosestContactsTo(referenceId, QUERY_BATCH_SIZE).map((remote) => remote.getPeerDescriptor())
+                return peerManager.getClosestNeighborsTo(referenceId, QUERY_BATCH_SIZE).map((remote) => remote.getPeerDescriptor())
             },
             ping: async () => true
         }

@@ -47,10 +47,14 @@ import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
  */
 export interface IDhtNodeRpcClient {
     /**
+     * TODO rename to getClosestNeighbors (breaking change)
+     *
      * @generated from protobuf rpc: getClosestPeers(dht.ClosestPeersRequest) returns (dht.ClosestPeersResponse);
      */
     getClosestPeers(input: ClosestPeersRequest, options?: RpcOptions): UnaryCall<ClosestPeersRequest, ClosestPeersResponse>;
     /**
+     * TODO rename to getClosestRingContacts (breaking change)
+     *
      * @generated from protobuf rpc: getClosestRingPeers(dht.ClosestRingPeersRequest) returns (dht.ClosestRingPeersResponse);
      */
     getClosestRingPeers(input: ClosestRingPeersRequest, options?: RpcOptions): UnaryCall<ClosestRingPeersRequest, ClosestRingPeersResponse>;
@@ -73,6 +77,8 @@ export class DhtNodeRpcClient implements IDhtNodeRpcClient, ServiceInfo {
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
+     * TODO rename to getClosestNeighbors (breaking change)
+     *
      * @generated from protobuf rpc: getClosestPeers(dht.ClosestPeersRequest) returns (dht.ClosestPeersResponse);
      */
     getClosestPeers(input: ClosestPeersRequest, options?: RpcOptions): UnaryCall<ClosestPeersRequest, ClosestPeersResponse> {
@@ -80,6 +86,8 @@ export class DhtNodeRpcClient implements IDhtNodeRpcClient, ServiceInfo {
         return stackIntercept<ClosestPeersRequest, ClosestPeersResponse>("unary", this._transport, method, opt, input);
     }
     /**
+     * TODO rename to getClosestRingContacts (breaking change)
+     *
      * @generated from protobuf rpc: getClosestRingPeers(dht.ClosestRingPeersRequest) returns (dht.ClosestRingPeersResponse);
      */
     getClosestRingPeers(input: ClosestRingPeersRequest, options?: RpcOptions): UnaryCall<ClosestRingPeersRequest, ClosestRingPeersResponse> {

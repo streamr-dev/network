@@ -426,6 +426,7 @@ export interface StreamrClientConfig {
             timeout?: number
             retryInterval?: number
         }
+        jsonRpcTimeout?: number
     }
 }
 
@@ -478,15 +479,6 @@ const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrCli
             highGasPriceStrategy: true,
             ...config.contracts.ethereumNetwork
         }
-    }
-    if (environmentId === 'dev2') {
-        // TODO config the 30s default for "dev2 in" @streamr/config and remove this explicit timeout
-        const toNumber = (value: any): number | undefined => {
-            return (value !== undefined) ? Number(value) : undefined
-        }
-        config.contracts.streamRegistryChainRPCs.rpcs.forEach((rpc: ConnectionInfo) => {
-            rpc.timeout = toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
-        })
     }
     return config
 }
