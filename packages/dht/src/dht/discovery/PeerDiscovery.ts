@@ -12,7 +12,6 @@ import { RingIdRaw, getRingIdRawFromPeerDescriptor } from '../contact/ringIdenti
 interface PeerDiscoveryConfig {
     localPeerDescriptor: PeerDescriptor
     joinNoProgressLimit: number
-    peerDiscoveryQueryBatchSize: number
     serviceId: ServiceID
     parallelism: number
     joinTimeout: number
@@ -185,11 +184,11 @@ export class PeerDiscovery {
         if (!this.recoveryIntervalStarted) {
             this.recoveryIntervalStarted = true
             // TODO use config option or named constant?
-            await scheduleAtInterval(() => this.fetchClosestPeersFromBucket(), 60000, true, this.abortController.signal)
+            await scheduleAtInterval(() => this.fetchClosestNeighbors(), 60000, true, this.abortController.signal)
         }
     }
 
-    private async fetchClosestPeersFromBucket(): Promise<void> {
+    private async fetchClosestNeighbors(): Promise<void> {
         if (this.isStopped()) {
             return
         }
@@ -199,8 +198,8 @@ export class PeerDiscovery {
             this.config.parallelism
         )
         await Promise.allSettled(
-            nodes.map(async (peer: DhtNodeRpcRemote) => {
-                const contacts = await peer.getClosestPeers(localNodeId)
+            nodes.map(async (node: DhtNodeRpcRemote) => {
+                const contacts = await node.getClosestPeers(localNodeId)
                 for (const contact of contacts) {
                     this.config.peerManager.addContact(contact)
                 }

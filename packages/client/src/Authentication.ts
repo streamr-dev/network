@@ -19,7 +19,7 @@ export interface Authentication {
     getStreamRegistryChainSigner: () => Promise<SignerWithProvider>
 }
 
-export const createPrivateKeyAuthentication = (key: string, config: Pick<StrictStreamrClientConfig, 'contracts'>): Authentication => {
+export const createPrivateKeyAuthentication = (key: string, config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>): Authentication => {
     const address = toEthereumAddress(computeAddress(key))
     return {
         getAddress: async () => address,
@@ -31,7 +31,7 @@ export const createPrivateKeyAuthentication = (key: string, config: Pick<StrictS
     }
 }
 
-export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'auth' | 'contracts'>): Authentication => {
+export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'auth' | 'contracts' | '_timeouts'>): Authentication => {
     if ((config.auth as PrivateKeyAuthConfig)?.privateKey !== undefined) {
         const privateKey = (config.auth as PrivateKeyAuthConfig).privateKey
         const normalizedPrivateKey = !privateKey.startsWith('0x')

@@ -13,13 +13,13 @@ export class RecursiveOperationSessionRpcRemote extends RpcRemote<RecursiveOpera
 
     sendResponse(
         routingPath: PeerDescriptor[],
-        closestNodes: PeerDescriptor[],
+        closestConnectedNodes: PeerDescriptor[],
         dataEntries: DataEntry[],
         noCloserNodesFound: boolean
     ): void {
         const report: RecursiveOperationResponse = {
             routingPath,
-            closestConnectedPeers: closestNodes,
+            closestConnectedNodes,
             dataEntries,
             noCloserNodesFound
         }
