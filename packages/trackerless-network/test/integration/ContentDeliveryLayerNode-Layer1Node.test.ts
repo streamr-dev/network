@@ -75,6 +75,7 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
         })
 
         await entryPointLayer1Node.start()
+        await entryPointContentDeliveryLayerNode.start()
         await entryPointLayer1Node.joinDht([entrypointDescriptor])
         await Promise.all(otherLayer1Nodes.map((node) => node.start()))
     })
@@ -87,10 +88,8 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
     })
 
     it('happy path single node ', async () => {
-        await entryPointContentDeliveryLayerNode.start()
-        await otherLayer1Nodes[0].joinDht([entrypointDescriptor])
-
         await otherContentDeliveryLayerNodes[0].start()
+        await otherLayer1Nodes[0].joinDht([entrypointDescriptor])
 
         await waitForCondition(() => otherContentDeliveryLayerNodes[0].getNeighbors().length === 1)
         expect(otherContentDeliveryLayerNodes[0].getNearbyNodeView().getIds().length).toEqual(1)
@@ -98,7 +97,6 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
     })
 
     it('happy path 4 nodes', async () => {
-        entryPointContentDeliveryLayerNode.start()
         range(4).forEach((i) => otherContentDeliveryLayerNodes[i].start())
         await Promise.all(range(4).map(async (i) => {
             await otherLayer1Nodes[i].joinDht([entrypointDescriptor])

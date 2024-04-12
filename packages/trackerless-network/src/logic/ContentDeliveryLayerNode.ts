@@ -32,7 +32,6 @@ import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryCon
 import { markAndCheckDuplicate } from './utils'
 import { Layer1Node } from './Layer1Node'
 import { StreamPartID } from '@streamr/protocol'
-import { uniqBy } from 'lodash'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -190,11 +189,6 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                 this.abortController.signal
             )
         }
-        // TODO remove this block, not required in practice
-        const candidates = this.getNeighborCandidatesFromLayer1()
-        if (candidates.length > 0) {
-            this.onNearbyContactAdded(candidates)
-        }
         this.config.neighborFinder.start()
         await this.config.neighborUpdateManager.start()
     }
@@ -326,17 +320,6 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             this.config.neighborFinder.start([nodeId])
             this.config.temporaryConnectionRpcLocal.removeNode(nodeId)
         }
-    }
-
-    private getNeighborCandidatesFromLayer1(): PeerDescriptor[] {
-        const nodes: PeerDescriptor[] = []
-        this.config.layer1Node.getClosestContacts(this.config.nodeViewSize).forEach((peer: PeerDescriptor) => {
-            nodes.push(peer)
-        })
-        this.config.layer1Node.getNeighbors().forEach((peer: PeerDescriptor) => {
-            nodes.push(peer)
-        })
-        return uniqBy(nodes, (p) => getNodeIdFromPeerDescriptor(p))
     }
 
     hasProxyConnection(nodeId: DhtAddress): boolean {

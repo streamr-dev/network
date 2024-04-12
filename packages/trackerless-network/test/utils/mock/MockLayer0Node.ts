@@ -49,6 +49,16 @@ export class MockLayer0Node extends EventEmitter implements Layer0Node {
     }
 
     // eslint-disable-next-line class-methods-use-this
+    getConnectionCount(): number {
+        return 0
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    hasConnection(): boolean {
+        return false
+    }
+
+    // eslint-disable-next-line class-methods-use-this
     getNeighbors(): PeerDescriptor[] {
         return []
     }

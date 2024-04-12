@@ -49,11 +49,11 @@ describe('RoutingSession', () => {
             rpcCommunicator: rpcCommunicator,
             localPeerDescriptor: mockPeerDescriptor1,
             routedMessage,
-            connections, 
             parallelism: 2,
             mode: RoutingMode.ROUTE,
             excludedNodeIds: new Set(),
-            routingTablesCache
+            routingTablesCache,
+            getConnections: () => [...connections.values()].map((c) => c.getPeerDescriptor())
         })
     })
 

@@ -3,7 +3,6 @@ import { RoutingMode, RoutingRemoteContact, RoutingSession, RoutingSessionEvents
 import { Logger, executeSafePromise, raceEvents3, withTimeout } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { DuplicateDetector } from './DuplicateDetector'
-import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { v4 } from 'uuid'
 import { RouterRpcLocal, createRouteMessageAck } from './RouterRpcLocal'
 import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../identifiers'
@@ -12,8 +11,8 @@ import { RoutingTablesCache } from './RoutingTablesCache'
 export interface RouterConfig {
     rpcCommunicator: RoutingRpcCommunicator
     localPeerDescriptor: PeerDescriptor
-    connections: Map<DhtAddress, DhtNodeRpcRemote>
     handleMessage: (message: Message) => void
+    getConnections: () => PeerDescriptor[]
 }
 
 interface ForwardingTableEntry {
@@ -158,17 +157,16 @@ export class Router {
         routedMessage.parallelRootNodeIds.forEach((nodeId) => {
             excludedNodeIds.add(nodeId as DhtAddress)
         })
-        logger.trace('routing session created with connections: ' + this.config.connections.size)
         return new RoutingSession({
             rpcCommunicator: this.config.rpcCommunicator,
             localPeerDescriptor: this.config.localPeerDescriptor,
             routedMessage,
-            connections: this.config.connections,
             // TODO use config option or named constant?
             parallelism: areEqualPeerDescriptors(this.config.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
             mode,
             excludedNodeIds,
-            routingTablesCache: this.routingTablesCache
+            routingTablesCache: this.routingTablesCache,
+            getConnections: this.config.getConnections
         })
     }
 
