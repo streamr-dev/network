@@ -11,4 +11,5 @@ program
     .command('mock-data', 'mock data subcommands')
     .command('wallet', 'wallet subcommands')
     .command('governance', 'governance subcommands')
+    .command('internal', 'subcommands for internal use')
     .parse()

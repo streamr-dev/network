@@ -96,21 +96,18 @@ export class ManagedConnection extends EventEmitter<Events> {
             })
             outgoingConnection.once('disconnected', this.onDisconnected)
 
-        } else {
-            if (incomingConnection) {
-                this.handshaker = new Handshaker(this.localPeerDescriptor, incomingConnection)
-                this.handshaker.on('handshakeRequest', (
-                    sourcePeerDescriptor: PeerDescriptor,
-                    version: string,
-                    targetPeerDescriptor?: PeerDescriptor
-                ) => {
-                    this.setRemotePeerDescriptor(sourcePeerDescriptor)
-                    this.emit('handshakeRequest', sourcePeerDescriptor, version, targetPeerDescriptor)
-                })
+        } else if (incomingConnection) {
+            this.handshaker = new Handshaker(this.localPeerDescriptor, incomingConnection)
+            this.handshaker.on('handshakeRequest', (
+                sourcePeerDescriptor: PeerDescriptor,
+                version: string,
+                targetPeerDescriptor?: PeerDescriptor
+            ) => {
+                this.setRemotePeerDescriptor(sourcePeerDescriptor)
+                this.emit('handshakeRequest', sourcePeerDescriptor, version, targetPeerDescriptor)
+            })
 
-                incomingConnection.on('disconnected', this.onDisconnected)
-
-            }
+            incomingConnection.on('disconnected', this.onDisconnected)
         }
     }
 
