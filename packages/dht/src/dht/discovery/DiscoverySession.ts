@@ -26,6 +26,7 @@ export class DiscoverySession {
 
     public readonly id = v4()
     private stopped = false
+    // TODO could we use a Gate to check if we have completed? 
     private emitter = new EventEmitter<DiscoverySessionEvents>()
     private noProgressCounter = 0
     private ongoingRequests: Set<DhtAddress> = new Set()
