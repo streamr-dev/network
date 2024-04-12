@@ -43,7 +43,6 @@ describe('ContentDeliveryLayerNode', () => {
             neighborFinder: new MockNeighborFinder() as any,
             streamPartId: StreamPartIDUtils.parse('stream#0'),
             isLocalNodeEntryPoint: () => false
-
         })
         await contentDeliveryLayerNode.start()
     })
@@ -69,7 +68,8 @@ describe('ContentDeliveryLayerNode', () => {
     it('Adds Closest Nodes from layer1 contactAdded event to nearbyNodeView', async () => {
         const peerDescriptor1 = createMockPeerDescriptor()
         const peerDescriptor2 = createMockPeerDescriptor()
-        layer1Node.emit('contactAdded', peerDescriptor1, [peerDescriptor1, peerDescriptor2])
+        layer1Node.setClosestContacts([peerDescriptor1, peerDescriptor2])
+        layer1Node.emit('closestContactAdded', peerDescriptor1)
         await waitForCondition(() => nearbyNodeView.size() === 2)
         expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor1))).toBeTruthy()
         expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor2))).toBeTruthy()
@@ -78,7 +78,8 @@ describe('ContentDeliveryLayerNode', () => {
     it('Adds Random Nodes from layer1 randomContactAdded event to randomNodeView', async () => {
         const peerDescriptor1 = createMockPeerDescriptor()
         const peerDescriptor2 = createMockPeerDescriptor()
-        layer1Node.emit('randomContactAdded', peerDescriptor1, [peerDescriptor1, peerDescriptor2])
+        layer1Node.setRandomContacts([peerDescriptor1, peerDescriptor2])
+        layer1Node.emit('randomContactAdded', peerDescriptor1)
         await waitForCondition(() => randomNodeView.size() === 2)
         expect(randomNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor1))).toBeTruthy()
         expect(randomNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor2))).toBeTruthy()
@@ -88,7 +89,8 @@ describe('ContentDeliveryLayerNode', () => {
         const peerDescriptor1 = createMockPeerDescriptor()
         const peerDescriptor2 = createMockPeerDescriptor()
         layer1Node.addNewRandomPeerToKBucket()
-        layer1Node.emit('contactAdded', peerDescriptor1, [peerDescriptor1, peerDescriptor2])
+        layer1Node.setClosestContacts([peerDescriptor1, peerDescriptor2])
+        layer1Node.emit('closestContactAdded', peerDescriptor1)
         await waitForCondition(() => {
             return nearbyNodeView.size() === 3
         }, 20000)

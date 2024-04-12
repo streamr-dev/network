@@ -4,6 +4,10 @@ import EventEmitter from 'eventemitter3'
 import { getDistance } from '../PeerManager'
 import { DhtAddress, getRawFromDhtAddress } from '../../identifiers'
 
+// add other getters in the future if needed
+export type ReadonlySortedContactList<C extends { getNodeId: () => DhtAddress }> =
+    Pick<SortedContactList<C>, 'getClosestContacts' | 'getAllContactsInUndefinedOrder'>
+
 export interface SortedContactListConfig {
     referenceId: DhtAddress  // all contacts in this list are in sorted by the distance to this ID
     allowToContainReferenceId: boolean
@@ -53,8 +57,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
                 if (this.hasEventListeners()) {
                     this.emit(
                         'contactAdded',
-                        contact,
-                        this.getClosestContacts()
+                        contact
                     )
                 }
             } else if (this.compareIds(this.contactIds[this.config.maxSize - 1], contactId) > 0) {
@@ -65,16 +68,13 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
                 const index = sortedIndexBy(this.contactIds, contactId, (id: DhtAddress) => { return this.distanceToReferenceId(id) })
                 this.contactIds.splice(index, 0, contactId)
                 if (this.hasEventListeners()) {
-                    const closestContacts = this.getClosestContacts()
                     this.emit(
                         'contactRemoved',
-                        removedContact,
-                        closestContacts
+                        removedContact
                     )
                     this.emit(
                         'contactAdded',
-                        contact,
-                        closestContacts
+                        contact
                     )
                 }
             }
@@ -133,8 +133,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
             if (this.hasEventListeners()) {
                 this.emit(
                     'contactRemoved',
-                    removed,
-                    this.getClosestContacts()
+                    removed
                 )
             }
             return true
@@ -142,7 +141,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
         return false
     }
 
-    public getAllContactsInUndefinedOrder(): IterableIterator<C> {
+    public getAllContactsInUndefinedOrder(): Iterable<C> {
         return this.contactsById.values()
     }
 
