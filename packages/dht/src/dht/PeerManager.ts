@@ -187,6 +187,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
         if (nodeId === this.config.localNodeId) {
             logger.error('handleConnected() to self')
+            return
         }
         const rpcRemote = this.config.createDhtNodeRpcRemote(peerDescriptor)
         if (!this.connections.has(nodeId)) {
