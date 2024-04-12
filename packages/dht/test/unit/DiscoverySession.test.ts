@@ -34,7 +34,8 @@ describe('DiscoverySession', () => {
             localNodeId,
             localPeerDescriptor: createPeerDescriptor(localNodeId),
             isLayer0: true,
-            createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => createMockRpcRemote(peerDescriptor) as any
+            createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => createMockRpcRemote(peerDescriptor) as any,
+            hasConnection: () => true
         } as any)
         for (const neighbor of topology.get(localNodeId)) {
             peerManager.addContact(createPeerDescriptor(neighbor))
