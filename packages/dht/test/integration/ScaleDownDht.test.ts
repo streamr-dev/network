@@ -4,7 +4,7 @@ import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/Dh
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { Logger } from '@streamr/utils'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
-import { areEqualPeerDescriptors, createRandomDhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
+import { DhtAddress, areEqualPeerDescriptors, createRandomDhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
@@ -42,19 +42,21 @@ describe('Scaling down a Dht network', () => {
         await Promise.all(nodes.map((node) => node.stop()))
     }, 10000)
 
-    // temporarily disabled: we can't access node.getConnections() after a node has been stopped
-    it.skip('Remaining nodes cleaned up stopped nodes from states', async () => {
+    it('Remaining nodes cleaned up stopped nodes from states', async () => {
         const randomIndices = []
         for (let i = 1; i < nodes.length; i++) {
             randomIndices.push(i)
         }
+        const stoppedNodes: Set<DhtAddress> = new Set()
         while (randomIndices.length > 1) {
             const index = Math.floor(Math.random() * randomIndices.length)
             const nodeIndex = randomIndices[index]
             randomIndices.splice(index, 1)
-            const stoppingPeerDescriptor = nodes[nodeIndex].getLocalPeerDescriptor()
-            await nodes[nodeIndex].stop()
-            const nodeIsCleaned = nodes.every((node) =>
+            const nodeToStop = nodes[nodeIndex]
+            const stoppingPeerDescriptor = nodeToStop.getLocalPeerDescriptor()
+            stoppedNodes.add(getNodeIdFromPeerDescriptor(stoppingPeerDescriptor))
+            await nodeToStop.stop()
+            const nodeIsCleaned = nodes.filter((node) => !stoppedNodes.has(node.getNodeId())).every((node) =>
                 node.getConnections().every((peer) => {
                     if (areEqualPeerDescriptors(peer, stoppingPeerDescriptor)) {
                         logger.error(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + ', ' 
