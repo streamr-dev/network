@@ -26,6 +26,7 @@ export class DiscoverySession {
 
     public readonly id = v4()
     private stopped = false
+    // TODO could we use a Gate to check if we have completed? 
     private emitter = new EventEmitter<DiscoverySessionEvents>()
     private noProgressCounter = 0
     private ongoingRequests: Set<DhtAddress> = new Set()
@@ -91,7 +92,7 @@ export class DiscoverySession {
                 excludedNodeIds: this.config.contactedPeers
             }
         )
-        if (uncontacted.length === 0 || this.noProgressCounter >= this.config.noProgressLimit) {
+        if ((uncontacted.length === 0 && this.ongoingRequests.size === 0) || (this.noProgressCounter >= this.config.noProgressLimit)) {
             this.emitter.emit('discoveryCompleted')
             this.stopped = true
             return
