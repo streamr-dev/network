@@ -2,8 +2,8 @@ import EventEmitter from 'eventemitter3'
 import { DhtAddress } from '../../identifiers'
 
 export interface Events<C> {
-    contactRemoved: (removedContact: C, closestContacts: C[]) => void
-    contactAdded: (contactAdded: C, closestContacts: C[]) => void
+    contactRemoved: (removedContact: C) => void
+    contactAdded: (contactAdded: C) => void
 }
 
 export class ContactList<C extends { getNodeId: () => DhtAddress }> extends EventEmitter<Events<C>> {

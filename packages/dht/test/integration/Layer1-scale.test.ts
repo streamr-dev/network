@@ -38,8 +38,8 @@ describe.skip('Layer1', () => {
     }, 30000)
 
     afterEach(async () => {
-        await Promise.all(nodes.map((node) => node.stop()))
         await Promise.all(layer1CleanUp.map((node) => node.stop()))
+        await Promise.all(nodes.map((node) => node.stop()))
         await layer0EntryPoint.stop()
         simulator.stop()
     })

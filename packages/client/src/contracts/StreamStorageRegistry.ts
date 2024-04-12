@@ -40,7 +40,7 @@ export class StreamStorageRegistry {
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly contractFactory: ContractFactory
     private readonly theGraphClient: TheGraphClient
-    private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
+    private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     private readonly authentication: Authentication
     private readonly logger: Logger
 
@@ -50,7 +50,7 @@ export class StreamStorageRegistry {
         streamIdBuilder: StreamIDBuilder,
         contractFactory: ContractFactory,
         theGraphClient: TheGraphClient,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         eventEmitter: StreamrClientEventEmitter,
         loggerFactory: LoggerFactory
