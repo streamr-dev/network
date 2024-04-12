@@ -108,6 +108,8 @@ export interface DataEntry {
     deleted: boolean;
 }
 /**
+ * TODO rename to ClosestNeighborsRequest
+ *
  * @generated from protobuf message dht.ClosestPeersRequest
  */
 export interface ClosestPeersRequest {
@@ -121,6 +123,8 @@ export interface ClosestPeersRequest {
     requestId: string;
 }
 /**
+ * TODO rename to ClosestPeersResponse
+ *
  * @generated from protobuf message dht.ClosestPeersResponse
  */
 export interface ClosestPeersResponse {
@@ -134,6 +138,8 @@ export interface ClosestPeersResponse {
     requestId: string;
 }
 /**
+ * TODO rename to ClosestRingContactsRequest
+ *
  * @generated from protobuf message dht.ClosestRingPeersRequest
  */
 export interface ClosestRingPeersRequest {
@@ -147,6 +153,8 @@ export interface ClosestRingPeersRequest {
     requestId: string;
 }
 /**
+ * TODO rename to ClosestRingContactsResponse
+ *
  * @generated from protobuf message dht.ClosestRingPeersResponse
  */
 export interface ClosestRingPeersResponse {
@@ -181,9 +189,9 @@ export interface RecursiveOperationRequest {
  */
 export interface RecursiveOperationResponse {
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor closestConnectedPeers = 1;
+     * @generated from protobuf field: repeated dht.PeerDescriptor closestConnectedNodes = 1;
      */
-    closestConnectedPeers: PeerDescriptor[];
+    closestConnectedNodes: PeerDescriptor[];
     /**
      * @generated from protobuf field: repeated dht.DataEntry dataEntries = 2;
      */
@@ -837,7 +845,7 @@ export const RecursiveOperationRequest = new RecursiveOperationRequest$Type();
 class RecursiveOperationResponse$Type extends MessageType<RecursiveOperationResponse> {
     constructor() {
         super("dht.RecursiveOperationResponse", [
-            { no: 1, name: "closestConnectedPeers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 1, name: "closestConnectedNodes", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
             { no: 2, name: "dataEntries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry },
             { no: 3, name: "noCloserNodesFound", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 4, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }

@@ -24,7 +24,7 @@ export const InstantiateERC1271ContractsToken = Symbol('InstantiateERC1271Contra
 
 export function createNewInstantiateContractsFn(
     contractFactory: ContractFactory,
-    config: Pick<StrictStreamrClientConfig, 'contracts'>
+    config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
 ): (address: EthereumAddress) => ERC1271Contract[] {
     return (address) => getStreamRegistryChainProviders(config).map((provider: Provider) => {
         return contractFactory.createReadContract(
