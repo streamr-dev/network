@@ -3,7 +3,11 @@ import { ERC1271ContractFacade, SUCCESS_MAGIC_VALUE } from '../../src/contracts/
 import { mock, MockProxy } from 'jest-mock-extended'
 import type { IERC1271 as ERC1271Contract } from '../../src/ethereumArtifacts/IERC1271'
 import { fastPrivateKey, randomEthereumAddress } from '@streamr/test-utils'
-import { createSignature, EthereumAddress, hexToBinary, hash } from '@streamr/utils'
+import { createSignature, hexToBinary, hash } from '@streamr/utils'
+import { RpcProviderFactory } from '../../src/RpcProviderFactory'
+import { ContractFactory } from '../../src/ContractFactory'
+import { Provider } from '@ethersproject/providers'
+import { ObservableContract } from '../../src/utils/contract'
 
 const PRIVATE_KEY = fastPrivateKey()
 const PAYLOAD = new Uint8Array([1, 2, 3])
@@ -19,16 +23,20 @@ describe('ERC1271ContractFacade', () => {
     beforeEach(() => {
         contractOne = mock<ERC1271Contract>()
         contractTwo = mock<ERC1271Contract>()
-        contractFacade = new ERC1271ContractFacade((address: EthereumAddress) => {
+        const rpcProviderFactory = mock<RpcProviderFactory>()
+        rpcProviderFactory.getProviders.mockReturnValue([mock<Provider>()])
+        const contractFactory = mock<ContractFactory>()
+        contractFactory.createReadContract.mockImplementation((address) => {
             switch (address) {
                 case CONTRACT_ADDRESS_ONE:
-                    return [contractOne]
+                    return contractOne as ObservableContract<any>
                 case CONTRACT_ADDRESS_TWO:
-                    return [contractTwo]
+                    return contractTwo as ObservableContract<any>
                 default:
                     throw new Error('test: should not be here')
             }
         })
+        contractFacade = new ERC1271ContractFacade(contractFactory, rpcProviderFactory)
     })
 
     it('isValidSignature delegates to isValidSignature', async () => {

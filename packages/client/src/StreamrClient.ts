@@ -49,8 +49,6 @@ import { StreamDefinition } from './types'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
-import { createNewInstantiateContractsFn, InstantiateERC1271ContractsToken } from './contracts/ERC1271ContractFacade'
-import { ContractFactory } from './ContractFactory'
 import { RpcProviderFactory } from './RpcProviderFactory'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
@@ -110,12 +108,7 @@ export class StreamrClient {
         const container = parentContainer.createChildContainer()
         container.register(AuthenticationInjectionToken, { useValue: authentication })
         container.register(ConfigInjectionToken, { useValue: strictConfig })
-        container.register(InstantiateERC1271ContractsToken, {
-            useValue: createNewInstantiateContractsFn(
-                container.resolve<ContractFactory>(ContractFactory),
-                container.resolve<RpcProviderFactory>(RpcProviderFactory)
-            )
-        })
+
         // eslint-disable-next-line max-len
         container.register(TheGraphClient, { useValue: createTheGraphClient(container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig) })
         this.id = strictConfig.id
