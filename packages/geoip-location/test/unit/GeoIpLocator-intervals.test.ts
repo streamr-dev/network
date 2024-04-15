@@ -1,7 +1,6 @@
 import { GeoIpLocator } from '../../src/GeoIpLocator'
 import { wait } from '@streamr/utils'
 import fs from 'fs'
-import { getSlowDbAndHashHandlers } from '../helpers/mswHandlers'
 import { TestServer } from '../helpers/TestServer'
 
 describe('GeoIpLocator', () => {

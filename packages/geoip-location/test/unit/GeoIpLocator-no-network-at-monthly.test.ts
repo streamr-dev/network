@@ -1,7 +1,6 @@
 import { GeoIpLocator } from '../../src/GeoIpLocator'
 import fs from 'fs'
 import { wait } from '@streamr/utils'
-import { t } from 'tar'
 import { TestServer } from '../helpers/TestServer'
 
 describe('GeoIpLocatorNoNetworkAtMonthly', () => {
