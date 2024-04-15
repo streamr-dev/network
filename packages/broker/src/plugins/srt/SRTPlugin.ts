@@ -116,7 +116,7 @@ export class SRTPlugin extends Plugin<SRTPluginConfig> {
         logger.info('Time measurements w/o outliers', {outliersRemoved})
         return clockDifference
     }
-
+    
     async awaitConnections(socket: number): Promise<void> {
         
         const clockDifference = _.round(await this.estimateTimeDiff(),1)
@@ -124,42 +124,127 @@ export class SRTPlugin extends Plugin<SRTPluginConfig> {
         logger.info('SRT plugin: awaiting incoming client connection ...')
         const fd = await this.server!.accept(socket)
         logger.info('SRT plugin: New incoming client fd:', { fd })
-        // make messagePoolSize configurable parameter
-        const messagePoolSize = 30
-        let messagePool: Array<string> = []
-        let msgCounter = 0
-        
+
         try {
-            // eslint-disable-next-line no-constant-condition
+            let chunks = []
+            let i = 0
+            const maxPayloadChunks = 2 // (approx max 6kb per publishedmsg)
+
             while (true) {
-                const chunk = await this.server.read(fd, 1316 * 8)
-                if (chunk instanceof Uint8Array) {
-                    const base64Chunk = arrayBufferToBase64(chunk)
-                    const base64Payload = JSON.parse(JSON.stringify(base64Chunk))
-                    messagePool.push(base64Payload)
-                    
-                    if (messagePool.length == messagePoolSize) {
-                        const timestamp = Date.now()
-                        const payload = { b:[0, messagePool, timestamp + clockDifference, msgCounter] }
-                        await this.streamrClient?.publish({ id: this.pluginConfig.streamId, partition: this.pluginConfig.partition }, payload)
-                        messagePool = []
-                        msgCounter++
-                    }
+                const chunk = await this.server.read(fd, 1316)
+                if (chunk instanceof Uint8Array && i < maxPayloadChunks) {
+                    chunks.push(chunk)
+                    i++
+                }
+        
+                if (i >= maxPayloadChunks) {
+                    const concatenatedChunks = concatenateUint8Arrays(chunks);
+                    console.log('Concatenated Data Length in Kb:', concatenatedChunks.length / 1024);
+                    await this.streamrClient?.publish({ id: this.pluginConfig.streamId, partition: this.pluginConfig.partition }, concatenatedChunks)
+                    i = 0
+                    chunks = []
                 }
             }
         } catch (error) {
+            console.error('Error reading data:', error);
             logger.info('SRT plugin', error)
             await this.restartServer()
-            // close connection ?
-            // restart plugin 
         }
+        
+        function concatenateUint8Arrays(chunks: Uint8Array[]): Uint8Array {
+            let totalLength = chunks.reduce((acc: number, val: Uint8Array) => acc + val.length, 0)
+            let result = new Uint8Array(totalLength)
+            let offset = 0
 
+            // Copy each Uint8Array chunk into the result array at the appropriate offset
+            for (let chunk of chunks) {
+                result.set(chunk, offset)
+                offset += chunk.length
+            }
+
+            return result
+        }
     }
 
     // eslint-disable-next-line class-methods-use-this
     override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }
-    
 }
 
+
+
+       
+
+
+
+
+
+
+
+
+
+
+
+
+        
+        // try {
+        //     // eslint-disable-next-line no-constant-condition
+        //     while (true) {
+        //         const chunk = await this.server.read(fd, 1316)
+        //             if (chunk instanceof Uint8Array && i < 10) {
+        //                 i = i + 1
+                        
+        //                 // Assume chunkPool is populated with several Uint8Array objects
+        //                 let combinedArray = this.concatenateUint8Arrays(chunkPool);
+        //                 console.log(combinedArray); // This is a single Uint8Array containing all data
+
+        //             }
+        //             if (i >= 10) {
+
+        //                 // Assuming chunkPool is an array of Uint8Array objects
+        //                 let totalSizeBytes = 0;
+
+        //                 // Summing the byte lengths of all chunks
+        //                 for (let chunk of chunkPool) {
+        //                     totalSizeBytes += chunk.length;
+        //                 }
+
+        //                 console.log(`Total size of chunks in bytes: ${totalSizeBytes}`);
+        //                 // Optionally, convert to kilobytes for display
+        //                 let totalSizeKilobytes = totalSizeBytes / 1024;
+        //                 console.log(`Total size of chunks in kilobytes: ${totalSizeKilobytes.toFixed(2)} KB`);
+
+
+        //                 await this.streamrClient?.publish({ id: this.pluginConfig.streamId, partition: this.pluginConfig.partition }, chunkPool)
+        //                 chunkPool = []
+        //                 i = 1
+        //             }
+                // if (chunk instanceof Uint8Array) {
+                //     // const base64Chunk = arrayBufferToBase64(chunk)
+                //     // const base64Payload = JSON.parse(JSON.stringify(base64Chunk))
+                //     // messagePool.push(base64Payload)
+                //     console.log('chunk:')
+                //     console.log(chunk)
+                //     console.log('Kb size: ', chunk.length / 1024)
+                    
+                //     // console.log('chunk')
+                //     // console.log(chunk)
+                //     // messagePool.push(chunk)
+                //     // //messagePool.push(deflatedChunk)
+                    
+                //     // if (messagePool.length == messagePoolSize) {
+                //     //     const timestamp = Date.now()
+                //     //     const payload = { b:[0, messagePool, timestamp + clockDifference, msgCounter] }
+                //     //     await this.streamrClient?.publish({ id: this.pluginConfig.streamId, partition: this.pluginConfig.partition }, payload)
+                //     //     messagePool = []
+                //     //     msgCounter++
+                //     // }
+                // }
+        //     }
+        // } catch (error) {
+        //     logger.info('SRT plugin', error)
+        //     await this.restartServer()
+        //     // close connection ?
+        //     // restart plugin 
+        // }
