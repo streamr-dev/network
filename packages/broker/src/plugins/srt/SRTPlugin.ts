@@ -40,6 +40,27 @@ function arrayBufferToBase64(buffer: Uint8Array): string {
     return btoa(binary)
 }
 
+function numToUint8Array(num: number): Uint8Array {
+    let arr = new Uint8Array(8);
+  
+    for (let i = 0; i < 8; i++) {
+      arr[i] = num % 256;
+      num = Math.floor(num / 256);
+    }
+  
+    return arr;
+  }
+  
+  function uint8ArrayToNum(arr: Uint8Array): number {
+    let num = 0;
+  
+    for (let i = 0; i < 8; i++) {
+      num += Math.pow(256, i) * arr[i];
+    }
+  
+    return num;
+  }
+
 export interface SRTPluginConfig {
     port: number
     payloadMetadata: boolean
@@ -131,21 +152,29 @@ export class SRTPlugin extends Plugin<SRTPluginConfig> {
         try {
             let chunks = []
             let i = 0
+            let msgCounter = 0
             const maxPayloadChunks = this.pluginConfig.maxPayloadChunks // < 5 unsafe, > 10 starts to add latency 
 
             while (true) {
                 const chunk = await this.server.read(fd, 1316) // Default SRT packet length is 1316 bytes
+                
                 if (chunk instanceof Uint8Array && i < maxPayloadChunks) {
                     chunks.push(chunk)
                     i++
                 }
         
                 if (i >= maxPayloadChunks) {
+                    const timestamp = Date.now()
+                    const adjustedTime = timestamp + clockDifference; 
+                    chunks.push(numToUint8Array(adjustedTime))  //second last 8 bytes, timestamp
+                    chunks.push(numToUint8Array(msgCounter))    //last 8 bytes, msg number
                     const concatenatedChunks = concatenateUint8Arrays(chunks);
+                    
                     console.log('Concatenated Data Length in Kb:', concatenatedChunks.length / 1024);
                     await this.streamrClient?.publish({ id: this.pluginConfig.streamId, partition: this.pluginConfig.partition }, concatenatedChunks)
                     i = 0
                     chunks = []
+                    msgCounter++
                 }
             }
         } catch (error) {
@@ -174,80 +203,3 @@ export class SRTPlugin extends Plugin<SRTPluginConfig> {
         return PLUGIN_CONFIG_SCHEMA
     }
 }
-
-
-
-       
-
-
-
-
-
-
-
-
-
-
-
-
-        
-        // try {
-        //     // eslint-disable-next-line no-constant-condition
-        //     while (true) {
-        //         const chunk = await this.server.read(fd, 1316)
-        //             if (chunk instanceof Uint8Array && i < 10) {
-        //                 i = i + 1
-                        
-        //                 // Assume chunkPool is populated with several Uint8Array objects
-        //                 let combinedArray = this.concatenateUint8Arrays(chunkPool);
-        //                 console.log(combinedArray); // This is a single Uint8Array containing all data
-
-        //             }
-        //             if (i >= 10) {
-
-        //                 // Assuming chunkPool is an array of Uint8Array objects
-        //                 let totalSizeBytes = 0;
-
-        //                 // Summing the byte lengths of all chunks
-        //                 for (let chunk of chunkPool) {
-        //                     totalSizeBytes += chunk.length;
-        //                 }
-
-        //                 console.log(`Total size of chunks in bytes: ${totalSizeBytes}`);
-        //                 // Optionally, convert to kilobytes for display
-        //                 let totalSizeKilobytes = totalSizeBytes / 1024;
-        //                 console.log(`Total size of chunks in kilobytes: ${totalSizeKilobytes.toFixed(2)} KB`);
-
-
-        //                 await this.streamrClient?.publish({ id: this.pluginConfig.streamId, partition: this.pluginConfig.partition }, chunkPool)
-        //                 chunkPool = []
-        //                 i = 1
-        //             }
-                // if (chunk instanceof Uint8Array) {
-                //     // const base64Chunk = arrayBufferToBase64(chunk)
-                //     // const base64Payload = JSON.parse(JSON.stringify(base64Chunk))
-                //     // messagePool.push(base64Payload)
-                //     console.log('chunk:')
-                //     console.log(chunk)
-                //     console.log('Kb size: ', chunk.length / 1024)
-                    
-                //     // console.log('chunk')
-                //     // console.log(chunk)
-                //     // messagePool.push(chunk)
-                //     // //messagePool.push(deflatedChunk)
-                    
-                //     // if (messagePool.length == messagePoolSize) {
-                //     //     const timestamp = Date.now()
-                //     //     const payload = { b:[0, messagePool, timestamp + clockDifference, msgCounter] }
-                //     //     await this.streamrClient?.publish({ id: this.pluginConfig.streamId, partition: this.pluginConfig.partition }, payload)
-                //     //     messagePool = []
-                //     //     msgCounter++
-                //     // }
-                // }
-        //     }
-        // } catch (error) {
-        //     logger.info('SRT plugin', error)
-        //     await this.restartServer()
-        //     // close connection ?
-        //     // restart plugin 
-        // }
