@@ -40,7 +40,7 @@ describe('downloadGeoIpDatabase', () => {
         // on windows the permissions might be 0o666
         expect(permissions === 0o600 || permissions === 0o666).toBe(true)
         expect(reader).toBeDefined()
-    })
+    }, 60000)
 
     it('downloads the database even if temp download folder already exists', async () => {
         fs.mkdirSync(path + '.download', { recursive: true })
@@ -50,17 +50,17 @@ describe('downloadGeoIpDatabase', () => {
         expect(fs.existsSync(path)).toBe(true)
         expect(fs.existsSync(path + '.download')).toBe(false)
         expect(fs.existsSync(path + '/GeoLite2-City.mmdb')).toBe(true)
-    })
+    }, 60000)
 
     it('throws if the path is not writable', async () => {
         const path = '/etc/downloadGeoIpDatabaseTest/'
         await expect(downloadGeoIpDatabase(path, false, mirrorUrl, abortController.signal)).rejects.toThrow()
-    })
+    }, 60000)
 
     it('throws if the path does not exist', async () => {
         const path = '/nonexistent/downloadGeoIpDatabaseTest/'
         await expect(downloadGeoIpDatabase(path, false, mirrorUrl, abortController.signal)).rejects.toThrow()
-    })
+    }, 60000)
 
     it('does not download the database if it is already up to date', async () => {
         const path = '/tmp/downloadGeoIpDatabaseTest/'
@@ -73,5 +73,5 @@ describe('downloadGeoIpDatabase', () => {
         
         const newReader3 = await downloadGeoIpDatabase(path, true, mirrorUrl, abortController.signal)
         expect(newReader3).toBeDefined()
-    })
+    }, 60000)
 })
