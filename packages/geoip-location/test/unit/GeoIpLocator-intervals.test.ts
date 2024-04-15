@@ -68,7 +68,7 @@ describe('GeoIpLocator', () => {
         expect(fetchMock).toHaveBeenCalledTimes(1)
 
         // wait for the failure interval to happen
-        await wait(2500)
+        await wait(1200)
 
         // failure interval should have been run after 1500ms from the failure
         // it should have tried downloading the hash again and
