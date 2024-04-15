@@ -1,5 +1,5 @@
 import { GeoIpLocator } from '../../src/GeoIpLocator'
-import { wait } from '@streamr/utils'
+import { wait, waitForCondition } from '@streamr/utils'
 import fs from 'fs'
 import { TestServer } from '../helpers/TestServer'
 
@@ -84,7 +84,7 @@ describe('GeoIpLocator', () => {
             .spyOn(globalThis, 'fetch')
             
         // wait for failure interval to happen
-        await wait(2000)
+        await wait(1200)
         
         // failure interval should have downloaded
         // both the hash and the db
@@ -92,7 +92,7 @@ describe('GeoIpLocator', () => {
         expect(fetchMock2).toHaveBeenCalledTimes(2)
         
         // expect the db to be there
-        expect(fs.existsSync(dbDir + '/' + DB_NAME + '.mmdb')).toBe(true)
+        await waitForCondition(() => fs.existsSync(dbDir + '/' + DB_NAME + '.mmdb'))
 
         // suomi.fi
         const location = locator.lookup('62.241.198.245')
