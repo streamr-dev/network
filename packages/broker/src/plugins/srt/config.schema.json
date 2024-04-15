@@ -32,6 +32,11 @@
         },
         "apiAuthentication": {
             "$ref": "definitions.schema.json#/definitions/apiAuthenticationOverride"
+        },
+        "maxPayloadChunks": {
+            "type": "integer",
+            "description": "Maximum amount of payload chunks to be wrapped in one Streamr msg",
+            "default": 5
         }
     }
 }

@@ -45,7 +45,8 @@ export interface SRTPluginConfig {
     payloadMetadata: boolean
     ip: string
     streamId: string
-    partition: number
+    partition: number,
+    maxPayloadChunks: number
 }
 
 export class SRTPlugin extends Plugin<SRTPluginConfig> {
@@ -117,6 +118,8 @@ export class SRTPlugin extends Plugin<SRTPluginConfig> {
         return clockDifference
     }
     
+    //Todo: add time stamp and msg number to payload package as bytedata
+
     async awaitConnections(socket: number): Promise<void> {
         
         const clockDifference = _.round(await this.estimateTimeDiff(),1)
@@ -128,10 +131,10 @@ export class SRTPlugin extends Plugin<SRTPluginConfig> {
         try {
             let chunks = []
             let i = 0
-            const maxPayloadChunks = 8 // < 5 unsafe, > 10 starts to add latency 
+            const maxPayloadChunks = this.pluginConfig.maxPayloadChunks // < 5 unsafe, > 10 starts to add latency 
 
             while (true) {
-                const chunk = await this.server.read(fd, 1316)
+                const chunk = await this.server.read(fd, 1316) // Default SRT packet length is 1316 bytes
                 if (chunk instanceof Uint8Array && i < maxPayloadChunks) {
                     chunks.push(chunk)
                     i++
