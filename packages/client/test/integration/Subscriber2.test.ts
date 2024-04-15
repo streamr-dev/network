@@ -69,7 +69,7 @@ describe('Subscriber', () => {
                 privateKey: publisherWallet.privateKey
             }
         })
-        publisherAuthentication = createPrivateKeyAuthentication(publisherWallet.privateKey, undefined as any)
+        publisherAuthentication = createPrivateKeyAuthentication(publisherWallet.privateKey)
     })
 
     afterAll(async () => {

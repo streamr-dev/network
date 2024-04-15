@@ -5,8 +5,8 @@ import { Wallet } from '@ethersproject/wallet'
 import { EthereumAddress, hexToBinary, toEthereumAddress, wait, createSignature } from '@streamr/utils'
 import pMemoize from 'p-memoize'
 import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'
-import { getStreamRegistryChainProviders } from './Ethereum'
 import { pLimitFn } from './utils/promises'
+import { RpcProviderFactory } from './RpcProviderFactory'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 
@@ -16,16 +16,16 @@ export interface Authentication {
     // always in lowercase
     getAddress: () => Promise<EthereumAddress>
     createMessageSignature: (payload: Uint8Array) => Promise<Uint8Array>
-    getStreamRegistryChainSigner: () => Promise<SignerWithProvider>
+    getStreamRegistryChainSigner: (rpcProviderFactory: RpcProviderFactory) => Promise<SignerWithProvider>
 }
 
-export const createPrivateKeyAuthentication = (key: string, config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>): Authentication => {
+export const createPrivateKeyAuthentication = (key: string): Authentication => {
     const address = toEthereumAddress(computeAddress(key))
     return {
         getAddress: async () => address,
         createMessageSignature: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
-        getStreamRegistryChainSigner: async () => {
-            const primaryProvider = getStreamRegistryChainProviders(config)[0]
+        getStreamRegistryChainSigner: async (rpcProviderFactory: RpcProviderFactory) => {
+            const primaryProvider = rpcProviderFactory.getPrimaryProvider()
             return new Wallet(key, primaryProvider)
         }
     }
@@ -37,7 +37,7 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
         const normalizedPrivateKey = !privateKey.startsWith('0x')
             ? `0x${privateKey}`
             : privateKey
-        return createPrivateKeyAuthentication(normalizedPrivateKey, config)
+        return createPrivateKeyAuthentication(normalizedPrivateKey)
     } else if ((config.auth as ProviderAuthConfig)?.ethereum !== undefined) {
         const ethereum = (config.auth as ProviderAuthConfig)?.ethereum
         const provider = new Web3Provider(ethereum)
@@ -83,6 +83,6 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
             }
         }
     } else {
-        return createPrivateKeyAuthentication(Wallet.createRandom().privateKey, config)
+        return createPrivateKeyAuthentication(Wallet.createRandom().privateKey)
     }
 }

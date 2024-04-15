@@ -40,7 +40,7 @@ describe('GroupKeyManager', () => {
                     keyRequestTimeout: 100
                 } as any
             },
-            createPrivateKeyAuthentication(wallet.privateKey, {} as any),
+            createPrivateKeyAuthentication(wallet.privateKey),
             eventEmitter,
             new DestroySignal()
         )
