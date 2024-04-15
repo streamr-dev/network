@@ -128,7 +128,7 @@ export class SRTPlugin extends Plugin<SRTPluginConfig> {
         try {
             let chunks = []
             let i = 0
-            const maxPayloadChunks = 2 // (approx max 6kb per publishedmsg)
+            const maxPayloadChunks = 8 // < 5 unsafe, > 10 starts to add latency 
 
             while (true) {
                 const chunk = await this.server.read(fd, 1316)
