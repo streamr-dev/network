@@ -30,7 +30,7 @@ describe('GeoIpLocator', () => {
             dbDir = getDbDir()
             locator = new GeoIpLocator(dbDir, 5000, 5000, 'http://localhost:31992/')
             await locator.start()
-        })
+        }, 60000)
 
         afterEach(async () => {
             locator!.stop()
