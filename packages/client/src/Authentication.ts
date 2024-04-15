@@ -25,7 +25,7 @@ export const createPrivateKeyAuthentication = (key: string): Authentication => {
         getAddress: async () => address,
         createMessageSignature: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
         getStreamRegistryChainSigner: async (rpcProviderFactory: RpcProviderFactory) => {
-            const primaryProvider = rpcProviderFactory.getProviders()[0] // TODO: should we have primaryProvider method
+            const primaryProvider = rpcProviderFactory.getPrimaryProvider()
             return new Wallet(key, primaryProvider)
         }
     }

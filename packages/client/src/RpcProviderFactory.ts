@@ -31,4 +31,8 @@ export class RpcProviderFactory {
         }
         return this.providers
     }
+
+    getPrimaryProvider(): Provider {
+        return this.getProviders()[0]
+    }
 }
