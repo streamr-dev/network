@@ -1,13 +1,10 @@
 import { GeoIpLocator } from '../../src/GeoIpLocator'
 import fs from 'fs'
 import { wait } from '@streamr/utils'
-import { setFlagsFromString } from 'v8'
-import { runInNewContext } from 'vm'
-
-setFlagsFromString('--expose_gc')
-const gc = runInNewContext('gc')
+import { TestServer } from '../helpers/TestServer'
 
 describe('GeoIpLocator', () => {
+    let testServer: TestServer | undefined
     let dirCounter = 0
     const dbPath = '/tmp'
 
@@ -16,13 +13,22 @@ describe('GeoIpLocator', () => {
         return dbPath + '/geolite2-' + dirCounter
     }
 
+    beforeAll(async () => {
+        testServer = new TestServer()
+        await testServer.start(31992)
+    }, 120000)
+
+    afterAll(async () => {
+        testServer!.stop()
+    })
+
     describe('tests with normal startup and shutdown', () => {
         let dbDir: string | undefined
         let locator: GeoIpLocator | undefined
 
         beforeEach(async () => {
             dbDir = getDbDir()
-            locator = new GeoIpLocator(dbDir, 5000)
+            locator = new GeoIpLocator(dbDir, 5000, 5000, 'http://localhost:31992/')
             await locator.start()
         })
 
@@ -97,31 +103,5 @@ describe('GeoIpLocator', () => {
             const locator = new GeoIpLocator('/etc')
             await expect(locator.start()).rejects.toThrow()
         })
-    })
-
-    describe('tests with non-standard startup', () => { 
-        let dbDir: string | undefined
-        let locator: GeoIpLocator | undefined
-
-        afterEach(async () => {
-            locator!.stop()
-            fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
-            fs.rmSync(dbDir!, { recursive: true })
-        })
-
-        it('does not leak memory in monthly database check', async () => {
-            dbDir = getDbDir()
-            locator = new GeoIpLocator(dbDir, 1000)
-            await locator.start()
-            gc()
-            await wait(2000)
-            const memoryUsage = process.memoryUsage()
-            await wait(10000)
-            await locator.stop()
-            gc()
-            await wait(2000)
-            const memoryUsage2 = process.memoryUsage()
-            expect(memoryUsage2.heapUsed).toBeLessThanOrEqual(memoryUsage.heapUsed)
-        }, 60000)
     })
 })

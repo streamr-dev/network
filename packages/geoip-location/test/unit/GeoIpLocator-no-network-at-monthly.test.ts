@@ -1,11 +1,14 @@
 import { GeoIpLocator } from '../../src/GeoIpLocator'
 import fs from 'fs'
 import { wait } from '@streamr/utils'
+import { t } from 'tar'
+import { TestServer } from '../helpers/TestServer'
 
 describe('GeoIpLocatorNoNetworkAtMonthly', () => {
     let dirCounter = 0
     const dbPath = '/tmp'
 
+    let testServer: TestServer | undefined
     let dbDir: string | undefined
     let locator: GeoIpLocator | undefined
 
@@ -14,14 +17,17 @@ describe('GeoIpLocatorNoNetworkAtMonthly', () => {
         return dbPath + '/geolite2-no-nw-monthly' + dirCounter
     }
 
-    beforeEach(async () => {
+    beforeAll(async () => {
+        testServer = new TestServer()
+        await testServer.start(31990)
         dbDir = getDbDir()
-        locator = new GeoIpLocator(dbDir, 5000)
+        locator = new GeoIpLocator(dbDir, 5000, 10000, 'http://localhost:31990/')
         await locator.start()
-    })
+    }, 120000)
 
-    afterEach(async () => {
+    afterAll(async () => {
         locator!.stop()
+        testServer!.stop()
         fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
         fs.rmSync(dbDir!, { recursive: true })
     })

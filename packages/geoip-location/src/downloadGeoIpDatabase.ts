@@ -1,10 +1,7 @@
 import crypto from 'crypto'
 import fs from 'fs'
-import { Readable } from 'stream'
-import { finished } from 'stream/promises'
-import tar from 'tar'
-import NodePath from 'path'     // use NodePath to avoid conflict with other 'path' symbols
 import { CityResponse, Reader } from 'mmdb-lib'
+import { extractFileFromTarStream } from './tarHelper'
 
 const GEOIP_MIRROR_URL = 'https://raw.githubusercontent.com/GitSquared/node-geolite2-redist/master/redist/'
 const DB_NAME = 'GeoLite2-City'
@@ -12,12 +9,13 @@ const TAR_SUFFFIX = '.tar.gz'
 const DB_SUFFIX = '.mmdb'
 const HASH_SUFFIX = '.mmdb.sha384'
 
-const downloadNewDb = async (url: string, dbFolder: string, remoteHash: string, 
+const downloadNewDb = async (url: string, dbFolder: string, remoteHash: string,
     abortSignal: AbortSignal): Promise<void> => {
 
     const downloadFolder = dbFolder + '.download'
-    const dbFileInDownloadFolder = downloadFolder + '/' + DB_NAME + DB_SUFFIX
-    const dbFileInDbFolder = dbFolder + DB_NAME + DB_SUFFIX
+    const dbFileName = DB_NAME + DB_SUFFIX
+    const dbFileInDownloadFolder = downloadFolder + '/' + dbFileName
+    const dbFileInDbFolder = dbFolder + dbFileName
 
     let response: Response | undefined
 
@@ -41,26 +39,15 @@ const downloadNewDb = async (url: string, dbFolder: string, remoteHash: string,
         throw new Error('Error creating temporary folder ' + downloadFolder + ', error: ' + e)
     }
 
-    let nodeStream: Readable | undefined
     try {
-        nodeStream = Readable.fromWeb(response.body!)
-        await finished(nodeStream
-            .pipe(tar.x({
-                cwd: downloadFolder,
-                filter: (entryPath: string): boolean => NodePath.basename(entryPath) === (DB_NAME + DB_SUFFIX),
-                strip: 1
-            })))
+        await extractFileFromTarStream(dbFileName, response.body!, downloadFolder)
     } catch (e) {
         try {
             fs.rmSync(downloadFolder, { recursive: true })
         } catch (e2) {
             // ignore error when removing the temporary folder
-        }
-        throw new Error('Error extracting tarball to ' + downloadFolder + ', error: ' + e)
-    } finally {
-        if (nodeStream !== undefined) {
-            nodeStream.destroy()
-        }
+        } 
+        throw e
     }
 
     // check the hash of the extracted file
@@ -88,38 +75,37 @@ const downloadNewDb = async (url: string, dbFolder: string, remoteHash: string,
     }
 
     // set the db file permissions to rw only for the owner
-    
+
     try {
         fs.chmodSync(dbFileInDbFolder, 0o600)
     } catch (err) {
         throw new Error('Error setting permissions on ' + dbFileInDbFolder + ', error: ' + err)
     }
-  
+
 }
 
-const downloadRemoteHash = async (abortSignal: AbortSignal): Promise<string> => {
+const downloadRemoteHash = async (remoteHashUrl: string, abortSignal: AbortSignal): Promise<string> => {
     // download the hash of the latest GeoIP database using fetch as text and trim it
-    const hashDownloadUrl = GEOIP_MIRROR_URL + DB_NAME + HASH_SUFFIX
     let response: Response | undefined
-    
+
     try {
-        response = await fetch(hashDownloadUrl, { signal: abortSignal })
+        response = await fetch(remoteHashUrl, { signal: abortSignal })
     } catch (e) {
         // Catching and re-throwing as async exception 
         // here is necessary, synch exceptions cannot be caught by the caller
-        throw new Error('Fetch error when downloading ' + hashDownloadUrl + ', error: ' + e)
+        throw new Error('Fetch error when downloading ' + remoteHashUrl + ', error: ' + e)
     }
 
     if (!response.ok) {
-        throw new Error('HTTP error when downloading ' + hashDownloadUrl + ', status: ' + response.status)
+        throw new Error('HTTP error when downloading ' + remoteHashUrl + ', status: ' + response.status)
     }
-    
+
     return (await response.text()).trim()
 }
 
 const isDbFileValid = async (dbFile: string, remoteHash: string): Promise<boolean> => {
     // check if the local db exists and calculate its hash
-    
+
     try {
         const db = fs.readFileSync(dbFile)
         const localHash = crypto.createHash('sha384').update(db).digest('hex')
@@ -140,7 +126,7 @@ const isDbFileValid = async (dbFile: string, remoteHash: string): Promise<boolea
 // also if there was no need to download a new db
 
 export const downloadGeoIpDatabase = async (dbFolder: string, forceReturnReader: boolean,
-    abortSignal: AbortSignal): Promise<Reader<CityResponse> | undefined> => {
+    mirrorUrl: string | undefined, abortSignal: AbortSignal): Promise<Reader<CityResponse> | undefined> => {
     // This will throw if the download folder is not readable
     if (!fs.existsSync(dbFolder)) {
         // This will throw if the download folder is not writable
@@ -151,13 +137,22 @@ export const downloadGeoIpDatabase = async (dbFolder: string, forceReturnReader:
         dbFolder += '/'
     }
 
-    const dbDownloadUrl = GEOIP_MIRROR_URL + DB_NAME + TAR_SUFFFIX
+    let geoIpMirrorUrl = GEOIP_MIRROR_URL
+    if (mirrorUrl !== undefined) {
+        if (!mirrorUrl.endsWith('/')) {
+            mirrorUrl += '/'
+        }
+        geoIpMirrorUrl = mirrorUrl
+    }
+
+    const remoteHashUrl = geoIpMirrorUrl + DB_NAME + HASH_SUFFIX
+    const dbDownloadUrl = geoIpMirrorUrl + DB_NAME + TAR_SUFFFIX
     const dbFileInDbFolder = dbFolder + DB_NAME + DB_SUFFIX
 
-    const remoteHash = await downloadRemoteHash(abortSignal)
-    
+    const remoteHash = await downloadRemoteHash(remoteHashUrl, abortSignal)
+
     const dbValid = await isDbFileValid(dbFileInDbFolder, remoteHash)
-    
+
     if (dbValid === false) {
         await downloadNewDb(dbDownloadUrl, dbFolder, remoteHash, abortSignal)
         // return new reader if db was downloaded
@@ -172,3 +167,4 @@ export const downloadGeoIpDatabase = async (dbFolder: string, forceReturnReader:
         return undefined
     }
 }
+

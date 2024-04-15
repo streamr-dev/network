@@ -13,6 +13,7 @@ export class GeoIpLocator {
     private readonly geoIpDatabaseFolder: string
     private readonly dbCheckInterval: number
     private readonly dbCheckErrorInterval: number
+    private readonly mirrorUrl?: string
     private reader?: Reader<CityResponse>
     private dbCheckTimeout?: LongTimeout.Timeout
 
@@ -20,7 +21,8 @@ export class GeoIpLocator {
     // If the check fails, retry after 24 hours
 
     constructor(geoIpDatabaseFolder: string, dbCheckInterval: number = 30 * 24 * 60 * 60 * 1000,
-        dbCheckErrorInterval: number = 24 * 60 * 60 * 1000) {
+        dbCheckErrorInterval: number = 24 * 60 * 60 * 1000,
+        mirrorUrl?: string) {
         this.abortController = new AbortController()
         this.dbCheckInterval = dbCheckInterval
         this.dbCheckErrorInterval = dbCheckErrorInterval
@@ -28,15 +30,16 @@ export class GeoIpLocator {
             geoIpDatabaseFolder += '/'
         }
         this.geoIpDatabaseFolder = filePathToNodeFormat(geoIpDatabaseFolder)
+        this.mirrorUrl = mirrorUrl
     }
 
     private checkDatabase: () => Promise<void> = async () => {
         if (this.reader === undefined) {
             // if we do not have a reader, create a new one in any case
-            this.reader = await downloadGeoIpDatabase(this.geoIpDatabaseFolder, true, this.abortController.signal)
+            this.reader = await downloadGeoIpDatabase(this.geoIpDatabaseFolder, true, this.mirrorUrl, this.abortController.signal)
         } else {
             // if we already have a reader, create a new one only if db has changed
-            const newReader = await downloadGeoIpDatabase(this.geoIpDatabaseFolder, false, this.abortController.signal)
+            const newReader = await downloadGeoIpDatabase(this.geoIpDatabaseFolder, false, this.mirrorUrl, this.abortController.signal)
             if (newReader !== undefined) {
                 this.reader = newReader
             }
@@ -44,6 +47,9 @@ export class GeoIpLocator {
     }
 
     private scheduleCheck: (timeout: number) => void = async (timeout: number) => {
+        if (this.abortController.signal.aborted) {
+            return
+        }
         this.dbCheckTimeout = LongTimeout.setTimeout(async () => {
             try {
                 await this.checkDatabase()
