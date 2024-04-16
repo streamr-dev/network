@@ -21,6 +21,9 @@ on:
         required: false
         type: boolean
         default: false
+      extra-log-prefix:
+        required: false
+        type: string
 
 jobs:
   test:
@@ -52,4 +55,4 @@ jobs:
         if: success() || failure()
         uses: ./.github/workflows/reusable/collect-and-upload-logs
         with:
-          artifact_prefix: ${{ inputs.package }}
+          artifact_prefix: "${{ inputs.package }}${{inputs.extra-log-prefix }}"

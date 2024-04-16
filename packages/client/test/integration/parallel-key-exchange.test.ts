@@ -62,7 +62,7 @@ describe('parallel key exchange', () => {
         const sub = await subscriber.subscribe(stream.id)
 
         for (const publisher of PUBLISHERS) {
-            const authentication = createPrivateKeyAuthentication(publisher.wallet.privateKey, undefined as any)
+            const authentication = createPrivateKeyAuthentication(publisher.wallet.privateKey)
             const messageFactory = new MessageFactory({
                 streamId: stream.id,
                 authentication,

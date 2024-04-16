@@ -375,10 +375,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             const isLayer0 = (this.connectionLocker !== undefined)
             if (isLayer0) {
                 const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
-                // TODO could create else block for this?
-                this.peerManager!.removeNeighbor(nodeId)
                 if (gracefulLeave) {
                     this.peerManager!.removeContact(nodeId)
+                } else {
+                    this.peerManager!.removeNeighbor(nodeId)
                 }
             }
             this.router!.onNodeDisconnected(peerDescriptor)

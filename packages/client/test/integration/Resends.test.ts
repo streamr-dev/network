@@ -38,7 +38,7 @@ describe('Resends', () => {
             permissions: [StreamPermission.SUBSCRIBE]
         })
         const groupKey = GroupKey.generate()
-        const authentication = createPrivateKeyAuthentication(publisherPrivateKey, undefined as any)
+        const authentication = createPrivateKeyAuthentication(publisherPrivateKey)
         messageFactory = new MessageFactory({
             authentication,
             streamId: stream.id,
