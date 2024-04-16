@@ -1,6 +1,6 @@
 {
   "name": "@streamr/geoip-location",
-  "version": "100.2.2",
+  "version": "100.2.3",
   "description": "Library for getting location information from IP addresses based on MaxMind GeoLite2 databases",
   "repository": {
     "type": "git",

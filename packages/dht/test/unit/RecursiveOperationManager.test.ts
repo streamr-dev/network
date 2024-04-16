@@ -74,12 +74,12 @@ describe('RecursiveOperationManager', () => {
         return new RecursiveOperationManager({
             localPeerDescriptor: peerDescriptor1,
             router,
-            connections: new Map(),
             serviceId: 'RecursiveOperationManager',
             localDataStore: new LocalDataStore(30 * 100),
             sessionTransport: transport,
             addContact: () => {},
-            rpcCommunicator: rpcCommunicator as any
+            rpcCommunicator: rpcCommunicator as any,
+            createDhtNodeRpcRemote: () => undefined as any
         })
     }
 
@@ -126,6 +126,7 @@ describe('RecursiveOperationManager', () => {
         const send = jest.fn()
         const transport = { 
             send,
+            getConnections: () => [],
             on: () => {},
             off: () => {}
         }
@@ -143,7 +144,8 @@ describe('RecursiveOperationManager', () => {
         const router = createMockRouter(RouteMessageError.DUPLICATE)
         const send = jest.fn()
         const transport = { 
-            send
+            send,
+            getConnections: () => []
         }
         const recursiveOperationManager = createRecursiveOperationManager(router as any, transport as any)
         const ack = await rpcCommunicator.callRpcMethod('routeRequest', routedMessage)

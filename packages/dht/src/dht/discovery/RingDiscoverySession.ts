@@ -29,7 +29,7 @@ export class RingDiscoverySession {
     private stopped = false
     private emitter = new EventEmitter<RingDiscoverySessionEvents>()
     private noProgressCounter = 0
-    private ongoingClosestPeersRequests: Set<DhtAddress> = new Set()
+    private ongoingRequests: Set<DhtAddress> = new Set()
     private readonly config: RingDiscoverySessionConfig
     private numContactedPeers = 0
     private targetIdAsRingId: RingId
@@ -48,7 +48,7 @@ export class RingDiscoverySession {
         }
     }
 
-    private async getClosestPeersFromContact(contact: DhtNodeRpcRemote): Promise<RingContacts> {
+    private async fetchClosestContactsFromRemote(contact: DhtNodeRpcRemote): Promise<RingContacts> {
         if (this.stopped) {
             return { left: [], right: [] }
         }
@@ -60,11 +60,11 @@ export class RingDiscoverySession {
         return returnedContacts
     }
 
-    private onClosestPeersRequestSucceeded(nodeId: DhtAddress, contacts: RingContacts) {
-        if (!this.ongoingClosestPeersRequests.has(nodeId)) {
+    private onRequestSucceeded(nodeId: DhtAddress, contacts: RingContacts) {
+        if (!this.ongoingRequests.has(nodeId)) {
             return
         }
-        this.ongoingClosestPeersRequests.delete(nodeId)
+        this.ongoingRequests.delete(nodeId)
         const oldClosestContacts = this.config.peerManager.getClosestRingContactsTo(this.config.targetId, 1)
         const oldClosestLeftDistance = getLeftDistance(
             this.targetIdAsRingId,
@@ -85,11 +85,11 @@ export class RingDiscoverySession {
         }
     }
 
-    private onClosestPeersRequestFailed(peer: DhtNodeRpcRemote) {
-        if (!this.ongoingClosestPeersRequests.has(peer.getNodeId())) {
+    private onRequestFailed(peer: DhtNodeRpcRemote) {
+        if (!this.ongoingRequests.has(peer.getNodeId())) {
             return
         }
-        this.ongoingClosestPeersRequests.delete(peer.getNodeId())
+        this.ongoingRequests.delete(peer.getNodeId())
         this.config.peerManager.removeContact(peer.getNodeId())
     }
 
@@ -128,14 +128,14 @@ export class RingDiscoverySession {
         }
 
         for (const nextPeer of merged) {
-            if (this.ongoingClosestPeersRequests.size >= this.config.parallelism) {
+            if (this.ongoingRequests.size >= this.config.parallelism) {
                 break
             }
-            this.ongoingClosestPeersRequests.add(nextPeer.getNodeId())
+            this.ongoingRequests.add(nextPeer.getNodeId())
             // eslint-disable-next-line promise/catch-or-return
-            this.getClosestPeersFromContact(nextPeer)
-                .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer.getNodeId(), contacts))
-                .catch(() => this.onClosestPeersRequestFailed(nextPeer))
+            this.fetchClosestContactsFromRemote(nextPeer)
+                .then((contacts) => this.onRequestSucceeded(nextPeer.getNodeId(), contacts))
+                .catch(() => this.onRequestFailed(nextPeer))
                 .finally(() => {
                     this.findMoreContacts()
                 })

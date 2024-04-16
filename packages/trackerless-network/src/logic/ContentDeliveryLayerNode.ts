@@ -5,8 +5,7 @@ import {
     ITransport,
     ConnectionLocker,
     DhtAddress,
-    getNodeIdFromPeerDescriptor,
-    RingContacts
+    getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
 import {
     StreamMessage,
@@ -33,7 +32,6 @@ import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryCon
 import { markAndCheckDuplicate } from './utils'
 import { Layer1Node } from './Layer1Node'
 import { StreamPartID } from '@streamr/protocol'
-import { uniqBy } from 'lodash'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -119,42 +117,38 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         this.registerDefaultServerMethods()
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
-            'contactAdded',
-            (_peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.onContactAdded(closestPeers),
+            'closestContactAdded',
+            () => this.onNearbyContactAdded(this.config.layer1Node.getClosestContacts()),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
-            'contactRemoved',
-            (_peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => this.onContactRemoved(closestPeers),
+            'closestContactRemoved',
+            () => this.onNearbyContactRemoved(),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
             'randomContactAdded',
-            (_peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.onRandomContactAdded(randomPeers),
+            (_peerDescriptor: PeerDescriptor) => this.onRandomContactAdded(),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
             'randomContactRemoved',
-            (_peerDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]) => this.onRandomContactRemoved(randomPeers),
+            (_peerDescriptor: PeerDescriptor) => this.onRandomContactRemoved(),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
             'ringContactAdded',
-            (_: PeerDescriptor, peers: RingContacts) => {
-                this.onRingContactEvent(peers)
-            },
+            () => this.onRingContactsUpdated(),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
             'ringContactRemoved',
-            (_: PeerDescriptor, peers: RingContacts) => {
-                this.onRingContactEvent(peers)
-            },
+            () => this.onRingContactsUpdated(),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
@@ -195,10 +189,6 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                 this.abortController.signal
             )
         }
-        const candidates = this.getNeighborCandidatesFromLayer1()
-        if (candidates.length > 0) {
-            this.onContactAdded(candidates)
-        }
         this.config.neighborFinder.start()
         await this.config.neighborUpdateManager.start()
     }
@@ -214,12 +204,13 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             (req: TemporaryConnectionRequest, context) => this.config.temporaryConnectionRpcLocal.closeConnection(req, context))
     }
 
-    private onRingContactEvent(ringContacts: RingContacts): void {
-        logger.trace(`onRingContactAdded`)
+    private onRingContactsUpdated(): void {
+        logger.trace('onRingContactsUpdated')
         if (this.isStopped()) {
             return
         }
-        this.config.leftNodeView.replaceAll(ringContacts.left.map((peer) => 
+        const contacts = this.config.layer1Node.getRingContacts()
+        this.config.leftNodeView.replaceAll(contacts.left.map((peer) => 
             new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,
                 peer,
@@ -228,7 +219,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                 this.config.rpcRequestTimeout
             )
         ))
-        this.config.rightNodeView.replaceAll(ringContacts.right.map((peer) =>
+        this.config.rightNodeView.replaceAll(contacts.right.map((peer) =>
             new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,
                 peer,
@@ -239,23 +230,25 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         ))
     }
 
-    private onContactAdded(closestNodes: PeerDescriptor[]): void {
+    // TODO refactor so that we don't need to give the parameter? (i.e. would be similar to onNearbyContactRemoved and other event handlers)
+    private onNearbyContactAdded(closestContacts: PeerDescriptor[]): void {
         logger.trace(`New nearby contact found`)
         if (this.isStopped()) {
             return
         }
-        this.updateNearbyNodeView(closestNodes)
+        this.updateNearbyNodeView(closestContacts)
         if (this.config.neighbors.size() < this.config.neighborTargetCount) {
             this.config.neighborFinder.start()
         }
     }
 
-    private onContactRemoved(closestNodes: PeerDescriptor[]): void {
+    private onNearbyContactRemoved(): void {
         logger.trace(`Nearby contact removed`)
         if (this.isStopped()) {
             return
         }
-        this.updateNearbyNodeView(closestNodes)
+        const closestContacts = this.config.layer1Node.getClosestContacts()
+        this.updateNearbyNodeView(closestContacts)
     }
 
     private updateNearbyNodeView(nodes: PeerDescriptor[]) {
@@ -284,11 +277,12 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         }
     }
 
-    private onRandomContactAdded(randomNodes: PeerDescriptor[]): void {
+    private onRandomContactAdded(): void {
         if (this.isStopped()) {
             return
         }
-        this.config.randomNodeView.replaceAll(randomNodes.map((descriptor) =>
+        const randomContacts = this.config.layer1Node.getRandomContacts()
+        this.config.randomNodeView.replaceAll(randomContacts.map((descriptor) =>
             new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,
                 descriptor,
@@ -302,12 +296,13 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         }
     }
 
-    private onRandomContactRemoved(randomNodes: PeerDescriptor[]): void {
-        logger.trace(`New nearby contact found`)
+    private onRandomContactRemoved(): void {
+        logger.trace(`New random contact removed`)
         if (this.isStopped()) {
             return
         }
-        this.config.randomNodeView.replaceAll(randomNodes.map((descriptor) =>
+        const randomContacts = this.config.layer1Node.getRandomContacts()
+        this.config.randomNodeView.replaceAll(randomContacts.map((descriptor) =>
             new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,
                 descriptor,
@@ -325,17 +320,6 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             this.config.neighborFinder.start([nodeId])
             this.config.temporaryConnectionRpcLocal.removeNode(nodeId)
         }
-    }
-
-    private getNeighborCandidatesFromLayer1(): PeerDescriptor[] {
-        const nodes: PeerDescriptor[] = []
-        this.config.layer1Node.getClosestContacts(this.config.nodeViewSize).forEach((peer: PeerDescriptor) => {
-            nodes.push(peer)
-        })
-        this.config.layer1Node.getNeighbors().forEach((peer: PeerDescriptor) => {
-            nodes.push(peer)
-        })
-        return uniqBy(nodes, (p) => getNodeIdFromPeerDescriptor(p))
     }
 
     hasProxyConnection(nodeId: DhtAddress): boolean {

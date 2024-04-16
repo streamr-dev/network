@@ -158,6 +158,7 @@ export class WebsocketConnector {
                     // The localPeerDescriptor can be undefined here as the WS server is used for connectivity checks
                     // before the localPeerDescriptor is set during start.
                     // Handshaked connections should be rejected before the localPeerDescriptor is set.
+                    // eslint-disable-next-line no-lonely-if
                     if (this.localPeerDescriptor !== undefined) {
                         this.attachHandshaker(connection)
                     } else {

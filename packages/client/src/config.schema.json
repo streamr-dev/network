@@ -454,6 +454,10 @@
                         }
                     },
                     "default": {}
+                },
+                "jsonRpcTimeout": {
+                    "type": "number",
+                    "default": 15000
                 }
             },
             "default": {}
