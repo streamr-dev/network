@@ -5,8 +5,10 @@ import { TestServer } from '../helpers/TestServer'
 
 describe('GeoIpLocator', () => {
   
-    const DB_NAME = 'GeoLite2-City'
-    
+    const serverPort = 31991
+    const mirrorUrl = 'http://localhost:' + serverPort + '/'
+
+    const DB_FILENAME = 'GeoLite2-City.mmdb'
     let dirCounter = 0
     const dbPath = '/tmp'
     let dbDir: string | undefined
@@ -15,7 +17,7 @@ describe('GeoIpLocator', () => {
 
     const getDbDir = () => {
         dirCounter++
-        return dbPath + '/geolite2-intervals' + dirCounter
+        return dbPath + '/geolitelocator2-intervals' + dirCounter
     }
 
     beforeAll(async () => {
@@ -34,19 +36,19 @@ describe('GeoIpLocator', () => {
         dbDir = getDbDir()
 
         try {
-            fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
+            fs.unlinkSync(dbDir + '/' + DB_FILENAME)
         } catch (e) {
             // ignore
         }
 
-        locator = new GeoIpLocator(dbDir, 3000, 1000, 'http://localhost:31991/')
+        locator = new GeoIpLocator(dbDir, 3000, 1000, mirrorUrl)
        
         // start locator normally
         await locator.start()
 
         // delete the db
         try {
-            fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')
+            fs.unlinkSync(dbDir + '/' + DB_FILENAME)
         } catch (e) {
             // ignore
         }
@@ -92,7 +94,7 @@ describe('GeoIpLocator', () => {
         expect(fetchMock2).toHaveBeenCalledTimes(2)
         
         // expect the db to be there
-        await waitForCondition(() => fs.existsSync(dbDir + '/' + DB_NAME + '.mmdb'))
+        await waitForCondition(() => fs.existsSync(dbDir + '/' + DB_FILENAME), 10000)
 
         // suomi.fi
         const location = locator.lookup('62.241.198.245')
