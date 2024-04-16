@@ -14,7 +14,8 @@ import {
     Metric,
     MetricsContext,
     MetricsDefinition,
-    RateMetric
+    RateMetric,
+    scheduleAtInterval
 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
@@ -169,6 +170,19 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             const entryPoints = await entryPointDiscovery.discoverEntryPointsFromDht(0)
             await entryPointDiscovery.storeSelfAsEntryPointIfNecessary(entryPoints.discoveredEntryPoints.length)
         }
+        layer1Node.on('manualRejoinRequired', async () => {
+            const abortController = new AbortController()
+            await scheduleAtInterval(async () => {
+                const entryPoints = await entryPointDiscovery.discoverEntryPointsFromDht(0)
+                await layer1Node.joinDht(entryPoints.discoveredEntryPoints)
+                if (entryPointDiscovery.isLocalNodeEntryPoint()) {
+                    await entryPointDiscovery.storeSelfAsEntryPointIfNecessary(entryPoints.discoveredEntryPoints.length)
+                }
+                if (layer1Node.getNeighborCount() > 0) {
+                    abortController.abort()
+                }
+            }, 30 * 1000, true, abortController.signal)
+        })
         node.on('entryPointLeaveDetected', () => handleEntryPointLeave())
         setImmediate(async () => {
             try {
@@ -213,7 +227,6 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             dhtJoinTimeout: 20000,  // TODO use config option or named constant?
             periodicallyPingNeighbors: true,
             periodicallyPingRingContacts: true
-
         })
     }
 

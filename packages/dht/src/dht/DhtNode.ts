@@ -60,6 +60,7 @@ export interface DhtNodeEvents {
     randomContactRemoved: (peerDescriptor: PeerDescriptor) => void
     ringContactAdded: (peerDescriptor: PeerDescriptor) => void
     ringContactRemoved: (peerDescriptor: PeerDescriptor) => void
+    manualRejoinRequired: () => void
 }
 
 export interface DhtNodeOptions {
@@ -353,18 +354,19 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.emit('ringContactAdded', peerDescriptor)
         })
         this.peerManager.on('kBucketEmpty', () => {
-            if (!this.peerDiscovery!.isJoinOngoing()
-                && this.config.entryPoints
-                && this.config.entryPoints.length > 0
-            ) {
-                setImmediate(async () => {
-                    const contactedPeers = new Set<DhtAddress>()
-                    const distantJoinContactPeers = new Set<DhtAddress>()
-                    // TODO should we catch possible promise rejection?
-                    await Promise.all(this.config.entryPoints!.map((entryPoint) =>
-                        this.peerDiscovery!.rejoinDht(entryPoint, contactedPeers, distantJoinContactPeers)
-                    ))
-                })
+            if (!this.peerDiscovery!.isJoinOngoing()) {
+                if (this.config.entryPoints && this.config.entryPoints.length > 0) {
+                    setImmediate(async () => {
+                        const contactedPeers = new Set<DhtAddress>()
+                        const distantJoinContactPeers = new Set<DhtAddress>()
+                        // TODO should we catch possible promise rejection?
+                        await Promise.all(this.config.entryPoints!.map((entryPoint) =>
+                            this.peerDiscovery!.rejoinDht(entryPoint, contactedPeers, distantJoinContactPeers)
+                        ))
+                    })
+                } else {
+                    this.emit('manualRejoinRequired')
+                }
             }
         })
         this.transport!.on('connected', (peerDescriptor: PeerDescriptor) => {
@@ -375,10 +377,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             const isLayer0 = (this.connectionLocker !== undefined)
             if (isLayer0) {
                 const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+                // TODO could create else block for this?
+                this.peerManager!.removeNeighbor(nodeId)
                 if (gracefulLeave) {
                     this.peerManager!.removeContact(nodeId)
-                } else {
-                    this.peerManager!.removeNeighbor(nodeId)
                 }
             }
             this.router!.onNodeDisconnected(peerDescriptor)
