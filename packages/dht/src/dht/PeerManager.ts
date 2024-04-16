@@ -1,5 +1,5 @@
 import {
-    Logger
+    Logger  
 } from '@streamr/utils'
 import KBucket from 'k-bucket'
 import {
@@ -26,6 +26,21 @@ interface PeerManagerConfig {
     lockId: LockID
     createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => DhtNodeRpcRemote
     hasConnection: (nodeId: DhtAddress) => boolean
+}
+
+// Returns all offline nodes, sets contacts as active if they are online
+const pingNodes = async (nodes: DhtNodeRpcRemote[], activeContacts: Set<DhtAddress>): Promise<PeerDescriptor[]> => {
+    const offlineNeighbors: PeerDescriptor[] = []
+    await Promise.allSettled(nodes.map(async (contact) => {
+        const isOnline = await contact.ping()
+        if (!isOnline) {
+            activeContacts.delete(contact.getNodeId())
+            offlineNeighbors.push(contact.getPeerDescriptor())
+        } else {
+            activeContacts.add(contact.getNodeId())
+        }
+    }))
+    return offlineNeighbors
 }
 
 export interface PeerManagerEvents {
@@ -168,7 +183,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         }
         const closest = this.getClosestActiveContactNotInBucket()
         if (closest) {
-            this.addContact(closest.getPeerDescriptor())
+            this.neighbors.add(closest)
         }
     }
 
@@ -195,6 +210,18 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
 
     removeNeighbor(nodeId: DhtAddress): void {
         this.neighbors.remove(getRawFromDhtAddress(nodeId))
+    }
+
+    // returns all offline neighbors
+    async pingAllNeighbors(): Promise<PeerDescriptor[]> {
+        logger.trace('Pinging neighbors', { nodes: this.neighbors.count() })
+        return pingNodes(this.neighbors.toArray(), this.activeContacts)
+    }
+
+    // returns all offline ring contacts
+    async pingAllRingContacts(): Promise<PeerDescriptor[]> {
+        logger.trace('Pinging ring contacts', { nodes: this.neighbors.count() }) 
+        return pingNodes(this.ringContacts.getAllContacts(), this.activeContacts)
     }
 
     stop(): void {
