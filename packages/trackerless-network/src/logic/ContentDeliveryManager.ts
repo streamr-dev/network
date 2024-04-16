@@ -14,8 +14,7 @@ import {
     Metric,
     MetricsContext,
     MetricsDefinition,
-    RateMetric,
-    scheduleAtInterval
+    RateMetric
 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
@@ -26,6 +25,7 @@ import { Layer1Node } from './Layer1Node'
 import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
 import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode'
 import { ProxyClient } from './proxy/ProxyClient'
+import { StreamPartReconnect } from './StreamPartReconnect'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void
@@ -147,6 +147,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             layer1Node, 
             () => entryPointDiscovery.isLocalNodeEntryPoint()
         )
+        const streamPartReconnect = new StreamPartReconnect(layer1Node, entryPointDiscovery)
         streamPart = {
             proxied: false,
             layer1Node,
@@ -154,6 +155,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             entryPointDiscovery,
             broadcast: (msg: StreamMessage) => node.broadcast(msg),
             stop: async () => {
+                streamPartReconnect.destroy()
                 await entryPointDiscovery.destroy()
                 node.stop()
                 await layer1Node.stop()
@@ -171,17 +173,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             await entryPointDiscovery.storeSelfAsEntryPointIfNecessary(entryPoints.discoveredEntryPoints.length)
         }
         layer1Node.on('manualRejoinRequired', async () => {
-            const abortController = new AbortController()
-            await scheduleAtInterval(async () => {
-                const entryPoints = await entryPointDiscovery.discoverEntryPointsFromDht(0)
-                await layer1Node.joinDht(entryPoints.discoveredEntryPoints)
-                if (entryPointDiscovery.isLocalNodeEntryPoint()) {
-                    await entryPointDiscovery.storeSelfAsEntryPointIfNecessary(entryPoints.discoveredEntryPoints.length)
-                }
-                if (layer1Node.getNeighborCount() > 0) {
-                    abortController.abort()
-                }
-            }, 30 * 1000, true, abortController.signal)
+            
         })
         node.on('entryPointLeaveDetected', () => handleEntryPointLeave())
         setImmediate(async () => {
