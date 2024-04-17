@@ -214,13 +214,13 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
 
     // returns all offline neighbors
     async pingAllNeighbors(): Promise<PeerDescriptor[]> {
-        logger.info('Pinging neighbors', { nodes: this.neighbors.count() })
+        logger.trace('Pinging neighbors', { nodes: this.neighbors.count() })
         return pingNodes(this.neighbors.toArray(), this.activeContacts)
     }
 
     // returns all offline ring contacts
     async pingAllRingContacts(): Promise<PeerDescriptor[]> {
-        logger.info('Pinging ring contacts', { nodes: this.neighbors.count() }) 
+        logger.trace('Pinging ring contacts', { nodes: this.neighbors.count() }) 
         return pingNodes(this.ringContacts.getAllContacts(), this.activeContacts)
     }
 
