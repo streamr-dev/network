@@ -183,7 +183,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         }
         const closest = this.getClosestActiveContactNotInBucket()
         if (closest) {
-            this.neighbors.add(closest)
+            this.addContact(closest.getPeerDescriptor())
         }
     }
 
