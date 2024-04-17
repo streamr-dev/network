@@ -20,7 +20,7 @@ const parseEntryPointData = (dataEntries: DataEntry[]): PeerDescriptor[] => {
     return dataEntries.filter((entry) => !entry.deleted).map((entry) => Any.unpack(entry.data!, PeerDescriptor))
 }
 
-interface FindEntryPointsResult {
+export interface FindEntryPointsResult {
     entryPointsFromDht: boolean
     discoveredEntryPoints: PeerDescriptor[]
 }

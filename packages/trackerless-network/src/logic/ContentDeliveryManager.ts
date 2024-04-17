@@ -173,7 +173,9 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             await entryPointDiscovery.storeSelfAsEntryPointIfNecessary(entryPoints.discoveredEntryPoints.length)
         }
         layer1Node.on('manualRejoinRequired', async () => {
-            
+            if (!streamPartReconnect.isRunning()) {
+                await streamPartReconnect.reconnect()
+            }
         })
         node.on('entryPointLeaveDetected', () => handleEntryPointLeave())
         setImmediate(async () => {
