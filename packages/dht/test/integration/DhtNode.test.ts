@@ -36,7 +36,7 @@ describe('DhtNode', () => {
         const epRpcCommunicator = new ListeningRpcCommunicator(SERVICE_ID_LAYER0, environment.createTransport(peerDescriptor))
         const dhtNodeRpcLocal = new DhtNodeRpcLocal({
             peerDiscoveryQueryBatchSize: undefined as any,
-            getClosestPeersTo: (nodeId: DhtAddress, maxCount: number) => getClosestNodes(nodeId, getAllPeerDescriptors(), maxCount, true),
+            getClosestNeighborsTo: (nodeId: DhtAddress, maxCount: number) => getClosestNodes(nodeId, getAllPeerDescriptors(), maxCount, true),
             getClosestRingContactsTo: undefined as any,
             addContact: () => {},
             removeContact: undefined as any,

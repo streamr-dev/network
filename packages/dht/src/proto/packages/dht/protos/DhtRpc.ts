@@ -108,6 +108,8 @@ export interface DataEntry {
     deleted: boolean;
 }
 /**
+ * TODO rename to ClosestNeighborsRequest
+ *
  * @generated from protobuf message dht.ClosestPeersRequest
  */
 export interface ClosestPeersRequest {
@@ -121,6 +123,8 @@ export interface ClosestPeersRequest {
     requestId: string;
 }
 /**
+ * TODO rename to ClosestPeersResponse
+ *
  * @generated from protobuf message dht.ClosestPeersResponse
  */
 export interface ClosestPeersResponse {
@@ -134,6 +138,8 @@ export interface ClosestPeersResponse {
     requestId: string;
 }
 /**
+ * TODO rename to ClosestRingContactsRequest
+ *
  * @generated from protobuf message dht.ClosestRingPeersRequest
  */
 export interface ClosestRingPeersRequest {
@@ -147,6 +153,8 @@ export interface ClosestRingPeersRequest {
     requestId: string;
 }
 /**
+ * TODO rename to ClosestRingContactsResponse
+ *
  * @generated from protobuf message dht.ClosestRingPeersResponse
  */
 export interface ClosestRingPeersResponse {
@@ -181,9 +189,9 @@ export interface RecursiveOperationRequest {
  */
 export interface RecursiveOperationResponse {
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor closestConnectedPeers = 1;
+     * @generated from protobuf field: repeated dht.PeerDescriptor closestConnectedNodes = 1;
      */
-    closestConnectedPeers: PeerDescriptor[];
+    closestConnectedNodes: PeerDescriptor[];
     /**
      * @generated from protobuf field: repeated dht.DataEntry dataEntries = 2;
      */
@@ -371,6 +379,14 @@ export interface ConnectivityResponse {
      * @generated from protobuf field: string version = 5;
      */
     version: string;
+    /**
+     * @generated from protobuf field: optional double latitude = 6;
+     */
+    latitude?: number;
+    /**
+     * @generated from protobuf field: optional double longitude = 7;
+     */
+    longitude?: number;
 }
 /**
  * @generated from protobuf message dht.HandshakeRequest
@@ -837,7 +853,7 @@ export const RecursiveOperationRequest = new RecursiveOperationRequest$Type();
 class RecursiveOperationResponse$Type extends MessageType<RecursiveOperationResponse> {
     constructor() {
         super("dht.RecursiveOperationResponse", [
-            { no: 1, name: "closestConnectedPeers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 1, name: "closestConnectedNodes", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
             { no: 2, name: "dataEntries", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => DataEntry },
             { no: 3, name: "noCloserNodesFound", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 4, name: "routingPath", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
@@ -970,7 +986,9 @@ class ConnectivityResponse$Type extends MessageType<ConnectivityResponse> {
             { no: 2, name: "natType", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "websocket", kind: "message", T: () => ConnectivityMethod },
             { no: 4, name: "ipAddress", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 5, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 5, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "latitude", kind: "scalar", opt: true, T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 7, name: "longitude", kind: "scalar", opt: true, T: 1 /*ScalarType.DOUBLE*/ }
         ]);
     }
 }

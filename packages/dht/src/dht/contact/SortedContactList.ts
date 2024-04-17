@@ -57,8 +57,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
                 if (this.hasEventListeners()) {
                     this.emit(
                         'contactAdded',
-                        contact,
-                        this.getClosestContacts()
+                        contact
                     )
                 }
             } else if (this.compareIds(this.contactIds[this.config.maxSize - 1], contactId) > 0) {
@@ -69,16 +68,13 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
                 const index = sortedIndexBy(this.contactIds, contactId, (id: DhtAddress) => { return this.distanceToReferenceId(id) })
                 this.contactIds.splice(index, 0, contactId)
                 if (this.hasEventListeners()) {
-                    const closestContacts = this.getClosestContacts()
                     this.emit(
                         'contactRemoved',
-                        removedContact,
-                        closestContacts
+                        removedContact
                     )
                     this.emit(
                         'contactAdded',
-                        contact,
-                        closestContacts
+                        contact
                     )
                 }
             }
@@ -137,8 +133,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
             if (this.hasEventListeners()) {
                 this.emit(
                     'contactRemoved',
-                    removed,
-                    this.getClosestContacts()
+                    removed
                 )
             }
             return true

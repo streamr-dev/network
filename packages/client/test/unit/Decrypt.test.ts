@@ -41,7 +41,7 @@ describe('Decrypt', () => {
 
     it('group key not available: timeout while waiting', async () => {
         const wallet = fastWallet()
-        const groupKeyManager = createGroupKeyManager(undefined, createPrivateKeyAuthentication(wallet.privateKey, {} as any))
+        const groupKeyManager = createGroupKeyManager(undefined, createPrivateKeyAuthentication(wallet.privateKey))
         const destroySignal = new DestroySignal()
         const groupKey = GroupKey.generate()
         const msg = await createMockMessage({

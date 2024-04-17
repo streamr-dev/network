@@ -66,11 +66,11 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             onResponseReceived: (
                 sourceId: DhtAddress,
                 routingPath: PeerDescriptor[],
-                nodes: PeerDescriptor[],
+                closestConnectedNodes: PeerDescriptor[],
                 dataEntries: DataEntry[],
                 noCloserNodesFound: boolean
             ) => {
-                this.onResponseReceived(sourceId, routingPath, nodes, dataEntries, noCloserNodesFound)
+                this.onResponseReceived(sourceId, routingPath, closestConnectedNodes, dataEntries, noCloserNodesFound)
             }
         })
         this.rpcCommunicator.registerRpcNotification(RecursiveOperationResponse, 'sendResponse',
@@ -131,7 +131,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     public onResponseReceived(
         sourceId: DhtAddress,
         routingPath: PeerDescriptor[],
-        nodes: PeerDescriptor[],
+        closestConnectedNodes: PeerDescriptor[],
         dataEntries: DataEntry[],
         noCloserNodesFound: boolean
     ): void {
@@ -139,7 +139,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         if (routingPath.length >= 1) {
             this.setHopAsReported(routingPath[routingPath.length - 1])
         }
-        nodes.forEach((descriptor: PeerDescriptor) => {
+        closestConnectedNodes.forEach((descriptor: PeerDescriptor) => {
             this.results.addContact(new Contact(descriptor))
         })
         this.processFoundData(dataEntries)
@@ -197,15 +197,13 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
                 clearTimeout(this.timeoutTask)
                 this.timeoutTask = undefined
             }
-        } else {
-            if (!this.timeoutTask && !this.completionEventEmitted) {
-                this.timeoutTask = setTimeout(() => {
-                    if (!this.completionEventEmitted) {
-                        this.emit('completed')
-                        this.completionEventEmitted = true
-                    }
-                }, 4000)  // TODO use config option or named constant?
-            }
+        } else if (!this.timeoutTask && !this.completionEventEmitted) {
+            this.timeoutTask = setTimeout(() => {
+                if (!this.completionEventEmitted) {
+                    this.emit('completed')
+                    this.completionEventEmitted = true
+                }
+            }, 4000)  // TODO use config option or named constant?
         }
     }
 

@@ -304,7 +304,13 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     }
 
     public hasConnection(nodeId: DhtAddress): boolean {
-        return this.connections.has(nodeId)
+        // TODO if we remove filtering in getConnections, this can just be this.connection.has(nodeId)
+        return this.getConnections().some((c) => getNodeIdFromPeerDescriptor(c) == nodeId)
+    }
+
+    public getConnectionCount(): number {
+        // TODO if we remove filtering in getConnections, this can just be this.connection.length
+        return this.getConnections().length
     }
 
     public hasLocalLockedConnection(nodeId: DhtAddress): boolean {
@@ -545,6 +551,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
 
     public getConnections(): PeerDescriptor[] {
         return Array.from(this.connections.values())
+            // TODO is this filtering needed? (if it is, should we do the same filtering e.g.
+            // in getConnection() or in other methods which access this.connections directly?)
             .filter((managedConnection: ManagedConnection) => managedConnection.isHandshakeCompleted())
             .map((managedConnection: ManagedConnection) => managedConnection.getPeerDescriptor()!)
     }

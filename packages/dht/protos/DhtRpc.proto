@@ -9,6 +9,7 @@ import "google/protobuf/timestamp.proto";
 import "packages/proto-rpc/protos/ProtoRpc.proto";
 
 service DhtNodeRpc {
+  // TODO rename to getClosestNeighbors (breaking change)
   rpc getClosestPeers (ClosestPeersRequest) returns (ClosestPeersResponse);
   // TODO rename to getClosestRingContacts (breaking change)
   rpc getClosestRingPeers (ClosestRingPeersRequest) returns (ClosestRingPeersResponse);
@@ -93,11 +94,13 @@ message DataEntry {
   bool deleted = 8;
 }
 
+// TODO rename to ClosestNeighborsRequest
 message ClosestPeersRequest {
   bytes nodeId = 1;
   string requestId = 2;
 }
 
+// TODO rename to ClosestNeighborsResponse
 message ClosestPeersResponse {
   repeated PeerDescriptor peers = 1;
   string requestId = 2;
@@ -128,7 +131,7 @@ enum RecursiveOperation {
 }
 
 message RecursiveOperationResponse {
-  repeated PeerDescriptor closestConnectedPeers = 1;
+  repeated PeerDescriptor closestConnectedNodes = 1;
   repeated DataEntry dataEntries = 2;
   bool noCloserNodesFound = 3;
   repeated PeerDescriptor routingPath = 4;
@@ -212,6 +215,8 @@ message ConnectivityResponse {
   ConnectivityMethod websocket = 3;
   uint32 ipAddress = 4;
   string version = 5;
+  optional double latitude = 6;
+  optional double longitude = 7;
 }
 
 message HandshakeRequest {

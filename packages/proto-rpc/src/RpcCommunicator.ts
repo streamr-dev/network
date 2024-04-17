@@ -226,12 +226,10 @@ export class RpcCommunicator<T extends ProtoCallContext> extends EventEmitter<Rp
                         }
                     }
                 })
-        } else {
-            if (deferredPromises) {
-                if (!this.ongoingRequests.has(rpcMessage.requestId)) {
-                    const ongoingRequest = new OngoingRequest(deferredPromises)
-                    ongoingRequest.resolveNotification()
-                }
+        } else if (deferredPromises) {
+            if (!this.ongoingRequests.has(rpcMessage.requestId)) {
+                const ongoingRequest = new OngoingRequest(deferredPromises)
+                ongoingRequest.resolveNotification()
             }
         }
     }

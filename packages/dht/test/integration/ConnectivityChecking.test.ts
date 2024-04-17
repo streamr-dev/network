@@ -15,7 +15,7 @@ describe('ConnectivityChecking', () => {
     beforeEach(async () => {
         server = new ConnectionManager({
             createConnectorFacade: () => new DefaultConnectorFacade({
-                createLocalPeerDescriptor: () => {
+                createLocalPeerDescriptor: async () => {
                     return {
                         ...createMockPeerDescriptor(),
                         websocket: {

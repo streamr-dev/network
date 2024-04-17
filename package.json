@@ -18,6 +18,7 @@
         "packages/utils",
         "packages/test-utils",
         "packages/cdn-location",
+        "packages/geoip-location",
         "packages/protocol",
         "packages/proto-rpc",
         "packages/autocertifier-client",

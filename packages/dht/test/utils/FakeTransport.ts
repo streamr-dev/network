@@ -1,5 +1,5 @@
 import { EventEmitter } from 'eventemitter3'
-import { getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { Message, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DEFAULT_SEND_OPTIONS, ITransport, SendOptions, TransportEvents } from '../../src/transport/ITransport'
 
@@ -39,6 +39,16 @@ class FakeTransport extends EventEmitter<TransportEvents> implements ITransport 
 
     getConnections(): PeerDescriptor[] {
         return this.connections
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    getConnectionCount(): number {
+        return this.connections.length
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    hasConnection(nodeId: DhtAddress): boolean {
+        return this.connections.some((c) => getNodeIdFromPeerDescriptor(c) === nodeId)
     }
 
     // eslint-disable-next-line class-methods-use-this

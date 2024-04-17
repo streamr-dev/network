@@ -30,7 +30,8 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
             ...config.client.network,
             controlLayer: {
                 ...config.client.network?.controlLayer,
-                geoIpDatabaseFolder: config.client.network?.controlLayer?.geoIpDatabaseFolder ?? '~/.streamr/geoipdatabases' // TODO: more cleaner solution?
+                geoIpDatabaseFolder: config.client.network?.controlLayer?.geoIpDatabaseFolder ??
+                    '~/.streamr/geoipdatabases' // TODO: more cleaner solution?
             }
         }
     })
@@ -79,7 +80,7 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
 }
 
 process.on('uncaughtException', (err) => {
-    logger.fatal( 'Encountered uncaughtException', { err })
+    logger.fatal('Encountered uncaughtException', { err })
     process.exit(1)
 })
 

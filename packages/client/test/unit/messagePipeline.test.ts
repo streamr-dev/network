@@ -59,7 +59,7 @@ describe('messagePipeline', () => {
             ),
             messageType: StreamMessageType.MESSAGE,
             content: opts.contentType === ContentType.BINARY ? opts.content! : utf8ToBinary(JSON.stringify(CONTENT)),
-            authentication: createPrivateKeyAuthentication(publisher.privateKey, undefined as any),
+            authentication: createPrivateKeyAuthentication(publisher.privateKey),
             contentType: opts.contentType ?? ContentType.JSON,
             encryptionType: EncryptionType.NONE,
             signatureType: SignatureType.SECP256K1,
@@ -112,7 +112,7 @@ describe('messagePipeline', () => {
                 mock<LitProtocolFacade>(),
                 groupKeyStore,
                 config,
-                createPrivateKeyAuthentication(publisher.privateKey, {} as any),
+                createPrivateKeyAuthentication(publisher.privateKey),
                 new StreamrClientEventEmitter(),
                 destroySignal
             ),
