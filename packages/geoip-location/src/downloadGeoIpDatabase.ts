@@ -2,6 +2,7 @@ import crypto from 'crypto'
 import fs from 'fs'
 import { CityResponse, Reader } from 'mmdb-lib'
 import { extractFileFromTarStream } from './tarHelper'
+import { v4 } from 'uuid'
 
 const GEOIP_MIRROR_URL = 'https://raw.githubusercontent.com/GitSquared/node-geolite2-redist/master/redist/'
 const DB_NAME = 'GeoLite2-City'
@@ -12,7 +13,11 @@ const HASH_SUFFIX = '.mmdb.sha384'
 const downloadNewDb = async (url: string, dbFolder: string, remoteHash: string,
     abortSignal: AbortSignal): Promise<void> => {
 
-    const downloadFolder = dbFolder + '.download'
+    // make a unique name for the temporary download folder
+    // in case there are multiple downloads happening at the same time
+
+    const uniqueName = v4()
+    const downloadFolder = dbFolder + '.download' + uniqueName
     const dbFileName = DB_NAME + DB_SUFFIX
     const dbFileInDownloadFolder = downloadFolder + '/' + dbFileName
     const dbFileInDbFolder = dbFolder + dbFileName

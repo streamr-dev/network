@@ -3,6 +3,7 @@ import http from 'http'
 import { Logger, wait } from '@streamr/utils'
 import { fetchFileToMemory } from './fetchFileToMemory'
 import fs from 'fs'
+import { v4 } from 'uuid'
 
 const logger = new Logger(module)
 
@@ -49,8 +50,14 @@ export class TestServer {
         } catch (e) {
             // ignore error when creating the cache folder
         }
-        fs.writeFileSync(CACHE_PATH + hashFileName, TestServer.hashData)
-        fs.writeFileSync(CACHE_PATH + dbFileName, TestServer.dbData)
+        // ensure there is never an incomplete file in the fs
+        const uniqueName = v4()
+
+        fs.writeFileSync(CACHE_PATH + hashFileName + uniqueName, TestServer.hashData)
+        fs.renameSync(CACHE_PATH + hashFileName + uniqueName, CACHE_PATH + hashFileName)
+        
+        fs.writeFileSync(CACHE_PATH + dbFileName + uniqueName, TestServer.dbData)
+        fs.renameSync(CACHE_PATH + dbFileName + uniqueName, CACHE_PATH + dbFileName)
     }
 
     private async writeDataKilobytesPerSecond(res: http.ServerResponse, data: Uint8Array, kilobytesPerSecond?: number): Promise<void> {
@@ -107,7 +114,7 @@ export class TestServer {
             })
         })
     }
-    
+
     async start(port: number, kiloBytesPerSecond?: number): Promise<void> {
         if (!TestServer.hashData || !TestServer.dbData) {
             await TestServer.prefetchData()

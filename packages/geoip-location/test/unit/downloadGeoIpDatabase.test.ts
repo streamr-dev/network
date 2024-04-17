@@ -31,7 +31,6 @@ describe('downloadGeoIpDatabase', () => {
         const reader = await downloadGeoIpDatabase(path, false, mirrorUrl, abortController.signal)
 
         expect(fs.existsSync(path)).toBe(true)
-        expect(fs.existsSync(path + '.download')).toBe(false)
         expect(fs.existsSync(path + '/GeoLite2-City.mmdb')).toBe(true)
 
         // https://www.martin-brennan.com/nodejs-file-permissions-fstat/
@@ -40,16 +39,6 @@ describe('downloadGeoIpDatabase', () => {
         // on windows the permissions might be 0o666
         expect(permissions === 0o600 || permissions === 0o666).toBe(true)
         expect(reader).toBeDefined()
-    }, 60000)
-
-    it('downloads the database even if temp download folder already exists', async () => {
-        fs.mkdirSync(path + '.download', { recursive: true })
-        const reader = await downloadGeoIpDatabase(path, false, mirrorUrl, abortController.signal)
-
-        expect(reader).toBeDefined()
-        expect(fs.existsSync(path)).toBe(true)
-        expect(fs.existsSync(path + '.download')).toBe(false)
-        expect(fs.existsSync(path + '/GeoLite2-City.mmdb')).toBe(true)
     }, 60000)
 
     it('throws if the path is not writable', async () => {
