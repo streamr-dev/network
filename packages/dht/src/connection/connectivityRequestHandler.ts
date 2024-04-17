@@ -25,6 +25,7 @@ export const attachConnectivityRequestHandler = (connectionToListenTo: Websocket
             if (message.body.oneofKind === 'connectivityRequest') {
                 logger.trace('ConnectivityRequest received: ' + JSON.stringify(Message.toJson(message)))
                 try {
+                    logger.info("geoIpLocator", { geoIpLocator: geoIpLocator })
                     await handleIncomingConnectivityRequest(connectionToListenTo,
                         message.body.connectivityRequest, geoIpLocator)
                     logger.trace('handleIncomingConnectivityRequest ok')

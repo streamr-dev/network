@@ -171,6 +171,7 @@ export class WebsocketConnector {
             this.selectedPort = port
 
             if (this.config.geoIpDatabaseFolder) {
+                logger.info("Starting GeoIpLocator...")
                 const geoIpLocator = new GeoIpLocator(this.config.geoIpDatabaseFolder)
                 try {
                     await geoIpLocator.start()

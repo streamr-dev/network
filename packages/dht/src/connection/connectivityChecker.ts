@@ -100,8 +100,8 @@ export const sendConnectivityRequest = async (
         outgoingConnection.send(Message.toBinary(msg))
         logger.trace('ConnectivityRequest sent: ' + JSON.stringify(Message.toJson(msg)))
         return await retPromise
-    } catch (e) {
-        logger.error('error getting connectivityresponse')
-        throw e
+    } catch (err) {
+        logger.error('error getting connectivityresponse', { err })
+        throw err
     }
 }
