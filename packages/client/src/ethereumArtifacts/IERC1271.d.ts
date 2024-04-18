@@ -3,106 +3,96 @@
 /* eslint-disable */
 import type {
     BaseContract,
-    BigNumber,
     BytesLike,
-    CallOverrides,
-    PopulatedTransaction,
-    Signer,
-    utils,
+    FunctionFragment,
+    Result,
+    Interface,
+    ContractRunner,
+    ContractMethod,
+    Listener,
 } from "ethers";
-import type { FunctionFragment, Result } from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
 import type {
-    TypedEventFilter,
-    TypedEvent,
+    TypedContractEvent,
+    TypedDeferredTopicFilter,
+    TypedEventLog,
     TypedListener,
-    OnEvent,
-    PromiseOrValue,
+    TypedContractMethod,
 } from "../../../common";
 
-export interface IERC1271Interface extends utils.Interface {
-    functions: {
-        "isValidSignature(bytes32,bytes)": FunctionFragment;
-    };
-
-    getFunction(nameOrSignatureOrTopic: "isValidSignature"): FunctionFragment;
+export interface IERC1271Interface extends Interface {
+    getFunction(nameOrSignature: "isValidSignature"): FunctionFragment;
 
     encodeFunctionData(
         functionFragment: "isValidSignature",
-        values: [PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>]
+        values: [BytesLike, BytesLike]
     ): string;
 
     decodeFunctionResult(
         functionFragment: "isValidSignature",
         data: BytesLike
     ): Result;
-
-    events: {};
 }
 
 export interface IERC1271 extends BaseContract {
-    connect(signerOrProvider: Signer | Provider | string): this;
-    attach(addressOrName: string): this;
-    deployed(): Promise<this>;
+    connect(runner?: ContractRunner | null): IERC1271;
+    waitForDeployment(): Promise<this>;
 
     interface: IERC1271Interface;
 
-    queryFilter<TEvent extends TypedEvent>(
-        event: TypedEventFilter<TEvent>,
+    queryFilter<TCEvent extends TypedContractEvent>(
+        event: TCEvent,
         fromBlockOrBlockhash?: string | number | undefined,
         toBlock?: string | number | undefined
-    ): Promise<Array<TEvent>>;
+    ): Promise<Array<TypedEventLog<TCEvent>>>;
+    queryFilter<TCEvent extends TypedContractEvent>(
+        filter: TypedDeferredTopicFilter<TCEvent>,
+        fromBlockOrBlockhash?: string | number | undefined,
+        toBlock?: string | number | undefined
+    ): Promise<Array<TypedEventLog<TCEvent>>>;
 
-    listeners<TEvent extends TypedEvent>(
-        eventFilter?: TypedEventFilter<TEvent>
-    ): Array<TypedListener<TEvent>>;
-    listeners(eventName?: string): Array<Listener>;
-    removeAllListeners<TEvent extends TypedEvent>(
-        eventFilter: TypedEventFilter<TEvent>
-    ): this;
-    removeAllListeners(eventName?: string): this;
-    off: OnEvent<this>;
-    on: OnEvent<this>;
-    once: OnEvent<this>;
-    removeListener: OnEvent<this>;
+    on<TCEvent extends TypedContractEvent>(
+        event: TCEvent,
+        listener: TypedListener<TCEvent>
+    ): Promise<this>;
+    on<TCEvent extends TypedContractEvent>(
+        filter: TypedDeferredTopicFilter<TCEvent>,
+        listener: TypedListener<TCEvent>
+    ): Promise<this>;
 
-    functions: {
-        isValidSignature(
-            hash: PromiseOrValue<BytesLike>,
-            signature: PromiseOrValue<BytesLike>,
-            overrides?: CallOverrides
-        ): Promise<[string] & { magicValue: string }>;
-    };
+    once<TCEvent extends TypedContractEvent>(
+        event: TCEvent,
+        listener: TypedListener<TCEvent>
+    ): Promise<this>;
+    once<TCEvent extends TypedContractEvent>(
+        filter: TypedDeferredTopicFilter<TCEvent>,
+        listener: TypedListener<TCEvent>
+    ): Promise<this>;
 
-    isValidSignature(
-        hash: PromiseOrValue<BytesLike>,
-        signature: PromiseOrValue<BytesLike>,
-        overrides?: CallOverrides
-    ): Promise<string>;
+    listeners<TCEvent extends TypedContractEvent>(
+        event: TCEvent
+    ): Promise<Array<TypedListener<TCEvent>>>;
+    listeners(eventName?: string): Promise<Array<Listener>>;
+    removeAllListeners<TCEvent extends TypedContractEvent>(
+        event?: TCEvent
+    ): Promise<this>;
 
-    callStatic: {
-        isValidSignature(
-            hash: PromiseOrValue<BytesLike>,
-            signature: PromiseOrValue<BytesLike>,
-            overrides?: CallOverrides
-        ): Promise<string>;
-    };
+    isValidSignature: TypedContractMethod<
+        [hash: BytesLike, signature: BytesLike],
+        [string],
+        "view"
+    >;
+
+    getFunction<T extends ContractMethod = ContractMethod>(
+        key: string | FunctionFragment
+    ): T;
+
+    getFunction(
+        nameOrSignature: "isValidSignature"
+    ): TypedContractMethod<
+        [hash: BytesLike, signature: BytesLike],
+        [string],
+        "view"
+    >;
 
     filters: {};
-
-    estimateGas: {
-        isValidSignature(
-            hash: PromiseOrValue<BytesLike>,
-            signature: PromiseOrValue<BytesLike>,
-            overrides?: CallOverrides
-        ): Promise<BigNumber>;
-    };
-
-    populateTransaction: {
-        isValidSignature(
-            hash: PromiseOrValue<BytesLike>,
-            signature: PromiseOrValue<BytesLike>,
-            overrides?: CallOverrides
-        ): Promise<PopulatedTransaction>;
-    };
 }

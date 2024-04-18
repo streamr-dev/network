@@ -1,5 +1,4 @@
 import { ContractFactory } from '../ContractFactory'
-import { Provider } from '@ethersproject/providers'
 import { BrandedString, EthereumAddress, MapWithTtl, toEthereumAddress } from '@streamr/utils'
 import ERC1271ContractArtifact from '../ethereumArtifacts/IERC1271Abi.json'
 import type { IERC1271 as ERC1271Contract } from '../ethereumArtifacts/IERC1271'
@@ -29,7 +28,7 @@ export class ERC1271ContractFacade {
         rpcProviderFactory: RpcProviderFactory
     ) {
         this.contractsByAddress = new Mapping<[EthereumAddress], ERC1271Contract[]>(async (address) => {
-            return rpcProviderFactory.getProviders().map((provider: Provider) => {
+            return rpcProviderFactory.getProviders().map((provider) => {
                 return contractFactory.createReadContract(
                     address,
                     ERC1271ContractArtifact,
