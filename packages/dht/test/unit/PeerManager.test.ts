@@ -97,7 +97,7 @@ describe('PeerManager', () => {
         expect(manager.getNeighbors()).toEqual([closesSuccessContact])
     })
 
-    it('pingAllNeighbors returns all offline nodes', async () => {
+    it('pruneOfflineNeighbors removes offline contacts', async () => {
         const localPeerDescriptor = createMockPeerDescriptor()
         const successContacts = range(5).map(() => createMockPeerDescriptor())
         const failureContact = createMockPeerDescriptor()
@@ -109,11 +109,11 @@ describe('PeerManager', () => {
         manager.addContact(failureContact)
         expect(manager.getNeighborCount()).toBe(6)
         failureSet.add(getNodeIdFromPeerDescriptor(failureContact))
-        const failedPings = await manager.pingAllNeighbors()
-        expect(failedPings).toEqual([failureContact])
+        await manager.pruneOfflineNeighbors()
+        expect(manager.getNeighborCount()).toBe(5)
     })
 
-    it('pingAllRingContacts returns all offline nodes', async () => {
+    it('pruneOfflineRingContacts removes offline contacts', async () => {
         const localPeerDescriptor = createMockPeerDescriptor()
         const failureContact = createMockPeerDescriptor()
         const failureSet: Set<DhtAddress> = new Set()
@@ -122,8 +122,8 @@ describe('PeerManager', () => {
         // Failure contacts is in the left and right side of the ring
         expect(manager.getRingContacts().getAllContacts().length).toEqual(2)
         failureSet.add(getNodeIdFromPeerDescriptor(failureContact))
-        const failedPings = await manager.pingAllRingContacts()
-        expect(failedPings).toEqual([failureContact, failureContact])
+        await manager.pruneOfflineRingContacts()
+        expect(manager.getRingContacts().getAllContacts().length).toEqual(0)
     })
 
 })
