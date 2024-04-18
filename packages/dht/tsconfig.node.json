@@ -2,7 +2,8 @@
     "extends": "../../tsconfig.node.json",
     "compilerOptions": {
         "outDir": "dist",
-        "noImplicitOverride": false
+        "noImplicitOverride": false,
+        "moduleResolution": "NodeNext"
     },
     "include": [
         "src/**/*",
