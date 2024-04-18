@@ -304,22 +304,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.bindRpcLocalMethods()
 
         if (this.config.periodicallyPingNeighbors === true) {
-            await scheduleAtInterval(async () => {
-                const offlineNeighbors = await this.peerManager!.pingAllNeighbors()
-                offlineNeighbors.forEach((offlineNeighbor) => {
-                    logger.trace('Removing offline neighbor', { node: getNodeIdFromPeerDescriptor(offlineNeighbor) })
-                    this.peerManager!.removeContact(getNodeIdFromPeerDescriptor(offlineNeighbor))
-                })
-            }, 60000, true, this.abortController.signal)
+            await scheduleAtInterval(() => this.peerManager!.pruneOfflineNeighbors(), 60000, true, this.abortController.signal)
         }
         if (this.config.periodicallyPingRingContacts === true) {
-            await scheduleAtInterval(async () => {
-                const offlineContacts = await this.peerManager!.pingAllRingContacts()
-                offlineContacts.forEach((contact) => {
-                    logger.trace('Removing offline ring contact', { node: getNodeIdFromPeerDescriptor(contact) })
-                    this.peerManager!.removeContact(getNodeIdFromPeerDescriptor(contact))
-                })
-            }, 60000, true, this.abortController.signal)
+            await scheduleAtInterval(() => this.peerManager!.pruneOfflineRingContacts(), 60000, true, this.abortController.signal)
         }
     }
 

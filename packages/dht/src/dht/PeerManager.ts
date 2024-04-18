@@ -213,16 +213,23 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     }
 
     // returns all offline neighbors
-    async pingAllNeighbors(): Promise<PeerDescriptor[]> {
-        logger.trace('Pinging neighbors', { nodes: this.neighbors.count() })
-        return pingNodes(this.neighbors.toArray(), this.activeContacts)
+    async pruneOfflineNeighbors(): Promise<void> {
+        logger.trace('Pruning offline neighbors', { nodes: this.neighbors.count() })
+        const offlineNeighbors = await pingNodes(this.neighbors.toArray(), this.activeContacts)
+        offlineNeighbors.forEach((offlineNeighbor) => {
+            logger.trace('Removing offline neighbor', { node: getNodeIdFromPeerDescriptor(offlineNeighbor) })
+            this.removeContact(getNodeIdFromPeerDescriptor(offlineNeighbor))
+        }) 
     }
 
-    // returns all offline ring contacts
-    async pingAllRingContacts(): Promise<PeerDescriptor[]> {
-        logger.trace('Pinging ring contacts', { nodes: this.neighbors.count() }) 
-        return pingNodes(this.ringContacts.getAllContacts(), this.activeContacts)
-    }
+    async pruneOfflineRingContacts(): Promise<void> {
+        logger.trace('Pruning offline ring contacts', { nodes: this.neighbors.count() }) 
+        const offlineContacts = await pingNodes(this.ringContacts.getAllContacts(), this.activeContacts)
+        offlineContacts.forEach((contact) => {
+            logger.trace('Removing offline ring contact', { node: getNodeIdFromPeerDescriptor(contact) })
+            this.removeContact(getNodeIdFromPeerDescriptor(contact))
+        })
+    } 
 
     stop(): void {
         this.stopped = true
