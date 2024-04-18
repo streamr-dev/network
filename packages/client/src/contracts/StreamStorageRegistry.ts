@@ -1,4 +1,3 @@
-import { Provider } from '@ethersproject/providers'
 import { StreamID, toStreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger, TheGraphClient, collect, toEthereumAddress } from '@streamr/utils'
 import min from 'lodash/min'
@@ -66,7 +65,7 @@ export class StreamStorageRegistry {
         this.config = config
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
-        this.streamStorageRegistryContractsReadonly = rpcProviderFactory.getProviders().map((provider: Provider) => {
+        this.streamStorageRegistryContractsReadonly = rpcProviderFactory.getProviders().map((provider) => {
             return this.contractFactory.createReadContract(
                 toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress),
                 StreamStorageRegistryArtifact,

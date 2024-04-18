@@ -1,4 +1,9 @@
-import { Contract, ContractReceipt, ContractTransaction } from 'ethers'
+import {
+    BaseContract,
+    Contract,
+    ContractTransactionReceipt,
+    ContractTransactionResponse,
+} from 'ethers'
 import { initEventGateway } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import shuffle from 'lodash/shuffle'
@@ -7,25 +12,26 @@ import pLimit from 'p-limit'
 import { InternalEvents, StreamrClientEventEmitter, StreamrClientEvents } from '../events'
 import { LoggerFactory } from './LoggerFactory'
 import { tryInSequence } from './promises'
+import type { TransactionResponse } from 'ethers/providers'
 
 export interface ContractEvent {
     onMethodExecute: (methodName: string) => void
-    onTransactionSubmit: (methodName: string, tx: ContractTransaction) => void
-    onTransactionConfirm: (methodName: string, tx: ContractTransaction, receipt: ContractReceipt) => void
+    onTransactionSubmit: (methodName: string, tx: ContractTransactionResponse) => void
+    onTransactionConfirm: (methodName: string, receipt: ContractTransactionReceipt | null) => void
 }
 
-export type ObservableContract<T extends Contract> = T & {
+export type ObservableContract<T extends BaseContract> = T & {
     eventEmitter: EventEmitter<ContractEvent>
 }
 
 export async function waitForTx(
-    txToSubmit: Promise<ContractTransaction>
-): Promise<ContractReceipt> {
+    txToSubmit: Promise<TransactionResponse>
+): Promise<ContractTransactionReceipt> {
     const tx = await txToSubmit
-    return tx.wait()
+    return tx.wait() as Promise<ContractTransactionReceipt> // cannot be null unless arg confirmations set to 0
 }
 
-const isTransaction = (returnValue: any): returnValue is ContractTransaction => {
+const isTransaction = (returnValue: any): returnValue is ContractTransactionResponse => {
     return (returnValue.wait !== undefined && (typeof returnValue.wait === 'function'))
 }
 
@@ -34,24 +40,24 @@ const createLogger = (eventEmitter: EventEmitter<ContractEvent>, loggerFactory: 
     eventEmitter.on('onMethodExecute', (methodName: string) => {
         logger.debug('Execute method', { methodName })
     })
-    eventEmitter.on('onTransactionSubmit', (methodName: string, tx: ContractTransaction) => {
+    eventEmitter.on('onTransactionSubmit', (methodName: string, tx: ContractTransactionResponse) => {
         logger.debug('Submit transaction', {
             method: methodName,
             tx: tx.hash,
             to: tx.to,
             nonce: tx.nonce,
-            gasLimit: tx.gasLimit.toNumber(),
-            gasPrice: tx.gasPrice?.toNumber()
+            gasLimit: tx.gasLimit,
+            gasPrice: tx.gasPrice
         })
     })
-    eventEmitter.on('onTransactionConfirm', (methodName: string, tx: ContractTransaction, receipt: ContractReceipt) => {
+    eventEmitter.on('onTransactionConfirm', (methodName: string, receipt: ContractTransactionReceipt | null) => {
         logger.debug('Received transaction confirmation', {
             method: methodName,
-            tx: tx.hash,
-            block: receipt.blockNumber,
-            confirmations: receipt.confirmations,
-            gasUsed: receipt.gasUsed.toNumber(),
-            events: (receipt.events || []).map((e) => e.event)
+            tx: receipt?.hash,
+            block: receipt?.blockNumber,
+            confirmations: receipt?.confirmations,
+            gasUsed: receipt?.gasUsed,
+            events: (receipt?.logs || []).map((e) => e)
         })
     })
 }
@@ -91,9 +97,9 @@ const createWrappedContractMethod = (
         if (isTransaction(returnValue)) {
             const tx = returnValue
             const originalWaitMethod = tx.wait
-            tx.wait = async (confirmations?: number): Promise<ContractReceipt> => {
-                const receipt = await withErrorHandling(() => originalWaitMethod(confirmations), methodName, 'waiting transaction for')
-                eventEmitter.emit('onTransactionConfirm', methodName, tx, receipt)
+            tx.wait = async (confirmations?: number, timeout?: number): Promise<null | ContractTransactionReceipt> => {
+                const receipt = await withErrorHandling(() => originalWaitMethod(confirmations, timeout), methodName, 'waiting transaction for')
+                eventEmitter.emit('onTransactionConfirm', methodName, receipt)
                 return receipt
             }
             eventEmitter.emit('onTransactionSubmit', methodName, tx)
@@ -111,7 +117,7 @@ const createWrappedContractMethod = (
  * or
  *     await contract.getFoobar(456)
  */
-export const createDecoratedContract = <T extends Contract>(
+export const createDecoratedContract = <T extends BaseContract>(
     contract: Contract,
     contractName: string,
     loggerFactory: LoggerFactory,

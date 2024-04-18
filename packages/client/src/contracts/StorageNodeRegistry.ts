@@ -1,4 +1,4 @@
-import { Provider } from '@ethersproject/providers'
+import { Provider } from 'ethers/providers'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -71,7 +71,7 @@ export class StorageNodeRegistry {
     }
 
     async getStorageNodeMetadata(nodeAddress: EthereumAddress): Promise<StorageNodeMetadata> {
-        const [ resultNodeAddress, metadata ] = await queryAllReadonlyContracts((contract: NodeRegistryContract) => {
+        const [ resultNodeAddress, metadata ] = await queryAllReadonlyContracts<any, NodeRegistryContract>((contract) => {
             return contract.getNode(nodeAddress)
         }, this.nodeRegistryContractsReadonly)
         const NODE_NOT_FOUND = '0x0000000000000000000000000000000000000000'

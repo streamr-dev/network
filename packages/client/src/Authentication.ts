@@ -1,7 +1,6 @@
-import type { Signer } from '@ethersproject/abstract-signer'
-import { Provider, Web3Provider } from '@ethersproject/providers'
-import { computeAddress } from '@ethersproject/transactions'
-import { Wallet } from '@ethersproject/wallet'
+import { BrowserProvider, AbstractSigner } from 'ethers'
+import { computeAddress } from 'ethers'
+import { Wallet } from 'ethers/wallet'
 import { EthereumAddress, hexToBinary, toEthereumAddress, wait, createSignature } from '@streamr/utils'
 import pMemoize from 'p-memoize'
 import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'
@@ -10,7 +9,7 @@ import { RpcProviderFactory } from './RpcProviderFactory'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 
-export type SignerWithProvider = Signer & { readonly provider: Provider }
+export type SignerWithProvider = AbstractSigner
 
 export interface Authentication {
     // always in lowercase
@@ -40,7 +39,7 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
         return createPrivateKeyAuthentication(normalizedPrivateKey)
     } else if ((config.auth as ProviderAuthConfig)?.ethereum !== undefined) {
         const ethereum = (config.auth as ProviderAuthConfig)?.ethereum
-        const provider = new Web3Provider(ethereum)
+        const provider = new BrowserProvider(ethereum as any) // TODO: type issue?
         const signer = provider.getSigner()
         return {
             getAddress: pMemoize(async () => {
@@ -57,7 +56,7 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
             createMessageSignature: pLimitFn(async (payload: Uint8Array) => {
                 // sign one at a time & wait a moment before asking for next signature
                 // otherwise MetaMask extension may not show the prompt window
-                const sig = await signer.signMessage(payload)
+                const sig = await (await signer).signMessage(payload)
                 await wait(50)
                 return hexToBinary(sig)
             }, 1),
@@ -66,7 +65,7 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                     throw new Error('Streamr streamRegistryChainRPC not configured (with chainId) in the StreamrClient options!')
                 }
                 const { chainId } = await provider.getNetwork()
-                if (chainId !== config.contracts.streamRegistryChainRPCs.chainId) {
+                if (chainId !== BigInt(config.contracts.streamRegistryChainRPCs.chainId)) {
                     const sideChainId = config.contracts.streamRegistryChainRPCs.chainId
                     throw new Error(
                         // eslint-disable-next-line max-len

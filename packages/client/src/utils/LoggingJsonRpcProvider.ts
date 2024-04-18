@@ -1,9 +1,17 @@
-import { StaticJsonRpcProvider } from '@ethersproject/providers'
+import { JsonRpcApiProviderOptions, JsonRpcProvider, Networkish } from 'ethers/providers'
 import { Logger, randomString } from '@streamr/utils'
+import { FetchRequest } from 'ethers'
+import { Promise } from 'ts-toolbelt/out/Any/Promise'
 
 const logger = new Logger(module)
 
-export class LoggingStaticJsonRpcProvider extends StaticJsonRpcProvider {
+export class LoggingJsonRpcProvider extends JsonRpcProvider {
+    private readonly urlConfig: FetchRequest
+
+    constructor(urlConfig: FetchRequest, network?: Networkish, options?: JsonRpcApiProviderOptions) {
+        super(urlConfig, network, options)
+        this.urlConfig = urlConfig
+    }
 
     override async send(method: string, params: any[]): Promise<any> {
         const traceId = randomString(5)
@@ -13,8 +21,8 @@ export class LoggingStaticJsonRpcProvider extends StaticJsonRpcProvider {
             method,
             params,
             connection: {
-                url: this.connection.url,
-                timeout: this.connection.timeout
+                url: this.urlConfig.url,
+                timeout: this.urlConfig.timeout
             }
         }
         logger.debug('Send request', logContext)

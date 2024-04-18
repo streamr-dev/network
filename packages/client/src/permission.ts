@@ -1,5 +1,4 @@
-import { MaxInt256 } from '@ethersproject/constants'
-import { BigNumber } from '@ethersproject/bignumber'
+import { MaxInt256 } from 'ethers/constants'
 import { EthereumAddress } from '@streamr/utils'
 
 export enum StreamPermission {
@@ -47,8 +46,8 @@ export type PermissionQueryResult = {
 export interface ChainPermissions {
     canEdit: boolean
     canDelete: boolean
-    publishExpiration: BigNumber
-    subscribeExpiration: BigNumber
+    publishExpiration: bigint
+    subscribeExpiration: bigint
     canGrant: boolean
 }
 
@@ -60,22 +59,22 @@ export const isPublicPermissionAssignment = (query: PermissionAssignment): query
     return (query as PublicPermissionAssignment).public === true
 }
 
-export const streamPermissionToSolidityType = (permission: StreamPermission): BigNumber => {
+export const streamPermissionToSolidityType = (permission: StreamPermission): bigint => {
     switch (permission) {
         case StreamPermission.EDIT:
-            return BigNumber.from(0)
+            return 0n
         case StreamPermission.DELETE:
-            return BigNumber.from(1)
+            return 1n
         case StreamPermission.PUBLISH:
-            return BigNumber.from(2)
+            return 2n
         case StreamPermission.SUBSCRIBE:
-            return BigNumber.from(3)
+            return 3n
         case StreamPermission.GRANT:
-            return BigNumber.from(4)
+            return 4n
         default:
             break
     }
-    return BigNumber.from(0)
+    return 0n
 }
 
 export const convertChainPermissionsToStreamPermissions = (chainPermissions: ChainPermissions): StreamPermission[] => {
@@ -87,10 +86,10 @@ export const convertChainPermissionsToStreamPermissions = (chainPermissions: Cha
     if (chainPermissions.canDelete) {
         permissions.push(StreamPermission.DELETE)
     }
-    if (BigNumber.from(chainPermissions.publishExpiration).gt(now)) {
+    if (chainPermissions.publishExpiration > now) {
         permissions.push(StreamPermission.PUBLISH)
     }
-    if (BigNumber.from(chainPermissions.subscribeExpiration).gt(now)) {
+    if (chainPermissions.subscribeExpiration > now) {
         permissions.push(StreamPermission.SUBSCRIBE)
     }
     if (chainPermissions.canGrant) {
@@ -103,8 +102,8 @@ export const convertStreamPermissionsToChainPermission = (permissions: StreamPer
     return {
         canEdit: permissions.includes(StreamPermission.EDIT),
         canDelete: permissions.includes(StreamPermission.DELETE),
-        publishExpiration: permissions.includes(StreamPermission.PUBLISH) ? MaxInt256 : BigNumber.from(0),
-        subscribeExpiration: permissions.includes(StreamPermission.SUBSCRIBE) ? MaxInt256 : BigNumber.from(0),
+        publishExpiration: permissions.includes(StreamPermission.PUBLISH) ? MaxInt256 : 0n,
+        subscribeExpiration: permissions.includes(StreamPermission.SUBSCRIBE) ? MaxInt256 : 0n,
         canGrant: permissions.includes(StreamPermission.GRANT)
     }
 }

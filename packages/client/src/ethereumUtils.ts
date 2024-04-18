@@ -3,9 +3,9 @@
  */
 import { Wallet } from '@ethersproject/wallet'
 import type { Overrides } from '@ethersproject/contracts'
-import type { BigNumber } from '@ethersproject/bignumber'
 import { StrictStreamrClientConfig } from './Config'
 import { RpcProviderFactory } from './RpcProviderFactory'
+import { FeeData } from 'ethers'
 
 export const generateEthereumAccount = (): { address: string, privateKey: string } => {
     const wallet = Wallet.createRandom()
@@ -27,13 +27,14 @@ export const getEthersOverrides = (
     const overrides = chainConfig.overrides ?? {}
     if ((chainConfig.highGasPriceStrategy) && (chainConfig.overrides?.gasPrice === undefined)) {
         const primaryProvider = rpcProviderFactory.getPrimaryProvider()
-        const gasPriceStrategy = (estimatedGasPrice: BigNumber) => {
+        const gasPriceStrategy = (feeData: FeeData) => {
             const INCREASE_PERCENTAGE = 30
-            return estimatedGasPrice.mul(100 + INCREASE_PERCENTAGE).div(100)
+            // TODO: what to do when gasPrice is null, is returning 0 okay?
+            return feeData.gasPrice === null ? 0n : feeData.gasPrice * BigInt(100 + INCREASE_PERCENTAGE) / 100n
         }
         return {
             ...overrides,
-            gasPrice: primaryProvider.getGasPrice().then(gasPriceStrategy)
+            gasPrice: primaryProvider.getFeeData().then(gasPriceStrategy)
         }
     }
     return overrides

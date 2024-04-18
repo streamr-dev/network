@@ -1,12 +1,12 @@
-import { Signer } from '@ethersproject/abstract-signer'
-import { Contract, ContractInterface, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
-import { Provider } from '@ethersproject/providers'
+import { Signer } from 'ethers/providers'
+import { Contract } from 'ethers/contract'
 import { EthereumAddress } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { StreamrClientEventEmitter } from './events'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { ObservableContract, createDecoratedContract } from './utils/contract'
+import { Provider, ContractTransactionReceipt, InterfaceAbi, BaseContract } from 'ethers'
 
 @scoped(Lifecycle.ContainerScoped)
 export class ContractFactory {
@@ -26,9 +26,9 @@ export class ContractFactory {
         this.loggerFactory = loggerFactory
     }
 
-    createReadContract<T extends Contract>(
+    createReadContract<T extends BaseContract>(
         address: EthereumAddress,
-        contractInterface: ContractInterface,
+        contractInterface: InterfaceAbi,
         provider: Provider,
         name: string
     ): ObservableContract<T> {
@@ -40,9 +40,9 @@ export class ContractFactory {
         )
     }
 
-    createWriteContract<T extends Contract>(
+    createWriteContract<T extends BaseContract>(
         address: EthereumAddress,
-        contractInterface: ContractInterface,
+        contractInterface: InterfaceAbi,
         signer: Signer,
         name: string
     ): ObservableContract<T> {
@@ -56,10 +56,9 @@ export class ContractFactory {
             // because the concurrency limit covers only submits, not tx.wait() calls.
             999999
         )
-        contract.eventEmitter.on('onTransactionConfirm', (methodName: string, transaction: ContractTransaction, receipt: ContractReceipt) => {
+        contract.eventEmitter.on('onTransactionConfirm', (methodName: string, receipt: ContractTransactionReceipt | null) => {
             this.eventEmitter.emit('confirmContractTransaction', {
                 methodName,
-                transaction,
                 receipt
             })
         })

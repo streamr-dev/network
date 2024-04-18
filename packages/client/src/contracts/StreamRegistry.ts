@@ -1,6 +1,4 @@
-import { BigNumber } from '@ethersproject/bignumber'
-import { ContractTransaction } from '@ethersproject/contracts'
-import { Provider } from '@ethersproject/providers'
+import { Provider } from 'ethers/providers'
 import { StreamID, StreamIDUtils, toStreamID } from '@streamr/protocol'
 import { EthereumAddress, GraphQLQuery, Logger, TheGraphClient, collect, isENSName, toEthereumAddress } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -35,6 +33,7 @@ import { StreamFactory } from './../StreamFactory'
 import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, searchStreams as _searchStreams } from './searchStreams'
 import { CacheAsyncFn, CacheAsyncFnType } from '../utils/caches'
 import { RpcProviderFactory } from '../RpcProviderFactory'
+import { ContractTransactionResponse } from 'ethers'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -259,7 +258,7 @@ export class StreamRegistry {
     }
 
     private async getStream_nonCached(streamId: StreamID): Promise<Stream> {
-        let metadata
+        let metadata: string
         try {
             metadata = await queryAllReadonlyContracts((contract: StreamRegistryContract) => {
                 return contract.getStreamMetadata(streamId)
@@ -413,7 +412,7 @@ export class StreamRegistry {
     }
 
     async grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
-        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: EthereumAddress | undefined, solidityType: BigNumber) => {
+        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: EthereumAddress | undefined, solidityType: bigint) => {
             return (user === undefined)
                 ? this.streamRegistryContract!.grantPublicPermission(streamId, solidityType, getEthersOverrides(this.rpcProviderFactory, this.config))
                 : this.streamRegistryContract!.grantPermission(streamId, user, solidityType, getEthersOverrides(this.rpcProviderFactory, this.config))
@@ -422,7 +421,7 @@ export class StreamRegistry {
 
     /* eslint-disable max-len */
     async revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
-        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: EthereumAddress | undefined, solidityType: BigNumber) => {
+        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: EthereumAddress | undefined, solidityType: bigint) => {
             return (user === undefined)
                 ? this.streamRegistryContract!.revokePublicPermission(streamId, solidityType, getEthersOverrides(this.rpcProviderFactory, this.config))
                 : this.streamRegistryContract!.revokePermission(streamId, user, solidityType, getEthersOverrides(this.rpcProviderFactory, this.config))
@@ -431,7 +430,7 @@ export class StreamRegistry {
 
     private async updatePermissions(
         streamIdOrPath: string,
-        createTransaction: (streamId: StreamID, user: EthereumAddress | undefined, solidityType: BigNumber) => Promise<ContractTransaction>,
+        createTransaction: (streamId: StreamID, user: EthereumAddress | undefined, solidityType: bigint) => Promise<ContractTransactionResponse>,
         ...assignments: PermissionAssignment[]
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)

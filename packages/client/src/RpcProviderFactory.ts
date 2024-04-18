@@ -1,8 +1,8 @@
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
-import type { Provider } from '@ethersproject/providers'
-import type { ConnectionInfo } from '@ethersproject/web'
-import { LoggingStaticJsonRpcProvider } from './utils/LoggingStaticJsonRpcProvider'
+import type { Provider } from 'ethers/providers'
+import { LoggingJsonRpcProvider } from './utils/LoggingJsonRpcProvider'
 import { inject, Lifecycle, scoped } from 'tsyringe'
+import { FetchRequest } from 'ethers'
 
 @scoped(Lifecycle.ContainerScoped)
 export class RpcProviderFactory {
@@ -18,11 +18,13 @@ export class RpcProviderFactory {
             // eslint-disable-next-line no-underscore-dangle
             const timeout = this.config._timeouts.jsonRpcTimeout
             const pollInterval = this.config.contracts.pollInterval
-            this.providers = this.config.contracts.streamRegistryChainRPCs.rpcs.map((c: ConnectionInfo) => {
-                const provider = new LoggingStaticJsonRpcProvider({
-                    ...c,
-                    timeout
-                })
+            this.providers = this.config.contracts.streamRegistryChainRPCs.rpcs.map((c) => {
+                const fetchRequest = new FetchRequest(c.url)
+                fetchRequest.timeout = timeout
+                const provider = new LoggingJsonRpcProvider(fetchRequest, {
+                    chainId: this.config.contracts.streamRegistryChainRPCs?.chainId,
+
+                }, { staticNetwork: true })
                 if (pollInterval !== undefined) {
                     provider.pollingInterval = pollInterval
                 }

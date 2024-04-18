@@ -1,7 +1,6 @@
 import 'reflect-metadata'
 import type { Overrides } from '@ethersproject/contracts'
-import type { ExternalProvider } from '@ethersproject/providers'
-import type { ConnectionInfo } from '@ethersproject/web'
+import type { Provider } from 'ethers/providers'
 import cloneDeep from 'lodash/cloneDeep'
 import { DeepRequired, MarkOptional } from 'ts-essentials'
 import { LogLevel, merge } from '@streamr/utils'
@@ -12,7 +11,7 @@ import { GapFillStrategy } from './subscribe/ordering/GapFiller'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 
 export interface ProviderAuthConfig {
-    ethereum: ExternalProvider
+    ethereum: Provider
 }
 
 export interface PrivateKeyAuthConfig {
@@ -213,6 +212,10 @@ export interface ConnectivityMethod {
     host: string
     port: number
     tls: boolean
+}
+
+export interface ConnectionInfo {
+    url: string
 }
 
 export interface ChainConnectionInfo {
