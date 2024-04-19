@@ -2,7 +2,10 @@
     "extends": "../../tsconfig.jest.json",
     "compilerOptions": {
         "outDir": "dist",
-        "noImplicitOverride": false
+        "noImplicitOverride": false,
+        // TODO: Why does node-datachannel require this?
+        "module": "CommonJS",
+        "moduleResolution": "Node10"
     },
     "include": [
         "src/**/*",
