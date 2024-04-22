@@ -261,16 +261,12 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         return this.nearbyContacts
     }
 
-    // TODO why this also return nearbyContacts: should we update the name or the implememtation?
     getClosestRingContactsTo(
         ringIdRaw: RingIdRaw,
         limit?: number,
         excludedIds?: Set<DhtAddress>
     ): { left: DhtNodeRpcRemote[], right: DhtNodeRpcRemote[] } {
         const closest = new RingContactList<DhtNodeRpcRemote>(ringIdRaw, excludedIds)
-        for (const contact of this.nearbyContacts.getAllContactsInUndefinedOrder()) {
-            closest.addContact(contact)
-        }
         this.ringContacts.getAllContacts().map((contact) => closest.addContact(contact))
         // TODO use config option or named constant?
         return closest.getClosestContacts(limit ?? 8)
