@@ -305,10 +305,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.bindRpcLocalMethods()
 
         if (this.config.periodicallyPingNeighbors === true) {
-            await scheduleAtInterval(() => this.peerManager!.pruneOfflineNeighbors(), 60000, true, this.abortController.signal)
+            await scheduleAtInterval(() => this.peerManager!.pruneOfflineNeighbors(), 60000, false, this.abortController.signal)
         }
         if (this.config.periodicallyPingRingContacts === true) {
-            await scheduleAtInterval(() => this.peerManager!.pruneOfflineRingContacts(), 60000, true, this.abortController.signal)
+            await scheduleAtInterval(() => this.peerManager!.pruneOfflineRingContacts(), 60000, false, this.abortController.signal)
         }
     }
 
