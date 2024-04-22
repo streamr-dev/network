@@ -72,6 +72,7 @@ export class EntryPointDiscovery {
     private readonly storeInterval: number
     private readonly networkSplitAvoidedNodes: Set<DhtAddress> = new Set()
     private isLocalNodeStoredAsEntryPoint = false
+    private networkSplitAvoidanceIsRunning = false
     constructor(config: EntryPointDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
@@ -160,6 +161,7 @@ export class EntryPointDiscovery {
     }
 
     private async avoidNetworkSplit(): Promise<void> {
+        this.networkSplitAvoidanceIsRunning = true
         await exponentialRunOff(async () => {
             const rediscoveredEntrypoints = await this.discoverEntryPoints()
             await this.config.layer1Node.joinDht(rediscoveredEntrypoints, false, false)
@@ -179,6 +181,10 @@ export class EntryPointDiscovery {
 
     public isLocalNodeEntryPoint(): boolean {
         return this.isLocalNodeStoredAsEntryPoint
+    }
+
+    public isNetworkSplitAvoidanceRunning(): boolean {
+        return this.networkSplitAvoidanceIsRunning
     }
 
     async destroy(): Promise<void> {
