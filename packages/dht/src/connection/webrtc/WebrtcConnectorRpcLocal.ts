@@ -14,7 +14,7 @@ import { IWebrtcConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.serv
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { ManagedConnection } from '../ManagedConnection'
-import { ManagedWebrtcConnection } from '../ManagedWebrtcConnection'
+import { ManagedWebrtcConnection } from './ManagedWebrtcConnection'
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'
 import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
 import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
