@@ -1,7 +1,7 @@
 import { EntryPointDiscovery } from '../../src/logic/EntryPointDiscovery'
 import { StreamPartReconnect } from '../../src/logic/StreamPartReconnect'
 import { MockLayer1Node } from '../utils/mock/MockLayer1Node'
-import { createFakeEntryPointDiscovery } from '../utils/mock/FakeEntryPointDiscovery'
+import { createFakeEntryPointDiscovery } from '../utils/fake/FakeEntryPointDiscovery'
 import { waitForCondition } from '@streamr/utils'
 
 describe('StreamPartReconnect', () => {
