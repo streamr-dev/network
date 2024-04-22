@@ -1,7 +1,8 @@
 import { ITransport, PeerDescriptor } from '@streamr/dht'
+import { TransportEvents } from '@streamr/dht'
 import { EventEmitter } from 'eventemitter3'
 
-export class MockTransport extends EventEmitter implements ITransport {
+export class MockTransport extends EventEmitter<TransportEvents> implements ITransport {
 
     // eslint-disable-next-line class-methods-use-this
     async send(): Promise<void> {

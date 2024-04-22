@@ -1,8 +1,8 @@
-import { PeerDescriptor, DataEntry, ITransport } from '@streamr/dht'
+import { PeerDescriptor, DataEntry, ITransport, TransportEvents } from '@streamr/dht'
 import { Layer0Node } from '../../../src/logic/Layer0Node'
 import { EventEmitter } from 'eventemitter3'
 
-export class MockLayer0Node extends EventEmitter implements Layer0Node {
+export class MockLayer0Node extends EventEmitter<TransportEvents> implements Layer0Node {
 
     private readonly peerDescriptor: PeerDescriptor
 
