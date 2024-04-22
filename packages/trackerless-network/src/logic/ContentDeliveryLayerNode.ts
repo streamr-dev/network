@@ -117,8 +117,8 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         this.registerDefaultServerMethods()
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
-            'nearbyContactAdded',
-            () => this.onNearbyContactAdded(this.config.layer1Node.getClosestContacts()),
+            'nearbyContactAdded', 
+            () => this.onNearbyContactAdded(),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
@@ -130,13 +130,13 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
             'randomContactAdded',
-            (_peerDescriptor: PeerDescriptor) => this.onRandomContactAdded(),
+            () => this.onRandomContactAdded(),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
             'randomContactRemoved',
-            (_peerDescriptor: PeerDescriptor) => this.onRandomContactRemoved(),
+            () => this.onRandomContactRemoved(),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
@@ -230,12 +230,12 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         ))
     }
 
-    // TODO refactor so that we don't need to give the parameter? (i.e. would be similar to onNearbyContactRemoved and other event handlers)
-    private onNearbyContactAdded(closestContacts: PeerDescriptor[]): void {
+    private onNearbyContactAdded(): void {
         logger.trace(`New nearby contact found`)
         if (this.isStopped()) {
             return
         }
+        const closestContacts = this.config.layer1Node.getClosestContacts()
         this.updateNearbyNodeView(closestContacts)
         if (this.config.neighbors.size() < this.config.neighborTargetCount) {
             this.config.neighborFinder.start()
