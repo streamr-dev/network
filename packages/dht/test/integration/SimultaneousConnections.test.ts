@@ -7,7 +7,7 @@ import { Message, PeerDescriptor } from '../../src/proto/packages/dht/protos/Dht
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
-import { MockTransport } from '../utils/mock/Transport'
+import { MockTransport } from '../utils/mock/MockTransport'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 const BASE_MESSAGE: Message = {
