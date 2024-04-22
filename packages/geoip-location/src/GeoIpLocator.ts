@@ -66,7 +66,7 @@ export class GeoIpLocator {
                 await this.checkDatabase()
                 this.scheduleCheck(this.dbCheckInterval)
             } catch (err) {
-                logger.warn('GeoIpLocator: monthly GeoIP database check failed', { err })
+                logger.warn('GeoIpLocator: GeoIP database check failed', { err })
                 this.scheduleCheck(this.dbCheckErrorInterval)
             } 
         }, timeout)

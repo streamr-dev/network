@@ -3,12 +3,15 @@ import fs from 'fs'
 import { CityResponse, Reader } from 'mmdb-lib'
 import { extractFileFromTarStream } from './tarHelper'
 import { v4 } from 'uuid'
+import { Logger } from '@streamr/utils'
 
 const GEOIP_MIRROR_URL = 'https://raw.githubusercontent.com/GitSquared/node-geolite2-redist/master/redist/'
 const DB_NAME = 'GeoLite2-City'
 const TAR_SUFFFIX = '.tar.gz'
 const DB_SUFFIX = '.mmdb'
 const HASH_SUFFIX = '.mmdb.sha384'
+
+const logger = new Logger(module)
 
 const downloadNewDb = async (url: string, dbFolder: string, remoteHash: string,
     abortSignal: AbortSignal): Promise<void> => {
@@ -25,6 +28,7 @@ const downloadNewDb = async (url: string, dbFolder: string, remoteHash: string,
     let response: Response | undefined
 
     try {
+        logger.debug('Downloading GeoIP database from: ' + url)
         response = await fetch(url, { keepalive: false, signal: abortSignal })
     } catch (e) {
         // Catching and re-throwing as async exception 
@@ -51,7 +55,7 @@ const downloadNewDb = async (url: string, dbFolder: string, remoteHash: string,
             fs.rmSync(downloadFolder, { recursive: true })
         } catch (e2) {
             // ignore error when removing the temporary folder
-        } 
+        }
         throw e
     }
 
@@ -87,6 +91,8 @@ const downloadNewDb = async (url: string, dbFolder: string, remoteHash: string,
         throw new Error('Error setting permissions on ' + dbFileInDbFolder + ', error: ' + err)
     }
 
+    logger.debug('Downloaded GeoIP database to: ' + dbFileInDbFolder)
+
 }
 
 const downloadRemoteHash = async (remoteHashUrl: string, abortSignal: AbortSignal): Promise<string> => {
@@ -94,6 +100,7 @@ const downloadRemoteHash = async (remoteHashUrl: string, abortSignal: AbortSigna
     let response: Response | undefined
 
     try {
+        logger.debug('Downloading GeoIP database hash from: ' + remoteHashUrl)
         response = await fetch(remoteHashUrl, { signal: abortSignal })
     } catch (e) {
         // Catching and re-throwing as async exception 
@@ -162,6 +169,8 @@ export const downloadGeoIpDatabase = async (dbFolder: string, forceReturnReader:
         await downloadNewDb(dbDownloadUrl, dbFolder, remoteHash, abortSignal)
         // return new reader if db was downloaded
         return new Reader<CityResponse>(fs.readFileSync(dbFileInDbFolder))
+    } else {
+        logger.debug('The hash of the local GeoIP database matches the remote hash, no need to download a new database')
     }
 
     if (forceReturnReader) {

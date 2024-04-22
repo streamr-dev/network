@@ -426,12 +426,15 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             let region: number | undefined = undefined
             if (this.config.region !== undefined) {
                 region = this.config.region
+                logger.debug(`Using region ${region} from config when generating local PeerDescriptor`)
             } else if (connectivityResponse.latitude !== undefined && connectivityResponse.longitude !== undefined) {
                 region = getLocalRegionByCoordinates(connectivityResponse.latitude, connectivityResponse.longitude)
+                logger.debug(`Using region ${region} from GeoIP when generating local PeerDescriptor`)
             } else {
                 // as a fallback get the region from the CDN
                 // and if it's not available, use a random region
                 region = await getLocalRegionWithCache(1000 * 60 * 60)
+                logger.debug(`Using region ${region} from CDN when generating local PeerDescriptor`)
             }
             
             this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, region, this.config.nodeId)

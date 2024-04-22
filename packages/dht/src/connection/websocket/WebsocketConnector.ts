@@ -172,11 +172,11 @@ export class WebsocketConnector {
                 try {
                     await geoIpLocator.start()
                     this.geoIpLocator = geoIpLocator
-                } catch (e) {
-                    console.error('Failed to start GeoIpLocator', e)
+                } catch (err) {
+                    logger.error('Failed to start GeoIpLocator', { err })
                 }
             }
-            
+
             const port = await this.websocketServer.start()
             this.selectedPort = port
         }
