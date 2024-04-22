@@ -174,7 +174,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         }
         layer1Node.on('manualRejoinRequired', async () => {
             if (!streamPartReconnect.isRunning() && !entryPointDiscovery.isNetworkSplitAvoidanceRunning()) {
-                logger.debug("Manual rejoin required for stream part", { streamPartId })
+                logger.debug('Manual rejoin required for stream part', { streamPartId })
                 await streamPartReconnect.reconnect()
             }
         })
