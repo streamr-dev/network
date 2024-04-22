@@ -166,30 +166,28 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
                         logger.trace('ping failed ' + nodeId)
                         this.config.connectionLocker?.weakUnlockConnection(nodeId, this.config.lockId)
                         this.removeContact(nodeId)
-                        this.addNearbyContactToBucket()
+                        this.addNearbyContactToNeighbors()
                     }
                 }).catch((_e) => {
                     this.config.connectionLocker?.weakUnlockConnection(nodeId, this.config.lockId)
                     this.removeContact(nodeId)
-                    this.addNearbyContactToBucket()
+                    this.addNearbyContactToNeighbors()
                 })
             }
         }
     }
 
-    // TODO some better name which doesn't use term "bucket"?
-    private addNearbyContactToBucket(): void {
+    private addNearbyContactToNeighbors(): void {
         if (this.stopped) {
             return
         }
-        const closest = this.getNearbyActiveContactNotInBucket()
+        const closest = this.getNearbyActiveContactNotInNeighbors()
         if (closest) {
             this.addContact(closest.getPeerDescriptor())
         }
     }
 
-    // TODO some better name which doesn't use term "bucket"?
-    private getNearbyActiveContactNotInBucket(): DhtNodeRpcRemote | undefined {
+    private getNearbyActiveContactNotInNeighbors(): DhtNodeRpcRemote | undefined {
         for (const contactId of this.nearbyContacts.getContactIds()) {
             if (!this.neighbors.get(getRawFromDhtAddress(contactId)) && this.activeContacts.has(contactId)) {
                 return this.nearbyContacts.getContact(contactId)!

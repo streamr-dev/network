@@ -85,8 +85,7 @@ describe('ContentDeliveryLayerNode', () => {
         expect(randomNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor2))).toBeTruthy()
     })
 
-    // TODO update test description (do not use the term KBucket)
-    it('Adds Nodes from layer1 KBucket to nearbyNodeView if its size is below nodeViewSize', async () => {
+    it('Adds Nodes from layer1 neighbors to nearbyNodeView if its size is below nodeViewSize', async () => {
         const peerDescriptor1 = createMockPeerDescriptor()
         const peerDescriptor2 = createMockPeerDescriptor()
         layer1Node.addNewRandomPeerToKBucket()
