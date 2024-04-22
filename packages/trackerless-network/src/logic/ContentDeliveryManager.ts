@@ -210,7 +210,10 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             entryPoints,
             numberOfNodesPerKBucket: 4,  // TODO use config option or named constant?
             rpcRequestTimeout: EXISTING_CONNECTION_TIMEOUT,
-            dhtJoinTimeout: 20000  // TODO use config option or named constant?
+            dhtJoinTimeout: 20000,  // TODO use config option or named constant?
+            periodicallyPingNeighbors: true,
+            periodicallyPingRingContacts: true
+
         })
     }
 

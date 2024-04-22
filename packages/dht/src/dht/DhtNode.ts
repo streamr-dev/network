@@ -3,6 +3,7 @@ import {
     Logger,
     MetricsContext,
     merge,
+    scheduleAtInterval,
     waitForCondition
 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
@@ -75,6 +76,8 @@ export interface DhtNodeOptions {
     networkConnectivityTimeout?: number
     storageRedundancyFactor?: number
     region?: number
+    periodicallyPingNeighbors?: boolean
+    periodicallyPingRingContacts?: boolean
 
     transport?: ITransport
     connectionLocker?: ConnectionLocker
@@ -299,6 +302,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.storeManager!.onContactAdded(peerDescriptor)
         })
         this.bindRpcLocalMethods()
+
+        if (this.config.periodicallyPingNeighbors === true) {
+            await scheduleAtInterval(() => this.peerManager!.pruneOfflineNeighbors(), 60000, true, this.abortController.signal)
+        }
+        if (this.config.periodicallyPingRingContacts === true) {
+            await scheduleAtInterval(() => this.peerManager!.pruneOfflineRingContacts(), 60000, true, this.abortController.signal)
+        }
     }
 
     private initPeerManager() {

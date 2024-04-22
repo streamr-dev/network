@@ -4,7 +4,14 @@ import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import { ConnectionLocker } from '../../connection/ConnectionManager'
 import { PeerManager } from '../PeerManager'
-import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
+import { 
+    DhtAddress,
+    areEqualPeerDescriptors,
+    createRandomDhtAddress,
+    getDhtAddressFromRaw,
+    getNodeIdFromPeerDescriptor,
+    getRawFromDhtAddress
+} from '../../identifiers'
 import { ServiceID } from '../../types/ServiceID'
 import { RingDiscoverySession } from './RingDiscoverySession'
 import { RingIdRaw, getRingIdRawFromPeerDescriptor } from '../contact/ringIdentifiers'
@@ -184,11 +191,11 @@ export class PeerDiscovery {
         if (!this.recoveryIntervalStarted) {
             this.recoveryIntervalStarted = true
             // TODO use config option or named constant?
-            await scheduleAtInterval(() => this.fetchClosestNeighbors(), 60000, true, this.abortController.signal)
+            await scheduleAtInterval(() => this.fetchClosestAndRandomNeighbors(), 60000, true, this.abortController.signal)
         }
     }
 
-    private async fetchClosestNeighbors(): Promise<void> {
+    private async fetchClosestAndRandomNeighbors(): Promise<void> {
         if (this.isStopped()) {
             return
         }
@@ -197,14 +204,21 @@ export class PeerDiscovery {
             localNodeId,
             this.config.parallelism
         )
-        await Promise.allSettled(
-            nodes.map(async (node: DhtNodeRpcRemote) => {
+        const randomNodes = this.config.peerManager.getClosestNeighborsTo(createRandomDhtAddress(), 1)
+        await Promise.allSettled([
+            ...nodes.map(async (node: DhtNodeRpcRemote) => {
                 const contacts = await node.getClosestPeers(localNodeId)
                 for (const contact of contacts) {
                     this.config.peerManager.addContact(contact)
                 }
+            }),
+            ...randomNodes.map(async (node: DhtNodeRpcRemote) => {
+                const contacts = await node.getClosestPeers(createRandomDhtAddress())
+                for (const contact of contacts) {
+                    this.config.peerManager.addContact(contact)
+                }
             })
-        )
+        ])
     }
 
     public isJoinOngoing(): boolean {
