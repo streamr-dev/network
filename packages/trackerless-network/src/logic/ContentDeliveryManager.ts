@@ -25,6 +25,7 @@ import { Layer1Node } from './Layer1Node'
 import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
 import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode'
 import { ProxyClient } from './proxy/ProxyClient'
+import { StreamPartReconnect } from './StreamPartReconnect'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void
@@ -146,6 +147,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             layer1Node, 
             () => entryPointDiscovery.isLocalNodeEntryPoint()
         )
+        const streamPartReconnect = new StreamPartReconnect(layer1Node, entryPointDiscovery)
         streamPart = {
             proxied: false,
             layer1Node,
@@ -153,6 +155,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             entryPointDiscovery,
             broadcast: (msg: StreamMessage) => node.broadcast(msg),
             stop: async () => {
+                streamPartReconnect.destroy()
                 await entryPointDiscovery.destroy()
                 node.stop()
                 await layer1Node.stop()
@@ -169,6 +172,12 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             const entryPoints = await entryPointDiscovery.discoverEntryPointsFromDht(0)
             await entryPointDiscovery.storeSelfAsEntryPointIfNecessary(entryPoints.discoveredEntryPoints.length)
         }
+        layer1Node.on('manualRejoinRequired', async () => {
+            if (!streamPartReconnect.isRunning() && !entryPointDiscovery.isNetworkSplitAvoidanceRunning()) {
+                logger.debug('Manual rejoin required for stream part', { streamPartId })
+                await streamPartReconnect.reconnect()
+            }
+        })
         node.on('entryPointLeaveDetected', () => handleEntryPointLeave())
         setImmediate(async () => {
             try {
@@ -210,7 +219,9 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             entryPoints,
             numberOfNodesPerKBucket: 4,  // TODO use config option or named constant?
             rpcRequestTimeout: EXISTING_CONNECTION_TIMEOUT,
-            dhtJoinTimeout: 20000  // TODO use config option or named constant?
+            dhtJoinTimeout: 20000,  // TODO use config option or named constant?
+            periodicallyPingNeighbors: true,
+            periodicallyPingRingContacts: true
         })
     }
 
