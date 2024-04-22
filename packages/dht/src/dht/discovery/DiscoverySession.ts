@@ -80,7 +80,7 @@ export class DiscoverySession {
         }
         const uncontacted = getClosestContacts(
             this.config.targetId,
-            this.config.peerManager.getClosestContacts().getAllContactsInUndefinedOrder(),
+            this.config.peerManager.getNearbyContacts().getAllContactsInUndefinedOrder(),
             {
                 maxCount: this.config.parallelism,
                 excludedNodeIds: this.config.contactedPeers
@@ -106,7 +106,7 @@ export class DiscoverySession {
     }
 
     public async findClosestNodes(timeout: number): Promise<void> {
-        if (this.config.peerManager.getContactCount(this.config.contactedPeers) === 0) {
+        if (this.config.peerManager.getNearbyContactCount(this.config.contactedPeers) === 0) {
             return
         }
         setImmediate(() => {

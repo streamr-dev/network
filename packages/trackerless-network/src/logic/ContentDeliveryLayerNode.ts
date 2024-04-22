@@ -117,13 +117,13 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         this.registerDefaultServerMethods()
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
-            'closestContactAdded',
+            'nearbyContactAdded',
             () => this.onNearbyContactAdded(this.config.layer1Node.getClosestContacts()),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
-            'closestContactRemoved',
+            'nearbyContactRemoved',
             () => this.onNearbyContactRemoved(),
             this.abortController.signal
         )

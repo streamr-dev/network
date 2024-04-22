@@ -1,8 +1,8 @@
 import { DhtAddress, PeerDescriptor, RingContacts } from '@streamr/dht'
 
 export interface Layer1NodeEvents {
-    closestContactAdded: (peerDescriptor: PeerDescriptor) => void
-    closestContactRemoved: (peerDescriptor: PeerDescriptor) => void
+    nearbyContactAdded: (peerDescriptor: PeerDescriptor) => void
+    nearbyContactRemoved: (peerDescriptor: PeerDescriptor) => void
     randomContactAdded: (peerDescriptor: PeerDescriptor) => void
     randomContactRemoved: (peerDescriptor: PeerDescriptor) => void
     ringContactAdded: (peerDescriptor: PeerDescriptor) => void
