@@ -1,9 +1,9 @@
 import { PeerDescriptor, RingContacts } from '@streamr/dht'
 import { EventEmitter } from 'eventemitter3'
-import { Layer1Node } from '../../../src/logic/Layer1Node'
+import { Layer1Node, Layer1NodeEvents } from '../../../src/logic/Layer1Node'
 import { createMockPeerDescriptor } from '../utils'
 
-export class MockLayer1Node extends EventEmitter implements Layer1Node {
+export class MockLayer1Node extends EventEmitter<Layer1NodeEvents> implements Layer1Node {
 
     private readonly kbucketPeers: PeerDescriptor[] = []
     private closestContacts: PeerDescriptor[] = []
