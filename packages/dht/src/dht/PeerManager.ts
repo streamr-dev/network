@@ -212,24 +212,14 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         this.neighbors.remove(getRawFromDhtAddress(nodeId))
     }
 
-    // returns all offline neighbors
-    async pruneOfflineNeighbors(): Promise<void> {
-        logger.trace('Pruning offline neighbors', { nodes: this.neighbors.count() })
-        const offlineNeighbors = await pingNodes(this.neighbors.toArray(), this.activeContacts)
+    async pruneOfflineNodes(nodes: DhtNodeRpcRemote[]): Promise<void> {
+        logger.trace('Pruning offline nodes', { nodes: nodes.length })
+        const offlineNeighbors = await pingNodes(nodes, this.activeContacts)
         offlineNeighbors.forEach((offlineNeighbor) => {
-            logger.trace('Removing offline neighbor', { node: getNodeIdFromPeerDescriptor(offlineNeighbor) })
+            logger.trace('Removing offline node', { node: getNodeIdFromPeerDescriptor(offlineNeighbor) })
             this.removeContact(getNodeIdFromPeerDescriptor(offlineNeighbor))
         }) 
     }
-
-    async pruneOfflineRingContacts(): Promise<void> {
-        logger.trace('Pruning offline ring contacts', { nodes: this.neighbors.count() }) 
-        const offlineContacts = await pingNodes(this.ringContacts.getAllContacts(), this.activeContacts)
-        offlineContacts.forEach((contact) => {
-            logger.trace('Removing offline ring contact', { node: getNodeIdFromPeerDescriptor(contact) })
-            this.removeContact(getNodeIdFromPeerDescriptor(contact))
-        })
-    } 
 
     stop(): void {
         this.stopped = true

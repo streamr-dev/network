@@ -121,6 +121,8 @@ type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
 
 const logger = new Logger(module)
 
+const PERIODICAL_PING_INTERVAL = 60 * 1000
+
 export type Events = TransportEvents & DhtNodeEvents
 
 export class DhtNode extends EventEmitter<Events> implements ITransport {
@@ -305,10 +307,19 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.bindRpcLocalMethods()
 
         if (this.config.periodicallyPingNeighbors === true) {
-            await scheduleAtInterval(() => this.peerManager!.pruneOfflineNeighbors(), 60000, false, this.abortController.signal)
+            await scheduleAtInterval(
+                async () => {
+                    const neighbors = this.peerManager!.getNeighbors().map((node) => this.createDhtNodeRpcRemote(node))
+                    await this.peerManager!.pruneOfflineNodes(neighbors)
+                }, PERIODICAL_PING_INTERVAL, false, this.abortController.signal
+            )
         }
         if (this.config.periodicallyPingRingContacts === true) {
-            await scheduleAtInterval(() => this.peerManager!.pruneOfflineRingContacts(), 60000, false, this.abortController.signal)
+            await scheduleAtInterval(
+                async () => {
+                    const ringContacts = this.peerManager!.getRingContacts().getAllContacts()
+                    await this.peerManager!.pruneOfflineNodes(ringContacts)
+                }, PERIODICAL_PING_INTERVAL, false, this.abortController.signal)
         }
     }
 

@@ -9,6 +9,20 @@ import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/Dh
 import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 import { createMockPeerDescriptor } from '../utils/utils'
 
+const createDhtNodeRpcRemote = (
+    peerDescriptor: PeerDescriptor,
+    localPeerDescriptor: PeerDescriptor,
+    pingFailures: Set<DhtAddress>
+) => {
+    const remote = new class extends DhtNodeRpcRemote {
+    // eslint-disable-next-line class-methods-use-this
+        async ping(): Promise<boolean> {
+            return !pingFailures.has(getNodeIdFromPeerDescriptor(peerDescriptor))
+        }
+    }(localPeerDescriptor, peerDescriptor, undefined as any, new MockRpcCommunicator())
+    return remote
+}
+
 const createPeerManager = (
     nodeIds: DhtAddress[], 
     localPeerDescriptor = createMockPeerDescriptor(),
@@ -18,15 +32,7 @@ const createPeerManager = (
         localNodeId: getNodeIdFromPeerDescriptor(localPeerDescriptor),
         localPeerDescriptor: localPeerDescriptor,
         isLayer0: true,
-        createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => {
-            const remote = new class extends DhtNodeRpcRemote {
-                // eslint-disable-next-line class-methods-use-this
-                async ping(): Promise<boolean> {
-                    return !pingFailures.has(getNodeIdFromPeerDescriptor(peerDescriptor))
-                }
-            }(localPeerDescriptor, peerDescriptor, undefined as any, new MockRpcCommunicator())
-            return remote
-        },
+        createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => createDhtNodeRpcRemote(peerDescriptor, localPeerDescriptor, pingFailures),
         hasConnection: () => false
     } as any)
     const contacts = nodeIds.map((n) => ({ nodeId: getRawFromDhtAddress(n), type: NodeType.NODEJS }))
@@ -97,7 +103,7 @@ describe('PeerManager', () => {
         expect(manager.getNeighbors()).toEqual([closesSuccessContact])
     })
 
-    it('pruneOfflineNeighbors removes offline contacts', async () => {
+    it('pruneOfflineNodes removes offline nodes', async () => {
         const localPeerDescriptor = createMockPeerDescriptor()
         const successContacts = range(5).map(() => createMockPeerDescriptor())
         const failureContact = createMockPeerDescriptor()
@@ -109,21 +115,8 @@ describe('PeerManager', () => {
         manager.addContact(failureContact)
         expect(manager.getNeighborCount()).toBe(6)
         failureSet.add(getNodeIdFromPeerDescriptor(failureContact))
-        await manager.pruneOfflineNeighbors()
+        await manager.pruneOfflineNodes(manager.getNeighbors().map((node) => createDhtNodeRpcRemote(node, localPeerDescriptor, failureSet)))
         expect(manager.getNeighborCount()).toBe(5)
-    })
-
-    it('pruneOfflineRingContacts removes offline contacts', async () => {
-        const localPeerDescriptor = createMockPeerDescriptor()
-        const failureContact = createMockPeerDescriptor()
-        const failureSet: Set<DhtAddress> = new Set()
-        const manager = createPeerManager([], localPeerDescriptor, failureSet)
-        manager.addContact(failureContact)
-        // Failure contacts is in the left and right side of the ring
-        expect(manager.getRingContacts().getAllContacts().length).toEqual(2)
-        failureSet.add(getNodeIdFromPeerDescriptor(failureContact))
-        await manager.pruneOfflineRingContacts()
-        expect(manager.getRingContacts().getAllContacts().length).toEqual(0)
     })
 
 })
