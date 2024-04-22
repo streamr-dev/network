@@ -8,7 +8,12 @@ interface GeoIpLookupResult {
     latitude: number
     longitude: number
 }
-export class GeoIpLocator {
+
+// 30 days in milliseconds
+const DEFAULT_DB_CHECK_INTERVAL = 30 * 24 * 60 * 60 * 1000
+// 24 hours in milliseconds
+const DEFAULT_DB_CHECK_ERROR_INTERVAL = 24 * 60 * 60 * 1000
+export class GeoIpLocator { 
     private abortController: AbortController
     private readonly geoIpDatabaseFolder: string
     private readonly dbCheckInterval: number
@@ -17,11 +22,8 @@ export class GeoIpLocator {
     private reader?: Reader<CityResponse>
     private dbCheckTimeout?: LongTimeout.Timeout
 
-    // By default, check the database every 30 days
-    // If the check fails, retry after 24 hours
-
-    constructor(geoIpDatabaseFolder: string, dbCheckInterval: number = 30 * 24 * 60 * 60 * 1000,
-        dbCheckErrorInterval: number = 24 * 60 * 60 * 1000,
+    constructor(geoIpDatabaseFolder: string, dbCheckInterval: number = DEFAULT_DB_CHECK_INTERVAL,
+        dbCheckErrorInterval: number = DEFAULT_DB_CHECK_ERROR_INTERVAL,
         mirrorUrl?: string) {
         this.abortController = new AbortController()
         

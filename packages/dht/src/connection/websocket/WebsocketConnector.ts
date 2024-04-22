@@ -80,7 +80,6 @@ export class WebsocketConnector {
             maxMessageSize: config.maxMessageSize,
             enableTls: config.serverEnableTls
         }) : undefined
-
         this.host = config.host
         this.rpcCommunicator = new ListeningRpcCommunicator(WebsocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, config.transport, {
             rpcRequestTimeout: 15000  // TODO use config option or named constant?
@@ -163,13 +162,11 @@ export class WebsocketConnector {
                         this.attachHandshaker(connection)
                     } else {
                         logger.trace('incoming Websocket connection before localPeerDescriptor was set, closing connection')
-                        connection.close(false).catch(() => { })
+                        connection.close(false).catch(() => {})
                     }
                 }
             })
-            const port = await this.websocketServer.start()
-            this.selectedPort = port
-
+            
             if (this.config.geoIpDatabaseFolder) {
                 const geoIpLocator = new GeoIpLocator(this.config.geoIpDatabaseFolder)
                 try {
@@ -179,6 +176,9 @@ export class WebsocketConnector {
                     console.error('Failed to start GeoIpLocator', e)
                 }
             }
+            
+            const port = await this.websocketServer.start()
+            this.selectedPort = port
         }
     }
 

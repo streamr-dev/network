@@ -7,6 +7,8 @@ describe('GeoIpLocator', () => {
     let testServer: TestServer | undefined
     let dirCounter = 0
     const dbPath = '/tmp'
+    const serverPort = 31992
+    const serverUrl = 'http://localhost:' + serverPort + '/'
 
     const getDbDir = () => {
         dirCounter++
@@ -15,7 +17,7 @@ describe('GeoIpLocator', () => {
 
     beforeAll(async () => {
         testServer = new TestServer()
-        await testServer.start(31992)
+        await testServer.start(serverPort)
     }, 120000)
 
     afterAll(async () => {
@@ -28,7 +30,7 @@ describe('GeoIpLocator', () => {
 
         it('can locate an IP address', async () => {
             dbDir = getDbDir()
-            locator = new GeoIpLocator(dbDir, 5000, 5000, 'http://localhost:31992/')
+            locator = new GeoIpLocator(dbDir, 5000, 5000, serverUrl)
             await locator.start()
 
             // suomi.fi
@@ -47,7 +49,7 @@ describe('GeoIpLocator', () => {
     
         it('returns undefined with invalid IP address', async () => {
             dbDir = getDbDir()
-            locator = new GeoIpLocator(dbDir, 5000, 5000, 'http://localhost:31992/')
+            locator = new GeoIpLocator(dbDir, 5000, 5000, serverUrl)
             await locator.start()
 
             expect(locator.lookup('invalid')).toBeUndefined()
@@ -63,7 +65,7 @@ describe('GeoIpLocator', () => {
 
         it('works also after monthly check', async () => {
             dbDir = getDbDir()
-            locator = new GeoIpLocator(dbDir, 5000, 5000, 'http://localhost:31992/')
+            locator = new GeoIpLocator(dbDir, 5000, 5000, serverUrl)
             await locator.start()
 
             await wait(7000)
@@ -83,7 +85,7 @@ describe('GeoIpLocator', () => {
 
         it('works also after monthly check if db gets deleted before the check', async () => {
             dbDir = getDbDir()
-            locator = new GeoIpLocator(dbDir, 5000, 5000, 'http://localhost:31992/')
+            locator = new GeoIpLocator(dbDir, 5000, 5000, serverUrl)
             await locator.start()
 
             fs.unlinkSync(dbDir + '/GeoLite2-City.mmdb')

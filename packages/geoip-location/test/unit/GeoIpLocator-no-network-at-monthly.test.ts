@@ -6,6 +6,8 @@ import { TestServer } from '../helpers/TestServer'
 describe('GeoIpLocatorNoNetworkAtMonthly', () => {
     let dirCounter = 0
     const dbPath = '/tmp'
+    const serverPort = 31990
+    const serverUrl = 'http://localhost:' + serverPort + '/'
 
     let testServer: TestServer | undefined
     let dbDir: string | undefined
@@ -18,9 +20,9 @@ describe('GeoIpLocatorNoNetworkAtMonthly', () => {
 
     beforeAll(async () => {
         testServer = new TestServer()
-        await testServer.start(31990)
+        await testServer.start(serverPort)
         dbDir = getDbDir()
-        locator = new GeoIpLocator(dbDir, 5000, 10000, 'http://localhost:31990/')
+        locator = new GeoIpLocator(dbDir, 5000, 10000, serverUrl)
         await locator.start()
     }, 120000)
 

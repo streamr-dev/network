@@ -22,7 +22,7 @@ describe('GeoIpLocator', () => {
 
     beforeAll(async () => {
         testServer = new TestServer()
-        await testServer.start(31991)
+        await testServer.start(serverPort)
     }, 120000)
     
     afterEach(async () => {
