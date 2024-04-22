@@ -274,6 +274,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             closest.addContact(contact)
         }
         this.ringContacts.getAllContacts().map((contact) => closest.addContact(contact))
+        // TODO use config option or named constant?
         return closest.getClosestContacts(limit ?? 8)
     }
     
