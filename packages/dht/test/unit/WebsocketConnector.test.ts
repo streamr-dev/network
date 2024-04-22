@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 import { WebsocketConnector } from '../../src/connection/websocket/WebsocketConnector'
 import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { MockTransport } from '../utils/mock/Transport'
+import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('WebsocketConnector', () => {
