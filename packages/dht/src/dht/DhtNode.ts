@@ -60,6 +60,7 @@ export interface DhtNodeEvents {
     randomContactRemoved: (peerDescriptor: PeerDescriptor) => void
     ringContactAdded: (peerDescriptor: PeerDescriptor) => void
     ringContactRemoved: (peerDescriptor: PeerDescriptor) => void
+    manualRejoinRequired: () => void
 }
 
 export interface DhtNodeOptions {
@@ -304,10 +305,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.bindRpcLocalMethods()
 
         if (this.config.periodicallyPingNeighbors === true) {
-            await scheduleAtInterval(() => this.peerManager!.pruneOfflineNeighbors(), 60000, true, this.abortController.signal)
+            await scheduleAtInterval(() => this.peerManager!.pruneOfflineNeighbors(), 60000, false, this.abortController.signal)
         }
         if (this.config.periodicallyPingRingContacts === true) {
-            await scheduleAtInterval(() => this.peerManager!.pruneOfflineRingContacts(), 60000, true, this.abortController.signal)
+            await scheduleAtInterval(() => this.peerManager!.pruneOfflineRingContacts(), 60000, false, this.abortController.signal)
         }
     }
 
@@ -341,18 +342,19 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.emit('ringContactAdded', peerDescriptor)
         })
         this.peerManager.on('kBucketEmpty', () => {
-            if (!this.peerDiscovery!.isJoinOngoing()
-                && this.config.entryPoints
-                && this.config.entryPoints.length > 0
-            ) {
-                setImmediate(async () => {
-                    const contactedPeers = new Set<DhtAddress>()
-                    const distantJoinContactPeers = new Set<DhtAddress>()
-                    // TODO should we catch possible promise rejection?
-                    await Promise.all(this.config.entryPoints!.map((entryPoint) =>
-                        this.peerDiscovery!.rejoinDht(entryPoint, contactedPeers, distantJoinContactPeers)
-                    ))
-                })
+            if (!this.peerDiscovery!.isJoinOngoing()) {
+                if (this.config.entryPoints && this.config.entryPoints.length > 0) {
+                    setImmediate(async () => {
+                        const contactedPeers = new Set<DhtAddress>()
+                        const distantJoinContactPeers = new Set<DhtAddress>()
+                        // TODO should we catch possible promise rejection?
+                        await Promise.all(this.config.entryPoints!.map((entryPoint) =>
+                            this.peerDiscovery!.rejoinDht(entryPoint, contactedPeers, distantJoinContactPeers)
+                        ))
+                    })
+                } else {
+                    this.emit('manualRejoinRequired')
+                }
             }
         })
         this.transport!.on('connected', (peerDescriptor: PeerDescriptor) => {
