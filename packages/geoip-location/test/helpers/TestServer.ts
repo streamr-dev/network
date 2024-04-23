@@ -133,10 +133,10 @@ export class TestServer extends EventEmitter<TestServerEvents> {
             this.server = app.listen(port, '127.0.0.1', () => {
                 logger.info('Test server is running on port ' + port)
                 
-                // The server is not really ready before the next event loop cycle
+                // The server is not really ready after listen callback, possible bug in express
                 setTimeout(() => {
                     resolve()
-                }, 0)
+                }, 1000)
             })
         })
     }
