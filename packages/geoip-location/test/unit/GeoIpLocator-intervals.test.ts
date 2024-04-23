@@ -6,7 +6,7 @@ import { TestServer } from '../helpers/TestServer'
 describe('GeoIpLocator', () => {
   
     const serverPort = 31991
-    const mirrorUrl = 'http://localhost:' + serverPort + '/'
+    const mirrorUrl = 'http://127.0.0.1:' + serverPort + '/'
 
     const DB_FILENAME = 'GeoLite2-City.mmdb'
     let dirCounter = 0

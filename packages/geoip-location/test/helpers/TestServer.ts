@@ -4,6 +4,8 @@ import { Logger, wait } from '@streamr/utils'
 import { fetchFileToMemory } from './fetchFileToMemory'
 import fs from 'fs'
 import { v4 } from 'uuid'
+import EventEmitter from 'eventemitter3'
+import { Duplex, pipeline } from 'stream'
 
 const logger = new Logger(module)
 
@@ -18,7 +20,18 @@ const hashFileName = '/GeoLite2-City.mmdb.sha384'
 
 const CACHE_PATH = '/tmp/geoip-location-test-cache'
 
-export class TestServer {
+export interface TestServerEvents {
+    closed: () => void
+}
+
+function bufferToStream(buf: Buffer) {
+    const tmp = new Duplex()
+    tmp.push(buf)
+    tmp.push(null)
+    return tmp
+}
+
+export class TestServer extends EventEmitter<TestServerEvents> {
     private server?: ServerType
     private abortController?: AbortController
 
@@ -28,7 +41,7 @@ export class TestServer {
     private static async prefetchData(): Promise<void> {
 
         TestServer.hashData = await fetchFileToMemory(hashUrl)
-        
+
         // check if db data is already prefetched to CACHE_PATH
 
         if (fs.existsSync(CACHE_PATH + hashFileName) && fs.existsSync(CACHE_PATH + dbFileName)) {
@@ -55,7 +68,7 @@ export class TestServer {
 
         fs.writeFileSync(CACHE_PATH + hashFileName + uniqueName, TestServer.hashData)
         fs.renameSync(CACHE_PATH + hashFileName + uniqueName, CACHE_PATH + hashFileName)
-        
+
         fs.writeFileSync(CACHE_PATH + dbFileName + uniqueName, TestServer.dbData)
         fs.renameSync(CACHE_PATH + dbFileName + uniqueName, CACHE_PATH + dbFileName)
     }
@@ -98,19 +111,32 @@ export class TestServer {
                     })
                 } else {
                     // send data without throttling from file
-                    res.sendFile(CACHE_PATH + dbFileName)
+                    const readable = bufferToStream(Buffer.from(TestServer.dbData!))
+                    pipeline(readable, res, (err) => {
+                        if (err) {
+                            logger.error('Error sending db file: ', { err })
+                        }
+                    })
                 }
             })
 
             app.get(hashFileName, (_req, res) => {
                 // always send hash data without throttling
-                res.sendFile(CACHE_PATH + hashFileName)
+                const readable = bufferToStream(Buffer.from(TestServer.hashData!))
+                pipeline(readable, res, (err) => {
+                    if (err) {
+                        logger.error('Error sending hash file: ', { err })
+                    }
+                })
             })
 
-            this.server = http.createServer(app)
-            this.server.listen(port, () => {
+            this.server = app.listen(port, '127.0.0.1', () => {
                 logger.info('Test server is running on port ' + port)
-                resolve()
+                
+                // The server is not really ready before the next event loop cycle
+                setTimeout(() => {
+                    resolve()
+                }, 0)
             })
         })
     }
@@ -128,12 +154,21 @@ export class TestServer {
         await this.startServer(port, kiloBytesPerSecond)
     }
 
-    stop(): void {
-        if (this.server) {
-            this.abortController!.abort()
-            this.server.close()
-            this.server.closeAllConnections()
-            this.server = undefined
-        }
+    stop(): Promise<void> {
+        return new Promise((resolve, _reject) => {
+            if (this.server) {
+                this.abortController!.abort()
+
+                this.server.close((err) => {
+                    if (err) {
+                        logger.warn('Error closing server: ', { err })
+                    }
+                    this.server = undefined
+                    this.emit('closed')
+                    resolve()
+                })
+                this.server.closeAllConnections()
+            }
+        })
     }
 }

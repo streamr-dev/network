@@ -4,7 +4,7 @@ import { TestServer } from '../helpers/TestServer'
 
 describe('downloadGeoIpDatabase', () => {
     const serverPort = 31993
-    const mirrorUrl = 'http://localhost:' + serverPort + '/'
+    const mirrorUrl = 'http://127.0.0.1:' + serverPort + '/'
 
     let testServer: TestServer | undefined
     const abortController = new AbortController()
@@ -23,7 +23,7 @@ describe('downloadGeoIpDatabase', () => {
         try {
             fs.rmSync(path, { recursive: true })
         } catch (e) {
-            // ignore error when removing the test
+            // ignore error when removing the test data
         }
     })
 

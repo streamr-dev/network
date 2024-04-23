@@ -8,7 +8,7 @@ describe('GeoIpLocator', () => {
     let dirCounter = 0
     const dbPath = '/tmp'
     const serverPort = 31992
-    const serverUrl = 'http://localhost:' + serverPort + '/'
+    const serverUrl = 'http://127.0.0.1:' + serverPort + '/'
 
     const getDbDir = () => {
         dirCounter++
