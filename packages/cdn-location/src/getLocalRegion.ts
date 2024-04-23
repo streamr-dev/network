@@ -3,6 +3,8 @@ import { fetchAirportCodeFromCdn } from './fetchAirportCodeFromCdn'
 import { Logger } from '@streamr/utils'
 import haversine from 'haversine'
 
+const DEFAULT_MAX_CACHE_AGE = 1000 * 60 * 60 // 1 hour
+
 const logger = new Logger(module)
 
 let cachedLocalRegion: number | undefined = undefined
@@ -48,8 +50,8 @@ const getRandomRegion: () => number = () => {
     return randomRegion
 }
 
-export const getLocalRegionWithCache: (maxCacheAge: number) => Promise<number> =
-    async (maxCacheAge: number) => {
+export const getLocalRegionWithCache: (maxCacheAge?: number) => Promise<number> =
+    async (maxCacheAge = DEFAULT_MAX_CACHE_AGE) => {
         if (cachedLocalRegion === undefined || cachedLocalRegionFetchTime === undefined ||
             Date.now() - cachedLocalRegionFetchTime > maxCacheAge) {
 

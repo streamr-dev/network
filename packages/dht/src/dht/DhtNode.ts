@@ -445,7 +445,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             } else {
                 // as a fallback get the region from the CDN
                 // and if it's not available, use a random region
-                region = await getLocalRegionWithCache(1000 * 60 * 60)
+                region = await getLocalRegionWithCache()
                 logger.debug(`Using region ${region} from CDN when generating local PeerDescriptor`)
             }
             
