@@ -89,7 +89,6 @@ export class WebsocketConnector {
             connect: (targetPeerDescriptor: PeerDescriptor) => this.connect(targetPeerDescriptor),
             hasConnection: (nodeId: DhtAddress): boolean => {
                 if (this.connectingConnections.has(nodeId)
-                    || this.connectingConnections.has(nodeId)
                     || this.ongoingConnectRequests.has(nodeId)
                     || config.hasConnection(nodeId)
                 ) {
