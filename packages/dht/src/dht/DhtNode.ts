@@ -130,7 +130,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private rpcCommunicator?: RoutingRpcCommunicator
     private transport?: ITransport
     private localPeerDescriptor?: PeerDescriptor
-    public router?: Router
+    private router?: Router
     private storeManager?: StoreManager
     private localDataStore: LocalDataStore
     private recursiveOperationManager?: RecursiveOperationManager
@@ -139,6 +139,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     public connectionLocker?: ConnectionLocker
     private started = false
     private abortController = new AbortController()
+
     constructor(conf: DhtNodeOptions) {
         super()
         this.config = merge({
