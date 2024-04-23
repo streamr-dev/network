@@ -158,7 +158,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             maxSize: 100000,  // TODO use config option or named constant?
             allowToContainReferenceId: false
         })
-        this.connections.forEach((connection, key) => {
+        this.connections.forEach((connection) => {
             if (!this.locks.isLocked(connection.getNodeId()) && Date.now() - connection.getLastUsedTimestamp() > maxIdleTime) {
                 logger.trace('disconnecting in timeout interval: ' + getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()))
                 disconnectionCandidates.addContact(connection)
