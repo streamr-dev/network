@@ -457,7 +457,7 @@
                 },
                 "jsonRpcTimeout": {
                     "type": "number",
-                    "default": 30000
+                    "default": 15000
                 }
             },
             "default": {}

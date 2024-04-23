@@ -1,5 +1,5 @@
 import {
-    Logger
+    Logger  
 } from '@streamr/utils'
 import KBucket from 'k-bucket'
 import {
@@ -26,6 +26,21 @@ interface PeerManagerConfig {
     lockId: LockID
     createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => DhtNodeRpcRemote
     hasConnection: (nodeId: DhtAddress) => boolean
+}
+
+// Returns all offline nodes, sets contacts as active if they are online
+const pingNodes = async (nodes: DhtNodeRpcRemote[], activeContacts: Set<DhtAddress>): Promise<PeerDescriptor[]> => {
+    const offlineNeighbors: PeerDescriptor[] = []
+    await Promise.allSettled(nodes.map(async (contact) => {
+        const isOnline = await contact.ping()
+        if (!isOnline) {
+            activeContacts.delete(contact.getNodeId())
+            offlineNeighbors.push(contact.getPeerDescriptor())
+        } else {
+            activeContacts.add(contact.getNodeId())
+        }
+    }))
+    return offlineNeighbors
 }
 
 export interface PeerManagerEvents {
@@ -110,7 +125,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         }
         const sortingList: SortedContactList<DhtNodeRpcRemote> = new SortedContactList({
             referenceId: this.config.localNodeId,
-            maxSize: 100,  // TODO use config option or named constant?
             allowToContainReferenceId: false
         })
         sortingList.addContacts(oldContacts)
@@ -196,6 +210,25 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
     removeNeighbor(nodeId: DhtAddress): void {
         this.neighbors.remove(getRawFromDhtAddress(nodeId))
     }
+
+    // returns all offline neighbors
+    async pruneOfflineNeighbors(): Promise<void> {
+        logger.trace('Pruning offline neighbors', { nodes: this.neighbors.count() })
+        const offlineNeighbors = await pingNodes(this.neighbors.toArray(), this.activeContacts)
+        offlineNeighbors.forEach((offlineNeighbor) => {
+            logger.trace('Removing offline neighbor', { node: getNodeIdFromPeerDescriptor(offlineNeighbor) })
+            this.removeContact(getNodeIdFromPeerDescriptor(offlineNeighbor))
+        }) 
+    }
+
+    async pruneOfflineRingContacts(): Promise<void> {
+        logger.trace('Pruning offline ring contacts', { nodes: this.neighbors.count() }) 
+        const offlineContacts = await pingNodes(this.ringContacts.getAllContacts(), this.activeContacts)
+        offlineContacts.forEach((contact) => {
+            logger.trace('Removing offline ring contact', { node: getNodeIdFromPeerDescriptor(contact) })
+            this.removeContact(getNodeIdFromPeerDescriptor(contact))
+        })
+    } 
 
     stop(): void {
         this.stopped = true

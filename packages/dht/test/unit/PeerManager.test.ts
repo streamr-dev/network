@@ -96,4 +96,34 @@ describe('PeerManager', () => {
         })
         expect(manager.getNeighbors()).toEqual([closesSuccessContact])
     })
+
+    it('pruneOfflineNeighbors removes offline contacts', async () => {
+        const localPeerDescriptor = createMockPeerDescriptor()
+        const successContacts = range(5).map(() => createMockPeerDescriptor())
+        const failureContact = createMockPeerDescriptor()
+        const failureSet: Set<DhtAddress> = new Set()
+        const manager = createPeerManager([], localPeerDescriptor, failureSet)
+        for (const successContact of successContacts) {
+            manager.addContact(successContact)
+        }
+        manager.addContact(failureContact)
+        expect(manager.getNeighborCount()).toBe(6)
+        failureSet.add(getNodeIdFromPeerDescriptor(failureContact))
+        await manager.pruneOfflineNeighbors()
+        expect(manager.getNeighborCount()).toBe(5)
+    })
+
+    it('pruneOfflineRingContacts removes offline contacts', async () => {
+        const localPeerDescriptor = createMockPeerDescriptor()
+        const failureContact = createMockPeerDescriptor()
+        const failureSet: Set<DhtAddress> = new Set()
+        const manager = createPeerManager([], localPeerDescriptor, failureSet)
+        manager.addContact(failureContact)
+        // Failure contacts is in the left and right side of the ring
+        expect(manager.getRingContacts().getAllContacts().length).toEqual(2)
+        failureSet.add(getNodeIdFromPeerDescriptor(failureContact))
+        await manager.pruneOfflineRingContacts()
+        expect(manager.getRingContacts().getAllContacts().length).toEqual(0)
+    })
+
 })
