@@ -31,7 +31,7 @@ describe('Layer0', () => {
             websocketServerEnableTls: false
         })
 
-        mock = jest.spyOn(WebsocketServerConnection.prototype, 'remoteIpAddress', 'get').mockReturnValue(testIp)
+        mock = jest.spyOn(WebsocketServerConnection.prototype, 'getRemoteIpAddress').mockImplementation(() => testIp)
 
     }, 10000)
 

@@ -13,7 +13,7 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
     public readonly connectionId: ConnectionID
     public readonly connectionType = ConnectionType.WEBSOCKET_SERVER
     public readonly resourceURL: Url
-    private readonly remoteAddress: string
+    private readonly remoteIpAddress: string
     private socket?: WebSocket
     private stopped = false
 
@@ -26,7 +26,7 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
 
         this.resourceURL = resourceURL
         this.connectionId = createRandomConnectionId()
-        this.remoteAddress = remoteAddress
+        this.remoteIpAddress = remoteAddress
 
         socket.on('message', this.onMessage)
         socket.on('close', this.onClose)
@@ -36,8 +36,8 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
     }
     
     // use a getter to make it possible to mock the value in tests
-    public get remoteIpAddress(): string {
-        return this.remoteAddress
+    public getRemoteIpAddress(): string {
+        return this.remoteIpAddress
     }
 
     private onMessage(message: WebSocket.RawData, isBinary: boolean): void {

@@ -40,8 +40,8 @@ export const attachConnectivityRequestHandler = (connectionToListenTo: Websocket
 
 const handleIncomingConnectivityRequest = async (connection: WebsocketServerConnection, connectivityRequest: ConnectivityRequest,
     geoIpLocator?: GeoIpLocator): Promise<void> => {
-    const host = connectivityRequest.host ?? connection.remoteIpAddress
-    const ipAddress = connection.remoteIpAddress
+    const host = connectivityRequest.host ?? connection.getRemoteIpAddress()
+    const ipAddress = connection.getRemoteIpAddress()
     let connectivityResponse: ConnectivityResponse
     if (connectivityRequest.port !== DISABLE_CONNECTIVITY_PROBE) {
         connectivityResponse = await connectivityProbe(connectivityRequest, ipAddress, host)

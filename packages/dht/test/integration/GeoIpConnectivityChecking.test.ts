@@ -46,7 +46,7 @@ describe('ConnectivityChecking', () => {
             metricsContext: new MetricsContext()
         })
         await server.start()
-        jest.spyOn(WebsocketServerConnection.prototype, 'remoteIpAddress', 'get').mockReturnValue(testIp)
+        jest.spyOn(WebsocketServerConnection.prototype, 'getRemoteIpAddress').mockImplementation(() => testIp)
     })
 
     afterEach(async () => {
