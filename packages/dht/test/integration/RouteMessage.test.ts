@@ -1,4 +1,4 @@
-import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
+import { DhtNode, DhtNodeEvents } from '../../src/dht/DhtNode'
 import { Message, NodeType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { Logger, runAndWaitForEvents3, waitForCondition } from '@streamr/utils'

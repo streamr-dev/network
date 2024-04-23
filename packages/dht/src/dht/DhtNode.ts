@@ -53,7 +53,7 @@ import { RingIdRaw } from './contact/ringIdentifiers'
 import { getLocalRegion } from '@streamr/cdn-location'
 import { RingContacts } from './contact/RingContactList'
 
-export interface DhtNodeEvents {
+export interface DhtNodeEvents extends TransportEvents {
     closestContactAdded: (peerDescriptor: PeerDescriptor) => void
     closestContactRemoved: (peerDescriptor: PeerDescriptor) => void
     randomContactAdded: (peerDescriptor: PeerDescriptor) => void
@@ -120,10 +120,7 @@ type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
     'metricsContext'>
 
 const logger = new Logger(module)
-
-export type Events = TransportEvents & DhtNodeEvents
-
-export class DhtNode extends EventEmitter<Events> implements ITransport {
+export class DhtNode extends EventEmitter<DhtNodeEvents> implements ITransport {
 
     private readonly config: StrictDhtNodeOptions
     private rpcCommunicator?: RoutingRpcCommunicator
