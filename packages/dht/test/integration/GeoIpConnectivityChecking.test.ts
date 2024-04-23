@@ -1,7 +1,7 @@
 import { MetricsContext } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
-import { MockTransport } from '../utils/mock/Transport'
+import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { sendConnectivityRequest } from '../../src/connection/connectivityChecker'
 import { LOCAL_PROTOCOL_VERSION } from '../../src/helpers/version'
@@ -20,7 +20,7 @@ const dbPath = '/tmp/geoipdatabasesintegration'
 describe('ConnectivityChecking', () => {
 
     let server: ConnectionManager
-    const PORT = 15001
+    const PORT = 15002
     const HOST = '127.0.0.1'
     let mock: jest.SpyInstance<string, [], any> | undefined 
 
