@@ -9,26 +9,24 @@ const doExtractFileFromTarStream = (fileName: string, stream: ReadableStream<any
     // with try-catch does not seem to work
 
     return new Promise((resolve, reject) => {
-        let nodeStream: Readable
         try {
-            nodeStream = Readable.fromWeb(stream)
+            const nodeStream = Readable.fromWeb(stream)
+            pipeline(nodeStream,
+                tar.x({
+                    cwd: downloadFolder,
+                    filter: (entryPath: string): boolean => NodePath.basename(entryPath) === fileName,
+                    strip: 1
+                }), (err) => {
+                    if (err) {
+                        reject(new Error('Error extracting tarball to ' + downloadFolder + ', error: ' + err))
+                    } else {
+                        resolve()
+                    }
+                })
         } catch (e) {
             reject(new Error('Failed to create nodejs Readable from web stream: ' + e))
             return
         }
-
-        pipeline(nodeStream,
-            tar.x({
-                cwd: downloadFolder,
-                filter: (entryPath: string): boolean => NodePath.basename(entryPath) === fileName,
-                strip: 1
-            }), (err) => {
-                if (err) {
-                    reject(new Error('Error extracting tarball to ' + downloadFolder + ', error: ' + err))
-                } else {
-                    resolve()
-                }
-            })
     })
 }
 
