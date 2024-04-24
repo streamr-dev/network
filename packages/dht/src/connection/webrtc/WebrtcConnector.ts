@@ -9,7 +9,7 @@ import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicat
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'
 import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
 import { WebrtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { ManagedWebrtcConnection } from '../ManagedWebrtcConnection'
+import { ManagedWebrtcConnection } from './ManagedWebrtcConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
 import { ManagedConnection } from '../ManagedConnection'
