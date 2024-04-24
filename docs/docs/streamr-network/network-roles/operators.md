@@ -25,6 +25,25 @@ The "leader" node in the Operator's fleet of Streamr nodes will send heartbeat t
 
 When new nodes want to join the network, they need to find someone already in the network. The purpose of the heartbeat process is to maintain publicly discoverable contact details for a decentralized set of nodes, so that joining the network doesn't need to rely on a hard-coded centralized entrypoint.
 
+### Staking Agents
+The Staking Agents feature allows Operators to grant Ethereum accounts the role of `CONTROLLER`. Operators can have any number of Controllers and these authorised accounts are able to act on behalf of the Operator. This role is designed to allow Operators to automate their intereactions with their Operator contract without compromising the security of the Operator funds since Controllers do not have permission to withdraw funds from the Operator contract. See [Staking Agent safety](#staking-agent-safety) for more details about the risks.
+
+#### How to add/remove Staking Agents
+Sign in with your Owner wallet to access your Operator on the Streamr Hub. Scroll down to the section, ***Staking Agents***. From here you can add/remove Staking agent addresses. This transaction must be completed by the Operator owner. Once you have added a new Staking Agent address, you may switch to that account and interact with your Operator on the Hub.
+
+You may of course also interact with the Operator contract directly using Polygonscan for example. Note, the Owner is also a Controller. This is visible on-chain but is not shown in the Hub UI, to avoid confusion.
+
+#### Ways to use Staking Agents
+- **As a Hub "hot wallet".** One useful way to use Staking Agents is to assign a hot wallet that can be used for interacting with your Operator contract on the Streamr Hub. If your owner wallet is a hardware wallet then creating a Staking Agent using a Metamask account will save you from physically signing trivial transactions with the hardware device.
+- **Inside an Operator automation script.** Run a script that picks the best Sponsorships to stake and unstake from.
+
+#### Staking Agent safety
+:::info
+- If you suspect that a Staking Agent address is compromised it should be removed from your Operator ASAP.
+- Staking agents may trigger penalties by engaging in unsuitable Sponsorships or prematurely exiting Sponsorships before the minimum stake period expires.
+- Never share your private keys with anyone. Keep them private.
+:::
+
 ### The Operator plugin
 The Operator plugin is packed with the Streamr node software. It’s essential that Operators run this plugin (or build a functional equivalent) to be able to join Sponsorships and participate on the Streamr Network incentive layer.
 
@@ -37,10 +56,6 @@ The Operator plugin will automatically validate that other Operators are doing w
 
 ### Operator heartbeat
 To observe your Operator's heartbeat, paste in your Operator contract address into [streams search](https://streamr.network/hub/streams) and select the coordination stream, then "Live data". If your node is connectable then there will be a "websocket entry" inside the peer descriptor heartbeats. 
-
-:::info Important
-- There's a known connectivity issue using Brave browser. Your node connectivity status may report incorrectly on the Streamr Hub.
-:::
 
 ### Node redundancy factor
 The redundancy factor sets the amount of duplicated work when running a fleet of multiple nodes. Doing redundant work protects against slashing in case some of your nodes experience failures. For example, setting this to 1 means that no duplication of work occurs (the feature is off), and setting it to 2 means that each stream assignment will be worked on by 2 nodes in your fleet.
