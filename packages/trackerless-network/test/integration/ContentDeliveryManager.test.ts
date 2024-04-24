@@ -44,11 +44,13 @@ describe('ContentDeliveryManager', () => {
         await transport2.start()
         layer0Node1 = new DhtNode({
             transport: transport1,
+            connectionsView: transport1,
             peerDescriptor: peerDescriptor1,
             entryPoints: [peerDescriptor1]
         })
         layer0Node2 = new DhtNode({
             transport: transport2,
+            connectionsView: transport2,
             peerDescriptor: peerDescriptor2,
             entryPoints: [peerDescriptor1]
         })

@@ -64,9 +64,11 @@ describe('DhtNode', () => {
             startRemoteNode(other, environment)
         }
 
+        const transport = environment.createTransport(localPeerDescriptor)
         const localNode = new DhtNode({
             peerDescriptor: localPeerDescriptor,
-            transport: environment.createTransport(localPeerDescriptor),
+            transport,
+            connectionsView: transport,
             entryPoints: [entryPointPeerDescriptor]
         })
         await localNode.start()

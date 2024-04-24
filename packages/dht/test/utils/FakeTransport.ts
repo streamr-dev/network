@@ -2,8 +2,10 @@ import { EventEmitter } from 'eventemitter3'
 import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { Message, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DEFAULT_SEND_OPTIONS, ITransport, SendOptions, TransportEvents } from '../../src/transport/ITransport'
+import { ConnectionsView } from '../../src/exports'
 
-class FakeTransport extends EventEmitter<TransportEvents> implements ITransport {
+// TODO extract ConnectionsView functionality to FakeConnectionsView
+class FakeTransport extends EventEmitter<TransportEvents> implements ITransport, ConnectionsView {
 
     private onSend: (msg: Message) => void
     private readonly localPeerDescriptor: PeerDescriptor
@@ -60,7 +62,7 @@ export class FakeEnvironment {
 
     private transports: FakeTransport[] = []
 
-    createTransport(peerDescriptor: PeerDescriptor): ITransport {
+    createTransport(peerDescriptor: PeerDescriptor): FakeTransport {
         const transport = new FakeTransport(peerDescriptor, (msg) => {
             const targetNode = getDhtAddressFromRaw(msg.targetDescriptor!.nodeId)
             const targetTransport = this.transports.find((t) => getNodeIdFromPeerDescriptor(t.getLocalPeerDescriptor()) === targetNode)

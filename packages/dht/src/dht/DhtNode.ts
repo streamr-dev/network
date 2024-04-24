@@ -52,6 +52,7 @@ import { createPeerDescriptor } from '../helpers/createPeerDescriptor'
 import { RingIdRaw } from './contact/ringIdentifiers'
 import { getLocalRegion } from '@streamr/cdn-location'
 import { RingContacts } from './contact/RingContactList'
+import { ConnectionsView } from '../connection/ConnectionsView'
 
 export interface DhtNodeEvents {
     nearbyContactAdded: (peerDescriptor: PeerDescriptor) => void
@@ -81,6 +82,7 @@ export interface DhtNodeOptions {
     periodicallyPingRingContacts?: boolean
 
     transport?: ITransport
+    connectionsView?: ConnectionsView
     connectionLocker?: ConnectionLocker
     peerDescriptor?: PeerDescriptor
     entryPoints?: PeerDescriptor[]
@@ -135,6 +137,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private recursiveOperationManager?: RecursiveOperationManager
     private peerDiscovery?: PeerDiscovery
     private peerManager?: PeerManager
+    private connectionsView?: ConnectionsView
     private connectionLocker?: ConnectionLocker
     private region?: number
     private started = false
@@ -201,6 +204,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             
         if (this.config.transport) {
             this.transport = this.config.transport
+            this.connectionsView = this.config.connectionsView
             this.connectionLocker = this.config.connectionLocker
             this.localPeerDescriptor = this.transport.getLocalPeerDescriptor()
         } else {
@@ -240,6 +244,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 metricsContext: this.config.metricsContext
             })
             await connectionManager.start()
+            this.connectionsView = connectionManager
             this.connectionLocker = connectionManager
             this.transport = connectionManager
         }
@@ -267,12 +272,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             rpcCommunicator: this.rpcCommunicator,
             localPeerDescriptor: this.localPeerDescriptor!,
             handleMessage: (message: Message) => this.handleMessageFromRouter(message),
-            getConnections: () => this.getConnections()
+            getConnections: () => this.connectionsView!.getConnections()
         })
         this.recursiveOperationManager = new RecursiveOperationManager({
             rpcCommunicator: this.rpcCommunicator,
             router: this.router,
             sessionTransport: this,
+            connectionsView: this.connectionsView!,
             localPeerDescriptor: this.localPeerDescriptor!,
             serviceId: this.config.serviceId,
             localDataStore: this.localDataStore,
@@ -322,7 +328,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             connectionLocker: this.connectionLocker,
             lockId: this.config.serviceId,
             createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => this.createDhtNodeRpcRemote(peerDescriptor),
-            hasConnection: (nodeId: DhtAddress) => this.transport!.hasConnection(nodeId)
+            hasConnection: (nodeId: DhtAddress) => this.connectionsView!.hasConnection(nodeId)
         })
         this.peerManager.on('nearbyContactRemoved', (peerDescriptor: PeerDescriptor) => {
             this.emit('nearbyContactRemoved', peerDescriptor)
@@ -498,7 +504,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     private getConnectedEntryPoints(): PeerDescriptor[] {
         return this.config.entryPoints !== undefined ? this.config.entryPoints.filter((entryPoint) =>
-            this.transport!.hasConnection(getNodeIdFromPeerDescriptor(entryPoint))
+            this.connectionsView!.hasConnection(getNodeIdFromPeerDescriptor(entryPoint))
         ) : []
     }
 
@@ -576,16 +582,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.started ? this.peerManager!.getNeighbors() : []
     }
 
-    public getConnections(): PeerDescriptor[] {
-        return this.transport!.getConnections()
-    }
-
-    public getConnectionCount(): number {
-        return this.transport!.getConnectionCount()
-    }
-
-    public hasConnection(nodeId: DhtAddress): boolean {
-        return this.transport!.hasConnection(nodeId)
+    getConnectionsView(): ConnectionsView {
+        return this.connectionsView!
     }
 
     public getLocalLockedConnectionCount(): number {
@@ -605,7 +603,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             if (!this.peerManager) {
                 return false
             } else {
-                return (this.getConnectionCount() > 0)
+                return (this.connectionsView!.getConnectionCount() > 0)
             }
         }, this.config.networkConnectivityTimeout, 100, this.abortController.signal)
     }
