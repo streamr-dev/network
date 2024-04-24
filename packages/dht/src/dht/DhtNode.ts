@@ -306,20 +306,20 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         })
         this.bindRpcLocalMethods()
 
+        const pruneTargets = []
         if (this.config.periodicallyPingNeighbors === true) {
-            await scheduleAtInterval(
-                async () => {
-                    const neighbors = this.peerManager!.getNeighbors().map((node) => this.createDhtNodeRpcRemote(node))
-                    await this.peerManager!.pruneOfflineNodes(neighbors)
-                }, PERIODICAL_PING_INTERVAL, false, this.abortController.signal
-            )
+            pruneTargets.push(() => this.peerManager!.getNeighbors().map((node) => this.createDhtNodeRpcRemote(node)))
         }
         if (this.config.periodicallyPingRingContacts === true) {
+            pruneTargets.push(() => this.peerManager!.getRingContacts().getAllContacts())
+        }
+        for (const pruneTarget of pruneTargets) {
             await scheduleAtInterval(
                 async () => {
-                    const ringContacts = this.peerManager!.getRingContacts().getAllContacts()
-                    await this.peerManager!.pruneOfflineNodes(ringContacts)
-                }, PERIODICAL_PING_INTERVAL, false, this.abortController.signal)
+                    const nodes = pruneTarget()
+                    await this.peerManager!.pruneOfflineNodes(nodes)
+                }, PERIODICAL_PING_INTERVAL, false, this.abortController.signal
+            )
         }
     }
 
