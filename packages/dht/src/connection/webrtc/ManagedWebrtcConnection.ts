@@ -1,7 +1,7 @@
-import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
-import { ConnectionType } from './IConnection'
-import { ManagedConnection } from './ManagedConnection'
-import { NodeWebrtcConnection } from './webrtc/NodeWebrtcConnection'
+import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { ConnectionType } from '../IConnection'
+import { ManagedConnection } from '../ManagedConnection'
+import { NodeWebrtcConnection } from './NodeWebrtcConnection'
 
 export class ManagedWebrtcConnection extends ManagedConnection {
 

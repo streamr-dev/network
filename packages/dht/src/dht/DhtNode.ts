@@ -55,8 +55,8 @@ import { RingContacts } from './contact/RingContactList'
 import { ConnectionsView } from '../connection/ConnectionsView'
 
 export interface DhtNodeEvents {
-    closestContactAdded: (peerDescriptor: PeerDescriptor) => void
-    closestContactRemoved: (peerDescriptor: PeerDescriptor) => void
+    nearbyContactAdded: (peerDescriptor: PeerDescriptor) => void
+    nearbyContactRemoved: (peerDescriptor: PeerDescriptor) => void
     randomContactAdded: (peerDescriptor: PeerDescriptor) => void
     randomContactRemoved: (peerDescriptor: PeerDescriptor) => void
     ringContactAdded: (peerDescriptor: PeerDescriptor) => void
@@ -131,14 +131,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private rpcCommunicator?: RoutingRpcCommunicator
     private transport?: ITransport
     private localPeerDescriptor?: PeerDescriptor
-    public router?: Router
+    private router?: Router
     private storeManager?: StoreManager
     private localDataStore: LocalDataStore
     private recursiveOperationManager?: RecursiveOperationManager
     private peerDiscovery?: PeerDiscovery
     private peerManager?: PeerManager
     private connectionsView?: ConnectionsView
-    public connectionLocker?: ConnectionLocker
+    private connectionLocker?: ConnectionLocker
     private region?: number
     private started = false
     private abortController = new AbortController()
@@ -306,7 +306,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 )
             }
         })
-        this.on('closestContactAdded', (peerDescriptor: PeerDescriptor) => {
+        this.on('nearbyContactAdded', (peerDescriptor: PeerDescriptor) => {
             this.storeManager!.onContactAdded(peerDescriptor)
         })
         this.bindRpcLocalMethods()
@@ -330,11 +330,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => this.createDhtNodeRpcRemote(peerDescriptor),
             hasConnection: (nodeId: DhtAddress) => this.connectionsView!.hasConnection(nodeId)
         })
-        this.peerManager.on('closestContactRemoved', (peerDescriptor: PeerDescriptor) => {
-            this.emit('closestContactRemoved', peerDescriptor)
+        this.peerManager.on('nearbyContactRemoved', (peerDescriptor: PeerDescriptor) => {
+            this.emit('nearbyContactRemoved', peerDescriptor)
         })
-        this.peerManager.on('closestContactAdded', (peerDescriptor: PeerDescriptor) =>
-            this.emit('closestContactAdded', peerDescriptor)
+        this.peerManager.on('nearbyContactAdded', (peerDescriptor: PeerDescriptor) =>
+            this.emit('nearbyContactAdded', peerDescriptor)
         )
         this.peerManager.on('randomContactRemoved', (peerDescriptor: PeerDescriptor) =>
             this.emit('randomContactRemoved', peerDescriptor)
@@ -453,7 +453,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public getClosestContacts(limit?: number): PeerDescriptor[] {
-        return this.peerManager!.getClosestContacts()
+        return this.peerManager!.getNearbyContacts()
             .getClosestContacts(limit)
             .map((peer) => peer.getPeerDescriptor())
     }
