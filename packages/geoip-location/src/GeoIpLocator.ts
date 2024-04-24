@@ -22,9 +22,12 @@ export class GeoIpLocator {
     private reader?: Reader<CityResponse>
     private dbCheckTimeout?: LongTimeout.Timeout
 
-    constructor(geoIpDatabaseFolder: string, dbCheckInterval: number = DEFAULT_DB_CHECK_INTERVAL,
-        dbCheckErrorInterval: number = DEFAULT_DB_CHECK_ERROR_INTERVAL,
-        mirrorUrl?: string) {
+    constructor(
+        geoIpDatabaseFolder: string,
+        dbCheckInterval = DEFAULT_DB_CHECK_INTERVAL,
+        dbCheckErrorInterval = DEFAULT_DB_CHECK_ERROR_INTERVAL,
+        mirrorUrl?: string
+    ) {
         this.abortController = new AbortController()
         
         // add +- 3 hours of randomness to dbCheckInterval 
@@ -47,10 +50,10 @@ export class GeoIpLocator {
     private checkDatabase: () => Promise<void> = async () => {
         if (this.reader === undefined) {
             // if we do not have a reader, create a new one in any case
-            this.reader = await downloadGeoIpDatabase(this.geoIpDatabaseFolder, true, this.mirrorUrl, this.abortController.signal)
+            this.reader = await downloadGeoIpDatabase(this.geoIpDatabaseFolder, true, this.abortController.signal, this.mirrorUrl)
         } else {
             // if we already have a reader, create a new one only if db has changed
-            const newReader = await downloadGeoIpDatabase(this.geoIpDatabaseFolder, false, this.mirrorUrl, this.abortController.signal)
+            const newReader = await downloadGeoIpDatabase(this.geoIpDatabaseFolder, false, this.abortController.signal, this.mirrorUrl)
             if (newReader !== undefined) {
                 this.reader = newReader
             }

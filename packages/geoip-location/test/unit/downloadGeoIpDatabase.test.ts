@@ -28,7 +28,7 @@ describe('downloadGeoIpDatabase', () => {
     })
 
     it('downloads the database with correct file permissions', async () => {
-        const reader = await downloadGeoIpDatabase(path, false, mirrorUrl, abortController.signal)
+        const reader = await downloadGeoIpDatabase(path, false, abortController.signal, mirrorUrl)
 
         expect(fs.existsSync(path)).toBe(true)
         expect(fs.existsSync(path + '/GeoLite2-City.mmdb')).toBe(true)
@@ -43,24 +43,24 @@ describe('downloadGeoIpDatabase', () => {
 
     it('throws if the path is not writable', async () => {
         const path = '/etc/downloadGeoIpDatabaseTest/'
-        await expect(downloadGeoIpDatabase(path, false, mirrorUrl, abortController.signal)).rejects.toThrow()
+        await expect(downloadGeoIpDatabase(path, false, abortController.signal, mirrorUrl)).rejects.toThrow()
     }, 60000)
 
     it('throws if the path does not exist', async () => {
         const path = '/nonexistent/downloadGeoIpDatabaseTest/'
-        await expect(downloadGeoIpDatabase(path, false, mirrorUrl, abortController.signal)).rejects.toThrow()
+        await expect(downloadGeoIpDatabase(path, false, abortController.signal, mirrorUrl)).rejects.toThrow()
     }, 60000)
 
     it('does not download the database if it is already up to date', async () => {
         const path = '/tmp/downloadGeoIpDatabaseTest/'
         
-        const newReader = await downloadGeoIpDatabase(path, false, mirrorUrl, abortController.signal)
+        const newReader = await downloadGeoIpDatabase(path, false, abortController.signal, mirrorUrl)
         expect(newReader).toBeDefined()
 
-        const newReader2 = await downloadGeoIpDatabase(path, false, mirrorUrl, abortController.signal)
+        const newReader2 = await downloadGeoIpDatabase(path, false, abortController.signal, mirrorUrl)
         expect(newReader2).toBeUndefined()
         
-        const newReader3 = await downloadGeoIpDatabase(path, true, mirrorUrl, abortController.signal)
+        const newReader3 = await downloadGeoIpDatabase(path, true, abortController.signal, mirrorUrl)
         expect(newReader3).toBeDefined()
     }, 60000)
 })

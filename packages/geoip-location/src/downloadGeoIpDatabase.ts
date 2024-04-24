@@ -13,9 +13,12 @@ const HASH_SUFFIX = '.mmdb.sha384'
 
 const logger = new Logger(module)
 
-const downloadNewDb = async (url: string, dbFolder: string, remoteHash: string,
-    abortSignal: AbortSignal): Promise<void> => {
-
+const downloadNewDb = async (
+    url: string,
+    dbFolder: string,
+    remoteHash: string,
+    abortSignal: AbortSignal
+): Promise<void> => {
     // make a unique name for the temporary download folder
     // in case there are multiple downloads happening at the same time
 
@@ -137,8 +140,12 @@ const isDbFileValid = async (dbFile: string, remoteHash: string): Promise<boolea
 // returns a Reader if a new db was downloaded, or if the caller wants to force return a reader
 // also if there was no need to download a new db
 
-export const downloadGeoIpDatabase = async (dbFolder: string, forceReturnReader: boolean,
-    mirrorUrl: string | undefined, abortSignal: AbortSignal): Promise<Reader<CityResponse> | undefined> => {
+export const downloadGeoIpDatabase = async (
+    dbFolder: string,
+    forceReturnReader: boolean,
+    abortSignal: AbortSignal,
+    mirrorUrl?: string
+): Promise<Reader<CityResponse> | undefined> => {
     // This will throw if the download folder is not readable
     if (!fs.existsSync(dbFolder)) {
         // This will throw if the download folder is not writable

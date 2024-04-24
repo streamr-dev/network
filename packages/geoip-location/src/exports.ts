@@ -1,7 +1,1 @@
-import {
-    GeoIpLocator
-} from './GeoIpLocator'
-
-export {
-    GeoIpLocator
-}
+export { GeoIpLocator } from './GeoIpLocator'
