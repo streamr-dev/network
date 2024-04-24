@@ -168,6 +168,8 @@ export class TestServer extends EventEmitter<TestServerEvents> {
                     resolve()
                 })
                 this.server.closeAllConnections()
+            } else {
+                resolve()
             }
         })
     }

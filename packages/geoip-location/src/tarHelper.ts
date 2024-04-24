@@ -9,7 +9,7 @@ const doExtractFileFromTarStream = (fileName: string, stream: ReadableStream<any
     // with try-catch does not seem to work
 
     return new Promise((resolve, reject) => {
-        let nodeStream: Readable | undefined
+        let nodeStream: Readable
         try {
             nodeStream = Readable.fromWeb(stream)
         } catch (e) {

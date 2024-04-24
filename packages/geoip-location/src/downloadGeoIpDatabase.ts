@@ -25,7 +25,7 @@ const downloadNewDb = async (url: string, dbFolder: string, remoteHash: string,
     const dbFileInDownloadFolder = downloadFolder + '/' + dbFileName
     const dbFileInDbFolder = dbFolder + dbFileName
 
-    let response: Response | undefined
+    let response: Response
 
     try {
         logger.debug('Downloading GeoIP database from: ' + url)
@@ -97,7 +97,7 @@ const downloadNewDb = async (url: string, dbFolder: string, remoteHash: string,
 
 const downloadRemoteHash = async (remoteHashUrl: string, abortSignal: AbortSignal): Promise<string> => {
     // download the hash of the latest GeoIP database using fetch as text and trim it
-    let response: Response | undefined
+    let response: Response
 
     try {
         logger.debug('Downloading GeoIP database hash from: ' + remoteHashUrl)

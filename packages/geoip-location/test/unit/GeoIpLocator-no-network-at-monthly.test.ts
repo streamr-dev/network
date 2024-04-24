@@ -9,9 +9,9 @@ describe('GeoIpLocatorNoNetworkAtMonthly', () => {
     const serverPort = 31990
     const serverUrl = 'http://localhost:' + serverPort + '/'
 
-    let testServer: TestServer | undefined
-    let dbDir: string | undefined
-    let locator: GeoIpLocator | undefined
+    let testServer: TestServer
+    let dbDir: string
+    let locator: GeoIpLocator
 
     const getDbDir = () => {
         dirCounter++

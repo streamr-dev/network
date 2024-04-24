@@ -8,14 +8,12 @@ describe('tarHelper', () => {
     const tarFileName = 'GeoLite2-City.tar.gz'
     const hashFileName = 'GeoLite2-City.mmdb.sha384'
 
-    let testServer: TestServer | undefined
+    let testServer: TestServer
 
     afterEach(async () => {
-        if (testServer != undefined) {
-            await testServer.stop()
-        }
+        await testServer!.stop()
     })
-
+    
     describe('testsWithNormalServer', () => {
         const serverPort = 3197
         
@@ -81,8 +79,6 @@ describe('tarHelper', () => {
             const closedPromise = waitForEvent3<TestServerEvents>(testServer!, 'closed', 10000)
             setTimeout(async () => {
                 await testServer!.stop()
-                // eslint-disable-next-line require-atomic-updates
-                testServer = undefined
             }, 5000)
 
             const url = serverUrl + serverPort + '/' + tarFileName

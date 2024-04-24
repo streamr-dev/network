@@ -11,9 +11,9 @@ describe('GeoIpLocator', () => {
     const DB_FILENAME = 'GeoLite2-City.mmdb'
     let dirCounter = 0
     const dbPath = '/tmp'
-    let dbDir: string | undefined
-    let locator: GeoIpLocator | undefined
-    let testServer: TestServer | undefined
+    let dbDir: string
+    let locator: GeoIpLocator
+    let testServer: TestServer
 
     const getDbDir = () => {
         dirCounter++

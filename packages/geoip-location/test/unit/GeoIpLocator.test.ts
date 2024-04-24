@@ -4,7 +4,7 @@ import { wait } from '@streamr/utils'
 import { TestServer } from '../helpers/TestServer'
 
 describe('GeoIpLocator', () => {
-    let testServer: TestServer | undefined
+    let testServer: TestServer
     let dirCounter = 0
     const dbPath = '/tmp'
     const serverPort = 31992
@@ -25,8 +25,8 @@ describe('GeoIpLocator', () => {
     })
 
     describe('tests with normal startup and shutdown', () => {
-        let dbDir: string | undefined
-        let locator: GeoIpLocator | undefined
+        let dbDir: string
+        let locator: GeoIpLocator
 
         it('can locate an IP address', async () => {
             dbDir = getDbDir()

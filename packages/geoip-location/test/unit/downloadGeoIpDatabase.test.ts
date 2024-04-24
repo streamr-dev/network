@@ -6,7 +6,7 @@ describe('downloadGeoIpDatabase', () => {
     const serverPort = 31993
     const mirrorUrl = 'http://127.0.0.1:' + serverPort + '/'
 
-    let testServer: TestServer | undefined
+    let testServer: TestServer
     const abortController = new AbortController()
     const path = '/tmp/downloadGeoIpDatabaseTest/'
 
