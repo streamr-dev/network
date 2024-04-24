@@ -13,7 +13,7 @@ describe('tarHelper', () => {
     afterEach(async () => {
         await testServer!.stop()
     })
-    
+
     describe('testsWithNormalServer', () => {
         const serverPort = 3197
         
@@ -28,7 +28,7 @@ describe('tarHelper', () => {
         
             await extractFileFromTarStream(dbFileName, result.body!, '/tmp')
             
-        }, 120000)
+        })
 
         it('throws asynchonously if the stream contains garbage', async () => {
             const url = serverUrl + serverPort + '/' + hashFileName
@@ -38,7 +38,7 @@ describe('tarHelper', () => {
                 .rejects
                 .toThrow('TAR_BAD_ARCHIVE: Unrecognized archive format')
 
-        }, 120000)
+        })
 
         it('throws asynchonously if the stream does not contain the desired file', async () => {
             const url = serverUrl + serverPort + '/' + tarFileName
@@ -48,7 +48,7 @@ describe('tarHelper', () => {
                 .rejects
                 .toThrow('File not found in tarball: nonexisting-filename')
 
-        }, 120000)
+        })
     })
 
     describe('testsWithThrottledServer', () => {
@@ -73,7 +73,7 @@ describe('tarHelper', () => {
                 .rejects
                 .toThrow('AbortError: This operation was aborted')
 
-        }, 120000)
+        }, 15 * 1000)
 
         it('throws asynchonously if server gets shut down', async () => {
             const closedPromise = waitForEvent3<TestServerEvents>(testServer!, 'closed', 10000)
@@ -87,6 +87,6 @@ describe('tarHelper', () => {
                 .rejects
                 .toThrow('Error extracting tarball')
             await closedPromise
-        }, 120000)
+        }, 15 * 1000)
     })
 })
