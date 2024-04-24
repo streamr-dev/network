@@ -25,7 +25,6 @@ const doExtractFileFromTarStream = (fileName: string, stream: ReadableStream<any
                 })
         } catch (e) {
             reject(new Error('Failed to create nodejs Readable from web stream: ' + e))
-            return
         }
     })
 }
