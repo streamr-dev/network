@@ -69,12 +69,12 @@ describe('PeerManager', () => {
         expect(actual.map((n) => n.getNodeId())).toEqual(expected)
     })
 
-    it('getContactCount', () => {
+    it('getNearbyContactCount', () => {
         const nodeIds = range(10).map(() => createRandomDhtAddress())
         const manager = createPeerManager(nodeIds)
-        expect(manager.getContactCount()).toBe(10)
-        expect(manager.getContactCount(new Set(sampleSize(nodeIds, 2)))).toBe(8)
-        expect(manager.getContactCount(new Set([sample(nodeIds)!, createRandomDhtAddress()]))).toBe(9)
+        expect(manager.getNearbyContactCount()).toBe(10)
+        expect(manager.getNearbyContactCount(new Set(sampleSize(nodeIds, 2)))).toBe(8)
+        expect(manager.getNearbyContactCount(new Set([sample(nodeIds)!, createRandomDhtAddress()]))).toBe(9)
     })
 
     it('addContact: ping fails', async () => {
