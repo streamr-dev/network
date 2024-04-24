@@ -2,10 +2,7 @@
     "extends": "../../tsconfig.node.json",
     "compilerOptions": {
         "outDir": "dist",
-        "noImplicitOverride": false,
-        // TODO: Why does node-datachannel require this?
-        "module": "CommonJS",
-        "moduleResolution": "Node10"
+        "noImplicitOverride": false
     },
     "include": [
         "src/**/*",

@@ -2,13 +2,7 @@
     "extends": "../../tsconfig.jest.json",
     "compilerOptions": {
         "outDir": "dist",
-        "noImplicitOverride": false,
-        // node-datachannel requires these settings
-        // because it is missing index.d.cts file.
-        // With these settings tsc interprets index.d.ts
-        // to be a CommonJS file.
-        "module": "CommonJS",
-        "moduleResolution": "Node10"
+        "noImplicitOverride": false
     },
     "include": [
         "src/**/*",
