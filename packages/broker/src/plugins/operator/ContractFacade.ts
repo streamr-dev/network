@@ -463,7 +463,14 @@ export class ContractFacade {
 
     async voteOnFlag(sponsorship: string, targetOperator: string, kick: boolean): Promise<void> {
         const voteData = kick ? VOTE_KICK : VOTE_NO_KICK
-        // typical gas cost 99336, but this has shown insufficient sometimes
+
+        // This will throw if voteOnFlag would revert e.g. due to flag already being closed.
+        // Since we bypass gas estimation in the actual transaction (by setting gasLimit),
+        //   we should do this step manually to avoid wasting the nodes' MATIC on reverting transactions.
+        await this.operatorContract.estimateGas.voteOnFlag(sponsorship, targetOperator, voteData)
+
+        // voting is cheap but closing flags is expensive; but no one knows they will close it, so estimateGas gives wrong estimate.
+        // typical flag closing costs 500k ~ 1M, but this has shown insufficient sometimes
         // TODO should we set gasLimit only here, or also for other transactions made by ContractFacade?
         await (await this.operatorContract.voteOnFlag(
             sponsorship,
