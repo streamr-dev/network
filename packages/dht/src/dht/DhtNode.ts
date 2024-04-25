@@ -315,7 +315,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
         const pruneTargets = []
         if (this.config.periodicallyPingNeighbors === true) {
-            pruneTargets.push(() => this.peerManager!.getNeighbors().map((node) => this.createDhtNodeRpcRemote(node)))
+            pruneTargets.push(() => this.peerManager!.getNeighbors().map((node) => this.createDhtNodeRpcRemote(node.getPeerDescriptor())))
         }
         if (this.config.periodicallyPingRingContacts === true) {
             pruneTargets.push(() => this.peerManager!.getRingContacts().getAllContacts())
@@ -590,7 +590,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public getNeighbors(): PeerDescriptor[] {
-        return this.started ? this.peerManager!.getNeighbors() : []
+        return this.started ? this.peerManager!.getNeighbors().map((remote: DhtNodeRpcRemote) => remote.getPeerDescriptor()) : []
     }
 
     getConnectionsView(): ConnectionsView {

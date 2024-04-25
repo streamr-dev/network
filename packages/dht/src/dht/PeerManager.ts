@@ -277,8 +277,8 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         return this.neighbors.count()
     }
 
-    getNeighbors(): PeerDescriptor[] {
-        return this.neighbors.toArray().map((rpcRemote: DhtNodeRpcRemote) => rpcRemote.getPeerDescriptor())
+    getNeighbors(): ReadonlyArray<DhtNodeRpcRemote> {
+        return this.neighbors.toArray()
     }
 
     setContactActive(nodeId: DhtAddress): void {

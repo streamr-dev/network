@@ -69,7 +69,7 @@ describe('PeerManager', () => {
         const actual = manager.getClosestNeighborsTo(referenceId, 5, excluded)
 
         const expected = sortBy(
-            without(manager.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n)), ...Array.from(excluded.values())),
+            without(manager.getNeighbors().map((n) => n.getNodeId()), ...Array.from(excluded.values())),
             (n: DhtAddress) => getDistance(getRawFromDhtAddress(n), getRawFromDhtAddress(referenceId))
         ).slice(0, 5)
         expect(actual.map((n) => n.getNodeId())).toEqual(expected)
@@ -97,7 +97,7 @@ describe('PeerManager', () => {
         manager.addContact(failureContact)
         const closesSuccessContact = getClosestContact(successContacts, getNodeIdFromPeerDescriptor(localPeerDescriptor))!
         await waitForCondition(() => {
-            const neighborNodeIds = manager.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
+            const neighborNodeIds = manager.getNeighbors().map((n) => n.getNodeId())
             return neighborNodeIds.includes(getNodeIdFromPeerDescriptor(closesSuccessContact))
         })
         expect(manager.getNeighbors()).toEqual([closesSuccessContact])
@@ -115,7 +115,9 @@ describe('PeerManager', () => {
         manager.addContact(failureContact)
         expect(manager.getNeighborCount()).toBe(6)
         failureSet.add(getNodeIdFromPeerDescriptor(failureContact))
-        await manager.pruneOfflineNodes(manager.getNeighbors().map((node) => createDhtNodeRpcRemote(node, localPeerDescriptor, failureSet)))
+        await manager.pruneOfflineNodes(
+            manager.getNeighbors().map((node) => createDhtNodeRpcRemote(node.getPeerDescriptor(), localPeerDescriptor, failureSet))
+        )
         expect(manager.getNeighborCount()).toBe(5)
     })
 
