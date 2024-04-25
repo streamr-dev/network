@@ -268,7 +268,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             serviceId: this.config.serviceId,
             parallelism: this.config.joinParallelism,
             connectionLocker: this.connectionLocker,
-            peerManager: this.peerManager!
+            peerManager: this.peerManager!,
+            abortSignal: this.abortController.signal
         })
         this.router = new Router({
             rpcCommunicator: this.rpcCommunicator,
@@ -635,7 +636,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.rpcCommunicator!.stop()
         this.router!.stop()
         this.recursiveOperationManager!.stop()
-        this.peerDiscovery!.stop()
         if (this.config.transport === undefined) {
             // if the transport was not given in config, the instance was created in start() and
             // this component is responsible for stopping it
