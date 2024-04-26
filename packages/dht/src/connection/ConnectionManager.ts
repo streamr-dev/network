@@ -24,6 +24,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ConnectionLockRpcLocal } from './ConnectionLockRpcLocal'
 import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { getOfferer } from '../helpers/offering'
+import { ConnectionsView } from './ConnectionsView'
 
 export interface ConnectionManagerConfig {
     maxConnections?: number
@@ -93,7 +94,7 @@ export const getNodeIdOrUnknownFromPeerDescriptor = (peerDescriptor: PeerDescrip
     }
 }
 
-export class ConnectionManager extends EventEmitter<TransportEvents> implements ITransport, ConnectionLocker {
+export class ConnectionManager extends EventEmitter<TransportEvents> implements ITransport, ConnectionsView, ConnectionLocker {
 
     private config: ConnectionManagerConfig
     private readonly metricsContext: MetricsContext

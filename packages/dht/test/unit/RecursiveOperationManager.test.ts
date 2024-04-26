@@ -13,12 +13,13 @@ import {
 import { RecursiveOperationManager } from '../../src/dht/recursive-operation/RecursiveOperationManager'
 import { LocalDataStore } from '../../src/dht/store/LocalDataStore'
 import { v4 } from 'uuid'
-import { MockRouter } from '../utils/mock/Router'
-import { MockTransport } from '../utils/mock/Transport'
+import { MockRouter } from '../utils/mock/MockRouter'
+import { MockTransport } from '../utils/mock/MockTransport'
 import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
 import { Router } from '../../src/dht/routing/Router'
 import { ITransport } from '../../src/transport/ITransport'
 import { areEqualPeerDescriptors, createRandomDhtAddress } from '../../src/identifiers'
+import { MockConnectionsView } from '../utils/mock/MockConnectionsView'
 
 const createMockRouter = (error?: RouteMessageError): Partial<Router> => {
     return {
@@ -77,6 +78,7 @@ describe('RecursiveOperationManager', () => {
             serviceId: 'RecursiveOperationManager',
             localDataStore: new LocalDataStore(30 * 100),
             sessionTransport: transport,
+            connectionsView: new MockConnectionsView(),
             addContact: () => {},
             rpcCommunicator: rpcCommunicator as any,
             createDhtNodeRpcRemote: () => undefined as any

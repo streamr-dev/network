@@ -31,9 +31,9 @@
     "dependencies": {
         "@manypkg/cli": "^0.21.2",
         "@protobuf-ts/plugin": "^2.9.3",
-        "@tsconfig/node20": "^20.1.2",
+        "@tsconfig/node18": "^18.2.4",
         "@types/jest": "^29.5.12",
-        "@types/node": "^20.10.7",
+        "@types/node": "^18.19.31",
         "@typescript-eslint/eslint-plugin": "^7.1.1",
         "@typescript-eslint/parser": "^7.1.1",
         "cli-table": "^0.3.6",

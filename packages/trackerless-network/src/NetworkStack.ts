@@ -168,7 +168,7 @@ export class NetworkStack {
         return {
             peerDescriptor: this.getLayer0Node().getLocalPeerDescriptor(),
             controlLayer: {
-                connections: this.getLayer0Node().getConnections(),
+                connections: this.getLayer0Node().getConnectionsView().getConnections(),
                 neighbors: this.getLayer0Node().getNeighbors()
             },
             streamPartitions: this.getContentDeliveryManager().getNodeInfo(),

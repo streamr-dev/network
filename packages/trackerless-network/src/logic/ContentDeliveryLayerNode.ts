@@ -65,6 +65,8 @@ export interface StrictContentDeliveryLayerNodeConfig {
     rpcRequestTimeout?: number
 }
 
+const RANDOM_NODE_VIEW_SIZE = 20
+
 const logger = new Logger(module)
 
 export class ContentDeliveryLayerNode extends EventEmitter<Events> {
@@ -117,26 +119,26 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         this.registerDefaultServerMethods()
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
-            'closestContactAdded',
-            () => this.onNearbyContactAdded(this.config.layer1Node.getClosestContacts()),
+            'nearbyContactAdded', 
+            () => this.onNearbyContactAdded(),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
-            'closestContactRemoved',
+            'nearbyContactRemoved',
             () => this.onNearbyContactRemoved(),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
             'randomContactAdded',
-            (_peerDescriptor: PeerDescriptor) => this.onRandomContactAdded(),
+            () => this.onRandomContactAdded(),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
             this.config.layer1Node as any,
             'randomContactRemoved',
-            (_peerDescriptor: PeerDescriptor) => this.onRandomContactRemoved(),
+            () => this.onRandomContactRemoved(),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
@@ -230,12 +232,12 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         ))
     }
 
-    // TODO refactor so that we don't need to give the parameter? (i.e. would be similar to onNearbyContactRemoved and other event handlers)
-    private onNearbyContactAdded(closestContacts: PeerDescriptor[]): void {
+    private onNearbyContactAdded(): void {
         logger.trace(`New nearby contact found`)
         if (this.isStopped()) {
             return
         }
+        const closestContacts = this.config.layer1Node.getClosestContacts()
         this.updateNearbyNodeView(closestContacts)
         if (this.config.neighbors.size() < this.config.neighborTargetCount) {
             this.config.neighborFinder.start()
@@ -281,7 +283,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         if (this.isStopped()) {
             return
         }
-        const randomContacts = this.config.layer1Node.getRandomContacts()
+        const randomContacts = this.config.layer1Node.getRandomContacts(RANDOM_NODE_VIEW_SIZE)
         this.config.randomNodeView.replaceAll(randomContacts.map((descriptor) =>
             new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,
@@ -301,7 +303,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         if (this.isStopped()) {
             return
         }
-        const randomContacts = this.config.layer1Node.getRandomContacts()
+        const randomContacts = this.config.layer1Node.getRandomContacts(RANDOM_NODE_VIEW_SIZE)
         this.config.randomNodeView.replaceAll(randomContacts.map((descriptor) =>
             new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,
