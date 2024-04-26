@@ -19,7 +19,7 @@ export interface Layer1Node {
     off<T extends keyof Layer1NodeEvents>(eventName: T, listener: () => void): void
     removeContact: (nodeId: DhtAddress) => void
     getClosestContacts: (maxCount?: number) => PeerDescriptor[]
-    getRandomContacts: () => PeerDescriptor[]
+    getRandomContacts: (maxCount?: number) => PeerDescriptor[]
     getRingContacts: () => RingContacts
     getNeighbors: () => PeerDescriptor[]
     getNeighborCount(): number
