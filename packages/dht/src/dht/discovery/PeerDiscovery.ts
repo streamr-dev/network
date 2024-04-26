@@ -120,7 +120,8 @@ export class PeerDiscovery {
             parallelism: this.config.parallelism,
             noProgressLimit: this.config.joinNoProgressLimit,
             peerManager: this.config.peerManager,
-            contactedPeers
+            contactedPeers,
+            abortSignal: this.abortController.signal
         }
         return new RingDiscoverySession(sessionOptions)
     }
@@ -235,8 +236,5 @@ export class PeerDiscovery {
 
     public stop(): void {
         this.abortController.abort()
-        this.ongoingRingDiscoverySessions.forEach((session) => {
-            session.stop()
-        })
     }
 }
