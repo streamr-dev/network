@@ -10,12 +10,12 @@ import {
 } from '../../identifiers'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { ServiceID } from '../../types/ServiceID'
-import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { PeerManager } from '../PeerManager'
-import { getClosestContacts } from '../contact/getClosestContacts'
+import { getClosestNodes } from '../contact/getClosestNodes'
 import { RingIdRaw, getRingIdRawFromPeerDescriptor } from '../contact/ringIdentifiers'
 import { DiscoverySession } from './DiscoverySession'
 import { RingDiscoverySession } from './RingDiscoverySession'
+import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 
 interface PeerDiscoveryConfig {
     localPeerDescriptor: PeerDescriptor
@@ -25,6 +25,7 @@ interface PeerDiscoveryConfig {
     joinTimeout: number
     connectionLocker?: ConnectionLocker
     peerManager: PeerManager
+    createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => DhtNodeRpcRemote
 }
 
 export const createDistantDhtAddress = (address: DhtAddress): DhtAddress => {
@@ -110,7 +111,8 @@ export class PeerDiscovery {
             noProgressLimit: this.config.joinNoProgressLimit,
             peerManager: this.config.peerManager,
             contactedPeers,
-            abortSignal: this.abortController.signal
+            abortSignal: this.abortController.signal,
+            createDhtNodeRpcRemote: this.config.createDhtNodeRpcRemote
         }
         return new DiscoverySession(sessionOptions)
     }
@@ -121,7 +123,8 @@ export class PeerDiscovery {
             parallelism: this.config.parallelism,
             noProgressLimit: this.config.joinNoProgressLimit,
             peerManager: this.config.peerManager,
-            contactedPeers
+            contactedPeers,
+            createDhtNodeRpcRemote: this.config.createDhtNodeRpcRemote
         }
         return new RingDiscoverySession(sessionOptions)
     }
@@ -201,22 +204,28 @@ export class PeerDiscovery {
             return
         }
         const localNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
-        const nodes = getClosestContacts(localNodeId, this.config.peerManager.getNeighbors(), { maxCount: this.config.parallelism })
-        const randomNodes = getClosestContacts(createRandomDhtAddress(), this.config.peerManager.getNeighbors(), { maxCount: 1 })
+        const nodes = this.getClosestNeighbors(localNodeId, this.config.parallelism)
+        const randomNodes = this.getClosestNeighbors(createRandomDhtAddress(), 1)
         await Promise.allSettled([
-            ...nodes.map(async (node: DhtNodeRpcRemote) => {
-                const contacts = await node.getClosestPeers(localNodeId)
+            ...nodes.map(async (node: PeerDescriptor) => {
+                const remote = this.config.createDhtNodeRpcRemote(node)
+                const contacts = await remote.getClosestPeers(localNodeId)
                 for (const contact of contacts) {
                     this.config.peerManager.addContact(contact)
                 }
             }),
-            ...randomNodes.map(async (node: DhtNodeRpcRemote) => {
-                const contacts = await node.getClosestPeers(createRandomDhtAddress())
+            ...randomNodes.map(async (node: PeerDescriptor) => {
+                const remote = this.config.createDhtNodeRpcRemote(node)
+                const contacts = await remote.getClosestPeers(createRandomDhtAddress())
                 for (const contact of contacts) {
                     this.config.peerManager.addContact(contact)
                 }
             })
         ])
+    }
+
+    private getClosestNeighbors(referenceId: DhtAddress, maxCount: number): PeerDescriptor[] {
+        return getClosestNodes(referenceId, this.config.peerManager.getNeighbors().map((n) => n.getPeerDescriptor()), { maxCount })
     }
 
     public isJoinOngoing(): boolean {

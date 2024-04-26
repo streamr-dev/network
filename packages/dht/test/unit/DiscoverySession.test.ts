@@ -71,7 +71,8 @@ describe('DiscoverySession', () => {
             noProgressLimit: NO_PROGRESS_LIMIT,
             peerManager,
             contactedPeers,
-            abortSignal: new AbortController().signal
+            abortSignal: new AbortController().signal,
+            createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => createMockRpcRemote(peerDescriptor) as any
         })
         await session.findClosestNodes(1000)
         expect(queriedNodes.length).toBeGreaterThanOrEqual(1)
