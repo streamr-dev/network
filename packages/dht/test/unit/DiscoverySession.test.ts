@@ -6,6 +6,7 @@ import { DiscoverySession } from '../../src/dht/discovery/DiscoverySession'
 import { DhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createTestTopology } from '../utils/topology'
+import { getClosestNodes } from '../../src/dht/contact/getClosestNodes'
 
 const NODE_COUNT = 40
 const MIN_NEIGHBOR_COUNT = 2  // nodes can get more neighbors when we merge network partitions
@@ -53,7 +54,7 @@ describe('DiscoverySession', () => {
                 queriedNodes.push(nodeId)
                 await wait(10)
                 const peerManager = createPeerManager(nodeId)
-                return peerManager.getClosestNeighborsTo(referenceId, QUERY_BATCH_SIZE).map((remote) => remote.getPeerDescriptor())
+                return getClosestNodes(referenceId, peerManager.getNeighbors().map((n) => n.getPeerDescriptor()), { maxCount: QUERY_BATCH_SIZE })
             },
             ping: async () => true
         }

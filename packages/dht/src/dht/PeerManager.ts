@@ -1,19 +1,19 @@
 import {
-    Logger  
+    Logger
 } from '@streamr/utils'
+import EventEmitter from 'eventemitter3'
 import KBucket from 'k-bucket'
+import { LockID } from '../connection/ConnectionLockStates'
+import { ConnectionLocker } from '../connection/ConnectionManager'
+import { DhtAddress, DhtAddressRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../identifiers'
 import {
     PeerDescriptor
 } from '../proto/packages/dht/protos/DhtRpc'
 import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 import { RandomContactList } from './contact/RandomContactList'
-import { ReadonlySortedContactList, SortedContactList } from './contact/SortedContactList'
-import { ConnectionLocker } from '../connection/ConnectionManager'
-import EventEmitter from 'eventemitter3'
-import { DhtAddress, DhtAddressRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../identifiers'
 import { RingContactList } from './contact/RingContactList'
+import { ReadonlySortedContactList, SortedContactList } from './contact/SortedContactList'
 import { RingIdRaw, getRingIdRawFromPeerDescriptor } from './contact/ringIdentifiers'
-import { LockID } from '../connection/ConnectionLockStates'
 
 const logger = new Logger(module)
 
@@ -233,17 +233,6 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         })
         this.nearbyContacts.stop()
         this.randomContacts.stop()
-    }
-
-    getClosestNeighborsTo(referenceId: DhtAddress, limit?: number, excludedNodeIds?: Set<DhtAddress>): DhtNodeRpcRemote[] {
-        const closest = new SortedContactList<DhtNodeRpcRemote>({
-            referenceId,
-            allowToContainReferenceId: true,
-            excludedNodeIds,
-            maxSize: limit
-        })
-        this.neighbors.toArray().forEach((contact) => closest.addContact(contact))
-        return closest.getClosestContacts()
     }
 
     getNearbyContacts(): ReadonlySortedContactList<DhtNodeRpcRemote> {

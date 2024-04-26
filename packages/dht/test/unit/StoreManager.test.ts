@@ -19,26 +19,27 @@ const NODES_CLOSEST_TO_DATA = sortBy(
     (id: DhtAddress) => getDistance(getRawFromDhtAddress(id), DATA_ENTRY.key)
 )
 
+const createPeerDescriptor = (nodeId: DhtAddress) => {
+    return { nodeId: getRawFromDhtAddress(nodeId), type: NodeType.NODEJS }
+}
+
 describe('StoreManager', () => {
 
     describe('new contact', () => {
 
         const createStoreManager = (
             localNodeId: DhtAddress,
-            closestNeighbors: DhtAddress[],
+            neighbors: DhtAddress[],
             replicateData: (request: ReplicateDataRequest) => unknown,
             setAllEntriesAsStale: (key: DhtAddress) => unknown
         ): StoreManager => {
-            const getClosestNeighborsTo = () => {
-                return closestNeighbors.map((nodeId) => ({ nodeId: getRawFromDhtAddress(nodeId), type: NodeType.NODEJS }))
-            }
             return new StoreManager({
                 rpcCommunicator: {
                     registerRpcMethod: () => {},
                     registerRpcNotification: () => {}
                 } as any,
                 recursiveOperationManager: undefined as any,
-                localPeerDescriptor: { nodeId: getRawFromDhtAddress(localNodeId), type: NodeType.NODEJS },
+                localPeerDescriptor: createPeerDescriptor(localNodeId),
                 localDataStore: { 
                     keys: () => [getDhtAddressFromRaw(DATA_ENTRY.key)],
                     values: () => [DATA_ENTRY],
@@ -47,7 +48,7 @@ describe('StoreManager', () => {
                 serviceId: undefined as any,
                 highestTtl: undefined as any,
                 redundancyFactor: 3,
-                getClosestNeighborsTo,
+                getNeighbors: () => neighbors.map((nodeId) => createPeerDescriptor(nodeId)),
                 createRpcRemote: () => ({ replicateData } as any)
             })
         }

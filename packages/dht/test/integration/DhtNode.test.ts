@@ -1,30 +1,13 @@
 import { waitForCondition } from '@streamr/utils'
 import { range, without } from 'lodash'
 import { DhtNodeRpcLocal } from '../../src/dht/DhtNodeRpcLocal'
-import { Contact } from '../../src/dht/contact/Contact'
-import { SortedContactList } from '../../src/dht/contact/SortedContactList'
-import { DhtAddress, DhtNode, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '../../src/exports'
+import { DhtNode, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '../../src/exports'
 import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor, PingRequest, PingResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { FakeEnvironment } from '../utils/FakeTransport'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const OTHER_NODE_COUNT = 3
 const SERVICE_ID_LAYER0 = 'layer0'
-
-const getClosestNodes = (
-    referenceId: DhtAddress,
-    nodes: PeerDescriptor[],
-    maxCount: number,
-    allowToContainReferenceId: boolean
-): PeerDescriptor[] => {
-    const list = new SortedContactList<Contact>({
-        referenceId,
-        allowToContainReferenceId,
-        maxSize: maxCount
-    })
-    list.addContacts(nodes.map((n) => new Contact(n)))
-    return list.getClosestContacts().map((c) => c.getPeerDescriptor())
-}
 
 describe('DhtNode', () => {
 
@@ -36,7 +19,7 @@ describe('DhtNode', () => {
         const epRpcCommunicator = new ListeningRpcCommunicator(SERVICE_ID_LAYER0, environment.createTransport(peerDescriptor))
         const dhtNodeRpcLocal = new DhtNodeRpcLocal({
             peerDiscoveryQueryBatchSize: undefined as any,
-            getClosestNeighborsTo: (nodeId: DhtAddress, maxCount: number) => getClosestNodes(nodeId, getAllPeerDescriptors(), maxCount, true),
+            getNeighbors: () => without(getAllPeerDescriptors(), peerDescriptor),
             getClosestRingContactsTo: undefined as any,
             addContact: () => {},
             removeContact: undefined as any,

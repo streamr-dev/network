@@ -56,10 +56,10 @@ export class DiscoverySession {
         }
         this.ongoingRequests.delete(nodeId)
         const targetId = getRawFromDhtAddress(this.config.targetId)
-        const oldClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
+        const oldClosestNeighbor = getClosestContacts(this.config.targetId, this.config.peerManager.getNeighbors(), { maxCount: 1 })[0]
         const oldClosestDistance = getDistance(targetId, getRawFromDhtAddress(oldClosestNeighbor.getNodeId()))
         this.addContacts(contacts)
-        const newClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
+        const newClosestNeighbor = getClosestContacts(this.config.targetId, this.config.peerManager.getNeighbors(), { maxCount: 1 })[0]
         const newClosestDistance = getDistance(targetId, getRawFromDhtAddress(newClosestNeighbor.getNodeId()))
         if (newClosestDistance >= oldClosestDistance) {
             this.noProgressCounter++

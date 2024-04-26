@@ -1,10 +1,6 @@
-import { DiscoverySession } from './DiscoverySession'
-import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
-import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import { ConnectionLocker } from '../../connection/ConnectionManager'
-import { PeerManager } from '../PeerManager'
-import { 
+import {
     DhtAddress,
     areEqualPeerDescriptors,
     createRandomDhtAddress,
@@ -12,9 +8,14 @@ import {
     getNodeIdFromPeerDescriptor,
     getRawFromDhtAddress
 } from '../../identifiers'
+import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { ServiceID } from '../../types/ServiceID'
-import { RingDiscoverySession } from './RingDiscoverySession'
+import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
+import { PeerManager } from '../PeerManager'
+import { getClosestContacts } from '../contact/getClosestContacts'
 import { RingIdRaw, getRingIdRawFromPeerDescriptor } from '../contact/ringIdentifiers'
+import { DiscoverySession } from './DiscoverySession'
+import { RingDiscoverySession } from './RingDiscoverySession'
 
 interface PeerDiscoveryConfig {
     localPeerDescriptor: PeerDescriptor
@@ -200,11 +201,8 @@ export class PeerDiscovery {
             return
         }
         const localNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
-        const nodes = this.config.peerManager.getClosestNeighborsTo(
-            localNodeId,
-            this.config.parallelism
-        )
-        const randomNodes = this.config.peerManager.getClosestNeighborsTo(createRandomDhtAddress(), 1)
+        const nodes = getClosestContacts(localNodeId, this.config.peerManager.getNeighbors(), { maxCount: this.config.parallelism })
+        const randomNodes = getClosestContacts(createRandomDhtAddress(), this.config.peerManager.getNeighbors(), { maxCount: 1 })
         await Promise.allSettled([
             ...nodes.map(async (node: DhtNodeRpcRemote) => {
                 const contacts = await node.getClosestPeers(localNodeId)

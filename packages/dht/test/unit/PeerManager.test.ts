@@ -1,9 +1,8 @@
 import { waitForCondition } from '@streamr/utils'
-import { range, sample, sampleSize, sortBy, without } from 'lodash'
+import { range, sample, sampleSize } from 'lodash'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
-import { PeerManager, getDistance } from '../../src/dht/PeerManager'
-import { Contact } from '../../src/dht/contact/Contact'
-import { SortedContactList } from '../../src/dht/contact/SortedContactList'
+import { PeerManager } from '../../src/dht/PeerManager'
+import { getClosestNodes } from '../../src/dht/contact/getClosestNodes'
 import { DhtAddress, createRandomDhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
 import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
@@ -15,7 +14,7 @@ const createDhtNodeRpcRemote = (
     pingFailures: Set<DhtAddress>
 ) => {
     const remote = new class extends DhtNodeRpcRemote {
-    // eslint-disable-next-line class-methods-use-this
+        // eslint-disable-next-line class-methods-use-this
         async ping(): Promise<boolean> {
             return !pingFailures.has(getNodeIdFromPeerDescriptor(peerDescriptor))
         }
@@ -42,38 +41,7 @@ const createPeerManager = (
     return manager
 }
 
-const getClosestContact = (contacts: PeerDescriptor[], referenceId: DhtAddress): PeerDescriptor | undefined => {
-    const list = new SortedContactList({
-        referenceId,
-        allowToContainReferenceId: false
-    })
-    for (const contact of contacts) {
-        list.addContact(new Contact(contact))
-    }
-    const id = list.getClosestContactId()
-    if (id !== undefined) {
-        return contacts.find((c) => getNodeIdFromPeerDescriptor(c) === id)
-    } else {
-        return undefined
-    }
-}
-
 describe('PeerManager', () => {
-
-    it('getClosestNeighborsTo', () => {
-        const nodeIds = range(10).map(() => createRandomDhtAddress())
-        const manager = createPeerManager(nodeIds)
-        const referenceId = createRandomDhtAddress()
-        const excluded = new Set<DhtAddress>(sampleSize(nodeIds, 2))
-
-        const actual = manager.getClosestNeighborsTo(referenceId, 5, excluded)
-
-        const expected = sortBy(
-            without(manager.getNeighbors().map((n) => n.getNodeId()), ...Array.from(excluded.values())),
-            (n: DhtAddress) => getDistance(getRawFromDhtAddress(n), getRawFromDhtAddress(referenceId))
-        ).slice(0, 5)
-        expect(actual.map((n) => n.getNodeId())).toEqual(expected)
-    })
 
     it('getNearbyContactCount', () => {
         const nodeIds = range(10).map(() => createRandomDhtAddress())
@@ -95,12 +63,13 @@ describe('PeerManager', () => {
         }
         expect(manager.getNeighborCount()).toBe(0)
         manager.addContact(failureContact)
-        const closesSuccessContact = getClosestContact(successContacts, getNodeIdFromPeerDescriptor(localPeerDescriptor))!
+        const closesSuccessContact = getClosestNodes(getNodeIdFromPeerDescriptor(localPeerDescriptor), successContacts)[0]
         await waitForCondition(() => {
             const neighborNodeIds = manager.getNeighbors().map((n) => n.getNodeId())
             return neighborNodeIds.includes(getNodeIdFromPeerDescriptor(closesSuccessContact))
         })
-        expect(manager.getNeighbors()).toEqual([closesSuccessContact])
+        expect(manager.getNeighborCount()).toBe(1)
+        expect(manager.getNeighbors()[0].getPeerDescriptor()).toEqualPeerDescriptor(closesSuccessContact)
     })
 
     it('pruneOfflineNodes removes offline nodes', async () => {

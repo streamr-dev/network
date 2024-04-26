@@ -1,23 +1,24 @@
+import { PeerDescriptor } from '../../exports'
 import { DhtAddress } from '../../identifiers'
+import { Contact } from './Contact'
 import { SortedContactList } from './SortedContactList'
 
-// TODO remove this function and use getClosestNodes instead, and rename the file
-export const getClosestContacts = <C extends { getNodeId: () => DhtAddress }>(
+export const getClosestNodes = (
     referenceId: DhtAddress,
-    contacts: Iterable<C>,
+    contacts: Iterable<PeerDescriptor>,
     opts?: {
         maxCount?: number
         excludedNodeIds?: Set<DhtAddress>
     }
-): C[] => {
-    const list = new SortedContactList<C>({
+): PeerDescriptor[] => {
+    const list = new SortedContactList<Contact>({
         referenceId,
         allowToContainReferenceId: true,
         excludedNodeIds: opts?.excludedNodeIds,
         maxSize: opts?.maxCount
     })
     for (const contact of contacts) {
-        list.addContact(contact)
+        list.addContact(new Contact(contact))
     }
-    return list.getClosestContacts()
+    return list.getClosestContacts().map((n) => n.getPeerDescriptor())
 }
