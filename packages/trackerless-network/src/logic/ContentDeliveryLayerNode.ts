@@ -65,6 +65,8 @@ export interface StrictContentDeliveryLayerNodeConfig {
     rpcRequestTimeout?: number
 }
 
+const RANDOM_NODE_VIEW_SIZE = 20
+
 const logger = new Logger(module)
 
 export class ContentDeliveryLayerNode extends EventEmitter<Events> {
@@ -281,7 +283,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         if (this.isStopped()) {
             return
         }
-        const randomContacts = this.config.layer1Node.getRandomContacts()
+        const randomContacts = this.config.layer1Node.getRandomContacts(RANDOM_NODE_VIEW_SIZE)
         this.config.randomNodeView.replaceAll(randomContacts.map((descriptor) =>
             new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,
@@ -301,7 +303,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         if (this.isStopped()) {
             return
         }
-        const randomContacts = this.config.layer1Node.getRandomContacts()
+        const randomContacts = this.config.layer1Node.getRandomContacts(RANDOM_NODE_VIEW_SIZE)
         this.config.randomNodeView.replaceAll(randomContacts.map((descriptor) =>
             new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,
