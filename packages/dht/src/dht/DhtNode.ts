@@ -269,6 +269,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             parallelism: this.config.joinParallelism,
             connectionLocker: this.connectionLocker,
             peerManager: this.peerManager!,
+            abortSignal: this.abortController.signal,
             createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => this.createDhtNodeRpcRemote(peerDescriptor),
         })
         this.router = new Router({
@@ -465,9 +466,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             .map((peer) => peer.getPeerDescriptor())
     }
 
-    // TODO remove defaultContactQueryLimit parameter from RandomContactList#getContacts and use explicit value here?
-    getRandomContacts(): PeerDescriptor[] {
-        return this.peerManager!.getRandomContacts().getContacts().map((c) => c.getPeerDescriptor())
+    getRandomContacts(limit?: number): PeerDescriptor[] {
+        return this.peerManager!.getRandomContacts().getContacts(limit).map((c) => c.getPeerDescriptor())
     }
 
     getRingContacts(): RingContacts {
@@ -631,7 +631,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.rpcCommunicator!.stop()
         this.router!.stop()
         this.recursiveOperationManager!.stop()
-        this.peerDiscovery!.stop()
         if (this.config.transport === undefined) {
             // if the transport was not given in config, the instance was created in start() and
             // this component is responsible for stopping it

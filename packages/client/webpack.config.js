@@ -99,7 +99,6 @@ module.exports = (env, argv) => {
                 stream: 'readable-stream',
                 util: 'util',
                 http: path.resolve('./src/shim/http-https.ts'),
-                '@ethersproject/wordlists': require.resolve('@ethersproject/wordlists/lib/browser-wordlists.js'),
                 https: path.resolve('./src/shim/http-https.ts'),
                 buffer: require.resolve('buffer/'),
                 'node-fetch': path.resolve('./src/shim/node-fetch.ts'),

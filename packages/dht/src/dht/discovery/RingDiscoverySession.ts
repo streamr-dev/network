@@ -1,18 +1,13 @@
-import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
-import EventEmitter from 'eventemitter3'
+import { Gate, Logger, withTimeout } from '@streamr/utils'
 import { v4 } from 'uuid'
-import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { PeerManager } from '../PeerManager'
-import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { RingId, RingIdRaw, getLeftDistance, getRingIdFromPeerDescriptor, getRingIdFromRaw } from '../contact/ringIdentifiers'
+import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
+import { PeerManager } from '../PeerManager'
 import { RingContacts } from '../contact/RingContactList'
+import { RingId, RingIdRaw, getLeftDistance, getRingIdFromPeerDescriptor, getRingIdFromRaw } from '../contact/ringIdentifiers'
 
 const logger = new Logger(module)
-
-interface RingDiscoverySessionEvents {
-    discoveryCompleted: () => void
-}
 
 interface RingDiscoverySessionConfig {
     targetId: RingIdRaw
@@ -21,15 +16,15 @@ interface RingDiscoverySessionConfig {
     peerManager: PeerManager
     // Note that contacted peers will be mutated by the DiscoverySession or other parallel sessions
     contactedPeers: Set<DhtAddress>
+    abortSignal: AbortSignal
 }
 
 export class RingDiscoverySession {
 
     public readonly id = v4()
-    private stopped = false
-    private emitter = new EventEmitter<RingDiscoverySessionEvents>()
     private noProgressCounter = 0
     private ongoingRequests: Set<DhtAddress> = new Set()
+    private doneGate = new Gate(false)
     private readonly config: RingDiscoverySessionConfig
     private numContactedPeers = 0
     private targetIdAsRingId: RingId
@@ -40,7 +35,7 @@ export class RingDiscoverySession {
     }
 
     private addContacts(contacts: PeerDescriptor[]): void {
-        if (this.stopped) {
+        if (this.config.abortSignal.aborted || this.doneGate.isOpen()) {
             return
         }
         for (const contact of contacts) {
@@ -49,7 +44,7 @@ export class RingDiscoverySession {
     }
 
     private async fetchClosestContactsFromRemote(contact: DhtNodeRpcRemote): Promise<RingContacts> {
-        if (this.stopped) {
+        if (this.config.abortSignal.aborted || this.doneGate.isOpen()) {
             return { left: [], right: [] }
         }
         logger.trace(`Getting closest ring peers from contact: ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
@@ -94,7 +89,7 @@ export class RingDiscoverySession {
     }
 
     private findMoreContacts(): void {
-        if (this.stopped) {
+        if (this.config.abortSignal.aborted || this.doneGate.isOpen()) {
             return
         }
         const uncontacted = this.config.peerManager.getClosestRingContactsTo(
@@ -104,8 +99,7 @@ export class RingDiscoverySession {
         )
         if ((uncontacted.left.length === 0 && uncontacted.right.length === 0)
             || this.noProgressCounter >= this.config.noProgressLimit) {
-            this.emitter.emit('discoveryCompleted')
-            this.stopped = true
+            this.doneGate.open()
             return
         }
         // ask from both sides equally
@@ -146,17 +140,9 @@ export class RingDiscoverySession {
         if (this.config.peerManager.getNearbyContactCount(this.config.contactedPeers) === 0) {
             return
         }
-        // TODO add abortController and signal it in stop()
-        await runAndWaitForEvents3<RingDiscoverySessionEvents>(
-            [this.findMoreContacts.bind(this)],
-            [[this.emitter, 'discoveryCompleted']],
-            timeout
-        )
-    }
-
-    public stop(): void {
-        this.stopped = true
-        this.emitter.emit('discoveryCompleted')
-        this.emitter.removeAllListeners()
+        setImmediate(() => {
+            this.findMoreContacts()
+        })
+        await withTimeout(this.doneGate.waitUntilOpen(), timeout, 'discovery session timed out', this.config.abortSignal)
     }
 }
