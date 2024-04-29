@@ -89,10 +89,10 @@ export class GeoIpLocator {
             return undefined
         }
 
-        // If ip is undefined, the library will crash
+        // If ip is falsy, the library will crash
         // this might happen despite the ts typings because the ip address 
         // comes from the ws server socket and is not under our control
-        if (ip === undefined || ip === null) {
+        if (!ip) {
             return undefined
         }
 
