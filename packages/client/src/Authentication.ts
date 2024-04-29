@@ -1,4 +1,4 @@
-import { BrowserProvider, AbstractSigner } from 'ethers'
+import { BrowserProvider, AbstractSigner, Provider } from 'ethers'
 import { computeAddress } from 'ethers'
 import { Wallet } from 'ethers/wallet'
 import { EthereumAddress, hexToBinary, toEthereumAddress, wait, createSignature } from '@streamr/utils'
@@ -9,7 +9,7 @@ import { RpcProviderFactory } from './RpcProviderFactory'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 
-export type SignerWithProvider = AbstractSigner
+export type SignerWithProvider = AbstractSigner<Provider>
 
 export interface Authentication {
     // always in lowercase
@@ -25,7 +25,7 @@ export const createPrivateKeyAuthentication = (key: string): Authentication => {
         createMessageSignature: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
         getStreamRegistryChainSigner: async (rpcProviderFactory: RpcProviderFactory) => {
             const primaryProvider = rpcProviderFactory.getPrimaryProvider()
-            return new Wallet(key, primaryProvider)
+            return new Wallet(key, primaryProvider) as SignerWithProvider
         }
     }
 }

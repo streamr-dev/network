@@ -11,7 +11,7 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { toStreamID, toStreamPartID } from '@streamr/protocol'
 import { fastPrivateKey, randomEthereumAddress } from '@streamr/test-utils'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
-import { Wallet } from '@ethersproject/wallet'
+import { Wallet } from 'ethers'
 import { toEthereumAddress } from '@streamr/utils'
 
 describe('GroupKeyManager', () => {

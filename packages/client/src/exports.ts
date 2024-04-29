@@ -70,7 +70,5 @@ export {
 } from '@streamr/protocol'
 
 export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht' 
-export type { ConnectionInfo } from '@ethersproject/web'
-export type { Signer } from '@ethersproject/abstract-signer'
-export type { ExternalProvider, Provider } from '@ethersproject/providers'
-export type { Overrides } from '@ethersproject/contracts'
+// TODO ConnectionInfo and ExternalProvider were exported, do se need those?
+export type { Signer, Provider, Overrides } from 'ethers'

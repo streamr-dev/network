@@ -1,8 +1,8 @@
 /**
  * Config and utilities for interating with identity & Ethereum chain.
  */
-import { Wallet } from '@ethersproject/wallet'
-import type { Overrides } from '@ethersproject/contracts'
+import { Wallet } from 'ethers'
+import type { Overrides } from 'ethers'
 import { StrictStreamrClientConfig } from './Config'
 import { RpcProviderFactory } from './RpcProviderFactory'
 import { FeeData } from 'ethers'
@@ -34,7 +34,7 @@ export const getEthersOverrides = (
         }
         return {
             ...overrides,
-            gasPrice: primaryProvider.getFeeData().then(gasPriceStrategy)
+            // TODO implement this to be compatible with Ethers 6 gasPrice: primaryProvider.getFeeData().then(gasPriceStrategy)
         }
     }
     return overrides

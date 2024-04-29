@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
-import type { Overrides } from '@ethersproject/contracts'
+import type { Overrides } from 'ethers'
 import { DhtAddress } from '@streamr/dht'
 import { StreamID } from '@streamr/protocol'
 import { ProxyDirection } from '@streamr/trackerless-network'

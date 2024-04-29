@@ -10,7 +10,7 @@ import { Subscription } from '../../src/subscribe/Subscription'
 import { counterId, instanceId, createTheGraphClient } from '../../src/utils/utils'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { createStrictConfig, ConfigInjectionToken, StrictStreamrClientConfig } from '../../src/Config'
-import * as ethersAbi from '@ethersproject/abi'
+// TODO import * as ethersAbi from '@ethersproject/abi'
 import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
 import { StorageNodeRegistry } from '../../src/contracts/StorageNodeRegistry'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
@@ -54,7 +54,7 @@ describeOnlyInNodeJs('MemoryLeaks', () => { // LeaksDetector is not supported in
     beforeEach(() => {
         leaksDetector = new LeaksDetector()
         leaksDetector.ignoreAll(rootContainer)
-        leaksDetector.ignoreAll(ethersAbi)
+        //TODO leaksDetector.ignoreAll(ethersAbi)
         leaksDetector.ignoreAll(CHAIN_CONFIG)
         snapshot()
     })

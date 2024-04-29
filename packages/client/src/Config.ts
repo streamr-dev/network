@@ -1,6 +1,5 @@
 import 'reflect-metadata'
-import type { Overrides } from '@ethersproject/contracts'
-import type { Provider } from 'ethers/providers'
+import type { Overrides, Provider } from 'ethers'
 import cloneDeep from 'lodash/cloneDeep'
 import { DeepRequired, MarkOptional } from 'ts-essentials'
 import { LogLevel, merge } from '@streamr/utils'

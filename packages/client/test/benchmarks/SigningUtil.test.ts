@@ -1,4 +1,4 @@
-import { verifyMessage, Wallet } from '@ethersproject/wallet'
+import { verifyMessage, Wallet } from 'ethers'
 import { randomString, toEthereumAddress, hexToBinary, areEqualBinaries } from '@streamr/utils'
 import { fastWallet } from '@streamr/test-utils'
 import { createSignature, verifySignature } from '@streamr/utils'

@@ -1,6 +1,5 @@
 import 'reflect-metadata'
 
-import { BigNumber } from '@ethersproject/bignumber'
 import { StreamID, toStreamID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
@@ -21,8 +20,8 @@ const createMockResultItem = (streamId: StreamID, metadata: string): SearchStrea
         },
         canEdit: true,
         canDelete: true,
-        publishExpiration: BigNumber.from(0),
-        subscribeExpiration: BigNumber.from(0),
+        publishExpiration: 0n,
+        subscribeExpiration: 0n,
         canGrant: true
     }
 }
