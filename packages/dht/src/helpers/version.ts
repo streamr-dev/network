@@ -1,4 +1,4 @@
-export const LOCAL_PROTOCOL_VERSION = '1.0'
+export const LOCAL_PROTOCOL_VERSION = '1.1'
 
 /*
  * When two nodes negotiate whether they are compatible or not, it is up to the
