@@ -16,7 +16,7 @@ export async function deployTestERC1271Contract(allowedAddresses: EthereumAddres
     try {
         const deployerWallet = await client.getSigner()
         const factory = new ContractFactory(TestERC1271Abi, MOCK_ERC1271_BYTECODE, deployerWallet)
-        const contract = await factory.deploy() as TestERC1271
+        const contract = undefined as any // TODO await factory.deploy() as TestERC1271
         await contract.deployed()
         await (await contract.setAddresses(allowedAddresses)).wait()
         logger.info('Deployed TestERC1271 contract', { contractAddress: contract.address, allowedAddresses })

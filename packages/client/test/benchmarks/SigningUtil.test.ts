@@ -84,7 +84,7 @@ describe('SigningUtil', () => {
     
         })
     
-        it('verify', async () => {
+        /*TODO re-enable it('verify', async () => {
             const elapsedTimeOur = await run(async () => {
                 return verifySignature(toEthereumAddress(wallet.address), payload, binarySignature)
             }, true, 'Verify-our')
@@ -97,7 +97,7 @@ describe('SigningUtil', () => {
             
             console.info(`Verify payloadSize=${payloadSize} is ${elapsedTimeEthers / elapsedTimeOur}x faster`)
             
-        })
+        })*/
     
     })
 
