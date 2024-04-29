@@ -22,7 +22,7 @@ describe('ConnectivityChecking', () => {
     let server: ConnectionManager
     const PORT = 15002
     const HOST = '127.0.0.1'
-    let mock: jest.SpyInstance<string, [], any> | undefined 
+    let mock: jest.SpyInstance<string, [], any> 
 
     beforeEach(async () => {
         server = new ConnectionManager({
@@ -46,11 +46,11 @@ describe('ConnectivityChecking', () => {
             metricsContext: new MetricsContext()
         })
         await server.start()
-        jest.spyOn(WebsocketServerConnection.prototype, 'getRemoteIpAddress').mockImplementation(() => testIp)
+        mock = jest.spyOn(WebsocketServerConnection.prototype, 'getRemoteIpAddress').mockImplementation(() => testIp)
     })
 
     afterEach(async () => {
-        mock?.mockRestore()
+        mock.mockRestore()
         await server.stop()
         fs.unlinkSync(dbPath + '/GeoLite2-City.mmdb')
         fs.rmSync(dbPath, { recursive: true })

@@ -13,7 +13,7 @@ describe('Layer0', () => {
 
     let epDhtNode: DhtNode
     let node1: DhtNode
-    let mock: jest.SpyInstance<string, [], any> | undefined 
+    let mock: jest.SpyInstance<string, [], any> 
     
     beforeEach(async () => {
 
@@ -36,7 +36,7 @@ describe('Layer0', () => {
     }, 10000)
 
     afterEach(async () => {
-        mock?.mockRestore()
+        mock.mockRestore()
         await Promise.all([
             epDhtNode.stop(),
             node1.stop()
