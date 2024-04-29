@@ -50,9 +50,6 @@ export class EntryPointDiscovery {
 
     async discoverEntryPointsFromDht(excludeSet: Set<DhtAddress> = new Set()): Promise<PeerDescriptor[]> {
         const discoveredEntryPoints = await this.discoverEntryPoints()
-        if (discoveredEntryPoints.length === 0) {
-            discoveredEntryPoints.push(this.config.localPeerDescriptor)
-        }
         const filtered = discoveredEntryPoints.filter((node) => !excludeSet.has(getNodeIdFromPeerDescriptor(node)))
         if (filtered.length > 0) {
             return filtered
