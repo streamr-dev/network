@@ -5,9 +5,6 @@ import NodePath from 'path'     // use NodePath to avoid conflict with other 'pa
 import fs from 'fs'
 
 const doExtractFileFromTarStream = (fileName: string, stream: ReadableStream<any>, downloadFolder: string): Promise<void> => {
-    // Async/await style does not work here because catching the onAborted errors 
-    // with try-catch does not seem to work
-
     return new Promise((resolve, reject) => {
         try {
             const nodeStream = Readable.fromWeb(stream)

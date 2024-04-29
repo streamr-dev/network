@@ -4,6 +4,7 @@ import LongTimeout from 'long-timeout'
 import { downloadGeoIpDatabase } from './downloadGeoIpDatabase'
 
 const logger = new Logger(module)
+
 interface GeoIpLookupResult {
     latitude: number
     longitude: number
@@ -13,6 +14,7 @@ interface GeoIpLookupResult {
 const DEFAULT_DB_CHECK_INTERVAL = 30 * 24 * 60 * 60 * 1000
 // 24 hours in milliseconds
 const DEFAULT_DB_CHECK_ERROR_INTERVAL = 24 * 60 * 60 * 1000
+
 export class GeoIpLocator { 
     private abortController: AbortController
     private readonly geoIpDatabaseFolder: string
@@ -70,7 +72,6 @@ export class GeoIpLocator {
         if (this.dbCheckTimeout !== undefined) {
             return
         }
-
         await this.checkDatabase()
         this.scheduleCheck(this.dbCheckInterval)
     }
@@ -91,7 +92,6 @@ export class GeoIpLocator {
         // If ip is undefined of null, the library will crash
         // this might happen despite the ts typings because the ip address 
         // comes from the ws server socket and is not under our control
-
         if (!(ip as unknown)) {
             return undefined
         }

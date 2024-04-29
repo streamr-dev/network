@@ -151,11 +151,9 @@ export const downloadGeoIpDatabase = async (
         // This will throw if the download folder is not writable
         fs.mkdirSync(dbFolder, { recursive: true })
     }
-
     if (!dbFolder.endsWith('/')) {
         dbFolder += '/'
     }
-
     let geoIpMirrorUrl = GEOIP_MIRROR_URL
     if (mirrorUrl !== undefined) {
         if (!mirrorUrl.endsWith('/')) {
@@ -163,15 +161,12 @@ export const downloadGeoIpDatabase = async (
         }
         geoIpMirrorUrl = mirrorUrl
     }
-
     const remoteHashUrl = geoIpMirrorUrl + DB_NAME + HASH_SUFFIX
     const dbDownloadUrl = geoIpMirrorUrl + DB_NAME + TAR_SUFFFIX
     const dbFileInDbFolder = dbFolder + DB_NAME + DB_SUFFIX
 
     const remoteHash = await downloadRemoteHash(remoteHashUrl, abortSignal)
-
     const dbValid = await isDbFileValid(dbFileInDbFolder, remoteHash)
-
     if (dbValid === false) {
         await downloadNewDb(dbDownloadUrl, dbFolder, remoteHash, abortSignal)
         // return new reader if db was downloaded
@@ -179,7 +174,6 @@ export const downloadGeoIpDatabase = async (
     } else {
         logger.debug('The hash of the local GeoIP database matches the remote hash, no need to download a new database')
     }
-
     if (forceReturnReader) {
         // return reader also for old db the caller wants it
         return new Reader<CityResponse>(fs.readFileSync(dbFileInDbFolder))
