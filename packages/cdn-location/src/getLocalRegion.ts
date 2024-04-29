@@ -50,16 +50,20 @@ const getRandomRegion: () => number = () => {
     return randomRegion
 }
 
-export const getLocalRegionWithCache: (maxCacheAge?: number) => Promise<number> =
-    async (maxCacheAge = DEFAULT_MAX_CACHE_AGE) => {
-        if (cachedLocalRegion === undefined || cachedLocalRegionFetchTime === undefined ||
-            Date.now() - cachedLocalRegionFetchTime > maxCacheAge) {
-
-            return getLocalRegion()
-        }
-
-        return cachedLocalRegion
+export const getLocalRegionWithCache: (maxCacheAge?: number) => Promise<number> = async (maxCacheAge = DEFAULT_MAX_CACHE_AGE) => {
+    if (cachedLocalRegion === undefined 
+        || cachedLocalRegionFetchTime === undefined 
+        || Date.now() - cachedLocalRegionFetchTime > maxCacheAge
+    ) {
+        const region = await getLocalRegion()
+        // eslint-disable-next-line require-atomic-updates
+        cachedLocalRegion = region
+        // eslint-disable-next-line require-atomic-updates
+        cachedLocalRegionFetchTime = Date.now()
+        return region
     }
+    return cachedLocalRegion
+}
 
 export const getLocalRegion: () => Promise<number> = async () => {
     let airportCode: string | undefined = undefined
@@ -69,9 +73,6 @@ export const getLocalRegion: () => Promise<number> = async () => {
     if (airportCode === undefined || !airportCodeToRegion[airportCode]) {
         return getRandomRegion()
     }
-
-    cachedLocalRegion = airportCodeToRegion[airportCode][0]
-    cachedLocalRegionFetchTime = Date.now()
 
     return airportCodeToRegion[airportCode][0]
 }
