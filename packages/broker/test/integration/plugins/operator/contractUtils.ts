@@ -1,7 +1,4 @@
-import { AddressZero } from '@ethersproject/constants'
-import { Contract } from '@ethersproject/contracts'
-import { JsonRpcProvider, Provider } from '@ethersproject/providers'
-import { parseEther } from '@ethersproject/units'
+import { ZeroAddress, Contract, JsonRpcProvider, Provider, parseEther } from 'ethers'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import type { Operator, OperatorFactory, Sponsorship, SponsorshipFactory } from '@streamr/network-contracts'
 import { TestToken, operatorABI, operatorFactoryABI, sponsorshipABI, sponsorshipFactoryABI, tokenABI } from '@streamr/network-contracts'
@@ -100,11 +97,11 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
     const chainConfig = opts.chainConfig ?? CHAIN_CONFIG.dev2
     const operatorFactory = new Contract(chainConfig.contracts.OperatorFactory, abi, opts.deployer) as unknown as OperatorFactory
     const contractAddress = await operatorFactory.operators(opts.deployer.address)
-    if (contractAddress !== AddressZero) {
+    if (contractAddress !== ZeroAddress) {
         throw new Error('Operator already has a contract')
     }
     const operatorReceipt = await (await operatorFactory.deployOperator(
-        parseEther('1').mul(opts.operatorsCutPercent ?? 0).div(100),
+        parseEther('1') * BigInt(opts.operatorsCutPercent ?? 0) / 100n,
         opts.operatorTokenName ?? `OperatorToken-${Date.now()}`,
         opts.metadata ?? '',
         [

@@ -1,5 +1,5 @@
-import { Provider } from '@ethersproject/providers'
-import { Operator, Sponsorship, operatorABI, sponsorshipABI } from '@streamr/network-contracts'
+import { Provider } from 'ethers'
+import { Operator, Sponsorship, operatorABI, sponsorshipABI } from '@streamr/network-contracts-ethers6'
 import { StreamID, ensureValidStreamPartitionIndex, toStreamID } from '@streamr/protocol'
 import {
     EthereumAddress,
@@ -61,6 +61,16 @@ export function parsePartitionFromReviewRequestMetadata(metadataAsString: string
     }
 
     return partition
+}
+
+const compareBigInts = (a: bigint, b: bigint) => {
+    if (a < b) {
+        return -1
+    } else if (a > b) {
+        return 1
+    } else {
+        return 0
+    }
 }
 
 export type ReviewRequestListener = (
@@ -289,15 +299,15 @@ export class ContractFacade {
         } = await operator.getSponsorshipsAndEarnings()
 
         const sponsorships = allSponsorshipAddresses
-            .map((address, i) => ({ address, earnings: earnings[i].toBigInt() }))
+            .map((address, i) => ({ address, earnings: earnings[i] }))
             .filter((sponsorship) => sponsorship.earnings >= minSponsorshipEarningsInWithdrawWei)
-            .sort((a, b) => Number(b.earnings - a.earnings)) // TODO: after Node 20, use .toSorted() instead
+            .sort((a, b) => compareBigInts(a.earnings, b.earnings)) // TODO: after Node 20, use .toSorted() instead
             .slice(0, maxSponsorshipsInWithdraw) // take all if maxSponsorshipsInWithdraw is undefined
 
         return {
             sponsorshipAddresses: sponsorships.map((sponsorship) => toEthereumAddress(sponsorship.address)),
             sumDataWei: sponsorships.reduce((sum, sponsorship) => sum += sponsorship.earnings, 0n),
-            maxAllowedEarningsDataWei: maxAllowedEarnings.toBigInt()
+            maxAllowedEarningsDataWei: maxAllowedEarnings
         }
     }
 
@@ -488,7 +498,8 @@ export class ContractFacade {
     }
 
     getProvider(): Provider {
-        return this.config.signer.provider
+        // TODO why casting is needed?
+        return this.config.signer.provider!
     }
 
     getEthersOverrides(): Overrides {

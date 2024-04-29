@@ -1,4 +1,4 @@
-import { Contract } from '@ethersproject/contracts'
+import { Contract } from 'ethers'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { OperatorFactory, operatorFactoryABI, type Sponsorship } from '@streamr/network-contracts'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
