@@ -44,12 +44,14 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
 
         entryPointLayer1Node = new DhtNode({
             transport: entrypointCm,
+            connectionsView: entrypointCm,
             peerDescriptor: entrypointDescriptor,
             serviceId: streamPartId
         })
 
         otherLayer1Nodes = range(otherNodeCount).map((i) => new DhtNode({
             transport: cms[i],
+            connectionsView: cms[i],
             peerDescriptor: peerDescriptors[i],
             serviceId: streamPartId
         }))

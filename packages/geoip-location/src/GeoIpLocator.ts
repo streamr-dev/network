@@ -29,15 +29,6 @@ export class GeoIpLocator {
         mirrorUrl?: string
     ) {
         this.abortController = new AbortController()
-        
-        // add +- 3 hours of randomness to dbCheckInterval 
-        // to avoid all clients checking the db at the same time
-        // in case multiple clients are started at the same time
-
-        if (dbCheckInterval > 24 * 60 * 60 * 1000) {
-            dbCheckInterval += Math.floor(Math.random() * 6 - 3) * 60 * 60 * 1000
-        }
-
         this.dbCheckInterval = dbCheckInterval
         this.dbCheckErrorInterval = dbCheckErrorInterval
         if (!geoIpDatabaseFolder.endsWith('/')) {
