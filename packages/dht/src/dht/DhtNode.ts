@@ -269,7 +269,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             parallelism: this.config.joinParallelism,
             connectionLocker: this.connectionLocker,
             peerManager: this.peerManager!,
-            abortSignal: this.abortController.signal
+            abortSignal: this.abortController.signal,
+            createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => this.createDhtNodeRpcRemote(peerDescriptor),
         })
         this.router = new Router({
             rpcCommunicator: this.rpcCommunicator,
