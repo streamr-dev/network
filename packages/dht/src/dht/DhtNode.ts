@@ -10,9 +10,11 @@ import { EventEmitter } from 'eventemitter3'
 import { sample } from 'lodash'
 import { MarkRequired } from 'ts-essentials'
 import { ConnectionLocker, ConnectionManager, PortRange, TlsCertificate } from '../connection/ConnectionManager'
+import { ConnectionsView } from '../connection/ConnectionsView'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../connection/ConnectorFacade'
 import { IceServer } from '../connection/webrtc/WebrtcConnector'
 import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
+import { createPeerDescriptor } from '../helpers/createPeerDescriptor'
 import { DhtAddress, KADEMLIA_ID_LENGTH_IN_BYTES, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { Any } from '../proto/google/protobuf/any'
 import {
@@ -42,17 +44,15 @@ import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 import { ExternalApiRpcLocal } from './ExternalApiRpcLocal'
 import { ExternalApiRpcRemote } from './ExternalApiRpcRemote'
 import { PeerManager } from './PeerManager'
+import { RingContacts } from './contact/RingContactList'
+import { RingIdRaw } from './contact/ringIdentifiers'
 import { PeerDiscovery } from './discovery/PeerDiscovery'
 import { RecursiveOperationManager } from './recursive-operation/RecursiveOperationManager'
 import { Router } from './routing/Router'
 import { LocalDataStore } from './store/LocalDataStore'
 import { StoreManager } from './store/StoreManager'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
-import { createPeerDescriptor } from '../helpers/createPeerDescriptor'
-import { RingIdRaw } from './contact/ringIdentifiers'
 import { getLocalRegionByCoordinates, getLocalRegionWithCache } from '@streamr/cdn-location'
-import { RingContacts } from './contact/RingContactList'
-import { ConnectionsView } from '../connection/ConnectionsView'
 
 export interface DhtNodeEvents {
     nearbyContactAdded: (peerDescriptor: PeerDescriptor) => void
@@ -264,7 +264,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             parallelism: this.config.joinParallelism,
             connectionLocker: this.connectionLocker,
             peerManager: this.peerManager!,
-            abortSignal: this.abortController.signal
+            abortSignal: this.abortController.signal,
+            createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => this.createDhtNodeRpcRemote(peerDescriptor),
         })
         this.router = new Router({
             rpcCommunicator: this.rpcCommunicator,
@@ -291,9 +292,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             highestTtl: this.config.storeHighestTtl,
             redundancyFactor: this.config.storageRedundancyFactor,
             localDataStore: this.localDataStore,
-            getClosestNeighborsTo: (key: DhtAddress, n?: number) => {
-                return this.peerManager!.getClosestNeighborsTo(key, n).map((n) => n.getPeerDescriptor())
-            },
+            getNeighbors: () => this.peerManager!.getNeighbors().map((n) => n.getPeerDescriptor()),
             createRpcRemote: (contact: PeerDescriptor) => {
                 return new StoreRpcRemote(
                     this.localPeerDescriptor!,
@@ -311,7 +310,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
         const pruneTargets = []
         if (this.config.periodicallyPingNeighbors === true) {
-            pruneTargets.push(() => this.peerManager!.getNeighbors().map((node) => this.createDhtNodeRpcRemote(node)))
+            pruneTargets.push(() => this.peerManager!.getNeighbors().map((node) => this.createDhtNodeRpcRemote(node.getPeerDescriptor())))
         }
         if (this.config.periodicallyPingRingContacts === true) {
             pruneTargets.push(() => this.peerManager!.getRingContacts().getAllContacts())
@@ -396,10 +395,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
         const dhtNodeRpcLocal = new DhtNodeRpcLocal({
             peerDiscoveryQueryBatchSize: this.config.peerDiscoveryQueryBatchSize,
-            getClosestNeighborsTo: (nodeId: DhtAddress, limit: number) => {
-                return this.peerManager!.getClosestNeighborsTo(nodeId, limit)
-                    .map((dhtPeer: DhtNodeRpcRemote) => dhtPeer.getPeerDescriptor())
-            },
+            getNeighbors: () => this.peerManager!.getNeighbors().map((n) => n.getPeerDescriptor()),
             getClosestRingContactsTo: (ringIdRaw: RingIdRaw, limit: number) => {
                 return this.getClosestRingContactsTo(ringIdRaw, limit)
             },
@@ -599,7 +595,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public getNeighbors(): PeerDescriptor[] {
-        return this.started ? this.peerManager!.getNeighbors() : []
+        return this.started ? this.peerManager!.getNeighbors().map((remote: DhtNodeRpcRemote) => remote.getPeerDescriptor()) : []
     }
 
     getConnectionsView(): ConnectionsView {
