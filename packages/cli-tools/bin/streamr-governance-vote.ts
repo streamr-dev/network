@@ -1,24 +1,25 @@
 #!/usr/bin/env node
 import { createCommand } from '../src/command'
 import { getClientConfig } from '../src/client'
-import snapshot from '@snapshot-labs/snapshot.js'
-import { Wallet } from '@ethersproject/wallet'
+//import snapshot from '@snapshot-labs/snapshot.js'
+import { Wallet } from 'ethers'
 import { PrivateKeyAuthConfig } from '@streamr/sdk'
 
 const hub = 'https://hub.snapshot.org'
-const snapshotClient = new snapshot.Client712(hub)
+//const snapshotClient = new snapshot.Client712(hub)
 
 const vote = async (privateKey: string, proposal: string, choice: number) => {
     const wallet = new Wallet(privateKey)
     try {
         console.log(`Wallet ${wallet.address} voting for choice ${choice} on proposal ${proposal}...`)
-        await snapshotClient.vote(wallet, wallet.address, {
+        // TODO implement this to be compatible with Ethers 6 (or import ethers 5 Wallet just for this?)
+        /*await snapshotClient.vote(wallet, wallet.address, {
             space: 'streamr.eth',
             proposal,
             type: 'single-choice', // support only this type for now
             choice,
             app: 'cli-tool'
-        })
+        })*/
         console.log(`Wallet ${wallet.address} successfully voted for choice ${choice} on proposal ${proposal}`)
     } catch (err) {
         console.error(err)
