@@ -36,13 +36,13 @@ describe('Layer0', () => {
     }, 10000)
 
     afterEach(async () => {
-        mock.mockRestore()
         await Promise.all([
             epDhtNode.stop(),
             node1.stop()
         ])
         fs.unlinkSync(dbPath + '/GeoLite2-City.mmdb')
         fs.rmSync(dbPath, { recursive: true })
+        mock.mockRestore()
     })
 
     it('Gets the correct region number by IP address', async () => {

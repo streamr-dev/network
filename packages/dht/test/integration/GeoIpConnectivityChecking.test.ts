@@ -50,10 +50,10 @@ describe('ConnectivityChecking', () => {
     })
 
     afterEach(async () => {
-        mock.mockRestore()
         await server.stop()
         fs.unlinkSync(dbPath + '/GeoLite2-City.mmdb')
         fs.rmSync(dbPath, { recursive: true })
+        mock.mockRestore()
     })
 
     it('connectivityCheck replies with correct latitude and longitude', async () => {
