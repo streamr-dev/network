@@ -16,10 +16,10 @@ export class StreamPartReconnect {
     async reconnect(timeout = DEFAULT_RECONNECT_INTERVAL): Promise<void> {
         this.abortController = new AbortController()
         await scheduleAtInterval(async () => {
-            const entryPoints = await this.entryPointDiscovery.discoverEntryPointsFromDht(0)
-            await this.layer1Node.joinDht(entryPoints.discoveredEntryPoints)
+            const entryPoints = await this.entryPointDiscovery.discoverEntryPointsFromDht()
+            await this.layer1Node.joinDht(entryPoints)
             if (this.entryPointDiscovery.isLocalNodeEntryPoint()) {
-                await this.entryPointDiscovery.storeSelfAsEntryPointIfNecessary(entryPoints.discoveredEntryPoints.length)
+                await this.entryPointDiscovery.storeAndKeepSelfAsEntryPoint()
             }
             if (this.layer1Node.getNeighborCount() > 0) {
                 this.abortController!.abort()

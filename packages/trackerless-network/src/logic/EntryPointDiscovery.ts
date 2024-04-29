@@ -7,10 +7,9 @@ import {
     getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
 import { StreamPartID } from '@streamr/protocol'
-import { Logger, scheduleAtInterval, wait } from '@streamr/utils'
+import { Logger, scheduleAtInterval } from '@streamr/utils'
 import { createHash } from 'crypto'
 import { Any } from '../proto/google/protobuf/any'
-import { Layer1Node } from './Layer1Node'
 
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): DhtAddress => {
     return getDhtAddressFromRaw(new Uint8Array((createHash('sha1').update(streamPartId).digest())))
@@ -25,41 +24,13 @@ export interface FindEntryPointsResult {
     discoveredEntryPoints: PeerDescriptor[]
 }
 
-const exponentialRunOff = async (
-    task: () => Promise<void>,
-    description: string,
-    abortSignal: AbortSignal,
-    baseDelay = 500,
-    maxAttempts = 6
-): Promise<void> => {
-    for (let i = 1; i <= maxAttempts; i++) {
-        if (abortSignal.aborted) {
-            return
-        }
-        const factor = 2 ** i
-        const delay = baseDelay * factor
-        try {
-            await task()
-        } catch (e: any) {
-            logger.trace(`${description} failed, retrying in ${delay} ms`)
-        }
-        try { // Abort controller throws unexpected errors in destroy?
-            await wait(delay, abortSignal)
-        } catch (err) {
-            logger.trace(`${err}`)  // TODO Do we need logging?
-        }
-    }
-}
-
 const logger = new Logger(module)
 
 export const ENTRYPOINT_STORE_LIMIT = 8
-export const NETWORK_SPLIT_AVOIDANCE_LIMIT = 4
 
 interface EntryPointDiscoveryConfig {
     streamPartId: StreamPartID
     localPeerDescriptor: PeerDescriptor
-    layer1Node: Layer1Node
     fetchEntryPointData: (key: DhtAddress) => Promise<DataEntry[]>
     storeEntryPointData: (key: DhtAddress, data: Any) => Promise<PeerDescriptor[]>
     deleteEntryPointData: (key: DhtAddress) => Promise<void>
@@ -70,43 +41,30 @@ export class EntryPointDiscovery {
     private readonly abortController: AbortController
     private readonly config: EntryPointDiscoveryConfig
     private readonly storeInterval: number
-    private readonly networkSplitAvoidedNodes: Set<DhtAddress> = new Set()
     private isLocalNodeStoredAsEntryPoint = false
-    private networkSplitAvoidanceIsRunning = false
     constructor(config: EntryPointDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
         this.storeInterval = this.config.storeInterval ?? 60000
     }
 
-    async discoverEntryPointsFromDht(knownEntryPointCount: number): Promise<FindEntryPointsResult> {
-        if (knownEntryPointCount > 0) {
-            return {
-                entryPointsFromDht: false,
-                discoveredEntryPoints: []
-            }
-        }
+    async discoverEntryPointsFromDht(excludeSet: Set<DhtAddress> = new Set()): Promise<PeerDescriptor[]> {
         const discoveredEntryPoints = await this.discoverEntryPoints()
         if (discoveredEntryPoints.length === 0) {
             discoveredEntryPoints.push(this.config.localPeerDescriptor)
         }
-        return {
-            discoveredEntryPoints,
-            entryPointsFromDht: true
+        const filtered = discoveredEntryPoints.filter((node) => !excludeSet.has(getNodeIdFromPeerDescriptor(node)))
+        if (filtered.length > 0) {
+            return filtered
+        // If all found entry points are filtered return the unfiltered list 
+        } else {
+            return discoveredEntryPoints
         }
     }
 
     private async discoverEntryPoints(): Promise<PeerDescriptor[]> {
         const dataKey = streamPartIdToDataKey(this.config.streamPartId)
-        const discoveredEntryPoints = await this.queryEntrypoints(dataKey)
-        const filtered = discoveredEntryPoints.filter((node) => 
-            !this.networkSplitAvoidedNodes.has(getNodeIdFromPeerDescriptor(node)))
-        // If all discovered entry points have previously been detected as offline, try again
-        if (filtered.length > 0) {
-            return filtered
-        } else {
-            return discoveredEntryPoints
-        }
+        return this.queryEntrypoints(dataKey)
     }
 
     private async queryEntrypoints(key: DhtAddress): Promise<PeerDescriptor[]> {
@@ -119,20 +77,13 @@ export class EntryPointDiscovery {
         }
     }
 
-    async storeSelfAsEntryPointIfNecessary(currentEntrypointCount: number): Promise<void> {
+    async storeAndKeepSelfAsEntryPoint(): Promise<void> {
         if (this.abortController.signal.aborted) {
             return
         }
-        const possibleNetworkSplitDetected = this.config.layer1Node.getNeighborCount() < NETWORK_SPLIT_AVOIDANCE_LIMIT
-        if ((currentEntrypointCount < ENTRYPOINT_STORE_LIMIT) || possibleNetworkSplitDetected) {
-            this.isLocalNodeStoredAsEntryPoint = true
-            await this.storeSelfAsEntryPoint()
-            await this.keepSelfAsEntryPoint()
-        }
-        if (possibleNetworkSplitDetected) {
-            // TODO should we catch possible promise rejection?
-            setImmediate(() => this.avoidNetworkSplit())
-        }
+        this.isLocalNodeStoredAsEntryPoint = true
+        await this.storeSelfAsEntryPoint()
+        await this.keepSelfAsEntryPoint()
     }
 
     private async storeSelfAsEntryPoint(): Promise<void> {
@@ -160,31 +111,8 @@ export class EntryPointDiscovery {
         }, this.storeInterval, false, this.abortController.signal)
     }
 
-    private async avoidNetworkSplit(): Promise<void> {
-        this.networkSplitAvoidanceIsRunning = true
-        await exponentialRunOff(async () => {
-            const rediscoveredEntrypoints = await this.discoverEntryPoints()
-            await this.config.layer1Node.joinDht(rediscoveredEntrypoints, false, false)
-            if (this.config.layer1Node.getNeighborCount() < NETWORK_SPLIT_AVOIDANCE_LIMIT) {
-                // Filter out nodes that are not neighbors as those nodes are assumed to be offline
-                const nodesToAvoid = rediscoveredEntrypoints
-                    .filter((peer) => !this.config.layer1Node.getNeighbors()
-                        .some((neighbor) => areEqualPeerDescriptors(neighbor, peer)))
-                    .map((peer) => getNodeIdFromPeerDescriptor(peer))
-                nodesToAvoid.forEach((node) => this.networkSplitAvoidedNodes.add(node))
-                throw new Error(`Network split is still possible`)
-            }
-        }, 'avoid network split', this.abortController.signal)
-        this.networkSplitAvoidedNodes.clear()
-        logger.trace(`Network split avoided`)
-    }
-
     public isLocalNodeEntryPoint(): boolean {
         return this.isLocalNodeStoredAsEntryPoint
-    }
-
-    public isNetworkSplitAvoidanceRunning(): boolean {
-        return this.networkSplitAvoidanceIsRunning
     }
 
     async destroy(): Promise<void> {
