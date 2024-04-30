@@ -1,7 +1,7 @@
 import { DhtAddress, DhtNodeEvents, PeerDescriptor, RingContacts } from '@streamr/dht'
 
-export type Layer1NodeEvents = Pick<DhtNodeEvents, 'manualRejoinRequired' | 'closestContactAdded' 
-    | 'closestContactRemoved' | 'randomContactAdded' | 'randomContactRemoved' | 'ringContactAdded' | 'ringContactRemoved'>
+export type Layer1NodeEvents = Pick<DhtNodeEvents, 'manualRejoinRequired' | 'nearbyContactAdded' 
+    | 'nearbyContactRemoved' | 'randomContactAdded' | 'randomContactRemoved' | 'ringContactAdded' | 'ringContactRemoved'>
 
 export interface Layer1Node {
     // TODO: Why do on, once and off need to be defined multiple times per function type?
@@ -13,7 +13,7 @@ export interface Layer1Node {
     off<T extends keyof Layer1NodeEvents>(eventName: T, listener: Layer1NodeEvents[T]): void
     removeContact: (nodeId: DhtAddress) => void
     getClosestContacts: (maxCount?: number) => PeerDescriptor[]
-    getRandomContacts: () => PeerDescriptor[]
+    getRandomContacts: (maxCount?: number) => PeerDescriptor[]
     getRingContacts: () => RingContacts
     getNeighbors: () => PeerDescriptor[]
     getNeighborCount(): number

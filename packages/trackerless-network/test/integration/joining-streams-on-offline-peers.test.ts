@@ -28,6 +28,7 @@ describe('Joining stream parts on offline nodes', () => {
         entryPoint = new NetworkStack({
             layer0: {
                 transport: entryPointTransport,
+                connectionsView: entryPointTransport,
                 peerDescriptor: entryPointPeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
             }
@@ -36,6 +37,7 @@ describe('Joining stream parts on offline nodes', () => {
         node1 = new NetworkStack({
             layer0: {
                 transport: node1Transport,
+                connectionsView: node1Transport,
                 peerDescriptor: node1PeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
             }
@@ -44,6 +46,7 @@ describe('Joining stream parts on offline nodes', () => {
         node2 = new NetworkStack({
             layer0: {
                 transport: node2Transport,
+                connectionsView: node2Transport,
                 peerDescriptor: node2PeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
             }

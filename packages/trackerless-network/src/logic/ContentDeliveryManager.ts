@@ -214,6 +214,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
     private createLayer1Node(streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): Layer1Node {
         return new DhtNode({
             transport: this.layer0Node!,
+            connectionsView: this.layer0Node!.getConnectionsView(),
             serviceId: 'layer1::' + streamPartId,
             peerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
             entryPoints,
