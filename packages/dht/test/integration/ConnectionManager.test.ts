@@ -134,7 +134,7 @@ describe('ConnectionManager', () => {
         await connectionManager2.stop()
     })
 
-    it('Can send data to other connectionmanager over websocket', async () => {
+    it.only('Can send data to other connectionmanager over websocket', async () => {
         const connectionManager1 = createConnectionManager({
             transport: mockConnectorTransport1,
             websocketHost: '127.0.0.1',

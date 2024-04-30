@@ -1,26 +1,53 @@
-import { Logger, binaryToUtf8 } from '@streamr/utils'
-import { WebSocket } from 'ws'
-import { AbstractWebsocketClientConnection } from './AbstractWebsocketClientConnection'
+import { Logger } from '@streamr/utils'
+import { WebSocket, WebSocketConfiguration } from 'node-datachannel'
+import { AbstractWebsocketClientConnection, Socket } from './AbstractWebsocketClientConnection'
 
 const logger = new Logger(module)
 
 const BINARY_TYPE = 'nodebuffer'
+const CLOSED = 0
+const OPEN = 1
 
 export class WebsocketClientConnection extends AbstractWebsocketClientConnection {
 
-    protected socket?: WebSocket
+    private socketImpl?: WebSocket
+    protected socket: Socket = {
+
+        binaryType: BINARY_TYPE,
+        readyState: CLOSED,
+        close: (_code?: number, _reason?: string) => {
+            this.socketImpl?.close()
+        },
+        send: (data: string | Buffer | ArrayBuffer | ArrayBufferView): void => {
+            this.socketImpl?.sendMessageBinary(data as Uint8Array)
+        }
+    }
 
     // TODO explicit default value for "selfSigned" or make it required
     public connect(address: string, selfSigned?: boolean): void {
         if (!this.destroyed) {
-            this.socket = new WebSocket(address, { rejectUnauthorized: !selfSigned })
-            this.socket.binaryType = BINARY_TYPE
-            this.socket.on('error', (error: Error) => this.onError(error))
-            this.socket.on('open', () => this.onOpen())
-            this.socket.on('close', (code: number, reason: Buffer) => this.onClose(code, binaryToUtf8(reason)))
-            this.socket.on('message', (message: Buffer, isBinary: boolean) => {
+            const webSocketConfig: WebSocketConfiguration = { maxMessageSize: 1048576 }
+            if (selfSigned) {
+                webSocketConfig.disableTlsVerification = true
+            }
+
+            this.socketImpl = new WebSocket()
+            this.socketImpl.open(address)
+
+            this.socketImpl.onError((error: string) => this.onError(new Error(error)))
+
+            this.socketImpl.onOpen(() => {
+                this.socket.readyState = OPEN
+                this.onOpen()
+            })
+
+            this.socketImpl.onClosed(() => {
+                this.socket.readyState = CLOSED
+                this.onClose(0, '')
+            })
+            this.socketImpl.onMessage((message: Buffer | string) => {
                 if (!this.destroyed) {
-                    if (isBinary === false) {
+                    if (typeof message === 'string') {
                         logger.debug('Received string data, only binary data is supported')
                     } else {
                         this.onMessage(new Uint8Array(message))
@@ -32,8 +59,9 @@ export class WebsocketClientConnection extends AbstractWebsocketClientConnection
         }
     }
 
+    // eslint-disable-next-line class-methods-use-this
     protected stopListening(): void {
-        this.socket?.removeAllListeners()
+        //this.socket?.removeAllListeners()
     }
 
 }
