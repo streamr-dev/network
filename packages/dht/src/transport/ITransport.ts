@@ -16,7 +16,7 @@ export const DEFAULT_SEND_OPTIONS = {
     sendIfStopped: false
 }
 export interface ITransport {
-    // TODO: Why do on, once and off need to be defined multiple times per function type?
+    // Needs overloading
     on<T extends keyof TransportEvents>(eventName: T, listener: TransportEvents[T]): void
     on<T extends keyof TransportEvents>(eventName: T, listener: TransportEvents[T]): void
     on<T extends keyof TransportEvents>(eventName: T, listener: TransportEvents[T]): void

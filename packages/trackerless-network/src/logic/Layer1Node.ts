@@ -4,7 +4,7 @@ export type Layer1NodeEvents = Pick<DhtNodeEvents, 'manualRejoinRequired' | 'nea
     | 'nearbyContactRemoved' | 'randomContactAdded' | 'randomContactRemoved' | 'ringContactAdded' | 'ringContactRemoved'>
 
 export interface Layer1Node {
-    // TODO: Why do on, once and off need to be defined multiple times per function type?
+    // Needs overloading
     on<T extends keyof Layer1NodeEvents>(eventName: T, listener: Layer1NodeEvents[T]): void
     on<T extends keyof Layer1NodeEvents>(eventName: T, listener: Layer1NodeEvents[T]): void
     once<T extends keyof Layer1NodeEvents>(eventName: T, listener: Layer1NodeEvents[T]): void
