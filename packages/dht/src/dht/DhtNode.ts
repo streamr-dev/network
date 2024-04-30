@@ -159,7 +159,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             storeHighestTtl: 60000,
             storeMaxTtl: 60000,
             networkConnectivityTimeout: 10000,
-            storageRedundancyFactor: 5,
+            storageRedundancyFactor: 5, // TODO validate that this is > 1 (as each node should replicate the data to other node)
             metricsContext: new MetricsContext()
         }, conf)
         this.validateConfig()
