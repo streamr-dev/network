@@ -19,6 +19,7 @@ import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
 import { Router } from '../../src/dht/routing/Router'
 import { ITransport } from '../../src/transport/ITransport'
 import { areEqualPeerDescriptors, createRandomDhtAddress } from '../../src/identifiers'
+import { MockConnectionsView } from '../utils/mock/MockConnectionsView'
 
 const createMockRouter = (error?: RouteMessageError): Partial<Router> => {
     return {
@@ -77,6 +78,7 @@ describe('RecursiveOperationManager', () => {
             serviceId: 'RecursiveOperationManager',
             localDataStore: new LocalDataStore(30 * 100),
             sessionTransport: transport,
+            connectionsView: new MockConnectionsView(),
             addContact: () => {},
             rpcCommunicator: rpcCommunicator as any,
             createDhtNodeRpcRemote: () => undefined as any

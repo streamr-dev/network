@@ -1,21 +1,25 @@
-import {
-    DataEntry, ReplicateDataRequest, PeerDescriptor,
-    StoreDataRequest, StoreDataResponse, RecursiveOperation
-} from '../../proto/packages/dht/protos/DhtRpc'
-import { Any } from '../../proto/google/protobuf/any'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { RecursiveOperationManager } from '../recursive-operation/RecursiveOperationManager'
 import { Logger, executeSafePromise } from '@streamr/utils'
-import { LocalDataStore } from './LocalDataStore'
-import { StoreRpcRemote } from './StoreRpcRemote'
-import { Timestamp } from '../../proto/google/protobuf/timestamp'
-import { SortedContactList } from '../contact/SortedContactList'
-import { Contact } from '../contact/Contact'
-import { ServiceID } from '../../types/ServiceID'
 import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
-import { StoreRpcLocal } from './StoreRpcLocal'
+import { Any } from '../../proto/google/protobuf/any'
+import { Timestamp } from '../../proto/google/protobuf/timestamp'
+import {
+    DataEntry,
+    PeerDescriptor,
+    RecursiveOperation,
+    ReplicateDataRequest,
+    StoreDataRequest, StoreDataResponse
+} from '../../proto/packages/dht/protos/DhtRpc'
+import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
+import { ServiceID } from '../../types/ServiceID'
 import { getDistance } from '../PeerManager'
+import { Contact } from '../contact/Contact'
+import { SortedContactList } from '../contact/SortedContactList'
+import { getClosestNodes } from '../contact/getClosestNodes'
+import { RecursiveOperationManager } from '../recursive-operation/RecursiveOperationManager'
+import { LocalDataStore } from './LocalDataStore'
+import { StoreRpcLocal } from './StoreRpcLocal'
+import { StoreRpcRemote } from './StoreRpcRemote'
 
 interface StoreManagerConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -25,7 +29,7 @@ interface StoreManagerConfig {
     serviceId: ServiceID
     highestTtl: number
     redundancyFactor: number
-    getClosestNeighborsTo: (dataKey: DhtAddress, n?: number) => PeerDescriptor[]
+    getNeighbors: () => ReadonlyArray<PeerDescriptor>
     createRpcRemote: (contact: PeerDescriptor) => StoreRpcRemote
 }
 
@@ -60,7 +64,8 @@ export class StoreManager {
 
     private replicateAndUpdateStaleState(key: DhtAddress, newNode: PeerDescriptor): void {
         const newNodeId = getNodeIdFromPeerDescriptor(newNode)
-        const closestToData = this.config.getClosestNeighborsTo(key, this.config.redundancyFactor)
+        const closestToData = getClosestNodes(key, this.config.getNeighbors(), { maxCount: this.config.redundancyFactor })
+        // TODO maybe we could analyze the selfIsPrimaryStorer without creating a separate sorted list?
         const sortedList = new SortedContactList<Contact>({
             referenceId: key, 
             maxSize: this.config.redundancyFactor,
@@ -138,7 +143,11 @@ export class StoreManager {
     }
 
     private selfIsWithinRedundancyFactor(dataKey: DhtAddress): boolean {
-        const closestNeighbors = this.config.getClosestNeighborsTo(dataKey, this.config.redundancyFactor)
+        const closestNeighbors = getClosestNodes(
+            dataKey,
+            this.config.getNeighbors(),
+            { maxCount: this.config.redundancyFactor }
+        )
         if (closestNeighbors.length < this.config.redundancyFactor) {
             return true
         } else {
@@ -151,7 +160,12 @@ export class StoreManager {
     private async replicateDataToClosestNodes(): Promise<void> {
         const dataEntries = Array.from(this.config.localDataStore.values())
         await Promise.all(dataEntries.map(async (dataEntry) => {
-            const neighbors = this.config.getClosestNeighborsTo(getDhtAddressFromRaw(dataEntry.key), this.config.redundancyFactor)
+            const dataKey = getDhtAddressFromRaw(dataEntry.key)
+            const neighbors = getClosestNodes(
+                dataKey,
+                this.config.getNeighbors(),
+                { maxCount: this.config.redundancyFactor }
+            )
             await Promise.all(neighbors.map(async (neighbor) => {
                 const rpcRemote = this.config.createRpcRemote(neighbor)
                 try {
@@ -169,7 +183,8 @@ export class StoreManager {
         const incomingNodeId = getNodeIdFromPeerDescriptor(incomingPeer)
         const key = getDhtAddressFromRaw(dataEntry.key)
         // TODO use config option or named constant?
-        const closestToData = this.config.getClosestNeighborsTo(key, 10)
+        const closestToData = getClosestNodes(key, this.config.getNeighbors(), { maxCount: 10 })
+        // TODO maybe we could analyze the selfIsPrimaryStorer without creating a separate sorted list?
         const sortedList = new SortedContactList<Contact>({
             referenceId: key, 
             maxSize: this.config.redundancyFactor,

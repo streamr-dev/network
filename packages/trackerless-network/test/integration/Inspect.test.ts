@@ -30,7 +30,8 @@ describe('inspect', () => {
             layer0: {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor,
-                transport
+                transport,
+                connectionsView: transport
             }
         })
         await node.start()

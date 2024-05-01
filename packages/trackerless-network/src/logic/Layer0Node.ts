@@ -1,4 +1,4 @@
-import { DataEntry, DhtAddress, ITransport, PeerDescriptor } from '@streamr/dht'
+import { ConnectionsView, DataEntry, DhtAddress, ITransport, PeerDescriptor } from '@streamr/dht'
 import { Any } from '../proto/google/protobuf/any'
 
 export interface Layer0Node extends ITransport {
@@ -11,7 +11,7 @@ export interface Layer0Node extends ITransport {
     waitForNetworkConnectivity(): Promise<void>
     getTransport(): ITransport
     getNeighbors(): PeerDescriptor[]
-    getConnections(): PeerDescriptor[]
+    getConnectionsView(): ConnectionsView
     start(): Promise<void>
     stop(): Promise<void>
 }

@@ -1,5 +1,6 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '@streamr/utils'
+import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { Empty } from '../proto/google/protobuf/empty'
 import {
     ClosestPeersRequest,
@@ -12,13 +13,13 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import { IDhtNodeRpc } from '../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
-import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../identifiers'
-import { RingIdRaw } from './contact/ringIdentifiers'
 import { RingContacts } from './contact/RingContactList'
+import { getClosestNodes } from './contact/getClosestNodes'
+import { RingIdRaw } from './contact/ringIdentifiers'
 
 interface DhtNodeRpcLocalConfig {
     peerDiscoveryQueryBatchSize: number
-    getClosestNeighborsTo: (nodeId: DhtAddress, limit: number) => PeerDescriptor[]
+    getNeighbors: () => ReadonlyArray<PeerDescriptor>
     getClosestRingContactsTo: (id: RingIdRaw, limit: number) => RingContacts
     addContact: (contact: PeerDescriptor) => void
     removeContact: (nodeId: DhtAddress) => void
@@ -34,16 +35,22 @@ export class DhtNodeRpcLocal implements IDhtNodeRpc {
         this.config = config
     }
 
+    // TODO rename to getClosestNeighbors (breaking change)
     async getClosestPeers(request: ClosestPeersRequest, context: ServerCallContext): Promise<ClosestPeersResponse> {
         this.config.addContact((context as DhtCallContext).incomingSourceDescriptor!)
+        const peers = getClosestNodes(
+            getDhtAddressFromRaw(request.nodeId), 
+            this.config.getNeighbors(),
+            { maxCount: this.config.peerDiscoveryQueryBatchSize }
+        )
         const response = {
-            peers: this.config.getClosestNeighborsTo(getDhtAddressFromRaw(request.nodeId), this.config.peerDiscoveryQueryBatchSize),
+            peers,
             requestId: request.requestId
         }
         return response
     }
 
-    // TODO rename to getClosestRingContacts
+    // TODO rename to getClosestRingContacts (breaking change)
     async getClosestRingPeers(request: ClosestRingPeersRequest, context: ServerCallContext): Promise<ClosestRingPeersResponse> {
         this.config.addContact((context as DhtCallContext).incomingSourceDescriptor!)
         const closestContacts = this.config.getClosestRingContactsTo(request.ringId as RingIdRaw, this.config.peerDiscoveryQueryBatchSize)
