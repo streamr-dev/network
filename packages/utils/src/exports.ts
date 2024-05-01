@@ -45,6 +45,7 @@ import { toLengthPrefixedFrame, LengthPrefixedFrameDecoder } from './lengthPrefi
 import { verifySignature, createSignature, recoverAddress, hash } from './signingUtils'
 import { ipv4ToNumber, numberToIpv4 } from './ipv4ToNumber'
 import { MapWithTtl } from './MapWithTtl'
+import { EmitterOf } from './EmitterOf'
 
 export {
     BrandedString,
@@ -107,7 +108,8 @@ export {
     ipv4ToNumber,
     numberToIpv4,
     hash,
-    MapWithTtl
+    MapWithTtl,
+    EmitterOf
 }
 
 export {

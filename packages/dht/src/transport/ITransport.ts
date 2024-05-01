@@ -1,6 +1,6 @@
 import { DhtAddress } from '../identifiers'
 import { Message, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
-
+import { EmitterOf } from '@streamr/utils'
 export interface TransportEvents {
     connected: (peerDescriptor: PeerDescriptor) => void
     disconnected: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => void
@@ -16,24 +16,12 @@ export const DEFAULT_SEND_OPTIONS = {
     connect: true,
     sendIfStopped: false
 }
-export interface ITransport {
-    // TODO: Why do on, once and off need to be defined multiple times per function type?
-    on<T extends keyof TransportEvents>(eventName: T, listener: TransportEvents[T]): void
-    on<T extends keyof TransportEvents>(eventName: T, listener: TransportEvents[T]): void
-    on<T extends keyof TransportEvents>(eventName: T, listener: TransportEvents[T]): void
 
-    once<T extends keyof TransportEvents>(eventName: T, listener: TransportEvents[T]): void
-    once<T extends keyof TransportEvents>(eventName: T, listener: TransportEvents[T]): void
-    once<T extends keyof TransportEvents>(eventName: T, listener: TransportEvents[T]): void
-
-    off<T extends keyof TransportEvents>(eventName: T, listener: TransportEvents[T]): void
-    off<T extends keyof TransportEvents>(eventName: T, listener: TransportEvents[T]): void
-    off<T extends keyof TransportEvents>(eventName: T, listener: TransportEvents[T]): void
-
+export interface ITransport extends EmitterOf<TransportEvents> {
     send(msg: Message, opts?: SendOptions): Promise<void>
     getLocalPeerDescriptor(): PeerDescriptor
     getConnections(): PeerDescriptor[]
     getConnectionCount(): number
     hasConnection(nodeId: DhtAddress): boolean
-    stop(): void | Promise<void>
+    stop(): void | Promise<void>    
 }
