@@ -22,7 +22,7 @@ import * as BrokerConfigSchema from './config.schema.json'
 
 const MIN_BALANCE = utils.parseEther('0.1')
 
-type EnvironmentId = 'polygon' | 'mumbai'
+type EnvironmentId = 'polygon' | 'polygonAmoy'
 
 export async function start(): Promise<void> {
     log(`
@@ -147,10 +147,7 @@ export async function start(): Promise<void> {
 
                 resume()
 
-                const hub =
-                    environmentId === 'polygon'
-                        ? 'https://streamr.network/hub'
-                        : 'https://mumbai.streamr.network/hub'
+                const hub = 'https://streamr.network/hub'
 
                 if (nodes !== undefined) {
                     if (!nodes.includes(nodeAddress.toLowerCase())) {
@@ -259,8 +256,8 @@ async function getEnvironmentId(): Promise<EnvironmentId> {
         choices: [
             { value: 'polygon', name: 'Streamr 1.0 mainnet + Polygon' },
             {
-                value: 'mumbai',
-                name: 'Streamr 1.0 testing environment + Mumbai',
+                value: 'polygonAmoy',
+                name: 'Streamr 1.0 testnet + Polygon Amoy testnet',
             },
         ],
         default: 'polygon',
