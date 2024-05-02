@@ -72,7 +72,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             host: this.config.websocketHost,
             entrypoints: this.config.entryPoints,
             tlsCertificate: this.config.tlsCertificate,
-            serverEnableTls: this.config.websocketServerEnableTls!,
+            serverEnableTls: this.config.websocketServerEnableTls ?? false,
             autoCertifierUrl: this.config.autoCertifierUrl!,
             autoCertifierConfigFile: this.config.autoCertifierConfigFile!,
             autoCertifierTransport,

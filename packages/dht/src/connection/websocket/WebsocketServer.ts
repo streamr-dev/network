@@ -106,6 +106,7 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
         try {
             this.wsServer = new WebSocketServer(webSocketServerConfiguration)
         } catch (err) {
+            console.error(err)
             throw (new WebsocketServerStartError('Starting Websocket server failed', err))
         }
         this.wsServer.onClient(async (ws: WebSocket) => {

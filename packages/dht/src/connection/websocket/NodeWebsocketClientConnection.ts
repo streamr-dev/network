@@ -16,7 +16,7 @@ export class WebsocketClientConnection extends AbstractWebsocketClientConnection
         binaryType: BINARY_TYPE,
         readyState: CLOSED,
         close: (_code?: number, _reason?: string) => {
-            this.socketImpl?.close()
+            this.socketImpl?.forceClose()
         },
         send: (data: string | Buffer | ArrayBuffer | ArrayBufferView): void => {
             this.socketImpl?.sendMessageBinary(data as Uint8Array)
@@ -42,6 +42,7 @@ export class WebsocketClientConnection extends AbstractWebsocketClientConnection
             })
 
             this.socketImpl.onClosed(() => {
+                this.socketImpl!.forceClose()
                 this.socket.readyState = CLOSED
                 this.onClose(0, '')
             })
@@ -61,7 +62,9 @@ export class WebsocketClientConnection extends AbstractWebsocketClientConnection
 
     // eslint-disable-next-line class-methods-use-this
     protected stopListening(): void {
+        
         //this.socket?.removeAllListeners()
+    
     }
 
 }

@@ -91,7 +91,7 @@ describe('Websocket Connection Management', () => {
         await connectorTransport3.stop()
     })
 
-    it.only('Can open connections to serverless peer with smaller nodeId', (done) => {
+    it('Can open connections to serverless peer with smaller nodeId', (done) => {
         const dummyMessage: Message = {
             serviceId: SERVICE_ID,
             body: {

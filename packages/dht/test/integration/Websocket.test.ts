@@ -62,6 +62,7 @@ describe('Websocket', () => {
     })
 
     afterAll(async () => {
+        clientWebsocket.close(true)
         await websocketServer.stop()
     })
 })

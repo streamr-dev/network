@@ -46,7 +46,10 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
 
     private onClose(): void {
         logger.trace('Peer ' + this.remoteIpAddress + ' disconnected.')
+        this.socket?.forceClose()
+        
         this.doDisconnect(0, '')    // TODO: use proper reason code and description
+       
     }
 
     private onError(error: string): void {
@@ -84,7 +87,7 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
         this.emit('disconnected', gracefulLeave, undefined, 'close() called')
         this.removeAllListeners()
         if (!this.stopped) {
-            this.socket?.close()
+            this.socket?.forceClose()
         } else {
             logger.debug('Tried to close a stopped connection')
         }
@@ -96,7 +99,7 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
             this.removeAllListeners()
             if (this.socket) {
                 this.stopListening()
-                this.socket.close()
+                this.socket.forceClose()
                 this.socket = undefined
             }
             this.stopped = true
