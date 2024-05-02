@@ -1,16 +1,10 @@
 import { DhtAddress, DhtNodeEvents, PeerDescriptor, RingContacts } from '@streamr/dht'
+import { EmitterOf } from '@streamr/utils'
 
 export type Layer1NodeEvents = Pick<DhtNodeEvents, 'manualRejoinRequired' | 'nearbyContactAdded' 
     | 'nearbyContactRemoved' | 'randomContactAdded' | 'randomContactRemoved' | 'ringContactAdded' | 'ringContactRemoved'>
 
-export interface Layer1Node {
-    // Needs overloading
-    on<T extends keyof Layer1NodeEvents>(eventName: T, listener: Layer1NodeEvents[T]): void
-    on<T extends keyof Layer1NodeEvents>(eventName: T, listener: Layer1NodeEvents[T]): void
-    once<T extends keyof Layer1NodeEvents>(eventName: T, listener: Layer1NodeEvents[T]): void
-    once<T extends keyof Layer1NodeEvents>(eventName: T, listener: Layer1NodeEvents[T]): void
-    off<T extends keyof Layer1NodeEvents>(eventName: T, listener: Layer1NodeEvents[T]): void
-    off<T extends keyof Layer1NodeEvents>(eventName: T, listener: Layer1NodeEvents[T]): void
+export interface Layer1Node extends EmitterOf<Layer1NodeEvents> {
     removeContact: (nodeId: DhtAddress) => void
     getClosestContacts: (maxCount?: number) => PeerDescriptor[]
     getRandomContacts: (maxCount?: number) => PeerDescriptor[]
