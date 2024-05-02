@@ -609,8 +609,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
  
     public async waitForNetworkConnectivity(): Promise<void> {
-        await waitForCondition(() => this.connectionsView!.getConnectionCount() > 0
-            , this.config.networkConnectivityTimeout, 100, this.abortController.signal)
+        await waitForCondition(
+            () => this.connectionsView!.getConnectionCount() > 0,
+            this.config.networkConnectivityTimeout,
+            100,
+            this.abortController.signal
+        )
     }
 
     public hasJoined(): boolean {
