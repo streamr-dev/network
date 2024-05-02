@@ -181,6 +181,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 throw new Error(`Invalid peerDescriptor, the length of the nodeId should be ${KADEMLIA_ID_LENGTH_IN_BYTES} bytes`)
             }
         }
+        if (this.config.transport !== undefined && this.config.connectionsView === undefined) {
+            throw new Error('connectionsView is required when transport is given')
+        }
     }
 
     public async start(): Promise<void> {
@@ -604,15 +607,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     public getWeakLockedConnectionCount(): number {
         return this.connectionLocker!.getWeakLockedConnectionCount()
     }
-
+ 
     public async waitForNetworkConnectivity(): Promise<void> {
-        await waitForCondition(() => {
-            if (!this.peerManager) {
-                return false
-            } else {
-                return (this.connectionsView!.getConnectionCount() > 0)
-            }
-        }, this.config.networkConnectivityTimeout, 100, this.abortController.signal)
+        await waitForCondition(() => this.connectionsView!.getConnectionCount() > 0
+        , this.config.networkConnectivityTimeout, 100, this.abortController.signal)
     }
 
     public hasJoined(): boolean {
