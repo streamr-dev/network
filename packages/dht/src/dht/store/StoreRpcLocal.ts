@@ -16,7 +16,7 @@ import { DhtAddress, getDhtAddressFromRaw } from '../../identifiers'
 interface StoreRpcLocalConfig {
     localDataStore: LocalDataStore
     replicateDataToNeighbors: (incomingPeer: PeerDescriptor, dataEntry: DataEntry) => void
-    selfIsWithinRedundancyFactor: (key: DhtAddress) => boolean
+    isLocalNodeStorer: (key: DhtAddress) => boolean
 }
 
 const logger = new Logger(module)
@@ -32,7 +32,7 @@ export class StoreRpcLocal implements IStoreRpc {
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
         logger.trace('storeData()')
         const key = getDhtAddressFromRaw(request.key)
-        const selfIsWithinRedundancyFactor = this.config.selfIsWithinRedundancyFactor(key)
+        const isLocalNodeStorer = this.config.isLocalNodeStorer(key)
         this.config.localDataStore.storeEntry({ 
             key: request.key,
             data: request.data,
@@ -40,10 +40,10 @@ export class StoreRpcLocal implements IStoreRpc {
             createdAt: request.createdAt,
             storedAt: Timestamp.now(),
             ttl: request.ttl,
-            stale: !selfIsWithinRedundancyFactor,
+            stale: !isLocalNodeStorer,
             deleted: false
         })
-        if (!selfIsWithinRedundancyFactor) {
+        if (!isLocalNodeStorer) {
             this.config.localDataStore.setAllEntriesAsStale(key)
         }
         return {}
@@ -57,7 +57,7 @@ export class StoreRpcLocal implements IStoreRpc {
             this.config.replicateDataToNeighbors((context as DhtCallContext).incomingSourceDescriptor!, request.entry!)
         }
         const key = getDhtAddressFromRaw(dataEntry.key)
-        if (!this.config.selfIsWithinRedundancyFactor(key)) {
+        if (!this.config.isLocalNodeStorer(key)) {
             this.config.localDataStore.setAllEntriesAsStale(key)
         }
         logger.trace('server-side replicateData() at end')

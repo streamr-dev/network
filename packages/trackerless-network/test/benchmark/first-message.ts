@@ -159,7 +159,7 @@ run().then(() => {
     console.log(foundData)
     const layer0Node = currentNode.stack.getLayer0Node() as DhtNode
     console.log(layer0Node.getNeighbors().length)
-    console.log(layer0Node.getConnectionCount())
+    console.log(layer0Node.getConnectionsView().getConnectionCount())
     const streamPartDelivery = contentDeliveryManager
         .getStreamPartDelivery(streamParts[0])! as { layer1Node: Layer1Node, node: ContentDeliveryLayerNode }
     console.log(streamPartDelivery.layer1Node.getNeighbors())

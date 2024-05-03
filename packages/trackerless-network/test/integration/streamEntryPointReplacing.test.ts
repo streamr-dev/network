@@ -27,6 +27,7 @@ describe('Stream Entry Points are replaced when known entry points leave streams
         const node = new NetworkStack({
             layer0: {
                 transport,
+                connectionsView: transport,
                 peerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
             }
@@ -41,6 +42,7 @@ describe('Stream Entry Points are replaced when known entry points leave streams
         layer0EntryPoint = new NetworkStack({
             layer0: {
                 transport: entryPointTransport,
+                connectionsView: entryPointTransport,
                 peerDescriptor: entryPointPeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
             }

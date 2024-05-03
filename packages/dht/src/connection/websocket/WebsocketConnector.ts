@@ -87,17 +87,10 @@ export class WebsocketConnector {
     private registerLocalRpcMethods(config: WebsocketConnectorConfig) {
         const rpcLocal = new WebsocketConnectorRpcLocal({
             connect: (targetPeerDescriptor: PeerDescriptor) => this.connect(targetPeerDescriptor),
-            hasConnection: (nodeId: DhtAddress): boolean => {
-                if (this.connectingConnections.has(nodeId)
-                    || this.connectingConnections.has(nodeId)
-                    || this.ongoingConnectRequests.has(nodeId)
-                    || config.hasConnection(nodeId)
-                ) {
-                    return true
-                } else {
-                    return false
-                }
-            },
+            hasConnection: (nodeId: DhtAddress): boolean => (this.connectingConnections.has(nodeId)
+                || this.ongoingConnectRequests.has(nodeId)
+                || config.hasConnection(nodeId))
+            ,
             onNewConnection: (connection: ManagedConnection) => config.onNewConnection(connection),
             abortSignal: this.abortController.signal
         })
@@ -307,6 +300,8 @@ export class WebsocketConnector {
             const ongoingConnectRequest = this.ongoingConnectRequests.get(nodeId)!
             if (!isMaybeSupportedVersion(remoteVersion)) {
                 ongoingConnectRequest.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
+            } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
+                ongoingConnectRequest.rejectHandshake(HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
             } else {
                 ongoingConnectRequest.attachImplementation(websocketServerConnection)
                 ongoingConnectRequest.acceptHandshake()

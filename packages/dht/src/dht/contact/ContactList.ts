@@ -13,17 +13,14 @@ export class ContactList<C extends { getNodeId: () => DhtAddress }> extends Even
     protected contactIds: DhtAddress[] = []
     protected localNodeId: DhtAddress
     protected maxSize: number
-    protected defaultContactQueryLimit
 
     constructor(
         localNodeId: DhtAddress,
-        maxSize: number,
-        defaultContactQueryLimit = 20
+        maxSize: number
     ) {
         super()
         this.localNodeId = localNodeId
         this.maxSize = maxSize
-        this.defaultContactQueryLimit = defaultContactQueryLimit
     }
 
     public getContact(id: DhtAddress): C | undefined {

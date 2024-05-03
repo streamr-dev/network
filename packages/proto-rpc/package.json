@@ -34,10 +34,8 @@
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
     "@streamr/test-utils": "100.2.3",
-    "@types/express": "^4.17.21",
     "@types/lodash": "^4.14.202",
     "@types/uuid": "^9.0.8",
-    "express": "^4.19.2",
     "patch-package": "^8.0.0",
     "ts-node": "^10.9.2"
   },

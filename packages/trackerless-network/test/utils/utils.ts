@@ -47,6 +47,7 @@ export const createMockContentDeliveryLayerNodeAndDhtNode = async (
     await mockCm.start()
     const layer1Node = new DhtNode({
         transport: mockCm,
+        connectionsView: mockCm,
         peerDescriptor: localPeerDescriptor,
         numberOfNodesPerKBucket: 4,
         entryPoints: [entryPointDescriptor],
@@ -134,6 +135,7 @@ export const createNetworkNodeWithSimulator = async (
             peerDescriptor,
             entryPoints,
             transport,
+            connectionsView: transport,
             maxConnections: 25,
             storeHighestTtl: 120000,
             storeMaxTtl: 120000

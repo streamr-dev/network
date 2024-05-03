@@ -1,4 +1,3 @@
-import { DhtAddress } from '../identifiers'
 import { Message, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 
 export interface TransportEvents {
@@ -33,8 +32,5 @@ export interface ITransport {
 
     send(msg: Message, opts?: SendOptions): Promise<void>
     getLocalPeerDescriptor(): PeerDescriptor
-    getConnections(): PeerDescriptor[]
-    getConnectionCount(): number
-    hasConnection(nodeId: DhtAddress): boolean
     stop(): void | Promise<void>
 }
