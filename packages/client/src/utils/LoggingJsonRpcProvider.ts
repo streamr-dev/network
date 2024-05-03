@@ -1,4 +1,4 @@
-import { JsonRpcApiProviderOptions, JsonRpcProvider, Networkish } from 'ethers/providers'
+import { JsonRpcApiProviderOptions, JsonRpcProvider, Networkish } from 'ethers'
 import { Logger, randomString } from '@streamr/utils'
 import { FetchRequest } from 'ethers'
 import { Promise } from 'ts-toolbelt/out/Any/Promise'

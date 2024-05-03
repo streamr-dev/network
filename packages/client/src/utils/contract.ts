@@ -12,7 +12,7 @@ import pLimit from 'p-limit'
 import { InternalEvents, StreamrClientEventEmitter, StreamrClientEvents } from '../events'
 import { LoggerFactory } from './LoggerFactory'
 import { tryInSequence } from './promises'
-import type { TransactionResponse } from 'ethers/providers'
+import type { TransactionResponse } from 'ethers'
 
 export interface ContractEvent {
     onMethodExecute: (methodName: string) => void

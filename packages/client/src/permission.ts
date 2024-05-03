@@ -1,4 +1,4 @@
-import { MaxInt256 } from 'ethers/constants'
+import { MaxInt256 } from 'ethers'
 import { EthereumAddress } from '@streamr/utils'
 
 export enum StreamPermission {

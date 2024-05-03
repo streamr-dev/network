@@ -1,5 +1,5 @@
-import { Signer } from 'ethers/providers'
-import { Contract } from 'ethers/contract'
+import { Signer } from 'ethers'
+import { Contract } from 'ethers'
 import { EthereumAddress } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'

@@ -1,5 +1,5 @@
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
-import type { Provider } from 'ethers/providers'
+import type { Provider } from 'ethers'
 import { LoggingJsonRpcProvider } from './utils/LoggingJsonRpcProvider'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { FetchRequest } from 'ethers'

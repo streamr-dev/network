@@ -1,4 +1,4 @@
-import { Provider } from 'ethers/providers'
+import { Provider } from 'ethers'
 import { StreamID, StreamIDUtils, toStreamID } from '@streamr/protocol'
 import { EthereumAddress, GraphQLQuery, Logger, TheGraphClient, collect, isENSName, toEthereumAddress } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
