@@ -1,5 +1,5 @@
 import { Contract } from 'ethers'
-import { Operator, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
+import { Operator, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts-ethers6'
 import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
 import { createClient, createTestStream } from '../../../utils'
@@ -14,6 +14,7 @@ import {
     stake
 } from './contractUtils'
 import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
+import { SignerWithProvider } from '@streamr/sdk'
 
 const logger = new Logger(module)
 
@@ -22,7 +23,7 @@ const ONE_ETHER = BigInt(1e18)
 
 const getEarnings = async (operatorContract: Operator): Promise<bigint> => {
     const { earnings } = await operatorContract.getSponsorshipsAndEarnings()
-    return earnings[0].toBigInt()
+    return earnings[0]
 }
 
 describe('checkOperatorValueBreach', () => {
@@ -56,10 +57,10 @@ describe('checkOperatorValueBreach', () => {
         const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
         const streamrConfigAddress = await operatorContract.streamrConfig()
         const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
-        const allowedDifference = valueBeforeWithdraw.mul(await streamrConfig.maxAllowedEarningsFraction()).div(ONE_ETHER).toBigInt()
+        const allowedDifference = valueBeforeWithdraw * (await streamrConfig.maxAllowedEarningsFraction()) / ONE_ETHER
         const contractFacade = ContractFacade.createInstance({
             ...watcherConfig,
-            signer: watcherWallets[0]
+            signer: watcherWallets[0] as SignerWithProvider
         })
         // overwrite (for this test only) the getRandomOperator method to deterministically return the operator's address
         contractFacade.getRandomOperator = async () => {
@@ -73,7 +74,7 @@ describe('checkOperatorValueBreach', () => {
         const earnings = await getEarnings(operatorContract)
         expect(earnings).toBeLessThan(allowedDifference)
         const valueAfterWithdraw = await operatorContract.valueWithoutEarnings()
-        expect(valueAfterWithdraw.toBigInt()).toBeGreaterThan(valueBeforeWithdraw.toBigInt())
+        expect(valueAfterWithdraw).toBeGreaterThan(valueBeforeWithdraw)
 
     }, 60 * 1000)
 })

@@ -1,4 +1,4 @@
-import type { Operator } from '@streamr/network-contracts'
+import type { Operator } from '@streamr/network-contracts-ethers6'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { collect, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'

@@ -1,7 +1,7 @@
 import { StreamPartID } from '@streamr/protocol'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { Stream, StreamrClient } from '@streamr/sdk'
+import { SignerWithProvider, Stream, StreamrClient } from '@streamr/sdk'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { createClient, createTestStream } from '../../../utils'
 import {
@@ -74,7 +74,7 @@ describe('MaintainTopologyService', () => {
         await stake(operatorContract, sponsorship1.address, 10000)
 
         const serviceHelperConfig = {
-            signer: operatorWallet,
+            signer: operatorWallet as SignerWithProvider,
             operatorContractAddress: toEthereumAddress(operatorContract.address),
             theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl,
             getEthersOverrides: () => ({})

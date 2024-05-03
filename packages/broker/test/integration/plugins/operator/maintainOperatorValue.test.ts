@@ -5,6 +5,7 @@ import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, se
 import { maintainOperatorValue } from '../../../../src/plugins/operator/maintainOperatorValue'
 import { multiply } from '../../../../src/helpers/multiply'
 import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
+import { SignerWithProvider } from '@streamr/sdk'
 
 const logger = new Logger(module)
 
@@ -42,7 +43,7 @@ describe('maintainOperatorValue', () => {
         await stake(operatorContract, sponsorship.address, STAKE_AMOUNT)
         const contractFacade = ContractFacade.createInstance({
             ...operatorServiceConfig,
-            signer: nodeWallets[0]
+            signer: nodeWallets[0] as SignerWithProvider
         })
         const { maxAllowedEarningsDataWei } = await contractFacade.getMyEarnings(1, 20)
         const triggerWithdrawLimitDataWei = multiply(maxAllowedEarningsDataWei, 1 - SAFETY_FRACTION)
@@ -60,6 +61,6 @@ describe('maintainOperatorValue', () => {
             contractFacade
         )
         const valueAfterWithdraw = await operatorContract.valueWithoutEarnings()
-        expect(valueAfterWithdraw.toBigInt()).toBeGreaterThan(valueBeforeWithdraw.toBigInt())
+        expect(valueAfterWithdraw).toBeGreaterThan(valueBeforeWithdraw)
     }, 60 * 1000)
 })

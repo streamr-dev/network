@@ -61,7 +61,7 @@ describe('Validator', () => {
         })
 
         it('invalid publisher', async () => {
-            const otherWallet = Wallet.createRandom()
+            const otherWallet = fastWallet()
             await expect(() => validate({
                 publisher: otherWallet
             })).rejects.toThrow('is not a publisher on stream streamId')

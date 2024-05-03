@@ -1,6 +1,6 @@
 import { Contract } from 'ethers'
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { OperatorFactory, operatorFactoryABI, type Sponsorship } from '@streamr/network-contracts'
+import { OperatorFactory, operatorFactoryABI, type Sponsorship } from '@streamr/network-contracts-ethers6'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 import {
@@ -15,6 +15,7 @@ import {
 } from './contractUtils'
 import { createClient, createTestStream } from '../../../utils'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { SignerWithProvider } from '@streamr/sdk'
 
 async function createStream(): Promise<string> {
     const client = createClient(await fetchPrivateKeyWithGas())
@@ -54,7 +55,7 @@ describe('ContractFacade', () => {
     it('getRandomOperator', async () => {
         const contractFacade = ContractFacade.createInstance({
             ...deployedOperator.operatorServiceConfig,
-            signer: deployedOperator.nodeWallets[0]
+            signer: deployedOperator.nodeWallets[0] as SignerWithProvider
         })
         const randomOperatorAddress = await contractFacade.getRandomOperator()
         expect(randomOperatorAddress).toBeDefined()
@@ -66,7 +67,7 @@ describe('ContractFacade', () => {
             operatorFactoryABI,
             getAdminWallet()
         ) as unknown as OperatorFactory
-        const isDeployedByFactory = (await operatorFactory.deploymentTimestamp(randomOperatorAddress!)).gt(0)
+        const isDeployedByFactory = (await operatorFactory.deploymentTimestamp(randomOperatorAddress!)) > 0
         expect(isDeployedByFactory).toBeTrue()
 
     }, 30 * 1000)
@@ -118,7 +119,7 @@ describe('ContractFacade', () => {
 
         const contractFacade = ContractFacade.createInstance({
             ...flagger.operatorServiceConfig,
-            signer: flagger.nodeWallets[0]
+            signer: flagger.nodeWallets[0] as SignerWithProvider
         })
         await contractFacade.flag(toEthereumAddress(sponsorship2.address), toEthereumAddress(target.operatorContract.address), 2)
 
