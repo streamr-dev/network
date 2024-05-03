@@ -31,7 +31,7 @@ export class WebsocketClientConnection extends AbstractWebsocketClientConnection
                 webSocketConfig.disableTlsVerification = true
             }
 
-            this.socketImpl = new WebSocket()
+            this.socketImpl = new WebSocket(webSocketConfig)
             this.socketImpl.open(address)
 
             this.socketImpl.onError((error: string) => this.onError(new Error(error)))

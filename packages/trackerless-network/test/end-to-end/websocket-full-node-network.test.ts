@@ -8,7 +8,7 @@ import { getNodeIdFromPeerDescriptor } from '@streamr/dht'
 
 describe('Full node network with WebSocket connections only', () => {
 
-    const NUM_OF_NODES = 20
+    const NUM_OF_NODES = 32
     const epPeerDescriptor = createMockPeerDescriptor({
         websocket: { host: '127.0.0.1', port: 15555, tls: false }
     })

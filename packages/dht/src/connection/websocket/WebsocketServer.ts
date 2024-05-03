@@ -2,7 +2,7 @@ import EventEmitter from 'eventemitter3'
 //import WebSocket from 'ws'
 import { WebsocketServerConnection } from './WebsocketServerConnection'
 import { ConnectionSourceEvents } from '../IConnectionSource'
-import { Logger, wait } from '@streamr/utils'
+import { Logger, wait, waitForCondition } from '@streamr/utils'
 import { createSelfSignedCertificate } from '@streamr/autocertifier-client'
 import { WebsocketServerStartError } from '../../helpers/errors'
 import { PortRange, TlsCertificate } from '../ConnectionManager'
@@ -46,7 +46,7 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
         if (ports[0] > 65535 || ports[1] > 65535) {
             throw new WebsocketServerStartError('Port number is too big')
         }
- 
+
         for (const port of ports) {
             try {
                 //await asAbortable(this.startServer(port, this.config.enableTls), this.abortController.signal)
@@ -54,12 +54,14 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
                 await wait(1000)
                 return port
             } catch (err) {
-                console.error(err)
-                //if (err.originalError?.code === 'EADDRINUSE') {
-                logger.debug(`failed to start WebSocket server on port: ${port} reattempting on next port`)
-                //} else {
-                //    throw new WebsocketServerStartError(err)
-                //}
+                if (typeof err.originalError?.message === 'string' &&
+                    (err.originalError?.message as unknown as string)
+                        .includes('TCP server socket binding failed')) {
+                    logger.warn(`failed to start WebSocket server on port: ${port} reattempting on next port`)
+                } else {
+                    console.error(err.originalError?.message)
+                    throw new WebsocketServerStartError(err)
+                }
             }
         }
         throw new WebsocketServerStartError(
@@ -106,16 +108,35 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
         try {
             this.wsServer = new WebSocketServer(webSocketServerConfiguration)
         } catch (err) {
-            console.error(err)
+            //console.error(err)
             throw (new WebsocketServerStartError('Starting Websocket server failed', err))
         }
         this.wsServer.onClient(async (ws: WebSocket) => {
 
-            while (ws.path() == undefined || ws.remoteAddress() == undefined) {
-                await wait(100)
+            if (ws.path() == undefined || ws.remoteAddress() == undefined) {
+                
+                ws.onOpen(() => {
+                    console.warn('delayed onOpen() called on serverSocket')
+                    if (ws.path() == undefined || ws.remoteAddress() == undefined) {
+                        return 
+                    }
+                    const parsedUrl = parse(ws.path()!)
+                    console.warn('remoteAddress: ' + ws.remoteAddress()!)
+                    this.emit('connected', new WebsocketServerConnection(ws, parsedUrl, ws.remoteAddress()!.split(':')[0]))
+                })
+                ws.onClosed(() => {
+                    console.warn('delayed onClosed() called on serverSocket')
+                    ws.forceClose()
+                })
+                ws.onError((error: string) => {
+                    console.warn('delayed onError() called on serverSocket ' + error)
+                    //ws.forceClose()
+                    //this.emit('error', error)
+                })
+            } else {
+                const parsedUrl = parse(ws.path()!)
+                this.emit('connected', new WebsocketServerConnection(ws, parsedUrl, ws.remoteAddress()!.split(':')[0]))
             }
-            const parsedUrl = parse(ws.path()!)
-            this.emit('connected', new WebsocketServerConnection(ws, parsedUrl, ws.remoteAddress()!.split(':')[0]))
         })
         /*
         const requestListener = (request: IncomingMessage, response: ServerResponse<IncomingMessage>) => {
