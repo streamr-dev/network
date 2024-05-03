@@ -1148,7 +1148,7 @@ describe('Config wizard', () => {
         })
     })
 
-    it('creates a mumbai-flavoured config file', async () => {
+    it('creates a amoy-flavoured config file', async () => {
         const { answers, logs } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
@@ -1173,7 +1173,7 @@ describe('Config wizard', () => {
         expect(answers).toEqual([
             'Generate',
             false,
-            'mumbai',
+            'polygonAmoy',
             true,
             OperatorAddress,
             true,
@@ -1213,7 +1213,7 @@ describe('Config wizard', () => {
 
         expect(config.client).not.toContainAnyKeys(['contracts', 'network'])
 
-        expect(config.client.environment).toEqual('mumbai')
+        expect(config.client.environment).toEqual('polygonAmoy')
 
         const summary = logs.join('\n')
 
@@ -1420,13 +1420,9 @@ describe('Config wizard', () => {
         expect(summary).toInclude(
             `https://streamr.network/hub/network/operators/${OperatorAddress.toLowerCase()}`
         )
-
-        expect(summary).not.toInclude(
-            `https://mumbai.streamr.network/hub/network/operators/${OperatorAddress.toLowerCase()}`
-        )
     })
 
-    it('displays proper mumbai operator url', async () => {
+    it('displays proper polygonAmoy operator url', async () => {
         const { logs } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
@@ -1439,12 +1435,8 @@ describe('Config wizard', () => {
 
         const summary = logs.join('\n')
 
-        expect(summary).not.toInclude(
-            `https://streamr.network/hub/network/operators/${OperatorAddress.toLowerCase()}`
-        )
-
         expect(summary).toInclude(
-            `https://mumbai.streamr.network/hub/network/operators/${OperatorAddress.toLowerCase()}`
+            `https://streamr.network/hub/network/operators/${OperatorAddress.toLowerCase()}`
         )
     })
 

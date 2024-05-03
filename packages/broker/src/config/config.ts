@@ -7,7 +7,7 @@ import { ApiAuthentication } from '../apiAuthentication'
 
 export interface Config {
     client?: StreamrClientConfig
-    environment?: 'mumbai' | 'polygon'
+    environment?: 'polygonAmoy' | 'polygon'
     httpServer?: {
         port: number
         sslCertificate?: {

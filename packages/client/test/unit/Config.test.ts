@@ -144,7 +144,7 @@ describe('Config', () => {
     describe('environment defaults', () => {
 
         it('happy path', () => {
-            const environmentId = 'mumbai'  // some environment id
+            const environmentId = 'polygonAmoy'  // some environment id
             const config: any = {
                 environment: environmentId
             }
@@ -169,7 +169,7 @@ describe('Config', () => {
         })
 
         it('override', () => {
-            const environmentId = 'mumbai'  // some environment id
+            const environmentId = 'polygonAmoy'  // some environment id
             const config: any = {
                 environment: environmentId,
                 contracts: {
