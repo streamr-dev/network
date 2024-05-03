@@ -65,7 +65,7 @@ const main = async () => {
         const cmConnections = (node.stack.getLayer0Node().getTransport() as ConnectionManager).getConnections()
         console.log('total connections (CM): ' + cmConnections.length)
         // @ts-expect-error private
-        const dhtConnections =  (node.stack.getLayer0Node() as DhtNode).getConnections()
+        const dhtConnections =  (node.stack.getLayer0Node() as DhtNode).getConnectionsView().getConnections()
         console.log('total connections: (DHTNODE)' + dhtConnections.length)
         if (cmConnections.length !== dhtConnections.length) {
             console.error('FATAL: connections mismatch')
