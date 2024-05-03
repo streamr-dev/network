@@ -70,7 +70,7 @@ const DhtNode = new DhtNode({
 
 ### Setting up a custom DHT network
 
-To setup a custom DHT network outside the Streamr Networks Mumbai or Polygon environments, you simply need to set up one or multiple entry point DhtNodes to the network and point all newly joining DhtNodes to them. It is also a good idea to configure the entry points to know each other. This makes it possible to restart them without causing network partitioning.
+To setup a custom DHT network outside the Streamr Networks Amoy or Polygon environments, you simply need to set up one or multiple entry point DhtNodes to the network and point all newly joining DhtNodes to them. It is also a good idea to configure the entry points to know each other. This makes it possible to restart them without causing network partitioning.
 
 ## Development
 
