@@ -147,8 +147,6 @@ export async function start(): Promise<void> {
 
                 resume()
 
-                const hub = 'https://streamr.network/hub'
-
                 if (nodes !== undefined) {
                     if (!nodes.includes(nodeAddress.toLowerCase())) {
                         log(
@@ -163,7 +161,7 @@ export async function start(): Promise<void> {
                     `)
                 }
 
-                log(`> *${hub}/network/operators/${operator}*`)
+                log(`> *https://streamr.network/hub/network/operators/${operator}*`)
             } catch (e) {
                 resume()
 
