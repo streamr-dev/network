@@ -498,8 +498,7 @@ export class ContractFacade {
     }
 
     getProvider(): Provider {
-        // TODO why casting is needed?
-        return this.config.signer.provider!
+        return this.config.signer.provider
     }
 
     getEthersOverrides(): Overrides {

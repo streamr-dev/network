@@ -176,7 +176,7 @@ class InspectionOverTimeTask {
                     // TODO remove casting when type definition for throwIfAborted() is available. We have the correct
                     // type definition (@types/node@18.19.31) in monorepo root, but ethers v6.12.0 seems to override
                     // it with an older version (18.15.13).
-                    ;(this.abortSignal as any).throwIfAborted()
+                    (this.abortSignal as any).throwIfAborted()
                     await this.initializeNewOperatorFleetState()
                     // TODO remove casting when type definition for throwIfAborted() is available. We have the correct
                     // type definition (@types/node@18.19.31) in monorepo root, but ethers v6.12.0 seems to override

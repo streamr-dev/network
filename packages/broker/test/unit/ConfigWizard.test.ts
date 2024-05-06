@@ -1,3 +1,5 @@
+/* eslint-disable */
+// TODO remove "eslint-disable"
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'fs'
 import os from 'os'
 import path from 'path'

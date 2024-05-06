@@ -1,4 +1,4 @@
-import "reflect-metadata"
+import 'reflect-metadata'
 
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'

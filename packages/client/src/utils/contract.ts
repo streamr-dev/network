@@ -78,7 +78,6 @@ const withErrorHandling = async <T>(
         const wrappedError = new Error(
             `Error while ${action} contract call "${methodName}"${(suffixes.length > 0) ? ', ' + suffixes.join(', ') : ''}`
         )
-        console.log(e)  // TODO remove
         // @ts-expect-error unknown property
         wrappedError.reason = e
         throw wrappedError
@@ -129,7 +128,7 @@ export const createDecoratedContract = <T extends BaseContract>(
 ): ObservableContract<T> => {
     const eventEmitter = new EventEmitter<ContractEvent>()
     const concurrencyLimit = pLimit(maxConcurrentCalls)
-    let decoratedContract: any = {
+    const decoratedContract: any = {
         eventEmitter
     }
     /*

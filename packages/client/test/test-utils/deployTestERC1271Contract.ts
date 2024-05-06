@@ -1,3 +1,5 @@
+/* eslint-disable */
+// TODO remove "eslint-disable"
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { createTestClient } from './utils'
 import { ContractFactory } from 'ethers'
