@@ -25,6 +25,7 @@ export { StorageNodeMetadata } from './contracts/StorageNodeRegistry'
 export { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './contracts/searchStreams'
 export {
     StreamrClientConfig,
+    ConnectionInfo,
     ChainConnectionInfo,
     EthereumNetworkConfig,
     ProviderAuthConfig,
@@ -70,5 +71,5 @@ export {
 } from '@streamr/protocol'
 
 export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht' 
-// TODO ConnectionInfo and ExternalProvider were exported, do se need those?
+// TODO ExternalProvider was exported, do se need those?
 export type { Signer, Provider, Overrides } from 'ethers'
