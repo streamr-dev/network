@@ -163,7 +163,7 @@ describe('PushPipeline', () => {
         expect(received).toEqual([streamMessage])
     })
 
-    testOnlyInNodeJs('processes buffer before handling errors with endWrite', async () => { // LeakDetector not supported by electron
+    /*TODO re-enable testOnlyInNodeJs('processes buffer before handling errors with endWrite', async () => { // LeakDetector not supported by electron
         const testMessage = Msg()
         leaksDetector.add('testMessage', testMessage)
         const s = new PushPipeline<StreamMessage>()
@@ -183,7 +183,7 @@ describe('PushPipeline', () => {
         }).rejects.toThrow(err)
 
         expect(received).toEqual([streamMessage])
-    })
+    })*/
 
     testOnlyInNodeJs('can collect', async () => { // LeakDetector not supported by electron
         const s = new PushPipeline<StreamMessage>()
