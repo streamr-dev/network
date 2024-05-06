@@ -2,6 +2,14 @@ import { areEqualPeerDescriptors, DhtAddress, getNodeIdFromPeerDescriptor, PeerD
 import { Logger, wait } from '@streamr/utils'
 import { Layer1Node } from './Layer1Node'
 
+/*
+ * Tries to find new neighbors if we currently have less than MIN_NEIGHBOR_COUNT neigbors. It does so by
+ * rejoining the stream's control layer network.
+ * 
+ * This way we can avoid some network split scenarios. The functionality is most relevant for small stream
+ * networks.
+ */
+
 const logger = new Logger(module)
 
 const exponentialRunOff = async (
@@ -30,7 +38,7 @@ const exponentialRunOff = async (
     }
 }
 
-export const SPLIT_AVOIDANCE_LIMIT = 4
+export const MIN_NEIGHBOR_COUNT = 4
 
 export interface StreamPartSplitAvoidanceConfig {
     layer1Node: Layer1Node
@@ -55,7 +63,7 @@ export class StreamPartSplitAvoidance {
         await exponentialRunOff(async () => {
             const discoveredEntrypoints = await this.config.discoverEntryPoints(this.excludedNodes)
             await this.config.layer1Node.joinDht(discoveredEntrypoints, false, false)
-            if (this.config.layer1Node.getNeighborCount() < SPLIT_AVOIDANCE_LIMIT) {
+            if (this.config.layer1Node.getNeighborCount() < MIN_NEIGHBOR_COUNT) {
                 // Filter out nodes that are not neighbors as those nodes are assumed to be offline
                 const newExcludes = discoveredEntrypoints
                     .filter((peer) => !this.config.layer1Node.getNeighbors()
