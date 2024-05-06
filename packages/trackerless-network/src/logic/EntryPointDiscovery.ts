@@ -19,11 +19,6 @@ const parseEntryPointData = (dataEntries: DataEntry[]): PeerDescriptor[] => {
     return dataEntries.filter((entry) => !entry.deleted).map((entry) => Any.unpack(entry.data!, PeerDescriptor))
 }
 
-export interface FindEntryPointsResult {
-    entryPointsFromDht: boolean
-    discoveredEntryPoints: PeerDescriptor[]
-}
-
 const logger = new Logger(module)
 
 export const ENTRYPOINT_STORE_LIMIT = 8
