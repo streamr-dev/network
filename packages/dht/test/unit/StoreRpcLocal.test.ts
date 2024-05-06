@@ -61,7 +61,7 @@ describe('StoreRpcLocal', () => {
             expect(setAllEntriesAsStale).not.toHaveBeenCalled()
             // Wait for setImmediate
             await wait(50)
-            expect(replicateDataToContact).toHaveBeenCalledTimes(4)
+            expect(replicateDataToContact).toHaveBeenCalledTimes(NODE_COUNT - 1)
         })
         
     })

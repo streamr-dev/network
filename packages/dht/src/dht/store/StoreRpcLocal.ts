@@ -30,10 +30,6 @@ export class StoreRpcLocal implements IStoreRpc {
         this.config = config
     }
 
-    private isLocalNodeStorer(dataKey: DhtAddress): boolean {
-        return this.config.getStorers(dataKey).some((p) => areEqualPeerDescriptors(p, this.config.localPeerDescriptor))    
-    }
-
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
         logger.trace('storeData()')
         const key = getDhtAddressFromRaw(request.key)
@@ -69,14 +65,18 @@ export class StoreRpcLocal implements IStoreRpc {
         return {}
     }
 
+    private isLocalNodeStorer(dataKey: DhtAddress): boolean {
+        return this.config.getStorers(dataKey).some((p) => areEqualPeerDescriptors(p, this.config.localPeerDescriptor))    
+    }
+
     private replicateDataToNeighbors(requestor: PeerDescriptor, dataEntry: DataEntry): void {
         const dataKey = getDhtAddressFromRaw(dataEntry.key)
         const storers = this.config.getStorers(dataKey)
-        const selfIsPrimaryStorer = areEqualPeerDescriptors(storers[0], this.config.localPeerDescriptor)
+        const isLocalNodePrimaryStorer = areEqualPeerDescriptors(storers[0], this.config.localPeerDescriptor)
         // If we are the closest to the data, get storageRedundancyFactor - 1 nearest node to the data, and
         // replicate to all those node. Otherwise replicate only to the one closest one. And never replicate 
         // to the requestor nor to itself.
-        const targets = (selfIsPrimaryStorer ? storers : [storers[0]]).filter(
+        const targets = (isLocalNodePrimaryStorer ? storers : [storers[0]]).filter(
             (p) => !areEqualPeerDescriptors(p, requestor) && !areEqualPeerDescriptors(p, this.config.localPeerDescriptor)
         )
         targets.forEach((target) => {
@@ -85,4 +85,5 @@ export class StoreRpcLocal implements IStoreRpc {
             })
         })
     }
+
 }
