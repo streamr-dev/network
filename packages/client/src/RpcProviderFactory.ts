@@ -23,6 +23,7 @@ export class RpcProviderFactory {
                 fetchRequest.timeout = timeout
                 const provider = new LoggingJsonRpcProvider(fetchRequest, {
                     chainId: this.config.contracts.streamRegistryChainRPCs?.chainId,
+                    name: this.config.contracts.streamRegistryChainRPCs?.name
 
                 }, { staticNetwork: true })
                 if (pollInterval !== undefined) {
