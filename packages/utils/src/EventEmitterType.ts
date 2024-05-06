@@ -6,8 +6,8 @@
 // Convert EventEmitter3 event types to corresponding listener
 // setter function types (eg. types of 'on', 'off', 'once').
 // For example, 
-// message: (message: Message) => void
-// -> message: (event: 'message', listener: (message: Message) => void) => void
+// message: (payload: Payload) => void
+// -> message: (event: 'message', listener: (payload: Payload) => void) => void
 
 type ListenerSetterTypes<T> = {
     [K in keyof T]: (event: K, listener: T[K]) => void
@@ -28,7 +28,7 @@ type Intersection<T> = {
 type OverloadedListenerSetter<T> = Intersection<ListenerSetterTypes<T>> 
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-export type EmitterOf<T> = {
+export type EventEmitterType<T> = {
     on: OverloadedListenerSetter<T> 
     off: OverloadedListenerSetter<T>
     once: OverloadedListenerSetter<T>
