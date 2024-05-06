@@ -33,10 +33,12 @@ interface EntryPointDiscoveryConfig {
 }
 
 export class EntryPointDiscovery {
+
     private readonly abortController: AbortController
     private readonly config: EntryPointDiscoveryConfig
     private readonly storeInterval: number
     private isLocalNodeStoredAsEntryPoint = false
+    
     constructor(config: EntryPointDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
