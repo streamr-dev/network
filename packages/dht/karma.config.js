@@ -4,8 +4,8 @@ const { createKarmaConfig, createWebpackConfig } = require('@streamr/browser-tes
 
 const TEST_PATHS = [
     'test/unit/**/!(connectivityRequestHandler*).ts',
-    './test/integration/**/!(DhtWith*|ReplicateData*).ts/',
-    './test/end-to-end/**/!(RecoveryFromFailedAutoCertification*|memory-leak*).ts'
+    './test/integration/**/!(DhtWith*|ReplicateData*|GeoIpConnectivityChecking*).ts/',
+    './test/end-to-end/**/!(RecoveryFromFailedAutoCertification*|memory-leak*|GeoIpLayer0*).ts'
 ]
 
 const NodeWebrtcConnection = path.resolve(__dirname, 'src/connection/webrtc/NodeWebrtcConnection.ts')

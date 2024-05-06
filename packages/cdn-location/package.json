@@ -9,7 +9,7 @@
   },
   "main": "dist/src/exports.js",
   "types": "dist/src/exports.d.ts",
-  "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
+  "license": "Apache-2.0",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
     "build": "tsc -b tsconfig.node.json",
@@ -21,6 +21,10 @@
     "prepare-for-tsp-solver": "./data-generation/prepareForTSPSolver.sh",
     "generate-data-from-tsp-solution": "./data-generation/generateDataFromTSPSolverResult.sh"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "haversine": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/haversine": "^1.1.8"
+  }
 }
