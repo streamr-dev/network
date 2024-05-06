@@ -9,7 +9,7 @@
             "type": "string",
             "enum": [
                 "polygon",
-                "mumbai",
+                "polygonAmoy",
                 "dev2"
             ],
             "description": "applies all environment-specific defaults for the given environment"
