@@ -83,7 +83,10 @@ const main = async () => {
             })
         }
         streamParts.forEach((stream) => {
-            console.log('total stream neighbors on ' + stream.toString() + ': ' + node.getNeighbors(stream).length)
+            console.log('total stream neighbors on ' + stream.toString() + ': ' + node.getNeighbors(stream).length 
+                // @ts-expect-error private
+                + ", (Layer1 neighbors: " + node.stack.getContentDeliveryManager().streamParts.get(stream)!.layer1Node.getNeighbors().length + ")"
+            )
         })
 
     }, 5000)
