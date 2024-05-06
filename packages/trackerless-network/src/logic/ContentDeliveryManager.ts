@@ -206,10 +206,10 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         }
         await streamPart.layer1Node.start()
         await streamPart.node.start()
-        if (this.knownStreamPartEntryPoints.has(streamPartId)) {
-            const entryPoints = this.knownStreamPartEntryPoints.get(streamPartId)!
+        const knownEntryPoints = this.knownStreamPartEntryPoints.get(streamPartId)
+        if (knownEntryPoints !== undefined) {
             await Promise.all([
-                streamPart.layer1Node.joinDht(entryPoints),
+                streamPart.layer1Node.joinDht(knownEntryPoints),
                 streamPart.layer1Node.joinRing()
             ])
         } else {
