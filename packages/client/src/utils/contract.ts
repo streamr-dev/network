@@ -136,7 +136,7 @@ export const createDecoratedContract = <T extends BaseContract>(
      * actually delegate each method to contract[methodName]. Those methods are almost identical
      * to contract.functions[methodName] methods. The major difference is the way of handling
      * single-value results: the return type of contract.functions[methodName] is always
-     * Promise<Result> (see https://docs.ethers.io/v5/api/contract/contract/#Contract--readonly)
+     * Promise<Result> (see https://docs.ethers.org/v6/api/contract/#BaseContract)
      */
     const methodNames = contract['interface'].fragments.filter((f) => FunctionFragment.isFunction(f)).map((f) => (f as FunctionFragment).name)
     methodNames.forEach((methodName) => {
