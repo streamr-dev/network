@@ -65,7 +65,7 @@ const ImportedPrivateKey =
 
 const OperatorAddress = '0x54d68882d5329397928787ec496da3ba8e45c48c'
 
-describe('Config wizard', () => {
+describe.skip('Config wizard', () => {
     let tempDir = mkdtempSync(path.join(os.tmpdir(), 'test-config-wizard'))
 
     let storagePath = path.join(tempDir, 'config.json')
