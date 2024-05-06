@@ -300,6 +300,8 @@ export class WebsocketConnector {
             const ongoingConnectRequest = this.ongoingConnectRequests.get(nodeId)!
             if (!isMaybeSupportedVersion(remoteVersion)) {
                 ongoingConnectRequest.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
+            } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
+                ongoingConnectRequest.rejectHandshake(HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
             } else {
                 ongoingConnectRequest.attachImplementation(websocketServerConnection)
                 ongoingConnectRequest.acceptHandshake()

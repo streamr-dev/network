@@ -135,6 +135,7 @@ export const createNetworkNodeWithSimulator = async (
             peerDescriptor,
             entryPoints,
             transport,
+            connectionsView: transport,
             maxConnections: 25,
             storeHighestTtl: 120000,
             storeMaxTtl: 120000

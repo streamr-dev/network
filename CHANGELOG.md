@@ -48,6 +48,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Removed
 
+- Removed `governance vote' command
+
 #### Fixed
 
 #### Security
