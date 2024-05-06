@@ -39,10 +39,11 @@ export interface StreamPartSplitAvoidanceConfig {
 }
 
 export class StreamPartSplitAvoidance {
+
     private readonly abortController: AbortController
     private readonly config: StreamPartSplitAvoidanceConfig
-    private readonly networkSplitAvoidedNodes: Set<DhtAddress> = new Set()
-    private networkSplitAvoidanceIsRunning = false
+    private readonly excludedNodes: Set<DhtAddress> = new Set()
+    private running = false
 
     constructor(config: StreamPartSplitAvoidanceConfig) {
         this.config = config
@@ -50,31 +51,30 @@ export class StreamPartSplitAvoidance {
     }
 
     public async avoidNetworkSplit(): Promise<void> {
-        this.networkSplitAvoidanceIsRunning = true
+        this.running = true
         await exponentialRunOff(async () => {
-            const discoveredEntrypoints = await this.config.discoverEntryPoints(this.networkSplitAvoidedNodes)
+            const discoveredEntrypoints = await this.config.discoverEntryPoints(this.excludedNodes)
             await this.config.layer1Node.joinDht(discoveredEntrypoints, false, false)
             if (this.config.layer1Node.getNeighborCount() < SPLIT_AVOIDANCE_LIMIT) {
                 // Filter out nodes that are not neighbors as those nodes are assumed to be offline
-                const nodesToAvoid = discoveredEntrypoints
+                const newExcludes = discoveredEntrypoints
                     .filter((peer) => !this.config.layer1Node.getNeighbors()
                         .some((neighbor) => areEqualPeerDescriptors(neighbor, peer)))
                     .map((peer) => getNodeIdFromPeerDescriptor(peer))
-                nodesToAvoid.forEach((node) => this.networkSplitAvoidedNodes.add(node))
+                newExcludes.forEach((node) => this.excludedNodes.add(node))
                 throw new Error(`Network split is still possible`)
             }
         }, 'avoid network split', this.abortController.signal, this.config.exponentialRunOfBaseDelay)
-        this.networkSplitAvoidanceIsRunning = false
-        this.networkSplitAvoidedNodes.clear()
+        this.running = false
+        this.excludedNodes.clear()
         logger.trace(`Network split avoided`)
     }
 
-    public isNetworkSplitAvoidanceRunning(): boolean {
-        return this.networkSplitAvoidanceIsRunning
+    public isRunning(): boolean {
+        return this.running
     }
 
     destroy(): void {
         this.abortController.abort()
     }
-
 }
