@@ -26,7 +26,7 @@ import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
 import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode'
 import { ProxyClient } from './proxy/ProxyClient'
 import { StreamPartReconnect } from './StreamPartReconnect'
-import { MIN_NEIGHBOR_COUNT, StreamPartSplitAvoidance } from './StreamPartSplitAvoidance'
+import { MIN_NEIGHBOR_COUNT as NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT, StreamPartSplitAvoidance } from './StreamPartSplitAvoidance'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void
@@ -215,12 +215,12 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         } else {
             const entryPoints = await entryPointDiscovery.discoverEntryPointsFromDht()
             await Promise.all([
-                streamPart.layer1Node.joinDht(sampleSize(entryPoints, MIN_NEIGHBOR_COUNT)),
+                streamPart.layer1Node.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT)),
                 streamPart.layer1Node.joinRing()
             ])
             if (entryPoints.length < ENTRYPOINT_STORE_LIMIT) {
                 await entryPointDiscovery.storeAndKeepSelfAsEntryPoint()
-                if (streamPart.layer1Node.getNeighborCount() < MIN_NEIGHBOR_COUNT) {
+                if (streamPart.layer1Node.getNeighborCount() < NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT) {
                     setImmediate(() => streamPart.splitAvoidance.avoidNetworkSplit())
                 }
             }
