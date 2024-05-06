@@ -9,19 +9,19 @@ Operator's nodes contain an inspection routine which connects to a target operat
 The nodes form a subjective opinion of whether someone's doing the work correctly or not, and act accordingly. There are incentives to flag and vote honestly, and disincentives for flagging and voting dishonestly. Flagging is the umbrella term used for the node inspection layer on the Streamr Network. Node inspections by flag-voting provide a degree of economic protection for sponsors when they pay for nodes to relay traffic on their selected stream inside the decentralized network.
 
 ### Flag stake
-The flag stake is the amount that operators must put at risk to flag another operator for potential protocol violations. In this case, operators are required to place 500 DATA at stake to initiate a flag against another operator if they suspect a violation. It's important to note that if the flag is ultimately deemed invalid, the operator who initiated the flag will lose the flag stake. Automated spot checks conducted by the node software flag potential violations independently, ensuring protocol integrity.
+The flag stake is the amount that operators must put at risk to flag another operator for potential protocol violations. In this case, operators are required to place a DATA stake to initiate a flag against another operator if they suspect a violation. It's important to note that if the flag is ultimately deemed invalid, the operator who initiated the flag will lose the flag stake. Automated spot checks conducted by the node software flag potential violations independently, ensuring protocol integrity.
 
-The flag stake has been set to **500 DATA** and is subject to change by Streamr DAO governance vote.
+The flag stake has been set to **50 DATA** and is subject to change by Streamr DAO governance vote.
 
 ### Flag reviewer reward
 Each reviewer who participates in the flag review process and votes for the majority result is paid a reward of 20 DATA. This reward serves as an incentive for nodes to actively engage in the validation of flagged operators within the protocol.
 
-The flag reviewer reward has been set to **20 DATA** and is subject to change by Streamr DAO governance vote.
+The flag reviewer reward has been set to **2 DATA** and is subject to change by Streamr DAO governance vote.
 
 ### Flagger reward
-If the flag raised by an operator is deemed valid, the flagger is rewarded with 360 DATA. This reward serves as an incentive for operators to flag potential protocol violations accurately, contributing to the overall integrity and adherence to protocol rules.
+If the flag raised by an operator is deemed valid, the flagger is rewarded with DATA. This reward serves as an incentive for operators to flag potential protocol violations accurately, contributing to the overall integrity and adherence to protocol rules.
 
-The flagger reward has been set to **360 DATA** and is subject to change by Streamr DAO governance vote.
+The flagger reward has been set to **36 DATA** and is subject to change by Streamr DAO governance vote.
 
 ### Flag reviewer count
 The number of operators that are randomly selected to review a flag by inspecting and validating the work of the flagged operator, and then voting whether the flag was valid or not. The voting is stake-weighted.
@@ -42,3 +42,10 @@ The voting period has been set to **15 minutes** and is subject to change by Str
 If an operator is flagged and the flag is deemed invalid, they can not be flagged again for a short period. Operators are not allowed to fully unstake during an active flag. Therefore, without this protection period, an attacker could prevent an operator from ever unstaking by continuously flagging them. This protection period gives the operator a window of time during which they can unstake if they wish.
 
 The flag protection period has been set to **1 hour** and is subject to change by Streamr DAO governance vote.
+
+### Minimum delegation period
+The minimum delegation period means that delegated tokens cannot be undelegated before a certain time has passed.
+
+This measure aims to counteract potential exploitation strategies that involve rapid cycling between delegation and undelegation to garner disproportionate returns. Establishing a minimum delegation period disrupts such strategies, rendering them impossible. Moreover, it grants Operators increased financial stability and a more predictable timeframe for utilizing the delegated funds effectively.
+
+The minimum delegation period is set to **48 hours** and is subject to change by Streamr DAO governance vote.

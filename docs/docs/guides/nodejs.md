@@ -18,7 +18,7 @@ The Streamr SDK is available on [NPM](https://www.npmjs.com/package/@streamr/nod
 $ npm install @streamr/sdk
 ```
 
-Having trouble installing the SDK? Maybe our [troubleshooting](../usage/streamr-js-client/how-to-use#Troubleshooting) section will help.
+Having trouble installing the SDK? Maybe our [troubleshooting](../usage/sdk/how-to-use#Troubleshooting) section will help.
 
 ### Initialize the SDK
 ```ts
