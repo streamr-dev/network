@@ -12,6 +12,7 @@ import pLimit from 'p-limit'
 import { InternalEvents, StreamrClientEventEmitter, StreamrClientEvents } from '../events'
 import { LoggerFactory } from './LoggerFactory'
 import { tryInSequence } from './promises'
+import { FunctionFragment } from 'ethers'
 import type { TransactionResponse } from 'ethers'
 
 export interface ContractEvent {
@@ -31,7 +32,7 @@ export async function waitForTx(
     return tx.wait() as Promise<ContractTransactionReceipt> // cannot be null unless arg confirmations set to 0
 }
 
-const isTransaction = (returnValue: any): returnValue is ContractTransactionResponse => {
+const isTransactionResponse = (returnValue: any): returnValue is ContractTransactionResponse => {
     return (returnValue.wait !== undefined && (typeof returnValue.wait === 'function'))
 }
 
@@ -77,6 +78,7 @@ const withErrorHandling = async <T>(
         const wrappedError = new Error(
             `Error while ${action} contract call "${methodName}"${(suffixes.length > 0) ? ', ' + suffixes.join(', ') : ''}`
         )
+        console.log(e)  // TODO remove
         // @ts-expect-error unknown property
         wrappedError.reason = e
         throw wrappedError
@@ -94,17 +96,19 @@ const createWrappedContractMethod = (
             eventEmitter.emit('onMethodExecute', methodName)
             return originalMethod(...args)
         }), methodName, 'executing')
-        if (isTransaction(returnValue)) {
-            const tx = returnValue
-            const originalWaitMethod = tx.wait
-            tx.wait = async (confirmations?: number, timeout?: number): Promise<null | ContractTransactionReceipt> => {
-                const receipt = await withErrorHandling(() => originalWaitMethod(confirmations, timeout), methodName, 'waiting transaction for')
-                eventEmitter.emit('onTransactionConfirm', methodName, receipt)
-                return receipt
+        if (isTransactionResponse(returnValue)) {
+            eventEmitter.emit('onTransactionSubmit', methodName, returnValue)
+            return {
+                ...returnValue,
+                wait: async (confirmations?: number, timeout?: number): Promise<null | ContractTransactionReceipt> => {
+                    const receipt = await withErrorHandling(() => returnValue.wait(confirmations, timeout), methodName, 'waiting transaction for')
+                    eventEmitter.emit('onTransactionConfirm', methodName, receipt)
+                    return receipt
+                }
             }
-            eventEmitter.emit('onTransactionSubmit', methodName, tx)
+        } else {
+            return returnValue
         }
-        return returnValue
     }
 }
 
@@ -124,8 +128,10 @@ export const createDecoratedContract = <T extends BaseContract>(
     maxConcurrentCalls: number
 ): ObservableContract<T> => {
     const eventEmitter = new EventEmitter<ContractEvent>()
-    const methods: Record<string, () => Promise<any>> = {}
     const concurrencyLimit = pLimit(maxConcurrentCalls)
+    let decoratedContract: any = {
+        eventEmitter
+    }
     /*
      * Wrap each contract function. We read the list of functions from contract.functions, but
      * actually delegate each method to contract[methodName]. Those methods are almost identical
@@ -133,20 +139,19 @@ export const createDecoratedContract = <T extends BaseContract>(
      * single-value results: the return type of contract.functions[methodName] is always
      * Promise<Result> (see https://docs.ethers.io/v5/api/contract/contract/#Contract--readonly)
      */
-    Object.keys(contract.functions).forEach((methodName) => {
-        methods[methodName] = createWrappedContractMethod(
+    const methodNames = contract['interface'].fragments.filter((f) => FunctionFragment.isFunction(f)).map((f) => (f as FunctionFragment).name)
+    methodNames.forEach((methodName) => {
+        decoratedContract[methodName] = createWrappedContractMethod(
             contract[methodName],
             `${contractName}.${methodName}`,
             eventEmitter,
             concurrencyLimit
         )
     })
-    createLogger(eventEmitter, loggerFactory)
-    const result: any = {
-        eventEmitter
-    }
 
-    function getAllPropertyNames(obj: object): string[] {
+    createLogger(eventEmitter, loggerFactory)
+
+    /*TODO re-enable function getAllPropertyNames(obj: object): string[] {
         const proto = Object.getPrototypeOf(obj)
         const inherited = (proto) ? getAllPropertyNames(proto) : []
         return [...new Set(Object.getOwnPropertyNames(obj).concat(inherited))]
@@ -156,8 +161,8 @@ export const createDecoratedContract = <T extends BaseContract>(
     // eslint-disable-next-line no-prototype-builtins
     for (const key of getAllPropertyNames(contract)) {
         result[key] = methods[key] !== undefined ? methods[key] : contract[key]
-    }
-    return result
+    }*/
+    return decoratedContract
 }
 
 export const queryAllReadonlyContracts = <T, C>(
