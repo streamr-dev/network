@@ -150,7 +150,7 @@ export const createDecoratedContract = <T extends BaseContract>(
 
     createLogger(eventEmitter, loggerFactory)
 
-    /*TODO re-enable function getAllPropertyNames(obj: object): string[] {
+    function getAllPropertyNames(obj: object): string[] {
         const proto = Object.getPrototypeOf(obj)
         const inherited = (proto) ? getAllPropertyNames(proto) : []
         return [...new Set(Object.getOwnPropertyNames(obj).concat(inherited))]
@@ -159,8 +159,10 @@ export const createDecoratedContract = <T extends BaseContract>(
     // copy own properties and inherited properties (e.g. contract.removeAllListeners)
     // eslint-disable-next-line no-prototype-builtins
     for (const key of getAllPropertyNames(contract)) {
-        result[key] = methods[key] !== undefined ? methods[key] : contract[key]
-    }*/
+        if (decoratedContract[key] === undefined) {
+            decoratedContract[key] = contract[key]
+        }
+    }
     return decoratedContract
 }
 
