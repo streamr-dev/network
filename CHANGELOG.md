@@ -12,6 +12,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- New geolocation detection by Nodes improves start up times and the decentralization of the network (https://github.com/streamr-dev/network/pull/2465)
+
 #### Changed
 
 #### Deprecated
@@ -26,6 +28,8 @@ Changes before Tatum release are not documented in this file.
 ### @streamr/node
 
 #### Added
+
+- Nodes provide geolocation detection for newly joining nodes (https://github.com/streamr-dev/network/pull/2465)
 
 #### Changed
 
