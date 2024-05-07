@@ -36,7 +36,7 @@ export type StreamPartDelivery = {
     layer1Node: Layer1Node
     node: ContentDeliveryLayerNode
     entryPointDiscovery: EntryPointDiscovery
-    splitAvoidance: StreamPartNetworkSplitAvoidance
+    networkSplitAvoidance: StreamPartNetworkSplitAvoidance
 } | {
     proxied: true
     client: ProxyClient
@@ -143,7 +143,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             storeEntryPointData: (key, data) => this.layer0Node!.storeDataToDht(key, data),
             deleteEntryPointData: async (key) => this.layer0Node!.deleteDataFromDht(key, false)
         })
-        const splitAvoidance = new StreamPartNetworkSplitAvoidance({
+        const networkSplitAvoidance = new StreamPartNetworkSplitAvoidance({
             layer1Node,
             discoverEntryPoints: async (excludedNodes) => entryPointDiscovery.discoverEntryPointsFromDht(excludedNodes)
         })
@@ -158,11 +158,11 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             layer1Node,
             node,
             entryPointDiscovery,
-            splitAvoidance,
+            networkSplitAvoidance,
             broadcast: (msg: StreamMessage) => node.broadcast(msg),
             stop: async () => {
                 streamPartReconnect.destroy()
-                splitAvoidance.destroy()
+                networkSplitAvoidance.destroy()
                 await entryPointDiscovery.destroy()
                 node.stop()
                 await layer1Node.stop()
@@ -182,7 +182,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             }
         }
         layer1Node.on('manualRejoinRequired', async () => {
-            if (!streamPartReconnect.isRunning() && !splitAvoidance.isRunning()) {
+            if (!streamPartReconnect.isRunning() && !networkSplitAvoidance.isRunning()) {
                 logger.debug('Manual rejoin required for stream part', { streamPartId })
                 await streamPartReconnect.reconnect()
             }
@@ -221,7 +221,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             if (entryPoints.length < ENTRYPOINT_STORE_LIMIT) {
                 await entryPointDiscovery.storeAndKeepLocalNodeAsEntryPoint()
                 if (streamPart.layer1Node.getNeighborCount() < NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT) {
-                    setImmediate(() => streamPart.splitAvoidance.avoidNetworkSplit())
+                    setImmediate(() => streamPart.networkSplitAvoidance.avoidNetworkSplit())
                 }
             }
         }
