@@ -43,7 +43,7 @@ describe('connectivityRequestHandler', () => {
             messageId: 'mock-message-id',
             body: {
                 oneofKind: 'connectivityRequest',
-                connectivityRequest: { port: PORT, host: HOST, tls: false, selfSigned: false }
+                connectivityRequest: { port: PORT, host: HOST, tls: false, allowSelfSignedCertificate: false }
             }
         }
         connection.emit('data', Message.toBinary(request))
@@ -78,7 +78,7 @@ describe('connectivityRequestHandler', () => {
             messageId: 'mock-message-id',
             body: {
                 oneofKind: 'connectivityRequest',
-                connectivityRequest: { port: 0, host: HOST, tls: false, selfSigned: false }
+                connectivityRequest: { port: 0, host: HOST, tls: false, allowSelfSignedCertificate: false }
             }
         }
         connection.emit('data', Message.toBinary(request))

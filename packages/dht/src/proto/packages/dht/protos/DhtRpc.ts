@@ -351,9 +351,9 @@ export interface ConnectivityRequest {
      */
     host?: string;
     /**
-     * @generated from protobuf field: bool selfSigned = 4;
+     * @generated from protobuf field: bool allowSelfSignedCertificate = 4;
      */
-    selfSigned: boolean;
+    allowSelfSignedCertificate: boolean;
 }
 /**
  * @generated from protobuf message dht.ConnectivityResponse
@@ -970,7 +970,7 @@ class ConnectivityRequest$Type extends MessageType<ConnectivityRequest> {
             { no: 1, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
             { no: 2, name: "tls", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 3, name: "host", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "selfSigned", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 4, name: "allowSelfSignedCertificate", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }
