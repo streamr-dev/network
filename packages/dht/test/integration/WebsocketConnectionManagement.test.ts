@@ -17,7 +17,7 @@ const SERVICE_ID = 'test'
 const createConfig = (localPeerDescriptor: PeerDescriptor, opts: Omit<DefaultConnectorFacadeConfig, 'createLocalPeerDescriptor'>) => {
     return {
         createConnectorFacade: () => new DefaultConnectorFacade({
-            createLocalPeerDescriptor: () => localPeerDescriptor,
+            createLocalPeerDescriptor: async () => localPeerDescriptor,
             ...opts
         }),
         metricsContext: new MetricsContext()

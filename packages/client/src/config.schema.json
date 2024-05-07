@@ -251,6 +251,9 @@
                         "autoCertifierConfigFile": {
                             "type": "string",
                             "default": "~/.streamr/certificate.json"
+                        },
+                        "geoIpDatabaseFolder": {
+                            "type": "string"
                         }
                     },
                     "default": {}
