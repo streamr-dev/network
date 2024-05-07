@@ -58,17 +58,13 @@ export class EntryPointDiscovery {
 
     private async discoverEntryPoints(): Promise<PeerDescriptor[]> {
         const dataKey = streamPartIdToDataKey(this.config.streamPartId)
-        return this.queryEntrypoints(dataKey)
-    }
-
-    private async queryEntrypoints(key: DhtAddress): Promise<PeerDescriptor[]> {
-        logger.trace(`Finding data from dht node ${getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)}`)
+        logger.trace(`Discovering entry points for key ${dataKey}`)
         try {
-            const result = await this.config.fetchEntryPointData(key)
+            const result = await this.config.fetchEntryPointData(dataKey)
             return parseEntryPointData(result)
         } catch (err) {
             return []
-        }
+        }    
     }
 
     async storeAndKeepLocalNodeAsEntryPoint(): Promise<void> {
