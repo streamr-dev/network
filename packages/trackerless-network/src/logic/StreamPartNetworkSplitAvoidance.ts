@@ -40,20 +40,20 @@ const exponentialRunOff = async (
 
 export const MIN_NEIGHBOR_COUNT = 4
 
-export interface StreamPartSplitAvoidanceConfig {
+export interface StreamPartNetworkSplitAvoidanceConfig {
     layer1Node: Layer1Node
     discoverEntryPoints: (excludedNodes?: Set<DhtAddress>) => Promise<PeerDescriptor[]>
     exponentialRunOfBaseDelay?: number
 }
 
-export class StreamPartSplitAvoidance {
+export class StreamPartNetworkSplitAvoidance {
 
     private readonly abortController: AbortController
-    private readonly config: StreamPartSplitAvoidanceConfig
+    private readonly config: StreamPartNetworkSplitAvoidanceConfig
     private readonly excludedNodes: Set<DhtAddress> = new Set()
     private running = false
 
-    constructor(config: StreamPartSplitAvoidanceConfig) {
+    constructor(config: StreamPartNetworkSplitAvoidanceConfig) {
         this.config = config
         this.abortController = new AbortController()
     }

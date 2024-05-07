@@ -26,7 +26,7 @@ import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
 import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode'
 import { ProxyClient } from './proxy/ProxyClient'
 import { StreamPartReconnect } from './StreamPartReconnect'
-import { MIN_NEIGHBOR_COUNT as NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT, StreamPartSplitAvoidance } from './StreamPartSplitAvoidance'
+import { MIN_NEIGHBOR_COUNT as NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT, StreamPartNetworkSplitAvoidance } from './StreamPartNetworkSplitAvoidance'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void
@@ -36,7 +36,7 @@ export type StreamPartDelivery = {
     layer1Node: Layer1Node
     node: ContentDeliveryLayerNode
     entryPointDiscovery: EntryPointDiscovery
-    splitAvoidance: StreamPartSplitAvoidance
+    splitAvoidance: StreamPartNetworkSplitAvoidance
 } | {
     proxied: true
     client: ProxyClient
@@ -143,7 +143,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             storeEntryPointData: (key, data) => this.layer0Node!.storeDataToDht(key, data),
             deleteEntryPointData: async (key) => this.layer0Node!.deleteDataFromDht(key, false)
         })
-        const splitAvoidance = new StreamPartSplitAvoidance({
+        const splitAvoidance = new StreamPartNetworkSplitAvoidance({
             layer1Node,
             discoverEntryPoints: async (excludedNodes) => entryPointDiscovery.discoverEntryPointsFromDht(excludedNodes)
         })
