@@ -71,7 +71,7 @@ export class EntryPointDiscovery {
         }
     }
 
-    async storeAndKeepSelfAsEntryPoint(): Promise<void> {
+    async storeAndKeepLocalNodeAsEntryPoint(): Promise<void> {
         if (this.abortController.signal.aborted) {
             return
         }

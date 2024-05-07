@@ -178,7 +178,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             }
             const entryPoints = await entryPointDiscovery.discoverEntryPointsFromDht()
             if (entryPoints.length < ENTRYPOINT_STORE_LIMIT) {
-                await entryPointDiscovery.storeAndKeepSelfAsEntryPoint()
+                await entryPointDiscovery.storeAndKeepLocalNodeAsEntryPoint()
             }
         }
         layer1Node.on('manualRejoinRequired', async () => {
@@ -219,7 +219,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
                 streamPart.layer1Node.joinRing()
             ])
             if (entryPoints.length < ENTRYPOINT_STORE_LIMIT) {
-                await entryPointDiscovery.storeAndKeepSelfAsEntryPoint()
+                await entryPointDiscovery.storeAndKeepLocalNodeAsEntryPoint()
                 if (streamPart.layer1Node.getNeighborCount() < NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT) {
                     setImmediate(() => streamPart.splitAvoidance.avoidNetworkSplit())
                 }

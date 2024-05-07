@@ -86,13 +86,13 @@ describe('EntryPointDiscovery', () => {
     })
 
     it('store on stream without saturated entrypoint count', async () => {
-        await entryPointDiscoveryWithData.storeAndKeepSelfAsEntryPoint()
+        await entryPointDiscoveryWithData.storeAndKeepLocalNodeAsEntryPoint()
         expect(storeCalled).toEqual(1)
         expect(entryPointDiscoveryWithData.isLocalNodeEntryPoint()).toEqual(true)
     })
 
     it('will keep stored until destroyed', async () => {
-        await entryPointDiscoveryWithData.storeAndKeepSelfAsEntryPoint()
+        await entryPointDiscoveryWithData.storeAndKeepLocalNodeAsEntryPoint()
         expect(storeCalled).toEqual(1)
         expect(entryPointDiscoveryWithData.isLocalNodeEntryPoint()).toEqual(true)
         await wait(4500)

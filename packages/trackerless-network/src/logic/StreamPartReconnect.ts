@@ -19,7 +19,7 @@ export class StreamPartReconnect {
             const entryPoints = await this.entryPointDiscovery.discoverEntryPointsFromDht()
             await this.layer1Node.joinDht(entryPoints)
             if (this.entryPointDiscovery.isLocalNodeEntryPoint()) {
-                await this.entryPointDiscovery.storeAndKeepSelfAsEntryPoint()
+                await this.entryPointDiscovery.storeAndKeepLocalNodeAsEntryPoint()
             }
             if (this.layer1Node.getNeighborCount() > 0) {
                 this.abortController!.abort()

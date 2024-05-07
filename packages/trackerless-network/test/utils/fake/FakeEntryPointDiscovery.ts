@@ -18,7 +18,7 @@ class FakeEntryPointDiscovery {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async storeAndKeepSelfAsEntryPoint(): Promise<void> {
+    async storeAndKeepLocalNodeAsEntryPoint(): Promise<void> {
     }
 
     // eslint-disable-next-line class-methods-use-this
