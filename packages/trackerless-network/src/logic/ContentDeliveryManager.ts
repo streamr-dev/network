@@ -145,7 +145,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         })
         const networkSplitAvoidance = new StreamPartNetworkSplitAvoidance({
             layer1Node,
-            discoverEntryPoints: async (excludedNodes) => entryPointDiscovery.discoverEntryPointsFromDht(excludedNodes)
+            discoverEntryPoints: async () => entryPointDiscovery.discoverEntryPoints()
         })
         const node = this.createContentDeliveryLayerNode(
             streamPartId,
@@ -176,7 +176,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             if (this.destroyed || entryPointDiscovery.isLocalNodeEntryPoint() || this.knownStreamPartEntryPoints.has(streamPartId)) {
                 return
             }
-            const entryPoints = await entryPointDiscovery.discoverEntryPointsFromDht()
+            const entryPoints = await entryPointDiscovery.discoverEntryPoints()
             if (entryPoints.length < ENTRYPOINT_STORE_LIMIT) {
                 await entryPointDiscovery.storeAndKeepLocalNodeAsEntryPoint()
             }
@@ -213,7 +213,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
                 streamPart.layer1Node.joinRing()
             ])
         } else {
-            const entryPoints = await entryPointDiscovery.discoverEntryPointsFromDht()
+            const entryPoints = await entryPointDiscovery.discoverEntryPoints()
             await Promise.all([
                 streamPart.layer1Node.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT)),
                 streamPart.layer1Node.joinRing()

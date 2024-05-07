@@ -13,7 +13,7 @@ class FakeEntryPointDiscovery {
         this.entryPoints = nodes
     } 
 
-    async discoverEntryPointsFromDht(): Promise<PeerDescriptor[]> {
+    async discoverEntryPoints(): Promise<PeerDescriptor[]> {
         return this.entryPoints
     }
 

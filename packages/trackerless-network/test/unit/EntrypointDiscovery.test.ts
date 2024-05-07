@@ -74,14 +74,14 @@ describe('EntryPointDiscovery', () => {
         entryPointDiscoveryWithData.destroy()
     })
 
-    it('discoverEntryPointsFromDht filters deleted data', async () => {
-        const res = await entryPointDiscoveryWithData.discoverEntryPointsFromDht()
+    it('discoverEntryPoints filters deleted data', async () => {
+        const res = await entryPointDiscoveryWithData.discoverEntryPoints()
         expect(res.length).toBe(1)
         expect(areEqualPeerDescriptors(res[0], peerDescriptor)).toBe(true)
     })
 
-    it('discoverEntryPointsFromDht without results', async () => {
-        const res = await entryPointDiscoveryWithoutData.discoverEntryPointsFromDht()
+    it('discoverEntryPoints without results', async () => {
+        const res = await entryPointDiscoveryWithoutData.discoverEntryPoints()
         expect(res.length).toBe(0)
     })
 
