@@ -1,3 +1,4 @@
+import { MIN_NEIGHBOR_COUNT } from '../../src/logic/StreamPartSplitAvoidance'
 import { StreamPartSplitAvoidance } from '../../src/logic/StreamPartSplitAvoidance'
 import { MockLayer1Node } from '../utils/mock/MockLayer1Node'
 
@@ -25,7 +26,7 @@ describe('StreamPartSplitAvoidance', () => {
 
     it('runs avoidance until number of neighbors is above MIN_NEIGHBOR_COUNT', async () => {
         await streamPartSplitAvoidance.avoidNetworkSplit()
-        expect(layer1Node.getNeighborCount()).toBeGreaterThan(4)
+        expect(layer1Node.getNeighborCount()).toBeGreaterThan(MIN_NEIGHBOR_COUNT)
     })
 
 })
