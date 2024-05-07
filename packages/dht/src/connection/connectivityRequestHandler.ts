@@ -11,12 +11,13 @@ import { IConnection } from './IConnection'
 import { WebsocketServerConnection } from './websocket/WebsocketServerConnection'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
 import { LOCAL_PROTOCOL_VERSION } from '../helpers/version'
+import { GeoIpLocator } from '@streamr/geoip-location'
 
 export const DISABLE_CONNECTIVITY_PROBE = 0
 
 const logger = new Logger(module)
 
-export const attachConnectivityRequestHandler = (connectionToListenTo: WebsocketServerConnection): void => {
+export const attachConnectivityRequestHandler = (connectionToListenTo: WebsocketServerConnection, geoIpLocator?: GeoIpLocator): void => {
     connectionToListenTo.on('data', async (data: Uint8Array) => {
         logger.trace('server received data')
         try {
@@ -24,7 +25,8 @@ export const attachConnectivityRequestHandler = (connectionToListenTo: Websocket
             if (message.body.oneofKind === 'connectivityRequest') {
                 logger.trace('ConnectivityRequest received: ' + JSON.stringify(Message.toJson(message)))
                 try {
-                    await handleIncomingConnectivityRequest(connectionToListenTo, message.body.connectivityRequest)
+                    await handleIncomingConnectivityRequest(connectionToListenTo,
+                        message.body.connectivityRequest, geoIpLocator)
                     logger.trace('handleIncomingConnectivityRequest ok')
                 } catch (err1) {
                     logger.error('handleIncomingConnectivityRequest', { err: err1 })
@@ -36,9 +38,13 @@ export const attachConnectivityRequestHandler = (connectionToListenTo: Websocket
     })
 }
 
-const handleIncomingConnectivityRequest = async (connection: WebsocketServerConnection, connectivityRequest: ConnectivityRequest): Promise<void> => {
-    const host = connectivityRequest.host ?? connection.remoteIpAddress
-    const ipAddress = connection.remoteIpAddress
+const handleIncomingConnectivityRequest = async (
+    connection: WebsocketServerConnection,
+    connectivityRequest: ConnectivityRequest,
+    geoIpLocator?: GeoIpLocator
+): Promise<void> => {
+    const host = connectivityRequest.host ?? connection.getRemoteIpAddress()
+    const ipAddress = connection.getRemoteIpAddress()
     let connectivityResponse: ConnectivityResponse
     if (connectivityRequest.port !== DISABLE_CONNECTIVITY_PROBE) {
         connectivityResponse = await connectivityProbe(connectivityRequest, ipAddress, host)
@@ -49,6 +55,13 @@ const handleIncomingConnectivityRequest = async (connection: WebsocketServerConn
             natType: NatType.UNKNOWN,
             ipAddress: ipv4ToNumber(ipAddress),
             version: LOCAL_PROTOCOL_VERSION
+        }
+    }
+    if (geoIpLocator !== undefined) {
+        const location = geoIpLocator.lookup(ipAddress)
+        if (location !== undefined) {
+            connectivityResponse.latitude = location.latitude
+            connectivityResponse.longitude = location.longitude
         }
     }
     const msg: Message = {

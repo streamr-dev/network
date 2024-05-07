@@ -64,7 +64,7 @@ The Streamr SDK is available on [NPM](https://www.npmjs.com/package/@streamr/sdk
 $ npm install @streamr/sdk
 ```
 
-Having trouble installing the client? Maybe our [troubleshooting](../usage/streamr-js-client/how-to-use#Troubleshooting) section will help.
+Having trouble installing the client? Maybe our [troubleshooting](../usage/sdk/how-to-use#Troubleshooting) section will help.
 
 :::note
 Make sure the `PRIVATE_KEY` you add has a small amount of `MATIC` (the native token of the Polygon blockchain) in its wallet to pay for gas to create the stream and make the permission assignment.

@@ -159,15 +159,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             maxSize: 100000,  // TODO use config option or named constant?
             allowToContainReferenceId: false
         })
-        this.connections.forEach((connection, key) => {
-            // TODO: Investigate why multiple invalid WS client connections to the same
-            // server with a different nodeId can remain in the this.connections map.
-            // Seems to only happen if the ConnectionManager acting as client is not running a WS server itself.
-            if (connection.getPeerDescriptor() !== undefined && !this.hasConnection(getNodeIdFromPeerDescriptor(connection.getPeerDescriptor()!))) {
-                logger.trace(`Attempting to disconnect a hanging connection to ${getNodeIdFromPeerDescriptor(connection.getPeerDescriptor()!)}`)
-                connection.close(false).catch(() => {})
-                this.connections.delete(key)
-            } else if (!this.locks.isLocked(connection.getNodeId()) && Date.now() - connection.getLastUsedTimestamp() > maxIdleTime) {
+        this.connections.forEach((connection) => {
+            if (!this.locks.isLocked(connection.getNodeId()) && Date.now() - connection.getLastUsedTimestamp() > maxIdleTime) {
                 logger.trace('disconnecting in timeout interval: ' + getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()))
                 disconnectionCandidates.addContact(connection)
             }

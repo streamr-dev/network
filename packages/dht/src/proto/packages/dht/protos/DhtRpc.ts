@@ -379,6 +379,14 @@ export interface ConnectivityResponse {
      * @generated from protobuf field: string version = 5;
      */
     version: string;
+    /**
+     * @generated from protobuf field: optional double latitude = 6;
+     */
+    latitude?: number;
+    /**
+     * @generated from protobuf field: optional double longitude = 7;
+     */
+    longitude?: number;
 }
 /**
  * @generated from protobuf message dht.HandshakeRequest
@@ -978,7 +986,9 @@ class ConnectivityResponse$Type extends MessageType<ConnectivityResponse> {
             { no: 2, name: "natType", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "websocket", kind: "message", T: () => ConnectivityMethod },
             { no: 4, name: "ipAddress", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 5, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 5, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "latitude", kind: "scalar", opt: true, T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 7, name: "longitude", kind: "scalar", opt: true, T: 1 /*ScalarType.DOUBLE*/ }
         ]);
     }
 }

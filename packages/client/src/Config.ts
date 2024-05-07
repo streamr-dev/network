@@ -156,6 +156,12 @@ export interface ControlLayerConfig {
      * (especially when starting the node for the first time on a new machine).
      */
     websocketServerEnableTls?: boolean
+
+    /**
+     * Define a geo ip database folder path to be used by the network node. When left undefined
+     * geoip functionality is disabled.
+     */
+    geoIpDatabaseFolder?: string
 }
 
 export interface NetworkNodeConfig {
@@ -234,7 +240,7 @@ export interface EthereumNetworkConfig {
 //   empty arrays will be applied as-is: we may want to remove "enthereum.rpcEndpoints" key 
 //   from @streamr/config as the intention is to use system-defaults (e.g. Metamask defaults)
 //   in Ethereum network
-export type EnvironmentId = 'polygon' | 'mumbai' | 'dev2'
+export type EnvironmentId = 'polygon' | 'polygonAmoy' | 'dev2'
 
 export const DEFAULT_ENVIRONMENT: EnvironmentId = 'polygon'
 

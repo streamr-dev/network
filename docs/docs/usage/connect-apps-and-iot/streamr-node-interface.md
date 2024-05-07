@@ -5,10 +5,6 @@ sidebar_position: 1
 # Connect to a Streamr node
 The Streamr node ships with interface plugins, which can be used to publish and subscribe to data from applications over off-the-shelf protocols HTTP, WebSocket, and MQTT. For now, publishing and subscribing is available through these plugins however features such as resends are unavailable at this time.
 
-:::caution
-Note that this documentation is for the Brubeck network - the current production network.
-:::
-
 <!-- TODO: Feature completeness matrix diagram -->
 
 ## Configuration
