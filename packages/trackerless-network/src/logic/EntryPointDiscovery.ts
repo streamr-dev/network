@@ -76,11 +76,11 @@ export class EntryPointDiscovery {
             return
         }
         this.isLocalNodeStoredAsEntryPoint = true
-        await this.storeSelfAsEntryPoint()
+        await this.storeLocalNodeAsEntryPoint()
         await this.keepSelfAsEntryPoint()
     }
 
-    private async storeSelfAsEntryPoint(): Promise<void> {
+    private async storeLocalNodeAsEntryPoint(): Promise<void> {
         const localPeerDescriptor = this.config.localPeerDescriptor
         const dataToStore = Any.pack(localPeerDescriptor, PeerDescriptor)
         try {
@@ -97,7 +97,7 @@ export class EntryPointDiscovery {
                 const discovered = await this.discoverEntryPoints()
                 if (discovered.length < ENTRYPOINT_STORE_LIMIT 
                     || discovered.some((peerDescriptor) => areEqualPeerDescriptors(peerDescriptor, this.config.localPeerDescriptor))) {
-                    await this.storeSelfAsEntryPoint()
+                    await this.storeLocalNodeAsEntryPoint()
                 }
             } catch (err) {
                 logger.debug(`Failed to keep self as entrypoint for ${this.config.streamPartId}`)
