@@ -3,7 +3,7 @@ import crypto from 'crypto'
 import { PeerDescriptor } from './proto/packages/dht/protos/DhtRpc'
 
 // https://www.scs.stanford.edu/~dm/home/papers/kpos.pdf
-const KADEMLIA_ID_LENGTH_IN_BYTES = 20
+export const KADEMLIA_ID_LENGTH_IN_BYTES = 20
 
 export type DhtAddress = BrandedString<'DhtAddress'>
 export type DhtAddressRaw = Uint8Array
@@ -27,4 +27,3 @@ export const areEqualPeerDescriptors = (peerDescriptor1: PeerDescriptor, peerDes
 export const createRandomDhtAddress = (): DhtAddress => {
     return getDhtAddressFromRaw(crypto.randomBytes(KADEMLIA_ID_LENGTH_IN_BYTES))
 }
-

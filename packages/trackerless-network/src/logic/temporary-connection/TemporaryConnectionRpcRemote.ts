@@ -11,8 +11,19 @@ export class TemporaryConnectionRpcRemote extends RpcRemote<TemporaryConnectionR
             const response = await this.getClient().openConnection({}, this.formDhtRpcOptions())
             return response.accepted
         } catch (err: any) {
-            logger.debug(`temporaryConnection to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
+            logger.debug(`temporaryConnection to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed`, { err })
             return false
+        }
+    }
+
+    async closeConnection(): Promise<void> {
+        try {
+            await this.getClient().closeConnection({}, this.formDhtRpcOptions({
+                connect: false,
+                notification: true
+            }))
+        } catch (err) {
+            logger.trace(`closeConnection to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed`, { err })
         }
     }
 }

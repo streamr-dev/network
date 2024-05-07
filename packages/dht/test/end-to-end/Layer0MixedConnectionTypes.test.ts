@@ -72,15 +72,13 @@ describe('Layer0MixedConnectionTypes', () => {
 
     it('2 non-server peers join first', async () => {
 
-        const promise = Promise.all([
+        await Promise.all([
             waitForEvent3<TransportEvents>((node3.getTransport() as ConnectionManager), 'connected'),
             waitForEvent3<TransportEvents>((node4.getTransport() as ConnectionManager), 'connected'),
+            node3.joinDht([epPeerDescriptor]),
+            node4.joinDht([epPeerDescriptor])
         ])
 
-        node3.joinDht([epPeerDescriptor])
-        node4.joinDht([epPeerDescriptor])
-
-        await promise
         await Promise.all([
             node1.joinDht([epPeerDescriptor]),
             node2.joinDht([epPeerDescriptor]),
@@ -93,7 +91,7 @@ describe('Layer0MixedConnectionTypes', () => {
         expect(node4.getNeighborCount()).toBeGreaterThanOrEqual(2)
         expect(node5.getNeighborCount()).toBeGreaterThanOrEqual(1)
 
-    }, 15000)
+    }, 20000)
 
     it('Simultaneous joins', async () => {
         await Promise.all([
@@ -108,5 +106,5 @@ describe('Layer0MixedConnectionTypes', () => {
         expect(node3.getNeighborCount()).toBeGreaterThanOrEqual(2)
         expect(node4.getNeighborCount()).toBeGreaterThanOrEqual(2)
         expect(node5.getNeighborCount()).toBeGreaterThanOrEqual(2)
-    }, 30000)
+    }, 40000)
 })

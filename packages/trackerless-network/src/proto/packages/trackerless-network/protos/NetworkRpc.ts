@@ -52,9 +52,56 @@ export interface MessageRef {
  */
 export interface StreamMessage {
     /**
-     * @generated from protobuf field: StreamMessageType messageType = 1;
+     * this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
+     *
+     * @generated from protobuf field: MessageID messageId = 1;
      */
-    messageType: StreamMessageType;
+    messageId?: MessageID;
+    /**
+     * @generated from protobuf field: optional MessageRef previousMessageRef = 2;
+     */
+    previousMessageRef?: MessageRef;
+    /**
+     * @generated from protobuf field: bytes signature = 3;
+     */
+    signature: Uint8Array;
+    /**
+     * @generated from protobuf field: SignatureType signatureType = 4;
+     */
+    signatureType: SignatureType;
+    /**
+     * @generated from protobuf oneof: body
+     */
+    body: {
+        oneofKind: "contentMessage";
+        /**
+         * @generated from protobuf field: ContentMessage contentMessage = 5;
+         */
+        contentMessage: ContentMessage;
+    } | {
+        oneofKind: "groupKeyRequest";
+        /**
+         * @generated from protobuf field: GroupKeyRequest groupKeyRequest = 6;
+         */
+        groupKeyRequest: GroupKeyRequest;
+    } | {
+        oneofKind: "groupKeyResponse";
+        /**
+         * @generated from protobuf field: GroupKeyResponse groupKeyResponse = 7;
+         */
+        groupKeyResponse: GroupKeyResponse;
+    } | {
+        oneofKind: undefined;
+    };
+}
+/**
+ * @generated from protobuf message ContentMessage
+ */
+export interface ContentMessage {
+    /**
+     * @generated from protobuf field: bytes content = 1;
+     */
+    content: Uint8Array;
     /**
      * @generated from protobuf field: ContentType contentType = 2;
      */
@@ -64,33 +111,11 @@ export interface StreamMessage {
      */
     encryptionType: EncryptionType;
     /**
-     * @generated from protobuf field: bytes content = 4;
-     */
-    content: Uint8Array;
-    /**
-     * @generated from protobuf field: SignatureType signatureType = 5;
-     */
-    signatureType: SignatureType;
-    /**
-     * @generated from protobuf field: bytes signature = 6;
-     */
-    signature: Uint8Array;
-    /**
-     * this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
-     *
-     * @generated from protobuf field: MessageID messageId = 7;
-     */
-    messageId?: MessageID;
-    /**
-     * @generated from protobuf field: optional MessageRef previousMessageRef = 8;
-     */
-    previousMessageRef?: MessageRef;
-    /**
-     * @generated from protobuf field: optional string groupKeyId = 9;
+     * @generated from protobuf field: optional string groupKeyId = 4;
      */
     groupKeyId?: string;
     /**
-     * @generated from protobuf field: optional GroupKey newGroupKey = 10;
+     * @generated from protobuf field: optional GroupKey newGroupKey = 5;
      */
     newGroupKey?: GroupKey;
 }
@@ -274,6 +299,67 @@ export interface TemporaryConnectionResponse {
     accepted: boolean;
 }
 /**
+ * @generated from protobuf message CloseTemporaryConnection
+ */
+export interface CloseTemporaryConnection {
+}
+/**
+ * @generated from protobuf message StreamPartitionInfo
+ */
+export interface StreamPartitionInfo {
+    /**
+     * @generated from protobuf field: string id = 1;
+     */
+    id: string;
+    /**
+     * @generated from protobuf field: repeated dht.PeerDescriptor controlLayerNeighbors = 2;
+     */
+    controlLayerNeighbors: PeerDescriptor[];
+    /**
+     * @generated from protobuf field: repeated dht.PeerDescriptor contentDeliveryLayerNeighbors = 3;
+     */
+    contentDeliveryLayerNeighbors: PeerDescriptor[];
+}
+/**
+ * @generated from protobuf message ControlLayerInfo
+ */
+export interface ControlLayerInfo {
+    /**
+     * @generated from protobuf field: repeated dht.PeerDescriptor neighbors = 1;
+     */
+    neighbors: PeerDescriptor[];
+    /**
+     * @generated from protobuf field: repeated dht.PeerDescriptor connections = 2;
+     */
+    connections: PeerDescriptor[];
+}
+/**
+ * @generated from protobuf message NodeInfoRequest
+ */
+export interface NodeInfoRequest {
+}
+/**
+ * @generated from protobuf message NodeInfoResponse
+ */
+export interface NodeInfoResponse {
+    /**
+     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 1;
+     */
+    peerDescriptor?: PeerDescriptor;
+    /**
+     * @generated from protobuf field: repeated StreamPartitionInfo streamPartitions = 2;
+     */
+    streamPartitions: StreamPartitionInfo[];
+    /**
+     * @generated from protobuf field: optional ControlLayerInfo controlLayer = 3;
+     */
+    controlLayer?: ControlLayerInfo;
+    /**
+     * @generated from protobuf field: string version = 4;
+     */
+    version: string;
+}
+/**
  * @generated from protobuf enum StreamMessageType
  */
 export enum StreamMessageType {
@@ -327,7 +413,11 @@ export enum SignatureType {
     /**
      * @generated from protobuf enum value: SECP256K1 = 1;
      */
-    SECP256K1 = 1
+    SECP256K1 = 1,
+    /**
+     * @generated from protobuf enum value: ERC_1271 = 2;
+     */
+    ERC_1271 = 2
 }
 /**
  * @generated from protobuf enum ProxyDirection
@@ -376,16 +466,13 @@ export const MessageRef = new MessageRef$Type();
 class StreamMessage$Type extends MessageType<StreamMessage> {
     constructor() {
         super("StreamMessage", [
-            { no: 1, name: "messageType", kind: "enum", T: () => ["StreamMessageType", StreamMessageType] },
-            { no: 2, name: "contentType", kind: "enum", T: () => ["ContentType", ContentType] },
-            { no: 3, name: "encryptionType", kind: "enum", T: () => ["EncryptionType", EncryptionType] },
-            { no: 4, name: "content", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 5, name: "signatureType", kind: "enum", T: () => ["SignatureType", SignatureType] },
-            { no: 6, name: "signature", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 7, name: "messageId", kind: "message", T: () => MessageID },
-            { no: 8, name: "previousMessageRef", kind: "message", T: () => MessageRef },
-            { no: 9, name: "groupKeyId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
-            { no: 10, name: "newGroupKey", kind: "message", T: () => GroupKey }
+            { no: 1, name: "messageId", kind: "message", T: () => MessageID },
+            { no: 2, name: "previousMessageRef", kind: "message", T: () => MessageRef },
+            { no: 3, name: "signature", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 4, name: "signatureType", kind: "enum", T: () => ["SignatureType", SignatureType] },
+            { no: 5, name: "contentMessage", kind: "message", oneof: "body", T: () => ContentMessage },
+            { no: 6, name: "groupKeyRequest", kind: "message", oneof: "body", T: () => GroupKeyRequest },
+            { no: 7, name: "groupKeyResponse", kind: "message", oneof: "body", T: () => GroupKeyResponse }
         ]);
     }
 }
@@ -393,6 +480,22 @@ class StreamMessage$Type extends MessageType<StreamMessage> {
  * @generated MessageType for protobuf message StreamMessage
  */
 export const StreamMessage = new StreamMessage$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ContentMessage$Type extends MessageType<ContentMessage> {
+    constructor() {
+        super("ContentMessage", [
+            { no: 1, name: "content", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 2, name: "contentType", kind: "enum", T: () => ["ContentType", ContentType] },
+            { no: 3, name: "encryptionType", kind: "enum", T: () => ["EncryptionType", EncryptionType] },
+            { no: 4, name: "groupKeyId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "newGroupKey", kind: "message", T: () => GroupKey }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ContentMessage
+ */
+export const ContentMessage = new ContentMessage$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class GroupKeyRequest$Type extends MessageType<GroupKeyRequest> {
     constructor() {
@@ -563,10 +666,72 @@ class TemporaryConnectionResponse$Type extends MessageType<TemporaryConnectionRe
  * @generated MessageType for protobuf message TemporaryConnectionResponse
  */
 export const TemporaryConnectionResponse = new TemporaryConnectionResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class CloseTemporaryConnection$Type extends MessageType<CloseTemporaryConnection> {
+    constructor() {
+        super("CloseTemporaryConnection", []);
+    }
+}
 /**
- * @generated ServiceType for protobuf service DeliveryRpc
+ * @generated MessageType for protobuf message CloseTemporaryConnection
  */
-export const DeliveryRpc = new ServiceType("DeliveryRpc", [
+export const CloseTemporaryConnection = new CloseTemporaryConnection$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class StreamPartitionInfo$Type extends MessageType<StreamPartitionInfo> {
+    constructor() {
+        super("StreamPartitionInfo", [
+            { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "controlLayerNeighbors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 3, name: "contentDeliveryLayerNeighbors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message StreamPartitionInfo
+ */
+export const StreamPartitionInfo = new StreamPartitionInfo$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ControlLayerInfo$Type extends MessageType<ControlLayerInfo> {
+    constructor() {
+        super("ControlLayerInfo", [
+            { no: 1, name: "neighbors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 2, name: "connections", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ControlLayerInfo
+ */
+export const ControlLayerInfo = new ControlLayerInfo$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class NodeInfoRequest$Type extends MessageType<NodeInfoRequest> {
+    constructor() {
+        super("NodeInfoRequest", []);
+    }
+}
+/**
+ * @generated MessageType for protobuf message NodeInfoRequest
+ */
+export const NodeInfoRequest = new NodeInfoRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class NodeInfoResponse$Type extends MessageType<NodeInfoResponse> {
+    constructor() {
+        super("NodeInfoResponse", [
+            { no: 1, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 2, name: "streamPartitions", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => StreamPartitionInfo },
+            { no: 3, name: "controlLayer", kind: "message", T: () => ControlLayerInfo },
+            { no: 4, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message NodeInfoResponse
+ */
+export const NodeInfoResponse = new NodeInfoResponse$Type();
+/**
+ * @generated ServiceType for protobuf service ContentDeliveryRpc
+ */
+export const ContentDeliveryRpc = new ServiceType("ContentDeliveryRpc", [
     { name: "sendStreamMessage", options: {}, I: StreamMessage, O: Empty },
     { name: "leaveStreamPartNotice", options: {}, I: LeaveStreamPartNotice, O: Empty }
 ]);
@@ -593,5 +758,12 @@ export const NeighborUpdateRpc = new ServiceType("NeighborUpdateRpc", [
  * @generated ServiceType for protobuf service TemporaryConnectionRpc
  */
 export const TemporaryConnectionRpc = new ServiceType("TemporaryConnectionRpc", [
-    { name: "openConnection", options: {}, I: TemporaryConnectionRequest, O: TemporaryConnectionResponse }
+    { name: "openConnection", options: {}, I: TemporaryConnectionRequest, O: TemporaryConnectionResponse },
+    { name: "closeConnection", options: {}, I: CloseTemporaryConnection, O: Empty }
+]);
+/**
+ * @generated ServiceType for protobuf service NodeInfoRpc
+ */
+export const NodeInfoRpc = new ServiceType("NodeInfoRpc", [
+    { name: "getInfo", options: {}, I: NodeInfoRequest, O: NodeInfoResponse }
 ]);

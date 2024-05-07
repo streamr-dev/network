@@ -2,7 +2,7 @@
 
 import { wait } from '@streamr/utils'
 import { WebsocketServer } from '../../src/connection/websocket/WebsocketServer'
-import { ClientWebsocket } from '../../src/connection/websocket/ClientWebsocket'
+import { WebsocketClientConnection } from '../../src/connection/websocket/NodeWebsocketClientConnection'
 
 // This 'test' is meant to be run manually using the following command:
 // node --inspect ../../../../node_modules/.bin/jest WebsocketServerMemoryLeak.test.ts
@@ -26,7 +26,7 @@ describe('WebsocketServermemoryLeak', () => {
         expect(port).toEqual(19792)
         
         for (let i = 0; i < 10000; i++) {
-            const clientWebsocket: ClientWebsocket = new ClientWebsocket()
+            const clientWebsocket: WebsocketClientConnection = new WebsocketClientConnection()
             clientWebsocket.on('connected', () => {
                 console.log('clientWebsocket connected ' + i)
             })

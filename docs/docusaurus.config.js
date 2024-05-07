@@ -50,7 +50,7 @@ const config = {
                     indexLabel: " ",
                     position: 5,
                 },
-                out: "usage/streamr-js-client/api",
+                out: "usage/sdk/api",
                 tsconfig: "../packages/client/tsconfig.json",
             },
         ],
@@ -61,15 +61,18 @@ const config = {
         [
             "classic",
             /** @type {import('@docusaurus/preset-classic').Options} */
-            ({
+            ({  
+                googleTagManager: {
+                    containerId: 'GTM-W9HTMKM',
+                },
                 docs: {
                     routeBasePath: "/",
                     sidebarPath: require.resolve("./sidebars.js"),
                     editUrl:
-                        "https://github.com/streamr-dev/network/tree/main/docs",
+                        "https://github.com/streamr-dev/network/tree/pre-1.0-docs/docs",
                     exclude: [
-                        "**usage/streamr-js-client/api/modules.mdx",
-                        "**usage/streamr-js-client/api/modules.md",
+                        "**usage/sdk/api/modules.mdx",
+                        "**usage/sdk/api/modules.md",
                     ],
                 },
                 blog: {
@@ -85,7 +88,10 @@ const config = {
 
     themeConfig:
         /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
-        ({
+        ({  
+            metadata: [
+                {name: "robots", content: "index, follow"}
+            ],
             navbar: {
                 title: "Streamr",
                 logo: {
@@ -123,6 +129,8 @@ const config = {
 
                 // Optional: see doc section below
                 contextualSearch: true,
+                schedule: 'every 1 day at 3:00 pm',
+                  
             },
             footer: {
                 links: [

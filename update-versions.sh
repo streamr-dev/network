@@ -10,6 +10,8 @@ fi
 
 PKG_DIRS="utils
 test-utils
+cdn-location
+geoip-location
 protocol
 proto-rpc
 autocertifier-client
@@ -22,15 +24,17 @@ broker"
 
 PKG_NAMES="@streamr/utils
 @streamr/test-utils
+@streamr/cdn-location
+@streamr/geoip-location
 @streamr/protocol
 @streamr/proto-rpc
 @streamr/autocertifier-client
 @streamr/dht
 @streamr/autocertifier-server
 @streamr/trackerless-network
-streamr-client
+@streamr/sdk
 @streamr/cli-tools
-streamr-broker
+@streamr/node
 "
 
 # Update package versions

@@ -10,7 +10,7 @@ import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { ConfigInjectionToken, NetworkPeerDescriptor, StrictStreamrClientConfig } from './Config'
 import { DestroySignal } from './DestroySignal'
-import { OperatorRegistry } from './registry/OperatorRegistry'
+import { OperatorRegistry } from './contracts/OperatorRegistry'
 import { pOnce } from './utils/promises'
 import { peerDescriptorTranslator } from './utils/utils'
 
@@ -107,7 +107,10 @@ export class NetworkNodeFacade {
             layer0: {
                 ...this.config.network.controlLayer,
                 entryPoints: entryPoints.map(peerDescriptorTranslator),
-                peerDescriptor: localPeerDescriptor
+                peerDescriptor: localPeerDescriptor,
+                websocketPortRange: (this.config.network.controlLayer.websocketPortRange !== null) 
+                    ? this.config.network.controlLayer.websocketPortRange
+                    : undefined
             },
             networkNode: this.config.network.node,
             metricsContext: new MetricsContext()

@@ -6,10 +6,10 @@ import { StreamrClientConfig } from '../../../src/Config'
 import { NetworkNodeFactory } from '../../../src/NetworkNodeFacade'
 import { StreamrClient } from '../../../src/StreamrClient'
 import { MIN_KEY_LENGTH } from '../../../src/encryption/RSAKeyPair'
-import { StorageNodeRegistry } from '../../../src/registry/StorageNodeRegistry'
-import { StreamRegistry } from '../../../src/registry/StreamRegistry'
-import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegistry'
-import { OperatorRegistry } from '../../../src/registry/OperatorRegistry'
+import { StorageNodeRegistry } from '../../../src/contracts/StorageNodeRegistry'
+import { StreamRegistry } from '../../../src/contracts/StreamRegistry'
+import { StreamStorageRegistry } from '../../../src/contracts/StreamStorageRegistry'
+import { OperatorRegistry } from '../../../src/contracts/OperatorRegistry'
 import { LoggerFactory } from './../../../src/utils/LoggerFactory'
 import { FakeChain } from './FakeChain'
 import { FakeLogger } from './FakeLogger'
@@ -20,6 +20,8 @@ import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
 import { FakeStreamRegistry } from './FakeStreamRegistry'
 import { FakeStreamStorageRegistry } from './FakeStreamStorageRegistry'
 import { FakeOperatorRegistry } from './FakeOperatorRegistry'
+import { ERC1271ContractFacade } from '../../../src/contracts/ERC1271ContractFacade'
+import { FakeERC1271ContractFacade } from './FakeERC1271ContractFacade'
 
 const DEFAULT_CLIENT_OPTIONS: StreamrClientConfig = {
     encryption: {
@@ -46,6 +48,7 @@ export class FakeEnvironment {
         this.dependencyContainer.register(FakeNetwork, { useValue: this.network })
         this.dependencyContainer.register(FakeChain, { useValue: this.chain })
         this.dependencyContainer.register(LoggerFactory, { useValue: loggerFactory } as any)
+        this.dependencyContainer.register(ERC1271ContractFacade, FakeERC1271ContractFacade as any)
         this.dependencyContainer.register(NetworkNodeFactory, FakeNetworkNodeFactory)
         this.dependencyContainer.register(StreamRegistry, FakeStreamRegistry as any)
         this.dependencyContainer.register(StreamStorageRegistry, FakeStreamStorageRegistry as any)

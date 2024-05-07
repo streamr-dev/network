@@ -1,11 +1,18 @@
 import { EventEmitter } from 'eventemitter3'
-import { ITransport, TransportEvents } from '../../src/transport/ITransport'
+import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 import { Message, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { DEFAULT_SEND_OPTIONS, ITransport, SendOptions, TransportEvents } from '../../src/transport/ITransport'
+import { ConnectionsView } from '../../src/exports'
 
-class FakeTransport extends EventEmitter<TransportEvents> implements ITransport {
+// TODO extract ConnectionsView functionality to FakeConnectionsView
+class FakeTransport extends EventEmitter<TransportEvents> implements ITransport, ConnectionsView {
 
     private onSend: (msg: Message) => void
     private readonly localPeerDescriptor: PeerDescriptor
+    // currently adds a peerDescription to the connections array when a "connect" option is seen in
+    // in send() call and never disconnects (TODO could add some disconnection logic? and maybe
+    // the connection should be seen by another FakeTransport instance, too?)
+    private connections: PeerDescriptor[] = []
 
     constructor(peerDescriptor: PeerDescriptor, onSend: (msg: Message) => void) {
         super()
@@ -13,19 +20,37 @@ class FakeTransport extends EventEmitter<TransportEvents> implements ITransport 
         this.localPeerDescriptor = peerDescriptor
     }
 
-    async send(msg: Message): Promise<void> {
+    async send(msg: Message, opts?: SendOptions): Promise<void> {
+        const connect = opts?.connect ?? DEFAULT_SEND_OPTIONS.connect
+        const targetNodeId = getNodeIdFromPeerDescriptor(msg.targetDescriptor!)
+        if (connect && !this.connections.some((c) => getNodeIdFromPeerDescriptor(c) === targetNodeId)) {
+            this.connect(msg.targetDescriptor!)
+        }
         msg.sourceDescriptor = this.localPeerDescriptor
         this.onSend(msg)
     }
 
-    // eslint-disable-next-line class-methods-use-this
     getLocalPeerDescriptor(): PeerDescriptor {
-        throw new Error('not implemented')
+        return this.localPeerDescriptor
+    }
+
+    private connect(peerDescriptor: PeerDescriptor) {
+        this.connections.push(peerDescriptor)
+        this.emit('connected', peerDescriptor)
+    }
+
+    getConnections(): PeerDescriptor[] {
+        return this.connections
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getAllConnectionPeerDescriptors(): PeerDescriptor[] {
-        throw new Error('not implemented')
+    getConnectionCount(): number {
+        return this.connections.length
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    hasConnection(nodeId: DhtAddress): boolean {
+        return this.connections.some((c) => getNodeIdFromPeerDescriptor(c) === nodeId)
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -37,9 +62,13 @@ export class FakeEnvironment {
 
     private transports: FakeTransport[] = []
 
-    createTransport(peerDescriptor: PeerDescriptor): ITransport {
+    createTransport(peerDescriptor: PeerDescriptor): FakeTransport {
         const transport = new FakeTransport(peerDescriptor, (msg) => {
-            this.transports.forEach((t) => t.emit('message', msg))
+            const targetNode = getDhtAddressFromRaw(msg.targetDescriptor!.nodeId)
+            const targetTransport = this.transports.find((t) => getNodeIdFromPeerDescriptor(t.getLocalPeerDescriptor()) === targetNode)
+            if (targetTransport !== undefined) {
+                targetTransport.emit('message', msg)
+            }
         })
         this.transports.push(transport)
         return transport

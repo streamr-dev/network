@@ -70,7 +70,6 @@ describe('update encryption key', () => {
         expect(msg2!.content).toEqual({
             mockId: 2
         })
-        // @ts-expect-error the type definition defines that newGroupKey EncryptedGroupKey (see EncryptionUtil:82)
         expect(msg2!.streamMessage.newGroupKey!.id).toBe(rotatedKey.id)
 
         await publisher.publish(streamPartId, {

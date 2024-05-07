@@ -10,7 +10,7 @@ module.exports = function({ entry, libraryName, alias = {} }) {
             },
             mode: 'development',
             entry,
-            devtool: 'source-map',
+            devtool: 'eval-source-map',
             module: {
                 rules: [
                     {
@@ -73,7 +73,8 @@ module.exports = function({ entry, libraryName, alias = {} }) {
                 'https': 'HTTPS',
                 'express': 'Express',
                 'process': 'process',
-                'ws': 'WebSocket'
+                'ws': 'WebSocket',
+                'querystring': 'QueryString',
             }
         }
     }

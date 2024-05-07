@@ -9,7 +9,10 @@ import "google/protobuf/timestamp.proto";
 import "packages/proto-rpc/protos/ProtoRpc.proto";
 
 service DhtNodeRpc {
+  // TODO rename to getClosestNeighbors (breaking change)
   rpc getClosestPeers (ClosestPeersRequest) returns (ClosestPeersResponse);
+  // TODO rename to getClosestRingContacts (breaking change)
+  rpc getClosestRingPeers (ClosestRingPeersRequest) returns (ClosestRingPeersResponse);
   rpc ping (PingRequest) returns (PingResponse);
   rpc leaveNotice (LeaveNotice) returns (google.protobuf.Empty);
 }
@@ -50,7 +53,7 @@ service ConnectionLockRpc {
 }
 
 service ExternalApiRpc {
-  rpc externalFindData (ExternalFindDataRequest) returns (ExternalFindDataResponse);
+  rpc externalFetchData (ExternalFetchDataRequest) returns (ExternalFetchDataResponse);
   rpc externalStoreData (ExternalStoreDataRequest) returns (ExternalStoreDataResponse);
 }
 
@@ -91,14 +94,29 @@ message DataEntry {
   bool deleted = 8;
 }
 
+// TODO rename to ClosestNeighborsRequest
 message ClosestPeersRequest {
   bytes nodeId = 1;
   string requestId = 2;
 }
 
+// TODO rename to ClosestNeighborsResponse
 message ClosestPeersResponse {
   repeated PeerDescriptor peers = 1;
   string requestId = 2;
+}
+
+// TODO rename to ClosestRingContactsRequest
+message ClosestRingPeersRequest {
+  bytes ringId = 1;
+  string requestId = 2;
+}
+
+// TODO rename to ClosestRingContactsResponse
+message ClosestRingPeersResponse {
+  repeated PeerDescriptor leftPeers = 1;
+  repeated PeerDescriptor rightPeers = 2;
+  string requestId = 3;
 }
 
 message RecursiveOperationRequest {
@@ -107,13 +125,13 @@ message RecursiveOperationRequest {
 }
 
 enum RecursiveOperation {
-  FIND_NODE = 0;
+  FIND_CLOSEST_NODES = 0;
   FETCH_DATA = 1;
   DELETE_DATA = 2;
 }
 
 message RecursiveOperationResponse {
-  repeated PeerDescriptor closestConnectedPeers = 1;
+  repeated PeerDescriptor closestConnectedNodes = 1;
   repeated DataEntry dataEntries = 2;
   bool noCloserNodesFound = 3;
   repeated PeerDescriptor routingPath = 4;
@@ -137,6 +155,10 @@ message PeerDescriptor {
   ConnectivityMethod tcp = 4;
   ConnectivityMethod websocket = 5;
   optional uint32 region = 6;
+  optional uint32 ipAddress = 7;
+  optional bytes publicKey = 8;
+  // signature of fields 2-8
+  optional bytes signature = 9; 
 }
 
 message ConnectivityMethod {
@@ -180,8 +202,6 @@ enum RouteMessageError {
   STOPPED = 2;
 }
 
-// Correspond to the MessageType Enum
-
 message ConnectivityRequest {
   uint32 port = 1;
   bool tls = 2;
@@ -193,6 +213,10 @@ message ConnectivityResponse {
   string host = 1;
   string natType = 2;
   ConnectivityMethod websocket = 3;
+  uint32 ipAddress = 4;
+  string version = 5;
+  optional double latitude = 6;
+  optional double longitude = 7;
 }
 
 message HandshakeRequest {
@@ -215,28 +239,18 @@ enum HandshakeError {
 
 // Wraps all messages
 
-enum MessageType {
-  RPC = 0;
-  CONNECTIVITY_REQUEST = 1;
-  CONNECTIVITY_RESPONSE = 2;
-  HANDSHAKE_REQUEST = 3;
-  HANDSHAKE_RESPONSE = 4;
-  RECURSIVE_OPERATION_REQUEST = 5;
-}
-
 message Message {
   string messageId = 1;
-  MessageType messageType = 2;
-  PeerDescriptor sourceDescriptor = 3;
-  PeerDescriptor targetDescriptor = 4;
-  string serviceId = 5; // id of the RPC service
+  PeerDescriptor sourceDescriptor = 2;
+  PeerDescriptor targetDescriptor = 3;
+  string serviceId = 4; // id of the RPC service
   oneof body {
+    protorpc.RpcMessage rpcMessage = 5;
     ConnectivityRequest connectivityRequest = 6;
     ConnectivityResponse connectivityResponse = 7;
     HandshakeRequest handshakeRequest = 8;
     HandshakeResponse handshakeResponse = 9;
-    protorpc.RpcMessage rpcMessage = 10;
-    RecursiveOperationRequest recursiveOperationRequest = 11;
+    RecursiveOperationRequest recursiveOperationRequest = 10;
   };
 }
 
@@ -287,10 +301,10 @@ message DisconnectNotice {
   DisconnectMode disconnectMode = 1;
 }
 
-message ExternalFindDataRequest {
+message ExternalFetchDataRequest {
   bytes key = 1;
 }
 
-message ExternalFindDataResponse {
+message ExternalFetchDataResponse {
   repeated DataEntry entries = 1;
 }

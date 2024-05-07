@@ -12,7 +12,7 @@ import {
 import { Contract, Overrides } from 'ethers'
 import sample from 'lodash/sample'
 import fetch from 'node-fetch'
-import { NetworkPeerDescriptor } from 'streamr-client'
+import { NetworkPeerDescriptor } from '@streamr/sdk'
 import { OperatorServiceConfig } from './OperatorPlugin'
 
 interface RawResult {
@@ -328,12 +328,12 @@ export class ContractFacade {
     }
 
     private async getOperatorAddresses(requiredBlockNumber: number): Promise<EthereumAddress[]> {
-        // TODO: use pagination or find a clever efficient way of selecting a random operator (NET-1113)
-        const createQuery = () => {
+        // TODO: find a clever more efficient way of selecting a random operator? (NET-1113)
+        const createQuery = (lastId: string, pageSize: number) => {
             return {
                 query: `
                     {
-                        operators(first: 1000) {
+                        operators(where: {totalStakeInSponsorshipsWei_gt: "0", id_gt: "${lastId}"}, first: ${pageSize}) {
                             id
                         }
                     }
@@ -469,7 +469,7 @@ export class ContractFacade {
             sponsorship,
             targetOperator,
             voteData,
-            { ...this.getEthersOverrides(), gasLimit: '200000' }
+            { ...this.getEthersOverrides(), gasLimit: '1300000' }
         )).wait()
     }
 
@@ -488,7 +488,7 @@ export class ContractFacade {
     }
 
     getProvider(): Provider {
-        return this.config.signer.provider!
+        return this.config.signer.provider
     }
 
     getEthersOverrides(): Overrides {

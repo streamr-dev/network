@@ -2,7 +2,7 @@ import {
     Message,
     NodeType,
     PeerDescriptor,
-    ClientWebsocket,
+    WebsocketClientConnection,
     ManagedConnection,
     RoutingRpcCommunicator,
     createRandomDhtAddress,
@@ -38,13 +38,13 @@ export const runStreamrChallenge = (
                 tls: true
             }
         }
-        const socket = new ClientWebsocket()
+        const socket = new WebsocketClientConnection()
         const address = 'wss://' + remotePeerDescriptor.websocket!.host + ':' +
         remotePeerDescriptor.websocket!.port
 
         const managedConnection = new ManagedConnection(LOCAL_PEER_DESCRIPTOR,
             ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
-        managedConnection.setRemotePeerDescriptor(remotePeerDescriptor!)
+        managedConnection.setRemotePeerDescriptor(remotePeerDescriptor)
 
         const onDisconnected = () => {
             reject(new FailedToConnectToStreamrWebSocket('Autocertifier failed to connect to '
@@ -67,7 +67,6 @@ export const runStreamrChallenge = (
             // eslint-disable-next-line promise/catch-or-return
             rpcClient.hasSession({ sessionId }).then(() => {
                 resolve()
-                return
             }).catch((e) => {
                 reject(e)
             }).finally(() => {

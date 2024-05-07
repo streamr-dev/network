@@ -50,7 +50,7 @@ describe('StreamrChallenger', () => {
                 },
                 websocketHost: '127.0.0.1',
                 websocketPortRange: { min: 12323, max: 12323 },
-                createLocalPeerDescriptor: () => mockPeerDescriptor1
+                createLocalPeerDescriptor: async () => mockPeerDescriptor1
             }),
             metricsContext: new MetricsContext()
         })
@@ -67,7 +67,7 @@ describe('StreamrChallenger', () => {
 
     it('Happy path', async () => {
         await runStreamrChallenge('127.0.0.1', '12323', sessionId)
-        await waitForCondition(() => challengedClientTransport.getAllConnectionPeerDescriptors().length === 0)
+        await waitForCondition(() => challengedClientTransport.getConnections().length === 0)
     })
 
 })

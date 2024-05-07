@@ -4,5 +4,5 @@ const StreamrClientExports = require('./exports')
 
 Object.assign(StreamrClientExports.StreamrClient, StreamrClientExports)
 
-// required to get require('streamr-client') instead of require('streamr-client').default
+// required to get require('@streamr/sdk') instead of require('@streamr/sdk').default
 module.exports = StreamrClientExports.StreamrClient

@@ -4,14 +4,14 @@ sidebar_position: 6
 
 # Permissions
 
-Stream permissioning relates to who gets to read, write and edit streams on the Network. This access control is enforced by the [on-chain stream registry](../../help/project-contracts.md). Since every permission update is a modification to the on-chain registry, it requires a small amount of `MATIC` tokens to fund the transaction.
+Stream permissioning relates to who gets to read, write and edit streams on the Network. This access control is enforced by the [on-chain stream registry](../../streamr-network/smart-contracts.md). Since every permission update is a modification to the on-chain registry, it requires a small amount of `MATIC` tokens to fund the transaction.
 
 User's are identified by their Ethereum public key address. It is these addresses that are given permission to read/write/edit streams.
 
 :::info Good to know:
 
 - The user that created the stream typically has all stream permissions.
-- Stream permissions can be modified using the [Streamr SDK](https://www.npmjs.com/package/streamr-client) or with the [Streamr user interface](https://streamr.network/core)
+- Stream permissions can be modified using the [Streamr SDK](https://www.npmjs.com/package/@streamr/sdk) or with the [Streamr user interface](https://streamr.network/core)
 :::
 
 **Here is the full list of permissions a user may have on a stream:**
@@ -54,7 +54,7 @@ await stream.hasPermission({
 You can import the `StreamPermission` enum with:
 
 ```ts
-const { StreamPermission } = require('streamr-client');
+const { StreamPermission } = require('@streamr/sdk');
 
 StreamPermission.PUBLISH;
 StreamPermission.SUBSCRIBE;

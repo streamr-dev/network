@@ -1,22 +1,28 @@
-import {
-    DataEntry, ReplicateDataRequest, PeerDescriptor,
-    StoreDataRequest, StoreDataResponse, RecursiveOperation
-} from '../../proto/packages/dht/protos/DhtRpc'
-import { Any } from '../../proto/google/protobuf/any'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { RecursiveOperationManager } from '../recursive-operation/RecursiveOperationManager'
-import { Logger, executeSafePromise } from '@streamr/utils'
-import { LocalDataStore } from './LocalDataStore'
-import { StoreRpcRemote } from './StoreRpcRemote'
+import { Logger } from '@streamr/utils'
+import {
+    DhtAddress,
+    areEqualPeerDescriptors,
+    getDhtAddressFromRaw,
+    getNodeIdFromPeerDescriptor,
+    getRawFromDhtAddress
+} from '../../identifiers'
+import { Any } from '../../proto/google/protobuf/any'
 import { Timestamp } from '../../proto/google/protobuf/timestamp'
-import { SortedContactList } from '../contact/SortedContactList'
-import { Contact } from '../contact/Contact'
+import {
+    DataEntry,
+    PeerDescriptor,
+    RecursiveOperation,
+    ReplicateDataRequest,
+    StoreDataRequest, StoreDataResponse
+} from '../../proto/packages/dht/protos/DhtRpc'
+import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { ServiceID } from '../../types/ServiceID'
-import { findIndex } from 'lodash'
-import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
+import { getClosestNodes } from '../contact/getClosestNodes'
+import { RecursiveOperationManager } from '../recursive-operation/RecursiveOperationManager'
+import { LocalDataStore } from './LocalDataStore'
 import { StoreRpcLocal } from './StoreRpcLocal'
-import { getDistance } from '../PeerManager'
+import { StoreRpcRemote } from './StoreRpcRemote'
 
 interface StoreManagerConfig {
     rpcCommunicator: RoutingRpcCommunicator
@@ -26,7 +32,7 @@ interface StoreManagerConfig {
     serviceId: ServiceID
     highestTtl: number
     redundancyFactor: number
-    getClosestNeighborsTo: (dataKey: DhtAddress, n?: number) => PeerDescriptor[]
+    getNeighbors: () => ReadonlyArray<PeerDescriptor>
     createRpcRemote: (contact: PeerDescriptor) => StoreRpcRemote
 }
 
@@ -43,9 +49,10 @@ export class StoreManager {
 
     private registerLocalRpcMethods() {
         const rpcLocal = new StoreRpcLocal({
+            localPeerDescriptor: this.config.localPeerDescriptor,
             localDataStore: this.config.localDataStore,
-            replicateDataToNeighbors: (incomingPeer: PeerDescriptor, dataEntry: DataEntry) => this.replicateDataToNeighbors(incomingPeer, dataEntry),
-            selfIsWithinRedundancyFactor: (key: DhtAddress): boolean => this.selfIsWithinRedundancyFactor(key)
+            replicateDataToContact: (dataEntry: DataEntry, contact: PeerDescriptor) => this.replicateDataToContact(dataEntry, contact),
+            getStorers: (dataKey: DhtAddress) => this.getStorers(dataKey)
         })
         this.config.rpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
             (request: StoreDataRequest) => rpcLocal.storeData(request))
@@ -53,44 +60,25 @@ export class StoreManager {
             (request: ReplicateDataRequest, context: ServerCallContext) => rpcLocal.replicateData(request, context))
     }
 
-    onNewContact(peerDescriptor: PeerDescriptor): void {
-        for (const dataEntry of this.config.localDataStore.values()) {
-            this.replicateAndUpdateStaleState(dataEntry, peerDescriptor)
+    onContactAdded(peerDescriptor: PeerDescriptor): void {
+        for (const key of this.config.localDataStore.keys()) {
+            this.replicateAndUpdateStaleState(key, peerDescriptor)
         }
     }
 
-    private replicateAndUpdateStaleState(dataEntry: DataEntry, newNode: PeerDescriptor): void {
-        const newNodeId = getNodeIdFromPeerDescriptor(newNode)
-        const key = getDhtAddressFromRaw(dataEntry.key)
-        // TODO use config option or named constant?
-        const closestToData = this.config.getClosestNeighborsTo(key, 10)
-        const sortedList = new SortedContactList<Contact>({
-            referenceId: key, 
-            maxSize: 20,  // TODO use config option or named constant?
-            allowToContainReferenceId: true,
-            emitEvents: false
-        })
-        sortedList.addContact(new Contact(this.config.localPeerDescriptor))
-        closestToData.forEach((neighbor) => {
-            if (newNodeId !== getNodeIdFromPeerDescriptor(neighbor)) {
-                sortedList.addContact(new Contact(neighbor))
-            }
-        })
-        const selfIsPrimaryStorer = (sortedList.getClosestContactId() === getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor))
-        if (selfIsPrimaryStorer) {
-            sortedList.addContact(new Contact(newNode))
-            const sorted = sortedList.getContactIds()
-            // findIndex should never return -1 here because we just added the new node to the list
-            const index = findIndex(sorted, (nodeId) => (nodeId === newNodeId))
-            // if new node is within the storageRedundancyFactor closest nodes to the data
-            // do replicate data to it
-            if (index < this.config.redundancyFactor) {
+    private replicateAndUpdateStaleState(dataKey: DhtAddress, newNode: PeerDescriptor): void {
+        const storers = this.getStorers(dataKey)
+        const storersBeforeContactAdded = storers.filter((p) => !areEqualPeerDescriptors(p, newNode))
+        const selfWasPrimaryStorer = areEqualPeerDescriptors(storersBeforeContactAdded[0], this.config.localPeerDescriptor)
+        if (selfWasPrimaryStorer) {
+            if (storers.some((p) => areEqualPeerDescriptors(p, newNode))) {
                 setImmediate(async () => {
-                    await this.replicateDataToContact(dataEntry, newNode)
+                    const dataEntries = Array.from(this.config.localDataStore.values(dataKey))
+                    await Promise.all(dataEntries.map(async (dataEntry) => this.replicateDataToContact(dataEntry, newNode)))
                 })
             }
-        } else if (!this.selfIsWithinRedundancyFactor(key)) {
-            this.config.localDataStore.setStale(key, getDhtAddressFromRaw(dataEntry.creator), true)
+        } else if (!storers.some((p) => areEqualPeerDescriptors(p, this.config.localPeerDescriptor))) {
+            this.config.localDataStore.setAllEntriesAsStale(dataKey)
         }
     }
 
@@ -105,7 +93,7 @@ export class StoreManager {
 
     public async storeDataToDht(key: DhtAddress, data: Any, creator: DhtAddress): Promise<PeerDescriptor[]> {
         logger.debug(`Storing data to DHT ${this.config.serviceId}`)
-        const result = await this.config.recursiveOperationManager.execute(key, RecursiveOperation.FIND_NODE)
+        const result = await this.config.recursiveOperationManager.execute(key, RecursiveOperation.FIND_CLOSEST_NODES)
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
         const ttl = this.config.highestTtl // ToDo: make TTL decrease according to some nice curve
@@ -145,69 +133,35 @@ export class StoreManager {
         return successfulNodes
     }
 
-    private selfIsWithinRedundancyFactor(dataKey: DhtAddress): boolean {
-        const closestNeighbors = this.config.getClosestNeighborsTo(dataKey, this.config.redundancyFactor)
-        if (closestNeighbors.length < this.config.redundancyFactor) {
-            return true
-        } else {
-            const furthestCloseNeighbor = closestNeighbors[closestNeighbors.length - 1]
-            const dataKeyRaw = getRawFromDhtAddress(dataKey)
-            return getDistance(dataKeyRaw, this.config.localPeerDescriptor.nodeId) < getDistance(dataKeyRaw, furthestCloseNeighbor.nodeId)
-        }
-    }
-
     private async replicateDataToClosestNodes(): Promise<void> {
         const dataEntries = Array.from(this.config.localDataStore.values())
         await Promise.all(dataEntries.map(async (dataEntry) => {
-            const neighbors = this.config.getClosestNeighborsTo(getDhtAddressFromRaw(dataEntry.key), this.config.redundancyFactor)
+            const dataKey = getDhtAddressFromRaw(dataEntry.key)
+            const neighbors = getClosestNodes(
+                dataKey,
+                this.config.getNeighbors(),
+                { maxCount: this.config.redundancyFactor }
+            )
             await Promise.all(neighbors.map(async (neighbor) => {
                 const rpcRemote = this.config.createRpcRemote(neighbor)
                 try {
                     await rpcRemote.replicateData({ entry: dataEntry })
                 } catch (err) {
-                    logger.trace('Failed to replicate data in replicateDataToClosestNodes', { error: err })
+                    logger.trace('Failed to replicate data in replicateDataToClosestNodes', { err })
                 }
             }))
         }))
     }
 
-    private replicateDataToNeighbors(incomingPeer: PeerDescriptor, dataEntry: DataEntry): void {
-        // sort own contact list according to data id
-        const localNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
-        const incomingNodeId = getNodeIdFromPeerDescriptor(incomingPeer)
-        const key = getDhtAddressFromRaw(dataEntry.key)
-        // TODO use config option or named constant?
-        const closestToData = this.config.getClosestNeighborsTo(key, 10)
-        const sortedList = new SortedContactList<Contact>({
-            referenceId: key, 
-            maxSize: this.config.redundancyFactor, 
-            allowToContainReferenceId: true, 
-            emitEvents: false
-        })
-        sortedList.addContact(new Contact(this.config.localPeerDescriptor))
-        closestToData.forEach((neighbor) => {
-            sortedList.addContact(new Contact(neighbor))
-        })
-        const selfIsPrimaryStorer = (sortedList.getClosestContactId() === localNodeId)
-        const targets = selfIsPrimaryStorer
-            // if we are the closest to the data, replicate to all storageRedundancyFactor nearest
-            ? sortedList.getAllContacts()
-            // if we are not the closest node to the data, replicate only to the closest one to the data
-            : [sortedList.getAllContacts()[0]]
-        targets.forEach((contact) => {
-            const contactNodeId = contact.getNodeId()
-            if ((incomingNodeId !== contactNodeId) && (localNodeId !== contactNodeId)) {
-                setImmediate(() => {
-                    executeSafePromise(async () => {
-                        await this.replicateDataToContact(dataEntry, contact.getPeerDescriptor())
-                        logger.trace('replicateDataToContact() returned', { 
-                            node: contactNodeId,
-                            replicateOnlyToClosest: !selfIsPrimaryStorer
-                        })
-                    })
-                })
+    private getStorers(dataKey: DhtAddress, excludedNode?: PeerDescriptor): PeerDescriptor[] {
+        return getClosestNodes(
+            dataKey,
+            [...this.config.getNeighbors(), this.config.localPeerDescriptor],
+            { 
+                maxCount: this.config.redundancyFactor,
+                excludedNodeIds: excludedNode !== undefined ? new Set([getNodeIdFromPeerDescriptor(excludedNode)]) : undefined
             }
-        })
+        )
     }
 
     async destroy(): Promise<void> {

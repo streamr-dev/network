@@ -13,11 +13,7 @@
             "stream": ["readable-stream"],
             "util": ["util"],
             "http": ["./src/shim/http-https.js"],
-            "@ethersproject/wordlists": [
-                "@ethersproject/wordlists/lib.esm/browser-wordlists.js"
-            ],
             "https": ["./src/shim/http-https.js"],
-            "crypto": ["crypto-browserify"],
             "buffer": ["buffer/"],
             "node-fetch": ["./src/shim/node-fetch.ts"],
             "@streamr/protocol/*": ["@streamr/protocol/src/*"],

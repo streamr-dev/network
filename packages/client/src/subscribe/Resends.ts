@@ -2,10 +2,11 @@ import { StreamID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@strea
 import { EthereumAddress, Logger, randomString, toEthereumAddress } from '@streamr/utils'
 import random from 'lodash/random'
 import without from 'lodash/without'
+import sample from 'lodash/sample'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { StreamrClientError } from '../StreamrClientError'
-import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
+import { StorageNodeRegistry } from '../contracts/StorageNodeRegistry'
 import { forEach, map, transformError } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { pull } from '../utils/PushBuffer'
@@ -176,8 +177,8 @@ export class Resends {
             throw new StreamrClientError(`no storage assigned: ${streamId}`, 'NO_STORAGE_NODES')
         }
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
-        const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
-        const url = createUrl(nodeUrl, resendType, streamPartId, query)
+        const nodeUrls = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).urls
+        const url = createUrl(sample(nodeUrls)!, resendType, streamPartId, query)
         const messageStream = raw ? new PushPipeline<StreamMessage, StreamMessage>() : this.messagePipelineFactory.createMessagePipeline({
             streamPartId,
             /*

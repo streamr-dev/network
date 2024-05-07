@@ -1,4 +1,4 @@
-import { StreamrClientConfig } from 'streamr-client'
+import { StreamrClientConfig } from '@streamr/sdk'
 import path from 'path'
 import * as os from 'os'
 import camelCase from 'lodash/camelCase'
@@ -7,7 +7,7 @@ import { ApiAuthentication } from '../apiAuthentication'
 
 export interface Config {
     client?: StreamrClientConfig
-    environment?: 'mumbai' | 'polygon'
+    environment?: 'polygonAmoy' | 'polygon'
     httpServer?: {
         port: number
         sslCertificate?: {

@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { describeOnlyInNodeJs, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Defer, wait } from '@streamr/utils'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
@@ -12,8 +12,8 @@ import { CONFIG_TEST } from '../../src/ConfigTest'
 import { createStrictConfig, ConfigInjectionToken, StrictStreamrClientConfig } from '../../src/Config'
 import * as ethersAbi from '@ethersproject/abi'
 import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
-import { StorageNodeRegistry } from '../../src/registry/StorageNodeRegistry'
-import { StreamRegistry } from '../../src/registry/StreamRegistry'
+import { StorageNodeRegistry } from '../../src/contracts/StorageNodeRegistry'
+import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { Resends } from '../../src/subscribe/Resends'
 import { Publisher } from '../../src/publish/Publisher'
 import { Subscriber } from '../../src/subscribe/Subscriber'
@@ -48,7 +48,7 @@ function snapshot(): string {
 const MAX_MESSAGES = 5
 const TIMEOUT = 30000
 
-describe('MemoryLeaks', () => {
+describeOnlyInNodeJs('MemoryLeaks', () => { // LeaksDetector is not supported in Electron
     let leaksDetector: LeaksDetector
 
     beforeEach(() => {

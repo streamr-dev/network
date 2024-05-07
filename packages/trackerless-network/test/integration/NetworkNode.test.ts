@@ -1,4 +1,4 @@
-import { NodeType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
+import { PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import {
     ContentType,
     EncryptionType,
@@ -10,6 +10,7 @@ import {
 } from '@streamr/protocol'
 import { EthereumAddress, hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
 
@@ -21,15 +22,9 @@ describe('NetworkNode', () => {
     let node1: NetworkNode
     let node2: NetworkNode
 
-    const pd1: PeerDescriptor = {
-        nodeId: new Uint8Array([1, 2, 3]),
-        type: NodeType.NODEJS
-    }
+    const pd1: PeerDescriptor = createMockPeerDescriptor()
 
-    const pd2: PeerDescriptor = {
-        nodeId: new Uint8Array([1, 1, 1]),
-        type: NodeType.NODEJS
-    }
+    const pd2: PeerDescriptor = createMockPeerDescriptor()
 
     beforeEach(async () => {
         const simulator = new Simulator()
@@ -42,14 +37,16 @@ describe('NetworkNode', () => {
             layer0: {
                 entryPoints: [pd1],
                 peerDescriptor: pd1,
-                transport: transport1
+                transport: transport1,
+                connectionsView: transport1
             }
         })
         node2 = createNetworkNode({
             layer0: {
                 entryPoints: [pd1],
                 peerDescriptor: pd2,
-                transport: transport2
+                transport: transport2,
+                connectionsView: transport2
             }
         })
 
@@ -96,6 +93,23 @@ describe('NetworkNode', () => {
         })
         await node2.broadcast(streamMessage)
         await waitForCondition(() => msgCount === 1)
+    })
+
+    it('fetchNodeInfo', async () => {
+        await node1.join(STREAM_PART_ID)
+        await node2.join(STREAM_PART_ID)
+        const result1 = await node1.fetchNodeInfo(pd2)
+        const result2 = await node2.fetchNodeInfo(pd1)
+        const result3 = await node1.fetchNodeInfo(node1.getPeerDescriptor())
+        expect(result1.streamPartitions.length).toEqual(1)
+        expect(result2.streamPartitions.length).toEqual(1)
+        expect(result3.streamPartitions.length).toEqual(1)
+        expect(result1.controlLayer.connections.length).toEqual(1)
+        expect(result2.controlLayer.connections.length).toEqual(1)
+        expect(result3.controlLayer.connections.length).toEqual(1)
+        expect(result1.controlLayer.neighbors.length).toEqual(1)
+        expect(result2.controlLayer.neighbors.length).toEqual(1)
+        expect(result3.controlLayer.neighbors.length).toEqual(1)
     })
 
 })

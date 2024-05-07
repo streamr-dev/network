@@ -1,5 +1,5 @@
 import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
-import { Message, MessageType, NodeType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message, NodeType, PeerDescriptor, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { Logger, runAndWaitForEvents3, waitForCondition } from '@streamr/utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils/utils'
@@ -64,7 +64,6 @@ describe('Route Message With Mock Connections', () => {
         const message: Message = {
             serviceId: 'unknown',
             messageId: v4(),
-            messageType: MessageType.RPC,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: rpcWrapper
@@ -74,6 +73,7 @@ describe('Route Message With Mock Connections', () => {
         }
 
         await runAndWaitForEvents3<DhtNodeEvents>([() => {
+            // @ts-expect-error private
             sourceNode.router!.doRouteMessage({
                 message,
                 target: destinationNode.getLocalPeerDescriptor().nodeId,
@@ -98,7 +98,6 @@ describe('Route Message With Mock Connections', () => {
             const message: Message = {
                 serviceId: 'unknown',
                 messageId: v4(),
-                messageType: MessageType.RPC,
                 body: {
                     oneofKind: 'rpcMessage',
                     rpcMessage: rpcWrapper
@@ -106,6 +105,7 @@ describe('Route Message With Mock Connections', () => {
                 sourceDescriptor: sourceNode.getLocalPeerDescriptor(),
                 targetDescriptor: destinationNode.getLocalPeerDescriptor()
             }
+            // @ts-expect-error private
             sourceNode.router!.doRouteMessage({
                 message,
                 target: destinationNode.getLocalPeerDescriptor().nodeId,
@@ -136,7 +136,6 @@ describe('Route Message With Mock Connections', () => {
                         const message: Message = {
                             serviceId: 'nonexisting_service',
                             messageId: v4(),
-                            messageType: MessageType.RPC,
                             body: {
                                 oneofKind: 'rpcMessage',
                                 rpcMessage: rpcWrapper
@@ -144,6 +143,7 @@ describe('Route Message With Mock Connections', () => {
                             sourceDescriptor: node.getLocalPeerDescriptor(),
                             targetDescriptor: destinationNode.getLocalPeerDescriptor()
                         }
+                        // @ts-expect-error private
                         node.router!.doRouteMessage({
                             message,
                             target: receiver.getLocalPeerDescriptor().nodeId,
@@ -171,13 +171,12 @@ describe('Route Message With Mock Connections', () => {
         const closestPeersRequestMessage: Message = {
             serviceId: 'unknown',
             messageId: v4(),
-            messageType: MessageType.RPC,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage: closestPeersRequest
             },
-            sourceDescriptor: sourceNode.getLocalPeerDescriptor()!,
-            targetDescriptor: destinationNode.getLocalPeerDescriptor()!
+            sourceDescriptor: sourceNode.getLocalPeerDescriptor(),
+            targetDescriptor: destinationNode.getLocalPeerDescriptor()
         }
 
         const routeMessageWrapper: RouteMessageWrapper = {
@@ -202,26 +201,26 @@ describe('Route Message With Mock Connections', () => {
         const requestMessage: Message = {
             serviceId: 'layer0',
             messageId: v4(),
-            messageType: MessageType.RPC,
             body: {
                 oneofKind: 'rpcMessage',
                 rpcMessage
             },
-            sourceDescriptor: sourceNode.getLocalPeerDescriptor()!,
-            targetDescriptor: entryPoint.getLocalPeerDescriptor()!
+            sourceDescriptor: sourceNode.getLocalPeerDescriptor(),
+            targetDescriptor: entryPoint.getLocalPeerDescriptor()
         }
 
         const forwardedMessage: RouteMessageWrapper = {
             message: requestMessage,
             requestId: v4(),
             sourcePeer: sourceNode.getLocalPeerDescriptor(),
-            target: entryPoint.getLocalPeerDescriptor()!.nodeId,
+            target: entryPoint.getLocalPeerDescriptor().nodeId,
             reachableThrough: [],
             routingPath: [],
             parallelRootNodeIds: []
         }
 
         await runAndWaitForEvents3<DhtNodeEvents>([() => {
+            // @ts-expect-error private
             sourceNode.router!.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
         }], [[destinationNode, 'message']])
 

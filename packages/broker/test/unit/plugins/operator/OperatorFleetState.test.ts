@@ -2,7 +2,7 @@ import { DhtAddress } from '@streamr/dht'
 import { eventsWithArgsToArray, randomEthereumAddress } from '@streamr/test-utils'
 import { wait, waitForCondition, waitForEvent } from '@streamr/utils'
 import { mock, MockProxy } from 'jest-mock-extended'
-import { MessageListener, StreamrClient, Subscription } from 'streamr-client'
+import { MessageListener, StreamrClient, Subscription } from '@streamr/sdk'
 import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
 import { createHeartbeatMessage } from '../../../../src/plugins/operator/heartbeatUtils'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
@@ -177,7 +177,7 @@ describe(OperatorFleetState, () => {
 
         beforeEach(() => {
             ready = false
-            // eslint-disable-next-line promise/always-return,promise/catch-or-return
+            // eslint-disable-next-line promise/catch-or-return
             state.waitUntilReady().then(() => {
                 ready = true
             })

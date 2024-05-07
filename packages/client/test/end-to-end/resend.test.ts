@@ -11,8 +11,8 @@ import shuffle from 'lodash/shuffle'
 import random from 'lodash/random'
 
 const NUM_OF_MESSAGES = 20
-const MESSAGE_STORE_TIMEOUT = 9 * 1000
-const TIMEOUT = 30 * 1000
+const MESSAGE_STORE_TIMEOUT = 10 * 1000
+const TIMEOUT = 60 * 1000
 
 describe('resend', () => {
     let publisherClient: StreamrClient

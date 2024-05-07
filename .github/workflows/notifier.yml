@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Slack Notification
-        uses: rtCamp/action-slack-notify@v2.2.1
+        uses: rtCamp/action-slack-notify@v2.3.0
         env:
           SLACK_CHANNEL: network-log
           SLACK_COLOR: ${{ github.event.workflow_run.conclusion }}

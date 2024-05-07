@@ -13,8 +13,8 @@ import {
     isPublicPermissionAssignment,
     isPublicPermissionQuery
 } from '../../../src/permission'
-import { StreamRegistry } from '../../../src/registry/StreamRegistry'
-import { SearchStreamsPermissionFilter } from '../../../src/registry/searchStreams'
+import { StreamRegistry } from '../../../src/contracts/StreamRegistry'
+import { SearchStreamsPermissionFilter } from '../../../src/contracts/searchStreams'
 import { FakeChain, PUBLIC_PERMISSION_TARGET, PublicPermissionTarget, StreamRegistryItem } from './FakeChain'
 
 @scoped(Lifecycle.ContainerScoped)
@@ -94,7 +94,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         if (registryItem === undefined) {
             return []
         }
-        const targets = registryItem.permissions.keys()
+        const targets = [...registryItem.permissions.keys()]
         return targets.map((target) => {
             const permissions = registryItem.permissions.get(target)
             if (target === PUBLIC_PERMISSION_TARGET) {

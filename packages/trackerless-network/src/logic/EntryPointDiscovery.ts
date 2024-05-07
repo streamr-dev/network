@@ -13,14 +13,14 @@ import { Any } from '../proto/google/protobuf/any'
 import { Layer1Node } from './Layer1Node'
 
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): DhtAddress => {
-    return getDhtAddressFromRaw(new Uint8Array(createHash('md5').update(streamPartId).digest()))
+    return getDhtAddressFromRaw(new Uint8Array((createHash('sha1').update(streamPartId).digest())))
 }
 
 const parseEntryPointData = (dataEntries: DataEntry[]): PeerDescriptor[] => {
     return dataEntries.filter((entry) => !entry.deleted).map((entry) => Any.unpack(entry.data!, PeerDescriptor))
 }
 
-interface FindEntryPointsResult {
+export interface FindEntryPointsResult {
     entryPointsFromDht: boolean
     discoveredEntryPoints: PeerDescriptor[]
 }
@@ -46,7 +46,7 @@ const exponentialRunOff = async (
         try { // Abort controller throws unexpected errors in destroy?
             await wait(delay, abortSignal)
         } catch (err) {
-            logger.trace(`${err}`)
+            logger.trace(`${err}`)  // TODO Do we need logging?
         }
     }
 }
@@ -60,7 +60,7 @@ interface EntryPointDiscoveryConfig {
     streamPartId: StreamPartID
     localPeerDescriptor: PeerDescriptor
     layer1Node: Layer1Node
-    getEntryPointData: (key: DhtAddress) => Promise<DataEntry[]>
+    fetchEntryPointData: (key: DhtAddress) => Promise<DataEntry[]>
     storeEntryPointData: (key: DhtAddress, data: Any) => Promise<PeerDescriptor[]>
     deleteEntryPointData: (key: DhtAddress) => Promise<void>
     storeInterval?: number
@@ -72,6 +72,7 @@ export class EntryPointDiscovery {
     private readonly storeInterval: number
     private readonly networkSplitAvoidedNodes: Set<DhtAddress> = new Set()
     private isLocalNodeStoredAsEntryPoint = false
+    private networkSplitAvoidanceIsRunning = false
     constructor(config: EntryPointDiscoveryConfig) {
         this.config = config
         this.abortController = new AbortController()
@@ -111,7 +112,7 @@ export class EntryPointDiscovery {
     private async queryEntrypoints(key: DhtAddress): Promise<PeerDescriptor[]> {
         logger.trace(`Finding data from dht node ${getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)}`)
         try {
-            const result = await this.config.getEntryPointData(key)
+            const result = await this.config.fetchEntryPointData(key)
             return parseEntryPointData(result)
         } catch (err) {
             return []
@@ -160,6 +161,7 @@ export class EntryPointDiscovery {
     }
 
     private async avoidNetworkSplit(): Promise<void> {
+        this.networkSplitAvoidanceIsRunning = true
         await exponentialRunOff(async () => {
             const rediscoveredEntrypoints = await this.discoverEntryPoints()
             await this.config.layer1Node.joinDht(rediscoveredEntrypoints, false, false)
@@ -179,6 +181,10 @@ export class EntryPointDiscovery {
 
     public isLocalNodeEntryPoint(): boolean {
         return this.isLocalNodeStoredAsEntryPoint
+    }
+
+    public isNetworkSplitAvoidanceRunning(): boolean {
+        return this.networkSplitAvoidanceIsRunning
     }
 
     async destroy(): Promise<void> {

@@ -7,7 +7,7 @@ import { ConnectionType } from '../../src/connection/IConnection'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import * as Err from '../../src/helpers/errors'
-import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { TransportEvents } from '../../src/transport/ITransport'
 import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
@@ -17,7 +17,7 @@ const SERVICE_ID = 'test'
 const createConfig = (localPeerDescriptor: PeerDescriptor, opts: Omit<DefaultConnectorFacadeConfig, 'createLocalPeerDescriptor'>) => {
     return {
         createConnectorFacade: () => new DefaultConnectorFacade({
-            createLocalPeerDescriptor: () => localPeerDescriptor,
+            createLocalPeerDescriptor: async () => localPeerDescriptor,
             ...opts
         }),
         metricsContext: new MetricsContext()
@@ -98,7 +98,6 @@ describe('Websocket Connection Management', () => {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
             },
-            messageType: MessageType.RPC,
             messageId: 'mockerer',
             targetDescriptor: noWsServerConnectorPeerDescriptor
         }
@@ -124,7 +123,6 @@ describe('Websocket Connection Management', () => {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
             },
-            messageType: MessageType.RPC,
             messageId: 'mockerer',
             targetDescriptor: biggerNoWsServerConnectorPeerDescriptor
         }
@@ -150,7 +148,6 @@ describe('Websocket Connection Management', () => {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
             },
-            messageType: MessageType.RPC,
             messageId: 'mockerer',
             targetDescriptor: {
                 nodeId: new Uint8Array([1, 2, 4]),
@@ -172,7 +169,6 @@ describe('Websocket Connection Management', () => {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
             },
-            messageType: MessageType.RPC,
             messageId: 'mockerer',
             targetDescriptor: wsServerConnectorPeerDescriptor
         }
@@ -199,7 +195,6 @@ describe('Websocket Connection Management', () => {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
             },
-            messageType: MessageType.RPC,
             messageId: 'mockerer',
             targetDescriptor: noWsServerConnectorPeerDescriptor
         }

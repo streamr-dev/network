@@ -1,4 +1,4 @@
-import { validateIsNotEmptyString, validateIsNotNegativeInteger, validateIsString } from '../../utils/validations'
+import { validateIsNotNegativeInteger } from '../../utils/validations'
 
 import MessageRef from './MessageRef'
 import { StreamID } from '../../../src/utils/StreamID'
@@ -22,13 +22,9 @@ export default class MessageID {
         publisherId: EthereumAddress,
         msgChainId: string
     ) {
-        validateIsNotEmptyString('streamId', streamId)
         validateIsNotNegativeInteger('streamPartition', streamPartition)
         validateIsNotNegativeInteger('timestamp', timestamp)
         validateIsNotNegativeInteger('sequenceNumber', sequenceNumber)
-        validateIsString('publisherId', publisherId)
-        validateIsString('msgChainId', msgChainId)
-
         this.streamId = streamId
         this.streamPartition = streamPartition
         this.timestamp = timestamp
@@ -43,16 +39,5 @@ export default class MessageID {
 
     toMessageRef(): MessageRef {
         return new MessageRef(this.timestamp, this.sequenceNumber)
-    }
-
-    clone(): MessageID {
-        return new MessageID(
-            this.streamId,
-            this.streamPartition,
-            this.timestamp,
-            this.sequenceNumber,
-            this.publisherId,
-            this.msgChainId
-        )
     }
 }

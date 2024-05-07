@@ -1,7 +1,7 @@
 import { Logger, toEthereumAddress } from '@streamr/utils'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
-import StreamrClient from 'streamr-client'
+import StreamrClient from '@streamr/sdk'
 import { version as CURRENT_VERSION } from '../package.json'
 import { HttpServerEndpoint, Plugin } from './Plugin'
 import { Config } from './config/config'
@@ -24,7 +24,17 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
     const config = validateConfig(configWithoutDefaults, BROKER_CONFIG_SCHEMA)
     const plugins: Plugin<any>[] = Object.keys(config.plugins).map((name) => createPlugin(name, config))
     applyPluginClientConfigs(plugins, config.client)
-    const streamrClient = new StreamrClient(config.client)
+    const streamrClient = new StreamrClient({
+        ...config.client,
+        network: {
+            ...config.client.network,
+            controlLayer: {
+                ...config.client.network?.controlLayer,
+                geoIpDatabaseFolder: config.client.network?.controlLayer?.geoIpDatabaseFolder ??
+                    '~/.streamr/geoipdatabases' // TODO: more cleaner solution?
+            }
+        }
+    })
 
     let httpServer: HttpServer | HttpsServer | undefined
 
@@ -70,7 +80,7 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
 }
 
 process.on('uncaughtException', (err) => {
-    logger.fatal( 'Encountered uncaughtException', { err })
+    logger.fatal('Encountered uncaughtException', { err })
     process.exit(1)
 })
 

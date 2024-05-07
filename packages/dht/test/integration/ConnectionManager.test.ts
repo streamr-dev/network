@@ -1,15 +1,17 @@
-import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { ConnectivityResponse, Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { Simulator } from '../../src/connection/simulator/Simulator'
-import { createPeerDescriptor } from '../../src/dht/DhtNode'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { Logger, MetricsContext, waitForEvent3 } from '@streamr/utils'
-import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
-import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
 import { MarkOptional } from 'ts-essentials'
+import { ConnectionManager } from '../../src/connection/ConnectionManager'
+import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
+import { Simulator } from '../../src/connection/simulator/Simulator'
+import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
+import { createPeerDescriptor } from '../../src/helpers/createPeerDescriptor'
+import { createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
+import { ConnectivityResponse, Message, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { TransportEvents } from '../../src/transport/ITransport'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
+import { getRandomRegion } from '../../src/connection/simulator/pings'
+import { range } from 'lodash'
 
 const SERVICE_ID = 'demo'
 
@@ -31,7 +33,7 @@ describe('ConnectionManager', () => {
     const createConnectionManager = (opts: MarkOptional<DefaultConnectorFacadeConfig, 'createLocalPeerDescriptor'>) => {
         return new ConnectionManager({
             createConnectorFacade: () => new DefaultConnectorFacade({
-                createLocalPeerDescriptor,
+                createLocalPeerDescriptor: async (response) => createLocalPeerDescriptor(response),
                 websocketServerEnableTls: false,
                 ...opts
             }),
@@ -40,7 +42,7 @@ describe('ConnectionManager', () => {
     }
 
     beforeEach(() => {
-        createLocalPeerDescriptor = jest.fn().mockImplementation((response) => createPeerDescriptor(response))
+        createLocalPeerDescriptor = jest.fn().mockImplementation((response) => createPeerDescriptor(response, getRandomRegion()))
     })
 
     beforeAll(async () => {
@@ -84,6 +86,27 @@ describe('ConnectionManager', () => {
 
         await connectionManager.stop()
     }, 15000)
+
+    it('Succesfully connectivityChecks if at least one entry point is online', async () => {
+        // Create offline PeerDescriptors
+        const entryPoints = range(4).map((i) => {
+            return createMockPeerDescriptor({
+                websocket: { host: '127.0.0.1', port: 12345 + i, tls: false }
+            })
+        })
+        entryPoints.push(createMockPeerDescriptor({
+            websocket: { host: '127.0.0.1', port: 9998, tls: false }
+        }))
+        const connectionManager = createConnectionManager({
+            transport: mockTransport,
+            websocketPortRange: { min: 9998, max: 9998 },
+            entryPoints
+        })
+        await connectionManager.start()
+        expect(createLocalPeerDescriptor.mock.calls[0][0].host).toEqual('127.0.0.1')
+
+        await connectionManager.stop()
+    }, 20000)
 
     it('Can probe connectivity in open internet', async () => {
         const connectionManager1 = createConnectionManager({
@@ -134,7 +157,6 @@ describe('ConnectionManager', () => {
 
         const msg: Message = {
             serviceId: SERVICE_ID,
-            messageType: MessageType.RPC,
             messageId: '1',
             body: {
                 oneofKind: 'rpcMessage',
@@ -144,7 +166,7 @@ describe('ConnectionManager', () => {
 
         const promise = new Promise<void>((resolve, _reject) => {
             connectionManager2.on('message', async (message: Message) => {
-                expect(message.messageType).toBe(MessageType.RPC)
+                expect(message.body.oneofKind).toBe('rpcMessage')
                 resolve()
             })
         })
@@ -193,7 +215,6 @@ describe('ConnectionManager', () => {
 
         const msg: Message = {
             serviceId: SERVICE_ID,
-            messageType: MessageType.RPC,
             messageId: '1',
             body: {
                 oneofKind: 'rpcMessage',
@@ -217,7 +238,7 @@ describe('ConnectionManager', () => {
 
         const promise = new Promise<void>((resolve, _reject) => {
             connectionManager2.on('message', async (message: Message) => {
-                expect(message.messageType).toBe(MessageType.RPC)
+                expect(message.body.oneofKind).toBe('rpcMessage')
                 resolve()
             })
         })
@@ -244,7 +265,6 @@ describe('ConnectionManager', () => {
 
         const msg: Message = {
             serviceId: SERVICE_ID,
-            messageType: MessageType.RPC,
             messageId: '1',
             body: {
                 oneofKind: 'rpcMessage',
@@ -254,7 +274,7 @@ describe('ConnectionManager', () => {
 
         const dataPromise = new Promise<void>((resolve, _reject) => {
             connectionManager4.on('message', async (message: Message) => {
-                expect(message.messageType).toBe(MessageType.RPC)
+                expect(message.body.oneofKind).toBe('rpcMessage')
                 resolve()
             })
         })
@@ -292,6 +312,7 @@ describe('ConnectionManager', () => {
         await Promise.all([disconnectedPromise1, disconnectedPromise2])
         await connectionManager3.stop()
         await connectionManager4.stop()
+        simulator2.stop()
     })
 
     it('Cannot send to own WebsocketServer if nodeIds do not match', async () => {
@@ -308,7 +329,6 @@ describe('ConnectionManager', () => {
         peerDescriptor.nodeId = new Uint8Array([12, 12, 12, 12])
         const msg: Message = {
             serviceId: SERVICE_ID,
-            messageType: MessageType.RPC,
             messageId: '1',
             targetDescriptor: peerDescriptor,
             body: {
@@ -343,7 +363,7 @@ describe('ConnectionManager', () => {
             transport: mockTransport,
             websocketHost: '127.0.0.1',
             websocketPortRange: { min: 10002, max: 10002 },
-            createLocalPeerDescriptor: () => peerDescriptor1 
+            createLocalPeerDescriptor: async () => peerDescriptor1 
         })
 
         await connectionManager1.start()
@@ -352,14 +372,13 @@ describe('ConnectionManager', () => {
             transport: mockTransport,
             websocketHost: '127.0.0.1',
             websocketPortRange: { min: 10003, max: 10003 },
-            createLocalPeerDescriptor: () => peerDescriptor2
+            createLocalPeerDescriptor: async () => peerDescriptor2
         })
 
         await connectionManager2.start()
 
         const msg: Message = {
             serviceId: SERVICE_ID,
-            messageType: MessageType.RPC,
             messageId: '1',
             targetDescriptor: {
                 // This is not the correct nodeId of peerDescriptor2

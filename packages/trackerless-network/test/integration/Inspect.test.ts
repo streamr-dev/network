@@ -30,7 +30,8 @@ describe('inspect', () => {
             layer0: {
                 entryPoints: [publisherDescriptor],
                 peerDescriptor,
-                transport
+                transport,
+                connectionsView: transport
             }
         })
         await node.start()
@@ -75,12 +76,12 @@ describe('inspect', () => {
                 123123,
                 sequenceNumber
             )
-            publisherNode.getStreamrNode().broadcast(msg)
+            publisherNode.getContentDeliveryManager().broadcast(msg)
             sequenceNumber += 1
         }, 200)
 
         for (const node of inspectedNodes) {
-            const result = await inspectorNode.getStreamrNode().inspect(node.getLayer0Node().getLocalPeerDescriptor(), streamPartId)
+            const result = await inspectorNode.getContentDeliveryManager().inspect(node.getLayer0Node().getLocalPeerDescriptor(), streamPartId)
             expect(result).toEqual(true)
         }
     }, 25000)

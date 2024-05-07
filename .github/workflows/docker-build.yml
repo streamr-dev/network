@@ -24,6 +24,10 @@ on:
       build_platforms:
         type: string
         required: true
+      include_latest_tag:
+        type: boolean
+        required: false
+        default: false
 
     secrets:
       dockerhub_username:
@@ -40,7 +44,7 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
       - name: Cache Docker layers
-        uses: actions/cache@v3.3.3
+        uses: actions/cache@v4.0.2
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-v1-${{ github.sha }}
@@ -52,11 +56,11 @@ jobs:
         with:
           platforms: arm64
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3.0.0
+        uses: docker/setup-buildx-action@v3.3.0
         with:
           driver-opts: |
             network=host
-      - uses: docker/login-action@v3.0.0
+      - uses: docker/login-action@v3.1.0
         if: ${{inputs.push_image}}
         with:
           username: ${{ secrets.dockerhub_username }}
@@ -70,7 +74,7 @@ jobs:
 
       - name: Docker meta
         id: docker_meta_success
-        uses: docker/metadata-action@v5.5.0
+        uses: docker/metadata-action@v5.5.1
         if: ${{inputs.push_image}}
         with:
           images: ${{inputs.image_name}}
@@ -78,14 +82,13 @@ jobs:
             latest=false
           tags: |
             type=match,pattern=broker/(v.*),group=1,value=${{ env.broker_head_tag }}
-            type=raw,value=dev,enable=${{ inputs.branch == 'brubeck' }}
-            type=raw,value=dev-tatum,enable=${{ inputs.branch == 'main' }}
-            type=raw,value=testnet-two,enable=${{ inputs.branch == 'testnet-two' }}
-            type=raw,value=testnet-three,enable=${{ inputs.branch == 'testnet-three' }}
+            type=raw,value=${{ inputs.branch }},enable=${{ inputs.branch != 'main' }}
+            type=raw,value=dev,enable=${{ inputs.branch == 'main' }}
+            type=raw,value=latest,enable=${{ inputs.include_latest_tag }}
 
       - name: Build
         if: ${{!inputs.push_image}}
-        uses: docker/build-push-action@v5.1.0
+        uses: docker/build-push-action@v5.3.0
         with:
           context: .
           file: ${{inputs.docker_file}}
@@ -110,7 +113,7 @@ jobs:
 
       - name: Build & Push
         if: ${{inputs.push_image}}
-        uses: docker/build-push-action@v5.1.0
+        uses: docker/build-push-action@v5.3.0
         with:
           context: .
           file: ${{inputs.docker_file}}
@@ -126,7 +129,7 @@ jobs:
 
       - name: Collect docker logs on failure
         if: failure()
-        uses: jwalton/gh-docker-logs@v2.2.1
+        uses: jwalton/gh-docker-logs@v2.2.2
         with:
           dest: 'logs'
 

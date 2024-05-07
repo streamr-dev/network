@@ -8,7 +8,7 @@ The Streamr node ships with interface plugins, which can be used to publish and 
 <!-- TODO: Feature completeness matrix diagram -->
 
 ## Configuration
-The plugins are enabled and configured in the Streamr config file. To generate a config file and enable the plugins you need, you can use the Streamr node's interactive config wizard.
+The plugins are enabled and configured in the Streamr config file. To generate a config file and enable the plugins you need, you can use the Streamr node's interactive Config Wizard.
 
 ### Authentication
 The plugins expose ports and API endpoints which can be used to publish and subscribe to data using the identity of the Streamr node. You will want to secure those ports, either by setting up a firewall and restricting access to the ports based on IP, or configuring API keys that only allow access if the API key is provided.

@@ -36,7 +36,7 @@ export class HandshakeRpcRemote extends RpcRemote<HandshakeRpcClient> {
                 interleaveTargetDescriptor: response.interleaveTargetDescriptor
             }
         } catch (err: any) {
-            logger.debug(`handshake to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
+            logger.debug(`handshake to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed`, { err })
             return {
                 accepted: false
             }
@@ -57,7 +57,7 @@ export class HandshakeRpcRemote extends RpcRemote<HandshakeRpcClient> {
                 accepted: res.accepted
             }
         } catch (err) {
-            logger.debug(`interleaveRequest to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed: ${err}`)
+            logger.debug(`interleaveRequest to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed`, { err })
             return {
                 accepted: false
             }

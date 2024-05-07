@@ -2,7 +2,7 @@ import { IWebrtcConnection, WebrtcConnectionEvents } from './IWebrtcConnection'
 import { ConnectionType, IConnection, ConnectionID, ConnectionEvents } from '../IConnection'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import EventEmitter from 'eventemitter3'
-import nodeDatachannel, { DataChannel, DescriptionType, PeerConnection } from 'node-datachannel'
+import { DataChannel, DescriptionType, PeerConnection, cleanup, initLogger } from 'node-datachannel'
 import { Logger } from '@streamr/utils'
 import { IllegalRtcPeerConnectionState } from '../../helpers/errors'
 import { iceServerAsString } from './iceServerAsString'
@@ -16,7 +16,7 @@ const logger = new Logger(module)
 export const WEBRTC_CLEANUP = new class {
     // eslint-disable-next-line class-methods-use-this
     cleanUp(): void {
-        nodeDatachannel.cleanup()
+        cleanup()
     }
 }
 
@@ -26,7 +26,7 @@ export interface Params {
     bufferThresholdLow?: number
     connectingTimeout?: number
     maxMessageSize?: number
-    iceServers?: IceServer[]
+    iceServers?: IceServer[]  // TODO make this parameter required (empty array is a good fallback which can be set by the caller if needed)
     portRange?: PortRange
 }
 
@@ -42,7 +42,7 @@ enum RtcPeerConnectionStateEnum {
     new = 'new'
 }
 
-nodeDatachannel.initLogger('Fatal')
+initLogger('Fatal')
 
 type RtcPeerConnectionState = keyof typeof RtcPeerConnectionStateEnum
 

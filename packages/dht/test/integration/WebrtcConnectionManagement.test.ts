@@ -1,6 +1,6 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
-import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
@@ -15,7 +15,7 @@ const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport:
     return new ConnectionManager({
         createConnectorFacade: () => new DefaultConnectorFacade({
             transport,
-            createLocalPeerDescriptor: () => localPeerDescriptor
+            createLocalPeerDescriptor: async () => localPeerDescriptor
         }),
         metricsContext: new MetricsContext()
     })
@@ -63,7 +63,6 @@ describe('WebRTC Connection Management', () => {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
             },
-            messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
 
@@ -87,7 +86,6 @@ describe('WebRTC Connection Management', () => {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
             }, 
-            messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
         manager1.on('message', (message: Message) => {
@@ -108,7 +106,6 @@ describe('WebRTC Connection Management', () => {
                 oneofKind: 'rpcMessage',
                 rpcMessage: RpcMessage.create()
             },
-            messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
         dummyMessage.targetDescriptor = peerDescriptor1
@@ -120,7 +117,6 @@ describe('WebRTC Connection Management', () => {
     it('Connects and disconnects webrtc connections', async () => {
         const msg: Message = {
             serviceId,
-            messageType: MessageType.RPC,
             messageId: '1',
             body: {
                 oneofKind: 'rpcMessage',
@@ -130,14 +126,14 @@ describe('WebRTC Connection Management', () => {
 
         const dataPromise = new Promise<void>((resolve, _reject) => {
             manager2.on('message', async (message: Message) => {
-                expect(message.messageType).toBe(MessageType.RPC)
+                expect(message.body.oneofKind).toBe('rpcMessage')
                 resolve()
             })
         })
 
         const connectedPromise1 = new Promise<void>((resolve, _reject) => {
             manager1.on('connected', () => {
-                //expect(message.messageType).toBe(MessageType.RPC)
+                //expect(message.body.oneofKind).toBe('rpcMessage')
                 resolve()
             })
         })
@@ -175,7 +171,6 @@ describe('WebRTC Connection Management', () => {
     it('Disconnects webrtcconnection while being connected', async () => {
         const msg: Message = {
             serviceId,
-            messageType: MessageType.RPC,
             messageId: '1',
             body: {
                 oneofKind: 'rpcMessage',
@@ -204,7 +199,6 @@ describe('WebRTC Connection Management', () => {
     it('failed connections are cleaned up', async () => {
         const msg: Message = {
             serviceId,
-            messageType: MessageType.RPC,
             messageId: '1',
             body: {
                 oneofKind: 'rpcMessage',
@@ -227,6 +221,6 @@ describe('WebRTC Connection Management', () => {
             manager1.send(msg),
             disconnectedPromise1
         ])
-        expect(manager1.getConnection(getNodeIdFromPeerDescriptor(msg.targetDescriptor!))).toBeUndefined()
+        expect(manager1.getConnection(getNodeIdFromPeerDescriptor(msg.targetDescriptor))).toBeUndefined()
     }, 20000)
 })

@@ -30,7 +30,7 @@ const createMessage = (timestamp: number, hasPrevRef = true) => {
             CONTEXT.publisherId, 
             CONTEXT.msgChainId
         ),
-        prevMsgRef: hasPrevRef ? new MessageRef(timestamp - 1, 0) : null,
+        prevMsgRef: hasPrevRef ? new MessageRef(timestamp - 1, 0) : undefined,
         content: utf8ToBinary('{}'),
         signature: hexToBinary('0x1324'),
         contentType: ContentType.JSON,

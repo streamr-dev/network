@@ -1,7 +1,7 @@
 import { StreamPartID } from '@streamr/protocol'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { Stream, StreamrClient } from 'streamr-client'
+import { Stream, StreamrClient } from '@streamr/sdk'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { createClient, createTestStream } from '../../../utils'
 import {
@@ -16,6 +16,7 @@ import { formCoordinationStreamId } from '../../../../src/plugins/operator/formC
 import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
+import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()
@@ -88,7 +89,7 @@ describe('MaintainTopologyService', () => {
             0
         )
         const operatorFleetState = createOperatorFleetState(formCoordinationStreamId(serviceHelperConfig.operatorContractAddress))
-        const maintainTopologyHelper = new MaintainTopologyHelper(serviceHelperConfig)
+        const maintainTopologyHelper = new MaintainTopologyHelper(ContractFacade.createInstance(serviceHelperConfig))
         const assignments = new StreamPartAssignments(
             await client.getNodeId(),
             3,

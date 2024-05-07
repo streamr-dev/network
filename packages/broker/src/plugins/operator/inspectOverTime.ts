@@ -1,5 +1,5 @@
 import { AbortError, composeAbortSignals, EthereumAddress, Gate, Logger, wait } from '@streamr/utils'
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient } from '@streamr/sdk'
 import { CreateOperatorFleetStateFn, OperatorFleetState } from './OperatorFleetState'
 import {
     findNodesForTargetGivenFleetState,
@@ -164,7 +164,7 @@ class InspectionOverTimeTask {
 
             if (attemptNo !== this.maxInspections) {
                 // TODO: remove when NET-1169 landed;
-                //  workaround subscribe bug in streamr-client (sometimes messages don't come thru to heartbeat stream)
+                //  workaround subscribe bug in @streamr/sdk (sometimes messages don't come thru to heartbeat stream)
                 if (this.fleetState?.getNodeIds().length === 0) {
                     this.logger.info('Destroying and re-creating fleet state')
                     if (this.fleetState !== undefined) {

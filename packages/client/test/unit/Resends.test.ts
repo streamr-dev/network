@@ -9,7 +9,7 @@ import {
     StreamPartIDUtils,
     toStreamID
 } from '@streamr/protocol'
-import { randomEthereumAddress, startTestServer } from '@streamr/test-utils'
+import { isRunningInElectron, randomEthereumAddress, startTestServer } from '@streamr/test-utils'
 import { collect, toLengthPrefixedFrame } from '@streamr/utils'
 import range from 'lodash/range'
 import { Resends } from '../../src/subscribe/Resends'
@@ -20,7 +20,7 @@ import { convertStreamMessageToBytes } from '@streamr/trackerless-network'
 const createResends = (serverUrl: string) => {
     return new Resends(
         {
-            getStorageNodeMetadata: async () => ({ http: serverUrl })
+            getStorageNodeMetadata: async () => ({ urls: [serverUrl] })
         } as any,
         undefined as any,
         undefined as any,
@@ -54,8 +54,10 @@ describe('Resends', () => {
             const messages = await resends.resend(StreamPartIDUtils.parse('stream#0'), { last: 1, raw: true }, async () => [randomEthereumAddress()])
             await collect(messages)
         }).rejects.toThrowStreamrError({
-            // eslint-disable-next-line max-len
-            message: `request to http://mock.test/streams/stream/data/partitions/0/last?count=1&format=raw failed, reason: getaddrinfo ENOTFOUND mock.test`,
+            message: isRunningInElectron()
+                ? 'Failed to fetch'
+                // eslint-disable-next-line max-len
+                : 'request to http://mock.test/streams/stream/data/partitions/0/last?count=1&format=raw failed, reason: getaddrinfo ENOTFOUND mock.test',
             code: 'STORAGE_NODE_ERROR'
         })
     })
