@@ -3,8 +3,7 @@ import {
     DhtAddress,
     PeerDescriptor,
     areEqualPeerDescriptors,
-    getDhtAddressFromRaw,
-    getNodeIdFromPeerDescriptor
+    getDhtAddressFromRaw
 } from '@streamr/dht'
 import { StreamPartID } from '@streamr/protocol'
 import { Logger, scheduleAtInterval } from '@streamr/utils'
@@ -45,18 +44,7 @@ export class EntryPointDiscovery {
         this.storeInterval = this.config.storeInterval ?? 60000
     }
 
-    async discoverEntryPointsFromDht(excludeSet: Set<DhtAddress> = new Set()): Promise<PeerDescriptor[]> {
-        const discoveredEntryPoints = await this.discoverEntryPoints()
-        const filtered = discoveredEntryPoints.filter((node) => !excludeSet.has(getNodeIdFromPeerDescriptor(node)))
-        if (filtered.length > 0) {
-            return filtered
-        // If all found entry points are filtered return the unfiltered list 
-        } else {
-            return discoveredEntryPoints
-        }
-    }
-
-    private async discoverEntryPoints(): Promise<PeerDescriptor[]> {
+    async discoverEntryPoints(): Promise<PeerDescriptor[]> {
         const dataKey = streamPartIdToDataKey(this.config.streamPartId)
         logger.trace(`Discovering entry points for key ${dataKey}`)
         try {

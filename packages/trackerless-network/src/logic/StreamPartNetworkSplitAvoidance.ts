@@ -61,11 +61,12 @@ export class StreamPartNetworkSplitAvoidance {
     public async avoidNetworkSplit(): Promise<void> {
         this.running = true
         await exponentialRunOff(async () => {
-            const discoveredEntrypoints = await this.config.discoverEntryPoints(this.excludedNodes)
-            await this.config.layer1Node.joinDht(discoveredEntrypoints, false, false)
+            const discoveredEntrypoints = await this.config.discoverEntryPoints()
+            const filteredEntryPoints = discoveredEntrypoints.filter((peer) => !this.excludedNodes.has(getNodeIdFromPeerDescriptor(peer)))
+            await this.config.layer1Node.joinDht(filteredEntryPoints, false, false)
             if (this.config.layer1Node.getNeighborCount() < MIN_NEIGHBOR_COUNT) {
                 // Filter out nodes that are not neighbors as those nodes are assumed to be offline
-                const newExcludes = discoveredEntrypoints
+                const newExcludes = filteredEntryPoints
                     .filter((peer) => !this.config.layer1Node.getNeighbors()
                         .some((neighbor) => areEqualPeerDescriptors(neighbor, peer)))
                     .map((peer) => getNodeIdFromPeerDescriptor(peer))
