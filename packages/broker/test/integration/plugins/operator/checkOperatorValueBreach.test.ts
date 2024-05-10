@@ -47,13 +47,13 @@ describe('checkOperatorValueBreach', () => {
         const { operatorServiceConfig: watcherConfig, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
         const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
         const sponsorer = await generateWalletWithGasAndTokens()
-        await delegate(operatorWallet, operatorContract.address, 20000)
+        await delegate(operatorWallet, await operatorContract.getAddress(), 20000)
         const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: 100, streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, sponsorship1.address, 25000)
-        await stake(operatorContract, sponsorship1.address, 10000)
+        await sponsor(sponsorer, await sponsorship1.getAddress(), 25000)
+        await stake(operatorContract, await sponsorship1.getAddress(), 10000)
         const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: 200, streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, sponsorship2.address, 25000)
-        await stake(operatorContract, sponsorship2.address, 10000)
+        await sponsor(sponsorer, await sponsorship2.getAddress(), 25000)
+        await stake(operatorContract, await sponsorship2.getAddress(), 10000)
         const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
         const streamrConfigAddress = await operatorContract.streamrConfig()
         const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
@@ -64,7 +64,7 @@ describe('checkOperatorValueBreach', () => {
         })
         // overwrite (for this test only) the getRandomOperator method to deterministically return the operator's address
         contractFacade.getRandomOperator = async () => {
-            return toEthereumAddress(operatorContract.address)
+            return toEthereumAddress(await operatorContract.getAddress())
         }
 
         logger.debug('Waiting until above', { allowedDifference })

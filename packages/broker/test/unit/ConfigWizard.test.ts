@@ -1654,7 +1654,7 @@ async function scenario(mocks: AnswerMock[]): Promise<Scenario> {
 
             const answer = await r.answer
 
-            answers.push(Array.isArray(answer) ? answer.join() : answer)
+            answers.push(Array.isArray(answer) ? answer.join() : answer as any)  // TODO why casting?
 
             return answer
         })

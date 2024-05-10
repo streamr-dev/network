@@ -1,4 +1,4 @@
-import { ZeroAddress, Contract, JsonRpcProvider, Provider, parseEther } from 'ethers'
+import { ZeroAddress, Contract, JsonRpcProvider, Provider, parseEther, EventLog } from 'ethers'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import type { Operator, OperatorFactory, Sponsorship, SponsorshipFactory } from '@streamr/network-contracts-ethers6'
 import { TestToken, operatorABI, operatorFactoryABI, sponsorshipABI, sponsorshipFactoryABI, tokenABI } from '@streamr/network-contracts-ethers6'
@@ -65,7 +65,7 @@ export async function setupOperatorContract(
         await (await operatorContract.setNodeAddresses(nodeWallets.map((w) => w.address))).wait()
     }
     const operatorConfig = {
-        operatorContractAddress: toEthereumAddress(operatorContract.address),
+        operatorContractAddress: toEthereumAddress(await operatorContract.getAddress()),
         theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl,
         getEthersOverrides: () => ({})
     }
@@ -114,9 +114,10 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
             0,
         ]
     )).wait()
-    const newOperatorAddress = operatorReceipt.events?.find((e: any) => e.event === 'NewOperator')?.args?.operatorContractAddress
+    const newSponsorshipEvent = operatorReceipt!.logs.find((l: any) => l.fragment?.name === 'NewOperator') as EventLog
+    const newOperatorAddress = newSponsorshipEvent.args.operatorContractAddress
     const newOperator = new Contract(newOperatorAddress, operatorABI, opts.deployer) as unknown as Operator
-    logger.debug('Deployed OperatorContract', { address: newOperator.address })
+    logger.debug('Deployed OperatorContract', { address: newOperatorAddress })
     return newOperator
 }
 
@@ -159,10 +160,10 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
         ]
     )
     const sponsorshipDeployReceipt = await sponsorshipDeployTx.wait() 
-    const newSponsorshipEvent = sponsorshipDeployReceipt.events?.find((e: any) => e.event === 'NewSponsorship')
-    const newSponsorshipAddress = newSponsorshipEvent?.args?.sponsorshipContract
+    const newSponsorshipEvent = sponsorshipDeployReceipt!.logs.find((l: any) => l.fragment?.name === 'NewSponsorship') as EventLog
+    const newSponsorshipAddress = newSponsorshipEvent.args.sponsorshipContract
     const newSponsorship = new Contract(newSponsorshipAddress, sponsorshipABI, opts.deployer) as unknown as Sponsorship
-    logger.debug('Deployed SponsorshipContract', { address: newSponsorship.address })
+    logger.debug('Deployed SponsorshipContract', { address: newSponsorshipAddress })
     return newSponsorship
 }
 

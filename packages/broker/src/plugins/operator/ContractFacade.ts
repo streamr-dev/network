@@ -133,7 +133,7 @@ export class ContractFacade {
     async getTimestampOfLastHeartbeat(): Promise<number | undefined> {
         const result = await this.theGraphClient.queryEntity<RawResult>({
             query: `{
-                operator(id: "${this.getOperatorContractAddress()}") {
+                operator(id: "${await this.getOperatorContractAddress()}") {
                     latestHeartbeatTimestamp
                 }
             }`
@@ -149,8 +149,8 @@ export class ContractFacade {
         }
     }
 
-    getOperatorContractAddress(): EthereumAddress {
-        return toEthereumAddress(this.operatorContract.address)
+    async getOperatorContractAddress(): Promise<EthereumAddress> {
+        return toEthereumAddress(await this.operatorContract.getAddress())
     }
 
     async getSponsorshipsOfOperator(operatorAddress: EthereumAddress): Promise<SponsorshipResult[]> {
@@ -271,9 +271,9 @@ export class ContractFacade {
     }
 
     async getRandomOperator(): Promise<EthereumAddress | undefined> {
-        const latestBlock = await this.operatorContract.provider.getBlockNumber()
+        const latestBlock = await this.getProvider().getBlockNumber()
         const operators = await this.getOperatorAddresses(latestBlock)
-        const excluded = this.getOperatorContractAddress()
+        const excluded = await this.getOperatorContractAddress()
         const operatorAddresses = operators.filter((id) => id !== excluded)
         logger.debug(`Found ${operatorAddresses.length} operators`)
         return sample(operatorAddresses)
@@ -316,7 +316,7 @@ export class ContractFacade {
         maxSponsorshipsInWithdraw: number
     ): Promise<EarningsData> {
         return this.getEarningsOf(
-            this.getOperatorContractAddress(),
+            await this.getOperatorContractAddress(),
             minSponsorshipEarningsInWithdraw,
             maxSponsorshipsInWithdraw
         )
@@ -360,12 +360,15 @@ export class ContractFacade {
         return operatorAddresses
     }
 
-    pullStakedStreams(requiredBlockNumber: number): AsyncGenerator<{ sponsorship: { id: string, stream: { id: string } } }> {
+    async* pullStakedStreams(
+        requiredBlockNumber: number
+    ): AsyncGenerator<{ sponsorship: { id: string, stream: { id: string } } }, undefined, undefined> {
+        const contractAddress = await this.getOperatorContractAddress()
         const createQuery = (lastId: string, pageSize: number) => {
             return {
                 query: `
                     {
-                        operator(id: "${this.getOperatorContractAddress()}") {
+                        operator(id: "${contractAddress}") {
                             stakes(where: {id_gt: "${lastId}"}, first: ${pageSize}) {
                                 sponsorship {
                                     id
@@ -386,13 +389,13 @@ export class ContractFacade {
         }
         const parseItems = (response: any) => {
             if (!response.operator) {
-                logger.error('Unable to find operator in The Graph', { operatorContractAddress: this.operatorContract.address })
+                logger.error('Unable to find operator in The Graph', { operatorContractAddress: contractAddress })
                 return []
             }
             return response.operator.stakes
         }
         this.theGraphClient.updateRequiredBlockNumber(requiredBlockNumber)
-        return this.theGraphClient.queryEntities<{ id: string, sponsorship: { id: string, stream: { id: string } } }>(createQuery, parseItems)
+        yield* this.theGraphClient.queryEntities<{ id: string, sponsorship: { id: string, stream: { id: string } } }>(createQuery, parseItems)
     }
 
     async hasOpenFlag(operatorAddress: EthereumAddress, sponsorshipAddress: EthereumAddress): Promise<boolean> {
@@ -426,7 +429,7 @@ export class ContractFacade {
         addManagedEventListener<any, any>(
             this.operatorContract as any,
             'ReviewRequest',
-            (
+            async (
                 sponsorship: string,
                 targetOperator: string,
                 voteStartTimestampInSecs: number,
@@ -439,7 +442,7 @@ export class ContractFacade {
                 } catch (err) {
                     if (err instanceof ParseError) {
                         logger.warn(`Skip review request (${err.reasonText})`, {
-                            address: this.operatorContract.address,
+                            address: await this.operatorContract.getAddress(),
                             sponsorship,
                             targetOperator,
                         })
@@ -449,7 +452,7 @@ export class ContractFacade {
                     return
                 }
                 logger.debug('Receive review request', {
-                    address: this.operatorContract.address,
+                    address: await this.operatorContract.getAddress(),
                     sponsorship,
                     targetOperator,
                     partition
@@ -490,7 +493,7 @@ export class ContractFacade {
     }
 
     addOperatorContractStakeEventListener(eventName: 'Staked' | 'Unstaked', listener: (sponsorship: string) => unknown): void {
-        this.operatorContract.on(eventName, listener)
+        this.operatorContract.on(eventName as any, listener)  // TODO better type
     }
 
     removeOperatorContractStakeEventListener(eventName: 'Staked' | 'Unstaked', listener: (sponsorship: string) => unknown): void {
