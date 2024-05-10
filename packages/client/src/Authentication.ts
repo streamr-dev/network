@@ -1,4 +1,4 @@
-import { BrowserProvider, AbstractSigner, Provider, TransactionRequest, TransactionResponse } from 'ethers'
+import { BrowserProvider, AbstractSigner, Provider } from 'ethers'
 import { computeAddress } from 'ethers'
 import { Wallet } from 'ethers'
 import { EthereumAddress, hexToBinary, toEthereumAddress, wait, createSignature } from '@streamr/utils'
@@ -6,27 +6,9 @@ import pMemoize from 'p-memoize'
 import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'
 import { pLimitFn } from './utils/promises'
 import { RpcProviderFactory } from './RpcProviderFactory'
+import { AutoNonceWallet } from './utils/AutoNonceWallet'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
-
-class AutoNonceWallet extends Wallet {
-    private _noncePromise: Promise<number> | null = null;
-
-    async sendTransaction(transaction: TransactionRequest): Promise<TransactionResponse> {
-        if (transaction.nonce == null) {
-            let _noncePromise = this._noncePromise
-            if (_noncePromise == null) {
-                _noncePromise = this.provider!.getTransactionCount(this.address);
-            }
-            this._noncePromise = _noncePromise.then((nonce) => (nonce + 1))
-            console.log('Sending transaction ' + transaction.data)
-            transaction.nonce = await _noncePromise;
-            console.log('Sent transaction with nonce ' + transaction.nonce + ' ' + transaction.data)
-        }
-        return super.sendTransaction(transaction);
-    }
-}
-
 
 export type SignerWithProvider = AbstractSigner<Provider>
 
