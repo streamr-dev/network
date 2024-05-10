@@ -113,11 +113,9 @@ export class NetworkStack {
             areEqualPeerDescriptors(entryPoint, this.layer0Node!.getLocalPeerDescriptor())
         ))) {
             await this.layer0Node?.joinDht(this.options.layer0.entryPoints)
-        } else {
-            if (doJoin) {
-                // in practice there aren't be existing connections and therefore this always connects
-                await this.ensureConnectedToControlLayer()
-            }
+        } else if (doJoin) {
+            // in practice there aren't be existing connections and therefore this always connects
+            await this.ensureConnectedToControlLayer()
         }
         // TODO: remove undefined checks here. Assume that start is approproately awaited before stop is called.
         await this.contentDeliveryManager?.start(this.layer0Node!, connectionManager, connectionManager)
@@ -170,7 +168,7 @@ export class NetworkStack {
         return {
             peerDescriptor: this.getLayer0Node().getLocalPeerDescriptor(),
             controlLayer: {
-                connections: this.getLayer0Node().getConnections(),
+                connections: this.getLayer0Node().getConnectionsView().getConnections(),
                 neighbors: this.getLayer0Node().getNeighbors()
             },
             streamPartitions: this.getContentDeliveryManager().getNodeInfo(),

@@ -24,6 +24,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ConnectionLockRpcLocal } from './ConnectionLockRpcLocal'
 import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../identifiers'
 import { getOfferer } from '../helpers/offering'
+import { ConnectionsView } from './ConnectionsView'
 
 export interface ConnectionManagerConfig {
     maxConnections?: number
@@ -93,7 +94,7 @@ export const getNodeIdOrUnknownFromPeerDescriptor = (peerDescriptor: PeerDescrip
     }
 }
 
-export class ConnectionManager extends EventEmitter<TransportEvents> implements ITransport, ConnectionLocker {
+export class ConnectionManager extends EventEmitter<TransportEvents> implements ITransport, ConnectionsView, ConnectionLocker {
 
     private config: ConnectionManagerConfig
     private readonly metricsContext: MetricsContext
@@ -158,15 +159,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             maxSize: 100000,  // TODO use config option or named constant?
             allowToContainReferenceId: false
         })
-        this.connections.forEach((connection, key) => {
-            // TODO: Investigate why multiple invalid WS client connections to the same
-            // server with a different nodeId can remain in the this.connections map.
-            // Seems to only happen if the ConnectionManager acting as client is not running a WS server itself.
-            if (connection.getPeerDescriptor() !== undefined && !this.hasConnection(getNodeIdFromPeerDescriptor(connection.getPeerDescriptor()!))) {
-                logger.trace(`Attempting to disconnect a hanging connection to ${getNodeIdFromPeerDescriptor(connection.getPeerDescriptor()!)}`)
-                connection.close(false).catch(() => {})
-                this.connections.delete(key)
-            } else if (!this.locks.isLocked(connection.getNodeId()) && Date.now() - connection.getLastUsedTimestamp() > maxIdleTime) {
+        this.connections.forEach((connection) => {
+            if (!this.locks.isLocked(connection.getNodeId()) && Date.now() - connection.getLastUsedTimestamp() > maxIdleTime) {
                 logger.trace('disconnecting in timeout interval: ' + getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()))
                 disconnectionCandidates.addContact(connection)
             }
@@ -304,7 +298,13 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     }
 
     public hasConnection(nodeId: DhtAddress): boolean {
-        return this.connections.has(nodeId)
+        // TODO if we remove filtering in getConnections, this can just be this.connection.has(nodeId)
+        return this.getConnections().some((c) => getNodeIdFromPeerDescriptor(c) == nodeId)
+    }
+
+    public getConnectionCount(): number {
+        // TODO if we remove filtering in getConnections, this can just be this.connection.length
+        return this.getConnections().length
     }
 
     public hasLocalLockedConnection(nodeId: DhtAddress): boolean {
@@ -545,6 +545,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
 
     public getConnections(): PeerDescriptor[] {
         return Array.from(this.connections.values())
+            // TODO is this filtering needed? (if it is, should we do the same filtering e.g.
+            // in getConnection() or in other methods which access this.connections directly?)
             .filter((managedConnection: ManagedConnection) => managedConnection.isHandshakeCompleted())
             .map((managedConnection: ManagedConnection) => managedConnection.getPeerDescriptor()!)
     }

@@ -4,11 +4,12 @@ import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { ContractFactory } from '../ContractFactory'
-import { getStreamRegistryChainProviders, getEthersOverrides } from '../Ethereum'
+import { getEthersOverrides } from '../ethereumUtils'
 import { StreamrClientError } from '../StreamrClientError'
 import type { NodeRegistry as NodeRegistryContract } from '../ethereumArtifacts/NodeRegistry'
 import NodeRegistryArtifact from '../ethereumArtifacts/NodeRegistryAbi.json'
 import { queryAllReadonlyContracts, waitForTx } from '../utils/contract'
+import { RpcProviderFactory } from '../RpcProviderFactory'
 
 export interface StorageNodeMetadata {
     urls: string[]
@@ -23,18 +24,21 @@ export class StorageNodeRegistry {
     private nodeRegistryContract?: NodeRegistryContract
     private readonly nodeRegistryContractsReadonly: NodeRegistryContract[]
     private readonly contractFactory: ContractFactory
-    private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
+    private readonly rpcProviderFactory: RpcProviderFactory
+    private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     private readonly authentication: Authentication
 
     constructor(
         contractFactory: ContractFactory,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>,
+        rpcProviderFactory: RpcProviderFactory,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
     ) {
         this.contractFactory = contractFactory
+        this.rpcProviderFactory = rpcProviderFactory
         this.config = config
         this.authentication = authentication
-        this.nodeRegistryContractsReadonly = getStreamRegistryChainProviders(config).map((provider: Provider) => {
+        this.nodeRegistryContractsReadonly = rpcProviderFactory.getProviders().map((provider: Provider) => {
             return this.contractFactory.createReadContract(
                 toEthereumAddress(this.config.contracts.storageNodeRegistryChainAddress),
                 NodeRegistryArtifact,
@@ -46,7 +50,7 @@ export class StorageNodeRegistry {
 
     private async connectToContract() {
         if (!this.nodeRegistryContract) {
-            const chainSigner = await this.authentication.getStreamRegistryChainSigner()
+            const chainSigner = await this.authentication.getStreamRegistryChainSigner(this.rpcProviderFactory)
             this.nodeRegistryContract = this.contractFactory.createWriteContract<NodeRegistryContract>(
                 toEthereumAddress(this.config.contracts.storageNodeRegistryChainAddress),
                 NodeRegistryArtifact,
@@ -58,7 +62,7 @@ export class StorageNodeRegistry {
 
     async setStorageNodeMetadata(metadata: StorageNodeMetadata | undefined): Promise<void> {
         await this.connectToContract()
-        const ethersOverrides = getEthersOverrides(this.config)
+        const ethersOverrides = getEthersOverrides(this.rpcProviderFactory, this.config)
         if (metadata !== undefined) {
             await waitForTx(this.nodeRegistryContract!.createOrUpdateNodeSelf(JSON.stringify(metadata), ethersOverrides))
         } else {

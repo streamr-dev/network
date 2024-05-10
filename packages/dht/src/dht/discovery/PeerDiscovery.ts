@@ -1,23 +1,32 @@
-import { DiscoverySession } from './DiscoverySession'
-import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
-import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger, scheduleAtInterval, setAbortableTimeout } from '@streamr/utils'
 import { ConnectionLocker } from '../../connection/ConnectionManager'
-import { PeerManager } from '../PeerManager'
-import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
+import {
+    DhtAddress,
+    areEqualPeerDescriptors,
+    createRandomDhtAddress,
+    getDhtAddressFromRaw,
+    getNodeIdFromPeerDescriptor,
+    getRawFromDhtAddress
+} from '../../identifiers'
+import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { ServiceID } from '../../types/ServiceID'
-import { RingDiscoverySession } from './RingDiscoverySession'
+import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
+import { PeerManager } from '../PeerManager'
+import { getClosestNodes } from '../contact/getClosestNodes'
 import { RingIdRaw, getRingIdRawFromPeerDescriptor } from '../contact/ringIdentifiers'
+import { DiscoverySession } from './DiscoverySession'
+import { RingDiscoverySession } from './RingDiscoverySession'
 
 interface PeerDiscoveryConfig {
     localPeerDescriptor: PeerDescriptor
     joinNoProgressLimit: number
-    peerDiscoveryQueryBatchSize: number
     serviceId: ServiceID
     parallelism: number
     joinTimeout: number
     connectionLocker?: ConnectionLocker
     peerManager: PeerManager
+    abortSignal: AbortSignal
+    createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => DhtNodeRpcRemote
 }
 
 export const createDistantDhtAddress = (address: DhtAddress): DhtAddress => {
@@ -35,13 +44,11 @@ export class PeerDiscovery {
     
     private rejoinOngoing = false
     private joinCalled = false
-    private readonly abortController: AbortController
     private recoveryIntervalStarted = false
     private readonly config: PeerDiscoveryConfig
 
     constructor(config: PeerDiscoveryConfig) {
         this.config = config
-        this.abortController = new AbortController()
     }
 
     async joinDht(
@@ -102,7 +109,9 @@ export class PeerDiscovery {
             parallelism: this.config.parallelism,
             noProgressLimit: this.config.joinNoProgressLimit,
             peerManager: this.config.peerManager,
-            contactedPeers
+            contactedPeers,
+            abortSignal: this.config.abortSignal,
+            createDhtNodeRpcRemote: this.config.createDhtNodeRpcRemote
         }
         return new DiscoverySession(sessionOptions)
     }
@@ -113,7 +122,9 @@ export class PeerDiscovery {
             parallelism: this.config.parallelism,
             noProgressLimit: this.config.joinNoProgressLimit,
             peerManager: this.config.peerManager,
-            contactedPeers
+            contactedPeers,
+            abortSignal: this.config.abortSignal,
+            createDhtNodeRpcRemote: this.config.createDhtNodeRpcRemote
         }
         return new RingDiscoverySession(sessionOptions)
     }
@@ -132,7 +143,7 @@ export class PeerDiscovery {
                     if (retry) {
                         // TODO should we catch possible promise rejection?
                         // TODO use config option or named constant?
-                        setAbortableTimeout(() => this.rejoinDht(entryPointDescriptor), 1000, this.abortController.signal)
+                        setAbortableTimeout(() => this.rejoinDht(entryPointDescriptor), 1000, this.config.abortSignal)
                     }
                 } else {
                     await this.ensureRecoveryIntervalIsRunning()
@@ -173,7 +184,7 @@ export class PeerDiscovery {
             if (!this.isStopped()) {
                 // TODO should we catch possible promise rejection?
                 // TODO use config option or named constant?
-                setAbortableTimeout(() => this.rejoinDht(entryPoint), 5000, this.abortController.signal)
+                setAbortableTimeout(() => this.rejoinDht(entryPoint), 5000, this.config.abortSignal)
             }
         } finally {
             this.rejoinOngoing = false
@@ -184,27 +195,37 @@ export class PeerDiscovery {
         if (!this.recoveryIntervalStarted) {
             this.recoveryIntervalStarted = true
             // TODO use config option or named constant?
-            await scheduleAtInterval(() => this.fetchClosestPeersFromBucket(), 60000, true, this.abortController.signal)
+            await scheduleAtInterval(() => this.fetchClosestAndRandomNeighbors(), 60000, true, this.config.abortSignal)
         }
     }
 
-    private async fetchClosestPeersFromBucket(): Promise<void> {
+    private async fetchClosestAndRandomNeighbors(): Promise<void> {
         if (this.isStopped()) {
             return
         }
         const localNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
-        const nodes = this.config.peerManager.getClosestNeighborsTo(
-            localNodeId,
-            this.config.parallelism
-        )
-        await Promise.allSettled(
-            nodes.map(async (peer: DhtNodeRpcRemote) => {
-                const contacts = await peer.getClosestPeers(localNodeId)
+        const nodes = this.getClosestNeighbors(localNodeId, this.config.parallelism)
+        const randomNodes = this.getClosestNeighbors(createRandomDhtAddress(), 1)
+        await Promise.allSettled([
+            ...nodes.map(async (node: PeerDescriptor) => {
+                const remote = this.config.createDhtNodeRpcRemote(node)
+                const contacts = await remote.getClosestPeers(localNodeId)
+                for (const contact of contacts) {
+                    this.config.peerManager.addContact(contact)
+                }
+            }),
+            ...randomNodes.map(async (node: PeerDescriptor) => {
+                const remote = this.config.createDhtNodeRpcRemote(node)
+                const contacts = await remote.getClosestPeers(createRandomDhtAddress())
                 for (const contact of contacts) {
                     this.config.peerManager.addContact(contact)
                 }
             })
-        )
+        ])
+    }
+
+    private getClosestNeighbors(referenceId: DhtAddress, maxCount: number): PeerDescriptor[] {
+        return getClosestNodes(referenceId, this.config.peerManager.getNeighbors().map((n) => n.getPeerDescriptor()), { maxCount })
     }
 
     public isJoinOngoing(): boolean {
@@ -216,16 +237,6 @@ export class PeerDiscovery {
     }
 
     private isStopped() {
-        return this.abortController.signal.aborted
-    }
-
-    public stop(): void {
-        this.abortController.abort()
-        this.ongoingDiscoverySessions.forEach((session) => {
-            session.stop()
-        })
-        this.ongoingRingDiscoverySessions.forEach((session) => {
-            session.stop()
-        })
+        return this.config.abortSignal.aborted
     }
 }

@@ -156,6 +156,12 @@ export interface ControlLayerConfig {
      * (especially when starting the node for the first time on a new machine).
      */
     websocketServerEnableTls?: boolean
+
+    /**
+     * Define a geo ip database folder path to be used by the network node. When left undefined
+     * geoip functionality is disabled.
+     */
+    geoIpDatabaseFolder?: string
 }
 
 export interface NetworkNodeConfig {
@@ -234,7 +240,7 @@ export interface EthereumNetworkConfig {
 //   empty arrays will be applied as-is: we may want to remove "enthereum.rpcEndpoints" key 
 //   from @streamr/config as the intention is to use system-defaults (e.g. Metamask defaults)
 //   in Ethereum network
-export type EnvironmentId = 'polygon' | 'mumbai' | 'dev2'
+export type EnvironmentId = 'polygon' | 'polygonAmoy' | 'dev2'
 
 export const DEFAULT_ENVIRONMENT: EnvironmentId = 'polygon'
 
@@ -426,6 +432,7 @@ export interface StreamrClientConfig {
             timeout?: number
             retryInterval?: number
         }
+        jsonRpcTimeout?: number
     }
 }
 
@@ -478,15 +485,6 @@ const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrCli
             highGasPriceStrategy: true,
             ...config.contracts.ethereumNetwork
         }
-    }
-    if (environmentId === 'dev2') {
-        // TODO config the 30s default for "dev2 in" @streamr/config and remove this explicit timeout
-        const toNumber = (value: any): number | undefined => {
-            return (value !== undefined) ? Number(value) : undefined
-        }
-        config.contracts.streamRegistryChainRPCs.rpcs.forEach((rpc: ConnectionInfo) => {
-            rpc.timeout = toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
-        })
     }
     return config
 }

@@ -118,7 +118,7 @@ export const createMockMessage = async (
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
         opts.streamPartId ?? opts.stream.getStreamParts()[0]
     )
-    const authentication = createPrivateKeyAuthentication(opts.publisher.privateKey, undefined as any)
+    const authentication = createPrivateKeyAuthentication(opts.publisher.privateKey)
     const factory = new MessageFactory({
         authentication,
         streamId,
@@ -165,7 +165,7 @@ export const startPublisherKeyExchangeSubscription = async (
 }
 
 export const createRandomAuthentication = (): Authentication => {
-    return createPrivateKeyAuthentication(`0x${fastPrivateKey()}`, undefined as any)
+    return createPrivateKeyAuthentication(`0x${fastPrivateKey()}`)
 }
 
 export const createStreamRegistry = (opts?: {

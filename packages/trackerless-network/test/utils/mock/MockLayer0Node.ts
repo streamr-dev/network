@@ -1,8 +1,9 @@
-import { PeerDescriptor, DataEntry, ITransport } from '@streamr/dht'
+import { PeerDescriptor, DataEntry, ITransport, TransportEvents, ConnectionsView } from '@streamr/dht'
 import { Layer0Node } from '../../../src/logic/Layer0Node'
 import { EventEmitter } from 'eventemitter3'
+import { MockConnectionsView } from './MockConnectionsView'
 
-export class MockLayer0Node extends EventEmitter implements Layer0Node {
+export class MockLayer0Node extends EventEmitter<TransportEvents> implements Layer0Node {
 
     private readonly peerDescriptor: PeerDescriptor
 
@@ -44,8 +45,8 @@ export class MockLayer0Node extends EventEmitter implements Layer0Node {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getConnections(): PeerDescriptor[] {
-        return []
+    getConnectionsView(): ConnectionsView {
+        return new MockConnectionsView()
     }
 
     // eslint-disable-next-line class-methods-use-this

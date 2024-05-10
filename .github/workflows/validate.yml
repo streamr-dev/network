@@ -48,6 +48,11 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: cdn-location
+  geoip-location:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: geoip-location
   protocol:
     needs: build
     uses: ./.github/workflows/test-setup.yml
@@ -142,6 +147,7 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: client
+      extra-log-prefix: '-browser'
       docker-services: init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
       run-entry-point: true
       run-brokers: true

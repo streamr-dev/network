@@ -38,7 +38,7 @@ describe('SortedContactList', () => {
         expect(list.getSize()).toEqual(3)
         expect(list.getClosestContacts()).toEqual([item1, item2, item3])
         expect(list.getContactIds()).toEqual([item1.getNodeId(), item2.getNodeId(), item3.getNodeId()])
-        expect(onContactRemoved).toBeCalledWith(item4, [item1, item2, item3])
+        expect(onContactRemoved).toBeCalledWith(item4)
         expect(list.getContact(item4.getNodeId())).toBeFalsy()
     })
 
@@ -63,9 +63,9 @@ describe('SortedContactList', () => {
         list.removeContact(item3.getNodeId())
         list.removeContact(createRandomDhtAddress())
         expect(list.getClosestContacts()).toEqual([item1, item4])
-        expect(onContactRemoved).toHaveBeenNthCalledWith(1, item3, [])
-        expect(onContactRemoved).toHaveBeenNthCalledWith(2, item2, [item1, item3, item4])
-        expect(onContactRemoved).toHaveBeenNthCalledWith(3, item3, [item1, item4])
+        expect(onContactRemoved).toHaveBeenNthCalledWith(1, item3)
+        expect(onContactRemoved).toHaveBeenNthCalledWith(2, item2)
+        expect(onContactRemoved).toHaveBeenNthCalledWith(3, item3)
     })
 
     it('get closest contacts', () => {

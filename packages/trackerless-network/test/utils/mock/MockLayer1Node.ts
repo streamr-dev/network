@@ -1,19 +1,37 @@
-import { PeerDescriptor } from '@streamr/dht'
+import { PeerDescriptor, RingContacts } from '@streamr/dht'
 import { EventEmitter } from 'eventemitter3'
-import { Layer1Node } from '../../../src/logic/Layer1Node'
+import { Layer1Node, Layer1NodeEvents } from '../../../src/logic/Layer1Node'
 import { createMockPeerDescriptor } from '../utils'
 
-export class MockLayer1Node extends EventEmitter implements Layer1Node {
-    
+export class MockLayer1Node extends EventEmitter<Layer1NodeEvents> implements Layer1Node {
+
     private readonly kbucketPeers: PeerDescriptor[] = []
+    private closestContacts: PeerDescriptor[] = []
+    private randomContacts: PeerDescriptor[] = []
 
     // eslint-disable-next-line class-methods-use-this
     removeContact(): void {
     }
 
-    // eslint-disable-next-line class-methods-use-this
     getClosestContacts(): PeerDescriptor[] {
-        return []
+        return this.closestContacts 
+    }
+
+    setClosestContacts(contacts: PeerDescriptor[]): void {
+        this.closestContacts = contacts
+    }
+
+    getRandomContacts(): PeerDescriptor[] {
+        return this.randomContacts 
+    }
+
+    setRandomContacts(contacts: PeerDescriptor[]): void {
+        this.randomContacts = contacts
+    }
+    
+    // eslint-disable-next-line class-methods-use-this
+    getRingContacts(): RingContacts {
+        return { left: [], right: [] }
     }
 
     getNeighbors(): PeerDescriptor[] {

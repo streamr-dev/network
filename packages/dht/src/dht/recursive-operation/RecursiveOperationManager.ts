@@ -25,16 +25,18 @@ import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationRpcLocal } from './RecursiveOperationRpcLocal'
 import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
 import { getDistance } from '../PeerManager'
+import { ConnectionsView } from '../../exports'
 
 interface RecursiveOperationManagerConfig {
     rpcCommunicator: RoutingRpcCommunicator
     sessionTransport: ITransport
-    connections: Map<DhtAddress, DhtNodeRpcRemote>
     router: Router
+    connectionsView: ConnectionsView
     localPeerDescriptor: PeerDescriptor
     serviceId: ServiceID
     localDataStore: LocalDataStore
     addContact: (contact: PeerDescriptor) => void
+    createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => DhtNodeRpcRemote
 }
 
 export interface RecursiveOperationResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
@@ -87,14 +89,14 @@ export class RecursiveOperationManager {
             targetId,
             localPeerDescriptor: this.config.localPeerDescriptor,
             // TODO use config option or named constant?
-            waitedRoutingPathCompletions: this.config.connections.size > 1 ? 2 : 1,
+            waitedRoutingPathCompletions: this.config.connectionsView.getConnectionCount() > 1 ? 2 : 1,
             operation,
             // TODO would it make sense to give excludedPeer as one of the fields RecursiveOperationSession?
             doRouteRequest: (routedMessage: RouteMessageWrapper) => {
                 return this.doRouteRequest(routedMessage, excludedPeer)
             }
         })
-        if (this.config.connections.size === 0) {
+        if (this.config.connectionsView.getConnectionCount() === 0) {
             const dataEntries = Array.from(this.config.localDataStore.values(targetId))
             session.onResponseReceived(
                 getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor),
@@ -140,7 +142,7 @@ export class RecursiveOperationManager {
         routingPath: PeerDescriptor[],
         targetPeerDescriptor: PeerDescriptor,
         serviceId: ServiceID,
-        closestNodes: PeerDescriptor[],
+        closestConnectedNodes: PeerDescriptor[],
         dataEntries: DataEntry[],
         noCloserNodesFound: boolean = false
     ): void {
@@ -150,7 +152,7 @@ export class RecursiveOperationManager {
                 .onResponseReceived(
                     getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor),
                     routingPath,
-                    closestNodes,
+                    closestConnectedNodes,
                     dataEntries,
                     noCloserNodesFound
                 )
@@ -165,7 +167,7 @@ export class RecursiveOperationManager {
                 // TODO use config option or named constant?
                 10000
             )
-            rpcRemote.sendResponse(routingPath, closestNodes, dataEntries, noCloserNodesFound)
+            rpcRemote.sendResponse(routingPath, closestConnectedNodes, dataEntries, noCloserNodesFound)
             remoteCommunicator.destroy()
         }
     }
@@ -177,7 +179,7 @@ export class RecursiveOperationManager {
         const targetId = getDhtAddressFromRaw(routedMessage.target)
         const request = (routedMessage.message!.body as { recursiveOperationRequest: RecursiveOperationRequest }).recursiveOperationRequest
         // TODO use config option or named constant?
-        const closestPeersToDestination = this.getClosestConnections(targetId, 5)
+        const closestConnectedNodes = this.getClosestConnectedNodes(targetId, 5)
         const dataEntries = (request.operation === RecursiveOperation.FETCH_DATA) 
             ? Array.from(this.config.localDataStore.values(targetId))
             : []
@@ -190,7 +192,7 @@ export class RecursiveOperationManager {
                 routedMessage.routingPath,
                 routedMessage.sourcePeer!,
                 request.sessionId,
-                closestPeersToDestination,
+                closestConnectedNodes,
                 dataEntries,
                 true
             )
@@ -200,15 +202,15 @@ export class RecursiveOperationManager {
             if ((ack.error === undefined) || (ack.error === RouteMessageError.NO_TARGETS)) {
                 const noCloserContactsFound = (ack.error === RouteMessageError.NO_TARGETS) ||
                     (
-                        closestPeersToDestination.length > 0 
+                        closestConnectedNodes.length > 0 
                         && getPreviousPeer(routedMessage) 
-                        && !this.isPeerCloserToIdThanSelf(closestPeersToDestination[0], targetId)
+                        && !this.isPeerCloserToIdThanSelf(closestConnectedNodes[0], targetId)
                     )
                 this.sendResponse(
                     routedMessage.routingPath,
                     routedMessage.sourcePeer!,
                     request.sessionId,
-                    closestPeersToDestination,
+                    closestConnectedNodes,
                     dataEntries,
                     noCloserContactsFound
                 )
@@ -217,15 +219,15 @@ export class RecursiveOperationManager {
         }    
     }
 
-    private getClosestConnections(referenceId: DhtAddress, limit: number): PeerDescriptor[] {
-        const connectedPeers = Array.from(this.config.connections.values())
-        const closestPeers = new SortedContactList<DhtNodeRpcRemote>({
+    private getClosestConnectedNodes(referenceId: DhtAddress, limit: number): PeerDescriptor[] {
+        const connectedNodes = this.config.connectionsView.getConnections().map((c) => this.config.createDhtNodeRpcRemote(c))
+        const sorted = new SortedContactList<DhtNodeRpcRemote>({
             referenceId,
             maxSize: limit,
             allowToContainReferenceId: true
         })
-        closestPeers.addContacts(connectedPeers)
-        return closestPeers.getClosestContacts(limit).map((peer) => peer.getPeerDescriptor())
+        sorted.addContacts(connectedNodes)
+        return sorted.getClosestContacts(limit).map((peer) => peer.getPeerDescriptor())
     }
 
     private isPeerCloserToIdThanSelf(peer: PeerDescriptor, nodeIdOrDataKey: DhtAddress): boolean {

@@ -21,6 +21,9 @@ on:
         required: false
         type: boolean
         default: false
+      extra-log-prefix:
+        required: false
+        type: string
 
 jobs:
   test:
@@ -31,6 +34,9 @@ jobs:
         uses: ./.github/workflows/reusable/cached-build
       - run: npm run check
         working-directory: 'packages/${{ inputs.package }}'
+      - name: install docker compose # TODO: this step probably belongs to streamr-docker-dev-action
+        if: ${{ inputs.docker-services != '' }}
+        run: sudo apt-get install -y docker-compose
       - name: start docker services
         if: ${{ inputs.docker-services != '' }}
         uses: streamr-dev/streamr-docker-dev-action@v1.0.1
@@ -49,4 +55,4 @@ jobs:
         if: success() || failure()
         uses: ./.github/workflows/reusable/collect-and-upload-logs
         with:
-          artifact_prefix: ${{ inputs.package }}
+          artifact_prefix: "${{ inputs.package }}${{inputs.extra-log-prefix }}"

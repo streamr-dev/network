@@ -38,7 +38,7 @@ describe('gap fill', () => {
             }
         })
         stream = await createTestStream(publisher, module)
-        const authentication = createPrivateKeyAuthentication(publisherWallet.privateKey, undefined as any)
+        const authentication = createPrivateKeyAuthentication(publisherWallet.privateKey)
         messageFactory = new MessageFactory({
             authentication,
             streamId: stream.id,

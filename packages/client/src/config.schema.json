@@ -9,7 +9,7 @@
             "type": "string",
             "enum": [
                 "polygon",
-                "mumbai",
+                "polygonAmoy",
                 "dev2"
             ],
             "description": "applies all environment-specific defaults for the given environment"
@@ -251,6 +251,9 @@
                         "autoCertifierConfigFile": {
                             "type": "string",
                             "default": "~/.streamr/certificate.json"
+                        },
+                        "geoIpDatabaseFolder": {
+                            "type": "string"
                         }
                     },
                     "default": {}
@@ -454,6 +457,10 @@
                         }
                     },
                     "default": {}
+                },
+                "jsonRpcTimeout": {
+                    "type": "number",
+                    "default": 15000
                 }
             },
             "default": {}
