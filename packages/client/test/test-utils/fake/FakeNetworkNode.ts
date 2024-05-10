@@ -1,6 +1,6 @@
 import { DhtAddress, PeerDescriptor, getDhtAddressFromRaw } from '@streamr/dht'
-import { ProxyDirection, StreamMessage, StreamPartID } from '@streamr/protocol'
-import { NetworkOptions } from '@streamr/trackerless-network'
+import { StreamMessage, StreamPartID } from '@streamr/protocol'
+import { NetworkOptions, ProxyDirection } from '@streamr/trackerless-network'
 import { EthereumAddress, MetricsContext } from '@streamr/utils'
 import crypto from 'crypto'
 import pull from 'lodash/pull'
