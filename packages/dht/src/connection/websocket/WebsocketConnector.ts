@@ -175,7 +175,7 @@ export class WebsocketConnector {
         }
     }
 
-    public async checkConnectivity(selfSigned: boolean): Promise<ConnectivityResponse> {
+    public async checkConnectivity(allowSelfSignedCertificate: boolean): Promise<ConnectivityResponse> {
         // TODO: this could throw?
         if (this.abortController.signal.aborted) {
             return {
@@ -209,7 +209,7 @@ export class WebsocketConnector {
                     port: this.selectedPort ?? DISABLE_CONNECTIVITY_PROBE,
                     host: this.host,
                     tls: this.websocketServer ? this.config.serverEnableTls : false,
-                    selfSigned
+                    allowSelfSignedCertificate
                 }
                 if (!this.abortController.signal.aborted) {
                     return await sendConnectivityRequest(connectivityRequest, entryPoint)
@@ -267,7 +267,7 @@ export class WebsocketConnector {
             socket.on('disconnected', delFunc)
             managedConnection.on('handshakeCompleted', delFunc)
 
-            socket.connect(url)
+            socket.connect(url, false)
 
             return managedConnection
         }

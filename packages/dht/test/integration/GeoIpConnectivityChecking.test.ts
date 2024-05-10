@@ -61,7 +61,7 @@ describe('ConnectivityChecking', () => {
             host: HOST,
             port: PORT,
             tls: false,
-            selfSigned: false
+            allowSelfSignedCertificate: false
         }
         const response = await sendConnectivityRequest(request, server.getLocalPeerDescriptor())
         expect(response.version).toEqual(LOCAL_PROTOCOL_VERSION)

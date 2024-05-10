@@ -19,13 +19,14 @@ import {
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
 import { ProxyDirection, StreamMessage, StreamPartitionInfo } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { EntryPointDiscovery, NETWORK_SPLIT_AVOIDANCE_LIMIT } from './EntryPointDiscovery'
+import { ENTRYPOINT_STORE_LIMIT, EntryPointDiscovery } from './EntryPointDiscovery'
 import { Layer0Node } from './Layer0Node'
 import { Layer1Node } from './Layer1Node'
 import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
 import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode'
 import { ProxyClient } from './proxy/ProxyClient'
 import { StreamPartReconnect } from './StreamPartReconnect'
+import { MIN_NEIGHBOR_COUNT as NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT, StreamPartNetworkSplitAvoidance } from './StreamPartNetworkSplitAvoidance'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void
@@ -35,6 +36,7 @@ export type StreamPartDelivery = {
     layer1Node: Layer1Node
     node: ContentDeliveryLayerNode
     entryPointDiscovery: EntryPointDiscovery
+    networkSplitAvoidance: StreamPartNetworkSplitAvoidance
 } | {
     proxied: true
     client: ProxyClient
@@ -137,10 +139,13 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         const entryPointDiscovery = new EntryPointDiscovery({
             streamPartId,
             localPeerDescriptor: this.getPeerDescriptor(),
-            layer1Node,
             fetchEntryPointData: (key) => this.layer0Node!.fetchDataFromDht(key),
             storeEntryPointData: (key, data) => this.layer0Node!.storeDataToDht(key, data),
             deleteEntryPointData: async (key) => this.layer0Node!.deleteDataFromDht(key, false)
+        })
+        const networkSplitAvoidance = new StreamPartNetworkSplitAvoidance({
+            layer1Node,
+            discoverEntryPoints: async () => entryPointDiscovery.discoverEntryPoints()
         })
         const node = this.createContentDeliveryLayerNode(
             streamPartId,
@@ -153,9 +158,11 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             layer1Node,
             node,
             entryPointDiscovery,
+            networkSplitAvoidance,
             broadcast: (msg: StreamMessage) => node.broadcast(msg),
             stop: async () => {
                 streamPartReconnect.destroy()
+                networkSplitAvoidance.destroy()
                 await entryPointDiscovery.destroy()
                 node.stop()
                 await layer1Node.stop()
@@ -169,11 +176,13 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             if (this.destroyed || entryPointDiscovery.isLocalNodeEntryPoint() || this.knownStreamPartEntryPoints.has(streamPartId)) {
                 return
             }
-            const entryPoints = await entryPointDiscovery.discoverEntryPointsFromDht(0)
-            await entryPointDiscovery.storeSelfAsEntryPointIfNecessary(entryPoints.discoveredEntryPoints.length)
+            const entryPoints = await entryPointDiscovery.discoverEntryPoints()
+            if (entryPoints.length < ENTRYPOINT_STORE_LIMIT) {
+                await entryPointDiscovery.storeAndKeepLocalNodeAsEntryPoint()
+            }
         }
         layer1Node.on('manualRejoinRequired', async () => {
-            if (!streamPartReconnect.isRunning() && !entryPointDiscovery.isNetworkSplitAvoidanceRunning()) {
+            if (!streamPartReconnect.isRunning() && !networkSplitAvoidance.isRunning()) {
                 logger.debug('Manual rejoin required for stream part', { streamPartId })
                 await streamPartReconnect.reconnect()
             }
@@ -197,17 +206,24 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         }
         await streamPart.layer1Node.start()
         await streamPart.node.start()
-        let entryPoints = this.knownStreamPartEntryPoints.get(streamPartId) ?? []
-        const discoveryResult = await entryPointDiscovery.discoverEntryPointsFromDht(
-            entryPoints.length
-        )
-        entryPoints = entryPoints.concat(discoveryResult.discoveredEntryPoints)
-        await Promise.all([
-            streamPart.layer1Node.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_LIMIT)),
-            streamPart.layer1Node.joinRing()
-        ])
-        if (discoveryResult.entryPointsFromDht) {
-            await entryPointDiscovery.storeSelfAsEntryPointIfNecessary(entryPoints.length)
+        const knownEntryPoints = this.knownStreamPartEntryPoints.get(streamPartId)
+        if (knownEntryPoints !== undefined) {
+            await Promise.all([
+                streamPart.layer1Node.joinDht(knownEntryPoints),
+                streamPart.layer1Node.joinRing()
+            ])
+        } else {
+            const entryPoints = await entryPointDiscovery.discoverEntryPoints()
+            await Promise.all([
+                streamPart.layer1Node.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT)),
+                streamPart.layer1Node.joinRing()
+            ])
+            if (entryPoints.length < ENTRYPOINT_STORE_LIMIT) {
+                await entryPointDiscovery.storeAndKeepLocalNodeAsEntryPoint()
+                if (streamPart.layer1Node.getNeighborCount() < NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT) {
+                    setImmediate(() => streamPart.networkSplitAvoidance.avoidNetworkSplit())
+                }
+            }
         }
     }
 

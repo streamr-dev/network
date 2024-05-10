@@ -1,5 +1,5 @@
 import { PeerDescriptor } from '@streamr/dht'
-import { EntryPointDiscovery, FindEntryPointsResult } from '../../../src/logic/EntryPointDiscovery'
+import { EntryPointDiscovery } from '../../../src/logic/EntryPointDiscovery'
 
 export const createFakeEntryPointDiscovery = (): EntryPointDiscovery => {
     return new FakeEntryPointDiscovery() as unknown as EntryPointDiscovery
@@ -13,15 +13,12 @@ class FakeEntryPointDiscovery {
         this.entryPoints = nodes
     } 
 
-    async discoverEntryPointsFromDht(): Promise<FindEntryPointsResult> {
-        return {
-            entryPointsFromDht: true,
-            discoveredEntryPoints: this.entryPoints
-        }
+    async discoverEntryPoints(): Promise<PeerDescriptor[]> {
+        return this.entryPoints
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async storeSelfAsEntryPointIfNecessary(): Promise<void> {
+    async storeAndKeepLocalNodeAsEntryPoint(): Promise<void> {
     }
 
     // eslint-disable-next-line class-methods-use-this
