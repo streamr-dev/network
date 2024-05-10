@@ -22,10 +22,6 @@ const {
 
 const provider = new JsonRpcProvider(rpcUrl)
 
-async function sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
 describe('AutoNonceWallet', () => {
     it('should not get nonce conflicts when sending many transactions rapidly', async () => {
         const wallet = new AutoNonceWallet(await fetchPrivateKeyWithGas(), provider)
@@ -57,11 +53,9 @@ describe('AutoNonceWallet', () => {
         // uses nonce X
         const tx1 = await streamRegistry1.createStream(`/test1_1-${Date.now()}`, JSON.stringify({ partitions: 2, description: 'foo' }))
         await tx1.wait()
-        await sleep(100)
         // uses nonce X + 1
         const tx2 = await streamRegistry2.createStream(`/test2_1-${Date.now()}`, JSON.stringify({ partitions: 2, description: 'foo' }))
         await tx2.wait()
-        await sleep(100)
         // tries to re-use nonce X + 1
         const tx1_2 = await streamRegistry1.createStream(`/test1_2-${Date.now()}`, JSON.stringify({ partitions: 2, description: 'foo' }))
         await tx1_2.wait()

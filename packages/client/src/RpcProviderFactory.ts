@@ -25,7 +25,10 @@ export class RpcProviderFactory {
                     chainId: this.config.contracts.streamRegistryChainRPCs?.chainId,
                     name: this.config.contracts.streamRegistryChainRPCs?.name
 
-                }, { staticNetwork: true })
+                }, {
+                    staticNetwork: true,
+                    batchMaxCount: 1,
+                })
                 if (pollInterval !== undefined) {
                     provider.pollingInterval = pollInterval
                 }

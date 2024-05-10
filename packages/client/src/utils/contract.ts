@@ -81,7 +81,6 @@ const withErrorHandling = async <T>(
         )
         // @ts-expect-error unknown property
         wrappedError.reason = e
-        console.log(e)
         throw wrappedError
     }
 }
