@@ -24,8 +24,10 @@ export class RpcProviderFactory {
                 const provider = new LoggingJsonRpcProvider(fetchRequest, {
                     chainId: this.config.contracts.streamRegistryChainRPCs?.chainId,
                     name: this.config.contracts.streamRegistryChainRPCs?.name
-
-                }, { staticNetwork: true })
+                }, {
+                    staticNetwork: true,
+                    batchMaxCount: 1 // TODO! enable this only for test (if fixes nonce issues there with streamr-docker-dev fastchain  )
+                })
                 if (pollInterval !== undefined) {
                     provider.pollingInterval = pollInterval
                 }
