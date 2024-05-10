@@ -123,7 +123,7 @@ export class StreamRegistry {
             transformation: (streamId: string, metadata: string, extra: any) => ({
                 streamId: toStreamID(streamId),
                 metadata: Stream.parseMetadata(metadata),
-                blockNumber: extra.blockNumber
+                blockNumber: extra.log.blockNumber
             }),
             loggerFactory
         })
