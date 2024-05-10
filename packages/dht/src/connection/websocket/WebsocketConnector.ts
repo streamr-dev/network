@@ -30,6 +30,7 @@ import * as Err from '../../helpers/errors'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { LOCAL_PROTOCOL_VERSION, isMaybeSupportedVersion } from '../../helpers/version'
+import { GeoIpLocator } from '@streamr/geoip-location'
 
 const logger = new Logger(module)
 
@@ -53,6 +54,7 @@ export interface WebsocketConnectorConfig {
     autoCertifierUrl: string
     autoCertifierConfigFile: string
     serverEnableTls: boolean
+    geoIpDatabaseFolder?: string
 }
 
 export class WebsocketConnector {
@@ -60,6 +62,7 @@ export class WebsocketConnector {
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly websocketServer?: WebsocketServer
+    private geoIpLocator?: GeoIpLocator
     private readonly ongoingConnectRequests: Map<DhtAddress, ManagedConnection> = new Map()
     private host?: string
     private autoCertifierClient?: AutoCertifierClientFacade
@@ -138,9 +141,9 @@ export class WebsocketConnector {
                 const serverSocket = connection as unknown as WebsocketServerConnection
                 const query = queryString.parse(serverSocket.resourceURL.query as string ?? '')
                 const action = query.action as (Action | undefined)
-                logger.trace('WebSocket client connected', { action, remoteAddress: serverSocket.remoteIpAddress })
+                logger.trace('WebSocket client connected', { action, remoteAddress: serverSocket.getRemoteIpAddress() })
                 if (action === 'connectivityRequest') {
-                    attachConnectivityRequestHandler(serverSocket)
+                    attachConnectivityRequestHandler(serverSocket, this.geoIpLocator)
                 } else if (action === 'connectivityProbe') {
                     // no-op
                 } else {
@@ -156,12 +159,23 @@ export class WebsocketConnector {
                     }
                 }
             })
+            
+            if (this.config.geoIpDatabaseFolder) {
+                const geoIpLocator = new GeoIpLocator(this.config.geoIpDatabaseFolder)
+                try {
+                    await geoIpLocator.start()
+                    this.geoIpLocator = geoIpLocator
+                } catch (err) {
+                    logger.error('Failed to start GeoIpLocator', { err })
+                }
+            }
+
             const port = await this.websocketServer.start()
             this.selectedPort = port
         }
     }
 
-    public async checkConnectivity(selfSigned: boolean): Promise<ConnectivityResponse> {
+    public async checkConnectivity(allowSelfSignedCertificate: boolean): Promise<ConnectivityResponse> {
         // TODO: this could throw?
         if (this.abortController.signal.aborted) {
             return {
@@ -176,9 +190,9 @@ export class WebsocketConnector {
             return {
                 host: this.host!,
                 natType: NatType.OPEN_INTERNET,
-                websocket: { 
-                    host: this.host!, 
-                    port: this.selectedPort!, 
+                websocket: {
+                    host: this.host!,
+                    port: this.selectedPort!,
                     tls: this.config.tlsCertificate !== undefined
                 },
                 // TODO: Resolve the given host name or or use as is if IP was given. 
@@ -195,7 +209,7 @@ export class WebsocketConnector {
                     port: this.selectedPort ?? DISABLE_CONNECTIVITY_PROBE,
                     host: this.host,
                     tls: this.websocketServer ? this.config.serverEnableTls : false,
-                    selfSigned
+                    allowSelfSignedCertificate
                 }
                 if (!this.abortController.signal.aborted) {
                     return await sendConnectivityRequest(connectivityRequest, entryPoint)
@@ -253,7 +267,7 @@ export class WebsocketConnector {
             socket.on('disconnected', delFunc)
             managedConnection.on('handshakeCompleted', delFunc)
 
-            socket.connect(url)
+            socket.connect(url, false)
 
             return managedConnection
         }
@@ -342,5 +356,6 @@ export class WebsocketConnector {
         const attempts = Array.from(this.connectingConnections.values())
         await Promise.allSettled(attempts.map((conn) => conn.close(false)))
         await this.websocketServer?.stop()
+        await this.geoIpLocator?.stop()
     }
 }

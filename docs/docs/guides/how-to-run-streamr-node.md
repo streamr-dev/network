@@ -5,8 +5,6 @@ sidebar_position: 5
 # How to run a Streamr node
 
 :::info
-These instructions are for running a Streamr node in the "1.0" Network. If you're looking for instructions on running a Streamr node in the Brubeck network, [go here](../streamr-network/brubeck-network/run-a-node.md).
-
 For those looking to earn, running a node is part of becoming an earning Operator. If that's new to you, then visit the [Become an Operator Guide](./become-an-operator.md)
 :::
 

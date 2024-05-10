@@ -15,7 +15,7 @@ const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport:
     return new ConnectionManager({
         createConnectorFacade: () => new DefaultConnectorFacade({
             transport,
-            createLocalPeerDescriptor: () => localPeerDescriptor
+            createLocalPeerDescriptor: async () => localPeerDescriptor
         }),
         metricsContext: new MetricsContext()
     })

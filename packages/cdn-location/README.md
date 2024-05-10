@@ -32,7 +32,7 @@ import { getLocalRegion, getLocalAirportCode } from '@streamr/cdn-location'
     // If the the local aiport code cannot be fetched from 
     // the CDN services, returns a random region number ending 
     // with '99' that is within the range of the 
-    // region numbers in the file airportCodeToRegionNumber.ts.  
+    // region numbers in the file airportCodeToRegion.ts.  
     
     const regionNumber: number = await getLocalRegion()
     
@@ -49,8 +49,8 @@ import { getLocalRegion, getLocalAirportCode } from '@streamr/cdn-location'
 
 **The following information is meant for advanced users who wish to re-generate the data files used by the package. If you are not interested in re-generating the data files, you can skip this section.**
 
-The data file [src/airportCodeToRegionNumber.ts](./src/airportCodeToRegionNumber.ts) contains a mapping between IATA airport codes and numeric region IDs. 
-The region numbers are chosen according to a solution to the travelling salesman problem (TSP) of finding the shortest paths between the IATA airports and clustering the result by country. The file [src/airportCodeToRegionNumber.ts](./src/airportCodeToRegionNumber.ts) is generated using the data and code found in __data-generation folder__.
+The data file [src/airportCodeToRegion.ts](./src/airportCodeToRegion.ts) contains a mapping between IATA airport codes and numeric region IDs. 
+The region numbers are chosen according to a solution to the travelling salesman problem (TSP) of finding the shortest paths between the IATA airports and clustering the result by country. The file [src/airportCodeToRegion.ts](./src/airportCodeToRegion.ts) is generated using the data and code found in __data-generation folder__.
 
 The data generation is done in three steps:
 
@@ -122,9 +122,9 @@ Inputs:
         This file contains the shortest path between the airports in the coordinates.csv file (indexing starts with 1). You need to generate this file by running a TSP solver. 
 
 Outputs:
-- __final-data/airportCodeToRegionNumber.ts__
+- __final-data/airportCodeToRegion.ts__
         **This is the final output of the data generation.** The file contains the mapping between IATA airport codes and numeric region numbers. The region numbers are chosen according to a solution to the travelling salesman problem (TSP) of finding the shortest paths between the IATA airports and by clustering the solution by country. __This file is automatically copied to the src/ folder of the package by the script, and will overwrite any previous version of the file.__ 
 - __intermediate-files/airportsWithShortestPath.csv__ 
-        This is a human-readable rendering of the final-data/airportCodeToRegionNumber.ts file that can be used for checkig the feasibility of the 
-        generated final-data/airportCodeToRegionNumber.ts data file. It contains the IATA code, the region number and the coordinates, continent and country code of the airports. 
+        This is a human-readable rendering of the final-data/airportCodeToRegion.ts file that can be used for checkig the feasibility of the 
+        generated final-data/airportCodeToRegion.ts data file. It contains the IATA code, the region number and the coordinates, continent and country code of the airports. 
 
