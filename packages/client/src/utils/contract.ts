@@ -13,6 +13,7 @@ import { InternalEvents, StreamrClientEventEmitter, StreamrClientEvents } from '
 import { LoggerFactory } from './LoggerFactory'
 import { tryInSequence } from './promises'
 import { FunctionFragment } from 'ethers'
+import { AutoNonceWallet } from './AutoNonceWallet'
 import type { TransactionResponse } from 'ethers'
 
 export interface ContractEvent {
@@ -85,35 +86,38 @@ const withErrorHandling = async <T>(
 }
 
 const createWrappedContractMethod = (
-    originalMethod: (...args: any) => Promise<any>,
+    contract: Contract,
+    contractName: string,
     methodName: string,
     eventEmitter: EventEmitter<ContractEvent>,
     concurrencyLimit: pLimit.Limit
 ) => {
+    const originalMethod = contract[methodName]
+    const methodFullName = `${contractName}.${methodName}`
     return async (...args: any) => {
         const returnValue = await withErrorHandling(() => concurrencyLimit(() => {
-            eventEmitter.emit('onMethodExecute', methodName)
+            eventEmitter.emit('onMethodExecute', methodFullName)
             return originalMethod(...args)
-        }), methodName, 'executing')
+        }), methodFullName, 'executing')
         if (isTransactionResponse(returnValue)) {
-            eventEmitter.emit('onTransactionSubmit', methodName, returnValue)
-            return {
-                ...returnValue,
-                wait: async (confirmations?: number, timeout?: number): Promise<null | ContractTransactionReceipt> => {
-                    const receipt = await withErrorHandling(() => returnValue.wait(confirmations, timeout), methodName, 'waiting transaction for')
-                    eventEmitter.emit('onTransactionConfirm', methodName, receipt)
-                    return receipt
+            eventEmitter.emit('onTransactionSubmit', methodFullName, returnValue)
+            const originalWait = returnValue.wait.bind(returnValue)
+            returnValue.wait = async (confirmations?: number, timeout?: number): Promise<null | ContractTransactionReceipt> => {
+                const receipt = await withErrorHandling(() => originalWait(confirmations, timeout), methodName, 'waiting transaction for')
+                eventEmitter.emit('onTransactionConfirm', methodFullName, receipt)
+                if (contract.runner instanceof AutoNonceWallet) {
+                    contract.runner.onTransactionConfirm()
                 }
+                return receipt
             }
-        } else {
-            return returnValue
         }
+        return returnValue
     }
 }
 
 /**
  * Adds error handling, logging and limits concurrency.
- * 
+ *
  * You can use the decorated contract normally, e.g.:
  *     const tx = await contract.createFoobar(123)
  *     return await tx.wait()
@@ -148,8 +152,9 @@ export const createDecoratedContract = <T extends BaseContract>(
     const methodNames = contract['interface'].fragments.filter((f) => FunctionFragment.isFunction(f)).map((f) => (f as FunctionFragment).name)
     methodNames.forEach((methodName) => {
         decoratedContract[methodName] = createWrappedContractMethod(
-            contract[methodName],
-            `${contractName}.${methodName}`,
+            contract,
+            contractName,
+            methodName,
             eventEmitter,
             concurrencyLimit
         )

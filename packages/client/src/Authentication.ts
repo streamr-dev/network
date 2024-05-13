@@ -6,6 +6,7 @@ import pMemoize from 'p-memoize'
 import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'
 import { pLimitFn } from './utils/promises'
 import { RpcProviderFactory } from './RpcProviderFactory'
+import { AutoNonceWallet } from './utils/AutoNonceWallet'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 
@@ -25,7 +26,7 @@ export const createPrivateKeyAuthentication = (key: string): Authentication => {
         createMessageSignature: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
         getStreamRegistryChainSigner: async (rpcProviderFactory: RpcProviderFactory) => {
             const primaryProvider = rpcProviderFactory.getPrimaryProvider()
-            return new Wallet(key, primaryProvider) as SignerWithProvider
+            return new AutoNonceWallet(key, primaryProvider) as SignerWithProvider
         }
     }
 }
