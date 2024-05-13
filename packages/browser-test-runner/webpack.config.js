@@ -10,7 +10,7 @@ module.exports = function({ entry, libraryName, alias = {} }) {
             },
             mode: 'development',
             entry,
-            devtool: 'source-map',
+            devtool: 'eval-source-map',
             module: {
                 rules: [
                     {
@@ -18,7 +18,7 @@ module.exports = function({ entry, libraryName, alias = {} }) {
                         exclude: /(node_modules|simulation)/,
                         use: [{
                             loader: 'ts-loader',
-                            options: { configFile: 'tsconfig.browser.json' },
+                            options: { configFile: 'tsconfig.browser.json', transpileOnly: true },
                         }]
                     }
                 ],
@@ -41,7 +41,7 @@ module.exports = function({ entry, libraryName, alias = {} }) {
                 }),
             ],
             resolve: {
-                extensions: ['.ts', '.js'],
+                extensions: ['.cts', '.ts', '.cjs', '.js'],
                 alias: {
                     'process': 'process/browser',
                     ...alias
@@ -67,13 +67,11 @@ module.exports = function({ entry, libraryName, alias = {} }) {
                 umdNamedDefine: true,
             },
             externals: {
-                'geoip-lite': 'commonjs geoip-lite',
-                'node-datachannel': 'commonjs node-datachannel',
                 'http': 'HTTP',
                 'https': 'HTTPS',
                 'express': 'Express',
                 'process': 'process',
-                'ws': 'WebSocket',
+                'node-datachannel': 'NodeDataChannel',
                 'querystring': 'QueryString',
             }
         }

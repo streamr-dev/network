@@ -48,6 +48,7 @@ module.exports = function(testPaths, webpackConfig, localDirectory) {
             client: {
                 clearContext: false, // leave Jasmine Spec Runner output visible in browser
                 useIframe: false,
+                runInParent: true
             },
             singleRun: !DEBUG_MODE,   //set to false to leave electron window open
             webpack: {

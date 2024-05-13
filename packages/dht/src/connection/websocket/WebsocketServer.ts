@@ -2,7 +2,7 @@ import EventEmitter from 'eventemitter3'
 //import WebSocket from 'ws'
 import { WebsocketServerConnection } from './WebsocketServerConnection'
 import { ConnectionSourceEvents } from '../IConnectionSource'
-import { Logger, wait } from '@streamr/utils'
+import { Logger } from '@streamr/utils'
 import { createSelfSignedCertificate } from '@streamr/autocertifier-client'
 import { WebsocketServerStartError } from '../../helpers/errors'
 import { PortRange, TlsCertificate } from '../ConnectionManager'
@@ -10,7 +10,7 @@ import { range } from 'lodash'
 import fs from 'fs'
 import { v4 as uuid } from 'uuid'
 import { parse } from 'url'
-import { WebSocketServer, WebSocket, WebSocketServerConfiguration } from 'node-datachannel'
+import NodeDataChannel from 'node-datachannel'
 
 const logger = new Logger(module)
 
@@ -26,10 +26,11 @@ interface Certs {
     key: string
 }
 
+//NodeDataChannel.initLogger('Verbose')
 export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
 
     //private httpServer?: HttpServer | HttpsServer
-    private wsServer?: WebSocketServer
+    private wsServer?: NodeDataChannel.WebSocketServer
     private readonly abortController = new AbortController()
     private readonly config: WebsocketServerConfig
 
@@ -51,7 +52,7 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
             try {
                 //await asAbortable(this.startServer(port, this.config.enableTls), this.abortController.signal)
                 this.startServer(port, this.config.enableTls)
-                await wait(1000)
+                //await wait(1000)
                 return port
             } catch (err) {
                 if (typeof err.originalError?.message === 'string' &&
@@ -59,7 +60,6 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
                         .includes('TCP server socket binding failed')) {
                     logger.warn(`failed to start WebSocket server on port: ${port} reattempting on next port`)
                 } else {
-                    console.error(err.originalError?.message)
                     throw new WebsocketServerStartError(err)
                 }
             }
@@ -86,7 +86,7 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
         connectionTimeout?: number; // milliseconds
         maxMessageSize?: number;
         */
-        const webSocketServerConfiguration: WebSocketServerConfiguration = {
+        const webSocketServerConfiguration: NodeDataChannel.WebSocketServerConfiguration = {
             port,
             enableTls: tls,
             bindAddress: '0.0.0.0',
@@ -106,32 +106,27 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
         }
 
         try {
-            this.wsServer = new WebSocketServer(webSocketServerConfiguration)
+            logger.trace('Starting WebSocket server on port ' + port)
+            this.wsServer = new NodeDataChannel.WebSocketServer(webSocketServerConfiguration)
         } catch (err) {
-            //console.error(err)
             throw (new WebsocketServerStartError('Starting Websocket server failed', err))
         }
-        this.wsServer.onClient(async (ws: WebSocket) => {
-
+        logger.trace('WebSocket server started on port ' + port)
+        this.wsServer.onClient((ws: NodeDataChannel.WebSocket) => { 
             if (ws.path() == undefined || ws.remoteAddress() == undefined) {
                 
                 ws.onOpen(() => {
-                    console.warn('delayed onOpen() called on serverSocket')
                     if (ws.path() == undefined || ws.remoteAddress() == undefined) {
                         return 
                     }
                     const parsedUrl = parse(ws.path()!)
-                    console.warn('remoteAddress: ' + ws.remoteAddress()!)
                     this.emit('connected', new WebsocketServerConnection(ws, parsedUrl, ws.remoteAddress()!.split(':')[0]))
                 })
                 ws.onClosed(() => {
-                    console.warn('delayed onClosed() called on serverSocket')
                     ws.forceClose()
                 })
                 ws.onError((error: string) => {
-                    console.warn('delayed onError() called on serverSocket ' + error)
-                    //ws.forceClose()
-                    //this.emit('error', error)
+                    logger.trace('WebSocket Client error: ' + error)
                 })
             } else {
                 const parsedUrl = parse(ws.path()!)
@@ -205,10 +200,12 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
     }
 
     private stopServer(): void {
+        logger.trace('Stopping WebSocket server')
         this.wsServer?.stop()
     }
 
     public updateCertificate(cert: string, key: string): void {
+        logger.trace('Updating WebSocket server certificate')
         this.stopServer()
         this.startServer(this.port!, this.tls!, { cert, key })
         /*
@@ -220,6 +217,7 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
     }
 
     public async stop(): Promise<void> {
+        logger.trace('WebSocketServet::stop()')
         this.abortController.abort()
         this.removeAllListeners()
         this.stopServer()
