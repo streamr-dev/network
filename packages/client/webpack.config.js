@@ -27,7 +27,7 @@ module.exports = (env, argv) => {
         entry: {
             'streamr-sdk': path.join(__dirname, 'src', 'exports-browser.ts'),
         },
-        devtool: 'source-map',
+        devtool: 'eval-source-map',
         output: {
             umdNamedDefine: true,
         },
@@ -159,7 +159,8 @@ module.exports = (env, argv) => {
         externals: {
             'express': 'Express',
             'node:stream/web': 'stream/web',
-            'node:timers/promises': 'timers/promises'
+            'node:timers/promises': 'timers/promises',
+            'node-datachannel': 'NodeDataChannel'
         }
     })
 
