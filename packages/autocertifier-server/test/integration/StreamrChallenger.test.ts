@@ -27,7 +27,7 @@ describe('StreamrChallenger', () => {
         websocket: {
             host: '127.0.0.1',
             port: 12323,
-            tls: false
+            tls: true
         }
     }
     const sessionId = 'sessionId'

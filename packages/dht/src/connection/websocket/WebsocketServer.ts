@@ -88,11 +88,14 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
         */
         const webSocketServerConfiguration: NodeDataChannel.WebSocketServerConfiguration = {
             port,
-            enableTls: tls,
+            enableTls: false,
             bindAddress: '0.0.0.0',
             maxMessageSize: this.config.maxMessageSize ?? 1048576
         }
 
+        if (certs || this.config.tlsCertificate || tls) {
+            webSocketServerConfiguration.enableTls = true
+        }
         if (certs) {
             webSocketServerConfiguration.certificatePemFile = certs.cert
             webSocketServerConfiguration.keyPemFile = certs.key
