@@ -1,5 +1,4 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { getLocalRegion } from '@streamr/cdn-location'
 import {
     Logger,
     MetricsContext,
@@ -53,6 +52,7 @@ import { Router } from './routing/Router'
 import { LocalDataStore } from './store/LocalDataStore'
 import { StoreManager } from './store/StoreManager'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
+import { getLocalRegionByCoordinates, getLocalRegionWithCache } from '@streamr/cdn-location'
 
 export interface DhtNodeEvents {
     nearbyContactAdded: (peerDescriptor: PeerDescriptor) => void
@@ -77,7 +77,6 @@ export interface DhtNodeOptions {
     storeMaxTtl?: number
     networkConnectivityTimeout?: number
     storageRedundancyFactor?: number
-    region?: number
     periodicallyPingNeighbors?: boolean
     periodicallyPingRingContacts?: boolean
 
@@ -90,6 +89,7 @@ export interface DhtNodeOptions {
     websocketPortRange?: PortRange
     websocketServerEnableTls?: boolean
     nodeId?: DhtAddress
+    region?: number
 
     rpcRequestTimeout?: number
     iceServers?: IceServer[]
@@ -104,6 +104,7 @@ export interface DhtNodeOptions {
     externalIp?: string
     autoCertifierUrl?: string
     autoCertifierConfigFile?: string
+    geoIpDatabaseFolder?: string
 }
 
 type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
@@ -140,8 +141,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private peerDiscovery?: PeerDiscovery
     private peerManager?: PeerManager
     private connectionsView?: ConnectionsView
-    private connectionLocker?: ConnectionLocker
-    private region?: number
+    public connectionLocker?: ConnectionLocker
     private started = false
     private abortController = new AbortController()
 
@@ -198,15 +198,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             if (this.config.peerDescriptor) {
                 this.config.peerDescriptor.websocket = undefined
             }
-        }
-        if (this.region !== undefined) {
-            this.region = this.config.region
-        } else if (this.config.peerDescriptor?.region !== undefined) {
-            this.region = this.config.peerDescriptor.region
-        } else {
-            this.region = await getLocalRegion()
-        }
-            
+        } 
+          
+        // If transport is given, do not create a ConnectionManager
         if (this.config.transport) {
             this.transport = this.config.transport
             this.connectionsView = this.config.connectionsView
@@ -228,7 +222,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 externalIp: this.config.externalIp,
                 autoCertifierUrl: this.config.autoCertifierUrl,
                 autoCertifierConfigFile: this.config.autoCertifierConfigFile,
-                createLocalPeerDescriptor: (connectivityResponse: ConnectivityResponse) => this.generatePeerDescriptorCallBack(connectivityResponse),
+                geoIpDatabaseFolder: this.config.geoIpDatabaseFolder,
+                createLocalPeerDescriptor: (connectivityResponse: ConnectivityResponse) => this.generatePeerDescriptorCallBack(connectivityResponse)
             }
             // If own PeerDescriptor is given in config, create a ConnectionManager with ws server
             if (this.config.peerDescriptor?.websocket) {
@@ -454,11 +449,25 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         }
     }
 
-    private generatePeerDescriptorCallBack(connectivityResponse: ConnectivityResponse) {
+    private async generatePeerDescriptorCallBack(connectivityResponse: ConnectivityResponse) {
         if (this.config.peerDescriptor !== undefined) {
             this.localPeerDescriptor = this.config.peerDescriptor
         } else {
-            this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, this.region!, this.config.nodeId)
+            let region: number | undefined = undefined
+            if (this.config.region !== undefined) {
+                region = this.config.region
+                logger.debug(`Using region ${region} from config when generating local PeerDescriptor`)
+            } else if (connectivityResponse.latitude !== undefined && connectivityResponse.longitude !== undefined) {
+                region = getLocalRegionByCoordinates(connectivityResponse.latitude, connectivityResponse.longitude)
+                logger.debug(`Using region ${region} from GeoIP when generating local PeerDescriptor`)
+            } else {
+                // as a fallback get the region from the CDN
+                // and if it's not available, use a random region
+                region = await getLocalRegionWithCache()
+                logger.debug(`Using region ${region} from CDN when generating local PeerDescriptor`)
+            }
+            
+            this.localPeerDescriptor = createPeerDescriptor(connectivityResponse, region, this.config.nodeId)
         }
         return this.localPeerDescriptor
     }

@@ -156,6 +156,12 @@ export interface ControlLayerConfig {
      * (especially when starting the node for the first time on a new machine).
      */
     websocketServerEnableTls?: boolean
+
+    /**
+     * Define a geo ip database folder path to be used by the network node. When left undefined
+     * geoip functionality is disabled.
+     */
+    geoIpDatabaseFolder?: string
 }
 
 export interface NetworkNodeConfig {

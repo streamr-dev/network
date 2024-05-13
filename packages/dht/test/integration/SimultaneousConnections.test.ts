@@ -22,7 +22,7 @@ const BASE_MESSAGE: Message = {
 const createConnectionManager = (localPeerDescriptor: PeerDescriptor, opts: Omit<DefaultConnectorFacadeConfig, 'createLocalPeerDescriptor'>) => {
     return new ConnectionManager({
         createConnectorFacade: () => new DefaultConnectorFacade({
-            createLocalPeerDescriptor: () => localPeerDescriptor,
+            createLocalPeerDescriptor: async () => localPeerDescriptor,
             ...opts
         }),
         metricsContext: new MetricsContext()

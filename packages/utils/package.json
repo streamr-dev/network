@@ -1,6 +1,6 @@
 {
   "name": "@streamr/utils",
-  "version": "100.2.3",
+  "version": "100.2.4",
   "description": "A collection of shared common utilities",
   "repository": {
     "type": "git",
@@ -24,7 +24,8 @@
     "lodash": "^4.17.21",
     "pino": "^8.19.0",
     "pino-pretty": "^10.3.1",
-    "secp256k1": "^5.0.0"
+    "secp256k1": "^5.0.0",
+    "sha3": "^2.1.4"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",

@@ -1,5 +1,5 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { Logger, executeSafePromise } from '@streamr/utils'
+import { Logger } from '@streamr/utils'
 import {
     DhtAddress,
     areEqualPeerDescriptors,
@@ -49,11 +49,10 @@ export class StoreManager {
 
     private registerLocalRpcMethods() {
         const rpcLocal = new StoreRpcLocal({
+            localPeerDescriptor: this.config.localPeerDescriptor,
             localDataStore: this.config.localDataStore,
-            replicateDataToNeighbors: (incomingPeer: PeerDescriptor, dataEntry: DataEntry) => this.replicateDataToNeighbors(incomingPeer, dataEntry),
-            isLocalNodeStorer: (dataKey: DhtAddress) => {
-                return this.getStorers(dataKey).some((p) => areEqualPeerDescriptors(p, this.config.localPeerDescriptor))
-            }
+            replicateDataToContact: (dataEntry: DataEntry, contact: PeerDescriptor) => this.replicateDataToContact(dataEntry, contact),
+            getStorers: (dataKey: DhtAddress) => this.getStorers(dataKey)
         })
         this.config.rpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
             (request: StoreDataRequest) => rpcLocal.storeData(request))
@@ -152,23 +151,6 @@ export class StoreManager {
                 }
             }))
         }))
-    }
-
-    private replicateDataToNeighbors(requestor: PeerDescriptor, dataEntry: DataEntry): void {
-        const dataKey = getDhtAddressFromRaw(dataEntry.key)
-        const storers = this.getStorers(dataKey)
-        const selfIsPrimaryStorer = areEqualPeerDescriptors(storers[0], this.config.localPeerDescriptor)
-        // If we are the closest to the data, get storageRedundancyFactor - 1 nearest node to the data, and
-        // replicate to all those node. Otherwise replicate only to the one closest one. And never replicate 
-        // to the requestor nor to itself.
-        const targets = (selfIsPrimaryStorer ? storers : [storers[0]]).filter(
-            (p) => !areEqualPeerDescriptors(p, requestor) && !areEqualPeerDescriptors(p, this.config.localPeerDescriptor)
-        )
-        targets.forEach((target) => {
-            setImmediate(() => {
-                executeSafePromise(() => this.replicateDataToContact(dataEntry, target))
-            })
-        })
     }
 
     private getStorers(dataKey: DhtAddress, excludedNode?: PeerDescriptor): PeerDescriptor[] {

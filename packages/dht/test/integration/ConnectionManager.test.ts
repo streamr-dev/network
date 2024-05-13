@@ -33,7 +33,7 @@ describe('ConnectionManager', () => {
     const createConnectionManager = (opts: MarkOptional<DefaultConnectorFacadeConfig, 'createLocalPeerDescriptor'>) => {
         return new ConnectionManager({
             createConnectorFacade: () => new DefaultConnectorFacade({
-                createLocalPeerDescriptor,
+                createLocalPeerDescriptor: async (response) => createLocalPeerDescriptor(response),
                 websocketServerEnableTls: false,
                 ...opts
             }),
@@ -365,7 +365,7 @@ describe('ConnectionManager', () => {
             transport: mockTransport,
             websocketHost: '127.0.0.1',
             websocketPortRange: { min: 10002, max: 10002 },
-            createLocalPeerDescriptor: () => peerDescriptor1 
+            createLocalPeerDescriptor: async () => peerDescriptor1 
         })
 
         await connectionManager1.start()
@@ -374,7 +374,7 @@ describe('ConnectionManager', () => {
             transport: mockTransport,
             websocketHost: '127.0.0.1',
             websocketPortRange: { min: 10003, max: 10003 },
-            createLocalPeerDescriptor: () => peerDescriptor2
+            createLocalPeerDescriptor: async () => peerDescriptor2
         })
 
         await connectionManager2.start()

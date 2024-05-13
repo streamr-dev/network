@@ -351,9 +351,9 @@ export interface ConnectivityRequest {
      */
     host?: string;
     /**
-     * @generated from protobuf field: bool selfSigned = 4;
+     * @generated from protobuf field: bool allowSelfSignedCertificate = 4;
      */
-    selfSigned: boolean;
+    allowSelfSignedCertificate: boolean;
 }
 /**
  * @generated from protobuf message dht.ConnectivityResponse
@@ -379,6 +379,14 @@ export interface ConnectivityResponse {
      * @generated from protobuf field: string version = 5;
      */
     version: string;
+    /**
+     * @generated from protobuf field: optional double latitude = 6;
+     */
+    latitude?: number;
+    /**
+     * @generated from protobuf field: optional double longitude = 7;
+     */
+    longitude?: number;
 }
 /**
  * @generated from protobuf message dht.HandshakeRequest
@@ -962,7 +970,7 @@ class ConnectivityRequest$Type extends MessageType<ConnectivityRequest> {
             { no: 1, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
             { no: 2, name: "tls", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 3, name: "host", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "selfSigned", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 4, name: "allowSelfSignedCertificate", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }
@@ -978,7 +986,9 @@ class ConnectivityResponse$Type extends MessageType<ConnectivityResponse> {
             { no: 2, name: "natType", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "websocket", kind: "message", T: () => ConnectivityMethod },
             { no: 4, name: "ipAddress", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 5, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 5, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "latitude", kind: "scalar", opt: true, T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 7, name: "longitude", kind: "scalar", opt: true, T: 1 /*ScalarType.DOUBLE*/ }
         ]);
     }
 }

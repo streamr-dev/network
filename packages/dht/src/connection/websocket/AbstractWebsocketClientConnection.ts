@@ -34,7 +34,7 @@ export abstract class AbstractWebsocketClientConnection extends EventEmitter<Con
     }
 
     // TODO explicit default value for "selfSigned" or make it required
-    public abstract connect(address: string, selfSigned?: boolean): void
+    public abstract connect(address: string, allowSelfSignedCertificate: boolean): void
     
     protected abstract stopListening(): void
 

@@ -57,7 +57,7 @@ describe('Websocket', () => {
             })
         })
 
-        clientWebsocket.connect('ws://127.0.0.1:9977')
+        clientWebsocket.connect('ws://127.0.0.1:9977', false)
     })
 
     afterAll(async () => {

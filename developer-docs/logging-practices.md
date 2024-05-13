@@ -28,7 +28,7 @@ log  messages for simplicity. The point being that these don't have to be necess
 - `FATAL` printed before an imminent software crash
 - `ERROR` something unusual went wrong, probably requiring user intervention, but the software as a whole continues running
 - `WARN` something typical went wrong, does not warrant user intervention necessarily
-- `INFO` something worth noting, e.g. in storage node a new state update, receiving a reward in Brubeck miner plugin
+- `INFO` something worth noting, e.g. in storage node a new state update
 - `DEBUG` more details about the operation of a module, however should not be overwhelming in quantity
 - `TRACE` equivalent to leftover debug messages, low level, kept on modules that exhibit higher defect rates, hopefully removed down the line
 

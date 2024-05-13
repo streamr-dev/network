@@ -50,7 +50,7 @@ const config = {
                     indexLabel: " ",
                     position: 5,
                 },
-                out: "usage/streamr-js-client/api",
+                out: "usage/sdk/api",
                 tsconfig: "../packages/client/tsconfig.json",
             },
         ],
@@ -71,8 +71,8 @@ const config = {
                     editUrl:
                         "https://github.com/streamr-dev/network/tree/pre-1.0-docs/docs",
                     exclude: [
-                        "**usage/streamr-js-client/api/modules.mdx",
-                        "**usage/streamr-js-client/api/modules.md",
+                        "**usage/sdk/api/modules.mdx",
+                        "**usage/sdk/api/modules.md",
                     ],
                 },
                 blog: {
