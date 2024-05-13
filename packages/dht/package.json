@@ -12,6 +12,7 @@
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
+    "postinstall": "cd ../.. && npm run patch-node-datachannel",
     "generate-protoc-code": "./proto.sh",
     "build": "tsc -b tsconfig.node.json",
     "build-browser": "webpack --mode=development --progress",
@@ -40,6 +41,7 @@
     "lodash": "^4.17.21",
     "lru-cache": "10.2.0",
     "node-datachannel": "^0.9.0",
+    "patch-package": "^8.0.0",
     "querystring": "0.2.1",
     "uuid": "^9.0.1",
     "websocket": "^1.0.34",
