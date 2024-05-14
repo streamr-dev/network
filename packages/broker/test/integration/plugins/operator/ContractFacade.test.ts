@@ -1,7 +1,7 @@
 import { Contract } from 'ethers'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { OperatorFactory, operatorFactoryABI, type Sponsorship } from '@streamr/network-contracts-ethers6'
-import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 import {
     createTheGraphClient,
