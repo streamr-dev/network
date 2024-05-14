@@ -21,12 +21,16 @@ export interface Authentication {
 
 export const createPrivateKeyAuthentication = (key: string): Authentication => {
     const address = toEthereumAddress(computeAddress(key))
+    let cachedChainSigner: SignerWithProvider | undefined = undefined
     return {
         getAddress: async () => address,
         createMessageSignature: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
-        getStreamRegistryChainSigner: async (rpcProviderFactory: RpcProviderFactory) => {
-            const primaryProvider = rpcProviderFactory.getPrimaryProvider()
-            return new NonceManager(new Wallet(key, primaryProvider)) as SignerWithProvider
+        getStreamRegistryChainSigner: async (rpcProviderFactory: RpcProviderFactory) => { // TODO: can we get rid of the argument here?
+            if (cachedChainSigner === undefined) {
+                const primaryProvider = rpcProviderFactory.getPrimaryProvider()
+                cachedChainSigner = new NonceManager(new Wallet(key, primaryProvider)) as SignerWithProvider
+            }
+            return cachedChainSigner
         }
     }
 }
