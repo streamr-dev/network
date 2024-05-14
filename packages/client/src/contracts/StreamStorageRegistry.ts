@@ -81,7 +81,7 @@ export class StreamStorageRegistry {
         const transformation = (streamId: string, nodeAddress: string, extra: any) => ({
             streamId: toStreamID(streamId),
             nodeAddress: toEthereumAddress(nodeAddress),
-            blockNumber: extra.blockNumber
+            blockNumber: extra.log.blockNumber
         })
         initContractEventGateway({
             sourceName: 'Added', 
