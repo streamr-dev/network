@@ -1,5 +1,4 @@
 import EventEmitter from 'eventemitter3'
-//import WebSocket from 'ws'
 import { WebsocketServerConnection } from './WebsocketServerConnection'
 import { ConnectionSourceEvents } from '../IConnectionSource'
 import { Logger } from '@streamr/utils'
@@ -26,10 +25,8 @@ interface Certs {
     key: string
 }
 
-//NodeDataChannel.initLogger('Verbose')
 export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
 
-    //private httpServer?: HttpServer | HttpsServer
     private wsServer?: NodeDataChannel.WebSocketServer
     private readonly abortController = new AbortController()
     private readonly config: WebsocketServerConfig
@@ -50,9 +47,7 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
 
         for (const port of ports) {
             try {
-                //await asAbortable(this.startServer(port, this.config.enableTls), this.abortController.signal)
-                this.startServer(port, this.config.enableTls)
-                //await wait(1000)
+                this.startServer(port, this.config.enableTls)               
                 return port
             } catch (err) {
                 if (typeof err.originalError?.message === 'string' &&
@@ -76,16 +71,6 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
         this.port = port
         this.tls = tls
 
-        /*
-        port?: number; // default 8080
-        enableTls?: boolean; // default = false;
-        certificatePemFile?: string;
-        keyPemFile?: string;
-        keyPemPass?: string;
-        bindAddress?: string;
-        connectionTimeout?: number; // milliseconds
-        maxMessageSize?: number;
-        */
         const webSocketServerConfiguration: NodeDataChannel.WebSocketServerConfiguration = {
             port,
             enableTls: false,
@@ -136,70 +121,6 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
                 this.emit('connected', new WebsocketServerConnection(ws, parsedUrl, ws.remoteAddress()!.split(':')[0]))
             }
         })
-        /*
-        const requestListener = (request: IncomingMessage, response: ServerResponse<IncomingMessage>) => {
-            logger.trace('Received request for ' + request.url)
-            response.writeHead(404)
-            response.end()
-        }
-        
-        return new Promise((resolve, reject) => {
-            if (this.config.tlsCertificate) {
-                this.httpServer = createHttpsServer({
-                    key: fs.readFileSync(this.config.tlsCertificate.privateKeyFileName),
-                    cert: fs.readFileSync(this.config.tlsCertificate.certFileName)
-                }, requestListener)
-            } else if (!tls) {
-                this.httpServer = createHttpServer(requestListener)
-            } else {
-                // TODO use config option or named constant?
-                const certificate = createSelfSignedCertificate('streamr-self-signed-' + uuid(), 1000)
-                this.httpServer = createHttpsServer({
-                    key: certificate.serverKey,
-                    cert: certificate.serverCert
-                }, requestListener)
-            }
-
-            function originIsAllowed() {
-                return true
-            }
-
-            this.wsServer = this.createWsServer()
-            
-            this.wsServer.on('connection', (ws: WebSocket, request: IncomingMessage) => {
-                logger.trace(`New connection from ${request.socket.remoteAddress}`)
-                if (!originIsAllowed()) {
-                    // Make sure we only accept requests from an allowed origin
-                    ws.close()
-                    logger.trace('IConnection from origin ' + request.headers.origin + ' rejected.')
-                    return
-                }
-                this.emit('connected', new WebsocketServerConnection(ws, parse(request.url!), request.socket.remoteAddress!))
-            })
-
-            this.httpServer.on('upgrade', (request, socket, head) => {
-                logger.trace('Received upgrade request for ' + request.url)
-                this.wsServer!.handleUpgrade(request, socket, head, (ws: WebSocket) => {
-                    this.wsServer!.emit('connection', ws, request)
-                })
-            })
-
-            this.httpServer.once('error', (err: Error) => {
-                reject(new WebsocketServerStartError('Starting Websocket server failed', err))
-            })
-
-            this.httpServer.once('listening', () => {
-                logger.debug('Websocket server is listening on port ' + port)
-                resolve()
-            })
-
-            try {
-                // Listen only to IPv4 network interfaces, default value listens to IPv6 as well
-                this.httpServer.listen(port, '0.0.0.0')
-            } catch (e) {
-                reject(new WebsocketServerStartError('Websocket server threw an exception', e))
-            }
-        }) */
     }
 
     private stopServer(): void {
@@ -211,12 +132,6 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
         logger.trace('Updating WebSocket server certificate')
         this.stopServer()
         this.startServer(this.port!, this.tls!, { cert, key })
-        /*
-        (this.httpServer! as HttpsServer).setSecureContext({
-            cert,
-            key
-        })
-        */
     }
 
     public async stop(): Promise<void> {
@@ -224,38 +139,5 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
         this.abortController.abort()
         this.removeAllListeners()
         this.stopServer()
-        /*
-        return new Promise((resolve, _reject) => {
-            this.wsServer!.close()
-            for (const ws of this.wsServer!.clients) {
-                ws.terminate()
-            }
-            this.httpServer?.once('close', () => {
-                // removeAllListeners is maybe not needed?
-                this.httpServer?.removeAllListeners()
-                resolve()
-            })
-            this.httpServer?.close()
-            // the close method "Stops the server from accepting new connections and closes all 
-            // connections connected to this server which are not sending a request or waiting for a 
-            // response." (https://nodejs.org/api/http.html#serverclosecallback)
-            // i.e. we need to call closeAllConnections() to close the rest of the connections
-            // (in practice this closes the active websocket connections)
-            this.httpServer?.closeAllConnections()
-        })
-        */
     }
-
-    /*
-    private createWsServer(): WebSocket.Server {
-        const maxPayload = this.config.maxMessageSize ?? 1048576
-        return this.wsServer = new WebSocket.Server({
-            noServer: true,
-            maxPayload
-        })
-    }
-
-    private startWsServer(certs?: Certs): void {
-    
-    }*/
 }
