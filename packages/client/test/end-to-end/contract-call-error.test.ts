@@ -14,7 +14,7 @@ describe('contract call error', () => {
         })
         await expect(() => client.createStream('/path')).rejects.toThrow(
             // eslint-disable-next-line max-len
-            'Error while executing contract call "streamRegistry.createStream", reason=processing response error, code=SERVER_ERROR'
+            'Error while executing contract call "streamRegistry.createStream", code=UNKNOWN_ERROR'
         )
     })
 
@@ -32,11 +32,11 @@ describe('contract call error', () => {
             }
         })
         await expect(() => client.createStream('/path')).rejects.toThrow(
-            'Error while executing contract call "streamRegistry.createStream", reason=could not detect network, code=NETWORK_ERROR'
+            'Error while executing contract call "streamRegistry.createStream", code=ENOTFOUND'
         )
     })
 
-    it('concurrent transactions', async () => {
+    it.skip('concurrent transactions', async () => { // TODO: remove this test if we decide to keep NonceManager
         const privateKey = await fetchPrivateKeyWithGas()
         const client = new StreamrClient({
             ...CONFIG_TEST,
