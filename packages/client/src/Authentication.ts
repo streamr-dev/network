@@ -1,5 +1,5 @@
 import { BrowserProvider, AbstractSigner, Provider } from 'ethers'
-import { computeAddress } from 'ethers'
+import { computeAddress, NonceManager } from 'ethers'
 import { Wallet } from 'ethers'
 import { EthereumAddress, hexToBinary, toEthereumAddress, wait, createSignature } from '@streamr/utils'
 import pMemoize from 'p-memoize'
@@ -26,7 +26,7 @@ export const createPrivateKeyAuthentication = (key: string): Authentication => {
         createMessageSignature: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
         getStreamRegistryChainSigner: async (rpcProviderFactory: RpcProviderFactory) => {
             const primaryProvider = rpcProviderFactory.getPrimaryProvider()
-            return new AutoNonceWallet(key, primaryProvider) as SignerWithProvider
+            return new NonceManager(new Wallet(key, primaryProvider)) as SignerWithProvider
         }
     }
 }
