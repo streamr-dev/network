@@ -6,7 +6,6 @@ import pMemoize from 'p-memoize'
 import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'
 import { pLimitFn } from './utils/promises'
 import { RpcProviderFactory } from './RpcProviderFactory'
-import { AutoNonceWallet } from './utils/AutoNonceWallet'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 

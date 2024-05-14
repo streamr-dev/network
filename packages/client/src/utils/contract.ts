@@ -13,7 +13,6 @@ import { InternalEvents, StreamrClientEventEmitter, StreamrClientEvents } from '
 import { LoggerFactory } from './LoggerFactory'
 import { tryInSequence } from './promises'
 import { FunctionFragment } from 'ethers'
-import { AutoNonceWallet } from './AutoNonceWallet'
 import type { TransactionResponse } from 'ethers'
 
 export interface ContractEvent {
@@ -105,9 +104,6 @@ const createWrappedContractMethod = (
             returnValue.wait = async (confirmations?: number, timeout?: number): Promise<null | ContractTransactionReceipt> => {
                 const receipt = await withErrorHandling(() => originalWait(confirmations, timeout), methodName, 'waiting transaction for')
                 eventEmitter.emit('onTransactionConfirm', methodFullName, receipt)
-                if (contract.runner instanceof AutoNonceWallet) {
-                    contract.runner.onTransactionConfirm()
-                }
                 return receipt
             }
         }
