@@ -81,7 +81,11 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
     public send(data: Uint8Array): void {
         // TODO: no need to check this.socket as it is always defined when stopped is false?
         if (!this.stopped && this.socket) {
-            this.socket.sendMessageBinary(data)
+            try {
+                this.socket.sendMessageBinary(data)
+            } catch (err) {
+                logger.error('error', { err })
+            }
         } else {
             logger.debug('Tried to call send() on a stopped socket')
         }
