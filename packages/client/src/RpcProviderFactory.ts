@@ -25,8 +25,7 @@ export class RpcProviderFactory {
                     chainId: this.config.contracts.streamRegistryChainRPCs?.chainId,
                     name: this.config.contracts.streamRegistryChainRPCs?.name
                 }, {
-                    staticNetwork: true,
-                    batchMaxCount: 1 // TODO! enable this only for test (if fixes nonce issues there with streamr-docker-dev fastchain  )
+                    staticNetwork: true
                 })
                 if (pollInterval !== undefined) {
                     provider.pollingInterval = pollInterval
