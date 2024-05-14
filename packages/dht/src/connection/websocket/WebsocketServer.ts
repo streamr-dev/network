@@ -117,8 +117,10 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
                     logger.trace('WebSocket Client error: ' + error)
                 })
             } else {
-                const parsedUrl = parse(ws.path()!)
-                this.emit('connected', new WebsocketServerConnection(ws, parsedUrl, ws.remoteAddress()!.split(':')[0]))
+                ws.onOpen(() => {
+                    const parsedUrl = parse(ws.path()!)
+                    this.emit('connected', new WebsocketServerConnection(ws, parsedUrl, ws.remoteAddress()!.split(':')[0]))
+                })
             }
         })
     }
