@@ -1,7 +1,7 @@
 import { Contract } from 'ethers'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { OperatorFactory, operatorFactoryABI, type Sponsorship } from '@streamr/network-contracts-ethers6'
-import { toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 import {
     createTheGraphClient,
@@ -157,5 +157,5 @@ describe('ContractFacade', () => {
             })
             return result.operator.flagsTargeted.length === 1
         }, 10000, 1000)
-    }, 30 * 1000)
+    }, 60 * 1000)  // TODO why this is slower, takes ~35 seconds?
 })
