@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3'
 import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../IConnection'
-import WebSocket from 'ws'
+import { WebSocket } from 'node-datachannel'
 import { Logger } from '@streamr/utils'
 import { Url } from 'url'
 import { CUSTOM_GOING_AWAY, GOING_AWAY } from './AbstractWebsocketClientConnection'
@@ -28,9 +28,9 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
         this.connectionId = createRandomConnectionId()
         this.remoteIpAddress = remoteAddress
 
-        socket.on('message', this.onMessage)
-        socket.on('close', this.onClose)
-        socket.on('error', this.onError)
+        socket.onMessage(this.onMessage)
+        socket.onClosed(this.onClose)
+        socket.onError(this.onError)
 
         this.socket = socket
     }
@@ -40,28 +40,34 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
         return this.remoteIpAddress
     }
 
-    private onMessage(message: WebSocket.RawData, isBinary: boolean): void {
-        if (!isBinary) {
+    private onMessage(message: Buffer | string): void {
+        if (typeof message === 'string') {
             logger.trace('Received string Message')
         } else {
             logger.trace('Websocket server received Message')
-            this.emit('data', new Uint8Array(message as Buffer))
+            this.emit('data', new Uint8Array(message))
         }
     }
 
-    private onClose(reasonCode: number, description: string): void {
+    private onClose(): void {
         logger.trace('Peer ' + this.remoteIpAddress + ' disconnected.')
-        this.doDisconnect(reasonCode, description)
+        this.socket?.forceClose()
+        
+        this.doDisconnect(0, '')    // TODO: use proper reason code and description
+       
     }
 
-    private onError(error: Error): void {
-        this.emit('error', error.name)
+    private onError(error: string): void {
+        this.emit('error', error)
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private stopListening(): void {
+        /*
         this.socket?.off('message', this.onMessage)
         this.socket?.off('close', this.onClose)
         this.socket?.off('error', this.onError)
+        */
     }
 
     private doDisconnect(reasonCode: number, description: string): void {
@@ -75,7 +81,7 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
     public send(data: Uint8Array): void {
         // TODO: no need to check this.socket as it is always defined when stopped is false?
         if (!this.stopped && this.socket) {
-            this.socket.send(data, { binary: true })
+            this.socket.sendMessageBinary(data)
         } else {
             logger.debug('Tried to call send() on a stopped socket')
         }
@@ -86,7 +92,7 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
         this.emit('disconnected', gracefulLeave, undefined, 'close() called')
         this.removeAllListeners()
         if (!this.stopped) {
-            this.socket?.close(gracefulLeave ? GOING_AWAY : undefined)
+            this.socket?.forceClose()
         } else {
             logger.debug('Tried to close a stopped connection')
         }
@@ -98,7 +104,7 @@ export class WebsocketServerConnection extends EventEmitter<ConnectionEvents> im
             this.removeAllListeners()
             if (this.socket) {
                 this.stopListening()
-                this.socket.close()
+                this.socket.forceClose()
                 this.socket = undefined
             }
             this.stopped = true

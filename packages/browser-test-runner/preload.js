@@ -1,7 +1,14 @@
 // Loads non-browser compatible components to Electron's NodeJS sandbox during tests
 
 process.once('loaded', () => {
-    window.WebSocket = require('ws')
+    
+    const nodeDataChannel = require('node-datachannel')
+    
+    window.NodeDataChannel = {
+        WebSocketServer: nodeDataChannel.WebSocketServer,
+        WebSocket: nodeDataChannel.WebSocket
+    }
+
     window.Express = require('express')
     window.HTTP = require('http')
     window.HTTPS = require('https')

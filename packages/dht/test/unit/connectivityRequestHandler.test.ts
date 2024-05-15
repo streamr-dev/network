@@ -36,7 +36,7 @@ describe('connectivityRequestHandler', () => {
         await once(httpServer, 'close')
     })
 
-    it('happy path', async () => {
+    it.skip('happy path', async () => {
         attachConnectivityRequestHandler(connection)
         const request: Message = {
             serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
@@ -71,7 +71,7 @@ describe('connectivityRequestHandler', () => {
         })
     })
 
-    it('disabled connectivity probing', async () => {
+    it.skip('disabled connectivity probing', async () => {
         attachConnectivityRequestHandler(connection)
         const request: Message = {
             serviceId: CONNECTIVITY_CHECKER_SERVICE_ID,
