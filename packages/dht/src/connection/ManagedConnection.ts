@@ -161,17 +161,15 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.emit('disconnected', gracefulLeave)
     }
 
-    async send(data: Uint8Array): Promise<void> {
+    send(data: Uint8Array): void {
         if (this.stopped) {
             throw new Err.SendFailed('ManagedConnection is stopped')
         }
-        this.lastUsedTimestamp = Date.now()
-
-        if (this.implementation) {
-            this.implementation.send(data)
-        } else {
+        if (!this.implementation) {
             throw new Error('Invariant violation no implementation before send called')
         }
+        this.lastUsedTimestamp = Date.now()
+        this.implementation!.send(data)
     }
 
     public sendNoWait(data: Uint8Array): void {
