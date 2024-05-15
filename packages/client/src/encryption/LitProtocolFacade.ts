@@ -60,7 +60,7 @@ const signAuthMessage = async (litNodeClient: LitNodeClient, authentication: Aut
     const uri = 'https://localhost/login'
     const statement = 'dummy'
     const addressInChecksumCase = ethers.utils.getAddress(await authentication.getAddress())
-    const nonce = litNodeClient.getLatestBlockhash()
+    const nonce = await litNodeClient.getLatestBlockhash()
     const expirationTime = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString()
     const siweMessage = new siwe.SiweMessage({
         domain,
@@ -115,6 +115,7 @@ export class LitProtocolFacade {
     async getLitNodeClient(): Promise<LitNodeClient> {
         if (this.litNodeClient === undefined) {
             this.litNodeClient = new LitNodeClient({
+                litNetwork: 'cayenne',
                 alertWhenUnauthorized: false,
                 debug: this.config.encryption.litProtocolLogging
             })
