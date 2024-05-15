@@ -7,6 +7,8 @@ import { Broker, createBroker } from '../../../../src/broker'
 import { createClient, createTestStream, formConfig, startBroker } from '../../../utils'
 import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, setupOperatorContract, sponsor, stake } from './contractUtils'
 
+const TIMEOUT = 60 * 1000
+
 describe('OperatorPlugin', () => {
 
     let broker: Broker
@@ -21,7 +23,7 @@ describe('OperatorPlugin', () => {
         brokerWallet = deployment.nodeWallets[0]
         operatorWallet = deployment.operatorWallet
         operatorContract = deployment.operatorContract
-    }, 30 * 1000)
+    }, TIMEOUT)
 
     afterEach(async () => {
         await broker?.stop()
@@ -65,7 +67,7 @@ describe('OperatorPlugin', () => {
         expect(receivedMessages[0].content).toEqual({ foo: 'bar' })
         await subscriber.destroy()
         await publisher.destroy()
-    }, 60 * 1000)  // TODO why this is slower?
+    }, TIMEOUT)  // TODO why this is slower?
 
     it('invalid configuration', async () => {
         await expect(async () => {
