@@ -16,10 +16,12 @@ export class OutputBuffer {
     }
 
     resolve(): void {
+        this.buffer.length = 0
         this.deferredPromise.resolve()
     }
 
     reject(): void {
+        this.buffer.length = 0
         this.deferredPromise.reject(new SendFailed('Could not send buffered messages'))
     }
 
