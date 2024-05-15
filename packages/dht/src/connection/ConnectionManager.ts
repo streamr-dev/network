@@ -211,7 +211,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         await this.connectorFacade.stop()
 
         await Promise.all(Array.from(this.endpoints.values()).map(async (endpoint) => {
-            const connection = endpoint.connection
+            const { connection, buffer } = endpoint
             if (connection.isHandshakeCompleted()) {
                 try {
                     await this.gracefullyDisconnectAsync(connection.getPeerDescriptor()!, DisconnectMode.LEAVING)
@@ -228,6 +228,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
                     await eventReceived
                     logger.trace('resolving after receiving disconnected event from non-handshaked connection')
                 } catch (e) {
+                    buffer.reject()
                     logger.trace('force-closing non-handshaked connection timed out ' + e)
                 }
             }
