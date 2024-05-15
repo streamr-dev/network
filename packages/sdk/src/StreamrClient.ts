@@ -166,7 +166,7 @@ export class StreamrClient {
         if (opts.streamId === undefined) {
             throw new Error('streamId required')
         }
-        if (opts.key !== undefined && this.config.encryption.litProtocolEnabled) {
+        if (opts.key !== undefined && this.config.encryption.litProtcolClient !== undefined) {
             throw new StreamrClientError('cannot pass "key" when Lit Protocol is enabled', 'UNSUPPORTED_OPERATION')
         }
         const streamId = await this.streamIdBuilder.toStreamID(opts.streamId)

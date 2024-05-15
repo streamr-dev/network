@@ -49,6 +49,7 @@
     "@babel/preset-env": "^7.24.7",
     "@babel/preset-typescript": "^7.24.7",
     "@jest/globals": "^29.5.0",
+    "@lit-protocol/lit-node-client": "^6.0.3",
     "@streamr/test-utils": "101.0.1",
     "@types/heap": "^0.2.34",
     "@types/lodash": "^4.17.6",

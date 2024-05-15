@@ -1,5 +1,6 @@
 import 'reflect-metadata'
 import type { Overrides, Eip1193Provider } from 'ethers'
+import type { LitNodeClient } from '@lit-protocol/lit-node-client'
 import cloneDeep from 'lodash/cloneDeep'
 import { DeepRequired, MarkOptional } from 'ts-essentials'
 import { LogLevel, merge } from '@streamr/utils'
@@ -341,17 +342,13 @@ export interface StreamrClientConfig {
     encryption?: {
         /**
          * Enable experimental Lit Protocol key exchange.
+         * TODO: write-up
          *
          * When enabled encryption key storing and fetching will primarily be done through the
          * [Lit Protocol](https://litprotocol.com/) and secondarily through the standard Streamr
          * key-exchange system.
          */
-        litProtocolEnabled?: boolean
-
-        /**
-         * Enable log messages of the Lit Protocol library to be printed to stdout.
-         */
-        litProtocolLogging?: boolean
+        litProtcolClient?: LitNodeClient
 
         // TODO keyRequestTimeout and maxKeyRequestsPerSecond config options could be applied
         // to lit protocol key requests (both encryption and decryption?)
