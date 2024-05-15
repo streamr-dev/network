@@ -169,7 +169,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             throw new Error('Invariant violation no implementation before send called')
         }
         this.lastUsedTimestamp = Date.now()
-        this.implementation!.send(data)
+        this.implementation.send(data)
     }
 
     public sendNoWait(data: Uint8Array): void {
