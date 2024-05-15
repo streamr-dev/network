@@ -13,8 +13,6 @@ export const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 
 export interface SetupOperatorContractOpts {
     nodeCount?: number
-    adminKey?: string
-    provider?: Provider
     chainConfig?: {
         contracts: {
             DATA: string
@@ -43,9 +41,7 @@ export async function setupOperatorContract(
     opts?: SetupOperatorContractOpts
 ): Promise<SetupOperatorContractReturnType> {
     const operatorWallet = await generateWalletWithGasAndTokens({
-        provider: opts?.provider,
-        chainConfig: opts?.chainConfig,
-        adminKey: opts?.adminKey
+        chainConfig: opts?.chainConfig
     })
     const operatorContract = await deployOperatorContract({
         chainConfig: opts?.chainConfig ?? TEST_CHAIN_CONFIG,
@@ -57,9 +53,7 @@ export async function setupOperatorContract(
     if ((opts?.nodeCount !== undefined) && (opts?.nodeCount > 0)) {
         for (const _ of range(opts.nodeCount)) {
             nodeWallets.push(await generateWalletWithGasAndTokens({
-                provider: opts?.provider,
-                chainConfig: opts?.chainConfig,
-                adminKey: opts?.adminKey
+                chainConfig: opts?.chainConfig
             }))
         }
         await (await operatorContract.setNodeAddresses(nodeWallets.map((w) => w.address))).wait()
@@ -178,9 +172,9 @@ export function getTokenContract(): TestToken {
 let cachedAdminWalletNonceManager: NonceManager | undefined
 
 // TODO: horrible hack to get things working, fix properly
-export const getAdminWallet = (adminKey?: string, provider?: Provider): NonceManager => {
+export const getAdminWallet = (): NonceManager => {
     if (cachedAdminWalletNonceManager === undefined) {
-        cachedAdminWalletNonceManager = new NonceManager(new Wallet(adminKey ?? TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider ?? getProvider()))
+        cachedAdminWalletNonceManager = new NonceManager(new Wallet(TEST_CHAIN_CONFIG.adminPrivateKey).connect(getProvider()))
     }
     return cachedAdminWalletNonceManager
 }
@@ -194,15 +188,13 @@ export const createTheGraphClient = (): TheGraphClient => {
 }
 
 interface GenerateWalletWithGasAndTokensOpts {
-    provider?: Provider
     chainConfig?: { contracts: { DATA: string } }
-    adminKey?: string
 }
 
 export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGasAndTokensOpts): Promise<Wallet> {
-    const provider = opts?.provider ?? getProvider()
+    const provider = getProvider()
     const newWallet = new Wallet(fastPrivateKey())
-    const adminWallet = getAdminWallet(opts?.adminKey, opts?.provider)
+    const adminWallet = getAdminWallet()
     const token = (opts?.chainConfig !== undefined)
         ? new Contract(opts.chainConfig.contracts.DATA, tokenABI, adminWallet) as unknown as TestToken
         : getTokenContract().connect(adminWallet)
