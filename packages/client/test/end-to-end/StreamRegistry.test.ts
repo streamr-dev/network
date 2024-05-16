@@ -90,6 +90,7 @@ describe('StreamRegistry', () => {
                 id: createRelativeTestStreamId(module, 'invalid'),
                 partitions: 150
             })
+            
             const validStream = await client.createStream({
                 id: createRelativeTestStreamId(module, 'valid'),
                 partitions: 3,
