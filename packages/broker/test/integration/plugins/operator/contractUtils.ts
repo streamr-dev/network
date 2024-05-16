@@ -162,7 +162,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
 }
 
 export function getProvider(): Provider {
-    return new JsonRpcProvider(TEST_CHAIN_CONFIG.rpcEndpoints[0].url, undefined, { batchMaxCount: 1 })
+    return new JsonRpcProvider(TEST_CHAIN_CONFIG.rpcEndpoints[0].url)
 }
 
 export function getTokenContract(): TestToken {
