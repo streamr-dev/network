@@ -1,4 +1,13 @@
-import { ZeroAddress, Contract, JsonRpcProvider, Provider, parseEther, EventLog, NonceManager } from 'ethers'
+import {
+    ZeroAddress,
+    Contract,
+    JsonRpcProvider,
+    Provider,
+    parseEther,
+    EventLog,
+    NonceManager,
+    FetchRequest
+} from 'ethers'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import type { Operator, OperatorFactory, Sponsorship, SponsorshipFactory } from '@streamr/network-contracts-ethers6'
 import { TestToken, operatorABI, operatorFactoryABI, sponsorshipABI, sponsorshipFactoryABI, tokenABI } from '@streamr/network-contracts-ethers6'
@@ -8,6 +17,7 @@ import { Wallet } from 'ethers'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { range } from 'lodash'
 import fetch from 'node-fetch'
+import { LoggingJsonRpcProvider } from '../../../utils'
 
 export const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 
@@ -162,7 +172,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
 }
 
 export function getProvider(): Provider {
-    return new JsonRpcProvider(TEST_CHAIN_CONFIG.rpcEndpoints[0].url)
+    return new LoggingJsonRpcProvider(new FetchRequest(TEST_CHAIN_CONFIG.rpcEndpoints[0].url))
 }
 
 export function getTokenContract(): TestToken {
