@@ -225,6 +225,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         } else {
             this.emit('disconnected', gracefulLeave)
         }
+        this.removeAllListeners()
     }
 
     public destroy(): void {

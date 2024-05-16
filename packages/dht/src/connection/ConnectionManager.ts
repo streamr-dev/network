@@ -413,15 +413,11 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             return false
         }
         connection.on('managedData', this.onData)
-        connection.on('disconnected', (gracefulLeave: boolean) => {
-            this.onDisconnected(connection, gracefulLeave)
-        })
+        connection.on('disconnected', (gracefulLeave: boolean) => this.onDisconnected(connection, gracefulLeave))
         if (connection.isHandshakeCompleted()) {
             this.onConnected(connection)
         } else {
-            connection.once('handshakeCompleted', () => {
-                this.onConnected(connection)
-            })
+            connection.once('handshakeCompleted', () => this.onConnected(connection))
         }
         return true
     }
