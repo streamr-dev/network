@@ -161,10 +161,8 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
     return newSponsorship
 }
 
-const provider = new JsonRpcProvider(TEST_CHAIN_CONFIG.rpcEndpoints[0].url, undefined, { batchMaxCount: 1 })
-
 export function getProvider(): Provider {
-    return provider
+    return new JsonRpcProvider(TEST_CHAIN_CONFIG.rpcEndpoints[0].url, undefined, { batchMaxCount: 1 })
 }
 
 export function getTokenContract(): TestToken {
