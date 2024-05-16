@@ -172,19 +172,22 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
 }
 
 export function getProvider(): Provider {
-    return new LoggingJsonRpcProvider(new FetchRequest(TEST_CHAIN_CONFIG.rpcEndpoints[0].url))
+    return new LoggingJsonRpcProvider(new FetchRequest(TEST_CHAIN_CONFIG.rpcEndpoints[0].url), undefined, {
+        batchStallTime: 0,       // Don't batch requests, send them immediately
+        cacheTimeout: -1         // Do not employ result caching
+    })
 }
 
 export function getTokenContract(): TestToken {
     return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, tokenABI) as unknown as TestToken
 }
 
-let cachedAdminWalletNonceManager: NonceManager | undefined
+let cachedAdminWalletNonceManager: Wallet | undefined
 
 // TODO: horrible hack to get things working, fix properly
-export const getAdminWallet = (): NonceManager => {
+export const getAdminWallet = (): Wallet => {
     if (cachedAdminWalletNonceManager === undefined) {
-        cachedAdminWalletNonceManager = new NonceManager(new Wallet(TEST_CHAIN_CONFIG.adminPrivateKey).connect(getProvider()))
+        cachedAdminWalletNonceManager = new Wallet(TEST_CHAIN_CONFIG.adminPrivateKey).connect(getProvider())
     }
     return cachedAdminWalletNonceManager
 }
