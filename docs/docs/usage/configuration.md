@@ -39,3 +39,38 @@ const {
     }
 } = config
 ```
+
+## Chain configuration
+The Streamr Network is an off-chain data network that can be combined with any EVM compatible blockchain. The Streamr "Mainnet" is coupled to the Polygon POS blockchain. Streamr has also deployed its infrastructure to the [Polygon Amoy Testnet](#polygon-amoy-testnet).
+
+To be clear,
+- Streams are created on a chain (default chain is Polygon POS)
+- To subscribe to a stream, you must have the Streamr SDK or Streamr node configured to the chain that the stream is on.
+
+### Polygon Amoy Testnet
+To switch chains, use the `environment` parameter. The default is `polygon`, which maps to the Polygon POS blockchain. To switch to the Polygon Amoy Testnet, follow these code snippets:
+
+**Streamr SDK:**
+```ts
+const streamr = new StreamrClient({
+    auth: {
+        privateKey: PRIVATE 
+    },
+    environment: "polygonAmoy",
+})
+```
+
+**Streamr node**
+```json
+{
+    "client": {
+        "auth": {
+            "privateKey": "PRIVATE"
+        },
+        "environment": “polygonAmoy”
+    },
+    "plugins": {
+        ...
+    }
+}
+```
