@@ -161,7 +161,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.emit('disconnected', gracefulLeave)
     }
 
-    async send(data: Uint8Array): Promise<void> {
+    send(data: Uint8Array): void {
         if (this.stopped) {
             throw new Err.SendFailed('ManagedConnection is stopped')
         }
