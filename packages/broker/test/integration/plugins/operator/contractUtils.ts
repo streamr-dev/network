@@ -1,13 +1,4 @@
-import {
-    ZeroAddress,
-    Contract,
-    JsonRpcProvider,
-    Provider,
-    parseEther,
-    EventLog,
-    NonceManager,
-    FetchRequest
-} from 'ethers'
+import { ZeroAddress, Contract, JsonRpcProvider, Provider, parseEther, EventLog, NonceManager } from 'ethers'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import type { Operator, OperatorFactory, Sponsorship, SponsorshipFactory } from '@streamr/network-contracts-ethers6'
 import { TestToken, operatorABI, operatorFactoryABI, sponsorshipABI, sponsorshipFactoryABI, tokenABI } from '@streamr/network-contracts-ethers6'
@@ -17,7 +8,6 @@ import { Wallet } from 'ethers'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { range } from 'lodash'
 import fetch from 'node-fetch'
-import { LoggingJsonRpcProvider } from '../../../utils'
 
 export const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 
@@ -163,7 +153,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
             '0',
         ]
     )
-    const sponsorshipDeployReceipt = await sponsorshipDeployTx.wait() 
+    const sponsorshipDeployReceipt = await sponsorshipDeployTx.wait()
     const newSponsorshipEvent = sponsorshipDeployReceipt!.logs.find((l: any) => l.fragment?.name === 'NewSponsorship') as EventLog
     const newSponsorshipAddress = newSponsorshipEvent.args.sponsorshipContract
     const newSponsorship = new Contract(newSponsorshipAddress, sponsorshipABI, opts.deployer) as unknown as Sponsorship
@@ -172,7 +162,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
 }
 
 export function getProvider(): Provider {
-    return new LoggingJsonRpcProvider(new FetchRequest(TEST_CHAIN_CONFIG.rpcEndpoints[0].url), undefined, {
+    return new JsonRpcProvider(TEST_CHAIN_CONFIG.rpcEndpoints[0].url, undefined, {
         batchStallTime: 0,       // Don't batch requests, send them immediately
         cacheTimeout: -1         // Do not employ result caching
     })
