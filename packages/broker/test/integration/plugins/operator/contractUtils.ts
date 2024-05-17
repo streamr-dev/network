@@ -1,4 +1,4 @@
-import { ZeroAddress, Contract, JsonRpcProvider, Provider, parseEther, EventLog, NonceManager } from 'ethers'
+import { ZeroAddress, Contract, JsonRpcProvider, Provider, parseEther, EventLog } from 'ethers'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import type { Operator, OperatorFactory, Sponsorship, SponsorshipFactory } from '@streamr/network-contracts-ethers6'
 import { TestToken, operatorABI, operatorFactoryABI, sponsorshipABI, sponsorshipFactoryABI, tokenABI } from '@streamr/network-contracts-ethers6'
@@ -172,14 +172,8 @@ export function getTokenContract(): TestToken {
     return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, tokenABI) as unknown as TestToken
 }
 
-let cachedAdminWalletNonceManager: Wallet | undefined
-
-// TODO: horrible hack to get things working, fix properly
-export const getAdminWallet = (): Wallet => {
-    if (cachedAdminWalletNonceManager === undefined) {
-        cachedAdminWalletNonceManager = new Wallet(TEST_CHAIN_CONFIG.adminPrivateKey).connect(getProvider())
-    }
-    return cachedAdminWalletNonceManager
+export const getAdminWallet = (adminKey?: string, provider?: Provider): Wallet => {
+    return new Wallet(adminKey ?? TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider ?? getProvider())
 }
 
 export const createTheGraphClient = (): TheGraphClient => {
