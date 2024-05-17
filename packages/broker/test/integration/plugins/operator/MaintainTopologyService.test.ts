@@ -120,6 +120,6 @@ describe('MaintainTopologyService', () => {
         await waitForCondition(async () => {
             const state = await getSubscribedStreamPartIds(client)
             return containsAll(state, stream2.getStreamParts()) && doesNotContainAny(state, stream1.getStreamParts())
-        }, 60000, 1000)
+        }, 10000, 1000)
     }, 120 * 1000)
 })
