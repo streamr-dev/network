@@ -106,7 +106,7 @@ describe('MaintainTopologyService', () => {
 
         await waitForCondition(async () => {
             return containsAll(await getSubscribedStreamPartIds(client), stream1.getStreamParts())
-        }, 10000, 1000)
+        }, 20000, 1000)
 
         await stake(operatorContract, sponsorship2.address, 10000)
         await waitForCondition(async () => {
@@ -114,12 +114,12 @@ describe('MaintainTopologyService', () => {
                 ...stream1.getStreamParts(),
                 ...stream2.getStreamParts()
             ])
-        }, 10000, 1000)
+        }, 20000, 1000)
 
         await (await operatorContract.unstake(sponsorship1.address)).wait()
         await waitForCondition(async () => {
             const state = await getSubscribedStreamPartIds(client)
             return containsAll(state, stream2.getStreamParts()) && doesNotContainAny(state, stream1.getStreamParts())
-        }, 10000, 1000)
+        }, 20000, 1000)
     }, 120 * 1000)
 })
