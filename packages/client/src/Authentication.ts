@@ -23,7 +23,7 @@ export const createPrivateKeyAuthentication = (key: string): Authentication => {
     return {
         getAddress: async () => address,
         createMessageSignature: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
-        getStreamRegistryChainSigner: async (rpcProviderFactory: RpcProviderFactory) => { // TODO: can we get rid of the argument here?
+        getStreamRegistryChainSigner: async (rpcProviderFactory: RpcProviderFactory) => {
             const primaryProvider = rpcProviderFactory.getPrimaryProvider()
             return new Wallet(key, primaryProvider) as SignerWithProvider
         }
