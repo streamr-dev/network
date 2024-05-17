@@ -12,8 +12,6 @@ import { toEthereumAddress } from '@streamr/utils'
 
 const httpPort1 = 12371
 
-const TIMEOUT = 30 * 1000
-
 const httpGet = (url: string): Promise<[number, string]> => { // return tuple is of form [statusCode, body]
     return new Promise((resolve, reject) => {
         http.get(url, (res) => {
@@ -36,14 +34,14 @@ describe('dataMetadataEndpoints', () => {
         storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
         client1 = createClient(await fetchPrivateKeyWithGas())
         storageNode = await startStorageNode(storageNodeAccount.privateKey, httpPort1)
-    }, TIMEOUT)
+    })
 
     afterAll(async () => {
         await Promise.allSettled([
             client1?.destroy(),
             storageNode?.stop()
         ])
-    }, TIMEOUT)
+    })
 
     it('returns http error 400 if given non-numeric partition', async () => {
         const url = `http://127.0.0.1:${httpPort1}/streams/stream/metadata/partitions/non-numeric`
@@ -54,7 +52,7 @@ describe('dataMetadataEndpoints', () => {
         expect(res).toEqual({
             error: 'Path parameter "partition" not a number: non-numeric'
         })
-    }, TIMEOUT)
+    })
 
     it('returns zero values for non-existing stream', async () => {
         const url = `http://127.0.0.1:${httpPort1}/streams/non-existing-stream/metadata/partitions/0`
@@ -66,7 +64,7 @@ describe('dataMetadataEndpoints', () => {
         expect(res.totalMessages).toEqual(0)
         expect(res.firstMessage).toEqual(0)
         expect(res.lastMessage).toEqual(0)
-    }, TIMEOUT)
+    })
 
     async function setUpStream(): Promise<Stream> {	
         const freshStream = await createTestStream(client1, module)	
@@ -104,5 +102,5 @@ describe('dataMetadataEndpoints', () => {
         ).toBeLessThan(
             new Date(res.lastMessage).getTime()
         )
-    }, TIMEOUT)
+    }, 30 * 1000)
 })
