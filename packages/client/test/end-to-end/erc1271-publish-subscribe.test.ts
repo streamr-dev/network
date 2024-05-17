@@ -11,7 +11,7 @@ import { MessageMetadata } from '../../src'
 const PAYLOAD = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 const TIMEOUT = 30 * 1000
 
-describe.skip('ERC-1271: publish', () => {  // TODO re-enable
+describe('ERC-1271: publish', () => {  // TODO re-enable
     let publisherWallet: Wallet
     let subscriberWallet: Wallet
     let erc1271ContractAddress: EthereumAddress
@@ -77,8 +77,7 @@ describe.skip('ERC-1271: publish', () => {  // TODO re-enable
     })
 })
 
-// TODO re-enable
-describe.skip('ERC-1271: subscribe', () => {
+describe('ERC-1271: subscribe', () => {
     let publisherWallet: Wallet
     let subscriberWallet: Wallet
     let erc1271ContractAddress: EthereumAddress
@@ -138,7 +137,7 @@ describe.skip('ERC-1271: subscribe', () => {
     }, TIMEOUT)
 })
 
-describe.skip('ERC-1271: publish and subscribe', () => {  // TODO re-enable
+describe('ERC-1271: publish and subscribe', () => {  // TODO re-enable
     let publisherWallet: Wallet
     let subscriberWallet: Wallet
     let erc1271SubscriberContractAddress: EthereumAddress
