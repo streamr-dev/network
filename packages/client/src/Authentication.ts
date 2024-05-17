@@ -1,5 +1,5 @@
 import { BrowserProvider, AbstractSigner, Provider } from 'ethers'
-import { computeAddress, NonceManager } from 'ethers'
+import { computeAddress } from 'ethers'
 import { Wallet } from 'ethers'
 import { EthereumAddress, hexToBinary, toEthereumAddress, wait, createSignature } from '@streamr/utils'
 import pMemoize from 'p-memoize'
@@ -20,16 +20,12 @@ export interface Authentication {
 
 export const createPrivateKeyAuthentication = (key: string): Authentication => {
     const address = toEthereumAddress(computeAddress(key))
-    let cachedChainSigner: SignerWithProvider | undefined = undefined
     return {
         getAddress: async () => address,
         createMessageSignature: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
         getStreamRegistryChainSigner: async (rpcProviderFactory: RpcProviderFactory) => { // TODO: can we get rid of the argument here?
-            if (cachedChainSigner === undefined) {
-                const primaryProvider = rpcProviderFactory.getPrimaryProvider()
-                cachedChainSigner = new NonceManager(new Wallet(key, primaryProvider)) as SignerWithProvider
-            }
-            return cachedChainSigner
+            const primaryProvider = rpcProviderFactory.getPrimaryProvider()
+            return new Wallet(key, primaryProvider) as SignerWithProvider
         }
     }
 }
