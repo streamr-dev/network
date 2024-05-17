@@ -18,6 +18,7 @@ export class MaintainTopologyService {
     }
 
     private onAddStakedStreamPart = this.concurrencyLimiter(async (streamPartId: StreamPartID): Promise<void> => {
+        logger.info('DEBUG onAddStakedStreamPart: ' + streamPartId)
         const [id, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         let subscription: Subscription
         try {
@@ -35,6 +36,7 @@ export class MaintainTopologyService {
     })
 
     private onRemoveStakedStreamPart = this.concurrencyLimiter(async (streamPartId: StreamPartID): Promise<void> => {
+        logger.info('DEBUG onRemoveStakedStreamPart: ' + streamPartId)
         const subscription = this.subscriptions.get(streamPartId)
         this.subscriptions.delete(streamPartId)
         try {
