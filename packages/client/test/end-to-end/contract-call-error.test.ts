@@ -18,8 +18,7 @@ describe('contract call error', () => {
         )
     })
 
-    // TODO fix this test, throws UncaughtException "Error: getaddrinfo ENOTFOUND mock.test"
-    it.skip('invalid chain RPC url', async () => {
+    it('invalid chain RPC url', async () => {
         const client = new StreamrClient({
             ...CONFIG_TEST,
             contracts: {
@@ -37,7 +36,7 @@ describe('contract call error', () => {
         )
     })
 
-    it.skip('concurrent transactions', async () => { // TODO: remove this test if we decide to keep NonceManager
+    it('concurrent transactions', async () => { // TODO: remove this test if we decide to keep NonceManager
         const privateKey = await fetchPrivateKeyWithGas()
         const client = new StreamrClient({
             ...CONFIG_TEST,
@@ -49,6 +48,6 @@ describe('contract call error', () => {
             client.createStream('/path1' + Date.now()),
             client.createStream('/path2' + Date.now())
             // eslint-disable-next-line max-len
-        ])).rejects.toThrow('Error while executing contract call "streamRegistry.createStream", reason=nonce has already been used, code=NONCE_EXPIRED')
+        ])).rejects.toThrow('Error while executing contract call "streamRegistry.createStream", code=NONCE_EXPIRED')
     })
 })
