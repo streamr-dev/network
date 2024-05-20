@@ -38,7 +38,7 @@ describe('contract call error', () => {
         )
     })
 
-    it('concurrent transactions', async () => { // TODO: remove this test if we decide to keep NonceManager
+    it('concurrent transactions', async () => {
         const privateKey = await fetchPrivateKeyWithGas()
         const client = new StreamrClient({
             ...CONFIG_TEST,
