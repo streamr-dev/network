@@ -9,7 +9,6 @@ import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicat
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'
 import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
 import { WebrtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { ManagedWebrtcConnection } from './ManagedWebrtcConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
 import { ManagedConnection } from '../ManagedConnection'
@@ -18,6 +17,8 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { WebrtcConnectorRpcLocal } from './WebrtcConnectorRpcLocal'
 import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { getOfferer } from '../../helpers/offering'
+import { createOutgoingHandshaker } from '../Handshaker'
+import { ConnectionType } from '../IConnection'
 
 const logger = new Logger(module)
 
@@ -50,11 +51,16 @@ export interface IceServer {
     tcp?: boolean
 }
 
+export interface ConnectingConnection {
+    managedConnection: ManagedConnection
+    connection: NodeWebrtcConnection
+}
+
 export class WebrtcConnector {
 
     private static readonly WEBRTC_CONNECTOR_SERVICE_ID = 'system/webrtc-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
-    private readonly ongoingConnectAttempts: Map<DhtAddress, ManagedWebrtcConnection> = new Map()
+    private readonly ongoingConnectAttempts: Map<DhtAddress, ConnectingConnection> = new Map()
     private localPeerDescriptor?: PeerDescriptor
     private stopped = false
     private config: WebrtcConnectorConfig
@@ -131,7 +137,7 @@ export class WebrtcConnector {
         const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
         const existingConnection = this.ongoingConnectAttempts.get(nodeId)
         if (existingConnection) {
-            return existingConnection
+            return existingConnection.managedConnection
         }
 
         const connection = this.createConnection(targetPeerDescriptor)
@@ -139,17 +145,21 @@ export class WebrtcConnector {
         const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor!)
         const targetNodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
         const offering = (getOfferer(localNodeId, targetNodeId) === 'local')
-        let managedConnection: ManagedWebrtcConnection
+        let managedConnection: ManagedConnection
 
         if (offering) {
-            managedConnection = new ManagedWebrtcConnection(this.localPeerDescriptor!, connection)
+            managedConnection = new ManagedConnection(ConnectionType.WEBRTC)
+            createOutgoingHandshaker(this.localPeerDescriptor!, targetPeerDescriptor, managedConnection, connection) 
         } else {
-            managedConnection = new ManagedWebrtcConnection(this.localPeerDescriptor!, undefined, connection)
+            managedConnection = new ManagedConnection(ConnectionType.WEBRTC)
         }
 
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
 
-        this.ongoingConnectAttempts.set(targetNodeId, managedConnection)
+        this.ongoingConnectAttempts.set(targetNodeId, {
+            managedConnection,
+            connection
+        })
 
         const delFunc = () => {
             this.ongoingConnectAttempts.delete(nodeId)
@@ -176,6 +186,7 @@ export class WebrtcConnector {
 
         if (offering) {
             connection.once('localDescription', (description: string) => {
+                logger.trace('Sending offer to remote peer')
                 remoteConnector.sendRtcOffer(description, connection.connectionId)
             })
         } else {
@@ -214,7 +225,10 @@ export class WebrtcConnector {
         this.stopped = true
 
         const attempts = Array.from(this.ongoingConnectAttempts.values())
-        await Promise.allSettled(attempts.map((conn) => conn.close(false)))
+        await Promise.allSettled(attempts.map(async (conn) => {
+            conn.connection.destroy()
+            await conn.managedConnection.close(false)
+        }))
 
         this.rpcCommunicator.destroy()
     }

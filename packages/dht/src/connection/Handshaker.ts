@@ -4,6 +4,8 @@ import { v4 } from 'uuid'
 import { Message, HandshakeRequest, HandshakeResponse, PeerDescriptor, HandshakeError } from '../proto/packages/dht/protos/DhtRpc'
 import { IConnection } from './IConnection'
 import { LOCAL_PROTOCOL_VERSION, isMaybeSupportedVersion } from '../helpers/version'
+import { ManagedConnection } from './ManagedConnection'
+import { getNodeIdFromPeerDescriptor } from '../identifiers'
 
 const logger = new Logger(module)
 
@@ -11,6 +13,66 @@ interface HandshakerEvents {
     handshakeRequest: (source: PeerDescriptor, version: string, target?: PeerDescriptor) => void
     handshakeCompleted: (remote: PeerDescriptor) => void
     handshakeFailed: (error?: HandshakeError) => void
+}
+
+export const createOutgoingHandshaker = (
+    localPeerDescriptor: PeerDescriptor,
+    targetPeerDescriptor: PeerDescriptor,
+    managedConnection: ManagedConnection,
+    connection: IConnection
+): Handshaker => {
+    const handshaker = new Handshaker(localPeerDescriptor, connection)
+    handshaker.once('handshakeFailed', (error) => {
+        if (error === HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR || error === HandshakeError.UNSUPPORTED_VERSION) {
+            // TODO should we have some handling for this floating promise?
+            managedConnection.close(false)
+        } else {
+            // NO-OP: the rejector should take care of destroying the connection.
+        }
+    })
+    handshaker.on('handshakeCompleted', (peerDescriptor: PeerDescriptor) => {
+        logger.trace('handshake completed for outgoing connection, ' + getNodeIdFromPeerDescriptor(peerDescriptor))
+        managedConnection.attachImplementation(connection)
+        managedConnection.onHandshakeCompleted(peerDescriptor)
+    })
+    connection.once('connected', () => handshaker.sendHandshakeRequest(targetPeerDescriptor))
+    connection.once('disconnected', managedConnection.onDisconnected)
+    return handshaker
+}
+
+export const createIncomingHandshaker = (
+    localPeerDescriptor: PeerDescriptor,
+    managedConnection: ManagedConnection,
+    connection: IConnection
+): Handshaker => {
+    const handshaker = new Handshaker(localPeerDescriptor, connection)
+    handshaker.on('handshakeRequest', (sourcePeerDescriptor: PeerDescriptor): void => {
+        managedConnection.setRemotePeerDescriptor(sourcePeerDescriptor)
+    })
+    connection.on('disconnected', managedConnection.onDisconnected)
+    return handshaker
+}
+
+export const rejectHandshake = (
+    managedConnection: ManagedConnection,
+    connection: IConnection,
+    handshaker: Handshaker,
+    error: HandshakeError
+): void => {
+    handshaker.sendHandshakeResponse(error)
+    connection.destroy()
+    managedConnection.destroy()   
+}
+
+export const acceptHandshake = (
+    managedConnection: ManagedConnection,
+    connection: IConnection,
+    handshaker: Handshaker,
+    sourcePeerDescriptor: PeerDescriptor
+): void => {
+    managedConnection.attachImplementation(connection)
+    handshaker.sendHandshakeResponse()
+    managedConnection.onHandshakeCompleted(sourcePeerDescriptor)
 }
 
 export class Handshaker extends EventEmitter<HandshakerEvents> {

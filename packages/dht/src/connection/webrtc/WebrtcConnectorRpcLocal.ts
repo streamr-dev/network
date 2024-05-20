@@ -14,12 +14,13 @@ import { IWebrtcConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.serv
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { ManagedConnection } from '../ManagedConnection'
-import { ManagedWebrtcConnection } from './ManagedWebrtcConnection'
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'
 import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
 import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { isMaybeSupportedVersion } from '../../helpers/version'
-import { ConnectionID } from '../IConnection'
+import { ConnectionID, ConnectionType } from '../IConnection'
+import { acceptHandshake, createIncomingHandshaker, rejectHandshake } from '../Handshaker'
+import { ConnectingConnection } from './WebrtcConnector'
 
 const logger = new Logger(module)
 
@@ -28,7 +29,7 @@ interface WebrtcConnectorRpcLocalConfig {
     connect: (targetPeerDescriptor: PeerDescriptor) => ManagedConnection 
     onNewConnection: (connection: ManagedConnection) => boolean
     // TODO pass accessor methods instead of passing a mutable entity
-    ongoingConnectAttempts: Map<DhtAddress, ManagedWebrtcConnection>
+    ongoingConnectAttempts: Map<DhtAddress, ConnectingConnection>
     rpcCommunicator: ListeningRpcCommunicator
     getLocalPeerDescriptor: () => PeerDescriptor
     allowPrivateAddresses: boolean
@@ -56,14 +57,17 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
     async rtcOffer(request: RtcOffer, context: ServerCallContext): Promise<Empty> {
         const remotePeer = (context as DhtCallContext).incomingSourceDescriptor!
         const nodeId = getNodeIdFromPeerDescriptor(remotePeer)
-        let managedConnection = this.config.ongoingConnectAttempts.get(nodeId)
-        let connection = managedConnection?.getWebrtcConnection()
+        let connection: NodeWebrtcConnection
+        let managedConnection: ManagedConnection
 
-        if (!managedConnection) {
+        if (!this.config.ongoingConnectAttempts.has(nodeId)) {
             connection = this.config.createConnection(remotePeer)
-            managedConnection = new ManagedWebrtcConnection(this.config.getLocalPeerDescriptor(), undefined, connection)
+            managedConnection = new ManagedConnection(ConnectionType.WEBRTC)
             managedConnection.setRemotePeerDescriptor(remotePeer)
-            this.config.ongoingConnectAttempts.set(nodeId, managedConnection)
+            this.config.ongoingConnectAttempts.set(nodeId, {
+                managedConnection,
+                connection
+            })
             this.config.onNewConnection(managedConnection)
             const remoteConnector = new WebrtcConnectorRpcRemote(
                 this.config.getLocalPeerDescriptor(),
@@ -72,26 +76,30 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
                 WebrtcConnectorRpcClient
             )
             connection.on('localCandidate', (candidate: string, mid: string) => {
-                remoteConnector.sendIceCandidate(candidate, mid, connection!.connectionId)
+                remoteConnector.sendIceCandidate(candidate, mid, connection.connectionId)
             })
             connection.once('localDescription', (description: string) => {
-                remoteConnector.sendRtcAnswer(description, connection!.connectionId)
+                remoteConnector.sendRtcAnswer(description, connection.connectionId)
             })
             connection.start(false)
+        } else {
+            managedConnection = this.config.ongoingConnectAttempts.get(nodeId)!.managedConnection
+            connection = this.config.ongoingConnectAttempts.get(nodeId)!.connection
         }
 
         // Always use offerers connectionId
         connection!.setConnectionId(request.connectionId as ConnectionID)
         connection!.setRemoteDescription(request.description, 'offer')
 
-        managedConnection.on('handshakeRequest', (_sourceDescriptor: PeerDescriptor, remoteVersion: string) => {
+        const handshaker = createIncomingHandshaker(this.config.getLocalPeerDescriptor(), managedConnection, connection!)
+        handshaker.on('handshakeRequest', (_sourceDescriptor: PeerDescriptor, remoteVersion: string) => {
             if (this.config.ongoingConnectAttempts.has(nodeId)) {
                 this.config.ongoingConnectAttempts.delete(nodeId)
             }
             if (!isMaybeSupportedVersion(remoteVersion)) {
-                managedConnection!.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
+                rejectHandshake(managedConnection!, connection!, handshaker, HandshakeError.UNSUPPORTED_VERSION)
             } else {
-                managedConnection!.acceptHandshake()
+                acceptHandshake(managedConnection!, connection!, handshaker, remotePeer)
             }
         })
         return {}
@@ -100,7 +108,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
     async rtcAnswer(request: RtcAnswer, context: ServerCallContext): Promise<Empty> {
         const remotePeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const nodeId = getNodeIdFromPeerDescriptor(remotePeerDescriptor)
-        const connection = this.config.ongoingConnectAttempts.get(nodeId)?.getWebrtcConnection()
+        const connection = this.config.ongoingConnectAttempts.get(nodeId)?.connection
         if (!connection) {
             return {}
         } else if (connection.connectionId !== request.connectionId) {
@@ -114,7 +122,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
     async iceCandidate(request: IceCandidate, context: ServerCallContext): Promise<Empty> {
         const remotePeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const nodeId = getNodeIdFromPeerDescriptor(remotePeerDescriptor)
-        const connection = this.config.ongoingConnectAttempts.get(nodeId)?.getWebrtcConnection()
+        const connection = this.config.ongoingConnectAttempts.get(nodeId)?.connection
         if (!connection) {
             return {}
         } else if (connection.connectionId !== request.connectionId) {

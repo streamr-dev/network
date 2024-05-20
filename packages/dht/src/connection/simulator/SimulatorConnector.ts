@@ -9,12 +9,17 @@ import { ManagedConnection } from '../ManagedConnection'
 import { Simulator } from './Simulator'
 import { SimulatorConnection } from './SimulatorConnection'
 import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { acceptHandshake, createIncomingHandshaker, createOutgoingHandshaker, Handshaker, rejectHandshake } from '../Handshaker'
 
 const logger = new Logger(module)
 
+interface ConnectingConnection {
+    connection: ManagedConnection
+    handshaker: Handshaker
+}
 export class SimulatorConnector {
 
-    private connectingConnections: Map<DhtAddress, ManagedConnection> = new Map()
+    private connectingConnections: Map<DhtAddress, ConnectingConnection> = new Map()
     private stopped = false
     private localPeerDescriptor: PeerDescriptor
     private simulator: Simulator
@@ -35,15 +40,18 @@ export class SimulatorConnector {
         const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
         const existingConnection = this.connectingConnections.get(nodeId)
         if (existingConnection) {
-            return existingConnection
+            return existingConnection.connection
         }
 
         const connection = new SimulatorConnection(this.localPeerDescriptor, targetPeerDescriptor, ConnectionType.SIMULATOR_CLIENT, this.simulator)
 
-        const managedConnection = new ManagedConnection(this.localPeerDescriptor, ConnectionType.SIMULATOR_CLIENT, connection, undefined)
+        const managedConnection = new ManagedConnection(ConnectionType.SIMULATOR_CLIENT)
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
-
-        this.connectingConnections.set(nodeId, managedConnection)
+        const handshaker = createOutgoingHandshaker(this.localPeerDescriptor, targetPeerDescriptor, managedConnection, connection)
+        this.connectingConnections.set(nodeId, {
+            connection: managedConnection,
+            handshaker,
+        })
         connection.once('disconnected', () => {
             this.connectingConnections.delete(nodeId)
         })
@@ -69,18 +77,18 @@ export class SimulatorConnector {
         const connection = new SimulatorConnection(this.localPeerDescriptor,
             sourceConnection.localPeerDescriptor, ConnectionType.SIMULATOR_SERVER, this.simulator)
 
-        const managedConnection = new ManagedConnection(this.localPeerDescriptor, ConnectionType.SIMULATOR_SERVER, undefined, connection)
-
+        const managedConnection = new ManagedConnection(ConnectionType.SIMULATOR_SERVER)
+        const handshaker = createIncomingHandshaker(this.localPeerDescriptor, managedConnection, connection)
         logger.trace('connected')
 
-        managedConnection.once('handshakeRequest', () => {
+        handshaker.once('handshakeRequest', () => {
             logger.trace(localNodeId + ' incoming handshake request')
 
             if (this.onNewConnection(managedConnection)) {
                 logger.trace(localNodeId + ' calling acceptHandshake')
-                managedConnection.acceptHandshake()
+                acceptHandshake(managedConnection, connection, handshaker, sourceConnection.localPeerDescriptor)
             } else {
-                managedConnection.rejectHandshake(HandshakeError.DUPLICATE_CONNECTION)
+                rejectHandshake(managedConnection, connection, handshaker, HandshakeError.DUPLICATE_CONNECTION)
             }
         })
 
@@ -90,8 +98,9 @@ export class SimulatorConnector {
     public async stop(): Promise<void> {
         this.stopped = true
         const conns = Array.from(this.connectingConnections.values())
-        await Promise.allSettled(conns.map((conn) =>
-            conn.close(false)
-        ))
+        await Promise.allSettled(conns.map(async (conn) => {
+            conn.handshaker.stop()
+            await conn.connection.close(false)
+        }))
     }
 }

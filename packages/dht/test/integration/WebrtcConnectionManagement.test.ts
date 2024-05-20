@@ -77,7 +77,7 @@ describe('WebRTC Connection Management', () => {
         manager1.send(dummyMessage).catch((e) => {
             throw e
         })
-    }, 60000)
+    }, 15000)
 
     it('Peer2 can open WebRTC Datachannel', (done) => {
         const dummyMessage: Message = {
