@@ -343,7 +343,7 @@ describe('ConnectionManager', () => {
         await connectionManager1.stop()
     })
 
-    it.only('Cannot send to a WebSocketServer if nodeIds do not match', async () => {
+    it('Cannot send to a WebSocketServer if nodeIds do not match', async () => {
 
         const peerDescriptor1 = createMockPeerDescriptor({
             websocket: {
