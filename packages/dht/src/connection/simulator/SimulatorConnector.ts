@@ -47,7 +47,7 @@ export class SimulatorConnector {
 
         const managedConnection = new ManagedConnection(ConnectionType.SIMULATOR_CLIENT)
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
-        const handshaker = createOutgoingHandshaker(this.localPeerDescriptor, targetPeerDescriptor, managedConnection, connection)
+        const handshaker = createOutgoingHandshaker(this.localPeerDescriptor, managedConnection, connection, targetPeerDescriptor)
         this.connectingConnections.set(nodeId, {
             connection: managedConnection,
             handshaker,

@@ -253,7 +253,7 @@ export class WebsocketConnector {
 
             const managedConnection = new ManagedConnection(ConnectionType.WEBSOCKET_CLIENT)
             managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
-            const handshaker = createOutgoingHandshaker(this.localPeerDescriptor!, targetPeerDescriptor, managedConnection, socket)
+            const handshaker = createOutgoingHandshaker(this.localPeerDescriptor!, managedConnection, socket, targetPeerDescriptor)
             this.connectingConnections.set(nodeId, {
                 connection: managedConnection,
                 handshaker

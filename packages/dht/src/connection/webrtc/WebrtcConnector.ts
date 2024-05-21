@@ -149,7 +149,7 @@ export class WebrtcConnector {
 
         if (offering) {
             managedConnection = new ManagedConnection(ConnectionType.WEBRTC)
-            createOutgoingHandshaker(this.localPeerDescriptor!, targetPeerDescriptor, managedConnection, connection) 
+            createOutgoingHandshaker(this.localPeerDescriptor!, managedConnection, connection, targetPeerDescriptor) 
         } else {
             managedConnection = new ManagedConnection(ConnectionType.WEBRTC)
         }

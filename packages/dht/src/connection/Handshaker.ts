@@ -17,9 +17,9 @@ interface HandshakerEvents {
 
 export const createOutgoingHandshaker = (
     localPeerDescriptor: PeerDescriptor,
-    targetPeerDescriptor: PeerDescriptor,
     managedConnection: ManagedConnection,
-    connection: IConnection
+    connection: IConnection,
+    targetPeerDescriptor?: PeerDescriptor
 ): Handshaker => {
     const handshaker = new Handshaker(localPeerDescriptor, connection)
     handshaker.once('handshakeFailed', (error) => {
@@ -109,6 +109,7 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
                 logger.trace('handshake response received')
                 const handshake = message.body.handshakeResponse
                 const error = !isMaybeSupportedVersion(handshake.version) ? HandshakeError.UNSUPPORTED_VERSION : handshake.error
+                console.log(error)
                 if (error !== undefined) {
                     this.emit('handshakeFailed', error)
                 } else {

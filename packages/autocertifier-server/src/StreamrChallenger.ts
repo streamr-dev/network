@@ -45,7 +45,7 @@ export const runStreamrChallenge = (
 
         const managedConnection = new ManagedConnection(ConnectionType.WEBSOCKET_CLIENT)
         managedConnection.setRemotePeerDescriptor(remotePeerDescriptor)
-        const handshaker = createOutgoingHandshaker(LOCAL_PEER_DESCRIPTOR, remotePeerDescriptor, managedConnection, socket)
+        const handshaker = createOutgoingHandshaker(LOCAL_PEER_DESCRIPTOR, managedConnection, socket)
         const onDisconnected = () => {
             reject(new FailedToConnectToStreamrWebSocket('Autocertifier failed to connect to '
                 + address + '. Please chack that the IP address is not behind a NAT.'))
@@ -54,6 +54,7 @@ export const runStreamrChallenge = (
         socket.on('disconnected', onDisconnected)
 
         managedConnection.on('handshakeCompleted', () => {
+            console.log("here")
             socket.off('disconnected', onDisconnected)
             const communicator = new RoutingRpcCommunicator(SERVICE_ID,
                 async (msg: Message): Promise<void> => {
