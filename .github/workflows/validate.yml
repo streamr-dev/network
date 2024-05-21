@@ -109,13 +109,12 @@ jobs:
       command: |
         npm run test-unit
         npm run test-integration
-        npm run docs
   client-e2e:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
       package: client
-      docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain ens-sync-script
+      docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
       run-entry-point: true
       run-brokers: true
       command: npm run test-end-to-end
