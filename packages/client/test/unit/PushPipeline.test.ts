@@ -163,10 +163,10 @@ describe('PushPipeline', () => {
         expect(received).toEqual([streamMessage])
     })
 
-    /*TODO re-enable testOnlyInNodeJs('processes buffer before handling errors with endWrite', async () => { // LeakDetector not supported by electron
+    testOnlyInNodeJs('processes buffer before handling errors with endWrite', async () => { // LeakDetector not supported by electron
         const testMessage = Msg()
         leaksDetector.add('testMessage', testMessage)
-        const s = new PushPipeline<StreamMessage>()
+        let s: PushPipeline<StreamMessage> | undefined = new PushPipeline<StreamMessage>()
         leaksDetector.add(instanceId(s), s)
         const err = new Error(counterId('expected error'))
 
@@ -174,16 +174,21 @@ describe('PushPipeline', () => {
         leaksDetector.add('streamMessage', streamMessage)
         s.push(streamMessage)
         s.endWrite(err)
-        const received: StreamMessage[] = []
+        let received: StreamMessage[] = []
         await expect(async () => {
-            for await (const msg of s) {
+            for await (const msg of s!) {
                 leaksDetector.add('receivedMessage', msg)
                 received.push(msg)
             }
         }).rejects.toThrow(err)
 
         expect(received).toEqual([streamMessage])
-    })*/
+
+        // TODO: why does this test require clearing these local vars?
+        // eslint-disable-next-line require-atomic-updates
+        s = undefined
+        received = []
+    })
 
     testOnlyInNodeJs('can collect', async () => { // LeakDetector not supported by electron
         const s = new PushPipeline<StreamMessage>()
