@@ -64,8 +64,16 @@ thead {
 }
 
 .theme-doc-sidebar-menu.menu__list .menu__link {
-    font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+html[data-theme="light"] .theme-doc-sidebar-menu.menu__list .menu__link {
+    color: #000;
+}
+
+html[data-theme="dark"] .theme-doc-sidebar-menu.menu__list .menu__link {
+    color: #FFF;
 }
 
 .hide-expandable-sidebar button,
@@ -79,7 +87,7 @@ thead {
     padding-left: 2.5rem !important;
     border: 0px !important;
     background-color: transparent !important;
-  }
+}
 
 /* override base styles on API reference featured classes */
 .link_t2Qp:before {
@@ -90,4 +98,19 @@ thead {
 
 .hidden-content {
     display: none;
+}
+
+.theme-doc-sidebar-menu.menu__list > .menu__list-item > .menu__list-item-collapsible > .menu__link {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    margin: 6px 0;
+}
+
+html[data-theme="light"] .theme-doc-sidebar-menu.menu__list > .menu__list-item > .menu__list-item-collapsible > .menu__link {
+    color: #000;
+}
+
+html[data-theme="dark"] .theme-doc-sidebar-menu.menu__list > .menu__list-item > .menu__list-item-collapsible > .menu__link {
+    color: #FFF;
 }
