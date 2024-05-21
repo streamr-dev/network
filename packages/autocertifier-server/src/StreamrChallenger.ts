@@ -54,7 +54,6 @@ export const runStreamrChallenge = (
         socket.on('disconnected', onDisconnected)
 
         managedConnection.on('handshakeCompleted', () => {
-            console.log("here")
             socket.off('disconnected', onDisconnected)
             const communicator = new RoutingRpcCommunicator(SERVICE_ID,
                 async (msg: Message): Promise<void> => {
