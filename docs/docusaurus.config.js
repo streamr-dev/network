@@ -69,7 +69,7 @@ const config = {
                     routeBasePath: "/",
                     sidebarPath: require.resolve("./sidebars.js"),
                     editUrl:
-                        "https://github.com/streamr-dev/network/tree/pre-1.0-docs/docs",
+                        "https://github.com/streamr-dev/network/tree/main/docs",
                     exclude: [
                         "**usage/sdk/api/modules.mdx",
                         "**usage/sdk/api/modules.md",

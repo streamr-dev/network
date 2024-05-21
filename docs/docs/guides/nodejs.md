@@ -6,10 +6,17 @@ sidebar_position: 1
 This is a quickstart guide on creating your first stream using the Streamr TypeScript SDK in a NodeJS script.
 
 **Prerequisites:**
-
 -   NPM v8 or greater
 -   NodeJS 18.13.x or greater (version 20 and later ideally)
 -   A small amount of `MATIC` to pay for gas on Polygon mainnet. You can reachout to us on the #dev channel of [Discord](https://discord.gg/gZAm8P7hK8) for some tokens.
+
+:::tip Key Point:
+If you'd like to test out Streamr without needing `MATIC` to pay for stream creation and access control transactions then you can configure any Streamr app or node to be on Polygon Amoy. 
+
+Note that streams that are registered on one chain, cannot see or interact with streams on another chain (including the stream mentioned in this guide). 
+
+Checkout our [Polygon Amoy testnet configuration](../usage/configuration.md#polygon-amoy-testnet) for more details.
+:::
 
 ## Streamr SDK
 The Streamr SDK is available on [NPM](https://www.npmjs.com/package/@streamr/node) and can be installed simply with:
