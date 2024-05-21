@@ -109,7 +109,6 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
                 logger.trace('handshake response received')
                 const handshake = message.body.handshakeResponse
                 const error = !isMaybeSupportedVersion(handshake.version) ? HandshakeError.UNSUPPORTED_VERSION : handshake.error
-                console.log(error)
                 if (error !== undefined) {
                     this.emit('handshakeFailed', error)
                 } else {
