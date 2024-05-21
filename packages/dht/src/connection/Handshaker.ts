@@ -29,14 +29,19 @@ export const createOutgoingHandshaker = (
         } else {
             // NO-OP: the rejector should take care of destroying the connection.
         }
+        handshaker.stop()
     })
     handshaker.on('handshakeCompleted', (peerDescriptor: PeerDescriptor) => {
         logger.trace('handshake completed for outgoing connection, ' + getNodeIdFromPeerDescriptor(peerDescriptor))
         managedConnection.attachImplementation(connection)
         managedConnection.onHandshakeCompleted(peerDescriptor)
+        handshaker.stop()
     })
     connection.once('connected', () => handshaker.sendHandshakeRequest(targetPeerDescriptor))
-    connection.once('disconnected', managedConnection.onDisconnected)
+    connection.once('disconnected', (graceful: boolean) => { 
+        managedConnection.onDisconnected(graceful)
+        handshaker.stop()
+    })
     return handshaker
 }
 
@@ -49,7 +54,16 @@ export const createIncomingHandshaker = (
     handshaker.on('handshakeRequest', (sourcePeerDescriptor: PeerDescriptor): void => {
         managedConnection.setRemotePeerDescriptor(sourcePeerDescriptor)
     })
-    connection.on('disconnected', managedConnection.onDisconnected)
+    connection.on('disconnected', (graceful: boolean) => {
+        managedConnection.onDisconnected(graceful)
+        handshaker.stop()
+    })
+    handshaker.on('handshakeCompleted', () => {
+        handshaker.stop()
+    })
+    handshaker.on('handshakeFailed', () => {
+        handshaker.stop()
+    })
     return handshaker
 }
 
