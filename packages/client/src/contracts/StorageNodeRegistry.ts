@@ -62,7 +62,7 @@ export class StorageNodeRegistry {
 
     async setStorageNodeMetadata(metadata: StorageNodeMetadata | undefined): Promise<void> {
         await this.connectToContract()
-        const ethersOverrides = getEthersOverrides(this.rpcProviderFactory, this.config)
+        const ethersOverrides = await getEthersOverrides(this.rpcProviderFactory, this.config)
         if (metadata !== undefined) {
             await waitForTx(this.nodeRegistryContract!.createOrUpdateNodeSelf(JSON.stringify(metadata), ethersOverrides))
         } else {

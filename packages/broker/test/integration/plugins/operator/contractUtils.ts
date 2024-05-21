@@ -61,7 +61,7 @@ export async function setupOperatorContract(
     const operatorConfig = {
         operatorContractAddress: toEthereumAddress(await operatorContract.getAddress()),
         theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl,
-        getEthersOverrides: () => ({})
+        getEthersOverrides: async () => ({})
     }
     return { operatorWallet, operatorContract, operatorServiceConfig: operatorConfig, nodeWallets }
 }

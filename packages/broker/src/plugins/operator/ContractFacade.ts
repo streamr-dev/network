@@ -127,7 +127,7 @@ export class ContractFacade {
 
     async writeHeartbeat(nodeDescriptor: NetworkPeerDescriptor): Promise<void> {
         const metadata = JSON.stringify(nodeDescriptor)
-        await (await this.operatorContract.heartbeat(metadata, this.getEthersOverrides())).wait()
+        await (await this.operatorContract.heartbeat(metadata, await this.getEthersOverrides())).wait()
     }
 
     async getTimestampOfLastHeartbeat(): Promise<number | undefined> {
@@ -267,7 +267,7 @@ export class ContractFacade {
 
     async flag(sponsorship: EthereumAddress, operator: EthereumAddress, partition: number): Promise<void> {
         const metadata = JSON.stringify({ partition })
-        await (await this.operatorContract.flag(sponsorship, operator, metadata, this.getEthersOverrides())).wait()
+        await (await this.operatorContract.flag(sponsorship, operator, metadata, await this.getEthersOverrides())).wait()
     }
 
     async getRandomOperator(): Promise<EthereumAddress | undefined> {
@@ -325,7 +325,7 @@ export class ContractFacade {
     async withdrawMyEarningsFromSponsorships(sponsorshipAddresses: EthereumAddress[]): Promise<void> {
         await (await this.operatorContract.withdrawEarningsFromSponsorships(
             sponsorshipAddresses,
-            this.getEthersOverrides()
+            await this.getEthersOverrides()
         )).wait()
     }
 
@@ -333,7 +333,7 @@ export class ContractFacade {
         await (await this.operatorContract.triggerAnotherOperatorWithdraw(
             targetOperatorAddress,
             sponsorshipAddresses,
-            this.getEthersOverrides()
+            await this.getEthersOverrides()
         )).wait()
     }
 
@@ -504,7 +504,7 @@ export class ContractFacade {
         return this.config.signer.provider
     }
 
-    getEthersOverrides(): Overrides {
+    getEthersOverrides(): Promise<Overrides> {
         return this.config.getEthersOverrides()
     }
 }

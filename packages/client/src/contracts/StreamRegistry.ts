@@ -183,7 +183,7 @@ export class StreamRegistry {
     }
 
     async createStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
-        const ethersOverrides = getEthersOverrides(this.rpcProviderFactory, this.config)
+        const ethersOverrides = await getEthersOverrides(this.rpcProviderFactory, this.config)
 
         const domainAndPath = StreamIDUtils.getDomainAndPath(streamId)
         if (domainAndPath === undefined) {
@@ -230,7 +230,7 @@ export class StreamRegistry {
     // Most likely the contract doesn't make any merging (like we do in Stream#update)?
     async updateStream(streamId: StreamID, metadata: Partial<StreamMetadata>): Promise<Stream> {
         await this.connectToContract()
-        const ethersOverrides = getEthersOverrides(this.rpcProviderFactory, this.config)
+        const ethersOverrides = await getEthersOverrides(this.rpcProviderFactory, this.config)
         await waitForTx(this.streamRegistryContract!.updateStreamMetadata(
             streamId,
             JSON.stringify(metadata),
@@ -242,7 +242,7 @@ export class StreamRegistry {
     async deleteStream(streamIdOrPath: string): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         await this.connectToContract()
-        const ethersOverrides = getEthersOverrides(this.rpcProviderFactory, this.config)
+        const ethersOverrides = await getEthersOverrides(this.rpcProviderFactory, this.config)
         await waitForTx(this.streamRegistryContract!.deleteStream(
             streamId,
             ethersOverrides
@@ -412,19 +412,21 @@ export class StreamRegistry {
     }
 
     async grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
+        const overrides = await getEthersOverrides(this.rpcProviderFactory, this.config)
         return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: EthereumAddress | undefined, solidityType: bigint) => {
             return (user === undefined)
-                ? this.streamRegistryContract!.grantPublicPermission(streamId, solidityType, getEthersOverrides(this.rpcProviderFactory, this.config))
-                : this.streamRegistryContract!.grantPermission(streamId, user, solidityType, getEthersOverrides(this.rpcProviderFactory, this.config))
+                ? this.streamRegistryContract!.grantPublicPermission(streamId, solidityType, overrides)
+                : this.streamRegistryContract!.grantPermission(streamId, user, solidityType, overrides)
         }, ...assignments)
     }
 
     /* eslint-disable max-len */
     async revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
+        const overrides = await getEthersOverrides(this.rpcProviderFactory, this.config)
         return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: EthereumAddress | undefined, solidityType: bigint) => {
             return (user === undefined)
-                ? this.streamRegistryContract!.revokePublicPermission(streamId, solidityType, getEthersOverrides(this.rpcProviderFactory, this.config))
-                : this.streamRegistryContract!.revokePermission(streamId, user, solidityType, getEthersOverrides(this.rpcProviderFactory, this.config))
+                ? this.streamRegistryContract!.revokePublicPermission(streamId, solidityType, overrides)
+                : this.streamRegistryContract!.revokePermission(streamId, user, solidityType, overrides)
         }, ...assignments)
     }
 
@@ -467,7 +469,7 @@ export class StreamRegistry {
             }))
         }
         await this.connectToContract()
-        const ethersOverrides = getEthersOverrides(this.rpcProviderFactory, this.config)
+        const ethersOverrides = await getEthersOverrides(this.rpcProviderFactory, this.config)
         const txToSubmit = this.streamRegistryContract!.setPermissionsMultipleStreams(
             streamIds,
             targets,

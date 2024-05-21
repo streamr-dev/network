@@ -21,22 +21,22 @@ export const generateEthereumAccount = (): { address: string, privateKey: string
  * Apply the gasPriceStrategy to the estimated gas price, if given
  * Ethers.js will resolve the gas price promise before sending the tx
  */
-export const getEthersOverrides = (
+export const getEthersOverrides = async (
     rpcProviderFactory: RpcProviderFactory, // TODO: can this be done somewhat cleaner?
     config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
-): Overrides => {
+): Promise<Overrides> => {
     const chainConfig = config.contracts.ethereumNetwork
     const overrides = chainConfig.overrides ?? {}
     if ((chainConfig.highGasPriceStrategy) && (chainConfig.overrides?.gasPrice === undefined)) {
         const primaryProvider = rpcProviderFactory.getPrimaryProvider()
+        const feeData = await primaryProvider.getFeeData()
         const gasPriceStrategy = (feeData: FeeData) => {
             const INCREASE_PERCENTAGE = 30
-            // TODO: what to do when gasPrice is null, is returning 0 okay?
-            return feeData.gasPrice === null ? 0n : feeData.gasPrice * BigInt(100 + INCREASE_PERCENTAGE) / 100n
+            return feeData.gasPrice === null ? undefined : feeData.gasPrice * BigInt(100 + INCREASE_PERCENTAGE) / 100n
         }
         return {
             ...overrides,
-            // TODO implement this to be compatible with Ethers 6 gasPrice: primaryProvider.getFeeData().then(gasPriceStrategy)
+            gasPrice: gasPriceStrategy(feeData)
         }
     }
     return overrides

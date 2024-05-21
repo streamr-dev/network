@@ -77,7 +77,7 @@ describe('MaintainTopologyService', () => {
             signer: operatorWallet as SignerWithProvider,
             operatorContractAddress: toEthereumAddress(await operatorContract.getAddress()),
             theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl,
-            getEthersOverrides: () => ({})
+            getEthersOverrides: async () => ({})
         }
 
         const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
