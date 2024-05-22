@@ -88,7 +88,6 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
             portRangeEnd: this.portRange?.max,
         })
 
-
         this.connection.onStateChange((state: string) => this.onStateChange(state))
         this.connection.onGatheringStateChange(() => {})
 
