@@ -14,7 +14,6 @@ import {
     stake
 } from './contractUtils'
 import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
-import { SignerWithProvider } from '@streamr/sdk'
 
 const logger = new Logger(module)
 
@@ -60,7 +59,7 @@ describe('checkOperatorValueBreach', () => {
         const allowedDifference = valueBeforeWithdraw * (await streamrConfig.maxAllowedEarningsFraction()) / ONE_ETHER
         const contractFacade = ContractFacade.createInstance({
             ...watcherConfig,
-            signer: watcherWallets[0] as SignerWithProvider
+            signer: watcherWallets[0]
         })
         // overwrite (for this test only) the getRandomOperator method to deterministically return the operator's address
         contractFacade.getRandomOperator = async () => {
