@@ -130,7 +130,7 @@ export const createDecoratedContract = <T extends BaseContract>(
     const concurrencyLimit = pLimit(maxConcurrentCalls)
     const decoratedContract: any = {
         eventEmitter,
-        // TODO implement also other generic contract methods which we need?
+        // TODO implement also other generic contract methods in the future if needed
         on: (eventName: string, listener: (...args: any[]) => void) => {
             contract.on(eventName, listener)
         },

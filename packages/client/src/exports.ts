@@ -70,6 +70,5 @@ export {
     StreamMessageType
 } from '@streamr/protocol'
 
-export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht' 
-// TODO ExternalProvider was exported, do se need those?
+export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht'
 export type { Signer, Provider, Overrides } from 'ethers'
