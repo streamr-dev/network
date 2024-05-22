@@ -55,7 +55,6 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
     private dataChannel?: DataChannel
     private lastState: RtcPeerConnectionState = 'connecting'
     private remoteDescriptionSet = false
-    private connectingTimeoutRef?: NodeJS.Timeout
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
     private readonly iceServers: IceServer[]
     private readonly _bufferThresholdHigh: number // TODO: buffer handling must be implemented before production use (NET-938)
@@ -89,10 +88,6 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
             portRangeEnd: this.portRange?.max,
         })
 
-        this.connectingTimeoutRef = setTimeout(() => {
-            logger.trace('connectingTimeout, this.closed === ' + this.closed)
-            this.doClose(false)
-        }, this.connectingTimeout)
 
         this.connection.onStateChange((state: string) => this.onStateChange(state))
         this.connection.onGatheringStateChange(() => {})
@@ -169,10 +164,6 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
             
             this.emit('disconnected', gracefulLeave, undefined, reason)
             this.removeAllListeners()
-            
-            if (this.connectingTimeoutRef) {
-                clearTimeout(this.connectingTimeoutRef)
-            }
 
             if (this.dataChannel) {
                 try {
@@ -226,9 +217,6 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
     }
 
     private onDataChannelOpen(): void {
-        if (this.connectingTimeoutRef) {
-            clearTimeout(this.connectingTimeoutRef)
-        }
         logger.trace(`DataChannel opened for peer ${getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)}`)
         this.emit('connected')
     }
