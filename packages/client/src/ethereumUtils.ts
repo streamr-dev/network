@@ -1,5 +1,3 @@
-/* eslint-disable */
-// TODO remove "eslint-disable"
 /**
  * Config and utilities for interating with identity & Ethereum chain.
  */

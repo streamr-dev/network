@@ -116,7 +116,7 @@ describe('MetricsPublisher', () => {
         it('ethereum authentication', async () => {
             await assertPublisherDisabled({
                 auth: {
-                    ethereum: {} as any // TODO
+                    ethereum: {} as any
                 }
             })
         })
