@@ -1,4 +1,4 @@
-import { Provider } from '@ethersproject/providers'
+import { Provider } from 'ethers'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -62,7 +62,7 @@ export class StorageNodeRegistry {
 
     async setStorageNodeMetadata(metadata: StorageNodeMetadata | undefined): Promise<void> {
         await this.connectToContract()
-        const ethersOverrides = getEthersOverrides(this.rpcProviderFactory, this.config)
+        const ethersOverrides = await getEthersOverrides(this.rpcProviderFactory, this.config)
         if (metadata !== undefined) {
             await waitForTx(this.nodeRegistryContract!.createOrUpdateNodeSelf(JSON.stringify(metadata), ethersOverrides))
         } else {
@@ -71,7 +71,7 @@ export class StorageNodeRegistry {
     }
 
     async getStorageNodeMetadata(nodeAddress: EthereumAddress): Promise<StorageNodeMetadata> {
-        const [ resultNodeAddress, metadata ] = await queryAllReadonlyContracts((contract: NodeRegistryContract) => {
+        const [ resultNodeAddress, metadata ] = await queryAllReadonlyContracts<any, NodeRegistryContract>((contract) => {
             return contract.getNode(nodeAddress)
         }, this.nodeRegistryContractsReadonly)
         const NODE_NOT_FOUND = '0x0000000000000000000000000000000000000000'

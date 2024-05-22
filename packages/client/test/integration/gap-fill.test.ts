@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { Wallet } from '@ethersproject/wallet'
+import { Wallet } from 'ethers'
 import { StreamMessage } from '@streamr/protocol'
 import { fastWallet, testOnlyInNodeJs } from '@streamr/test-utils'
 import { collect, toEthereumAddress } from '@streamr/utils'
