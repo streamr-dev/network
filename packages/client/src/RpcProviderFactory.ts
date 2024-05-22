@@ -4,6 +4,10 @@ import { LoggingJsonRpcProvider } from './utils/LoggingJsonRpcProvider'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { FetchRequest } from 'ethers'
 
+function isDevChain(config: Pick<StrictStreamrClientConfig, 'contracts'>): boolean {
+    return config.contracts.streamRegistryChainRPCs?.name === 'dev2'
+}
+
 @scoped(Lifecycle.ContainerScoped)
 export class RpcProviderFactory {
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
@@ -26,8 +30,8 @@ export class RpcProviderFactory {
                     name: this.config.contracts.streamRegistryChainRPCs?.name
                 }, {
                     staticNetwork: true,
-                    batchStallTime: 0,       // Don't batch requests, send them immediately
-                    cacheTimeout: -1         // Do not employ result caching
+                    batchStallTime: isDevChain(this.config) ? 0 : undefined, // Don't batch requests, send them immediately
+                    cacheTimeout: isDevChain(this.config) ? -1 : undefined   // Do not employ result caching
                 })
                 if (pollInterval !== undefined) {
                     provider.pollingInterval = pollInterval
