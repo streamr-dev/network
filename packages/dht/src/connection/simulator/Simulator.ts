@@ -99,7 +99,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private fixedLatency?: number
 
     private loopCounter = 0
-    private MAX_LOOPS = 2000
+    private MAX_LOOPS = 1000
 
     private operationQueue: Heap<SimulatorOperation> = new Heap<SimulatorOperation>((a: SimulatorOperation, b: SimulatorOperation) => {
         if ((a.executionTime - b.executionTime) === 0) {
