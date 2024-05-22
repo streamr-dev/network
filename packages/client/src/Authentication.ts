@@ -39,7 +39,7 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
         return createPrivateKeyAuthentication(normalizedPrivateKey)
     } else if ((config.auth as ProviderAuthConfig)?.ethereum !== undefined) {
         const ethereum = (config.auth as ProviderAuthConfig)?.ethereum
-        const provider = new BrowserProvider(ethereum as any)
+        const provider = new BrowserProvider(ethereum)
         const signer = provider.getSigner()
         return {
             getAddress: pMemoize(async () => {

@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import type { Overrides, Provider } from 'ethers'
+import type { Overrides, Eip1193Provider } from 'ethers'
 import cloneDeep from 'lodash/cloneDeep'
 import { DeepRequired, MarkOptional } from 'ts-essentials'
 import { LogLevel, merge } from '@streamr/utils'
@@ -10,7 +10,7 @@ import { GapFillStrategy } from './subscribe/ordering/GapFiller'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 
 export interface ProviderAuthConfig {
-    ethereum: Provider
+    ethereum: Eip1193Provider
 }
 
 export interface PrivateKeyAuthConfig {

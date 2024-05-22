@@ -71,4 +71,4 @@ export {
 } from '@streamr/protocol'
 
 export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht'
-export type { Signer, Provider, Overrides } from 'ethers'
+export type { Signer, Eip1193Provider, Overrides } from 'ethers'
