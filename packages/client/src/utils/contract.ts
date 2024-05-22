@@ -58,7 +58,7 @@ const createLogger = (eventEmitter: EventEmitter<ContractEvent>, loggerFactory: 
             block: receipt?.blockNumber,
             confirmations: receipt?.confirmations,
             gasUsed: receipt?.gasUsed,
-            events: (receipt?.logs || []).map((e) => e)
+            events: receipt?.logs ?? []
         })
     })
 }
