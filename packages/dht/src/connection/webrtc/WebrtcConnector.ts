@@ -164,9 +164,11 @@ export class WebrtcConnector {
         const delFunc = () => {
             this.ongoingConnectAttempts.delete(nodeId)
             connection.off('disconnected', delFunc)
+            managedConnection.off('disconnected', delFunc)
             managedConnection.off('handshakeCompleted', delFunc)
         }
         connection.on('disconnected', delFunc)
+        managedConnection.on('disconnected', delFunc)
         managedConnection.on('handshakeCompleted', delFunc)
 
         const remoteConnector = new WebrtcConnectorRpcRemote(

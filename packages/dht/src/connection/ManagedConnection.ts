@@ -27,8 +27,6 @@ export class ManagedConnection extends EventEmitter<Events> {
     private stopped = false
     private bufferSentbyOtherConnection = false
     public replacedByOtherConnection = false
-    protected outgoingConnection?: IConnection
-    protected incomingConnection?: IConnection
     private readonly connectingAbortController: AbortController = new AbortController()
 
     constructor(connectionType: ConnectionType) {

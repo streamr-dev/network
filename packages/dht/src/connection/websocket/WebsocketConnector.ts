@@ -264,9 +264,11 @@ export class WebsocketConnector {
                     this.connectingConnections.delete(nodeId)
                 }
                 socket.off('disconnected', delFunc)
+                managedConnection.off('disconnected', delFunc)
                 managedConnection.off('handshakeCompleted', delFunc)
             }
             socket.on('disconnected', delFunc)
+            managedConnection.on('disconnected', delFunc)
             managedConnection.on('handshakeCompleted', delFunc)
 
             socket.connect(url, false)
