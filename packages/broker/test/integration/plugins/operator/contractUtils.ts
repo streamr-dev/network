@@ -8,6 +8,7 @@ import { Wallet } from 'ethers'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { range } from 'lodash'
 import fetch from 'node-fetch'
+import { SignerWithProvider } from '@streamr/sdk'
 
 export const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 
@@ -32,7 +33,7 @@ export interface SetupOperatorContractReturnType {
     operatorWallet: Wallet
     operatorContract: Operator
     operatorServiceConfig: Omit<OperatorServiceConfig, 'signer'>
-    nodeWallets: Wallet[]
+    nodeWallets: (Wallet & SignerWithProvider)[]
 }
 
 const logger = new Logger(module)
@@ -49,7 +50,7 @@ export async function setupOperatorContract(
         operatorsCutPercent: opts?.operatorConfig?.operatorsCutPercent,
         metadata: opts?.operatorConfig?.metadata
     })
-    const nodeWallets: Wallet[] = []
+    const nodeWallets: (Wallet & SignerWithProvider)[] = []
     if ((opts?.nodeCount !== undefined) && (opts?.nodeCount > 0)) {
         for (const _ of range(opts.nodeCount)) {
             nodeWallets.push(await generateWalletWithGasAndTokens({
@@ -188,7 +189,7 @@ interface GenerateWalletWithGasAndTokensOpts {
     chainConfig?: { contracts: { DATA: string } }
 }
 
-export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGasAndTokensOpts): Promise<Wallet> {
+export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGasAndTokensOpts): Promise<Wallet & SignerWithProvider> {
     const provider = getProvider()
     const newWallet = new Wallet(fastPrivateKey())
     const adminWallet = getAdminWallet()
@@ -210,7 +211,7 @@ export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGa
         10,
         100
     )
-    return newWallet.connect(provider)
+    return newWallet.connect(provider) as (Wallet & SignerWithProvider)
 }
 
 export const delegate = async (delegator: Wallet, operatorContractAddress: string, amount: number, token?: TestToken): Promise<void> => {

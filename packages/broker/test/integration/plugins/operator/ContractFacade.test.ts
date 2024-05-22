@@ -15,7 +15,6 @@ import {
 } from './contractUtils'
 import { createClient, createTestStream } from '../../../utils'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { SignerWithProvider } from '@streamr/sdk'
 
 async function createStream(): Promise<string> {
     const client = createClient(await fetchPrivateKeyWithGas())
@@ -55,7 +54,7 @@ describe('ContractFacade', () => {
     it('getRandomOperator', async () => {
         const contractFacade = ContractFacade.createInstance({
             ...deployedOperator.operatorServiceConfig,
-            signer: deployedOperator.nodeWallets[0] as SignerWithProvider
+            signer: deployedOperator.nodeWallets[0]
         })
         const randomOperatorAddress = await contractFacade.getRandomOperator()
         expect(randomOperatorAddress).toBeDefined()
@@ -119,7 +118,7 @@ describe('ContractFacade', () => {
 
         const contractFacade = ContractFacade.createInstance({
             ...flagger.operatorServiceConfig,
-            signer: flagger.nodeWallets[0] as SignerWithProvider
+            signer: flagger.nodeWallets[0]
         })
         await contractFacade.flag(
             toEthereumAddress(await sponsorship2.getAddress()),

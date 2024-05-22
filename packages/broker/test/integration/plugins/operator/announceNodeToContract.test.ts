@@ -2,7 +2,6 @@ import { waitForCondition } from '@streamr/utils'
 import { setupOperatorContract } from './contractUtils'
 import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 import { announceNodeToContract } from '../../../../src/plugins/operator/announceNodeToContract'
-import { SignerWithProvider } from '@streamr/sdk'
 
 const TIMEOUT = 30 * 1000
 
@@ -16,7 +15,7 @@ describe('announceNodeToContract', () => {
         })
         contractFacade = ContractFacade.createInstance({
             ...operatorServiceConfig,
-            signer: nodeWallets[0] as SignerWithProvider
+            signer: nodeWallets[0]
         })
     }, TIMEOUT)
 
