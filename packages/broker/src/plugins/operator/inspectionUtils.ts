@@ -143,10 +143,7 @@ export async function inspectTarget({
             // TODO: re-enable when works
             //const result = await streamrClient.inspect(descriptor, target.streamPart)
             const result = true
-            // TODO remove casting when type definition for throwIfAborted() is available. We have the correct
-            // type definition (@types/node@18.19.31) in monorepo root, but ethers v6.12.0 seems to override
-            // it with an older version (18.15.13).
-            ;(abortSignal as any).throwIfAborted()
+            abortSignal.throwIfAborted()
             if (result) {
                 logger.info('Inspection done (no issue detected)', {
                     targetOperator: target.operatorAddress,

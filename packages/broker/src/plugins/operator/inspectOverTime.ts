@@ -142,10 +142,7 @@ class InspectionOverTimeTask {
                 this.getRedundancyFactor,
                 this.logger
             )
-            // TODO remove casting when type definition for throwIfAborted() is available. We have the correct
-            // type definition (@types/node@18.19.31) in monorepo root, but ethers v6.12.0 seems to override
-            // it with an older version (18.15.13).
-            ;(this.abortSignal as any).throwIfAborted()
+            this.abortSignal.throwIfAborted()
             const pass = await this.inspectTargetFn({
                 target: this.target,
                 targetPeerDescriptors: onlineNodeDescriptors,
@@ -173,15 +170,9 @@ class InspectionOverTimeTask {
                     if (this.fleetState !== undefined) {
                         await this.fleetState.destroy()
                     }
-                    // TODO remove casting when type definition for throwIfAborted() is available. We have the correct
-                    // type definition (@types/node@18.19.31) in monorepo root, but ethers v6.12.0 seems to override
-                    // it with an older version (18.15.13).
-                    (this.abortSignal as any).throwIfAborted()
+                    this.abortSignal.throwIfAborted()
                     await this.initializeNewOperatorFleetState()
-                    // TODO remove casting when type definition for throwIfAborted() is available. We have the correct
-                    // type definition (@types/node@18.19.31) in monorepo root, but ethers v6.12.0 seems to override
-                    // it with an older version (18.15.13).
-                    ;(this.abortSignal as any).throwIfAborted()
+                    this.abortSignal.throwIfAborted()
                 }
 
                 const sleepTime = Math.max(this.inspectionIntervalInMs - timeElapsedInMs, 0)
