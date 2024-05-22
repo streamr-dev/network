@@ -22,26 +22,43 @@ export const createOutgoingHandshaker = (
     targetPeerDescriptor?: PeerDescriptor
 ): Handshaker => {
     const handshaker = new Handshaker(localPeerDescriptor, connection)
-    handshaker.once('handshakeFailed', (error) => {
+    const handshakeFailedListener = (error?: HandshakeError) => {
         if (error === HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR || error === HandshakeError.UNSUPPORTED_VERSION) {
-            // TODO should we have some handling for this floating promise?
             managedConnection.close(false)
         } else {
             // NO-OP: the rejector should take care of destroying the connection.
         }
         handshaker.stop()
-    })
-    handshaker.on('handshakeCompleted', (peerDescriptor: PeerDescriptor) => {
+        connection.off('disconnected', disconnectedListener)
+        connection.off('connected', connectedListener)
+    }
+    const handshakeCompletedListener = (peerDescriptor: PeerDescriptor) => {
         logger.trace('handshake completed for outgoing connection, ' + getNodeIdFromPeerDescriptor(peerDescriptor))
         managedConnection.attachImplementation(connection)
         managedConnection.onHandshakeCompleted(peerDescriptor)
         handshaker.stop()
-    })
-    connection.once('connected', () => handshaker.sendHandshakeRequest(targetPeerDescriptor))
-    connection.once('disconnected', (graceful: boolean) => { 
+        handshaker.off('handshakeCompleted', handshakeCompletedListener)
+        connection.off('disconnected', disconnectedListener)
+        connection.off('connected', connectedListener)
+    }
+    const connectedListener = () => handshaker.sendHandshakeRequest(targetPeerDescriptor)
+    const disconnectedListener = (graceful: boolean) => { 
         managedConnection.onDisconnected(graceful)
         handshaker.stop()
-    })
+        connection.off('disconnected', disconnectedListener)
+        connection.off('connected', connectedListener)
+    }
+
+    handshaker.once('handshakeFailed', handshakeFailedListener)
+    handshaker.on('handshakeCompleted', handshakeCompletedListener)
+    connection.once('connected', connectedListener)
+    connection.once('disconnected', disconnectedListener)
+
+    const managedConnectionDisconnectedListener = () => {
+        handshaker.stop()
+        managedConnection.off('disconnected', managedConnectionDisconnectedListener)
+    }
+    managedConnection.once('disconnected', managedConnectionDisconnectedListener)
     return handshaker
 }
 
@@ -54,16 +71,25 @@ export const createIncomingHandshaker = (
     handshaker.on('handshakeRequest', (sourcePeerDescriptor: PeerDescriptor): void => {
         managedConnection.setRemotePeerDescriptor(sourcePeerDescriptor)
     })
-    connection.on('disconnected', (graceful: boolean) => {
+    const connectionDisconnected = (graceful: boolean) => {
         managedConnection.onDisconnected(graceful)
         handshaker.stop()
-    })
-    handshaker.on('handshakeCompleted', () => {
+        connection.off('disconnected', connectionDisconnected)
+        handshaker.off('handshakeCompleted', stopHandshaker)
+        handshaker.off('handshakeFailed', stopHandshaker)
+        managedConnection.off('disconnected', connectionDisconnected)
+    }
+    const stopHandshaker = () => {
         handshaker.stop()
-    })
-    handshaker.on('handshakeFailed', () => {
-        handshaker.stop()
-    })
+        managedConnection.off('disconnected', connectionDisconnected)
+        connection.off('disconnected', connectionDisconnected)
+        handshaker.off('handshakeCompleted', stopHandshaker)
+        handshaker.off('handshakeFailed', stopHandshaker)
+    }
+    connection.on('disconnected', connectionDisconnected)
+    handshaker.on('handshakeCompleted', stopHandshaker)
+    handshaker.on('handshakeFailed', stopHandshaker)
+    managedConnection.once('disconnected', stopHandshaker)
     return handshaker
 }
 
@@ -173,5 +199,6 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
 
     public stop(): void {
         this.connection.off('data', this.onDataListener)
+        this.removeAllListeners()
     }
 }
