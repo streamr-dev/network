@@ -26,8 +26,8 @@ export class RpcProviderFactory {
                 const fetchRequest = new FetchRequest(c.url)
                 fetchRequest.timeout = timeout
                 const provider = new LoggingJsonRpcProvider(fetchRequest, {
-                    chainId: this.config.contracts.streamRegistryChainRPCs?.chainId,
-                    name: this.config.contracts.streamRegistryChainRPCs?.name
+                    chainId: this.config.contracts.streamRegistryChainRPCs.chainId,
+                    name: this.config.contracts.streamRegistryChainRPCs.name
                 }, {
                     staticNetwork: true,
                     batchStallTime: isDevChain(this.config) ? 0 : undefined, // Don't batch requests, send them immediately

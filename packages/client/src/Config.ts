@@ -225,8 +225,8 @@ export interface ConnectionInfo {
 
 export interface ChainConnectionInfo {
     rpcs: ConnectionInfo[]
-    chainId?: number
-    name?: string
+    chainId: number
+    name: string
 }
 
 // these should come from ETH-184 config package when it's ready
