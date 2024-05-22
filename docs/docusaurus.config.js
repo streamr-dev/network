@@ -29,8 +29,6 @@ const config = {
         locales: ["en"],
     },
 
-    onBrokenLinks: "warn",  // TODO handle broker
-
     plugins: [
         [
             "docusaurus-plugin-typedoc",
