@@ -20,7 +20,6 @@ import { ConnectingConnection } from './WebrtcConnector'
 const logger = new Logger(module)
 
 interface WebrtcConnectorRpcLocalConfig {
-    createConnection: (targetPeerDescriptor: PeerDescriptor) => NodeWebrtcConnection 
     connect: (targetPeerDescriptor: PeerDescriptor, doNotRequestConnection: boolean) => ManagedConnection 
     onNewConnection: (connection: ManagedConnection) => boolean
     // TODO pass accessor methods instead of passing a mutable entity

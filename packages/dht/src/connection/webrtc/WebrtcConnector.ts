@@ -82,7 +82,6 @@ export class WebrtcConnector {
         onNewConnection: (connection: ManagedConnection) => boolean
     ) {
         const localRpc = new WebrtcConnectorRpcLocal({
-            createConnection: (targetPeerDescriptor: PeerDescriptor) => this.createConnection(targetPeerDescriptor),
             connect: (targetPeerDescriptor: PeerDescriptor, doNotRequestConnection: boolean) => 
                 this.connect(targetPeerDescriptor, doNotRequestConnection),
             onNewConnection,
