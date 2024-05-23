@@ -1,4 +1,4 @@
-import { fastWallet, fetchPrivateKeyWithGas, isRunningInElectron } from '@streamr/test-utils'
+import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { StreamrClient } from '../../src/StreamrClient'
 
@@ -32,9 +32,7 @@ describe('contract call error', () => {
             }
         })
         await expect(() => client.createStream('/path')).rejects.toThrow(
-            isRunningInElectron()
-                ? 'Error while executing contract call "streamRegistry.createStream"'
-                : 'Error while executing contract call "streamRegistry.createStream", code=ENOTFOUND'
+            'Error while executing contract call "streamRegistry.createStream"'
         )
     })
 
