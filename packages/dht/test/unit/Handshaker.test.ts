@@ -1,9 +1,9 @@
 import EventEmitter from 'eventemitter3'
-import { createIncomingHandshaker, Handshaker } from '../../src/connection/Handshaker'
+import { createHandshakeRequest, createHandshakeResponse, createIncomingHandshaker, Handshaker } from '../../src/connection/Handshaker'
 import { ConnectionEvents, IConnection } from '../../src/connection/IConnection'
 import { createOutgoingHandshaker, ManagedConnection } from '../../src/exports'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { HandshakeError } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { HandshakeError, Message } from '../../src/proto/packages/dht/protos/DhtRpc'
 
 describe('Handshaker', () => {
 
@@ -78,6 +78,8 @@ describe('Handshaker', () => {
         })
 
         it('onHandshakeCompleted', () => {
+            const message = createHandshakeResponse(createMockPeerDescriptor());
+            (connection as any).emit('data', Message.toBinary(message))
             handshaker.emit('handshakeCompleted', createMockPeerDescriptor())
             expect(mockAttachImplementation).toHaveBeenCalledTimes(1)
             expect(mockOnHandshakeCompleted).toHaveBeenCalledTimes(1)
@@ -123,6 +125,8 @@ describe('Handshaker', () => {
         })
 
         it('onHandshakeRequest', () => {
+            const message = createHandshakeRequest(createMockPeerDescriptor(), createMockPeerDescriptor());
+            (connection as any).emit('data', Message.toBinary(message))
             handshaker.emit('handshakeRequest', createMockPeerDescriptor(), '1.0')
             expect(mockSetRemotePeerDescriptor).toHaveBeenCalledTimes(1)
         })
