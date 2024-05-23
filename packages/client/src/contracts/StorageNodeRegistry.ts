@@ -8,7 +8,7 @@ import { getEthersOverrides } from '../ethereumUtils'
 import { StreamrClientError } from '../StreamrClientError'
 import type { NodeRegistry as NodeRegistryContract } from '../ethereumArtifacts/NodeRegistry'
 import NodeRegistryArtifact from '../ethereumArtifacts/NodeRegistryAbi.json'
-import { queryAllReadonlyContracts, waitForTx } from '../utils/contract'
+import { waitForTx } from '../utils/contract'
 import { RpcProviderFactory } from '../RpcProviderFactory'
 
 export interface StorageNodeMetadata {
@@ -22,7 +22,7 @@ export interface StorageNodeMetadata {
 export class StorageNodeRegistry {
 
     private nodeRegistryContract?: NodeRegistryContract
-    private readonly nodeRegistryContractsReadonly: NodeRegistryContract[]
+    private readonly nodeRegistryContractsReadonly: NodeRegistryContract
     private readonly contractFactory: ContractFactory
     private readonly rpcProviderFactory: RpcProviderFactory
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
@@ -38,14 +38,12 @@ export class StorageNodeRegistry {
         this.rpcProviderFactory = rpcProviderFactory
         this.config = config
         this.authentication = authentication
-        this.nodeRegistryContractsReadonly = rpcProviderFactory.getProviders().map((provider: Provider) => {
-            return this.contractFactory.createReadContract(
-                toEthereumAddress(this.config.contracts.storageNodeRegistryChainAddress),
-                NodeRegistryArtifact,
-                provider,
-                'storageNodeRegistry'
-            ) as NodeRegistryContract
-        })
+        this.nodeRegistryContractsReadonly = this.contractFactory.createReadContract(
+            toEthereumAddress(this.config.contracts.storageNodeRegistryChainAddress),
+            NodeRegistryArtifact,
+            rpcProviderFactory.getProvider(),
+            'storageNodeRegistry'
+        ) as NodeRegistryContract
     }
 
     private async connectToContract() {
@@ -71,9 +69,7 @@ export class StorageNodeRegistry {
     }
 
     async getStorageNodeMetadata(nodeAddress: EthereumAddress): Promise<StorageNodeMetadata> {
-        const [ resultNodeAddress, metadata ] = await queryAllReadonlyContracts<any, NodeRegistryContract>((contract) => {
-            return contract.getNode(nodeAddress)
-        }, this.nodeRegistryContractsReadonly)
+        const [ resultNodeAddress, metadata ] = await this.nodeRegistryContractsReadonly.getNode(nodeAddress)
         const NODE_NOT_FOUND = '0x0000000000000000000000000000000000000000'
         if (resultNodeAddress !== NODE_NOT_FOUND) {
             return JSON.parse(metadata)

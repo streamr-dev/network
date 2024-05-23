@@ -13,7 +13,7 @@ import type { StreamStorageRegistryV2 as StreamStorageRegistryContract } from '.
 import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageRegistryV2Abi.json'
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { initContractEventGateway, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
+import { initContractEventGateway, waitForTx } from '../utils/contract'
 import { RpcProviderFactory } from '../RpcProviderFactory'
 
 export interface StorageNodeAssignmentEvent {
@@ -35,7 +35,7 @@ interface NodeQueryResult {
 export class StreamStorageRegistry {
 
     private streamStorageRegistryContract?: StreamStorageRegistryContract
-    private readonly streamStorageRegistryContractsReadonly: StreamStorageRegistryContract[]
+    private readonly streamStorageRegistryContractsReadonly: StreamStorageRegistryContract
     private readonly streamFactory: StreamFactory
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly contractFactory: ContractFactory
@@ -65,19 +65,17 @@ export class StreamStorageRegistry {
         this.config = config
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
-        this.streamStorageRegistryContractsReadonly = rpcProviderFactory.getProviders().map((provider) => {
-            return this.contractFactory.createReadContract(
-                toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress),
-                StreamStorageRegistryArtifact,
-                provider,
-                'streamStorageRegistry'
-            ) as StreamStorageRegistryContract
-        })
+        this.streamStorageRegistryContractsReadonly = this.contractFactory.createReadContract(
+            toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress),
+            StreamStorageRegistryArtifact,
+            rpcProviderFactory.getProvider(),
+            'streamStorageRegistry'
+        ) as StreamStorageRegistryContract
         this.initStreamAssignmentEventListeners(eventEmitter, loggerFactory)
     }
 
     private initStreamAssignmentEventListeners(eventEmitter: StreamrClientEventEmitter, loggerFactory: LoggerFactory) {
-        const primaryReadonlyContract = this.streamStorageRegistryContractsReadonly[0]
+        const primaryReadonlyContract = this.streamStorageRegistryContractsReadonly
         const transformation = (streamId: string, nodeAddress: string, extra: any) => ({
             streamId: toStreamID(streamId),
             nodeAddress: toEthereumAddress(nodeAddress),
@@ -132,9 +130,7 @@ export class StreamStorageRegistry {
     async isStoredStream(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.logger.debug('Check if stream is stored in storage node', { streamId, nodeAddress })
-        return queryAllReadonlyContracts((contract: StreamStorageRegistryContract) => {
-            return contract.isStorageNodeOf(streamId, nodeAddress)
-        }, this.streamStorageRegistryContractsReadonly)
+        return await this.streamStorageRegistryContractsReadonly.isStorageNodeOf(streamId, nodeAddress)
     }
 
     async getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {

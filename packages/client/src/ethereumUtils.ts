@@ -26,7 +26,7 @@ export const getEthersOverrides = async (
     const chainConfig = config.contracts.ethereumNetwork
     const overrides = chainConfig.overrides ?? {}
     if ((chainConfig.highGasPriceStrategy) && (chainConfig.overrides?.gasPrice === undefined)) {
-        const primaryProvider = rpcProviderFactory.getPrimaryProvider()
+        const primaryProvider = rpcProviderFactory.getProvider()
         const feeData = await primaryProvider.getFeeData()
         const gasPriceStrategy = (feeData: FeeData) => {
             const INCREASE_PERCENTAGE = 30

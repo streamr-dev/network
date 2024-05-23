@@ -24,7 +24,7 @@ describe('ERC1271ContractFacade', () => {
         contractOne = mock<ERC1271Contract>()
         contractTwo = mock<ERC1271Contract>()
         const rpcProviderFactory = mock<RpcProviderFactory>()
-        rpcProviderFactory.getProviders.mockReturnValue([mock<Provider>()])
+        rpcProviderFactory.getProvider.mockReturnValue(mock<Provider>())
         const contractFactory = mock<ContractFactory>()
         contractFactory.createReadContract.mockImplementation((address) => {
             switch (address) {
