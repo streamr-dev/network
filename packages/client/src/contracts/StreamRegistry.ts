@@ -255,7 +255,7 @@ export class StreamRegistry {
     private async getStream_nonCached(streamId: StreamID): Promise<Stream> {
         let metadata: string
         try {
-            metadata = this.streamRegistryContractsReadonly.getStreamMetadata(streamId)
+            metadata = await this.streamRegistryContractsReadonly.getStreamMetadata(streamId)
         } catch (err) {
             return streamContractErrorProcessor(err, streamId, 'StreamRegistry')
         }
