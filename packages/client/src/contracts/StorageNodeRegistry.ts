@@ -1,4 +1,3 @@
-import { Provider } from 'ethers'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
