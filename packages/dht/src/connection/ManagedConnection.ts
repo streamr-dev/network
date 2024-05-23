@@ -77,15 +77,6 @@ export class ManagedConnection extends EventEmitter<Events> {
             this.lastUsedTimestamp = Date.now()
             this.emit('managedData', bytes, this.getPeerDescriptor()!)
         })
-
-        impl.on('error', (name: string) => {
-            this.emit('error', name)
-        })
-        impl.on('connected', () => {
-            this.lastUsedTimestamp = Date.now()
-            logger.trace('connected emitted')
-            this.emit('connected')
-        })
         impl.on('disconnected', (gracefulLeave) => this.onDisconnected(gracefulLeave))
     }
 
