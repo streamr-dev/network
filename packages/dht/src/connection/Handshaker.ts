@@ -67,15 +67,15 @@ export const createIncomingHandshaker = (
     connection: IConnection
 ): Handshaker => {
     const handshaker = new Handshaker(localPeerDescriptor, connection)
-    handshaker.on('handshakeRequest', (sourcePeerDescriptor: PeerDescriptor): void => {
-        managedConnection.setRemotePeerDescriptor(sourcePeerDescriptor)
-    })
     const stopHandshaker = () => {
         handshaker.stop()
         managedConnection.off('disconnected', connectionDisconnected)
         managedConnection.off('handshakeCompleted', stopHandshaker)
         connection.off('disconnected', connectionDisconnected)
-
+    }
+    const onHandshakeRequest = (sourcePeerDescriptor: PeerDescriptor): void => {
+        managedConnection.setRemotePeerDescriptor(sourcePeerDescriptor)
+        stopHandshaker()
     }
     const connectionDisconnected = (graceful: boolean) => {
         managedConnection.onDisconnected(graceful)
@@ -85,6 +85,7 @@ export const createIncomingHandshaker = (
         connection.close(false)
         stopHandshaker()
     }
+    handshaker.on('handshakeRequest', onHandshakeRequest)
     connection.once('disconnected', connectionDisconnected)
     managedConnection.once('handshakeCompleted', stopHandshaker)
     managedConnection.once('disconnected', managedConnectionDisconnected)
