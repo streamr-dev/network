@@ -41,7 +41,8 @@ export class RpcProviderFactory {
                 name: this.config.contracts.streamRegistryChainRPCs.name
             }, {
                 quorum: Math.min(2, this.config.contracts.streamRegistryChainRPCs?.rpcs.length),
-                pollingInterval: pollInterval
+                pollingInterval: pollInterval,
+                cacheTimeout: isDevChain(this.config) ? -1 : undefined   // Do not employ result caching
             })
         }
         return this.provider
