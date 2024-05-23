@@ -9,17 +9,13 @@ import { ManagedConnection } from '../ManagedConnection'
 import { Simulator } from './Simulator'
 import { SimulatorConnection } from './SimulatorConnection'
 import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { acceptHandshake, createIncomingHandshaker, createOutgoingHandshaker, Handshaker, rejectHandshake } from '../Handshaker'
+import { acceptHandshake, createIncomingHandshaker, createOutgoingHandshaker, rejectHandshake } from '../Handshaker'
 
 const logger = new Logger(module)
 
-interface ConnectingConnection {
-    connection: ManagedConnection
-    handshaker: Handshaker
-}
 export class SimulatorConnector {
 
-    private connectingConnections: Map<DhtAddress, ConnectingConnection> = new Map()
+    private connectingConnections: Map<DhtAddress, ManagedConnection> = new Map()
     private stopped = false
     private localPeerDescriptor: PeerDescriptor
     private simulator: Simulator
@@ -40,18 +36,15 @@ export class SimulatorConnector {
         const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
         const existingConnection = this.connectingConnections.get(nodeId)
         if (existingConnection) {
-            return existingConnection.connection
+            return existingConnection
         }
 
         const connection = new SimulatorConnection(this.localPeerDescriptor, targetPeerDescriptor, ConnectionType.SIMULATOR_CLIENT, this.simulator)
 
         const managedConnection = new ManagedConnection(ConnectionType.SIMULATOR_CLIENT)
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
-        const handshaker = createOutgoingHandshaker(this.localPeerDescriptor, managedConnection, connection, targetPeerDescriptor)
-        this.connectingConnections.set(nodeId, {
-            connection: managedConnection,
-            handshaker,
-        })
+        createOutgoingHandshaker(this.localPeerDescriptor, managedConnection, connection, targetPeerDescriptor)
+        this.connectingConnections.set(nodeId, managedConnection)
         const delFunc = () => {
             this.connectingConnections.delete(nodeId)
             connection.off('disconnected', delFunc)
@@ -100,9 +93,6 @@ export class SimulatorConnector {
     public async stop(): Promise<void> {
         this.stopped = true
         const conns = Array.from(this.connectingConnections.values())
-        await Promise.allSettled(conns.map(async (conn) => {
-            conn.handshaker.stop()
-            await conn.connection.close(false)
-        }))
+        await Promise.allSettled(conns.map(async (conn) => conn.close(false)))
     }
 }

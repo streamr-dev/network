@@ -57,11 +57,6 @@ export interface WebsocketConnectorConfig {
     geoIpDatabaseFolder?: string
 }
 
-interface ConnectingConnection {
-    connection: ManagedConnection
-    handshaker: Handshaker
-}
-
 export class WebsocketConnector {
 
     private static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
@@ -73,7 +68,7 @@ export class WebsocketConnector {
     private autoCertifierClient?: AutoCertifierClientFacade
     private selectedPort?: number
     private localPeerDescriptor?: PeerDescriptor
-    private connectingConnections: Map<DhtAddress, ConnectingConnection> = new Map()
+    private connectingConnections: Map<DhtAddress, ManagedConnection> = new Map()
     private abortController = new AbortController()
     private readonly config: WebsocketConnectorConfig
 
@@ -241,7 +236,7 @@ export class WebsocketConnector {
         const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
         const existingConnection = this.connectingConnections.get(nodeId)
         if (existingConnection) {
-            return existingConnection.connection
+            return existingConnection
         }
 
         if (this.localPeerDescriptor!.websocket && !targetPeerDescriptor.websocket) {
@@ -253,11 +248,8 @@ export class WebsocketConnector {
 
             const managedConnection = new ManagedConnection(ConnectionType.WEBSOCKET_CLIENT)
             managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
-            const handshaker = createOutgoingHandshaker(this.localPeerDescriptor!, managedConnection, socket, targetPeerDescriptor)
-            this.connectingConnections.set(nodeId, {
-                connection: managedConnection,
-                handshaker
-            })
+            createOutgoingHandshaker(this.localPeerDescriptor!, managedConnection, socket, targetPeerDescriptor)
+            this.connectingConnections.set(nodeId, managedConnection)
 
             const delFunc = () => {
                 if (this.connectingConnections.has(nodeId)) {
@@ -344,13 +336,10 @@ export class WebsocketConnector {
         this.rpcCommunicator.destroy()
 
         const requests = Array.from(this.ongoingConnectRequests.values())
-        await Promise.allSettled(requests.map((conn) => conn.close(false)))
+        await Promise.allSettled(requests.map((conn) => conn.close(true)))
 
         const attempts = Array.from(this.connectingConnections.values())
-        await Promise.allSettled(attempts.map(async (conn) => {
-            conn.handshaker.stop()
-            await conn.connection.close(false)
-        }))
+        await Promise.allSettled(attempts.map(async (conn) => conn.close(true)))
         await this.websocketServer?.stop()
         await this.geoIpLocator?.stop()
     }
