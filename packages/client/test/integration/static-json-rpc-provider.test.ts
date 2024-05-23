@@ -7,6 +7,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 const MOCK_CHAIN_ID = 5555
 const TRUE = '0x0000000000000000000000000000000000000000000000000000000000000001'
 const SERVER_PORT = 9999
+const BLOCK_NUMBER = 123
 
 const logger = new Logger(module)
 
@@ -41,6 +42,8 @@ const startServer = async (): Promise<{ getRequests: () => JsonRpcRequest[], sto
         requests.push({ method })
         if (method === 'eth_chainId') {
             sendResponse(toHex(MOCK_CHAIN_ID))
+        } else if (method === 'eth_blockNumber') {
+            sendResponse(toHex(BLOCK_NUMBER))
         } else if (method === 'eth_call') {
             const data = req.body.params[0].data
             const contractMethodHash = data.substring(2, 10)
