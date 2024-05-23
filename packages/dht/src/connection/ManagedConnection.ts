@@ -35,9 +35,6 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.connectionType = connectionType
         this.connectionId = createRandomConnectionId()
 
-        this.send = this.send.bind(this)
-        this.onDisconnected = this.onDisconnected.bind(this)
-
         logger.trace('creating ManagedConnection of type: ' + connectionType)
 
         setAbortableTimeout(() => {
@@ -89,10 +86,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             logger.trace('connected emitted')
             this.emit('connected')
         })
-
-        //ensure that we have subscribed to the event only once
-        impl.off('disconnected', this.onDisconnected)
-        impl.on('disconnected', this.onDisconnected)
+        impl.on('disconnected', (gracefulLeave) => this.onDisconnected(gracefulLeave))
     }
 
     public onDisconnected(gracefulLeave: boolean): void {
@@ -139,7 +133,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         }
                
         if (this.implementation) {
-            await this.implementation?.close(gracefulLeave)
+            await this.implementation.close(gracefulLeave)
         } else {
             this.emit('disconnected', gracefulLeave)
         }
@@ -155,7 +149,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
         this.removeAllListeners()
         if (this.implementation) {
-            this.implementation?.destroy()
+            this.implementation.destroy()
         }
     }
 

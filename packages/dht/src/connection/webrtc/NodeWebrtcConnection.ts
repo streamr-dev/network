@@ -24,7 +24,6 @@ export interface Params {
     remotePeerDescriptor: PeerDescriptor
     bufferThresholdHigh?: number
     bufferThresholdLow?: number
-    connectingTimeout?: number
     maxMessageSize?: number
     iceServers?: IceServer[]  // TODO make this parameter required (empty array is a good fallback which can be set by the caller if needed)
     portRange?: PortRange
@@ -59,11 +58,11 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
     private readonly iceServers: IceServer[]
     private readonly _bufferThresholdHigh: number // TODO: buffer handling must be implemented before production use (NET-938)
     private readonly bufferThresholdLow: number
-    private readonly connectingTimeout: number
     private readonly remotePeerDescriptor: PeerDescriptor
     private readonly portRange?: PortRange
     private readonly maxMessageSize?: number
     private closed = false
+    private offering?: boolean
 
     constructor(params: Params) {
         super()
@@ -72,7 +71,6 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
         // eslint-disable-next-line no-underscore-dangle
         this._bufferThresholdHigh = params.bufferThresholdHigh ?? 2 ** 17
         this.bufferThresholdLow = params.bufferThresholdLow ?? 2 ** 15
-        this.connectingTimeout = params.connectingTimeout ?? 20000
         this.remotePeerDescriptor = params.remotePeerDescriptor
         this.maxMessageSize = params.maxMessageSize ?? 1048576
         this.portRange = params.portRange
@@ -80,6 +78,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
 
     public start(isOffering: boolean): void {
         const nodeId = getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)
+        this.offering = isOffering
         logger.trace(`Starting new connection for peer ${nodeId}`, { isOffering })
         this.connection = new PeerConnection(nodeId, {
             iceServers: this.iceServers.map(iceServerAsString),

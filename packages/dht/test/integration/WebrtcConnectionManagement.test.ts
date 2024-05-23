@@ -32,7 +32,7 @@ describe('WebRTC Connection Management', () => {
     let connectorTransport2: SimulatorTransport
 
     beforeEach(async () => {
-        simulator = new Simulator(LatencyType.FIXED, 500)
+        simulator = new Simulator(LatencyType.FIXED, 20)
         connectorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
         await connectorTransport1.start()
         manager1 = createConnectionManager(peerDescriptor1, connectorTransport1)
