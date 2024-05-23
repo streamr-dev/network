@@ -40,7 +40,7 @@ export class RpcProviderFactory {
                 chainId: this.config.contracts.streamRegistryChainRPCs.chainId,
                 name: this.config.contracts.streamRegistryChainRPCs.name
             }, {
-                quorum: 2,
+                quorum: Math.min(2, this.config.contracts.streamRegistryChainRPCs?.rpcs.length),
                 pollingInterval: pollInterval
             })
         }
