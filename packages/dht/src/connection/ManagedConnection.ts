@@ -1,4 +1,4 @@
-import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from './IConnection'
+import { ConnectionID, ConnectionType, IConnection } from './IConnection'
 import * as Err from '../helpers/errors'
 import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { Logger, setAbortableTimeout } from '@streamr/utils'
@@ -10,13 +10,14 @@ import { createRandomConnectionId } from './Connection'
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
     handshakeCompleted: (peerDescriptor: PeerDescriptor) => void
+    disconnected: (gracefulLeave: boolean) => void
 }
 
 const logger = new Logger(module)
 
-export type Events = ManagedConnectionEvents & ConnectionEvents
+export type Events = ManagedConnectionEvents
 
-export class ManagedConnection extends EventEmitter<Events> {
+export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
 
     private implementation?: IConnection
     public connectionId: ConnectionID
