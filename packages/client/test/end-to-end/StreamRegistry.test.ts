@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { Wallet } from '@ethersproject/wallet'
+import { Wallet } from 'ethers'
 import { toStreamID } from '@streamr/protocol'
 import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
 import { EthereumAddress, collect, toEthereumAddress, waitForCondition } from '@streamr/utils'

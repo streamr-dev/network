@@ -6,7 +6,7 @@ import { fastPrivateKey, randomEthereumAddress } from '@streamr/test-utils'
 import { createSignature, hexToBinary, hash } from '@streamr/utils'
 import { RpcProviderFactory } from '../../src/RpcProviderFactory'
 import { ContractFactory } from '../../src/ContractFactory'
-import { Provider } from '@ethersproject/providers'
+import { Provider } from 'ethers'
 import { ObservableContract } from '../../src/utils/contract'
 
 const PRIVATE_KEY = fastPrivateKey()

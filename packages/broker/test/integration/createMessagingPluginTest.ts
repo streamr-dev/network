@@ -1,4 +1,4 @@
-import { Wallet } from '@ethersproject/wallet'
+import { Wallet } from 'ethers'
 import { MessageMetadata, Stream, StreamrClient } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
 import { Broker } from '../../src/broker'

@@ -2,14 +2,14 @@ import { checkbox, confirm, input, password, select } from '@inquirer/prompts'
 import { config as streamrConfig } from '@streamr/config'
 import { toEthereumAddress } from '@streamr/utils'
 import chalk from 'chalk'
-import { BigNumber, Wallet, providers, utils } from 'ethers'
-import { isAddress } from 'ethers/lib/utils'
+import { Wallet, isAddress, formatEther, parseEther, JsonRpcProvider } from 'ethers'
 import { chmodSync, existsSync, mkdirSync, writeFileSync } from 'fs'
 import capitalize from 'lodash/capitalize'
 import omit from 'lodash/omit'
 import path from 'path'
 import { v4 as uuid } from 'uuid'
 import { z } from 'zod'
+import fetch from 'node-fetch'
 import {
     CURRENT_CONFIGURATION_VERSION,
     formSchemaUrl,
@@ -20,7 +20,7 @@ import * as WebsocketConfigSchema from '../plugins/websocket/config.schema.json'
 import { ConfigFile, getDefaultFile } from './config'
 import * as BrokerConfigSchema from './config.schema.json'
 
-const MIN_BALANCE = utils.parseEther('0.1')
+const MIN_BALANCE = parseEther('0.1')
 
 type EnvironmentId = 'polygon' | 'polygonAmoy'
 
@@ -111,12 +111,12 @@ export async function start(): Promise<void> {
                 )
 
                 const content = `Your node address has *${Number(
-                    utils.formatEther(balance)
+                    formatEther(balance)
                 ).toFixed(2)} MATIC*`
 
                 resume()
 
-                if (balance.lt(MIN_BALANCE)) {
+                if (balance < MIN_BALANCE) {
                     log(`
                         > ! ${content}. You'll need to fund it with a small amount of MATIC tokens.
                     `)
@@ -426,14 +426,14 @@ function persistConfig(storagePath: string, config: ConfigFile): void {
 async function getNativeBalance(
     environmentId: EnvironmentId,
     address: string
-): Promise<BigNumber> {
+): Promise<bigint> {
     const url = streamrConfig[environmentId].rpcEndpoints[0]?.url
 
     if (!url || !/^https?:/i.test(url)) {
         throw new Error('Invalid RPC')
     }
 
-    return new providers.JsonRpcProvider(url).getBalance(address)
+    return new JsonRpcProvider(url).getBalance(address)
 }
 
 /**
