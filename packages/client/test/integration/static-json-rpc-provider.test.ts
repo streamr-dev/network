@@ -1,5 +1,5 @@
 import { Logger } from '@streamr/utils'
-import { ethers } from 'ethers'
+import { keccak256, toUtf8Bytes } from 'ethers'
 import { once } from 'events'
 import express, { Request, Response } from 'express'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -14,7 +14,7 @@ const toHex = (val: number) => {
     return '0x' + val.toString(16)
 }
 
-const getLabelHash = (methodSignature: string) => ethers.utils.keccak256(ethers.utils.toUtf8Bytes(methodSignature))
+const getLabelHash = (methodSignature: string) => keccak256(toUtf8Bytes(methodSignature))
 
 const getContractMethodHash = (methodSignature: string) => getLabelHash(methodSignature).substring(2, 10)
 
