@@ -1,6 +1,6 @@
-import { Contract } from '@ethersproject/contracts'
+import { Contract } from 'ethers'
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { OperatorFactory, operatorFactoryABI, type Sponsorship } from '@streamr/network-contracts'
+import { OperatorFactory, operatorFactoryABI, type Sponsorship } from '@streamr/network-contracts-ethers6'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 import {
@@ -58,7 +58,7 @@ describe('ContractFacade', () => {
         })
         const randomOperatorAddress = await contractFacade.getRandomOperator()
         expect(randomOperatorAddress).toBeDefined()
-        expect(randomOperatorAddress).not.toEqual(deployedOperator.operatorContract.address) // should not be me
+        expect(randomOperatorAddress).not.toEqual(await deployedOperator.operatorContract.getAddress()) // should not be me
 
         // check it's a valid operator, deployed by the OperatorFactory
         const operatorFactory = new Contract(
@@ -66,16 +66,16 @@ describe('ContractFacade', () => {
             operatorFactoryABI,
             getAdminWallet()
         ) as unknown as OperatorFactory
-        const isDeployedByFactory = (await operatorFactory.deploymentTimestamp(randomOperatorAddress!)).gt(0)
+        const isDeployedByFactory = (await operatorFactory.deploymentTimestamp(randomOperatorAddress!)) > 0
         expect(isDeployedByFactory).toBeTrue()
 
     }, 30 * 1000)
 
     it('getSponsorshipsOfOperator, getOperatorsInSponsorship', async () => {
-        const operatorContractAddress = toEthereumAddress(deployedOperator.operatorContract.address)
+        const operatorContractAddress = toEthereumAddress(await deployedOperator.operatorContract.getAddress())
         await delegate(deployedOperator.operatorWallet, operatorContractAddress, 20000)
-        await stake(deployedOperator.operatorContract, sponsorship1.address, 10000)
-        await stake(deployedOperator.operatorContract, sponsorship2.address, 10000)
+        await stake(deployedOperator.operatorContract, await sponsorship1.getAddress(), 10000)
+        await stake(deployedOperator.operatorContract, await sponsorship2.getAddress(), 10000)
 
         const contractFacade = ContractFacade.createInstance({
             ...deployedOperator.operatorServiceConfig,
@@ -90,43 +90,47 @@ describe('ContractFacade', () => {
         const sponsorships = await contractFacade.getSponsorshipsOfOperator(toEthereumAddress(operatorContractAddress))
         expect(sponsorships).toIncludeSameMembers([
             {
-                sponsorshipAddress: toEthereumAddress(sponsorship1.address),
+                sponsorshipAddress: toEthereumAddress(await sponsorship1.getAddress()),
                 operatorCount: 1,
                 streamId: streamId1
             },
             {
-                sponsorshipAddress: toEthereumAddress(sponsorship2.address),
+                sponsorshipAddress: toEthereumAddress(await sponsorship2.getAddress()),
                 operatorCount: 1,
                 streamId: streamId2
             }
         ])
 
-        const operators = await contractFacade.getOperatorsInSponsorship(toEthereumAddress(sponsorship1.address))
-        expect(operators).toEqual([toEthereumAddress(deployedOperator.operatorContract.address)])
+        const operators = await contractFacade.getOperatorsInSponsorship(toEthereumAddress(await sponsorship1.getAddress()))
+        expect(operators).toEqual([toEthereumAddress(await deployedOperator.operatorContract.getAddress())])
     }, 30 * 1000)
 
     it('flag', async () => {
         const flagger = deployedOperator
         const target = await setupOperatorContract()
 
-        await sponsor(flagger.operatorWallet, sponsorship2.address, 50000)
+        await sponsor(flagger.operatorWallet, await sponsorship2.getAddress(), 50000)
 
-        await delegate(flagger.operatorWallet, flagger.operatorContract.address, 20000)
-        await delegate(target.operatorWallet, target.operatorContract.address, 30000)
-        await stake(flagger.operatorContract, sponsorship2.address, 15000)
-        await stake(target.operatorContract, sponsorship2.address, 25000)
+        await delegate(flagger.operatorWallet, await flagger.operatorContract.getAddress(), 20000)
+        await delegate(target.operatorWallet, await target.operatorContract.getAddress(), 30000)
+        await stake(flagger.operatorContract, await sponsorship2.getAddress(), 15000)
+        await stake(target.operatorContract, await sponsorship2.getAddress(), 25000)
 
         const contractFacade = ContractFacade.createInstance({
             ...flagger.operatorServiceConfig,
             signer: flagger.nodeWallets[0]
         })
-        await contractFacade.flag(toEthereumAddress(sponsorship2.address), toEthereumAddress(target.operatorContract.address), 2)
+        await contractFacade.flag(
+            toEthereumAddress(await sponsorship2.getAddress()),
+            toEthereumAddress(await target.operatorContract.getAddress()),
+            2
+        )
 
         const graphClient = createTheGraphClient()
         await waitForCondition(async (): Promise<boolean> => {
             const result = await graphClient.queryEntity<{ operator: { flagsOpened: any[] } }>({ query: `
                 {
-                    operator(id: "${flagger.operatorContract.address.toLowerCase()}") {
+                    operator(id: "${(await flagger.operatorContract.getAddress()).toLowerCase()}") {
                         id
                         flagsOpened {
                             id
@@ -141,7 +145,7 @@ describe('ContractFacade', () => {
         await waitForCondition(async (): Promise<boolean> => {
             const result = await graphClient.queryEntity<{ operator: { flagsTargeted: any[] } }>({ query: `
                 {
-                    operator(id: "${target.operatorContract.address.toLowerCase()}") {
+                    operator(id: "${(await target.operatorContract.getAddress()).toLowerCase()}") {
                         id
                         flagsTargeted {
                             id
@@ -152,5 +156,5 @@ describe('ContractFacade', () => {
             })
             return result.operator.flagsTargeted.length === 1
         }, 10000, 1000)
-    }, 30 * 1000)
+    }, 60 * 1000)  // TODO why this is slower, takes ~35 seconds?
 })
