@@ -1,4 +1,4 @@
-import { Wallet } from '@ethersproject/wallet'
+import { Wallet } from 'ethers'
 import {
     StreamID,
     StreamMessage,

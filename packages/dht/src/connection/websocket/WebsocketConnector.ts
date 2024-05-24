@@ -40,7 +40,6 @@ export const connectivityMethodToWebsocketUrl = (ws: ConnectivityMethod, action?
     return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port + ((action !== undefined) ? '?action=' + action : '')
 }
 
-const ENTRY_POINT_CONNECTION_ATTEMPTS = 5
 export interface WebsocketConnectorConfig {
     transport: ITransport
     onNewConnection: (connection: ManagedConnection) => boolean
@@ -224,7 +223,10 @@ export class WebsocketConnector {
                 await wait(2000, this.abortController.signal)
             }
         }
-        throw new WebsocketServerStartError(`Failed to connect to the entrypoints after ${ENTRY_POINT_CONNECTION_ATTEMPTS} attempts`)
+        throw new WebsocketServerStartError(
+            `Failed to connect to the entrypoints after ${this.config.entrypoints.length} attempts\n`
+            + `Attempted hosts: ${this.config.entrypoints.map((entry) => `${entry.websocket!.host}:${entry.websocket!.port}`).join(', ')}`
+        )
     }
 
     public isPossibleToFormConnection(targetPeerDescriptor: PeerDescriptor): boolean {

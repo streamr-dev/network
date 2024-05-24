@@ -37,9 +37,9 @@ describe('maintainOperatorValue', () => {
         })
         const sponsorer = await generateWalletWithGasAndTokens()
         const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 100, streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, sponsorship.address, 25000)
-        await delegate(operatorWallet, operatorContract.address, STAKE_AMOUNT)
-        await stake(operatorContract, sponsorship.address, STAKE_AMOUNT)
+        await sponsor(sponsorer, await sponsorship.getAddress(), 25000)
+        await delegate(operatorWallet, await operatorContract.getAddress(), STAKE_AMOUNT)
+        await stake(operatorContract, await sponsorship.getAddress(), STAKE_AMOUNT)
         const contractFacade = ContractFacade.createInstance({
             ...operatorServiceConfig,
             signer: nodeWallets[0]
@@ -60,6 +60,6 @@ describe('maintainOperatorValue', () => {
             contractFacade
         )
         const valueAfterWithdraw = await operatorContract.valueWithoutEarnings()
-        expect(valueAfterWithdraw.toBigInt()).toBeGreaterThan(valueBeforeWithdraw.toBigInt())
+        expect(valueAfterWithdraw).toBeGreaterThan(valueBeforeWithdraw)
     }, 60 * 1000)
 })

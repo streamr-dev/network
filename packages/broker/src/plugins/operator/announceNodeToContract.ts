@@ -19,7 +19,7 @@ const isHeartbeatStale = async (
     contractFacade: ContractFacade
 ): Promise<boolean> => {
     logger.debug('Polling last heartbeat timestamp', {
-        operatorContractAddress: contractFacade.getOperatorContractAddress()
+        operatorContractAddress: await contractFacade.getOperatorContractAddress()
     })
     let lastHeartbeatTs
     try {
