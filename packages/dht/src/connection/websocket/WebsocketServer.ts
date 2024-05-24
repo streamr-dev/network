@@ -3,7 +3,6 @@ import { createServer as createHttpsServer, Server as HttpsServer } from 'https'
 import EventEmitter from 'eventemitter3'
 import WebSocket from 'ws'
 import { WebsocketServerConnection } from './WebsocketServerConnection'
-import { ConnectionSourceEvents } from '../IConnectionSource'
 import { Logger, asAbortable } from '@streamr/utils'
 import { createSelfSignedCertificate } from '@streamr/autocertifier-client' 
 import { WebsocketServerStartError } from '../../helpers/errors'
@@ -12,6 +11,7 @@ import { range } from 'lodash'
 import fs from 'fs'
 import { v4 as uuid } from 'uuid'
 import { parse } from 'url'
+import { IConnection } from '../IConnection'
 
 const logger = new Logger(module)
 
@@ -22,7 +22,11 @@ interface WebsocketServerConfig {
     maxMessageSize?: number
 }
 
-export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
+interface Events {
+    connected: ((connection: IConnection) => void) 
+}
+
+export class WebsocketServer extends EventEmitter<Events> {
 
     private httpServer?: HttpServer | HttpsServer
     private wsServer?: WebSocket.Server
