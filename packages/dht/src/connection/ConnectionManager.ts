@@ -377,7 +377,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const buffer = outputBuffer.getBuffer()
         while (buffer.length > 0) {
             logger.trace('emptying buffer')
-            connection.sendNoWait(buffer.shift()!)
+            connection.send(buffer.shift()!)
         }
         outputBuffer.resolve()
         this.emit('connected', peerDescriptor)

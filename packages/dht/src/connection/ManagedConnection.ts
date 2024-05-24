@@ -100,15 +100,6 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
         this.implementation.send(data)
     }
 
-    public sendNoWait(data: Uint8Array): void {
-        this.lastUsedTimestamp = Date.now()
-        if (this.implementation) {
-            this.implementation.send(data)
-        } else {
-            logger.trace('sendNoWait() called on connection without implementation')
-        }
-    }
-
     public reportBufferSentByOtherConnection(): void {
         logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' reportBufferSentByOtherConnection')
         logger.trace('bufferSentByOtherConnection reported')
