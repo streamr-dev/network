@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
-import type { Overrides } from '@ethersproject/contracts'
+import type { Overrides } from 'ethers'
 import { DhtAddress } from '@streamr/dht'
 import { StreamID } from '@streamr/protocol'
 import { ProxyDirection } from '@streamr/trackerless-network'
@@ -692,7 +692,7 @@ export class StreamrClient {
      * Get overrides for transaction options. Use as a parameter when submitting
      * transactions via ethers library.
      */
-    getEthersOverrides(): Overrides {
+    getEthersOverrides(): Promise<Overrides> {
         return _getEthersOverrides(this.rpcProviderFactory, this.config)
     }
 
