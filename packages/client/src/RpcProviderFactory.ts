@@ -4,6 +4,8 @@ import { LoggingJsonRpcProvider } from './utils/LoggingJsonRpcProvider'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { FetchRequest, FallbackProvider } from 'ethers'
 
+export const QUORUM = 2
+
 function isDevChain(config: Pick<StrictStreamrClientConfig, 'contracts'>): boolean {
     return config.contracts.streamRegistryChainRPCs?.name === 'dev2'
 }
@@ -40,7 +42,7 @@ export class RpcProviderFactory {
                 chainId: this.config.contracts.streamRegistryChainRPCs.chainId,
                 name: this.config.contracts.streamRegistryChainRPCs.name
             }, {
-                quorum: Math.min(2, this.config.contracts.streamRegistryChainRPCs?.rpcs.length),
+                quorum: Math.min(QUORUM, this.config.contracts.streamRegistryChainRPCs?.rpcs.length),
                 pollingInterval: pollInterval,
                 cacheTimeout: isDevChain(this.config) ? -1 : undefined   // Do not employ result caching
             })
