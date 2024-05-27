@@ -26,8 +26,7 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
     private handshakeCompleted = false
     private lastUsedTimestamp: number = Date.now()
     private stopped = false
-    private bufferSentbyOtherConnection = false
-    public replacedByOtherConnection = false
+    private replacedAsDuplicate = false
     private readonly connectingAbortController: AbortController = new AbortController()
 
     constructor(connectionType: ConnectionType) {
@@ -64,7 +63,7 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
         this.setRemotePeerDescriptor(peerDescriptor)
         this.connectingAbortController.abort()
         this.handshakeCompleted = true
-        if (!this.bufferSentbyOtherConnection) {
+        if (!this.replacedAsDuplicate) {
             logger.trace('emitting handshake_completed')
             this.emit('handshakeCompleted', peerDescriptor)
         }
@@ -83,7 +82,7 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
 
     public onDisconnected(gracefulLeave: boolean): void {
         logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' onDisconnected() ' + gracefulLeave)
-        if (this.bufferSentbyOtherConnection) {
+        if (this.replacedAsDuplicate) {
             return
         }
         this.emit('disconnected', gracefulLeave)
@@ -100,10 +99,9 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
         this.implementation.send(data)
     }
 
-    public reportBufferSentByOtherConnection(): void {
-        logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' reportBufferSentByOtherConnection')
-        logger.trace('bufferSentByOtherConnection reported')
-        this.bufferSentbyOtherConnection = true
+    public replaceAsDuplicate(): void {
+        logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' replaceAsDuplicate')
+        this.replacedAsDuplicate = true
     }
 
     public async close(gracefulLeave: boolean): Promise<void> {
@@ -111,7 +109,7 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
             return
         }
         this.connectingAbortController.abort()
-        if (this.replacedByOtherConnection) {
+        if (this.replacedAsDuplicate) {
             logger.trace('close() called on replaced connection')
         }
                
