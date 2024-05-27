@@ -40,8 +40,7 @@ export const createOutgoingHandshaker = (
     }
     const handshakeCompletedListener = (peerDescriptor: PeerDescriptor) => {
         logger.trace('handshake completed for outgoing connection, ' + getNodeIdFromPeerDescriptor(peerDescriptor))
-        managedConnection.attachImplementation(connection)
-        managedConnection.onHandshakeCompleted(peerDescriptor)
+        managedConnection.attachConnection(peerDescriptor, connection)
         stopHandshaker()
     }
     const connectedListener = () => handshaker.sendHandshakeRequest(targetPeerDescriptor)
@@ -70,7 +69,7 @@ export const createIncomingHandshaker = (
     const stopHandshaker = () => {
         handshaker.stop()
         managedConnection.off('disconnected', connectionDisconnected)
-        managedConnection.off('handshakeCompleted', stopHandshaker)
+        managedConnection.off('connected', stopHandshaker)
         connection.off('disconnected', connectionDisconnected)
     }
     const onHandshakeRequest = (sourcePeerDescriptor: PeerDescriptor): void => {
@@ -87,7 +86,7 @@ export const createIncomingHandshaker = (
     }
     handshaker.on('handshakeRequest', onHandshakeRequest)
     connection.once('disconnected', connectionDisconnected)
-    managedConnection.once('handshakeCompleted', stopHandshaker)
+    managedConnection.once('connected', stopHandshaker)
     managedConnection.once('disconnected', managedConnectionDisconnected)
     return handshaker
 }
@@ -109,9 +108,8 @@ export const acceptHandshake = (
     handshaker: Handshaker,
     sourcePeerDescriptor: PeerDescriptor
 ): void => {
-    managedConnection.attachImplementation(connection)
     handshaker.sendHandshakeResponse()
-    managedConnection.onHandshakeCompleted(sourcePeerDescriptor)
+    managedConnection.attachConnection(sourcePeerDescriptor, connection)
 }
 
 export const createHandshakeRequest = (localPeerDescriptor: PeerDescriptor, remotePeerDescriptor: PeerDescriptor): Message => {

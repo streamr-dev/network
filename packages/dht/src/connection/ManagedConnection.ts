@@ -9,7 +9,7 @@ import { createRandomConnectionId } from './Connection'
 
 export interface ManagedConnectionEvents {
     managedData: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
-    handshakeCompleted: (peerDescriptor: PeerDescriptor) => void
+    connected: (peerDescriptor: PeerDescriptor) => void
     disconnected: (gracefulLeave: boolean) => void
 }
 
@@ -19,68 +19,63 @@ export type Events = ManagedConnectionEvents
 
 export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
 
-    private implementation?: IConnection
+    private connection?: IConnection
     public connectionId: ConnectionID
     private remotePeerDescriptor?: PeerDescriptor
     public connectionType: ConnectionType
-    private handshakeCompleted = false
     private lastUsedTimestamp: number = Date.now()
-    private stopped = false
+    private connected = false
     private replacedAsDuplicate = false
+    private stopped = false
     private readonly connectingAbortController: AbortController = new AbortController()
 
     constructor(connectionType: ConnectionType) {
         super()
-
         this.connectionType = connectionType
         this.connectionId = createRandomConnectionId()
-
         logger.trace('creating ManagedConnection of type: ' + connectionType)
-
         setAbortableTimeout(() => {
             this.close(false)
         }, 15 * 1000, this.connectingAbortController.signal)
     }
 
-    public getNodeId(): DhtAddress {
+    getNodeId(): DhtAddress {
         return getNodeIdFromPeerDescriptor(this.remotePeerDescriptor!)
     }
 
-    public getLastUsedTimestamp(): number {
+    getLastUsedTimestamp(): number {
         return this.lastUsedTimestamp
     }
 
-    public setRemotePeerDescriptor(peerDescriptor: PeerDescriptor): void {
+    setRemotePeerDescriptor(peerDescriptor: PeerDescriptor): void {
         this.remotePeerDescriptor = peerDescriptor
     }
 
-    public getPeerDescriptor(): PeerDescriptor | undefined {
+    getPeerDescriptor(): PeerDescriptor | undefined {
         return this.remotePeerDescriptor
     }
 
-    public onHandshakeCompleted(peerDescriptor: PeerDescriptor): void {
-        this.lastUsedTimestamp = Date.now()
-        this.setRemotePeerDescriptor(peerDescriptor)
-        this.connectingAbortController.abort()
-        this.handshakeCompleted = true
-        if (!this.replacedAsDuplicate) {
-            logger.trace('emitting handshake_completed')
-            this.emit('handshakeCompleted', peerDescriptor)
-        }
-    }
+    attachConnection(peerDescriptor: PeerDescriptor, connection: IConnection): void {
+        logger.trace('attachConnection()')
+        this.connection = connection
 
-    public attachImplementation(impl: IConnection): void {
-        logger.trace('attachImplementation()')
-        this.implementation = impl
-
-        impl.on('data', (bytes: Uint8Array) => {
+        connection.on('data', (bytes: Uint8Array) => {
             this.lastUsedTimestamp = Date.now()
             this.emit('managedData', bytes, this.getPeerDescriptor()!)
         })
-        impl.on('disconnected', (gracefulLeave) => this.onDisconnected(gracefulLeave))
+        connection.on('disconnected', (gracefulLeave) => this.onDisconnected(gracefulLeave))
+
+        this.lastUsedTimestamp = Date.now()
+        this.setRemotePeerDescriptor(peerDescriptor)
+        this.connectingAbortController.abort()
+        this.connected = true
+        if (!this.replacedAsDuplicate) {
+            logger.trace('emitting connection')
+            this.emit('connected', peerDescriptor)
+        }
     }
 
-    public onDisconnected(gracefulLeave: boolean): void {
+    onDisconnected(gracefulLeave: boolean): void {
         logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' onDisconnected() ' + gracefulLeave)
         if (this.replacedAsDuplicate) {
             return
@@ -92,19 +87,19 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
         if (this.stopped) {
             throw new Err.SendFailed('ManagedConnection is stopped')
         }
-        if (!this.implementation) {
+        if (!this.connection) {
             throw new Error('Invariant violation no implementation before send called')
         }
         this.lastUsedTimestamp = Date.now()
-        this.implementation.send(data)
+        this.connection.send(data)
     }
 
-    public replaceAsDuplicate(): void {
+    replaceAsDuplicate(): void {
         logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' replaceAsDuplicate')
         this.replacedAsDuplicate = true
     }
 
-    public async close(gracefulLeave: boolean): Promise<void> {
+    async close(gracefulLeave: boolean): Promise<void> {
         if (this.stopped) {
             return
         }
@@ -113,15 +108,15 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
             logger.trace('close() called on replaced connection')
         }
                
-        if (this.implementation) {
-            await this.implementation.close(gracefulLeave)
+        if (this.connection) {
+            await this.connection.close(gracefulLeave)
         } else {
             this.emit('disconnected', gracefulLeave)
         }
         this.removeAllListeners()
     }
 
-    public destroy(): void {
+    destroy(): void {
         if (this.stopped) {
             return
         }
@@ -129,13 +124,13 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
         this.stopped = true
 
         this.removeAllListeners()
-        if (this.implementation) {
-            this.implementation.destroy()
+        if (this.connection) {
+            this.connection.destroy()
         }
     }
 
-    isHandshakeCompleted(): boolean {
-        return this.handshakeCompleted
+    isConnected(): boolean {
+        return this.connected
     }
 
 }

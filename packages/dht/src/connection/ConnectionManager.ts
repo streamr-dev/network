@@ -212,7 +212,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
 
         await Promise.all(Array.from(this.endpoints.values()).map(async (endpoint) => {
             const { connection, buffer } = endpoint
-            if (connection.isHandshakeCompleted()) {
+            if (connection.isConnected()) {
                 try {
                     await this.gracefullyDisconnectAsync(connection.getPeerDescriptor()!, DisconnectMode.LEAVING)
                 } catch (e) {
@@ -281,7 +281,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const binary = Message.toBinary(message)
         this.metrics.sendBytesPerSecond.record(binary.byteLength)
         this.metrics.sendMessagesPerSecond.record(1)
-        if (connection.isHandshakeCompleted()) {
+        if (connection.isConnected()) {
             return connection.send(binary)
         }
         return this.endpoints.get(nodeId)!.buffer.push(binary)   
@@ -414,10 +414,10 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         }
         connection.on('managedData', this.onData)
         connection.on('disconnected', (gracefulLeave: boolean) => this.onDisconnected(connection, gracefulLeave))
-        if (connection.isHandshakeCompleted()) {
+        if (connection.isConnected()) {
             this.onConnected(connection)
         } else {
-            connection.once('handshakeCompleted', () => this.onConnected(connection))
+            connection.once('connected', () => this.onConnected(connection))
         }
         return true
     }
@@ -565,7 +565,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             .map((endpoint) => endpoint.connection)
             // TODO is this filtering needed? (if it is, should we do the same filtering e.g.
             // in getConnection() or in other methods which access this.endpoints directly?)
-            .filter((managedConnection: ManagedConnection) => managedConnection.isHandshakeCompleted())
+            .filter((managedConnection: ManagedConnection) => managedConnection.isConnected())
             .map((managedConnection: ManagedConnection) => managedConnection.getPeerDescriptor()!)
     }
 

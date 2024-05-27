@@ -11,8 +11,7 @@ describe('Handshaker', () => {
     let managedConnection: ManagedConnection
     let connection: IConnection
 
-    let mockAttachImplementation: () => void
-    let mockOnHandshakeCompleted: () => void
+    let mockAttachConnection: () => void
     let mockOnDisconnected: () => void
     let mockSend: () => void
     let mockConnectionClose: () => void
@@ -20,19 +19,14 @@ describe('Handshaker', () => {
     let mockSetRemotePeerDescriptor: () => void
 
     beforeEach(() => {
-        mockAttachImplementation = jest.fn()
-        mockOnHandshakeCompleted = jest.fn()
+        mockAttachConnection = jest.fn()
         mockOnDisconnected = jest.fn()
         mockManagedConnectionClose = jest.fn()
         mockSetRemotePeerDescriptor = jest.fn()
         managedConnection = new class extends EventEmitter {
             // eslint-disable-next-line class-methods-use-this
-            onHandshakeCompleted() { 
-                mockOnHandshakeCompleted()
-            }
-            // eslint-disable-next-line class-methods-use-this
-            attachImplementation(_connection: IConnection) {
-                mockAttachImplementation()
+            attachConnection() { 
+                mockAttachConnection()
             }
             // eslint-disable-next-line class-methods-use-this
             onDisconnected() {
@@ -81,25 +75,23 @@ describe('Handshaker', () => {
             const message = createHandshakeResponse(createMockPeerDescriptor());
             (connection as any).emit('data', Message.toBinary(message))
             handshaker.emit('handshakeCompleted', createMockPeerDescriptor())
-            expect(mockAttachImplementation).toHaveBeenCalledTimes(1)
-            expect(mockOnHandshakeCompleted).toHaveBeenCalledTimes(1)
+            expect(mockAttachConnection).toHaveBeenCalledTimes(1)
         })
 
         it('onHandshakeFailed invalid PeerDescriptor', () => {
             handshaker.emit('handshakeFailed', HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
-            expect(mockOnHandshakeCompleted).not.toHaveBeenCalled()
-            expect(mockManagedConnectionClose).toHaveBeenCalledTimes(1)
+            expect(mockAttachConnection).not.toHaveBeenCalled()
         })
 
         it('onHandshakeFailed unsupported version', () => {
             handshaker.emit('handshakeFailed', HandshakeError.UNSUPPORTED_VERSION)
-            expect(mockOnHandshakeCompleted).not.toHaveBeenCalled()
+            expect(mockAttachConnection).not.toHaveBeenCalled()
             expect(mockManagedConnectionClose).toHaveBeenCalledTimes(1)
         })
 
         it('onHandShakeFailed ', () => {
             handshaker.emit('handshakeFailed', HandshakeError.DUPLICATE_CONNECTION)
-            expect(mockOnHandshakeCompleted).not.toHaveBeenCalled()
+            expect(mockAttachConnection).not.toHaveBeenCalled()
         })
 
         it('calls managed connection onDisconnected if connection closes', () => {

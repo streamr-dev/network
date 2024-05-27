@@ -48,11 +48,11 @@ export class SimulatorConnector {
         const delFunc = () => {
             this.connectingConnections.delete(nodeId)
             connection.off('disconnected', delFunc)
-            managedConnection.off('handshakeCompleted', delFunc)
+            managedConnection.off('connected', delFunc)
             managedConnection.off('disconnected', delFunc)
         }
         connection.once('disconnected', delFunc)
-        managedConnection.once('handshakeCompleted', delFunc)
+        managedConnection.once('connected', delFunc)
         managedConnection.once('disconnected', delFunc)
         
         connection.connect()
