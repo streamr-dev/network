@@ -135,7 +135,6 @@ export class WebsocketConnector {
                 rejectHandshake(managedConnection, connection, handshaker, HandshakeError.DUPLICATE_CONNECTION)
             }    
         })
-        
     }
 
     public async autoCertify(): Promise<void> {
