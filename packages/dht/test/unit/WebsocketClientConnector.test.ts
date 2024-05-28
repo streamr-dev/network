@@ -1,14 +1,14 @@
 /* eslint-disable max-len */
-import { WebsocketConnector } from '../../src/connection/websocket/WebsocketConnector'
+import { WebsocketClientConnector } from '../../src/connection/websocket/WebsocketClientConnector'
 import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor } from '../utils/utils'
 
-describe('WebsocketConnector', () => {
+describe('WebsocketClientConnector', () => {
 
     describe('isPossibleToFormConnection', () => {
 
-        const connector = new WebsocketConnector({
+        const connector = new WebsocketClientConnector({
             transport: new MockTransport(),
             canConnect: () => {}
         } as any)
@@ -25,15 +25,15 @@ describe('WebsocketConnector', () => {
             connector.setLocalPeerDescriptor(createMockPeerDescriptor({ type: NodeType.NODEJS, websocket: { host: '1.1.1.1', port: 11, tls: true } }))
             expect(connector.isPossibleToFormConnection(createMockPeerDescriptor({ type: NodeType.NODEJS, websocket: { host: '2.2.2.2', port: 22, tls: false } }))).toBe(true)
             expect(connector.isPossibleToFormConnection(createMockPeerDescriptor({ type: NodeType.NODEJS, websocket: { host: '2.2.2.2', port: 22, tls: true } }))).toBe(true)
-            expect(connector.isPossibleToFormConnection(createMockPeerDescriptor({ type: NodeType.NODEJS }))).toBe(true)
-            expect(connector.isPossibleToFormConnection(createMockPeerDescriptor({ type: NodeType.BROWSER }))).toBe(true)
+            expect(connector.isPossibleToFormConnection(createMockPeerDescriptor({ type: NodeType.NODEJS }))).toBe(false)
+            expect(connector.isPossibleToFormConnection(createMockPeerDescriptor({ type: NodeType.BROWSER }))).toBe(false)
         })
 
         it('node with non-TLS server', () => {
             connector.setLocalPeerDescriptor(createMockPeerDescriptor({ type: NodeType.NODEJS, websocket: { host: '1.1.1.1', port: 11, tls: false } }))
             expect(connector.isPossibleToFormConnection(createMockPeerDescriptor({ type: NodeType.NODEJS, websocket: { host: '2.2.2.2', port: 22, tls: false } }))).toBe(true)
             expect(connector.isPossibleToFormConnection(createMockPeerDescriptor({ type: NodeType.NODEJS, websocket: { host: '2.2.2.2', port: 22, tls: true } }))).toBe(true)
-            expect(connector.isPossibleToFormConnection(createMockPeerDescriptor({ type: NodeType.NODEJS }))).toBe(true)
+            expect(connector.isPossibleToFormConnection(createMockPeerDescriptor({ type: NodeType.NODEJS }))).toBe(false)
             expect(connector.isPossibleToFormConnection(createMockPeerDescriptor({ type: NodeType.BROWSER }))).toBe(false)
         })
 
@@ -41,8 +41,8 @@ describe('WebsocketConnector', () => {
             connector.setLocalPeerDescriptor(createMockPeerDescriptor({ type: NodeType.NODEJS, websocket: { host: '192.168.11.11', port: 11, tls: false } }))
             expect(connector.isPossibleToFormConnection(createMockPeerDescriptor({ type: NodeType.NODEJS, websocket: { host: '2.2.2.2', port: 22, tls: false } }))).toBe(true)
             expect(connector.isPossibleToFormConnection(createMockPeerDescriptor({ type: NodeType.NODEJS, websocket: { host: '2.2.2.2', port: 22, tls: true } }))).toBe(true)
-            expect(connector.isPossibleToFormConnection(createMockPeerDescriptor({ type: NodeType.NODEJS }))).toBe(true)
-            expect(connector.isPossibleToFormConnection(createMockPeerDescriptor({ type: NodeType.BROWSER }))).toBe(true)
+            expect(connector.isPossibleToFormConnection(createMockPeerDescriptor({ type: NodeType.NODEJS }))).toBe(false)
+            expect(connector.isPossibleToFormConnection(createMockPeerDescriptor({ type: NodeType.BROWSER }))).toBe(false)
         })
 
         it('browser', () => {

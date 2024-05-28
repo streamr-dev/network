@@ -7,7 +7,7 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ConnectionEvents, IConnection } from './IConnection'
 import { WebsocketClientConnection } from './websocket/NodeWebsocketClientConnection'
-import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
+import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketClientConnector'
 import { isMaybeSupportedVersion } from '../helpers/version'
 
 const logger = new Logger(module)
