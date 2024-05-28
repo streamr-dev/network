@@ -117,6 +117,7 @@ export class WebsocketConnector {
             if (this.ongoingConnectRequests.has(nodeId)) {
                 managedConnection.destroy()
                 const ongoingConnectRequest = this.ongoingConnectRequests.get(nodeId)!
+                ongoingConnectRequest.setRemotePeerDescriptor(remotePeerDescriptor)
                 if (!isMaybeSupportedVersion(remoteVersion)) {
                     rejectHandshake(ongoingConnectRequest, connection, handshaker, HandshakeError.UNSUPPORTED_VERSION)  
                 } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
@@ -125,6 +126,7 @@ export class WebsocketConnector {
                     acceptHandshake(ongoingConnectRequest, connection, handshaker, remotePeerDescriptor)
                 }
                 this.ongoingConnectRequests.delete(nodeId)
+                handshaker.stop()
             } else if (!isMaybeSupportedVersion(remoteVersion)) {
                 rejectHandshake(managedConnection, connection, handshaker, HandshakeError.UNSUPPORTED_VERSION)  
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
