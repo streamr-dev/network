@@ -3,25 +3,25 @@ import {
     PeerDescriptor,
     WebsocketConnectionRequest
 } from '../../proto/packages/dht/protos/DhtRpc'
-import { IWebsocketConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
+import { IWebsocketClientConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { ManagedConnection } from '../ManagedConnection'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { DhtAddress } from '../../identifiers'
 
-interface WebsocketConnectorRpcLocalConfig {
+interface WebsocketClientConnectorRpcLocalConfig {
     connect: (targetPeerDescriptor: PeerDescriptor) => ManagedConnection
     hasConnection: (nodeId: DhtAddress) => boolean
     onNewConnection: (connection: ManagedConnection) => boolean
     abortSignal: AbortSignal
 }
 
-export class WebsocketConnectorRpcLocal implements IWebsocketConnectorRpc {
+export class WebsocketClientConnectorRpcLocal implements IWebsocketClientConnectorRpc {
 
-    private readonly config: WebsocketConnectorRpcLocalConfig
+    private readonly config: WebsocketClientConnectorRpcLocalConfig
 
-    constructor(config: WebsocketConnectorRpcLocalConfig) {
+    constructor(config: WebsocketClientConnectorRpcLocalConfig) {
         this.config = config
     }
 

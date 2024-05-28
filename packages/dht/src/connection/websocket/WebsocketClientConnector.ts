@@ -2,7 +2,7 @@ import { WebsocketClientConnection } from './NodeWebsocketClientConnection'
 import { ConnectionType } from '../IConnection'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
-import { WebsocketConnectorRpcLocal } from './WebsocketConnectorRpcLocal'
+import { WebsocketClientConnectorRpcLocal } from './WebsocketClientConnectorRpcLocal'
 import {
     ConnectivityMethod,
     PeerDescriptor,
@@ -51,7 +51,7 @@ export class WebsocketClientConnector {
     }
 
     private registerLocalRpcMethods() {
-        const rpcLocal = new WebsocketConnectorRpcLocal({
+        const rpcLocal = new WebsocketClientConnectorRpcLocal({
             connect: (targetPeerDescriptor: PeerDescriptor) => this.connect(targetPeerDescriptor),
             hasConnection: (nodeId: DhtAddress): boolean => (this.connectingConnections.has(nodeId)
                 || this.ongoingConnectRequests.has(nodeId)

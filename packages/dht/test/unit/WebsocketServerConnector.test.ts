@@ -4,7 +4,7 @@ import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor } from '../utils/utils'
 
-describe('WebsocketSererConnector', () => {
+describe('WebsocketServerConnector', () => {
 
     describe('isPossibleToFormConnection', () => {
 

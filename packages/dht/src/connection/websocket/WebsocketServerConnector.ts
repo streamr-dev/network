@@ -17,8 +17,8 @@ import { isMaybeSupportedVersion, LOCAL_PROTOCOL_VERSION } from '../../helpers/v
 import { shuffle } from 'lodash'
 import { sendConnectivityRequest } from '../connectivityChecker'
 import { acceptHandshake, Handshaker, rejectHandshake } from '../Handshaker'
-import { WebsocketConnectorRpcRemote } from './WebsocketConnectorRpcRemote'
-import { WebsocketConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { WebsocketClientConnectorRpcRemote } from './WebsocketClientConnectorRpcRemote'
+import { WebsocketClientConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { WebsocketServerStartError } from '../../helpers/errors'
 import * as Err from '../../helpers/errors'
 import { expectedConnectionType } from '../../helpers/Connectivity'
@@ -233,11 +233,11 @@ export class WebsocketServerConnector {
 
     private requestConnectionFromPeer(localPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): ManagedConnection {
         setImmediate(() => {
-            const remoteConnector = new WebsocketConnectorRpcRemote(
+            const remoteConnector = new WebsocketClientConnectorRpcRemote(
                 localPeerDescriptor,
                 targetPeerDescriptor,
                 this.rpcCommunicator,
-                WebsocketConnectorRpcClient
+                WebsocketClientConnectorRpcClient
             )
             remoteConnector.requestConnection().then(() => {
                 logger.trace('Sent WebsocketConnectionRequest notification to peer', { targetPeerDescriptor })
