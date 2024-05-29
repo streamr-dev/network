@@ -12,6 +12,7 @@ import { IceServer, WebrtcConnector } from './webrtc/WebrtcConnector'
 import { WebsocketClientConnector } from './websocket/WebsocketClientConnector'
 import { DhtAddress } from '../identifiers'
 import { WebsocketServerConnector, WebsocketServerConnectorConfig } from './websocket/WebsocketServerConnector'
+import { ListeningRpcCommunicator } from '../transport/ListeningRpcCommunicator'
 
 export interface ConnectorFacade {
     createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection
@@ -52,6 +53,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
 
     private readonly config: DefaultConnectorFacadeConfig
     private localPeerDescriptor?: PeerDescriptor
+    private websocketConnectorRpcCommunicator?: ListeningRpcCommunicator
     private websocketClientConnector?: WebsocketClientConnector
     private websocketServerConnector?: WebsocketServerConnector
     private webrtcConnector?: WebrtcConnector
@@ -65,16 +67,22 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         autoCertifierTransport: ITransport
     ): Promise<void> {
         logger.trace(`Creating WebsocketConnectorRpcLocal`)
+        this.websocketConnectorRpcCommunicator = new ListeningRpcCommunicator(
+            WebsocketClientConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, 
+            this.config.transport, 
+            { rpcRequestTimeout: 15000 }  // TODO use config option or named constant?
+        
+        )
         const webSocketClientConnectorConfig = {
-            transport: this.config.transport,
             // TODO should we use canConnect also for WebrtcConnector? (NET-1142)
             onNewConnection,
-            hasConnection
+            hasConnection,
+            rpcCommunicator: this.websocketConnectorRpcCommunicator,
         }
         this.websocketClientConnector = new WebsocketClientConnector(webSocketClientConnectorConfig)
 
         const webSocketServerConnectorConfig = {
-            transport: this.config.transport,
+            rpcCommunicator: this.websocketConnectorRpcCommunicator,
             // TODO should we use canConnect also for WebrtcConnector? (NET-1142)
             onNewConnection,
             hasConnection,
@@ -164,6 +172,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     }
 
     async stop(): Promise<void> {
+        this.websocketConnectorRpcCommunicator!.destroy()
         await this.websocketServerConnector!.destroy()
         await this.websocketClientConnector!.destroy()
         await this.webrtcConnector!.stop()

@@ -1,6 +1,6 @@
 import { GeoIpLocator } from '@streamr/geoip-location'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
-import { Action, connectivityMethodToWebsocketUrl, WebsocketClientConnector } from './WebsocketClientConnector'
+import { Action, connectivityMethodToWebsocketUrl } from './WebsocketClientConnector'
 import { WebsocketServer } from './WebsocketServer'
 import { areEqualPeerDescriptors, DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { ManagedConnection } from '../ManagedConnection'
@@ -26,7 +26,7 @@ import { expectedConnectionType } from '../../helpers/Connectivity'
 const logger = new Logger(module)
 
 export interface WebsocketServerConnectorConfig {
-    transport: ITransport
+    rpcCommunicator: ListeningRpcCommunicator
     onNewConnection: (connection: ManagedConnection) => boolean
     hasConnection: (nodeId: DhtAddress) => boolean
     portRange?: PortRange
@@ -43,7 +43,6 @@ export interface WebsocketServerConnectorConfig {
 
 export class WebsocketServerConnector {
 
-    private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly websocketServer?: WebsocketServer
     private geoIpLocator?: GeoIpLocator
     private readonly ongoingConnectRequests: Map<DhtAddress, ManagedConnection> = new Map()
@@ -63,9 +62,6 @@ export class WebsocketServerConnector {
             enableTls: config.serverEnableTls
         }) : undefined
         this.host = config.host
-        this.rpcCommunicator = new ListeningRpcCommunicator(WebsocketClientConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, config.transport, {
-            rpcRequestTimeout: 15000  // TODO use config option or named constant?
-        })
     }
 
     public async start(): Promise<void> {
@@ -236,7 +232,7 @@ export class WebsocketServerConnector {
             const remoteConnector = new WebsocketClientConnectorRpcRemote(
                 localPeerDescriptor,
                 targetPeerDescriptor,
-                this.rpcCommunicator,
+                this.config.rpcCommunicator,
                 WebsocketClientConnectorRpcClient
             )
             remoteConnector.requestConnection().then(() => {
@@ -266,7 +262,6 @@ export class WebsocketServerConnector {
 
     public async destroy(): Promise<void> {
         this.abortController.abort()
-        this.rpcCommunicator.destroy()
 
         const requests = Array.from(this.ongoingConnectRequests.values())
         await Promise.allSettled(requests.map((conn) => conn.close(true)))
