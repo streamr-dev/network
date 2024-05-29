@@ -5,21 +5,20 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ITransport } from '../transport/ITransport'
 import { PortRange, TlsCertificate } from './ConnectionManager'
-import { ManagedConnection } from './ManagedConnection'
 import { Simulator } from './simulator/Simulator'
 import { SimulatorConnector } from './simulator/SimulatorConnector'
 import { IceServer, WebrtcConnector } from './webrtc/WebrtcConnector'
 import { WebsocketClientConnector } from './websocket/WebsocketClientConnector'
 import { DhtAddress } from '../identifiers'
 import { WebsocketServerConnector, WebsocketServerConnectorConfig } from './websocket/WebsocketServerConnector'
-import { EventEmitter } from 'eventemitter3'
 import { IConnection } from './IConnection'
+import { PendingConnection } from './PendingConnection'
 
 export interface ConnectorFacade {
-    createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection
+    createConnection: (peerDescriptor: PeerDescriptor) => PendingConnection
     getLocalPeerDescriptor: () => PeerDescriptor | undefined
     start: (
-        onNewConnection: (connection: ManagedConnection) => boolean,
+        onNewConnection: (connection: PendingConnection) => boolean,
         onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void,
         hasConnection: (nodeId: DhtAddress) => boolean,
         autoCertifierTransport: ITransport
@@ -63,7 +62,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     }
 
     async start(
-        onNewConnection: (connection: ManagedConnection) => boolean,
+        onNewConnection: (connection: PendingConnection) => boolean,
         onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void,
         hasConnection: (nodeId: DhtAddress) => boolean,
         autoCertifierTransport: ITransport
@@ -157,7 +156,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         this.setLocalPeerDescriptor(localPeerDescriptor)
     }
 
-    createConnection(peerDescriptor: PeerDescriptor): ManagedConnection {
+    createConnection(peerDescriptor: PeerDescriptor): PendingConnection {
         if (this.websocketClientConnector!.isPossibleToFormConnection(peerDescriptor)) {
             return this.websocketClientConnector!.connect(peerDescriptor)
         } else if (this.websocketServerConnector!.isPossibleToFormConnection(peerDescriptor)) {
@@ -190,7 +189,7 @@ export class SimulatorConnectorFacade implements ConnectorFacade {
     }
 
     async start(
-        onNewConnection: (connection: ManagedConnection) => boolean,
+        onNewConnection: (connection: PendingConnection) => boolean,
         onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void
     ): Promise<void> {
         logger.trace(`Creating SimulatorConnector`)
@@ -203,7 +202,7 @@ export class SimulatorConnectorFacade implements ConnectorFacade {
         this.simulator.addConnector(this.simulatorConnector)
     }
 
-    createConnection(peerDescriptor: PeerDescriptor): ManagedConnection {
+    createConnection(peerDescriptor: PeerDescriptor): PendingConnection {
         return this.simulatorConnector!.connect(peerDescriptor)
     }
 

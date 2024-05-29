@@ -304,6 +304,7 @@ describe('ConnectionManager', () => {
         })
         msg.targetDescriptor = mockPeerDescriptor4
         connectionManager3.send(msg)
+
         await Promise.all([dataPromise, connectedPromise1, connectedPromise2])
 
         // @ts-expect-error private field

@@ -3,7 +3,6 @@ import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicat
 import { Action, connectivityMethodToWebsocketUrl, WebsocketClientConnector } from './WebsocketClientConnector'
 import { WebsocketServer } from './WebsocketServer'
 import { areEqualPeerDescriptors, DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { ManagedConnection } from '../ManagedConnection'
 import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
 import { ConnectivityResponse, HandshakeError, PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { NatType, PortRange, TlsCertificate } from '../ConnectionManager'
@@ -22,13 +21,13 @@ import { WebsocketClientConnectorRpcClient } from '../../proto/packages/dht/prot
 import { WebsocketServerStartError } from '../../helpers/errors'
 import * as Err from '../../helpers/errors'
 import { expectedConnectionType } from '../../helpers/Connectivity'
-import EventEmitter from 'eventemitter3'
+import { PendingConnection } from '../PendingConnection'
 
 const logger = new Logger(module)
 
 export interface WebsocketServerConnectorConfig {
     transport: ITransport
-    onNewConnection: (connection: ManagedConnection) => boolean
+    onNewConnection: (connection: PendingConnection) => boolean
     onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void
     hasConnection: (nodeId: DhtAddress) => boolean
     portRange?: PortRange
@@ -48,7 +47,7 @@ export class WebsocketServerConnector {
     private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly websocketServer?: WebsocketServer
     private geoIpLocator?: GeoIpLocator
-    private readonly ongoingConnectRequests: Map<DhtAddress, ManagedConnection> = new Map()
+    private readonly ongoingConnectRequests: Map<DhtAddress, PendingConnection> = new Map()
     private host?: string
     private autoCertifierClient?: AutoCertifierClientFacade
     private selectedPort?: number
@@ -138,18 +137,17 @@ export class WebsocketServerConnector {
             }
             this.ongoingConnectRequests.delete(nodeId)
         } else {
-            const managedConnection = new ManagedConnection(ConnectionType.WEBSOCKET_SERVER)
-            managedConnection.setRemotePeerDescriptor(sourcePeerDescriptor)
+            const pendingConnection = new PendingConnection(sourcePeerDescriptor)
             
             if (!isMaybeSupportedVersion(remoteVersion)) {
-                rejectHandshake(managedConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_VERSION)  
+                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_VERSION)  
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
-                rejectHandshake(managedConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)  
-            } else if (this.config.onNewConnection(managedConnection)) {
+                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)  
+            } else if (this.config.onNewConnection(pendingConnection)) {
                 acceptHandshake(handshaker)
                 this.config.onHandshakeCompleted(sourcePeerDescriptor, websocketServerConnection)
             } else {
-                rejectHandshake(managedConnection, websocketServerConnection, handshaker, HandshakeError.DUPLICATE_CONNECTION)
+                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.DUPLICATE_CONNECTION)
             }
         }
     }
@@ -227,7 +225,7 @@ export class WebsocketServerConnector {
         this.host = hostName
     }
 
-    public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
+    public connect(targetPeerDescriptor: PeerDescriptor): PendingConnection {
         const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
         if (this.ongoingConnectRequests.has(nodeId)) {
             return this.ongoingConnectRequests.get(nodeId)!
@@ -235,7 +233,7 @@ export class WebsocketServerConnector {
         return this.requestConnectionFromPeer(this.localPeerDescriptor!, targetPeerDescriptor)
     }
 
-    private requestConnectionFromPeer(localPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): ManagedConnection {
+    private requestConnectionFromPeer(localPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): PendingConnection {
         setImmediate(() => {
             const remoteConnector = new WebsocketClientConnectorRpcRemote(
                 localPeerDescriptor,
@@ -251,13 +249,12 @@ export class WebsocketServerConnector {
                 })
             })
         })
-        const managedConnection = new ManagedConnection(ConnectionType.WEBSOCKET_SERVER)
+        const pendingConnection = new PendingConnection(targetPeerDescriptor)
         const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
         // TODO: can this leak?
-        managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(nodeId))
-        managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
-        this.ongoingConnectRequests.set(nodeId, managedConnection)
-        return managedConnection
+        pendingConnection.on('disconnected', () => this.ongoingConnectRequests.delete(nodeId))
+        this.ongoingConnectRequests.set(nodeId, pendingConnection)
+        return pendingConnection
     }
 
     public isPossibleToFormConnection(targetPeerDescriptor: PeerDescriptor): boolean {

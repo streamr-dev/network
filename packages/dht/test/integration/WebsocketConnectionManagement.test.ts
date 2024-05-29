@@ -3,7 +3,6 @@
 import { MetricsContext, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
-import { ConnectionType } from '../../src/connection/IConnection'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import * as Err from '../../src/helpers/errors'
@@ -103,12 +102,6 @@ describe('Websocket Connection Management', () => {
         }
         noWsServerManager.on('message', (message: Message) => {
             expect(message.messageId).toEqual('mockerer')
-            expect(wsServerManager.getConnection(getNodeIdFromPeerDescriptor(noWsServerConnectorPeerDescriptor))!.connectionType).toEqual(
-                ConnectionType.WEBSOCKET_SERVER
-            )
-            expect(noWsServerManager.getConnection(getNodeIdFromPeerDescriptor(wsServerConnectorPeerDescriptor))!.connectionType).toEqual(
-                ConnectionType.WEBSOCKET_CLIENT
-            )
 
             done()
         })
@@ -128,13 +121,6 @@ describe('Websocket Connection Management', () => {
         }
         biggerNoWsServerManager.on('message', (message: Message) => {
             expect(message.messageId).toEqual('mockerer')
-            expect(wsServerManager.getConnection(getNodeIdFromPeerDescriptor(biggerNoWsServerConnectorPeerDescriptor))!.connectionType).toEqual(
-                ConnectionType.WEBSOCKET_SERVER
-            )
-            expect(biggerNoWsServerManager.getConnection(getNodeIdFromPeerDescriptor(wsServerConnectorPeerDescriptor))!.connectionType).toEqual(
-                ConnectionType.WEBSOCKET_CLIENT
-            )
-
             done()
         })
 
@@ -159,7 +145,7 @@ describe('Websocket Connection Management', () => {
             waitForEvent3<TransportEvents>(wsServerManager, 'disconnected', 15000),
             wsServerManager.send(dummyMessage)
         ])
-        expect(wsServerManager.getConnection(getNodeIdFromPeerDescriptor(dummyMessage.targetDescriptor!))).toBeUndefined()
+        expect(wsServerManager.hasConnection(getNodeIdFromPeerDescriptor(dummyMessage.targetDescriptor!))).toBeFalse()
     }, 20000)
     
     it('Can open connections to peer with server', async () => {
@@ -176,15 +162,11 @@ describe('Websocket Connection Management', () => {
         await waitForCondition(
             () => {
                 const nodeId = getNodeIdFromPeerDescriptor(noWsServerConnectorPeerDescriptor)
-                return (!!wsServerManager.getConnection(nodeId)
-                    && wsServerManager.getConnection(nodeId)!.connectionType === ConnectionType.WEBSOCKET_SERVER)
+                return wsServerManager.hasConnection(nodeId)
             }
         )
         await waitForCondition(
-            () => {
-                const connection = noWsServerManager.getConnection(getNodeIdFromPeerDescriptor(wsServerConnectorPeerDescriptor))!
-                return connection.connectionType === ConnectionType.WEBSOCKET_CLIENT
-            }
+            () => noWsServerManager.hasConnection(getNodeIdFromPeerDescriptor(wsServerConnectorPeerDescriptor))
         )
     })
 

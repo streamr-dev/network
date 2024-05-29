@@ -12,15 +12,15 @@ import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
 import { WebrtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
-import { ManagedConnection } from '../ManagedConnection'
 import { PortRange } from '../ConnectionManager'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { WebrtcConnectorRpcLocal } from './WebrtcConnectorRpcLocal'
 import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { getOfferer } from '../../helpers/offering'
 import { acceptHandshake, createIncomingHandshaker, createOutgoingHandshaker, rejectHandshake } from '../Handshaker'
-import { ConnectionType, IConnection } from '../IConnection'
+import { IConnection } from '../IConnection'
 import { isMaybeSupportedVersion } from '../../helpers/version'
+import { PendingConnection } from '../PendingConnection'
 
 const logger = new Logger(module)
 
@@ -34,7 +34,7 @@ export const replaceInternalIpWithExternalIp = (candidate: string, ip: string): 
 }
 
 export interface WebrtcConnectorConfig {
-    onNewConnection: (connection: ManagedConnection) => boolean
+    onNewConnection: (connection: PendingConnection) => boolean
     onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void
     transport: ITransport
     iceServers?: IceServer[]
@@ -55,7 +55,7 @@ export interface IceServer {
 }
 
 export interface ConnectingConnection {
-    managedConnection: ManagedConnection
+    managedConnection: PendingConnection
     connection: NodeWebrtcConnection
 }
 
@@ -80,7 +80,7 @@ export class WebrtcConnector {
         const localRpc = new WebrtcConnectorRpcLocal({
             connect: (targetPeerDescriptor: PeerDescriptor, doNotRequestConnection: boolean) => 
                 this.connect(targetPeerDescriptor, doNotRequestConnection),
-            onNewConnection: (connection: ManagedConnection) => this.config.onNewConnection(connection),
+            onNewConnection: (connection: PendingConnection) => this.config.onNewConnection(connection),
             ongoingConnectAttempts: this.ongoingConnectAttempts,
             rpcCommunicator: this.rpcCommunicator,
             getLocalPeerDescriptor: () => this.localPeerDescriptor!,
@@ -124,7 +124,7 @@ export class WebrtcConnector {
         )
     }
 
-    connect(targetPeerDescriptor: PeerDescriptor, doNotRequestConnection: boolean): ManagedConnection {
+    connect(targetPeerDescriptor: PeerDescriptor, doNotRequestConnection: boolean): PendingConnection {
         if (areEqualPeerDescriptors(targetPeerDescriptor, this.localPeerDescriptor!)) {
             throw new Err.CannotConnectToSelf('Cannot open WebRTC Connection to self')
         }
@@ -142,7 +142,7 @@ export class WebrtcConnector {
         const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor!)
         const targetNodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
         const offering = (getOfferer(localNodeId, targetNodeId) === 'local')
-        let managedConnection: ManagedConnection
+        let pendingConnection: PendingConnection
         const remoteConnector = new WebrtcConnectorRpcRemote(
             this.localPeerDescriptor!,
             targetPeerDescriptor,
@@ -152,25 +152,25 @@ export class WebrtcConnector {
         const delFunc = () => {
             this.ongoingConnectAttempts.delete(nodeId)
             connection.off('disconnected', delFunc)
-            managedConnection.off('disconnected', delFunc)
-            managedConnection.off('connected', delFunc)
+            pendingConnection.off('disconnected', delFunc)
+            pendingConnection.off('connected', delFunc)
         }
         if (offering) {
-            managedConnection = new ManagedConnection(ConnectionType.WEBRTC)
-            createOutgoingHandshaker(this.localPeerDescriptor!, managedConnection, connection, this.config.onHandshakeCompleted, targetPeerDescriptor)
+            pendingConnection = new PendingConnection(targetPeerDescriptor)
+            createOutgoingHandshaker(this.localPeerDescriptor!, pendingConnection, connection, this.config.onHandshakeCompleted, targetPeerDescriptor)
             connection.once('localDescription', (description: string) => {
                 logger.trace('Sending offer to remote peer')
                 remoteConnector.sendRtcOffer(description, connection.connectionId)
             })
         } else {
-            managedConnection = new ManagedConnection(ConnectionType.WEBRTC)
-            const handshaker = createIncomingHandshaker(this.localPeerDescriptor!, managedConnection, connection)
+            pendingConnection = new PendingConnection(targetPeerDescriptor)
+            const handshaker = createIncomingHandshaker(this.localPeerDescriptor!, pendingConnection, connection)
             connection.once('localDescription', (description: string) => {
                 remoteConnector.sendRtcAnswer(description, connection.connectionId)
             })
             handshaker.on('handshakeRequest', (sourceDescriptor: PeerDescriptor, remoteVersion: string) => {
                 if (!isMaybeSupportedVersion(remoteVersion)) {
-                    rejectHandshake(managedConnection!, connection, handshaker, HandshakeError.UNSUPPORTED_VERSION)
+                    rejectHandshake(pendingConnection!, connection, handshaker, HandshakeError.UNSUPPORTED_VERSION)
                 } else {
                     acceptHandshake(handshaker)
                     this.config.onHandshakeCompleted(sourceDescriptor, connection)
@@ -179,16 +179,14 @@ export class WebrtcConnector {
             })
         }
 
-        managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
-
         this.ongoingConnectAttempts.set(targetNodeId, {
-            managedConnection,
+            managedConnection: pendingConnection,
             connection
         })
 
         connection.on('disconnected', delFunc)
-        managedConnection.on('disconnected', delFunc)
-        managedConnection.on('connected', delFunc)
+        pendingConnection.on('disconnected', delFunc)
+        pendingConnection.on('connected', delFunc)
     
         connection.on('localCandidate', (candidate: string, mid: string) => {
             if (this.config.externalIp !== undefined) {
@@ -204,7 +202,7 @@ export class WebrtcConnector {
             remoteConnector.requestConnection()
         }
 
-        return managedConnection
+        return pendingConnection
     }
 
     private createConnection(targetPeerDescriptor: PeerDescriptor): NodeWebrtcConnection {
