@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 import { WebsocketClientConnector } from '../../src/connection/websocket/WebsocketClientConnector'
 import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { MockTransport } from '../utils/mock/MockTransport'
+import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('WebsocketClientConnector', () => {
@@ -9,7 +9,7 @@ describe('WebsocketClientConnector', () => {
     describe('isPossibleToFormConnection', () => {
 
         const connector = new WebsocketClientConnector({
-            transport: new MockTransport(),
+            rpcCommunicator: new MockRpcCommunicator(),
             canConnect: () => {}
         } as any)
 
