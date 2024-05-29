@@ -1,6 +1,5 @@
 import { WebsocketClientConnection } from './NodeWebsocketClientConnection'
 import { ConnectionType, IConnection } from '../IConnection'
-import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { WebsocketClientConnectorRpcLocal } from './WebsocketClientConnectorRpcLocal'
 import {
@@ -24,16 +23,15 @@ export const connectivityMethodToWebsocketUrl = (ws: ConnectivityMethod, action?
 }
 
 export interface WebsocketClientConnectorConfig {
-    transport: ITransport
     onNewConnection: (connection: PendingConnection) => boolean
     onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void
     hasConnection: (nodeId: DhtAddress) => boolean
+    rpcCommunicator: ListeningRpcCommunicator
 }
 
 export class WebsocketClientConnector {
 
     public static readonly WEBSOCKET_CONNECTOR_SERVICE_ID = 'system/websocket-connector'
-    private readonly rpcCommunicator: ListeningRpcCommunicator
     private readonly websocketServer?: WebsocketServer
     private geoIpLocator?: GeoIpLocator
 
@@ -44,9 +42,7 @@ export class WebsocketClientConnector {
 
     constructor(config: WebsocketClientConnectorConfig) {
         this.config = config
-        this.rpcCommunicator = new ListeningRpcCommunicator(WebsocketClientConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, config.transport, {
-            rpcRequestTimeout: 15000  // TODO use config option or named constant?
-        })
+        
         this.registerLocalRpcMethods()
     }
 
@@ -59,7 +55,7 @@ export class WebsocketClientConnector {
             onNewConnection: (connection: PendingConnection) => this.config.onNewConnection(connection),
             abortSignal: this.abortController.signal
         })
-        this.rpcCommunicator.registerRpcNotification(
+        this.config.rpcCommunicator.registerRpcNotification(
             WebsocketConnectionRequest,
             'requestConnection',
             async (req: WebsocketConnectionRequest, context: ServerCallContext): Promise<Empty> => {
@@ -114,7 +110,6 @@ export class WebsocketClientConnector {
 
     public async destroy(): Promise<void> {
         this.abortController.abort()
-        this.rpcCommunicator.destroy()
 
         const requests = Array.from(this.connectingConnections.values())
         await Promise.allSettled(requests.map((conn) => conn.close(true)))
