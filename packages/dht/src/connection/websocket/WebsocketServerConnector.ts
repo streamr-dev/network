@@ -22,12 +22,14 @@ import { WebsocketClientConnectorRpcClient } from '../../proto/packages/dht/prot
 import { WebsocketServerStartError } from '../../helpers/errors'
 import * as Err from '../../helpers/errors'
 import { expectedConnectionType } from '../../helpers/Connectivity'
+import EventEmitter from 'eventemitter3'
 
 const logger = new Logger(module)
 
 export interface WebsocketServerConnectorConfig {
     transport: ITransport
     onNewConnection: (connection: ManagedConnection) => boolean
+    onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void
     hasConnection: (nodeId: DhtAddress) => boolean
     portRange?: PortRange
     maxMessageSize?: number
@@ -131,7 +133,8 @@ export class WebsocketServerConnector {
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 rejectHandshake(ongoingConnectRequest, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)  
             } else {
-                acceptHandshake(ongoingConnectRequest, websocketServerConnection, handshaker, sourcePeerDescriptor)
+                acceptHandshake(handshaker)
+                this.config.onHandshakeCompleted(sourcePeerDescriptor, websocketServerConnection)
             }
             this.ongoingConnectRequests.delete(nodeId)
         } else {
@@ -143,7 +146,8 @@ export class WebsocketServerConnector {
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 rejectHandshake(managedConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)  
             } else if (this.config.onNewConnection(managedConnection)) {
-                acceptHandshake(managedConnection, websocketServerConnection, handshaker, sourcePeerDescriptor)
+                acceptHandshake(handshaker)
+                this.config.onHandshakeCompleted(sourcePeerDescriptor, websocketServerConnection)
             } else {
                 rejectHandshake(managedConnection, websocketServerConnection, handshaker, HandshakeError.DUPLICATE_CONNECTION)
             }
@@ -249,6 +253,7 @@ export class WebsocketServerConnector {
         })
         const managedConnection = new ManagedConnection(ConnectionType.WEBSOCKET_SERVER)
         const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
+        // TODO: can this leak?
         managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(nodeId))
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
         this.ongoingConnectRequests.set(nodeId, managedConnection)

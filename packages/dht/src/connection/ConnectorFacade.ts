@@ -12,12 +12,15 @@ import { IceServer, WebrtcConnector } from './webrtc/WebrtcConnector'
 import { WebsocketClientConnector } from './websocket/WebsocketClientConnector'
 import { DhtAddress } from '../identifiers'
 import { WebsocketServerConnector, WebsocketServerConnectorConfig } from './websocket/WebsocketServerConnector'
+import { EventEmitter } from 'eventemitter3'
+import { IConnection } from './IConnection'
 
 export interface ConnectorFacade {
     createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection
     getLocalPeerDescriptor: () => PeerDescriptor | undefined
     start: (
         onNewConnection: (connection: ManagedConnection) => boolean,
+        onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void,
         hasConnection: (nodeId: DhtAddress) => boolean,
         autoCertifierTransport: ITransport
     ) => Promise<void>
@@ -61,6 +64,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
 
     async start(
         onNewConnection: (connection: ManagedConnection) => boolean,
+        onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void,
         hasConnection: (nodeId: DhtAddress) => boolean,
         autoCertifierTransport: ITransport
     ): Promise<void> {
@@ -69,7 +73,8 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             transport: this.config.transport,
             // TODO should we use canConnect also for WebrtcConnector? (NET-1142)
             onNewConnection,
-            hasConnection
+            hasConnection,
+            onHandshakeCompleted
         }
         this.websocketClientConnector = new WebsocketClientConnector(webSocketClientConnectorConfig)
 
@@ -77,6 +82,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             transport: this.config.transport,
             // TODO should we use canConnect also for WebrtcConnector? (NET-1142)
             onNewConnection,
+            onHandshakeCompleted,
             hasConnection,
             portRange: this.config.websocketPortRange,
             host: this.config.websocketHost,
@@ -91,6 +97,8 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         }
         this.websocketServerConnector = new WebsocketServerConnector(webSocketServerConnectorConfig)
         this.webrtcConnector = new WebrtcConnector({
+            onNewConnection,
+            onHandshakeCompleted,
             transport: this.config.transport,
             iceServers: this.config.iceServers,
             allowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
@@ -99,7 +107,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             externalIp: this.config.externalIp,
             portRange: this.config.webrtcPortRange,
             maxMessageSize: this.config.maxMessageSize
-        }, onNewConnection)
+        }, )
         await this.websocketServerConnector.start()
         // TODO: generate a PeerDescriptor in a single function. Requires changes to the createOwnPeerDescriptor
         // function in the config. Currently it's given by the DhtNode and it sets the PeerDescriptor for the
@@ -181,12 +189,16 @@ export class SimulatorConnectorFacade implements ConnectorFacade {
         this.simulator = simulator
     }
 
-    async start(onNewConnection: (connection: ManagedConnection) => boolean): Promise<void> {
+    async start(
+        onNewConnection: (connection: ManagedConnection) => boolean,
+        onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void
+    ): Promise<void> {
         logger.trace(`Creating SimulatorConnector`)
         this.simulatorConnector = new SimulatorConnector(
             this.localPeerDescriptor,
             this.simulator,
-            onNewConnection
+            onNewConnection,
+            onHandshakeCompleted
         )
         this.simulator.addConnector(this.simulatorConnector)
     }

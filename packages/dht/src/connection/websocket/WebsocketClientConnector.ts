@@ -1,5 +1,5 @@
 import { WebsocketClientConnection } from './NodeWebsocketClientConnection'
-import { ConnectionType } from '../IConnection'
+import { ConnectionType, IConnection } from '../IConnection'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { WebsocketClientConnectorRpcLocal } from './WebsocketClientConnectorRpcLocal'
@@ -26,6 +26,7 @@ export const connectivityMethodToWebsocketUrl = (ws: ConnectivityMethod, action?
 export interface WebsocketClientConnectorConfig {
     transport: ITransport
     onNewConnection: (connection: ManagedConnection) => boolean
+    onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void
     hasConnection: (nodeId: DhtAddress) => boolean
 }
 
@@ -90,7 +91,7 @@ export class WebsocketClientConnector {
 
         const managedConnection = new ManagedConnection(ConnectionType.WEBSOCKET_CLIENT)
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
-        createOutgoingHandshaker(this.localPeerDescriptor!, managedConnection, socket, targetPeerDescriptor)
+        createOutgoingHandshaker(this.localPeerDescriptor!, managedConnection, socket, this.config.onHandshakeCompleted, targetPeerDescriptor)
         this.connectingConnections.set(nodeId, managedConnection)
 
         const delFunc = () => {

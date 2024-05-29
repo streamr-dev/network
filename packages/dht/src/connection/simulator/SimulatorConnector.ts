@@ -1,4 +1,4 @@
-import { ConnectionType } from '../IConnection'
+import { ConnectionType, IConnection } from '../IConnection'
 
 import {
     HandshakeError,
@@ -20,15 +20,18 @@ export class SimulatorConnector {
     private localPeerDescriptor: PeerDescriptor
     private simulator: Simulator
     private onNewConnection: (connection: ManagedConnection) => boolean
+    private onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void
 
     constructor(
         localPeerDescriptor: PeerDescriptor,
         simulator: Simulator,
-        onNewConnection: (connection: ManagedConnection) => boolean
+        onNewConnection: (connection: ManagedConnection) => boolean,
+        onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void
     ) {
         this.localPeerDescriptor = localPeerDescriptor
         this.simulator = simulator
         this.onNewConnection = onNewConnection
+        this.onHandshakeCompleted = (peerDescriptor, connection) => onHandshakeCompleted(peerDescriptor, connection)
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
@@ -43,7 +46,7 @@ export class SimulatorConnector {
 
         const managedConnection = new ManagedConnection(ConnectionType.SIMULATOR_CLIENT)
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
-        createOutgoingHandshaker(this.localPeerDescriptor, managedConnection, connection, targetPeerDescriptor)
+        createOutgoingHandshaker(this.localPeerDescriptor, managedConnection, connection, this.onHandshakeCompleted, targetPeerDescriptor)
         this.connectingConnections.set(nodeId, managedConnection)
         const delFunc = () => {
             this.connectingConnections.delete(nodeId)
@@ -81,7 +84,8 @@ export class SimulatorConnector {
 
             if (this.onNewConnection(managedConnection)) {
                 logger.trace(localNodeId + ' calling acceptHandshake')
-                acceptHandshake(managedConnection, connection, handshaker, sourceConnection.localPeerDescriptor)
+                acceptHandshake(handshaker)
+                this.onHandshakeCompleted(sourceConnection.localPeerDescriptor, connection)
             } else {
                 rejectHandshake(managedConnection, connection, handshaker, HandshakeError.DUPLICATE_CONNECTION)
             }

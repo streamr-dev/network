@@ -26,6 +26,7 @@ import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from
 import { getOfferer } from '../helpers/offering'
 import { ConnectionsView } from './ConnectionsView'
 import { OutputBuffer } from './OutputBuffer'
+import { IConnection } from './IConnection'
 
 export interface ConnectionManagerConfig {
     maxConnections?: number
@@ -120,6 +121,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         this.onData = this.onData.bind(this)
         this.send = this.send.bind(this)
         this.onNewConnection = this.onNewConnection.bind(this)
+        this.onHandshakeCompleted = this.onHandshakeCompleted.bind(this)
         this.metricsContext = this.config.metricsContext ?? new MetricsContext()
         this.metrics = {
             sendMessagesPerSecond: new RateMetric(),
@@ -188,6 +190,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         logger.trace(`Starting ConnectionManager...`)
         await this.connectorFacade.start(
             (connection: ManagedConnection) => this.onNewConnection(connection),
+            (peerDescriptor: PeerDescriptor, connection: IConnection) => this.onHandshakeCompleted(peerDescriptor, connection),
             (nodeId: DhtAddress) => this.hasConnection(nodeId),
             this
         )
@@ -449,6 +452,16 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         })
 
         return true
+    }
+
+    private onHandshakeCompleted(peerDescriptor: PeerDescriptor, connection: IConnection) {
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        if (this.endpoints.has(nodeId)) {
+            const managedConnection = this.endpoints.get(nodeId)!.connection
+            managedConnection.attachConnection(peerDescriptor, connection) 
+        } else {
+            logger.fatal(`onHandshakeCompleted() did not have the id ${nodeId}`)
+        }
     }
 
     private async closeConnection(peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string): Promise<void> {

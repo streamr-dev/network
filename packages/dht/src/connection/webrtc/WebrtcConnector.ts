@@ -19,7 +19,7 @@ import { WebrtcConnectorRpcLocal } from './WebrtcConnectorRpcLocal'
 import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { getOfferer } from '../../helpers/offering'
 import { acceptHandshake, createIncomingHandshaker, createOutgoingHandshaker, rejectHandshake } from '../Handshaker'
-import { ConnectionType } from '../IConnection'
+import { ConnectionType, IConnection } from '../IConnection'
 import { isMaybeSupportedVersion } from '../../helpers/version'
 
 const logger = new Logger(module)
@@ -34,6 +34,8 @@ export const replaceInternalIpWithExternalIp = (candidate: string, ip: string): 
 }
 
 export interface WebrtcConnectorConfig {
+    onNewConnection: (connection: ManagedConnection) => boolean
+    onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void
     transport: ITransport
     iceServers?: IceServer[]
     allowPrivateAddresses?: boolean
@@ -66,25 +68,19 @@ export class WebrtcConnector {
     private stopped = false
     private config: WebrtcConnectorConfig
 
-    constructor(
-        config: WebrtcConnectorConfig,
-        onNewConnection: (connection: ManagedConnection) => boolean
-    ) {
+    constructor(config: WebrtcConnectorConfig) {
         this.config = config
         this.rpcCommunicator = new ListeningRpcCommunicator(WebrtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, config.transport, {
             rpcRequestTimeout: 15000  // TODO use config option or named constant?
         })
-        this.registerLocalRpcMethods(config, onNewConnection)
+        this.registerLocalRpcMethods(config)
     }
 
-    private registerLocalRpcMethods(
-        config: WebrtcConnectorConfig,
-        onNewConnection: (connection: ManagedConnection) => boolean
-    ) {
+    private registerLocalRpcMethods(config: WebrtcConnectorConfig) {
         const localRpc = new WebrtcConnectorRpcLocal({
             connect: (targetPeerDescriptor: PeerDescriptor, doNotRequestConnection: boolean) => 
                 this.connect(targetPeerDescriptor, doNotRequestConnection),
-            onNewConnection,
+            onNewConnection: (connection: ManagedConnection) => this.config.onNewConnection(connection),
             ongoingConnectAttempts: this.ongoingConnectAttempts,
             rpcCommunicator: this.rpcCommunicator,
             getLocalPeerDescriptor: () => this.localPeerDescriptor!,
@@ -161,7 +157,7 @@ export class WebrtcConnector {
         }
         if (offering) {
             managedConnection = new ManagedConnection(ConnectionType.WEBRTC)
-            createOutgoingHandshaker(this.localPeerDescriptor!, managedConnection, connection, targetPeerDescriptor)
+            createOutgoingHandshaker(this.localPeerDescriptor!, managedConnection, connection, this.config.onHandshakeCompleted, targetPeerDescriptor)
             connection.once('localDescription', (description: string) => {
                 logger.trace('Sending offer to remote peer')
                 remoteConnector.sendRtcOffer(description, connection.connectionId)
@@ -176,7 +172,8 @@ export class WebrtcConnector {
                 if (!isMaybeSupportedVersion(remoteVersion)) {
                     rejectHandshake(managedConnection!, connection, handshaker, HandshakeError.UNSUPPORTED_VERSION)
                 } else {
-                    acceptHandshake(managedConnection!, connection, handshaker, sourceDescriptor)
+                    acceptHandshake(handshaker)
+                    this.config.onHandshakeCompleted(sourceDescriptor, connection)
                 }
                 delFunc()
             })
