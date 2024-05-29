@@ -256,7 +256,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         // TODO would it make sense to move this call to WebrtcConnector#stop()?
         // - but note that we should call this only after connections have been closed
         //   (i.e the this.gracefullyDisconnectAsync() calls above)
-        WEBRTC_CLEANUP.cleanUp()
+        // WEBRTC_CLEANUP.cleanUp()
     }
 
     public getLocalLockedConnectionCount(): number {
