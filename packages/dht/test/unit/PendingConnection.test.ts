@@ -1,7 +1,7 @@
-import { wait, waitForEvent3 } from "@streamr/utils"
-import { PendingConnection } from "../../src/exports"
-import { createMockPeerDescriptor } from "../utils/utils"
-import { PendingConnectionEvents } from "../../src/connection/PendingConnection"
+import { wait, waitForEvent3 } from '@streamr/utils'
+import { PendingConnection } from '../../src/exports'
+import { createMockPeerDescriptor } from '../utils/utils'
+import { PendingConnectionEvents } from '../../src/connection/PendingConnection'
 
 describe('PendingConnection', () => {
 
