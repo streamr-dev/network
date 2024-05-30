@@ -97,7 +97,7 @@ export const rejectHandshake = (
 ): void => {
     handshaker.sendHandshakeResponse(error)
     connection.destroy()
-    pendingConnection.destroy()
+    pendingConnection.destroy('HANDSHAKE FAILED')
 }
 
 export const acceptHandshake = (handshaker: Handshaker): void => {

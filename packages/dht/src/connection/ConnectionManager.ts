@@ -182,6 +182,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
                     logger.trace('disconnecting in timeout interval: ' + getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()))
                     disconnectionCandidates.addContact(connection)
                 }
+            } else if (endpoint.connected === false && endpoint.connection.stopped) {
+                console.log('STOPPED CONNECTION IN CONNECTION MANAGER')
             }
         })
         const disconnectables = disconnectionCandidates.getFurthestContacts(this.endpoints.size - maxConnections)
@@ -393,7 +395,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             managedConnection.send(buffer.shift()!)
         }
         outputBuffer.resolve()
-        pendingConnection.destroy()
+        pendingConnection.destroy('REPLACING PENDING WITH MANAGED')
         this.endpoints.set(nodeId, {
             connected: true,
             connection: managedConnection

@@ -14,7 +14,8 @@ export class PendingConnection extends EventEmitter<Events> {
     private readonly connectingAbortController: AbortController = new AbortController()
     private remotePeerDescriptor: PeerDescriptor
     private replacedAsDuplicate: boolean = false
-    private stopped: boolean = false
+    public stopped: boolean = false
+    private destroyReason?: string
 
     constructor(remotePeerDescriptor: PeerDescriptor) {
         super()
@@ -40,10 +41,11 @@ export class PendingConnection extends EventEmitter<Events> {
         }
     }
 
-    destroy(): void {
+    destroy(reason: string): void {
         if (this.stopped) {
             return
         }
+        this.destroyReason = reason
         this.stopped = true
         this.connectingAbortController.abort()
         this.removeAllListeners()
