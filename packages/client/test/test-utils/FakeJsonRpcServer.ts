@@ -5,12 +5,11 @@ import express, { Request, Response } from 'express'
 import { Server } from 'http'
 import { AddressInfo } from 'net'
 import { promisify } from 'util'
+import { isArray } from 'lodash'
 
 export const CHAIN_ID = 5555
 const TRUE = '0x0000000000000000000000000000000000000000000000000000000000000001'
 const BLOCK_NUMBER = 123
-
-const logger = new Logger(module)
 
 const toHex = (val: number) => {
     return '0x' + val.toString(16)
@@ -21,7 +20,9 @@ const getLabelHash = (methodSignature: string) => keccak256(toUtf8Bytes(methodSi
 const getContractMethodHash = (methodSignature: string) => getLabelHash(methodSignature).substring(2, 10)
 
 export interface JsonRpcRequest {
+    id: string
     method: string
+    params: any[]
     timestamp: number
     serverPort: number
 }
@@ -38,45 +39,60 @@ export class FakeJsonRpcServer {
     async start(): Promise<void> {
         const app = express()
         app.use(express.json())
-        const createResponse = (result: any, requestId: any) => {
-            return {
-                jsonrpc: '2.0',
-                id: requestId,
-                result
-            }
-        }
-        app.post('/', async (req: Request, res: Response) => {
-            const method = req.body.method
-            this.requests.push({ method, timestamp: Date.now(), serverPort: this.getPort() })
+        app.post('/', async (httpRequest: Request, httpResponse: Response) => {
+            const requests = this.parseRpcRequests(httpRequest)
+            this.requests.push(...requests)
             if (this.errorState !== undefined) {
                 if (this.errorState !== 'doNotRespond') {
-                    res.sendStatus(this.errorState.httpStatus)
+                    httpResponse.sendStatus(this.errorState.httpStatus)
                 } else {
-                    this.pendingResponses.push(res)
+                    this.pendingResponses.push(httpResponse)
                 }
                 return
             }
-            const sendResponse = (result: any) => {
-                res.json(createResponse(result, req.body.id))
-            }
-            if (method === 'eth_chainId') {
-                sendResponse(toHex(CHAIN_ID))
-            } else if (method === 'eth_blockNumber') {
-                sendResponse(toHex(BLOCK_NUMBER))
-            } else if (method === 'eth_call') {
-                const data = req.body.params[0].data
-                const contractMethodHash = data.substring(2, 10)
-                if (contractMethodHash === getContractMethodHash('hasPermission(string,address,uint8)')) {
-                    sendResponse(TRUE)
-                } else {
-                    logger.warn(`Unknown contract method: ${contractMethodHash}, request: ${JSON.stringify(req.body.params[0])}`)
-                }
-            } else {
-                logger.warn(`Unknown method: ${method}, request: ${JSON.stringify(req.body)}`)
-            }
+            const responses = requests.map((req) => ({
+                jsonrpc: '2.0',
+                id: req.id,
+                result: this.createResult(req)
+            }))
+            new Logger(module).info('SIZE=' + requests.length + ' ' + JSON.stringify(requests))
+            const responseJson = (requests.length === 1) ? responses[0] : responses
+            httpResponse.json(responseJson)
         })
         this.httpServer = app.listen(0)  // uses random port
         await once(this.httpServer, 'listening')
+    }
+
+    private parseRpcRequests(httpRequest: Request): JsonRpcRequest[] {
+        const timestamp = Date.now()
+        const serverPort = this.getPort()
+        const items = isArray(httpRequest.body) ? httpRequest.body : [httpRequest.body]
+        return items.map((item) => ({ 
+            id: item.id,
+            method: item.method,
+            params: item.params,
+            timestamp,
+            serverPort
+        }))
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    private createResult(request: JsonRpcRequest): any {
+        if (request.method === 'eth_chainId') {
+            return toHex(CHAIN_ID)
+        } else if (request.method === 'eth_blockNumber') {
+            return toHex(BLOCK_NUMBER)
+        } else if (request.method === 'eth_call') {
+            const data = request.params[0].data
+            const contractMethodHash = data.substring(2, 10)
+            if (contractMethodHash === getContractMethodHash('hasPermission(string,address,uint8)')) {
+                return TRUE
+            } else {
+                throw new Error(`Unknown contract method: ${contractMethodHash}, request: ${JSON.stringify(request)}`)
+            }
+        } else {
+            throw new Error(`Unknown method: ${request.method}, request: ${JSON.stringify(request)}`)
+        }
     }
 
     async stop(): Promise<void> {
