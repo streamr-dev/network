@@ -84,7 +84,7 @@ export class SimulatorConnector {
 
             if (this.onNewConnection(pendingConnection)) {
                 logger.trace(remoteNodeId + ' calling acceptHandshake')
-                acceptHandshake(handshaker)
+                acceptHandshake(handshaker, pendingConnection)
                 this.onHandshakeCompleted(remotePeerDescriptor, connection)
             } else {
                 rejectHandshake(pendingConnection, connection, handshaker, HandshakeError.DUPLICATE_CONNECTION)
