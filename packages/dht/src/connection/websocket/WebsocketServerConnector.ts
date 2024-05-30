@@ -42,11 +42,16 @@ export interface WebsocketServerConnectorConfig {
     geoIpDatabaseFolder?: string
 }
 
+interface OngoingConnectionRequest {
+    delFunc: () => void
+    pendingConnection: PendingConnection
+}
+
 export class WebsocketServerConnector {
 
     private readonly websocketServer?: WebsocketServer
     private geoIpLocator?: GeoIpLocator
-    private readonly ongoingConnectRequests: Map<DhtAddress, PendingConnection> = new Map()
+    private readonly ongoingConnectRequests: Map<DhtAddress, OngoingConnectionRequest> = new Map()
     private host?: string
     private autoCertifierClient?: AutoCertifierClientFacade
     private selectedPort?: number
@@ -122,16 +127,17 @@ export class WebsocketServerConnector {
     ) {
         const nodeId = getNodeIdFromPeerDescriptor(sourcePeerDescriptor)
         if (this.ongoingConnectRequests.has(nodeId)) {
-            const ongoingConnectRequest = this.ongoingConnectRequests.get(nodeId)!
+            const { pendingConnection, delFunc } = this.ongoingConnectRequests.get(nodeId)!
             if (!isMaybeSupportedVersion(remoteVersion)) {
-                rejectHandshake(ongoingConnectRequest, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_VERSION)  
+                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_VERSION)
+                delFunc()
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
-                rejectHandshake(ongoingConnectRequest, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)  
+                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
+                delFunc()  
             } else {
-                acceptHandshake(handshaker, ongoingConnectRequest)
+                acceptHandshake(handshaker, pendingConnection)
                 this.config.onHandshakeCompleted(sourcePeerDescriptor, websocketServerConnection)
             }
-            this.ongoingConnectRequests.delete(nodeId)
         } else {
             const pendingConnection = new PendingConnection(sourcePeerDescriptor)
             
@@ -224,7 +230,7 @@ export class WebsocketServerConnector {
     public connect(targetPeerDescriptor: PeerDescriptor): PendingConnection {
         const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
         if (this.ongoingConnectRequests.has(nodeId)) {
-            return this.ongoingConnectRequests.get(nodeId)!
+            return this.ongoingConnectRequests.get(nodeId)!.pendingConnection
         }
         return this.requestConnectionFromPeer(this.localPeerDescriptor!, targetPeerDescriptor)
     }
@@ -255,7 +261,7 @@ export class WebsocketServerConnector {
         }
         pendingConnection.on('connected', delFunc)
         pendingConnection.on('disconnected', delFunc)
-        this.ongoingConnectRequests.set(nodeId, pendingConnection)
+        this.ongoingConnectRequests.set(nodeId, { pendingConnection, delFunc })
         return pendingConnection
     }
 
@@ -272,7 +278,7 @@ export class WebsocketServerConnector {
         this.abortController.abort()
 
         const requests = Array.from(this.ongoingConnectRequests.values())
-        await Promise.allSettled(requests.map((conn) => conn.close(true)))
+        await Promise.allSettled(requests.map((ongoingConnectRequest) => ongoingConnectRequest.pendingConnection.close(true)))
 
         await this.websocketServer?.stop()
         await this.geoIpLocator?.stop()
