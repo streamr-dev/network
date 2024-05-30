@@ -128,7 +128,7 @@ export class WebsocketServerConnector {
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 rejectHandshake(ongoingConnectRequest, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)  
             } else {
-                acceptHandshake(handshaker)
+                acceptHandshake(handshaker, ongoingConnectRequest)
                 this.config.onHandshakeCompleted(sourcePeerDescriptor, websocketServerConnection)
             }
             this.ongoingConnectRequests.delete(nodeId)
@@ -140,7 +140,7 @@ export class WebsocketServerConnector {
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)  
             } else if (this.config.onNewConnection(pendingConnection)) {
-                acceptHandshake(handshaker)
+                acceptHandshake(handshaker, pendingConnection)
                 this.config.onHandshakeCompleted(sourcePeerDescriptor, websocketServerConnection)
             } else {
                 rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.DUPLICATE_CONNECTION)
@@ -248,7 +248,13 @@ export class WebsocketServerConnector {
         const pendingConnection = new PendingConnection(targetPeerDescriptor)
         const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
         // TODO: can this leak?
-        pendingConnection.on('disconnected', () => this.ongoingConnectRequests.delete(nodeId))
+        const delFunc = () => {
+            pendingConnection.off('connected', delFunc)
+            pendingConnection.off('disconnected', delFunc)
+            this.ongoingConnectRequests.delete(nodeId)
+        }
+        pendingConnection.on('connected', () => delFunc)
+        pendingConnection.on('disconnected', () => delFunc)
         this.ongoingConnectRequests.set(nodeId, pendingConnection)
         return pendingConnection
     }

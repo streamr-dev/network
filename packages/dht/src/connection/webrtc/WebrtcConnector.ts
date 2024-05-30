@@ -172,7 +172,7 @@ export class WebrtcConnector {
                 if (!isMaybeSupportedVersion(remoteVersion)) {
                     rejectHandshake(pendingConnection!, connection, handshaker, HandshakeError.UNSUPPORTED_VERSION)
                 } else {
-                    acceptHandshake(handshaker)
+                    acceptHandshake(handshaker, pendingConnection)
                     this.config.onHandshakeCompleted(sourceDescriptor, connection)
                 }
                 delFunc()

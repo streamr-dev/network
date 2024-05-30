@@ -3,25 +3,25 @@ import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { Logger, setAbortableTimeout } from '@streamr/utils'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
 
-interface Events {
+export interface PendingConnectionEvents {
     connected: () => void
     disconnected: (gracefulLeave: boolean) => void
 }
 
 const logger = new Logger(module)
 
-export class PendingConnection extends EventEmitter<Events> {
+export class PendingConnection extends EventEmitter<PendingConnectionEvents> {
     private readonly connectingAbortController: AbortController = new AbortController()
     private remotePeerDescriptor: PeerDescriptor
     private replacedAsDuplicate: boolean = false
     private stopped: boolean = false
 
-    constructor(remotePeerDescriptor: PeerDescriptor) {
+    constructor(remotePeerDescriptor: PeerDescriptor, timeout = 15 * 1000) {
         super()
         this.remotePeerDescriptor = remotePeerDescriptor
         setAbortableTimeout(() => {
             this.close(false)
-        }, 15 * 1000, this.connectingAbortController.signal)
+        }, timeout, this.connectingAbortController.signal)
     }
 
     replaceAsDuplicate(): void {
