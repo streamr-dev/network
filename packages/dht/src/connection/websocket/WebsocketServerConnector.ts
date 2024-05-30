@@ -253,8 +253,8 @@ export class WebsocketServerConnector {
             pendingConnection.off('disconnected', delFunc)
             this.ongoingConnectRequests.delete(nodeId)
         }
-        pendingConnection.on('connected', () => delFunc)
-        pendingConnection.on('disconnected', () => delFunc)
+        pendingConnection.on('connected', delFunc)
+        pendingConnection.on('disconnected', delFunc)
         this.ongoingConnectRequests.set(nodeId, pendingConnection)
         return pendingConnection
     }
