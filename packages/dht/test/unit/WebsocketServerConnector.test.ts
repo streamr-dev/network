@@ -6,12 +6,20 @@ import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('WebsocketServerConnector', () => {
 
-    describe('isPossibleToFormConnection', () => {
+    let connector: WebsocketServerConnector
 
-        const connector = new WebsocketServerConnector({
+    beforeEach(() => {
+        connector = new WebsocketServerConnector({
             rpcCommunicator: new MockRpcCommunicator(),
             canConnect: () => {}
         } as any)
+    })
+
+    afterEach(() => {
+        connector.destroy()
+    })
+
+    describe('isPossibleToFormConnection', () => {
 
         it('node without server', () => {
             connector.setLocalPeerDescriptor(createMockPeerDescriptor({ type: NodeType.NODEJS }))
@@ -52,5 +60,42 @@ describe('WebsocketServerConnector', () => {
             expect(connector.isPossibleToFormConnection(createMockPeerDescriptor({ type: NodeType.NODEJS }))).toBe(false)
             expect(connector.isPossibleToFormConnection(createMockPeerDescriptor({ type: NodeType.BROWSER }))).toBe(false)
         })
+
     })
+
+    describe('Connect', () => {
+
+        it('Returns existing connecting connection', () => {
+            connector.setLocalPeerDescriptor(createMockPeerDescriptor({ type: NodeType.NODEJS, websocket: { host: '1.1.1.1', port: 11, tls: false } }))
+            const remotePeerDescriptor = createMockPeerDescriptor()
+            const firstConnection = connector.connect(remotePeerDescriptor)
+            const secondConnection = connector.connect(remotePeerDescriptor)
+            expect(firstConnection).toEqual(secondConnection)
+            firstConnection.close(false)
+        })
+
+        it('Disconnected event removes connecting connection', () => {
+            connector.setLocalPeerDescriptor(createMockPeerDescriptor({ type: NodeType.NODEJS, websocket: { host: '1.1.1.1', port: 11, tls: false } }))
+            const remotePeerDescriptor = createMockPeerDescriptor()
+            const firstConnection = connector.connect(remotePeerDescriptor)
+            firstConnection.emit('disconnected', false)
+            const secondConnection = connector.connect(remotePeerDescriptor)
+            expect(firstConnection).not.toEqual(secondConnection)
+            firstConnection.close(false)
+            secondConnection.close(false)
+        })
+
+        it('Connected event removes connecting connection', () => {
+            connector.setLocalPeerDescriptor(createMockPeerDescriptor({ type: NodeType.NODEJS, websocket: { host: '1.1.1.1', port: 11, tls: false } }))
+            const remotePeerDescriptor = createMockPeerDescriptor()
+            const firstConnection = connector.connect(remotePeerDescriptor)
+            firstConnection.emit('connected',)
+            const secondConnection = connector.connect(remotePeerDescriptor)
+            expect(firstConnection).not.toEqual(secondConnection)
+            firstConnection.close(false)
+            secondConnection.close(false)
+        })
+
+    })
+
 })
