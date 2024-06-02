@@ -1,0 +1,17 @@
+{
+    "extends": "../../tsconfig.node.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "noImplicitOverride": false
+    },
+    "include": [
+        "src/**/*",
+    ],
+    "references": [
+        { "path": "../utils/tsconfig.node.json" },
+        { "path": "../protocol/tsconfig.node.json" },
+        { "path": "../dht/tsconfig.node.json" },
+        { "path": "../trackerless-network/tsconfig.node.json" },
+        { "path": "../client/tsconfig.node.json" },
+    ]
+}

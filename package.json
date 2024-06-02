@@ -27,7 +27,8 @@
         "packages/trackerless-network",
         "packages/client",
         "packages/broker",
-        "packages/cli-tools"
+        "packages/cli-tools",
+        "packages/debug-scripts"
     ],
     "dependencies": {
         "@manypkg/cli": "^0.21.2",
