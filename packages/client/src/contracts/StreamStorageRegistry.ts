@@ -1,20 +1,22 @@
 import { StreamID, toStreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger, TheGraphClient, collect, toEthereumAddress } from '@streamr/utils'
+import { Contract } from 'ethers'
 import min from 'lodash/min'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { ContractFactory } from '../ContractFactory'
-import { getEthersOverrides } from '../ethereumUtils'
+import { RpcProviderFactory } from '../RpcProviderFactory'
 import { Stream } from '../Stream'
 import { StreamFactory } from '../StreamFactory'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import type { StreamStorageRegistryV2 as StreamStorageRegistryContract } from '../ethereumArtifacts/StreamStorageRegistryV2'
 import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageRegistryV2Abi.json'
+import { getEthersOverrides } from '../ethereumUtils'
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { initContractEventGateway, waitForTx } from '../utils/contract'
-import { RpcProviderFactory } from '../RpcProviderFactory'
+import { ChainEventPoller } from './ChainEventPoller'
 
 export interface StorageNodeAssignmentEvent {
     readonly streamId: StreamID
@@ -71,19 +73,27 @@ export class StreamStorageRegistry {
             rpcProviderFactory.getProvider(),
             'streamStorageRegistry'
         ) as StreamStorageRegistryContract
-        this.initStreamAssignmentEventListeners(eventEmitter, loggerFactory)
+        const chainEventPoller = new ChainEventPoller(this.rpcProviderFactory.getEventProviders().map((p) => {
+            // TODO would it make sense to use createDecoratedContract to get logging? or would it do that
+            return new Contract(toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress), StreamStorageRegistryArtifact, p)
+        }))
+        this.initStreamAssignmentEventListeners(eventEmitter, chainEventPoller, loggerFactory)
     }
 
-    private initStreamAssignmentEventListeners(eventEmitter: StreamrClientEventEmitter, loggerFactory: LoggerFactory) {
-        const primaryReadonlyContract = this.streamStorageRegistryContractsReadonly
-        const transformation = (streamId: string, nodeAddress: string, extra: any) => ({
+    // eslint-disable-next-line class-methods-use-this
+    private initStreamAssignmentEventListeners(
+        eventEmitter: StreamrClientEventEmitter,
+        chainEventPoller: ChainEventPoller,
+        loggerFactory: LoggerFactory
+    ) {
+        const transformation = (streamId: string, nodeAddress: string, blockNumber: number) => ({
             streamId: toStreamID(streamId),
             nodeAddress: toEthereumAddress(nodeAddress),
-            blockNumber: extra.log.blockNumber
+            blockNumber
         })
         initContractEventGateway({
             sourceName: 'Added', 
-            sourceEmitter: primaryReadonlyContract,
+            sourceEmitter: chainEventPoller,
             targetName: 'addToStorageNode',
             targetEmitter: eventEmitter,
             transformation,
@@ -91,7 +101,7 @@ export class StreamStorageRegistry {
         })
         initContractEventGateway({
             sourceName: 'Removed', 
-            sourceEmitter: primaryReadonlyContract,
+            sourceEmitter: chainEventPoller,
             targetName: 'removeFromStorageNode',
             targetEmitter: eventEmitter,
             transformation,

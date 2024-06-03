@@ -1,8 +1,8 @@
-import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import type { Provider } from 'ethers'
+import { FallbackProvider, FetchRequest, JsonRpcProvider } from 'ethers'
+import { Lifecycle, inject, scoped } from 'tsyringe'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { LoggingJsonRpcProvider } from './utils/LoggingJsonRpcProvider'
-import { inject, Lifecycle, scoped } from 'tsyringe'
-import { FetchRequest, FallbackProvider } from 'ethers'
 
 export const QUORUM = 2
 
@@ -48,5 +48,19 @@ export class RpcProviderFactory {
             })
         }
         return this.provider
+    }
+
+    // TODO reduce copy-paste?
+    getEventProviders(): Provider[] {
+        return this.config.contracts.streamRegistryChainRPCs.rpcs.map((c) => {
+            const f = new FetchRequest(c.url)
+            f.retryFunc = async () => false  // TODO use this line also for providers in the fallbackprovider?
+            return new JsonRpcProvider(f, {
+                chainId: this.config.contracts.streamRegistryChainRPCs.chainId,
+                name: this.config.contracts.streamRegistryChainRPCs.name
+            }, {
+                staticNetwork: true
+            })
+        })
     }
 }

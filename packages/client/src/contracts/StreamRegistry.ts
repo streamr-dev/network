@@ -1,15 +1,17 @@
 import { StreamID, StreamIDUtils, toStreamID } from '@streamr/protocol'
 import { EthereumAddress, GraphQLQuery, Logger, TheGraphClient, collect, isENSName, toEthereumAddress } from '@streamr/utils'
+import { Contract, ContractTransactionResponse } from 'ethers'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { ContractFactory } from '../ContractFactory'
-import { getEthersOverrides } from '../ethereumUtils'
+import { RpcProviderFactory } from '../RpcProviderFactory'
 import { Stream, StreamMetadata } from '../Stream'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamrClientError } from '../StreamrClientError'
 import type { StreamRegistryV4 as StreamRegistryContract } from '../ethereumArtifacts/StreamRegistryV4'
 import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV4Abi.json'
+import { getEthersOverrides } from '../ethereumUtils'
 import { StreamrClientEventEmitter } from '../events'
 import {
     ChainPermissions,
@@ -26,13 +28,12 @@ import {
 } from '../permission'
 import { filter, map } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { CacheAsyncFn, CacheAsyncFnType } from '../utils/caches'
 import { ObservableContract, initContractEventGateway, waitForTx } from '../utils/contract'
 import { until } from '../utils/promises'
 import { StreamFactory } from './../StreamFactory'
+import { ChainEventPoller } from './ChainEventPoller'
 import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, searchStreams as _searchStreams } from './searchStreams'
-import { CacheAsyncFn, CacheAsyncFnType } from '../utils/caches'
-import { RpcProviderFactory } from '../RpcProviderFactory'
-import { ContractTransactionResponse } from 'ethers'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -112,15 +113,19 @@ export class StreamRegistry {
             this.rpcProviderFactory.getProvider(),
             'streamRegistry'
         )
+        const chainEventPoller = new ChainEventPoller(this.rpcProviderFactory.getEventProviders().map((p) => {
+            // TODO would it make sense to use createDecoratedContract to get logging? or would it do that
+            return new Contract(toEthereumAddress(this.config.contracts.streamRegistryChainAddress), StreamRegistryArtifact, p)
+        }))
         initContractEventGateway({
             sourceName: 'StreamCreated', 
-            sourceEmitter: this.streamRegistryContractsReadonly,
+            sourceEmitter: chainEventPoller,
             targetName: 'createStream',
             targetEmitter: eventEmitter,
-            transformation: (streamId: string, metadata: string, extra: any) => ({
+            transformation: (streamId: string, metadata: string, blockNumber: number) => ({
                 streamId: toStreamID(streamId),
                 metadata: Stream.parseMetadata(metadata),
-                blockNumber: extra.log.blockNumber
+                blockNumber
             }),
             loggerFactory
         })

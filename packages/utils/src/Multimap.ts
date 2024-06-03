@@ -56,4 +56,8 @@ export class Multimap<K, V> {
             yield* this.get(k)
         }
     }
+
+    getKeyCount(): number {
+        return this.delegatee.size
+    }
 }

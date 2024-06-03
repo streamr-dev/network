@@ -1,7 +1,11 @@
+import 'reflect-metadata'
+
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { wait } from '@streamr/utils'
 import { range, sortBy } from 'lodash'
 import { QUORUM } from '../../src/RpcProviderFactory'
 import { StreamrClient } from '../../src/StreamrClient'
+import { StreamCreationEvent } from '../../src/contracts/StreamRegistry'
 import { CHAIN_ID, ErrorState, FakeJsonRpcServer, JsonRpcRequest } from '../test-utils/FakeJsonRpcServer'
 
 const SERVER_COUNT = 3
@@ -84,5 +88,41 @@ describe('use JsonRpcProvider', () => {
         await client.isStreamPublisher('/stream1', randomEthereumAddress())
         const requests = getNewRequests(now).filter((r) => r.method === 'eth_chainId')
         expect(requests).toHaveLength(0)
+    })
+
+    describe('events', () => {
+
+        it('happy path', async () => {
+            const POLL_INTERVAL = 1000 // TODO shorter, e.g 100ms
+            const receivedEvents: StreamCreationEvent[] = []
+            const now = Date.now()
+            client.on('createStream', (event: StreamCreationEvent) => {
+                receivedEvents.push(event)
+            })
+            await wait(0.5 * POLL_INTERVAL)
+            expect(getNewRequests(now).filter((r) => r.method === 'eth_getLogs')).toHaveLength(1)
+            await wait(1.5 * POLL_INTERVAL)
+            expect(getNewRequests(now).filter((r) => r.method === 'eth_getLogs')).toHaveLength(2)
+            expect(receivedEvents).toEqual([{
+                streamId: '0x0000000000000000000000000000000000000001/foo',
+                metadata: {
+                    partitions: 1
+                },
+                blockNumber: 123
+            }])
+        })
+
+        it('uses another server, if server sends HTTP 503 response', async () => {
+            // TODO
+        })
+    
+        it('uses another server, if server sends HTTP 429 response', async () => {
+            // TODO
+        })
+    
+        it('uses another server, if server doesn\'t respond', async () => {
+            // TODO
+        }, 30 * 1000)
+
     })
 })

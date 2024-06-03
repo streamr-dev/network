@@ -1,17 +1,19 @@
+import { initEventGateway } from '@streamr/utils'
+import type { TransactionResponse } from 'ethers'
 import {
     BaseContract,
     Contract,
     ContractTransactionReceipt,
     ContractTransactionResponse,
+    FunctionFragment,
 } from 'ethers'
-import { initEventGateway } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import without from 'lodash/without'
 import pLimit from 'p-limit'
 import { InternalEvents, StreamrClientEventEmitter, StreamrClientEvents } from '../events'
 import { LoggerFactory } from './LoggerFactory'
-import { FunctionFragment } from 'ethers'
-import type { TransactionResponse } from 'ethers'
+
+// TODO move this file to the contracts directory?
 
 export interface ContractEvent {
     onMethodExecute: (methodName: string) => void
