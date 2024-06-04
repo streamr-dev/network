@@ -101,13 +101,13 @@ describe('use JsonRpcProvider', () => {
 
         const runErrorTest = async (errorState: ErrorState, extraWait = 0): Promise<void> => {
             const POLL_INTERVAL = 1000 // TODO shorter, e.g 100ms
-            servers.map((s) => s.setError('eth_getLogs', errorState))
+            servers.forEach((s) => s.setError('eth_getLogs', errorState))
             const receivedEvents: StreamCreationEvent[] = []
             client.on('createStream', (event: StreamCreationEvent) => {
                 receivedEvents.push(event)
             })
             await waitForCondition(() => getRequests().some((r) => r.method === 'eth_getLogs'), 5000 + extraWait)
-            servers.map((s) => s.setError('eth_getLogs', undefined))
+            servers.forEach((s) => s.setError('eth_getLogs', undefined))
             await wait(1.5 * POLL_INTERVAL + extraWait)
             expect(receivedEvents).toEqual([{
                 streamId: '0x0000000000000000000000000000000000000001/foo',
