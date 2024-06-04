@@ -7,6 +7,9 @@ type Listener = (...args: any[]) => void
 
 const BLOCK_NUMBER_QUERY_DELAY = 1000
 const POLL_INTERVAL = 1000  // TODO 5000? create a config option?
+// This is a undocumented ether.js feature. We could alternatively pass [...this.listeners.keys()], but
+// that doesn't seem to work if array size > 1
+const ALL_TOPICS = '*'
 
 export class ChainEventPoller {
 
@@ -51,7 +54,7 @@ export class ChainEventPoller {
                 const eventNames = [...this.listeners.keys()]
                 logger.info('Polling', { fromBlock, eventNames })  // TODO debug level
                 try {
-                    const events = await sample(this.contracts)!.queryFilter(eventNames, fromBlock) as EventLog[]
+                    const events = await sample(this.contracts)!.queryFilter(ALL_TOPICS, fromBlock) as EventLog[]
                     logger.info('Polled', { fromBlock, events: events.length })  // TODO debug level
                     if (events.length > 0) {
                         for (const event of events) {
