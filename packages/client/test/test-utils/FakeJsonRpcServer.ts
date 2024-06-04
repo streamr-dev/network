@@ -97,32 +97,28 @@ export class FakeJsonRpcServer {
             }
         } else if (request.method === 'eth_getLogs') {
             const topics = request.params[0].topics
-            if (topics.length !== 1) {
+            if ((topics.length !== 1) || (topics[0] !== null)) {
                 throw new Error('Not implemented')
             }
-            if ((topics[0] === getEventTopicHash('StreamCreated(string,string)'))) {
-                if (request.params[0].toBlock !== 'latest') {
-                    throw new Error('Not implemented')
-                }
-                const fromBlock = parseInt(request.params[0].fromBlock, 16)
-                if (BLOCK_NUMBER >= fromBlock) {
-                    const data = new AbiCoder().encode(['string', 'string'], [EVENT_STREAM_ID, JSON.stringify({ partitions: 1 })])
-                    return [{
-                        address: request.params[0].address,
-                        topics,
-                        data,
-                        blockNumber: toHex(BLOCK_NUMBER),
-                        transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-                        transactionIndex: '0x0',
-                        blockHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-                        logIndex: '0x0',
-                        removed: false
-                    }]
-                } else {
-                    return []
-                }
+            if (request.params[0].toBlock !== 'latest') {
+                throw new Error('Not implemented')
+            }
+            const fromBlock = parseInt(request.params[0].fromBlock, 16)
+            if (BLOCK_NUMBER >= fromBlock) {
+                const data = new AbiCoder().encode(['string', 'string'], [EVENT_STREAM_ID, JSON.stringify({ partitions: 1 })])
+                return [{
+                    address: request.params[0].address,
+                    topics: [getEventTopicHash('StreamCreated(string,string)')],
+                    data,
+                    blockNumber: toHex(BLOCK_NUMBER),
+                    transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+                    transactionIndex: '0x0',
+                    blockHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+                    logIndex: '0x0',
+                    removed: false
+                }]
             } else {
-                throw new Error(`Unknown topic: ${request.method}, request: ${JSON.stringify(request)}`)
+                return []
             }
         } else {
             throw new Error(`Unknown method: ${request.method}, request: ${JSON.stringify(request)}`)
