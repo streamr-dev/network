@@ -27,7 +27,6 @@ const logger = new Logger(module)
 
 export interface WebsocketServerConnectorConfig {
     onNewConnection: (connection: PendingConnection) => boolean
-    onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void
     rpcCommunicator: ListeningRpcCommunicator
     hasConnection: (nodeId: DhtAddress) => boolean
     portRange?: PortRange
@@ -135,8 +134,7 @@ export class WebsocketServerConnector {
                 rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
                 delFunc()  
             } else {
-                acceptHandshake(handshaker, pendingConnection)
-                this.config.onHandshakeCompleted(sourcePeerDescriptor, websocketServerConnection)
+                acceptHandshake(handshaker, pendingConnection, websocketServerConnection)
             }
         } else {
             const pendingConnection = new PendingConnection(sourcePeerDescriptor)
@@ -146,8 +144,7 @@ export class WebsocketServerConnector {
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)  
             } else if (this.config.onNewConnection(pendingConnection)) {
-                acceptHandshake(handshaker, pendingConnection)
-                this.config.onHandshakeCompleted(sourcePeerDescriptor, websocketServerConnection)
+                acceptHandshake(handshaker, pendingConnection, websocketServerConnection)
             } else {
                 rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.DUPLICATE_CONNECTION)
             }

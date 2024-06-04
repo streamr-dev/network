@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 import { WebsocketServerConnector } from '../../src/connection/websocket/WebsocketServerConnector'
 import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { MockConnection } from '../utils/mock/MockConnection'
 import { MockRpcCommunicator } from '../utils/mock/MockRpcCommunicator'
 import { createMockPeerDescriptor } from '../utils/utils'
 
@@ -89,7 +90,7 @@ describe('WebsocketServerConnector', () => {
             connector.setLocalPeerDescriptor(createMockPeerDescriptor({ type: NodeType.NODEJS, websocket: { host: '1.1.1.1', port: 11, tls: false } }))
             const remotePeerDescriptor = createMockPeerDescriptor()
             const firstConnection = connector.connect(remotePeerDescriptor)
-            firstConnection.emit('connected',)
+            firstConnection.onHandshakeCompleted(new MockConnection())
             const secondConnection = connector.connect(remotePeerDescriptor)
             expect(firstConnection).not.toEqual(secondConnection)
             firstConnection.close(false)

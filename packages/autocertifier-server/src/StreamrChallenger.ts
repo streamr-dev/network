@@ -8,6 +8,7 @@ import {
     createRandomDhtAddress,
     getRawFromDhtAddress,
     PendingConnection,
+    IConnection,
     createOutgoingHandshaker
 } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -44,8 +45,10 @@ export const runStreamrChallenge = (
         remotePeerDescriptor.websocket!.port
 
         const pendingConnection = new PendingConnection(remotePeerDescriptor)
-        const handshaker = createOutgoingHandshaker(LOCAL_PEER_DESCRIPTOR, pendingConnection, socket, (peerDescriptor, connection) => {
+        const handshaker = createOutgoingHandshaker(LOCAL_PEER_DESCRIPTOR, pendingConnection, socket)
+        pendingConnection.on('connected', (peerDescriptor: PeerDescriptor, connection: IConnection) => {   
             const managedConnection = new ManagedConnection(peerDescriptor, connection)
+        
             socket.off('disconnected', onDisconnected)
             const communicator = new RoutingRpcCommunicator(SERVICE_ID,
                 async (msg: Message): Promise<void> => {
@@ -68,6 +71,7 @@ export const runStreamrChallenge = (
                 managedConnection.close(true)
                 pendingConnection.close(true)
                 handshaker.stop()
+
             })
         })
         const onDisconnected = () => {

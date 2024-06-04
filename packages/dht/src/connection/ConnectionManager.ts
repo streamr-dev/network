@@ -129,7 +129,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         this.onData = this.onData.bind(this)
         this.send = this.send.bind(this)
         this.onNewConnection = this.onNewConnection.bind(this)
-        this.onHandshakeCompleted = this.onHandshakeCompleted.bind(this)
         this.metricsContext = this.config.metricsContext ?? new MetricsContext()
         this.metrics = {
             sendMessagesPerSecond: new RateMetric(),
@@ -200,7 +199,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         logger.trace(`Starting ConnectionManager...`)
         await this.connectorFacade.start(
             (connection: PendingConnection) => this.onNewConnection(connection),
-            (peerDescriptor: PeerDescriptor, connection: IConnection) => this.onHandshakeCompleted(peerDescriptor, connection),
             (nodeId: DhtAddress) => this.hasConnection(nodeId),
             this
         )
@@ -426,6 +424,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         if (!this.acceptNewConnection(connection)) {
             return false
         }
+        connection.on('connected', (peerDescriptor: PeerDescriptor, connection: IConnection) => this.onConnected(peerDescriptor, connection))
         connection.on('disconnected', (gracefulLeave: boolean) => this.onDisconnected(connection.getPeerDescriptor(), gracefulLeave))
         return true
     }
@@ -447,7 +446,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
                 logger.trace('replaced: ' + nodeId)
 
                 oldConnection.replaceAsDuplicate()
-                this.endpoints.set(nodeId, { connected: false, connection: newConnection, buffer: buffer! })
+                this.endpoints.set(nodeId, { connected: false, connection: newConnection, buffer: buffer })
                 return true
             } else {
                 return false

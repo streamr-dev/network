@@ -34,6 +34,11 @@ describe('Handshaker', () => {
             close() {
                 mockPendingConnectionClose()
             }
+
+            // eslint-disable-next-line class-methods-use-this
+            onHandshakeCompleted(_connection: IConnection) {
+                mockOnHandshakeCompleted()
+            }
         } as any
 
         mockSend = jest.fn()
@@ -57,7 +62,6 @@ describe('Handshaker', () => {
                 createMockPeerDescriptor(),
                 pendingConnection,
                 connection,
-                mockOnHandshakeCompleted,
                 createMockPeerDescriptor()
             )
         })
