@@ -17,21 +17,20 @@ import { Authentication } from '../Authentication'
 import { StreamrClientError } from '../StreamrClientError'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { StreamRegistry } from '../contracts/StreamRegistry'
-import { createSignaturePayload } from '../signature'
+import { createSignaturePayload } from '../signature/signature'
 import { Mapping } from '../utils/Mapping'
 import { formLookupKey } from '../utils/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { PublishMetadata } from './Publisher'
 import { createMessageRef, createRandomMsgChainId } from './messageChain'
-import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
-import { assertSignatureIsValid } from '../utils/validateStreamMessage'
+import { SignatureValidator } from '../signature/SignatureValidator'
 
 export interface MessageFactoryOptions {
     streamId: StreamID
     authentication: Authentication
     streamRegistry: Pick<StreamRegistry, 'getStream' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'clearStreamCache'>
     groupKeyQueue: GroupKeyQueue
-    erc1271ContractFacade: ERC1271ContractFacade
+    signatureValidator: SignatureValidator
 }
 
 export const createSignedMessage = async (
@@ -62,7 +61,7 @@ export class MessageFactory {
     private readonly prevMsgRefs: Map<string, MessageRef> = new Map()
     private readonly streamRegistry: Pick<StreamRegistry, 'getStream' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'clearStreamCache'>
     private readonly groupKeyQueue: GroupKeyQueue
-    private readonly erc1271ContractFacade: ERC1271ContractFacade
+    private readonly signatureValidator: SignatureValidator
     private firstMessage = true
 
     constructor(opts: MessageFactoryOptions) {
@@ -70,7 +69,7 @@ export class MessageFactory {
         this.authentication = opts.authentication
         this.streamRegistry = opts.streamRegistry
         this.groupKeyQueue = opts.groupKeyQueue
-        this.erc1271ContractFacade = opts.erc1271ContractFacade
+        this.signatureValidator = opts.signatureValidator
         this.defaultMessageChainIds = new Mapping(async () => {
             return createRandomMsgChainId()
         })
@@ -151,7 +150,7 @@ export class MessageFactory {
         if (this.firstMessage) {
             this.firstMessage = false
             if (metadata.erc1271Contract !== undefined) {
-                await assertSignatureIsValid(msg, this.erc1271ContractFacade)
+                await this.signatureValidator.assertSignatureIsValid(msg)
             }
         }
 

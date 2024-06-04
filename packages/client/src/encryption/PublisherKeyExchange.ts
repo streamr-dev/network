@@ -25,8 +25,8 @@ import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
-import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
 import { StreamrClientEventEmitter } from '../events'
+import { SignatureValidator } from '../signature/SignatureValidator'
 
 /*
  * Sends group key responses
@@ -45,7 +45,7 @@ export class PublisherKeyExchange {
 
     private readonly networkNodeFacade: NetworkNodeFacade
     private readonly streamRegistry: StreamRegistry
-    private readonly erc1271ContractFacade: ERC1271ContractFacade
+    private readonly signatureValidator: SignatureValidator
     private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
     private readonly logger: Logger
@@ -54,7 +54,7 @@ export class PublisherKeyExchange {
     constructor(
         networkNodeFacade: NetworkNodeFacade,
         streamRegistry: StreamRegistry,
-        @inject(ERC1271ContractFacade) erc1271ContractFacade: ERC1271ContractFacade,
+        signatureValidator: SignatureValidator,
         store: LocalGroupKeyStore,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         eventEmitter: StreamrClientEventEmitter,
@@ -62,7 +62,7 @@ export class PublisherKeyExchange {
     ) {
         this.networkNodeFacade = networkNodeFacade
         this.streamRegistry = streamRegistry
-        this.erc1271ContractFacade = erc1271ContractFacade
+        this.signatureValidator = signatureValidator
         this.store = store
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
@@ -89,7 +89,7 @@ export class PublisherKeyExchange {
                 const responseType = await this.getResponseType(recipient)
                 if (responseType !== ResponseType.NONE) {
                     this.logger.debug('Handling group key request', { requestId, responseType })
-                    await validateStreamMessage(request, this.streamRegistry, this.erc1271ContractFacade)
+                    await validateStreamMessage(request, this.streamRegistry, this.signatureValidator)
                     const authenticatedUser = await this.authentication.getAddress()
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),

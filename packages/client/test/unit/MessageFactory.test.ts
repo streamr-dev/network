@@ -20,6 +20,7 @@ import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
 import { merge, utf8ToBinary } from '@streamr/utils'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import { mock } from 'jest-mock-extended'
+import { SignatureValidator } from '../../src/signature/SignatureValidator'
 
 const WALLET = fastWallet()
 const STREAM_ID = toStreamID('/path', toEthereumAddress(WALLET.address))
@@ -45,7 +46,7 @@ const createMessageFactory = async (opts?: {
                     isStreamPublisher: true
                 }),
                 groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY),
-                erc1271ContractFacade: mock<ERC1271ContractFacade>()
+                signatureValidator: new SignatureValidator(opts?.erc1271ContractFacade ?? mock<ERC1271ContractFacade>())
             },
             opts
         )
@@ -185,7 +186,7 @@ describe('MessageFactory', () => {
         expect(msg.newGroupKey).toMatchObject({
             id: nextGroupKey.id,
             data: expect.any(Uint8Array)
-        })    
+        })
         expect(GROUP_KEY.decryptNextGroupKey(msg.newGroupKey!)).toEqual(nextGroupKey)
     })
 

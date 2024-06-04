@@ -14,7 +14,7 @@ import { MessageFactory } from '../../src/publish/MessageFactory'
 import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { mock } from 'jest-mock-extended'
-import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
+import { SignatureValidator } from '../../src/signature/SignatureValidator'
 
 const PUBLISHER_COUNT = 50
 const MESSAGE_COUNT_PER_PUBLISHER = 3
@@ -72,7 +72,7 @@ describe('parallel key exchange', () => {
                     isStreamPublisher: true
                 }),
                 groupKeyQueue: await createGroupKeyQueue(authentication, publisher.groupKey),
-                erc1271ContractFacade: mock<ERC1271ContractFacade>()
+                signatureValidator: mock<SignatureValidator>()
             })
             for (let i = 0; i < MESSAGE_COUNT_PER_PUBLISHER; i++) {
                 const msg = await messageFactory.createMessage({

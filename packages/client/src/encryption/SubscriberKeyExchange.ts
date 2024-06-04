@@ -27,8 +27,8 @@ import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { RSAKeyPair } from './RSAKeyPair'
-import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
 import { Subscriber } from '../subscribe/Subscriber'
+import { SignatureValidator } from '../signature/SignatureValidator'
 
 const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed
 
@@ -43,7 +43,7 @@ export class SubscriberKeyExchange {
     private readonly pendingRequests: MaxSizedSet<string> = new MaxSizedSet(MAX_PENDING_REQUEST_COUNT)
     private readonly networkNodeFacade: NetworkNodeFacade
     private readonly streamRegistry: StreamRegistry
-    private readonly erc1271ContractFacade: ERC1271ContractFacade
+    private readonly signatureValidator: SignatureValidator
     private readonly store: LocalGroupKeyStore
     private readonly subscriber: Subscriber
     private readonly authentication: Authentication
@@ -54,7 +54,7 @@ export class SubscriberKeyExchange {
     constructor(
         networkNodeFacade: NetworkNodeFacade,
         streamRegistry: StreamRegistry,
-        @inject(ERC1271ContractFacade) erc1271ContractFacade: ERC1271ContractFacade,
+        signatureValidator: SignatureValidator,
         store: LocalGroupKeyStore,
         subscriber: Subscriber,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>,
@@ -63,7 +63,7 @@ export class SubscriberKeyExchange {
     ) {
         this.networkNodeFacade = networkNodeFacade
         this.streamRegistry = streamRegistry
-        this.erc1271ContractFacade = erc1271ContractFacade
+        this.signatureValidator = signatureValidator
         this.store = store
         this.subscriber = subscriber
         this.authentication = authentication
@@ -138,7 +138,7 @@ export class SubscriberKeyExchange {
                 if (await this.isAssignedToMe(msg.getStreamPartID(), recipient, requestId)) {
                     this.logger.debug('Handle group key response', { requestId })
                     this.pendingRequests.delete(requestId)
-                    await validateStreamMessage(msg, this.streamRegistry, this.erc1271ContractFacade)
+                    await validateStreamMessage(msg, this.streamRegistry, this.signatureValidator)
                     await Promise.all(encryptedGroupKeys.map(async (encryptedKey) => {
                         const key = GroupKey.decryptRSAEncrypted(encryptedKey, this.rsaKeyPair!.getPrivateKey())
                         await this.store.set(key.id, msg.getPublisherId(), key.data)

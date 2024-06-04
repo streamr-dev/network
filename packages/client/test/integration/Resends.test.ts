@@ -10,8 +10,8 @@ import { StreamPermission } from '../../src/permission'
 import { MessageFactory } from '../../src/publish/MessageFactory'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
-import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import { mock } from 'jest-mock-extended'
+import { SignatureValidator } from '../../src/signature/SignatureValidator'
 
 describe('Resends', () => {
 
@@ -44,7 +44,7 @@ describe('Resends', () => {
             streamId: stream.id,
             streamRegistry: createStreamRegistry(),
             groupKeyQueue: await createGroupKeyQueue(authentication, groupKey),
-            erc1271ContractFacade: mock<ERC1271ContractFacade>()
+            signatureValidator: mock<SignatureValidator>()
         })
         // store the encryption key publisher's local group key store
         await publisher.updateEncryptionKey({

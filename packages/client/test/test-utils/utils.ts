@@ -33,7 +33,7 @@ import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
 import { addAfterFn } from './jest-utils'
 import path from 'path'
 import fetch from 'node-fetch'
-import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
+import { SignatureValidator } from '../../src/signature/SignatureValidator'
 
 const logger = new Logger(module)
 
@@ -128,7 +128,7 @@ export const createMockMessage = async (
             isStreamPublisher: true
         }),
         groupKeyQueue: await createGroupKeyQueue(authentication, opts.encryptionKey, opts.nextEncryptionKey),
-        erc1271ContractFacade: mock<ERC1271ContractFacade>()
+        signatureValidator: mock<SignatureValidator>()
     })
     const DEFAULT_CONTENT = {}
     const plainContent = opts.content ?? DEFAULT_CONTENT

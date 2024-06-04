@@ -29,6 +29,8 @@ import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { createMessagePipeline } from '../../src/subscribe/messagePipeline'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { mockLoggerFactory } from '../test-utils/utils'
+import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
+import { SignatureValidator } from '../../src/signature/SignatureValidator'
 
 const CONTENT = {
     foo: 'bar'
@@ -106,7 +108,7 @@ describe('messagePipeline', () => {
             getStorageNodes: undefined as any,
             resends: undefined as any,
             streamRegistry: streamRegistry as any,
-            erc1271ContractFacade: undefined as any,
+            signatureValidator: new SignatureValidator(mock<ERC1271ContractFacade>()),
             groupKeyManager: new GroupKeyManager(
                 mock<SubscriberKeyExchange>(),
                 mock<LitProtocolFacade>(),

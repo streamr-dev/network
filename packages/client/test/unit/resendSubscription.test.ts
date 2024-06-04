@@ -12,7 +12,7 @@ import { PushPipeline } from '../../src/utils/PushPipeline'
 import { createGroupKeyQueue, createRandomAuthentication, createStreamRegistry, mockLoggerFactory } from '../test-utils/utils'
 import { isEqual } from 'lodash'
 import { mock } from 'jest-mock-extended'
-import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
+import { SignatureValidator } from '../../src/signature/SignatureValidator'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 const MAX_GAP_REQUESTS = 2
@@ -58,7 +58,7 @@ describe('resend subscription', () => {
                 isPublicStream: true
             }),
             groupKeyQueue: await createGroupKeyQueue(authentication),
-            erc1271ContractFacade: mock<ERC1271ContractFacade>()
+            signatureValidator: mock<SignatureValidator>()
         })
     })
 
@@ -92,7 +92,7 @@ describe('resend subscription', () => {
                 outputMessages.push(item)
             }
         })
-    }    
+    }
 
     const createSubscription = (
         resend: () => Promise<PushPipeline<StreamMessage, StreamMessage>>,
@@ -155,7 +155,7 @@ describe('resend subscription', () => {
         const resend = createResend(historicalMessages, () => [])
         sub = createSubscription(resend)
         startConsuming()
-        
+
         const realtimeMessages = await publishAndWaitUntilConsumed('realtime')
         await sub.unsubscribe()
 

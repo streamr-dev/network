@@ -23,6 +23,9 @@ import { Stream } from '../../src/Stream'
 import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { createRandomAuthentication, MOCK_CONTENT } from '../test-utils/utils'
+import { SignatureValidator } from '../../src/signature/SignatureValidator'
+import { mock } from 'jest-mock-extended'
+import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 
 const groupKeyMessageToStreamMessage = async (
     groupKeyMessage: GroupKeyRequest | GroupKeyResponse,
@@ -65,7 +68,7 @@ describe('Validator2', () => {
                 getStream,
                 isStreamPublisher: (streamId: string, address: EthereumAddress) => isPublisher(address, streamId),
                 isStreamSubscriber: (streamId: string, address: EthereumAddress) => isSubscriber(address, streamId)
-            } as any, undefined as any)
+            } as any, new SignatureValidator(mock<ERC1271ContractFacade>()))
         }
     }
 
