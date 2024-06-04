@@ -1,11 +1,10 @@
-import { Logger } from '@streamr/utils'
-import { keccak256, toUtf8Bytes, AbiCoder } from 'ethers'
+import { AbiCoder, keccak256, toUtf8Bytes } from 'ethers'
 import { once } from 'events'
 import express, { Request, Response } from 'express'
 import { Server } from 'http'
+import { intersection, isArray } from 'lodash'
 import { AddressInfo } from 'net'
 import { promisify } from 'util'
-import { isArray } from 'lodash'
 
 export const CHAIN_ID = 5555
 const TRUE = '0x0000000000000000000000000000000000000000000000000000000000000001'
@@ -35,7 +34,7 @@ export type ErrorState = { httpStatus: number } | 'doNotRespond'
 export class FakeJsonRpcServer {
 
     private requests: JsonRpcRequest[] = []
-    private errorState?: ErrorState = undefined
+    private errorStates: Map<string, ErrorState> = new Map()
     private httpServer?: Server
     private pendingResponses: Response[] = []
 
@@ -44,12 +43,14 @@ export class FakeJsonRpcServer {
         app.use(express.json())
         app.post('/', async (httpRequest: Request, httpResponse: Response) => {
             const requests = this.parseRpcRequests(httpRequest)
-            new Logger(module).info('REQUEST: ' + JSON.stringify(requests))
             this.requests.push(...requests)
-            if (this.errorState !== undefined) {
-                new Logger(module).error('ERROR STATE: ' + JSON.stringify(this.errorState))
-                if (this.errorState !== 'doNotRespond') {
-                    httpResponse.sendStatus(this.errorState.httpStatus)
+            // Note that a batch can contain requests to multiple methods. As we can't do partial failures,
+            // we fail the whole batch if just some of the method is defined to be an error.
+            const errorMethods = intersection(requests.map((r) => r.method), [...this.errorStates.keys()])
+            if (errorMethods.length > 0) {
+                const errorState = this.errorStates.get(errorMethods[0])!  // pick some error state if multiple methods match the request
+                if (errorState !== 'doNotRespond') {
+                    httpResponse.sendStatus(errorState.httpStatus)
                 } else {
                     this.pendingResponses.push(httpResponse)
                 }
@@ -60,7 +61,6 @@ export class FakeJsonRpcServer {
                 id: req.id,
                 result: this.createResult(req)
             }))
-            //new Logger(module).info('SIZE=' + requests.length + ' ' + JSON.stringify(requests))
             const responseJson = (requests.length === 1) ? responses[0] : responses
             httpResponse.json(responseJson)
         })
@@ -133,8 +133,12 @@ export class FakeJsonRpcServer {
         await once(this.httpServer!, 'close')
     }
 
-    setError(state: ErrorState): void {
-        this.errorState = state
+    setError(method: string, state: ErrorState | undefined): void {
+        if (state !== undefined) {
+            this.errorStates.set(method, state)
+        } else {
+            this.errorStates.delete(method)
+        }
     }
 
     getRequests(): JsonRpcRequest[] {
