@@ -8,9 +8,6 @@ type Listener = (...args: any[]) => void
 const BLOCK_NUMBER_QUERY_DELAY = 1000
 const POLL_INTERVAL = 1000  // TODO 5000? create a config option?
 const TIMEOUT = 10 * 1000 // TODO what would be a good value? create a config option?
-// This is a undocumented ether.js feature. We could alternatively pass [...this.listeners.keys()], but
-// that doesn't seem to work if array size > 1
-const ALL_TOPICS = '*'
 
 export class ChainEventPoller {
 
@@ -56,7 +53,7 @@ export class ChainEventPoller {
                 logger.info('Polling', { fromBlock, eventNames })  // TODO debug level
                 try {
                     const events = (await withTimeout(
-                        sample(this.contracts)!.queryFilter(ALL_TOPICS, fromBlock),
+                        sample(this.contracts)!.queryFilter([eventNames], fromBlock),
                         TIMEOUT,
                         undefined,
                         this.abortSignal
