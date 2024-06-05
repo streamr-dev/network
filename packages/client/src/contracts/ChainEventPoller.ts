@@ -1,4 +1,4 @@
-import { Logger, Multimap, randomString, wait, withTimeout } from '@streamr/utils'
+import { Logger, Multimap, randomString, wait, withTimeout, scheduleAtInterval } from '@streamr/utils'
 import { Contract, EventLog, Provider } from 'ethers'
 import { sample } from 'lodash'
 
@@ -6,14 +6,14 @@ type EventName = string
 type Listener = (...args: any[]) => void
 
 const BLOCK_NUMBER_QUERY_DELAY = 1000
-const POLL_INTERVAL = 1000  // TODO 5000? create a config option?
+export const POLL_INTERVAL = 1000  // TODO 5000? create a config option?
 const TIMEOUT = 10 * 1000 // TODO what would be a good value? create a config option?
 
 export class ChainEventPoller {
 
     private listeners: Multimap<EventName, Listener> = new Multimap()
     private contracts: Contract[]
-    private abortSignal: AbortSignal = new AbortController().signal // TODO get an instance from constructor
+    private abortController?: AbortController
 
     // all these contracts are actually the same chain contract (i.e. StreamRegistry), but have different providers
     // connected to them
@@ -22,7 +22,7 @@ export class ChainEventPoller {
     }
 
     on(eventName: string, listener: Listener): void {
-        const started = this.listeners.getKeyCount() > 0
+        const started = !this.listeners.isEmpty()
         this.listeners.add(eventName, listener)
         if (!started) {
             this.start()
@@ -30,16 +30,20 @@ export class ChainEventPoller {
     }
 
     off(eventName: string, listener: Listener): void {
+        const started = !this.listeners.isEmpty()
         this.listeners.remove(eventName, listener)
-        // const started = [this.listeners.keys()].length > 0  // TODO implement this as "getKeyCount" method to Multimap
-        // TODO stop if no listeners
+        if (started && this.listeners.isEmpty()) {
+            this.abortController!.abort()
+        }
     }
 
     private start(): void {
+        const abortController = new AbortController()
+        this.abortController = abortController
         setImmediate(async () => {
             const logger = new Logger(module, { traceId: randomString(6) })
             logger.info('Start polling', { POLL_INTERVAL })  // TODO debug level
-            let fromBlock = undefined
+            let fromBlock: number | undefined = undefined
             do {
                 try {
                     fromBlock = await sample(this.getProviders())!.getBlockNumber()
@@ -48,7 +52,7 @@ export class ChainEventPoller {
                     await wait(BLOCK_NUMBER_QUERY_DELAY)
                 }
             } while (fromBlock === undefined)
-            while (!this.abortSignal.aborted) {
+            await scheduleAtInterval(async () => {
                 const eventNames = [...this.listeners.keys()]
                 logger.info('Polling', { fromBlock, eventNames })  // TODO debug level
                 try {
@@ -56,10 +60,10 @@ export class ChainEventPoller {
                         sample(this.contracts)!.queryFilter([eventNames], fromBlock),
                         TIMEOUT,
                         undefined,
-                        this.abortSignal
+                        this.abortController!.signal
                     )) as EventLog[]
                     logger.info('Polled', { fromBlock, events: events.length })  // TODO debug level
-                    if (events.length > 0) {
+                    if ((events.length > 0) && (!abortController.signal.aborted)) {
                         for (const event of events) {
                             const listeners = this.listeners.get(event.fragment.name)
                             for (const listener of listeners) {
@@ -71,8 +75,8 @@ export class ChainEventPoller {
                 } catch (err) {
                     logger.info('Failed to poll', { err, eventNames, fromBlock })  // TODO debug level
                 }
-                await wait(POLL_INTERVAL, this.abortSignal)
-            }
+
+            }, POLL_INTERVAL, true, abortController.signal)
         })
     }
 

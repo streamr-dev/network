@@ -60,4 +60,8 @@ export class Multimap<K, V> {
     getKeyCount(): number {
         return this.delegatee.size
     }
+
+    isEmpty(): boolean {
+        return this.getKeyCount() === 0
+    }
 }
