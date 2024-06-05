@@ -34,7 +34,6 @@ export const createOutgoingHandshaker = (
         if (error === HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR || error === HandshakeError.UNSUPPORTED_VERSION) {
             pendingConnection.close(false)
         } else {
-            // NO-OP: the rejector should take care of destroying the connection.
             pendingConnection.destroy()
         }
         stopHandshaker()
