@@ -35,6 +35,7 @@ export const createOutgoingHandshaker = (
             pendingConnection.close(false)
         } else {
             // NO-OP: the rejector should take care of destroying the connection.
+            pendingConnection.destroy()
         }
         stopHandshaker()
     }

@@ -32,6 +32,10 @@ describe('Handshaker', () => {
             }
             // eslint-disable-next-line class-methods-use-this
             close() {
+            }
+
+            // eslint-disable-next-line class-methods-use-this
+            destroy() {
                 mockPendingConnectionClose()
             }
 
