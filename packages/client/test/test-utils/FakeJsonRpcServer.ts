@@ -97,7 +97,8 @@ export class FakeJsonRpcServer {
             }
         } else if (request.method === 'eth_getLogs') {
             const topics = request.params[0].topics
-            if ((topics.length !== 1) || (topics[0] !== null)) {
+            const topicHash = getEventTopicHash('StreamCreated(string,string)')
+            if ((topics.length !== 1) || (topics[0] !== topicHash)) {
                 throw new Error('Not implemented')
             }
             if (request.params[0].toBlock !== 'latest') {
@@ -108,7 +109,7 @@ export class FakeJsonRpcServer {
                 const data = new AbiCoder().encode(['string', 'string'], [EVENT_STREAM_ID, JSON.stringify({ partitions: 1 })])
                 return [{
                     address: request.params[0].address,
-                    topics: [getEventTopicHash('StreamCreated(string,string)')],
+                    topics: [topicHash],
                     data,
                     blockNumber: toHex(BLOCK_NUMBER),
                     transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
