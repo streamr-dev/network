@@ -79,6 +79,7 @@ export interface TlsCertificate {
 
 interface ConnectingEndpoint {
     connected: false
+    // TODO: Handle PendingConnections in ConnectorFacade only? ConnectionManager knows buffer and reacts to events from below.
     connection: PendingConnection
     buffer: OutputBuffer
 }
