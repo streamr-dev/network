@@ -46,4 +46,13 @@ describe('ManagedConnection', () => {
         expect(managedConnection.getLastUsedTimestamp()).toBeGreaterThan(createdTimestamp)
     })
 
+    it('replace as duplicate', async () => {
+        managedConnection.once('disconnected', (graceful) => {
+            throw new Error('disconnected')
+        })
+        managedConnection.replaceAsDuplicate()
+        managedConnection.close(true)
+        await wait(50)
+    })
+
 })
