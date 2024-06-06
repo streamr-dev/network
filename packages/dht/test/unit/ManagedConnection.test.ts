@@ -47,7 +47,7 @@ describe('ManagedConnection', () => {
     })
 
     it('replace as duplicate', async () => {
-        managedConnection.once('disconnected', (graceful) => {
+        managedConnection.once('disconnected', () => {
             throw new Error('disconnected')
         })
         managedConnection.replaceAsDuplicate()
