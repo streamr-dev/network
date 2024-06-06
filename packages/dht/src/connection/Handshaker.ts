@@ -19,7 +19,6 @@ export const createOutgoingHandshaker = (
     localPeerDescriptor: PeerDescriptor,
     pendingConnection: PendingConnection,
     connection: IConnection,
-    onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void,
     targetPeerDescriptor?: PeerDescriptor
 ): Handshaker => {
     const handshaker = new Handshaker(localPeerDescriptor, connection)
@@ -35,14 +34,13 @@ export const createOutgoingHandshaker = (
         if (error === HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR || error === HandshakeError.UNSUPPORTED_VERSION) {
             pendingConnection.close(false)
         } else {
-            // NO-OP: the rejector should take care of destroying the connection.
+            pendingConnection.destroy()
         }
         stopHandshaker()
     }
     const handshakeCompletedListener = (peerDescriptor: PeerDescriptor) => {
         logger.trace('handshake completed for outgoing connection, ' + getNodeIdFromPeerDescriptor(peerDescriptor))
-        pendingConnection.emit('connected')
-        onHandshakeCompleted(peerDescriptor, connection)
+        pendingConnection.onHandshakeCompleted(connection)
         stopHandshaker()
     }
     const connectedListener = () => handshaker.sendHandshakeRequest(targetPeerDescriptor)
@@ -101,9 +99,9 @@ export const rejectHandshake = (
     pendingConnection.destroy()
 }
 
-export const acceptHandshake = (handshaker: Handshaker, pendingConnection: PendingConnection): void => {
+export const acceptHandshake = (handshaker: Handshaker, pendingConnection: PendingConnection, connection: IConnection): void => {
     handshaker.sendHandshakeResponse()
-    pendingConnection.emit('connected')
+    pendingConnection.onHandshakeCompleted(connection)
 }
 
 export const createHandshakeRequest = (localPeerDescriptor: PeerDescriptor, remotePeerDescriptor: PeerDescriptor): Message => {

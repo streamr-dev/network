@@ -11,7 +11,6 @@ import { IceServer, WebrtcConnector } from './webrtc/WebrtcConnector'
 import { WebsocketClientConnector } from './websocket/WebsocketClientConnector'
 import { DhtAddress } from '../identifiers'
 import { WebsocketServerConnector, WebsocketServerConnectorConfig } from './websocket/WebsocketServerConnector'
-import { IConnection } from './IConnection'
 import { PendingConnection } from './PendingConnection'
 import { ListeningRpcCommunicator } from '../transport/ListeningRpcCommunicator'
 
@@ -20,7 +19,6 @@ export interface ConnectorFacade {
     getLocalPeerDescriptor: () => PeerDescriptor | undefined
     start: (
         onNewConnection: (connection: PendingConnection) => boolean,
-        onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void,
         hasConnection: (nodeId: DhtAddress) => boolean,
         autoCertifierTransport: ITransport
     ) => Promise<void>
@@ -65,7 +63,6 @@ export class DefaultConnectorFacade implements ConnectorFacade {
 
     async start(
         onNewConnection: (connection: PendingConnection) => boolean,
-        onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void,
         hasConnection: (nodeId: DhtAddress) => boolean,
         autoCertifierTransport: ITransport
     ): Promise<void> {
@@ -80,7 +77,6 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             // TODO should we use canConnect also for WebrtcConnector? (NET-1142)
             onNewConnection,
             hasConnection,
-            onHandshakeCompleted,
             rpcCommunicator: this.websocketConnectorRpcCommunicator
         }
         this.websocketClientConnector = new WebsocketClientConnector(webSocketClientConnectorConfig)
@@ -89,7 +85,6 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             rpcCommunicator: this.websocketConnectorRpcCommunicator,
             // TODO should we use canConnect also for WebrtcConnector? (NET-1142)
             onNewConnection,
-            onHandshakeCompleted,
             hasConnection,
             portRange: this.config.websocketPortRange,
             host: this.config.websocketHost,
@@ -105,7 +100,6 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         this.websocketServerConnector = new WebsocketServerConnector(webSocketServerConnectorConfig)
         this.webrtcConnector = new WebrtcConnector({
             onNewConnection,
-            onHandshakeCompleted,
             transport: this.config.transport,
             iceServers: this.config.iceServers,
             allowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
@@ -199,14 +193,12 @@ export class SimulatorConnectorFacade implements ConnectorFacade {
 
     async start(
         onNewConnection: (connection: PendingConnection) => boolean,
-        onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void
     ): Promise<void> {
         logger.trace(`Creating SimulatorConnector`)
         this.simulatorConnector = new SimulatorConnector(
             this.localPeerDescriptor,
             this.simulator,
             onNewConnection,
-            onHandshakeCompleted
         )
         this.simulator.addConnector(this.simulatorConnector)
     }

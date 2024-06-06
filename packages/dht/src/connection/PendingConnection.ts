@@ -2,9 +2,10 @@ import EventEmitter from 'eventemitter3'
 import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { Logger, setAbortableTimeout } from '@streamr/utils'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
+import { IConnection } from './IConnection'
 
 export interface PendingConnectionEvents {
-    connected: () => void
+    connected: (peerDescriptor: PeerDescriptor, connection: IConnection) => void
     disconnected: (gracefulLeave: boolean) => void
 }
 
@@ -27,6 +28,12 @@ export class PendingConnection extends EventEmitter<PendingConnectionEvents> {
     replaceAsDuplicate(): void {
         logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' replaceAsDuplicate')
         this.replacedAsDuplicate = true
+    }
+
+    onHandshakeCompleted(connection: IConnection): void {
+        if (!this.replacedAsDuplicate) {
+            this.emit('connected', this.remotePeerDescriptor, connection)
+        }
     }
 
     close(graceful: boolean): void {

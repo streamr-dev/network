@@ -18,7 +18,6 @@ import { WebrtcConnectorRpcLocal } from './WebrtcConnectorRpcLocal'
 import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { getOfferer } from '../../helpers/offering'
 import { acceptHandshake, createIncomingHandshaker, createOutgoingHandshaker, rejectHandshake } from '../Handshaker'
-import { IConnection } from '../IConnection'
 import { isMaybeSupportedVersion } from '../../helpers/version'
 import { PendingConnection } from '../PendingConnection'
 
@@ -35,7 +34,6 @@ export const replaceInternalIpWithExternalIp = (candidate: string, ip: string): 
 
 export interface WebrtcConnectorConfig {
     onNewConnection: (connection: PendingConnection) => boolean
-    onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void
     transport: ITransport
     iceServers?: IceServer[]
     allowPrivateAddresses?: boolean
@@ -157,7 +155,7 @@ export class WebrtcConnector {
         }
         if (offering) {
             pendingConnection = new PendingConnection(targetPeerDescriptor)
-            createOutgoingHandshaker(this.localPeerDescriptor!, pendingConnection, connection, this.config.onHandshakeCompleted, targetPeerDescriptor)
+            createOutgoingHandshaker(this.localPeerDescriptor!, pendingConnection, connection, targetPeerDescriptor)
             connection.once('localDescription', (description: string) => {
                 logger.trace('Sending offer to remote peer')
                 remoteConnector.sendRtcOffer(description, connection.connectionId)
@@ -168,12 +166,11 @@ export class WebrtcConnector {
             connection.once('localDescription', (description: string) => {
                 remoteConnector.sendRtcAnswer(description, connection.connectionId)
             })
-            handshaker.on('handshakeRequest', (sourceDescriptor: PeerDescriptor, remoteVersion: string) => {
+            handshaker.on('handshakeRequest', (_sourceDescriptor: PeerDescriptor, remoteVersion: string) => {
                 if (!isMaybeSupportedVersion(remoteVersion)) {
                     rejectHandshake(pendingConnection!, connection, handshaker, HandshakeError.UNSUPPORTED_VERSION)
                 } else {
-                    acceptHandshake(handshaker, pendingConnection)
-                    this.config.onHandshakeCompleted(sourceDescriptor, connection)
+                    acceptHandshake(handshaker, pendingConnection, connection)
                 }
                 delFunc()
             })

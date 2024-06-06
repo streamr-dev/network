@@ -23,6 +23,7 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
     private remotePeerDescriptor: PeerDescriptor
     private lastUsedTimestamp: number = Date.now()
     private stopped = false
+    private replacedAsDuplicate = false
 
     constructor(peerDescriptor: PeerDescriptor, connection: IConnection) {
         super()
@@ -39,21 +40,16 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
         this.remotePeerDescriptor = peerDescriptor
     }
 
-    getNodeId(): DhtAddress {
-        return getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)
-    }
-
-    getLastUsedTimestamp(): number {
-        return this.lastUsedTimestamp
-    }
-
-    getPeerDescriptor(): PeerDescriptor | undefined {
-        return this.remotePeerDescriptor
-    }
-
     private onDisconnected(gracefulLeave: boolean): void {
         logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' onDisconnected() ' + gracefulLeave)
-        this.emit('disconnected', gracefulLeave)
+        if (!this.replacedAsDuplicate) {
+            this.emit('disconnected', gracefulLeave)
+        }
+    }
+
+    replaceAsDuplicate(): void {
+        logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' replaceAsDuplicate')
+        this.replacedAsDuplicate = true
     }
 
     send(data: Uint8Array): void {
@@ -70,6 +66,18 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
         }
         await this.connection.close(gracefulLeave)       
         this.removeAllListeners()
+    }
+
+    getNodeId(): DhtAddress {
+        return getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)
+    }
+
+    getLastUsedTimestamp(): number {
+        return this.lastUsedTimestamp
+    }
+
+    getPeerDescriptor(): PeerDescriptor | undefined {
+        return this.remotePeerDescriptor
     }
 
 }

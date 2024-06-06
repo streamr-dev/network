@@ -44,7 +44,11 @@ export abstract class AbstractWebsocketClientConnection extends EventEmitter<Con
                 logger.trace(`Sending data with size ${data.byteLength}`)
                 this.socket?.send(data)
             } else {
-                logger.debug('Tried to send data on a non-open connection')
+                logger.debug('Tried to send data on a non-open connection', { 
+                    id: this.connectionId,
+                    readyState: this.socket!.readyState,
+                    destroyed: this.destroyed
+                })
             }
         } else {
             logger.debug('Tried to send() on stopped connection')
@@ -58,7 +62,7 @@ export abstract class AbstractWebsocketClientConnection extends EventEmitter<Con
             logger.trace(`Closing socket for connection ${this.connectionId}`)
             this.socket?.close(gracefulLeave ? CUSTOM_GOING_AWAY : undefined)
         } else {
-            logger.debug('Tried to close() a stopped connection')
+            logger.debug('Tried to close() a stopped connection', { id: this.connectionId })
         }
     }
 

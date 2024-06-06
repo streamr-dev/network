@@ -1,4 +1,5 @@
 import { WebrtcConnector } from '../../src/connection/webrtc/WebrtcConnector'
+import { MockConnection } from '../utils/mock/MockConnection'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor } from '../utils/utils'
 
@@ -43,7 +44,7 @@ describe('WebrtcConnector', () => {
             connector.setLocalPeerDescriptor(createMockPeerDescriptor())
             const remotePeerDescriptor = createMockPeerDescriptor()
             const firstConnection = connector.connect(remotePeerDescriptor, false)
-            firstConnection.emit('connected',)
+            firstConnection.onHandshakeCompleted(new MockConnection())
             const secondConnection = connector.connect(remotePeerDescriptor, false)
             expect(firstConnection).not.toEqual(secondConnection)
             firstConnection.close(false)

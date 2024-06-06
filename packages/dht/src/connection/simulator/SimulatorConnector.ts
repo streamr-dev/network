@@ -1,4 +1,4 @@
-import { ConnectionType, IConnection } from '../IConnection'
+import { ConnectionType } from '../IConnection'
 
 import {
     HandshakeError,
@@ -20,18 +20,15 @@ export class SimulatorConnector {
     private localPeerDescriptor: PeerDescriptor
     private simulator: Simulator
     private onNewConnection: (connection: PendingConnection) => boolean
-    private onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void
 
     constructor(
         localPeerDescriptor: PeerDescriptor,
         simulator: Simulator,
         onNewConnection: (connection: PendingConnection) => boolean,
-        onHandshakeCompleted: (peerDescriptor: PeerDescriptor, connection: IConnection) => void
     ) {
         this.localPeerDescriptor = localPeerDescriptor
         this.simulator = simulator
         this.onNewConnection = onNewConnection
-        this.onHandshakeCompleted = onHandshakeCompleted
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): PendingConnection {
@@ -45,7 +42,7 @@ export class SimulatorConnector {
         const connection = new SimulatorConnection(this.localPeerDescriptor, targetPeerDescriptor, ConnectionType.SIMULATOR_CLIENT, this.simulator)
 
         const pendingConnection = new PendingConnection(targetPeerDescriptor)
-        createOutgoingHandshaker(this.localPeerDescriptor, pendingConnection, connection, this.onHandshakeCompleted, targetPeerDescriptor)
+        createOutgoingHandshaker(this.localPeerDescriptor, pendingConnection, connection, targetPeerDescriptor)
         this.connectingConnections.set(nodeId, pendingConnection)
         const delFunc = () => {
             this.connectingConnections.delete(nodeId)
@@ -84,8 +81,7 @@ export class SimulatorConnector {
 
             if (this.onNewConnection(pendingConnection)) {
                 logger.trace(remoteNodeId + ' calling acceptHandshake')
-                acceptHandshake(handshaker, pendingConnection)
-                this.onHandshakeCompleted(remotePeerDescriptor, connection)
+                acceptHandshake(handshaker, pendingConnection, connection)
             } else {
                 rejectHandshake(pendingConnection, connection, handshaker, HandshakeError.DUPLICATE_CONNECTION)
             }
