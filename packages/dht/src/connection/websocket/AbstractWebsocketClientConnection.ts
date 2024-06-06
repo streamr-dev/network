@@ -44,7 +44,11 @@ export abstract class AbstractWebsocketClientConnection extends EventEmitter<Con
                 logger.trace(`Sending data with size ${data.byteLength}`)
                 this.socket?.send(data)
             } else {
-                logger.debug('Tried to send data on a non-open connection', { destroyed: this.destroyed, id: this.connectionId, readyState: this.socket!.readyState })
+                logger.debug('Tried to send data on a non-open connection', { 
+                    id: this.connectionId,
+                    readyState: this.socket!.readyState,
+                    destroyed: this.destroyed
+                })
             }
         } else {
             logger.debug('Tried to send() on stopped connection')
