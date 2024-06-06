@@ -21,10 +21,12 @@ describe('Handshaker', () => {
     let mockSend: () => void
     let mockConnectionClose: () => void
     let mockPendingConnectionClose: () => void
+    let mockPendingConnectionDestroy: () => void
 
     beforeEach(() => {
         mockOnHandshakeCompleted = jest.fn()
         mockPendingConnectionClose = jest.fn()
+        mockPendingConnectionDestroy = jest.fn()
         pendingConnection = new class extends EventEmitter {
             // eslint-disable-next-line class-methods-use-this
             attachConnection() { 
@@ -37,6 +39,7 @@ describe('Handshaker', () => {
 
             // eslint-disable-next-line class-methods-use-this
             destroy() {
+                mockPendingConnectionDestroy()
             }
 
             // eslint-disable-next-line class-methods-use-this
@@ -99,6 +102,7 @@ describe('Handshaker', () => {
 
         it('onHandShakeFailed ', () => {
             handshaker.emit('handshakeFailed', HandshakeError.DUPLICATE_CONNECTION)
+            expect(mockPendingConnectionDestroy).toHaveBeenCalled()
             expect(mockOnHandshakeCompleted).not.toHaveBeenCalled()
         })
 

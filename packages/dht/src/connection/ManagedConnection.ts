@@ -47,6 +47,8 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
         }
     }
 
+    // TODO: Can this be removed if ManagedConnections can never be duplicates?
+    // Handle duplicates in the ConncetorFacade and no longer have PendingConnections in ConnectionManager
     replaceAsDuplicate(): void {
         logger.trace(getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) + ' replaceAsDuplicate')
         this.replacedAsDuplicate = true
