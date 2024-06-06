@@ -58,7 +58,7 @@ export abstract class AbstractWebsocketClientConnection extends EventEmitter<Con
             logger.trace(`Closing socket for connection ${this.connectionId}`)
             this.socket?.close(gracefulLeave ? CUSTOM_GOING_AWAY : undefined)
         } else {
-            logger.debug('Tried to close() a stopped connection')
+            logger.debug('Tried to close() a stopped connection', { id: this.connectionId })
         }
     }
 
