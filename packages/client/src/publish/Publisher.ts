@@ -13,6 +13,7 @@ import { Mapping } from '../utils/Mapping'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { MessageFactory } from './MessageFactory'
 import { SignatureValidator } from '../signature/SignatureValidator'
+import { MessageSigner } from '../signature/MessageSigner'
 
 export interface PublishMetadata {
     timestamp?: string | number | Date
@@ -49,6 +50,7 @@ export class Publisher {
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
     private readonly signatureValidator: SignatureValidator
+    private readonly messageSigner: MessageSigner
 
     constructor(
         node: NetworkNodeFacade,
@@ -56,13 +58,15 @@ export class Publisher {
         groupKeyManager: GroupKeyManager,
         streamIdBuilder: StreamIDBuilder,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        signatureValidator: SignatureValidator
+        signatureValidator: SignatureValidator,
+        messageSigner: MessageSigner
     ) {
         this.node = node
         this.streamRegistry = streamRegistry
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
         this.signatureValidator = signatureValidator
+        this.messageSigner = messageSigner
         this.messageFactories = new Mapping(async (streamId: StreamID) => {
             return this.createMessageFactory(streamId)
         })
@@ -124,7 +128,8 @@ export class Publisher {
             authentication: this.authentication,
             streamRegistry: this.streamRegistry,
             groupKeyQueue: await this.groupKeyQueues.get(streamId),
-            signatureValidator: this.signatureValidator
+            signatureValidator: this.signatureValidator,
+            messageSigner: this.messageSigner
         })
     }
 }

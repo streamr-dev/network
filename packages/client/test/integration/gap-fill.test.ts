@@ -12,6 +12,7 @@ import { Stream } from './../../src/Stream'
 import { MessageFactory } from './../../src/publish/MessageFactory'
 import { mock } from 'jest-mock-extended'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
+import { MessageSigner } from '../../src/signature/MessageSigner'
 
 const GROUP_KEY = GroupKey.generate()
 
@@ -44,7 +45,8 @@ describe('gap fill', () => {
             streamId: stream.id,
             streamRegistry: createStreamRegistry(),
             groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY),
-            signatureValidator: mock<SignatureValidator>()
+            signatureValidator: mock<SignatureValidator>(),
+            messageSigner: new MessageSigner(authentication)
         })
     })
 

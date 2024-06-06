@@ -12,6 +12,7 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
 import { mock } from 'jest-mock-extended'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
+import { MessageSigner } from '../../src/signature/MessageSigner'
 
 describe('Resends', () => {
 
@@ -44,7 +45,8 @@ describe('Resends', () => {
             streamId: stream.id,
             streamRegistry: createStreamRegistry(),
             groupKeyQueue: await createGroupKeyQueue(authentication, groupKey),
-            signatureValidator: mock<SignatureValidator>()
+            signatureValidator: mock<SignatureValidator>(),
+            messageSigner: new MessageSigner(authentication)
         })
         // store the encryption key publisher's local group key store
         await publisher.updateEncryptionKey({

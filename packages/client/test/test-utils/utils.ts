@@ -34,6 +34,7 @@ import { addAfterFn } from './jest-utils'
 import path from 'path'
 import fetch from 'node-fetch'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
+import { MessageSigner } from '../../src/signature/MessageSigner'
 
 const logger = new Logger(module)
 
@@ -128,7 +129,8 @@ export const createMockMessage = async (
             isStreamPublisher: true
         }),
         groupKeyQueue: await createGroupKeyQueue(authentication, opts.encryptionKey, opts.nextEncryptionKey),
-        signatureValidator: mock<SignatureValidator>()
+        signatureValidator: mock<SignatureValidator>(),
+        messageSigner: new MessageSigner(authentication)
     })
     const DEFAULT_CONTENT = {}
     const plainContent = opts.content ?? DEFAULT_CONTENT

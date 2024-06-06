@@ -13,6 +13,7 @@ import { createGroupKeyQueue, createRandomAuthentication, createStreamRegistry, 
 import { isEqual } from 'lodash'
 import { mock } from 'jest-mock-extended'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
+import { MessageSigner } from '../../src/signature/MessageSigner'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 const MAX_GAP_REQUESTS = 2
@@ -58,7 +59,8 @@ describe('resend subscription', () => {
                 isPublicStream: true
             }),
             groupKeyQueue: await createGroupKeyQueue(authentication),
-            signatureValidator: mock<SignatureValidator>()
+            signatureValidator: mock<SignatureValidator>(),
+            messageSigner: new MessageSigner(authentication)
         })
     })
 

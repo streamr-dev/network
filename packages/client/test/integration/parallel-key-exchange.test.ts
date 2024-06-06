@@ -15,6 +15,7 @@ import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { mock } from 'jest-mock-extended'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
+import { MessageSigner } from '../../src/signature/MessageSigner'
 
 const PUBLISHER_COUNT = 50
 const MESSAGE_COUNT_PER_PUBLISHER = 3
@@ -72,7 +73,8 @@ describe('parallel key exchange', () => {
                     isStreamPublisher: true
                 }),
                 groupKeyQueue: await createGroupKeyQueue(authentication, publisher.groupKey),
-                signatureValidator: mock<SignatureValidator>()
+                signatureValidator: mock<SignatureValidator>(),
+                messageSigner: new MessageSigner(authentication),
             })
             for (let i = 0; i < MESSAGE_COUNT_PER_PUBLISHER; i++) {
                 const msg = await messageFactory.createMessage({

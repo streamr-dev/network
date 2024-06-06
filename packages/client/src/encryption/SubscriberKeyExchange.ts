@@ -17,7 +17,6 @@ import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { createSignedMessage } from '../publish/MessageFactory'
 import { createRandomMsgChainId } from '../publish/messageChain'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { LoggerFactory } from '../utils/LoggerFactory'
@@ -29,6 +28,7 @@ import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { RSAKeyPair } from './RSAKeyPair'
 import { Subscriber } from '../subscribe/Subscriber'
 import { SignatureValidator } from '../signature/SignatureValidator'
+import { MessageSigner } from '../signature/MessageSigner'
 
 const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed
 
@@ -44,6 +44,7 @@ export class SubscriberKeyExchange {
     private readonly networkNodeFacade: NetworkNodeFacade
     private readonly streamRegistry: StreamRegistry
     private readonly signatureValidator: SignatureValidator
+    private readonly messageSigner: MessageSigner
     private readonly store: LocalGroupKeyStore
     private readonly subscriber: Subscriber
     private readonly authentication: Authentication
@@ -55,6 +56,7 @@ export class SubscriberKeyExchange {
         networkNodeFacade: NetworkNodeFacade,
         streamRegistry: StreamRegistry,
         signatureValidator: SignatureValidator,
+        messageSigner: MessageSigner,
         store: LocalGroupKeyStore,
         subscriber: Subscriber,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'encryption'>,
@@ -64,6 +66,7 @@ export class SubscriberKeyExchange {
         this.networkNodeFacade = networkNodeFacade
         this.streamRegistry = streamRegistry
         this.signatureValidator = signatureValidator
+        this.messageSigner = messageSigner
         this.store = store
         this.subscriber = subscriber
         this.authentication = authentication
@@ -113,7 +116,7 @@ export class SubscriberKeyExchange {
             groupKeyIds: [groupKeyId],
         })
         const erc1271contract = this.subscriber.getERC1271ContractAddress(streamPartId)
-        return createSignedMessage({
+        return this.messageSigner.createSignedMessage({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(streamPartId),
                 StreamPartIDUtils.getStreamPartition(streamPartId),
@@ -126,9 +129,7 @@ export class SubscriberKeyExchange {
             contentType: ContentType.BINARY,
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
             encryptionType: EncryptionType.NONE,
-            authentication: this.authentication,
-            signatureType: erc1271contract === undefined ? SignatureType.SECP256K1 : SignatureType.ERC_1271
-        })
+        }, erc1271contract === undefined ? SignatureType.SECP256K1 : SignatureType.ERC_1271)
     }
 
     private async onMessage(msg: StreamMessage): Promise<void> {
