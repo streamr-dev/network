@@ -2,6 +2,7 @@ import { wait, waitForEvent3 } from '@streamr/utils'
 import { PendingConnection } from '../../src/exports'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { PendingConnectionEvents } from '../../src/connection/PendingConnection'
+import { MockConnection } from '../utils/mock/MockConnection'
 
 describe('PendingConnection', () => {
 
@@ -33,6 +34,23 @@ describe('PendingConnection', () => {
             throw new Error('disconnected')
         })
         pendingConnection.destroy()
+        await wait(50)
+    })
+
+    it('emites connected', (done) => {
+        const mockConnection = new MockConnection()
+        pendingConnection.once('connected', (_peerDescriptor, connection) => {
+            expect(mockConnection).toEqual(connection)
+            done()
+        })
+        pendingConnection.onHandshakeCompleted(mockConnection)
+    }) 
+
+    it('does not emit connected if replaced', async () => {
+        pendingConnection.once('connected', () => {
+            throw new Error('connected')
+        })
+        pendingConnection.replaceAsDuplicate()
         await wait(50)
     })
 
