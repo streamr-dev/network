@@ -7,7 +7,7 @@ import { createSignature, hexToBinary, hash } from '@streamr/utils'
 import { RpcProviderFactory } from '../../src/RpcProviderFactory'
 import { ContractFactory } from '../../src/ContractFactory'
 import { Provider } from 'ethers'
-import { ObservableContract } from '../../src/utils/contract'
+import { ObservableContract } from '../../src/contracts/contract'
 
 const PRIVATE_KEY = fastPrivateKey()
 const PAYLOAD = new Uint8Array([1, 2, 3])

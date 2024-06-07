@@ -15,7 +15,7 @@ import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageReg
 import { getEthersOverrides } from '../ethereumUtils'
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { initContractEventGateway, waitForTx } from '../utils/contract'
+import { initContractEventGateway, waitForTx } from './contract'
 import { ChainEventPoller } from './ChainEventPoller'
 
 export interface StorageNodeAssignmentEvent {

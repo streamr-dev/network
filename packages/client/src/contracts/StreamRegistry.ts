@@ -29,7 +29,7 @@ import {
 import { filter, map } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { CacheAsyncFn, CacheAsyncFnType } from '../utils/caches'
-import { ObservableContract, initContractEventGateway, waitForTx } from '../utils/contract'
+import { ObservableContract, initContractEventGateway, waitForTx } from './contract'
 import { until } from '../utils/promises'
 import { StreamFactory } from './../StreamFactory'
 import { ChainEventPoller } from './ChainEventPoller'

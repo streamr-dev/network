@@ -11,9 +11,7 @@ import EventEmitter from 'eventemitter3'
 import without from 'lodash/without'
 import pLimit from 'p-limit'
 import { InternalEvents, StreamrClientEventEmitter, StreamrClientEvents } from '../events'
-import { LoggerFactory } from './LoggerFactory'
-
-// TODO move this file to the contracts directory?
+import { LoggerFactory } from '../utils/LoggerFactory'
 
 export interface ContractEvent {
     onMethodExecute: (methodName: string) => void

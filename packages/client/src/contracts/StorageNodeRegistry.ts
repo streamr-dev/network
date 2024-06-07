@@ -7,7 +7,7 @@ import { getEthersOverrides } from '../ethereumUtils'
 import { StreamrClientError } from '../StreamrClientError'
 import type { NodeRegistry as NodeRegistryContract } from '../ethereumArtifacts/NodeRegistry'
 import NodeRegistryArtifact from '../ethereumArtifacts/NodeRegistryAbi.json'
-import { waitForTx } from '../utils/contract'
+import { waitForTx } from './contract'
 import { RpcProviderFactory } from '../RpcProviderFactory'
 
 export interface StorageNodeMetadata {
