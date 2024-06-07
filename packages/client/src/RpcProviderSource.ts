@@ -23,7 +23,6 @@ export class RpcProviderSource {
         if (this.provider === undefined) {
             // eslint-disable-next-line no-underscore-dangle
             const timeout = this.config._timeouts.jsonRpcTimeout
-            const pollInterval = this.config.contracts.pollInterval
             const providers = this.config.contracts.streamRegistryChainRPCs.rpcs.map((c) => {
                 const fetchRequest = new FetchRequest(c.url)
                 fetchRequest.timeout = timeout
@@ -32,7 +31,6 @@ export class RpcProviderSource {
                     name: this.config.contracts.streamRegistryChainRPCs.name
                 }, {
                     staticNetwork: true,
-                    pollingInterval: pollInterval,
                     batchStallTime: isDevChain(this.config) ? 0 : undefined, // Don't batch requests, send them immediately
                     cacheTimeout: isDevChain(this.config) ? -1 : undefined   // Do not employ result caching
                 })
@@ -42,7 +40,6 @@ export class RpcProviderSource {
                 name: this.config.contracts.streamRegistryChainRPCs.name
             }, {
                 quorum: Math.min(QUORUM, this.config.contracts.streamRegistryChainRPCs?.rpcs.length),
-                pollingInterval: pollInterval,
                 cacheTimeout: isDevChain(this.config) ? -1 : undefined   // Do not employ result caching
             })
         }

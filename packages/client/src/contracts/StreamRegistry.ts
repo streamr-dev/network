@@ -116,7 +116,7 @@ export class StreamRegistry {
         const chainEventPoller = new ChainEventPoller(this.rpcProviderSource.getEventProviders().map((p) => {
             // TODO would it make sense to use createDecoratedContract to get logging? or would it do that
             return new Contract(toEthereumAddress(this.config.contracts.streamRegistryChainAddress), StreamRegistryArtifact, p)
-        }))
+        }), config.contracts.pollInterval)
         initContractEventGateway({
             sourceName: 'StreamCreated', 
             sourceEmitter: chainEventPoller,

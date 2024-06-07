@@ -1,10 +1,11 @@
 import { wait, waitForCondition } from '@streamr/utils'
 import { Contract } from 'ethers'
-import { ChainEventPoller, POLL_INTERVAL } from './../../src/contracts/ChainEventPoller'
+import { ChainEventPoller } from './../../src/contracts/ChainEventPoller'
 
 const INITIAL_BLOCK_NUMBER = 123
 const EVENT_NAME = 'foo'
 const EVENT_ARGS = [ 'mock-arg1', 'mock-arg2' ]
+const POLL_INTERVAL = 100
 
 describe('ChainEventPoller', () => {
 
@@ -28,7 +29,7 @@ describe('ChainEventPoller', () => {
                 }
             }
         } as unknown as Contract
-        const poller = new ChainEventPoller([contract])
+        const poller = new ChainEventPoller([contract], POLL_INTERVAL)
 
         const listener1 = jest.fn()
         poller.on(EVENT_NAME, listener1)

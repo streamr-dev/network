@@ -6,19 +6,20 @@ type EventName = string
 type Listener = (...args: any[]) => void
 
 const BLOCK_NUMBER_QUERY_DELAY = 1000
-export const POLL_INTERVAL = 1000  // TODO 5000? create a config option?
 const TIMEOUT = 10 * 1000 // TODO what would be a good value? create a config option?
 
 export class ChainEventPoller {
 
     private listeners: Multimap<EventName, Listener> = new Multimap()
-    private contracts: Contract[]
     private abortController?: AbortController
+    private contracts: Contract[]
+    private pollInterval: number
 
     // all these contracts are actually the same chain contract (i.e. StreamRegistry), but have different providers
     // connected to them
-    constructor(contracts: Contract[]) {
+    constructor(contracts: Contract[], pollInterval: number) {
         this.contracts = contracts
+        this.pollInterval = pollInterval
     }
 
     on(eventName: string, listener: Listener): void {
@@ -42,7 +43,7 @@ export class ChainEventPoller {
         this.abortController = abortController
         setImmediate(async () => {
             const logger = new Logger(module, { traceId: randomString(6) })
-            logger.debug('Start polling', { POLL_INTERVAL })
+            logger.debug('Start polling', { pollInterval: this.pollInterval })
             let fromBlock: number | undefined = undefined
             do {
                 try {
@@ -76,7 +77,7 @@ export class ChainEventPoller {
                     logger.debug('Failed to poll', { err, eventNames, fromBlock })
                 }
 
-            }, POLL_INTERVAL, true, abortController.signal)
+            }, this.pollInterval, true, abortController.signal)
         })
     }
 

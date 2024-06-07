@@ -9,6 +9,7 @@ import { StreamCreationEvent } from '../../src/contracts/StreamRegistry'
 import { CHAIN_ID, ErrorState, FakeJsonRpcServer, JsonRpcRequest } from '../test-utils/FakeJsonRpcServer'
 
 const SERVER_COUNT = 3
+const POLL_INTERVAL = 500
 
 describe('use JsonRpcProvider', () => {
 
@@ -37,7 +38,8 @@ describe('use JsonRpcProvider', () => {
                     rpcs: servers.map((server) => ({
                         url: `http://localhost:${server.getPort()}`
                     }))
-                }
+                },
+                pollInterval: POLL_INTERVAL
             }
         })
     })
@@ -100,7 +102,6 @@ describe('use JsonRpcProvider', () => {
     describe('events', () => {
 
         const runErrorTest = async (errorState: ErrorState, extraWait = 0): Promise<void> => {
-            const POLL_INTERVAL = 1000 // TODO shorter, e.g 100ms
             servers.forEach((s) => s.setError('eth_getLogs', errorState))
             const receivedEvents: StreamCreationEvent[] = []
             client.on('createStream', (event: StreamCreationEvent) => {
@@ -119,7 +120,6 @@ describe('use JsonRpcProvider', () => {
         }
 
         it('happy path', async () => {
-            const POLL_INTERVAL = 1000 // TODO shorter, e.g 100ms
             const receivedEvents: StreamCreationEvent[] = []
             const now = Date.now()
             client.on('createStream', (event: StreamCreationEvent) => {
