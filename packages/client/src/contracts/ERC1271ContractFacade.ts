@@ -5,7 +5,7 @@ import type { IERC1271 as ERC1271Contract } from '../ethereumArtifacts/IERC1271'
 import { Mapping } from '../utils/Mapping'
 import { Lifecycle, scoped } from 'tsyringe'
 import { recoverAddress, hash } from '@streamr/utils'
-import { RpcProviderFactory } from '../RpcProviderFactory'
+import { RpcProviderSource } from '../RpcProviderSource'
 
 export const SUCCESS_MAGIC_VALUE = '0x1626ba7e' // Magic value for success as defined by ERC-1271
 
@@ -24,13 +24,13 @@ export class ERC1271ContractFacade {
 
     constructor(
         contractFactory: ContractFactory,
-        rpcProviderFactory: RpcProviderFactory
+        rpcProviderSource: RpcProviderSource
     ) {
         this.contractsByAddress = new Mapping<[EthereumAddress], ERC1271Contract>(async (address) => {
             return contractFactory.createReadContract(
                 address,
                 ERC1271ContractArtifact,
-                rpcProviderFactory.getProvider(),
+                rpcProviderSource.getProvider(),
                 'erc1271Contract'
             ) as ERC1271Contract
         })

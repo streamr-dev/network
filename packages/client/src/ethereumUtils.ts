@@ -4,7 +4,7 @@
 import { Wallet } from 'ethers'
 import type { Overrides } from 'ethers'
 import { StrictStreamrClientConfig } from './Config'
-import { RpcProviderFactory } from './RpcProviderFactory'
+import { RpcProviderSource } from './RpcProviderSource'
 import { FeeData } from 'ethers'
 
 export const generateEthereumAccount = (): { address: string, privateKey: string } => {
@@ -20,13 +20,13 @@ export const generateEthereumAccount = (): { address: string, privateKey: string
  * Ethers.js will resolve the gas price promise before sending the tx
  */
 export const getEthersOverrides = async (
-    rpcProviderFactory: RpcProviderFactory, // TODO: can this be done somewhat cleaner?
+    rpcProviderSource: RpcProviderSource, // TODO: can this be done somewhat cleaner?
     config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
 ): Promise<Overrides> => {
     const chainConfig = config.contracts.ethereumNetwork
     const overrides = chainConfig.overrides ?? {}
     if ((chainConfig.highGasPriceStrategy) && (chainConfig.overrides?.gasPrice === undefined)) {
-        const primaryProvider = rpcProviderFactory.getProvider()
+        const primaryProvider = rpcProviderSource.getProvider()
         const feeData = await primaryProvider.getFeeData()
         const gasPriceStrategy = (feeData: FeeData) => {
             const INCREASE_PERCENTAGE = 30

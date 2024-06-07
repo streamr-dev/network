@@ -10,9 +10,8 @@ function isDevChain(config: Pick<StrictStreamrClientConfig, 'contracts'>): boole
     return config.contracts.streamRegistryChainRPCs?.name === 'dev2'
 }
 
-// TODO: do we even need this class anymore?
 @scoped(Lifecycle.ContainerScoped)
-export class RpcProviderFactory {
+export class RpcProviderSource {
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     private provider?: Provider
 

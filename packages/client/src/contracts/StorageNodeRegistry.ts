@@ -8,7 +8,7 @@ import { StreamrClientError } from '../StreamrClientError'
 import type { NodeRegistry as NodeRegistryContract } from '../ethereumArtifacts/NodeRegistry'
 import NodeRegistryArtifact from '../ethereumArtifacts/NodeRegistryAbi.json'
 import { waitForTx } from './contract'
-import { RpcProviderFactory } from '../RpcProviderFactory'
+import { RpcProviderSource } from '../RpcProviderSource'
 
 export interface StorageNodeMetadata {
     urls: string[]
@@ -23,31 +23,31 @@ export class StorageNodeRegistry {
     private nodeRegistryContract?: NodeRegistryContract
     private readonly nodeRegistryContractsReadonly: NodeRegistryContract
     private readonly contractFactory: ContractFactory
-    private readonly rpcProviderFactory: RpcProviderFactory
+    private readonly rpcProviderSource: RpcProviderSource
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     private readonly authentication: Authentication
 
     constructor(
         contractFactory: ContractFactory,
-        rpcProviderFactory: RpcProviderFactory,
+        rpcProviderSource: RpcProviderSource,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
     ) {
         this.contractFactory = contractFactory
-        this.rpcProviderFactory = rpcProviderFactory
+        this.rpcProviderSource = rpcProviderSource
         this.config = config
         this.authentication = authentication
         this.nodeRegistryContractsReadonly = this.contractFactory.createReadContract(
             toEthereumAddress(this.config.contracts.storageNodeRegistryChainAddress),
             NodeRegistryArtifact,
-            rpcProviderFactory.getProvider(),
+            rpcProviderSource.getProvider(),
             'storageNodeRegistry'
         ) as NodeRegistryContract
     }
 
     private async connectToContract() {
         if (!this.nodeRegistryContract) {
-            const chainSigner = await this.authentication.getStreamRegistryChainSigner(this.rpcProviderFactory)
+            const chainSigner = await this.authentication.getStreamRegistryChainSigner(this.rpcProviderSource)
             this.nodeRegistryContract = this.contractFactory.createWriteContract<NodeRegistryContract>(
                 toEthereumAddress(this.config.contracts.storageNodeRegistryChainAddress),
                 NodeRegistryArtifact,
@@ -59,7 +59,7 @@ export class StorageNodeRegistry {
 
     async setStorageNodeMetadata(metadata: StorageNodeMetadata | undefined): Promise<void> {
         await this.connectToContract()
-        const ethersOverrides = await getEthersOverrides(this.rpcProviderFactory, this.config)
+        const ethersOverrides = await getEthersOverrides(this.rpcProviderSource, this.config)
         if (metadata !== undefined) {
             await waitForTx(this.nodeRegistryContract!.createOrUpdateNodeSelf(JSON.stringify(metadata), ethersOverrides))
         } else {
