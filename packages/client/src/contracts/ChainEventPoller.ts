@@ -72,7 +72,7 @@ export class ChainEventPoller {
                                 listener(...event.args, event.blockNumber)
                             }
                         }
-                        fromBlock = events[0].blockNumber + 1
+                        fromBlock = Math.max(...events.map((e) => e.blockNumber)) + 1
                     }
                 } catch (err) {
                     logger.debug('Failed to poll', { err, eventNames, fromBlock })

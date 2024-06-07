@@ -2,14 +2,14 @@ import { wait, waitForCondition } from '@streamr/utils'
 import { Contract } from 'ethers'
 import { ChainEventPoller } from './../../src/contracts/ChainEventPoller'
 
-const INITIAL_BLOCK_NUMBER = 123
-const EVENT_NAME = 'foo'
-const EVENT_ARGS = [ 'mock-arg1', 'mock-arg2' ]
 const POLL_INTERVAL = 100
 
 describe('ChainEventPoller', () => {
 
     it('happy path', async () => {
+        const INITIAL_BLOCK_NUMBER = 123
+        const EVENT_NAME = 'foo'
+        const EVENT_ARGS = [ 'mock-arg1', 'mock-arg2' ]
         let blockNumber = INITIAL_BLOCK_NUMBER
         const contract = {
             queryFilter: jest.fn().mockImplementation(() => {
@@ -73,5 +73,68 @@ describe('ChainEventPoller', () => {
         expect(contract.runner!.provider!.getBlockNumber).toHaveBeenCalledTimes(2)
         expect(contract.queryFilter).toHaveBeenCalledTimes(3)
         expect(listener2).toHaveBeenCalledTimes(1)
+    })
+
+    it('multiple events and listeners', async () => {
+        const EVENT_NAME_1 = 'event-name-1'
+        const EVENT_NAME_2 = 'event-name-2'
+        const contract = {
+            queryFilter: jest.fn().mockImplementation(() => {
+                const result = [{
+                    fragment: {
+                        name: EVENT_NAME_1
+                    },
+                    args: ['arg-foo1'],
+                    blockNumber: 150
+                }, {
+                    fragment: {
+                        name: EVENT_NAME_1
+                    },
+                    args: ['arg-foo2'],
+                    blockNumber: 155
+                }, {
+                    fragment: {
+                        name: EVENT_NAME_2
+                    },
+                    args: ['arg-bar'],
+                    blockNumber: 152
+                }]
+                return result
+            }),
+            runner: {
+                provider: {
+                    getBlockNumber: jest.fn().mockImplementation(async () => 123)
+                }
+            }
+        } as unknown as Contract
+        const poller = new ChainEventPoller([contract], POLL_INTERVAL, 10 * 1000)
+
+        const listener1 = jest.fn()
+        const listener2 = jest.fn()
+        const listener3 = jest.fn()
+        poller.on(EVENT_NAME_1, listener1)
+        poller.on(EVENT_NAME_2, listener2)
+        poller.on(EVENT_NAME_2, listener3)
+
+        await waitForCondition(
+            () => {
+                return (listener1.mock.calls.length > 0) && (listener2.mock.calls.length > 0) && (listener3.mock.calls.length > 0)
+            }
+        )
+        expect(contract.queryFilter).toHaveBeenNthCalledWith(1, [[EVENT_NAME_1, EVENT_NAME_2]], 123)
+        expect(listener1).toHaveBeenCalledTimes(2)
+        expect(listener1).toHaveBeenCalledWith('arg-foo1', 150)
+        expect(listener1).toHaveBeenCalledWith('arg-foo2', 155)
+        expect(listener2).toHaveBeenCalledTimes(1)
+        expect(listener2).toHaveBeenCalledWith('arg-bar', 152)
+        expect(listener3).toHaveBeenCalledTimes(1)
+        expect(listener3).toHaveBeenCalledWith('arg-bar', 152)
+
+        await wait(1.5 * POLL_INTERVAL)
+        expect(contract.queryFilter).toHaveBeenNthCalledWith(2, [[EVENT_NAME_1, EVENT_NAME_2]], 155 + 1)
+
+        poller.off(EVENT_NAME_1, listener1)
+        poller.off(EVENT_NAME_2, listener2)
+        poller.off(EVENT_NAME_2, listener3)
     })
 })
