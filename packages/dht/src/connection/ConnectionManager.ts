@@ -425,8 +425,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         if (!this.acceptNewConnection(connection)) {
             return false
         }
-        connection.on('connected', (peerDescriptor: PeerDescriptor, connection: IConnection) => this.onConnected(peerDescriptor, connection))
-        connection.on('disconnected', (gracefulLeave: boolean) => this.onDisconnected(connection.getPeerDescriptor(), gracefulLeave))
+        connection.once('connected', (peerDescriptor: PeerDescriptor, connection: IConnection) => this.onConnected(peerDescriptor, connection))
+        connection.once('disconnected', (gracefulLeave: boolean) => this.onDisconnected(connection.getPeerDescriptor(), gracefulLeave))
         return true
     }
 
@@ -462,15 +462,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         })
 
         return true
-    }
-
-    private onHandshakeCompleted(peerDescriptor: PeerDescriptor, connection: IConnection) {
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
-        if (this.endpoints.has(nodeId)) {
-            this.onConnected(peerDescriptor, connection)
-        } else {
-            logger.fatal(`onHandshakeCompleted() did not have the id ${nodeId}`)
-        }
     }
 
     private async closeConnection(peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string): Promise<void> {
