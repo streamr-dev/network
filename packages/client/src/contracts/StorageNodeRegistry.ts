@@ -21,7 +21,7 @@ export interface StorageNodeMetadata {
 export class StorageNodeRegistry {
 
     private nodeRegistryContract?: NodeRegistryContract
-    private readonly nodeRegistryContractsReadonly: NodeRegistryContract
+    private readonly nodeRegistryContractReadonly: NodeRegistryContract
     private readonly contractFactory: ContractFactory
     private readonly rpcProviderSource: RpcProviderSource
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
@@ -37,7 +37,7 @@ export class StorageNodeRegistry {
         this.rpcProviderSource = rpcProviderSource
         this.config = config
         this.authentication = authentication
-        this.nodeRegistryContractsReadonly = this.contractFactory.createReadContract(
+        this.nodeRegistryContractReadonly = this.contractFactory.createReadContract(
             toEthereumAddress(this.config.contracts.storageNodeRegistryChainAddress),
             NodeRegistryArtifact,
             rpcProviderSource.getProvider(),
@@ -68,7 +68,7 @@ export class StorageNodeRegistry {
     }
 
     async getStorageNodeMetadata(nodeAddress: EthereumAddress): Promise<StorageNodeMetadata> {
-        const [ resultNodeAddress, metadata ] = await this.nodeRegistryContractsReadonly.getNode(nodeAddress)
+        const [ resultNodeAddress, metadata ] = await this.nodeRegistryContractReadonly.getNode(nodeAddress)
         const NODE_NOT_FOUND = '0x0000000000000000000000000000000000000000'
         if (resultNodeAddress !== NODE_NOT_FOUND) {
             return JSON.parse(metadata)

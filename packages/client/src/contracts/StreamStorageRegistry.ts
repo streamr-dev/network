@@ -37,7 +37,7 @@ interface NodeQueryResult {
 export class StreamStorageRegistry {
 
     private streamStorageRegistryContract?: StreamStorageRegistryContract
-    private readonly streamStorageRegistryContractsReadonly: StreamStorageRegistryContract
+    private readonly streamStorageRegistryContractReadonly: StreamStorageRegistryContract
     private readonly streamFactory: StreamFactory
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly contractFactory: ContractFactory
@@ -67,7 +67,7 @@ export class StreamStorageRegistry {
         this.config = config
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
-        this.streamStorageRegistryContractsReadonly = this.contractFactory.createReadContract(
+        this.streamStorageRegistryContractReadonly = this.contractFactory.createReadContract(
             toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress),
             StreamStorageRegistryArtifact,
             rpcProviderSource.getProvider(),
@@ -140,7 +140,7 @@ export class StreamStorageRegistry {
     async isStoredStream(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.logger.debug('Check if stream is stored in storage node', { streamId, nodeAddress })
-        return await this.streamStorageRegistryContractsReadonly.isStorageNodeOf(streamId, nodeAddress)
+        return await this.streamStorageRegistryContractReadonly.isStorageNodeOf(streamId, nodeAddress)
     }
 
     async getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {

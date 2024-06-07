@@ -71,7 +71,7 @@ const CACHE_KEY_SEPARATOR = '|'
 export class StreamRegistry {
 
     private streamRegistryContract?: ObservableContract<StreamRegistryContract>
-    private streamRegistryContractsReadonly: ObservableContract<StreamRegistryContract>
+    private streamRegistryContractReadonly: ObservableContract<StreamRegistryContract>
     private readonly streamFactory: StreamFactory
     private readonly contractFactory: ContractFactory
     private readonly rpcProviderSource: RpcProviderSource
@@ -107,7 +107,7 @@ export class StreamRegistry {
         this.config = config
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
-        this.streamRegistryContractsReadonly = this.contractFactory.createReadContract<StreamRegistryContract>(
+        this.streamRegistryContractReadonly = this.contractFactory.createReadContract<StreamRegistryContract>(
             toEthereumAddress(this.config.contracts.streamRegistryChainAddress),
             StreamRegistryArtifact,
             this.rpcProviderSource.getProvider(),
@@ -254,13 +254,13 @@ export class StreamRegistry {
     private async streamExistsOnChain(streamIdOrPath: string): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.logger.debug('Check if stream exists on chain', { streamId })
-        return this.streamRegistryContractsReadonly.exists(streamId)
+        return this.streamRegistryContractReadonly.exists(streamId)
     }
 
     private async getStream_nonCached(streamId: StreamID): Promise<Stream> {
         let metadata: string
         try {
-            metadata = await this.streamRegistryContractsReadonly.getStreamMetadata(streamId)
+            metadata = await this.streamRegistryContractReadonly.getStreamMetadata(streamId)
         } catch (err) {
             return streamContractErrorProcessor(err, streamId, 'StreamRegistry')
         }
@@ -344,11 +344,11 @@ export class StreamRegistry {
         const streamId = await this.streamIdBuilder.toStreamID(query.streamId)
         const permissionType = streamPermissionToSolidityType(query.permission)
         if (isPublicPermissionQuery(query)) {
-            return this.streamRegistryContractsReadonly.hasPublicPermission(streamId, permissionType)
+            return this.streamRegistryContractReadonly.hasPublicPermission(streamId, permissionType)
         } else if (query.allowPublic) {
-            return this.streamRegistryContractsReadonly.hasPermission(streamId, toEthereumAddress(query.user), permissionType)
+            return this.streamRegistryContractReadonly.hasPermission(streamId, toEthereumAddress(query.user), permissionType)
         } else {
-            return this.streamRegistryContractsReadonly.hasDirectPermission(streamId, toEthereumAddress(query.user), permissionType)
+            return this.streamRegistryContractReadonly.hasDirectPermission(streamId, toEthereumAddress(query.user), permissionType)
         }
     }
 
@@ -477,7 +477,7 @@ export class StreamRegistry {
 
     private async isStreamPublisher_nonCached(streamId: StreamID, userAddress: EthereumAddress): Promise<boolean> {
         try {
-            return await this.streamRegistryContractsReadonly.hasPermission(streamId, userAddress, streamPermissionToSolidityType(StreamPermission.PUBLISH))
+            return await this.streamRegistryContractReadonly.hasPermission(streamId, userAddress, streamPermissionToSolidityType(StreamPermission.PUBLISH))
         } catch (err) {
             return streamContractErrorProcessor(err, streamId, 'StreamPermission')
         }
@@ -485,7 +485,7 @@ export class StreamRegistry {
 
     private async isStreamSubscriber_nonCached(streamId: StreamID, userAddress: EthereumAddress): Promise<boolean> {
         try {
-            return await this.streamRegistryContractsReadonly.hasPermission(streamId, userAddress, streamPermissionToSolidityType(StreamPermission.SUBSCRIBE))
+            return await this.streamRegistryContractReadonly.hasPermission(streamId, userAddress, streamPermissionToSolidityType(StreamPermission.SUBSCRIBE))
         } catch (err) {
             return streamContractErrorProcessor(err, streamId, 'StreamPermission')
         }
