@@ -432,13 +432,16 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
 
     private acceptNewConnection(newConnection: PendingConnection): boolean {
         const nodeId = getNodeIdFromPeerDescriptor(newConnection.getPeerDescriptor())
-        logger.trace(nodeId + ' acceptIncomingConnection()')
+        logger.trace(nodeId + ' acceptNewConnection()')
         if (this.endpoints.has(nodeId)) {
             if (getOfferer(getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor()), nodeId) === 'remote') {
                 let buffer: OutputBuffer | undefined
                 const endpoint = this.endpoints.get(nodeId)!
+                // This is a rare occurance but it does happen from time to time.
+                // Could be related to WS client connections not realizing that they have been disconnected.
+                // Makes refactoring duplicate connection handling to the connectors very difficult. 
                 if (this.endpoints.get(nodeId)!.connected) {
-                    logger.fatal('REPLACING CONNECTED CONNECTION', { nodeId })
+                    logger.debug('replacing connected connection', { nodeId })
                     buffer = new OutputBuffer()
                 } else {
                     buffer = (endpoint as ConnectingEndpoint).buffer
@@ -454,7 +457,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             }
         }
 
-        logger.trace(nodeId + ' added to connections at acceptIncomingConnection')
+        logger.trace(nodeId + ' added to connections at acceptNewConnection')
         this.endpoints.set(nodeId, {
             connected: false,
             buffer: new OutputBuffer(),
