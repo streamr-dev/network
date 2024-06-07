@@ -42,19 +42,19 @@ export class ChainEventPoller {
         this.abortController = abortController
         setImmediate(async () => {
             const logger = new Logger(module, { traceId: randomString(6) })
-            logger.info('Start polling', { POLL_INTERVAL })  // TODO debug level
+            logger.debug('Start polling', { POLL_INTERVAL })
             let fromBlock: number | undefined = undefined
             do {
                 try {
                     fromBlock = await sample(this.getProviders())!.getBlockNumber()
                 } catch (err) {
-                    logger.info('Failed to query block number', { err })  // TODO debug level
+                    logger.debug('Failed to query block number', { err })
                     await wait(BLOCK_NUMBER_QUERY_DELAY)
                 }
             } while (fromBlock === undefined)
             await scheduleAtInterval(async () => {
                 const eventNames = [...this.listeners.keys()]
-                logger.info('Polling', { fromBlock, eventNames })  // TODO debug level
+                logger.debug('Polling', { fromBlock, eventNames })
                 try {
                     const events = (await withTimeout(
                         sample(this.contracts)!.queryFilter([eventNames], fromBlock),
@@ -62,7 +62,7 @@ export class ChainEventPoller {
                         undefined,
                         this.abortController!.signal
                     )) as EventLog[]
-                    logger.info('Polled', { fromBlock, events: events.length })  // TODO debug level
+                    logger.debug('Polled', { fromBlock, events: events.length })
                     if ((events.length > 0) && (!abortController.signal.aborted)) {
                         for (const event of events) {
                             const listeners = this.listeners.get(event.fragment.name)
@@ -73,7 +73,7 @@ export class ChainEventPoller {
                         fromBlock = events[0].blockNumber + 1
                     }
                 } catch (err) {
-                    logger.info('Failed to poll', { err, eventNames, fromBlock })  // TODO debug level
+                    logger.debug('Failed to poll', { err, eventNames, fromBlock })
                 }
 
             }, POLL_INTERVAL, true, abortController.signal)
