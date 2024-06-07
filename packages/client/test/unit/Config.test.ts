@@ -23,6 +23,7 @@ describe('Config', () => {
                     contracts: {
                         streamRegistryChainRPCs: {
                             chainId: 123,
+                            name: 'foo',
                             rpcs: []
                         }
                     }

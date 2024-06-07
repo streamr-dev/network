@@ -500,7 +500,8 @@
             "additionalProperties": false,
             "required": [
                 "rpcs",
-                "chainId"
+                "chainId",
+                "name"
             ],
             "properties": {
                 "chainId": {
