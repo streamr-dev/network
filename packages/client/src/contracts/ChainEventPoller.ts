@@ -5,7 +5,7 @@ import { sample } from 'lodash'
 type EventName = string
 type Listener = (...args: any[]) => void
 
-const BLOCK_NUMBER_QUERY_DELAY = 1000
+const BLOCK_NUMBER_QUERY_RETRY_DELAY = 1000
 
 export class ChainEventPoller {
 
@@ -51,7 +51,7 @@ export class ChainEventPoller {
                     fromBlock = await sample(this.getProviders())!.getBlockNumber()
                 } catch (err) {
                     logger.debug('Failed to query block number', { err })
-                    await wait(BLOCK_NUMBER_QUERY_DELAY)
+                    await wait(BLOCK_NUMBER_QUERY_RETRY_DELAY)
                 }
             } while (fromBlock === undefined)
             await scheduleAtInterval(async () => {
