@@ -14,6 +14,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
+- Restructured `contracts` config structure (https://github.com/streamr-dev/network/pull/2581) 
+
 #### Deprecated
 
 #### Removed
