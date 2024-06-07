@@ -61,15 +61,15 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                 return hexToBinary(sig)
             }, 1),
             getStreamRegistryChainSigner: async () => {
-                if (config.contracts.streamRegistryChainRPCs.chainId === undefined) {
-                    throw new Error('Streamr streamRegistryChainRPC not configured (with chainId) in the StreamrClient options!')
+                if (config.contracts.ethereumNetwork.chainId === undefined) {
+                    throw new Error('Streamr chainId not configuredin the StreamrClient options!')
                 }
-                const { chainId } = await provider.getNetwork()
-                if (chainId !== BigInt(config.contracts.streamRegistryChainRPCs.chainId)) {
-                    const sideChainId = config.contracts.streamRegistryChainRPCs.chainId
+                const expectedChainId = config.contracts.ethereumNetwork.chainId
+                const actualChainId = (await provider.getNetwork()).chainId
+                if (actualChainId !== BigInt(expectedChainId)) {
                     throw new Error(
                         // eslint-disable-next-line max-len
-                        `Please connect the custom authentication provider to Ethereum blockchain with chainId ${sideChainId}: current chainId is ${chainId}`
+                        `Please connect the custom authentication provider to Ethereum blockchain with chainId ${expectedChainId}: current chainId is ${actualChainId}`
                     )
                 }
                 return signer

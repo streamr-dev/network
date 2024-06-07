@@ -22,13 +22,9 @@ describe('contract call error', () => {
         const client = new StreamrClient({
             ...CONFIG_TEST,
             contracts: {
-                streamRegistryChainRPCs: {
-                    name: 'streamr',
-                    chainId: 8997,
-                    rpcs: [{
-                        url: 'http://mock.test'
-                    }]
-                }
+                rpcs: [{
+                    url: 'http://mock.test'
+                }]
             }
         })
         await expect(() => client.createStream('/path')).rejects.toThrow(

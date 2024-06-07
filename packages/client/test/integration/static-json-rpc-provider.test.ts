@@ -70,13 +70,12 @@ describe('use StaticJsonRpcProvider', () => {
         const server = await startServer()
         const client = new StreamrClient({
             contracts: {
-                streamRegistryChainRPCs: {
-                    name: 'mock-name',
-                    chainId: MOCK_CHAIN_ID,
-                    rpcs: [{
-                        url: `http://localhost:${SERVER_PORT}`
-                    }]
-                }
+                ethereumNetwork: {
+                    chainId: MOCK_CHAIN_ID
+                },
+                rpcs: [{
+                    url: `http://localhost:${SERVER_PORT}`
+                }]
             }
         })
 
