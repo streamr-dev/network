@@ -74,7 +74,6 @@ export class StreamStorageRegistry {
             'streamStorageRegistry'
         ) as StreamStorageRegistryContract
         const chainEventPoller = new ChainEventPoller(this.rpcProviderSource.getEventProviders().map((p) => {
-            // TODO would it make sense to use createDecoratedContract to get logging? or would it do that
             return new Contract(toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress), StreamStorageRegistryArtifact, p)
         // eslint-disable-next-line no-underscore-dangle
         }), config.contracts.pollInterval, config._timeouts.jsonRpcTimeout)
