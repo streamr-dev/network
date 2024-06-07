@@ -6,7 +6,6 @@ type EventName = string
 type Listener = (...args: any[]) => void
 
 const BLOCK_NUMBER_QUERY_DELAY = 1000
-const TIMEOUT = 10 * 1000 // TODO what would be a good value? create a config option?
 
 export class ChainEventPoller {
 
@@ -14,12 +13,14 @@ export class ChainEventPoller {
     private abortController?: AbortController
     private contracts: Contract[]
     private pollInterval: number
+    private timeout: number
 
     // all these contracts are actually the same chain contract (i.e. StreamRegistry), but have different providers
     // connected to them
-    constructor(contracts: Contract[], pollInterval: number) {
+    constructor(contracts: Contract[], pollInterval: number, timeout: number) {
         this.contracts = contracts
         this.pollInterval = pollInterval
+        this.timeout = timeout
     }
 
     on(eventName: string, listener: Listener): void {
@@ -59,7 +60,7 @@ export class ChainEventPoller {
                 try {
                     const events = (await withTimeout(
                         sample(this.contracts)!.queryFilter([eventNames], fromBlock),
-                        TIMEOUT,
+                        this.timeout,
                         undefined,
                         this.abortController!.signal
                     )) as EventLog[]

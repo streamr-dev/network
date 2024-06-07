@@ -10,6 +10,7 @@ import { CHAIN_ID, ErrorState, FakeJsonRpcServer, JsonRpcRequest } from '../test
 
 const SERVER_COUNT = 3
 const POLL_INTERVAL = 500
+const TIMEOUT = 2000
 
 describe('use JsonRpcProvider', () => {
 
@@ -40,6 +41,9 @@ describe('use JsonRpcProvider', () => {
                     }))
                 },
                 pollInterval: POLL_INTERVAL
+            },
+            _timeouts: {
+                jsonRpcTimeout: TIMEOUT
             }
         })
     })
@@ -87,7 +91,7 @@ describe('use JsonRpcProvider', () => {
         it('uses another server, if server doesn\'t respond', async () => {
             const requests = await runErrorTest('doNotRespond')
             expect(requests).toHaveLength(QUORUM + 1)
-        }, 30 * 1000)
+        })
 
         it('reading information from contract doesn\'t cause multiple chainId requests', async () => {
             await client.isStreamPublisher('/stream1', randomEthereumAddress())
@@ -147,7 +151,7 @@ describe('use JsonRpcProvider', () => {
         })
         
         it('continues polling, if server doesn\'t respond', async () => {
-            await runErrorTest('doNotRespond', 10 * 1000)  // the timeout constant in ChainEventPoller (TODO configure)
-        }, 30 * 1000)
+            await runErrorTest('doNotRespond', TIMEOUT)
+        })
     })
 })

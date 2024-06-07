@@ -29,7 +29,7 @@ describe('ChainEventPoller', () => {
                 }
             }
         } as unknown as Contract
-        const poller = new ChainEventPoller([contract], POLL_INTERVAL)
+        const poller = new ChainEventPoller([contract], POLL_INTERVAL, 10 * 1000)
 
         const listener1 = jest.fn()
         poller.on(EVENT_NAME, listener1)
