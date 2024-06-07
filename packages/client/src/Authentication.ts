@@ -69,7 +69,7 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                 if (actualChainId !== BigInt(expectedChainId)) {
                     throw new Error(
                         // eslint-disable-next-line max-len
-                        `Please connect the custom authentication provider to Ethereum blockchain with chainId ${expectedChainId}: current chainId is ${actualChainId}`
+                        `Please connect the custom authentication provider with chainId ${expectedChainId} (current chainId is ${actualChainId})`
                     )
                 }
                 return signer
