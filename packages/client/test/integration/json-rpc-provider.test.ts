@@ -33,13 +33,12 @@ describe('use JsonRpcProvider', () => {
         }))
         client = new StreamrClient({
             contracts: {
-                streamRegistryChainRPCs: {
-                    name: 'mock-name',
-                    chainId: CHAIN_ID,
-                    rpcs: servers.map((server) => ({
-                        url: `http://localhost:${server.getPort()}`
-                    }))
+                ethereumNetwork: {
+                    chainId: CHAIN_ID
                 },
+                rpcs: servers.map((server) => ({
+                    url: `http://localhost:${server.getPort()}`
+                })),
                 pollInterval: POLL_INTERVAL
             },
             _timeouts: {

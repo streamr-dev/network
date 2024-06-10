@@ -14,6 +14,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
+- Restructured `contracts` config structure (https://github.com/streamr-dev/network/pull/2581) 
+
 #### Deprecated
 
 #### Removed
@@ -34,6 +36,8 @@ Changes before Tatum release are not documented in this file.
 #### Removed
 
 #### Fixed
+
+- Fix memory leak in SubscriberPlugin (https://github.com/streamr-dev/network/pull/2578)
 
 #### Security
 

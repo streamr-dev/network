@@ -19,7 +19,7 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
 
     private async subscribeToStreamParts(streamrClient: StreamrClient): Promise<void> {
         this.subscriptions = await pTransaction(this.pluginConfig.streams.map(({ streamId, streamPartition }) => (
-            streamrClient.subscribe({ id: streamId, partition: streamPartition, raw: true })
+            streamrClient.subscribe({ id: streamId, partition: streamPartition, raw: true }, () => {})
         )), (sub) => sub.unsubscribe())
     }
 

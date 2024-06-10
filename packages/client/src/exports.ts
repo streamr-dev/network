@@ -26,7 +26,6 @@ export { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './contracts
 export {
     StreamrClientConfig,
     ConnectionInfo,
-    ChainConnectionInfo,
     EthereumNetworkConfig,
     ProviderAuthConfig,
     PrivateKeyAuthConfig,
