@@ -14,7 +14,7 @@ export type SignerWithProvider = AbstractSigner<Provider>
 export interface Authentication {
     // always in lowercase
     getAddress: () => Promise<EthereumAddress>
-    createMessageSignature: (payload: Uint8Array) => Promise<Uint8Array>
+    createMessageSignature: (payload: Uint8Array) => Promise<Uint8Array> // TODO: rename signWithWallet ?
     getStreamRegistryChainSigner: (rpcProviderFactory: RpcProviderFactory) => Promise<SignerWithProvider>
 }
 

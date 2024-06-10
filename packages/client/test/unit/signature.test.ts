@@ -13,9 +13,9 @@ import {
 import { hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import { mock, MockProxy } from 'jest-mock-extended'
-import { createSignaturePayload } from '../../src/signature/signature'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
+import { createSignaturePayload } from '../../src/signature/createSignaturePayload'
 
 describe('signature', () => {
     let erc1271ContractFacade: MockProxy<ERC1271ContractFacade>
