@@ -223,14 +223,9 @@ export interface ConnectionInfo {
     url: string
 }
 
-export interface ChainConnectionInfo {
-    rpcs: ConnectionInfo[]
-    chainId: number
-    name: string
-}
-
 // these should come from ETH-184 config package when it's ready
 export interface EthereumNetworkConfig {
+    chainId: number
     overrides?: Overrides
     highGasPriceStrategy?: boolean
 }
@@ -388,10 +383,10 @@ export interface StreamrClientConfig {
         streamRegistryChainAddress?: string
         streamStorageRegistryChainAddress?: string
         storageNodeRegistryChainAddress?: string
-        streamRegistryChainRPCs?: ChainConnectionInfo
         // most of the above should go into ethereumNetworks configs once ETH-184 is ready
         ethereumNetwork?: EthereumNetworkConfig
         /** Some TheGraph instance, that indexes the streamr registries */
+        rpcs?: ConnectionInfo[]
         theGraphUrl?: string
         maxConcurrentCalls?: number
         pollInterval?: number
@@ -470,14 +465,14 @@ const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrCli
             }
         } as any,
         contracts: {
+            ethereumNetwork: {
+                chainId: defaults.id,
+                ...data.contracts?.ethereumNetwork
+            },
             streamRegistryChainAddress: defaults.contracts.StreamRegistry,
             streamStorageRegistryChainAddress: defaults.contracts.StreamStorageRegistry,
             storageNodeRegistryChainAddress: defaults.contracts.StorageNodeRegistry,
-            streamRegistryChainRPCs: {
-                name: defaults.name,
-                chainId: defaults.id,
-                rpcs: defaults.rpcEndpoints
-            },
+            rpcs: defaults.rpcEndpoints,
             theGraphUrl: defaults.theGraphUrl,
             ...data.contracts,
         } as any

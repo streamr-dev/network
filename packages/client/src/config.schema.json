@@ -287,6 +287,22 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+                "ethereumNetwork": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "chainId": {
+                            "type": "number"
+                        },
+                        "overrides": {
+                            "type": "object"
+                        },
+                        "highGasPriceStrategy": {
+                            "type": "boolean"
+                        }
+                    },
+                    "default": {}
+                },
                 "streamRegistryChainAddress": {
                     "type": "string",
                     "format": "ethereum-address"
@@ -299,21 +315,13 @@
                     "type": "string",
                     "format": "ethereum-address"
                 },
-                "streamRegistryChainRPCs": {
-                    "$ref": "#/definitions/chainConnectionInfoList"
-                },
-                "ethereumNetwork": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "overrides": {
-                            "type": "object"
-                        },
-                        "highGasPriceStrategy": {
-                            "type": "boolean"
-                        }
+                "rpcs": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#/definitions/rpcProviderConfig"
                     },
-                    "default": {}
+                    "minItems": 1
                 },
                 "theGraphUrl": {
                     "type": "string",
@@ -492,30 +500,6 @@
                 },
                 "headers": {
                     "type": "object"
-                }
-            }
-        },
-        "chainConnectionInfoList": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-                "rpcs",
-                "chainId"
-            ],
-            "properties": {
-                "chainId": {
-                    "type": "number"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "rpcs": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#/definitions/rpcProviderConfig"
-                    },
-                    "minItems": 1
                 }
             }
         },
