@@ -15,7 +15,7 @@ export class SECP256K1Algorithms implements MessageSignerAlgorithm {
 
     async sign(opts: MarkRequired<Omit<StreamMessageOptions, 'signature' | 'signatureType'>, 'messageType'>): Promise<Uint8Array> {
         const payload = createSignaturePayload(opts)
-        return this.authentication.createMessageSignature(payload)
+        return this.authentication.signWithWallet(payload)
     }
 }
 

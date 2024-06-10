@@ -14,7 +14,7 @@ export type SignerWithProvider = AbstractSigner<Provider>
 export interface Authentication {
     // always in lowercase
     getAddress: () => Promise<EthereumAddress>
-    createMessageSignature: (payload: Uint8Array) => Promise<Uint8Array> // TODO: rename signWithWallet ?
+    signWithWallet: (payload: Uint8Array) => Promise<Uint8Array>
     getStreamRegistryChainSigner: (rpcProviderFactory: RpcProviderFactory) => Promise<SignerWithProvider>
 }
 
@@ -22,7 +22,7 @@ export const createPrivateKeyAuthentication = (key: string): Authentication => {
     const address = toEthereumAddress(computeAddress(key))
     return {
         getAddress: async () => address,
-        createMessageSignature: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
+        signWithWallet: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
         getStreamRegistryChainSigner: async (rpcProviderFactory: RpcProviderFactory) => {
             const primaryProvider = rpcProviderFactory.getPrimaryProvider()
             return new Wallet(key, primaryProvider) as SignerWithProvider
@@ -53,7 +53,7 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                     throw new Error('no addresses connected and selected in the custom authentication provider')
                 }
             }),
-            createMessageSignature: pLimitFn(async (payload: Uint8Array) => {
+            signWithWallet: pLimitFn(async (payload: Uint8Array) => {
                 // sign one at a time & wait a moment before asking for next signature
                 // otherwise MetaMask extension may not show the prompt window
                 const sig = await (await signer).signMessage(payload)

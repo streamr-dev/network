@@ -70,7 +70,7 @@ const signAuthMessage = async (authentication: Authentication) => {
         chainId: 1
     })
     const messageToSign = siweMessage.prepareMessage()
-    const signature = await authentication.createMessageSignature(Buffer.from(messageToSign))
+    const signature = await authentication.signWithWallet(Buffer.from(messageToSign))
     return {
         sig: signature,
         derivedVia: 'web3.eth.personal.sign',
