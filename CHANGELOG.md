@@ -20,6 +20,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Removed
 
+- Removed obsolete RPC provider options (https://github.com/streamr-dev/network/pull/2583)
+
 #### Fixed
 
 #### Security

@@ -484,22 +484,6 @@
                 "url": {
                     "type": "string",
                     "format": "uri"
-                },
-                "user": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "allowInsecureAuthentication": {
-                    "type": "boolean"
-                },
-                "timeout": {
-                    "type": "number",
-                    "default": 120000
-                },
-                "headers": {
-                    "type": "object"
                 }
             }
         },
