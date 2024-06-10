@@ -28,7 +28,7 @@ describe('signature', () => {
 
     describe('SECP256K1', () => {
 
-        it('unencrypted message passes signature validation', () => {
+        it('unencrypted message passes signature validation', async () => {
             const message = new StreamMessage({
                 messageId: new MessageID(
                     toStreamID('streamr.eth/foo/bar'),
@@ -47,10 +47,10 @@ describe('signature', () => {
                 signature: hexToBinary('e53045adef4e01f7fe11d4b3073c6053688912e4db0ee780c189cd0d128c923457e1f6cbc1e47d9cd57e115afa9eb8524288887777c1056d638b193cae112dda1b'),
                 signatureType: SignatureType.SECP256K1
             })
-            expect(() => signatureValidator.assertSignatureIsValid(message)).not.toThrow()
+            await expect(signatureValidator.assertSignatureIsValid(message)).toResolve()
         })
 
-        it('encrypted message passes signature validation', () => {
+        it('encrypted message passes signature validation', async () => {
             const message = new StreamMessage({
                 messageId : new MessageID(
                     toStreamID('streamr.eth/encrypt-test'),
@@ -71,7 +71,7 @@ describe('signature', () => {
                 groupKeyId: '4717fdf7-3cb7-4819-95fc-21122409e630-GroupKey1',
                 signatureType: SignatureType.SECP256K1
             })
-            expect(() => signatureValidator.assertSignatureIsValid(message)).not.toThrow()
+            await expect(signatureValidator.assertSignatureIsValid(message)).toResolve()
         })
 
     })
@@ -95,7 +95,7 @@ describe('signature', () => {
      */
     describe('LEGACY_SECP256K1', () => {
 
-        it('unencrypted message passes signature validation', () => {
+        it('unencrypted message passes signature validation', async () => {
             const message = new StreamMessage({
                 messageId: new MessageID(
                     toStreamID('streamr.eth/metrics/nodes/firehose/min'),
@@ -115,10 +115,10 @@ describe('signature', () => {
                 signature: hexToBinary('0x738f682914f224522030fb6520f51cff14581904d981268d182936f0f42d832935e970f775f78ccbba053261916215b7742407aae4bdd49777a7bcf8954ee8401c'),
                 signatureType: SignatureType.LEGACY_SECP256K1
             })
-            expect(() => signatureValidator.assertSignatureIsValid(message)).not.toThrow()
+            await expect(signatureValidator.assertSignatureIsValid(message)).toResolve()
         })
 
-        it('encrypted message passes signature validation', () => {
+        it('encrypted message passes signature validation', async () => {
             const message = new StreamMessage({
                 messageId : new MessageID(
                     toStreamID('0x0472476943d7570b368e2a02123321518568a66e/encrypt-test'),
@@ -139,7 +139,7 @@ describe('signature', () => {
                 groupKeyId: '4717fdf7-3cb7-4819-95fc-21122409e630-GroupKey1',
                 signatureType: SignatureType.LEGACY_SECP256K1
             })
-            expect(() => signatureValidator.assertSignatureIsValid(message)).not.toThrow()
+            await expect(signatureValidator.assertSignatureIsValid(message)).toResolve()
         })
     })
 
