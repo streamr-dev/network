@@ -52,10 +52,6 @@ export class FakeJsonRpcServer {
                 if (errorState !== 'doNotRespond') {
                     httpResponse.sendStatus(errorState.httpStatus)
                 } else {
-                    // Electron will freeze on response#end for connections have been de-facto closed, so we make sure to remove them here
-                    httpRequest.on('close', () => {
-                        this.pendingResponses = this.pendingResponses.filter((r) => r !== httpResponse)
-                    })
                     this.pendingResponses.push(httpResponse)
                 }
                 return
@@ -131,7 +127,8 @@ export class FakeJsonRpcServer {
     }
 
     async stop(): Promise<void> {
-        for (const r of this.pendingResponses) {
+        const closableResponses = this.pendingResponses.filter((r) => !r.closed)
+        for (const r of closableResponses) {
             await promisify(r.end.bind(r))()
         }
         this.httpServer!.close()
