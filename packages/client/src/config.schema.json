@@ -323,6 +323,10 @@
                     },
                     "minItems": 1
                 },
+                "rpcQuorum": {
+                    "type": "number",
+                    "default": 2
+                },
                 "theGraphUrl": {
                     "type": "string",
                     "format": "uri"

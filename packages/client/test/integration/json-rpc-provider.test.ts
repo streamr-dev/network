@@ -3,7 +3,6 @@ import 'reflect-metadata'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { wait, waitForCondition } from '@streamr/utils'
 import { range, sortBy } from 'lodash'
-import { QUORUM } from '../../src/RpcProviderSource'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamCreationEvent } from '../../src/contracts/StreamRegistry'
 import { CHAIN_ID, ErrorState, FakeJsonRpcServer, JsonRpcRequest } from '../test-utils/FakeJsonRpcServer'
@@ -11,6 +10,7 @@ import { CHAIN_ID, ErrorState, FakeJsonRpcServer, JsonRpcRequest } from '../test
 const SERVER_COUNT = 3
 const POLL_INTERVAL = 500
 const TIMEOUT = 2000
+const QUORUM = 2
 
 describe('use JsonRpcProvider', () => {
 
@@ -39,6 +39,7 @@ describe('use JsonRpcProvider', () => {
                 rpcs: servers.map((server) => ({
                     url: `http://localhost:${server.getPort()}`
                 })),
+                rpcQuorum: QUORUM,
                 pollInterval: POLL_INTERVAL
             },
             _timeouts: {

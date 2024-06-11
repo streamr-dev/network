@@ -385,8 +385,9 @@ export interface StreamrClientConfig {
         storageNodeRegistryChainAddress?: string
         // most of the above should go into ethereumNetworks configs once ETH-184 is ready
         ethereumNetwork?: EthereumNetworkConfig
-        /** Some TheGraph instance, that indexes the streamr registries */
         rpcs?: ConnectionInfo[]
+        rpcQuorum?: number
+        /** Some TheGraph instance, that indexes the streamr registries */
         theGraphUrl?: string
         maxConcurrentCalls?: number
         pollInterval?: number

@@ -5,8 +5,6 @@ import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { LoggingJsonRpcProvider } from './utils/LoggingJsonRpcProvider'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 
-export const QUORUM = 2
-
 function isDevChain(config: Pick<StrictStreamrClientConfig, 'contracts'>): boolean {
     return config.contracts.ethereumNetwork.chainId === CHAIN_CONFIG.dev2.id
 }
@@ -33,7 +31,7 @@ export class RpcProviderSource {
         if (this.provider === undefined) {
             const providers = this.getSubProviders()
             this.provider = new FallbackProvider(providers, this.config.contracts.ethereumNetwork.chainId, {
-                quorum: Math.min(QUORUM, this.config.contracts.rpcs.length),
+                quorum: Math.min(this.config.contracts.rpcQuorum, this.config.contracts.rpcs.length),
                 cacheTimeout: formJsonRpcApiProviderOptions(this.config).cacheTimeout
             })
         }
