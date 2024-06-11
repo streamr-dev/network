@@ -1,5 +1,5 @@
 import type { Provider } from 'ethers'
-import { FallbackProvider, FetchRequest, JsonRpcProvider } from 'ethers'
+import { FallbackProvider, FetchRequest } from 'ethers'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { LoggingJsonRpcProvider } from './utils/LoggingJsonRpcProvider'
@@ -54,7 +54,7 @@ export class RpcProviderSource {
             // eslint-disable-next-line no-underscore-dangle
             f.timeout = this.config._timeouts.jsonRpcTimeout
             const opts = formJsonRpcApiProviderOptions(this.config)
-            return new JsonRpcProvider(f, this.config.contracts.ethereumNetwork.chainId, opts)
+            return new LoggingJsonRpcProvider(f, this.config.contracts.ethereumNetwork.chainId, opts)
         })
     }
 }
