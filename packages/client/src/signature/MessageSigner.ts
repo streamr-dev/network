@@ -35,8 +35,7 @@ export class MessageSigner {
         return new StreamMessage({
             ...opts,
             signature,
-            signatureType,
-            content: opts.content
+            signatureType
         })
     }
 }
