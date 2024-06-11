@@ -73,7 +73,7 @@ export class StreamStorageRegistry {
             rpcProviderSource.getProvider(),
             'streamStorageRegistry'
         ) as StreamStorageRegistryContract
-        const chainEventPoller = new ChainEventPoller(this.rpcProviderSource.getEventProviders().map((p) => {
+        const chainEventPoller = new ChainEventPoller(this.rpcProviderSource.getSubProviders().map((p) => {
             return new Contract(toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress), StreamStorageRegistryArtifact, p)
         // eslint-disable-next-line no-underscore-dangle
         }), config.contracts.pollInterval, config._timeouts.jsonRpcTimeout)

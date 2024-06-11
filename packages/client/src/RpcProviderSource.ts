@@ -1,5 +1,5 @@
 import type { Provider } from 'ethers'
-import { FallbackProvider, FetchRequest } from 'ethers'
+import { AbstractProvider, FallbackProvider, FetchRequest } from 'ethers'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { LoggingJsonRpcProvider } from './utils/LoggingJsonRpcProvider'
@@ -23,6 +23,7 @@ const formJsonRpcApiProviderOptions = (config: Pick<StrictStreamrClientConfig, '
 export class RpcProviderSource {
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     private provider?: Provider
+    private subProviders?: AbstractProvider[]
 
     constructor(@inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>) {
         this.config = config
@@ -30,31 +31,30 @@ export class RpcProviderSource {
 
     getProvider(): Provider {
         if (this.provider === undefined) {
-            const opts = formJsonRpcApiProviderOptions(this.config)
-            const providers = this.config.contracts.rpcs.map((c) => {
-                const fetchRequest = new FetchRequest(c.url)
-                fetchRequest.retryFunc = async () => false
-                // eslint-disable-next-line no-underscore-dangle
-                fetchRequest.timeout = this.config._timeouts.jsonRpcTimeout
-                return new LoggingJsonRpcProvider(fetchRequest, this.config.contracts.ethereumNetwork.chainId, opts)
-            })
+            const providers = this.getSubProviders()
             this.provider = new FallbackProvider(providers, this.config.contracts.ethereumNetwork.chainId, {
                 quorum: Math.min(QUORUM, this.config.contracts.rpcs.length),
-                cacheTimeout: opts.cacheTimeout
+                cacheTimeout: formJsonRpcApiProviderOptions(this.config).cacheTimeout
             })
         }
         return this.provider
     }
 
-    // TODO reduce copy-paste?
-    getEventProviders(): Provider[] {
-        return this.config.contracts.rpcs.map((c) => {
-            const f = new FetchRequest(c.url)
-            f.retryFunc = async () => false
-            // eslint-disable-next-line no-underscore-dangle
-            f.timeout = this.config._timeouts.jsonRpcTimeout
-            const opts = formJsonRpcApiProviderOptions(this.config)
-            return new LoggingJsonRpcProvider(f, this.config.contracts.ethereumNetwork.chainId, opts)
-        })
+    /**
+     * Use this method only if you need access each provider separately. In most cases it is better to use
+     * the `getProvider` method as it provides better fail-safety.
+     */
+    getSubProviders(): AbstractProvider[] {
+        if (this.subProviders === undefined) {
+            this.subProviders = this.config.contracts.rpcs.map((c) => {
+                const f = new FetchRequest(c.url)
+                f.retryFunc = async () => false
+                // eslint-disable-next-line no-underscore-dangle
+                f.timeout = this.config._timeouts.jsonRpcTimeout
+                const opts = formJsonRpcApiProviderOptions(this.config)
+                return new LoggingJsonRpcProvider(f, this.config.contracts.ethereumNetwork.chainId, opts)
+            })
+        }
+        return this.subProviders
     }
 }

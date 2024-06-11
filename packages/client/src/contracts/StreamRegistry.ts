@@ -113,7 +113,7 @@ export class StreamRegistry {
             this.rpcProviderSource.getProvider(),
             'streamRegistry'
         )
-        const chainEventPoller = new ChainEventPoller(this.rpcProviderSource.getEventProviders().map((p) => {
+        const chainEventPoller = new ChainEventPoller(this.rpcProviderSource.getSubProviders().map((p) => {
             return new Contract(toEthereumAddress(this.config.contracts.streamRegistryChainAddress), StreamRegistryArtifact, p)
         // eslint-disable-next-line no-underscore-dangle
         }), config.contracts.pollInterval, config._timeouts.jsonRpcTimeout)
