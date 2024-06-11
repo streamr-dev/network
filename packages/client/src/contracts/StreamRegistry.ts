@@ -9,8 +9,8 @@ import { getEthersOverrides } from '../ethereumUtils'
 import { Stream, StreamMetadata } from '../Stream'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamrClientError } from '../StreamrClientError'
-import type { StreamRegistryV4 as StreamRegistryContract } from '../ethereumArtifacts/StreamRegistryV4'
-import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV4Abi.json'
+import type { StreamRegistryV5 as StreamRegistryContract } from '../ethereumArtifacts/StreamRegistryV5'
+import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV5Abi.json'
 import { StreamrClientEventEmitter } from '../events'
 import {
     ChainPermissions,
