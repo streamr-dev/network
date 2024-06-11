@@ -44,6 +44,8 @@ export abstract class AbstractWebsocketClientConnection extends EventEmitter<Con
                 logger.trace(`Sending data with size ${data.byteLength}`)
                 this.socket?.send(data)
             } else {
+                // Could this throw for faster feedback on RPC calls?
+                // Currently this log line is seen if a connection is closing but the disconnected event has not been emitted yet.
                 logger.debug('Tried to send data on a non-open connection', { 
                     id: this.connectionId,
                     readyState: this.socket!.readyState,

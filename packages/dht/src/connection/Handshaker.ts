@@ -33,10 +33,10 @@ export const createOutgoingHandshaker = (
     const handshakeFailedListener = (error?: HandshakeError) => {
         if (error === HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR || error === HandshakeError.UNSUPPORTED_VERSION) {
             pendingConnection.close(false)
+            stopHandshaker()
         } else {
-            pendingConnection.destroy()
+            // Wait for the other end to close the connection
         }
-        stopHandshaker()
     }
     const handshakeCompletedListener = (peerDescriptor: PeerDescriptor) => {
         logger.trace('handshake completed for outgoing connection, ' + getNodeIdFromPeerDescriptor(peerDescriptor))

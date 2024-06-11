@@ -1,10 +1,12 @@
 import EventEmitter from 'eventemitter3'
 import { 
+    acceptHandshake,
     createHandshakeRequest,
     createHandshakeResponse,
     createIncomingHandshaker,
     createOutgoingHandshaker,
-    Handshaker
+    Handshaker,
+    rejectHandshake
 } from '../../src/connection/Handshaker'
 import { ConnectionEvents, IConnection } from '../../src/connection/IConnection'
 import { createMockPeerDescriptor } from '../utils/utils'
@@ -22,11 +24,13 @@ describe('Handshaker', () => {
     let mockConnectionClose: () => void
     let mockPendingConnectionClose: () => void
     let mockPendingConnectionDestroy: () => void
+    let mockConnectionDestroy: () => void
 
     beforeEach(() => {
         mockOnHandshakeCompleted = jest.fn()
         mockPendingConnectionClose = jest.fn()
         mockPendingConnectionDestroy = jest.fn()
+        mockConnectionDestroy = jest.fn()
         pendingConnection = new class extends EventEmitter {
             // eslint-disable-next-line class-methods-use-this
             attachConnection() { 
@@ -58,6 +62,11 @@ describe('Handshaker', () => {
             // eslint-disable-next-line class-methods-use-this
             close() {
                 mockConnectionClose()
+            }
+
+            // eslint-disable-next-line class-methods-use-this
+            destroy() {
+                mockConnectionDestroy()
             }
         } as any    
     })
@@ -102,7 +111,7 @@ describe('Handshaker', () => {
 
         it('onHandShakeFailed ', () => {
             handshaker.emit('handshakeFailed', HandshakeError.DUPLICATE_CONNECTION)
-            expect(mockPendingConnectionDestroy).toHaveBeenCalled()
+            expect(mockPendingConnectionDestroy).not.toHaveBeenCalled()
             expect(mockOnHandshakeCompleted).not.toHaveBeenCalled()
         })
 
@@ -142,6 +151,17 @@ describe('Handshaker', () => {
         it('closes connection if managed connection closes', () => {
             (pendingConnection as any).emit('disconnected')
             expect(mockConnectionClose).toHaveBeenCalledTimes(1)
+        })
+
+        it('destroys connection if handshake is rejected', () => {
+            rejectHandshake(pendingConnection, connection, handshaker, HandshakeError.DUPLICATE_CONNECTION)
+            expect(mockPendingConnectionDestroy).toHaveBeenCalled()
+            expect(mockConnectionDestroy).toHaveBeenCalled()
+        })
+
+        it('calls onHandshakeCompleted if handshake is accepted', () => {
+            acceptHandshake(handshaker, pendingConnection, connection)
+            expect(mockOnHandshakeCompleted).toHaveBeenCalled()
         })
 
     })
