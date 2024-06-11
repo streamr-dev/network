@@ -26,6 +26,7 @@ export class RpcProviderSource {
             const timeout = this.config._timeouts.jsonRpcTimeout
             const providers = this.config.contracts.rpcs.map((c) => {
                 const fetchRequest = new FetchRequest(c.url)
+                fetchRequest.retryFunc = async () => false
                 fetchRequest.timeout = timeout
                 return new LoggingJsonRpcProvider(fetchRequest, this.config.contracts.ethereumNetwork.chainId, {
                     staticNetwork: true,
@@ -45,7 +46,7 @@ export class RpcProviderSource {
     getEventProviders(): Provider[] {
         return this.config.contracts.rpcs.map((c) => {
             const f = new FetchRequest(c.url)
-            f.retryFunc = async () => false  // TODO use this line also for providers in the fallbackprovider?
+            f.retryFunc = async () => false
             return new JsonRpcProvider(f, this.config.contracts.ethereumNetwork.chainId, {
                 staticNetwork: true
             })

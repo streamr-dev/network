@@ -82,9 +82,7 @@ describe('use JsonRpcProvider', () => {
 
         it('uses another server, if server sends HTTP 429 response', async () => {
             const requests = await runErrorTest({ httpStatus: 429 })
-            expect(requests.length).toBeGreaterThanOrEqual(QUORUM + 1)
-            // seems that the FallbackProvider retries the 429 server several times before it moves on
-            expect(requests.length).toBeLessThanOrEqual(10)  // not a strict limit, just asserting that we get some finite count of requests
+            expect(requests).toHaveLength(QUORUM + 1)
         })
 
         it('uses another server, if server doesn\'t respond', async () => {
