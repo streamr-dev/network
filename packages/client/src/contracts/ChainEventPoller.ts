@@ -1,4 +1,4 @@
-import { Logger, Multimap, randomString, wait, withTimeout, scheduleAtInterval } from '@streamr/utils'
+import { Logger, Multimap, randomString, scheduleAtInterval, wait } from '@streamr/utils'
 import { Contract, EventLog, Provider } from 'ethers'
 import { sample } from 'lodash'
 
@@ -13,14 +13,12 @@ export class ChainEventPoller {
     private abortController?: AbortController
     private contracts: Contract[]
     private pollInterval: number
-    private timeout: number
 
     // all these contracts are actually the same chain contract (i.e. StreamRegistry), but have different providers
     // connected to them
-    constructor(contracts: Contract[], pollInterval: number, timeout: number) {
+    constructor(contracts: Contract[], pollInterval: number) {
         this.contracts = contracts
         this.pollInterval = pollInterval
-        this.timeout = timeout
     }
 
     on(eventName: string, listener: Listener): void {
@@ -58,12 +56,7 @@ export class ChainEventPoller {
                 const eventNames = [...this.listeners.keys()]
                 logger.debug('Polling', { fromBlock, eventNames })
                 try {
-                    const events = (await withTimeout(
-                        sample(this.contracts)!.queryFilter([eventNames], fromBlock),
-                        this.timeout,
-                        undefined,
-                        this.abortController!.signal
-                    )) as EventLog[]
+                    const events = (await sample(this.contracts)!.queryFilter([eventNames], fromBlock)) as EventLog[]
                     logger.debug('Polled', { fromBlock, events: events.length })
                     if ((events.length > 0) && (!abortController.signal.aborted)) {
                         for (const event of events) {
