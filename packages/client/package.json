@@ -94,7 +94,7 @@
     "@streamr/utils": "100.2.5-beta.1",
     "core-js": "^3.36.0",
     "env-paths": "^2.2.1",
-    "ethers": "^6.12.0",
+    "ethers": "^6.13.0",
     "eventemitter3": "^5.0.0",
     "idb": "^8.0.0",
     "lit-siwe": "^1.1.8",
