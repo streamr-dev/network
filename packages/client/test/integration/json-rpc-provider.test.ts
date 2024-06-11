@@ -49,8 +49,8 @@ describe('use JsonRpcProvider', () => {
     })
 
     afterEach(async () => {
-        await Promise.all(servers.map((server) => server.stop()))
         await client.destroy()
+        await Promise.all(servers.map((server) => server.stop()))
     })
 
     describe('read', () => {
