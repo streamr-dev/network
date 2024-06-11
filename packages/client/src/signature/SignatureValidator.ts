@@ -15,7 +15,7 @@ export class SignatureValidator {
         this.validators.set(SignatureType.LEGACY_SECP256K1, async (streamMessage) => {
             const payload = createLegacySignaturePayload(streamMessage)
             return verifySignature(streamMessage.getPublisherId(), payload, streamMessage.signature)
-        }) // TODO: good registration pattern?
+        })
         this.validators.set(SignatureType.SECP256K1, async (streamMessage) => {
             const payload = createSignaturePayload(streamMessage)
             return verifySignature(streamMessage.getPublisherId(), payload, streamMessage.signature)

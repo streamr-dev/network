@@ -15,7 +15,7 @@ export class MessageSigner {
         this.signers.set(SignatureType.LEGACY_SECP256K1, (opts) => {
             const payload = createLegacySignaturePayload(opts)
             return authentication.signWithWallet(payload)
-        }) // TODO: good registration pattern?
+        })
         this.signers.set(SignatureType.SECP256K1, (opts) => {
             const payload = createSignaturePayload(opts)
             return authentication.signWithWallet(payload)
