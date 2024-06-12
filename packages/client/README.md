@@ -5,20 +5,19 @@
 </p>
 
 <h1 align="left">
-  Streamr JavaScript Client
+  Streamr TypeScript SDK
 </h1>
 
 ![latest npm package version](https://img.shields.io/npm/v/@streamr/sdk?label=latest)
 ![GitHub stars](https://img.shields.io/github/stars/streamr-dev/network-monorepo?style=social)
 [![Discord Chat](https://img.shields.io/discord/801574432350928907.svg?label=Discord&logo=Discord&colorB=7289da)](https://discord.gg/FVtAph9cvz)
 
-The Streamr Client library allows you to easily interact with the [Streamr Network](https://streamr.network) from
-JavaScript-based environments, such as browsers and [Node.js](https://nodejs.org). The library wraps a Streamr light node for publishing and subscribing to messages. It also contains convenience functions for creating and managing streams.
+The Streamr SDK allows you to interact with the [Streamr Network](https://streamr.network) from JavaScript-based environments, such as browsers and [Node.js](https://nodejs.org). This library contains convenience functions for creating and managing streams on the Streamr Network.
 
 **[Checkout our documentation](https://docs.streamr.network) for the full usage instructions.**
 
 ## Quickstart
-The client is available on [NPM](https://www.npmjs.com/package/@streamr/sdk) and can be installed simply by:
+The SDK is available on [NPM](https://www.npmjs.com/package/@streamr/sdk) and can be installed simply by:
 
 ```
 npm install @streamr/sdk
@@ -35,24 +34,26 @@ const { StreamrClient } = require('@streamr/sdk')
 ```
 
 ## Environments and frameworks
+The Streamr SDK is built for the browser and NodeJS environments. 
+
 **NodeJS**
-- NodeJS `16.13.x` is the minimum required version. NodeJS `18.13.x`, NPM `8.x` and later versions are recommended.
+- NodeJS `18.13.x`, NPM `8.x` and later versions are recommended.
 
 **Browser (Website/WebApps)**
-- To use with react please see [streamr-client-react](https://github.com/streamr-dev/streamr-client-react)
 - For usage in the browser include the latest build, e.g. by including a `<script>` tag pointing at a CDN:
 - `<script src="https://unpkg.com/@streamr/sdk@latest/streamr-sdk.web.min.js"></script>`
+- To use within React, please see [streamr-client-react](https://github.com/streamr-dev/streamr-client-react)
 
 **Browser extension**
-- Due to the stricter security rules inside browser extensions you must use the web build version of the Streamr Client.
+- Due to the stricter security rules inside browser extensions you must use the web build version of the Streamr SDK.
 
 ## Usage
 
 ### Full API reference
-For a full API reference visit https://api-docs.streamr.network/.
+For a full API reference visit https://docs.streamr.network/usage/sdk/api/.
 
-### Client creation
-In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function [`StreamrClient.generateEthereumAccount()`](#utility-functions), which returns the address and private key of a fresh Ethereum account. A private key is not required if you are only subscribing to public streams on the Network.
+### Authentication
+In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function [`StreamrClient.generateEthereumAccount()`](#utility-functions), which returns the address and private key of a fresh Ethereum account. A private key is not required if you are subscribing to public streams on the Network.
 
 ```js
 const streamr = new StreamrClient({
@@ -88,7 +89,7 @@ console.log(stream.id) // e.g. `0x12345.../foo/bar`
 
 ### Subscribing
 ```js
-const streamId = '0x7d275b79eaed6b00eb1fe7e1174c1c6f2e711283/ethereum/gas-price'
+const streamId = 'streams.dimo.eth/firehose/weather'
 
 streamr.subscribe(streamId, (message) => {
     // handle for individual messages

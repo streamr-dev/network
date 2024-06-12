@@ -11,7 +11,7 @@ import {
     select as selectMock,
 } from '@inquirer/prompts'
 import chalk from 'chalk'
-import { Wallet, providers, utils } from 'ethers'
+import { parseEther, Wallet, JsonRpcProvider } from 'ethers'
 import { v4 as uuidMock } from 'uuid'
 
 const checkbox = checkboxMock as jest.MockedFunction<any>
@@ -48,6 +48,21 @@ jest.mock('@inquirer/prompts', () => {
     }
 })
 
+const fakeFetchResponseBody: jest.Mock<string | Error> = jest.fn(
+    () => '{"data":{"operator":{"nodes":[]}}}'
+)
+
+jest.mock('node-fetch', () => {
+    return () => {
+        const result = fakeFetchResponseBody()
+        if (typeof result === 'string') {
+            return Promise.resolve(new Response(result))
+        } else {
+            return Promise.reject(result)
+        }
+    }
+})
+
 interface AnswerMock {
     prompt: jest.MockedFunction<any>
     question: RegExp
@@ -55,13 +70,13 @@ interface AnswerMock {
     validate?: (screen: string) => void
 }
 
-const GeneratedPrivateKey =
+const GENERATED_PRIVATE_KEY =
     '0x9a2f3b058b9b457f9f954e62ea9fd2cefe2978736ffb3ef2c1782ccfad9c411d'
 
-const ImportedPrivateKey =
+const IMPORTED_PRIVATE_KEY =
     '0xb269c55ff525eac7633e80c01732d499015d5c22ce952e68272023c1d6c7f92f'
 
-const OperatorAddress = '0x54d68882d5329397928787ec496da3ba8e45c48c'
+const OPERATOR_ADDRESS = '0x54d68882d5329397928787ec496da3ba8e45c48c'
 
 describe('Config wizard', () => {
     let tempDir = mkdtempSync(path.join(os.tmpdir(), 'test-config-wizard'))
@@ -69,10 +84,6 @@ describe('Config wizard', () => {
     let storagePath = path.join(tempDir, 'config.json')
 
     const fakeBalance = jest.fn(() => '0.0')
-
-    const fakeFetchResponseBody = jest.fn(
-        () => '{"data":{"operator":{"nodes":[]}}}'
-    )
 
     beforeEach(() => {
         jest.clearAllMocks()
@@ -82,19 +93,17 @@ describe('Config wizard', () => {
         storagePath = path.join(tempDir, 'config.json')
 
         jest.spyOn(Wallet, 'createRandom').mockImplementation(
-            () => new Wallet(GeneratedPrivateKey)
-        )
-
-        jest.spyOn(global, 'fetch').mockImplementation(() =>
-            Promise.resolve(new Response(fakeFetchResponseBody()))
+            () => new Wallet(GENERATED_PRIVATE_KEY) as any
         )
 
         jest.spyOn(
-            providers.JsonRpcProvider.prototype,
+            JsonRpcProvider.prototype,
             'getBalance'
         ).mockImplementation(() =>
-            Promise.resolve(utils.parseEther(fakeBalance()))
+            Promise.resolve(parseEther(fakeBalance()))
         )
+
+        fakeFetchResponseBody.mockImplementation(() => '{"data":{"operator":{"nodes":[]}}}')
     })
 
     afterAll(() => {
@@ -125,7 +134,7 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GeneratedPrivateKey,
+                    privateKey: GENERATED_PRIVATE_KEY,
                 },
             },
         })
@@ -155,7 +164,7 @@ describe('Config wizard', () => {
         const { answers } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey({ type: 'Y' }, 'enter', {
-                find: GeneratedPrivateKey,
+                find: GENERATED_PRIVATE_KEY,
             }),
             Step.network('enter'),
             Step.rewards('abort'),
@@ -167,7 +176,7 @@ describe('Config wizard', () => {
     it('creates a config file with an imported private key', async () => {
         const { answers, logs } = await scenario([
             Step.privateKeySource({ keypress: 'down' }, 'enter'),
-            Step.providePrivateKey({ type: ImportedPrivateKey }, 'enter'),
+            Step.providePrivateKey({ type: IMPORTED_PRIVATE_KEY }, 'enter'),
             Step.network('enter'),
             Step.rewards({ type: 'n' }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
@@ -176,7 +185,7 @@ describe('Config wizard', () => {
 
         expect(answers).toEqual([
             'Import',
-            ImportedPrivateKey,
+            IMPORTED_PRIVATE_KEY,
             'polygon',
             false,
             false,
@@ -188,7 +197,7 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: ImportedPrivateKey,
+                    privateKey: IMPORTED_PRIVATE_KEY,
                 },
             },
         })
@@ -224,13 +233,13 @@ describe('Config wizard', () => {
                 { keypress: 'backspace' },
                 { keypress: 'backspace' },
                 { keypress: 'backspace' },
-                { type: ImportedPrivateKey },
+                { type: IMPORTED_PRIVATE_KEY },
                 'enter'
             ),
             Step.network('abort'),
         ])
 
-        expect(answers).toEqual(['Import', ImportedPrivateKey])
+        expect(answers).toEqual(['Import', IMPORTED_PRIVATE_KEY])
 
         expect(existsSync(storagePath)).toBe(false)
     })
@@ -241,7 +250,7 @@ describe('Config wizard', () => {
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
             Step.rewards('enter'),
-            Step.operator({ type: OperatorAddress }, 'enter'),
+            Step.operator({ type: OPERATOR_ADDRESS }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
             Step.storage({ type: storagePath }, 'enter'),
         ])
@@ -251,7 +260,7 @@ describe('Config wizard', () => {
             false,
             'polygon',
             true,
-            OperatorAddress,
+            OPERATOR_ADDRESS,
             false,
             storagePath,
         ])
@@ -261,7 +270,7 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GeneratedPrivateKey,
+                    privateKey: GENERATED_PRIVATE_KEY,
                 },
             },
         })
@@ -269,7 +278,7 @@ describe('Config wizard', () => {
         const { operator, ...otherPlugins } = config.plugins
 
         expect(operator).toMatchObject({
-            operatorContractAddress: OperatorAddress,
+            operatorContractAddress: OPERATOR_ADDRESS,
         })
 
         expect(otherPlugins).toBeEmptyObject()
@@ -306,7 +315,7 @@ describe('Config wizard', () => {
                 { keypress: 'backspace' },
                 { keypress: 'backspace' },
                 { keypress: 'backspace' },
-                { type: OperatorAddress },
+                { type: OPERATOR_ADDRESS },
                 'enter'
             ),
             Step.pubsub('abort'),
@@ -317,7 +326,7 @@ describe('Config wizard', () => {
             false,
             'polygon',
             true,
-            OperatorAddress,
+            OPERATOR_ADDRESS,
         ])
 
         expect(existsSync(storagePath)).toBe(false)
@@ -351,7 +360,7 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GeneratedPrivateKey,
+                    privateKey: GENERATED_PRIVATE_KEY,
                 },
             },
         })
@@ -409,7 +418,7 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GeneratedPrivateKey,
+                    privateKey: GENERATED_PRIVATE_KEY,
                 },
             },
         })
@@ -471,7 +480,7 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GeneratedPrivateKey,
+                    privateKey: GENERATED_PRIVATE_KEY,
                 },
             },
         })
@@ -533,7 +542,7 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GeneratedPrivateKey,
+                    privateKey: GENERATED_PRIVATE_KEY,
                 },
             },
         })
@@ -596,7 +605,7 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GeneratedPrivateKey,
+                    privateKey: GENERATED_PRIVATE_KEY,
                 },
             },
         })
@@ -659,7 +668,7 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GeneratedPrivateKey,
+                    privateKey: GENERATED_PRIVATE_KEY,
                 },
             },
         })
@@ -726,7 +735,7 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GeneratedPrivateKey,
+                    privateKey: GENERATED_PRIVATE_KEY,
                 },
             },
         })
@@ -799,7 +808,7 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GeneratedPrivateKey,
+                    privateKey: GENERATED_PRIVATE_KEY,
                 },
             },
         })
@@ -909,7 +918,7 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GeneratedPrivateKey,
+                    privateKey: GENERATED_PRIVATE_KEY,
                 },
             },
         })
@@ -986,7 +995,7 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GeneratedPrivateKey,
+                    privateKey: GENERATED_PRIVATE_KEY,
                 },
             },
         })
@@ -1048,7 +1057,7 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GeneratedPrivateKey,
+                    privateKey: GENERATED_PRIVATE_KEY,
                 },
             },
         })
@@ -1090,7 +1099,7 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GeneratedPrivateKey,
+                    privateKey: GENERATED_PRIVATE_KEY,
                 },
             },
         })
@@ -1142,7 +1151,7 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GeneratedPrivateKey,
+                    privateKey: GENERATED_PRIVATE_KEY,
                 },
             },
         })
@@ -1154,7 +1163,7 @@ describe('Config wizard', () => {
             Step.revealPrivateKey('enter'),
             Step.network({ keypress: 'down' }, 'enter'),
             Step.rewards('enter'),
-            Step.operator({ type: OperatorAddress }, 'enter'),
+            Step.operator({ type: OPERATOR_ADDRESS }, 'enter'),
             Step.pubsub('enter'),
             Step.pubsubPlugins(
                 { keypress: 'space' },
@@ -1175,7 +1184,7 @@ describe('Config wizard', () => {
             false,
             'polygonAmoy',
             true,
-            OperatorAddress,
+            OPERATOR_ADDRESS,
             true,
             'websocket,mqtt,http',
             '7170',
@@ -1189,7 +1198,7 @@ describe('Config wizard', () => {
         expect(config).toMatchObject({
             client: {
                 auth: {
-                    privateKey: GeneratedPrivateKey,
+                    privateKey: GENERATED_PRIVATE_KEY,
                 },
             },
         })
@@ -1204,7 +1213,7 @@ describe('Config wizard', () => {
         expect(http).toBeEmptyObject()
 
         expect(operator).toMatchObject({
-            operatorContractAddress: OperatorAddress,
+            operatorContractAddress: OPERATOR_ADDRESS,
         })
 
         expect(otherPlugins).toBeEmptyObject()
@@ -1236,7 +1245,7 @@ describe('Config wizard', () => {
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
             Step.rewards('enter'),
-            Step.operator({ type: OperatorAddress }, 'enter'),
+            Step.operator({ type: OPERATOR_ADDRESS }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
             Step.storage({ type: storagePath }, 'enter'),
         ])
@@ -1256,7 +1265,7 @@ describe('Config wizard', () => {
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
             Step.rewards('enter'),
-            Step.operator({ type: OperatorAddress }, 'enter'),
+            Step.operator({ type: OPERATOR_ADDRESS }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
             Step.storage({ type: storagePath }, 'enter'),
         ])
@@ -1270,7 +1279,7 @@ describe('Config wizard', () => {
 
     it('reports balance check failures', async () => {
         jest.spyOn(
-            providers.JsonRpcProvider.prototype,
+            JsonRpcProvider.prototype,
             'getBalance'
         ).mockRejectedValue(new Error('whatever'))
 
@@ -1279,7 +1288,7 @@ describe('Config wizard', () => {
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
             Step.rewards('enter'),
-            Step.operator({ type: OperatorAddress }, 'enter'),
+            Step.operator({ type: OPERATOR_ADDRESS }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
             Step.storage({ type: storagePath }, 'enter'),
         ])
@@ -1304,7 +1313,7 @@ describe('Config wizard', () => {
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
             Step.rewards('enter'),
-            Step.operator({ type: OperatorAddress }, 'enter'),
+            Step.operator({ type: OPERATOR_ADDRESS }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
             Step.storage({ type: storagePath }, 'enter'),
         ])
@@ -1332,7 +1341,7 @@ describe('Config wizard', () => {
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
             Step.rewards('enter'),
-            Step.operator({ type: OperatorAddress }, 'enter'),
+            Step.operator({ type: OPERATOR_ADDRESS }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
             Step.storage({ type: storagePath }, 'enter'),
         ])
@@ -1360,7 +1369,7 @@ describe('Config wizard', () => {
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
             Step.rewards('enter'),
-            Step.operator({ type: OperatorAddress }, 'enter'),
+            Step.operator({ type: OPERATOR_ADDRESS }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
             Step.storage({ type: storagePath }, 'enter'),
         ])
@@ -1379,14 +1388,14 @@ describe('Config wizard', () => {
     })
 
     it('reports pairing check failures', async () => {
-        jest.spyOn(global, 'fetch').mockRejectedValue(new Error('whatever'))
+        fakeFetchResponseBody.mockImplementation(() => new Error('whatever'))
 
         const { logs } = await scenario([
             Step.privateKeySource('enter'),
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
             Step.rewards('enter'),
-            Step.operator({ type: OperatorAddress }, 'enter'),
+            Step.operator({ type: OPERATOR_ADDRESS }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
             Step.storage({ type: storagePath }, 'enter'),
         ])
@@ -1410,7 +1419,7 @@ describe('Config wizard', () => {
             Step.revealPrivateKey('enter'),
             Step.network('enter'),
             Step.rewards('enter'),
-            Step.operator({ type: OperatorAddress }, 'enter'),
+            Step.operator({ type: OPERATOR_ADDRESS }, 'enter'),
             Step.pubsub({ type: 'n' }, 'enter'),
             Step.storage({ type: storagePath }, 'enter'),
         ])
@@ -1418,7 +1427,7 @@ describe('Config wizard', () => {
         const summary = logs.join('\n')
 
         expect(summary).toInclude(
-            `https://streamr.network/hub/network/operators/${OperatorAddress.toLowerCase()}`
+            `https://streamr.network/hub/network/operators/${OPERATOR_ADDRESS.toLowerCase()}`
         )
     })
 
@@ -1652,7 +1661,7 @@ async function scenario(mocks: AnswerMock[]): Promise<Scenario> {
 
             const answer = await r.answer
 
-            answers.push(Array.isArray(answer) ? answer.join() : answer)
+            answers.push(Array.isArray(answer) ? answer.join() : answer as any)  // TODO why casting?
 
             return answer
         })

@@ -25,7 +25,7 @@ export { StorageNodeMetadata } from './contracts/StorageNodeRegistry'
 export { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './contracts/searchStreams'
 export {
     StreamrClientConfig,
-    ChainConnectionInfo,
+    ConnectionInfo,
     EthereumNetworkConfig,
     ProviderAuthConfig,
     PrivateKeyAuthConfig,
@@ -69,8 +69,5 @@ export {
     StreamMessageType
 } from '@streamr/protocol'
 
-export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht' 
-export type { ConnectionInfo } from '@ethersproject/web'
-export type { Signer } from '@ethersproject/abstract-signer'
-export type { ExternalProvider, Provider } from '@ethersproject/providers'
-export type { Overrides } from '@ethersproject/contracts'
+export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht'
+export type { Signer, Eip1193Provider, Overrides } from 'ethers'

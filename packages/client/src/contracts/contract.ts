@@ -1,31 +1,36 @@
-import { Contract, ContractReceipt, ContractTransaction } from 'ethers'
 import { initEventGateway } from '@streamr/utils'
+import type { TransactionResponse } from 'ethers'
+import {
+    BaseContract,
+    Contract,
+    ContractTransactionReceipt,
+    ContractTransactionResponse,
+    FunctionFragment,
+} from 'ethers'
 import EventEmitter from 'eventemitter3'
-import shuffle from 'lodash/shuffle'
 import without from 'lodash/without'
 import pLimit from 'p-limit'
 import { InternalEvents, StreamrClientEventEmitter, StreamrClientEvents } from '../events'
-import { LoggerFactory } from './LoggerFactory'
-import { tryInSequence } from './promises'
+import { LoggerFactory } from '../utils/LoggerFactory'
 
 export interface ContractEvent {
     onMethodExecute: (methodName: string) => void
-    onTransactionSubmit: (methodName: string, tx: ContractTransaction) => void
-    onTransactionConfirm: (methodName: string, tx: ContractTransaction, receipt: ContractReceipt) => void
+    onTransactionSubmit: (methodName: string, tx: ContractTransactionResponse) => void
+    onTransactionConfirm: (methodName: string, receipt: ContractTransactionReceipt | null) => void
 }
 
-export type ObservableContract<T extends Contract> = T & {
+export type ObservableContract<T extends BaseContract> = T & {
     eventEmitter: EventEmitter<ContractEvent>
 }
 
 export async function waitForTx(
-    txToSubmit: Promise<ContractTransaction>
-): Promise<ContractReceipt> {
+    txToSubmit: Promise<TransactionResponse>
+): Promise<ContractTransactionReceipt> {
     const tx = await txToSubmit
-    return tx.wait()
+    return tx.wait() as Promise<ContractTransactionReceipt> // cannot be null unless arg confirmations set to 0
 }
 
-const isTransaction = (returnValue: any): returnValue is ContractTransaction => {
+const isTransactionResponse = (returnValue: any): returnValue is ContractTransactionResponse => {
     return (returnValue.wait !== undefined && (typeof returnValue.wait === 'function'))
 }
 
@@ -34,24 +39,24 @@ const createLogger = (eventEmitter: EventEmitter<ContractEvent>, loggerFactory: 
     eventEmitter.on('onMethodExecute', (methodName: string) => {
         logger.debug('Execute method', { methodName })
     })
-    eventEmitter.on('onTransactionSubmit', (methodName: string, tx: ContractTransaction) => {
+    eventEmitter.on('onTransactionSubmit', (methodName: string, tx: ContractTransactionResponse) => {
         logger.debug('Submit transaction', {
             method: methodName,
             tx: tx.hash,
             to: tx.to,
             nonce: tx.nonce,
-            gasLimit: tx.gasLimit.toNumber(),
-            gasPrice: tx.gasPrice?.toNumber()
+            gasLimit: tx.gasLimit,
+            gasPrice: tx.gasPrice
         })
     })
-    eventEmitter.on('onTransactionConfirm', (methodName: string, tx: ContractTransaction, receipt: ContractReceipt) => {
+    eventEmitter.on('onTransactionConfirm', (methodName: string, receipt: ContractTransactionReceipt | null) => {
         logger.debug('Received transaction confirmation', {
             method: methodName,
-            tx: tx.hash,
-            block: receipt.blockNumber,
-            confirmations: receipt.confirmations,
-            gasUsed: receipt.gasUsed.toNumber(),
-            events: (receipt.events || []).map((e) => e.event)
+            tx: receipt?.hash,
+            block: receipt?.blockNumber,
+            confirmations: receipt?.confirmations,
+            gasUsed: receipt?.gasUsed,
+            events: receipt?.logs ?? []
         })
     })
 }
@@ -78,25 +83,27 @@ const withErrorHandling = async <T>(
 }
 
 const createWrappedContractMethod = (
-    originalMethod: (...args: any) => Promise<any>,
+    contract: Contract,
+    contractName: string,
     methodName: string,
     eventEmitter: EventEmitter<ContractEvent>,
     concurrencyLimit: pLimit.Limit
 ) => {
+    const originalMethod = contract[methodName]
+    const methodFullName = `${contractName}.${methodName}`
     return async (...args: any) => {
         const returnValue = await withErrorHandling(() => concurrencyLimit(() => {
-            eventEmitter.emit('onMethodExecute', methodName)
+            eventEmitter.emit('onMethodExecute', methodFullName)
             return originalMethod(...args)
-        }), methodName, 'executing')
-        if (isTransaction(returnValue)) {
-            const tx = returnValue
-            const originalWaitMethod = tx.wait
-            tx.wait = async (confirmations?: number): Promise<ContractReceipt> => {
-                const receipt = await withErrorHandling(() => originalWaitMethod(confirmations), methodName, 'waiting transaction for')
-                eventEmitter.emit('onTransactionConfirm', methodName, tx, receipt)
+        }), methodFullName, 'executing')
+        if (isTransactionResponse(returnValue)) {
+            eventEmitter.emit('onTransactionSubmit', methodFullName, returnValue)
+            const originalWait = returnValue.wait.bind(returnValue)
+            returnValue.wait = async (confirmations?: number, timeout?: number): Promise<null | ContractTransactionReceipt> => {
+                const receipt = await withErrorHandling(() => originalWait(confirmations, timeout), methodName, 'waiting transaction for')
+                eventEmitter.emit('onTransactionConfirm', methodFullName, receipt)
                 return receipt
             }
-            eventEmitter.emit('onTransactionSubmit', methodName, tx)
         }
         return returnValue
     }
@@ -104,65 +111,52 @@ const createWrappedContractMethod = (
 
 /**
  * Adds error handling, logging and limits concurrency.
- * 
+ *
  * You can use the decorated contract normally, e.g.:
  *     const tx = await contract.createFoobar(123)
  *     return await tx.wait()
  * or
  *     await contract.getFoobar(456)
  */
-export const createDecoratedContract = <T extends Contract>(
+export const createDecoratedContract = <T extends BaseContract>(
     contract: Contract,
     contractName: string,
     loggerFactory: LoggerFactory,
     maxConcurrentCalls: number
 ): ObservableContract<T> => {
     const eventEmitter = new EventEmitter<ContractEvent>()
-    const methods: Record<string, () => Promise<any>> = {}
     const concurrencyLimit = pLimit(maxConcurrentCalls)
+    const decoratedContract: any = {
+        eventEmitter,
+        // TODO implement also other generic contract methods in the future if needed
+        on: (eventName: string, listener: (...args: any[]) => void) => {
+            contract.on(eventName, listener)
+        },
+        off: (eventName: string, listener: (...args: any[]) => void) => {
+            contract.off(eventName, listener)
+        }
+    }
     /*
      * Wrap each contract function. We read the list of functions from contract.functions, but
      * actually delegate each method to contract[methodName]. Those methods are almost identical
      * to contract.functions[methodName] methods. The major difference is the way of handling
      * single-value results: the return type of contract.functions[methodName] is always
-     * Promise<Result> (see https://docs.ethers.io/v5/api/contract/contract/#Contract--readonly)
+     * Promise<Result> (see https://docs.ethers.org/v6/api/contract/#BaseContract)
      */
-    Object.keys(contract.functions).forEach((methodName) => {
-        methods[methodName] = createWrappedContractMethod(
-            contract[methodName],
-            `${contractName}.${methodName}`,
+    const methodNames = contract['interface'].fragments.filter((f) => FunctionFragment.isFunction(f)).map((f) => (f as FunctionFragment).name)
+    methodNames.forEach((methodName) => {
+        decoratedContract[methodName] = createWrappedContractMethod(
+            contract,
+            contractName,
+            methodName,
             eventEmitter,
             concurrencyLimit
         )
     })
+
     createLogger(eventEmitter, loggerFactory)
-    const result: any = {
-        eventEmitter
-    }
 
-    function getAllPropertyNames(obj: object): string[] {
-        const proto = Object.getPrototypeOf(obj)
-        const inherited = (proto) ? getAllPropertyNames(proto) : []
-        return [...new Set(Object.getOwnPropertyNames(obj).concat(inherited))]
-    }
-
-    // copy own properties and inherited properties (e.g. contract.removeAllListeners)
-    // eslint-disable-next-line no-prototype-builtins
-    for (const key of getAllPropertyNames(contract)) {
-        result[key] = methods[key] !== undefined ? methods[key] : contract[key]
-    }
-    return result
-}
-
-export const queryAllReadonlyContracts = <T, C>(
-    call: (contract: C) => Promise<T>,
-    contracts: C[]
-): Promise<T> => {
-    return tryInSequence(
-        shuffle(contracts).map((contract: C) => {
-            return () => call(contract)
-        })
-    )
+    return decoratedContract
 }
 
 export const initContractEventGateway = <
