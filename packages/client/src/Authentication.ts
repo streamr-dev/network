@@ -15,7 +15,7 @@ export interface Authentication {
     // always in lowercase
     getAddress: () => Promise<EthereumAddress>
     createMessageSignature: (payload: Uint8Array) => Promise<Uint8Array>
-    getStreamRegistryChainSigner: (rpcProviderSource: RpcProviderSource) => Promise<SignerWithProvider>
+    getTransactionSigner: (rpcProviderSource: RpcProviderSource) => Promise<SignerWithProvider>
 }
 
 export const createPrivateKeyAuthentication = (key: string): Authentication => {
@@ -23,7 +23,7 @@ export const createPrivateKeyAuthentication = (key: string): Authentication => {
     return {
         getAddress: async () => address,
         createMessageSignature: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
-        getStreamRegistryChainSigner: async (rpcProviderSource: RpcProviderSource) => {
+        getTransactionSigner: async (rpcProviderSource: RpcProviderSource) => {
             const primaryProvider = rpcProviderSource.getProvider()
             return new Wallet(key, primaryProvider) as SignerWithProvider
         }
@@ -60,7 +60,7 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                 await wait(50)
                 return hexToBinary(sig)
             }, 1),
-            getStreamRegistryChainSigner: async () => {
+            getTransactionSigner: async () => {
                 if (config.contracts.ethereumNetwork.chainId === undefined) {
                     throw new Error('Streamr chainId not configuredin the StreamrClient options!')
                 }

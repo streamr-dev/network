@@ -571,7 +571,7 @@ export class StreamrClient {
      * Gets the Signer associated with the current {@link StreamrClient} instance.
      */
     getSigner(): Promise<SignerWithProvider> {
-        return this.authentication.getStreamRegistryChainSigner(this.rpcProviderSource)
+        return this.authentication.getTransactionSigner(this.rpcProviderSource)
     }
 
     /**

@@ -11,22 +11,21 @@ import {
 import range from 'lodash/range'
 import shuffle from 'lodash/shuffle'
 import { wait, utf8ToBinary } from '@streamr/utils'
-import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { createRandomAuthentication, mockLoggerFactory } from '../test-utils/utils'
 import { MessageStream } from '../../src/subscribe/MessageStream'
+import { MessageSigner } from '../../src/signature/MessageSigner'
 
 const authentication = createRandomAuthentication()
+const messageSigner = new MessageSigner(authentication)
 
 async function makeMsg(ts: number, content: unknown): Promise<StreamMessage> {
-    return createSignedMessage({
+    return messageSigner.createSignedMessage({
         messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await authentication.getAddress(), 'msgChain'),
         messageType: StreamMessageType.MESSAGE,
         content: utf8ToBinary(JSON.stringify(content)),
-        authentication,
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
-        signatureType: SignatureType.SECP256K1
-    })
+    }, SignatureType.SECP256K1)
 }
 
 async function createAssignmentMessagesFor(stream: {

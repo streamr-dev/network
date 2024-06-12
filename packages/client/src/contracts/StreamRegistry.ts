@@ -174,7 +174,7 @@ export class StreamRegistry {
 
     private async connectToContract(): Promise<void> {
         if (!this.streamRegistryContract) {
-            const chainSigner = await this.authentication.getStreamRegistryChainSigner(this.rpcProviderSource)
+            const chainSigner = await this.authentication.getTransactionSigner(this.rpcProviderSource)
             this.streamRegistryContract = this.contractFactory.createWriteContract<StreamRegistryContract>(
                 toEthereumAddress(this.config.contracts.streamRegistryChainAddress),
                 StreamRegistryArtifact,
