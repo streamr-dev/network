@@ -17,7 +17,7 @@ import { randomEthereumAddress } from '@streamr/test-utils'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { createSignaturePayload } from '../../src/signature/createSignaturePayload'
 
-describe('signature', () => {
+describe('SignatureValidator', () => {
     let erc1271ContractFacade: MockProxy<ERC1271ContractFacade>
     let signatureValidator: SignatureValidator
 
