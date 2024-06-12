@@ -4,34 +4,36 @@ import { SignatureType, StreamMessage, StreamMessageOptions } from '@streamr/pro
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { createSignaturePayload } from './createSignaturePayload'
 
-type SignerFn = (opts: MarkRequired<Omit<StreamMessageOptions, 'signature' | 'signatureType'>, 'messageType'>) => Promise<Uint8Array>
-
 @scoped(Lifecycle.ContainerScoped)
 export class MessageSigner {
-    private readonly signers = new Map<SignatureType, SignerFn>()
+    private readonly authentication: Authentication
 
     constructor(@inject(AuthenticationInjectionToken) authentication: Authentication) {
-        const secp256k1Signer: SignerFn = (opts) => {
-            const payload = createSignaturePayload(opts)
-            return authentication.createMessageSignature(payload)
-        }
-        this.signers.set(SignatureType.SECP256K1, secp256k1Signer)
-        this.signers.set(SignatureType.ERC_1271, secp256k1Signer)
+        this.authentication = authentication
     }
 
     async createSignedMessage(
         opts: MarkRequired<Omit<StreamMessageOptions, 'signature' | 'signatureType'>, 'messageType'>,
         signatureType: SignatureType
     ): Promise<StreamMessage> {
-        const sign = this.signers.get(signatureType)
-        if (sign === undefined) {
-            throw new Error(`Cannot sign message, unsupported signatureType: "${signatureType}"`)
-        }
-        const signature = await sign(opts)
+        const signature = await this.sign(opts, signatureType)
         return new StreamMessage({
             ...opts,
             signature,
             signatureType
         })
+    }
+
+    private sign(
+        opts: MarkRequired<Omit<StreamMessageOptions, 'signature' | 'signatureType'>, 'messageType'>,
+        signatureType: SignatureType
+    ): Promise<Uint8Array> {
+        switch (signatureType) {
+            case SignatureType.SECP256K1:
+            case SignatureType.ERC_1271:
+                return this.authentication.createMessageSignature(createSignaturePayload(opts))
+            default:
+                throw new Error(`Cannot sign message, unsupported signatureType: "${signatureType}"`)
+        }
     }
 }
