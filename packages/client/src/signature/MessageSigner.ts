@@ -13,7 +13,7 @@ export class MessageSigner {
     constructor(@inject(AuthenticationInjectionToken) authentication: Authentication) {
         const secp256k1Signer: SignerFn = (opts) => {
             const payload = createSignaturePayload(opts)
-            return authentication.signWithWallet(payload)
+            return authentication.createMessageSignature(payload)
         }
         this.signers.set(SignatureType.SECP256K1, secp256k1Signer)
         this.signers.set(SignatureType.ERC_1271, secp256k1Signer)

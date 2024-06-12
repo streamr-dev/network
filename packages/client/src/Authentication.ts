@@ -14,16 +14,16 @@ export type SignerWithProvider = AbstractSigner<Provider>
 export interface Authentication {
     // always in lowercase
     getAddress: () => Promise<EthereumAddress>
-    signWithWallet: (payload: Uint8Array) => Promise<Uint8Array>
-    getStreamRegistryChainSigner: (rpcProviderFactory: RpcProviderFactory) => Promise<SignerWithProvider>
+    createMessageSignature: (payload: Uint8Array) => Promise<Uint8Array>
+    getTransactionSigner: (rpcProviderFactory: RpcProviderFactory) => Promise<SignerWithProvider>
 }
 
 export const createPrivateKeyAuthentication = (key: string): Authentication => {
     const address = toEthereumAddress(computeAddress(key))
     return {
         getAddress: async () => address,
-        signWithWallet: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
-        getStreamRegistryChainSigner: async (rpcProviderFactory: RpcProviderFactory) => {
+        createMessageSignature: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
+        getTransactionSigner: async (rpcProviderFactory: RpcProviderFactory) => {
             const primaryProvider = rpcProviderFactory.getPrimaryProvider()
             return new Wallet(key, primaryProvider) as SignerWithProvider
         }
@@ -53,14 +53,14 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                     throw new Error('no addresses connected and selected in the custom authentication provider')
                 }
             }),
-            signWithWallet: pLimitFn(async (payload: Uint8Array) => {
+            createMessageSignature: pLimitFn(async (payload: Uint8Array) => {
                 // sign one at a time & wait a moment before asking for next signature
                 // otherwise MetaMask extension may not show the prompt window
                 const sig = await (await signer).signMessage(payload)
                 await wait(50)
                 return hexToBinary(sig)
             }, 1),
-            getStreamRegistryChainSigner: async () => {
+            getTransactionSigner: async () => {
                 if (config.contracts.ethereumNetwork.chainId === undefined) {
                     throw new Error('Streamr chainId not configuredin the StreamrClient options!')
                 }

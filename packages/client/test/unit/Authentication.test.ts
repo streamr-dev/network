@@ -10,7 +10,7 @@ describe('Authentication', () => {
         it('happy path', async () => {
             const payload = Buffer.from('data-to-sign')
             const authentication = createPrivateKeyAuthentication(PRIVATE_KEY)
-            const signature = await authentication.signWithWallet(payload)
+            const signature = await authentication.createMessageSignature(payload)
             expect(signature).toStrictEqual(hexToBinary('0x084b3ac0f2ad17d387ca5bbf5d72d8f1dfd1b372e399ce6b0bfc60793e'
                 + 'b717d2431e498294f202d8dfd9f56158391d453c018470aea92ed6a80a23c20ab6f7ac1b'))
         })
