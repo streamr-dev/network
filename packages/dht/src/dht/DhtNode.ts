@@ -54,7 +54,7 @@ import { StoreManager } from './store/StoreManager'
 import { StoreRpcRemote } from './store/StoreRpcRemote'
 import { getLocalRegionByCoordinates, getLocalRegionWithCache } from '@streamr/cdn-location'
 
-export interface DhtNodeEvents {
+export interface DhtNodeEvents extends TransportEvents {
     nearbyContactAdded: (peerDescriptor: PeerDescriptor) => void
     nearbyContactRemoved: (peerDescriptor: PeerDescriptor) => void
     randomContactAdded: (peerDescriptor: PeerDescriptor) => void
@@ -126,9 +126,7 @@ const logger = new Logger(module)
 
 const PERIODICAL_PING_INTERVAL = 60 * 1000
 
-export type Events = TransportEvents & DhtNodeEvents
-
-export class DhtNode extends EventEmitter<Events> implements ITransport {
+export class DhtNode extends EventEmitter<DhtNodeEvents> implements ITransport {
 
     private readonly config: StrictDhtNodeOptions
     private rpcCommunicator?: RoutingRpcCommunicator
