@@ -5,7 +5,7 @@ import { EthereumAddress, hexToBinary, toEthereumAddress, wait, createSignature 
 import pMemoize from 'p-memoize'
 import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'
 import { pLimitFn } from './utils/promises'
-import { RpcProviderFactory } from './RpcProviderFactory'
+import { RpcProviderSource } from './RpcProviderSource'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 
@@ -15,7 +15,7 @@ export interface Authentication {
     // always in lowercase
     getAddress: () => Promise<EthereumAddress>
     createMessageSignature: (payload: Uint8Array) => Promise<Uint8Array>
-    getTransactionSigner: (rpcProviderFactory: RpcProviderFactory) => Promise<SignerWithProvider>
+    getTransactionSigner: (rpcProviderSource: RpcProviderSource) => Promise<SignerWithProvider>
 }
 
 export const createPrivateKeyAuthentication = (key: string): Authentication => {
@@ -23,8 +23,8 @@ export const createPrivateKeyAuthentication = (key: string): Authentication => {
     return {
         getAddress: async () => address,
         createMessageSignature: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
-        getTransactionSigner: async (rpcProviderFactory: RpcProviderFactory) => {
-            const primaryProvider = rpcProviderFactory.getPrimaryProvider()
+        getTransactionSigner: async (rpcProviderSource: RpcProviderSource) => {
+            const primaryProvider = rpcProviderSource.getProvider()
             return new Wallet(key, primaryProvider) as SignerWithProvider
         }
     }
