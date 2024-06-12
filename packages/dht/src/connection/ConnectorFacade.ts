@@ -108,7 +108,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             externalIp: this.config.externalIp,
             portRange: this.config.webrtcPortRange,
             maxMessageSize: this.config.maxMessageSize
-        }, )
+        })
         await this.websocketServerConnector.start()
         // TODO: generate a PeerDescriptor in a single function. Requires changes to the createOwnPeerDescriptor
         // function in the config. Currently it's given by the DhtNode and it sets the PeerDescriptor for the
@@ -198,7 +198,7 @@ export class SimulatorConnectorFacade implements ConnectorFacade {
         this.simulatorConnector = new SimulatorConnector(
             this.localPeerDescriptor,
             this.simulator,
-            onNewConnection,
+            onNewConnection
         )
         this.simulator.addConnector(this.simulatorConnector)
     }
