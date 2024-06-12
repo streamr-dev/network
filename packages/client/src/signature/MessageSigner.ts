@@ -3,7 +3,6 @@ import { MarkRequired } from 'ts-essentials'
 import { SignatureType, StreamMessage, StreamMessageOptions } from '@streamr/protocol'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { createSignaturePayload } from './createSignaturePayload'
-import { createLegacySignaturePayload } from './createLegacySignaturePayload'
 
 type SignerFn = (opts: MarkRequired<Omit<StreamMessageOptions, 'signature' | 'signatureType'>, 'messageType'>) => Promise<Uint8Array>
 
@@ -12,15 +11,12 @@ export class MessageSigner {
     private readonly signers = new Map<SignatureType, SignerFn>()
 
     constructor(@inject(AuthenticationInjectionToken) authentication: Authentication) {
-        this.signers.set(SignatureType.LEGACY_SECP256K1, (opts) => {
-            const payload = createLegacySignaturePayload(opts)
-            return authentication.signWithWallet(payload)
-        })
-        this.signers.set(SignatureType.SECP256K1, (opts) => {
+        const secp256k1Signer: SignerFn = (opts) => {
             const payload = createSignaturePayload(opts)
             return authentication.signWithWallet(payload)
-        })
-        this.signers.set(SignatureType.ERC_1271, this.signers.get(SignatureType.SECP256K1)!)
+        }
+        this.signers.set(SignatureType.SECP256K1, secp256k1Signer)
+        this.signers.set(SignatureType.ERC_1271, secp256k1Signer)
     }
 
     async createSignedMessage(
