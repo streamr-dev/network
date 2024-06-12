@@ -200,7 +200,7 @@ describe('StreamRegistry', () => {
                 await client.getOrCreateStream({
                     id: `${otherAddress}${newPath}`,
                 })
-            }).rejects.toThrow(`stream id "${otherAddress}${newPath}" not in namespace of authenticated user "${publicAddress}"`)
+            }).rejects.toThrow(`stream id "${otherAddress}${newPath}" not in namespace of user address "${publicAddress}"`)
         }, TIMEOUT)
     })
 

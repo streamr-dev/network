@@ -5,7 +5,6 @@ import { EthereumAddress, hexToBinary, toEthereumAddress, wait, createSignature 
 import pMemoize from 'p-memoize'
 import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'
 import { pLimitFn } from './utils/promises'
-import { RpcProviderFactory } from './RpcProviderFactory'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 
@@ -15,18 +14,13 @@ export interface Authentication {
     // always in lowercase
     getAddress: () => Promise<EthereumAddress>
     signWithWallet: (payload: Uint8Array) => Promise<Uint8Array>
-    getStreamRegistryChainSigner: (rpcProviderFactory: RpcProviderFactory) => Promise<SignerWithProvider>
 }
 
 export const createPrivateKeyAuthentication = (key: string): Authentication => {
     const address = toEthereumAddress(computeAddress(key))
     return {
         getAddress: async () => address,
-        signWithWallet: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
-        getStreamRegistryChainSigner: async (rpcProviderFactory: RpcProviderFactory) => {
-            const primaryProvider = rpcProviderFactory.getPrimaryProvider()
-            return new Wallet(key, primaryProvider) as SignerWithProvider
-        }
+        signWithWallet: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key))
     }
 }
 
@@ -59,27 +53,7 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                 const sig = await (await signer).signMessage(payload)
                 await wait(50)
                 return hexToBinary(sig)
-            }, 1),
-            getStreamRegistryChainSigner: async () => {
-                if (config.contracts.ethereumNetwork.chainId === undefined) {
-                    throw new Error('Streamr chainId not configuredin the StreamrClient options!')
-                }
-                const expectedChainId = config.contracts.ethereumNetwork.chainId
-                const actualChainId = (await provider.getNetwork()).chainId
-                if (actualChainId !== BigInt(expectedChainId)) {
-                    throw new Error(
-                        // eslint-disable-next-line max-len
-                        `Please connect the custom authentication provider with chainId ${expectedChainId} (current chainId is ${actualChainId})`
-                    )
-                }
-                return signer
-                // TODO: handle events
-                // ethereum.on('accountsChanged', (accounts) => { })
-                // https://docs.metamask.io/guide/ethereum-provider.html#events says:
-                //   "We recommend reloading the page unless you have a very good reason not to"
-                //   Of course we can't and won't do that, but if we need something chain-dependent...
-                // ethereum.on('chainChanged', (chainId) => { window.location.reload() });
-            }
+            }, 1)
         }
     } else {
         return createPrivateKeyAuthentication(Wallet.createRandom().privateKey)

@@ -1,7 +1,6 @@
 import { Provider } from 'ethers'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { ContractFactory } from '../ContractFactory'
 import { getEthersOverrides } from '../ethereumUtils'
@@ -10,6 +9,7 @@ import type { NodeRegistry as NodeRegistryContract } from '../ethereumArtifacts/
 import NodeRegistryArtifact from '../ethereumArtifacts/NodeRegistryAbi.json'
 import { queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 import { RpcProviderFactory } from '../RpcProviderFactory'
+import { SignerSource } from '../SignerSource'
 
 export interface StorageNodeMetadata {
     urls: string[]
@@ -25,19 +25,19 @@ export class StorageNodeRegistry {
     private readonly nodeRegistryContractsReadonly: NodeRegistryContract[]
     private readonly contractFactory: ContractFactory
     private readonly rpcProviderFactory: RpcProviderFactory
+    private readonly signerSource: SignerSource
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
-    private readonly authentication: Authentication
 
     constructor(
         contractFactory: ContractFactory,
         rpcProviderFactory: RpcProviderFactory,
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        signerSource: SignerSource,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
     ) {
         this.contractFactory = contractFactory
         this.rpcProviderFactory = rpcProviderFactory
+        this.signerSource = signerSource
         this.config = config
-        this.authentication = authentication
         this.nodeRegistryContractsReadonly = rpcProviderFactory.getProviders().map((provider: Provider) => {
             return this.contractFactory.createReadContract(
                 toEthereumAddress(this.config.contracts.storageNodeRegistryChainAddress),
@@ -50,7 +50,7 @@ export class StorageNodeRegistry {
 
     private async connectToContract() {
         if (!this.nodeRegistryContract) {
-            const chainSigner = await this.authentication.getStreamRegistryChainSigner(this.rpcProviderFactory)
+            const chainSigner = await this.signerSource.getSigner()
             this.nodeRegistryContract = this.contractFactory.createWriteContract<NodeRegistryContract>(
                 toEthereumAddress(this.config.contracts.storageNodeRegistryChainAddress),
                 NodeRegistryArtifact,

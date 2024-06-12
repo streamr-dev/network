@@ -2,7 +2,6 @@ import { Provider } from 'ethers'
 import { StreamID, StreamIDUtils, toStreamID } from '@streamr/protocol'
 import { EthereumAddress, GraphQLQuery, Logger, TheGraphClient, collect, isENSName, toEthereumAddress } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { ContractFactory } from '../ContractFactory'
 import { getEthersOverrides } from '../ethereumUtils'
@@ -34,6 +33,7 @@ import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, searchStreams as _
 import { CacheAsyncFn, CacheAsyncFnType } from '../utils/caches'
 import { RpcProviderFactory } from '../RpcProviderFactory'
 import { ContractTransactionResponse } from 'ethers'
+import { SignerSource } from '../SignerSource'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -75,11 +75,11 @@ export class StreamRegistry {
     private readonly streamFactory: StreamFactory
     private readonly contractFactory: ContractFactory
     private readonly rpcProviderFactory: RpcProviderFactory
+    private readonly signerSource: SignerSource
     private readonly theGraphClient: TheGraphClient
     private readonly streamIdBuilder: StreamIDBuilder
     /** @internal */
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>
-    private readonly authentication: Authentication
     private readonly logger: Logger
     private readonly getStream_cached: CacheAsyncFnType<[StreamID], Stream, string>
     private readonly isStreamPublisher_cached: CacheAsyncFnType<[StreamID, EthereumAddress], boolean, string>
@@ -92,20 +92,20 @@ export class StreamRegistry {
         streamFactory: StreamFactory,
         contractFactory: ContractFactory,
         rpcProviderFactory: RpcProviderFactory,
+        signerSource: SignerSource,
         theGraphClient: TheGraphClient,
         streamIdBuilder: StreamIDBuilder,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
         eventEmitter: StreamrClientEventEmitter,
         loggerFactory: LoggerFactory
     ) {
         this.streamFactory = streamFactory
         this.contractFactory = contractFactory
         this.rpcProviderFactory = rpcProviderFactory
+        this.signerSource = signerSource
         this.theGraphClient = theGraphClient
         this.streamIdBuilder = streamIdBuilder
         this.config = config
-        this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
         this.streamRegistryContractsReadonly = rpcProviderFactory.getProviders().map((provider: Provider) => {
             return this.contractFactory.createReadContract<StreamRegistryContract>(
@@ -172,7 +172,7 @@ export class StreamRegistry {
 
     private async connectToContract(): Promise<void> {
         if (!this.streamRegistryContract) {
-            const chainSigner = await this.authentication.getStreamRegistryChainSigner(this.rpcProviderFactory)
+            const chainSigner = await this.signerSource.getSigner()
             this.streamRegistryContract = this.contractFactory.createWriteContract<StreamRegistryContract>(
                 toEthereumAddress(this.config.contracts.streamRegistryChainAddress),
                 StreamRegistryArtifact,
@@ -220,9 +220,9 @@ export class StreamRegistry {
     }
 
     private async ensureStreamIdInNamespaceOfAuthenticatedUser(address: EthereumAddress, streamId: StreamID): Promise<void> {
-        const userAddress = await this.authentication.getAddress()
+        const userAddress = await this.signerSource.getAddress()
         if (address !== userAddress) {
-            throw new Error(`stream id "${streamId}" not in namespace of authenticated user "${userAddress}"`)
+            throw new Error(`stream id "${streamId}" not in namespace of user address "${userAddress}"`)
         }
     }
 

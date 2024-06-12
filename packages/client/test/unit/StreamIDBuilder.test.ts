@@ -2,22 +2,21 @@ import 'reflect-metadata'
 
 import { toEthereumAddress } from '@streamr/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { Authentication } from '../../src/Authentication'
 import { StreamIDBuilder } from '../../src/StreamIDBuilder'
 import { StreamDefinition } from '../../src/types'
+import { mock, MockProxy } from 'jest-mock-extended'
+import { SignerSource } from '../../src/SignerSource'
 
 const address = '0xf5B45CC4cc510C31Cd6B64B8F4f341C283894086'
 const normalizedAddress = address.toLowerCase()
 
 describe('StreamIDBuilder', () => {
-    let getAddress: jest.Mock<Promise<string>, []>
+    let signerSource: MockProxy<SignerSource>
     let streamIdBuilder: StreamIDBuilder
 
     beforeEach(() => {
-        getAddress = jest.fn()
-        streamIdBuilder = new StreamIDBuilder({
-            getAddress
-        } as unknown as Authentication)
+        signerSource = mock<SignerSource>()
+        streamIdBuilder = new StreamIDBuilder(signerSource)
     })
 
     describe('toStreamID', () => {
@@ -34,14 +33,14 @@ describe('StreamIDBuilder', () => {
         })
 
         it('throws if given path-only format but ethereum address fetching rejects', () => {
-            getAddress.mockRejectedValue(new Error('random error for getAddress'))
+            signerSource.getAddress.mockRejectedValue(new Error('random error for getAddress'))
             return expect(streamIdBuilder.toStreamID('/foo/bar'))
                 .rejects
                 .toThrow('random error for getAddress')
         })
 
         it('returns full stream id given path-only format', () => {
-            getAddress.mockResolvedValue(toEthereumAddress(address))
+            signerSource.getAddress.mockResolvedValue(toEthereumAddress(address))
             return expect(streamIdBuilder.toStreamID('/foo/bar'))
                 .resolves
                 .toEqual(`${normalizedAddress}/foo/bar`)

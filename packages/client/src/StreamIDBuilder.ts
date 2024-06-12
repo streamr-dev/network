@@ -7,9 +7,9 @@ import {
     toStreamPartID
 } from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
-import { Lifecycle, inject, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from './Authentication'
+import { Lifecycle, scoped } from 'tsyringe'
 import { StreamDefinition } from './types'
+import { SignerSource } from './SignerSource'
 
 export const DEFAULT_PARTITION = 0
 
@@ -39,16 +39,16 @@ function parseRawDefinition(definition: StreamDefinition): [string, number | und
 @scoped(Lifecycle.ContainerScoped)
 export class StreamIDBuilder {
 
-    private authentication: Authentication
+    private readonly signerSource: SignerSource
 
-    constructor(@inject(AuthenticationInjectionToken) authentication: Authentication) {
-        this.authentication = authentication
+    constructor(signerSource: SignerSource) {
+        this.signerSource = signerSource
     }
 
     async toStreamID(streamIdOrPath: string): Promise<StreamID> {
         let address: EthereumAddress | undefined
         if (StreamIDUtils.isPathOnlyFormat(streamIdOrPath)) {
-            address = await this.authentication.getAddress()
+            address = await this.signerSource.getAddress()
         }
         return toStreamID(streamIdOrPath, address)
     }

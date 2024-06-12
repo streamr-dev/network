@@ -2,7 +2,6 @@ import { StreamID, toStreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger, TheGraphClient, collect, toEthereumAddress } from '@streamr/utils'
 import min from 'lodash/min'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
-import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { ContractFactory } from '../ContractFactory'
 import { getEthersOverrides } from '../ethereumUtils'
@@ -15,6 +14,7 @@ import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { initContractEventGateway, queryAllReadonlyContracts, waitForTx } from '../utils/contract'
 import { RpcProviderFactory } from '../RpcProviderFactory'
+import { SignerSource } from '../SignerSource'
 
 export interface StorageNodeAssignmentEvent {
     readonly streamId: StreamID
@@ -40,9 +40,9 @@ export class StreamStorageRegistry {
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly contractFactory: ContractFactory
     private readonly rpcProviderFactory: RpcProviderFactory
+    private readonly signerSource: SignerSource
     private readonly theGraphClient: TheGraphClient
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
-    private readonly authentication: Authentication
     private readonly logger: Logger
 
     /* eslint-disable indent */
@@ -51,9 +51,9 @@ export class StreamStorageRegistry {
         streamIdBuilder: StreamIDBuilder,
         contractFactory: ContractFactory,
         rpcProviderFactory: RpcProviderFactory,
+        signerSource: SignerSource,
         theGraphClient: TheGraphClient,
         @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>,
-        @inject(AuthenticationInjectionToken) authentication: Authentication,
         eventEmitter: StreamrClientEventEmitter,
         loggerFactory: LoggerFactory
     ) {
@@ -61,9 +61,9 @@ export class StreamStorageRegistry {
         this.streamIdBuilder = streamIdBuilder
         this.contractFactory = contractFactory
         this.rpcProviderFactory = rpcProviderFactory
+        this.signerSource = signerSource
         this.theGraphClient = theGraphClient
         this.config = config
-        this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
         this.streamStorageRegistryContractsReadonly = rpcProviderFactory.getProviders().map((provider) => {
             return this.contractFactory.createReadContract(
@@ -103,7 +103,7 @@ export class StreamStorageRegistry {
 
     private async connectToContract() {
         if (!this.streamStorageRegistryContract) {
-            const chainSigner = await this.authentication.getStreamRegistryChainSigner(this.rpcProviderFactory)
+            const chainSigner = await this.signerSource.getSigner()
             this.streamStorageRegistryContract = this.contractFactory.createWriteContract<StreamStorageRegistryContract>(
                 toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress),
                 StreamStorageRegistryArtifact,

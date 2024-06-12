@@ -50,6 +50,7 @@ import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
 import { RpcProviderFactory } from './RpcProviderFactory'
+import { SignerSource } from './SignerSource'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -85,6 +86,7 @@ export class StreamrClient {
     private readonly resends: Resends
     private readonly node: NetworkNodeFacade
     private readonly rpcProviderFactory: RpcProviderFactory
+    private readonly signerSource: SignerSource
     private readonly streamRegistry: StreamRegistry
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
@@ -104,7 +106,6 @@ export class StreamrClient {
     ) {
         const strictConfig = createStrictConfig(config)
         const authentication = createAuthentication(strictConfig)
-        redactConfig(strictConfig)
         const container = parentContainer.createChildContainer()
         container.register(AuthenticationInjectionToken, { useValue: authentication })
         container.register(ConfigInjectionToken, { useValue: strictConfig })
@@ -114,11 +115,13 @@ export class StreamrClient {
         this.id = strictConfig.id
         this.config = strictConfig
         this.authentication = authentication
+        this.rpcProviderFactory = container.resolve(RpcProviderFactory)
+        this.signerSource = container.resolve(SignerSource)
+        redactConfig(strictConfig) // TODO: is it too late to redact here?
         this.publisher = container.resolve<Publisher>(Publisher)
         this.subscriber = container.resolve<Subscriber>(Subscriber)
         this.resends = container.resolve<Resends>(Resends)
         this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
-        this.rpcProviderFactory = container.resolve(RpcProviderFactory)
         this.streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
         this.streamStorageRegistry = container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
         this.storageNodeRegistry = container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
@@ -571,7 +574,7 @@ export class StreamrClient {
      * Gets the Signer associated with the current {@link StreamrClient} instance.
      */
     getSigner(): Promise<SignerWithProvider> {
-        return this.authentication.getStreamRegistryChainSigner(this.rpcProviderFactory)
+        return this.signerSource.getSigner()
     }
 
     /**
