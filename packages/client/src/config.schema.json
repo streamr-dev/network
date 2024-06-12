@@ -323,6 +323,10 @@
                     },
                     "minItems": 1
                 },
+                "rpcQuorum": {
+                    "type": "number",
+                    "default": 2
+                },
                 "theGraphUrl": {
                     "type": "string",
                     "format": "uri"
@@ -332,7 +336,8 @@
                     "default": 10
                 },
                 "pollInterval": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 4000
                 }
             },
             "default": {}

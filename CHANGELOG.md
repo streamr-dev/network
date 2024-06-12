@@ -14,7 +14,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
-- Restructured `contracts` config structure (https://github.com/streamr-dev/network/pull/2581) 
+- Restructured `contracts` config structure (https://github.com/streamr-dev/network/pull/2581)
+- Improve reliability of JSON RPC interactions by adding retry redundancy (https://github.com/streamr-dev/network/pull/2562)
 
 #### Deprecated
 
