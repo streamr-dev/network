@@ -434,8 +434,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
                 const oldConnection = endpoint.connection
                 logger.trace('replaced: ' + nodeId)
 
-                oldConnection.reportBufferSentByOtherConnection()
-                oldConnection.replacedByOtherConnection = true
+                oldConnection.replaceAsDuplicate()
                 this.endpoints.set(nodeId, { connection: newConnection, buffer })
                 return true
             } else {
