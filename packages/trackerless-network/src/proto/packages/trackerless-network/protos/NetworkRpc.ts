@@ -191,9 +191,9 @@ export interface StreamPartHandshakeRequest {
      */
     neighborIds: Uint8Array[];
     /**
-     * @generated from protobuf field: optional bytes interleaveSourceId = 5;
+     * @generated from protobuf field: optional bytes interleaveNodeId = 5;
      */
-    interleaveSourceId?: Uint8Array;
+    interleaveNodeId?: Uint8Array;
 }
 /**
  * @generated from protobuf message StreamPartHandshakeResponse
@@ -546,7 +546,7 @@ class StreamPartHandshakeRequest$Type extends MessageType<StreamPartHandshakeReq
             { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "concurrentHandshakeTargetId", kind: "scalar", opt: true, T: 12 /*ScalarType.BYTES*/ },
             { no: 4, name: "neighborIds", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 12 /*ScalarType.BYTES*/ },
-            { no: 5, name: "interleaveSourceId", kind: "scalar", opt: true, T: 12 /*ScalarType.BYTES*/ }
+            { no: 5, name: "interleaveNodeId", kind: "scalar", opt: true, T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
 }

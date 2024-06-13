@@ -113,7 +113,7 @@ message StreamPartHandshakeRequest {
   string requestId = 2;
   optional bytes concurrentHandshakeTargetId = 3;
   repeated bytes neighborIds = 4;
-  optional bytes interleaveSourceId = 5;
+  optional bytes interleaveNodeId = 5;
 }
 
 message StreamPartHandshakeResponse {
