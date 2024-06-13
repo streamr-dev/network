@@ -184,7 +184,7 @@ export class Resends {
             /*
              * Disable ordering if the source of this resend is the only storage node. In that case there is no
              * other storage node from which we could fetch the gaps. When we set "disableMessageOrdering"
-             * to true, we disable both gap filling and message ordering. As resend messages always arrive 
+             * to true, we disable both gap filling and message ordering. As resend messages always arrive
              * in ascending order, we don't need the ordering functionality.
              */
             getStorageNodes: async () => without(nodeAddresses, nodeAddress),

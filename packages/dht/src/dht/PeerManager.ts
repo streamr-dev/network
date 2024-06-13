@@ -19,7 +19,7 @@ const logger = new Logger(module)
 
 interface PeerManagerConfig {
     numberOfNodesPerKBucket: number
-    maxContactListSize: number
+    maxContactCount: number
     localNodeId: DhtAddress
     localPeerDescriptor: PeerDescriptor
     connectionLocker?: ConnectionLocker
@@ -96,7 +96,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         })
         this.nearbyContacts = new SortedContactList({
             referenceId: this.config.localNodeId,
-            maxSize: this.config.maxContactListSize,
+            maxSize: this.config.maxContactCount,
             allowToContainReferenceId: false
         })
         this.nearbyContacts.on('contactRemoved', (contact: DhtNodeRpcRemote) => {
@@ -110,7 +110,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
             this.emit('nearbyContactAdded', contact.getPeerDescriptor())
         )
         this.activeContacts = new Set()
-        this.randomContacts = new RandomContactList(this.config.localNodeId, this.config.maxContactListSize)
+        this.randomContacts = new RandomContactList(this.config.localNodeId, this.config.maxContactCount)
         this.randomContacts.on('contactRemoved', (removedContact: DhtNodeRpcRemote) =>
             this.emit('randomContactRemoved', removedContact.getPeerDescriptor())
         )

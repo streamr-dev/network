@@ -12,7 +12,8 @@ import { StreamDefinition } from '../types'
 import { Mapping } from '../utils/Mapping'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { MessageFactory } from './MessageFactory'
-import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
+import { SignatureValidator } from '../signature/SignatureValidator'
+import { MessageSigner } from '../signature/MessageSigner'
 
 export interface PublishMetadata {
     timestamp?: string | number | Date
@@ -48,7 +49,8 @@ export class Publisher {
     private readonly streamRegistry: StreamRegistry
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
-    private readonly erc1271ContractFacade: ERC1271ContractFacade
+    private readonly signatureValidator: SignatureValidator
+    private readonly messageSigner: MessageSigner
 
     constructor(
         node: NetworkNodeFacade,
@@ -56,13 +58,15 @@ export class Publisher {
         groupKeyManager: GroupKeyManager,
         streamIdBuilder: StreamIDBuilder,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        erc1271ContractFacade: ERC1271ContractFacade
+        signatureValidator: SignatureValidator,
+        messageSigner: MessageSigner
     ) {
         this.node = node
         this.streamRegistry = streamRegistry
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
-        this.erc1271ContractFacade = erc1271ContractFacade
+        this.signatureValidator = signatureValidator
+        this.messageSigner = messageSigner
         this.messageFactories = new Mapping(async (streamId: StreamID) => {
             return this.createMessageFactory(streamId)
         })
@@ -124,7 +128,8 @@ export class Publisher {
             authentication: this.authentication,
             streamRegistry: this.streamRegistry,
             groupKeyQueue: await this.groupKeyQueues.get(streamId),
-            erc1271ContractFacade: this.erc1271ContractFacade
+            signatureValidator: this.signatureValidator,
+            messageSigner: this.messageSigner
         })
     }
 }

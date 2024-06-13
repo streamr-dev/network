@@ -25,7 +25,7 @@ import fs from 'fs'
 import { NetworkNode } from '../../src/NetworkNode'
 import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
 import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
-import { Layer1Node } from '../../src/logic/Layer1Node'
+import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 
 const numNodes = 10000
@@ -112,7 +112,7 @@ const measureJoiningTime = async () => {
     const streamSubscriber = await createNetworkNodeWithSimulator(
         peerDescriptor,
         simulator,
-        [randomNode.stack.getLayer0Node().getLocalPeerDescriptor()]
+        [randomNode.stack.getControlLayerNode().getLocalPeerDescriptor()]
     )
     currentNode = streamSubscriber
     const start = performance.now()
@@ -155,14 +155,14 @@ run().then(() => {
     console.error(err)
     const contentDeliveryManager = currentNode.stack.getContentDeliveryManager()
     const streamParts = contentDeliveryManager.getStreamParts()
-    const foundData = nodes[0].stack.getLayer0Node().fetchDataFromDht(streamPartIdToDataKey(streamParts[0]))
+    const foundData = nodes[0].stack.getControlLayerNode().fetchDataFromDht(streamPartIdToDataKey(streamParts[0]))
     console.log(foundData)
-    const layer0Node = currentNode.stack.getLayer0Node() as DhtNode
-    console.log(layer0Node.getNeighbors().length)
-    console.log(layer0Node.getConnectionsView().getConnectionCount())
+    const controlLayerNode = currentNode.stack.getControlLayerNode() as DhtNode
+    console.log(controlLayerNode.getNeighbors().length)
+    console.log(controlLayerNode.getConnectionsView().getConnectionCount())
     const streamPartDelivery = contentDeliveryManager
-        .getStreamPartDelivery(streamParts[0])! as { layer1Node: Layer1Node, node: ContentDeliveryLayerNode }
-    console.log(streamPartDelivery.layer1Node.getNeighbors())
+        .getStreamPartDelivery(streamParts[0])! as { discoveryLayerNode: DiscoveryLayerNode, node: ContentDeliveryLayerNode }
+    console.log(streamPartDelivery.discoveryLayerNode.getNeighbors())
     console.log(streamPartDelivery.node.getNeighbors())
     console.log(nodes[nodes.length - 1])
     if (publishInterval) {
