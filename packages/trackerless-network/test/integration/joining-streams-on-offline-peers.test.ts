@@ -70,8 +70,8 @@ describe('Joining stream parts on offline nodes', () => {
         let messageReceived = false
 
         // store offline peer descriptors to DHT
-        await entryPoint.getLayer0Node().storeDataToDht(streamPartIdToDataKey(STREAM_PART_ID), Any.pack(offlineDescriptor1, PeerDescriptor))
-        await entryPoint.getLayer0Node().storeDataToDht(streamPartIdToDataKey(STREAM_PART_ID), Any.pack(offlineDescriptor2, PeerDescriptor))
+        await entryPoint.getControlLayerNode().storeDataToDht(streamPartIdToDataKey(STREAM_PART_ID), Any.pack(offlineDescriptor1, PeerDescriptor))
+        await entryPoint.getControlLayerNode().storeDataToDht(streamPartIdToDataKey(STREAM_PART_ID), Any.pack(offlineDescriptor2, PeerDescriptor))
         
         node1.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
         node1.getContentDeliveryManager().on('newMessage', () => { messageReceived = true })

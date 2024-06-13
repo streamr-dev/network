@@ -19,14 +19,14 @@ import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { MsgChainUtil } from './MsgChainUtil'
 import { Resends } from './Resends'
 import { OrderMessages } from './ordering/OrderMessages'
-import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
+import { SignatureValidator } from '../signature/SignatureValidator'
 
 export interface MessagePipelineOptions {
     streamPartId: StreamPartID
     getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>
     resends: Resends
     streamRegistry: StreamRegistry
-    erc1271ContractFacade: ERC1271ContractFacade
+    signatureValidator: SignatureValidator
     groupKeyManager: GroupKeyManager
     // eslint-disable-next-line max-len
     config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
@@ -54,7 +54,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
 
     const messageStream = new PushPipeline<StreamMessage, StreamMessage>
     const msgChainUtil = new MsgChainUtil(async (msg) => {
-        await validateStreamMessage(msg, opts.streamRegistry, opts.erc1271ContractFacade)
+        await validateStreamMessage(msg, opts.streamRegistry, opts.signatureValidator)
         let decrypted
         if (StreamMessage.isAESEncrypted(msg)) {
             try {

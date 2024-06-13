@@ -1,19 +1,17 @@
+import { initEventGateway } from '@streamr/utils'
+import type { TransactionResponse } from 'ethers'
 import {
     BaseContract,
     Contract,
     ContractTransactionReceipt,
     ContractTransactionResponse,
+    FunctionFragment,
 } from 'ethers'
-import { initEventGateway } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
-import shuffle from 'lodash/shuffle'
 import without from 'lodash/without'
 import pLimit from 'p-limit'
 import { InternalEvents, StreamrClientEventEmitter, StreamrClientEvents } from '../events'
-import { LoggerFactory } from './LoggerFactory'
-import { tryInSequence } from './promises'
-import { FunctionFragment } from 'ethers'
-import type { TransactionResponse } from 'ethers'
+import { LoggerFactory } from '../utils/LoggerFactory'
 
 export interface ContractEvent {
     onMethodExecute: (methodName: string) => void
@@ -159,17 +157,6 @@ export const createDecoratedContract = <T extends BaseContract>(
     createLogger(eventEmitter, loggerFactory)
 
     return decoratedContract
-}
-
-export const queryAllReadonlyContracts = <T, C>(
-    call: (contract: C) => Promise<T>,
-    contracts: C[]
-): Promise<T> => {
-    return tryInSequence(
-        shuffle(contracts).map((contract: C) => {
-            return () => call(contract)
-        })
-    )
 }
 
 export const initContractEventGateway = <
