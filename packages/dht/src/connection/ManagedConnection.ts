@@ -29,7 +29,6 @@ export class ManagedConnection extends EventEmitter<Events> {
     private implementation?: IConnection
     private outputBufferEmitter = new EventEmitter<OutputBufferEvents>()
     private outputBuffer: Uint8Array[] = []
-    private inputBuffer: Uint8Array[] = []
     public connectionId: ConnectionID
     private remotePeerDescriptor?: PeerDescriptor
     public connectionType: ConnectionType
@@ -111,48 +110,6 @@ export class ManagedConnection extends EventEmitter<Events> {
         }
     }
 
-    // eventemitter3 does not implement the standard 'newListener' event, so we need to override
-
-    override on(
-        event: keyof Events,
-        fn: (...args: any) => void,
-        // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-        context?: any
-    ): this {
-        if (event === 'managedData' && this.listenerCount('managedData') === 0) {
-            while (this.inputBuffer.length > 0) {
-                logger.trace('emptying inputBuffer')
-                const data = this.inputBuffer.shift()!
-                fn(data, this.getPeerDescriptor())
-            }
-        }
-        super.on(event, fn, context)
-        return this
-    }
-
-    override once(
-        event: keyof Events,
-        fn: (...args: any) => void,
-        // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-        context?: any
-    ): this {
-        if (event === 'managedData' && this.listenerCount('managedData') === 0) {
-            if (this.inputBuffer.length > 0) {
-                while (this.inputBuffer.length > 0) {
-                    logger.trace('emptying inputBuffer')
-                    const data = this.inputBuffer.shift()!
-                    fn(data, this.getPeerDescriptor())
-                }
-            } else {
-                super.once(event, fn, context)
-            }
-        } else {
-            super.once(event, fn, context)
-        }
-
-        return this
-    }
-
     public getNodeId(): DhtAddress {
         return getNodeIdFromPeerDescriptor(this.remotePeerDescriptor!)
     }
@@ -191,11 +148,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
         impl.on('data', (bytes: Uint8Array) => {
             this.lastUsedTimestamp = Date.now()
-            if (this.listenerCount('managedData') === 0) {
-                this.inputBuffer.push(bytes)
-            } else {
-                this.emit('managedData', bytes, this.getPeerDescriptor()!)
-            }
+            this.emit('managedData', bytes, this.getPeerDescriptor()!)
         })
 
         impl.on('error', (name: string) => {
@@ -285,14 +238,11 @@ export class ManagedConnection extends EventEmitter<Events> {
             if (!this.handshaker) {
                 this.handshaker = new Handshaker(this.localPeerDescriptor, this.implementation)
             }
-
             this.handshaker.sendHandshakeResponse()
-
         } else {  // This happens to when there is a regular incoming connection
             this.handshaker!.sendHandshakeResponse()
             this.attachImplementation(this.incomingConnection!)
         }
-
         this.onHandshakeCompleted(this.remotePeerDescriptor!)
     }
 
