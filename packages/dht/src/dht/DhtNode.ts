@@ -67,7 +67,7 @@ export interface DhtNodeEvents {
 export interface DhtNodeOptions {
     serviceId?: ServiceID
     joinParallelism?: number
-    maxNeighborListSize?: number
+    maxContactCount?: number
     numberOfNodesPerKBucket?: number
     joinNoProgressLimit?: number
     peerDiscoveryQueryBatchSize?: number
@@ -110,7 +110,7 @@ export interface DhtNodeOptions {
 type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
     'serviceId' |
     'joinParallelism' |
-    'maxNeighborListSize' |
+    'maxContactCount' |
     'numberOfNodesPerKBucket' |
     'joinNoProgressLimit' |
     'dhtJoinTimeout' |
@@ -125,6 +125,9 @@ type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
 const logger = new Logger(module)
 
 const PERIODICAL_PING_INTERVAL = 60 * 1000
+
+// TODO move this to trackerless-network package and change serviceId to be a required paramater
+export const CONTROL_LAYER_NODE_SERVICE_ID = 'layer0'
 
 export type Events = TransportEvents & DhtNodeEvents
 
@@ -148,9 +151,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     constructor(conf: DhtNodeOptions) {
         super()
         this.config = merge({
-            serviceId: 'layer0',
+            serviceId: CONTROL_LAYER_NODE_SERVICE_ID,
             joinParallelism: 3,
-            maxNeighborListSize: 200,
+            maxContactCount: 200,
             numberOfNodesPerKBucket: 8,
             joinNoProgressLimit: 5,
             dhtJoinTimeout: 60000,
@@ -331,7 +334,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private initPeerManager() {
         this.peerManager = new PeerManager({
             numberOfNodesPerKBucket: this.config.numberOfNodesPerKBucket,
-            maxContactListSize: this.config.maxNeighborListSize,
+            maxContactCount: this.config.maxContactCount,
             localNodeId: this.getNodeId(),
             localPeerDescriptor: this.localPeerDescriptor!,
             connectionLocker: this.connectionLocker,
@@ -378,8 +381,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.emit('connected', peerDescriptor)
         })
         this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => {
-            const isLayer0 = (this.connectionLocker !== undefined)
-            if (isLayer0) {
+            const isControlLayerNode = (this.connectionLocker !== undefined)
+            if (isControlLayerNode) {
                 const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
                 if (gracefulLeave) {
                     this.peerManager!.removeContact(nodeId)
