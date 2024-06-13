@@ -2,7 +2,7 @@ import { ConnectionEvents, ConnectionID, ConnectionType, IConnection } from './I
 import * as Err from '../helpers/errors'
 import { Handshaker } from './Handshaker'
 import { HandshakeError, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
-import { Logger, runAndRaceEvents3, RunAndRaceEventsReturnType } from '@streamr/utils'
+import { Logger, setAbortableTimeout } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
 import { DhtAddress, getNodeIdFromPeerDescriptor } from '../identifiers'
@@ -15,11 +15,6 @@ export interface ManagedConnectionEvents {
     handshakeFailed: () => void
 }
 
-interface OutputBufferEvents {
-    bufferSent: () => void
-    bufferSendingFailed: () => void
-}
-
 const logger = new Logger(module)
 
 export type Events = ManagedConnectionEvents & ConnectionEvents
@@ -27,8 +22,6 @@ export type Events = ManagedConnectionEvents & ConnectionEvents
 export class ManagedConnection extends EventEmitter<Events> {
 
     private implementation?: IConnection
-    private outputBufferEmitter = new EventEmitter<OutputBufferEvents>()
-    private outputBuffer: Uint8Array[] = []
     public connectionId: ConnectionID
     private remotePeerDescriptor?: PeerDescriptor
     public connectionType: ConnectionType
@@ -37,13 +30,11 @@ export class ManagedConnection extends EventEmitter<Events> {
     private lastUsedTimestamp: number = Date.now()
     private stopped = false
     private bufferSentbyOtherConnection = false
-    private closing = false
     public replacedByOtherConnection = false
     private localPeerDescriptor: PeerDescriptor
     protected outgoingConnection?: IConnection
     protected incomingConnection?: IConnection
-    // TODO: Temporary debug variable, should be removed in the future.
-    private created = Date.now()
+    private readonly connectingAbortController: AbortController = new AbortController()
 
     constructor(
         localPeerDescriptor: PeerDescriptor,
@@ -83,8 +74,7 @@ export class ManagedConnection extends EventEmitter<Events> {
 
             this.handshaker.on('handshakeCompleted', (peerDescriptor: PeerDescriptor) => {
                 logger.trace('handshake completed for outgoing connection '
-                    + ', ' + getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor) 
-                    + ' outputBuffer.length: ' + this.outputBuffer.length)
+                    + ', ' + getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor))
                 this.attachImplementation(outgoingConnection)
                 this.onHandshakeCompleted(peerDescriptor)
             })
@@ -108,6 +98,9 @@ export class ManagedConnection extends EventEmitter<Events> {
 
             incomingConnection.on('disconnected', this.onDisconnected)
         }
+        setAbortableTimeout(() => {
+            this.close(false)
+        }, 15 * 1000, this.connectingAbortController.signal)
     }
 
     public getNodeId(): DhtAddress {
@@ -132,12 +125,7 @@ export class ManagedConnection extends EventEmitter<Events> {
         this.setRemotePeerDescriptor(peerDescriptor)
         this.handshakeCompleted = true
         this.handshaker!.stop()
-
-        while (this.outputBuffer.length > 0) {
-            logger.trace('emptying outputBuffer')
-            this.implementation!.send(this.outputBuffer.shift()!)
-        }
-        this.outputBufferEmitter.emit('bufferSent')
+        this.connectingAbortController.abort()
         logger.trace('emitting handshake_completed')
         this.emit('handshakeCompleted', peerDescriptor)
     }
@@ -170,55 +158,24 @@ export class ManagedConnection extends EventEmitter<Events> {
         if (this.bufferSentbyOtherConnection) {
             return
         }
-        this.outputBufferEmitter.emit('bufferSendingFailed')
         this.emit('disconnected', gracefulLeave)
     }
 
-    async send(data: Uint8Array, connect: boolean): Promise<void> {
+    send(data: Uint8Array): void {
         if (this.stopped) {
             throw new Err.SendFailed('ManagedConnection is stopped')
         }
-        if (this.closing) {
-            throw new Err.SendFailed('ManagedConnection is closing')
+        if (!this.implementation) {
+            throw new Error('Invariant violation no implementation before send called')
         }
         this.lastUsedTimestamp = Date.now()
-
-        if (!connect && !this.implementation) {
-            throw new Err.ConnectionNotOpen('Connection not open when calling send() with connect flag as false')
-        } else if (this.implementation) {
-            this.implementation.send(data)
-        } else {
-            logger.trace('adding data to outputBuffer')
-
-            let result: RunAndRaceEventsReturnType<OutputBufferEvents>
-
-            try {
-                result = await runAndRaceEvents3<OutputBufferEvents>([() => { this.outputBuffer.push(data) }],
-                    this.outputBufferEmitter, ['bufferSent', 'bufferSendingFailed'], 15000)  // TODO use config option or named constant?
-            } catch (e) {
-                logger.debug(`Connection to ${getNodeIdOrUnknownFromPeerDescriptor(this.remotePeerDescriptor)} timed out`, {
-                    peerDescriptor: this.remotePeerDescriptor,
-                    type: this.connectionType,
-                    lifetime: Date.now() - this.created
-                })
-                await this.close(false)
-                throw new Err.SendFailed('Sending buffer timed out')
-            }
-
-            if (result.winnerName === 'bufferSendingFailed') {
-                throw new Err.SendFailed('Sending buffer failed')
-            }
-            // buffer was sent successfully, return normally
-        }
+        this.implementation.send(data)
     }
 
     public sendNoWait(data: Uint8Array): void {
         this.lastUsedTimestamp = Date.now()
         if (this.implementation) {
             this.implementation.send(data)
-        } else {
-            logger.trace('adding data to outputBuffer')
-            this.outputBuffer.push(data)
         }
     }
 
@@ -229,7 +186,6 @@ export class ManagedConnection extends EventEmitter<Events> {
         }
         logger.trace('bufferSentByOtherConnection reported')
         this.bufferSentbyOtherConnection = true
-        this.outputBufferEmitter.emit('bufferSent')
     }
 
     public acceptHandshake(): void {
@@ -252,16 +208,14 @@ export class ManagedConnection extends EventEmitter<Events> {
     }
 
     public async close(gracefulLeave: boolean): Promise<void> {
-        if (this.closing) {
+        if (this.stopped) {
             return
         }
+        this.connectingAbortController.abort()
         if (this.replacedByOtherConnection) {
             logger.trace('close() called on replaced connection')
         }
-        this.closing = true
-        
-        this.outputBufferEmitter.emit('bufferSendingFailed')
-       
+               
         if (this.implementation) {
             await this.implementation?.close(gracefulLeave)
         } else if (this.outgoingConnection) {
@@ -271,21 +225,23 @@ export class ManagedConnection extends EventEmitter<Events> {
         } else {
             this.emit('disconnected', gracefulLeave)
         }
+        this.removeAllListeners()
     }
 
     public destroy(): void {
-        this.closing = true
-        if (!this.stopped) {
-            this.stopped = true
+        if (this.stopped) {
+            return
+        }
+        this.connectingAbortController.abort()
+        this.stopped = true
 
-            this.removeAllListeners()
-            if (this.implementation) {
-                this.implementation?.destroy()
-            } else if (this.outgoingConnection) {
-                this.outgoingConnection?.destroy()
-            } else if (this.incomingConnection) {
-                this.incomingConnection?.destroy()
-            }
+        this.removeAllListeners()
+        if (this.implementation) {
+            this.implementation?.destroy()
+        } else if (this.outgoingConnection) {
+            this.outgoingConnection?.destroy()
+        } else if (this.incomingConnection) {
+            this.incomingConnection?.destroy()
         }
     }
 
@@ -293,9 +249,4 @@ export class ManagedConnection extends EventEmitter<Events> {
         return this.handshakeCompleted
     }
 
-    stealOutputBuffer(): Uint8Array[] {
-        const ret = this.outputBuffer
-        this.outputBuffer = []
-        return ret
-    }
 }
