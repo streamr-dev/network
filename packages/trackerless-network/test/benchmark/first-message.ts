@@ -25,7 +25,7 @@ import fs from 'fs'
 import { NetworkNode } from '../../src/NetworkNode'
 import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
 import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
-import { Layer1Node } from '../../src/logic/Layer1Node'
+import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 
 const numNodes = 10000
@@ -161,8 +161,8 @@ run().then(() => {
     console.log(controlLayerNode.getNeighbors().length)
     console.log(controlLayerNode.getConnectionsView().getConnectionCount())
     const streamPartDelivery = contentDeliveryManager
-        .getStreamPartDelivery(streamParts[0])! as { layer1Node: Layer1Node, node: ContentDeliveryLayerNode }
-    console.log(streamPartDelivery.layer1Node.getNeighbors())
+        .getStreamPartDelivery(streamParts[0])! as { discoveryLayerNode: DiscoveryLayerNode, node: ContentDeliveryLayerNode }
+    console.log(streamPartDelivery.discoveryLayerNode.getNeighbors())
     console.log(streamPartDelivery.node.getNeighbors())
     console.log(nodes[nodes.length - 1])
     if (publishInterval) {
