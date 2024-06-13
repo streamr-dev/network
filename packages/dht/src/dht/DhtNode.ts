@@ -67,7 +67,7 @@ export interface DhtNodeEvents {
 export interface DhtNodeOptions {
     serviceId?: ServiceID
     joinParallelism?: number
-    maxNeighborListSize?: number
+    maxContactCount?: number
     numberOfNodesPerKBucket?: number
     joinNoProgressLimit?: number
     peerDiscoveryQueryBatchSize?: number
@@ -110,7 +110,7 @@ export interface DhtNodeOptions {
 type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
     'serviceId' |
     'joinParallelism' |
-    'maxNeighborListSize' |
+    'maxContactCount' |
     'numberOfNodesPerKBucket' |
     'joinNoProgressLimit' |
     'dhtJoinTimeout' |
@@ -150,7 +150,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.config = merge({
             serviceId: 'layer0',
             joinParallelism: 3,
-            maxNeighborListSize: 200,
+            maxContactCount: 200,
             numberOfNodesPerKBucket: 8,
             joinNoProgressLimit: 5,
             dhtJoinTimeout: 60000,
@@ -331,7 +331,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     private initPeerManager() {
         this.peerManager = new PeerManager({
             numberOfNodesPerKBucket: this.config.numberOfNodesPerKBucket,
-            maxContactListSize: this.config.maxNeighborListSize,
+            maxContactCount: this.config.maxContactCount,
             localNodeId: this.getNodeId(),
             localPeerDescriptor: this.localPeerDescriptor!,
             connectionLocker: this.connectionLocker,
