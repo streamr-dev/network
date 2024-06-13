@@ -259,11 +259,11 @@ export class WebsocketConnector {
                 }
                 socket.off('disconnected', delFunc)
                 managedConnection.off('disconnected', delFunc)
-                managedConnection.off('handshakeCompleted', delFunc)
+                managedConnection.off('connected', delFunc)
             }
             socket.on('disconnected', delFunc)
             managedConnection.on('disconnected', delFunc)
-            managedConnection.on('handshakeCompleted', delFunc)
+            managedConnection.on('connected', delFunc)
 
             socket.connect(url, false)
 

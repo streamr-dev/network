@@ -157,7 +157,7 @@ export class WebrtcConnector {
             this.ongoingConnectAttempts.delete(nodeId)
             connection.off('disconnected', delFunc)
             managedConnection.off('disconnected', delFunc)
-            managedConnection.off('handshakeCompleted', delFunc)
+            managedConnection.off('connected', delFunc)
         }
         if (offering) {
             managedConnection = new ManagedConnection(ConnectionType.WEBRTC)
@@ -191,7 +191,7 @@ export class WebrtcConnector {
 
         connection.on('disconnected', delFunc)
         managedConnection.on('disconnected', delFunc)
-        managedConnection.on('handshakeCompleted', delFunc)
+        managedConnection.on('connected', delFunc)
     
         connection.on('localCandidate', (candidate: string, mid: string) => {
             if (this.config.externalIp !== undefined) {
