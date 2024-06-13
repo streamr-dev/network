@@ -94,8 +94,8 @@ export class ProxyClient extends EventEmitter<Events> {
             streamPartId: this.config.streamPartId,
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: DhtAddress) => this.broadcast(message, previousNode),
-            onLeaveNotice: (senderId: DhtAddress) => {
-                const contact = this.neighbors.get(senderId)
+            onLeaveNotice: (remoteNodeId: DhtAddress) => {
+                const contact = this.neighbors.get(remoteNodeId)
                 if (contact) {
                     // TODO should we catch possible promise rejection?
                     setImmediate(() => this.onNodeDisconnected(contact.getPeerDescriptor()))

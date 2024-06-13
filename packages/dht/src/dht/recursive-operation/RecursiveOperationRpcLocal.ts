@@ -26,8 +26,8 @@ export class RecursiveOperationRpcLocal implements IRecursiveOperationRpc {
         if (this.config.isMostLikelyDuplicate(routedMessage.requestId)) {
             return createRouteMessageAck(routedMessage, RouteMessageError.DUPLICATE)
         }
-        const senderId = getNodeIdFromPeerDescriptor(getPreviousPeer(routedMessage) ?? routedMessage.sourcePeer!)
-        logger.trace(`Received routeRequest call from ${senderId}`)
+        const remoteNodeId = getNodeIdFromPeerDescriptor(getPreviousPeer(routedMessage) ?? routedMessage.sourcePeer!)
+        logger.trace(`Received routeRequest call from ${remoteNodeId}`)
         this.config.addToDuplicateDetector(routedMessage.requestId)
         return this.config.doRouteRequest(routedMessage)
     }

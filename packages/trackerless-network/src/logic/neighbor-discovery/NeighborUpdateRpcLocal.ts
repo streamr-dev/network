@@ -54,9 +54,9 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
     // INeighborUpdateRpc server method
     async neighborUpdate(message: NeighborUpdate, context: ServerCallContext): Promise<NeighborUpdate> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
+        const remoteNodeId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
         this.updateContacts(message.neighborDescriptors)
-        if (!this.config.neighbors.has(senderId) && !this.config.ongoingHandshakes.has(senderId)) {
+        if (!this.config.neighbors.has(remoteNodeId) && !this.config.ongoingHandshakes.has(remoteNodeId)) {
             return this.createResponse(true)
         } else {
             const isOverNeighborCount = this.config.neighbors.size() > this.config.neighborTargetCount
@@ -67,7 +67,7 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
             if (!isOverNeighborCount) {
                 this.config.neighborFinder.start()
             } else {
-                this.config.neighbors.remove(senderId)
+                this.config.neighbors.remove(remoteNodeId)
             }
             return this.createResponse(isOverNeighborCount)
         }

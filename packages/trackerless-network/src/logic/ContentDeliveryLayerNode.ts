@@ -87,30 +87,30 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             rpcCommunicator: this.config.rpcCommunicator,
             markAndCheckDuplicate: (msg: MessageID, prev?: MessageRef) => markAndCheckDuplicate(this.duplicateDetectors, msg, prev),
             broadcast: (message: StreamMessage, previousNode?: DhtAddress) => this.broadcast(message, previousNode),
-            onLeaveNotice: (sourceId: DhtAddress, sourceIsStreamEntryPoint: boolean) => {
+            onLeaveNotice: (remoteNodeId: DhtAddress, sourceIsStreamEntryPoint: boolean) => {
                 if (this.abortController.signal.aborted) {
                     return
                 }
-                const contact = this.config.nearbyNodeView.get(sourceId)
-                || this.config.randomNodeView.get(sourceId)
-                || this.config.neighbors.get(sourceId)
-                || this.config.proxyConnectionRpcLocal?.getConnection(sourceId)?.remote
+                const contact = this.config.nearbyNodeView.get(remoteNodeId)
+                || this.config.randomNodeView.get(remoteNodeId)
+                || this.config.neighbors.get(remoteNodeId)
+                || this.config.proxyConnectionRpcLocal?.getConnection(remoteNodeId)?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
-                    this.config.discoveryLayerNode.removeContact(sourceId)
-                    this.config.neighbors.remove(sourceId)
-                    this.config.nearbyNodeView.remove(sourceId)
-                    this.config.randomNodeView.remove(sourceId)
-                    this.config.leftNodeView.remove(sourceId)
-                    this.config.rightNodeView.remove(sourceId)
-                    this.config.neighborFinder.start([sourceId])
-                    this.config.proxyConnectionRpcLocal?.removeConnection(sourceId)
+                    this.config.discoveryLayerNode.removeContact(remoteNodeId)
+                    this.config.neighbors.remove(remoteNodeId)
+                    this.config.nearbyNodeView.remove(remoteNodeId)
+                    this.config.randomNodeView.remove(remoteNodeId)
+                    this.config.leftNodeView.remove(remoteNodeId)
+                    this.config.rightNodeView.remove(remoteNodeId)
+                    this.config.neighborFinder.start([remoteNodeId])
+                    this.config.proxyConnectionRpcLocal?.removeConnection(remoteNodeId)
                 }
                 if (sourceIsStreamEntryPoint) {
                     this.emit('entryPointLeaveDetected')
                 }
             },
-            markForInspection: (senderId: DhtAddress, messageId: MessageID) => this.config.inspector.markMessage(senderId, messageId)
+            markForInspection: (remoteNodeId: DhtAddress, messageId: MessageID) => this.config.inspector.markMessage(remoteNodeId, messageId)
         })
     }
 

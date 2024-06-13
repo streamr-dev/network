@@ -66,8 +66,8 @@ export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
     }
 
     async closeConnection(_request: CloseTemporaryConnection, context: ServerCallContext): Promise<Empty> {
-        const senderId = getNodeIdFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!)
-        this.removeNode(senderId)
+        const remoteNodeId = getNodeIdFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!)
+        this.removeNode(remoteNodeId)
         return {}
     }
 }

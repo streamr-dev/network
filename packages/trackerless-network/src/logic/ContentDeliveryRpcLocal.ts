@@ -15,8 +15,8 @@ export interface ContentDeliveryRpcLocalConfig {
     streamPartId: StreamPartID
     markAndCheckDuplicate: (messageId: MessageID, previousMessageRef?: MessageRef) => boolean
     broadcast: (message: StreamMessage, previousNode?: DhtAddress) => void
-    onLeaveNotice(senderId: DhtAddress, isLocalNodeEntryPoint: boolean): void
-    markForInspection(senderId: DhtAddress, messageId: MessageID): void
+    onLeaveNotice(remoteNodeId: DhtAddress, isLocalNodeEntryPoint: boolean): void
+    markForInspection(remoteNodeId: DhtAddress, messageId: MessageID): void
     rpcCommunicator: ListeningRpcCommunicator
 }
 
@@ -40,8 +40,8 @@ export class ContentDeliveryRpcLocal implements IContentDeliveryRpc {
     async leaveStreamPartNotice(message: LeaveStreamPartNotice, context: ServerCallContext): Promise<Empty> {
         if (message.streamPartId === this.config.streamPartId) {
             const sourcePeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-            const sourceId = getNodeIdFromPeerDescriptor(sourcePeerDescriptor)
-            this.config.onLeaveNotice(sourceId, message.isEntryPoint)
+            const remoteNodeId = getNodeIdFromPeerDescriptor(sourcePeerDescriptor)
+            this.config.onLeaveNotice(remoteNodeId, message.isEntryPoint)
         }
         return Empty
     }

@@ -28,7 +28,7 @@ interface HandshakeRpcLocalConfig {
     maxNeighborCount: number
     createRpcRemote: (target: PeerDescriptor) => HandshakeRpcRemote
     createContentDeliveryRpcRemote: (peerDescriptor: PeerDescriptor) => ContentDeliveryRpcRemote
-    handshakeWithInterleaving: (target: PeerDescriptor, senderId: DhtAddress) => Promise<boolean>
+    handshakeWithInterleaving: (target: PeerDescriptor, remoteNodeId: DhtAddress) => Promise<boolean>
 }
 
 const logger = new Logger(module)
@@ -126,10 +126,10 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
 
     async interleaveRequest(message: InterleaveRequest, context: ServerCallContext): Promise<InterleaveResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
+        const remoteNodeId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
         try {
-            await this.config.handshakeWithInterleaving(message.interleaveTargetDescriptor!, senderId)
-            this.config.neighbors.remove(senderId)
+            await this.config.handshakeWithInterleaving(message.interleaveTargetDescriptor!, remoteNodeId)
+            this.config.neighbors.remove(remoteNodeId)
             return { accepted: true }
         } catch (err) {
             logger.debug(`interleaveRequest to ${getNodeIdFromPeerDescriptor(message.interleaveTargetDescriptor!)} failed`, { err })

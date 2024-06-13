@@ -64,13 +64,13 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     private registerLocalRpcMethods() {
         const rpcLocal = new RecursiveOperationSessionRpcLocal({
             onResponseReceived: (
-                sourceId: DhtAddress,
+                remoteNodeId: DhtAddress,
                 routingPath: PeerDescriptor[],
                 closestConnectedNodes: PeerDescriptor[],
                 dataEntries: DataEntry[],
                 noCloserNodesFound: boolean
             ) => {
-                this.onResponseReceived(sourceId, routingPath, closestConnectedNodes, dataEntries, noCloserNodesFound)
+                this.onResponseReceived(remoteNodeId, routingPath, closestConnectedNodes, dataEntries, noCloserNodesFound)
             }
         })
         this.rpcCommunicator.registerRpcNotification(RecursiveOperationResponse, 'sendResponse',
@@ -129,7 +129,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     }
 
     public onResponseReceived(
-        sourceId: DhtAddress,
+        remoteNodeId: DhtAddress,
         routingPath: PeerDescriptor[],
         closestConnectedNodes: PeerDescriptor[],
         dataEntries: DataEntry[],
@@ -143,8 +143,8 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             this.results.addContact(new Contact(descriptor))
         })
         this.processFoundData(dataEntries)
-        if (noCloserNodesFound || this.noCloserNodesReceivedFrom.has(sourceId)) {
-            this.onNoCloserPeersFound(sourceId)
+        if (noCloserNodesFound || this.noCloserNodesReceivedFrom.has(remoteNodeId)) {
+            this.onNoCloserPeersFound(remoteNodeId)
         }
     }
 
@@ -187,9 +187,9 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         })
     }
 
-    private onNoCloserPeersFound(sourceId: DhtAddress): void {
+    private onNoCloserPeersFound(remoteNodeId: DhtAddress): void {
         this.noCloserNodesReceivedCounter += 1
-        this.noCloserNodesReceivedFrom.add(sourceId)
+        this.noCloserNodesReceivedFrom.add(remoteNodeId)
         if (this.isCompleted()) {
             this.emit('completed')
             this.completionEventEmitted = true
