@@ -80,6 +80,8 @@ export interface TlsCertificate {
 interface ConnectingEndpoint {
     connected: false
     // TODO: Handle PendingConnections in ConnectorFacade only? ConnectionManager knows buffer and reacts to events from below.
+    // Difficulties arise from duplicate connection handling. Sometimes a connected connection is replaced as duplicate in which case
+    // a managed connection has to be replaced in the ConnectionManager.
     connection: PendingConnection
     buffer: OutputBuffer
 }
@@ -89,6 +91,7 @@ interface ConnectedEndpoint {
     connection: ManagedConnection
 }
 
+// TODO: Could encapsulate all endpoint logic to its own module
 type Endpoint = ConnectedEndpoint | ConnectingEndpoint
 
 const INTERNAL_SERVICE_ID = 'system/connection-manager'
