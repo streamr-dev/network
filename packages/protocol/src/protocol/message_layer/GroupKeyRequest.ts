@@ -1,16 +1,15 @@
 import StreamMessage, { StreamMessageType } from './StreamMessage'
-import { EthereumAddress } from '@streamr/utils'
 
 interface Options {
     requestId: string
-    recipient: EthereumAddress
+    recipient: Uint8Array
     rsaPublicKey: string
     groupKeyIds: string[]
 }
 
 export default class GroupKeyRequest {
     readonly requestId: string
-    readonly recipient: EthereumAddress
+    readonly recipient: Uint8Array
     readonly rsaPublicKey: string
     readonly groupKeyIds: ReadonlyArray<string>
 
