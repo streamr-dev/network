@@ -283,7 +283,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             ...message,
             sourceDescriptor: this.getLocalPeerDescriptor()
         }
-
         let connection = this.endpoints.get(nodeId)?.connection
         if (!connection && opts.connect) {
             connection = this.connectorFacade.createConnection(peerDescriptor)

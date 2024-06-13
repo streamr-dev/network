@@ -49,7 +49,7 @@ import { StreamDefinition } from './types'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
-import { RpcProviderFactory } from './RpcProviderFactory'
+import { RpcProviderSource } from './RpcProviderSource'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -84,7 +84,7 @@ export class StreamrClient {
     private readonly subscriber: Subscriber
     private readonly resends: Resends
     private readonly node: NetworkNodeFacade
-    private readonly rpcProviderFactory: RpcProviderFactory
+    private readonly rpcProviderSource: RpcProviderSource
     private readonly streamRegistry: StreamRegistry
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
@@ -118,7 +118,7 @@ export class StreamrClient {
         this.subscriber = container.resolve<Subscriber>(Subscriber)
         this.resends = container.resolve<Resends>(Resends)
         this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
-        this.rpcProviderFactory = container.resolve(RpcProviderFactory)
+        this.rpcProviderSource = container.resolve(RpcProviderSource)
         this.streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
         this.streamStorageRegistry = container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
         this.storageNodeRegistry = container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
@@ -571,7 +571,7 @@ export class StreamrClient {
      * Gets the Signer associated with the current {@link StreamrClient} instance.
      */
     getSigner(): Promise<SignerWithProvider> {
-        return this.authentication.getStreamRegistryChainSigner(this.rpcProviderFactory)
+        return this.authentication.getTransactionSigner(this.rpcProviderSource)
     }
 
     /**
@@ -693,7 +693,7 @@ export class StreamrClient {
      * transactions via ethers library.
      */
     getEthersOverrides(): Promise<Overrides> {
-        return _getEthersOverrides(this.rpcProviderFactory, this.config)
+        return _getEthersOverrides(this.rpcProviderSource, this.config)
     }
 
     // --------------------------------------------------------------------------------------------

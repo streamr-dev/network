@@ -1,8 +1,9 @@
 ---
 sidebar_position: 0
+slug: /
 ---
 
-# What is the Streamr Network
+# Overview
 The Streamr Network is a peer-to-peer network for publishing and subscribing to data in real-time. Applications use it for _decentralized messaging_, for example sharing data across applications or broadcasting real-time state changes to large audiences. The decentralized nature of the system makes the data transport scalable, robust, secure, tamper proof, and censorship resistant.
 
 The Streamr Network consists of _nodes_ that interconnect peer-to-peer using the Streamr protocol. Together, the nodes in the Network form a topic-based publish-subscribe messaging system. Topics in this messaging system are called streams. The job of the Network is to deliver published streams of messages to all subscribers of that stream.

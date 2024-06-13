@@ -24,8 +24,8 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
     public connectionId: ConnectionID
     private remotePeerDescriptor: PeerDescriptor
     private lastUsedTimestamp: number = Date.now()
-    private stopped = false
     private replacedAsDuplicate = false
+    private stopped = false
 
     constructor(peerDescriptor: PeerDescriptor, connection: IConnection) {
         super()
@@ -47,6 +47,7 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
         if (!this.replacedAsDuplicate) {
             this.emit('disconnected', gracefulLeave)
         }
+        this.removeAllListeners()
     }
 
     // TODO: Can this be removed if ManagedConnections can never be duplicates?

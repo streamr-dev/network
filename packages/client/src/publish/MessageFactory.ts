@@ -7,50 +7,29 @@ import {
     SignatureType,
     StreamID,
     StreamMessage,
-    StreamMessageOptions,
     StreamMessageType
 } from '@streamr/protocol'
 import { EthereumAddress, keyToArrayIndex, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import random from 'lodash/random'
-import { MarkRequired } from 'ts-essentials'
 import { Authentication } from '../Authentication'
 import { StreamrClientError } from '../StreamrClientError'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { StreamRegistry } from '../contracts/StreamRegistry'
-import { createSignaturePayload } from '../signature'
 import { Mapping } from '../utils/Mapping'
 import { formLookupKey } from '../utils/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { PublishMetadata } from './Publisher'
 import { createMessageRef, createRandomMsgChainId } from './messageChain'
-import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
-import { assertSignatureIsValid } from '../utils/validateStreamMessage'
+import { SignatureValidator } from '../signature/SignatureValidator'
+import { MessageSigner } from '../signature/MessageSigner'
 
 export interface MessageFactoryOptions {
     streamId: StreamID
     authentication: Authentication
     streamRegistry: Pick<StreamRegistry, 'getStream' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'clearStreamCache'>
     groupKeyQueue: GroupKeyQueue
-    erc1271ContractFacade: ERC1271ContractFacade
-}
-
-export const createSignedMessage = async (
-    opts: MarkRequired<Omit<StreamMessageOptions, 'signature'>, 'messageType'> & { authentication: Authentication }
-): Promise<StreamMessage> => {
-    const signature = await opts.authentication.createMessageSignature(createSignaturePayload({
-        messageId: opts.messageId,
-        messageType: opts.messageType,
-        content: opts.content,
-        signatureType: opts.signatureType,
-        encryptionType: opts.encryptionType,
-        prevMsgRef: opts.prevMsgRef ?? undefined,
-        newGroupKey: opts.newGroupKey ?? undefined
-    }))
-    return new StreamMessage({
-        ...opts,
-        signature,
-        content: opts.content
-    })
+    signatureValidator: SignatureValidator
+    messageSigner: MessageSigner
 }
 
 export class MessageFactory {
@@ -62,7 +41,8 @@ export class MessageFactory {
     private readonly prevMsgRefs: Map<string, MessageRef> = new Map()
     private readonly streamRegistry: Pick<StreamRegistry, 'getStream' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'clearStreamCache'>
     private readonly groupKeyQueue: GroupKeyQueue
-    private readonly erc1271ContractFacade: ERC1271ContractFacade
+    private readonly signatureValidator: SignatureValidator
+    private readonly messageSigner: MessageSigner
     private firstMessage = true
 
     constructor(opts: MessageFactoryOptions) {
@@ -70,7 +50,8 @@ export class MessageFactory {
         this.authentication = opts.authentication
         this.streamRegistry = opts.streamRegistry
         this.groupKeyQueue = opts.groupKeyQueue
-        this.erc1271ContractFacade = opts.erc1271ContractFacade
+        this.signatureValidator = opts.signatureValidator
+        this.messageSigner = opts.messageSigner
         this.defaultMessageChainIds = new Mapping(async () => {
             return createRandomMsgChainId()
         })
@@ -133,7 +114,7 @@ export class MessageFactory {
             }
         }
 
-        const msg = await createSignedMessage({
+        const msg = await this.messageSigner.createSignedMessage({
             messageId,
             messageType: StreamMessageType.MESSAGE,
             content: rawContent,
@@ -141,17 +122,15 @@ export class MessageFactory {
             encryptionType,
             groupKeyId,
             newGroupKey,
-            authentication: this.authentication,
-            contentType,
-            signatureType: metadata.erc1271Contract !== undefined ? SignatureType.ERC_1271 : SignatureType.SECP256K1,
-        })
+            contentType
+        }, metadata.erc1271Contract !== undefined ? SignatureType.ERC_1271 : SignatureType.SECP256K1)
 
         // Assert the signature is valid for the first message. This is done here to improve user experience
         // in case the client signer is not authorized for the ERC-1271 contract.
         if (this.firstMessage) {
             this.firstMessage = false
             if (metadata.erc1271Contract !== undefined) {
-                await assertSignatureIsValid(msg, this.erc1271ContractFacade)
+                await this.signatureValidator.assertSignatureIsValid(msg)
             }
         }
 

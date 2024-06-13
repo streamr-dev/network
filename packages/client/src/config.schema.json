@@ -287,6 +287,22 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+                "ethereumNetwork": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "chainId": {
+                            "type": "number"
+                        },
+                        "overrides": {
+                            "type": "object"
+                        },
+                        "highGasPriceStrategy": {
+                            "type": "boolean"
+                        }
+                    },
+                    "default": {}
+                },
                 "streamRegistryChainAddress": {
                     "type": "string",
                     "format": "ethereum-address"
@@ -299,21 +315,17 @@
                     "type": "string",
                     "format": "ethereum-address"
                 },
-                "streamRegistryChainRPCs": {
-                    "$ref": "#/definitions/chainConnectionInfoList"
-                },
-                "ethereumNetwork": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "overrides": {
-                            "type": "object"
-                        },
-                        "highGasPriceStrategy": {
-                            "type": "boolean"
-                        }
+                "rpcs": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#/definitions/rpcProviderConfig"
                     },
-                    "default": {}
+                    "minItems": 1
+                },
+                "rpcQuorum": {
+                    "type": "number",
+                    "default": 2
                 },
                 "theGraphUrl": {
                     "type": "string",
@@ -324,7 +336,8 @@
                     "default": 10
                 },
                 "pollInterval": {
-                    "type": "number"
+                    "type": "number",
+                    "default": 4000
                 }
             },
             "default": {}
@@ -476,46 +489,6 @@
                 "url": {
                     "type": "string",
                     "format": "uri"
-                },
-                "user": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "allowInsecureAuthentication": {
-                    "type": "boolean"
-                },
-                "timeout": {
-                    "type": "number",
-                    "default": 120000
-                },
-                "headers": {
-                    "type": "object"
-                }
-            }
-        },
-        "chainConnectionInfoList": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-                "rpcs",
-                "chainId"
-            ],
-            "properties": {
-                "chainId": {
-                    "type": "number"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "rpcs": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#/definitions/rpcProviderConfig"
-                    },
-                    "minItems": 1
                 }
             }
         },
