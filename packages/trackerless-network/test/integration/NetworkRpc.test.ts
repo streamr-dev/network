@@ -44,7 +44,7 @@ describe('Network RPC', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             StreamPartIDUtils.parse('testStream#0'),
-            randomEthereumAddress()
+            randomBytes(40)
         )
         await client.sendStreamMessage(msg)
         await waitForCondition(() => recvCounter === 1)

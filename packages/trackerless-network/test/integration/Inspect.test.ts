@@ -4,6 +4,7 @@ import { StreamPartIDUtils } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import { randomBytes } from 'crypto'
 
 describe('inspect', () => {
 
@@ -72,7 +73,7 @@ describe('inspect', () => {
             const msg = createStreamMessage(
                 JSON.stringify({ hello: 'WORLD' }),
                 streamPartId,
-                randomEthereumAddress(),
+                randomBytes(40),
                 123123,
                 sequenceNumber
             )

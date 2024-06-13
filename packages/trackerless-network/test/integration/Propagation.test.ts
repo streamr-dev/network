@@ -68,7 +68,7 @@ describe('Propagation', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             STREAM_PART_ID,
-            randomEthereumAddress()
+            randomBytes(40)
         )
         contentDeliveryLayerNodes[0].broadcast(msg)
         await waitForCondition(() => totalReceived >= NUM_OF_NODES, 10000)

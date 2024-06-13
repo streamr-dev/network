@@ -5,6 +5,7 @@ import { ContentDeliveryRpcLocal } from '../../src/logic/ContentDeliveryRpcLocal
 import { LeaveStreamPartNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import { randomBytes } from 'crypto'
 
 describe('ContentDeliveryRpcLocal', () => {
 
@@ -16,7 +17,7 @@ describe('ContentDeliveryRpcLocal', () => {
     const message = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
         StreamPartIDUtils.parse('random-graph#0'),
-        randomEthereumAddress()
+        randomBytes(40)
     )
 
     let mockBroadcast: jest.Mock
