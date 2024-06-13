@@ -12,6 +12,7 @@ export interface PendingConnectionEvents {
 const logger = new Logger(module)
 
 export class PendingConnection extends EventEmitter<PendingConnectionEvents> {
+
     private readonly connectingAbortController: AbortController = new AbortController()
     private remotePeerDescriptor: PeerDescriptor
     private replacedAsDuplicate: boolean = false

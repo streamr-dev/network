@@ -41,11 +41,13 @@ export interface WebsocketServerConnectorConfig {
     geoIpDatabaseFolder?: string
 }
 
+// TODO: Could delFunc be removed here if the Handshaker event based clean up works correctly now?
 interface OngoingConnectionRequest {
     delFunc: () => void
     pendingConnection: PendingConnection
 }
 
+// TODO: Move server starting logic including autocertification and connectivity checking to WebsocketServer.ts?
 export class WebsocketServerConnector {
 
     private readonly websocketServer?: WebsocketServer

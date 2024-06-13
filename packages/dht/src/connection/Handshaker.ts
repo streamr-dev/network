@@ -15,6 +15,10 @@ interface HandshakerEvents {
     handshakeFailed: (error?: HandshakeError) => void
 }
 
+// Optimally the Outgoing and Incoming Handshakers could be their own separate classes
+// However, in cases where the PeerDescriptor of the other end of the connection can be known
+// only after a HandshakeRequest a base Handshaker class is needed as the IncomingHandshaker currently
+// requires knowledge of the other ends PeerDescriptor. (Note PendingConnection requires the remote PeerDescriptor)
 export const createOutgoingHandshaker = (
     localPeerDescriptor: PeerDescriptor,
     pendingConnection: PendingConnection,
