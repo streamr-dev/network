@@ -63,7 +63,7 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
             connectionLocker: cms[i],
             localPeerDescriptor: peerDescriptors[i],
             neighborUpdateInterval: 2000,
-            isLocalNodeEntryPoint: () => false
+            isLocalNodeStored: () => false
         }))
 
         entryPointContentDeliveryLayerNode = createContentDeliveryLayerNode({
@@ -73,7 +73,7 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
             connectionLocker: entrypointCm,
             localPeerDescriptor: entrypointDescriptor,
             neighborUpdateInterval: 2000,
-            isLocalNodeEntryPoint: () => false
+            isLocalNodeStored: () => false
         })
 
         await entryPointDiscoveryLayerNode.start()

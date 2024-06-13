@@ -45,7 +45,7 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
             transport: cms[i],
             connectionLocker: cms[i],
             localPeerDescriptor: peerDescriptors[i],
-            isLocalNodeEntryPoint: () => false
+            isLocalNodeStored: () => false
         }))
         entryPointContentDeliveryLayerNode = createContentDeliveryLayerNode({
             streamPartId,
@@ -53,7 +53,7 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
             transport: entrypointCm,
             connectionLocker: entrypointCm,
             localPeerDescriptor: entrypointDescriptor,
-            isLocalNodeEntryPoint: () => false
+            isLocalNodeStored: () => false
         })
 
         await entryPointDiscoveryLayerNode.start()

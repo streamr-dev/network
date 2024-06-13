@@ -42,7 +42,7 @@ describe('ContentDeliveryLayerNode', () => {
             neighborUpdateManager: new MockNeighborUpdateManager() as any,
             neighborFinder: new MockNeighborFinder() as any,
             streamPartId: StreamPartIDUtils.parse('stream#0'),
-            isLocalNodeEntryPoint: () => false
+            isLocalNodeStored: () => false
         })
         await contentDeliveryLayerNode.start()
     })

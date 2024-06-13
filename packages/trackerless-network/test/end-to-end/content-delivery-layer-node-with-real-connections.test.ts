@@ -49,7 +49,7 @@ describe('content delivery layer node with real connections', () => {
                 transport: epDhtNode.getTransport(),
                 connectionLocker: epDhtNode.getTransport() as ConnectionManager,
                 localPeerDescriptor: epPeerDescriptor,
-                isLocalNodeEntryPoint: () => false
+                isLocalNodeStored: () => false
             }
         )
         contentDeliveryLayerNode2 = createContentDeliveryLayerNode({
@@ -58,7 +58,7 @@ describe('content delivery layer node with real connections', () => {
             transport: dhtNode1.getTransport(),
             connectionLocker: dhtNode1.getTransport() as ConnectionManager,
             localPeerDescriptor: dhtNode1.getLocalPeerDescriptor(),
-            isLocalNodeEntryPoint: () => false
+            isLocalNodeStored: () => false
         })
         contentDeliveryLayerNode3 = createContentDeliveryLayerNode({
             streamPartId,
@@ -66,7 +66,7 @@ describe('content delivery layer node with real connections', () => {
             transport: dhtNode2.getTransport(),
             connectionLocker: dhtNode2.getTransport() as ConnectionManager,
             localPeerDescriptor: dhtNode2.getLocalPeerDescriptor(),
-            isLocalNodeEntryPoint: () => false
+            isLocalNodeStored: () => false
         })
         contentDeliveryLayerNode4 = createContentDeliveryLayerNode({
             streamPartId,
@@ -74,7 +74,7 @@ describe('content delivery layer node with real connections', () => {
             transport: dhtNode3.getTransport(),
             connectionLocker: dhtNode3.getTransport() as ConnectionManager,
             localPeerDescriptor: dhtNode3.getLocalPeerDescriptor(),
-            isLocalNodeEntryPoint: () => false
+            isLocalNodeStored: () => false
         })
         contentDeliveryLayerNode5 = createContentDeliveryLayerNode({
             streamPartId,
@@ -82,7 +82,7 @@ describe('content delivery layer node with real connections', () => {
             transport: dhtNode4.getTransport(),
             connectionLocker: dhtNode4.getTransport() as ConnectionManager,
             localPeerDescriptor: dhtNode4.getLocalPeerDescriptor(),
-            isLocalNodeEntryPoint: () => false
+            isLocalNodeStored: () => false
         })
         await Promise.all([
             contentDeliveryLayerNode1.start(),
