@@ -89,7 +89,7 @@ describe('Stream Entry Points are replaced when known entry points leave streams
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             STREAM_PART_ID,
-            randomEthereumAddress()
+            randomBytes(40)
         )
         newNodeInStream.getContentDeliveryManager().broadcast(msg)
         await waitForCondition(() => receivedMessages === NUM_OF_LATER_NODES, 30000)

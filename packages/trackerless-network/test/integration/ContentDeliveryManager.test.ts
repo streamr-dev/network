@@ -25,7 +25,7 @@ describe('ContentDeliveryManager', () => {
     const msg = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
         STREAM_PART_ID,
-        randomEthereumAddress()
+        randomBytes(40)
     )
     let simulator: Simulator
 
@@ -118,7 +118,7 @@ describe('ContentDeliveryManager', () => {
         const msg2 = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             streamPartId2,
-            randomEthereumAddress()
+            randomBytes(40)
         )
         await Promise.all([
             waitForEvent3<Events>(manager1, 'newMessage'),

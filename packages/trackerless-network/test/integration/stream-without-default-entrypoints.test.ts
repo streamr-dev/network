@@ -5,6 +5,7 @@ import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
+import { randomBytes } from 'crypto'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
 

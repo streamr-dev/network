@@ -8,7 +8,7 @@ import { StreamMessage } from '../../src/proto/packages/trackerless-network/prot
 import { createStreamMessage } from '../utils/utils'
 
 const STREAM_PART = StreamPartIDUtils.parse('stream#0')
-const PUBLISHER_ID = randomEthereumAddress()
+const PUBLISHER_ID = randomBytes(40)
 
 const createMessage = (id: number): StreamMessage => {
     return createStreamMessage(`${id}`, STREAM_PART, PUBLISHER_ID)

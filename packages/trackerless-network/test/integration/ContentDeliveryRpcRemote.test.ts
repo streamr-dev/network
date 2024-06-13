@@ -85,7 +85,7 @@ describe('ContentDeliveryRpcRemote', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             StreamPartIDUtils.parse('test-stream#0'),
-            randomEthereumAddress()
+            randomBytes(40)
         )
 
         await rpcRemote.sendStreamMessage(msg)

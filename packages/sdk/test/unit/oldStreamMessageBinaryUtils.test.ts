@@ -12,7 +12,7 @@ describe('oldStreamMessageBinaryUtils', () => {
                 0,
                 10001,
                 0,
-                toEthereumAddress('0x1234567890123456789012345678901234567890'),
+                new Uint8Array(hexToBinary('0x1234567890123456789012345678901234567890')),
                 'msgChainId'
             ),
             prevMsgRef: new MessageRef(10000, 1),

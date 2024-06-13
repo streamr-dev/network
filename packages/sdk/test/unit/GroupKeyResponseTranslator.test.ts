@@ -8,7 +8,7 @@ describe('GroupKeyResponseTranslator', () => {
 
     const oldGroupKeyResponse = new OldGroupKeyResponse({
         requestId: 'request',
-        recipient: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as EthereumAddress,
+        recipient: hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
         encryptedGroupKeys: [ new OldEncryptedGroupKey('id', hexToBinary('0000')) ]
     })
     const newGroupKey: GroupKey = {

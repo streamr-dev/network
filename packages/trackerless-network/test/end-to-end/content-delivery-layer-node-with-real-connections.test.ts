@@ -152,7 +152,7 @@ describe('content delivery layer node with real connections', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             streamPartId,
-            randomEthereumAddress()
+            randomBytes(40)
         )
         contentDeliveryLayerNode1.broadcast(msg)
         await waitForCondition(() => receivedMessageCount >= 4)

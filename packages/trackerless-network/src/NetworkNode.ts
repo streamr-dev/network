@@ -46,7 +46,7 @@ export class NetworkNode {
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: EthereumAddress,
+        userId: Uint8Array,
         connectionCount?: number
     ): Promise<void> {
         await this.stack.getContentDeliveryManager().setProxies(streamPartId, nodes, direction, userId, connectionCount)

@@ -3,6 +3,7 @@ import { StreamPartIDUtils, hexToBinary, utf8ToBinary, waitForCondition } from '
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
+import { randomBytes } from 'crypto'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 
@@ -38,7 +39,7 @@ describe('inspect', () => {
 
     let inspectorNode: NetworkNode
 
-    const message: StreamMessage = { 
+    const message: StreamMessage = {
         messageId: {
             streamId: StreamPartIDUtils.getStreamID(STREAM_PART_ID),
             streamPartition: StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),

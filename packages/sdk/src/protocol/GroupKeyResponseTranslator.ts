@@ -14,7 +14,7 @@ export class GroupKeyResponseTranslator {
             }
         })
         const translated: NewGroupKeyResponse = {
-            recipientId: hexToBinary(msg.recipient),
+            recipientId: msg.recipient,
             requestId: msg.requestId,
             groupKeys
         }
@@ -28,7 +28,7 @@ export class GroupKeyResponseTranslator {
         ))
         return new OldGroupKeyResponse({
             requestId: msg.requestId,
-            recipient: toEthereumAddress(binaryToHex(msg.recipientId, true)),
+            recipient: msg.recipientId,
             encryptedGroupKeys
         })
     }

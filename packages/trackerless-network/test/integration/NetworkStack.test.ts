@@ -5,6 +5,7 @@ import {
 } from '@streamr/utils'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import { randomBytes } from 'crypto'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 
@@ -55,7 +56,7 @@ describe('NetworkStack', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             STREAM_PART_ID,
-            randomEthereumAddress()
+            randomBytes(40)
         )
         stack2.getContentDeliveryManager().broadcast(msg)
         await waitForCondition(() => receivedMessages === 1)

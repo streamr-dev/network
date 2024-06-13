@@ -32,7 +32,7 @@ describe('ContentDeliveryManager', () => {
         const message = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             streamPartId,
-            randomEthereumAddress()
+            randomBytes(40)
         )
 
         beforeEach(async () => {
@@ -61,7 +61,7 @@ describe('ContentDeliveryManager', () => {
         it('happy path', async () => {
             const streamPartId = StreamPartIDUtils.parse('stream#0')
             const proxy = createMockPeerDescriptor()
-            const userId = randomEthereumAddress()
+            const userId = randomBytes(40)
             await manager.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
             expect(manager.isProxiedStreamPart(streamPartId)).toBe(true)
             await manager.setProxies(streamPartId, [], ProxyDirection.PUBLISH, userId)
@@ -71,7 +71,7 @@ describe('ContentDeliveryManager', () => {
         it('empty node list', async () => {
             const streamPartId = StreamPartIDUtils.parse('stream#0')
             const proxy = createMockPeerDescriptor()
-            const userId = randomEthereumAddress()
+            const userId = randomBytes(40)
             await manager.setProxies(streamPartId, [], ProxyDirection.PUBLISH, userId)
             expect(manager.isProxiedStreamPart(streamPartId)).toBe(false)
             await manager.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
@@ -83,7 +83,7 @@ describe('ContentDeliveryManager', () => {
         it('connection count to 0', async () => {
             const streamPartId = StreamPartIDUtils.parse('stream#0')
             const proxy = createMockPeerDescriptor()
-            const userId = randomEthereumAddress()
+            const userId = randomBytes(40)
             await manager.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId, 0)
             expect(manager.isProxiedStreamPart(streamPartId)).toBe(false)
             await manager.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
