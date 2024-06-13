@@ -245,7 +245,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
     private createContentDeliveryLayerNode(
         streamPartId: StreamPartID,
         layer1Node: Layer1Node,
-        isLocalNodeEntryPoint: () => boolean
+        isLocalNodeStored: () => boolean
     ) {
         return createContentDeliveryLayerNode({
             streamPartId,
@@ -257,7 +257,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             neighborTargetCount: this.config.streamPartitionNeighborTargetCount,
             acceptProxyConnections: this.config.acceptProxyConnections,
             rpcRequestTimeout: this.config.rpcRequestTimeout,
-            isLocalNodeEntryPoint
+            isLocalNodeStored
         })
     }
 

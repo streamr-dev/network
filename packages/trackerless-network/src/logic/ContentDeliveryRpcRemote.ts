@@ -20,10 +20,10 @@ export class ContentDeliveryRpcRemote extends RpcRemote<ContentDeliveryRpcClient
         })
     }
 
-    leaveStreamPartNotice(streamPartId: StreamPartID, isLocalNodeEntryPoint: boolean): void {
+    leaveStreamPartNotice(streamPartId: StreamPartID, isLocalNodeStored: boolean): void {
         const notification: LeaveStreamPartNotice = {
             streamPartId,
-            isStored: isLocalNodeEntryPoint
+            isStored: isLocalNodeStored
         }
         const options = this.formDhtRpcOptions({
             notification: true

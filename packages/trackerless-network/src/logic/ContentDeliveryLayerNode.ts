@@ -59,7 +59,7 @@ export interface StrictContentDeliveryLayerNodeConfig {
     neighborTargetCount: number
     inspector: Inspector
     temporaryConnectionRpcLocal: TemporaryConnectionRpcLocal
-    isLocalNodeEntryPoint: () => boolean
+    isLocalNodeStored: () => boolean
 
     proxyConnectionRpcLocal?: ProxyConnectionRpcLocal
     rpcRequestTimeout?: number
@@ -338,7 +338,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         this.abortController.abort()
         this.config.proxyConnectionRpcLocal?.stop()
         this.config.neighbors.getAll().map((remote) => {
-            remote.leaveStreamPartNotice(this.config.streamPartId, this.config.isLocalNodeEntryPoint())
+            remote.leaveStreamPartNotice(this.config.streamPartId, this.config.isLocalNodeStored())
             this.config.connectionLocker.weakUnlockConnection(
                 getNodeIdFromPeerDescriptor(remote.getPeerDescriptor()),
                 this.config.streamPartId

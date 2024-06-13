@@ -60,7 +60,7 @@ export const createMockContentDeliveryLayerNodeAndDhtNode = async (
         connectionLocker: mockCm,
         localPeerDescriptor,
         rpcRequestTimeout: 5000,
-        isLocalNodeEntryPoint: () => false
+        isLocalNodeStored: () => false
     })
     return [layer1Node, contentDeliveryLayerNode]
 }
