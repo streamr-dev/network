@@ -41,7 +41,7 @@ export class ContentDeliveryRpcLocal implements IContentDeliveryRpc {
         if (message.streamPartId === this.config.streamPartId) {
             const sourcePeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
             const sourceId = getNodeIdFromPeerDescriptor(sourcePeerDescriptor)
-            this.config.onLeaveNotice(sourceId, message.isEntryPoint)
+            this.config.onLeaveNotice(sourceId, message.isStored)
         }
         return Empty
     }

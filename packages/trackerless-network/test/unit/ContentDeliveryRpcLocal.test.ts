@@ -51,7 +51,7 @@ describe('ContentDeliveryRpcLocal', () => {
     it('Server leaveStreamPartNotice()', async () => {
         const leaveNotice: LeaveStreamPartNotice = {
             streamPartId: StreamPartIDUtils.parse('stream#0'),
-            isEntryPoint: false
+            isStored: false
         }
         await rpcLocal.leaveStreamPartNotice(leaveNotice, { incomingSourceDescriptor: mockSender } as any)
         expect(mockOnLeaveNotice).toHaveBeenCalledTimes(1)
