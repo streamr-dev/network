@@ -3,7 +3,6 @@ import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicat
 import { Action, connectivityMethodToWebsocketUrl } from './WebsocketClientConnector'
 import { WebsocketServer } from './WebsocketServer'
 import { areEqualPeerDescriptors, DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { ManagedConnection } from '../ManagedConnection'
 import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
 import { ConnectivityResponse, HandshakeError, PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { NatType, PortRange, TlsCertificate } from '../ConnectionManager'
@@ -22,12 +21,13 @@ import { WebsocketClientConnectorRpcClient } from '../../proto/packages/dht/prot
 import { WebsocketServerStartError } from '../../helpers/errors'
 import * as Err from '../../helpers/errors'
 import { expectedConnectionType } from '../../helpers/Connectivity'
+import { PendingConnection } from '../PendingConnection'
 
 const logger = new Logger(module)
 
 export interface WebsocketServerConnectorConfig {
+    onNewConnection: (connection: PendingConnection) => boolean
     rpcCommunicator: ListeningRpcCommunicator
-    onNewConnection: (connection: ManagedConnection) => boolean
     hasConnection: (nodeId: DhtAddress) => boolean
     portRange?: PortRange
     maxMessageSize?: number
@@ -41,11 +41,18 @@ export interface WebsocketServerConnectorConfig {
     geoIpDatabaseFolder?: string
 }
 
+// TODO: Could delFunc be removed here if the Handshaker event based clean up works correctly now?
+interface OngoingConnectionRequest {
+    delFunc: () => void
+    pendingConnection: PendingConnection
+}
+
+// TODO: Move server starting logic including autocertification and connectivity checking to WebsocketServer.ts?
 export class WebsocketServerConnector {
 
     private readonly websocketServer?: WebsocketServer
     private geoIpLocator?: GeoIpLocator
-    private readonly ongoingConnectRequests: Map<DhtAddress, ManagedConnection> = new Map()
+    private readonly ongoingConnectRequests: Map<DhtAddress, OngoingConnectionRequest> = new Map()
     private host?: string
     private autoCertifierClient?: AutoCertifierClientFacade
     private selectedPort?: number
@@ -121,27 +128,27 @@ export class WebsocketServerConnector {
     ) {
         const nodeId = getNodeIdFromPeerDescriptor(sourcePeerDescriptor)
         if (this.ongoingConnectRequests.has(nodeId)) {
-            const ongoingConnectRequest = this.ongoingConnectRequests.get(nodeId)!
+            const { pendingConnection, delFunc } = this.ongoingConnectRequests.get(nodeId)!
             if (!isMaybeSupportedVersion(remoteVersion)) {
-                rejectHandshake(ongoingConnectRequest, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_VERSION)  
+                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_VERSION)
+                delFunc()
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
-                rejectHandshake(ongoingConnectRequest, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)  
+                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
+                delFunc()  
             } else {
-                acceptHandshake(ongoingConnectRequest, websocketServerConnection, handshaker, sourcePeerDescriptor)
+                acceptHandshake(handshaker, pendingConnection, websocketServerConnection)
             }
-            this.ongoingConnectRequests.delete(nodeId)
         } else {
-            const managedConnection = new ManagedConnection(ConnectionType.WEBSOCKET_SERVER)
-            managedConnection.setRemotePeerDescriptor(sourcePeerDescriptor)
+            const pendingConnection = new PendingConnection(sourcePeerDescriptor)
             
             if (!isMaybeSupportedVersion(remoteVersion)) {
-                rejectHandshake(managedConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_VERSION)  
+                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_VERSION)  
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
-                rejectHandshake(managedConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)  
-            } else if (this.config.onNewConnection(managedConnection)) {
-                acceptHandshake(managedConnection, websocketServerConnection, handshaker, sourcePeerDescriptor)
+                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)  
+            } else if (this.config.onNewConnection(pendingConnection)) {
+                acceptHandshake(handshaker, pendingConnection, websocketServerConnection)
             } else {
-                rejectHandshake(managedConnection, websocketServerConnection, handshaker, HandshakeError.DUPLICATE_CONNECTION)
+                rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.DUPLICATE_CONNECTION)
             }
         }
     }
@@ -219,15 +226,15 @@ export class WebsocketServerConnector {
         this.host = hostName
     }
 
-    public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
+    public connect(targetPeerDescriptor: PeerDescriptor): PendingConnection {
         const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
         if (this.ongoingConnectRequests.has(nodeId)) {
-            return this.ongoingConnectRequests.get(nodeId)!
+            return this.ongoingConnectRequests.get(nodeId)!.pendingConnection
         }
         return this.requestConnectionFromPeer(this.localPeerDescriptor!, targetPeerDescriptor)
     }
 
-    private requestConnectionFromPeer(localPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): ManagedConnection {
+    private requestConnectionFromPeer(localPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): PendingConnection {
         setImmediate(() => {
             const remoteConnector = new WebsocketClientConnectorRpcRemote(
                 localPeerDescriptor,
@@ -243,12 +250,18 @@ export class WebsocketServerConnector {
                 })
             })
         })
-        const managedConnection = new ManagedConnection(ConnectionType.WEBSOCKET_SERVER)
+        const pendingConnection = new PendingConnection(targetPeerDescriptor)
         const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
-        managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(nodeId))
-        managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
-        this.ongoingConnectRequests.set(nodeId, managedConnection)
-        return managedConnection
+        // TODO: can this leak?
+        const delFunc = () => {
+            pendingConnection.off('connected', delFunc)
+            pendingConnection.off('disconnected', delFunc)
+            this.ongoingConnectRequests.delete(nodeId)
+        }
+        pendingConnection.on('connected', delFunc)
+        pendingConnection.on('disconnected', delFunc)
+        this.ongoingConnectRequests.set(nodeId, { pendingConnection, delFunc })
+        return pendingConnection
     }
 
     public isPossibleToFormConnection(targetPeerDescriptor: PeerDescriptor): boolean {
@@ -264,7 +277,7 @@ export class WebsocketServerConnector {
         this.abortController.abort()
 
         const requests = Array.from(this.ongoingConnectRequests.values())
-        await Promise.allSettled(requests.map((conn) => conn.close(true)))
+        await Promise.allSettled(requests.map((ongoingConnectRequest) => ongoingConnectRequest.pendingConnection.close(true)))
 
         await this.websocketServer?.stop()
         await this.geoIpLocator?.stop()

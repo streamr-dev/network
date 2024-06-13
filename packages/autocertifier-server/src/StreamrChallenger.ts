@@ -7,7 +7,8 @@ import {
     RoutingRpcCommunicator,
     createRandomDhtAddress,
     getRawFromDhtAddress,
-    ConnectionType,
+    PendingConnection,
+    IConnection,
     createOutgoingHandshaker
 } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -43,17 +44,11 @@ export const runStreamrChallenge = (
         const address = 'wss://' + remotePeerDescriptor.websocket!.host + ':' +
         remotePeerDescriptor.websocket!.port
 
-        const managedConnection = new ManagedConnection(ConnectionType.WEBSOCKET_CLIENT)
-        managedConnection.setRemotePeerDescriptor(remotePeerDescriptor)
-        const handshaker = createOutgoingHandshaker(LOCAL_PEER_DESCRIPTOR, managedConnection, socket)
-        const onDisconnected = () => {
-            reject(new FailedToConnectToStreamrWebSocket('Autocertifier failed to connect to '
-                + address + '. Please chack that the IP address is not behind a NAT.'))
-        }
-
-        socket.on('disconnected', onDisconnected)
-
-        managedConnection.on('connected', () => {
+        const pendingConnection = new PendingConnection(remotePeerDescriptor)
+        const handshaker = createOutgoingHandshaker(LOCAL_PEER_DESCRIPTOR, pendingConnection, socket)
+        pendingConnection.on('connected', (peerDescriptor: PeerDescriptor, connection: IConnection) => {   
+            const managedConnection = new ManagedConnection(peerDescriptor, connection)
+        
             socket.off('disconnected', onDisconnected)
             const communicator = new RoutingRpcCommunicator(SERVICE_ID,
                 async (msg: Message): Promise<void> => {
@@ -74,9 +69,17 @@ export const runStreamrChallenge = (
                 // close with leave flag true just in case 
                 // any info of the autocertifer is in the network
                 managedConnection.close(true)
+                pendingConnection.close(true)
                 handshaker.stop()
+
             })
         })
+        const onDisconnected = () => {
+            reject(new FailedToConnectToStreamrWebSocket('Autocertifier failed to connect to '
+                + address + '. Please chack that the IP address is not behind a NAT.'))
+        }
+
+        socket.on('disconnected', onDisconnected)
 
         // TODO: the 1st query by autocertifier-client will always be self-signed,
         // later queries may have a proper certificate

@@ -5,20 +5,20 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ITransport } from '../transport/ITransport'
 import { PortRange, TlsCertificate } from './ConnectionManager'
-import { ManagedConnection } from './ManagedConnection'
 import { Simulator } from './simulator/Simulator'
 import { SimulatorConnector } from './simulator/SimulatorConnector'
 import { IceServer, WebrtcConnector } from './webrtc/WebrtcConnector'
 import { WebsocketClientConnector } from './websocket/WebsocketClientConnector'
 import { DhtAddress } from '../identifiers'
 import { WebsocketServerConnector, WebsocketServerConnectorConfig } from './websocket/WebsocketServerConnector'
+import { PendingConnection } from './PendingConnection'
 import { ListeningRpcCommunicator } from '../transport/ListeningRpcCommunicator'
 
 export interface ConnectorFacade {
-    createConnection: (peerDescriptor: PeerDescriptor) => ManagedConnection
+    createConnection: (peerDescriptor: PeerDescriptor) => PendingConnection
     getLocalPeerDescriptor: () => PeerDescriptor | undefined
     start: (
-        onNewConnection: (connection: ManagedConnection) => boolean,
+        onNewConnection: (connection: PendingConnection) => boolean,
         hasConnection: (nodeId: DhtAddress) => boolean,
         autoCertifierTransport: ITransport
     ) => Promise<void>
@@ -62,7 +62,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
     }
 
     async start(
-        onNewConnection: (connection: ManagedConnection) => boolean,
+        onNewConnection: (connection: PendingConnection) => boolean,
         hasConnection: (nodeId: DhtAddress) => boolean,
         autoCertifierTransport: ITransport
     ): Promise<void> {
@@ -77,7 +77,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             // TODO should we use canConnect also for WebrtcConnector? (NET-1142)
             onNewConnection,
             hasConnection,
-            rpcCommunicator: this.websocketConnectorRpcCommunicator,
+            rpcCommunicator: this.websocketConnectorRpcCommunicator
         }
         this.websocketClientConnector = new WebsocketClientConnector(webSocketClientConnectorConfig)
 
@@ -99,6 +99,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         }
         this.websocketServerConnector = new WebsocketServerConnector(webSocketServerConnectorConfig)
         this.webrtcConnector = new WebrtcConnector({
+            onNewConnection,
             transport: this.config.transport,
             iceServers: this.config.iceServers,
             allowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
@@ -107,7 +108,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             externalIp: this.config.externalIp,
             portRange: this.config.webrtcPortRange,
             maxMessageSize: this.config.maxMessageSize
-        }, onNewConnection)
+        })
         await this.websocketServerConnector.start()
         // TODO: generate a PeerDescriptor in a single function. Requires changes to the createOwnPeerDescriptor
         // function in the config. Currently it's given by the DhtNode and it sets the PeerDescriptor for the
@@ -157,7 +158,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         this.setLocalPeerDescriptor(localPeerDescriptor)
     }
 
-    createConnection(peerDescriptor: PeerDescriptor): ManagedConnection {
+    createConnection(peerDescriptor: PeerDescriptor): PendingConnection {
         if (this.websocketClientConnector!.isPossibleToFormConnection(peerDescriptor)) {
             return this.websocketClientConnector!.connect(peerDescriptor)
         } else if (this.websocketServerConnector!.isPossibleToFormConnection(peerDescriptor)) {
@@ -190,7 +191,9 @@ export class SimulatorConnectorFacade implements ConnectorFacade {
         this.simulator = simulator
     }
 
-    async start(onNewConnection: (connection: ManagedConnection) => boolean): Promise<void> {
+    async start(
+        onNewConnection: (connection: PendingConnection) => boolean,
+    ): Promise<void> {
         logger.trace(`Creating SimulatorConnector`)
         this.simulatorConnector = new SimulatorConnector(
             this.localPeerDescriptor,
@@ -200,7 +203,7 @@ export class SimulatorConnectorFacade implements ConnectorFacade {
         this.simulator.addConnector(this.simulatorConnector)
     }
 
-    createConnection(peerDescriptor: PeerDescriptor): ManagedConnection {
+    createConnection(peerDescriptor: PeerDescriptor): PendingConnection {
         return this.simulatorConnector!.connect(peerDescriptor)
     }
 

@@ -5,33 +5,33 @@ import {
     PeerDescriptor,
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { Logger } from '@streamr/utils'
-import { ManagedConnection } from '../ManagedConnection'
 import { Simulator } from './Simulator'
 import { SimulatorConnection } from './SimulatorConnection'
 import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { acceptHandshake, createIncomingHandshaker, createOutgoingHandshaker, rejectHandshake } from '../Handshaker'
+import { PendingConnection } from '../PendingConnection'
 
 const logger = new Logger(module)
 
 export class SimulatorConnector {
 
-    private connectingConnections: Map<DhtAddress, ManagedConnection> = new Map()
+    private connectingConnections: Map<DhtAddress, PendingConnection> = new Map()
     private stopped = false
     private localPeerDescriptor: PeerDescriptor
     private simulator: Simulator
-    private onNewConnection: (connection: ManagedConnection) => boolean
+    private onNewConnection: (connection: PendingConnection) => boolean
 
     constructor(
         localPeerDescriptor: PeerDescriptor,
         simulator: Simulator,
-        onNewConnection: (connection: ManagedConnection) => boolean
+        onNewConnection: (connection: PendingConnection) => boolean,
     ) {
         this.localPeerDescriptor = localPeerDescriptor
         this.simulator = simulator
         this.onNewConnection = onNewConnection
     }
 
-    public connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
+    public connect(targetPeerDescriptor: PeerDescriptor): PendingConnection {
         logger.trace('connect() ' + getNodeIdFromPeerDescriptor(targetPeerDescriptor))
         const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
         const existingConnection = this.connectingConnections.get(nodeId)
@@ -41,22 +41,21 @@ export class SimulatorConnector {
 
         const connection = new SimulatorConnection(this.localPeerDescriptor, targetPeerDescriptor, ConnectionType.SIMULATOR_CLIENT, this.simulator)
 
-        const managedConnection = new ManagedConnection(ConnectionType.SIMULATOR_CLIENT)
-        managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
-        createOutgoingHandshaker(this.localPeerDescriptor, managedConnection, connection, targetPeerDescriptor)
-        this.connectingConnections.set(nodeId, managedConnection)
+        const pendingConnection = new PendingConnection(targetPeerDescriptor)
+        createOutgoingHandshaker(this.localPeerDescriptor, pendingConnection, connection, targetPeerDescriptor)
+        this.connectingConnections.set(nodeId, pendingConnection)
         const delFunc = () => {
             this.connectingConnections.delete(nodeId)
             connection.off('disconnected', delFunc)
-            managedConnection.off('connected', delFunc)
-            managedConnection.off('disconnected', delFunc)
+            pendingConnection.off('connected', delFunc)
+            pendingConnection.off('disconnected', delFunc)
         }
         connection.once('disconnected', delFunc)
-        managedConnection.once('connected', delFunc)
-        managedConnection.once('disconnected', delFunc)
+        pendingConnection.once('connected', delFunc)
+        pendingConnection.once('disconnected', delFunc)
         
         connection.connect()
-        return managedConnection
+        return pendingConnection
     }
 
     public getPeerDescriptor(): PeerDescriptor {
@@ -64,26 +63,27 @@ export class SimulatorConnector {
     }
 
     public handleIncomingConnection(sourceConnection: SimulatorConnection): void {
-        const localNodeId = getNodeIdFromPeerDescriptor(sourceConnection.localPeerDescriptor)
-        logger.trace(localNodeId + ' incoming connection, stopped: ' + this.stopped)
+        // connection is incoming, so remotePeerDescriptor is localPeerDescriptor
+        const remotePeerDescriptor = sourceConnection.localPeerDescriptor
+        const remoteNodeId = getNodeIdFromPeerDescriptor(sourceConnection.localPeerDescriptor)
+        logger.trace(remoteNodeId + ' incoming connection, stopped: ' + this.stopped)
         if (this.stopped) {
             return
         }
-        const connection = new SimulatorConnection(this.localPeerDescriptor,
-            sourceConnection.localPeerDescriptor, ConnectionType.SIMULATOR_SERVER, this.simulator)
-
-        const managedConnection = new ManagedConnection(ConnectionType.SIMULATOR_SERVER)
-        const handshaker = createIncomingHandshaker(this.localPeerDescriptor, managedConnection, connection)
+        const connection = new SimulatorConnection(this.localPeerDescriptor, remotePeerDescriptor, ConnectionType.SIMULATOR_SERVER, this.simulator)
+        
+        const pendingConnection = new PendingConnection(remotePeerDescriptor)
+        const handshaker = createIncomingHandshaker(this.localPeerDescriptor, pendingConnection, connection)
         logger.trace('connected')
 
         handshaker.once('handshakeRequest', () => {
-            logger.trace(localNodeId + ' incoming handshake request')
+            logger.trace(remoteNodeId + ' incoming handshake request')
 
-            if (this.onNewConnection(managedConnection)) {
-                logger.trace(localNodeId + ' calling acceptHandshake')
-                acceptHandshake(managedConnection, connection, handshaker, sourceConnection.localPeerDescriptor)
+            if (this.onNewConnection(pendingConnection)) {
+                logger.trace(remoteNodeId + ' calling acceptHandshake')
+                acceptHandshake(handshaker, pendingConnection, connection)
             } else {
-                rejectHandshake(managedConnection, connection, handshaker, HandshakeError.DUPLICATE_CONNECTION)
+                rejectHandshake(pendingConnection, connection, handshaker, HandshakeError.DUPLICATE_CONNECTION)
             }
         })
 

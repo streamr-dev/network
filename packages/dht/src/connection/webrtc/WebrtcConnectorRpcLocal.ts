@@ -11,17 +11,17 @@ import {
 import { IWebrtcConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
-import { ManagedConnection } from '../ManagedConnection'
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'
 import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { ConnectionID } from '../IConnection'
 import { ConnectingConnection } from './WebrtcConnector'
+import { PendingConnection } from '../PendingConnection'
 
 const logger = new Logger(module)
 
 interface WebrtcConnectorRpcLocalConfig {
-    connect: (targetPeerDescriptor: PeerDescriptor, doNotRequestConnection: boolean) => ManagedConnection 
-    onNewConnection: (connection: ManagedConnection) => boolean
+    connect: (targetPeerDescriptor: PeerDescriptor, doNotRequestConnection: boolean) => PendingConnection 
+    onNewConnection: (connection: PendingConnection) => boolean
     // TODO pass accessor methods instead of passing a mutable entity
     ongoingConnectAttempts: Map<DhtAddress, ConnectingConnection>
     rpcCommunicator: ListeningRpcCommunicator
@@ -42,9 +42,8 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         if (this.config.ongoingConnectAttempts.has(getNodeIdFromPeerDescriptor(targetPeerDescriptor))) {
             return {}
         }
-        const managedConnection = this.config.connect(targetPeerDescriptor, false)
-        managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
-        this.config.onNewConnection(managedConnection)
+        const pendingConnection = this.config.connect(targetPeerDescriptor, false)
+        this.config.onNewConnection(pendingConnection)
         return {}
     }
 
@@ -52,14 +51,14 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         const remotePeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const nodeId = getNodeIdFromPeerDescriptor(remotePeerDescriptor)
         let connection: NodeWebrtcConnection
-        let managedConnection: ManagedConnection
+        let pendingConnection: PendingConnection
 
         if (!this.config.ongoingConnectAttempts.has(nodeId)) {
-            managedConnection = this.config.connect(remotePeerDescriptor, true)
+            pendingConnection = this.config.connect(remotePeerDescriptor, true)
             connection = this.config.ongoingConnectAttempts.get(nodeId)!.connection
-            this.config.onNewConnection(managedConnection)
+            this.config.onNewConnection(pendingConnection)
         } else {
-            managedConnection = this.config.ongoingConnectAttempts.get(nodeId)!.managedConnection
+            pendingConnection = this.config.ongoingConnectAttempts.get(nodeId)!.managedConnection
             connection = this.config.ongoingConnectAttempts.get(nodeId)!.connection
         }
         // Always use offerers connectionId

@@ -5,15 +5,15 @@ import {
 } from '../../proto/packages/dht/protos/DhtRpc'
 import { IWebsocketClientConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
-import { ManagedConnection } from '../ManagedConnection'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { DhtAddress } from '../../identifiers'
+import { PendingConnection } from '../PendingConnection'
 
 interface WebsocketClientConnectorRpcLocalConfig {
-    connect: (targetPeerDescriptor: PeerDescriptor) => ManagedConnection
+    connect: (targetPeerDescriptor: PeerDescriptor) => PendingConnection
     hasConnection: (nodeId: DhtAddress) => boolean
-    onNewConnection: (connection: ManagedConnection) => boolean
+    onNewConnection: (connection: PendingConnection) => boolean
     abortSignal: AbortSignal
 }
 
