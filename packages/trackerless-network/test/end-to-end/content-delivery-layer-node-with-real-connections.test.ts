@@ -5,7 +5,7 @@ import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { Layer0Node } from '../../src/logic/Layer0Node'
+import { ControlLayerNode } from '../../src/logic/ControlLayerNode'
 import { Layer1Node } from '../../src/logic/Layer1Node'
 
 describe('content delivery layer node with real connections', () => {
@@ -18,11 +18,11 @@ describe('content delivery layer node with real connections', () => {
     // Currently the nodes here are practically layer0 nodes acting as layer1 nodes, for the purpose of this test
     // they are layer1 nodes as the DHT is per stream
     // TODO refactor the test to use normal layering style (i.e. have separate objects for layer0 and layer1 nodes)
-    let epDhtNode: Layer0Node & Layer1Node
-    let dhtNode1: Layer0Node & Layer1Node
-    let dhtNode2: Layer0Node & Layer1Node
-    let dhtNode3: Layer0Node & Layer1Node
-    let dhtNode4: Layer0Node & Layer1Node
+    let epDhtNode: ControlLayerNode & Layer1Node
+    let dhtNode1: ControlLayerNode & Layer1Node
+    let dhtNode2: ControlLayerNode & Layer1Node
+    let dhtNode3: ControlLayerNode & Layer1Node
+    let dhtNode4: ControlLayerNode & Layer1Node
     let contentDeliveryLayerNode1: ContentDeliveryLayerNode
     let contentDeliveryLayerNode2: ContentDeliveryLayerNode
     let contentDeliveryLayerNode3: ContentDeliveryLayerNode

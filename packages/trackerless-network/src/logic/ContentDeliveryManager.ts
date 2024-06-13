@@ -20,7 +20,7 @@ import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
 import { ProxyDirection, StreamMessage, StreamPartitionInfo } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ENTRYPOINT_STORE_LIMIT, EntryPointDiscovery } from './EntryPointDiscovery'
-import { Layer0Node } from './Layer0Node'
+import { ControlLayerNode } from './ControlLayerNode'
 import { Layer1Node } from './Layer1Node'
 import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
 import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode'
@@ -65,7 +65,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
 
     private transport?: ITransport
     private connectionLocker?: ConnectionLocker
-    private layer0Node?: Layer0Node
+    private controlLayerNode?: ControlLayerNode
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
     private readonly config: ContentDeliveryManagerConfig
@@ -86,12 +86,12 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         this.metricsContext.addMetrics('node', this.metrics)
     }
 
-    async start(startedAndJoinedLayer0Node: Layer0Node, transport: ITransport, connectionLocker: ConnectionLocker): Promise<void> {
+    async start(startedAndJoinedControlLayerNode: ControlLayerNode, transport: ITransport, connectionLocker: ConnectionLocker): Promise<void> {
         if (this.started || this.destroyed) {
             return
         }
         this.started = true
-        this.layer0Node = startedAndJoinedLayer0Node
+        this.controlLayerNode = startedAndJoinedControlLayerNode
         this.transport = transport
         this.connectionLocker = connectionLocker
     }
@@ -105,7 +105,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         await Promise.all(Array.from(this.streamParts.values()).map((streamPart) => streamPart.stop()))
         this.streamParts.clear()
         this.removeAllListeners()
-        this.layer0Node = undefined
+        this.controlLayerNode = undefined
         this.transport = undefined
         this.connectionLocker = undefined
     }
@@ -139,9 +139,9 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         const entryPointDiscovery = new EntryPointDiscovery({
             streamPartId,
             localPeerDescriptor: this.getPeerDescriptor(),
-            fetchEntryPointData: (key) => this.layer0Node!.fetchDataFromDht(key),
-            storeEntryPointData: (key, data) => this.layer0Node!.storeDataToDht(key, data),
-            deleteEntryPointData: async (key) => this.layer0Node!.deleteDataFromDht(key, false)
+            fetchEntryPointData: (key) => this.controlLayerNode!.fetchDataFromDht(key),
+            storeEntryPointData: (key, data) => this.controlLayerNode!.storeDataToDht(key, data),
+            deleteEntryPointData: async (key) => this.controlLayerNode!.deleteDataFromDht(key, false)
         })
         const networkSplitAvoidance = new StreamPartNetworkSplitAvoidance({
             layer1Node,
@@ -229,10 +229,10 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
 
     private createLayer1Node(streamPartId: StreamPartID, entryPoints: PeerDescriptor[]): Layer1Node {
         return new DhtNode({
-            transport: this.layer0Node!,
-            connectionsView: this.layer0Node!.getConnectionsView(),
+            transport: this.controlLayerNode!,
+            connectionsView: this.controlLayerNode!.getConnectionsView(),
             serviceId: 'layer1::' + streamPartId,
-            peerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
+            peerDescriptor: this.controlLayerNode!.getLocalPeerDescriptor(),
             entryPoints,
             numberOfNodesPerKBucket: 4,  // TODO use config option or named constant?
             rpcRequestTimeout: EXISTING_CONNECTION_TIMEOUT,
@@ -252,7 +252,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             transport: this.transport!,
             layer1Node,
             connectionLocker: this.connectionLocker!,
-            localPeerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
+            localPeerDescriptor: this.controlLayerNode!.getLocalPeerDescriptor(),
             minPropagationTargets: this.config.streamPartitionMinPropagationTargets,
             neighborTargetCount: this.config.streamPartitionNeighborTargetCount,
             acceptProxyConnections: this.config.acceptProxyConnections,
@@ -301,7 +301,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
     private createProxyClient(streamPartId: StreamPartID): ProxyClient {
         return new ProxyClient({
             transport: this.transport!,
-            localPeerDescriptor: this.layer0Node!.getLocalPeerDescriptor(),
+            localPeerDescriptor: this.controlLayerNode!.getLocalPeerDescriptor(),
             streamPartId,
             connectionLocker: this.connectionLocker!,
             minPropagationTargets: this.config.streamPartitionMinPropagationTargets
@@ -350,11 +350,11 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
     }
 
     getPeerDescriptor(): PeerDescriptor {
-        return this.layer0Node!.getLocalPeerDescriptor()
+        return this.controlLayerNode!.getLocalPeerDescriptor()
     }
 
     getNodeId(): DhtAddress {
-        return getNodeIdFromPeerDescriptor(this.layer0Node!.getLocalPeerDescriptor())
+        return getNodeIdFromPeerDescriptor(this.controlLayerNode!.getLocalPeerDescriptor())
     }
 
     getNeighbors(streamPartId: StreamPartID): DhtAddress[] {

@@ -112,7 +112,7 @@ const measureJoiningTime = async () => {
     const streamSubscriber = await createNetworkNodeWithSimulator(
         peerDescriptor,
         simulator,
-        [randomNode.stack.getLayer0Node().getLocalPeerDescriptor()]
+        [randomNode.stack.getControlLayerNode().getLocalPeerDescriptor()]
     )
     currentNode = streamSubscriber
     const start = performance.now()
@@ -155,11 +155,11 @@ run().then(() => {
     console.error(err)
     const contentDeliveryManager = currentNode.stack.getContentDeliveryManager()
     const streamParts = contentDeliveryManager.getStreamParts()
-    const foundData = nodes[0].stack.getLayer0Node().fetchDataFromDht(streamPartIdToDataKey(streamParts[0]))
+    const foundData = nodes[0].stack.getControlLayerNode().fetchDataFromDht(streamPartIdToDataKey(streamParts[0]))
     console.log(foundData)
-    const layer0Node = currentNode.stack.getLayer0Node() as DhtNode
-    console.log(layer0Node.getNeighbors().length)
-    console.log(layer0Node.getConnectionsView().getConnectionCount())
+    const controlLayerNode = currentNode.stack.getControlLayerNode() as DhtNode
+    console.log(controlLayerNode.getNeighbors().length)
+    console.log(controlLayerNode.getConnectionsView().getConnectionCount())
     const streamPartDelivery = contentDeliveryManager
         .getStreamPartDelivery(streamParts[0])! as { layer1Node: Layer1Node, node: ContentDeliveryLayerNode }
     console.log(streamPartDelivery.layer1Node.getNeighbors())
