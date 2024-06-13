@@ -83,6 +83,7 @@ interface ConnectingEndpoint {
     // Difficulties arise from duplicate connection handling. Sometimes a connected connection is replaced as duplicate in which case
     // a managed connection has to be replaced in the ConnectionManager.
     connection: PendingConnection
+    // Could the buffer be in the PendingConnection?
     buffer: OutputBuffer
 }
 
