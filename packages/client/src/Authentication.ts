@@ -5,7 +5,7 @@ import { EthereumAddress, hexToBinary, toEthereumAddress, wait, createSignature 
 import pMemoize from 'p-memoize'
 import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'
 import { pLimitFn } from './utils/promises'
-import { RpcProviderFactory } from './RpcProviderFactory'
+import { RpcProviderSource } from './RpcProviderSource'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 
@@ -15,7 +15,7 @@ export interface Authentication {
     // always in lowercase
     getAddress: () => Promise<EthereumAddress>
     createMessageSignature: (payload: Uint8Array) => Promise<Uint8Array>
-    getStreamRegistryChainSigner: (rpcProviderFactory: RpcProviderFactory) => Promise<SignerWithProvider>
+    getTransactionSigner: (rpcProviderSource: RpcProviderSource) => Promise<SignerWithProvider>
 }
 
 export const createPrivateKeyAuthentication = (key: string): Authentication => {
@@ -23,8 +23,8 @@ export const createPrivateKeyAuthentication = (key: string): Authentication => {
     return {
         getAddress: async () => address,
         createMessageSignature: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
-        getStreamRegistryChainSigner: async (rpcProviderFactory: RpcProviderFactory) => {
-            const primaryProvider = rpcProviderFactory.getPrimaryProvider()
+        getTransactionSigner: async (rpcProviderSource: RpcProviderSource) => {
+            const primaryProvider = rpcProviderSource.getProvider()
             return new Wallet(key, primaryProvider) as SignerWithProvider
         }
     }
@@ -60,16 +60,16 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                 await wait(50)
                 return hexToBinary(sig)
             }, 1),
-            getStreamRegistryChainSigner: async () => {
-                if (config.contracts.streamRegistryChainRPCs.chainId === undefined) {
-                    throw new Error('Streamr streamRegistryChainRPC not configured (with chainId) in the StreamrClient options!')
+            getTransactionSigner: async () => {
+                if (config.contracts.ethereumNetwork.chainId === undefined) {
+                    throw new Error('Streamr chainId not configuredin the StreamrClient options!')
                 }
-                const { chainId } = await provider.getNetwork()
-                if (chainId !== BigInt(config.contracts.streamRegistryChainRPCs.chainId)) {
-                    const sideChainId = config.contracts.streamRegistryChainRPCs.chainId
+                const expectedChainId = config.contracts.ethereumNetwork.chainId
+                const actualChainId = (await provider.getNetwork()).chainId
+                if (actualChainId !== BigInt(expectedChainId)) {
                     throw new Error(
                         // eslint-disable-next-line max-len
-                        `Please connect the custom authentication provider to Ethereum blockchain with chainId ${sideChainId}: current chainId is ${chainId}`
+                        `Please connect the custom authentication provider with chainId ${expectedChainId} (current chainId is ${actualChainId})`
                     )
                 }
                 return signer

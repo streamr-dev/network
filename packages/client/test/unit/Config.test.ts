@@ -21,13 +21,10 @@ describe('Config', () => {
             expect(() => {
                 return createStrictConfig({
                     contracts: {
-                        streamRegistryChainRPCs: {
-                            chainId: 123,
-                            rpcs: []
-                        }
+                        rpcs: []
                     }
                 } as any)
-            }).toThrow('/contracts/streamRegistryChainRPCs/rpcs must NOT have fewer than 1 items')
+            }).toThrow('/contracts/rpcs must NOT have fewer than 1 items')
         })
 
         describe('invalid property format', () => {
@@ -155,14 +152,13 @@ describe('Config', () => {
                     }
                 },
                 contracts: {
+                    ethereumNetwork: {
+                        chainId: CHAIN_CONFIG[environmentId].id
+                    },
                     streamRegistryChainAddress: CHAIN_CONFIG[environmentId].contracts.StreamRegistry,
                     streamStorageRegistryChainAddress: CHAIN_CONFIG[environmentId].contracts.StreamStorageRegistry,
                     storageNodeRegistryChainAddress: CHAIN_CONFIG[environmentId].contracts.StorageNodeRegistry,
-                    streamRegistryChainRPCs: {
-                        name: CHAIN_CONFIG[environmentId].name,
-                        chainId: CHAIN_CONFIG[environmentId].id,
-                        rpcs: CHAIN_CONFIG[environmentId].rpcEndpoints
-                    },
+                    rpcs: CHAIN_CONFIG[environmentId].rpcEndpoints,
                     theGraphUrl: CHAIN_CONFIG[environmentId].theGraphUrl
                 }
             })
