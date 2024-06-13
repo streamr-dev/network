@@ -23,7 +23,7 @@ import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/Handshake
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { Layer1Node } from '../../src/logic/Layer1Node'
+import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { ContentDeliveryRpcClient, HandshakeRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RpcCommunicator } from '@streamr/proto-rpc'
 
@@ -42,10 +42,10 @@ export const createMockContentDeliveryLayerNodeAndDhtNode = async (
     entryPointDescriptor: PeerDescriptor,
     streamPartId: StreamPartID,
     simulator: Simulator
-): Promise<[ Layer1Node, ContentDeliveryLayerNode ]> => {
+): Promise<[ DiscoveryLayerNode, ContentDeliveryLayerNode ]> => {
     const mockCm = new SimulatorTransport(localPeerDescriptor, simulator)
     await mockCm.start()
-    const layer1Node = new DhtNode({
+    const discoveryLayerNode = new DhtNode({
         transport: mockCm,
         connectionsView: mockCm,
         peerDescriptor: localPeerDescriptor,
@@ -56,13 +56,13 @@ export const createMockContentDeliveryLayerNodeAndDhtNode = async (
     const contentDeliveryLayerNode = createContentDeliveryLayerNode({
         streamPartId,
         transport: mockCm,
-        layer1Node,
+        discoveryLayerNode,
         connectionLocker: mockCm,
         localPeerDescriptor,
         rpcRequestTimeout: 5000,
         isLocalNodeStored: () => false
     })
-    return [layer1Node, contentDeliveryLayerNode]
+    return [discoveryLayerNode, contentDeliveryLayerNode]
 }
 
 export const createStreamMessage = (
