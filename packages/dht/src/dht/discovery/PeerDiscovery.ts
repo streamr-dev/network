@@ -16,6 +16,7 @@ import { getClosestNodes } from '../contact/getClosestNodes'
 import { RingIdRaw, getRingIdRawFromPeerDescriptor } from '../contact/ringIdentifiers'
 import { DiscoverySession } from './DiscoverySession'
 import { RingDiscoverySession } from './RingDiscoverySession'
+import { CONTROL_LAYER_NODE_SERVICE_ID } from '../DhtNode'
 
 interface PeerDiscoveryConfig {
     localPeerDescriptor: PeerDescriptor
@@ -79,7 +80,8 @@ export class PeerDiscovery {
         }
         this.joinCalled = true
         logger.debug(
-            `Joining ${this.config.serviceId === 'layer0' ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
+            `Joining ${this.config.serviceId === CONTROL_LAYER_NODE_SERVICE_ID
+                ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
             + ` via entrypoint ${getNodeIdFromPeerDescriptor(entryPointDescriptor)}`
         )
         if (areEqualPeerDescriptors(entryPointDescriptor, this.config.localPeerDescriptor)) {
