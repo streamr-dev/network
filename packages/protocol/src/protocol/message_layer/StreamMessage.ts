@@ -6,7 +6,7 @@ import MessageID from './MessageID'
 import EncryptedGroupKey from './EncryptedGroupKey'
 import { StreamID } from '../../utils/StreamID'
 import { StreamPartID } from '../../utils/StreamPartID'
-import { EthereumAddress, binaryToUtf8 } from '@streamr/utils'
+import { binaryToUtf8 } from '@streamr/utils'
 import ValidationError from '../../errors/ValidationError'
 
 export enum StreamMessageType {
@@ -137,7 +137,7 @@ export default class StreamMessage implements StreamMessageOptions {
         return this.messageId.sequenceNumber
     }
 
-    getPublisherId(): EthereumAddress {
+    getPublisherId(): Uint8Array {
         return this.messageId.publisherId
     }
 
