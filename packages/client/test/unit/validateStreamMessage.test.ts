@@ -6,6 +6,9 @@ import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { Stream } from '../../src/Stream'
 import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
 import { createMockMessage } from '../test-utils/utils'
+import { SignatureValidator } from '../../src/signature/SignatureValidator'
+import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
+import { mock } from 'jest-mock-extended'
 
 const publisherWallet = fastWallet()
 const PARTITION_COUNT = 3
@@ -37,7 +40,7 @@ const validate = async (messageOptions: MessageOptions) => {
             return userAddress === toEthereumAddress(publisherWallet.address)
         }
     }
-    await validateStreamMessage(msg, streamRegistry as any, undefined as any)
+    await validateStreamMessage(msg, streamRegistry as any, new SignatureValidator(mock<ERC1271ContractFacade>()))
 }
 
 describe('Validator', () => {
