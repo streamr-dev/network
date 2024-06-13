@@ -4,6 +4,8 @@ import { v4 } from 'uuid'
 import { Message, HandshakeRequest, HandshakeResponse, PeerDescriptor, HandshakeError } from '../proto/packages/dht/protos/DhtRpc'
 import { IConnection } from './IConnection'
 import { LOCAL_PROTOCOL_VERSION, isMaybeSupportedVersion } from '../helpers/version'
+import { ManagedConnection } from './ManagedConnection'
+import { getNodeIdFromPeerDescriptor } from '../identifiers'
 
 const logger = new Logger(module)
 
@@ -11,6 +13,105 @@ interface HandshakerEvents {
     handshakeRequest: (source: PeerDescriptor, version: string, target?: PeerDescriptor) => void
     handshakeCompleted: (remote: PeerDescriptor) => void
     handshakeFailed: (error?: HandshakeError) => void
+}
+
+export const createOutgoingHandshaker = (
+    localPeerDescriptor: PeerDescriptor,
+    managedConnection: ManagedConnection,
+    connection: IConnection,
+    targetPeerDescriptor?: PeerDescriptor
+): Handshaker => {
+    const handshaker = new Handshaker(localPeerDescriptor, connection)
+    const stopHandshaker = () => {
+        handshaker.stop()
+        connection.off('disconnected', disconnectedListener)
+        connection.off('connected', connectedListener)
+        handshaker.off('handshakeCompleted', handshakeCompletedListener)
+        handshaker.off('handshakeFailed', handshakeFailedListener)
+        managedConnection.off('disconnected', managedConnectionDisconnectedListener)
+    }
+    const handshakeFailedListener = (error?: HandshakeError) => {
+        if (error === HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR || error === HandshakeError.UNSUPPORTED_VERSION) {
+            managedConnection.close(false)
+        } else {
+            // NO-OP: the rejector should take care of destroying the connection.
+        }
+        stopHandshaker()
+    }
+    const handshakeCompletedListener = (peerDescriptor: PeerDescriptor) => {
+        logger.trace('handshake completed for outgoing connection, ' + getNodeIdFromPeerDescriptor(peerDescriptor))
+        managedConnection.attachImplementation(connection)
+        managedConnection.onHandshakeCompleted(peerDescriptor)
+        stopHandshaker()
+    }
+    const connectedListener = () => handshaker.sendHandshakeRequest(targetPeerDescriptor)
+    const disconnectedListener = (graceful: boolean) => { 
+        managedConnection.onDisconnected(graceful)
+        stopHandshaker()
+    }
+    const managedConnectionDisconnectedListener = () => {
+        connection.close(false)
+        stopHandshaker()
+    }
+    handshaker.once('handshakeFailed', handshakeFailedListener)
+    handshaker.once('handshakeCompleted', handshakeCompletedListener)
+    connection.once('connected', connectedListener)
+    connection.once('disconnected', disconnectedListener)
+    managedConnection.once('disconnected', managedConnectionDisconnectedListener)
+    return handshaker
+}
+
+export const createIncomingHandshaker = (
+    localPeerDescriptor: PeerDescriptor,
+    managedConnection: ManagedConnection,
+    connection: IConnection
+): Handshaker => {
+    const handshaker = new Handshaker(localPeerDescriptor, connection)
+    const stopHandshaker = () => {
+        handshaker.stop()
+        managedConnection.off('disconnected', connectionDisconnected)
+        managedConnection.off('handshakeCompleted', stopHandshaker)
+        connection.off('disconnected', connectionDisconnected)
+    }
+    const onHandshakeRequest = (sourcePeerDescriptor: PeerDescriptor): void => {
+        managedConnection.setRemotePeerDescriptor(sourcePeerDescriptor)
+        stopHandshaker()
+    }
+    const connectionDisconnected = (graceful: boolean) => {
+        managedConnection.onDisconnected(graceful)
+        stopHandshaker()
+    }
+    const managedConnectionDisconnected = () => {
+        connection.close(false)
+        stopHandshaker()
+    }
+    handshaker.on('handshakeRequest', onHandshakeRequest)
+    connection.once('disconnected', connectionDisconnected)
+    managedConnection.once('handshakeCompleted', stopHandshaker)
+    managedConnection.once('disconnected', managedConnectionDisconnected)
+    return handshaker
+}
+
+export const rejectHandshake = (
+    managedConnection: ManagedConnection,
+    connection: IConnection,
+    handshaker: Handshaker,
+    error: HandshakeError
+): void => {
+    handshaker.sendHandshakeResponse(error)
+    connection.destroy()
+    managedConnection.destroy()
+}
+
+export const acceptHandshake = (
+    managedConnection: ManagedConnection,
+    connection: IConnection,
+    handshaker: Handshaker,
+    sourcePeerDescriptor: PeerDescriptor
+): void => {
+    managedConnection.attachImplementation(connection)
+    handshaker.sendHandshakeResponse()
+    managedConnection.onHandshakeCompleted(sourcePeerDescriptor)
 }
 
 export class Handshaker extends EventEmitter<HandshakerEvents> {
@@ -97,5 +198,6 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
 
     public stop(): void {
         this.connection.off('data', this.onDataListener)
+        this.removeAllListeners()
     }
 }

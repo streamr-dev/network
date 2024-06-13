@@ -18,7 +18,7 @@ import { WebsocketServer } from './WebsocketServer'
 import { sendConnectivityRequest } from '../connectivityChecker'
 import { NatType, PortRange, TlsCertificate } from '../ConnectionManager'
 import { WebsocketServerConnection } from './WebsocketServerConnection'
-import { Handshaker } from '../Handshaker'
+import { acceptHandshake, createOutgoingHandshaker, Handshaker, rejectHandshake } from '../Handshaker'
 import queryString from 'querystring'
 import { shuffle } from 'lodash'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
@@ -112,7 +112,7 @@ export class WebsocketConnector {
     private attachHandshaker(connection: IConnection) {
         const handshaker = new Handshaker(this.localPeerDescriptor!, connection)
         handshaker.once('handshakeRequest', (localPeerDescriptor: PeerDescriptor, sourceVersion: string, remotePeerDescriptor?: PeerDescriptor) => {
-            this.onServerSocketHandshakeRequest(localPeerDescriptor, connection, sourceVersion, remotePeerDescriptor)
+            this.onServerSocketHandshakeRequest(localPeerDescriptor, connection, handshaker, sourceVersion, remotePeerDescriptor)
         })
     }
 
@@ -248,15 +248,9 @@ export class WebsocketConnector {
 
             const url = connectivityMethodToWebsocketUrl(targetPeerDescriptor.websocket!)
 
-            const managedConnection = new ManagedConnection(
-                this.localPeerDescriptor!,
-                ConnectionType.WEBSOCKET_CLIENT,
-                socket,
-                undefined,
-                targetPeerDescriptor
-            )
+            const managedConnection = new ManagedConnection(ConnectionType.WEBSOCKET_CLIENT)
             managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
-
+            createOutgoingHandshaker(this.localPeerDescriptor!, managedConnection, socket, targetPeerDescriptor)
             this.connectingConnections.set(nodeId, managedConnection)
 
             const delFunc = () => {
@@ -264,9 +258,11 @@ export class WebsocketConnector {
                     this.connectingConnections.delete(nodeId)
                 }
                 socket.off('disconnected', delFunc)
+                managedConnection.off('disconnected', delFunc)
                 managedConnection.off('handshakeCompleted', delFunc)
             }
             socket.on('disconnected', delFunc)
+            managedConnection.on('disconnected', delFunc)
             managedConnection.on('handshakeCompleted', delFunc)
 
             socket.connect(url, false)
@@ -291,13 +287,7 @@ export class WebsocketConnector {
                 })
             })
         })
-        const managedConnection = new ManagedConnection(
-            this.localPeerDescriptor!,
-            ConnectionType.WEBSOCKET_SERVER,
-            undefined,
-            undefined,
-            targetPeerDescriptor
-        )
+        const managedConnection = new ManagedConnection(ConnectionType.WEBSOCKET_SERVER)
         const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
         managedConnection.on('disconnected', () => this.ongoingConnectRequests.delete(nodeId))
         managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
@@ -308,6 +298,7 @@ export class WebsocketConnector {
     private onServerSocketHandshakeRequest(
         sourcePeerDescriptor: PeerDescriptor,
         websocketServerConnection: IConnection,
+        handshaker: Handshaker,
         remoteVersion: string,
         targetPeerDescriptor?: PeerDescriptor
     ) {
@@ -315,31 +306,25 @@ export class WebsocketConnector {
         if (this.ongoingConnectRequests.has(nodeId)) {
             const ongoingConnectRequest = this.ongoingConnectRequests.get(nodeId)!
             if (!isMaybeSupportedVersion(remoteVersion)) {
-                ongoingConnectRequest.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
+                rejectHandshake(ongoingConnectRequest, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_VERSION)  
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
-                ongoingConnectRequest.rejectHandshake(HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
+                rejectHandshake(ongoingConnectRequest, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)  
             } else {
-                ongoingConnectRequest.attachImplementation(websocketServerConnection)
-                ongoingConnectRequest.acceptHandshake()
+                acceptHandshake(ongoingConnectRequest, websocketServerConnection, handshaker, sourcePeerDescriptor)
             }
             this.ongoingConnectRequests.delete(nodeId)
         } else {
-            const managedConnection = new ManagedConnection(
-                this.localPeerDescriptor!,
-                ConnectionType.WEBSOCKET_SERVER,
-                undefined,
-                websocketServerConnection,
-                targetPeerDescriptor
-            )
+            const managedConnection = new ManagedConnection(ConnectionType.WEBSOCKET_SERVER)
             managedConnection.setRemotePeerDescriptor(sourcePeerDescriptor)
+            
             if (!isMaybeSupportedVersion(remoteVersion)) {
-                managedConnection.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
+                rejectHandshake(managedConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_VERSION)  
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
-                managedConnection.rejectHandshake(HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)
+                rejectHandshake(managedConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)  
             } else if (this.config.onNewConnection(managedConnection)) {
-                managedConnection.acceptHandshake()
+                acceptHandshake(managedConnection, websocketServerConnection, handshaker, sourcePeerDescriptor)
             } else {
-                managedConnection.rejectHandshake(HandshakeError.DUPLICATE_CONNECTION)
+                rejectHandshake(managedConnection, websocketServerConnection, handshaker, HandshakeError.DUPLICATE_CONNECTION)
             }
         }
     }
@@ -353,10 +338,10 @@ export class WebsocketConnector {
         this.rpcCommunicator.destroy()
 
         const requests = Array.from(this.ongoingConnectRequests.values())
-        await Promise.allSettled(requests.map((conn) => conn.close(false)))
+        await Promise.allSettled(requests.map((conn) => conn.close(true)))
 
         const attempts = Array.from(this.connectingConnections.values())
-        await Promise.allSettled(attempts.map((conn) => conn.close(false)))
+        await Promise.allSettled(attempts.map(async (conn) => conn.close(true)))
         await this.websocketServer?.stop()
         await this.geoIpLocator?.stop()
     }

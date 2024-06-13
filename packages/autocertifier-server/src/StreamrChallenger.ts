@@ -7,7 +7,8 @@ import {
     RoutingRpcCommunicator,
     createRandomDhtAddress,
     getRawFromDhtAddress,
-    ConnectionType
+    ConnectionType,
+    createOutgoingHandshaker
 } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
@@ -42,10 +43,9 @@ export const runStreamrChallenge = (
         const address = 'wss://' + remotePeerDescriptor.websocket!.host + ':' +
         remotePeerDescriptor.websocket!.port
 
-        const managedConnection = new ManagedConnection(LOCAL_PEER_DESCRIPTOR,
-            ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
+        const managedConnection = new ManagedConnection(ConnectionType.WEBSOCKET_CLIENT)
         managedConnection.setRemotePeerDescriptor(remotePeerDescriptor)
-
+        const handshaker = createOutgoingHandshaker(LOCAL_PEER_DESCRIPTOR, managedConnection, socket)
         const onDisconnected = () => {
             reject(new FailedToConnectToStreamrWebSocket('Autocertifier failed to connect to '
                 + address + '. Please chack that the IP address is not behind a NAT.'))
@@ -74,6 +74,7 @@ export const runStreamrChallenge = (
                 // close with leave flag true just in case 
                 // any info of the autocertifer is in the network
                 managedConnection.close(true)
+                handshaker.stop()
             })
         })
 

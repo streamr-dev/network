@@ -1,4 +1,5 @@
 import {
+    HandshakeError,
     IceCandidate,
     PeerDescriptor,
     RtcAnswer,
@@ -9,7 +10,6 @@ import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicat
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'
 import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
 import { WebrtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
-import { ManagedWebrtcConnection } from './ManagedWebrtcConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
 import { ManagedConnection } from '../ManagedConnection'
@@ -18,6 +18,9 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { WebrtcConnectorRpcLocal } from './WebrtcConnectorRpcLocal'
 import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { getOfferer } from '../../helpers/offering'
+import { acceptHandshake, createIncomingHandshaker, createOutgoingHandshaker, rejectHandshake } from '../Handshaker'
+import { ConnectionType } from '../IConnection'
+import { isMaybeSupportedVersion } from '../../helpers/version'
 
 const logger = new Logger(module)
 
@@ -37,7 +40,6 @@ export interface WebrtcConnectorConfig {
     bufferThresholdLow?: number
     bufferThresholdHigh?: number
     maxMessageSize?: number
-    connectionTimeout?: number
     externalIp?: string
     portRange?: PortRange
 }
@@ -50,11 +52,16 @@ export interface IceServer {
     tcp?: boolean
 }
 
+export interface ConnectingConnection {
+    managedConnection: ManagedConnection
+    connection: NodeWebrtcConnection
+}
+
 export class WebrtcConnector {
 
     private static readonly WEBRTC_CONNECTOR_SERVICE_ID = 'system/webrtc-connector'
     private readonly rpcCommunicator: ListeningRpcCommunicator
-    private readonly ongoingConnectAttempts: Map<DhtAddress, ManagedWebrtcConnection> = new Map()
+    private readonly ongoingConnectAttempts: Map<DhtAddress, ConnectingConnection> = new Map()
     private localPeerDescriptor?: PeerDescriptor
     private stopped = false
     private config: WebrtcConnectorConfig
@@ -75,8 +82,8 @@ export class WebrtcConnector {
         onNewConnection: (connection: ManagedConnection) => boolean
     ) {
         const localRpc = new WebrtcConnectorRpcLocal({
-            createConnection: (targetPeerDescriptor: PeerDescriptor) => this.createConnection(targetPeerDescriptor),
-            connect: (targetPeerDescriptor: PeerDescriptor) => this.connect(targetPeerDescriptor),
+            connect: (targetPeerDescriptor: PeerDescriptor, doNotRequestConnection: boolean) => 
+                this.connect(targetPeerDescriptor, doNotRequestConnection),
             onNewConnection,
             ongoingConnectAttempts: this.ongoingConnectAttempts,
             rpcCommunicator: this.rpcCommunicator,
@@ -121,7 +128,7 @@ export class WebrtcConnector {
         )
     }
 
-    connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
+    connect(targetPeerDescriptor: PeerDescriptor, doNotRequestConnection: boolean): ManagedConnection {
         if (areEqualPeerDescriptors(targetPeerDescriptor, this.localPeerDescriptor!)) {
             throw new Err.CannotConnectToSelf('Cannot open WebRTC Connection to self')
         }
@@ -131,7 +138,7 @@ export class WebrtcConnector {
         const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
         const existingConnection = this.ongoingConnectAttempts.get(nodeId)
         if (existingConnection) {
-            return existingConnection
+            return existingConnection.managedConnection
         }
 
         const connection = this.createConnection(targetPeerDescriptor)
@@ -139,33 +146,53 @@ export class WebrtcConnector {
         const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor!)
         const targetNodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
         const offering = (getOfferer(localNodeId, targetNodeId) === 'local')
-        let managedConnection: ManagedWebrtcConnection
-
-        if (offering) {
-            managedConnection = new ManagedWebrtcConnection(this.localPeerDescriptor!, connection)
-        } else {
-            managedConnection = new ManagedWebrtcConnection(this.localPeerDescriptor!, undefined, connection)
-        }
-
-        managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
-
-        this.ongoingConnectAttempts.set(targetNodeId, managedConnection)
-
-        const delFunc = () => {
-            this.ongoingConnectAttempts.delete(nodeId)
-            connection.off('disconnected', delFunc)
-            managedConnection.off('handshakeCompleted', delFunc)
-        }
-        connection.on('disconnected', delFunc)
-        managedConnection.on('handshakeCompleted', delFunc)
-
+        let managedConnection: ManagedConnection
         const remoteConnector = new WebrtcConnectorRpcRemote(
             this.localPeerDescriptor!,
             targetPeerDescriptor,
             this.rpcCommunicator,
             WebrtcConnectorRpcClient
         )
+        const delFunc = () => {
+            this.ongoingConnectAttempts.delete(nodeId)
+            connection.off('disconnected', delFunc)
+            managedConnection.off('disconnected', delFunc)
+            managedConnection.off('handshakeCompleted', delFunc)
+        }
+        if (offering) {
+            managedConnection = new ManagedConnection(ConnectionType.WEBRTC)
+            createOutgoingHandshaker(this.localPeerDescriptor!, managedConnection, connection, targetPeerDescriptor)
+            connection.once('localDescription', (description: string) => {
+                logger.trace('Sending offer to remote peer')
+                remoteConnector.sendRtcOffer(description, connection.connectionId)
+            })
+        } else {
+            managedConnection = new ManagedConnection(ConnectionType.WEBRTC)
+            const handshaker = createIncomingHandshaker(this.localPeerDescriptor!, managedConnection, connection)
+            connection.once('localDescription', (description: string) => {
+                remoteConnector.sendRtcAnswer(description, connection.connectionId)
+            })
+            handshaker.on('handshakeRequest', (sourceDescriptor: PeerDescriptor, remoteVersion: string) => {
+                if (!isMaybeSupportedVersion(remoteVersion)) {
+                    rejectHandshake(managedConnection!, connection, handshaker, HandshakeError.UNSUPPORTED_VERSION)
+                } else {
+                    acceptHandshake(managedConnection!, connection, handshaker, sourceDescriptor)
+                }
+                delFunc()
+            })
+        }
 
+        managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
+
+        this.ongoingConnectAttempts.set(targetNodeId, {
+            managedConnection,
+            connection
+        })
+
+        connection.on('disconnected', delFunc)
+        managedConnection.on('disconnected', delFunc)
+        managedConnection.on('handshakeCompleted', delFunc)
+    
         connection.on('localCandidate', (candidate: string, mid: string) => {
             if (this.config.externalIp !== undefined) {
                 candidate = replaceInternalIpWithExternalIp(candidate, this.config.externalIp)
@@ -174,19 +201,9 @@ export class WebrtcConnector {
             remoteConnector.sendIceCandidate(candidate, mid, connection.connectionId)
         })
 
-        if (offering) {
-            connection.once('localDescription', (description: string) => {
-                remoteConnector.sendRtcOffer(description, connection.connectionId)
-            })
-        } else {
-            connection.once('localDescription', (description: string) => {
-                remoteConnector.sendRtcAnswer(description, connection.connectionId)
-            })
-        }
-
         connection.start(offering)
 
-        if (!offering) {
+        if (!doNotRequestConnection && !offering) {
             remoteConnector.requestConnection()
         }
 
@@ -199,7 +216,6 @@ export class WebrtcConnector {
             iceServers: this.config.iceServers,
             bufferThresholdLow: this.config.bufferThresholdLow,
             bufferThresholdHigh: this.config.bufferThresholdHigh,
-            connectingTimeout: this.config.connectionTimeout,
             portRange: this.config.portRange
             // TODO should we pass maxMessageSize?
         })
@@ -214,7 +230,10 @@ export class WebrtcConnector {
         this.stopped = true
 
         const attempts = Array.from(this.ongoingConnectAttempts.values())
-        await Promise.allSettled(attempts.map((conn) => conn.close(false)))
+        await Promise.allSettled(attempts.map(async (conn) => {
+            conn.connection.destroy()
+            await conn.managedConnection.close(false)
+        }))
 
         this.rpcCommunicator.destroy()
     }

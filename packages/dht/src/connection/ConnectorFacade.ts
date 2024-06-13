@@ -35,7 +35,6 @@ export interface DefaultConnectorFacadeConfig {
     webrtcAllowPrivateAddresses?: boolean
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
-    webrtcNewConnectionTimeout?: number
     externalIp?: string
     webrtcPortRange?: PortRange
     maxMessageSize?: number
@@ -88,7 +87,6 @@ export class DefaultConnectorFacade implements ConnectorFacade {
             allowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
             bufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
             bufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
-            connectionTimeout: this.config.webrtcNewConnectionTimeout,
             externalIp: this.config.externalIp,
             portRange: this.config.webrtcPortRange,
             maxMessageSize: this.config.maxMessageSize
@@ -145,7 +143,7 @@ export class DefaultConnectorFacade implements ConnectorFacade {
         if (this.websocketConnector!.isPossibleToFormConnection(peerDescriptor)) {
             return this.websocketConnector!.connect(peerDescriptor)
         } else {
-            return this.webrtcConnector!.connect(peerDescriptor)
+            return this.webrtcConnector!.connect(peerDescriptor, false)
         }
     }
 

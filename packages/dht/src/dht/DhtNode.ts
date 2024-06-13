@@ -96,7 +96,6 @@ export interface DhtNodeOptions {
     webrtcAllowPrivateAddresses?: boolean
     webrtcDatachannelBufferThresholdLow?: number
     webrtcDatachannelBufferThresholdHigh?: number
-    webrtcNewConnectionTimeout?: number
     webrtcPortRange?: PortRange
     maxMessageSize?: number
     maxConnections?: number
@@ -217,7 +216,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 webrtcAllowPrivateAddresses: this.config.webrtcAllowPrivateAddresses,
                 webrtcDatachannelBufferThresholdLow: this.config.webrtcDatachannelBufferThresholdLow,
                 webrtcDatachannelBufferThresholdHigh: this.config.webrtcDatachannelBufferThresholdHigh,
-                webrtcNewConnectionTimeout: this.config.webrtcNewConnectionTimeout,
                 webrtcPortRange: this.config.webrtcPortRange,
                 maxMessageSize: this.config.maxMessageSize,
                 websocketServerEnableTls: this.config.websocketServerEnableTls,
