@@ -114,9 +114,41 @@ export const acceptHandshake = (
     managedConnection.onHandshakeCompleted(sourcePeerDescriptor)
 }
 
+export const createHandshakeRequest = (localPeerDescriptor: PeerDescriptor, remotePeerDescriptor: PeerDescriptor): Message => {
+    const outgoingHandshake: HandshakeRequest = {
+        sourcePeerDescriptor: localPeerDescriptor,
+        targetPeerDescriptor: remotePeerDescriptor,
+        version: LOCAL_PROTOCOL_VERSION
+    }
+    return {
+        serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
+        messageId: v4(),
+        body: {
+            oneofKind: 'handshakeRequest',
+            handshakeRequest: outgoingHandshake
+        }
+    }
+} 
+
+export const createHandshakeResponse = (localPeerDescriptor: PeerDescriptor, error?: HandshakeError): Message => {
+    const outgoingHandshakeResponse: HandshakeResponse = {
+        sourcePeerDescriptor: localPeerDescriptor,
+        error,
+        version: LOCAL_PROTOCOL_VERSION
+    }
+    return {
+        serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
+        messageId: v4(),
+        body: {
+            oneofKind: 'handshakeResponse',
+            handshakeResponse: outgoingHandshakeResponse
+        }
+    }
+}
+
 export class Handshaker extends EventEmitter<HandshakerEvents> {
 
-    private static readonly HANDSHAKER_SERVICE_ID = 'system/handshaker'
+    public static readonly HANDSHAKER_SERVICE_ID = 'system/handshaker'
     private localPeerDescriptor: PeerDescriptor
     private connection: IConnection
     private readonly onDataListener: (data: Uint8Array) => void
@@ -161,37 +193,13 @@ export class Handshaker extends EventEmitter<HandshakerEvents> {
     }
 
     public sendHandshakeRequest(remotePeerDescriptor?: PeerDescriptor): void {
-        const outgoingHandshake: HandshakeRequest = {
-            sourcePeerDescriptor: this.localPeerDescriptor,
-            targetPeerDescriptor: remotePeerDescriptor,
-            version: LOCAL_PROTOCOL_VERSION
-        }
-        const msg: Message = {
-            serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
-            messageId: v4(),
-            body: {
-                oneofKind: 'handshakeRequest',
-                handshakeRequest: outgoingHandshake
-            }
-        }
+        const msg = createHandshakeRequest(this.localPeerDescriptor, remotePeerDescriptor!)
         this.connection.send(Message.toBinary(msg))
         logger.trace('handshake request sent')
     }
 
     public sendHandshakeResponse(error?: HandshakeError): void {
-        const outgoingHandshakeResponse: HandshakeResponse = {
-            sourcePeerDescriptor: this.localPeerDescriptor,
-            error,
-            version: LOCAL_PROTOCOL_VERSION
-        }
-        const msg: Message = {
-            serviceId: Handshaker.HANDSHAKER_SERVICE_ID,
-            messageId: v4(),
-            body: {
-                oneofKind: 'handshakeResponse',
-                handshakeResponse: outgoingHandshakeResponse
-            }
-        }
+        const msg = createHandshakeResponse(this.localPeerDescriptor, error)
         this.connection.send(Message.toBinary(msg))
         logger.trace('handshake response sent')
     }
