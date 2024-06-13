@@ -1,11 +1,11 @@
 import { PeerDescriptor } from '@streamr/dht'
-import { EntryPointDiscovery } from '../../../src/logic/EntryPointDiscovery'
+import { KnownNodesManager } from '../../../src/logic/KnownNodesManager'
 
-export const createFakeEntryPointDiscovery = (): EntryPointDiscovery => {
-    return new FakeEntryPointDiscovery() as unknown as EntryPointDiscovery
+export const createFakeKnownNodesManager = (): KnownNodesManager => {
+    return new FakeKnownNodesManager() as unknown as KnownNodesManager
 }
 
-class FakeEntryPointDiscovery {
+class FakeKnownNodesManager {
 
     private entryPoints: PeerDescriptor[] = []
 

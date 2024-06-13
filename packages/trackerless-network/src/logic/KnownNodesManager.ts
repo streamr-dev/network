@@ -22,7 +22,7 @@ const logger = new Logger(module)
 
 export const ENTRYPOINT_STORE_LIMIT = 8
 
-interface EntryPointDiscoveryConfig {
+interface KnownNodesManagerConfig {
     streamPartId: StreamPartID
     localPeerDescriptor: PeerDescriptor
     fetchEntryPointData: (key: DhtAddress) => Promise<DataEntry[]>
@@ -31,20 +31,21 @@ interface EntryPointDiscoveryConfig {
     storeInterval?: number
 }
 
-export class EntryPointDiscovery {
+// TODO maybe better name?
+export class KnownNodesManager {
 
     private readonly abortController: AbortController
-    private readonly config: EntryPointDiscoveryConfig
+    private readonly config: KnownNodesManagerConfig
     private readonly storeInterval: number
-    private isLocalNodeStoredAsEntryPoint = false
+    private isLocalPeerDescritorStored = false
     
-    constructor(config: EntryPointDiscoveryConfig) {
+    constructor(config: KnownNodesManagerConfig) {
         this.config = config
         this.abortController = new AbortController()
         this.storeInterval = this.config.storeInterval ?? 60000
     }
 
-    async discoverEntryPoints(): Promise<PeerDescriptor[]> {
+    async discoverNodes(): Promise<PeerDescriptor[]> {
         const dataKey = streamPartIdToDataKey(this.config.streamPartId)
         logger.trace(`Discovering entry points for key ${dataKey}`)
         try {
@@ -59,7 +60,7 @@ export class EntryPointDiscovery {
         if (this.abortController.signal.aborted) {
             return
         }
-        this.isLocalNodeStoredAsEntryPoint = true
+        this.isLocalPeerDescritorStored = true
         await this.storeLocalNodeAsEntryPoint()
         await this.keepSelfAsEntryPoint()
     }
@@ -78,7 +79,7 @@ export class EntryPointDiscovery {
         await scheduleAtInterval(async () => {
             logger.trace(`Attempting to keep self as entrypoint for ${this.config.streamPartId}`)
             try {
-                const discovered = await this.discoverEntryPoints()
+                const discovered = await this.discoverNodes()
                 if (discovered.length < ENTRYPOINT_STORE_LIMIT 
                     || discovered.some((peerDescriptor) => areEqualPeerDescriptors(peerDescriptor, this.config.localPeerDescriptor))) {
                     await this.storeLocalNodeAsEntryPoint()
@@ -89,8 +90,8 @@ export class EntryPointDiscovery {
         }, this.storeInterval, false, this.abortController.signal)
     }
 
-    public isLocalNodeEntryPoint(): boolean {
-        return this.isLocalNodeStoredAsEntryPoint
+    public isLocalNodeStored(): boolean {
+        return this.isLocalPeerDescritorStored
     }
 
     async destroy(): Promise<void> {

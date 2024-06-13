@@ -23,7 +23,7 @@ import {
 import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import fs from 'fs'
 import { NetworkNode } from '../../src/NetworkNode'
-import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
+import { streamPartIdToDataKey } from '../../src/logic/KnownNodesManager'
 import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
 import { Layer1Node } from '../../src/logic/Layer1Node'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'

@@ -1,19 +1,19 @@
-import { EntryPointDiscovery } from '../../src/logic/EntryPointDiscovery'
+import { KnownNodesManager } from '../../src/logic/KnownNodesManager'
 import { StreamPartReconnect } from '../../src/logic/StreamPartReconnect'
 import { MockLayer1Node } from '../utils/mock/MockLayer1Node'
-import { createFakeEntryPointDiscovery } from '../utils/fake/FakeEntryPointDiscovery'
+import { createFakeKnownNodesManager } from '../utils/fake/FakeKnownNodesManager'
 import { waitForCondition } from '@streamr/utils'
 
 describe('StreamPartReconnect', () => {
 
-    let entryPointDiscovery: EntryPointDiscovery
+    let knownNodesManager: KnownNodesManager
     let layer1Node: MockLayer1Node
     let streamPartReconnect: StreamPartReconnect
 
     beforeEach(() => {
-        entryPointDiscovery = createFakeEntryPointDiscovery()
+        knownNodesManager = createFakeKnownNodesManager()
         layer1Node = new MockLayer1Node()
-        streamPartReconnect = new StreamPartReconnect(layer1Node, entryPointDiscovery)
+        streamPartReconnect = new StreamPartReconnect(layer1Node, knownNodesManager)
     })
 
     afterEach(() => {

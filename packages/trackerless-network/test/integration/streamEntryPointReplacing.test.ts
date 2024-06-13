@@ -1,7 +1,7 @@
 import { Simulator, SimulatorTransport, LatencyType } from '@streamr/dht'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
-import { ENTRYPOINT_STORE_LIMIT } from '../../src/logic/EntryPointDiscovery'
+import { ENTRYPOINT_STORE_LIMIT } from '../../src/logic/KnownNodesManager'
 import { range } from 'lodash'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { waitForCondition } from '@streamr/utils'
