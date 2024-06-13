@@ -11,6 +11,10 @@ export interface PendingConnectionEvents {
 
 const logger = new Logger(module)
 
+// PendingConnection is used as a reference to a connection that should be opened and handshaked to a given PeerDescriptor
+// It does not hold a connection internally. The public method onHandshakedCompleted should be called once a connection for the 
+// remotePeerDescriptor is opened and handshaked successfully.
+// PendingConnections are created by the Connectors.
 export class PendingConnection extends EventEmitter<PendingConnectionEvents> {
 
     private readonly connectingAbortController: AbortController = new AbortController()
