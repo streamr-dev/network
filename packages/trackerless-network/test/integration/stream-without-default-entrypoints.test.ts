@@ -9,11 +9,12 @@ import {
     StreamMessageType,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { EthereumAddress, hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
+import { hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
 import { createMockPeerDescriptor } from '../utils/utils'
+import { randomBytes } from 'crypto'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
 
@@ -30,7 +31,7 @@ describe('stream without default entrypoints', () => {
             StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
             666,
             0,
-            '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as EthereumAddress,
+            randomBytes(40),
             'msgChainId'
         ),
         prevMsgRef: new MessageRef(665, 0),

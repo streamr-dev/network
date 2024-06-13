@@ -4,9 +4,9 @@ import { waitForCondition } from '@streamr/utils'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
 import { Layer0Node } from '../../src/logic/Layer0Node'
 import { Layer1Node } from '../../src/logic/Layer1Node'
+import { randomBytes } from 'crypto'
 
 describe('content delivery layer node with real connections', () => {
 
@@ -153,7 +153,7 @@ describe('content delivery layer node with real connections', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             streamPartId,
-            randomEthereumAddress()
+            randomBytes(40)
         )
         contentDeliveryLayerNode1.broadcast(msg)
         await waitForCondition(() => receivedMessageCount >= 4)

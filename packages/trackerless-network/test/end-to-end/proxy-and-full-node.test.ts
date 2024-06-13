@@ -9,13 +9,13 @@ import {
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
 import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { StreamMessage as InternalStreamMessage, ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
+import { randomBytes } from 'crypto'
 
-const PROXIED_NODE_USER_ID = randomEthereumAddress()
+const PROXIED_NODE_USER_ID = randomBytes(40)
 
 const createMessage = (streamPartId: StreamPartID): StreamMessage => {
     return new StreamMessage({ 
@@ -24,7 +24,7 @@ const createMessage = (streamPartId: StreamPartID): StreamMessage => {
             StreamPartIDUtils.getStreamPartition(streamPartId),
             666,
             0,
-            randomEthereumAddress(),
+            randomBytes(40),
             'msgChainId'
         ),
         prevMsgRef: new MessageRef(665, 0),

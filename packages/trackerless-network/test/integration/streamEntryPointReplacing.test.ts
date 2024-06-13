@@ -5,7 +5,7 @@ import { ENTRYPOINT_STORE_LIMIT } from '../../src/logic/EntryPointDiscovery'
 import { range } from 'lodash'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { waitForCondition } from '@streamr/utils'
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { randomBytes } from 'crypto'
 
 describe('Stream Entry Points are replaced when known entry points leave streams', () => {
     
@@ -90,7 +90,7 @@ describe('Stream Entry Points are replaced when known entry points leave streams
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             STREAM_PART_ID,
-            randomEthereumAddress()
+            randomBytes(40)
         )
         newNodeInStream.getContentDeliveryManager().broadcast(msg)
         await waitForCondition(() => receivedMessages === NUM_OF_LATER_NODES, 30000)

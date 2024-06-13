@@ -11,7 +11,7 @@ import { createStreamMessage } from '../utils/utils'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { DhtCallContext } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { randomBytes } from 'crypto'
 
 describe('Network RPC', () => {
     let rpcCommunicator1: RpcCommunicator<DhtCallContext>
@@ -45,7 +45,7 @@ describe('Network RPC', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             StreamPartIDUtils.parse('testStream#0'),
-            randomEthereumAddress()
+            randomBytes(40)
         )
         await client.sendStreamMessage(msg)
         await waitForCondition(() => recvCounter === 1)

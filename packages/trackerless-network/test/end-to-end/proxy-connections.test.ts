@@ -8,7 +8,6 @@ import {
     StreamMessageType,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
 import { hexToBinary, utf8ToBinary, wait, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
@@ -16,8 +15,9 @@ import { ProxyClient } from '../../src/logic/proxy/ProxyClient'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { DhtAddress } from '@streamr/dht'
+import { randomBytes } from 'crypto'
 
-const PROXIED_NODE_USER_ID = randomEthereumAddress()
+const PROXIED_NODE_USER_ID = randomBytes(40)
 const STREAM_PART_ID = StreamPartIDUtils.parse('proxy-test#0')
 const MESSAGE = new StreamMessage({
     messageId: new MessageID(
@@ -25,7 +25,7 @@ const MESSAGE = new StreamMessage({
         StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
         666,
         0,
-        randomEthereumAddress(),
+        randomBytes(40),
         'msgChainId'
     ),
     prevMsgRef: new MessageRef(665, 0),
