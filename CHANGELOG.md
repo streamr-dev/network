@@ -14,9 +14,15 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
+- Update to ethers.js library to v6 (https://github.com/streamr-dev/network/pull/2506)
+- Restructured `contracts` config structure (https://github.com/streamr-dev/network/pull/2581)
+- Improve reliability of JSON RPC interactions by adding retry redundancy (https://github.com/streamr-dev/network/pull/2562)
+
 #### Deprecated
 
 #### Removed
+
+- Removed obsolete RPC provider options (https://github.com/streamr-dev/network/pull/2583)
 
 #### Fixed
 
@@ -34,6 +40,8 @@ Changes before Tatum release are not documented in this file.
 #### Removed
 
 #### Fixed
+
+- Fix memory leak in SubscriberPlugin (https://github.com/streamr-dev/network/pull/2578)
 
 #### Security
 

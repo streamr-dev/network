@@ -81,7 +81,7 @@ describe('inspect', () => {
         }, 200)
 
         for (const node of inspectedNodes) {
-            const result = await inspectorNode.getContentDeliveryManager().inspect(node.getLayer0Node().getLocalPeerDescriptor(), streamPartId)
+            const result = await inspectorNode.getContentDeliveryManager().inspect(node.getControlLayerNode().getLocalPeerDescriptor(), streamPartId)
             expect(result).toEqual(true)
         }
     }, 25000)

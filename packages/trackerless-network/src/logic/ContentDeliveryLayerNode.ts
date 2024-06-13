@@ -30,7 +30,7 @@ import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { Inspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { markAndCheckDuplicate } from './utils'
-import { Layer1Node } from './Layer1Node'
+import { DiscoveryLayerNode } from './DiscoveryLayerNode'
 import { StreamPartID } from '@streamr/protocol'
 
 export interface Events {
@@ -41,7 +41,7 @@ export interface Events {
 
 export interface StrictContentDeliveryLayerNodeConfig {
     streamPartId: StreamPartID
-    layer1Node: Layer1Node
+    discoveryLayerNode: DiscoveryLayerNode
     transport: ITransport
     connectionLocker: ConnectionLocker
     localPeerDescriptor: PeerDescriptor
@@ -97,7 +97,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                 || this.config.proxyConnectionRpcLocal?.getConnection(sourceId)?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
-                    this.config.layer1Node.removeContact(sourceId)
+                    this.config.discoveryLayerNode.removeContact(sourceId)
                     this.config.neighbors.remove(sourceId)
                     this.config.nearbyNodeView.remove(sourceId)
                     this.config.randomNodeView.remove(sourceId)
@@ -118,37 +118,37 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         this.started = true
         this.registerDefaultServerMethods()
         addManagedEventListener<any, any>(
-            this.config.layer1Node as any,
+            this.config.discoveryLayerNode as any,
             'nearbyContactAdded', 
             () => this.onNearbyContactAdded(),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
-            this.config.layer1Node as any,
+            this.config.discoveryLayerNode as any,
             'nearbyContactRemoved',
             () => this.onNearbyContactRemoved(),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
-            this.config.layer1Node as any,
+            this.config.discoveryLayerNode as any,
             'randomContactAdded',
             () => this.onRandomContactAdded(),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
-            this.config.layer1Node as any,
+            this.config.discoveryLayerNode as any,
             'randomContactRemoved',
             () => this.onRandomContactRemoved(),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
-            this.config.layer1Node as any,
+            this.config.discoveryLayerNode as any,
             'ringContactAdded',
             () => this.onRingContactsUpdated(),
             this.abortController.signal
         )
         addManagedEventListener<any, any>(
-            this.config.layer1Node as any,
+            this.config.discoveryLayerNode as any,
             'ringContactRemoved',
             () => this.onRingContactsUpdated(),
             this.abortController.signal
@@ -211,7 +211,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         if (this.isStopped()) {
             return
         }
-        const contacts = this.config.layer1Node.getRingContacts()
+        const contacts = this.config.discoveryLayerNode.getRingContacts()
         this.config.leftNodeView.replaceAll(contacts.left.map((peer) => 
             new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,
@@ -237,7 +237,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         if (this.isStopped()) {
             return
         }
-        const closestContacts = this.config.layer1Node.getClosestContacts()
+        const closestContacts = this.config.discoveryLayerNode.getClosestContacts()
         this.updateNearbyNodeView(closestContacts)
         if (this.config.neighbors.size() < this.config.neighborTargetCount) {
             this.config.neighborFinder.start()
@@ -249,7 +249,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         if (this.isStopped()) {
             return
         }
-        const closestContacts = this.config.layer1Node.getClosestContacts()
+        const closestContacts = this.config.discoveryLayerNode.getClosestContacts()
         this.updateNearbyNodeView(closestContacts)
     }
 
@@ -263,7 +263,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                 this.config.rpcRequestTimeout
             )
         ))
-        for (const descriptor of this.config.layer1Node.getNeighbors()) {
+        for (const descriptor of this.config.discoveryLayerNode.getNeighbors()) {
             if (this.config.nearbyNodeView.size() >= this.config.nodeViewSize) {
                 break
             }
@@ -283,7 +283,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         if (this.isStopped()) {
             return
         }
-        const randomContacts = this.config.layer1Node.getRandomContacts(RANDOM_NODE_VIEW_SIZE)
+        const randomContacts = this.config.discoveryLayerNode.getRandomContacts(RANDOM_NODE_VIEW_SIZE)
         this.config.randomNodeView.replaceAll(randomContacts.map((descriptor) =>
             new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,
@@ -303,7 +303,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         if (this.isStopped()) {
             return
         }
-        const randomContacts = this.config.layer1Node.getRandomContacts(RANDOM_NODE_VIEW_SIZE)
+        const randomContacts = this.config.discoveryLayerNode.getRandomContacts(RANDOM_NODE_VIEW_SIZE)
         this.config.randomNodeView.replaceAll(randomContacts.map((descriptor) =>
             new ContentDeliveryRpcRemote(
                 this.config.localPeerDescriptor,

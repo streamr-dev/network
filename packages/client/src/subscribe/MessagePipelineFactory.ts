@@ -10,17 +10,17 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { PushPipeline } from '../utils/PushPipeline'
 import { Resends } from './Resends'
 import { MessagePipelineOptions, createMessagePipeline as _createMessagePipeline } from './messagePipeline'
-import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
+import { SignatureValidator } from '../signature/SignatureValidator'
 
 type MessagePipelineFactoryOptions = MarkOptional<Omit<MessagePipelineOptions,
     'resends' |
     'groupKeyManager' |
     'streamRegistry' |
-    'erc1271ContractFacade' |
+    'signatureValidator' |
     'destroySignal' |
     'loggerFactory'>,
     'getStorageNodes' |
-    'config'> 
+    'config'>
 
 @scoped(Lifecycle.ContainerScoped)
 export class MessagePipelineFactory {
@@ -28,18 +28,18 @@ export class MessagePipelineFactory {
     private readonly resends: Resends
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly streamRegistry: StreamRegistry
-    private readonly erc1271ContractFacade: ERC1271ContractFacade
+    private readonly signatureValidator: SignatureValidator
     private readonly groupKeyManager: GroupKeyManager
     private readonly config: MessagePipelineOptions['config']
     private readonly destroySignal: DestroySignal
     private readonly loggerFactory: LoggerFactory
-    
+
     /* eslint-disable indent */
     constructor(
         @inject(delay(() => Resends)) resends: Resends,
         streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StreamRegistry)) streamRegistry: StreamRegistry,
-        @inject(ERC1271ContractFacade) erc1271ContractFacade: ERC1271ContractFacade,
+        signatureValidator: SignatureValidator,
         @inject(delay(() => GroupKeyManager)) groupKeyManager: GroupKeyManager,
         @inject(ConfigInjectionToken) config: MessagePipelineOptions['config'],
         destroySignal: DestroySignal,
@@ -48,7 +48,7 @@ export class MessagePipelineFactory {
         this.resends = resends
         this.streamStorageRegistry = streamStorageRegistry
         this.streamRegistry = streamRegistry
-        this.erc1271ContractFacade = erc1271ContractFacade
+        this.signatureValidator = signatureValidator
         this.groupKeyManager = groupKeyManager
         this.config = config
         this.destroySignal = destroySignal
@@ -62,7 +62,7 @@ export class MessagePipelineFactory {
             getStorageNodes: opts.getStorageNodes ?? ((streamId: StreamID) => this.streamStorageRegistry.getStorageNodes(streamId)),
             resends: this.resends,
             streamRegistry: this.streamRegistry,
-            erc1271ContractFacade: this.erc1271ContractFacade,
+            signatureValidator: this.signatureValidator,
             groupKeyManager: this.groupKeyManager,
             config: opts.config ?? this.config,
             destroySignal: this.destroySignal,
