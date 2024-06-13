@@ -80,7 +80,8 @@ export class PeerDiscovery {
         }
         this.joinCalled = true
         logger.debug(
-            `Joining ${this.config.serviceId === CONTROL_LAYER_NODE_SERVICE_ID ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
+            `Joining ${this.config.serviceId === CONTROL_LAYER_NODE_SERVICE_ID
+                ? 'The Streamr Network' : `Control Layer for ${this.config.serviceId}`}`
             + ` via entrypoint ${getNodeIdFromPeerDescriptor(entryPointDescriptor)}`
         )
         if (areEqualPeerDescriptors(entryPointDescriptor, this.config.localPeerDescriptor)) {
