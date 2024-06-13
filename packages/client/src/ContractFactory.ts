@@ -5,7 +5,7 @@ import { Lifecycle, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { StreamrClientEventEmitter } from './events'
 import { LoggerFactory } from './utils/LoggerFactory'
-import { ObservableContract, createDecoratedContract } from './utils/contract'
+import { ObservableContract, createDecoratedContract } from './contracts/contract'
 import { Provider, ContractTransactionReceipt, InterfaceAbi, BaseContract } from 'ethers'
 
 @scoped(Lifecycle.ContainerScoped)

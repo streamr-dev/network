@@ -1,6 +1,6 @@
 import { areEqualPeerDescriptors, DhtAddress, getNodeIdFromPeerDescriptor, PeerDescriptor } from '@streamr/dht'
 import { Logger, wait } from '@streamr/utils'
-import { Layer1Node } from './Layer1Node'
+import { DiscoveryLayerNode } from './DiscoveryLayerNode'
 
 /*
  * Tries to find new neighbors if we currently have less than MIN_NEIGHBOR_COUNT neigbors. It does so by
@@ -41,7 +41,7 @@ const exponentialRunOff = async (
 export const MIN_NEIGHBOR_COUNT = 4
 
 export interface StreamPartNetworkSplitAvoidanceConfig {
-    layer1Node: Layer1Node
+    discoveryLayerNode: DiscoveryLayerNode
     discoverEntryPoints: (excludedNodes?: Set<DhtAddress>) => Promise<PeerDescriptor[]>
     exponentialRunOfBaseDelay?: number
 }
@@ -63,11 +63,11 @@ export class StreamPartNetworkSplitAvoidance {
         await exponentialRunOff(async () => {
             const discoveredEntrypoints = await this.config.discoverEntryPoints()
             const filteredEntryPoints = discoveredEntrypoints.filter((peer) => !this.excludedNodes.has(getNodeIdFromPeerDescriptor(peer)))
-            await this.config.layer1Node.joinDht(filteredEntryPoints, false, false)
-            if (this.config.layer1Node.getNeighborCount() < MIN_NEIGHBOR_COUNT) {
+            await this.config.discoveryLayerNode.joinDht(filteredEntryPoints, false, false)
+            if (this.config.discoveryLayerNode.getNeighborCount() < MIN_NEIGHBOR_COUNT) {
                 // Filter out nodes that are not neighbors as those nodes are assumed to be offline
                 const newExcludes = filteredEntryPoints
-                    .filter((peer) => !this.config.layer1Node.getNeighbors()
+                    .filter((peer) => !this.config.discoveryLayerNode.getNeighbors()
                         .some((neighbor) => areEqualPeerDescriptors(neighbor, peer)))
                     .map((peer) => getNodeIdFromPeerDescriptor(peer))
                 newExcludes.forEach((node) => this.excludedNodes.add(node))

@@ -9,7 +9,7 @@ const path = require("path")
 const config = {
     title: "Streamr Docs",
     tagline:
-        "Publish and subscribe to your json based real-time data powered by the decentralized Streamr network.",
+        "Publish and subscribe to real-time data powered by the decentralized Streamr network.",
     url: "https://docs.streamr.network/",
     baseUrl: "/",
     onBrokenLinks: "warn",  // TODO use "throw" instead and fix the broken link (currently the "Provider" class has broken links)
