@@ -20,7 +20,7 @@ const parseEntryPointData = (dataEntries: DataEntry[]): PeerDescriptor[] => {
 
 const logger = new Logger(module)
 
-export const ENTRYPOINT_STORE_LIMIT = 8
+export const MAX_STORED_COUNT = 8
 
 interface KnownNodesManagerConfig {
     streamPartId: StreamPartID
@@ -80,7 +80,7 @@ export class KnownNodesManager {
             logger.trace(`Attempting to keep self as entrypoint for ${this.config.streamPartId}`)
             try {
                 const discovered = await this.discoverNodes()
-                if (discovered.length < ENTRYPOINT_STORE_LIMIT 
+                if (discovered.length < MAX_STORED_COUNT 
                     || discovered.some((peerDescriptor) => areEqualPeerDescriptors(peerDescriptor, this.config.localPeerDescriptor))) {
                     await this.storeLocalNodeAsEntryPoint()
                 }

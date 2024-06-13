@@ -19,7 +19,7 @@ import {
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
 import { ProxyDirection, StreamMessage, StreamPartitionInfo } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { ENTRYPOINT_STORE_LIMIT, KnownNodesManager } from './KnownNodesManager'
+import { MAX_STORED_COUNT, KnownNodesManager } from './KnownNodesManager'
 import { Layer0Node } from './Layer0Node'
 import { Layer1Node } from './Layer1Node'
 import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
@@ -177,7 +177,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
                 return
             }
             const entryPoints = await knownNodesManager.discoverNodes()
-            if (entryPoints.length < ENTRYPOINT_STORE_LIMIT) {
+            if (entryPoints.length < MAX_STORED_COUNT) {
                 await knownNodesManager.storeAndKeepLocalNodeAsEntryPoint()
             }
         }
@@ -218,7 +218,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
                 streamPart.layer1Node.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT)),
                 streamPart.layer1Node.joinRing()
             ])
-            if (entryPoints.length < ENTRYPOINT_STORE_LIMIT) {
+            if (entryPoints.length < MAX_STORED_COUNT) {
                 await knownNodesManager.storeAndKeepLocalNodeAsEntryPoint()
                 if (streamPart.layer1Node.getNeighborCount() < NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT) {
                     setImmediate(() => streamPart.networkSplitAvoidance.avoidNetworkSplit())
