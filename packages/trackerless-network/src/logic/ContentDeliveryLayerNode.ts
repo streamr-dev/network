@@ -36,7 +36,7 @@ import { StreamPartID } from '@streamr/protocol'
 export interface Events {
     message: (message: StreamMessage) => void
     neighborConnected: (nodeId: DhtAddress) => void
-    entryPointLeaveDetected: () => void
+    storedNodeLeaveDetected: () => void
 }
 
 export interface StrictContentDeliveryLayerNodeConfig {
@@ -107,7 +107,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                     this.config.proxyConnectionRpcLocal?.removeConnection(sourceId)
                 }
                 if (sourceIsStreamEntryPoint) {
-                    this.emit('entryPointLeaveDetected')
+                    this.emit('storedNodeLeaveDetected')
                 }
             },
             markForInspection: (senderId: DhtAddress, messageId: MessageID) => this.config.inspector.markMessage(senderId, messageId)

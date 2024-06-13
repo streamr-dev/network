@@ -187,7 +187,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
                 await streamPartReconnect.reconnect()
             }
         })
-        node.on('entryPointLeaveDetected', () => handleEntryPointLeave())
+        node.on('storedNodeLeaveDetected', () => handleEntryPointLeave())
         setImmediate(async () => {
             try {
                 await this.startLayersAndJoinDht(streamPartId, knownNodesManager)
