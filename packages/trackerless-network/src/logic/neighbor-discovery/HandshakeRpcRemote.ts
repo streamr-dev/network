@@ -18,15 +18,15 @@ export class HandshakeRpcRemote extends RpcRemote<HandshakeRpcClient> {
 
     async handshake(
         streamPartId: StreamPartID,
-        neighborIds: DhtAddress[],
-        concurrentHandshakeTargetId?: DhtAddress,
+        neighborNodeIds: DhtAddress[],
+        concurrentHandshakeNodeId?: DhtAddress,
         interleaveNodeId?: DhtAddress
     ): Promise<HandshakeResponse> {
         const request: StreamPartHandshakeRequest = {
             streamPartId,
             requestId: v4(),
-            neighborIds: neighborIds.map((id) => getRawFromDhtAddress(id)),
-            concurrentHandshakeTargetId: (concurrentHandshakeTargetId !== undefined) ? getRawFromDhtAddress(concurrentHandshakeTargetId) : undefined,
+            neighborNodeIds: neighborNodeIds.map((id) => getRawFromDhtAddress(id)),
+            concurrentHandshakeNodeId: (concurrentHandshakeNodeId !== undefined) ? getRawFromDhtAddress(concurrentHandshakeNodeId) : undefined,
             interleaveNodeId: (interleaveNodeId !== undefined) ? getRawFromDhtAddress(interleaveNodeId) : undefined
         }
         try {

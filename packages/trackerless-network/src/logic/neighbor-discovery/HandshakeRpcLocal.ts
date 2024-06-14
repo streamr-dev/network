@@ -89,7 +89,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
 
     private acceptHandshakeWithInterleaving(request: StreamPartHandshakeRequest, requester: PeerDescriptor): StreamPartHandshakeResponse {
         const exclude: DhtAddress[] = []
-        request.neighborIds.forEach((id: DhtAddressRaw) => exclude.push(getDhtAddressFromRaw(id)))
+        request.neighborNodeIds.forEach((id: DhtAddressRaw) => exclude.push(getDhtAddressFromRaw(id)))
         this.config.ongoingInterleaves.forEach((id) => exclude.push(id))
         exclude.push(getNodeIdFromPeerDescriptor(requester))
         if (request.interleaveNodeId !== undefined) {
