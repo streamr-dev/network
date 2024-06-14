@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
 import { groupBy, range } from 'lodash'
-import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
+import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { DhtAddress } from '@streamr/dht'
 

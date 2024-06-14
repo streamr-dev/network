@@ -1,14 +1,14 @@
 import { scheduleAtInterval } from '@streamr/utils'
-import { EntryPointDiscovery } from './EntryPointDiscovery'
+import { NodeStoreManager } from './NodeStoreManager'
 import { DiscoveryLayerNode } from './DiscoveryLayerNode'
 
 const DEFAULT_RECONNECT_INTERVAL = 30 * 1000
 export class StreamPartReconnect {
     private abortController?: AbortController
     private readonly discoveryLayerNode: DiscoveryLayerNode
-    private readonly entryPointDiscovery: EntryPointDiscovery
+    private readonly entryPointDiscovery: NodeStoreManager
 
-    constructor(discoveryLayerNode: DiscoveryLayerNode, entryPointDiscovery: EntryPointDiscovery) {
+    constructor(discoveryLayerNode: DiscoveryLayerNode, entryPointDiscovery: NodeStoreManager) {
         this.discoveryLayerNode = discoveryLayerNode
         this.entryPointDiscovery = entryPointDiscovery
     }
@@ -16,10 +16,10 @@ export class StreamPartReconnect {
     async reconnect(timeout = DEFAULT_RECONNECT_INTERVAL): Promise<void> {
         this.abortController = new AbortController()
         await scheduleAtInterval(async () => {
-            const entryPoints = await this.entryPointDiscovery.discoverEntryPoints()
+            const entryPoints = await this.entryPointDiscovery.fetchNodes()
             await this.discoveryLayerNode.joinDht(entryPoints)
-            if (this.entryPointDiscovery.isLocalNodeEntryPoint()) {
-                await this.entryPointDiscovery.storeAndKeepLocalNodeAsEntryPoint()
+            if (this.entryPointDiscovery.isLocalNodeStored()) {
+                await this.entryPointDiscovery.storeAndKeepLocalNode()
             }
             if (this.discoveryLayerNode.getNeighborCount() > 0) {
                 this.abortController!.abort()

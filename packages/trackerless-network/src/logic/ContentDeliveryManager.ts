@@ -5,6 +5,7 @@ import {
     EXISTING_CONNECTION_TIMEOUT,
     ITransport,
     PeerDescriptor,
+    getDhtAddressFromRaw,
     getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
 import { StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
@@ -16,17 +17,18 @@ import {
     MetricsDefinition,
     RateMetric
 } from '@streamr/utils'
+import { createHash } from 'crypto'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
 import { ProxyDirection, StreamMessage, StreamPartitionInfo } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { ENTRYPOINT_STORE_LIMIT, EntryPointDiscovery } from './EntryPointDiscovery'
+import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
 import { ControlLayerNode } from './ControlLayerNode'
 import { DiscoveryLayerNode } from './DiscoveryLayerNode'
-import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
+import { MAX_NODE_COUNT, NodeStoreManager } from './NodeStoreManager'
+import { MIN_NEIGHBOR_COUNT as NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT, StreamPartNetworkSplitAvoidance } from './StreamPartNetworkSplitAvoidance'
+import { StreamPartReconnect } from './StreamPartReconnect'
 import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode'
 import { ProxyClient } from './proxy/ProxyClient'
-import { StreamPartReconnect } from './StreamPartReconnect'
-import { MIN_NEIGHBOR_COUNT as NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT, StreamPartNetworkSplitAvoidance } from './StreamPartNetworkSplitAvoidance'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void
@@ -35,7 +37,7 @@ export type StreamPartDelivery = {
     proxied: false
     discoveryLayerNode: DiscoveryLayerNode
     node: ContentDeliveryLayerNode
-    entryPointDiscovery: EntryPointDiscovery
+    entryPointDiscovery: NodeStoreManager
     networkSplitAvoidance: StreamPartNetworkSplitAvoidance
 } | {
     proxied: true
@@ -59,6 +61,10 @@ export interface ContentDeliveryManagerConfig {
     streamPartitionMinPropagationTargets?: number
     acceptProxyConnections?: boolean
     rpcRequestTimeout?: number
+}
+
+export const streamPartIdToDataKey = (streamPartId: StreamPartID): DhtAddress => {
+    return getDhtAddressFromRaw(new Uint8Array((createHash('sha1').update(streamPartId).digest())))
 }
 
 export class ContentDeliveryManager extends EventEmitter<Events> {
@@ -136,21 +142,21 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         }
         logger.debug(`Join stream part ${streamPartId}`)
         const discoveryLayerNode = this.createDiscoveryLayerNode(streamPartId, this.knownStreamPartEntryPoints.get(streamPartId) ?? [])
-        const entryPointDiscovery = new EntryPointDiscovery({
-            streamPartId,
+        const entryPointDiscovery = new NodeStoreManager({
+            key: streamPartIdToDataKey(streamPartId),
             localPeerDescriptor: this.getPeerDescriptor(),
-            fetchEntryPointData: (key) => this.controlLayerNode!.fetchDataFromDht(key),
-            storeEntryPointData: (key, data) => this.controlLayerNode!.storeDataToDht(key, data),
-            deleteEntryPointData: async (key) => this.controlLayerNode!.deleteDataFromDht(key, false)
+            fetchDataFromDht: (key) => this.controlLayerNode!.fetchDataFromDht(key),
+            storeDataToDht: (key, data) => this.controlLayerNode!.storeDataToDht(key, data),
+            deleteDataFromDht: async (key, waitForCompletion) => this.controlLayerNode!.deleteDataFromDht(key, waitForCompletion)
         })
         const networkSplitAvoidance = new StreamPartNetworkSplitAvoidance({
             discoveryLayerNode,
-            discoverEntryPoints: async () => entryPointDiscovery.discoverEntryPoints()
+            discoverEntryPoints: async () => entryPointDiscovery.fetchNodes()
         })
         const node = this.createContentDeliveryLayerNode(
             streamPartId,
             discoveryLayerNode, 
-            () => entryPointDiscovery.isLocalNodeEntryPoint()
+            () => entryPointDiscovery.isLocalNodeStored()
         )
         const streamPartReconnect = new StreamPartReconnect(discoveryLayerNode, entryPointDiscovery)
         streamPart = {
@@ -173,12 +179,12 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             this.emit('newMessage', message)
         })
         const handleEntryPointLeave = async () => {
-            if (this.destroyed || entryPointDiscovery.isLocalNodeEntryPoint() || this.knownStreamPartEntryPoints.has(streamPartId)) {
+            if (this.destroyed || entryPointDiscovery.isLocalNodeStored() || this.knownStreamPartEntryPoints.has(streamPartId)) {
                 return
             }
-            const entryPoints = await entryPointDiscovery.discoverEntryPoints()
-            if (entryPoints.length < ENTRYPOINT_STORE_LIMIT) {
-                await entryPointDiscovery.storeAndKeepLocalNodeAsEntryPoint()
+            const entryPoints = await entryPointDiscovery.fetchNodes()
+            if (entryPoints.length < MAX_NODE_COUNT) {
+                await entryPointDiscovery.storeAndKeepLocalNode()
             }
         }
         discoveryLayerNode.on('manualRejoinRequired', async () => {
@@ -197,7 +203,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         })
     }
 
-    private async startLayersAndJoinDht(streamPartId: StreamPartID, entryPointDiscovery: EntryPointDiscovery): Promise<void> {
+    private async startLayersAndJoinDht(streamPartId: StreamPartID, entryPointDiscovery: NodeStoreManager): Promise<void> {
         logger.debug(`Start layers and join DHT for stream part ${streamPartId}`)
         const streamPart = this.streamParts.get(streamPartId)
         if ((streamPart === undefined) || streamPart.proxied) {
@@ -213,13 +219,13 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
                 streamPart.discoveryLayerNode.joinRing()
             ])
         } else {
-            const entryPoints = await entryPointDiscovery.discoverEntryPoints()
+            const entryPoints = await entryPointDiscovery.fetchNodes()
             await Promise.all([
                 streamPart.discoveryLayerNode.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT)),
                 streamPart.discoveryLayerNode.joinRing()
             ])
-            if (entryPoints.length < ENTRYPOINT_STORE_LIMIT) {
-                await entryPointDiscovery.storeAndKeepLocalNodeAsEntryPoint()
+            if (entryPoints.length < MAX_NODE_COUNT) {
+                await entryPointDiscovery.storeAndKeepLocalNode()
                 if (streamPart.discoveryLayerNode.getNeighborCount() < NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT) {
                     setImmediate(() => streamPart.networkSplitAvoidance.avoidNetworkSplit())
                 }
