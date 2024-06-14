@@ -1,7 +1,6 @@
 import secp256k1 from 'secp256k1'
 import { Keccak } from 'sha3'
-import { binaryToHex } from './binaryUtils'
-import { EthereumAddress, toEthereumAddress } from './EthereumAddress'
+import { areEqualBinaries } from './binaryUtils'
 
 const SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
 const keccak = new Keccak(256)
@@ -46,19 +45,19 @@ export function createSignature(payload: Uint8Array, privateKey: Uint8Array): Ui
     return result
 }
 
-export function recoverAddress(signature: Uint8Array, payload: Uint8Array): string {
+export function recoverAddress(signature: Uint8Array, payload: Uint8Array): Uint8Array {
     const publicKey = recoverPublicKey(signature, payload)
     const pubKeyWithoutFirstByte = publicKey.subarray(1, publicKey.length)
     keccak.reset()
     keccak.update(Buffer.from(pubKeyWithoutFirstByte))
     const hashOfPubKey = keccak.digest('binary')
-    return binaryToHex(hashOfPubKey.subarray(12, hashOfPubKey.length), true)
+    return hashOfPubKey.subarray(12, hashOfPubKey.length)
 }
 
-export function verifySignature(address: EthereumAddress, payload: Uint8Array, signature: Uint8Array): boolean {
+export function verifySignature(address: Uint8Array, payload: Uint8Array, signature: Uint8Array): boolean {
     try {
-        const recoveredAddress = toEthereumAddress(recoverAddress(signature, payload))
-        return recoveredAddress === address
+        const recoveredAddress = recoverAddress(signature, payload)
+        return areEqualBinaries(recoveredAddress, address)
     } catch {
         return false
     }
