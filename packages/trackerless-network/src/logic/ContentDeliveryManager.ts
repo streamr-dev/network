@@ -37,7 +37,7 @@ export type StreamPartDelivery = {
     proxied: false
     discoveryLayerNode: DiscoveryLayerNode
     node: ContentDeliveryLayerNode
-    entryPointDiscovery: PeerDescriptorStoreManager
+    peerDescriptorStoreManager: PeerDescriptorStoreManager
     networkSplitAvoidance: StreamPartNetworkSplitAvoidance
 } | {
     proxied: true
@@ -163,7 +163,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             proxied: false,
             discoveryLayerNode,
             node,
-            entryPointDiscovery: peerDescriptorStoreManager,
+            peerDescriptorStoreManager,
             networkSplitAvoidance,
             broadcast: (msg: StreamMessage) => node.broadcast(msg),
             stop: async () => {
@@ -203,7 +203,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         })
     }
 
-    private async startLayersAndJoinDht(streamPartId: StreamPartID, entryPointDiscovery: PeerDescriptorStoreManager): Promise<void> {
+    private async startLayersAndJoinDht(streamPartId: StreamPartID, peerDescriptorStoreManager: PeerDescriptorStoreManager): Promise<void> {
         logger.debug(`Start layers and join DHT for stream part ${streamPartId}`)
         const streamPart = this.streamParts.get(streamPartId)
         if ((streamPart === undefined) || streamPart.proxied) {
@@ -219,13 +219,13 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
                 streamPart.discoveryLayerNode.joinRing()
             ])
         } else {
-            const entryPoints = await entryPointDiscovery.fetchNodes()
+            const entryPoints = await peerDescriptorStoreManager.fetchNodes()
             await Promise.all([
                 streamPart.discoveryLayerNode.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT)),
                 streamPart.discoveryLayerNode.joinRing()
             ])
             if (entryPoints.length < MAX_NODE_COUNT) {
-                await entryPointDiscovery.storeAndKeepLocalNode()
+                await peerDescriptorStoreManager.storeAndKeepLocalNode()
                 if (streamPart.discoveryLayerNode.getNeighborCount() < NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT) {
                     setImmediate(() => streamPart.networkSplitAvoidance.avoidNetworkSplit())
                 }
