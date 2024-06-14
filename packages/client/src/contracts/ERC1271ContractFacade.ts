@@ -1,5 +1,5 @@
 import { ContractFactory } from '../ContractFactory'
-import { BrandedString, EthereumAddress, MapWithTtl, toEthereumAddress } from '@streamr/utils'
+import { binaryToHex, BrandedString, EthereumAddress, MapWithTtl, toEthereumAddress } from '@streamr/utils'
 import ERC1271ContractArtifact from '../ethereumArtifacts/IERC1271Abi.json'
 import type { IERC1271 as ERC1271Contract } from '../ethereumArtifacts/IERC1271'
 import { Mapping } from '../utils/Mapping'
@@ -37,7 +37,7 @@ export class ERC1271ContractFacade {
     }
 
     async isValidSignature(contractAddress: EthereumAddress, payload: Uint8Array, signature: Uint8Array): Promise<boolean> {
-        const clientWalletAddress = toEthereumAddress(recoverAddress(signature, payload))
+        const clientWalletAddress = toEthereumAddress(binaryToHex(recoverAddress(signature, payload), true))
         const cacheKey = formCacheKey(contractAddress, clientWalletAddress)
         const cachedValue = this.publisherCache.get(cacheKey)
         if (cachedValue !== undefined) {

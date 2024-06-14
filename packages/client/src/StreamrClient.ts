@@ -183,7 +183,7 @@ export class StreamrClient {
      * @remarks Keys will be added to the store automatically by the client as encountered. This method can be used to
      * manually add some known keys into the store.
      */
-    async addEncryptionKey(key: GroupKey, publisherId: EthereumAddress): Promise<void> {
+    async addEncryptionKey(key: GroupKey, publisherId: Uint8Array): Promise<void> {
         await this.localGroupKeyStore.set(key.id, publisherId, key.data)
     }
 
@@ -486,17 +486,17 @@ export class StreamrClient {
     /**
      * Checks whether a given ethereum address has {@link StreamPermission.PUBLISH} permission to a stream.
      */
-    async isStreamPublisher(streamIdOrPath: string, userAddress: string): Promise<boolean> {
+    async isStreamPublisher(streamIdOrPath: string, userId: Uint8Array): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.streamRegistry.isStreamPublisher(streamId, toEthereumAddress(userAddress), false)
+        return this.streamRegistry.isStreamPublisher(streamId, userId, false)
     }
 
     /**
      * Checks whether a given ethereum address has {@link StreamPermission.SUBSCRIBE} permission to a stream.
      */
-    async isStreamSubscriber(streamIdOrPath: string, userAddress: string): Promise<boolean> {
+    async isStreamSubscriber(streamIdOrPath: string, userId: Uint8Array): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.streamRegistry.isStreamSubscriber(streamId, toEthereumAddress(userAddress), false)
+        return this.streamRegistry.isStreamSubscriber(streamId, userId, false)
     }
 
     // --------------------------------------------------------------------------------------------
@@ -578,7 +578,14 @@ export class StreamrClient {
      * Gets the Ethereum address of the wallet associated with the current {@link StreamrClient} instance.
      */
     getAddress(): Promise<EthereumAddress> {
-        return this.authentication.getAddress()
+        return this.authentication.getUserIdAsEthereumAddress()
+    }
+
+    /**
+     * Gets the user id associated with the current {@link StreamrClient} instance.
+     */
+    getUserId(): Promise<Uint8Array> {
+        return this.authentication.getUserId()
     }
 
     // --------------------------------------------------------------------------------------------

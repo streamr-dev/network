@@ -1,5 +1,5 @@
 import { StreamID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { EthereumAddress, executeSafePromise } from '@streamr/utils'
+import { binaryToHex, EthereumAddress, executeSafePromise } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../../Config'
 import { Mapping } from '../../utils/Mapping'
 import { PushBuffer } from '../../utils/PushBuffer'
@@ -55,7 +55,7 @@ const createMessageChain = (
  */
 export class OrderMessages {
 
-    private readonly chains: Mapping<[EthereumAddress, string], OrderedMessageChain>
+    private readonly chains: Mapping<[string, string], OrderedMessageChain>
     private readonly outBuffer = new PushBuffer<StreamMessage>()
     private readonly abortController = new AbortController()
 
@@ -66,7 +66,7 @@ export class OrderMessages {
         resends: Resends,
         config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
     ) {
-        this.chains = new Mapping(async (publisherId: EthereumAddress, msgChainId: string) => {
+        this.chains = new Mapping(async (publisherId: string, msgChainId: string) => {
             const chain = createMessageChain(
                 {
                     streamPartId, 
@@ -101,7 +101,7 @@ export class OrderMessages {
                 if (this.abortController.signal.aborted) {
                     return
                 }
-                const chain = await this.chains.get(msg.getPublisherId(), msg.getMsgChainId())
+                const chain = await this.chains.get(binaryToHex(msg.getPublisherId(), true), msg.getMsgChainId())
                 chain.addMessage(msg)
             }
             await Promise.all(this.chains.values().map((chain) => chain.waitUntilIdle()))

@@ -3,7 +3,7 @@ import {
     GroupKeyRequest as NewGroupKeyRequest,
     GroupKeyResponse as NewGroupKeyResponse
 } from '@streamr/trackerless-network'
-import { utf8ToBinary } from '@streamr/utils'
+import { binaryToHex, utf8ToBinary } from '@streamr/utils'
 
 export const createSignaturePayload = (opts: {
     messageId: MessageID
@@ -14,7 +14,7 @@ export const createSignaturePayload = (opts: {
 }): Uint8Array | never => {
     const header = Buffer.concat([
         Buffer.from(`${opts.messageId.streamId}${opts.messageId.streamPartition}${opts.messageId.timestamp}`
-                + `${opts.messageId.sequenceNumber}${opts.messageId.publisherId}${opts.messageId.msgChainId}`),
+                + `${opts.messageId.sequenceNumber}${binaryToHex(opts.messageId.publisherId, true)}${opts.messageId.msgChainId}`),
         (opts.prevMsgRef !== undefined) ? Buffer.from(`${opts.prevMsgRef.timestamp}${opts.prevMsgRef.sequenceNumber}`) : new Uint8Array(0)
     ])
     if (opts.messageType === StreamMessageType.MESSAGE) {

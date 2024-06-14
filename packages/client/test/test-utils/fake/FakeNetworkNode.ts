@@ -1,7 +1,7 @@
 import { DhtAddress, PeerDescriptor, getDhtAddressFromRaw } from '@streamr/dht'
 import { StreamMessage, StreamPartID } from '@streamr/protocol'
 import { NetworkOptions, ProxyDirection } from '@streamr/trackerless-network'
-import { EthereumAddress, MetricsContext } from '@streamr/utils'
+import { MetricsContext } from '@streamr/utils'
 import crypto from 'crypto'
 import pull from 'lodash/pull'
 import { Lifecycle, scoped } from 'tsyringe'
@@ -108,7 +108,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
         _direction: ProxyDirection,
-        _userId: EthereumAddress,
+        _userId: Uint8Array,
         connectionCount?: number
     ): Promise<void> {
         const enable = (nodes.length > 0) && ((connectionCount === undefined) || (connectionCount > 0))

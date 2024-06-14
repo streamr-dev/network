@@ -1,5 +1,5 @@
 import { Wallet } from 'ethers'
-import { EthereumAddress, toEthereumAddress, hexToBinary } from '@streamr/utils'
+import { hexToBinary, areEqualBinaries } from '@streamr/utils'
 import { StreamMessage, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
@@ -36,8 +36,8 @@ const validate = async (messageOptions: MessageOptions) => {
                 partitions: PARTITION_COUNT
             })
         } as any),
-        isStreamPublisher: async (_streamIdOrPath: string, userAddress: EthereumAddress) => {
-            return userAddress === toEthereumAddress(publisherWallet.address)
+        isStreamPublisher: async (_streamIdOrPath: string, userId: Uint8Array) => {
+            return areEqualBinaries(userId, hexToBinary(publisherWallet.address))
         }
     }
     await validateStreamMessage(msg, streamRegistry as any, new SignatureValidator(mock<ERC1271ContractFacade>()))
