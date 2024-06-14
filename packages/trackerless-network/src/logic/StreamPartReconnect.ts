@@ -1,16 +1,16 @@
 import { scheduleAtInterval } from '@streamr/utils'
-import { NodeStoreManager } from './NodeStoreManager'
+import { PeerDescriptorStoreManager } from './PeerDescriptorStoreManager'
 import { DiscoveryLayerNode } from './DiscoveryLayerNode'
 
 const DEFAULT_RECONNECT_INTERVAL = 30 * 1000
 export class StreamPartReconnect {
     private abortController?: AbortController
     private readonly discoveryLayerNode: DiscoveryLayerNode
-    private readonly entryPointDiscovery: NodeStoreManager
+    private readonly entryPointDiscovery: PeerDescriptorStoreManager
 
-    constructor(discoveryLayerNode: DiscoveryLayerNode, entryPointDiscovery: NodeStoreManager) {
+    constructor(discoveryLayerNode: DiscoveryLayerNode, peerDescriptorStoreManager: PeerDescriptorStoreManager) {
         this.discoveryLayerNode = discoveryLayerNode
-        this.entryPointDiscovery = entryPointDiscovery
+        this.entryPointDiscovery = peerDescriptorStoreManager
     }
 
     async reconnect(timeout = DEFAULT_RECONNECT_INTERVAL): Promise<void> {

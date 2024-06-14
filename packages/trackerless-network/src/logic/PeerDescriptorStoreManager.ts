@@ -15,7 +15,7 @@ const logger = new Logger(module)
 
 export const MAX_NODE_COUNT = 8
 
-interface NodeRegistryConfig {
+interface PeerDescriptorStoreManagerConfig {
     key: DhtAddress
     localPeerDescriptor: PeerDescriptor
     storeInterval?: number
@@ -28,14 +28,14 @@ interface NodeRegistryConfig {
  * For each key there is usually 0-MAX_NODE_COUNT PeerDescriptors stored in the DHT. If there are fewer node,
  * the peer descriptor of the local node is stored to the DHT.
  */
-export class NodeStoreManager {
+export class PeerDescriptorStoreManager {
 
     private readonly abortController: AbortController
-    private readonly config: NodeRegistryConfig
+    private readonly config: PeerDescriptorStoreManagerConfig
     // eslint-disable-next-line no-underscore-dangle
     private isLocalNodeStored_ = false
 
-    constructor(config: NodeRegistryConfig) {
+    constructor(config: PeerDescriptorStoreManagerConfig) {
         this.config = config
         this.abortController = new AbortController()
     }

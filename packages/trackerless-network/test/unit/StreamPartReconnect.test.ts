@@ -1,19 +1,19 @@
-import { NodeStoreManager } from '../../src/logic/NodeStoreManager'
+import { PeerDescriptorStoreManager } from '../../src/logic/PeerDescriptorStoreManager'
 import { StreamPartReconnect } from '../../src/logic/StreamPartReconnect'
 import { MockDiscoveryLayerNode } from '../utils/mock/MockDiscoveryLayerNode'
-import { createFakeNodeStoreManager } from '../utils/fake/FakeNodeStoreManager'
+import { createFakePeerDescriptorStoreManager } from '../utils/fake/FakePeerDescriptorStoreManager'
 import { waitForCondition } from '@streamr/utils'
 
 describe('StreamPartReconnect', () => {
 
-    let nodeStoreManager: NodeStoreManager
+    let peerDescriptorSoreManager: PeerDescriptorStoreManager
     let discoveryLayerNode: MockDiscoveryLayerNode
     let streamPartReconnect: StreamPartReconnect
 
     beforeEach(() => {
-        nodeStoreManager = createFakeNodeStoreManager()
+        peerDescriptorSoreManager = createFakePeerDescriptorStoreManager()
         discoveryLayerNode = new MockDiscoveryLayerNode()
-        streamPartReconnect = new StreamPartReconnect(discoveryLayerNode, nodeStoreManager)
+        streamPartReconnect = new StreamPartReconnect(discoveryLayerNode, peerDescriptorSoreManager)
     })
 
     afterEach(() => {

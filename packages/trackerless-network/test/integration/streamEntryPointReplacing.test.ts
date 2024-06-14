@@ -1,7 +1,7 @@
 import { Simulator, SimulatorTransport, LatencyType } from '@streamr/dht'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
-import { MAX_NODE_COUNT } from '../../src/logic/NodeStoreManager'
+import { MAX_NODE_COUNT } from '../../src/logic/PeerDescriptorStoreManager'
 import { range } from 'lodash'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { waitForCondition } from '@streamr/utils'

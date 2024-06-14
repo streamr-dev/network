@@ -1,11 +1,11 @@
 import { PeerDescriptor } from '@streamr/dht'
-import { NodeStoreManager } from '../../../src/logic/NodeStoreManager'
+import { PeerDescriptorStoreManager } from '../../../src/logic/PeerDescriptorStoreManager'
 
-export const createFakeNodeStoreManager = (): NodeStoreManager => {
-    return new FakeNodeStoreManager() as unknown as NodeStoreManager
+export const createFakePeerDescriptorStoreManager = (): PeerDescriptorStoreManager => {
+    return new FakePeerDescriptorStoreManager() as unknown as PeerDescriptorStoreManager
 }
 
-class FakeNodeStoreManager {
+class FakePeerDescriptorStoreManager {
 
     private nodes: PeerDescriptor[] = []
 

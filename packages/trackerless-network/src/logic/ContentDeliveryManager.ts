@@ -24,7 +24,7 @@ import { ProxyDirection, StreamMessage, StreamPartitionInfo } from '../proto/pac
 import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
 import { ControlLayerNode } from './ControlLayerNode'
 import { DiscoveryLayerNode } from './DiscoveryLayerNode'
-import { MAX_NODE_COUNT, NodeStoreManager } from './NodeStoreManager'
+import { MAX_NODE_COUNT, PeerDescriptorStoreManager } from './PeerDescriptorStoreManager'
 import { MIN_NEIGHBOR_COUNT as NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT, StreamPartNetworkSplitAvoidance } from './StreamPartNetworkSplitAvoidance'
 import { StreamPartReconnect } from './StreamPartReconnect'
 import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode'
@@ -37,7 +37,7 @@ export type StreamPartDelivery = {
     proxied: false
     discoveryLayerNode: DiscoveryLayerNode
     node: ContentDeliveryLayerNode
-    entryPointDiscovery: NodeStoreManager
+    entryPointDiscovery: PeerDescriptorStoreManager
     networkSplitAvoidance: StreamPartNetworkSplitAvoidance
 } | {
     proxied: true
@@ -142,7 +142,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         }
         logger.debug(`Join stream part ${streamPartId}`)
         const discoveryLayerNode = this.createDiscoveryLayerNode(streamPartId, this.knownStreamPartEntryPoints.get(streamPartId) ?? [])
-        const nodeStoreManager = new NodeStoreManager({
+        const peerDescriptorStoreManager = new PeerDescriptorStoreManager({
             key: streamPartIdToDataKey(streamPartId),
             localPeerDescriptor: this.getPeerDescriptor(),
             fetchDataFromDht: (key) => this.controlLayerNode!.fetchDataFromDht(key),
@@ -151,25 +151,25 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         })
         const networkSplitAvoidance = new StreamPartNetworkSplitAvoidance({
             discoveryLayerNode,
-            discoverEntryPoints: async () => nodeStoreManager.fetchNodes()
+            discoverEntryPoints: async () => peerDescriptorStoreManager.fetchNodes()
         })
         const node = this.createContentDeliveryLayerNode(
             streamPartId,
             discoveryLayerNode, 
-            () => nodeStoreManager.isLocalNodeStored()
+            () => peerDescriptorStoreManager.isLocalNodeStored()
         )
-        const streamPartReconnect = new StreamPartReconnect(discoveryLayerNode, nodeStoreManager)
+        const streamPartReconnect = new StreamPartReconnect(discoveryLayerNode, peerDescriptorStoreManager)
         streamPart = {
             proxied: false,
             discoveryLayerNode,
             node,
-            entryPointDiscovery: nodeStoreManager,
+            entryPointDiscovery: peerDescriptorStoreManager,
             networkSplitAvoidance,
             broadcast: (msg: StreamMessage) => node.broadcast(msg),
             stop: async () => {
                 streamPartReconnect.destroy()
                 networkSplitAvoidance.destroy()
-                await nodeStoreManager.destroy()
+                await peerDescriptorStoreManager.destroy()
                 node.stop()
                 await discoveryLayerNode.stop()
             }
@@ -179,12 +179,12 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             this.emit('newMessage', message)
         })
         const handleEntryPointLeave = async () => {
-            if (this.destroyed || nodeStoreManager.isLocalNodeStored() || this.knownStreamPartEntryPoints.has(streamPartId)) {
+            if (this.destroyed || peerDescriptorStoreManager.isLocalNodeStored() || this.knownStreamPartEntryPoints.has(streamPartId)) {
                 return
             }
-            const entryPoints = await nodeStoreManager.fetchNodes()
+            const entryPoints = await peerDescriptorStoreManager.fetchNodes()
             if (entryPoints.length < MAX_NODE_COUNT) {
-                await nodeStoreManager.storeAndKeepLocalNode()
+                await peerDescriptorStoreManager.storeAndKeepLocalNode()
             }
         }
         discoveryLayerNode.on('manualRejoinRequired', async () => {
@@ -196,14 +196,14 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         node.on('entryPointLeaveDetected', () => handleEntryPointLeave())
         setImmediate(async () => {
             try {
-                await this.startLayersAndJoinDht(streamPartId, nodeStoreManager)
+                await this.startLayersAndJoinDht(streamPartId, peerDescriptorStoreManager)
             } catch (err) {
                 logger.warn(`Failed to join to stream part ${streamPartId}`, { err })
             }
         })
     }
 
-    private async startLayersAndJoinDht(streamPartId: StreamPartID, entryPointDiscovery: NodeStoreManager): Promise<void> {
+    private async startLayersAndJoinDht(streamPartId: StreamPartID, entryPointDiscovery: PeerDescriptorStoreManager): Promise<void> {
         logger.debug(`Start layers and join DHT for stream part ${streamPartId}`)
         const streamPart = this.streamParts.get(streamPartId)
         if ((streamPart === undefined) || streamPart.proxied) {

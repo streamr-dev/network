@@ -1,16 +1,16 @@
 import { PeerDescriptor, areEqualPeerDescriptors, createRandomDhtAddress } from '@streamr/dht'
 import { wait } from '@streamr/utils'
-import { NodeStoreManager } from '../../src/logic/NodeStoreManager'
+import { PeerDescriptorStoreManager } from '../../src/logic/PeerDescriptorStoreManager'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { DataEntry } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const KEY = createRandomDhtAddress()
 
-describe('NodeStoreManager', () => {
+describe('PeerDescriptorStoreManager', () => {
 
-    let withData: NodeStoreManager
-    let withoutData: NodeStoreManager
+    let withData: PeerDescriptorStoreManager
+    let withoutData: PeerDescriptorStoreManager
     let storeCalled: number
 
     const peerDescriptor = createMockPeerDescriptor()
@@ -51,7 +51,7 @@ describe('NodeStoreManager', () => {
 
     beforeEach(() => {
         storeCalled = 0
-        withData = new NodeStoreManager({
+        withData = new PeerDescriptorStoreManager({
             localPeerDescriptor: peerDescriptor,
             key: KEY,
             fetchDataFromDht: fakeFetchDataFromDht,
@@ -59,7 +59,7 @@ describe('NodeStoreManager', () => {
             deleteDataFromDht: fakeDeleteDataFromDht,
             storeInterval: 2000
         })
-        withoutData = new NodeStoreManager({
+        withoutData = new PeerDescriptorStoreManager({
             localPeerDescriptor: peerDescriptor,
             key: KEY,
             fetchDataFromDht: fakeEmptyFetchDataFromDht,
