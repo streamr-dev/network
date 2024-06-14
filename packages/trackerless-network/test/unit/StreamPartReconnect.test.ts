@@ -1,19 +1,19 @@
-import { EntryPointDiscovery } from '../../src/logic/EntryPointDiscovery'
+import { PeerDescriptorStoreManager } from '../../src/logic/PeerDescriptorStoreManager'
 import { StreamPartReconnect } from '../../src/logic/StreamPartReconnect'
 import { MockDiscoveryLayerNode } from '../utils/mock/MockDiscoveryLayerNode'
-import { createFakeEntryPointDiscovery } from '../utils/fake/FakeEntryPointDiscovery'
+import { createFakePeerDescriptorStoreManager } from '../utils/fake/FakePeerDescriptorStoreManager'
 import { waitForCondition } from '@streamr/utils'
 
 describe('StreamPartReconnect', () => {
 
-    let entryPointDiscovery: EntryPointDiscovery
+    let peerDescriptorSoreManager: PeerDescriptorStoreManager
     let discoveryLayerNode: MockDiscoveryLayerNode
     let streamPartReconnect: StreamPartReconnect
 
     beforeEach(() => {
-        entryPointDiscovery = createFakeEntryPointDiscovery()
+        peerDescriptorSoreManager = createFakePeerDescriptorStoreManager()
         discoveryLayerNode = new MockDiscoveryLayerNode()
-        streamPartReconnect = new StreamPartReconnect(discoveryLayerNode, entryPointDiscovery)
+        streamPartReconnect = new StreamPartReconnect(discoveryLayerNode, peerDescriptorSoreManager)
     })
 
     afterEach(() => {
