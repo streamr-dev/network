@@ -142,7 +142,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         }
         logger.debug(`Join stream part ${streamPartId}`)
         const discoveryLayerNode = this.createDiscoveryLayerNode(streamPartId, this.knownStreamPartEntryPoints.get(streamPartId) ?? [])
-        const entryPointDiscovery = new NodeStoreManager({
+        const nodeStoreManager = new NodeStoreManager({
             key: streamPartIdToDataKey(streamPartId),
             localPeerDescriptor: this.getPeerDescriptor(),
             fetchDataFromDht: (key) => this.controlLayerNode!.fetchDataFromDht(key),
@@ -151,25 +151,25 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         })
         const networkSplitAvoidance = new StreamPartNetworkSplitAvoidance({
             discoveryLayerNode,
-            discoverEntryPoints: async () => entryPointDiscovery.fetchNodes()
+            discoverEntryPoints: async () => nodeStoreManager.fetchNodes()
         })
         const node = this.createContentDeliveryLayerNode(
             streamPartId,
             discoveryLayerNode, 
-            () => entryPointDiscovery.isLocalNodeStored()
+            () => nodeStoreManager.isLocalNodeStored()
         )
-        const streamPartReconnect = new StreamPartReconnect(discoveryLayerNode, entryPointDiscovery)
+        const streamPartReconnect = new StreamPartReconnect(discoveryLayerNode, nodeStoreManager)
         streamPart = {
             proxied: false,
             discoveryLayerNode,
             node,
-            entryPointDiscovery,
+            entryPointDiscovery: nodeStoreManager,
             networkSplitAvoidance,
             broadcast: (msg: StreamMessage) => node.broadcast(msg),
             stop: async () => {
                 streamPartReconnect.destroy()
                 networkSplitAvoidance.destroy()
-                await entryPointDiscovery.destroy()
+                await nodeStoreManager.destroy()
                 node.stop()
                 await discoveryLayerNode.stop()
             }
@@ -179,12 +179,12 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             this.emit('newMessage', message)
         })
         const handleEntryPointLeave = async () => {
-            if (this.destroyed || entryPointDiscovery.isLocalNodeStored() || this.knownStreamPartEntryPoints.has(streamPartId)) {
+            if (this.destroyed || nodeStoreManager.isLocalNodeStored() || this.knownStreamPartEntryPoints.has(streamPartId)) {
                 return
             }
-            const entryPoints = await entryPointDiscovery.fetchNodes()
+            const entryPoints = await nodeStoreManager.fetchNodes()
             if (entryPoints.length < MAX_NODE_COUNT) {
-                await entryPointDiscovery.storeAndKeepLocalNode()
+                await nodeStoreManager.storeAndKeepLocalNode()
             }
         }
         discoveryLayerNode.on('manualRejoinRequired', async () => {
@@ -196,7 +196,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         node.on('entryPointLeaveDetected', () => handleEntryPointLeave())
         setImmediate(async () => {
             try {
-                await this.startLayersAndJoinDht(streamPartId, entryPointDiscovery)
+                await this.startLayersAndJoinDht(streamPartId, nodeStoreManager)
             } catch (err) {
                 logger.warn(`Failed to join to stream part ${streamPartId}`, { err })
             }
