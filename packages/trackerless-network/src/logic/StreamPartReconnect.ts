@@ -6,20 +6,20 @@ const DEFAULT_RECONNECT_INTERVAL = 30 * 1000
 export class StreamPartReconnect {
     private abortController?: AbortController
     private readonly discoveryLayerNode: DiscoveryLayerNode
-    private readonly entryPointDiscovery: PeerDescriptorStoreManager
+    private readonly peerDescriptorStoreManager: PeerDescriptorStoreManager
 
     constructor(discoveryLayerNode: DiscoveryLayerNode, peerDescriptorStoreManager: PeerDescriptorStoreManager) {
         this.discoveryLayerNode = discoveryLayerNode
-        this.entryPointDiscovery = peerDescriptorStoreManager
+        this.peerDescriptorStoreManager = peerDescriptorStoreManager
     }
 
     async reconnect(timeout = DEFAULT_RECONNECT_INTERVAL): Promise<void> {
         this.abortController = new AbortController()
         await scheduleAtInterval(async () => {
-            const entryPoints = await this.entryPointDiscovery.fetchNodes()
+            const entryPoints = await this.peerDescriptorStoreManager.fetchNodes()
             await this.discoveryLayerNode.joinDht(entryPoints)
-            if (this.entryPointDiscovery.isLocalNodeStored()) {
-                await this.entryPointDiscovery.storeAndKeepLocalNode()
+            if (this.peerDescriptorStoreManager.isLocalNodeStored()) {
+                await this.peerDescriptorStoreManager.storeAndKeepLocalNode()
             }
             if (this.discoveryLayerNode.getNeighborCount() > 0) {
                 this.abortController!.abort()
