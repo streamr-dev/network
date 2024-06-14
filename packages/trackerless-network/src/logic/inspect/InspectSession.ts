@@ -7,7 +7,7 @@ export interface Events {
     done: () => void
 }
 
-interface InspectSessionConfig {
+interface InspectSessionOptions {
     inspectedNode: DhtAddress
 }
 
@@ -20,9 +20,9 @@ export class InspectSession extends EventEmitter<Events> {
     private readonly inspectionMessages: Map<string, boolean> = new Map()
     private readonly inspectedNode: DhtAddress
 
-    constructor(config: InspectSessionConfig) {
+    constructor(options: InspectSessionOptions) {
         super()
-        this.inspectedNode = config.inspectedNode
+        this.inspectedNode = options.inspectedNode
     }
 
     markMessage(remoteNodeId: DhtAddress, messageId: MessageID): void {

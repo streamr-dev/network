@@ -28,7 +28,7 @@ import { OutputBuffer } from './OutputBuffer'
 import { IConnection } from './IConnection'
 import { PendingConnection } from './PendingConnection'
 
-export interface ConnectionManagerConfig {
+export interface ConnectionManagerOptions {
     maxConnections?: number
     metricsContext: MetricsContext
     createConnectorFacade: () => ConnectorFacade
@@ -116,9 +116,9 @@ export const getNodeIdOrUnknownFromPeerDescriptor = (peerDescriptor: PeerDescrip
 
 export class ConnectionManager extends EventEmitter<TransportEvents> implements ITransport, ConnectionsView, ConnectionLocker {
 
-    private config: ConnectionManagerConfig
+    private options: ConnectionManagerOptions
     private readonly metricsContext: MetricsContext
-    // TODO use config option or named constant?
+    // TODO use options option or named constant?
     private readonly duplicateMessageDetector: DuplicateDetector = new DuplicateDetector(10000)
     private readonly metrics: ConnectionManagerMetrics
     private locks = new ConnectionLockStates()
@@ -128,13 +128,13 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     private disconnectorIntervalRef?: NodeJS.Timeout
     private state = ConnectionManagerState.IDLE
 
-    constructor(config: ConnectionManagerConfig) {
+    constructor(options: ConnectionManagerOptions) {
         super()
-        this.config = config
+        this.options = options
         this.onData = this.onData.bind(this)
         this.send = this.send.bind(this)
         this.onNewConnection = this.onNewConnection.bind(this)
-        this.metricsContext = this.config.metricsContext ?? new MetricsContext()
+        this.metricsContext = this.options.metricsContext ?? new MetricsContext()
         this.metrics = {
             sendMessagesPerSecond: new RateMetric(),
             sendBytesPerSecond: new RateMetric(),
@@ -144,10 +144,10 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             connectionTotalFailureCount: new CountMetric()
         }
         this.metricsContext.addMetrics('node', this.metrics)
-        this.connectorFacade = this.config.createConnectorFacade()
+        this.connectorFacade = this.options.createConnectorFacade()
         this.send = this.send.bind(this)
         this.rpcCommunicator = new RoutingRpcCommunicator(INTERNAL_SERVICE_ID, this.send, {
-            rpcRequestTimeout: 10000  // TODO use config option or named constant?
+            rpcRequestTimeout: 10000  // TODO use options option or named constant?
         })
         const lockRpcLocal = new ConnectionLockRpcLocal({
             addRemoteLocked: (id: DhtAddress, lockId: LockID) => this.locks.addRemoteLocked(id, lockId),
@@ -176,7 +176,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         }
         const disconnectionCandidates = new SortedContactList<ManagedConnection>({
             referenceId: getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor()), 
-            maxSize: 100000,  // TODO use config option or named constant?
+            maxSize: 100000,  // TODO use options option or named constant?
             allowToContainReferenceId: false
         })
         this.endpoints.forEach((endpoint) => {
@@ -211,8 +211,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         this.disconnectorIntervalRef = setInterval(() => {
             logger.trace('disconnectorInterval')
             const LAST_USED_LIMIT = 20000
-            this.garbageCollectConnections(this.config.maxConnections ?? 80, LAST_USED_LIMIT)
-        }, 5000)  // TODO use config option or named constant?
+            this.garbageCollectConnections(this.options.maxConnections ?? 80, LAST_USED_LIMIT)
+        }, 5000)  // TODO use options option or named constant?
     }
 
     public async stop(): Promise<void> {
@@ -236,7 +236,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             } else {
                 const connection = endpoint.connection
                 logger.trace('handshake of connection not completed, force-closing')
-                // TODO use config option or named constant?
+                // TODO use options option or named constant?
                 const eventReceived = waitForEvent3(connection as any, 'disconnected', 2000)
                 // TODO should we have some handling for this floating promise?
                 connection.close(true)
@@ -542,7 +542,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         if (endpoint.connected) {
             const connection = endpoint.connection
             const promise = new Promise<void>((resolve, _reject) => {
-                // TODO use config option or named constant?
+                // TODO use options option or named constant?
                 // eslint-disable-next-line promise/catch-or-return
                 waitForEvent3<ManagedConnectionEvents>(connection, 'disconnected', 2000).then(() => {
                     logger.trace('disconnected event received in gracefullyDisconnectAsync()')

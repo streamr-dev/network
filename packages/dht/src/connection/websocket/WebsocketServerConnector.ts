@@ -25,7 +25,7 @@ import { PendingConnection } from '../PendingConnection'
 
 const logger = new Logger(module)
 
-export interface WebsocketServerConnectorConfig {
+export interface WebsocketServerConnectorOptions {
     onNewConnection: (connection: PendingConnection) => boolean
     rpcCommunicator: ListeningRpcCommunicator
     hasConnection: (nodeId: DhtAddress) => boolean
@@ -58,17 +58,17 @@ export class WebsocketServerConnector {
     private selectedPort?: number
     private localPeerDescriptor?: PeerDescriptor
     private abortController = new AbortController()
-    private readonly config: WebsocketServerConnectorConfig
+    private readonly options: WebsocketServerConnectorOptions
 
-    constructor(config: WebsocketServerConnectorConfig) {
-        this.config = config
-        this.websocketServer = config.portRange ? new WebsocketServer({
-            portRange: config.portRange,
-            tlsCertificate: config.tlsCertificate,
-            maxMessageSize: config.maxMessageSize,
-            enableTls: config.serverEnableTls
+    constructor(options: WebsocketServerConnectorOptions) {
+        this.options = options
+        this.websocketServer = options.portRange ? new WebsocketServer({
+            portRange: options.portRange,
+            tlsCertificate: options.tlsCertificate,
+            maxMessageSize: options.maxMessageSize,
+            enableTls: options.serverEnableTls
         }) : undefined
-        this.host = config.host
+        this.host = options.host
     }
 
     public async start(): Promise<void> {
@@ -96,8 +96,8 @@ export class WebsocketServerConnector {
                 }
             })
             
-            if (this.config.geoIpDatabaseFolder) {
-                const geoIpLocator = new GeoIpLocator(this.config.geoIpDatabaseFolder)
+            if (this.options.geoIpDatabaseFolder) {
+                const geoIpLocator = new GeoIpLocator(this.options.geoIpDatabaseFolder)
                 try {
                     await geoIpLocator.start()
                     this.geoIpLocator = geoIpLocator
@@ -145,7 +145,7 @@ export class WebsocketServerConnector {
                 rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.UNSUPPORTED_VERSION)  
             } else if (targetPeerDescriptor && !areEqualPeerDescriptors(this.localPeerDescriptor!, targetPeerDescriptor)) {
                 rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.INVALID_TARGET_PEER_DESCRIPTOR)  
-            } else if (this.config.onNewConnection(pendingConnection)) {
+            } else if (this.options.onNewConnection(pendingConnection)) {
                 acceptHandshake(handshaker, pendingConnection, websocketServerConnection)
             } else {
                 rejectHandshake(pendingConnection, websocketServerConnection, handshaker, HandshakeError.DUPLICATE_CONNECTION)
@@ -163,22 +163,22 @@ export class WebsocketServerConnector {
                 version: LOCAL_PROTOCOL_VERSION
             }
         }
-        if (!this.config.entrypoints || this.config.entrypoints.length === 0) {
-            // return connectivity info given in config
+        if (!this.options.entrypoints || this.options.entrypoints.length === 0) {
+            // return connectivity info given in options
             return {
                 host: this.host!,
                 natType: NatType.OPEN_INTERNET,
                 websocket: {
                     host: this.host!,
                     port: this.selectedPort!,
-                    tls: this.config.tlsCertificate !== undefined
+                    tls: this.options.tlsCertificate !== undefined
                 },
                 // TODO: Resolve the given host name or or use as is if IP was given. 
                 ipAddress: ipv4ToNumber('127.0.0.1'),
                 version: LOCAL_PROTOCOL_VERSION
             }
         }
-        const shuffledEntrypoints = shuffle(this.config.entrypoints)
+        const shuffledEntrypoints = shuffle(this.options.entrypoints)
         while (shuffledEntrypoints.length > 0 && !this.abortController.signal.aborted) {
             const entryPoint = shuffledEntrypoints[0]
             try {
@@ -186,7 +186,7 @@ export class WebsocketServerConnector {
                 const connectivityRequest = {
                     port: this.selectedPort ?? DISABLE_CONNECTIVITY_PROBE,
                     host: this.host,
-                    tls: this.websocketServer ? this.config.serverEnableTls : false,
+                    tls: this.websocketServer ? this.options.serverEnableTls : false,
                     allowSelfSignedCertificate
                 }
                 if (!this.abortController.signal.aborted) {
@@ -203,16 +203,16 @@ export class WebsocketServerConnector {
             }
         }
         throw new WebsocketServerStartError(
-            `Failed to connect to the entrypoints after ${this.config.entrypoints.length} attempts\n`
-            + `Attempted hosts: ${this.config.entrypoints.map((entry) => `${entry.websocket!.host}:${entry.websocket!.port}`).join(', ')}`
+            `Failed to connect to the entrypoints after ${this.options.entrypoints.length} attempts\n`
+            + `Attempted hosts: ${this.options.entrypoints.map((entry) => `${entry.websocket!.host}:${entry.websocket!.port}`).join(', ')}`
         )
     }
 
     public async autoCertify(): Promise<void> {
         this.autoCertifierClient = new AutoCertifierClientFacade({
-            configFile: this.config.autoCertifierConfigFile,
-            transport: this.config.autoCertifierTransport,
-            url: this.config.autoCertifierUrl,
+            configFile: this.options.autoCertifierConfigFile,
+            transport: this.options.autoCertifierTransport,
+            url: this.options.autoCertifierUrl,
             wsServerPort: this.selectedPort!,
             setHost: (hostName: string) => this.setHost(hostName),
             updateCertificate: (certificate: string, privateKey: string) => this.websocketServer!.updateCertificate(certificate, privateKey)
@@ -239,7 +239,7 @@ export class WebsocketServerConnector {
             const remoteConnector = new WebsocketClientConnectorRpcRemote(
                 localPeerDescriptor,
                 targetPeerDescriptor,
-                this.config.rpcCommunicator,
+                this.options.rpcCommunicator,
                 WebsocketClientConnectorRpcClient
             )
             remoteConnector.requestConnection().then(() => {

@@ -20,7 +20,7 @@ import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 import { Logger } from '@streamr/utils'
 import { StreamPartID } from '@streamr/protocol'
 
-interface HandshakeRpcLocalConfig {
+interface HandshakeRpcLocalOptions {
     streamPartId: StreamPartID
     neighbors: NodeList
     ongoingHandshakes: Set<DhtAddress>
@@ -35,10 +35,10 @@ const logger = new Logger(module)
 
 export class HandshakeRpcLocal implements IHandshakeRpc {
 
-    private readonly config: HandshakeRpcLocalConfig
+    private readonly options: HandshakeRpcLocalOptions
 
-    constructor(config: HandshakeRpcLocalConfig) {
-        this.config = config
+    constructor(options: HandshakeRpcLocalOptions) {
+        this.options = options
     }
 
     async handshake(request: StreamPartHandshakeRequest, context: ServerCallContext): Promise<StreamPartHandshakeResponse> {
@@ -49,17 +49,17 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
         const senderDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const getInterleaveNodeIds = () => (request.interleaveNodeId !== undefined) ? [getDhtAddressFromRaw(request.interleaveNodeId)] : []
         const senderNodeId = getNodeIdFromPeerDescriptor(senderDescriptor)
-        if (this.config.ongoingInterleaves.has(senderNodeId)) {
+        if (this.options.ongoingInterleaves.has(senderNodeId)) {
             return this.rejectHandshake(request)
-        } else if (this.config.neighbors.has(senderNodeId)
-            || this.config.ongoingHandshakes.has(senderNodeId)
+        } else if (this.options.neighbors.has(senderNodeId)
+            || this.options.ongoingHandshakes.has(senderNodeId)
         ) {
             return this.acceptHandshake(request, senderDescriptor)
-        } else if (this.config.neighbors.size() + this.config.ongoingHandshakes.size < this.config.maxNeighborCount) {
+        } else if (this.options.neighbors.size() + this.options.ongoingHandshakes.size < this.options.maxNeighborCount) {
             return this.acceptHandshake(request, senderDescriptor)
         } else if (
-            this.config.neighbors.size(getInterleaveNodeIds()) - this.config.ongoingInterleaves.size >= 2
-            && this.config.neighbors.size() <= this.config.maxNeighborCount
+            this.options.neighbors.size(getInterleaveNodeIds()) - this.options.ongoingInterleaves.size >= 2
+            && this.options.neighbors.size() <= this.options.maxNeighborCount
         ) {
             // Do not accept the handshakes requests if the target neighbor count can potentially drop below 2 
             // due to interleaving. This ensures that a stable number of connections is kept during high churn.
@@ -74,7 +74,7 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
             requestId: request.requestId,
             accepted: true
         }
-        this.config.neighbors.add(this.config.createContentDeliveryRpcRemote(requester))
+        this.options.neighbors.add(this.options.createContentDeliveryRpcRemote(requester))
         return res
     }
 
@@ -90,17 +90,17 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
     private acceptHandshakeWithInterleaving(request: StreamPartHandshakeRequest, requester: PeerDescriptor): StreamPartHandshakeResponse {
         const exclude: DhtAddress[] = []
         request.neighborNodeIds.forEach((id: DhtAddressRaw) => exclude.push(getDhtAddressFromRaw(id)))
-        this.config.ongoingInterleaves.forEach((id) => exclude.push(id))
+        this.options.ongoingInterleaves.forEach((id) => exclude.push(id))
         exclude.push(getNodeIdFromPeerDescriptor(requester))
         if (request.interleaveNodeId !== undefined) {
             exclude.push(getDhtAddressFromRaw(request.interleaveNodeId))
         }
-        const last = this.config.neighbors.getLast(exclude)
+        const last = this.options.neighbors.getLast(exclude)
         const lastPeerDescriptor = last ? last.getPeerDescriptor() : undefined
         if (last) {
             const nodeId = getNodeIdFromPeerDescriptor(last.getPeerDescriptor())
-            const remote = this.config.createRpcRemote(last.getPeerDescriptor())
-            this.config.ongoingInterleaves.add(nodeId)
+            const remote = this.options.createRpcRemote(last.getPeerDescriptor())
+            this.options.ongoingInterleaves.add(nodeId)
             // Run this with then catch instead of setImmediate to avoid changes in state
             // eslint-disable-next-line promise/catch-or-return
             remote.interleaveRequest(requester).then((response) => {
@@ -108,15 +108,15 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
                 // and unlock the connection
                 // If response is not accepted, keep the last node as a neighbor
                 if (response.accepted) {
-                    this.config.neighbors.remove(getNodeIdFromPeerDescriptor(lastPeerDescriptor!))
+                    this.options.neighbors.remove(getNodeIdFromPeerDescriptor(lastPeerDescriptor!))
                 }
             }).catch(() => {
                 // no-op: InterleaveRequest cannot reject
             }).finally(() => {
-                this.config.ongoingInterleaves.delete(nodeId)
+                this.options.ongoingInterleaves.delete(nodeId)
             })
         }
-        this.config.neighbors.add(this.config.createContentDeliveryRpcRemote(requester))
+        this.options.neighbors.add(this.options.createContentDeliveryRpcRemote(requester))
         return {
             requestId: request.requestId,
             accepted: true,
@@ -128,8 +128,8 @@ export class HandshakeRpcLocal implements IHandshakeRpc {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const remoteNodeId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
         try {
-            await this.config.handshakeWithInterleaving(message.interleaveTargetDescriptor!, remoteNodeId)
-            this.config.neighbors.remove(remoteNodeId)
+            await this.options.handshakeWithInterleaving(message.interleaveTargetDescriptor!, remoteNodeId)
+            this.options.neighbors.remove(remoteNodeId)
             return { accepted: true }
         } catch (err) {
             logger.debug(`interleaveRequest to ${getNodeIdFromPeerDescriptor(message.interleaveTargetDescriptor!)} failed`, { err })

@@ -22,7 +22,7 @@ export const connectivityMethodToWebsocketUrl = (ws: ConnectivityMethod, action?
     return (ws.tls ? 'wss://' : 'ws://') + ws.host + ':' + ws.port + ((action !== undefined) ? '?action=' + action : '')
 }
 
-export interface WebsocketClientConnectorConfig {
+export interface WebsocketClientConnectorOptions {
     onNewConnection: (connection: PendingConnection) => boolean
     hasConnection: (nodeId: DhtAddress) => boolean
     rpcCommunicator: ListeningRpcCommunicator
@@ -37,10 +37,10 @@ export class WebsocketClientConnector {
     private localPeerDescriptor?: PeerDescriptor
     private connectingConnections: Map<DhtAddress, PendingConnection> = new Map()
     private abortController = new AbortController()
-    private readonly config: WebsocketClientConnectorConfig
+    private readonly options: WebsocketClientConnectorOptions
 
-    constructor(config: WebsocketClientConnectorConfig) {
-        this.config = config
+    constructor(options: WebsocketClientConnectorOptions) {
+        this.options = options
         
         this.registerLocalRpcMethods()
     }
@@ -49,12 +49,12 @@ export class WebsocketClientConnector {
         const rpcLocal = new WebsocketClientConnectorRpcLocal({
             connect: (targetPeerDescriptor: PeerDescriptor) => this.connect(targetPeerDescriptor),
             hasConnection: (nodeId: DhtAddress): boolean => (this.connectingConnections.has(nodeId)
-                || this.config.hasConnection(nodeId))
+                || this.options.hasConnection(nodeId))
             ,
-            onNewConnection: (connection: PendingConnection) => this.config.onNewConnection(connection),
+            onNewConnection: (connection: PendingConnection) => this.options.onNewConnection(connection),
             abortSignal: this.abortController.signal
         })
-        this.config.rpcCommunicator.registerRpcNotification(
+        this.options.rpcCommunicator.registerRpcNotification(
             WebsocketConnectionRequest,
             'requestConnection',
             async (req: WebsocketConnectionRequest, context: ServerCallContext): Promise<Empty> => {

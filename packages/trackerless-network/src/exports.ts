@@ -1,6 +1,6 @@
 export { NetworkStack, NetworkOptions, NodeInfo } from './NetworkStack'
 export { NetworkNode, createNetworkNode } from './NetworkNode'
-export { ContentDeliveryManagerConfig } from './logic/ContentDeliveryManager'
+export { ContentDeliveryManagerOptions } from './logic/ContentDeliveryManager'
 export { ProxyDirection, GroupKeyRequest, GroupKeyResponse } from './proto/packages/trackerless-network/protos/NetworkRpc'
 export { streamPartIdToDataKey } from './logic/ContentDeliveryManager'
 export {

@@ -11,7 +11,7 @@ export class ExternalApiRpcRemote extends RpcRemote<ExternalApiRpcClient> {
             key: getRawFromDhtAddress(key)
         }
         const options = this.formDhtRpcOptions({
-            // TODO use config option or named constant?
+            // TODO use options option or named constant?
             timeout: 10000
         })
         try {
@@ -28,7 +28,7 @@ export class ExternalApiRpcRemote extends RpcRemote<ExternalApiRpcClient> {
             data
         }
         const options = this.formDhtRpcOptions({
-            // TODO use config option or named constant?
+            // TODO use options option or named constant?
             timeout: 10000
         })
         try {

@@ -40,7 +40,7 @@ const exponentialRunOff = async (
 
 export const MIN_NEIGHBOR_COUNT = 4
 
-export interface StreamPartNetworkSplitAvoidanceConfig {
+export interface StreamPartNetworkSplitAvoidanceOptions {
     discoveryLayerNode: DiscoveryLayerNode
     discoverEntryPoints: (excludedNodes?: Set<DhtAddress>) => Promise<PeerDescriptor[]>
     exponentialRunOfBaseDelay?: number
@@ -49,31 +49,31 @@ export interface StreamPartNetworkSplitAvoidanceConfig {
 export class StreamPartNetworkSplitAvoidance {
 
     private readonly abortController: AbortController
-    private readonly config: StreamPartNetworkSplitAvoidanceConfig
+    private readonly options: StreamPartNetworkSplitAvoidanceOptions
     private readonly excludedNodes: Set<DhtAddress> = new Set()
     private running = false
 
-    constructor(config: StreamPartNetworkSplitAvoidanceConfig) {
-        this.config = config
+    constructor(options: StreamPartNetworkSplitAvoidanceOptions) {
+        this.options = options
         this.abortController = new AbortController()
     }
 
     public async avoidNetworkSplit(): Promise<void> {
         this.running = true
         await exponentialRunOff(async () => {
-            const discoveredEntrypoints = await this.config.discoverEntryPoints()
+            const discoveredEntrypoints = await this.options.discoverEntryPoints()
             const filteredEntryPoints = discoveredEntrypoints.filter((peer) => !this.excludedNodes.has(getNodeIdFromPeerDescriptor(peer)))
-            await this.config.discoveryLayerNode.joinDht(filteredEntryPoints, false, false)
-            if (this.config.discoveryLayerNode.getNeighborCount() < MIN_NEIGHBOR_COUNT) {
+            await this.options.discoveryLayerNode.joinDht(filteredEntryPoints, false, false)
+            if (this.options.discoveryLayerNode.getNeighborCount() < MIN_NEIGHBOR_COUNT) {
                 // Filter out nodes that are not neighbors as those nodes are assumed to be offline
                 const newExcludes = filteredEntryPoints
-                    .filter((peer) => !this.config.discoveryLayerNode.getNeighbors()
+                    .filter((peer) => !this.options.discoveryLayerNode.getNeighbors()
                         .some((neighbor) => areEqualPeerDescriptors(neighbor, peer)))
                     .map((peer) => getNodeIdFromPeerDescriptor(peer))
                 newExcludes.forEach((node) => this.excludedNodes.add(node))
                 throw new Error(`Network split is still possible`)
             }
-        }, 'avoid network split', this.abortController.signal, this.config.exponentialRunOfBaseDelay)
+        }, 'avoid network split', this.abortController.signal, this.options.exponentialRunOfBaseDelay)
         this.running = false
         this.excludedNodes.clear()
         logger.trace(`Network split avoided`)
