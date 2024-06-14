@@ -37,7 +37,6 @@ export type StreamPartDelivery = {
     proxied: false
     discoveryLayerNode: DiscoveryLayerNode
     node: ContentDeliveryLayerNode
-    peerDescriptorStoreManager: PeerDescriptorStoreManager
     networkSplitAvoidance: StreamPartNetworkSplitAvoidance
 } | {
     proxied: true
@@ -163,7 +162,6 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             proxied: false,
             discoveryLayerNode,
             node,
-            peerDescriptorStoreManager,
             networkSplitAvoidance,
             broadcast: (msg: StreamMessage) => node.broadcast(msg),
             stop: async () => {
