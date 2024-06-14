@@ -46,7 +46,7 @@ export class Handshaker {
             ongoingHandshakes: this.config.ongoingHandshakes,
             ongoingInterleaves: new Set(),
             maxNeighborCount: this.config.maxNeighborCount,
-            handshakeWithInterleaving: (target: PeerDescriptor, senderId: DhtAddress) => this.handshakeWithInterleaving(target, senderId),
+            handshakeWithInterleaving: (target: PeerDescriptor, remoteNodeId: DhtAddress) => this.handshakeWithInterleaving(target, remoteNodeId),
             createRpcRemote: (target: PeerDescriptor) => this.createRpcRemote(target),
             createContentDeliveryRpcRemote: (target: PeerDescriptor) => this.createContentDeliveryRpcRemote(target)
         })
@@ -160,7 +160,7 @@ export class Handshaker {
         return result.accepted
     }
 
-    private async handshakeWithInterleaving(target: PeerDescriptor, interleaveSourceId: DhtAddress): Promise<boolean> {
+    private async handshakeWithInterleaving(target: PeerDescriptor, remoteNodeId: DhtAddress): Promise<boolean> {
         const neighbor = this.createRpcRemote(target)
         const targetNodeId = getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor())
         this.config.ongoingHandshakes.add(targetNodeId)
@@ -168,7 +168,7 @@ export class Handshaker {
             this.config.streamPartId,
             this.config.neighbors.getIds(),
             undefined,
-            interleaveSourceId
+            remoteNodeId
         )
         if (result.accepted) {
             this.config.neighbors.add(this.createContentDeliveryRpcRemote(neighbor.getPeerDescriptor()))

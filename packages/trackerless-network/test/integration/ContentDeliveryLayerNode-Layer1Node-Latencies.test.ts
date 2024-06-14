@@ -99,8 +99,8 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
                 const neighbor = allNodes.find((node) => {
                     return node.getOwnNodeId() === ownNodeId
                 })
-                const neighborIds = neighbor!.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
-                expect(neighborIds).toContain(nodeId)
+                const neighborNodeIds = neighbor!.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
+                expect(neighborNodeIds).toContain(nodeId)
             })
         })
     }, 60000)
@@ -126,8 +126,8 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
                     const neighborId = getNodeIdFromPeerDescriptor(neighbor)
                     if (neighborId !== entryPointContentDeliveryLayerNode.getOwnNodeId()) {
                         const neighbor = otherContentDeliveryLayerNodes.find((n) => n.getOwnNodeId() === neighborId)
-                        const neighborIds = neighbor!.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
-                        if (!neighborIds.includes(nodeId)) {
+                        const neighborNodeIds = neighbor!.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
+                        if (!neighborNodeIds.includes(nodeId)) {
                             mismatchCounter += 1
                         }
                     }

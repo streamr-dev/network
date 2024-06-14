@@ -10,7 +10,7 @@ const logger = new Logger(module)
 
 interface RecursiveOperationSessionRpcLocalConfig {
     onResponseReceived: (
-        sourceId: DhtAddress,
+        remoteNodeId: DhtAddress,
         routingPath: PeerDescriptor[],
         nodes: PeerDescriptor[],
         dataEntries: DataEntry[],
@@ -27,9 +27,9 @@ export class RecursiveOperationSessionRpcLocal implements IRecursiveOperationSes
     }
     
     async sendResponse(report: RecursiveOperationResponse, context: ServerCallContext): Promise<Empty> {
-        const sourceId = getNodeIdFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!)
+        const remoteNodeId = getNodeIdFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!)
         logger.trace('RecursiveOperationResponse arrived: ' + JSON.stringify(report))
-        this.config.onResponseReceived(sourceId, report.routingPath, report.closestConnectedNodes, report.dataEntries, report.noCloserNodesFound)
+        this.config.onResponseReceived(remoteNodeId, report.routingPath, report.closestConnectedNodes, report.dataEntries, report.noCloserNodesFound)
         return {}
     }
 }

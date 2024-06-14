@@ -86,8 +86,8 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
     // IProxyConnectionRpc server method
     async requestConnection(request: ProxyConnectionRequest, context: ServerCallContext): Promise<ProxyConnectionResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
-        this.connections.set(senderId, {
+        const remoteNodeId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
+        this.connections.set(remoteNodeId, {
             direction: request.direction,
             userId: toEthereumAddress(binaryToHex(request.userId, true)),
             remote: new ContentDeliveryRpcRemote(
@@ -100,8 +100,8 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
         const response: ProxyConnectionResponse = {
             accepted: true
         }
-        logger.trace(`Accepted connection request from ${senderId} to ${this.config.streamPartId}`)
-        this.emit('newConnection', senderId)
+        logger.trace(`Accepted connection request from ${remoteNodeId} to ${this.config.streamPartId}`)
+        this.emit('newConnection', remoteNodeId)
         return response
     }
 }
