@@ -23,7 +23,7 @@ describe('GroupKeyManager', () => {
     const groupKeyId = 'groupKeyId-123'
     const streamId = toStreamID('test.eth/foobar')
     const wallet = new Wallet(fastPrivateKey())
-    const publisherId = toEthereumAddress(wallet.address)
+    const publisherId = hexToBinary(wallet.address)
     const groupKey = GroupKey.generate(groupKeyId)
 
     function createGroupKeyManager(litProtocolEnabled: boolean): GroupKeyManager {
@@ -177,7 +177,7 @@ describe('GroupKeyManager', () => {
 
         it('not own key', async () => {
             await expect(() => {
-                return groupKeyManager.fetchLatestEncryptionKey(randomEthereumAddress(), streamId)
+                return groupKeyManager.fetchLatestEncryptionKey(randomBytes(20), streamId)
             }).rejects.toThrow('not supported')
         })
     })

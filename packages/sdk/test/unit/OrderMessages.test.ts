@@ -21,7 +21,7 @@ import { MessageRef } from './../../src/protocol/MessageRef'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
-const PUBLISHER_ID = randomEthereumAddress()
+const PUBLISHER_ID = randomBytes(20)
 const MSG_CHAIN_ID = 'mock-msg-chain-id'
 
 const CONFIG = {

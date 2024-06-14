@@ -13,7 +13,7 @@ export interface Gap {
 
 export interface OrderedMessageChainContext {
     streamPartId: StreamPartID
-    publisherId: EthereumAddress
+    publisherId: string
     msgChainId: string
 }
 

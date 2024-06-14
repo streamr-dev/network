@@ -78,8 +78,8 @@ const validateMessage = async (
 
 const validateGroupKeyMessage = async (
     streamMessage: StreamMessage,
-    expectedPublisher: EthereumAddress,
-    expectedSubscriber: EthereumAddress,
+    expectedPublisher: Uint8Array,
+    expectedSubscriber: Uint8Array,
     streamRegistry: StreamRegistry
 ): Promise<void> => {
     const streamId = streamMessage.getStreamId()

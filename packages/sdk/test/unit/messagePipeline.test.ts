@@ -49,7 +49,7 @@ describe('messagePipeline', () => {
                 partition,
                 Date.now(),
                 0,
-                toEthereumAddress(publisher.address),
+                hexToBinary(publisher.address),
                 'mock-msgChainId'
             ),
             messageType: StreamMessageType.MESSAGE,

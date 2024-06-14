@@ -1,4 +1,4 @@
-import { verifySignature } from '@streamr/utils'
+import { binaryToHex, toEthereumAddress, verifySignature } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
 import { SignatureType, StreamMessage } from '../protocol/StreamMessage'
@@ -46,7 +46,7 @@ export class SignatureValidator {
                 )
             case SignatureType.ERC_1271:
                 return this.erc1271ContractFacade.isValidSignature(
-                    streamMessage.getPublisherId(),
+                    toEthereumAddress(binaryToHex(streamMessage.getPublisherId(), true)),
                     createSignaturePayload(streamMessage),
                     streamMessage.signature
                 )

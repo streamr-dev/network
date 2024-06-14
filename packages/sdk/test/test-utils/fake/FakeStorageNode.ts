@@ -180,7 +180,7 @@ export class FakeStorageNode {
         fromSequenceNumber?: number
         toTimestamp: number
         toSequenceNumber?: number
-        publisherId?: string
+        publisherId?: Uint8Array
         msgChainId?: string
     }): AsyncIterable<StreamMessage> {
         const messages = this.streamPartMessages.get(streamPartId)

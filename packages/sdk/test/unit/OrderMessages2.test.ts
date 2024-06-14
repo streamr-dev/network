@@ -80,7 +80,7 @@ function formChainOfMessages(publisherId: EthereumAddress): Array<MessageInfo> {
 }
 
 function createMsg({ publisherId, timestamp }: MessageInfo): StreamMessage {
-    const messageId = new MessageID(toStreamID('streamId'), 0, timestamp, 0, publisherId, '')
+    const messageId = new MessageID(toStreamID('streamId'), 0, timestamp, 0, hexToBinary(publisherId), '')
     const prevMsgRef = timestamp > 1 ? new MessageRef(timestamp - 1, 0) : undefined
     return new StreamMessage({
         messageId,
@@ -127,7 +127,7 @@ describe.skip('OrderMessages2', () => {
         ), 0)
 
         const inOrderHandler = (msg: StreamMessage) => {
-            actual[msg.getPublisherId()].push(msg.getTimestamp())
+            actual[binaryToHex(msg.getPublisherId())].push(msg.getTimestamp())
         }
 
         const gapHandler = async (from: number, to: number, publisherId: string): Promise<PushPipeline<StreamMessage>> => {

@@ -5,7 +5,7 @@ import { MessageRef } from './../../src/protocol/MessageRef'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
 
 const STREAM_ID = toStreamID('stream')
-const PUBLISHER_ID = toEthereumAddress('0x0000000000000000000000000000000000000001')
+const PUBLISHER_ID = hexToBinary('0x0000000000000000000000000000000000000001')
 const MSG_CHAIN_ID = 'msgChainId'
 
 const createMessage = (timestamp: number, hasPrevRef = true) => {

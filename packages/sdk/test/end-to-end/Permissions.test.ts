@@ -5,8 +5,9 @@ import { CONFIG_TEST } from '../../src/ConfigTest'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
-import { fastWallet, fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
-import { toEthereumAddress } from '@streamr/utils'
+import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { hexToBinary, toEthereumAddress } from '@streamr/utils'
+import { randomBytes } from 'crypto'
 
 const TIMEOUT = 40000
 
@@ -15,10 +16,12 @@ describe('Stream permissions', () => {
     let client: StreamrClient
     let stream: Stream
     let otherUser: Wallet
+    let otherUserId: Uint8Array
 
     beforeAll(async () => {
         const wallet = new Wallet(await fetchPrivateKeyWithGas())
         otherUser = fastWallet()
+        otherUserId = hexToBinary(otherUser.address)
         client = new StreamrClient({
             ...CONFIG_TEST,
             auth: {
@@ -40,31 +43,31 @@ describe('Stream permissions', () => {
     describe('happy path', () => {
         it('direct permissions', async () => {
             await stream.grantPermissions({
-                user: otherUser.address,
+                user: otherUserId,
                 permissions: [StreamPermission.PUBLISH, StreamPermission.EDIT],
             })
             expect(await stream.hasPermission({
                 permission: StreamPermission.PUBLISH,
-                user: otherUser.address,
+                user: otherUserId,
                 allowPublic: false
             })).toBe(true)
             expect(await stream.hasPermission({
                 permission: StreamPermission.EDIT,
-                user: otherUser.address,
+                user: otherUserId,
                 allowPublic: false
             })).toBe(true)
             await stream.revokePermissions({
-                user: otherUser.address,
+                user: otherUserId,
                 permissions: [StreamPermission.PUBLISH, StreamPermission.EDIT],
             })
             expect(await stream.hasPermission({
                 permission: StreamPermission.PUBLISH,
-                user: otherUser.address,
+                user: otherUserId,
                 allowPublic: false
             })).toBe(false)
             expect(await stream.hasPermission({
                 permission: StreamPermission.EDIT,
-                user: otherUser.address,
+                user: otherUserId,
                 allowPublic: false
             })).toBe(false)
         }, TIMEOUT)
@@ -76,22 +79,22 @@ describe('Stream permissions', () => {
             })
             expect(await stream.hasPermission({
                 permission: StreamPermission.PUBLISH,
-                user: otherUser.address,
+                user: otherUserId,
                 allowPublic: true
             })).toBe(true)
             expect(await stream.hasPermission({
                 permission: StreamPermission.SUBSCRIBE,
-                user: otherUser.address,
+                user: otherUserId,
                 allowPublic: true
             })).toBe(true)
             expect(await stream.hasPermission({
                 permission: StreamPermission.PUBLISH,
-                user: otherUser.address,
+                user: otherUserId,
                 allowPublic: false
             })).toBe(false)
             expect(await stream.hasPermission({
                 permission: StreamPermission.SUBSCRIBE,
-                user: otherUser.address,
+                user: otherUserId,
                 allowPublic: false
             })).toBe(false)
             await stream.revokePermissions({
@@ -100,12 +103,12 @@ describe('Stream permissions', () => {
             })
             expect(await stream.hasPermission({
                 permission: StreamPermission.PUBLISH,
-                user: otherUser.address,
+                user: otherUserId,
                 allowPublic: true
             })).toBe(false)
             expect(await stream.hasPermission({
                 permission: StreamPermission.SUBSCRIBE,
-                user: otherUser.address,
+                user: otherUserId,
                 allowPublic: true
             })).toBe(false)
         }, TIMEOUT)
@@ -132,7 +135,7 @@ describe('Stream permissions', () => {
 
     it('no permissions initially for other users', async () => {
         expect(await stream.hasPermission({
-            user: otherUser.address,
+            user: otherUserId,
             permission: StreamPermission.SUBSCRIBE,
             allowPublic: false
         })).toBe(false)
@@ -144,7 +147,7 @@ describe('Stream permissions', () => {
 
     it('can revoke non-existing permissions', async () => {
         await stream.revokePermissions({
-            user: otherUser.address,
+            user: otherUserId,
             permissions: [StreamPermission.SUBSCRIBE]
         })
         await stream.revokePermissions({
@@ -157,8 +160,8 @@ describe('Stream permissions', () => {
         const otherStream = await client.createStream({
             id: createRelativeTestStreamId(module)
         })
-        const user1 = randomEthereumAddress()
-        const user2 = randomEthereumAddress()
+        const user1 = randomBytes(24)
+        const user2 = randomBytes(18)
         await stream.grantPermissions({
             user: user1,
             permissions: [StreamPermission.GRANT]
@@ -192,18 +195,18 @@ describe('Stream permissions', () => {
         expect(await stream.hasPermission({ permission: StreamPermission.SUBSCRIBE, allowPublic: false, user: user2 })).toBe(false)
         expect(await stream.hasPermission({ permission: StreamPermission.EDIT, allowPublic: false, user: user2 })).toBe(false)
         expect(await otherStream.hasPermission(
-            { permission: StreamPermission.PUBLISH, allowPublic: true, user: randomEthereumAddress() }
+            { permission: StreamPermission.PUBLISH, allowPublic: true, user: randomBytes(32) }
         )).toBe(true)
     }, TIMEOUT)
 
     it('grant same permission multiple times', async () => {
         await stream.grantPermissions({
-            user: otherUser.address,
+            user: otherUserId,
             permissions: [StreamPermission.SUBSCRIBE]
         })
         const previousPermissions = await stream.getPermissions()
         await stream.grantPermissions({
-            user: otherUser.address,
+            user: otherUserId,
             permissions: [StreamPermission.SUBSCRIBE]
         })
         const permissions = await stream.getPermissions()
@@ -223,7 +226,7 @@ describe('Stream permissions', () => {
         const errorSnippet = `You don't have permission to publish to this stream. Using address: ${toEthereumAddress(otherUser.address)}`
         await expect(() => otherUserClient.publish(stream.id, message)).rejects.toThrow(errorSnippet)
         await client.grantPermissions(stream.id, {
-            user: otherUser.address,
+            user: otherUserId,
             permissions: [StreamPermission.PUBLISH]
         })
         await expect(otherUserClient.publish(stream.id, message)).resolves.toBeDefined()

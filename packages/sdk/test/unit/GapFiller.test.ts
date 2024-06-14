@@ -1,4 +1,11 @@
-import { Defer, EthereumAddress, StreamPartIDUtils, hexToBinary, toEthereumAddress, utf8ToBinary, wait, waitForCondition } from '@streamr/utils'
+
+import {
+    Defer,
+    EthereumAddress,
+   StreamPartIDUtils, hexToBinary, toEthereumAddress,
+   utf8ToBinary, wait,
+    waitForCondition
+} from '@streamr/utils'
 import { GapFillStrategy, GapFiller } from '../../src/subscribe/ordering/GapFiller'
 import { Gap, OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
 import { fromArray } from '../../src/utils/GeneratorUtils'
@@ -11,7 +18,7 @@ const CONTEXT = {
     publisherId: toEthereumAddress('0x0000000000000000000000000000000000000001'),
     msgChainId: 'msgChainId'
 }
-const STORAGE_NODE_ADDRESS = toEthereumAddress('0x0000000000000000000000000000000000000002')
+const STORAGE_NODE_ADDRESS = hexToBinary('0x0000000000000000000000000000000000000002')
 
 const createMessage = (timestamp: number, hasPrevRef = true) => {
     return new StreamMessage({
@@ -20,7 +27,7 @@ const createMessage = (timestamp: number, hasPrevRef = true) => {
             StreamPartIDUtils.getStreamPartition(CONTEXT.streamPartId),
             timestamp,
             0,
-            CONTEXT.publisherId, 
+            hexToBinary(CONTEXT.publisherId),
             CONTEXT.msgChainId
         ),
         prevMsgRef: hasPrevRef ? new MessageRef(timestamp - 1, 0) : undefined,
@@ -65,7 +72,7 @@ describe('GapFiller', () => {
         })
         filler.start()
     }
-    
+
     const startPassiveGapFiller = () => {
         const filler = new GapFiller({
             chain,
@@ -85,7 +92,7 @@ describe('GapFiller', () => {
             chain.addMessage(createMessage(timestamp, usePrevRefs))
         }
     }
-    
+
     const expectOrderedMessages = async (expectedTimestamps: number[]) => {
         await waitForCondition(() => onOrderedMessageAdded.mock.calls.length === expectedTimestamps.length)
         const actualTimestamps = onOrderedMessageAdded.mock.calls.map((call) => call[0].getTimestamp())
@@ -181,7 +188,7 @@ describe('GapFiller', () => {
             const resend = jest.fn()
             const getStorageNodeAddresses = jest.fn()
             startActiveGapFiller(
-                resend, 
+                resend,
                 getStorageNodeAddresses,
             )
             addMessages([1, 3])
@@ -196,7 +203,7 @@ describe('GapFiller', () => {
             // eslint-disable-next-line require-yield
             const resend = async function* (
                 _gap: Gap,
-                _storageNodeAddress: EthereumAddress, 
+                _storageNodeAddress: EthereumAddress,
                 abortSignal: AbortSignal
             ) {
                 const defer = new Defer<undefined>()
