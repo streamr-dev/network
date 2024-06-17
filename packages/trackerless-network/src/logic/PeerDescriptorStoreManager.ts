@@ -15,7 +15,7 @@ const logger = new Logger(module)
 
 export const MAX_NODE_COUNT = 8
 
-interface PeerDescriptorStoreManagerConfig {
+interface PeerDescriptorStoreManagerOptions {
     key: DhtAddress
     localPeerDescriptor: PeerDescriptor
     storeInterval?: number
@@ -31,19 +31,19 @@ interface PeerDescriptorStoreManagerConfig {
 export class PeerDescriptorStoreManager {
 
     private readonly abortController: AbortController
-    private readonly config: PeerDescriptorStoreManagerConfig
+    private readonly options: PeerDescriptorStoreManagerOptions
     // eslint-disable-next-line no-underscore-dangle
     private isLocalNodeStored_ = false
 
-    constructor(config: PeerDescriptorStoreManagerConfig) {
-        this.config = config
+    constructor(options: PeerDescriptorStoreManagerOptions) {
+        this.options = options
         this.abortController = new AbortController()
     }
 
     async fetchNodes(): Promise<PeerDescriptor[]> {
-        logger.trace('Fetch data', { key: this.config.key })
+        logger.trace('Fetch data', { key: this.options.key })
         try {
-            const result = await this.config.fetchDataFromDht(this.config.key)
+            const result = await this.options.fetchDataFromDht(this.options.key)
             return parsePeerDescriptor(result)
         } catch (err) {
             return []
@@ -61,28 +61,28 @@ export class PeerDescriptorStoreManager {
     }
 
     private async storeLocalNode(): Promise<void> {
-        const localPeerDescriptor = this.config.localPeerDescriptor
+        const localPeerDescriptor = this.options.localPeerDescriptor
         const dataToStore = Any.pack(localPeerDescriptor, PeerDescriptor)
         try {
-            await this.config.storeDataToDht(this.config.key, dataToStore)
+            await this.options.storeDataToDht(this.options.key, dataToStore)
         } catch (err) {
-            logger.warn('Failed to store local node', { key: this.config.key })
+            logger.warn('Failed to store local node', { key: this.options.key })
         }
     }
 
     private async keepLocalNode(): Promise<void> {
         await scheduleAtInterval(async () => {
-            logger.trace('Attempting to keep local node', { key: this.config.key })
+            logger.trace('Attempting to keep local node', { key: this.options.key })
             try {
                 const discovered = await this.fetchNodes()
                 if (discovered.length < MAX_NODE_COUNT
-                    || discovered.some((peerDescriptor) => areEqualPeerDescriptors(peerDescriptor, this.config.localPeerDescriptor))) {
+                    || discovered.some((peerDescriptor) => areEqualPeerDescriptors(peerDescriptor, this.options.localPeerDescriptor))) {
                     await this.storeLocalNode()
                 }
             } catch (err) {
-                logger.debug('Failed to keep local node', { key: this.config.key })
+                logger.debug('Failed to keep local node', { key: this.options.key })
             }
-        }, this.config.storeInterval ?? 60000, false, this.abortController.signal)
+        }, this.options.storeInterval ?? 60000, false, this.abortController.signal)
     }
 
     public isLocalNodeStored(): boolean {
@@ -92,6 +92,6 @@ export class PeerDescriptorStoreManager {
 
     async destroy(): Promise<void> {
         this.abortController.abort()
-        await this.config.deleteDataFromDht(this.config.key, false)
+        await this.options.deleteDataFromDht(this.options.key, false)
     }
 }

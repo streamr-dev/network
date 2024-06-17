@@ -15,7 +15,7 @@ import { HandshakeRpcRemote, INTERLEAVE_REQUEST_TIMEOUT } from './HandshakeRpcRe
 import { HandshakeRpcLocal } from './HandshakeRpcLocal'
 import { StreamPartID } from '@streamr/protocol'
 
-interface HandshakerConfig {
+interface HandshakerOptions {
     localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     neighbors: NodeList
@@ -35,33 +35,33 @@ const PARALLEL_HANDSHAKE_COUNT = 2
 
 export class Handshaker {
 
-    private config: HandshakerConfig
+    private options: HandshakerOptions
     private readonly rpcLocal: HandshakeRpcLocal
 
-    constructor(config: HandshakerConfig) {
-        this.config = config
+    constructor(options: HandshakerOptions) {
+        this.options = options
         this.rpcLocal = new HandshakeRpcLocal({
-            streamPartId: this.config.streamPartId,
-            neighbors: this.config.neighbors,
-            ongoingHandshakes: this.config.ongoingHandshakes,
+            streamPartId: this.options.streamPartId,
+            neighbors: this.options.neighbors,
+            ongoingHandshakes: this.options.ongoingHandshakes,
             ongoingInterleaves: new Set(),
-            maxNeighborCount: this.config.maxNeighborCount,
+            maxNeighborCount: this.options.maxNeighborCount,
             handshakeWithInterleaving: (target: PeerDescriptor, remoteNodeId: DhtAddress) => this.handshakeWithInterleaving(target, remoteNodeId),
             createRpcRemote: (target: PeerDescriptor) => this.createRpcRemote(target),
             createContentDeliveryRpcRemote: (target: PeerDescriptor) => this.createContentDeliveryRpcRemote(target)
         })
-        this.config.rpcCommunicator.registerRpcMethod(InterleaveRequest, InterleaveResponse, 'interleaveRequest',
+        this.options.rpcCommunicator.registerRpcMethod(InterleaveRequest, InterleaveResponse, 'interleaveRequest',
             (req: InterleaveRequest, context) => this.rpcLocal.interleaveRequest(req, context), { timeout: INTERLEAVE_REQUEST_TIMEOUT })
-        this.config.rpcCommunicator.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake',
+        this.options.rpcCommunicator.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake',
             (req: StreamPartHandshakeRequest, context) => this.rpcLocal.handshake(req, context))
     }
 
     async attemptHandshakesOnContacts(excludedIds: DhtAddress[]): Promise<DhtAddress[]> {
-        // TODO use config option or named constant? or why the value 2?
-        if (this.config.neighbors.size() + this.config.ongoingHandshakes.size < this.config.maxNeighborCount - 2) {
+        // TODO use options option or named constant? or why the value 2?
+        if (this.options.neighbors.size() + this.options.ongoingHandshakes.size < this.options.maxNeighborCount - 2) {
             logger.trace(`Attempting parallel handshakes with ${PARALLEL_HANDSHAKE_COUNT} targets`)
             return this.selectParallelTargetsAndHandshake(excludedIds)
-        } else if (this.config.neighbors.size() + this.config.ongoingHandshakes.size < this.config.maxNeighborCount) {
+        } else if (this.options.neighbors.size() + this.options.ongoingHandshakes.size < this.options.maxNeighborCount) {
             logger.trace(`Attempting handshake with new target`)
             return this.selectNewTargetAndHandshake(excludedIds)
         }
@@ -69,17 +69,17 @@ export class Handshaker {
     }
 
     private async selectParallelTargetsAndHandshake(excludedIds: DhtAddress[]): Promise<DhtAddress[]> {
-        const exclude = excludedIds.concat(this.config.neighbors.getIds())
+        const exclude = excludedIds.concat(this.options.neighbors.getIds())
         const neighbors = this.selectParallelTargets(exclude)
-        neighbors.forEach((contact) => this.config.ongoingHandshakes.add(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())))
+        neighbors.forEach((contact) => this.options.ongoingHandshakes.add(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())))
         return this.doParallelHandshakes(neighbors, exclude)
     }
 
     private selectParallelTargets(excludedIds: DhtAddress[]): HandshakeRpcRemote[] {
         const neighbors: Map<DhtAddress, ContentDeliveryRpcRemote> = new Map()
         // First add the closest left and then right contacts from the ring if possible.
-        const left = this.config.leftNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
-        const right = this.config.rightNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
+        const left = this.options.leftNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
+        const right = this.options.rightNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
         if (left) {
             neighbors.set(getNodeIdFromPeerDescriptor(left.getPeerDescriptor()), left)
         }
@@ -88,7 +88,7 @@ export class Handshaker {
         }
         // If there is still room add the closest contact based on the kademlia metric
         if (neighbors.size < PARALLEL_HANDSHAKE_COUNT) {
-            const first = this.config.nearbyNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
+            const first = this.options.nearbyNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
             if (first) {
                 neighbors.set(getNodeIdFromPeerDescriptor(first.getPeerDescriptor()), first)
             }
@@ -100,9 +100,9 @@ export class Handshaker {
         // If there is still room add a random contact until PARALLEL_HANDSHAKE_COUNT is reached
         while (
             neighbors.size < PARALLEL_HANDSHAKE_COUNT 
-            && this.config.randomNodeView.size(getExcludedFromRandomView()) > 0
+            && this.options.randomNodeView.size(getExcludedFromRandomView()) > 0
         ) {
-            const random = this.config.randomNodeView.getRandom([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
+            const random = this.options.randomNodeView.getRandom([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
             if (random) {
                 neighbors.set(getNodeIdFromPeerDescriptor(random.getPeerDescriptor()), random)
             }
@@ -128,11 +128,11 @@ export class Handshaker {
     }
 
     private async selectNewTargetAndHandshake(excludedIds: DhtAddress[]): Promise<DhtAddress[]> {
-        const exclude = excludedIds.concat(this.config.neighbors.getIds())
-        const neighbor = this.config.leftNodeView.getFirst(exclude) 
-            ?? this.config.rightNodeView.getFirst(exclude)
-            ?? this.config.nearbyNodeView.getFirst(exclude)
-            ?? this.config.randomNodeView.getRandom(exclude)
+        const exclude = excludedIds.concat(this.options.neighbors.getIds())
+        const neighbor = this.options.leftNodeView.getFirst(exclude) 
+            ?? this.options.rightNodeView.getFirst(exclude)
+            ?? this.options.nearbyNodeView.getFirst(exclude)
+            ?? this.options.randomNodeView.getRandom(exclude)
         if (neighbor) {
             const accepted = await this.handshakeWithTarget(this.createRpcRemote(neighbor.getPeerDescriptor()))
             if (!accepted) {
@@ -144,61 +144,61 @@ export class Handshaker {
 
     private async handshakeWithTarget(neighbor: HandshakeRpcRemote, concurrentNodeId?: DhtAddress): Promise<boolean> {
         const targetNodeId = getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor())
-        this.config.ongoingHandshakes.add(targetNodeId)
+        this.options.ongoingHandshakes.add(targetNodeId)
         const result = await neighbor.handshake(
-            this.config.streamPartId,
-            this.config.neighbors.getIds(),
+            this.options.streamPartId,
+            this.options.neighbors.getIds(),
             concurrentNodeId
         )
         if (result.accepted) {
-            this.config.neighbors.add(this.createContentDeliveryRpcRemote(neighbor.getPeerDescriptor()))
+            this.options.neighbors.add(this.createContentDeliveryRpcRemote(neighbor.getPeerDescriptor()))
         }
         if (result.interleaveTargetDescriptor) {
             await this.handshakeWithInterleaving(result.interleaveTargetDescriptor, targetNodeId)
         }
-        this.config.ongoingHandshakes.delete(targetNodeId)
+        this.options.ongoingHandshakes.delete(targetNodeId)
         return result.accepted
     }
 
     private async handshakeWithInterleaving(target: PeerDescriptor, remoteNodeId: DhtAddress): Promise<boolean> {
         const neighbor = this.createRpcRemote(target)
         const targetNodeId = getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor())
-        this.config.ongoingHandshakes.add(targetNodeId)
+        this.options.ongoingHandshakes.add(targetNodeId)
         const result = await neighbor.handshake(
-            this.config.streamPartId,
-            this.config.neighbors.getIds(),
+            this.options.streamPartId,
+            this.options.neighbors.getIds(),
             undefined,
             remoteNodeId
         )
         if (result.accepted) {
-            this.config.neighbors.add(this.createContentDeliveryRpcRemote(neighbor.getPeerDescriptor()))
+            this.options.neighbors.add(this.createContentDeliveryRpcRemote(neighbor.getPeerDescriptor()))
         }
-        this.config.ongoingHandshakes.delete(targetNodeId)
+        this.options.ongoingHandshakes.delete(targetNodeId)
         return result.accepted
     }
 
     private createRpcRemote(targetPeerDescriptor: PeerDescriptor): HandshakeRpcRemote {
         return new HandshakeRpcRemote(
-            this.config.localPeerDescriptor,
+            this.options.localPeerDescriptor,
             targetPeerDescriptor,
-            this.config.rpcCommunicator,
+            this.options.rpcCommunicator,
             HandshakeRpcClient,
-            this.config.rpcRequestTimeout
+            this.options.rpcRequestTimeout
         )
     }
 
     private createContentDeliveryRpcRemote(targetPeerDescriptor: PeerDescriptor): ContentDeliveryRpcRemote {
         return new ContentDeliveryRpcRemote(
-            this.config.localPeerDescriptor,
+            this.options.localPeerDescriptor,
             targetPeerDescriptor,
-            this.config.rpcCommunicator,
+            this.options.rpcCommunicator,
             ContentDeliveryRpcClient,
-            this.config.rpcRequestTimeout
+            this.options.rpcRequestTimeout
         )
     }
 
     getOngoingHandshakes(): Set<DhtAddress> {
-        return this.config.ongoingHandshakes
+        return this.options.ongoingHandshakes
     }
 
 }

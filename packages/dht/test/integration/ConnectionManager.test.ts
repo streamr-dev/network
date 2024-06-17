@@ -1,7 +1,7 @@
 import { Logger, MetricsContext, waitForEvent3 } from '@streamr/utils'
 import { MarkOptional } from 'ts-essentials'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
+import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../../src/connection/ConnectorFacade'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { createPeerDescriptor } from '../../src/helpers/createPeerDescriptor'
@@ -30,7 +30,7 @@ describe('ConnectionManager', () => {
     const mockConnectorTransport2 = new SimulatorTransport(mockPeerDescriptor2, simulator)
     let createLocalPeerDescriptor: jest.Mock<PeerDescriptor, [ConnectivityResponse]>
 
-    const createConnectionManager = (opts: MarkOptional<DefaultConnectorFacadeConfig, 'createLocalPeerDescriptor'>) => {
+    const createConnectionManager = (opts: MarkOptional<DefaultConnectorFacadeOptions, 'createLocalPeerDescriptor'>) => {
         return new ConnectionManager({
             createConnectorFacade: () => new DefaultConnectorFacade({
                 createLocalPeerDescriptor: async (response) => createLocalPeerDescriptor(response),

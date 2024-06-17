@@ -10,7 +10,7 @@ import { IContentDeliveryRpc } from '../proto/packages/trackerless-network/proto
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { StreamPartID } from '@streamr/protocol'
 
-export interface ContentDeliveryRpcLocalConfig {
+export interface ContentDeliveryRpcLocalOptions {
     localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     markAndCheckDuplicate: (messageId: MessageID, previousMessageRef?: MessageRef) => boolean
@@ -22,26 +22,26 @@ export interface ContentDeliveryRpcLocalConfig {
 
 export class ContentDeliveryRpcLocal implements IContentDeliveryRpc {
     
-    private readonly config: ContentDeliveryRpcLocalConfig
+    private readonly options: ContentDeliveryRpcLocalOptions
 
-    constructor(config: ContentDeliveryRpcLocalConfig) {
-        this.config = config
+    constructor(options: ContentDeliveryRpcLocalOptions) {
+        this.options = options
     }
 
     async sendStreamMessage(message: StreamMessage, context: ServerCallContext): Promise<Empty> {
         const previousNode = getNodeIdFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!)
-        this.config.markForInspection(previousNode, message.messageId!)
-        if (this.config.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)) {
-            this.config.broadcast(message, previousNode)
+        this.options.markForInspection(previousNode, message.messageId!)
+        if (this.options.markAndCheckDuplicate(message.messageId!, message.previousMessageRef)) {
+            this.options.broadcast(message, previousNode)
         }
         return Empty
     }
 
     async leaveStreamPartNotice(message: LeaveStreamPartNotice, context: ServerCallContext): Promise<Empty> {
-        if (message.streamPartId === this.config.streamPartId) {
+        if (message.streamPartId === this.options.streamPartId) {
             const sourcePeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
             const remoteNodeId = getNodeIdFromPeerDescriptor(sourcePeerDescriptor)
-            this.config.onLeaveNotice(remoteNodeId, message.isEntryPoint)
+            this.options.onLeaveNotice(remoteNodeId, message.isEntryPoint)
         }
         return Empty
     }

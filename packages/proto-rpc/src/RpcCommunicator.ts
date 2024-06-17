@@ -31,7 +31,7 @@ interface RpcCommunicatorEvents<T extends ProtoCallContext> {
     outgoingMessage: (message: RpcMessage, requestId: string, callContext?: T) => void
 }
 
-export interface RpcCommunicatorConfig {
+export interface RpcCommunicatorOptions {
     rpcRequestTimeout?: number
 }
 
@@ -40,14 +40,14 @@ class OngoingRequest {
     private deferredPromises: ResultParts
     private timeoutRef?: NodeJS.Timeout
 
-    constructor(deferredPromises: ResultParts, timeoutConfig?: { timeout: number, onTimeout: () => void }) {
+    constructor(deferredPromises: ResultParts, timeoutOptions?: { timeout: number, onTimeout: () => void }) {
         this.deferredPromises = deferredPromises
-        if (timeoutConfig) {
+        if (timeoutOptions) {
             this.timeoutRef = setTimeout(() => {
                 const error = new Err.RpcTimeout('Rpc request timed out', new Error())
                 this.rejectDeferredPromises(error, StatusCode.DEADLINE_EXCEEDED)
-                timeoutConfig.onTimeout()
-            }, timeoutConfig.timeout)
+                timeoutOptions.onTimeout()
+            }, timeoutOptions.timeout)
         }
         
     }
@@ -125,7 +125,7 @@ export class RpcCommunicator<T extends ProtoCallContext> extends EventEmitter<Rp
     private readonly rpcRequestTimeout: number
     private outgoingMessageListener?: OutgoingMessageListener<T>
 
-    constructor(params?: RpcCommunicatorConfig) {
+    constructor(params?: RpcCommunicatorOptions) {
         super()
 
         this.rpcRequestTimeout = params?.rpcRequestTimeout ?? 5000

@@ -32,7 +32,7 @@ export const replaceInternalIpWithExternalIp = (candidate: string, ip: string): 
     return parsed.join(' ')
 }
 
-export interface WebrtcConnectorConfig {
+export interface WebrtcConnectorOptions {
     onNewConnection: (connection: PendingConnection) => boolean
     transport: ITransport
     iceServers?: IceServer[]
@@ -64,25 +64,25 @@ export class WebrtcConnector {
     private readonly ongoingConnectAttempts: Map<DhtAddress, ConnectingConnection> = new Map()
     private localPeerDescriptor?: PeerDescriptor
     private stopped = false
-    private config: WebrtcConnectorConfig
+    private options: WebrtcConnectorOptions
 
-    constructor(config: WebrtcConnectorConfig) {
-        this.config = config
-        this.rpcCommunicator = new ListeningRpcCommunicator(WebrtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, config.transport, {
-            rpcRequestTimeout: 15000  // TODO use config option or named constant?
+    constructor(options: WebrtcConnectorOptions) {
+        this.options = options
+        this.rpcCommunicator = new ListeningRpcCommunicator(WebrtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, options.transport, {
+            rpcRequestTimeout: 15000  // TODO use options option or named constant?
         })
-        this.registerLocalRpcMethods(config)
+        this.registerLocalRpcMethods(options)
     }
 
-    private registerLocalRpcMethods(config: WebrtcConnectorConfig) {
+    private registerLocalRpcMethods(options: WebrtcConnectorOptions) {
         const localRpc = new WebrtcConnectorRpcLocal({
             connect: (targetPeerDescriptor: PeerDescriptor, doNotRequestConnection: boolean) => 
                 this.connect(targetPeerDescriptor, doNotRequestConnection),
-            onNewConnection: (connection: PendingConnection) => this.config.onNewConnection(connection),
+            onNewConnection: (connection: PendingConnection) => this.options.onNewConnection(connection),
             ongoingConnectAttempts: this.ongoingConnectAttempts,
             rpcCommunicator: this.rpcCommunicator,
             getLocalPeerDescriptor: () => this.localPeerDescriptor!,
-            allowPrivateAddresses: config.allowPrivateAddresses ?? true
+            allowPrivateAddresses: options.allowPrivateAddresses ?? true
         })
         this.rpcCommunicator.registerRpcNotification(WebrtcConnectionRequest, 'requestConnection',
             async (_req: WebrtcConnectionRequest, context: ServerCallContext) => {
@@ -186,8 +186,8 @@ export class WebrtcConnector {
         pendingConnection.on('connected', delFunc)
     
         connection.on('localCandidate', (candidate: string, mid: string) => {
-            if (this.config.externalIp !== undefined) {
-                candidate = replaceInternalIpWithExternalIp(candidate, this.config.externalIp)
+            if (this.options.externalIp !== undefined) {
+                candidate = replaceInternalIpWithExternalIp(candidate, this.options.externalIp)
                 logger.debug(`onLocalCandidate injected external ip ${candidate} ${mid}`)
             }
             remoteConnector.sendIceCandidate(candidate, mid, connection.connectionId)
@@ -205,10 +205,10 @@ export class WebrtcConnector {
     private createConnection(targetPeerDescriptor: PeerDescriptor): NodeWebrtcConnection {
         return new NodeWebrtcConnection({
             remotePeerDescriptor: targetPeerDescriptor,
-            iceServers: this.config.iceServers,
-            bufferThresholdLow: this.config.bufferThresholdLow,
-            bufferThresholdHigh: this.config.bufferThresholdHigh,
-            portRange: this.config.portRange
+            iceServers: this.options.iceServers,
+            bufferThresholdLow: this.options.bufferThresholdLow,
+            bufferThresholdHigh: this.options.bufferThresholdHigh,
+            portRange: this.options.portRange
             // TODO should we pass maxMessageSize?
         })
     }

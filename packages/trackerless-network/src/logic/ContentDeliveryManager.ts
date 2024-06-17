@@ -54,7 +54,7 @@ interface Metrics extends MetricsDefinition {
     broadcastBytesPerSecond: Metric
 }
 
-export interface ContentDeliveryManagerConfig {
+export interface ContentDeliveryManagerOptions {
     metricsContext?: MetricsContext
     streamPartitionNeighborTargetCount?: number
     streamPartitionMinPropagationTargets?: number
@@ -73,17 +73,17 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
     private controlLayerNode?: ControlLayerNode
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
-    private readonly config: ContentDeliveryManagerConfig
+    private readonly options: ContentDeliveryManagerOptions
     private readonly streamParts: Map<StreamPartID, StreamPartDelivery>
     private readonly knownStreamPartEntryPoints: Map<StreamPartID, PeerDescriptor[]> = new Map()
     private started = false
     private destroyed = false
 
-    constructor(config: ContentDeliveryManagerConfig) {
+    constructor(options: ContentDeliveryManagerOptions) {
         super()
-        this.config = config
+        this.options = options
         this.streamParts = new Map()
-        this.metricsContext = config.metricsContext ?? new MetricsContext()
+        this.metricsContext = options.metricsContext ?? new MetricsContext()
         this.metrics = {
             broadcastMessagesPerSecond: new RateMetric(),
             broadcastBytesPerSecond: new RateMetric()
@@ -238,9 +238,9 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             serviceId: 'layer1::' + streamPartId,
             peerDescriptor: this.controlLayerNode!.getLocalPeerDescriptor(),
             entryPoints,
-            numberOfNodesPerKBucket: 4,  // TODO use config option or named constant?
+            numberOfNodesPerKBucket: 4,  // TODO use options option or named constant?
             rpcRequestTimeout: EXISTING_CONNECTION_TIMEOUT,
-            dhtJoinTimeout: 20000,  // TODO use config option or named constant?
+            dhtJoinTimeout: 20000,  // TODO use options option or named constant?
             periodicallyPingNeighbors: true,
             periodicallyPingRingContacts: true
         })
@@ -257,10 +257,10 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             discoveryLayerNode,
             connectionLocker: this.connectionLocker!,
             localPeerDescriptor: this.controlLayerNode!.getLocalPeerDescriptor(),
-            minPropagationTargets: this.config.streamPartitionMinPropagationTargets,
-            neighborTargetCount: this.config.streamPartitionNeighborTargetCount,
-            acceptProxyConnections: this.config.acceptProxyConnections,
-            rpcRequestTimeout: this.config.rpcRequestTimeout,
+            minPropagationTargets: this.options.streamPartitionMinPropagationTargets,
+            neighborTargetCount: this.options.streamPartitionNeighborTargetCount,
+            acceptProxyConnections: this.options.acceptProxyConnections,
+            rpcRequestTimeout: this.options.rpcRequestTimeout,
             isLocalNodeEntryPoint
         })
     }
@@ -273,7 +273,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         connectionCount?: number
     ): Promise<void> {
         // TODO explicit default value for "acceptProxyConnections" or make it required
-        if (this.config.acceptProxyConnections) {
+        if (this.options.acceptProxyConnections) {
             throw new Error('cannot set proxies when acceptProxyConnections=true')
         }
         const enable = (nodes.length > 0) && ((connectionCount === undefined) || (connectionCount > 0))
@@ -308,7 +308,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             localPeerDescriptor: this.controlLayerNode!.getLocalPeerDescriptor(),
             streamPartId,
             connectionLocker: this.connectionLocker!,
-            minPropagationTargets: this.config.streamPartitionMinPropagationTargets
+            minPropagationTargets: this.options.streamPartitionMinPropagationTargets
         })
     }
 

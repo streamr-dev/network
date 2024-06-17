@@ -10,7 +10,7 @@ import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { DhtAddress } from '../../identifiers'
 import { PendingConnection } from '../PendingConnection'
 
-interface WebsocketClientConnectorRpcLocalConfig {
+interface WebsocketClientConnectorRpcLocalOptions {
     connect: (targetPeerDescriptor: PeerDescriptor) => PendingConnection
     hasConnection: (nodeId: DhtAddress) => boolean
     onNewConnection: (connection: PendingConnection) => boolean
@@ -19,20 +19,20 @@ interface WebsocketClientConnectorRpcLocalConfig {
 
 export class WebsocketClientConnectorRpcLocal implements IWebsocketClientConnectorRpc {
 
-    private readonly config: WebsocketClientConnectorRpcLocalConfig
+    private readonly options: WebsocketClientConnectorRpcLocalOptions
 
-    constructor(config: WebsocketClientConnectorRpcLocalConfig) {
-        this.config = config
+    constructor(options: WebsocketClientConnectorRpcLocalOptions) {
+        this.options = options
     }
 
     public async requestConnection(_request: WebsocketConnectionRequest, context: ServerCallContext): Promise<Empty> {
-        if (this.config.abortSignal.aborted) {
+        if (this.options.abortSignal.aborted) {
             return {}
         }
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        if (!this.config.hasConnection(getNodeIdFromPeerDescriptor(senderPeerDescriptor))) {
-            const connection = this.config.connect(senderPeerDescriptor)
-            this.config.onNewConnection(connection)
+        if (!this.options.hasConnection(getNodeIdFromPeerDescriptor(senderPeerDescriptor))) {
+            const connection = this.options.connect(senderPeerDescriptor)
+            this.options.onNewConnection(connection)
         }
         return {}
     }

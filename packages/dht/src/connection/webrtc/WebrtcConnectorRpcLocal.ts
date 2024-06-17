@@ -19,7 +19,7 @@ import { PendingConnection } from '../PendingConnection'
 
 const logger = new Logger(module)
 
-interface WebrtcConnectorRpcLocalConfig {
+interface WebrtcConnectorRpcLocalOptions {
     connect: (targetPeerDescriptor: PeerDescriptor, doNotRequestConnection: boolean) => PendingConnection 
     onNewConnection: (connection: PendingConnection) => boolean
     // TODO pass accessor methods instead of passing a mutable entity
@@ -31,19 +31,19 @@ interface WebrtcConnectorRpcLocalConfig {
 
 export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
 
-    private readonly config: WebrtcConnectorRpcLocalConfig
+    private readonly options: WebrtcConnectorRpcLocalOptions
 
-    constructor(config: WebrtcConnectorRpcLocalConfig) {
-        this.config = config
+    constructor(options: WebrtcConnectorRpcLocalOptions) {
+        this.options = options
     }
 
     async requestConnection(context: ServerCallContext): Promise<Empty> {
         const targetPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        if (this.config.ongoingConnectAttempts.has(getNodeIdFromPeerDescriptor(targetPeerDescriptor))) {
+        if (this.options.ongoingConnectAttempts.has(getNodeIdFromPeerDescriptor(targetPeerDescriptor))) {
             return {}
         }
-        const pendingConnection = this.config.connect(targetPeerDescriptor, false)
-        this.config.onNewConnection(pendingConnection)
+        const pendingConnection = this.options.connect(targetPeerDescriptor, false)
+        this.options.onNewConnection(pendingConnection)
         return {}
     }
 
@@ -53,13 +53,13 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
         let connection: NodeWebrtcConnection
         let pendingConnection: PendingConnection
 
-        if (!this.config.ongoingConnectAttempts.has(nodeId)) {
-            pendingConnection = this.config.connect(remotePeerDescriptor, true)
-            connection = this.config.ongoingConnectAttempts.get(nodeId)!.connection
-            this.config.onNewConnection(pendingConnection)
+        if (!this.options.ongoingConnectAttempts.has(nodeId)) {
+            pendingConnection = this.options.connect(remotePeerDescriptor, true)
+            connection = this.options.ongoingConnectAttempts.get(nodeId)!.connection
+            this.options.onNewConnection(pendingConnection)
         } else {
-            pendingConnection = this.config.ongoingConnectAttempts.get(nodeId)!.managedConnection
-            connection = this.config.ongoingConnectAttempts.get(nodeId)!.connection
+            pendingConnection = this.options.ongoingConnectAttempts.get(nodeId)!.managedConnection
+            connection = this.options.ongoingConnectAttempts.get(nodeId)!.connection
         }
         // Always use offerers connectionId
         connection!.setConnectionId(request.connectionId as ConnectionID)
@@ -70,7 +70,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
     async rtcAnswer(request: RtcAnswer, context: ServerCallContext): Promise<Empty> {
         const remotePeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const nodeId = getNodeIdFromPeerDescriptor(remotePeerDescriptor)
-        const connection = this.config.ongoingConnectAttempts.get(nodeId)?.connection
+        const connection = this.options.ongoingConnectAttempts.get(nodeId)?.connection
         if (!connection) {
             return {}
         } else if (connection.connectionId !== request.connectionId) {
@@ -84,7 +84,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
     async iceCandidate(request: IceCandidate, context: ServerCallContext): Promise<Empty> {
         const remotePeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const nodeId = getNodeIdFromPeerDescriptor(remotePeerDescriptor)
-        const connection = this.config.ongoingConnectAttempts.get(nodeId)?.connection
+        const connection = this.options.ongoingConnectAttempts.get(nodeId)?.connection
         if (!connection) {
             return {}
         } else if (connection.connectionId !== request.connectionId) {
@@ -97,7 +97,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
     }
 
     private isIceCandidateAllowed(candidate: string): boolean {
-        if (!this.config.allowPrivateAddresses) {
+        if (!this.options.allowPrivateAddresses) {
             const address = getAddressFromIceCandidate(candidate)
             if ((address !== undefined) && isPrivateIPv4(address)) {
                 return false

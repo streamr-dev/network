@@ -2,7 +2,7 @@
 
 import { MetricsContext, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
+import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../../src/connection/ConnectorFacade'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import * as Err from '../../src/helpers/errors'
@@ -13,7 +13,7 @@ import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
 
 const SERVICE_ID = 'test'
 
-const createConfig = (localPeerDescriptor: PeerDescriptor, opts: Omit<DefaultConnectorFacadeConfig, 'createLocalPeerDescriptor'>) => {
+const createOptions = (localPeerDescriptor: PeerDescriptor, opts: Omit<DefaultConnectorFacadeOptions, 'createLocalPeerDescriptor'>) => {
     return {
         createConnectorFacade: () => new DefaultConnectorFacade({
             createLocalPeerDescriptor: async () => localPeerDescriptor,
@@ -60,21 +60,21 @@ describe('Websocket Connection Management', () => {
         connectorTransport3 = new SimulatorTransport(biggerNoWsServerConnectorPeerDescriptor, simulator)
         await connectorTransport3.start()
 
-        const config1 = createConfig(wsServerConnectorPeerDescriptor, {
+        const options1 = createOptions(wsServerConnectorPeerDescriptor, {
             transport: connectorTransport1,
             websocketHost: '127.0.0.1',
             websocketPortRange: { min: 12223, max: 12223 }
         })
-        const config2 = createConfig(noWsServerConnectorPeerDescriptor, {
+        const options2 = createOptions(noWsServerConnectorPeerDescriptor, {
             transport: connectorTransport2
         })
-        const config3 = createConfig(biggerNoWsServerConnectorPeerDescriptor, {
+        const options3 = createOptions(biggerNoWsServerConnectorPeerDescriptor, {
             transport: connectorTransport3
         })
 
-        wsServerManager = new ConnectionManager(config1)
-        noWsServerManager = new ConnectionManager(config2)
-        biggerNoWsServerManager = new ConnectionManager(config3)
+        wsServerManager = new ConnectionManager(options1)
+        noWsServerManager = new ConnectionManager(options2)
+        biggerNoWsServerManager = new ConnectionManager(options3)
 
         await wsServerManager.start()
         await noWsServerManager.start()

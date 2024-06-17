@@ -11,7 +11,7 @@ import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { Logger, MetricsContext, waitForCondition } from '@streamr/utils'
 import { pull } from 'lodash'
 import { version as applicationVersion } from '../package.json'
-import { ContentDeliveryManager, ContentDeliveryManagerConfig } from './logic/ContentDeliveryManager'
+import { ContentDeliveryManager, ContentDeliveryManagerOptions } from './logic/ContentDeliveryManager'
 import { ControlLayerNode } from './logic/ControlLayerNode'
 import { NodeInfoClient } from './logic/node-info/NodeInfoClient'
 import { NODE_INFO_RPC_SERVICE_ID, NodeInfoRpcLocal } from './logic/node-info/NodeInfoRpcLocal'
@@ -19,7 +19,7 @@ import { NodeInfoResponse, ProxyDirection, StreamMessage } from './proto/package
 
 export interface NetworkOptions {
     layer0?: DhtNodeOptions
-    networkNode?: ContentDeliveryManagerConfig
+    networkNode?: ContentDeliveryManagerOptions
     metricsContext?: MetricsContext
 }
 
