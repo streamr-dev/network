@@ -16,6 +16,7 @@ import { Resends } from '../../src/subscribe/Resends'
 import { mockLoggerFactory, MOCK_CONTENT } from '../test-utils/utils'
 import { hexToBinary } from '@streamr/utils'
 import { convertStreamMessageToBytes } from '@streamr/trackerless-network'
+import { randomBytes } from 'crypto'
 
 const createResends = (serverUrl: string) => {
     return new Resends(
@@ -67,7 +68,7 @@ describe('Resends', () => {
         const MESSAGE_COUNT = 257
         const streamPartId = StreamPartIDUtils.parse('stream#0')
         const server = await startTestServer('/streams/:streamId/data/partitions/:partition/:resendType', async (_req, res) => {
-            const publisherId = randomEthereumAddress()
+            const publisherId = randomBytes(30)
             for (const _ of range(MESSAGE_COUNT)) {
                 const msg = new StreamMessage({
                     messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisherId, ''),

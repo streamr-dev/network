@@ -1,5 +1,5 @@
 import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { waitForEvent } from '@streamr/utils'
+import { areEqualBinaries, waitForEvent } from '@streamr/utils'
 import crypto from 'crypto'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -74,7 +74,7 @@ export class GroupKeyManager {
     }
 
     async fetchLatestEncryptionKey(publisherId: Uint8Array, streamId: StreamID): Promise<GroupKey | undefined> {
-        if (publisherId !== (await this.authentication.getUserId())) {
+        if (!areEqualBinaries(publisherId, await this.authentication.getUserId())) {
             throw new Error('storeKey: fetching latest encryption keys for other publishers not supported.')
         }
         const keyId = await this.localGroupKeyStore.getLatestEncryptionKeyId(publisherId, streamId)
@@ -82,7 +82,7 @@ export class GroupKeyManager {
     }
 
     async storeKey(groupKey: GroupKey | undefined, publisherId: Uint8Array, streamId: StreamID): Promise<GroupKey> {
-        if (publisherId !== (await this.authentication.getUserId())) { // TODO: unit test?
+        if (!areEqualBinaries(publisherId, (await this.authentication.getUserId()))) { // TODO: unit test?
             throw new Error('storeKey: storing latest encryption keys for other publishers not supported.')
         }
         if (groupKey === undefined) {

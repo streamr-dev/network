@@ -1,4 +1,4 @@
-import { toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { ContentType, EncryptionType, MessageID, SignatureType, toStreamID, StreamMessageType } from '@streamr/protocol'
 import { MessageStream } from '../../src/subscribe/MessageStream'
 import { Msg } from '../test-utils/publish'
@@ -7,7 +7,7 @@ import { convertStreamMessageToMessage } from './../../src/Message'
 import omit from 'lodash/omit'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 
-const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const PUBLISHER_ID = hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 describe('MessageStream', () => {
 

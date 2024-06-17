@@ -1,5 +1,5 @@
 import { StreamID } from '@streamr/protocol'
-import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
+import { binaryToHex, EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
 import { Methods } from '@streamr/test-utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
@@ -24,7 +24,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     private readonly streamFactory: StreamFactory
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
-    
+
     constructor(
         chain: FakeChain,
         streamFactory: StreamFactory,
@@ -41,9 +41,9 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         if (this.chain.streams.has(streamId)) {
             throw new Error(`Stream already exists: ${streamId}`)
         }
-        const authenticatedUser: EthereumAddress = await this.authentication.getAddress()
-        const permissions = new Multimap<EthereumAddress, StreamPermission>()
-        permissions.addAll(authenticatedUser, Object.values(StreamPermission))
+        const authenticatedUserId = binaryToHex(await this.authentication.getUserId())
+        const permissions = new Multimap<string, StreamPermission>()
+        permissions.addAll(authenticatedUserId, Object.values(StreamPermission))
         const registryItem: StreamRegistryItem = {
             metadata,
             permissions
@@ -172,17 +172,17 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
             permission: StreamPermission.SUBSCRIBE
         })
     }
-    
+
     // eslint-disable-next-line class-methods-use-this
     clearStreamCache(): void {
         // no-op
     }
 
-    async isStreamPublisher(streamIdOrPath: string, user: EthereumAddress): Promise<boolean> {
+    async isStreamPublisher(streamIdOrPath: string, user: Uint8Array): Promise<boolean> {
         return this.hasPermission({ streamId: streamIdOrPath, user, permission: StreamPermission.PUBLISH, allowPublic: true })
     }
 
-    async isStreamSubscriber(streamIdOrPath: string, user: EthereumAddress): Promise<boolean> {
+    async isStreamSubscriber(streamIdOrPath: string, userId: Uint8Array): Promise<boolean> {
         return this.hasPermission({ streamId: streamIdOrPath, user, permission: StreamPermission.SUBSCRIBE, allowPublic: true })
     }
 

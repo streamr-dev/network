@@ -9,10 +9,11 @@ import { StreamrClientEventEmitter } from '../../src/events'
 import { DestroySignal } from '../../src/DestroySignal'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { toStreamID, toStreamPartID } from '@streamr/protocol'
-import { fastPrivateKey, randomEthereumAddress } from '@streamr/test-utils'
+import { fastPrivateKey } from '@streamr/test-utils'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { Wallet } from 'ethers'
-import { toEthereumAddress } from '@streamr/utils'
+import { hexToBinary } from '@streamr/utils'
+import { randomBytes } from 'crypto'
 
 describe('GroupKeyManager', () => {
     let groupKeyStore: MockProxy<LocalGroupKeyStore>
@@ -24,7 +25,7 @@ describe('GroupKeyManager', () => {
     const groupKeyId = 'groupKeyId-123'
     const streamId = toStreamID('test.eth/foobar')
     const wallet = new Wallet(fastPrivateKey())
-    const publisherId = toEthereumAddress(wallet.address)
+    const publisherId = hexToBinary(wallet.address)
     const groupKey = GroupKey.generate(groupKeyId)
 
     function createGroupKeyManager(litProtocolEnabled: boolean): GroupKeyManager {
@@ -178,7 +179,7 @@ describe('GroupKeyManager', () => {
 
         it('not own key', async () => {
             await expect(() => {
-                return groupKeyManager.fetchLatestEncryptionKey(randomEthereumAddress(), streamId)
+                return groupKeyManager.fetchLatestEncryptionKey(randomBytes(20), streamId)
             }).rejects.toThrow('not supported')
         })
     })
