@@ -360,23 +360,6 @@ export interface NodeInfoResponse {
     version: string;
 }
 /**
- * @generated from protobuf enum StreamMessageType
- */
-export enum StreamMessageType {
-    /**
-     * @generated from protobuf enum value: MESSAGE = 0;
-     */
-    MESSAGE = 0,
-    /**
-     * @generated from protobuf enum value: GROUP_KEY_REQUEST = 1;
-     */
-    GROUP_KEY_REQUEST = 1,
-    /**
-     * @generated from protobuf enum value: GROUP_KEY_RESPONSE = 2;
-     */
-    GROUP_KEY_RESPONSE = 2
-}
-/**
  * @generated from protobuf enum ContentType
  */
 export enum ContentType {
