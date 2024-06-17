@@ -1,3 +1,4 @@
+---
 name: auto release docker
 on:
   workflow_run:
