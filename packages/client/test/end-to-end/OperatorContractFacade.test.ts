@@ -1,5 +1,4 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { OperatorFactory, operatorFactoryABI, type Sponsorship } from '@streamr/network-contracts-ethers6'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { Contract, Wallet } from 'ethers'
@@ -16,6 +15,9 @@ import {
     sponsor,
     stake
 } from '../../src/contracts/operatorContractUtils'
+import type { OperatorFactory as OperatorFactoryContract } from '../../src/ethereumArtifacts/OperatorFactory'
+import OperatorFactoryArtifact from '../../src/ethereumArtifacts/OperatorFactoryAbi.json'
+import type { Sponsorship as SponsorshipContract } from '../../src/ethereumArtifacts/Sponsorship'
 
 const createClient = (privateKey?: string): StreamrClient => {
     return new StreamrClient({
@@ -42,8 +44,8 @@ const getOperatorContractFacade = async (wallet: Wallet | undefined, operator: S
 describe('OperatorContractFacade', () => {
     let streamId1: string
     let streamId2: string
-    let sponsorship1: Sponsorship
-    let sponsorship2: Sponsorship
+    let sponsorship1: SponsorshipContract
+    let sponsorship2: SponsorshipContract
     let deployedOperator: SetupOperatorContractReturnType
 
     beforeAll(async () => {
@@ -76,9 +78,9 @@ describe('OperatorContractFacade', () => {
         // check it's a valid operator, deployed by the OperatorFactory
         const operatorFactory = new Contract(
             CHAIN_CONFIG.dev2.contracts.OperatorFactory,
-            operatorFactoryABI,
+            OperatorFactoryArtifact,
             getAdminWallet()
-        ) as unknown as OperatorFactory
+        ) as unknown as OperatorFactoryContract
         const isDeployedByFactory = (await operatorFactory.deploymentTimestamp(randomOperatorAddress!)) > 0
         expect(isDeployedByFactory).toBeTrue()
 

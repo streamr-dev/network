@@ -1,4 +1,3 @@
-import { Operator, operatorABI as OperatorArtifact, Sponsorship, sponsorshipABI } from '@streamr/network-contracts-ethers6'
 import { StreamID, ensureValidStreamPartitionIndex, toStreamID } from '@streamr/protocol'
 import { NetworkPeerDescriptor } from '@streamr/sdk'
 import {
@@ -14,6 +13,10 @@ import sample from 'lodash/sample'
 import { Authentication } from '../Authentication'
 import { ContractFactory } from '../ContractFactory'
 import { RpcProviderSource } from '../RpcProviderSource'
+import type { Operator as OperatorContract } from '../ethereumArtifacts/Operator'
+import OperatorArtifact from '../ethereumArtifacts/OperatorAbi.json'
+import type { Sponsorship as SponsorshipContract } from '../ethereumArtifacts/Sponsorship'
+import SponsorshipArtifact from '../ethereumArtifacts/SponsorshipAbi.json'
 import { ObservableContract } from './contract'
 
 interface RawResult {
@@ -104,8 +107,8 @@ export interface Flag {
 export class OperatorContractFacade {
 
     private readonly contractAddress: EthereumAddress
-    private contract?: ObservableContract<Operator>
-    private readonly contractReadonly: ObservableContract<Operator>
+    private contract?: ObservableContract<OperatorContract>
+    private readonly contractReadonly: ObservableContract<OperatorContract>
     private readonly contractFactory: ContractFactory
     private readonly rpcProviderSource: RpcProviderSource
     private readonly theGraphClient: TheGraphClient
@@ -123,7 +126,7 @@ export class OperatorContractFacade {
         this.contractAddress = contractAddress
         this.contractFactory = contractFactory
         this.rpcProviderSource = rpcProviderSource
-        this.contractReadonly = contractFactory.createReadContract<Operator>(
+        this.contractReadonly = contractFactory.createReadContract<OperatorContract>(
             toEthereumAddress(contractAddress),
             OperatorArtifact,
             rpcProviderSource.getProvider(),
@@ -302,13 +305,17 @@ export class OperatorContractFacade {
         maxSponsorshipsInWithdraw: number
     ): Promise<EarningsData> {
         const signer = await this.authentication.getTransactionSigner(this.rpcProviderSource)
-        const operator = new Contract(operatorContractAddress, OperatorArtifact, signer) as unknown as Operator
+        const operator = new Contract(operatorContractAddress, OperatorArtifact, signer) as unknown as OperatorContract
         const minSponsorshipEarningsInWithdrawWei = BigInt(minSponsorshipEarningsInWithdraw ?? 0)
         const {
             addresses: allSponsorshipAddresses,
             earnings,
             maxAllowedEarnings,
-        } = await operator.getSponsorshipsAndEarnings()
+        } = await operator.getSponsorshipsAndEarnings() as {  // TODO why casting is needed?
+            addresses: string[]
+            earnings: bigint[]
+            maxAllowedEarnings: bigint
+        }
 
         const sponsorships = allSponsorshipAddresses
             .map((address, i) => ({ address, earnings: earnings[i] }))
@@ -485,7 +492,7 @@ export class OperatorContractFacade {
 
     async getStreamId(sponsorshipAddress: string): Promise<StreamID> {
         const signer = await this.authentication.getTransactionSigner(this.rpcProviderSource)
-        const sponsorship = new Contract(sponsorshipAddress, sponsorshipABI, signer) as unknown as Sponsorship
+        const sponsorship = new Contract(sponsorshipAddress, SponsorshipArtifact, signer) as unknown as SponsorshipContract
         return toStreamID(await sponsorship.streamId())
     }
 
@@ -523,7 +530,7 @@ export class OperatorContractFacade {
     private async connectToContract(): Promise<void> {
         if (this.contract === undefined) {
             const signer = await this.authentication.getTransactionSigner(this.rpcProviderSource)
-            this.contract = this.contractFactory.createWriteContract<Operator>(
+            this.contract = this.contractFactory.createWriteContract<OperatorContract>(
                 this.contractAddress,
                 OperatorArtifact,
                 signer,

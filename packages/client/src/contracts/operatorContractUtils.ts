@@ -1,6 +1,14 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import type { Operator, OperatorFactory, Sponsorship, SponsorshipFactory } from '@streamr/network-contracts-ethers6'
-import { TestToken, operatorABI, operatorFactoryABI, sponsorshipABI, sponsorshipFactoryABI, tokenABI } from '@streamr/network-contracts-ethers6'
+import type { Operator as OperatorContract } from '../ethereumArtifacts/Operator'
+import OperatorArtifact from '../ethereumArtifacts/OperatorAbi.json'
+import type { Sponsorship as SponsorshipContract } from '../ethereumArtifacts/Sponsorship'
+import SponsorshipArtifact from '../ethereumArtifacts/SponsorshipAbi.json'
+import type { OperatorFactory as OperatorFactoryContract } from '../ethereumArtifacts/OperatorFactory'
+import OperatorFactoryArtifact from '../ethereumArtifacts/OperatorFactoryAbi.json'
+import type { SponsorshipFactory as SponsorshipFactoryContract } from '../ethereumArtifacts/SponsorshipFactory'
+import SponsorshipFactoryArtifact from '../ethereumArtifacts/SponsorshipFactoryAbi.json'
+import type { TestToken as TestTokenContract } from '../ethereumArtifacts/TestToken'
+import TestTokenArtifact from '../ethereumArtifacts/TestTokenAbi.json'
 import { SignerWithProvider } from '@streamr/sdk'
 import { fastPrivateKey } from '@streamr/test-utils'
 import { Logger, TheGraphClient, retry } from '@streamr/utils'
@@ -29,7 +37,7 @@ export interface SetupOperatorContractOpts {
 
 export interface SetupOperatorContractReturnType {
     operatorWallet: Wallet
-    operatorContract: Operator
+    operatorContract: OperatorContract
     nodeWallets: (Wallet & SignerWithProvider)[]
 }
 
@@ -78,11 +86,11 @@ interface DeployOperatorContractOpts {
  * @param opts.deployer should be the operator's Wallet
  * @returns Operator
  */
-export async function deployOperatorContract(opts: DeployOperatorContractOpts): Promise<Operator> {
+export async function deployOperatorContract(opts: DeployOperatorContractOpts): Promise<OperatorContract> {
     logger.debug('Deploying OperatorContract')
-    const abi = operatorFactoryABI
+    const abi = OperatorFactoryArtifact
     const chainConfig = opts.chainConfig ?? CHAIN_CONFIG.dev2
-    const operatorFactory = new Contract(chainConfig.contracts.OperatorFactory, abi, opts.deployer) as unknown as OperatorFactory
+    const operatorFactory = new Contract(chainConfig.contracts.OperatorFactory, abi, opts.deployer) as unknown as OperatorFactoryContract
     const contractAddress = await operatorFactory.operators(opts.deployer.address)
     if (contractAddress !== ZeroAddress) {
         throw new Error('Operator already has a contract')
@@ -103,7 +111,7 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
     )).wait()
     const newSponsorshipEvent = operatorReceipt!.logs.find((l: any) => l.fragment?.name === 'NewOperator') as EventLog
     const newOperatorAddress = newSponsorshipEvent.args.operatorContractAddress
-    const newOperator = new Contract(newOperatorAddress, operatorABI, opts.deployer) as unknown as Operator
+    const newOperator = new Contract(newOperatorAddress, OperatorArtifact, opts.deployer) as unknown as OperatorContract
     logger.debug('Deployed OperatorContract', { address: newOperatorAddress })
     return newOperator
 }
@@ -124,14 +132,14 @@ export interface DeploySponsorshipContractOpts {
     }
 }
 
-export async function deploySponsorshipContract(opts: DeploySponsorshipContractOpts): Promise<Sponsorship> {
+export async function deploySponsorshipContract(opts: DeploySponsorshipContractOpts): Promise<SponsorshipContract> {
     logger.debug('Deploying SponsorshipContract')
     const chainConfig = opts.chainConfig ?? CHAIN_CONFIG.dev2
     const sponsorshipFactory = new Contract(
         chainConfig.contracts.SponsorshipFactory,
-        sponsorshipFactoryABI,
+        SponsorshipFactoryArtifact,
         opts.deployer
-    ) as unknown as SponsorshipFactory
+    ) as unknown as SponsorshipFactoryContract
     const sponsorshipDeployTx = await sponsorshipFactory.deploySponsorship(
         (opts.minOperatorCount ?? 1).toString(),
         opts.streamId,
@@ -149,7 +157,7 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
     const sponsorshipDeployReceipt = await sponsorshipDeployTx.wait()
     const newSponsorshipEvent = sponsorshipDeployReceipt!.logs.find((l: any) => l.fragment?.name === 'NewSponsorship') as EventLog
     const newSponsorshipAddress = newSponsorshipEvent.args.sponsorshipContract
-    const newSponsorship = new Contract(newSponsorshipAddress, sponsorshipABI, opts.deployer) as unknown as Sponsorship
+    const newSponsorship = new Contract(newSponsorshipAddress, SponsorshipArtifact, opts.deployer) as unknown as SponsorshipContract
     logger.debug('Deployed SponsorshipContract', { address: newSponsorshipAddress })
     return newSponsorship
 }
@@ -161,8 +169,8 @@ export function getProvider(): Provider {
     })
 }
 
-export function getTokenContract(): TestToken {
-    return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, tokenABI) as unknown as TestToken
+export function getTokenContract(): TestTokenContract {
+    return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, TestTokenArtifact) as unknown as TestTokenContract
 }
 
 export const getAdminWallet = (adminKey?: string, provider?: Provider): Wallet => {
@@ -186,7 +194,7 @@ export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGa
     const newWallet = new Wallet(fastPrivateKey())
     const adminWallet = getAdminWallet()
     const token = (opts?.chainConfig !== undefined)
-        ? new Contract(opts.chainConfig.contracts.DATA, tokenABI, adminWallet) as unknown as TestToken
+        ? new Contract(opts.chainConfig.contracts.DATA, TestTokenArtifact, adminWallet) as unknown as TestTokenContract
         : getTokenContract().connect(adminWallet)
     await retry(
         async () => {
@@ -206,7 +214,7 @@ export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGa
     return newWallet.connect(provider) as (Wallet & SignerWithProvider)
 }
 
-export const delegate = async (delegator: Wallet, operatorContractAddress: string, amount: number, token?: TestToken): Promise<void> => {
+export const delegate = async (delegator: Wallet, operatorContractAddress: string, amount: number, token?: TestTokenContract): Promise<void> => {
     logger.debug('Delegate', { amount })
     // onTokenTransfer: the tokens are delegated on behalf of the given data address
     // eslint-disable-next-line max-len
@@ -214,24 +222,24 @@ export const delegate = async (delegator: Wallet, operatorContractAddress: strin
     await transferTokens(delegator, operatorContractAddress, amount, delegator.address, token)
 }
 
-export const stake = async (operatorContract: Operator, sponsorshipContractAddress: string, amount: number): Promise<void> => {
+export const stake = async (operatorContract: OperatorContract, sponsorshipContractAddress: string, amount: number): Promise<void> => {
     logger.debug('Stake', { amount })
     await (await operatorContract.stake(sponsorshipContractAddress, parseEther(amount.toString()))).wait()
 }
 
-export const unstake = async (operatorContract: Operator, sponsorshipContractAddress: string): Promise<void> => {
+export const unstake = async (operatorContract: OperatorContract, sponsorshipContractAddress: string): Promise<void> => {
     logger.debug('Unstake')
     await (await operatorContract.unstake(sponsorshipContractAddress)).wait()
 }
 
-export const sponsor = async (sponsorer: Wallet, sponsorshipContractAddress: string, amount: number, token?: TestToken): Promise<void> => {
+export const sponsor = async (sponsorer: Wallet, sponsorshipContractAddress: string, amount: number, token?: TestTokenContract): Promise<void> => {
     logger.debug('Sponsor', { amount })
     // eslint-disable-next-line max-len
     // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Sponsorship.sol#L139
     await transferTokens(sponsorer, sponsorshipContractAddress, amount, undefined, token)
 }
 
-export const transferTokens = async (from: Wallet, to: string, amount: number, data?: string, token?: TestToken): Promise<void> => {
+export const transferTokens = async (from: Wallet, to: string, amount: number, data?: string, token?: TestTokenContract): Promise<void> => {
     const tx = await ((token ?? getTokenContract()).connect(from).transferAndCall(to, parseEther(amount.toString()), data ?? '0x'))
     await tx.wait()
 }
