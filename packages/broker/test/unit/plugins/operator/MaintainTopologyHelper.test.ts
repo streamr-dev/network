@@ -1,11 +1,11 @@
-import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
-import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
-import { mock, MockProxy } from 'jest-mock-extended'
+import { toStreamID } from '@streamr/protocol'
+import { OperatorContractFacade } from '@streamr/sdk'
+import { eventsWithArgsToArray, randomEthereumAddress } from '@streamr/test-utils'
+import { wait } from '@streamr/utils'
 import { Provider } from 'ethers'
 import EventEmitter3 from 'eventemitter3'
-import { eventsWithArgsToArray, randomEthereumAddress } from '@streamr/test-utils'
-import { toStreamID } from '@streamr/protocol'
-import { wait } from '@streamr/utils'
+import { mock, MockProxy } from 'jest-mock-extended'
+import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 
 const fromArray = async function* <T>(items: T[]): AsyncGenerator<T> {
     for (const item of items) {
@@ -20,7 +20,7 @@ const SPONSORSHIP_TWO = randomEthereumAddress()
 
 describe(MaintainTopologyHelper, () => {
     let smartContractEventEmitter: EventEmitter3
-    let contractFacade: MockProxy<ContractFacade>
+    let contractFacade: MockProxy<OperatorContractFacade>
     let helper: MaintainTopologyHelper
 
     async function triggerEventHandler(event: 'Staked' | 'Unstaked', sponsorship: string): Promise<void> {
@@ -30,7 +30,7 @@ describe(MaintainTopologyHelper, () => {
 
     beforeEach(() => {
         smartContractEventEmitter = new EventEmitter3()
-        contractFacade = mock<ContractFacade>()
+        contractFacade = mock<OperatorContractFacade>()
         contractFacade.getProvider.mockReturnValue(mock<Provider>())
         contractFacade.addOperatorContractStakeEventListener
             .mockImplementation(smartContractEventEmitter.on.bind(smartContractEventEmitter))

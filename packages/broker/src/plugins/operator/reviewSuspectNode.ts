@@ -1,9 +1,8 @@
-import { EthereumAddress, Logger, randomString, setAbortableTimeout } from '@streamr/utils'
-import { ContractFacade } from './ContractFacade'
-import { StreamrClient } from '@streamr/sdk'
-import { CreateOperatorFleetStateFn } from './OperatorFleetState'
 import { toStreamPartID } from '@streamr/protocol'
+import { OperatorContractFacade, StreamrClient } from '@streamr/sdk'
+import { EthereumAddress, Logger, randomString, setAbortableTimeout } from '@streamr/utils'
 import random from 'lodash/random'
+import { CreateOperatorFleetStateFn } from './OperatorFleetState'
 import { inspectOverTime } from './inspectOverTime'
 
 const logger = new Logger(module)
@@ -12,7 +11,7 @@ export interface ReviewProcessOpts {
     sponsorshipAddress: EthereumAddress
     targetOperator: EthereumAddress
     partition: number
-    contractFacade: ContractFacade
+    contractFacade: OperatorContractFacade
     streamrClient: StreamrClient
     createOperatorFleetState: CreateOperatorFleetStateFn
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>

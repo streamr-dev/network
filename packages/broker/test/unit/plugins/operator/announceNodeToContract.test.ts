@@ -1,13 +1,12 @@
 import { DhtAddress } from '@streamr/dht'
+import { NetworkNodeType, OperatorContractFacade, StreamrClient } from '@streamr/sdk'
 import { MockProxy, mock } from 'jest-mock-extended'
-import { NetworkNodeType, StreamrClient } from '@streamr/sdk'
-import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 import { announceNodeToContract } from '../../../../src/plugins/operator/announceNodeToContract'
 
 const NODE_ID = '0x1111' as DhtAddress
 
-const createHelper = (timestampOfLastHeartbeat: number | undefined): MockProxy<ContractFacade> => {
-    const helper = mock<ContractFacade>()
+const createHelper = (timestampOfLastHeartbeat: number | undefined): MockProxy<OperatorContractFacade> => {
+    const helper = mock<OperatorContractFacade>()
     helper.getTimestampOfLastHeartbeat.mockImplementation(async () => {
         return timestampOfLastHeartbeat
     })

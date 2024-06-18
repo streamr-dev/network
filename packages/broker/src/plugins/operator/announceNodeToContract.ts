@@ -1,12 +1,11 @@
+import { OperatorContractFacade, StreamrClient } from '@streamr/sdk'
 import { Logger } from '@streamr/utils'
-import StreamrClient from '@streamr/sdk'
-import { ContractFacade } from './ContractFacade'
 
 const logger = new Logger(module)
 
 export const announceNodeToContract = async (
     writeIntervalInMs: number,
-    contractFacade: ContractFacade,
+    contractFacade: OperatorContractFacade,
     streamrClient: StreamrClient
 ): Promise<void> => {
     if (await isHeartbeatStale(writeIntervalInMs, contractFacade)) {
@@ -16,7 +15,7 @@ export const announceNodeToContract = async (
 
 const isHeartbeatStale = async (
     writeIntervalInMs: number,
-    contractFacade: ContractFacade
+    contractFacade: OperatorContractFacade
 ): Promise<boolean> => {
     logger.debug('Polling last heartbeat timestamp', {
         operatorContractAddress: await contractFacade.getOperatorContractAddress()
@@ -34,7 +33,7 @@ const isHeartbeatStale = async (
 }
 
 const writeHeartbeat = async (
-    contractFacade: ContractFacade,
+    contractFacade: OperatorContractFacade,
     streamrClient: StreamrClient
 ): Promise<void> => {
     logger.info('Write heartbeat')

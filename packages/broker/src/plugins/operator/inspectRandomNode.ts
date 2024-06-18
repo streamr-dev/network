@@ -1,15 +1,14 @@
-import { EthereumAddress, Logger, randomString } from '@streamr/utils'
-import { StreamPartAssignments } from './StreamPartAssignments'
-import { StreamrClient } from '@streamr/sdk'
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { findTarget } from './inspectionUtils'
-import { ContractFacade } from './ContractFacade'
+import { OperatorContractFacade, StreamrClient } from '@streamr/sdk'
+import { EthereumAddress, Logger, randomString } from '@streamr/utils'
 import { CreateOperatorFleetStateFn } from './OperatorFleetState'
+import { StreamPartAssignments } from './StreamPartAssignments'
 import { inspectOverTime } from './inspectOverTime'
+import { findTarget } from './inspectionUtils'
 
 export async function inspectRandomNode(
     operatorContractAddress: EthereumAddress,
-    contractFacade: ContractFacade,
+    contractFacade: OperatorContractFacade,
     assignments: StreamPartAssignments,
     streamrClient: StreamrClient,
     heartbeatTimeoutInMs: number,

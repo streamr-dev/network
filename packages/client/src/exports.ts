@@ -69,5 +69,30 @@ export {
     StreamMessageType
 } from '@streamr/protocol'
 
+// These are exported for the internal OperatorContractFacade class
+// TODO could we hide the class and the getOperatorContractFacade from API docs?
+export { OperatorContractFacade } from './contracts/OperatorContractFacade'
+// TODO maybe should use more specific name for these exports
+export {
+    ParseError,
+    parsePartitionFromReviewRequestMetadata, ReviewRequestListener, SponsorshipResult
+} from './contracts/OperatorContractFacade'
+// TODO maybe should use more specific name for these exports (some utils may be for testing only), maybe move
+// into OperatorContractFacade or new SponsorshitContractFacade?
+export {
+    createTheGraphClient,
+    delegate,
+    deploySponsorshipContract,
+    getAdminWallet,
+    setupOperatorContract,
+    SetupOperatorContractReturnType,
+    sponsor,
+    stake,
+    getProvider,
+    generateWalletWithGasAndTokens,
+    SetupOperatorContractOpts,
+    deployOperatorContract,
+} from './contracts/operatorContractUtils'
+
 export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht'
 export type { Signer, Eip1193Provider, Overrides } from 'ethers'

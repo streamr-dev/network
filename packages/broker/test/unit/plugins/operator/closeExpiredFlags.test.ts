@@ -1,13 +1,13 @@
-import { closeExpiredFlags } from '../../../../src/plugins/operator/closeExpiredFlags'
-import { ContractFacade, SponsorshipResult } from '../../../../src/plugins/operator/ContractFacade'
-import { mock } from 'jest-mock-extended'
+import { OperatorContractFacade, SponsorshipResult } from '@streamr/sdk'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { mock } from 'jest-mock-extended'
+import { closeExpiredFlags } from '../../../../src/plugins/operator/closeExpiredFlags'
 
 const sponsorshipAddress = randomEthereumAddress()
 const operatorAddress = randomEthereumAddress()
 const targetAddress = randomEthereumAddress()
 
-const contractFacadeMock = mock<ContractFacade>()
+const contractFacadeMock = mock<OperatorContractFacade>()
 contractFacadeMock.getSponsorshipsOfOperator.mockImplementation(async () => {
     return [
         {

@@ -1,6 +1,6 @@
+import { OperatorContractFacade } from '@streamr/sdk'
 import { Logger } from '@streamr/utils'
 import { multiply } from '../../helpers/multiply'
-import { ContractFacade } from './ContractFacade'
 
 const logger = new Logger(module)
 
@@ -8,7 +8,7 @@ export const maintainOperatorValue = async (
     withdrawLimitSafetyFraction: number,
     minSponsorshipEarningsInWithdraw: number,
     maxSponsorshipsInWithdraw: number,
-    contractFacade: ContractFacade
+    contractFacade: OperatorContractFacade
 ): Promise<void> => {
     logger.info('Check whether it is time to withdraw my earnings')
     const { sumDataWei, maxAllowedEarningsDataWei, sponsorshipAddresses } = await contractFacade.getMyEarnings(

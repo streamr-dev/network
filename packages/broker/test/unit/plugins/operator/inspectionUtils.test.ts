@@ -1,11 +1,10 @@
-import { mock, MockProxy } from 'jest-mock-extended'
-import { StreamrClient, Subscription } from '@streamr/sdk'
 import { StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
+import { OperatorContractFacade, StreamrClient, Subscription } from '@streamr/sdk'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { EthereumAddress, Logger } from '@streamr/utils'
+import { mock, MockProxy } from 'jest-mock-extended'
 import { findTarget, inspectTarget } from '../../../../src/plugins/operator/inspectionUtils'
 import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
-import { EthereumAddress, Logger } from '@streamr/utils'
-import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 
 const MY_OPERATOR_ADDRESS = randomEthereumAddress()
 const OTHER_OPERATOR_ADDRESS = randomEthereumAddress()
@@ -25,7 +24,7 @@ const PEER_DESCRIPTOR_THREE = { nodeId: '0x3333' }
 const logger = new Logger(module)
 
 describe(findTarget, () => {
-    let contractFacade: MockProxy<ContractFacade>
+    let contractFacade: MockProxy<OperatorContractFacade>
     let assignments: MockProxy<StreamPartAssignments>
 
     function setupEnv(sponsorships: Array<{ address: EthereumAddress, operators: EthereumAddress[], streamId: StreamID }>) {
@@ -48,7 +47,7 @@ describe(findTarget, () => {
     }
 
     beforeEach(() => {
-        contractFacade = mock<ContractFacade>()
+        contractFacade = mock<OperatorContractFacade>()
         assignments = mock<StreamPartAssignments>()
     })
 

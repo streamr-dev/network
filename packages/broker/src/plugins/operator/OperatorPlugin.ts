@@ -1,24 +1,23 @@
+import { SignerWithProvider, StreamrClient } from '@streamr/sdk'
 import { EthereumAddress, Logger, scheduleAtInterval, setAbortableInterval, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { Overrides } from 'ethers'
-import { StreamrClient, SignerWithProvider } from '@streamr/sdk'
 import { Plugin } from '../../Plugin'
-import { maintainOperatorValue } from './maintainOperatorValue'
+import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import { MaintainTopologyService } from './MaintainTopologyService'
 import { OperatorFleetState } from './OperatorFleetState'
-import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { createIsLeaderFn } from './createIsLeaderFn'
+import { StreamPartAssignments } from './StreamPartAssignments'
 import { announceNodeToContract } from './announceNodeToContract'
 import { announceNodeToStream } from './announceNodeToStream'
 import { checkOperatorValueBreach } from './checkOperatorValueBreach'
+import { closeExpiredFlags } from './closeExpiredFlags'
+import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
+import { createIsLeaderFn } from './createIsLeaderFn'
 import { fetchRedundancyFactor } from './fetchRedundancyFactor'
 import { formCoordinationStreamId } from './formCoordinationStreamId'
-import { StreamPartAssignments } from './StreamPartAssignments'
-import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import { inspectRandomNode } from './inspectRandomNode'
-import { ContractFacade } from './ContractFacade'
+import { maintainOperatorValue } from './maintainOperatorValue'
 import { reviewSuspectNode } from './reviewSuspectNode'
-import { closeExpiredFlags } from './closeExpiredFlags'
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
@@ -66,20 +65,14 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         const signer = await streamrClient.getSigner()
         const nodeId = await streamrClient.getNodeId()
         const operatorContractAddress = toEthereumAddress(this.pluginConfig.operatorContractAddress)
-        const serviceConfig = {
-            signer,
-            operatorContractAddress,
-            theGraphUrl: streamrClient.getConfig().contracts.theGraphUrl,
-            getEthersOverrides: () => streamrClient.getEthersOverrides()
-        }
 
-        const redundancyFactor = await fetchRedundancyFactor(serviceConfig)
+        const redundancyFactor = await fetchRedundancyFactor({ operatorContractAddress, signer })
         if (redundancyFactor === undefined) {
             throw new Error('Failed to fetch my redundancy factor')
         }
         logger.info('Fetched my redundancy factor', { redundancyFactor })
 
-        const contractFacade = ContractFacade.createInstance(serviceConfig)
+        const contractFacade = await streamrClient.getOperatorContractFacade(operatorContractAddress)
         const maintainTopologyHelper = new MaintainTopologyHelper(contractFacade)
         const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
             streamrClient,
@@ -195,7 +188,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 try {
                     await closeExpiredFlags(
                         this.pluginConfig.closeExpiredFlags.maxAgeInMs,
-                        serviceConfig.operatorContractAddress,
+                        operatorContractAddress,
                         contractFacade
                     )
                 } catch (err) {

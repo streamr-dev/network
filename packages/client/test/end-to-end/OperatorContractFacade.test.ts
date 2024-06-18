@@ -1,24 +1,32 @@
-import { Contract } from 'ethers'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { OperatorFactory, operatorFactoryABI, type Sponsorship } from '@streamr/network-contracts-ethers6'
+import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
+import { Contract } from 'ethers'
+import { CONFIG_TEST } from '../../src/ConfigTest'
+import { StreamrClient } from '../../src/StreamrClient'
+import { OperatorContractFacade } from '../../src/contracts/OperatorContractFacade'
 import {
+    SetupOperatorContractReturnType,
     createTheGraphClient,
     delegate,
     deploySponsorshipContract,
     getAdminWallet,
     setupOperatorContract,
-    SetupOperatorContractReturnType,
     sponsor,
     stake
-} from './contractUtils'
-import { createClient, createTestStream } from '../../../utils'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+} from '../../src/contracts/operatorContractUtils'
+
+export const theGraphClient = createTheGraphClient()
 
 async function createStream(): Promise<string> {
-    const client = createClient(await fetchPrivateKeyWithGas())
-    const streamId = (await createTestStream(client, module)).id
+    const client = new StreamrClient({
+        ...CONFIG_TEST,
+        auth: {
+            privateKey: await fetchPrivateKeyWithGas()
+        }
+    })
+    const streamId = (await client.createStream(`/${Date.now()}`)).id
     await client.destroy()
     return streamId
 }
@@ -52,10 +60,11 @@ describe('ContractFacade', () => {
     }, 90 * 1000)
 
     it('getRandomOperator', async () => {
-        const contractFacade = ContractFacade.createInstance({
-            ...deployedOperator.operatorServiceConfig,
-            signer: deployedOperator.nodeWallets[0]
-        })
+        const contractFacade = new OperatorContractFacade(
+            toEthereumAddress(await deployedOperator.operatorContract.getAddress()),
+            deployedOperator.nodeWallets[0],
+            theGraphClient
+        )
         const randomOperatorAddress = await contractFacade.getRandomOperator()
         expect(randomOperatorAddress).toBeDefined()
         expect(randomOperatorAddress).not.toEqual(await deployedOperator.operatorContract.getAddress()) // should not be me
@@ -77,10 +86,11 @@ describe('ContractFacade', () => {
         await stake(deployedOperator.operatorContract, await sponsorship1.getAddress(), 10000)
         await stake(deployedOperator.operatorContract, await sponsorship2.getAddress(), 10000)
 
-        const contractFacade = ContractFacade.createInstance({
-            ...deployedOperator.operatorServiceConfig,
-            signer: undefined as any
-        })
+        const contractFacade = new OperatorContractFacade(
+            toEthereumAddress(await deployedOperator.operatorContract.getAddress()),
+            undefined as any,
+            theGraphClient
+        )
 
         await waitForCondition(async (): Promise<boolean> => {
             const res = await contractFacade.getSponsorshipsOfOperator(toEthereumAddress(operatorContractAddress))
@@ -116,10 +126,11 @@ describe('ContractFacade', () => {
         await stake(flagger.operatorContract, await sponsorship2.getAddress(), 15000)
         await stake(target.operatorContract, await sponsorship2.getAddress(), 25000)
 
-        const contractFacade = ContractFacade.createInstance({
-            ...flagger.operatorServiceConfig,
-            signer: flagger.nodeWallets[0]
-        })
+        const contractFacade = new OperatorContractFacade(
+            toEthereumAddress(await flagger.operatorContract.getAddress()),
+            flagger.nodeWallets[0],
+            theGraphClient,
+        )
         await contractFacade.flag(
             toEthereumAddress(await sponsorship2.getAddress()),
             toEthereumAddress(await target.operatorContract.getAddress()),

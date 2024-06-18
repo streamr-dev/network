@@ -1,14 +1,14 @@
-import { fetchRedundancyFactor } from '../../../../src/plugins/operator/fetchRedundancyFactor'
-import { getProvider, setupOperatorContract, SetupOperatorContractReturnType } from './contractUtils'
-import { Contract } from 'ethers'
 import { Operator, operatorABI } from '@streamr/network-contracts-ethers6'
-import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
+import { SetupOperatorContractReturnType, SignerWithProvider, getProvider, setupOperatorContract } from '@streamr/sdk'
 import { fastWallet } from '@streamr/test-utils'
-import { SignerWithProvider } from '@streamr/sdk'
+import { toEthereumAddress } from '@streamr/utils'
+import { Contract } from 'ethers'
+import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
+import { fetchRedundancyFactor } from '../../../../src/plugins/operator/fetchRedundancyFactor'
 
 async function updateMetadata(deployment: SetupOperatorContractReturnType, metadata: string): Promise<void> {
     const operator = new Contract(
-        deployment.operatorServiceConfig.operatorContractAddress,
+        await deployment.operatorContract.getAddress(),
         operatorABI,
         deployment.operatorWallet
     ) as unknown as Operator
@@ -17,12 +17,12 @@ async function updateMetadata(deployment: SetupOperatorContractReturnType, metad
 
 describe(fetchRedundancyFactor, () => {
     let deployment: SetupOperatorContractReturnType
-    let serviceConfig: OperatorServiceConfig
+    let serviceConfig: Pick<OperatorServiceConfig, 'operatorContractAddress' | 'signer'>
 
     beforeAll(async () => {
         deployment = await setupOperatorContract()
         serviceConfig = {
-            ...deployment.operatorServiceConfig,
+            operatorContractAddress: toEthereumAddress(await deployment.operatorContract.getAddress()),
             signer: fastWallet().connect(getProvider()) as SignerWithProvider
         }
     }, 30 * 1000)

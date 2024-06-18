@@ -1,10 +1,8 @@
-import { Contract } from 'ethers'
 import { Operator, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts-ethers6'
-import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
-import { createClient, createTestStream } from '../../../utils'
 import {
+    OperatorContractFacade,
     SetupOperatorContractOpts,
+    createTheGraphClient,
     delegate,
     deploySponsorshipContract,
     generateWalletWithGasAndTokens,
@@ -12,8 +10,11 @@ import {
     setupOperatorContract,
     sponsor,
     stake
-} from './contractUtils'
-import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
+} from '@streamr/sdk'
+import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { Contract } from 'ethers'
+import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
+import { createClient, createTestStream } from '../../../utils'
 
 const logger = new Logger(module)
 
@@ -43,7 +44,7 @@ describe('checkOperatorValueBreach', () => {
 
     it('withdraws the other Operators earnings when they are above the limit', async () => {
         // eslint-disable-next-line max-len
-        const { operatorServiceConfig: watcherConfig, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
+        const { operatorContract: watcherOperatorContract, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
         const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
         const sponsorer = await generateWalletWithGasAndTokens()
         await delegate(operatorWallet, await operatorContract.getAddress(), 20000)
@@ -57,10 +58,11 @@ describe('checkOperatorValueBreach', () => {
         const streamrConfigAddress = await operatorContract.streamrConfig()
         const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
         const allowedDifference = valueBeforeWithdraw * (await streamrConfig.maxAllowedEarningsFraction()) / ONE_ETHER
-        const contractFacade = ContractFacade.createInstance({
-            ...watcherConfig,
-            signer: watcherWallets[0]
-        })
+        const contractFacade = new OperatorContractFacade(
+            toEthereumAddress(await watcherOperatorContract.getAddress()),
+            watcherWallets[0],
+            createTheGraphClient()
+        )
         // overwrite (for this test only) the getRandomOperator method to deterministically return the operator's address
         contractFacade.getRandomOperator = async () => {
             return toEthereumAddress(await operatorContract.getAddress())

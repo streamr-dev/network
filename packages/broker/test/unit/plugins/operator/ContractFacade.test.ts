@@ -1,11 +1,11 @@
 import {
-    ContractFacade,
+    OperatorContractFacade,
     ParseError,
     parsePartitionFromReviewRequestMetadata, ReviewRequestListener,
-} from '../../../../src/plugins/operator/ContractFacade'
-import { EventEmitter } from 'eventemitter3'
+} from '@streamr/sdk'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
+import { EventEmitter } from 'eventemitter3'
 
 describe(parsePartitionFromReviewRequestMetadata, () => {
     it('throws given undefined', () => {
@@ -40,7 +40,7 @@ describe('ContractFacade', () => {
         let listener: jest.MockedFn<ReviewRequestListener>
         let fakeOperator: EventEmitter
         let abortController: AbortController
-        let helper: ContractFacade
+        let helper: OperatorContractFacade
         const sponsorshipAddress = randomEthereumAddress()
         const operatorContractAddress = randomEthereumAddress()
     
@@ -52,7 +52,7 @@ describe('ContractFacade', () => {
                     return operatorContractAddress
                 }
             }()
-            helper = new ContractFacade(fakeOperator as any, undefined as any, undefined as any)
+            helper = new OperatorContractFacade(fakeOperator as any, undefined as any, undefined as any)
             abortController = new AbortController()
             helper.addReviewRequestListener(listener, abortController.signal)
         })

@@ -1,10 +1,10 @@
+import { OperatorContractFacade } from '@streamr/sdk'
 import { Logger } from '@streamr/utils'
-import { ContractFacade } from './ContractFacade'
 
 const logger = new Logger(module)
 
 export const checkOperatorValueBreach = async (
-    contractFacade: ContractFacade,
+    contractFacade: OperatorContractFacade,
     minSponsorshipEarningsInWithdraw: number,
     maxSponsorshipsInWithdraw: number
 ): Promise<void> => {

@@ -1,16 +1,14 @@
-import { ZeroAddress, Contract, JsonRpcProvider, Provider, parseEther, EventLog } from 'ethers'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import type { Operator, OperatorFactory, Sponsorship, SponsorshipFactory } from '@streamr/network-contracts-ethers6'
 import { TestToken, operatorABI, operatorFactoryABI, sponsorshipABI, sponsorshipFactoryABI, tokenABI } from '@streamr/network-contracts-ethers6'
+import { SignerWithProvider } from '@streamr/sdk'
 import { fastPrivateKey } from '@streamr/test-utils'
-import { Logger, TheGraphClient, toEthereumAddress, retry } from '@streamr/utils'
-import { Wallet } from 'ethers'
-import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
+import { Logger, TheGraphClient, retry } from '@streamr/utils'
+import { Contract, EventLog, JsonRpcProvider, Provider, Wallet, ZeroAddress, parseEther } from 'ethers'
 import { range } from 'lodash'
 import fetch from 'node-fetch'
-import { SignerWithProvider } from '@streamr/sdk'
 
-export const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
+const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 
 export interface SetupOperatorContractOpts {
     nodeCount?: number
@@ -32,7 +30,6 @@ export interface SetupOperatorContractOpts {
 export interface SetupOperatorContractReturnType {
     operatorWallet: Wallet
     operatorContract: Operator
-    operatorServiceConfig: Omit<OperatorServiceConfig, 'signer'>
     nodeWallets: (Wallet & SignerWithProvider)[]
 }
 
@@ -59,12 +56,7 @@ export async function setupOperatorContract(
         }
         await (await operatorContract.setNodeAddresses(nodeWallets.map((w) => w.address))).wait()
     }
-    const operatorConfig = {
-        operatorContractAddress: toEthereumAddress(await operatorContract.getAddress()),
-        theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl,
-        getEthersOverrides: async () => ({})
-    }
-    return { operatorWallet, operatorContract, operatorServiceConfig: operatorConfig, nodeWallets }
+    return { operatorWallet, operatorContract, nodeWallets }
 }
 
 interface DeployOperatorContractOpts {

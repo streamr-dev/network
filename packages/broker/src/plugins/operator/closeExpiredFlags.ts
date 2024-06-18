@@ -1,12 +1,12 @@
+import { OperatorContractFacade, SponsorshipResult } from '@streamr/sdk'
 import { EthereumAddress, Logger } from '@streamr/utils'
-import { ContractFacade, SponsorshipResult } from './ContractFacade'
 
 const logger = new Logger(module)
 
 export const closeExpiredFlags = async (
     maxAgeInMs: number,
     operatorContractAddress: EthereumAddress,
-    contractFacade: ContractFacade
+    contractFacade: OperatorContractFacade
 ): Promise<void> => {
     logger.info('Start')
 

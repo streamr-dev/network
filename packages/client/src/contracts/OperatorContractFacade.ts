@@ -1,19 +1,17 @@
-import { Provider } from 'ethers'
 import { Operator, Sponsorship, operatorABI, sponsorshipABI } from '@streamr/network-contracts-ethers6'
 import { StreamID, ensureValidStreamPartitionIndex, toStreamID } from '@streamr/protocol'
+import { NetworkPeerDescriptor } from '@streamr/sdk'
 import {
     EthereumAddress,
     Logger,
     TheGraphClient,
     addManagedEventListener,
-    toEthereumAddress,
-    collect
+    collect,
+    toEthereumAddress
 } from '@streamr/utils'
-import { Contract, Overrides } from 'ethers'
+import { Contract, Overrides, Provider } from 'ethers'
 import sample from 'lodash/sample'
-import fetch from 'node-fetch'
-import { NetworkPeerDescriptor } from '@streamr/sdk'
-import { OperatorServiceConfig } from './OperatorPlugin'
+import { SignerWithProvider } from '../Authentication'
 
 interface RawResult {
     operator: null | { latestHeartbeatTimestamp: string | null }
@@ -100,29 +98,23 @@ export interface Flag {
     }
 }
 
-export class ContractFacade {
+export class OperatorContractFacade {
 
-    private readonly operatorContract: Operator
+    private readonly operatorContract: Operator  // TODO rename to "contract"
+    private readonly signer: SignerWithProvider
     private readonly theGraphClient: TheGraphClient
-    private readonly config: OperatorServiceConfig
+    private readonly getEthersOverrides: () => Promise<Overrides>
 
-    // for tests
-    constructor(operatorContract: Operator, theGraphClient: TheGraphClient, config: OperatorServiceConfig) {
-        this.operatorContract = operatorContract
+    constructor(
+        contractAddress: EthereumAddress,
+        signer: SignerWithProvider,
+        theGraphClient: TheGraphClient,
+        getEthersOverrides: () => Promise<Overrides> = async () => ({})
+    ) {
+        this.operatorContract = new Contract(contractAddress, operatorABI, signer) as unknown as Operator
+        this.signer = signer
         this.theGraphClient = theGraphClient
-        this.config = config
-    }
-
-    static createInstance(config: OperatorServiceConfig): ContractFacade {
-        return new ContractFacade(
-            new Contract(config.operatorContractAddress, operatorABI, config.signer) as unknown as Operator,
-            new TheGraphClient({
-                serverUrl: config.theGraphUrl,
-                fetch,
-                logger
-            }),
-            config
-        )
+        this.getEthersOverrides = getEthersOverrides
     }
 
     async writeHeartbeat(nodeDescriptor: NetworkPeerDescriptor): Promise<void> {
@@ -290,7 +282,7 @@ export class ContractFacade {
         minSponsorshipEarningsInWithdraw: number,
         maxSponsorshipsInWithdraw: number
     ): Promise<EarningsData> {
-        const operator = new Contract(operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
+        const operator = new Contract(operatorContractAddress, operatorABI, this.signer) as unknown as Operator
         const minSponsorshipEarningsInWithdrawWei = BigInt(minSponsorshipEarningsInWithdraw ?? 0)
         const {
             addresses: allSponsorshipAddresses,
@@ -470,7 +462,7 @@ export class ContractFacade {
     }
 
     async getStreamId(sponsorshipAddress: string): Promise<StreamID> {
-        const sponsorship = new Contract(sponsorshipAddress, sponsorshipABI, this.config.signer) as unknown as Sponsorship
+        const sponsorship = new Contract(sponsorshipAddress, sponsorshipABI, this.signer) as unknown as Sponsorship
         return toStreamID(await sponsorship.streamId())
     }
 
@@ -501,10 +493,6 @@ export class ContractFacade {
     }
 
     getProvider(): Provider {
-        return this.config.signer.provider
-    }
-
-    getEthersOverrides(): Promise<Overrides> {
-        return this.config.getEthersOverrides()
+        return this.signer.provider
     }
 }

@@ -1,11 +1,10 @@
 /**
  * Config and utilities for interating with identity & Ethereum chain.
  */
-import { Wallet } from 'ethers'
 import type { Overrides } from 'ethers'
+import { FeeData, Wallet } from 'ethers'
 import { StrictStreamrClientConfig } from './Config'
 import { RpcProviderSource } from './RpcProviderSource'
-import { FeeData } from 'ethers'
 
 export const generateEthereumAccount = (): { address: string, privateKey: string } => {
     const wallet = Wallet.createRandom()
@@ -21,7 +20,7 @@ export const generateEthereumAccount = (): { address: string, privateKey: string
  */
 export const getEthersOverrides = async (
     rpcProviderSource: RpcProviderSource, // TODO: can this be done somewhat cleaner?
-    config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
+    config: Pick<StrictStreamrClientConfig, 'contracts'>
 ): Promise<Overrides> => {
     const chainConfig = config.contracts.ethereumNetwork
     const overrides = chainConfig.overrides ?? {}

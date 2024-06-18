@@ -1,8 +1,10 @@
-import { Lifecycle, scoped } from 'tsyringe'
-import { TheGraphClient, Logger } from '@streamr/utils'
+import { Logger, TheGraphClient } from '@streamr/utils'
 import { shuffle } from 'lodash'
+import { Lifecycle, scoped } from 'tsyringe'
 import { NetworkPeerDescriptor } from '../Config'
 import { LoggerFactory } from '../utils/LoggerFactory'
+
+// TODO move the functionality of this class to OperatorContractFacade
 
 @scoped(Lifecycle.ContainerScoped)
 export class OperatorRegistry {

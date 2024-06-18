@@ -1,14 +1,13 @@
-import { shuffle } from 'lodash'
-import { NetworkPeerDescriptor, StreamrClient } from '@streamr/sdk'
-import { OperatorFleetState } from './OperatorFleetState'
 import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { NetworkPeerDescriptor, OperatorContractFacade, StreamrClient } from '@streamr/sdk'
 import { EthereumAddress, Logger } from '@streamr/utils'
-import { ConsistentHashRing } from './ConsistentHashRing'
-import { StreamPartAssignments } from './StreamPartAssignments'
-import { weightedSample } from '../../helpers/weightedSample'
+import { shuffle } from 'lodash'
 import sample from 'lodash/sample'
 import without from 'lodash/without'
-import { ContractFacade } from './ContractFacade'
+import { weightedSample } from '../../helpers/weightedSample'
+import { ConsistentHashRing } from './ConsistentHashRing'
+import { OperatorFleetState } from './OperatorFleetState'
+import { StreamPartAssignments } from './StreamPartAssignments'
 
 export type FindNodesForTargetGivenFleetStateFn = typeof findNodesForTargetGivenFleetState
 export type InspectTargetFn = typeof inspectTarget
@@ -41,7 +40,7 @@ function getPartitionsOfStreamAssignedToMe(
 
 export async function findTarget(
     myOperatorContractAddress: EthereumAddress,
-    contractFacade: ContractFacade,
+    contractFacade: OperatorContractFacade,
     assignments: StreamPartAssignments,
     logger: Logger
 ): Promise<Target | undefined> {
