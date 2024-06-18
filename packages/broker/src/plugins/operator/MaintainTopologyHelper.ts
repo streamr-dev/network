@@ -31,7 +31,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
     }
 
     async start(): Promise<void> {
-        const latestBlock = await this.contractFacade.getProvider().getBlockNumber()
+        const latestBlock = await this.contractFacade.getCurrentBlockNumber()
 
         this.onStakedListener = async (sponsorship: string) => {
             logger.info('Receive "Staked" event', { sponsorship })

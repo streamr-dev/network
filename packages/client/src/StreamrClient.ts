@@ -51,6 +51,7 @@ import { StreamDefinition } from './types'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
+import { ContractFactory } from './ContractFactory'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -90,6 +91,7 @@ export class StreamrClient {
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
     private readonly operatorRegistry: OperatorRegistry
+    private readonly contractFactory: ContractFactory
     private readonly localGroupKeyStore: LocalGroupKeyStore
     private readonly theGraphClient: TheGraphClient
     private readonly streamIdBuilder: StreamIDBuilder
@@ -125,6 +127,7 @@ export class StreamrClient {
         this.streamStorageRegistry = container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
         this.storageNodeRegistry = container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
         this.operatorRegistry = container.resolve<OperatorRegistry>(OperatorRegistry)
+        this.contractFactory = container.resolve<ContractFactory>(ContractFactory)
         this.localGroupKeyStore = container.resolve<LocalGroupKeyStore>(LocalGroupKeyStore)
         this.streamIdBuilder = container.resolve<StreamIDBuilder>(StreamIDBuilder)
         this.eventEmitter = container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
@@ -704,8 +707,10 @@ export class StreamrClient {
     async getOperatorContractFacade(operatorContractAddress: EthereumAddress): Promise<OperatorContractFacade> {
         return new OperatorContractFacade(
             operatorContractAddress,
-            await this.getSigner(),
+            this.contractFactory,
+            this.rpcProviderSource,
             this.theGraphClient,
+            this.authentication,
             () => this.getEthersOverrides()
         )
     }

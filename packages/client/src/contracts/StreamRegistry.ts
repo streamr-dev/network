@@ -71,7 +71,7 @@ const CACHE_KEY_SEPARATOR = '|'
 export class StreamRegistry {
 
     private streamRegistryContract?: ObservableContract<StreamRegistryContract>
-    private streamRegistryContractReadonly: ObservableContract<StreamRegistryContract>
+    private readonly streamRegistryContractReadonly: ObservableContract<StreamRegistryContract>
     private readonly streamFactory: StreamFactory
     private readonly contractFactory: ContractFactory
     private readonly rpcProviderSource: RpcProviderSource
@@ -173,7 +173,7 @@ export class StreamRegistry {
     }
 
     private async connectToContract(): Promise<void> {
-        if (!this.streamRegistryContract) {
+        if (this.streamRegistryContract === undefined) {
             const chainSigner = await this.authentication.getTransactionSigner(this.rpcProviderSource)
             this.streamRegistryContract = this.contractFactory.createWriteContract<StreamRegistryContract>(
                 toEthereumAddress(this.config.contracts.streamRegistryChainAddress),

@@ -46,7 +46,7 @@ export class StorageNodeRegistry {
     }
 
     private async connectToContract() {
-        if (!this.nodeRegistryContract) {
+        if (this.nodeRegistryContract === undefined) {
             const chainSigner = await this.authentication.getTransactionSigner(this.rpcProviderSource)
             this.nodeRegistryContract = this.contractFactory.createWriteContract<NodeRegistryContract>(
                 toEthereumAddress(this.config.contracts.storageNodeRegistryChainAddress),

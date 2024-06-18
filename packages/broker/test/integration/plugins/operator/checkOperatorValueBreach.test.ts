@@ -58,11 +58,9 @@ describe('checkOperatorValueBreach', () => {
         const streamrConfigAddress = await operatorContract.streamrConfig()
         const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
         const allowedDifference = valueBeforeWithdraw * (await streamrConfig.maxAllowedEarningsFraction()) / ONE_ETHER
-        const contractFacade = new OperatorContractFacade(
-            toEthereumAddress(await watcherOperatorContract.getAddress()),
-            watcherWallets[0],
-            createTheGraphClient()
-        )
+        const contractFacade = await createClient(watcherWallets[0].privateKey)
+            .getOperatorContractFacade(toEthereumAddress(await watcherOperatorContract.getAddress()))
+
         // overwrite (for this test only) the getRandomOperator method to deterministically return the operator's address
         contractFacade.getRandomOperator = async () => {
             return toEthereumAddress(await operatorContract.getAddress())

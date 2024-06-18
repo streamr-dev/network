@@ -1,6 +1,7 @@
 import { OperatorContractFacade, createTheGraphClient, setupOperatorContract } from '@streamr/sdk'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { announceNodeToContract } from '../../../../src/plugins/operator/announceNodeToContract'
+import { createClient } from '../../../utils'
 
 const TIMEOUT = 30 * 1000
 
@@ -12,11 +13,7 @@ describe('announceNodeToContract', () => {
         const { operatorContract, nodeWallets } = await setupOperatorContract({
             nodeCount: 1
         })
-        contractFacade = new OperatorContractFacade(
-            toEthereumAddress(await operatorContract.getAddress()),
-            nodeWallets[0],
-            createTheGraphClient()
-        )
+        contractFacade = await createClient(nodeWallets[0].privateKey).getOperatorContractFacade(toEthereumAddress(await operatorContract.getAddress()))
     }, TIMEOUT)
 
     it('read empty heartbeat, then write heartbeat then read timestamp', async () => {

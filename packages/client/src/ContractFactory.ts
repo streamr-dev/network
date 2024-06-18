@@ -8,6 +8,8 @@ import { LoggerFactory } from './utils/LoggerFactory'
 import { ObservableContract, createDecoratedContract } from './contracts/contract'
 import { Provider, ContractTransactionReceipt, InterfaceAbi, BaseContract } from 'ethers'
 
+// TODO move to contracts directory?
+
 @scoped(Lifecycle.ContainerScoped)
 export class ContractFactory {
 

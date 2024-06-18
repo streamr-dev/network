@@ -31,7 +31,6 @@ describe(MaintainTopologyHelper, () => {
     beforeEach(() => {
         smartContractEventEmitter = new EventEmitter3()
         contractFacade = mock<OperatorContractFacade>()
-        contractFacade.getProvider.mockReturnValue(mock<Provider>())
         contractFacade.addOperatorContractStakeEventListener
             .mockImplementation(smartContractEventEmitter.on.bind(smartContractEventEmitter))
         helper = new MaintainTopologyHelper(contractFacade)

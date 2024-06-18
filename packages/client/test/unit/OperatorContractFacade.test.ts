@@ -33,7 +33,7 @@ describe(parsePartitionFromReviewRequestMetadata, () => {
     })
 })
 
-describe('ContractFacade', () => {
+describe('OperatorContractFacade', () => {
 
     describe('addReviewRequestListener', () => {
 
@@ -52,7 +52,18 @@ describe('ContractFacade', () => {
                     return operatorContractAddress
                 }
             }()
-            helper = new OperatorContractFacade(fakeOperator as any, undefined as any, undefined as any)
+            helper = new OperatorContractFacade(
+                operatorContractAddress,
+                {
+                    createReadContract: () => fakeOperator
+                } as any,
+                {
+                    getProvider: () => undefined
+                } as any,
+                undefined as any,
+                undefined as any,
+                undefined as any
+            )
             abortController = new AbortController()
             helper.addReviewRequestListener(listener, abortController.signal)
         })
