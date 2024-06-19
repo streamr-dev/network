@@ -8,7 +8,7 @@ import {
     collect,
     toEthereumAddress
 } from '@streamr/utils'
-import { Contract, Overrides } from 'ethers'
+import { Overrides } from 'ethers'
 import sample from 'lodash/sample'
 import { Authentication } from '../Authentication'
 import { ContractFactory } from '../ContractFactory'
@@ -304,8 +304,12 @@ export class OperatorContractFacade {
         minSponsorshipEarningsInWithdraw: number,
         maxSponsorshipsInWithdraw: number
     ): Promise<EarningsData> {
-        const signer = await this.authentication.getTransactionSigner(this.rpcProviderSource)
-        const operator = new Contract(operatorContractAddress, OperatorArtifact, signer) as unknown as OperatorContract
+        const operator = this.contractFactory.createReadContract<OperatorContract>(
+            toEthereumAddress(operatorContractAddress),
+            OperatorArtifact,
+            this.rpcProviderSource.getProvider(),
+            'operator'
+        )
         const minSponsorshipEarningsInWithdrawWei = BigInt(minSponsorshipEarningsInWithdraw ?? 0)
         const {
             addresses: allSponsorshipAddresses,
@@ -491,8 +495,12 @@ export class OperatorContractFacade {
     }
 
     async getStreamId(sponsorshipAddress: string): Promise<StreamID> {
-        const signer = await this.authentication.getTransactionSigner(this.rpcProviderSource)
-        const sponsorship = new Contract(sponsorshipAddress, SponsorshipArtifact, signer) as unknown as SponsorshipContract
+        const sponsorship = this.contractFactory.createReadContract<SponsorshipContract>(
+            toEthereumAddress(sponsorshipAddress),
+            SponsorshipArtifact,
+            this.rpcProviderSource.getProvider(),
+            'sponsorship'
+        )
         return toStreamID(await sponsorship.streamId())
     }
 
