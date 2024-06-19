@@ -1,4 +1,4 @@
-import { SignerWithProvider, StreamrClient } from '@streamr/sdk'
+import { ReviewRequestEvent, SignerWithProvider, StreamrClient } from '@streamr/sdk'
 import { EthereumAddress, Logger, scheduleAtInterval, setAbortableInterval, toEthereumAddress } from '@streamr/utils'
 import { Schema } from 'ajv'
 import { Overrides } from 'ethers'
@@ -196,19 +196,13 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 }
             }, this.pluginConfig.closeExpiredFlags.intervalInMs, false, this.abortController.signal)
 
-            contractFacade.addReviewRequestListener(async (
-                sponsorshipAddress,
-                targetOperator,
-                partition,
-                votingPeriodStartTimestamp,
-                votingPeriodEndTimestamp
-            ) => {
+            contractFacade.on('reviewRequest', (event: ReviewRequestEvent) => {
                 try {
                     if (isLeader()) {
                         await reviewSuspectNode({
-                            sponsorshipAddress,
-                            targetOperator,
-                            partition,
+                            sponsorshipAddress: event.sponsorship,
+                            targetOperator: event.targetOperator,
+                            partition: event.partition,
                             contractFacade,
                             streamrClient,
                             createOperatorFleetState,
@@ -219,8 +213,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                             maxSleepTime: 5 * 60 * 1000,
                             heartbeatTimeoutInMs: this.pluginConfig.heartbeatTimeoutInMs,
                             votingPeriod: {
-                                startTime: votingPeriodStartTimestamp,
-                                endTime: votingPeriodEndTimestamp
+                                startTime: event.votingPeriodStartTimestamp,
+                                endTime: event.votingPeriodEndTimestamp
                             },
                             inspectionIntervalInMs: 8 * 60 * 1000,
                             maxInspections: 10,
@@ -230,7 +224,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 } catch (err) {
                     logger.error('Encountered error while processing review request', { err })
                 }
-            }, this.abortController.signal)
+            }, this.abortController.signal)  // TODO call contractFacade.off('reviewRequest') with the registered listener?
         })
     }
 

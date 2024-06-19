@@ -4,11 +4,11 @@ import {
     EthereumAddress,
     Logger,
     TheGraphClient,
-    addManagedEventListener,
     collect,
     toEthereumAddress
 } from '@streamr/utils'
-import { Overrides } from 'ethers'
+import { Contract, Overrides } from 'ethers'
+import EventEmitter from 'eventemitter3'
 import sample from 'lodash/sample'
 import { Authentication } from '../Authentication'
 import { ContractFactory } from '../ContractFactory'
@@ -17,7 +17,9 @@ import type { Operator as OperatorContract } from '../ethereumArtifacts/Operator
 import OperatorArtifact from '../ethereumArtifacts/OperatorAbi.json'
 import type { Sponsorship as SponsorshipContract } from '../ethereumArtifacts/Sponsorship'
 import SponsorshipArtifact from '../ethereumArtifacts/SponsorshipAbi.json'
-import { ObservableContract } from './contract'
+import { LoggerFactory } from '../utils/LoggerFactory'
+import { ChainEventPoller } from './ChainEventPoller'
+import { ObservableContract, initContractEventGateway } from './contract'
 
 interface RawResult {
     operator: null | { latestHeartbeatTimestamp: string | null }
@@ -27,6 +29,24 @@ interface EarningsData {
     sponsorshipAddresses: EthereumAddress[]
     sumDataWei: bigint
     maxAllowedEarningsDataWei: bigint
+}
+
+export interface StakeEvent {  // TODO export, do we want to keep the current style where event payloads are always objects?
+    sponsorship: EthereumAddress
+}
+
+export interface ReviewRequestEvent {
+    sponsorship: EthereumAddress
+    targetOperator: EthereumAddress
+    partition: number
+    votingPeriodStartTimestamp: number
+    votingPeriodEndTimestamp: number
+}
+
+export interface OperatorContractEvents {  // TODO what is our current event naming style exactly? does this definition apply this style?
+    stake: (payload: StakeEvent) => void
+    unstake: (payload: StakeEvent) => void
+    reviewRequest: (payload: ReviewRequestEvent) => void
 }
 
 export const VOTE_KICK = '0x0000000000000000000000000000000000000000000000000000000000000001'
@@ -114,6 +134,7 @@ export class OperatorContractFacade {
     private readonly theGraphClient: TheGraphClient
     private readonly authentication: Authentication
     private readonly getEthersOverrides: () => Promise<Overrides>
+    private readonly eventEmitter: EventEmitter<OperatorContractEvents> = new EventEmitter()
 
     constructor(
         contractAddress: EthereumAddress,
@@ -121,7 +142,9 @@ export class OperatorContractFacade {
         rpcProviderSource: RpcProviderSource,
         theGraphClient: TheGraphClient,
         authentication: Authentication,
-        getEthersOverrides: () => Promise<Overrides> = async () => ({})
+        getEthersOverrides: () => Promise<Overrides>,
+        loggerFactory: LoggerFactory,
+        eventPollInterval: number
     ) {
         this.contractAddress = contractAddress
         this.contractFactory = contractFactory
@@ -135,6 +158,83 @@ export class OperatorContractFacade {
         this.theGraphClient = theGraphClient
         this.authentication = authentication
         this.getEthersOverrides = getEthersOverrides
+        this.initEventGateways(contractAddress, loggerFactory, eventPollInterval)
+        // TODO maybe we should remove all event listeners when client triggers a destroy signal?
+    }
+
+    private initEventGateways(
+        contractAddress: EthereumAddress,
+        loggerFactory: LoggerFactory,
+        eventPollInterval: number
+    ): void {
+        const chainEventPoller = new ChainEventPoller(this.rpcProviderSource.getSubProviders().map((p) => {
+            return new Contract(contractAddress, OperatorArtifact, p)
+        // eslint-disable-next-line no-underscore-dangle
+        }), eventPollInterval)
+        const stakeEventTransformation = (sponsorship: string) => ({
+            sponsorship: toEthereumAddress(sponsorship)  // TODO update usages to use 
+        })
+        initContractEventGateway({
+            sourceName: 'Staked', 
+            sourceEmitter: chainEventPoller,
+            targetName: 'staked',
+            targetEmitter: this.eventEmitter,
+            stakeEventTransformation,
+            loggerFactory
+        } as any)  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
+        initContractEventGateway({
+            sourceName: 'Unstaked', 
+            sourceEmitter: chainEventPoller,
+            targetName: 'unstaked',
+            targetEmitter: this.eventEmitter,
+            stakeEventTransformation,
+            loggerFactory
+        } as any)  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
+        const reviewRequestTransform = (
+            sponsorship: string,
+            targetOperator: string,
+            voteStartTimestampInSecs: number,
+            voteEndTimestampInSecs: number,
+            metadataAsString?: string
+        ) => {
+            let partition: number
+            try {
+                partition = parsePartitionFromReviewRequestMetadata(metadataAsString)
+            } catch (err) {
+                if (err instanceof ParseError) {
+                    logger.warn(`Skip review request (${err.reasonText})`, {
+                        address: contractAddress,
+                        sponsorship,
+                        targetOperator,
+                    })
+                } else {
+                    logger.warn('Encountered unexpected error', { err })
+                }
+                return  // TODO throw event so that emitting is skipped in the gateway
+            }
+            /* ok to remove this logging if we log it elsewhere?
+            logger.debug('Receive review request', {
+                address: await this.getOperatorContractAddress(),
+                sponsorship,
+                targetOperator,
+                partition
+            })*/
+            return {
+                sponsorship: toEthereumAddress(sponsorship),
+                targetOperator: toEthereumAddress(targetOperator),
+                partition,
+                votingPeriodStartTimestamp: voteStartTimestampInSecs * 1000,
+                votingPeriodEndTimestamp: voteEndTimestampInSecs * 1000
+            }
+        }
+        initContractEventGateway({
+            sourceName: 'ReviewRequest',
+            sourceEmitter: chainEventPoller,
+            targetName: 'reviewRequest',
+            targetEmitter: this.eventEmitter,
+            reviewRequestTransform,
+            loggerFactory
+        } as any)  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
     }
 
     async writeHeartbeat(nodeDescriptor: NetworkPeerDescriptor): Promise<void> {
@@ -450,50 +550,6 @@ export class OperatorContractFacade {
         }
     }
 
-    addReviewRequestListener(listener: ReviewRequestListener, abortSignal: AbortSignal): void {
-        addManagedEventListener<any, any>(
-            this.contractReadonly as any,
-            'ReviewRequest',
-            async (
-                sponsorship: string,
-                targetOperator: string,
-                voteStartTimestampInSecs: number,
-                voteEndTimestampInSecs: number,
-                metadataAsString?: string
-            ) => {
-                let partition: number
-                try {
-                    partition = parsePartitionFromReviewRequestMetadata(metadataAsString)
-                } catch (err) {
-                    if (err instanceof ParseError) {
-                        logger.warn(`Skip review request (${err.reasonText})`, {
-                            address: await this.getOperatorContractAddress(),
-                            sponsorship,
-                            targetOperator,
-                        })
-                    } else {
-                        logger.warn('Encountered unexpected error', { err })
-                    }
-                    return
-                }
-                logger.debug('Receive review request', {
-                    address: await this.getOperatorContractAddress(),
-                    sponsorship,
-                    targetOperator,
-                    partition
-                })
-                listener(
-                    toEthereumAddress(sponsorship),
-                    toEthereumAddress(targetOperator),
-                    partition,
-                    voteStartTimestampInSecs * 1000,
-                    voteEndTimestampInSecs * 1000
-                )
-            },
-            abortSignal
-        )
-    }
-
     async getStreamId(sponsorshipAddress: string): Promise<StreamID> {
         const sponsorship = this.contractFactory.createReadContract<SponsorshipContract>(
             toEthereumAddress(sponsorshipAddress),
@@ -523,16 +579,16 @@ export class OperatorContractFacade {
         await this.voteOnFlag(sponsorship, targetOperator, false)
     }
 
-    addOperatorContractStakeEventListener(eventName: 'Staked' | 'Unstaked', listener: (sponsorship: string) => unknown): void {
-        this.contractReadonly.on(eventName as any, listener)  // TODO better type
-    }
-
-    removeOperatorContractStakeEventListener(eventName: 'Staked' | 'Unstaked', listener: (sponsorship: string) => unknown): void {
-        this.contractReadonly.off(eventName, listener)
-    }
-
     getCurrentBlockNumber(): Promise<number> {
         return this.rpcProviderSource.getProvider().getBlockNumber()
+    }
+
+    on<E extends keyof OperatorContractEvents>(eventName: E, listener: OperatorContractEvents[E]): void {
+        this.eventEmitter.on(eventName, listener as any)
+    }
+
+    off<E extends keyof OperatorContractEvents>(eventName: E, listener: OperatorContractEvents[E]): void {
+        this.eventEmitter.off(eventName, listener as any)
     }
 
     private async connectToContract(): Promise<void> {
