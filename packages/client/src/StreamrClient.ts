@@ -430,14 +430,14 @@ export class StreamrClient {
     /**
      * Gets all ethereum addresses that have {@link StreamPermission.PUBLISH} permission to the stream.
      */
-    getStreamPublishers(streamIdOrPath: string): AsyncIterable<EthereumAddress> {
+    getStreamPublishers(streamIdOrPath: string): AsyncIterable<Uint8Array> {
         return this.streamRegistry.getStreamPublishers(streamIdOrPath)
     }
 
     /**
      * Gets all ethereum addresses that have {@link StreamPermission.SUBSCRIBE} permission to the stream.
      */
-    getStreamSubscribers(streamIdOrPath: string): AsyncIterable<EthereumAddress> {
+    getStreamSubscribers(streamIdOrPath: string): AsyncIterable<Uint8Array> {
         return this.streamRegistry.getStreamSubscribers(streamIdOrPath)
     }
 
