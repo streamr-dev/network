@@ -3,32 +3,27 @@ import { Logger } from '@streamr/utils'
 import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../helpers/AddressTools'
 import { Empty } from '../../proto/google/protobuf/empty'
 import {
-    HandshakeError,
     IceCandidate,
     PeerDescriptor,
     RtcAnswer,
     RtcOffer
 } from '../../proto/packages/dht/protos/DhtRpc'
-import { WebrtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { IWebrtcConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
-import { ManagedConnection } from '../ManagedConnection'
-import { ManagedWebrtcConnection } from './ManagedWebrtcConnection'
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'
-import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
 import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { isMaybeSupportedVersion } from '../../helpers/version'
 import { ConnectionID } from '../IConnection'
+import { ConnectingConnection } from './WebrtcConnector'
+import { PendingConnection } from '../PendingConnection'
 
 const logger = new Logger(module)
 
-interface WebrtcConnectorRpcLocalConfig {
-    createConnection: (targetPeerDescriptor: PeerDescriptor) => NodeWebrtcConnection 
-    connect: (targetPeerDescriptor: PeerDescriptor) => ManagedConnection 
-    onNewConnection: (connection: ManagedConnection) => boolean
+interface WebrtcConnectorRpcLocalOptions {
+    connect: (targetPeerDescriptor: PeerDescriptor, doNotRequestConnection: boolean) => PendingConnection 
+    onNewConnection: (connection: PendingConnection) => boolean
     // TODO pass accessor methods instead of passing a mutable entity
-    ongoingConnectAttempts: Map<DhtAddress, ManagedWebrtcConnection>
+    ongoingConnectAttempts: Map<DhtAddress, ConnectingConnection>
     rpcCommunicator: ListeningRpcCommunicator
     getLocalPeerDescriptor: () => PeerDescriptor
     allowPrivateAddresses: boolean
@@ -36,71 +31,46 @@ interface WebrtcConnectorRpcLocalConfig {
 
 export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
 
-    private readonly config: WebrtcConnectorRpcLocalConfig
+    private readonly options: WebrtcConnectorRpcLocalOptions
 
-    constructor(config: WebrtcConnectorRpcLocalConfig) {
-        this.config = config
+    constructor(options: WebrtcConnectorRpcLocalOptions) {
+        this.options = options
     }
 
     async requestConnection(context: ServerCallContext): Promise<Empty> {
         const targetPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        if (this.config.ongoingConnectAttempts.has(getNodeIdFromPeerDescriptor(targetPeerDescriptor))) {
+        if (this.options.ongoingConnectAttempts.has(getNodeIdFromPeerDescriptor(targetPeerDescriptor))) {
             return {}
         }
-        const managedConnection = this.config.connect(targetPeerDescriptor)
-        managedConnection.setRemotePeerDescriptor(targetPeerDescriptor)
-        this.config.onNewConnection(managedConnection)
+        const pendingConnection = this.options.connect(targetPeerDescriptor, false)
+        this.options.onNewConnection(pendingConnection)
         return {}
     }
 
     async rtcOffer(request: RtcOffer, context: ServerCallContext): Promise<Empty> {
-        const remotePeer = (context as DhtCallContext).incomingSourceDescriptor!
-        const nodeId = getNodeIdFromPeerDescriptor(remotePeer)
-        let managedConnection = this.config.ongoingConnectAttempts.get(nodeId)
-        let connection = managedConnection?.getWebrtcConnection()
+        const remotePeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+        const nodeId = getNodeIdFromPeerDescriptor(remotePeerDescriptor)
+        let connection: NodeWebrtcConnection
+        let pendingConnection: PendingConnection
 
-        if (!managedConnection) {
-            connection = this.config.createConnection(remotePeer)
-            managedConnection = new ManagedWebrtcConnection(this.config.getLocalPeerDescriptor(), undefined, connection)
-            managedConnection.setRemotePeerDescriptor(remotePeer)
-            this.config.ongoingConnectAttempts.set(nodeId, managedConnection)
-            this.config.onNewConnection(managedConnection)
-            const remoteConnector = new WebrtcConnectorRpcRemote(
-                this.config.getLocalPeerDescriptor(),
-                remotePeer,
-                this.config.rpcCommunicator,
-                WebrtcConnectorRpcClient
-            )
-            connection.on('localCandidate', (candidate: string, mid: string) => {
-                remoteConnector.sendIceCandidate(candidate, mid, connection!.connectionId)
-            })
-            connection.once('localDescription', (description: string) => {
-                remoteConnector.sendRtcAnswer(description, connection!.connectionId)
-            })
-            connection.start(false)
+        if (!this.options.ongoingConnectAttempts.has(nodeId)) {
+            pendingConnection = this.options.connect(remotePeerDescriptor, true)
+            connection = this.options.ongoingConnectAttempts.get(nodeId)!.connection
+            this.options.onNewConnection(pendingConnection)
+        } else {
+            pendingConnection = this.options.ongoingConnectAttempts.get(nodeId)!.managedConnection
+            connection = this.options.ongoingConnectAttempts.get(nodeId)!.connection
         }
-
         // Always use offerers connectionId
         connection!.setConnectionId(request.connectionId as ConnectionID)
         connection!.setRemoteDescription(request.description, 'offer')
-
-        managedConnection.on('handshakeRequest', (_sourceDescriptor: PeerDescriptor, remoteVersion: string) => {
-            if (this.config.ongoingConnectAttempts.has(nodeId)) {
-                this.config.ongoingConnectAttempts.delete(nodeId)
-            }
-            if (!isMaybeSupportedVersion(remoteVersion)) {
-                managedConnection.rejectHandshake(HandshakeError.UNSUPPORTED_VERSION)
-            } else {
-                managedConnection.acceptHandshake()
-            }
-        })
         return {}
     }
 
     async rtcAnswer(request: RtcAnswer, context: ServerCallContext): Promise<Empty> {
         const remotePeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const nodeId = getNodeIdFromPeerDescriptor(remotePeerDescriptor)
-        const connection = this.config.ongoingConnectAttempts.get(nodeId)?.getWebrtcConnection()
+        const connection = this.options.ongoingConnectAttempts.get(nodeId)?.connection
         if (!connection) {
             return {}
         } else if (connection.connectionId !== request.connectionId) {
@@ -114,7 +84,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
     async iceCandidate(request: IceCandidate, context: ServerCallContext): Promise<Empty> {
         const remotePeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const nodeId = getNodeIdFromPeerDescriptor(remotePeerDescriptor)
-        const connection = this.config.ongoingConnectAttempts.get(nodeId)?.getWebrtcConnection()
+        const connection = this.options.ongoingConnectAttempts.get(nodeId)?.connection
         if (!connection) {
             return {}
         } else if (connection.connectionId !== request.connectionId) {
@@ -127,7 +97,7 @@ export class WebrtcConnectorRpcLocal implements IWebrtcConnectorRpc {
     }
 
     private isIceCandidateAllowed(candidate: string): boolean {
-        if (!this.config.allowPrivateAddresses) {
+        if (!this.options.allowPrivateAddresses) {
             const address = getAddressFromIceCandidate(candidate)
             if ((address !== undefined) && isPrivateIPv4(address)) {
                 return false

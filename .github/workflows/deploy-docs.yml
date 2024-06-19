@@ -1,3 +1,4 @@
+---
 name: Production Documentation
 
 on:
@@ -9,7 +10,7 @@ on:
   #    - '!**alpha**'
   #    - '!**tatum**'
 
-jobs:  
+jobs:
   deploy:
     name: Build and deploy documentation to production
     environment:
@@ -36,7 +37,7 @@ jobs:
         run: echo ${{ steps.get_version.outputs.VERSION }}
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
-        with: 
+        with:
           aws-access-key-id: ${{ secrets.AWS_KEY_PROD_DOCS }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_PROD_DOCS }}
           aws-region: eu-west-1

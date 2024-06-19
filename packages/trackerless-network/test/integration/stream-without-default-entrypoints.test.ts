@@ -12,7 +12,7 @@ import {
 import { EthereumAddress, hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
+import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
@@ -121,7 +121,7 @@ describe('stream without default entrypoints', () => {
             await nodes[i].join(STREAM_PART_ID, { minCount: (i > 0) ? 1 : 0, timeout: 15000 })
         }
         await waitForCondition(async () => {
-            const entryPointData = await nodes[15].stack.getLayer0Node().fetchDataFromDht(streamPartIdToDataKey(STREAM_PART_ID))
+            const entryPointData = await nodes[15].stack.getControlLayerNode().fetchDataFromDht(streamPartIdToDataKey(STREAM_PART_ID))
             return entryPointData.length >= 7
         }, 15000)
         

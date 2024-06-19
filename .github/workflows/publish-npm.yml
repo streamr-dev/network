@@ -1,3 +1,4 @@
+---
 name: publish npm
 on:
   workflow_dispatch:

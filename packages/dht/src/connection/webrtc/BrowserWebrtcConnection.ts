@@ -13,12 +13,6 @@ enum DisconnectedRtcPeerConnectionStateEnum {
 
 const logger = new Logger(module)
 
-export const WEBRTC_CLEANUP = new class {
-    // eslint-disable-next-line class-methods-use-this
-    cleanUp(): void {
-    }
-}
-
 type Events = WebrtcConnectionEvents & ConnectionEvents
 
 interface Params {

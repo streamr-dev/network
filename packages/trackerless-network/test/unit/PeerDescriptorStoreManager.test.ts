@@ -1,17 +1,16 @@
-import { PeerDescriptor, areEqualPeerDescriptors } from '@streamr/dht'
-import { StreamPartIDUtils } from '@streamr/protocol'
+import { PeerDescriptor, areEqualPeerDescriptors, createRandomDhtAddress } from '@streamr/dht'
 import { wait } from '@streamr/utils'
-import { EntryPointDiscovery } from '../../src/logic/EntryPointDiscovery'
+import { PeerDescriptorStoreManager } from '../../src/logic/PeerDescriptorStoreManager'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { DataEntry } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
-const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
+const KEY = createRandomDhtAddress()
 
-describe('EntryPointDiscovery', () => {
+describe('PeerDescriptorStoreManager', () => {
 
-    let entryPointDiscoveryWithData: EntryPointDiscovery
-    let entryPointDiscoveryWithoutData: EntryPointDiscovery
+    let withData: PeerDescriptorStoreManager
+    let withoutData: PeerDescriptorStoreManager
     let storeCalled: number
 
     const peerDescriptor = createMockPeerDescriptor()
@@ -35,68 +34,68 @@ describe('EntryPointDiscovery', () => {
         deleted: true
     }
 
-    const fakeFetchEntryPointData = async (): Promise<DataEntry[]> => {
+    const fakeFetchDataFromDht = async (): Promise<DataEntry[]> => {
         return [fakeData, fakeDeletedData]
     }
 
-    const fakeStoreEntryPointData = async (): Promise<PeerDescriptor[]> => {
+    const fakeStoreDataToDht = async (): Promise<PeerDescriptor[]> => {
         storeCalled++
         return [peerDescriptor]
     }
 
-    const fakeEmptyFetchEntryPointData = async (): Promise<DataEntry[]> => {
+    const fakeEmptyFetchDataFromDht = async (): Promise<DataEntry[]> => {
         return []
     }
 
-    const fakeDeleteEntryPointData = async (): Promise<void> => {}
+    const fakeDeleteDataFromDht = async (): Promise<void> => {}
 
     beforeEach(() => {
         storeCalled = 0
-        entryPointDiscoveryWithData = new EntryPointDiscovery({
+        withData = new PeerDescriptorStoreManager({
             localPeerDescriptor: peerDescriptor,
-            streamPartId: STREAM_PART_ID,
-            fetchEntryPointData: fakeFetchEntryPointData,
-            storeEntryPointData: fakeStoreEntryPointData,
-            deleteEntryPointData: fakeDeleteEntryPointData,
+            key: KEY,
+            fetchDataFromDht: fakeFetchDataFromDht,
+            storeDataToDht: fakeStoreDataToDht,
+            deleteDataFromDht: fakeDeleteDataFromDht,
             storeInterval: 2000
         })
-        entryPointDiscoveryWithoutData = new EntryPointDiscovery({
+        withoutData = new PeerDescriptorStoreManager({
             localPeerDescriptor: peerDescriptor,
-            streamPartId: STREAM_PART_ID,
-            fetchEntryPointData: fakeEmptyFetchEntryPointData,
-            storeEntryPointData: fakeStoreEntryPointData,
-            deleteEntryPointData: fakeDeleteEntryPointData,
+            key: KEY,
+            fetchDataFromDht: fakeEmptyFetchDataFromDht,
+            storeDataToDht: fakeStoreDataToDht,
+            deleteDataFromDht: fakeDeleteDataFromDht,
             storeInterval: 2000
         })
     })
 
     afterEach(() => {
-        entryPointDiscoveryWithData.destroy()
+        withData.destroy()
     })
 
     it('discoverEntryPoints filters deleted data', async () => {
-        const res = await entryPointDiscoveryWithData.discoverEntryPoints()
+        const res = await withData.fetchNodes()
         expect(res.length).toBe(1)
         expect(areEqualPeerDescriptors(res[0], peerDescriptor)).toBe(true)
     })
 
     it('discoverEntryPoints without results', async () => {
-        const res = await entryPointDiscoveryWithoutData.discoverEntryPoints()
+        const res = await withoutData.fetchNodes()
         expect(res.length).toBe(0)
     })
 
     it('store on stream without saturated entrypoint count', async () => {
-        await entryPointDiscoveryWithData.storeAndKeepLocalNodeAsEntryPoint()
+        await withData.storeAndKeepLocalNode()
         expect(storeCalled).toEqual(1)
-        expect(entryPointDiscoveryWithData.isLocalNodeEntryPoint()).toEqual(true)
+        expect(withData.isLocalNodeStored()).toEqual(true)
     })
 
     it('will keep stored until destroyed', async () => {
-        await entryPointDiscoveryWithData.storeAndKeepLocalNodeAsEntryPoint()
+        await withData.storeAndKeepLocalNode()
         expect(storeCalled).toEqual(1)
-        expect(entryPointDiscoveryWithData.isLocalNodeEntryPoint()).toEqual(true)
+        expect(withData.isLocalNodeStored()).toEqual(true)
         await wait(4500)
-        await entryPointDiscoveryWithData.destroy()
+        await withData.destroy()
         // we have configured storeInterval to 2 seconds, i.e. after 4.5 seconds it should have been called 2 more items 
         expect(storeCalled).toEqual(3)
     })

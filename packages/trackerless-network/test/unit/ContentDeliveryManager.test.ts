@@ -3,7 +3,7 @@ import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
 import { ContentDeliveryManager } from '../../src/logic/ContentDeliveryManager'
-import { MockLayer0Node } from '../utils/mock/MockLayer0Node'
+import { MockControlLayerNode } from '../utils/mock/MockControlLayerNode'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor, createStreamMessage, mockConnectionLocker } from '../utils/utils'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
@@ -15,7 +15,7 @@ describe('ContentDeliveryManager', () => {
 
     beforeEach(async () => {
         manager = new ContentDeliveryManager({})
-        const mockLayer0 = new MockLayer0Node(peerDescriptor)
+        const mockLayer0 = new MockControlLayerNode(peerDescriptor)
         await manager.start(mockLayer0, new MockTransport(), mockConnectionLocker)
     })
 
