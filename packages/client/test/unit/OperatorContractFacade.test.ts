@@ -1,11 +1,12 @@
-import {
-    OperatorContractFacade,
-    ParseError,
-    parsePartitionFromReviewRequestMetadata, ReviewRequestListener,
-} from '@streamr/sdk'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
+import {
+    OperatorContractFacade,
+    ParseError,
+    ReviewRequestListener,
+    parsePartitionFromReviewRequestMetadata
+} from '../../src/contracts/OperatorContractFacade'
 
 describe(parsePartitionFromReviewRequestMetadata, () => {
     it('throws given undefined', () => {
