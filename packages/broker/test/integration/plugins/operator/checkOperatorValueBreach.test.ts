@@ -1,8 +1,6 @@
 import { Operator, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts-ethers6'
 import {
-    OperatorContractFacade,
     SetupOperatorContractOpts,
-    createTheGraphClient,
     delegate,
     deploySponsorshipContract,
     generateWalletWithGasAndTokens,

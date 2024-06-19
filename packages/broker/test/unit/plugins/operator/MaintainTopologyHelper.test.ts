@@ -2,9 +2,8 @@ import { toStreamID } from '@streamr/protocol'
 import { OperatorContractFacade } from '@streamr/sdk'
 import { eventsWithArgsToArray, randomEthereumAddress } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
-import { Provider } from 'ethers'
 import EventEmitter3 from 'eventemitter3'
-import { mock, MockProxy } from 'jest-mock-extended'
+import { MockProxy, mock } from 'jest-mock-extended'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 
 const fromArray = async function* <T>(items: T[]): AsyncGenerator<T> {

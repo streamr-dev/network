@@ -1,6 +1,4 @@
 import {
-    OperatorContractFacade,
-    createTheGraphClient,
     delegate,
     deploySponsorshipContract,
     generateWalletWithGasAndTokens,

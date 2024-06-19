@@ -1,6 +1,7 @@
 import { StreamPartID } from '@streamr/protocol'
 import {
-    OperatorContractFacade, Stream, StreamrClient, createTheGraphClient, delegate,
+    Stream, StreamrClient,
+    delegate,
     deployOperatorContract,
     deploySponsorshipContract,
     generateWalletWithGasAndTokens,
@@ -81,7 +82,7 @@ describe('MaintainTopologyService', () => {
         const operatorContractAddress = toEthereumAddress(await operatorContract.getAddress())
         const operatorFleetState = createOperatorFleetState(formCoordinationStreamId(operatorContractAddress))
         const maintainTopologyHelper = new MaintainTopologyHelper(
-             await createClient(operatorWallet.privateKey).getOperatorContractFacade(toEthereumAddress(operatorContractAddress))
+            await createClient(operatorWallet.privateKey).getOperatorContractFacade(toEthereumAddress(operatorContractAddress))
         )
         const assignments = new StreamPartAssignments(
             await client.getNodeId(),
