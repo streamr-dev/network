@@ -183,7 +183,7 @@ export const createTheGraphClient = (
         // eslint-disable-next-line no-underscore-dangle
         indexPollInterval: config._timeouts.theGraph.indexPollInterval
     })
-    eventEmitter.on('confirmContractTransaction', (payload: { receipt: ContractTransactionReceipt | null }) => {
+    eventEmitter.on('contractTransactionConfirmed', (payload: { receipt: ContractTransactionReceipt | null }) => {
         if (payload.receipt != null) {
             instance.updateRequiredBlockNumber(payload.receipt.blockNumber)
         }
