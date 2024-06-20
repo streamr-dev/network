@@ -74,7 +74,7 @@ export class PublisherKeyExchange {
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.logger.debug('Started')
         })
-        eventEmitter.on('publish', (msg) => {
+        eventEmitter.on('messagePublished', (msg) => {
             if (msg.signatureType === SignatureType.ERC_1271) {
                 const address = msg.getPublisherId()
                 if (!this.erc1271ContractAddresses.has(address)) {

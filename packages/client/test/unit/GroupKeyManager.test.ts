@@ -80,7 +80,7 @@ describe('GroupKeyManager', () => {
         it('key present in subscriber key exchange', async () => {
             subscriberKeyExchange.requestGroupKey.mockImplementation(async () => {
                 groupKeyStore.get.mockResolvedValue(groupKey)
-                setTimeout(() => eventEmitter.emit('storeEncryptionKeyToLocalStore', groupKey.id), 0)
+                setTimeout(() => eventEmitter.emit('encryptionKeyStoredToLocalStore', groupKey.id), 0)
             })
 
             const key = await groupKeyManager.fetchKey(toStreamPartID(streamId, 0), groupKeyId, publisherId)
