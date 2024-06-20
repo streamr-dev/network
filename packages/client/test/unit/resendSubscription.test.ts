@@ -132,7 +132,7 @@ describe('resend subscription', () => {
         const onResendComplete = jest.fn().mockImplementation(
             () => latestMessageWhenResendComplete = last(outputMessages.values())!
         )
-        sub.on('resendComplete', onResendComplete)
+        sub.on('resendCompleted', onResendComplete)
         startConsuming()
 
         const bufferedRealtimeMessages = await publishAndWaitUntilConsumed('bufferedRealtime')
