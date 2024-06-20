@@ -16,7 +16,7 @@ export interface SubscriptionEvents {
     /**
      * Emitted when a resend is complete.
      */
-    resendComplete: () => void
+    resendCompleted: () => void
 }
 
 /**
