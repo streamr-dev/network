@@ -81,7 +81,6 @@ export {
 // TODO maybe should use more specific name for these exports (some utils may be for testing only), maybe move
 // into OperatorContractFacade or new SponsorshitContractFacade?
 export {
-    createTheGraphClient,
     delegate,
     deploySponsorshipContract,
     getAdminWallet,

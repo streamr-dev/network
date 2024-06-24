@@ -1,13 +1,13 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { Logger, TheGraphClient, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { Contract, Wallet } from 'ethers'
+import fetch from 'node-fetch'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { StreamrClient } from '../../src/StreamrClient'
 import { OperatorContractFacade } from '../../src/contracts/OperatorContractFacade'
 import {
     SetupOperatorContractReturnType,
-    createTheGraphClient,
     delegate,
     deploySponsorshipContract,
     getAdminWallet,
@@ -25,6 +25,14 @@ const createClient = (privateKey?: string): StreamrClient => {
         auth: (privateKey !== undefined) ? {
             privateKey
         } : undefined
+    })
+}
+
+const createTheGraphClient = (): TheGraphClient => {
+    return new TheGraphClient({
+        serverUrl: CONFIG_TEST.contracts!.theGraphUrl!,
+        fetch,
+        logger: new Logger(module)
     })
 }
 

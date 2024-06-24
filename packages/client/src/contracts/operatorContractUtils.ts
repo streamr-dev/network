@@ -1,20 +1,19 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
+import { SignerWithProvider } from '@streamr/sdk'
+import { fastPrivateKey } from '@streamr/test-utils'
+import { Logger, retry } from '@streamr/utils'
+import { Contract, EventLog, JsonRpcProvider, Provider, Wallet, ZeroAddress, parseEther } from 'ethers'
+import { range } from 'lodash'
 import type { Operator as OperatorContract } from '../ethereumArtifacts/Operator'
 import OperatorArtifact from '../ethereumArtifacts/OperatorAbi.json'
-import type { Sponsorship as SponsorshipContract } from '../ethereumArtifacts/Sponsorship'
-import SponsorshipArtifact from '../ethereumArtifacts/SponsorshipAbi.json'
 import type { OperatorFactory as OperatorFactoryContract } from '../ethereumArtifacts/OperatorFactory'
 import OperatorFactoryArtifact from '../ethereumArtifacts/OperatorFactoryAbi.json'
+import type { Sponsorship as SponsorshipContract } from '../ethereumArtifacts/Sponsorship'
+import SponsorshipArtifact from '../ethereumArtifacts/SponsorshipAbi.json'
 import type { SponsorshipFactory as SponsorshipFactoryContract } from '../ethereumArtifacts/SponsorshipFactory'
 import SponsorshipFactoryArtifact from '../ethereumArtifacts/SponsorshipFactoryAbi.json'
 import type { TestToken as TestTokenContract } from '../ethereumArtifacts/TestToken'
 import TestTokenArtifact from '../ethereumArtifacts/TestTokenAbi.json'
-import { SignerWithProvider } from '@streamr/sdk'
-import { fastPrivateKey } from '@streamr/test-utils'
-import { Logger, TheGraphClient, retry } from '@streamr/utils'
-import { Contract, EventLog, JsonRpcProvider, Provider, Wallet, ZeroAddress, parseEther } from 'ethers'
-import { range } from 'lodash'
-import fetch from 'node-fetch'
 
 const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 
@@ -175,14 +174,6 @@ export function getTokenContract(): TestTokenContract {
 
 export const getAdminWallet = (adminKey?: string, provider?: Provider): Wallet => {
     return new Wallet(adminKey ?? TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider ?? getProvider())
-}
-
-export const createTheGraphClient = (): TheGraphClient => {
-    return new TheGraphClient({
-        serverUrl: TEST_CHAIN_CONFIG.theGraphUrl,
-        fetch,
-        logger: new Logger(module)
-    })
 }
 
 interface GenerateWalletWithGasAndTokensOpts {
