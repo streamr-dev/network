@@ -68,6 +68,7 @@ export class ContractFactory {
         return contract
     }
 
+    // eslint-disable-next-line class-methods-use-this
     createEventContract(
         address: EthereumAddress,
         contractInterface: InterfaceAbi,

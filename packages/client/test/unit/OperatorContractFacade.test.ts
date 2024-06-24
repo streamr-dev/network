@@ -83,7 +83,10 @@ describe('OperatorContractFacade', () => {
     describe('reviewRequest listener', () => {
     
         it('emitting ReviewRequest with valid metadata causes listener to be invoked', async () => {
-            const operatorContractFacade = createOperatorContractFacade('ReviewRequest', [SPONSORSHIP_ADDRESS, OPERATOR_CONTRACT_ADDRESS, 1000, 1050, '{ "partition": 7 }'])
+            const operatorContractFacade = createOperatorContractFacade(
+                'ReviewRequest',
+                [SPONSORSHIP_ADDRESS, OPERATOR_CONTRACT_ADDRESS, 1000, 1050, '{ "partition": 7 }']
+            )
             const listener = jest.fn()
             operatorContractFacade.on('reviewRequest', listener)
             await wait(1.5 * POLL_INTERVAL)
@@ -98,7 +101,10 @@ describe('OperatorContractFacade', () => {
         })
     
         it('emitting ReviewRequest with invalid metadata causes listener to not be invoked', async () => {
-            const operatorContractFacade = createOperatorContractFacade('ReviewRequest', [SPONSORSHIP_ADDRESS, OPERATOR_CONTRACT_ADDRESS, 1000, 1050, '{ "partition": 666 }'])
+            const operatorContractFacade = createOperatorContractFacade(
+                'ReviewRequest',
+                [SPONSORSHIP_ADDRESS, OPERATOR_CONTRACT_ADDRESS, 1000, 1050, '{ "partition": 666 }']
+            )
             const listener = jest.fn()
             operatorContractFacade.on('reviewRequest', listener)
             await wait(1.5 * POLL_INTERVAL)
