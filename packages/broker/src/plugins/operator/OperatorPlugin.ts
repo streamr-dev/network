@@ -1,5 +1,13 @@
 import { ReviewRequestEvent, SignerWithProvider, StreamrClient } from '@streamr/sdk'
-import { EthereumAddress, Logger, scheduleAtInterval, setAbortableInterval, toEthereumAddress } from '@streamr/utils'
+import { 
+    EthereumAddress,
+    Logger,
+    addManagedEventListener,
+    executeSafePromise,
+    scheduleAtInterval,
+    setAbortableInterval,
+    toEthereumAddress
+} from '@streamr/utils'
 import { Schema } from 'ajv'
 import { Overrides } from 'ethers'
 import { Plugin } from '../../Plugin'
@@ -196,35 +204,44 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 }
             }, this.pluginConfig.closeExpiredFlags.intervalInMs, false, this.abortController.signal)
 
-            contractFacade.on('reviewRequest', (event: ReviewRequestEvent) => {
-                try {
-                    if (isLeader()) {
-                        await reviewSuspectNode({
-                            sponsorshipAddress: event.sponsorship,
-                            targetOperator: event.targetOperator,
-                            partition: event.partition,
-                            contractFacade,
-                            streamrClient,
-                            createOperatorFleetState,
-                            getRedundancyFactor: (operatorContractAddress) => fetchRedundancyFactor({
-                                operatorContractAddress,
-                                signer
-                            }),
-                            maxSleepTime: 5 * 60 * 1000,
-                            heartbeatTimeoutInMs: this.pluginConfig.heartbeatTimeoutInMs,
-                            votingPeriod: {
-                                startTime: event.votingPeriodStartTimestamp,
-                                endTime: event.votingPeriodEndTimestamp
-                            },
-                            inspectionIntervalInMs: 8 * 60 * 1000,
-                            maxInspections: 10,
-                            abortSignal: this.abortController.signal
+            addManagedEventListener(
+                contractFacade,
+                'reviewRequest',
+                (event: ReviewRequestEvent): void => {
+                    setImmediate(() => {
+                        executeSafePromise(async () => {
+                            try {
+                                if (isLeader()) {
+                                    await reviewSuspectNode({
+                                        sponsorshipAddress: event.sponsorship,
+                                        targetOperator: event.targetOperator,
+                                        partition: event.partition,
+                                        contractFacade,
+                                        streamrClient,
+                                        createOperatorFleetState,
+                                        getRedundancyFactor: (operatorContractAddress) => fetchRedundancyFactor({
+                                            operatorContractAddress,
+                                            signer
+                                        }),
+                                        maxSleepTime: 5 * 60 * 1000,
+                                        heartbeatTimeoutInMs: this.pluginConfig.heartbeatTimeoutInMs,
+                                        votingPeriod: {
+                                            startTime: event.votingPeriodStartTimestamp,
+                                            endTime: event.votingPeriodEndTimestamp
+                                        },
+                                        inspectionIntervalInMs: 8 * 60 * 1000,
+                                        maxInspections: 10,
+                                        abortSignal: this.abortController.signal
+                                    })
+                                }
+                            } catch (err) {
+                                logger.error('Encountered error while processing review request', { err })
+                            }
                         })
-                    }
-                } catch (err) {
-                    logger.error('Encountered error while processing review request', { err })
-                }
-            }, this.abortController.signal)  // TODO call contractFacade.off('reviewRequest') with the registered listener?
+                    })
+                },
+                this.abortController.signal
+            )
         })
     }
 
