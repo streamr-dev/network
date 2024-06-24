@@ -3,6 +3,7 @@ import { addManagedEventListener } from '../src/addManagedEventListener'
 
 interface Events {
     foo: (x: string, y: number) => void
+    bar: (x: number) => void
 }
 
 describe('addManagedEventListener', () => {
