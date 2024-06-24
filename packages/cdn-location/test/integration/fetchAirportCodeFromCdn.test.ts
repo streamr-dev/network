@@ -1,5 +1,5 @@
 import { Logger } from '@streamr/utils'
-import { fetchAirportCodeFromAmazon, 
+import {
     fetchAirportCodeFromCdn, 
     fetchAirportCodeFromCloudflare, 
     fetchAirportCodeFromFastly } from '../../src/fetchAirportCodeFromCdn'
