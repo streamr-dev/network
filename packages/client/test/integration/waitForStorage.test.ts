@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { toEthereumAddress } from '@streamr/utils'
+import { hexToBinary } from '@streamr/utils'
 import { MessageID, ContentType, EncryptionType, SignatureType, StreamMessageType } from '@streamr/protocol'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
@@ -12,7 +12,7 @@ import { createRandomAuthentication, createRelativeTestStreamId, MOCK_CONTENT } 
 import { convertStreamMessageToMessage } from '../../src/Message'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 
-const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const PUBLISHER_ID = hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 describe('waitForStorage', () => {
 
