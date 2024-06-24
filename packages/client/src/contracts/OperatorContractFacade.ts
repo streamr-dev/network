@@ -116,6 +116,9 @@ export interface Flag {
     }
 }
 
+/**
+ * @deprecated This in an internal class
+ */
 export class OperatorContractFacade {
 
     private readonly contractAddress: EthereumAddress
