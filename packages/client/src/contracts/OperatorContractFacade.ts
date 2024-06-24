@@ -584,11 +584,11 @@ export class OperatorContractFacade {
     }
 
     on<E extends keyof OperatorContractEvents>(eventName: E, listener: OperatorContractEvents[E]): void {
-        this.eventEmitter.on(eventName, listener as any)
+        this.eventEmitter.on(eventName, listener as any)  // TODO why casting?
     }
 
     off<E extends keyof OperatorContractEvents>(eventName: E, listener: OperatorContractEvents[E]): void {
-        this.eventEmitter.off(eventName, listener as any)
+        this.eventEmitter.off(eventName, listener as any)  // TODO why casting?
     }
 
     private async connectToContract(): Promise<void> {
