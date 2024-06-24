@@ -1,11 +1,11 @@
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
-import { EventEmitter } from 'eventemitter3'
 import {
+    OperatorContractFacade,
     ParseError,
-    ReviewRequestListener,
     parsePartitionFromReviewRequestMetadata
 } from '../../src/contracts/OperatorContractFacade'
+import { mockLoggerFactory } from '../test-utils/utils'
 
 describe(parsePartitionFromReviewRequestMetadata, () => {
     it('throws given undefined', () => {
@@ -33,57 +33,77 @@ describe(parsePartitionFromReviewRequestMetadata, () => {
     })
 })
 
+const POLL_INTERVAL = 100
+const OPERATOR_CONTRACT_ADDRESS = randomEthereumAddress()
+const SPONSORSHIP_ADDRESS = randomEthereumAddress()
+const INITIAL_BLOCK_NUMBER = 111
+const EVENT_BLOCK_NUMBER = 222
+
+const createOperatorContractFacade = (eventName: string, args: any[]) => {
+    const fakeContract = {
+        queryFilter: (eventNames: string[], fromBlock: number) => {
+            if ((eventNames[0][0] === eventName) && (fromBlock <= EVENT_BLOCK_NUMBER)) {
+                return [{
+                    fragment: {
+                        name: eventName
+                    },
+                    args,
+                    blockNumber: EVENT_BLOCK_NUMBER
+                }]
+            } else {
+                return []
+            }
+        },
+        runner: {
+            provider: {
+                getBlockNumber: async () => INITIAL_BLOCK_NUMBER
+            }
+        }
+    }
+    return new OperatorContractFacade(
+        OPERATOR_CONTRACT_ADDRESS,
+        {
+            createReadContract: () => fakeContract,
+            createEventContract: () => fakeContract
+        } as any,
+        {
+            getProvider: () => undefined,
+            getSubProviders: () => ['dummy']
+        } as any,
+        undefined as any,
+        undefined as any,
+        undefined as any,
+        mockLoggerFactory(),
+        POLL_INTERVAL
+    )
+}
+
 describe('OperatorContractFacade', () => {
 
-    describe.skip('addReviewRequestListener', () => {  // TODO re-enable or implement as integration/end-to-end test?
-
-        let listener: jest.MockedFn<ReviewRequestListener>
-        let fakeOperator: EventEmitter
-        let abortController: AbortController
-        const sponsorshipAddress = randomEthereumAddress()
-        const operatorContractAddress = randomEthereumAddress()
-    
-        beforeEach(() => {
-            listener = jest.fn()
-            fakeOperator = new class extends EventEmitter {
-                // eslint-disable-next-line class-methods-use-this
-                async getAddress() {
-                    return operatorContractAddress
-                }
-            }()
-            /*TODO const helper = new OperatorContractFacade(
-                operatorContractAddress,
-                {
-                    createReadContract: () => fakeOperator
-                } as any,
-                {
-                    getProvider: () => undefined
-                } as any,
-                undefined as any,
-                undefined as any,
-                undefined as any,
-                mockLoggerFactory(),
-                9999
-            )
-            abortController = new AbortController()
-            helper.addReviewRequestListener(listener, abortController.signal)*/
-        })
-    
-        afterEach(() => {
-            abortController.abort()
-        })
+    describe('reviewRequest listener', () => {
     
         it('emitting ReviewRequest with valid metadata causes listener to be invoked', async () => {
-            fakeOperator.emit('ReviewRequest', sponsorshipAddress, operatorContractAddress, 1000, 1050, '{ "partition": 7 }')
-            await wait(0)
-            expect(listener).toHaveBeenLastCalledWith(sponsorshipAddress, operatorContractAddress, 7, 1000 * 1000, 1050 * 1000)
+            const operatorContractFacade = createOperatorContractFacade('ReviewRequest', [SPONSORSHIP_ADDRESS, OPERATOR_CONTRACT_ADDRESS, 1000, 1050, '{ "partition": 7 }'])
+            const listener = jest.fn()
+            operatorContractFacade.on('reviewRequest', listener)
+            await wait(1.5 * POLL_INTERVAL)
+            expect(listener).toHaveBeenLastCalledWith({ 
+                sponsorship: SPONSORSHIP_ADDRESS, 
+                targetOperator: OPERATOR_CONTRACT_ADDRESS,
+                partition: 7,
+                votingPeriodStartTimestamp: 1000 * 1000,
+                votingPeriodEndTimestamp: 1050 * 1000
+            })
+            operatorContractFacade.off('reviewRequest', listener)
         })
     
         it('emitting ReviewRequest with invalid metadata causes listener to not be invoked', async () => {
-            fakeOperator.emit('ReviewRequest', sponsorshipAddress, operatorContractAddress, 1000, 1050, '{ "partition": 666 }')
-            await wait(0)
+            const operatorContractFacade = createOperatorContractFacade('ReviewRequest', [SPONSORSHIP_ADDRESS, OPERATOR_CONTRACT_ADDRESS, 1000, 1050, '{ "partition": 666 }'])
+            const listener = jest.fn()
+            operatorContractFacade.on('reviewRequest', listener)
+            await wait(1.5 * POLL_INTERVAL)
             expect(listener).not.toHaveBeenCalled()
+            operatorContractFacade.off('reviewRequest', listener)
         })
-    
     })
 })
