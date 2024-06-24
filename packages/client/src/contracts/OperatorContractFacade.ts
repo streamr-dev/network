@@ -97,14 +97,6 @@ const compareBigInts = (a: bigint, b: bigint) => {
     }
 }
 
-export type ReviewRequestListener = (
-    sponsorship: EthereumAddress,
-    operatorContractAddress: EthereumAddress,
-    partition: number,
-    votingPeriodStartTime: number,
-    votingPeriodEndTime: number
-) => void
-
 const logger = new Logger(module)
 
 export interface SponsorshipResult {
