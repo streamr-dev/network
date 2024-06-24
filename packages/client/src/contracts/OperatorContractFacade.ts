@@ -3,12 +3,12 @@ import { NetworkPeerDescriptor } from '@streamr/sdk'
 import {
     EthereumAddress,
     Logger,
+    ObservableEventEmitter,
     TheGraphClient,
     collect,
     toEthereumAddress
 } from '@streamr/utils'
 import { Contract, Overrides } from 'ethers'
-import EventEmitter from 'eventemitter3'
 import sample from 'lodash/sample'
 import { Authentication } from '../Authentication'
 import { ContractFactory } from '../ContractFactory'
@@ -134,7 +134,7 @@ export class OperatorContractFacade {
     private readonly theGraphClient: TheGraphClient
     private readonly authentication: Authentication
     private readonly getEthersOverrides: () => Promise<Overrides>
-    private readonly eventEmitter: EventEmitter<OperatorContractEvents> = new EventEmitter()
+    private readonly eventEmitter: ObservableEventEmitter<OperatorContractEvents> = new ObservableEventEmitter()
 
     constructor(
         contractAddress: EthereumAddress,
