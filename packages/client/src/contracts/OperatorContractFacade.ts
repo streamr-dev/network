@@ -179,7 +179,7 @@ export class OperatorContractFacade {
             sourceEmitter: chainEventPoller,
             targetName: 'staked',
             targetEmitter: this.eventEmitter,
-            stakeEventTransformation,
+            transformation: stakeEventTransformation,
             loggerFactory
         } as any)  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
         initContractEventGateway({
@@ -187,7 +187,7 @@ export class OperatorContractFacade {
             sourceEmitter: chainEventPoller,
             targetName: 'unstaked',
             targetEmitter: this.eventEmitter,
-            stakeEventTransformation,
+            transformation: stakeEventTransformation,
             loggerFactory
         } as any)  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
         const reviewRequestTransform = (
@@ -197,28 +197,7 @@ export class OperatorContractFacade {
             voteEndTimestampInSecs: number,
             metadataAsString?: string
         ) => {
-            let partition: number
-            try {
-                partition = parsePartitionFromReviewRequestMetadata(metadataAsString)
-            } catch (err) {
-                if (err instanceof ParseError) {
-                    logger.warn(`Skip review request (${err.reasonText})`, {
-                        address: contractAddress,
-                        sponsorship,
-                        targetOperator,
-                    })
-                } else {
-                    logger.warn('Encountered unexpected error', { err })
-                }
-                return  // TODO throw event so that emitting is skipped in the gateway
-            }
-            /* ok to remove this logging if we log it elsewhere?
-            logger.debug('Receive review request', {
-                address: await this.getOperatorContractAddress(),
-                sponsorship,
-                targetOperator,
-                partition
-            })*/
+            const partition = parsePartitionFromReviewRequestMetadata(metadataAsString)
             return {
                 sponsorship: toEthereumAddress(sponsorship),
                 targetOperator: toEthereumAddress(targetOperator),
@@ -232,7 +211,7 @@ export class OperatorContractFacade {
             sourceEmitter: chainEventPoller,
             targetName: 'reviewRequest',
             targetEmitter: this.eventEmitter,
-            reviewRequestTransform,
+            transformation: reviewRequestTransform,
             loggerFactory
         } as any)  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
     }
