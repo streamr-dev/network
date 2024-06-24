@@ -7,8 +7,8 @@ import { ContentDeliveryManager, Events } from '../../src/logic/ContentDeliveryM
 import { waitForEvent3, waitForCondition } from '@streamr/utils'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
 import { Layer0Node } from '../../src/logic/Layer0Node'
+import { randomBytes } from 'crypto'
 
 describe('ContentDeliveryManager', () => {
 
@@ -26,7 +26,7 @@ describe('ContentDeliveryManager', () => {
     const msg = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
         STREAM_PART_ID,
-        randomEthereumAddress()
+        randomBytes(40)
     )
 
     afterEach(async () => {
@@ -113,7 +113,7 @@ describe('ContentDeliveryManager', () => {
         const msg2 = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             streamPartId2,
-            randomEthereumAddress()
+            randomBytes(40)
         )
         await Promise.all([
             waitForEvent3<Events>(manager1, 'newMessage'),

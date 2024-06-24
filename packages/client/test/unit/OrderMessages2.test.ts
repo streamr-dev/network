@@ -8,7 +8,7 @@ import {
     toStreamID
 } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, toEthereumAddress, wait, waitForCondition, hexToBinary } from '@streamr/utils'
+import { toEthereumAddress, wait, waitForCondition, hexToBinary, EthereumAddress, binaryToHex } from '@streamr/utils'
 import { shuffle } from 'lodash'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
@@ -86,7 +86,7 @@ function formChainOfMessages(publisherId: EthereumAddress): Array<MessageInfo> {
 }
 
 function createMsg({ publisherId, timestamp }: MessageInfo): StreamMessage {
-    const messageId = new MessageID(toStreamID('streamId'), 0, timestamp, 0, publisherId, '')
+    const messageId = new MessageID(toStreamID('streamId'), 0, timestamp, 0, hexToBinary(publisherId), '')
     const prevMsgRef = timestamp > 1 ? new MessageRef(timestamp - 1, 0) : undefined
     return new StreamMessage({
         messageId,
@@ -133,7 +133,7 @@ describe.skip('OrderMessages2', () => {
         ), 0)
 
         const inOrderHandler = (msg: StreamMessage) => {
-            actual[msg.getPublisherId()].push(msg.getTimestamp())
+            actual[binaryToHex(msg.getPublisherId())].push(msg.getTimestamp())
         }
 
         const gapHandler = async (from: number, to: number, publisherId: string): Promise<PushPipeline<StreamMessage>> => {

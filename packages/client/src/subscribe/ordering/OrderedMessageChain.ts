@@ -1,5 +1,5 @@
 import { MessageRef, StreamMessage, StreamPartID } from '@streamr/protocol'
-import { Heap, Gate, Logger, EthereumAddress } from '@streamr/utils'
+import { Heap, Gate, Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 
 /*
@@ -12,7 +12,7 @@ export interface Gap {
 
 export interface OrderedMessageChainContext {
     streamPartId: StreamPartID
-    publisherId: EthereumAddress
+    publisherId: string
     msgChainId: string
 }
 

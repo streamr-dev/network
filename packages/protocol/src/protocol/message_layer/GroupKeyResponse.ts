@@ -2,17 +2,16 @@ import ValidationError from '../../errors/ValidationError'
 
 import StreamMessage, { StreamMessageType } from './StreamMessage'
 import EncryptedGroupKey from './EncryptedGroupKey'
-import { EthereumAddress } from '@streamr/utils'
 
 interface Options {
     requestId: string
-    recipient: EthereumAddress
+    recipient: Uint8Array
     encryptedGroupKeys: EncryptedGroupKey[]
 }
 
 export default class GroupKeyResponse {
     readonly requestId: string
-    readonly recipient: EthereumAddress
+    readonly recipient: Uint8Array
     readonly encryptedGroupKeys: ReadonlyArray<EncryptedGroupKey>
 
     constructor({ requestId, recipient, encryptedGroupKeys }: Options) {

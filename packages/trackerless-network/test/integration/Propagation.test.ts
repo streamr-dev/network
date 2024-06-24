@@ -1,11 +1,11 @@
 import { Simulator } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { createMockPeerDescriptor, createMockContentDeliveryLayerNodeAndDhtNode, createStreamMessage } from '../utils/utils'
 import { Layer1Node } from '../../src/logic/Layer1Node'
+import { randomBytes } from 'crypto'
 
 describe('Propagation', () => {
     const entryPointDescriptor = createMockPeerDescriptor()
@@ -69,7 +69,7 @@ describe('Propagation', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             STREAM_PART_ID,
-            randomEthereumAddress()
+            randomBytes(40)
         )
         contentDeliveryLayerNodes[0].broadcast(msg)
         await waitForCondition(() => totalReceived >= NUM_OF_NODES, 10000)

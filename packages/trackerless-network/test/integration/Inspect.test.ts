@@ -1,9 +1,9 @@
 import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
 import { range } from 'lodash'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import { randomBytes } from 'crypto'
 
 describe('inspect', () => {
 
@@ -72,7 +72,7 @@ describe('inspect', () => {
             const msg = createStreamMessage(
                 JSON.stringify({ hello: 'WORLD' }),
                 streamPartId,
-                randomEthereumAddress(),
+                randomBytes(40),
                 123123,
                 sequenceNumber
             )

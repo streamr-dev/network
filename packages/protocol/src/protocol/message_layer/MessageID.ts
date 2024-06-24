@@ -3,7 +3,6 @@ import { validateIsNotNegativeInteger } from '../../utils/validations'
 import MessageRef from './MessageRef'
 import { StreamID } from '../../../src/utils/StreamID'
 import { StreamPartID, toStreamPartID } from '../../utils/StreamPartID'
-import { EthereumAddress } from '@streamr/utils'
 
 export default class MessageID {
 
@@ -11,7 +10,7 @@ export default class MessageID {
     readonly streamPartition: number
     readonly timestamp: number
     readonly sequenceNumber: number
-    readonly publisherId: EthereumAddress
+    readonly publisherId: Uint8Array
     readonly msgChainId: string
 
     constructor(
@@ -19,7 +18,7 @@ export default class MessageID {
         streamPartition: number,
         timestamp: number,
         sequenceNumber: number,
-        publisherId: EthereumAddress,
+        publisherId: Uint8Array,
         msgChainId: string
     ) {
         validateIsNotNegativeInteger('streamPartition', streamPartition)

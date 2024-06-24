@@ -15,7 +15,7 @@ import { Empty } from '../../src/proto/google/protobuf/empty'
 import { waitForCondition } from '@streamr/utils'
 import { createStreamMessage } from '../utils/utils'
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { randomBytes } from 'crypto'
 
 describe('ContentDeliveryRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator
@@ -86,7 +86,7 @@ describe('ContentDeliveryRpcRemote', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             StreamPartIDUtils.parse('test-stream#0'),
-            randomEthereumAddress()
+            randomBytes(40)
         )
 
         await rpcRemote.sendStreamMessage(msg)

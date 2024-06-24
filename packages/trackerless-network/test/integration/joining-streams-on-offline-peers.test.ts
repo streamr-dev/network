@@ -5,7 +5,7 @@ import { StreamPartIDUtils } from '@streamr/protocol'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { waitForCondition } from '@streamr/utils'
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { randomBytes } from 'crypto'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 
@@ -75,7 +75,7 @@ describe('Joining stream parts on offline nodes', () => {
         
         node1.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
         node1.getContentDeliveryManager().on('newMessage', () => { messageReceived = true })
-        const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), STREAM_PART_ID, randomEthereumAddress())
+        const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), STREAM_PART_ID, randomBytes(40))
         node2.getContentDeliveryManager().broadcast(msg)
         await waitForCondition(() => messageReceived, 40000)
     }, 60000)

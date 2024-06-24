@@ -21,7 +21,7 @@ import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemo
 import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
 import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { Layer1Node } from '../../src/logic/Layer1Node'
 import { ContentDeliveryRpcClient, HandshakeRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -68,7 +68,7 @@ export const createMockContentDeliveryLayerNodeAndDhtNode = async (
 export const createStreamMessage = (
     content: string,
     streamPartId: StreamPartID,
-    publisherId: EthereumAddress,
+    publisherId: Uint8Array,
     timestamp?: number,
     sequenceNumber?: number
 ): StreamMessage => {
@@ -77,7 +77,7 @@ export const createStreamMessage = (
         streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
         sequenceNumber: sequenceNumber ?? 0,
         timestamp: timestamp ?? Date.now(),
-        publisherId: hexToBinary(publisherId),
+        publisherId,
         messageChainId: 'messageChain0',
     }
     const msg: StreamMessage = {

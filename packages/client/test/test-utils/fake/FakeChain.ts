@@ -9,7 +9,7 @@ export const PUBLIC_PERMISSION_TARGET: PublicPermissionTarget = 'public'
 
 export interface StreamRegistryItem {
     metadata: StreamMetadata
-    permissions: Multimap<EthereumAddress | PublicPermissionTarget, StreamPermission>
+    permissions: Multimap<string | PublicPermissionTarget, StreamPermission>
 }
 
 export class FakeChain {

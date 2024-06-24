@@ -12,7 +12,7 @@ import {
     StreamMessageType
 } from '@streamr/protocol'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
-import { collect, toEthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { collect, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { StrictStreamrClientConfig } from '../../src/Config'
@@ -57,7 +57,7 @@ describe('messagePipeline', () => {
                 partition,
                 Date.now(),
                 0,
-                toEthereumAddress(publisher.address),
+                hexToBinary(publisher.address),
                 'mock-msgChainId'
             ),
             messageType: StreamMessageType.MESSAGE,

@@ -8,10 +8,10 @@ import {
     StreamMessageType,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
 import { hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { createMockPeerDescriptor } from '../utils/utils'
+import { randomBytes } from 'crypto'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 
@@ -53,7 +53,7 @@ describe('inspect', () => {
             StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
             666,
             0,
-            randomEthereumAddress(),
+            randomBytes(40),
             'msgChainId'
         ),
         prevMsgRef: new MessageRef(665, 0),

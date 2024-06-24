@@ -1,5 +1,5 @@
 import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, toStreamID, StreamMessageType } from '@streamr/protocol'
-import { collect, toEthereumAddress, wait, utf8ToBinary } from '@streamr/utils'
+import { collect, wait, utf8ToBinary, hexToBinary } from '@streamr/utils'
 import { pull } from '../../src/utils/PushBuffer'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { counterId, instanceId } from '../../src/utils/utils'
@@ -9,7 +9,7 @@ import { createRandomAuthentication } from '../test-utils/utils'
 import { testOnlyInNodeJs } from '@streamr/test-utils'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 
-const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const PUBLISHER_ID = hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 describe('PushPipeline', () => {
 
