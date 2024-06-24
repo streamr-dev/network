@@ -5,7 +5,7 @@ import {
     ITransport,
     ConnectionLocker,
     DhtAddress,
-    getNodeIdFromPeerDescriptor
+    getNodeIdFromPeerDescriptor,
 } from '@streamr/dht'
 import {
     StreamMessage,
@@ -117,44 +117,44 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
     async start(): Promise<void> {
         this.started = true
         this.registerDefaultServerMethods()
-        addManagedEventListener<any, any>(
-            this.options.discoveryLayerNode as any,
+        addManagedEventListener(
+            this.options.discoveryLayerNode,
             'nearbyContactAdded', 
             () => this.onNearbyContactAdded(),
             this.abortController.signal
         )
-        addManagedEventListener<any, any>(
-            this.options.discoveryLayerNode as any,
+        addManagedEventListener(
+            this.options.discoveryLayerNode,
             'nearbyContactRemoved',
             () => this.onNearbyContactRemoved(),
             this.abortController.signal
         )
-        addManagedEventListener<any, any>(
-            this.options.discoveryLayerNode as any,
+        addManagedEventListener(
+            this.options.discoveryLayerNode,
             'randomContactAdded',
             () => this.onRandomContactAdded(),
             this.abortController.signal
         )
-        addManagedEventListener<any, any>(
-            this.options.discoveryLayerNode as any,
+        addManagedEventListener(
+            this.options.discoveryLayerNode,
             'randomContactRemoved',
             () => this.onRandomContactRemoved(),
             this.abortController.signal
         )
-        addManagedEventListener<any, any>(
-            this.options.discoveryLayerNode as any,
+        addManagedEventListener(
+            this.options.discoveryLayerNode,
             'ringContactAdded',
             () => this.onRingContactsUpdated(),
             this.abortController.signal
         )
-        addManagedEventListener<any, any>(
-            this.options.discoveryLayerNode as any,
+        addManagedEventListener(
+            this.options.discoveryLayerNode,
             'ringContactRemoved',
             () => this.onRingContactsUpdated(),
             this.abortController.signal
         )
-        addManagedEventListener<any, any>(
-            this.options.transport as any,
+        addManagedEventListener(
+            this.options.transport,
             'disconnected',
             (peerDescriptor: PeerDescriptor) => this.onNodeDisconnected(peerDescriptor),
             this.abortController.signal

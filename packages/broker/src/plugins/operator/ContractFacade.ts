@@ -426,8 +426,8 @@ export class ContractFacade {
     }
 
     addReviewRequestListener(listener: ReviewRequestListener, abortSignal: AbortSignal): void {
-        addManagedEventListener<any, any>(
-            this.operatorContract as any,
+        addManagedEventListener(
+            this.operatorContract,
             'ReviewRequest',
             async (
                 sponsorship: string,
