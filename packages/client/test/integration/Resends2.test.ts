@@ -114,7 +114,7 @@ describe('Resends2', () => {
                     expect(receivedMsgs).toEqual([])
                 })
 
-                sub.once('resendComplete', onResent)
+                sub.once('resendCompleted', onResent)
                 const publishedStream2 = await publishTestMessages(3)
 
                 const receivedMsgs: any[] = []
@@ -146,7 +146,7 @@ describe('Resends2', () => {
                 const onResent = jest.fn(() => {
                     expect(receivedMsgs).toEqual([])
                 })
-                sub.once('resendComplete', onResent)
+                sub.once('resendCompleted', onResent)
 
                 await publishTestMessages(3)
                 await collect(sub, 3)
@@ -167,7 +167,7 @@ describe('Resends2', () => {
                 })
 
                 const onResent = jest.fn(() => {})
-                sub.once('resendComplete', onResent)
+                sub.once('resendCompleted', onResent)
                 const onSubError = jest.fn()
                 sub.on('error', onSubError) // suppress
 
@@ -199,7 +199,7 @@ describe('Resends2', () => {
                 const onResent = jest.fn(() => {
                     expect(receivedMsgs).toEqual([])
                 })
-                sub.once('resendComplete', onResent)
+                sub.once('resendCompleted', onResent)
 
                 for await (const msg of sub) {
                     receivedMsgs.push(msg)
@@ -371,7 +371,7 @@ describe('Resends2', () => {
                 expect(await client.getSubscriptions(stream.id)).toHaveLength(1)
 
                 const onResent = jest.fn()
-                sub.once('resendComplete', onResent)
+                sub.once('resendCompleted', onResent)
                 const receivedMsgsPromise = collect(sub, MAX_MESSAGES + REALTIME_MESSAGES)
                 await waitForCondition(() => onResent.mock.calls.length > 0)
 
@@ -409,7 +409,7 @@ describe('Resends2', () => {
                     expect(receivedMsgs).toEqual(publishedBefore)
                 })
 
-                sub.once('resendComplete', onResent)
+                sub.once('resendCompleted', onResent)
 
                 for await (const msg of sub) {
                     receivedMsgs.push(msg)

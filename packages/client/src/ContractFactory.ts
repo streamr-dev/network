@@ -59,7 +59,7 @@ export class ContractFactory {
             999999
         )
         contract.eventEmitter.on('onTransactionConfirm', (methodName: string, receipt: ContractTransactionReceipt | null) => {
-            this.eventEmitter.emit('confirmContractTransaction', {
+            this.eventEmitter.emit('contractTransactionConfirmed', {
                 methodName,
                 receipt
             })

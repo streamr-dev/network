@@ -120,7 +120,7 @@ export class StreamRegistry {
         initContractEventGateway({
             sourceName: 'StreamCreated', 
             sourceEmitter: chainEventPoller,
-            targetName: 'createStream',
+            targetName: 'streamCreated',
             targetEmitter: eventEmitter,
             transformation: (streamId: string, metadata: string, blockNumber: number) => ({
                 streamId: toStreamID(streamId),

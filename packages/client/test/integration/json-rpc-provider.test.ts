@@ -106,7 +106,7 @@ describe('use JsonRpcProvider', () => {
         const runErrorTest = async (errorState: ErrorState, extraWait = 0): Promise<void> => {
             servers.forEach((s) => s.setError('eth_getLogs', errorState))
             const receivedEvents: StreamCreationEvent[] = []
-            client.on('createStream', (event: StreamCreationEvent) => {
+            client.on('streamCreated', (event: StreamCreationEvent) => {
                 receivedEvents.push(event)
             })
             await waitForCondition(() => getRequests().some((r) => r.method === 'eth_getLogs'), 5000 + extraWait)
@@ -124,7 +124,7 @@ describe('use JsonRpcProvider', () => {
         it('happy path', async () => {
             const receivedEvents: StreamCreationEvent[] = []
             const now = Date.now()
-            client.on('createStream', (event: StreamCreationEvent) => {
+            client.on('streamCreated', (event: StreamCreationEvent) => {
                 receivedEvents.push(event)
             })
             await wait(0.5 * POLL_INTERVAL)

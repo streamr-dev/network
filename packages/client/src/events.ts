@@ -6,19 +6,19 @@ import { StreamMessage } from '@streamr/protocol'
 import { ContractTransactionReceipt } from 'ethers'
 
 export interface StreamrClientEvents {
-    createStream: (payload: StreamCreationEvent) => void
-    addToStorageNode: (payload: StorageNodeAssignmentEvent) => void
-    removeFromStorageNode: (payload: StorageNodeAssignmentEvent) => void
+    streamCreated: (payload: StreamCreationEvent) => void
+    streamAddedToStorageNode: (payload: StorageNodeAssignmentEvent) => void
+    streamRemovedFromFromStorageNode: (payload: StorageNodeAssignmentEvent) => void
     /** @internal */
-    storeEncryptionKeyToLocalStore: (keyId: string) => void
+    encryptionKeyStoredToLocalStore: (keyId: string) => void
     /** @internal */
-    confirmContractTransaction: (payload: { methodName: string, receipt: ContractTransactionReceipt | null }) => void
+    contractTransactionConfirmed: (payload: { methodName: string, receipt: ContractTransactionReceipt | null }) => void
 }
 
 // events for internal communication between StreamrClient components
 export interface InternalEvents {
-    publish: (message: StreamMessage) => void
-    subscribe: () => void
+    messagePublished: (message: StreamMessage) => void
+    streamPartSubscribed: () => void
 }
 
 @scoped(Lifecycle.ContainerScoped)

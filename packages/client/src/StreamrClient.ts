@@ -157,7 +157,7 @@ export class StreamrClient {
         metadata?: PublishMetadata
     ): Promise<Message> {
         const result = await this.publisher.publish(streamDefinition, content, metadata)
-        this.eventEmitter.emit('publish', result)
+        this.eventEmitter.emit('messagePublished', result)
         return convertStreamMessageToMessage(result)
     }
 
@@ -237,7 +237,7 @@ export class StreamrClient {
         if (onMessage !== undefined) {
             sub.useLegacyOnMessageHandler(onMessage)
         }
-        this.eventEmitter.emit('subscribe', undefined)
+        this.eventEmitter.emit('streamPartSubscribed', undefined)
         return sub
     }
 

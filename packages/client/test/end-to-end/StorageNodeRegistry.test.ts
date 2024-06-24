@@ -83,10 +83,10 @@ describe('StorageNodeRegistry', () => {
 
         const onAddPayloads: any[] = []
         const onRemovePayloads: any[] = []
-        listenerClient.on('addToStorageNode', (payload: any) => {
+        listenerClient.on('streamAddedToStorageNode', (payload: any) => {
             onAddPayloads.push(payload)
         })
-        listenerClient.on('removeFromStorageNode', (payload: any) => {
+        listenerClient.on('streamRemovedFromFromStorageNode', (payload: any) => {
             onRemovePayloads.push(payload)
         })
 
