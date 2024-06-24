@@ -8,7 +8,7 @@ import {
     collect,
     toEthereumAddress
 } from '@streamr/utils'
-import { Contract, Overrides } from 'ethers'
+import { Overrides } from 'ethers'
 import sample from 'lodash/sample'
 import { Authentication } from '../Authentication'
 import { ContractFactory } from '../ContractFactory'
@@ -168,7 +168,7 @@ export class OperatorContractFacade {
         eventPollInterval: number
     ): void {
         const chainEventPoller = new ChainEventPoller(this.rpcProviderSource.getSubProviders().map((p) => {
-            return new Contract(contractAddress, OperatorArtifact, p)
+            return this.contractFactory.createEventContract(contractAddress, OperatorArtifact, p)
         // eslint-disable-next-line no-underscore-dangle
         }), eventPollInterval)
         const stakeEventTransformation = (sponsorship: string) => ({

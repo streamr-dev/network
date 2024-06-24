@@ -7,6 +7,7 @@ import { StreamrClientEventEmitter } from './events'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { ObservableContract, createDecoratedContract } from './contracts/contract'
 import { Provider, ContractTransactionReceipt, InterfaceAbi, BaseContract } from 'ethers'
+import { AbstractProvider } from 'ethers'
 
 // TODO move to contracts directory?
 
@@ -65,5 +66,13 @@ export class ContractFactory {
             })
         })
         return contract
+    }
+
+    createEventContract(
+        address: EthereumAddress,
+        contractInterface: InterfaceAbi,
+        provider: AbstractProvider
+    ): Contract {
+        return new Contract(address, contractInterface, provider)
     }
 }

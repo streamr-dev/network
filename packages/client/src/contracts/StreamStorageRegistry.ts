@@ -1,6 +1,5 @@
 import { StreamID, toStreamID } from '@streamr/protocol'
 import { EthereumAddress, Logger, TheGraphClient, collect, toEthereumAddress } from '@streamr/utils'
-import { Contract } from 'ethers'
 import min from 'lodash/min'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -74,7 +73,7 @@ export class StreamStorageRegistry {
             'streamStorageRegistry'
         ) as StreamStorageRegistryContract
         const chainEventPoller = new ChainEventPoller(this.rpcProviderSource.getSubProviders().map((p) => {
-            return new Contract(toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress), StreamStorageRegistryArtifact, p)
+            return contractFactory.createEventContract(toEthereumAddress(this.config.contracts.streamStorageRegistryChainAddress), StreamStorageRegistryArtifact, p)
         // eslint-disable-next-line no-underscore-dangle
         }), config.contracts.pollInterval)
         this.initStreamAssignmentEventListeners(eventEmitter, chainEventPoller, loggerFactory)
