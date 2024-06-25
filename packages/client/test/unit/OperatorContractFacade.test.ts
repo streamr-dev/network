@@ -88,7 +88,7 @@ describe('OperatorContractFacade', () => {
                 [SPONSORSHIP_ADDRESS, OPERATOR_CONTRACT_ADDRESS, 1000, 1050, '{ "partition": 7 }']
             )
             const listener = jest.fn()
-            operatorContractFacade.on('reviewRequest', listener)
+            operatorContractFacade.on('reviewRequested', listener)
             await wait(1.5 * POLL_INTERVAL)
             expect(listener).toHaveBeenLastCalledWith({ 
                 sponsorship: SPONSORSHIP_ADDRESS, 
@@ -97,7 +97,7 @@ describe('OperatorContractFacade', () => {
                 votingPeriodStartTimestamp: 1000 * 1000,
                 votingPeriodEndTimestamp: 1050 * 1000
             })
-            operatorContractFacade.off('reviewRequest', listener)
+            operatorContractFacade.off('reviewRequested', listener)
         })
     
         it('emitting ReviewRequest with invalid metadata causes listener to not be invoked', async () => {
@@ -106,10 +106,10 @@ describe('OperatorContractFacade', () => {
                 [SPONSORSHIP_ADDRESS, OPERATOR_CONTRACT_ADDRESS, 1000, 1050, '{ "partition": 666 }']
             )
             const listener = jest.fn()
-            operatorContractFacade.on('reviewRequest', listener)
+            operatorContractFacade.on('reviewRequested', listener)
             await wait(1.5 * POLL_INTERVAL)
             expect(listener).not.toHaveBeenCalled()
-            operatorContractFacade.off('reviewRequest', listener)
+            operatorContractFacade.off('reviewRequested', listener)
         })
     })
 })
