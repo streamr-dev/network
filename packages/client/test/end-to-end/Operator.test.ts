@@ -5,7 +5,7 @@ import { Contract, Wallet } from 'ethers'
 import fetch from 'node-fetch'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { StreamrClient } from '../../src/StreamrClient'
-import { OperatorContractFacade } from '../../src/contracts/OperatorContractFacade'
+import { Operator } from '../../src/contracts/Operator'
 import {
     SetupOperatorContractReturnType,
     delegate,
@@ -43,13 +43,13 @@ async function createStream(): Promise<string> {
     return streamId
 }
 
-const getOperatorContractFacade = async (wallet: Wallet | undefined, operator: SetupOperatorContractReturnType): Promise<OperatorContractFacade> => {
+const getOperator = async (wallet: Wallet | undefined, operator: SetupOperatorContractReturnType): Promise<Operator> => {
     const client = createClient(wallet?.privateKey)
     const contractAddress = toEthereumAddress(await operator.operatorContract.getAddress())
-    return client.getOperatorContractFacade(contractAddress)
+    return client.getOperator(contractAddress)
 }
 
-describe('OperatorContractFacade', () => {
+describe('Operator', () => {
     let streamId1: string
     let streamId2: string
     let sponsorship1: SponsorshipContract
@@ -78,8 +78,8 @@ describe('OperatorContractFacade', () => {
     }, 90 * 1000)
 
     it('getRandomOperator', async () => {
-        const contractFacade = await getOperatorContractFacade(deployedOperator.nodeWallets[0], deployedOperator)
-        const randomOperatorAddress = await contractFacade.getRandomOperator()
+        const operator = await getOperator(deployedOperator.nodeWallets[0], deployedOperator)
+        const randomOperatorAddress = await operator.getRandomOperator()
         expect(randomOperatorAddress).toBeDefined()
         expect(randomOperatorAddress).not.toEqual(await deployedOperator.operatorContract.getAddress()) // should not be me
 
@@ -100,14 +100,14 @@ describe('OperatorContractFacade', () => {
         await stake(deployedOperator.operatorContract, await sponsorship1.getAddress(), 10000)
         await stake(deployedOperator.operatorContract, await sponsorship2.getAddress(), 10000)
 
-        const contractFacade = await getOperatorContractFacade(undefined, deployedOperator)
+        const operator = await getOperator(undefined, deployedOperator)
 
         await waitForCondition(async (): Promise<boolean> => {
-            const res = await contractFacade.getSponsorshipsOfOperator(toEthereumAddress(operatorContractAddress))
+            const res = await operator.getSponsorshipsOfOperator(toEthereumAddress(operatorContractAddress))
             return res.length === 2
         }, 10000, 500)
 
-        const sponsorships = await contractFacade.getSponsorshipsOfOperator(toEthereumAddress(operatorContractAddress))
+        const sponsorships = await operator.getSponsorshipsOfOperator(toEthereumAddress(operatorContractAddress))
         expect(sponsorships).toIncludeSameMembers([
             {
                 sponsorshipAddress: toEthereumAddress(await sponsorship1.getAddress()),
@@ -121,7 +121,7 @@ describe('OperatorContractFacade', () => {
             }
         ])
 
-        const operators = await contractFacade.getOperatorsInSponsorship(toEthereumAddress(await sponsorship1.getAddress()))
+        const operators = await operator.getOperatorsInSponsorship(toEthereumAddress(await sponsorship1.getAddress()))
         expect(operators).toEqual([toEthereumAddress(await deployedOperator.operatorContract.getAddress())])
     }, 30 * 1000)
 
@@ -136,7 +136,7 @@ describe('OperatorContractFacade', () => {
         await stake(flagger.operatorContract, await sponsorship2.getAddress(), 15000)
         await stake(target.operatorContract, await sponsorship2.getAddress(), 25000)
 
-        const contractFacade = await getOperatorContractFacade(deployedOperator.nodeWallets[0], flagger)
+        const contractFacade = await getOperator(deployedOperator.nodeWallets[0], flagger)
         await contractFacade.flag(
             toEthereumAddress(await sponsorship2.getAddress()),
             toEthereumAddress(await target.operatorContract.getAddress()),

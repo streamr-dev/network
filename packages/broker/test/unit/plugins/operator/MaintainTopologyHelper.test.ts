@@ -1,5 +1,5 @@
 import { toStreamID } from '@streamr/protocol'
-import { OperatorContractEvents, OperatorContractFacade, StakeEvent } from '@streamr/sdk'
+import { OperatorEvents, Operator, StakeEvent } from '@streamr/sdk'
 import { eventsWithArgsToArray, randomEthereumAddress } from '@streamr/test-utils'
 import { EthereumAddress, Multimap, wait } from '@streamr/utils'
 import { MockProxy, mock } from 'jest-mock-extended'
@@ -20,7 +20,7 @@ const SPONSORSHIP_TWO = randomEthereumAddress()
 
 describe(MaintainTopologyHelper, () => {
 
-    let contractFacade: MockProxy<OperatorContractFacade>
+    let operator: MockProxy<Operator>
     let helper: MaintainTopologyHelper
     let eventListeners: Multimap<StakeEventName, (payload: StakeEvent) => void>
 
@@ -36,22 +36,22 @@ describe(MaintainTopologyHelper, () => {
 
     beforeEach(() => {
         eventListeners = new Multimap()
-        contractFacade = mock<OperatorContractFacade>()
-        const onEvent = <E extends keyof OperatorContractEvents>(eventName: E, listener: OperatorContractEvents[E]): void => {
+        operator = mock<Operator>()
+        const onEvent = <E extends keyof OperatorEvents>(eventName: E, listener: OperatorEvents[E]): void => {
             if ((eventName === 'staked') || (eventName == 'unstaked')) {
                 eventListeners.add(eventName, listener as (payload: StakeEvent) => void)
             }
         }
-        contractFacade.on.mockImplementation(onEvent)
-        helper = new MaintainTopologyHelper(contractFacade)
+        operator.on.mockImplementation(onEvent)
+        helper = new MaintainTopologyHelper(operator)
     })
 
     describe('given two sponsorships pointing to different streams', () => {
 
         beforeEach(() => {
-            contractFacade.pullStakedStreams.mockReturnValue(fromArray([]))
-            contractFacade.getStreamId.calledWith(SPONSORSHIP_ONE).mockResolvedValue(STREAM_ONE_ID)
-            contractFacade.getStreamId.calledWith(SPONSORSHIP_TWO).mockResolvedValue(STREAM_TWO_ID)
+            operator.pullStakedStreams.mockReturnValue(fromArray([]))
+            operator.getStreamId.calledWith(SPONSORSHIP_ONE).mockResolvedValue(STREAM_ONE_ID)
+            operator.getStreamId.calledWith(SPONSORSHIP_TWO).mockResolvedValue(STREAM_TWO_ID)
         })
 
         it('emits "addStakedStreams" twice when staking to both', async () => {
@@ -86,9 +86,9 @@ describe(MaintainTopologyHelper, () => {
     describe('given two sponsorships pointing to the same stream', () => {
 
         beforeEach(() => {
-            contractFacade.pullStakedStreams.mockReturnValue(fromArray([]))
-            contractFacade.getStreamId.calledWith(SPONSORSHIP_ONE).mockResolvedValue(STREAM_ONE_ID)
-            contractFacade.getStreamId.calledWith(SPONSORSHIP_TWO).mockResolvedValue(STREAM_ONE_ID)
+            operator.pullStakedStreams.mockReturnValue(fromArray([]))
+            operator.getStreamId.calledWith(SPONSORSHIP_ONE).mockResolvedValue(STREAM_ONE_ID)
+            operator.getStreamId.calledWith(SPONSORSHIP_TWO).mockResolvedValue(STREAM_ONE_ID)
         })
 
         it('emits "addStakedStreams" only once when staking to both', async () => {
@@ -129,7 +129,7 @@ describe(MaintainTopologyHelper, () => {
         const STREAM_THREE_ID = toStreamID('streamThree')
 
         beforeEach(() => {
-            contractFacade.pullStakedStreams.mockReturnValue(fromArray([
+            operator.pullStakedStreams.mockReturnValue(fromArray([
                 {
                     sponsorship: {
                         id: SPONSORSHIP_THREE,
@@ -156,9 +156,9 @@ describe(MaintainTopologyHelper, () => {
                 }
             ]))
 
-            contractFacade.getStreamId.calledWith(SPONSORSHIP_ONE).mockResolvedValue(STREAM_ONE_ID)
-            contractFacade.getStreamId.calledWith(SPONSORSHIP_TWO).mockResolvedValue(STREAM_TWO_ID)
-            contractFacade.getStreamId.calledWith(SPONSORSHIP_SIX).mockResolvedValue(STREAM_THREE_ID)
+            operator.getStreamId.calledWith(SPONSORSHIP_ONE).mockResolvedValue(STREAM_ONE_ID)
+            operator.getStreamId.calledWith(SPONSORSHIP_TWO).mockResolvedValue(STREAM_TWO_ID)
+            operator.getStreamId.calledWith(SPONSORSHIP_SIX).mockResolvedValue(STREAM_THREE_ID)
         })
 
         it('emits "addStakedStreams" for initially pulled stakes (ignoring duplicate streams)', async () => {

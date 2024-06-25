@@ -80,8 +80,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         }
         logger.info('Fetched my redundancy factor', { redundancyFactor })
 
-        const contractFacade = await streamrClient.getOperatorContractFacade(operatorContractAddress)
-        const maintainTopologyHelper = new MaintainTopologyHelper(contractFacade)
+        const operator = await streamrClient.getOperator(operatorContractAddress)
+        const maintainTopologyHelper = new MaintainTopologyHelper(operator)
         const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
             streamrClient,
             this.pluginConfig.heartbeatUpdateIntervalInMs,
@@ -126,7 +126,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             }, this.pluginConfig.heartbeatUpdateIntervalInMs, this.abortController.signal)
             await scheduleAtInterval(
                 async () => checkOperatorValueBreach(
-                    contractFacade,
+                    operator,
                     this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
                     this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw
                 ).catch((err) => {
@@ -143,7 +143,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                     if (isLeader()) {
                         await announceNodeToContract(
                             this.pluginConfig.announceNodeToContract.writeIntervalInMs,
-                            contractFacade,
+                            operator,
                             streamrClient
                         )
                     }
@@ -160,7 +160,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                                 this.pluginConfig.maintainOperatorValue.withdrawLimitSafetyFraction,
                                 this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
                                 this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw,
-                                contractFacade
+                                operator
                             )
                         } catch (err) {
                             logger.error('Encountered error while checking earnings', { err })
@@ -176,7 +176,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 try {
                     await inspectRandomNode(
                         operatorContractAddress,
-                        contractFacade,
+                        operator,
                         streamPartAssignments,
                         streamrClient,
                         this.pluginConfig.heartbeatTimeoutInMs,
@@ -197,7 +197,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                     await closeExpiredFlags(
                         this.pluginConfig.closeExpiredFlags.maxAgeInMs,
                         operatorContractAddress,
-                        contractFacade
+                        operator
                     )
                 } catch (err) {
                     logger.error('Encountered error while closing expired flags', { err })
@@ -205,7 +205,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             }, this.pluginConfig.closeExpiredFlags.intervalInMs, false, this.abortController.signal)
 
             addManagedEventListener(
-                contractFacade,
+                operator,
                 'reviewRequested',
                 (event: ReviewRequestEvent): void => {
                     setImmediate(() => {
@@ -216,7 +216,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                                         sponsorshipAddress: event.sponsorship,
                                         targetOperator: event.targetOperator,
                                         partition: event.partition,
-                                        contractFacade,
+                                        operator,
                                         streamrClient,
                                         createOperatorFleetState,
                                         getRedundancyFactor: (operatorContractAddress) => fetchRedundancyFactor({

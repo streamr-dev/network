@@ -1,5 +1,5 @@
 import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { NetworkPeerDescriptor, OperatorContractFacade, StreamrClient } from '@streamr/sdk'
+import { NetworkPeerDescriptor, Operator, StreamrClient } from '@streamr/sdk'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import { shuffle } from 'lodash'
 import sample from 'lodash/sample'
@@ -40,12 +40,12 @@ function getPartitionsOfStreamAssignedToMe(
 
 export async function findTarget(
     myOperatorContractAddress: EthereumAddress,
-    contractFacade: OperatorContractFacade,
+    operator: Operator,
     assignments: StreamPartAssignments,
     logger: Logger
 ): Promise<Target | undefined> {
     // choose sponsorship
-    const sponsorships = await contractFacade.getSponsorshipsOfOperator(myOperatorContractAddress)
+    const sponsorships = await operator.getSponsorshipsOfOperator(myOperatorContractAddress)
     const suitableSponsorships = sponsorships
         .filter(({ operatorCount }) => operatorCount >= 2)  // exclude sponsorships with only self
         .filter(({ streamId }) => isAnyPartitionOfStreamAssignedToMe(assignments, streamId))
@@ -59,7 +59,7 @@ export async function findTarget(
     )!
 
     // choose operator
-    const operators = await contractFacade.getOperatorsInSponsorship(targetSponsorship.sponsorshipAddress)
+    const operators = await operator.getOperatorsInSponsorship(targetSponsorship.sponsorshipAddress)
     const targetOperatorAddress = sample(without(operators, myOperatorContractAddress))
     if (targetOperatorAddress === undefined) {
         // Only happens if during the async awaits the other operator(s) were removed from the sponsorship.
@@ -76,7 +76,7 @@ export async function findTarget(
         return undefined
     }
 
-    const flagAlreadyRaised = await contractFacade.hasOpenFlag(targetOperatorAddress, targetSponsorship.sponsorshipAddress)
+    const flagAlreadyRaised = await operator.hasOpenFlag(targetOperatorAddress, targetSponsorship.sponsorshipAddress)
     if (flagAlreadyRaised) {
         logger.info('Skip inspection (target already has open flag)', { targetSponsorship, targetOperatorAddress })
         return undefined

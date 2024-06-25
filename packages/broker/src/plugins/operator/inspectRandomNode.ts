@@ -1,5 +1,5 @@
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { OperatorContractFacade, StreamrClient } from '@streamr/sdk'
+import { Operator, StreamrClient } from '@streamr/sdk'
 import { EthereumAddress, Logger, randomString } from '@streamr/utils'
 import { CreateOperatorFleetStateFn } from './OperatorFleetState'
 import { StreamPartAssignments } from './StreamPartAssignments'
@@ -8,7 +8,7 @@ import { findTarget } from './inspectionUtils'
 
 export async function inspectRandomNode(
     operatorContractAddress: EthereumAddress,
-    contractFacade: OperatorContractFacade,
+    operator: Operator,
     assignments: StreamPartAssignments,
     streamrClient: StreamrClient,
     heartbeatTimeoutInMs: number,
@@ -21,7 +21,7 @@ export async function inspectRandomNode(
     const logger = new Logger(module, { traceId })
     logger.info('Select a random operator to inspect')
 
-    const target = await findTargetFn(operatorContractAddress, contractFacade, assignments, logger)
+    const target = await findTargetFn(operatorContractAddress, operator, assignments, logger)
     if (target === undefined) {
         return
     }
@@ -47,14 +47,14 @@ export async function inspectRandomNode(
         return
     }
 
-    const flagAlreadyRaised = await contractFacade.hasOpenFlag(target.operatorAddress, target.sponsorshipAddress)
+    const flagAlreadyRaised = await operator.hasOpenFlag(target.operatorAddress, target.sponsorshipAddress)
     if (flagAlreadyRaised) {
         logger.info('Not raising flag (target already has open flag)', { target })
         return
     }
 
     logger.info('Raise flag', { target })
-    await contractFacade.flag(
+    await operator.flag(
         target.sponsorshipAddress,
         target.operatorAddress,
         StreamPartIDUtils.getStreamPartition(target.streamPart)

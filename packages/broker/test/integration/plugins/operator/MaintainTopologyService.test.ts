@@ -85,7 +85,7 @@ describe('MaintainTopologyService', () => {
         const operatorContractAddress = toEthereumAddress(await operatorContract.getAddress())
         const operatorFleetState = createOperatorFleetState(formCoordinationStreamId(operatorContractAddress))
         const maintainTopologyHelper = new MaintainTopologyHelper(
-            await createClient(operatorWallet.privateKey).getOperatorContractFacade(toEthereumAddress(operatorContractAddress))
+            await createClient(operatorWallet.privateKey).getOperator(toEthereumAddress(operatorContractAddress))
         )
         const assignments = new StreamPartAssignments(
             await client.getNodeId(),

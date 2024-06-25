@@ -1,5 +1,5 @@
 import { StreamID, toStreamID } from '@streamr/protocol'
-import { OperatorContractFacade, StakeEvent } from '@streamr/sdk'
+import { Operator, StakeEvent } from '@streamr/sdk'
 import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 
@@ -23,21 +23,21 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
     private readonly sponsorshipCountOfStream: Map<StreamID, number> = new Map()
     private onStakedListener?: (sponsorship: StakeEvent) => unknown
     private onUnstakedListener?: (sponsorship: StakeEvent) => unknown
-    private readonly contractFacade: OperatorContractFacade
+    private readonly operator: Operator
 
-    constructor(contractFacade: OperatorContractFacade) {
+    constructor(operator: Operator) {
         super()
-        this.contractFacade = contractFacade
+        this.operator = operator
     }
 
     async start(): Promise<void> {
-        const latestBlock = await this.contractFacade.getCurrentBlockNumber()
+        const latestBlock = await this.operator.getCurrentBlockNumber()
 
         this.onStakedListener = async (event: StakeEvent) => {
             const sponsorship = event.sponsorship
             logger.info('Receive "Staked" event', { sponsorship })
             const sponsorshipAddress = toEthereumAddress(sponsorship)
-            const streamId = await this.contractFacade.getStreamId(sponsorshipAddress) // TODO: add catching here
+            const streamId = await this.operator.getStreamId(sponsorshipAddress) // TODO: add catching here
             if (this.streamIdOfSponsorship.has(sponsorshipAddress)) {
                 logger.debug('Ignore already staked into sponsorship', { sponsorship })
                 return
@@ -50,7 +50,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
                 this.emit('addStakedStreams', [streamId])
             }
         }
-        this.contractFacade.on('staked', this.onStakedListener)
+        this.operator.on('staked', this.onStakedListener)
         this.onUnstakedListener = (event: StakeEvent) => {
             const sponsorship = event.sponsorship
             logger.info('Receive "Unstaked" event', { sponsorship })
@@ -68,9 +68,9 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
                 this.emit('removeStakedStream', streamId)
             }
         }
-        this.contractFacade.on('unstaked', this.onUnstakedListener)
+        this.operator.on('unstaked', this.onUnstakedListener)
         
-        const queryResult = this.contractFacade.pullStakedStreams(latestBlock)
+        const queryResult = this.operator.pullStakedStreams(latestBlock)
         for await (const stake of queryResult) {
             const sponsorshipId = toEthereumAddress(stake.sponsorship.id)
             const streamId = toStreamID(stake.sponsorship.stream.id)
@@ -87,8 +87,8 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
     }
 
     stop(): void {
-        this.contractFacade.off('staked', this.onStakedListener!)
-        this.contractFacade.off('unstaked', this.onUnstakedListener!)
+        this.operator.off('staked', this.onStakedListener!)
+        this.operator.off('unstaked', this.onUnstakedListener!)
         this.removeAllListeners()
     }
 }

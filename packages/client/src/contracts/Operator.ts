@@ -55,7 +55,7 @@ export interface ReviewRequestEvent {
  * @deprecated
  * @hidden
  */
-export interface OperatorContractEvents {
+export interface OperatorEvents {
     staked: (payload: StakeEvent) => void
     unstaked: (payload: StakeEvent) => void
     reviewRequested: (payload: ReviewRequestEvent) => void
@@ -140,7 +140,7 @@ export interface Flag {
  * @deprecated This in an internal class
  * @hidden
  */
-export class OperatorContractFacade {
+export class Operator {
 
     private readonly contractAddress: EthereumAddress
     private contract?: ObservableContract<OperatorContract>
@@ -150,7 +150,7 @@ export class OperatorContractFacade {
     private readonly theGraphClient: TheGraphClient
     private readonly authentication: Authentication
     private readonly getEthersOverrides: () => Promise<Overrides>
-    private readonly eventEmitter: ObservableEventEmitter<OperatorContractEvents> = new ObservableEventEmitter()
+    private readonly eventEmitter: ObservableEventEmitter<OperatorEvents> = new ObservableEventEmitter()
 
     constructor(
         contractAddress: EthereumAddress,
@@ -580,11 +580,11 @@ export class OperatorContractFacade {
         return this.rpcProviderSource.getProvider().getBlockNumber()
     }
 
-    on<E extends keyof OperatorContractEvents>(eventName: E, listener: OperatorContractEvents[E]): void {
+    on<E extends keyof OperatorEvents>(eventName: E, listener: OperatorEvents[E]): void {
         this.eventEmitter.on(eventName, listener as any)  // TODO why casting?
     }
 
-    off<E extends keyof OperatorContractEvents>(eventName: E, listener: OperatorContractEvents[E]): void {
+    off<E extends keyof OperatorEvents>(eventName: E, listener: OperatorEvents[E]): void {
         this.eventEmitter.off(eventName, listener as any)  // TODO why casting?
     }
 

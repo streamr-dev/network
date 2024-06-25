@@ -48,12 +48,12 @@ describe('maintainOperatorValue', () => {
         await sponsor(sponsorer, await sponsorship.getAddress(), 25000)
         await delegate(operatorWallet, await operatorContract.getAddress(), STAKE_AMOUNT)
         await stake(operatorContract, await sponsorship.getAddress(), STAKE_AMOUNT)
-        const contractFacade = await createClient(nodeWallets[0].privateKey)
-            .getOperatorContractFacade(toEthereumAddress(await operatorContract.getAddress()))
-        const { maxAllowedEarningsDataWei } = await contractFacade.getMyEarnings(1, 20)
+        const operator = await createClient(nodeWallets[0].privateKey)
+            .getOperator(toEthereumAddress(await operatorContract.getAddress()))
+        const { maxAllowedEarningsDataWei } = await operator.getMyEarnings(1, 20)
         const triggerWithdrawLimitDataWei = multiply(maxAllowedEarningsDataWei, 1 - SAFETY_FRACTION)
         await waitForCondition(async () => {
-            const { sumDataWei } = await contractFacade.getMyEarnings(1, 20)
+            const { sumDataWei } = await operator.getMyEarnings(1, 20)
             const earnings = sumDataWei
             return earnings > triggerWithdrawLimitDataWei
         }, 10000, 1000)
@@ -63,7 +63,7 @@ describe('maintainOperatorValue', () => {
             SAFETY_FRACTION,
             1,
             20,
-            contractFacade
+            operator
         )
         const valueAfterWithdraw = await operatorContract.valueWithoutEarnings()
         expect(valueAfterWithdraw).toBeGreaterThan(valueBeforeWithdraw)

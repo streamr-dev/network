@@ -1,4 +1,4 @@
-import { OperatorContractFacade } from '@streamr/sdk'
+import { Operator } from '@streamr/sdk'
 import { Logger } from '@streamr/utils'
 import { multiply } from '../../helpers/multiply'
 
@@ -8,10 +8,10 @@ export const maintainOperatorValue = async (
     withdrawLimitSafetyFraction: number,
     minSponsorshipEarningsInWithdraw: number,
     maxSponsorshipsInWithdraw: number,
-    contractFacade: OperatorContractFacade
+    operator: Operator
 ): Promise<void> => {
     logger.info('Check whether it is time to withdraw my earnings')
-    const { sumDataWei, maxAllowedEarningsDataWei, sponsorshipAddresses } = await contractFacade.getMyEarnings(
+    const { sumDataWei, maxAllowedEarningsDataWei, sponsorshipAddresses } = await operator.getMyEarnings(
         minSponsorshipEarningsInWithdraw,
         maxSponsorshipsInWithdraw
     )
@@ -19,7 +19,7 @@ export const maintainOperatorValue = async (
     logger.trace(` -> is ${sumDataWei} > ${triggerWithdrawLimitDataWei} ?`)
     if (sumDataWei > triggerWithdrawLimitDataWei) {
         logger.info('Withdraw earnings from sponsorships', { sponsorshipAddresses })
-        await contractFacade.withdrawMyEarningsFromSponsorships(sponsorshipAddresses)
+        await operator.withdrawMyEarningsFromSponsorships(sponsorshipAddresses)
     } else {
         logger.info('Skip withdrawing earnings')
     }

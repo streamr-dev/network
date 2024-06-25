@@ -1,5 +1,5 @@
 import { StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { OperatorContractFacade, StreamrClient, Subscription } from '@streamr/sdk'
+import { Operator, StreamrClient, Subscription } from '@streamr/sdk'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import { mock, MockProxy } from 'jest-mock-extended'
@@ -24,11 +24,11 @@ const PEER_DESCRIPTOR_THREE = { nodeId: '0x3333' }
 const logger = new Logger(module)
 
 describe(findTarget, () => {
-    let contractFacade: MockProxy<OperatorContractFacade>
+    let operator: MockProxy<Operator>
     let assignments: MockProxy<StreamPartAssignments>
 
     function setupEnv(sponsorships: Array<{ address: EthereumAddress, operators: EthereumAddress[], streamId: StreamID }>) {
-        contractFacade.getSponsorshipsOfOperator.mockImplementation(async (operatorAddress) => {
+        operator.getSponsorshipsOfOperator.mockImplementation(async (operatorAddress) => {
             return sponsorships
                 .filter(({ operators }) => operators.includes(operatorAddress))
                 .map(({ address, operators, streamId }) => ({
@@ -37,7 +37,7 @@ describe(findTarget, () => {
                     streamId,
                 }))
         })
-        contractFacade.getOperatorsInSponsorship.mockImplementation(async (sponsorshipAddress) => {
+        operator.getOperatorsInSponsorship.mockImplementation(async (sponsorshipAddress) => {
             return sponsorships.find(({ address }) => address === sponsorshipAddress)!.operators
         })
     }
@@ -47,13 +47,13 @@ describe(findTarget, () => {
     }
 
     beforeEach(() => {
-        contractFacade = mock<OperatorContractFacade>()
+        operator = mock<Operator>()
         assignments = mock<StreamPartAssignments>()
     })
 
     it('returns undefined if no sponsorships are found', async () => {
         setupEnv([])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, contractFacade, assignments, logger)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, operator, assignments, logger)
         expect(result).toBeUndefined()
     })
 
@@ -63,7 +63,7 @@ describe(findTarget, () => {
             operators: [MY_OPERATOR_ADDRESS],
             streamId: STREAM_ID,
         }])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, contractFacade, assignments, logger)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, operator, assignments, logger)
         expect(result).toBeUndefined()
     })
 
@@ -74,7 +74,7 @@ describe(findTarget, () => {
             streamId: STREAM_ID,
         }])
         setStreamPartsAssignedToMe([])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, contractFacade, assignments, logger)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, operator, assignments, logger)
         expect(result).toBeUndefined()
     })
 
@@ -90,7 +90,7 @@ describe(findTarget, () => {
             toStreamPartID(STREAM_ID, 2),
         ])
 
-        const result = await findTarget(MY_OPERATOR_ADDRESS, contractFacade, assignments, logger)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, operator, assignments, logger)
         expect(result).toMatchObject({
             sponsorshipAddress: SPONSORSHIP_ADDRESS,
             operatorAddress: OTHER_OPERATOR_ADDRESS,

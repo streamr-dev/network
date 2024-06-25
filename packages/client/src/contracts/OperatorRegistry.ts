@@ -4,7 +4,7 @@ import { Lifecycle, scoped } from 'tsyringe'
 import { NetworkPeerDescriptor } from '../Config'
 import { LoggerFactory } from '../utils/LoggerFactory'
 
-// TODO move the functionality of this class to OperatorContractFacade
+// TODO move the functionality of this class to Operator class?
 
 @scoped(Lifecycle.ContainerScoped)
 export class OperatorRegistry {

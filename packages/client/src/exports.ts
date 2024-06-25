@@ -69,15 +69,15 @@ export {
     StreamMessageType
 } from '@streamr/protocol'
 
-// These are exported for the internal OperatorContractFacade class (TODO use more specific name for these exports?)
+// These are exported for the internal Operator class (TODO use more specific name for these exports?)
 export {
-    OperatorContractFacade,
-    OperatorContractEvents,
+    Operator,
+    OperatorEvents,
     StakeEvent,
     ReviewRequestEvent,
     SponsorshipResult,
     Flag
-} from './contracts/OperatorContractFacade'
+} from './contracts/Operator'
 import {
     delegate,
     deploySponsorshipContract,

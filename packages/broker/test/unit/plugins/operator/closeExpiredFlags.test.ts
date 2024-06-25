@@ -1,4 +1,4 @@
-import { OperatorContractFacade, SponsorshipResult } from '@streamr/sdk'
+import { Operator, SponsorshipResult } from '@streamr/sdk'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { mock } from 'jest-mock-extended'
 import { closeExpiredFlags } from '../../../../src/plugins/operator/closeExpiredFlags'
@@ -7,8 +7,8 @@ const sponsorshipAddress = randomEthereumAddress()
 const operatorAddress = randomEthereumAddress()
 const targetAddress = randomEthereumAddress()
 
-const contractFacadeMock = mock<OperatorContractFacade>()
-contractFacadeMock.getSponsorshipsOfOperator.mockImplementation(async () => {
+const operatorMock = mock<Operator>()
+operatorMock.getSponsorshipsOfOperator.mockImplementation(async () => {
     return [
         {
             sponsorshipAddress,
@@ -17,7 +17,7 @@ contractFacadeMock.getSponsorshipsOfOperator.mockImplementation(async () => {
         } as SponsorshipResult
     ]
 })
-contractFacadeMock.getExpiredFlags.mockImplementation(async () => {
+operatorMock.getExpiredFlags.mockImplementation(async () => {
     return [
         {
             id: 'flagId',
@@ -37,9 +37,9 @@ describe('closeExpiredFlags', () => {
     const flagLifetime = 1000
 
     test('closes expired flags', async () => {
-        await closeExpiredFlags(flagLifetime, operatorAddress, contractFacadeMock)
-        expect(contractFacadeMock.closeFlag).toHaveBeenCalledTimes(1)
+        await closeExpiredFlags(flagLifetime, operatorAddress, operatorMock)
+        expect(operatorMock.closeFlag).toHaveBeenCalledTimes(1)
         // 3rd boolean param is ignored in actual usage
-        expect(contractFacadeMock.closeFlag).toHaveBeenCalledWith(sponsorshipAddress, targetAddress)
+        expect(operatorMock.closeFlag).toHaveBeenCalledWith(sponsorshipAddress, targetAddress)
     })
 })

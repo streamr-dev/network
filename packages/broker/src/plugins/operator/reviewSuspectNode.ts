@@ -1,5 +1,5 @@
 import { toStreamPartID } from '@streamr/protocol'
-import { OperatorContractFacade, StreamrClient } from '@streamr/sdk'
+import { Operator, StreamrClient } from '@streamr/sdk'
 import { EthereumAddress, Logger, randomString, setAbortableTimeout } from '@streamr/utils'
 import random from 'lodash/random'
 import { CreateOperatorFleetStateFn } from './OperatorFleetState'
@@ -11,7 +11,7 @@ export interface ReviewProcessOpts {
     sponsorshipAddress: EthereumAddress
     targetOperator: EthereumAddress
     partition: number
-    contractFacade: OperatorContractFacade
+    operator: Operator
     streamrClient: StreamrClient
     createOperatorFleetState: CreateOperatorFleetStateFn
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>
@@ -30,7 +30,7 @@ export const reviewSuspectNode = async ({
     sponsorshipAddress,
     targetOperator,
     partition,
-    contractFacade,
+    operator,
     streamrClient,
     createOperatorFleetState,
     getRedundancyFactor,
@@ -44,7 +44,7 @@ export const reviewSuspectNode = async ({
     if (Date.now() + maxSleepTime > votingPeriod.startTime) {
         throw new Error('Max sleep time overlaps with voting period')
     }
-    const streamId = await contractFacade.getStreamId(sponsorshipAddress)
+    const streamId = await operator.getStreamId(sponsorshipAddress)
     // random sleep time to make sure multiple instances of voters don't all inspect at the same time
     const sleepTimeInMsBeforeFirstInspection = random(maxSleepTime)
     const consumeResults = inspectOverTime({
@@ -72,7 +72,7 @@ export const reviewSuspectNode = async ({
         const kick = results.filter((b) => b).length <= results.length / 2
         logger.info('Vote on flag', { sponsorshipAddress, targetOperator, kick })
         try {
-            await contractFacade.voteOnFlag(sponsorshipAddress, targetOperator, kick)
+            await operator.voteOnFlag(sponsorshipAddress, targetOperator, kick)
         } catch (err) {
             logger.warn('Encountered error while voting on flag', {
                 sponsorshipAddress,

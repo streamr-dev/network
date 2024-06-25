@@ -1,28 +1,28 @@
-import { OperatorContractFacade, StreamrClient } from '@streamr/sdk'
+import { Operator, StreamrClient } from '@streamr/sdk'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
 export const announceNodeToContract = async (
     writeIntervalInMs: number,
-    contractFacade: OperatorContractFacade,
+    operator: Operator,
     streamrClient: StreamrClient
 ): Promise<void> => {
-    if (await isHeartbeatStale(writeIntervalInMs, contractFacade)) {
-        await writeHeartbeat(contractFacade, streamrClient)
+    if (await isHeartbeatStale(writeIntervalInMs, operator)) {
+        await writeHeartbeat(operator, streamrClient)
     }
 }
 
 const isHeartbeatStale = async (
     writeIntervalInMs: number,
-    contractFacade: OperatorContractFacade
+    operator: Operator
 ): Promise<boolean> => {
     logger.debug('Polling last heartbeat timestamp', {
-        operatorContractAddress: await contractFacade.getOperatorContractAddress()
+        operatorContractAddress: await operator.getOperatorContractAddress()
     })
     let lastHeartbeatTs
     try {
-        lastHeartbeatTs = await contractFacade.getTimestampOfLastHeartbeat()
+        lastHeartbeatTs = await operator.getTimestampOfLastHeartbeat()
     } catch (err) {
         logger.warn('Failed to poll last heartbeat timestamp', { reason: err?.message })
         return false // we don't know if heartbeat is stale, but we don't want execution to continue
@@ -33,13 +33,13 @@ const isHeartbeatStale = async (
 }
 
 const writeHeartbeat = async (
-    contractFacade: OperatorContractFacade,
+    operator: Operator,
     streamrClient: StreamrClient
 ): Promise<void> => {
     logger.info('Write heartbeat')
     try {
         const nodeDescriptor = await streamrClient.getPeerDescriptor()
-        await contractFacade.writeHeartbeat(nodeDescriptor)
+        await operator.writeHeartbeat(nodeDescriptor)
         logger.debug('Wrote heartbeat', { nodeDescriptor })
     } catch (err) {
         logger.warn('Failed to write heartbeat', { reason: err?.message })

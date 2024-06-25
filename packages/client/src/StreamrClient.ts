@@ -29,7 +29,7 @@ import { Stream, StreamMetadata } from './Stream'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamrClientError } from './StreamrClientError'
 import { ContractFactory } from './contracts/ContractFactory'
-import { OperatorContractFacade } from './contracts/OperatorContractFacade'
+import { Operator } from './contracts/Operator'
 import { OperatorRegistry } from './contracts/OperatorRegistry'
 import { StorageNodeMetadata, StorageNodeRegistry } from './contracts/StorageNodeRegistry'
 import { StreamRegistry } from './contracts/StreamRegistry'
@@ -705,8 +705,8 @@ export class StreamrClient {
      * @deprecated This in an internal method
      * @hidden
      */
-    async getOperatorContractFacade(operatorContractAddress: EthereumAddress): Promise<OperatorContractFacade> {
-        return new OperatorContractFacade(
+    async getOperator(operatorContractAddress: EthereumAddress): Promise<Operator> {
+        return new Operator(
             operatorContractAddress,
             this.contractFactory,
             this.rpcProviderSource,

@@ -1,10 +1,10 @@
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
 import {
-    OperatorContractFacade,
+    Operator,
     ParseError,
     parsePartitionFromReviewRequestMetadata
-} from '../../src/contracts/OperatorContractFacade'
+} from '../../src/contracts/Operator'
 import { mockLoggerFactory } from '../test-utils/utils'
 
 describe(parsePartitionFromReviewRequestMetadata, () => {
@@ -39,7 +39,7 @@ const SPONSORSHIP_ADDRESS = randomEthereumAddress()
 const INITIAL_BLOCK_NUMBER = 111
 const EVENT_BLOCK_NUMBER = 222
 
-const createOperatorContractFacade = (eventName: string, args: any[]) => {
+const createOperator = (eventName: string, args: any[]) => {
     const fakeContract = {
         queryFilter: (eventNames: string[], fromBlock: number) => {
             if ((eventNames[0][0] === eventName) && (fromBlock <= EVENT_BLOCK_NUMBER)) {
@@ -60,7 +60,7 @@ const createOperatorContractFacade = (eventName: string, args: any[]) => {
             }
         }
     }
-    return new OperatorContractFacade(
+    return new Operator(
         OPERATOR_CONTRACT_ADDRESS,
         {
             createReadContract: () => fakeContract,
@@ -78,17 +78,17 @@ const createOperatorContractFacade = (eventName: string, args: any[]) => {
     )
 }
 
-describe('OperatorContractFacade', () => {
+describe('Operator', () => {
 
     describe('reviewRequest listener', () => {
     
         it('emitting ReviewRequest with valid metadata causes listener to be invoked', async () => {
-            const operatorContractFacade = createOperatorContractFacade(
+            const operator = createOperator(
                 'ReviewRequest',
                 [SPONSORSHIP_ADDRESS, OPERATOR_CONTRACT_ADDRESS, 1000, 1050, '{ "partition": 7 }']
             )
             const listener = jest.fn()
-            operatorContractFacade.on('reviewRequested', listener)
+            operator.on('reviewRequested', listener)
             await wait(1.5 * POLL_INTERVAL)
             expect(listener).toHaveBeenLastCalledWith({ 
                 sponsorship: SPONSORSHIP_ADDRESS, 
@@ -97,19 +97,19 @@ describe('OperatorContractFacade', () => {
                 votingPeriodStartTimestamp: 1000 * 1000,
                 votingPeriodEndTimestamp: 1050 * 1000
             })
-            operatorContractFacade.off('reviewRequested', listener)
+            operator.off('reviewRequested', listener)
         })
     
         it('emitting ReviewRequest with invalid metadata causes listener to not be invoked', async () => {
-            const operatorContractFacade = createOperatorContractFacade(
+            const operator = createOperator(
                 'ReviewRequest',
                 [SPONSORSHIP_ADDRESS, OPERATOR_CONTRACT_ADDRESS, 1000, 1050, '{ "partition": 666 }']
             )
             const listener = jest.fn()
-            operatorContractFacade.on('reviewRequested', listener)
+            operator.on('reviewRequested', listener)
             await wait(1.5 * POLL_INTERVAL)
             expect(listener).not.toHaveBeenCalled()
-            operatorContractFacade.off('reviewRequested', listener)
+            operator.off('reviewRequested', listener)
         })
     })
 })
