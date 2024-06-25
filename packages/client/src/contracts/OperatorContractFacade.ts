@@ -55,7 +55,7 @@ export interface ReviewRequestEvent {
  * @deprecated
  * @hidden
  */
-export interface OperatorContractEvents {  // TODO what is our current event naming style exactly? does this definition apply this style?
+export interface OperatorContractEvents {
     staked: (payload: StakeEvent) => void
     unstaked: (payload: StakeEvent) => void
     reviewRequested: (payload: ReviewRequestEvent) => void
