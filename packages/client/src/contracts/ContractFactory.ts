@@ -1,15 +1,10 @@
-import { Signer } from 'ethers'
-import { Contract } from 'ethers'
 import { EthereumAddress } from '@streamr/utils'
+import { AbstractProvider, BaseContract, Contract, ContractTransactionReceipt, InterfaceAbi, Provider, Signer } from 'ethers'
 import { Lifecycle, inject, scoped } from 'tsyringe'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
-import { StreamrClientEventEmitter } from './events'
-import { LoggerFactory } from './utils/LoggerFactory'
-import { ObservableContract, createDecoratedContract } from './contracts/contract'
-import { Provider, ContractTransactionReceipt, InterfaceAbi, BaseContract } from 'ethers'
-import { AbstractProvider } from 'ethers'
-
-// TODO move to contracts directory?
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { StreamrClientEventEmitter } from '../events'
+import { LoggerFactory } from '../utils/LoggerFactory'
+import { ObservableContract, createDecoratedContract } from './contract'
 
 @scoped(Lifecycle.ContainerScoped)
 export class ContractFactory {

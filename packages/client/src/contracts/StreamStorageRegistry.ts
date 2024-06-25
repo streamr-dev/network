@@ -4,7 +4,6 @@ import min from 'lodash/min'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { ContractFactory } from '../ContractFactory'
 import { RpcProviderSource } from '../RpcProviderSource'
 import { Stream } from '../Stream'
 import { StreamFactory } from '../StreamFactory'
@@ -14,8 +13,9 @@ import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageReg
 import { getEthersOverrides } from '../ethereumUtils'
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { initContractEventGateway, waitForTx } from './contract'
 import { ChainEventPoller } from './ChainEventPoller'
+import { ContractFactory } from './ContractFactory'
+import { initContractEventGateway, waitForTx } from './contract'
 
 export interface StorageNodeAssignmentEvent {
     readonly streamId: StreamID

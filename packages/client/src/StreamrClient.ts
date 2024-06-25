@@ -28,6 +28,7 @@ import { RpcProviderSource } from './RpcProviderSource'
 import { Stream, StreamMetadata } from './Stream'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamrClientError } from './StreamrClientError'
+import { ContractFactory } from './contracts/ContractFactory'
 import { OperatorContractFacade } from './contracts/OperatorContractFacade'
 import { OperatorRegistry } from './contracts/OperatorRegistry'
 import { StorageNodeMetadata, StorageNodeRegistry } from './contracts/StorageNodeRegistry'
@@ -51,7 +52,6 @@ import { StreamDefinition } from './types'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
-import { ContractFactory } from './ContractFactory'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions

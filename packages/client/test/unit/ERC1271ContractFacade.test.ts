@@ -5,7 +5,7 @@ import type { IERC1271 as ERC1271Contract } from '../../src/ethereumArtifacts/IE
 import { fastPrivateKey, randomEthereumAddress } from '@streamr/test-utils'
 import { createSignature, hexToBinary, hash } from '@streamr/utils'
 import { RpcProviderSource } from '../../src/RpcProviderSource'
-import { ContractFactory } from '../../src/ContractFactory'
+import { ContractFactory } from '../../src/contracts/ContractFactory'
 import { Provider } from 'ethers'
 import { ObservableContract } from '../../src/contracts/contract'
 

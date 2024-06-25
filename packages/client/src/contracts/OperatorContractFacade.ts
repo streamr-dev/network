@@ -11,7 +11,6 @@ import {
 import { Overrides } from 'ethers'
 import sample from 'lodash/sample'
 import { Authentication } from '../Authentication'
-import { ContractFactory } from '../ContractFactory'
 import { RpcProviderSource } from '../RpcProviderSource'
 import type { Operator as OperatorContract } from '../ethereumArtifacts/Operator'
 import OperatorArtifact from '../ethereumArtifacts/OperatorAbi.json'
@@ -19,6 +18,7 @@ import type { Sponsorship as SponsorshipContract } from '../ethereumArtifacts/Sp
 import SponsorshipArtifact from '../ethereumArtifacts/SponsorshipAbi.json'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { ChainEventPoller } from './ChainEventPoller'
+import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway } from './contract'
 
 interface RawResult {
