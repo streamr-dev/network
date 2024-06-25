@@ -76,7 +76,7 @@ export { OperatorContractFacade } from './contracts/OperatorContractFacade'
 export {
     ParseError,
     parsePartitionFromReviewRequestMetadata, SponsorshipResult,
-    StakeEvent, ReviewRequestEvent
+    OperatorContractEvents, StakeEvent, ReviewRequestEvent
 } from './contracts/OperatorContractFacade'
 // TODO maybe should use more specific name for these exports (some utils may be for testing only), maybe move
 // into OperatorContractFacade or new SponsorshitContractFacade?
