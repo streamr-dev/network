@@ -83,7 +83,6 @@ export {
 export {
     delegate,
     deploySponsorshipContract,
-    getAdminWallet,
     setupOperatorContract,
     SetupOperatorContractReturnType,
     sponsor,
