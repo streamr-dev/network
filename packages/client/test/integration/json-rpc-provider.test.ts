@@ -12,6 +12,13 @@ const POLL_INTERVAL = 500
 const TIMEOUT = 2000
 const QUORUM = 2
 
+/**
+ * This test is testing internals of Ethers.js. But we want to keep it here nonetheless
+ * to ensure that Ethers.js behaves in a consistent manner in future updates as well.
+ *
+ * If in the future the behavior described here is more precisely codified (and tested)
+ * within the Ethers.js library itself, we can consider removing these tests.
+ */
 describe('use JsonRpcProvider', () => {
 
     let client: StreamrClient
