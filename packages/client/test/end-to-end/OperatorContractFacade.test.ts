@@ -30,7 +30,7 @@ const createClient = (privateKey?: string): StreamrClient => {
 
 const createTheGraphClient = (): TheGraphClient => {
     return new TheGraphClient({
-        serverUrl: CONFIG_TEST.contracts!.theGraphUrl!,
+        serverUrl: CHAIN_CONFIG.dev2.theGraphUrl!,
         fetch,
         logger: new Logger(module)
     })
