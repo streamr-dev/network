@@ -167,21 +167,23 @@ export class OperatorContractFacade {
         // eslint-disable-next-line no-underscore-dangle
         }), eventPollInterval)
         const stakeEventTransformation = (sponsorship: string) => ({
-            sponsorship: toEthereumAddress(sponsorship)  // TODO update usages to use 
+            sponsorship: toEthereumAddress(sponsorship)  // TODO update usages to use
         })
+        // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
+        // -> then "as any" casting is not needed
         initContractEventGateway({
-            sourceName: 'Staked', 
+            sourceName: 'Staked',
             sourceEmitter: chainEventPoller,
-            targetName: 'staked' as any,  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
-            targetEmitter: this.eventEmitter as any,  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
+            targetName: 'staked' as any,
+            targetEmitter: this.eventEmitter as any,
             transformation: stakeEventTransformation,
             loggerFactory
-        } as any)  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
+        })
         initContractEventGateway({
-            sourceName: 'Unstaked', 
+            sourceName: 'Unstaked',
             sourceEmitter: chainEventPoller,
-            targetName: 'unstaked' as any,  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
-            targetEmitter: this.eventEmitter as any,  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
+            targetName: 'unstaked' as any,
+            targetEmitter: this.eventEmitter as any,
             transformation: stakeEventTransformation,
             loggerFactory
         })
@@ -204,8 +206,8 @@ export class OperatorContractFacade {
         initContractEventGateway({
             sourceName: 'ReviewRequest',
             sourceEmitter: chainEventPoller,
-            targetName: 'reviewRequested' as any,  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
-            targetEmitter: this.eventEmitter as any,  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
+            targetName: 'reviewRequested' as any,
+            targetEmitter: this.eventEmitter as any,
             transformation: reviewRequestTransform,
             loggerFactory
         })
