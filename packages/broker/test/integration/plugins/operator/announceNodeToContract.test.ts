@@ -1,4 +1,4 @@
-import { OperatorContractFacade, setupOperatorContract } from '@streamr/sdk'
+import { OperatorContractFacade, _operatorContractUtils } from '@streamr/sdk'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { announceNodeToContract } from '../../../../src/plugins/operator/announceNodeToContract'
 import { createClient } from '../../../utils'
@@ -10,7 +10,7 @@ describe('announceNodeToContract', () => {
     let contractFacade: OperatorContractFacade
 
     beforeEach(async () => {
-        const { operatorContract, nodeWallets } = await setupOperatorContract({
+        const { operatorContract, nodeWallets } = await _operatorContractUtils.setupOperatorContract({
             nodeCount: 1
         })
         contractFacade = await createClient(nodeWallets[0].privateKey)

@@ -17,6 +17,10 @@ import TestTokenArtifact from '../ethereumArtifacts/TestTokenAbi.json'
 
 const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 
+/**
+ * @deprecated
+ * @hidden
+ */
 export interface SetupOperatorContractOpts {
     nodeCount?: number
     chainConfig?: {
@@ -34,6 +38,10 @@ export interface SetupOperatorContractOpts {
     }
 }
 
+/**
+ * @deprecated
+ * @hidden
+ */
 export interface SetupOperatorContractReturnType {
     operatorWallet: Wallet
     operatorContract: OperatorContract
@@ -66,7 +74,11 @@ export async function setupOperatorContract(
     return { operatorWallet, operatorContract, nodeWallets }
 }
 
-interface DeployOperatorContractOpts {
+/**
+ * @deprecated
+ * @hidden
+ */
+export interface DeployOperatorContractOpts {
     deployer: Wallet
     operatorsCutPercent?: number
     metadata?: string
@@ -115,6 +127,10 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
     return newOperator
 }
 
+/**
+ * @deprecated
+ * @hidden
+ */
 export interface DeploySponsorshipContractOpts {
     streamId: string
     deployer: Wallet

@@ -74,24 +74,45 @@ export {
 export { OperatorContractFacade } from './contracts/OperatorContractFacade'
 // TODO maybe should use more specific name for these exports
 export {
-    ParseError,
-    parsePartitionFromReviewRequestMetadata, SponsorshipResult,
-    OperatorContractEvents, StakeEvent, ReviewRequestEvent
+    SponsorshipResult,
+    OperatorContractEvents,
+    StakeEvent,
+    ReviewRequestEvent,
+    Flag
 } from './contracts/OperatorContractFacade'
 // TODO maybe should use more specific name for these exports (some utils may be for testing only), maybe move
 // into OperatorContractFacade or new SponsorshitContractFacade?
-export {
+
+import {
     delegate,
     deploySponsorshipContract,
     setupOperatorContract,
+    SetupOperatorContractOpts,
     SetupOperatorContractReturnType,
+    deployOperatorContract,
+    DeployOperatorContractOpts,
     sponsor,
     stake,
     getProvider,
     generateWalletWithGasAndTokens,
-    SetupOperatorContractOpts,
-    deployOperatorContract,
+    DeploySponsorshipContractOpts,
 } from './contracts/operatorContractUtils'
+/**
+ * @deprecated
+ * @hidden
+ */
+const _operatorContractUtils = {
+    delegate,
+    deploySponsorshipContract,
+    setupOperatorContract,
+    sponsor,
+    stake,
+    getProvider,
+    generateWalletWithGasAndTokens,
+    deployOperatorContract
+}
+export { _operatorContractUtils }
+export type { SetupOperatorContractOpts, SetupOperatorContractReturnType, DeployOperatorContractOpts, DeploySponsorshipContractOpts }
 
 export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht'
 export type { Signer, Eip1193Provider, Overrides } from 'ethers'

@@ -1,11 +1,6 @@
 import { StreamPartID } from '@streamr/protocol'
 import {
-    Stream, StreamrClient,
-    delegate,
-    deployOperatorContract,
-    deploySponsorshipContract,
-    generateWalletWithGasAndTokens,
-    stake
+    Stream, StreamrClient, _operatorContractUtils
 } from '@streamr/sdk'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
@@ -15,6 +10,14 @@ import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFle
 import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
 import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
 import { createClient, createTestStream } from '../../../utils'
+
+const {
+    delegate,
+    deployOperatorContract,
+    deploySponsorshipContract,
+    generateWalletWithGasAndTokens,
+    stake
+} = _operatorContractUtils
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()

@@ -703,6 +703,7 @@ export class StreamrClient {
 
     /**
      * @deprecated This in an internal method
+     * @hidden
      */
     async getOperatorContractFacade(operatorContractAddress: EthereumAddress): Promise<OperatorContractFacade> {
         return new OperatorContractFacade(

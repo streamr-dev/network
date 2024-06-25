@@ -1,4 +1,4 @@
-import { setupOperatorContract } from '@streamr/sdk'
+import { _operatorContractUtils } from '@streamr/sdk'
 import { fastPrivateKey } from '@streamr/test-utils'
 import { collect, toEthereumAddress } from '@streamr/utils'
 import { announceNodeToStream } from '../../../../src/plugins/operator/announceNodeToStream'
@@ -10,7 +10,7 @@ const TIMEOUT = 40 * 1000
 describe('announceNodeToStream', () => {
 
     it('publishes to stream', async () => {
-        const { operatorContract, nodeWallets } = await setupOperatorContract({
+        const { operatorContract, nodeWallets } = await _operatorContractUtils.setupOperatorContract({
             nodeCount: 1
         })
         const operatorContractAddress = toEthereumAddress(await operatorContract.getAddress())

@@ -1,16 +1,18 @@
-import {
+import { _operatorContractUtils } from '@streamr/sdk'
+import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { multiply } from '../../../../src/helpers/multiply'
+import { maintainOperatorValue } from '../../../../src/plugins/operator/maintainOperatorValue'
+import { createClient, createTestStream } from '../../../utils'
+
+const {
     delegate,
     deploySponsorshipContract,
     generateWalletWithGasAndTokens,
     setupOperatorContract,
     sponsor,
     stake
-} from '@streamr/sdk'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { multiply } from '../../../../src/helpers/multiply'
-import { maintainOperatorValue } from '../../../../src/plugins/operator/maintainOperatorValue'
-import { createClient, createTestStream } from '../../../utils'
+} = _operatorContractUtils
 
 const logger = new Logger(module)
 

@@ -1,10 +1,14 @@
 import { Operator, operatorABI } from '@streamr/network-contracts-ethers6'
-import { SetupOperatorContractReturnType, SignerWithProvider, getProvider, setupOperatorContract } from '@streamr/sdk'
+import { SetupOperatorContractReturnType, SignerWithProvider, _operatorContractUtils } from '@streamr/sdk'
 import { fastWallet } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
 import { Contract } from 'ethers'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { fetchRedundancyFactor } from '../../../../src/plugins/operator/fetchRedundancyFactor'
+
+const {
+    getProvider, setupOperatorContract
+} = _operatorContractUtils
 
 async function updateMetadata(deployment: SetupOperatorContractReturnType, metadata: string): Promise<void> {
     const operator = new Contract(

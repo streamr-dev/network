@@ -31,10 +31,18 @@ interface EarningsData {
     maxAllowedEarningsDataWei: bigint
 }
 
+/**
+ * @deprecated
+ * @hidden
+ */
 export interface StakeEvent {  // TODO export, do we want to keep the current style where event payloads are always objects?
     sponsorship: EthereumAddress
 }
 
+/**
+ * @deprecated
+ * @hidden
+ */
 export interface ReviewRequestEvent {
     sponsorship: EthereumAddress
     targetOperator: EthereumAddress
@@ -43,6 +51,10 @@ export interface ReviewRequestEvent {
     votingPeriodEndTimestamp: number
 }
 
+/**
+ * @deprecated
+ * @hidden
+ */
 export interface OperatorContractEvents {  // TODO what is our current event naming style exactly? does this definition apply this style?
     staked: (payload: StakeEvent) => void
     unstaked: (payload: StakeEvent) => void
@@ -99,12 +111,20 @@ const compareBigInts = (a: bigint, b: bigint) => {
 
 const logger = new Logger(module)
 
+/**
+ * @deprecated
+ * @hidden
+ */
 export interface SponsorshipResult {
     sponsorshipAddress: EthereumAddress
     streamId: StreamID
     operatorCount: number
 }
 
+/**
+ * @deprecated
+ * @hidden
+ */
 export interface Flag {
     id: string
     flaggingTimestamp: number
@@ -118,6 +138,7 @@ export interface Flag {
 
 /**
  * @deprecated This in an internal class
+ * @hidden
  */
 export class OperatorContractFacade {
 

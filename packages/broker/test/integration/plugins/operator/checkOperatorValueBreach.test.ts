@@ -1,6 +1,14 @@
 import { Operator, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts-ethers6'
 import {
     SetupOperatorContractOpts,
+    _operatorContractUtils,
+} from '@streamr/sdk'
+import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { Contract } from 'ethers'
+import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
+import { createClient, createTestStream } from '../../../utils'
+
+const {
     delegate,
     deploySponsorshipContract,
     generateWalletWithGasAndTokens,
@@ -8,11 +16,7 @@ import {
     setupOperatorContract,
     sponsor,
     stake
-} from '@streamr/sdk'
-import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { Contract } from 'ethers'
-import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
-import { createClient, createTestStream } from '../../../utils'
+} = _operatorContractUtils
 
 const logger = new Logger(module)
 
