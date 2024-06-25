@@ -50,7 +50,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
                 this.emit('addStakedStreams', [streamId])
             }
         }
-        this.contractFacade.on('stake', this.onStakedListener)
+        this.contractFacade.on('staked', this.onStakedListener)
         this.onUnstakedListener = (event: StakeEvent) => {
             const sponsorship = event.sponsorship
             logger.info('Receive "Unstaked" event', { sponsorship })
@@ -68,7 +68,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
                 this.emit('removeStakedStream', streamId)
             }
         }
-        this.contractFacade.on('unstake', this.onUnstakedListener)
+        this.contractFacade.on('unstaked', this.onUnstakedListener)
         
         const queryResult = this.contractFacade.pullStakedStreams(latestBlock)
         for await (const stake of queryResult) {
@@ -87,8 +87,8 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
     }
 
     stop(): void {
-        this.contractFacade.off('stake', this.onStakedListener!)
-        this.contractFacade.off('unstake', this.onUnstakedListener!)
+        this.contractFacade.off('staked', this.onStakedListener!)
+        this.contractFacade.off('unstaked', this.onUnstakedListener!)
         this.removeAllListeners()
     }
 }

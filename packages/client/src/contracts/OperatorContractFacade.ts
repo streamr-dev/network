@@ -44,9 +44,9 @@ export interface ReviewRequestEvent {
 }
 
 export interface OperatorContractEvents {  // TODO what is our current event naming style exactly? does this definition apply this style?
-    stake: (payload: StakeEvent) => void
-    unstake: (payload: StakeEvent) => void
-    reviewRequest: (payload: ReviewRequestEvent) => void
+    staked: (payload: StakeEvent) => void
+    unstaked: (payload: StakeEvent) => void
+    reviewRequested: (payload: ReviewRequestEvent) => void
 }
 
 export const VOTE_KICK = '0x0000000000000000000000000000000000000000000000000000000000000001'
@@ -172,19 +172,19 @@ export class OperatorContractFacade {
         initContractEventGateway({
             sourceName: 'Staked', 
             sourceEmitter: chainEventPoller,
-            targetName: 'staked',
-            targetEmitter: this.eventEmitter,
+            targetName: 'staked' as any,  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
+            targetEmitter: this.eventEmitter as any,  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
             transformation: stakeEventTransformation,
             loggerFactory
         } as any)  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
         initContractEventGateway({
             sourceName: 'Unstaked', 
             sourceEmitter: chainEventPoller,
-            targetName: 'unstaked',
-            targetEmitter: this.eventEmitter,
+            targetName: 'unstaked' as any,  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
+            targetEmitter: this.eventEmitter as any,  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
             transformation: stakeEventTransformation,
             loggerFactory
-        } as any)  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
+        })
         const reviewRequestTransform = (
             sponsorship: string,
             targetOperator: string,
@@ -204,11 +204,11 @@ export class OperatorContractFacade {
         initContractEventGateway({
             sourceName: 'ReviewRequest',
             sourceEmitter: chainEventPoller,
-            targetName: 'reviewRequest',
-            targetEmitter: this.eventEmitter,
+            targetName: 'reviewRequested' as any,  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
+            targetEmitter: this.eventEmitter as any,  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
             transformation: reviewRequestTransform,
             loggerFactory
-        } as any)  // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
+        })
     }
 
     async writeHeartbeat(nodeDescriptor: NetworkPeerDescriptor): Promise<void> {

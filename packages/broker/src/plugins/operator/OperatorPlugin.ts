@@ -206,7 +206,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
 
             addManagedEventListener(
                 contractFacade,
-                'reviewRequest',
+                'reviewRequested',
                 (event: ReviewRequestEvent): void => {
                     setImmediate(() => {
                         executeSafePromise(async () => {
