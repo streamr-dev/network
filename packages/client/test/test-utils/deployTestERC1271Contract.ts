@@ -1,6 +1,6 @@
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { createTestClient } from './utils'
-import { ContractFactory } from '@ethersproject/contracts'
+import { ContractFactory } from 'ethers'
 import TestERC1271Abi from '../ethereumArtifacts/TestERC1271Abi.json'
 import { TestERC1271 } from '../ethereumArtifacts/TestERC1271'
 import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
@@ -16,11 +16,12 @@ export async function deployTestERC1271Contract(allowedAddresses: EthereumAddres
     try {
         const deployerWallet = await client.getSigner()
         const factory = new ContractFactory(TestERC1271Abi, MOCK_ERC1271_BYTECODE, deployerWallet)
-        const contract = await factory.deploy() as TestERC1271
-        await contract.deployed()
-        await (await contract.setAddresses(allowedAddresses)).wait()
-        logger.info('Deployed TestERC1271 contract', { contractAddress: contract.address, allowedAddresses })
-        return toEthereumAddress(contract.address)
+        const contract = await factory.deploy() as unknown as TestERC1271
+        await contract.waitForDeployment()
+        await contract.setAddresses(allowedAddresses)
+        const contractAddress = await contract.getAddress()
+        logger.info('Deployed TestERC1271 contract', { contractAddress, allowedAddresses })
+        return toEthereumAddress(contractAddress)
     } finally {
         await client.destroy()
     }

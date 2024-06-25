@@ -2,9 +2,7 @@ import 'reflect-metadata'
 
 import { toEthereumAddress } from '@streamr/utils'
 import { MessageID, ContentType, EncryptionType, SignatureType, StreamMessageType } from '@streamr/protocol'
-import { Authentication } from '../../src/Authentication'
 import { StreamPermission } from '../../src/permission'
-import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamrClientError } from '../../src/StreamrClientError'
@@ -12,6 +10,7 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { createRandomAuthentication, createRelativeTestStreamId, MOCK_CONTENT } from '../test-utils/utils'
 import { convertStreamMessageToMessage } from '../../src/Message'
+import { MessageSigner } from '../../src/signature/MessageSigner'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -20,11 +19,11 @@ describe('waitForStorage', () => {
     let client: StreamrClient
     let stream: Stream
     let storageNode: FakeStorageNode
-    let authentication: Authentication
+    let messageSigner: MessageSigner
     let environment: FakeEnvironment
 
     beforeEach(async () => {
-        authentication = createRandomAuthentication()
+        messageSigner = new MessageSigner(createRandomAuthentication())
         environment = new FakeEnvironment()
         client = environment.createClient()
         stream = await client.createStream({
@@ -67,15 +66,13 @@ describe('waitForStorage', () => {
 
     it('no message', async () => {
         await stream.addToStorageNode(storageNode.getAddress())
-        const msg = convertStreamMessageToMessage(await createSignedMessage({
+        const msg = convertStreamMessageToMessage(await messageSigner.createSignedMessage({
             messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
             messageType: StreamMessageType.MESSAGE,
             content: MOCK_CONTENT,
-            authentication,
             contentType: ContentType.JSON,
-            encryptionType: EncryptionType.NONE,
-            signatureType: SignatureType.SECP256K1
-        }))
+            encryptionType: EncryptionType.NONE
+        }, SignatureType.SECP256K1))
         await expect(() => client.waitForStorage(msg, {
             interval: 50,
             timeout: 100,
@@ -87,15 +84,13 @@ describe('waitForStorage', () => {
     })
 
     it('no storage assigned', async () => {
-        const msg = convertStreamMessageToMessage(await createSignedMessage({
+        const msg = convertStreamMessageToMessage(await messageSigner.createSignedMessage({
             messageId: new MessageID(stream.id, 0, Date.now(), 0, PUBLISHER_ID, 'msgChainId'),
             messageType: StreamMessageType.MESSAGE,
             content: MOCK_CONTENT,
-            authentication,
             contentType: ContentType.JSON,
-            encryptionType: EncryptionType.NONE,
-            signatureType: SignatureType.SECP256K1
-        }))
+            encryptionType: EncryptionType.NONE
+        }, SignatureType.SECP256K1))
         await expect(() => client.waitForStorage(msg, {
             messageMatchFn: () => {
                 return true

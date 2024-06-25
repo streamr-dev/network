@@ -4,7 +4,11 @@ import EventEmitter from 'eventemitter3'
 import { getDistance } from '../PeerManager'
 import { DhtAddress, getRawFromDhtAddress } from '../../identifiers'
 
-export interface SortedContactListConfig {
+// add other getters in the future if needed
+export type ReadonlySortedContactList<C extends { getNodeId: () => DhtAddress }> =
+    Pick<SortedContactList<C>, 'getClosestContacts' | 'getAllContactsInUndefinedOrder'>
+
+export interface SortedContactListOptions {
     referenceId: DhtAddress  // all contacts in this list are in sorted by the distance to this ID
     allowToContainReferenceId: boolean
     maxSize?: number
@@ -16,15 +20,15 @@ export interface SortedContactListConfig {
 
 export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extends EventEmitter<Events<C>> {
 
-    private config: SortedContactListConfig
+    private options: SortedContactListOptions
     private contactsById: Map<DhtAddress, C> = new Map()
     private contactIds: DhtAddress[] = []
 
     constructor(
-        config: SortedContactListConfig
+        options: SortedContactListOptions
     ) {
         super()
-        this.config = config
+        this.options = options
         this.compareIds = this.compareIds.bind(this)
     }
 
@@ -38,26 +42,25 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
 
     public addContact(contact: C): void {
         const contactId = contact.getNodeId()
-        if (this.config.excludedNodeIds !== undefined && this.config.excludedNodeIds.has(contactId)) {
+        if (this.options.excludedNodeIds !== undefined && this.options.excludedNodeIds.has(contactId)) {
             return
         }
-        if ((!this.config.allowToContainReferenceId && (this.config.referenceId === contactId)) ||
-            (this.config.nodeIdDistanceLimit !== undefined && this.compareIds(this.config.nodeIdDistanceLimit, contactId) < 0)) {
+        if ((!this.options.allowToContainReferenceId && (this.options.referenceId === contactId)) ||
+            (this.options.nodeIdDistanceLimit !== undefined && this.compareIds(this.options.nodeIdDistanceLimit, contactId) < 0)) {
             return
         }
         if (!this.contactsById.has(contactId)) {
-            if ((this.config.maxSize === undefined) || (this.contactIds.length < this.config.maxSize)) {
+            if ((this.options.maxSize === undefined) || (this.contactIds.length < this.options.maxSize)) {
                 this.contactsById.set(contactId, contact)
                 const index = sortedIndexBy(this.contactIds, contactId, (id: DhtAddress) => { return this.distanceToReferenceId(id) })
                 this.contactIds.splice(index, 0, contactId)
                 if (this.hasEventListeners()) {
                     this.emit(
                         'contactAdded',
-                        contact,
-                        this.getClosestContacts()
+                        contact
                     )
                 }
-            } else if (this.compareIds(this.contactIds[this.config.maxSize - 1], contactId) > 0) {
+            } else if (this.compareIds(this.contactIds[this.options.maxSize - 1], contactId) > 0) {
                 const removedId = this.contactIds.pop()
                 const removedContact = this.contactsById.get(removedId!)!
                 this.contactsById.delete(removedId!)
@@ -65,16 +68,13 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
                 const index = sortedIndexBy(this.contactIds, contactId, (id: DhtAddress) => { return this.distanceToReferenceId(id) })
                 this.contactIds.splice(index, 0, contactId)
                 if (this.hasEventListeners()) {
-                    const closestContacts = this.getClosestContacts()
                     this.emit(
                         'contactRemoved',
-                        removedContact,
-                        closestContacts
+                        removedContact
                     )
                     this.emit(
                         'contactAdded',
-                        contact,
-                        closestContacts
+                        contact
                     )
                 }
             }
@@ -120,7 +120,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
     // TODO inline this method?
     private distanceToReferenceId(id: DhtAddress): number {
         // TODO maybe this class should store the referenceId also as DhtAddressRaw so that we don't need to convert it here?
-        return getDistance(getRawFromDhtAddress(this.config.referenceId), getRawFromDhtAddress(id))
+        return getDistance(getRawFromDhtAddress(this.options.referenceId), getRawFromDhtAddress(id))
     }
 
     public removeContact(id: DhtAddress): boolean {
@@ -133,8 +133,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
             if (this.hasEventListeners()) {
                 this.emit(
                     'contactRemoved',
-                    removed,
-                    this.getClosestContacts()
+                    removed
                 )
             }
             return true
@@ -142,7 +141,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
         return false
     }
 
-    public getAllContactsInUndefinedOrder(): IterableIterator<C> {
+    public getAllContactsInUndefinedOrder(): Iterable<C> {
         return this.contactsById.values()
     }
 

@@ -78,8 +78,8 @@ export class MetricsPublisher {
             })
         })
         if (this.config.periods.length > 0) {
-            this.eventEmitter.on('publish', () => ensureStarted())
-            this.eventEmitter.on('subscribe', () => ensureStarted())
+            this.eventEmitter.on('messagePublished', () => ensureStarted())
+            this.eventEmitter.on('streamPartSubscribed', () => ensureStarted())
         }
     }
 

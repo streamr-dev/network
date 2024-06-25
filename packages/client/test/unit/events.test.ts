@@ -9,7 +9,7 @@ describe('events', () => {
             const client = environment.createClient()
             const onEmit = jest.fn()
             // @ts-expect-error internal event
-            client.on('publish', onEmit)
+            client.on('messagePublished', onEmit)
             const stream = await client.createStream('/test')
             await client.publish(stream.id, {})
             await stream.publish({})

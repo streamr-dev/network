@@ -14,8 +14,8 @@ export class LeaksDetector {
     ignoredKeys = new Set([
         '/container',
         '/childContainer',
-        'rovider/formatter',
-        'chainProviders/0/formatter'
+        'provider/formatter',
+        'providers/0/formatter'
     ])
 
     private counter = CounterId(this.id, { maxPrefixes: 1024 })
@@ -166,7 +166,7 @@ export class LeaksDetector {
         const leaks = await this.getLeaks()
         const numLeaks = Object.keys(leaks).length
         if (numLeaks) {
-            const msg = `Leaking ${numLeaks} of ${this.leakDetectors.size} items: ${JSON.stringify(leaks)}`
+            const msg = `Leaking ${numLeaks} of ${this.leakDetectors.size} items: ${JSON.stringify(leaks, undefined, 2)}`
             this.clear()
             throw new Error(msg)
         }

@@ -45,4 +45,14 @@ describe('RandomContactList', () => {
         expect(list.getSize()).toEqual(3)
     })
 
+    it('get contacts', () => {
+        const list = new RandomContactList(item0.getNodeId(), 5, 1)
+        list.addContact(item1)
+        list.addContact(item2)
+        list.addContact(item3)
+        list.addContact(item4)
+        expect(list.getContacts()).toHaveLength(4)
+        expect(list.getContacts(3)).toHaveLength(3)
+        expect(list.getContacts(-2)).toHaveLength(0)
+    })
 })

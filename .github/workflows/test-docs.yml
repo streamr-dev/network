@@ -1,10 +1,11 @@
+---
 name: Test Building Documentation
 
 on:
   pull_request:
-    branches: [ main, brubeck ]
+    branches: [main, brubeck]
 
-jobs:  
+jobs:
   deploy:
     name: Test building documentation
     runs-on: ubuntu-latest

@@ -1,4 +1,4 @@
-import { Wallet } from '@ethersproject/wallet'
+import { Wallet } from 'ethers'
 import { EthereumAddress, toEthereumAddress, waitForCondition, waitForEvent } from '@streamr/utils'
 import cors from 'cors'
 import crypto from 'crypto'

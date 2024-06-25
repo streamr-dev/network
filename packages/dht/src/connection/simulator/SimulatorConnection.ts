@@ -95,8 +95,7 @@ export class SimulatorConnection extends Connection implements IConnection {
 
     public handleIncomingData(data: Uint8Array): void {
         if (!this.stopped) {
-            logger.trace('handleIncomingData()')
-            logger.trace(protoToString(Message.fromBinary(data), Message))
+            logger.trace('handleIncomingData() ' + protoToString(Message.fromBinary(data), Message))
             this.emit('data', data)
         } else {
             logger.trace('tried to call handleIncomingData() a stopped connection')

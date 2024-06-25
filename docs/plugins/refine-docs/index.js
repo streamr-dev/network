@@ -3,7 +3,7 @@ const path = require("path")
 
 module.exports = function(context, options) {
 
-    const relativeAPIDocPath = "docs/usage/streamr-js-client/api"
+    const relativeAPIDocPath = "docs/usage/sdk/api"
 
     const extractImportantLinks = (content) => {
         const importantClassesRegex = /^## Important Classes([\s\S]*?)^##/m

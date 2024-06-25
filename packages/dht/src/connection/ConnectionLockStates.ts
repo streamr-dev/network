@@ -36,12 +36,10 @@ export class ConnectionLockStates {
     public isRemoteLocked(id: DhtAddress, lockId?: LockID): boolean {
         if (lockId === undefined) {
             return this.remoteLocks.has(id)
+        } else if (this.remoteLocks.has(id) && this.remoteLocks.get(id)!.has(lockId)) {
+            return true
         } else {
-            if (this.remoteLocks.has(id) && this.remoteLocks.get(id)!.has(lockId)) {
-                return true
-            } else {
-                return false
-            }
+            return false
         }
     }
 

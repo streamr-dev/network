@@ -7,7 +7,7 @@ import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 const logger = new Logger(module)
 
-interface RecursiveOperationRpcLocalConfig {
+interface RecursiveOperationRpcLocalOptions {
     doRouteRequest: (routedMessage: RouteMessageWrapper) => RouteMessageAck
     addContact: (contact: PeerDescriptor, setActive?: boolean) => void
     isMostLikelyDuplicate: (requestId: string) => boolean
@@ -16,19 +16,19 @@ interface RecursiveOperationRpcLocalConfig {
 
 export class RecursiveOperationRpcLocal implements IRecursiveOperationRpc {
 
-    private readonly config: RecursiveOperationRpcLocalConfig
+    private readonly options: RecursiveOperationRpcLocalOptions
 
-    constructor(config: RecursiveOperationRpcLocalConfig) {
-        this.config = config
+    constructor(options: RecursiveOperationRpcLocalOptions) {
+        this.options = options
     }
 
     async routeRequest(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
-        if (this.config.isMostLikelyDuplicate(routedMessage.requestId)) {
+        if (this.options.isMostLikelyDuplicate(routedMessage.requestId)) {
             return createRouteMessageAck(routedMessage, RouteMessageError.DUPLICATE)
         }
-        const senderId = getNodeIdFromPeerDescriptor(getPreviousPeer(routedMessage) ?? routedMessage.sourcePeer!)
-        logger.trace(`Received routeRequest call from ${senderId}`)
-        this.config.addToDuplicateDetector(routedMessage.requestId)
-        return this.config.doRouteRequest(routedMessage)
+        const remoteNodeId = getNodeIdFromPeerDescriptor(getPreviousPeer(routedMessage) ?? routedMessage.sourcePeer!)
+        logger.trace(`Received routeRequest call from ${remoteNodeId}`)
+        this.options.addToDuplicateDetector(routedMessage.requestId)
+        return this.options.doRouteRequest(routedMessage)
     }
 }

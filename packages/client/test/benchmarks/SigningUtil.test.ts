@@ -1,5 +1,5 @@
-import { verifyMessage, Wallet } from '@ethersproject/wallet'
-import { randomString, toEthereumAddress, hexToBinary, areEqualBinaries } from '@streamr/utils'
+import { verifyMessage, Wallet } from 'ethers'
+import { randomString, toEthereumAddress, hexToBinary, areEqualBinaries, binaryToHex } from '@streamr/utils'
 import { fastWallet } from '@streamr/test-utils'
 import { createSignature, verifySignature } from '@streamr/utils'
 
@@ -90,7 +90,7 @@ describe('SigningUtil', () => {
             }, true, 'Verify-our')
     
             const elapsedTimeEthers = await run(async () => {
-                return toEthereumAddress(verifyMessage(payload, binarySignature)) === toEthereumAddress(wallet.address)
+                return toEthereumAddress(verifyMessage(payload, binaryToHex(binarySignature, true))) === toEthereumAddress(wallet.address)
             }, true, 'Verify-ethers.js')
     
             expect(elapsedTimeOur).toBeLessThan(elapsedTimeEthers)

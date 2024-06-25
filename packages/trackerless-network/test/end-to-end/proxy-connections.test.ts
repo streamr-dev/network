@@ -11,7 +11,7 @@ import {
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { hexToBinary, utf8ToBinary, wait, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
+import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { ProxyClient } from '../../src/logic/proxy/ProxyClient'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
@@ -48,7 +48,7 @@ describe('Proxy connections', () => {
     const hasConnectionFromProxy = (proxyNode: NetworkNode): boolean => {
         const delivery = proxyNode.stack.getContentDeliveryManager().getStreamPartDelivery(STREAM_PART_ID)
         return (delivery !== undefined)
-            ? ((delivery as { node: RandomGraphNode }).node).hasProxyConnection(proxiedNode.getNodeId())
+            ? ((delivery as { node: ContentDeliveryLayerNode }).node).hasProxyConnection(proxiedNode.getNodeId())
             : false
     }
     

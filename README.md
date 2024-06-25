@@ -191,17 +191,7 @@ To publish the Docker image, use [release-docker workflow](https://github.com/st
 Click button "Run Workflow". Select the right branch and you are good to go. The Docker tags are automatically chosen based on
 the associated Git branch and tag.
 
-### Step 4: Update API docs
-
-Are we still doing this?
-
-```bash
-cd packages/client
-npm run docs
-aws s3 cp ./docs s3://api-docs.streamr.network/client/vX.Y --recursive --profile streamr-api-docs-upload
-```
-
-### Step 5: (optional) Docker image tag `latest`
+### Step 4: (optional) Docker image tag `latest`
 
 GitHub Actions will not update the `latest` tag. This must be done manually. Keep in mind that `latest` should
 always refer to the latest _stable_ version.

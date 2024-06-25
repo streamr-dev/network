@@ -1,6 +1,6 @@
 import { PeerDescriptor, Simulator, SimulatorTransport, LatencyType } from '@streamr/dht'
 import { NetworkStack } from '../../src/NetworkStack'
-import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
+import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
@@ -28,6 +28,7 @@ describe('Joining stream parts on offline nodes', () => {
         entryPoint = new NetworkStack({
             layer0: {
                 transport: entryPointTransport,
+                connectionsView: entryPointTransport,
                 peerDescriptor: entryPointPeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
             }
@@ -36,6 +37,7 @@ describe('Joining stream parts on offline nodes', () => {
         node1 = new NetworkStack({
             layer0: {
                 transport: node1Transport,
+                connectionsView: node1Transport,
                 peerDescriptor: node1PeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
             }
@@ -44,6 +46,7 @@ describe('Joining stream parts on offline nodes', () => {
         node2 = new NetworkStack({
             layer0: {
                 transport: node2Transport,
+                connectionsView: node2Transport,
                 peerDescriptor: node2PeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
             }
@@ -67,8 +70,8 @@ describe('Joining stream parts on offline nodes', () => {
         let messageReceived = false
 
         // store offline peer descriptors to DHT
-        await entryPoint.getLayer0Node().storeDataToDht(streamPartIdToDataKey(STREAM_PART_ID), Any.pack(offlineDescriptor1, PeerDescriptor))
-        await entryPoint.getLayer0Node().storeDataToDht(streamPartIdToDataKey(STREAM_PART_ID), Any.pack(offlineDescriptor2, PeerDescriptor))
+        await entryPoint.getControlLayerNode().storeDataToDht(streamPartIdToDataKey(STREAM_PART_ID), Any.pack(offlineDescriptor1, PeerDescriptor))
+        await entryPoint.getControlLayerNode().storeDataToDht(streamPartIdToDataKey(STREAM_PART_ID), Any.pack(offlineDescriptor2, PeerDescriptor))
         
         node1.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
         node1.getContentDeliveryManager().on('newMessage', () => { messageReceived = true })

@@ -1,6 +1,6 @@
 import { Logger } from '@streamr/utils'
 import { Contract } from 'ethers'
-import { Operator, operatorABI } from '@streamr/network-contracts'
+import { Operator, operatorABI } from '@streamr/network-contracts-ethers6'
 import { OperatorServiceConfig } from './OperatorPlugin'
 import { z } from 'zod'
 

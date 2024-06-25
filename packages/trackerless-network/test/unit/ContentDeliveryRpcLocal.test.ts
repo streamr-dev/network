@@ -3,7 +3,7 @@ import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { ContentDeliveryRpcLocal } from '../../src/logic/ContentDeliveryRpcLocal'
 import { LeaveStreamPartNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { MockTransport } from '../utils/mock/Transport'
+import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 
 describe('ContentDeliveryRpcLocal', () => {

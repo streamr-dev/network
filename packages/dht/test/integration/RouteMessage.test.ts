@@ -73,6 +73,7 @@ describe('Route Message With Mock Connections', () => {
         }
 
         await runAndWaitForEvents3<DhtNodeEvents>([() => {
+            // @ts-expect-error private
             sourceNode.router!.doRouteMessage({
                 message,
                 target: destinationNode.getLocalPeerDescriptor().nodeId,
@@ -104,6 +105,7 @@ describe('Route Message With Mock Connections', () => {
                 sourceDescriptor: sourceNode.getLocalPeerDescriptor(),
                 targetDescriptor: destinationNode.getLocalPeerDescriptor()
             }
+            // @ts-expect-error private
             sourceNode.router!.doRouteMessage({
                 message,
                 target: destinationNode.getLocalPeerDescriptor().nodeId,
@@ -141,6 +143,7 @@ describe('Route Message With Mock Connections', () => {
                             sourceDescriptor: node.getLocalPeerDescriptor(),
                             targetDescriptor: destinationNode.getLocalPeerDescriptor()
                         }
+                        // @ts-expect-error private
                         node.router!.doRouteMessage({
                             message,
                             target: receiver.getLocalPeerDescriptor().nodeId,
@@ -217,6 +220,7 @@ describe('Route Message With Mock Connections', () => {
         }
 
         await runAndWaitForEvents3<DhtNodeEvents>([() => {
+            // @ts-expect-error private
             sourceNode.router!.doRouteMessage(forwardedMessage, RoutingMode.FORWARD)
         }], [[destinationNode, 'message']])
 

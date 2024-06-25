@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { Wallet } from '@ethersproject/wallet'
+import { Wallet } from 'ethers'
 import { MAX_PARTITION_COUNT, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { fastPrivateKey, fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { EthereumAddress, Logger, merge, wait, waitForCondition, utf8ToBinary } from '@streamr/utils'
@@ -33,7 +33,8 @@ import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
 import { addAfterFn } from './jest-utils'
 import path from 'path'
 import fetch from 'node-fetch'
-import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
+import { SignatureValidator } from '../../src/signature/SignatureValidator'
+import { MessageSigner } from '../../src/signature/MessageSigner'
 
 const logger = new Logger(module)
 
@@ -118,7 +119,7 @@ export const createMockMessage = async (
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
         opts.streamPartId ?? opts.stream.getStreamParts()[0]
     )
-    const authentication = createPrivateKeyAuthentication(opts.publisher.privateKey, undefined as any)
+    const authentication = createPrivateKeyAuthentication(opts.publisher.privateKey)
     const factory = new MessageFactory({
         authentication,
         streamId,
@@ -128,7 +129,8 @@ export const createMockMessage = async (
             isStreamPublisher: true
         }),
         groupKeyQueue: await createGroupKeyQueue(authentication, opts.encryptionKey, opts.nextEncryptionKey),
-        erc1271ContractFacade: mock<ERC1271ContractFacade>()
+        signatureValidator: mock<SignatureValidator>(),
+        messageSigner: new MessageSigner(authentication)
     })
     const DEFAULT_CONTENT = {}
     const plainContent = opts.content ?? DEFAULT_CONTENT
@@ -165,7 +167,7 @@ export const startPublisherKeyExchangeSubscription = async (
 }
 
 export const createRandomAuthentication = (): Authentication => {
-    return createPrivateKeyAuthentication(`0x${fastPrivateKey()}`, undefined as any)
+    return createPrivateKeyAuthentication(`0x${fastPrivateKey()}`)
 }
 
 export const createStreamRegistry = (opts?: {

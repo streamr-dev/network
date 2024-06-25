@@ -10,7 +10,7 @@ module.exports = function({ entry, libraryName, alias = {} }) {
             },
             mode: 'development',
             entry,
-            devtool: 'source-map',
+            devtool: 'eval-source-map',
             module: {
                 rules: [
                     {

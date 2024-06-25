@@ -50,41 +50,47 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
             entryPoints: [entrypointDescriptor]
         })
 
+        await layer0EntryPoint.start()
+        await layer0Node1.start()
+        await layer0Node2.start()
+        await layer0Node3.start()
+        await layer0Node4.start()
+
         layer1EntryPoint = new DhtNode({
             nodeId: getNodeIdFromPeerDescriptor(entrypointDescriptor),
             transport: layer0EntryPoint,
+            connectionsView: layer0EntryPoint.getConnectionsView(),
             serviceId: 'layer1'
         })
 
         layer1Node1 = new DhtNode({
             nodeId: layer0Node1Id,
             transport: layer0Node1,
+            connectionsView: layer0Node1.getConnectionsView(),
             serviceId: 'layer1'
         })
 
         layer1Node2 = new DhtNode({
             nodeId: layer0Node2Id,
             transport: layer0Node2,
+            connectionsView: layer0Node2.getConnectionsView(),
             serviceId: 'layer1'
         })
 
         layer1Node3 = new DhtNode({
             nodeId: layer0Node3Id,
             transport: layer0Node3,
+            connectionsView: layer0Node3.getConnectionsView(),
             serviceId: 'layer1'
         })
 
         layer1Node4 = new DhtNode({
             nodeId: layer0Node4Id,
             transport: layer0Node4,
+            connectionsView: layer0Node4.getConnectionsView(),
             serviceId: 'layer1'
         })
 
-        await layer0EntryPoint.start()
-        await layer0Node1.start()
-        await layer0Node2.start()
-        await layer0Node3.start()
-        await layer0Node4.start()
         await layer1EntryPoint.start()
         await layer1Node1.start()
         await layer1Node2.start()

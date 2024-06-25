@@ -90,7 +90,7 @@ export class LocalGroupKeyStore {
         const persistence = await this.persistenceManager.getPersistence(NAMESPACES.ENCRYPTION_KEYS)
         await persistence.set(formLookupKey1(keyId, publisherId), Buffer.from(data).toString('hex'))
         this.logger.debug('Set key', { keyId, publisherId })
-        this.eventEmitter.emit('storeEncryptionKeyToLocalStore', keyId)
+        this.eventEmitter.emit('encryptionKeyStoredToLocalStore', keyId)
     }
 
     async setLatestEncryptionKeyId(keyId: string, publisherId: EthereumAddress, streamId: StreamID): Promise<void> {

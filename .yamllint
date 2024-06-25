@@ -1,0 +1,22 @@
+---
+extends: default
+
+rules:
+  trailing-spaces: {}
+  line-length:
+    disable
+  new-lines:
+    type: unix
+  truthy:
+    disable
+  new-line-at-end-of-file:
+    disable
+  comments:
+    require-starting-space: false
+    ignore-shebangs: false
+    min-spaces-from-content: 1
+
+ignore: |
+  /node_modules/
+  /packages/dht/node_modules/
+  /packages/network/node_modules/

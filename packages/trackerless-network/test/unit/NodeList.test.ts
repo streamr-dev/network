@@ -13,7 +13,7 @@ import { NodeList } from '../../src/logic/NodeList'
 import { formStreamPartContentDeliveryServiceId } from '../../src/logic/formStreamPartDeliveryServiceId'
 import { ContentDeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { MockTransport } from '../utils/mock/Transport'
+import { MockTransport } from '../utils/mock/MockTransport'
 
 const streamPartId = StreamPartIDUtils.parse('stream#0')
 

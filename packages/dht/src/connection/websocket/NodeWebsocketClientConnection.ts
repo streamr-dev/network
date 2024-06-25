@@ -28,7 +28,7 @@ export class WebsocketClientConnection extends AbstractWebsocketClientConnection
                 }
             })
         } else {
-            logger.debug('Tried to connect() a stopped connection')
+            logger.debug('Tried to connect() a stopped connection', { id: this.connectionId })
         }
     }
 

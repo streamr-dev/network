@@ -39,7 +39,7 @@ describe('MetricsPublisher', () => {
         )
 
         // trigger metric publisher to start
-        eventEmitter.emit('subscribe', undefined)
+        eventEmitter.emit('streamPartSubscribed', undefined)
     }
 
     const assertPublisherEnabled = async (
@@ -116,7 +116,7 @@ describe('MetricsPublisher', () => {
         it('ethereum authentication', async () => {
             await assertPublisherDisabled({
                 auth: {
-                    ethereum: {}
+                    ethereum: {} as any
                 }
             })
         })

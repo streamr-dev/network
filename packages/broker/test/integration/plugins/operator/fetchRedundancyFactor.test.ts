@@ -1,8 +1,10 @@
 import { fetchRedundancyFactor } from '../../../../src/plugins/operator/fetchRedundancyFactor'
 import { getProvider, setupOperatorContract, SetupOperatorContractReturnType } from './contractUtils'
-import { Contract, Wallet } from 'ethers'
-import { Operator, operatorABI } from '@streamr/network-contracts'
+import { Contract } from 'ethers'
+import { Operator, operatorABI } from '@streamr/network-contracts-ethers6'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
+import { fastWallet } from '@streamr/test-utils'
+import { SignerWithProvider } from '@streamr/sdk'
 
 async function updateMetadata(deployment: SetupOperatorContractReturnType, metadata: string): Promise<void> {
     const operator = new Contract(
@@ -21,7 +23,7 @@ describe(fetchRedundancyFactor, () => {
         deployment = await setupOperatorContract()
         serviceConfig = {
             ...deployment.operatorServiceConfig,
-            signer: Wallet.createRandom().connect(getProvider())
+            signer: fastWallet().connect(getProvider()) as SignerWithProvider
         }
     }, 30 * 1000)
 

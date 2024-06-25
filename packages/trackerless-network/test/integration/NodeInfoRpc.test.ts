@@ -40,6 +40,7 @@ describe('NetworkStack NodeInfoRpc', () => {
         requesteStack = new NetworkStack({
             layer0: {
                 transport: requesteeTransport1,
+                connectionsView: requesteeTransport1,
                 peerDescriptor: requesteePeerDescriptor,
                 entryPoints: [requesteePeerDescriptor]
             }
@@ -47,6 +48,7 @@ describe('NetworkStack NodeInfoRpc', () => {
         otherStack = new NetworkStack({
             layer0: {
                 transport: otherTransport,
+                connectionsView: otherTransport,
                 peerDescriptor: otherPeerDescriptor,
                 entryPoints: [requesteePeerDescriptor]
             }

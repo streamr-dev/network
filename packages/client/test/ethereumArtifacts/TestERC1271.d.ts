@@ -13,8 +13,8 @@ import type {
   Signer,
   utils,
 } from "ethers";
-import type { FunctionFragment, Result } from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
+import type { FunctionFragment, Result } from "ethers";
+import type { Listener, Provider } from "ethers";
 import type {
   TypedEventFilter,
   TypedEvent,

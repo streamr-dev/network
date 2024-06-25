@@ -5,6 +5,7 @@ import {
 } from '../../../../src/plugins/operator/ContractFacade'
 import { EventEmitter } from 'eventemitter3'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { wait } from '@streamr/utils'
 
 describe(parsePartitionFromReviewRequestMetadata, () => {
     it('throws given undefined', () => {
@@ -45,7 +46,12 @@ describe('ContractFacade', () => {
     
         beforeEach(() => {
             listener = jest.fn()
-            fakeOperator = new EventEmitter()
+            fakeOperator = new class extends EventEmitter {
+                // eslint-disable-next-line class-methods-use-this
+                async getAddress() {
+                    return operatorContractAddress
+                }
+            }()
             helper = new ContractFacade(fakeOperator as any, undefined as any, undefined as any)
             abortController = new AbortController()
             helper.addReviewRequestListener(listener, abortController.signal)
@@ -55,13 +61,15 @@ describe('ContractFacade', () => {
             abortController.abort()
         })
     
-        it('emitting ReviewRequest with valid metadata causes listener to be invoked', () => {
+        it('emitting ReviewRequest with valid metadata causes listener to be invoked', async () => {
             fakeOperator.emit('ReviewRequest', sponsorshipAddress, operatorContractAddress, 1000, 1050, '{ "partition": 7 }')
+            await wait(0)
             expect(listener).toHaveBeenLastCalledWith(sponsorshipAddress, operatorContractAddress, 7, 1000 * 1000, 1050 * 1000)
         })
     
-        it('emitting ReviewRequest with invalid metadata causes listener to not be invoked', () => {
+        it('emitting ReviewRequest with invalid metadata causes listener to not be invoked', async () => {
             fakeOperator.emit('ReviewRequest', sponsorshipAddress, operatorContractAddress, 1000, 1050, '{ "partition": 666 }')
+            await wait(0)
             expect(listener).not.toHaveBeenCalled()
         })
     

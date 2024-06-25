@@ -1,7 +1,7 @@
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 import { mock, MockProxy } from 'jest-mock-extended'
-import { Provider } from '@ethersproject/providers'
+import { Provider } from 'ethers'
 import EventEmitter3 from 'eventemitter3'
 import { eventsWithArgsToArray, randomEthereumAddress } from '@streamr/test-utils'
 import { toStreamID } from '@streamr/protocol'

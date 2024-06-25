@@ -4,7 +4,7 @@ import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
 import { Broker } from '../../../../src/broker'
 import { createClient, startBroker, createTestStream } from '../../../utils'
 import { wait } from '@streamr/utils'
-import { Wallet } from '@ethersproject/wallet'
+import { Wallet } from 'ethers'
 
 const MQTT_PLUGIN_PORT = 12470
 

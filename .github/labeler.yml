@@ -1,52 +1,52 @@
 ---
 ci:
-- changed-files:
-  - any-glob-to-any-file: '.github/*'
-  - any-glob-to-any-file: '.github/**/*'
+  - changed-files:
+      - any-glob-to-any-file: '.github/*'
+      - any-glob-to-any-file: '.github/**/*'
 docs:
-- changed-files:
-  - any-glob-to-any-file: '**.md'
-  - any-glob-to-any-file: '*.md'
+  - changed-files:
+      - any-glob-to-any-file: '**.md'
+      - any-glob-to-any-file: '*.md'
 broker:
-- changed-files:
-  - any-glob-to-any-file: 'packages/broker/*'
-  - any-glob-to-any-file: 'packages/broker/**/*'
+  - changed-files:
+      - any-glob-to-any-file: 'packages/broker/*'
+      - any-glob-to-any-file: 'packages/broker/**/*'
 browser-test-runner:
-- changed-files:
-  - any-glob-to-any-file: 'package/browser-test-runner/*'
-  - any-glob-to-any-file: 'package/browser-test-runner/**/*'
+  - changed-files:
+      - any-glob-to-any-file: 'package/browser-test-runner/*'
+      - any-glob-to-any-file: 'package/browser-test-runner/**/*'
 network:
-- changed-files:
-  - any-glob-to-any-file: 'packages/trackerless-network/*'
-  - any-glob-to-any-file: 'packages/trackerless-network/**/*'
+  - changed-files:
+      - any-glob-to-any-file: 'packages/trackerless-network/*'
+      - any-glob-to-any-file: 'packages/trackerless-network/**/*'
 dht:
-- changed-files:
-  - any-glob-to-any-file: 'packages/dht/*'
-  - any-glob-to-any-file: 'packages/dht/**/*'
+  - changed-files:
+      - any-glob-to-any-file: 'packages/dht/*'
+      - any-glob-to-any-file: 'packages/dht/**/*'
 proto-rpc:
-- changed-files:
-  - any-glob-to-any-file: 'packages/proto-rpc/*'
-  - any-glob-to-any-file: 'packages/proto-rpc/**/*'
+  - changed-files:
+      - any-glob-to-any-file: 'packages/proto-rpc/*'
+      - any-glob-to-any-file: 'packages/proto-rpc/**/*'
 client:
-- changed-files:
-  - any-glob-to-any-file: 'packages/client/*'
-  - any-glob-to-any-file: 'packages/client/**/*'
+  - changed-files:
+      - any-glob-to-any-file: 'packages/client/*'
+      - any-glob-to-any-file: 'packages/client/**/*'
 protocol:
-- changed-files:
-  - any-glob-to-any-file: 'packages/protocol/*'
-  - any-glob-to-any-file: 'packages/protocol/**/*'
+  - changed-files:
+      - any-glob-to-any-file: 'packages/protocol/*'
+      - any-glob-to-any-file: 'packages/protocol/**/*'
 test-utils:
-- changed-files:
-  - any-glob-to-any-file: 'packages/test-utils/*'
-  - any-glob-to-any-file: 'packages/test-utils/**/*'
+  - changed-files:
+      - any-glob-to-any-file: 'packages/test-utils/*'
+      - any-glob-to-any-file: 'packages/test-utils/**/*'
 utils:
-- changed-files:
-  - any-glob-to-any-file: 'packages/utils/*'
-  - any-glob-to-any-file: 'packages/utils/**/*'
+  - changed-files:
+      - any-glob-to-any-file: 'packages/utils/*'
+      - any-glob-to-any-file: 'packages/utils/**/*'
 cli-tools:
-- changed-files:
-  - any-glob-to-any-file: 'packages/cli-tools/*'
-  - any-glob-to-any-file: 'packages/cli-tools/**/*'
+  - changed-files:
+      - any-glob-to-any-file: 'packages/cli-tools/*'
+      - any-glob-to-any-file: 'packages/cli-tools/**/*'
 changelog:
-- changed-files:
-  - any-glob-to-any-file: 'packages/*/CHANGELOG.md'
+  - changed-files:
+      - any-glob-to-any-file: 'packages/*/CHANGELOG.md'

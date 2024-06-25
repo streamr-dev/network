@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { Wallet } from '@ethersproject/wallet'
+import { Wallet } from 'ethers'
 import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
 import { CONFIG_TEST, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
@@ -83,10 +83,10 @@ describe('StorageNodeRegistry', () => {
 
         const onAddPayloads: any[] = []
         const onRemovePayloads: any[] = []
-        listenerClient.on('addToStorageNode', (payload: any) => {
+        listenerClient.on('streamAddedToStorageNode', (payload: any) => {
             onAddPayloads.push(payload)
         })
-        listenerClient.on('removeFromStorageNode', (payload: any) => {
+        listenerClient.on('streamRemovedFromFromStorageNode', (payload: any) => {
             onRemovePayloads.push(payload)
         })
 

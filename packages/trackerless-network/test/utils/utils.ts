@@ -9,7 +9,7 @@ import {
     getRandomRegion,
     getRawFromDhtAddress
 } from '@streamr/dht'
-import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
+import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import {
     ContentType,
     EncryptionType,
@@ -18,12 +18,12 @@ import {
     StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
-import { createRandomGraphNode } from '../../src/logic/createRandomGraphNode'
+import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
 import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { Layer1Node } from '../../src/logic/Layer1Node'
+import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { ContentDeliveryRpcClient, HandshakeRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RpcCommunicator } from '@streamr/proto-rpc'
 
@@ -37,31 +37,32 @@ export const mockConnectionLocker: ConnectionLocker = {
     getWeakLockedConnectionCount: () => 0,
 }
 
-export const createMockRandomGraphNodeAndDhtNode = async (
+export const createMockContentDeliveryLayerNodeAndDhtNode = async (
     localPeerDescriptor: PeerDescriptor,
     entryPointDescriptor: PeerDescriptor,
     streamPartId: StreamPartID,
     simulator: Simulator
-): Promise<[ Layer1Node, RandomGraphNode ]> => {
+): Promise<[ DiscoveryLayerNode, ContentDeliveryLayerNode ]> => {
     const mockCm = new SimulatorTransport(localPeerDescriptor, simulator)
     await mockCm.start()
-    const layer1Node = new DhtNode({
+    const discoveryLayerNode = new DhtNode({
         transport: mockCm,
+        connectionsView: mockCm,
         peerDescriptor: localPeerDescriptor,
         numberOfNodesPerKBucket: 4,
         entryPoints: [entryPointDescriptor],
         rpcRequestTimeout: 5000
     })
-    const randomGraphNode = createRandomGraphNode({
+    const contentDeliveryLayerNode = createContentDeliveryLayerNode({
         streamPartId,
         transport: mockCm,
-        layer1Node,
+        discoveryLayerNode,
         connectionLocker: mockCm,
         localPeerDescriptor,
         rpcRequestTimeout: 5000,
         isLocalNodeEntryPoint: () => false
     })
-    return [layer1Node, randomGraphNode]
+    return [discoveryLayerNode, contentDeliveryLayerNode]
 }
 
 export const createStreamMessage = (
@@ -134,6 +135,7 @@ export const createNetworkNodeWithSimulator = async (
             peerDescriptor,
             entryPoints,
             transport,
+            connectionsView: transport,
             maxConnections: 25,
             storeHighestTtl: 120000,
             storeMaxTtl: 120000

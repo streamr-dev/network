@@ -4,7 +4,7 @@ import { NeighborUpdateRpcLocal } from '../../src/logic/neighbor-discovery/Neigh
 import { createMockPeerDescriptor } from '../utils/utils'
 import { NodeList } from '../../src/logic/NodeList'
 import { StreamPartIDUtils } from '@streamr/protocol'
-import { MockTransport } from '../utils/mock/Transport'
+import { MockTransport } from '../utils/mock/MockTransport'
 import { ContentDeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
 import { range } from 'lodash'

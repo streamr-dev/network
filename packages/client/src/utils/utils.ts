@@ -1,4 +1,3 @@
-import { ContractReceipt } from '@ethersproject/contracts'
 import { DhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress } from '@streamr/dht'
 import { StreamID, toStreamID } from '@streamr/protocol'
 import {
@@ -19,6 +18,7 @@ import { StreamrClientEventEmitter } from '../events'
 import { WebStreamToNodeStream } from './WebStreamToNodeStream'
 import { SEPARATOR } from './uuid'
 import { NodeType, PeerDescriptor } from '@streamr/dht'
+import { ContractTransactionReceipt } from 'ethers'
 
 const logger = new Logger(module)
 
@@ -183,8 +183,10 @@ export const createTheGraphClient = (
         // eslint-disable-next-line no-underscore-dangle
         indexPollInterval: config._timeouts.theGraph.indexPollInterval
     })
-    eventEmitter.on('confirmContractTransaction', (payload: { receipt: ContractReceipt }) => {
-        instance.updateRequiredBlockNumber(payload.receipt.blockNumber)
+    eventEmitter.on('contractTransactionConfirmed', (payload: { receipt: ContractTransactionReceipt | null }) => {
+        if (payload.receipt != null) {
+            instance.updateRequiredBlockNumber(payload.receipt.blockNumber)
+        }
     })
     return instance
 }

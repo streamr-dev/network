@@ -6,7 +6,7 @@ import { Logger, waitForEvent3 } from '@streamr/utils'
 import { TemporaryConnectionRpcRemote } from '../temporary-connection/TemporaryConnectionRpcRemote'
 import { StreamPartID } from '@streamr/protocol'
 
-interface InspectorConfig {
+interface InspectorOptions {
     localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     rpcCommunicator: ListeningRpcCommunicator
@@ -30,14 +30,14 @@ export class Inspector {
     private readonly openInspectConnection: (peerDescriptor: PeerDescriptor, lockId: LockID) => Promise<void>
     private readonly closeInspectConnection: (peerDescriptor: PeerDescriptor, lockId: LockID) => Promise<void>
 
-    constructor(config: InspectorConfig) {
-        this.streamPartId = config.streamPartId
-        this.localPeerDescriptor = config.localPeerDescriptor
-        this.rpcCommunicator = config.rpcCommunicator
-        this.connectionLocker = config.connectionLocker
-        this.inspectionTimeout = config.inspectionTimeout ?? DEFAULT_TIMEOUT
-        this.openInspectConnection = config.openInspectConnection ?? this.defaultOpenInspectConnection
-        this.closeInspectConnection = config.closeInspectConnection ?? this.defaultCloseInspectConnection
+    constructor(options: InspectorOptions) {
+        this.streamPartId = options.streamPartId
+        this.localPeerDescriptor = options.localPeerDescriptor
+        this.rpcCommunicator = options.rpcCommunicator
+        this.connectionLocker = options.connectionLocker
+        this.inspectionTimeout = options.inspectionTimeout ?? DEFAULT_TIMEOUT
+        this.openInspectConnection = options.openInspectConnection ?? this.defaultOpenInspectConnection
+        this.closeInspectConnection = options.closeInspectConnection ?? this.defaultCloseInspectConnection
     }
 
     async defaultOpenInspectConnection(peerDescriptor: PeerDescriptor, lockId: LockID): Promise<void> {

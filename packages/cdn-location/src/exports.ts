@@ -1,6 +1,15 @@
-import { getLocalRegion, getLocalAirportCode } from './getLocalRegion'
+import {
+    getLocalRegion,
+    getLocalRegionWithCache,
+    getLocalAirportCode,
+    getLocalRegionByCoordinates,
+    getLocalAirportCodeByCoordinates
+} from './getLocalRegion'
 
 export {
     getLocalRegion,
-    getLocalAirportCode
+    getLocalRegionWithCache,
+    getLocalRegionByCoordinates,
+    getLocalAirportCode,
+    getLocalAirportCodeByCoordinates
 }

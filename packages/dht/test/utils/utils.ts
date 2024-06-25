@@ -17,7 +17,7 @@ import {
     IDhtNodeRpc,
     IRouterRpc,
     IStoreRpc,
-    IWebsocketConnectorRpc
+    IWebsocketClientConnectorRpc
 } from '../../src/proto/packages/dht/protos/DhtRpc.server'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
@@ -89,6 +89,7 @@ export const createMockConnectionDhtNode = async (
     const opts = {
         peerDescriptor: peerDescriptor,
         transport: mockConnectionManager,
+        connectionsView: mockConnectionManager,
         connectionLocker: mockConnectionManager,
         numberOfNodesPerKBucket,
         maxConnections: maxConnections,
@@ -115,7 +116,9 @@ export const createMockConnectionLayer1Node = async (
         type: NodeType.NODEJS,
     }
     const node = new DhtNode({
-        peerDescriptor: descriptor, transport: layer0Node,
+        peerDescriptor: descriptor,
+        transport: layer0Node,
+        connectionsView: layer0Node.getConnectionsView(),
         serviceId: serviceId ? serviceId : 'layer1', numberOfNodesPerKBucket,
         rpcRequestTimeout: 10000
     })
@@ -228,7 +231,7 @@ export const mockStoreRpc: IStoreRpcWithError = {
     }
 }
 
-export const mockWebsocketConnectorRpc: IWebsocketConnectorRpc = {
+export const mockWebsocketClientConnectorRpc: IWebsocketClientConnectorRpc = {
     async requestConnection(): Promise<Empty> {
         return {}
     }

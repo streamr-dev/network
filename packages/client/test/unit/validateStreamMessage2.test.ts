@@ -21,8 +21,11 @@ import assert from 'assert'
 import { Authentication } from '../../src/Authentication'
 import { Stream } from '../../src/Stream'
 import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
-import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { createRandomAuthentication, MOCK_CONTENT } from '../test-utils/utils'
+import { SignatureValidator } from '../../src/signature/SignatureValidator'
+import { mock } from 'jest-mock-extended'
+import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
+import { MessageSigner } from '../../src/signature/MessageSigner'
 
 const groupKeyMessageToStreamMessage = async (
     groupKeyMessage: GroupKeyRequest | GroupKeyResponse,
@@ -30,7 +33,8 @@ const groupKeyMessageToStreamMessage = async (
     prevMsgRef: MessageRef | undefined,
     authentication: Authentication
 ): Promise<StreamMessage> => {
-    return createSignedMessage({
+    const messageSigner = new MessageSigner(authentication)
+    return messageSigner.createSignedMessage({
         messageId,
         prevMsgRef,
         content: groupKeyMessage instanceof GroupKeyRequest
@@ -41,9 +45,7 @@ const groupKeyMessageToStreamMessage = async (
             : StreamMessageType.GROUP_KEY_RESPONSE,
         contentType: ContentType.JSON,
         encryptionType: EncryptionType.NONE,
-        signatureType: SignatureType.SECP256K1,
-        authentication
-    })
+    }, SignatureType.SECP256K1)
 }
 
 const publisherAuthentication = createRandomAuthentication()
@@ -65,7 +67,7 @@ describe('Validator2', () => {
                 getStream,
                 isStreamPublisher: (streamId: string, address: EthereumAddress) => isPublisher(address, streamId),
                 isStreamSubscriber: (streamId: string, address: EthereumAddress) => isSubscriber(address, streamId)
-            } as any, undefined as any)
+            } as any, new SignatureValidator(mock<ERC1271ContractFacade>()))
         }
     }
 
@@ -87,38 +89,34 @@ describe('Validator2', () => {
             return address === subscriber && streamId === 'streamId'
         }
 
-        msg = await createSignedMessage({
+        const publisherSigner = new MessageSigner(publisherAuthentication)
+
+        msg = await publisherSigner.createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
             messageType: StreamMessageType.MESSAGE,
             content: MOCK_CONTENT,
-            authentication: publisherAuthentication,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-            signatureType: SignatureType.SECP256K1
-        })
+        }, SignatureType.SECP256K1)
 
-        msgWithNewGroupKey = await createSignedMessage({
+        msgWithNewGroupKey = await publisherSigner.createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
             messageType: StreamMessageType.MESSAGE,
             content: MOCK_CONTENT,
             newGroupKey: new EncryptedGroupKey('groupKeyId', hexToBinary('0x1111')),
-            authentication: publisherAuthentication,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-            signatureType: SignatureType.SECP256K1
-        })
+        }, SignatureType.SECP256K1)
         assert.notStrictEqual(msg.signature, msgWithNewGroupKey.signature)
 
-        msgWithPrevMsgRef = await createSignedMessage({
+        msgWithPrevMsgRef = await publisherSigner.createSignedMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 2000, 0, publisher, 'msgChainId'),
             messageType: StreamMessageType.MESSAGE,
             content: MOCK_CONTENT,
             prevMsgRef: new MessageRef(1000, 0),
-            authentication: publisherAuthentication,
             contentType: ContentType.JSON,
-            encryptionType: EncryptionType.NONE,
-            signatureType: SignatureType.SECP256K1
-        })
+            encryptionType: EncryptionType.NONE
+        }, SignatureType.SECP256K1)
         assert.notStrictEqual(msg.signature, msgWithPrevMsgRef.signature)
 
         groupKeyRequest = await groupKeyMessageToStreamMessage(new GroupKeyRequest({

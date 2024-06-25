@@ -3,7 +3,6 @@ sidebar_position: 2
 ---
 
 # Use Streamr in your web app
-
 In this quickstart guide, you'll be using Streamr in a **ReactJS** web application. You'll be reading from a publicly readable stream. Your ReactJS app will be a consumer (subscriber) of the stream. If you want your app to be able to write data to the stream, then you'll need to grant access to individual users of your app or create a publicly writable stream (the latter is typically not recommended). Publishing is typically accomplished with a centralized gatekeeping service (like a NodeJS server).
 
 **Prerequisites:**
@@ -27,19 +26,19 @@ The SDK is available on [NPM](https://www.npmjs.com/package/@streamr/sdk) and ca
 $ npm install @streamr/sdk
 ```
 
-Having trouble installing the SDK? Maybe our [troubleshooting](../usage/streamr-js-client/how-to-use#Troubleshooting) section will help.
+Having trouble installing the SDK? Maybe our [troubleshooting](../usage/sdk/how-to-use#Troubleshooting) section will help.
 
 ## Subscribe to data of a stream
 
-This tutorial shows how to subscribe to a `PUBLIC` [stream](https://streamr.network/marketplace/products/c188a26fc1aa4d6b91772fa4c463cc4968c1156707824a538061baa5a26b3d93/streamPreview/0x8ed334e44265a0c89b7739cb66a8f19675a5fc7a%2Fultrasound.money%2Ffees%2Fburn-categories). The current Ethereum 2.0 burn stats get published onto this stream every minute, and we want to consume this data.
+This tutorial shows how to subscribe to a `PUBLIC` [stream](https://streamr.network/hub/streams/streams.dimo.eth%2Ffirehose%2Fweather/live-data).
 
-To do that, we must first set up the `StreamrClient`. The `StreamrClient` handles the authentification of your stream interactions. It is needed to see if your user has permission to read from the stream.
+To do that, we must first set up the `StreamrClient`. The `StreamrClient` handles the authentication of your stream interactions. It is needed to see if your user has permission to read from the stream.
 
 In this case, the stream is set to `PUBLIC` (anyone can read). However, since this information gets stored in the Stream registry, which exists inside a smart contract on the Polygon chain, we need a wallet to receive the information.
 
 :::info
 By default, your stream will only have the creator address set for permission to read from your stream.
-If you have created your own stream, set the `SUBSCRIBE` permission to public or allowlist some addresses so that your users can read data from your stream. Learn more about **[authentification](../usage/authenticate)**.
+If you have created your own stream, set the `SUBSCRIBE` permission to public or allowlist some addresses so that your users can read data from your stream. Learn more about **[authentication](../usage/authenticate)**.
 :::
 
 ```ts
@@ -48,7 +47,7 @@ declare var window: any
 
 export const startSubscribing = () => {
     const streamId =
-        "0x8ed334e44265a0c89b7739cb66a8f19675a5fc7a/ultrasound.money/fees/burn-categories"
+        "streams.dimo.eth/firehose/weather"
     // Add a browser wallet (e.g. Metamask) to check if the address has permission to read the stream
     const streamr = new StreamrClient({
         auth: { ethereum: window.ethereum },
@@ -104,7 +103,7 @@ import { useSubscribe } from "streamr-client-react"
 
 const StreamrExample = () => {
     const streamId =
-        "0x8ed334e44265a0c89b7739cb66a8f19675a5fc7a/ultrasound.money/fees/burn-categories"
+        "streams.dimo.eth/firehose/weather"
 
     useSubscribe(streamId, {
         onMessage: (msg) => {

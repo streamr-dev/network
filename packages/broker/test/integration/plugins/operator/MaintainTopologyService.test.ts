@@ -70,14 +70,14 @@ describe('MaintainTopologyService', () => {
         const sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream1.id })
         const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream2.id })
         const operatorContract = await deployOperatorContract({ deployer: operatorWallet })
-        await delegate(operatorWallet, operatorContract.address, 20000)
-        await stake(operatorContract, sponsorship1.address, 10000)
+        await delegate(operatorWallet, await operatorContract.getAddress(), 20000)
+        await stake(operatorContract, await sponsorship1.getAddress(), 10000)
 
         const serviceHelperConfig = {
             signer: operatorWallet,
-            operatorContractAddress: toEthereumAddress(operatorContract.address),
+            operatorContractAddress: toEthereumAddress(await operatorContract.getAddress()),
             theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl,
-            getEthersOverrides: () => ({})
+            getEthersOverrides: async () => ({})
         }
 
         const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
@@ -108,7 +108,7 @@ describe('MaintainTopologyService', () => {
             return containsAll(await getSubscribedStreamPartIds(client), stream1.getStreamParts())
         }, 10000, 1000)
 
-        await stake(operatorContract, sponsorship2.address, 10000)
+        await stake(operatorContract, await sponsorship2.getAddress(), 10000)
         await waitForCondition(async () => {
             return containsAll(await getSubscribedStreamPartIds(client), [
                 ...stream1.getStreamParts(),
@@ -116,7 +116,7 @@ describe('MaintainTopologyService', () => {
             ])
         }, 10000, 1000)
 
-        await (await operatorContract.unstake(sponsorship1.address)).wait()
+        await (await operatorContract.unstake(await sponsorship1.getAddress())).wait()
         await waitForCondition(async () => {
             const state = await getSubscribedStreamPartIds(client)
             return containsAll(state, stream2.getStreamParts()) && doesNotContainAny(state, stream1.getStreamParts())

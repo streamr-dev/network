@@ -32,10 +32,8 @@ class ResponseTransform extends Transform {
             if (this.format.header !== undefined) {
                 this.push(this.format.header)
             }
-        } else {
-            if (this.format.delimiter !== undefined) {
-                this.push(this.format.delimiter)
-            }
+        } else if (this.format.delimiter !== undefined) {
+            this.push(this.format.delimiter)
         }
         this.push(this.format.formatMessage(input))
         done()

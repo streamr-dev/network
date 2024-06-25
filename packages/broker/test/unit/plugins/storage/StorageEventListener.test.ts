@@ -49,7 +49,7 @@ describe(StorageEventListener, () => {
     })
 
     function addToStorageNode(recipient: EthereumAddress) {
-        storageEventListeners.get('addToStorageNode')!({
+        storageEventListeners.get('streamAddedToStorageNode')!({
             nodeAddress: recipient,
             streamId: toStreamID('streamId'),
             blockNumber: 1234

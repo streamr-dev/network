@@ -23,10 +23,10 @@ To earn DATA tokens on Polygon you must be willing to hold and stake DATA tokens
 ### Sponsorships
 Sponsorships are the source of incentivization. These are visible on [The Hub](https://streamr.network/hub/network/sponsorships).
 
-### The Mumbai test environment
-The [Mumbai Hub](https://mumbai.streamr.network) is the place to test out your Operator before creating it on Polygon with real tokens.
+### The Amoy test environment
+The [Streamr Hub](https://streamr.network/hub) is the place to test out your Operator before creating it on Polygon with real tokens, just select "Polygon Amoy testnet" from the top-right dropdown.
 
-You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumbaifaucet.com) and you'll need ` TEST` tokens (the Mumbai network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
+You'll need Amoy `MATIC` - widely available with [public faucets](https://faucet.polygon.technology/) and you'll need ` TEST` tokens (the Amoy network's worthless `DATA` tokens) - There is a `TEST` token faucet on the [Streamr Discord](https://discord.gg/gZAm8P7hK8).
 
 ### Community resources
 - Tutorial videos. Follow at your own risk. Note that version numbers and exact instructions may change over time.
@@ -41,6 +41,6 @@ You'll need Mumbai `MATIC` - widely available with [public faucets](https://mumb
 Your tokens are at risk and [the risks are real!](../streamr-network/network-roles/operators.md#operator-risks).
 :::
 
-- Consider starting small with your stake amount and use common sense to never stake more than you can afford to lose. A professional audit of the incentive layer has been completed by Cyfrin, but nothing can be guaranteed of course. 
-- If you want to stake on a sponsorship, DO NOT click on the "Sponsor". That's for funding the sponsorship, not staking! Instead, go to the sponsorship you want to stake on and click "Join as an operator” and enter the amount. 
-- There may be an increase in activity by scammers. A common approach is to pretend to offer help or tech support in direct messages (something we never do). Report any account that is asking you to sign transactions or asking for any sort of credentials such as your private key. These accounts are trying to steal your tokens. It’s advised you disable DMs on Discord. More tips can be found in #server-safety-guide. 
+- Consider starting small with your stake amount and use common sense to never stake more than you can afford to lose. A professional audit of the incentive layer has been completed by Cyfrin, but nothing can be guaranteed of course.
+- If you want to stake on a sponsorship, DO NOT click on the "Sponsor". That's for funding the sponsorship, not staking! Instead, go to the sponsorship you want to stake on and click "Join as an operator” and enter the amount.
+- There may be an increase in activity by scammers. A common approach is to pretend to offer help or tech support in direct messages (something we never do). Report any account that is asking you to sign transactions or asking for any sort of credentials such as your private key. These accounts are trying to steal your tokens. It’s advised you disable DMs on Discord. More tips can be found in #server-safety-guide.

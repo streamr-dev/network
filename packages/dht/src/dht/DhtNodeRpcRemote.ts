@@ -58,6 +58,7 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
         }
     }
 
+    // TODO rename to getClosestRingContacts (breaking change)
     async getClosestRingPeers(ringIdRaw: RingIdRaw): Promise<RingContacts> {
         logger.trace(`Requesting getClosestRingPeers on ${this.serviceId} from ${this.getNodeId()}`)
         const request: ClosestRingPeersRequest = {

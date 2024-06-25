@@ -1,4 +1,4 @@
-import { Wallet } from '@ethersproject/wallet'
+import { Wallet } from 'ethers'
 import { Client, types as cassandraTypes } from 'cassandra-driver'
 import { StreamrClient } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'

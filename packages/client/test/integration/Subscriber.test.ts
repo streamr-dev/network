@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { Wallet } from '@ethersproject/wallet'
+import { Wallet } from 'ethers'
 import { fastWallet } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
 import { Stream } from '../../src/Stream'

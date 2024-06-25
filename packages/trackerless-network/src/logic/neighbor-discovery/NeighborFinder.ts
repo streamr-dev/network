@@ -2,7 +2,7 @@ import { setAbortableTimeout } from '@streamr/utils'
 import { NodeList } from '../NodeList'
 import { DhtAddress } from '@streamr/dht'
 
-interface FindNeighborsSessionConfig {
+interface FindNeighborsSessionOptions {
     neighbors: NodeList
     nearbyNodeView: NodeList
     leftNodeView: NodeList
@@ -17,11 +17,11 @@ const INTERVAL = 250
 
 export class NeighborFinder {
     private readonly abortController: AbortController
-    private readonly config: FindNeighborsSessionConfig
+    private readonly options: FindNeighborsSessionOptions
     private running = false
 
-    constructor(config: FindNeighborsSessionConfig) {
-        this.config = config
+    constructor(options: FindNeighborsSessionOptions) {
+        this.options = options
         this.abortController = new AbortController()
     }
 
@@ -29,14 +29,14 @@ export class NeighborFinder {
         if (!this.running) {
             return
         }
-        const newExcludes = await this.config.doFindNeighbors(excluded)
+        const newExcludes = await this.options.doFindNeighbors(excluded)
         const uniqueContactCount = new Set([
-            ...this.config.nearbyNodeView.getIds(),
-            ...this.config.leftNodeView.getIds(),
-            ...this.config.rightNodeView.getIds(),
-            ...this.config.randomNodeView.getIds()
+            ...this.options.nearbyNodeView.getIds(),
+            ...this.options.leftNodeView.getIds(),
+            ...this.options.rightNodeView.getIds(),
+            ...this.options.randomNodeView.getIds()
         ]).size
-        if (this.config.neighbors.size() < this.config.minCount && newExcludes.length < uniqueContactCount) {
+        if (this.options.neighbors.size() < this.options.minCount && newExcludes.length < uniqueContactCount) {
             // TODO should we catch possible promise rejection?
             setAbortableTimeout(() => this.findNeighbors(newExcludes), INTERVAL, this.abortController.signal)
         } else {

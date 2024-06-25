@@ -50,8 +50,8 @@ describe('Router', () => {
         router = new Router({
             localPeerDescriptor: peerDescriptor1,
             rpcCommunicator: rpcCommunicator as any,
-            connections,
-            handleMessage: () => {}
+            handleMessage: () => {},
+            getConnections: () => [...connections.values()].map((c) => c.getPeerDescriptor())
         })
     })
 

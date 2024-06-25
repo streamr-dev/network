@@ -37,7 +37,7 @@ export interface IAutoCertifierClient {
     on(eventName: string, cb: (subdomain: CertifiedSubdomain) => void): void
 }
 
-interface AutoCertifierClientFacadeConfig {
+interface AutoCertifierClientFacadeOptions {
     url: string
     configFile: string
     transport: ITransport
@@ -55,24 +55,24 @@ export class AutoCertifierClientFacade {
 
     private autoCertifierClient: IAutoCertifierClient
     private readonly rpcCommunicator: ListeningRpcCommunicator
-    private readonly config: AutoCertifierClientFacadeConfig
+    private readonly options: AutoCertifierClientFacadeOptions
 
-    constructor(config: AutoCertifierClientFacadeConfig) {
-        this.config = config
-        this.rpcCommunicator = new ListeningRpcCommunicator(AUTO_CERTIFIER_SERVICE_ID, config.transport)
-        this.autoCertifierClient = config.createClientFactory ? config.createClientFactory() 
+    constructor(options: AutoCertifierClientFacadeOptions) {
+        this.options = options
+        this.rpcCommunicator = new ListeningRpcCommunicator(AUTO_CERTIFIER_SERVICE_ID, options.transport)
+        this.autoCertifierClient = options.createClientFactory ? options.createClientFactory() 
             : defaultAutoCertifierClientFactory(
-                config.configFile,
-                config.url,
+                options.configFile,
+                options.url,
                 this.rpcCommunicator,
-                config.wsServerPort
+                options.wsServerPort
             )
     }
 
     async start(): Promise<void> {
         this.autoCertifierClient.on('updatedCertificate', (subdomain: CertifiedSubdomain) => {
-            this.config.setHost(subdomain.fqdn)
-            this.config.updateCertificate(subdomain.certificate, subdomain.privateKey)
+            this.options.setHost(subdomain.fqdn)
+            this.options.updateCertificate(subdomain.certificate, subdomain.privateKey)
             logger.trace(`Updated certificate`)
         })
         await Promise.all([

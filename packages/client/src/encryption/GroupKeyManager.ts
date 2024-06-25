@@ -64,7 +64,7 @@ export class GroupKeyManager {
         const groupKeyIds = await waitForEvent(
             // TODO remove "as any" type casing in NET-889
             this.eventEmitter as any,
-            'storeEncryptionKeyToLocalStore',
+            'encryptionKeyStoredToLocalStore',
             this.config.encryption.keyRequestTimeout,
             (storedGroupKeyId: string) => storedGroupKeyId === groupKeyId,
             this.destroySignal.abortSignal

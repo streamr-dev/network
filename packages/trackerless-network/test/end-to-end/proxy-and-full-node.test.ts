@@ -87,14 +87,14 @@ describe('proxy and full node', () => {
 
     it('proxied node can act as full node on another stream part', async () => {
         await proxiedNode.setProxies(proxiedStreamPart, [proxyNodeDescriptor], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 1)
-        expect(proxiedNode.stack.getLayer0Node().hasJoined()).toBe(false)
+        expect(proxiedNode.stack.getControlLayerNode().hasJoined()).toBe(false)
 
         await Promise.all([
             waitForEvent3(proxyNode.stack.getContentDeliveryManager() as any, 'newMessage'),
             proxiedNode.broadcast(createMessage(regularStreamPart1))
         ])
 
-        expect(proxiedNode.stack.getLayer0Node().hasJoined()).toBe(true)
+        expect(proxiedNode.stack.getControlLayerNode().hasJoined()).toBe(true)
 
         await Promise.all([
             waitForEvent3(proxyNode.stack.getContentDeliveryManager() as any, 'newMessage'),
@@ -107,7 +107,7 @@ describe('proxy and full node', () => {
 
     it('proxied node can act as full node on multiple stream parts', async () => {
         await proxiedNode.setProxies(proxiedStreamPart, [proxyNodeDescriptor], ProxyDirection.PUBLISH, PROXIED_NODE_USER_ID, 1)
-        expect(proxiedNode.stack.getLayer0Node().hasJoined()).toBe(false)
+        expect(proxiedNode.stack.getControlLayerNode().hasJoined()).toBe(false)
 
         await Promise.all([
             waitForEvent3(proxyNode.stack.getContentDeliveryManager() as any, 'newMessage', 5000, 
@@ -124,7 +124,7 @@ describe('proxy and full node', () => {
             proxiedNode.broadcast(createMessage(regularStreamPart4))
         ])
 
-        expect(proxiedNode.stack.getLayer0Node().hasJoined()).toBe(true)
+        expect(proxiedNode.stack.getControlLayerNode().hasJoined()).toBe(true)
 
         await Promise.all([
             waitForEvent3(proxyNode.stack.getContentDeliveryManager() as any, 'newMessage'),

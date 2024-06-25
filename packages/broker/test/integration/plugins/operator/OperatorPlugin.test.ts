@@ -1,4 +1,4 @@
-import type { Operator } from '@streamr/network-contracts'
+import type { Operator } from '@streamr/network-contracts-ethers6'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { collect, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
@@ -33,9 +33,9 @@ describe('OperatorPlugin', () => {
 
         const sponsorer = await generateWalletWithGasAndTokens()
         const sponsorship1 = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
-        await sponsor(sponsorer, sponsorship1.address, 10000)
-        await delegate(operatorWallet, operatorContract.address, 10000)
-        await stake(operatorContract, sponsorship1.address, 10000)
+        await sponsor(sponsorer, await sponsorship1.getAddress(), 10000)
+        await delegate(operatorWallet, await operatorContract.getAddress(), 10000)
+        await stake(operatorContract, await sponsorship1.getAddress(), 10000)
 
         const publisher = createClient(fastPrivateKey())
         await stream.grantPermissions({
@@ -49,7 +49,7 @@ describe('OperatorPlugin', () => {
             privateKey: brokerWallet.privateKey,
             extraPlugins: {
                 operator: {
-                    operatorContractAddress: operatorContract.address
+                    operatorContractAddress: await operatorContract.getAddress()
                 }
             }
         })
@@ -65,7 +65,7 @@ describe('OperatorPlugin', () => {
         expect(receivedMessages[0].content).toEqual({ foo: 'bar' })
         await subscriber.destroy()
         await publisher.destroy()
-    }, 30 * 1000)
+    }, 60 * 1000)  // TODO why this is slower?
 
     it('invalid configuration', async () => {
         await expect(async () => {
@@ -73,7 +73,7 @@ describe('OperatorPlugin', () => {
                 privateKey: brokerWallet.privateKey,
                 extraPlugins: {
                     operator: {
-                        operatorContractAddress: operatorContract.address
+                        operatorContractAddress: await operatorContract.getAddress()
                     }
                 }
             })

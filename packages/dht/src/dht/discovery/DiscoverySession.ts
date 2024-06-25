@@ -1,106 +1,116 @@
-import { Logger, runAndWaitForEvents3 } from '@streamr/utils'
-import EventEmitter from 'eventemitter3'
+import { Gate, Logger, withTimeout } from '@streamr/utils'
 import { v4 } from 'uuid'
-import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { PeerManager, getDistance } from '../PeerManager'
-import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { DhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
+import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
+import { PeerManager, getDistance } from '../PeerManager'
+import { getClosestNodes } from '../contact/getClosestNodes'
 
 const logger = new Logger(module)
 
-interface DiscoverySessionEvents {
-    discoveryCompleted: () => void
-}
-
-interface DiscoverySessionConfig {
+interface DiscoverySessionOptions {
     targetId: DhtAddress
     parallelism: number
     noProgressLimit: number
     peerManager: PeerManager
     // Note that contacted peers will be mutated by the DiscoverySession or other parallel sessions
     contactedPeers: Set<DhtAddress>
+    abortSignal: AbortSignal
+    createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => DhtNodeRpcRemote
 }
 
 export class DiscoverySession {
 
     public readonly id = v4()
-    private stopped = false
-    private emitter = new EventEmitter<DiscoverySessionEvents>()
     private noProgressCounter = 0
-    private ongoingClosestPeersRequests: Set<DhtAddress> = new Set()
-    private readonly config: DiscoverySessionConfig
+    private ongoingRequests: Set<DhtAddress> = new Set()
+    private doneGate = new Gate(false)
+    private readonly options: DiscoverySessionOptions
 
-    constructor(config: DiscoverySessionConfig) {
-        this.config = config
+    constructor(options: DiscoverySessionOptions) {
+        this.options = options
     }
 
     private addContacts(contacts: PeerDescriptor[]): void {
-        if (this.stopped) {
+        if (this.options.abortSignal.aborted || this.doneGate.isOpen()) {
             return
         }
         for (const contact of contacts) {
-            this.config.peerManager.addContact(contact)
+            this.options.peerManager.addContact(contact)
         }
     }
 
-    private async getClosestPeersFromContact(contact: DhtNodeRpcRemote): Promise<PeerDescriptor[]> {
-        if (this.stopped) {
+    private async fetchClosestNeighborsFromRemote(peerDescriptor: PeerDescriptor): Promise<PeerDescriptor[]> {
+        if (this.options.abortSignal.aborted || this.doneGate.isOpen()) {
             return []
         }
-        logger.trace(`Getting closest peers from contact: ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
-        this.config.contactedPeers.add(contact.getNodeId())
-        const returnedContacts = await contact.getClosestPeers(this.config.targetId)
-        this.config.peerManager.setContactActive(contact.getNodeId())
+        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        logger.trace(`Getting closest neighbors from remote: ${nodeId}`)
+        this.options.contactedPeers.add(nodeId)
+        const remote = this.options.createDhtNodeRpcRemote(peerDescriptor)
+        const returnedContacts = await remote.getClosestPeers(this.options.targetId)
+        this.options.peerManager.setContactActive(nodeId)
         return returnedContacts
     }
 
-    private onClosestPeersRequestSucceeded(nodeId: DhtAddress, contacts: PeerDescriptor[]) {
-        if (!this.ongoingClosestPeersRequests.has(nodeId)) {
+    private onRequestSucceeded(nodeId: DhtAddress, contacts: PeerDescriptor[]) {
+        if (!this.ongoingRequests.has(nodeId)) {
             return
         }
-        this.ongoingClosestPeersRequests.delete(nodeId)
-        const targetId = getRawFromDhtAddress(this.config.targetId)
-        const oldClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
-        const oldClosestDistance = getDistance(targetId, getRawFromDhtAddress(oldClosestNeighbor.getNodeId()))
+        this.ongoingRequests.delete(nodeId)
+        const targetId = getRawFromDhtAddress(this.options.targetId)
+        const oldClosestNeighbor = this.getClosestNeighbor()
+        const oldClosestDistance = getDistance(targetId, oldClosestNeighbor.nodeId)
         this.addContacts(contacts)
-        const newClosestNeighbor = this.config.peerManager.getClosestNeighborsTo(this.config.targetId, 1)[0]
-        const newClosestDistance = getDistance(targetId, getRawFromDhtAddress(newClosestNeighbor.getNodeId()))
+        const newClosestNeighbor = this.getClosestNeighbor()
+        const newClosestDistance = getDistance(targetId, newClosestNeighbor.nodeId)
         if (newClosestDistance >= oldClosestDistance) {
             this.noProgressCounter++
         }
     }
 
-    private onClosestPeersRequestFailed(peer: DhtNodeRpcRemote) {
-        if (!this.ongoingClosestPeersRequests.has(peer.getNodeId())) {
+    private getClosestNeighbor(): PeerDescriptor {
+        return getClosestNodes(
+            this.options.targetId,
+            this.options.peerManager.getNeighbors().map((n) => n.getPeerDescriptor()),
+            { maxCount: 1 }
+        )[0]
+    }
+
+    private onRequestFailed(nodeId: DhtAddress) {
+        if (!this.ongoingRequests.has(nodeId)) {
             return
         }
-        this.ongoingClosestPeersRequests.delete(peer.getNodeId())
-        this.config.peerManager.removeContact(peer.getNodeId())
+        this.ongoingRequests.delete(nodeId)
+        this.options.peerManager.removeContact(nodeId)
     }
 
     private findMoreContacts(): void {
-        if (this.stopped) {
+        if (this.options.abortSignal.aborted || this.doneGate.isOpen()) {
             return
         }
-        const uncontacted = this.config.peerManager.getClosestContactsTo(
-            this.config.targetId,
-            this.config.parallelism,
-            this.config.contactedPeers
+        const uncontacted = getClosestNodes(
+            this.options.targetId,
+            Array.from(this.options.peerManager.getNearbyContacts().getAllContactsInUndefinedOrder(), (c) => c.getPeerDescriptor()), 
+            {
+                maxCount: this.options.parallelism,
+                excludedNodeIds: this.options.contactedPeers
+            }
         )
-        if (uncontacted.length === 0 || this.noProgressCounter >= this.config.noProgressLimit) {
-            this.emitter.emit('discoveryCompleted')
-            this.stopped = true
+        if ((uncontacted.length === 0 && this.ongoingRequests.size === 0) || (this.noProgressCounter >= this.options.noProgressLimit)) {
+            this.doneGate.open()
             return
         }
-        for (const nextPeer of uncontacted) {
-            if (this.ongoingClosestPeersRequests.size >= this.config.parallelism) {
+        for (const node of uncontacted) {
+            if (this.ongoingRequests.size >= this.options.parallelism) {
                 break
             }
-            this.ongoingClosestPeersRequests.add(nextPeer.getNodeId())
+            const nodeId = getNodeIdFromPeerDescriptor(node)
+            this.ongoingRequests.add(nodeId)
             // eslint-disable-next-line promise/catch-or-return
-            this.getClosestPeersFromContact(nextPeer)
-                .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer.getNodeId(), contacts))
-                .catch(() => this.onClosestPeersRequestFailed(nextPeer))
+            this.fetchClosestNeighborsFromRemote(node)
+                .then((contacts) => this.onRequestSucceeded(nodeId, contacts))
+                .catch(() => this.onRequestFailed(nodeId))
                 .finally(() => {
                     this.findMoreContacts()
                 })
@@ -108,20 +118,12 @@ export class DiscoverySession {
     }
 
     public async findClosestNodes(timeout: number): Promise<void> {
-        if (this.config.peerManager.getContactCount(this.config.contactedPeers) === 0) {
+        if (this.options.peerManager.getNearbyContactCount(this.options.contactedPeers) === 0) {
             return
         }
-        // TODO add abortController and signal it in stop()
-        await runAndWaitForEvents3<DiscoverySessionEvents>(
-            [this.findMoreContacts.bind(this)],
-            [[this.emitter, 'discoveryCompleted']],
-            timeout
-        )
-    }
-
-    public stop(): void {
-        this.stopped = true
-        this.emitter.emit('discoveryCompleted')
-        this.emitter.removeAllListeners()
+        setImmediate(() => {
+            this.findMoreContacts()
+        })
+        await withTimeout(this.doneGate.waitUntilOpen(), timeout, 'discovery session timed out', this.options.abortSignal)
     }
 }

@@ -1,7 +1,7 @@
 import { MetricsContext } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
-import { MockTransport } from '../utils/mock/Transport'
+import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { sendConnectivityRequest } from '../../src/connection/connectivityChecker'
 import { LOCAL_PROTOCOL_VERSION } from '../../src/helpers/version'
@@ -15,7 +15,7 @@ describe('ConnectivityChecking', () => {
     beforeEach(async () => {
         server = new ConnectionManager({
             createConnectorFacade: () => new DefaultConnectorFacade({
-                createLocalPeerDescriptor: () => {
+                createLocalPeerDescriptor: async () => {
                     return {
                         ...createMockPeerDescriptor(),
                         websocket: {
@@ -44,7 +44,7 @@ describe('ConnectivityChecking', () => {
             host: HOST,
             port: PORT,
             tls: false,
-            selfSigned: false
+            allowSelfSignedCertificate: false
         }
         const response = await sendConnectivityRequest(request, server.getLocalPeerDescriptor())
         expect(response.version).toEqual(LOCAL_PROTOCOL_VERSION)

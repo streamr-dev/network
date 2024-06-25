@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/parameter-properties */
-import EventEmitter from 'eventemitter3'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { ConnectionSourceEvents } from '../IConnectionSource'
 import { SimulatorConnector } from './SimulatorConnector'
 import { SimulatorConnection } from './SimulatorConnection'
 import { ConnectionID } from '../IConnection'
@@ -89,7 +87,7 @@ class SendOperation extends SimulatorOperation {
 class CloseOperation extends SimulatorOperation {
 }
 
-export class Simulator extends EventEmitter<ConnectionSourceEvents> {
+export class Simulator {
     private stopped = false
     private connectors: Map<DhtAddress, SimulatorConnector> = new Map()
     private latencyTable?: Array<Array<number>>
@@ -112,8 +110,6 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private simulatorTimeout?: NodeJS.Timeout
 
     constructor(latencyType: LatencyType = LatencyType.NONE, fixedLatency?: number) {
-        super()
-
         this.latencyType = latencyType
         this.fixedLatency = fixedLatency
 

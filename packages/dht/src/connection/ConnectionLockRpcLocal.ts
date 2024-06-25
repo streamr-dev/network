@@ -15,7 +15,7 @@ import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
 import { LockID } from './ConnectionLockStates'
 import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../identifiers'
 
-interface ConnectionLockRpcLocalConfig {
+interface ConnectionLockRpcLocalOptions {
     addRemoteLocked: (id: DhtAddress, lockId: LockID) => void
     removeRemoteLocked: (id: DhtAddress, lockId: LockID) => void
     closeConnection: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string) => void
@@ -26,22 +26,22 @@ const logger = new Logger(module)
 
 export class ConnectionLockRpcLocal implements IConnectionLockRpc {
 
-    private readonly config: ConnectionLockRpcLocalConfig
+    private readonly options: ConnectionLockRpcLocalOptions
 
-    constructor(config: ConnectionLockRpcLocalConfig) {
-        this.config = config
+    constructor(options: ConnectionLockRpcLocalOptions) {
+        this.options = options
     }
 
     async lockRequest(lockRequest: LockRequest, context: ServerCallContext): Promise<LockResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        if (areEqualPeerDescriptors(senderPeerDescriptor, this.config.getLocalPeerDescriptor())) {
+        if (areEqualPeerDescriptors(senderPeerDescriptor, this.options.getLocalPeerDescriptor())) {
             const response: LockResponse = {
                 accepted: false
             }
             return response
         }
         const remoteNodeId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
-        this.config.addRemoteLocked(remoteNodeId, lockRequest.lockId)
+        this.options.addRemoteLocked(remoteNodeId, lockRequest.lockId)
         const response: LockResponse = {
             accepted: true
         }
@@ -51,7 +51,7 @@ export class ConnectionLockRpcLocal implements IConnectionLockRpc {
     async unlockRequest(unlockRequest: UnlockRequest, context: ServerCallContext): Promise<Empty> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
         const nodeId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
-        this.config.removeRemoteLocked(nodeId, unlockRequest.lockId)
+        this.options.removeRemoteLocked(nodeId, unlockRequest.lockId)
         return {}
     }
 
@@ -60,9 +60,9 @@ export class ConnectionLockRpcLocal implements IConnectionLockRpc {
         logger.trace(getNodeIdOrUnknownFromPeerDescriptor(senderPeerDescriptor) + ' received gracefulDisconnect notice')
 
         if (disconnectNotice.disconnectMode === DisconnectMode.LEAVING) {
-            this.config.closeConnection(senderPeerDescriptor, true, 'graceful leave notified')
+            this.options.closeConnection(senderPeerDescriptor, true, 'graceful leave notified')
         } else {
-            this.config.closeConnection(senderPeerDescriptor, false, 'graceful disconnect notified')
+            this.options.closeConnection(senderPeerDescriptor, false, 'graceful disconnect notified')
         }
         return {}
     }

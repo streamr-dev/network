@@ -4,7 +4,8 @@ import { Publisher } from '../../src/publish/Publisher'
 import { StreamIDBuilder } from '../../src/StreamIDBuilder'
 import { createGroupKeyManager, createRandomAuthentication } from '../test-utils/utils'
 import { mock } from 'jest-mock-extended'
-import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
+import { SignatureValidator } from '../../src/signature/SignatureValidator'
+import { MessageSigner } from '../../src/signature/MessageSigner'
 
 describe('Publisher', () => {
     it('error message', async () => {
@@ -20,7 +21,8 @@ describe('Publisher', () => {
             createGroupKeyManager(undefined, authentication),
             streamIdBuilder,
             authentication,
-            mock<ERC1271ContractFacade>()
+            mock<SignatureValidator>(),
+            mock<MessageSigner>()
         )
         const streamId = await streamIdBuilder.toStreamID('/test')
         await expect(async () => {

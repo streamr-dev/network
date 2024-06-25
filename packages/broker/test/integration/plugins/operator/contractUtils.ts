@@ -1,23 +1,19 @@
-import { AddressZero } from '@ethersproject/constants'
-import { Contract } from '@ethersproject/contracts'
-import { JsonRpcProvider, Provider } from '@ethersproject/providers'
-import { parseEther } from '@ethersproject/units'
+import { ZeroAddress, Contract, JsonRpcProvider, Provider, parseEther, EventLog } from 'ethers'
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import type { Operator, OperatorFactory, Sponsorship, SponsorshipFactory } from '@streamr/network-contracts'
-import { TestToken, operatorABI, operatorFactoryABI, sponsorshipABI, sponsorshipFactoryABI, tokenABI } from '@streamr/network-contracts'
+import type { Operator, OperatorFactory, Sponsorship, SponsorshipFactory } from '@streamr/network-contracts-ethers6'
+import { TestToken, operatorABI, operatorFactoryABI, sponsorshipABI, sponsorshipFactoryABI, tokenABI } from '@streamr/network-contracts-ethers6'
 import { fastPrivateKey } from '@streamr/test-utils'
 import { Logger, TheGraphClient, toEthereumAddress, retry } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { OperatorServiceConfig } from '../../../../src/plugins/operator/OperatorPlugin'
 import { range } from 'lodash'
 import fetch from 'node-fetch'
+import { SignerWithProvider } from '@streamr/sdk'
 
 export const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 
 export interface SetupOperatorContractOpts {
     nodeCount?: number
-    adminKey?: string
-    provider?: Provider
     chainConfig?: {
         contracts: {
             DATA: string
@@ -37,7 +33,7 @@ export interface SetupOperatorContractReturnType {
     operatorWallet: Wallet
     operatorContract: Operator
     operatorServiceConfig: Omit<OperatorServiceConfig, 'signer'>
-    nodeWallets: Wallet[]
+    nodeWallets: (Wallet & SignerWithProvider)[]
 }
 
 const logger = new Logger(module)
@@ -46,9 +42,7 @@ export async function setupOperatorContract(
     opts?: SetupOperatorContractOpts
 ): Promise<SetupOperatorContractReturnType> {
     const operatorWallet = await generateWalletWithGasAndTokens({
-        provider: opts?.provider,
-        chainConfig: opts?.chainConfig,
-        adminKey: opts?.adminKey
+        chainConfig: opts?.chainConfig
     })
     const operatorContract = await deployOperatorContract({
         chainConfig: opts?.chainConfig ?? TEST_CHAIN_CONFIG,
@@ -56,21 +50,19 @@ export async function setupOperatorContract(
         operatorsCutPercent: opts?.operatorConfig?.operatorsCutPercent,
         metadata: opts?.operatorConfig?.metadata
     })
-    const nodeWallets: Wallet[] = []
+    const nodeWallets: (Wallet & SignerWithProvider)[] = []
     if ((opts?.nodeCount !== undefined) && (opts?.nodeCount > 0)) {
         for (const _ of range(opts.nodeCount)) {
             nodeWallets.push(await generateWalletWithGasAndTokens({
-                provider: opts?.provider,
-                chainConfig: opts?.chainConfig,
-                adminKey: opts?.adminKey
+                chainConfig: opts?.chainConfig
             }))
         }
         await (await operatorContract.setNodeAddresses(nodeWallets.map((w) => w.address))).wait()
     }
     const operatorConfig = {
-        operatorContractAddress: toEthereumAddress(operatorContract.address),
+        operatorContractAddress: toEthereumAddress(await operatorContract.getAddress()),
         theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl,
-        getEthersOverrides: () => ({})
+        getEthersOverrides: async () => ({})
     }
     return { operatorWallet, operatorContract, operatorServiceConfig: operatorConfig, nodeWallets }
 }
@@ -100,11 +92,11 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
     const chainConfig = opts.chainConfig ?? CHAIN_CONFIG.dev2
     const operatorFactory = new Contract(chainConfig.contracts.OperatorFactory, abi, opts.deployer) as unknown as OperatorFactory
     const contractAddress = await operatorFactory.operators(opts.deployer.address)
-    if (contractAddress !== AddressZero) {
+    if (contractAddress !== ZeroAddress) {
         throw new Error('Operator already has a contract')
     }
     const operatorReceipt = await (await operatorFactory.deployOperator(
-        parseEther('1').mul(opts.operatorsCutPercent ?? 0).div(100),
+        parseEther('1') * BigInt(opts.operatorsCutPercent ?? 0) / 100n,
         opts.operatorTokenName ?? `OperatorToken-${Date.now()}`,
         opts.metadata ?? '',
         [
@@ -117,9 +109,10 @@ export async function deployOperatorContract(opts: DeployOperatorContractOpts): 
             0,
         ]
     )).wait()
-    const newOperatorAddress = operatorReceipt.events?.find((e) => e.event === 'NewOperator')?.args?.operatorContractAddress
+    const newSponsorshipEvent = operatorReceipt!.logs.find((l: any) => l.fragment?.name === 'NewOperator') as EventLog
+    const newOperatorAddress = newSponsorshipEvent.args.operatorContractAddress
     const newOperator = new Contract(newOperatorAddress, operatorABI, opts.deployer) as unknown as Operator
-    logger.debug('Deployed OperatorContract', { address: newOperator.address })
+    logger.debug('Deployed OperatorContract', { address: newOperatorAddress })
     return newOperator
 }
 
@@ -161,16 +154,19 @@ export async function deploySponsorshipContract(opts: DeploySponsorshipContractO
             '0',
         ]
     )
-    const sponsorshipDeployReceipt = await sponsorshipDeployTx.wait() 
-    const newSponsorshipEvent = sponsorshipDeployReceipt.events?.find((e) => e.event === 'NewSponsorship')
-    const newSponsorshipAddress = newSponsorshipEvent?.args?.sponsorshipContract
+    const sponsorshipDeployReceipt = await sponsorshipDeployTx.wait()
+    const newSponsorshipEvent = sponsorshipDeployReceipt!.logs.find((l: any) => l.fragment?.name === 'NewSponsorship') as EventLog
+    const newSponsorshipAddress = newSponsorshipEvent.args.sponsorshipContract
     const newSponsorship = new Contract(newSponsorshipAddress, sponsorshipABI, opts.deployer) as unknown as Sponsorship
-    logger.debug('Deployed SponsorshipContract', { address: newSponsorship.address })
+    logger.debug('Deployed SponsorshipContract', { address: newSponsorshipAddress })
     return newSponsorship
 }
 
 export function getProvider(): Provider {
-    return new JsonRpcProvider(TEST_CHAIN_CONFIG.rpcEndpoints[0].url)
+    return new JsonRpcProvider(TEST_CHAIN_CONFIG.rpcEndpoints[0].url, undefined, {
+        batchStallTime: 0,       // Don't batch requests, send them immediately
+        cacheTimeout: -1         // Do not employ result caching
+    })
 }
 
 export function getTokenContract(): TestToken {
@@ -190,15 +186,13 @@ export const createTheGraphClient = (): TheGraphClient => {
 }
 
 interface GenerateWalletWithGasAndTokensOpts {
-    provider?: Provider
     chainConfig?: { contracts: { DATA: string } }
-    adminKey?: string
 }
 
-export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGasAndTokensOpts): Promise<Wallet> {
-    const provider = opts?.provider ?? getProvider()
+export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGasAndTokensOpts): Promise<Wallet & SignerWithProvider> {
+    const provider = getProvider()
     const newWallet = new Wallet(fastPrivateKey())
-    const adminWallet = getAdminWallet(opts?.adminKey, opts?.provider)
+    const adminWallet = getAdminWallet()
     const token = (opts?.chainConfig !== undefined)
         ? new Contract(opts.chainConfig.contracts.DATA, tokenABI, adminWallet) as unknown as TestToken
         : getTokenContract().connect(adminWallet)
@@ -217,7 +211,7 @@ export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGa
         10,
         100
     )
-    return newWallet.connect(provider)
+    return newWallet.connect(provider) as (Wallet & SignerWithProvider)
 }
 
 export const delegate = async (delegator: Wallet, operatorContractAddress: string, amount: number, token?: TestToken): Promise<void> => {

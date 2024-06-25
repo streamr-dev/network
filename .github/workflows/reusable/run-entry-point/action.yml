@@ -1,3 +1,4 @@
+---
 name: "run entry point"
 description: "run entry point dht node directly from the monorepo codebase"
 

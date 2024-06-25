@@ -1,4 +1,4 @@
-import { Wallet } from '@ethersproject/wallet'
+import { Wallet } from 'ethers'
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import { StreamrClient, Stream, StreamPartID, StreamPermission } from '@streamr/sdk'
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'

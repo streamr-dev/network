@@ -1,34 +1,31 @@
 import { toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import { ContentType, EncryptionType, MessageID, SignatureType, toStreamID, StreamMessageType } from '@streamr/protocol'
-import { Authentication } from '../../src/Authentication'
-import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { MessageStream } from '../../src/subscribe/MessageStream'
 import { Msg } from '../test-utils/publish'
 import { createRandomAuthentication, waitForCalls } from '../test-utils/utils'
 import { convertStreamMessageToMessage } from './../../src/Message'
 import omit from 'lodash/omit'
+import { MessageSigner } from '../../src/signature/MessageSigner'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 describe('MessageStream', () => {
 
     const streamId = toStreamID('streamId')
-    let authentication: Authentication
+    let messageSigner: MessageSigner
 
     const createMockMessage = async () => {
-        return await createSignedMessage({
+        return await messageSigner.createSignedMessage({
             messageId: new MessageID(streamId, 0, 0, 0, PUBLISHER_ID, 'msgChainId'),
             messageType: StreamMessageType.MESSAGE,
             content: utf8ToBinary(JSON.stringify(Msg())),
-            authentication,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-            signatureType: SignatureType.SECP256K1
-        })
+        }, SignatureType.SECP256K1)
     }
 
     beforeEach(async () => {
-        authentication = createRandomAuthentication()
+        messageSigner = new MessageSigner(createRandomAuthentication())
     })
 
     it('onMessage', async () => {

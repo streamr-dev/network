@@ -38,7 +38,7 @@ export const initResendSubscription = (
                 await subscription.handleError(err)
             }
         }
-        eventEmitter.emit('resendComplete')
+        eventEmitter.emit('resendCompleted')
         yield* src
     }
     subscription.pipe(resendThenRealtime)

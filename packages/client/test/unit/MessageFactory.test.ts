@@ -20,6 +20,8 @@ import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
 import { merge, utf8ToBinary } from '@streamr/utils'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import { mock } from 'jest-mock-extended'
+import { SignatureValidator } from '../../src/signature/SignatureValidator'
+import { MessageSigner } from '../../src/signature/MessageSigner'
 
 const WALLET = fastWallet()
 const STREAM_ID = toStreamID('/path', toEthereumAddress(WALLET.address))
@@ -33,7 +35,7 @@ const createMessageFactory = async (opts?: {
     groupKeyQueue?: GroupKeyQueue
     erc1271ContractFacade?: ERC1271ContractFacade
 }) => {
-    const authentication = createPrivateKeyAuthentication(WALLET.privateKey, undefined as any)
+    const authentication = createPrivateKeyAuthentication(WALLET.privateKey)
     return new MessageFactory(
         merge<MessageFactoryOptions>(
             {
@@ -45,7 +47,8 @@ const createMessageFactory = async (opts?: {
                     isStreamPublisher: true
                 }),
                 groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY),
-                erc1271ContractFacade: mock<ERC1271ContractFacade>()
+                signatureValidator: new SignatureValidator(opts?.erc1271ContractFacade ?? mock<ERC1271ContractFacade>()),
+                messageSigner: new MessageSigner(authentication)
             },
             opts
         )
@@ -178,14 +181,14 @@ describe('MessageFactory', () => {
     it('next group key', async () => {
         const nextGroupKey = GroupKey.generate()
         const messageFactory = await createMessageFactory({
-            groupKeyQueue: await createGroupKeyQueue(createPrivateKeyAuthentication(WALLET.privateKey, undefined as any), GROUP_KEY, nextGroupKey)
+            groupKeyQueue: await createGroupKeyQueue(createPrivateKeyAuthentication(WALLET.privateKey), GROUP_KEY, nextGroupKey)
         })
         const msg = await createMessage({}, messageFactory)
         expect(msg.groupKeyId).toBe(GROUP_KEY.id)
         expect(msg.newGroupKey).toMatchObject({
             id: nextGroupKey.id,
             data: expect.any(Uint8Array)
-        })    
+        })
         expect(GROUP_KEY.decryptNextGroupKey(msg.newGroupKey!)).toEqual(nextGroupKey)
     })
 

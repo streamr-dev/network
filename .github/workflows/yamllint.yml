@@ -1,0 +1,29 @@
+---
+name: Linter
+defaults:
+    run:
+        shell: bash
+concurrency:
+    group: ci-${{ github.head_ref }}
+    cancel-in-progress: false
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+        branches:
+            - main
+jobs:
+    lint:
+        name: Lint yaml files
+        runs-on: ubuntu-latest
+        steps:
+            - name: Check out the repo
+              uses: actions/checkout@v4.1.6
+            - name: Run YAML Lint
+              uses: ibiqlik/action-yamllint@v3.1.1
+              with:
+                  file_or_dir: .
+                  strict: true
+                  no_warnings: false
+                  config_file: .yamllint

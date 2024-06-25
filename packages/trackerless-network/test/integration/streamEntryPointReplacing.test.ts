@@ -1,7 +1,7 @@
 import { Simulator, SimulatorTransport, LatencyType } from '@streamr/dht'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
-import { ENTRYPOINT_STORE_LIMIT } from '../../src/logic/EntryPointDiscovery'
+import { MAX_NODE_COUNT } from '../../src/logic/PeerDescriptorStoreManager'
 import { range } from 'lodash'
 import { StreamPartIDUtils } from '@streamr/protocol'
 import { waitForCondition } from '@streamr/utils'
@@ -27,6 +27,7 @@ describe('Stream Entry Points are replaced when known entry points leave streams
         const node = new NetworkStack({
             layer0: {
                 transport,
+                connectionsView: transport,
                 peerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
             }
@@ -41,6 +42,7 @@ describe('Stream Entry Points are replaced when known entry points leave streams
         layer0EntryPoint = new NetworkStack({
             layer0: {
                 transport: entryPointTransport,
+                connectionsView: entryPointTransport,
                 peerDescriptor: entryPointPeerDescriptor,
                 entryPoints: [entryPointPeerDescriptor]
             }
@@ -48,7 +50,7 @@ describe('Stream Entry Points are replaced when known entry points leave streams
         await entryPointTransport.start()
         await layer0EntryPoint.start()
 
-        initialNodesOnStream = await Promise.all(range(ENTRYPOINT_STORE_LIMIT).map(async () => {
+        initialNodesOnStream = await Promise.all(range(MAX_NODE_COUNT).map(async () => {
             return await startNode()
         }))
 

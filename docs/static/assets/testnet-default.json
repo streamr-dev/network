@@ -1,0 +1,14 @@
+{
+    "client": {
+        "metrics": false,
+        "auth": {
+            "privateKey": "NODE_PRIVATE_KEY"
+        },
+        "environment": "polygonAmoy"
+    },
+    "plugins": {
+        "operator": {
+            "operatorContractAddress": "YOUR_OPERATOR_CONTRACT_ADDRESS"
+        }
+    }
+}

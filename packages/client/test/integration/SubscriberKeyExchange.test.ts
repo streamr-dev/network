@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { EthereumAddress, toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { Wallet } from '@ethersproject/wallet'
+import { Wallet } from 'ethers'
 import {
     ContentType,
     EncryptionType,

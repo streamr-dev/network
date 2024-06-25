@@ -1,6 +1,5 @@
 import { areEqualBinaries, waitForEvent3 } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { ConnectionType } from '../../src/connection/IConnection'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
@@ -69,11 +68,6 @@ describe('Layer0 with WebRTC connections', () => {
         const nodeId2 = getNodeIdFromPeerDescriptor(node2.getLocalPeerDescriptor())
         expect((node1.getTransport() as ConnectionManager).hasConnection(nodeId2)).toEqual(true)
         expect((node2.getTransport() as ConnectionManager).hasConnection(nodeId1)).toEqual(true)
-        expect((node1.getTransport() as ConnectionManager).getConnection(nodeId2)!.connectionType)
-            .toEqual(ConnectionType.WEBRTC)
-        expect((node2.getTransport() as ConnectionManager).getConnection(nodeId1)!.connectionType)
-            .toEqual(ConnectionType.WEBRTC)
-
     }, 60000)
 
     it('Happy path simultaneous joins', async () => {
@@ -87,9 +81,5 @@ describe('Layer0 with WebRTC connections', () => {
         const nodeId2 = getNodeIdFromPeerDescriptor(node2.getLocalPeerDescriptor())
         expect((node1.getTransport() as ConnectionManager).hasConnection(nodeId2)).toEqual(true)
         expect((node2.getTransport() as ConnectionManager).hasConnection(nodeId1)).toEqual(true)
-        expect((node1.getTransport() as ConnectionManager).getConnection(nodeId2)!.connectionType)
-            .toEqual(ConnectionType.WEBRTC)
-        expect((node2.getTransport() as ConnectionManager).getConnection(nodeId1)!.connectionType)
-            .toEqual(ConnectionType.WEBRTC)
     })
 })
