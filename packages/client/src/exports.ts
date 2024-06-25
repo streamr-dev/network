@@ -69,20 +69,15 @@ export {
     StreamMessageType
 } from '@streamr/protocol'
 
-// These are exported for the internal OperatorContractFacade class
-// TODO could we hide the class and the getOperatorContractFacade from API docs?
-export { OperatorContractFacade } from './contracts/OperatorContractFacade'
-// TODO maybe should use more specific name for these exports
+// These are exported for the internal OperatorContractFacade class (TODO use more specific name for these exports?)
 export {
-    SponsorshipResult,
+    OperatorContractFacade,
     OperatorContractEvents,
     StakeEvent,
     ReviewRequestEvent,
+    SponsorshipResult,
     Flag
 } from './contracts/OperatorContractFacade'
-// TODO maybe should use more specific name for these exports (some utils may be for testing only), maybe move
-// into OperatorContractFacade or new SponsorshitContractFacade?
-
 import {
     delegate,
     deploySponsorshipContract,
