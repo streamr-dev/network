@@ -101,6 +101,7 @@ import {
  * @deprecated
  * @hidden
  */
+// eslint-disable-next-line no-underscore-dangle
 const _operatorContractUtils = {
     delegate,
     deploySponsorshipContract,
@@ -111,6 +112,7 @@ const _operatorContractUtils = {
     generateWalletWithGasAndTokens,
     deployOperatorContract
 }
+// eslint-disable-next-line no-underscore-dangle
 export { _operatorContractUtils }
 export type { SetupOperatorContractOpts, SetupOperatorContractReturnType, DeployOperatorContractOpts, DeploySponsorshipContractOpts }
 
