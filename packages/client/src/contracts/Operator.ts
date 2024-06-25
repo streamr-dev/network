@@ -11,6 +11,7 @@ import {
 import { Overrides } from 'ethers'
 import sample from 'lodash/sample'
 import { Authentication } from '../Authentication'
+import { DestroySignal } from '../DestroySignal'
 import { RpcProviderSource } from '../RpcProviderSource'
 import type { Operator as OperatorContract } from '../ethereumArtifacts/Operator'
 import OperatorArtifact from '../ethereumArtifacts/OperatorAbi.json'
@@ -158,8 +159,9 @@ export class Operator {
         rpcProviderSource: RpcProviderSource,
         theGraphClient: TheGraphClient,
         authentication: Authentication,
-        getEthersOverrides: () => Promise<Overrides>,
+        destroySignal: DestroySignal,
         loggerFactory: LoggerFactory,
+        getEthersOverrides: () => Promise<Overrides>,
         eventPollInterval: number
     ) {
         this.contractAddress = contractAddress
@@ -175,7 +177,9 @@ export class Operator {
         this.authentication = authentication
         this.getEthersOverrides = getEthersOverrides
         this.initEventGateways(contractAddress, loggerFactory, eventPollInterval)
-        // TODO maybe we should remove all event listeners when client triggers a destroy signal?
+        destroySignal.onDestroy.listen(() => {
+            this.eventEmitter.removeAllListeners()
+        })
     }
 
     private initEventGateways(

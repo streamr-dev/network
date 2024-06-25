@@ -712,8 +712,9 @@ export class StreamrClient {
             this.rpcProviderSource,
             this.theGraphClient,
             this.authentication,
-            () => this.getEthersOverrides(),
+            this.destroySignal,
             this.loggerFactory,
+            () => this.getEthersOverrides(),
             this.config.contracts.pollInterval
         )
     }

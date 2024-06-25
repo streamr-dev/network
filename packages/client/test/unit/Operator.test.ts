@@ -1,5 +1,8 @@
+import 'reflect-metadata'
+
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
+import { DestroySignal } from '../../src/DestroySignal'
 import {
     Operator,
     ParseError,
@@ -72,8 +75,9 @@ const createOperator = (eventName: string, args: any[]) => {
         } as any,
         undefined as any,
         undefined as any,
-        undefined as any,
+        new DestroySignal(),
         mockLoggerFactory(),
+        undefined as any,
         POLL_INTERVAL
     )
 }
