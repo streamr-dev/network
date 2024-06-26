@@ -15,6 +15,8 @@ import {
     sponsor,
     stake
 } from '../../src/contracts/operatorContractUtils'
+import type { Operator as OperatorContract } from '../../src/ethereumArtifacts/Operator'
+import OperatorArtifact from '../../src/ethereumArtifacts/OperatorAbi.json'
 import type { OperatorFactory as OperatorFactoryContract } from '../../src/ethereumArtifacts/OperatorFactory'
 import OperatorFactoryArtifact from '../../src/ethereumArtifacts/OperatorFactoryAbi.json'
 import type { Sponsorship as SponsorshipContract } from '../../src/ethereumArtifacts/Sponsorship'
@@ -174,4 +176,58 @@ describe('Operator', () => {
             return result.operator.flagsTargeted.length === 1
         }, 10000, 1000)
     }, 60 * 1000)  // TODO why this is slower, takes ~35 seconds?
+
+    describe('fetchRedundancyFactor', () => {
+
+        let operator: Operator
+
+        async function updateMetadata(metadata: string): Promise<void> {
+            const operator = new Contract(
+                await deployedOperator.operatorContract.getAddress(),
+                OperatorArtifact,
+                deployedOperator.operatorWallet
+            ) as unknown as OperatorContract
+            await (await operator.updateMetadata(metadata)).wait()
+        }
+
+        beforeAll(async () => (
+            operator = await createClient(deployedOperator.operatorWallet.privateKey).getOperator(
+                toEthereumAddress(await deployedOperator.operatorContract.getAddress())
+            )
+        ))
+        
+        describe('happy paths', () => {
+            it('empty metadata', async () => {
+                await updateMetadata('')
+                const factor = await operator.fetchRedundancyFactor()
+                expect(factor).toEqual(1)
+            })
+    
+            it('explicit valid metadata', async () => {
+                await updateMetadata(JSON.stringify({ redundancyFactor: 6 }))
+                const factor = await operator.fetchRedundancyFactor()
+                expect(factor).toEqual(6)
+            })
+        })
+    
+        describe('no result cases', () => {
+            it('invalid json', async () => {
+                await updateMetadata('invalidjson')
+                const factor = await operator.fetchRedundancyFactor()
+                expect(factor).toBeUndefined()
+            })
+    
+            it('valid json but missing field', async () => {
+                await updateMetadata(JSON.stringify({ foo: 'bar' }))
+                const factor = await operator.fetchRedundancyFactor()
+                expect(factor).toBeUndefined()
+            })
+    
+            it('valid json but invalid value', async () => {
+                await updateMetadata(JSON.stringify({ redundancyFactor: 0 }))
+                const factor = await operator.fetchRedundancyFactor()
+                expect(factor).toBeUndefined()
+            })
+        })
+    })
 })

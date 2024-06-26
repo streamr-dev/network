@@ -21,6 +21,7 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway } from './contract'
+import { z } from 'zod'
 
 interface RawResult {
     operator: null | { latestHeartbeatTimestamp: string | null }
@@ -578,6 +579,37 @@ export class Operator {
         // voteOnFlag is not used to vote here but to close the expired flag. The vote data gets ignored.
         // Anyone can call this function at this point.
         await this.voteOnFlag(sponsorship, targetOperator, false)
+    }
+
+    async fetchRedundancyFactor(): Promise<number | undefined> {
+        const MetadataSchema = z.object({
+            redundancyFactor: z.number()
+                .int()
+                .gte(1)
+        })
+        const metadataAsString = await this.contractReadonly.metadata()
+        if (metadataAsString.length === 0) {
+            return 1
+        }
+        let metadata: Record<string, unknown>
+        try {
+            metadata = JSON.parse(metadataAsString)
+        } catch {
+            logger.warn('Encountered malformed metadata', { operatorAddress: await this.getOperatorContractAddress(), metadataAsString })
+            return undefined
+        }
+        let validatedMetadata: z.infer<typeof MetadataSchema>
+        try {
+            validatedMetadata = MetadataSchema.parse(metadata)
+        } catch (err) {
+            logger.warn('Encountered invalid metadata', {
+                operatorAddress: await this.getOperatorContractAddress(),
+                metadataAsString,
+                reason: err?.reason
+            })
+            return undefined
+        }
+        return validatedMetadata.redundancyFactor
     }
 
     getCurrentBlockNumber(): Promise<number> {

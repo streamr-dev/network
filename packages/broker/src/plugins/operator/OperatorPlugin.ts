@@ -21,7 +21,6 @@ import { checkOperatorValueBreach } from './checkOperatorValueBreach'
 import { closeExpiredFlags } from './closeExpiredFlags'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { createIsLeaderFn } from './createIsLeaderFn'
-import { fetchRedundancyFactor } from './fetchRedundancyFactor'
 import { formCoordinationStreamId } from './formCoordinationStreamId'
 import { inspectRandomNode } from './inspectRandomNode'
 import { maintainOperatorValue } from './maintainOperatorValue'
@@ -70,17 +69,16 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private readonly abortController: AbortController = new AbortController()
 
     async start(streamrClient: StreamrClient): Promise<void> {
-        const signer = await streamrClient.getSigner()
         const nodeId = await streamrClient.getNodeId()
         const operatorContractAddress = toEthereumAddress(this.pluginConfig.operatorContractAddress)
 
-        const redundancyFactor = await fetchRedundancyFactor({ operatorContractAddress, signer })
+        const operator = await streamrClient.getOperator(operatorContractAddress)
+        const redundancyFactor = await operator.fetchRedundancyFactor()
         if (redundancyFactor === undefined) {
             throw new Error('Failed to fetch my redundancy factor')
         }
         logger.info('Fetched my redundancy factor', { redundancyFactor })
 
-        const operator = await streamrClient.getOperator(operatorContractAddress)
         const maintainTopologyHelper = new MaintainTopologyHelper(operator)
         const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
             streamrClient,
@@ -180,10 +178,9 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                         streamPartAssignments,
                         streamrClient,
                         this.pluginConfig.heartbeatTimeoutInMs,
-                        (operatorContractAddress) => fetchRedundancyFactor({
-                            operatorContractAddress,
-                            signer
-                        }),
+                        async (targetOperatorContractAddress) => {
+                            return (await streamrClient.getOperator(targetOperatorContractAddress)).fetchRedundancyFactor()
+                        },
                         createOperatorFleetState,
                         this.abortController.signal
                     )
@@ -219,10 +216,9 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                                         operator,
                                         streamrClient,
                                         createOperatorFleetState,
-                                        getRedundancyFactor: (operatorContractAddress) => fetchRedundancyFactor({
-                                            operatorContractAddress,
-                                            signer
-                                        }),
+                                        getRedundancyFactor: async (targetOperatorContractAddress) => {
+                                            return (await streamrClient.getOperator(targetOperatorContractAddress)).fetchRedundancyFactor()
+                                        },
                                         maxSleepTime: 5 * 60 * 1000,
                                         heartbeatTimeoutInMs: this.pluginConfig.heartbeatTimeoutInMs,
                                         votingPeriod: {

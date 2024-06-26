@@ -112,7 +112,8 @@
     "ts-essentials": "^9.4.1",
     "ts-toolbelt": "^9.6.0",
     "tsyringe": "^4.8.0",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "zod": "^3.22.4"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8",
