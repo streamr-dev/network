@@ -191,10 +191,11 @@ To publish the Docker image, use [release-docker workflow](https://github.com/st
 Click button "Run Workflow". Select the right branch and you are good to go. The Docker tags are automatically chosen based on
 the associated Git branch and tag.
 
-### Step 4: (optional) Docker image tag `latest`
+### Manually adjusting Docker image tag `latest`
 
-GitHub Actions will not update the `latest` tag. This must be done manually. Keep in mind that `latest` should
-always refer to the latest _stable_ version.
+GitHub actions will update the `latest` tag if told to do so in the workflow dispatch drop-down menu.
+If for whatever reason you want to manually change the `latest` tag, here are the instructions to do so.
+Keep in mind that `latest` should always refer to the latest _stable_ version.
 
 To update `latest` do the following.
 
