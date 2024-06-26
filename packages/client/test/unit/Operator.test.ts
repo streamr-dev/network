@@ -2,9 +2,11 @@ import 'reflect-metadata'
 
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { wait } from '@streamr/utils'
+import { capitalize } from 'lodash'
 import { DestroySignal } from '../../src/DestroySignal'
 import {
     Operator,
+    OperatorEvents,
     ParseError,
     parsePartitionFromReviewRequestMetadata
 } from '../../src/contracts/Operator'
@@ -114,6 +116,23 @@ describe('Operator', () => {
             await wait(1.5 * POLL_INTERVAL)
             expect(listener).not.toHaveBeenCalled()
             operator.off('reviewRequested', listener)
+        })
+    })
+
+    describe('stake events', () => {
+
+        it.each([['staked'], ['unstaked']])('handle %s event', async (eventName: string) => {
+            const operator = createOperator(
+                capitalize(eventName),
+                [SPONSORSHIP_ADDRESS]
+            )
+            const listener = jest.fn()
+            operator.on(eventName as keyof OperatorEvents, listener)
+            await wait(1.5 * POLL_INTERVAL)
+            expect(listener).toHaveBeenLastCalledWith({ 
+                sponsorship: SPONSORSHIP_ADDRESS
+            })
+            operator.off(eventName as keyof OperatorEvents, listener)
         })
     })
 })

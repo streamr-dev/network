@@ -192,7 +192,7 @@ export class Operator {
         // eslint-disable-next-line no-underscore-dangle
         }), eventPollInterval)
         const stakeEventTransformation = (sponsorship: string) => ({
-            sponsorship: toEthereumAddress(sponsorship)  // TODO update usages to use
+            sponsorship: toEthereumAddress(sponsorship)
         })
         // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
         // -> then "as any" casting is not needed
