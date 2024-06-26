@@ -146,7 +146,7 @@ export class Operator {
 
     private readonly contractAddress: EthereumAddress
     private contract?: ObservableContract<OperatorContract>
-    private readonly contractReadonly: ObservableContract<OperatorContract>
+    private readonly contractReadonly: ObservableContract<OperatorContract> // TODO: implement lazy loading because all methods don't use this
     private readonly contractFactory: ContractFactory
     private readonly rpcProviderSource: RpcProviderSource
     private readonly theGraphClient: TheGraphClient
