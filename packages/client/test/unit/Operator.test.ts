@@ -121,7 +121,7 @@ describe('Operator', () => {
 
     describe('stake events', () => {
 
-        it.each([['staked'], ['unstaked']])('handle %s event', async (eventName: string) => {
+        it.each(['staked', 'unstaked'])('handle %s event', async (eventName: string) => {
             const operator = createOperator(
                 capitalize(eventName),
                 [SPONSORSHIP_ADDRESS]
