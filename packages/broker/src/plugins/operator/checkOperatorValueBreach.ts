@@ -15,7 +15,7 @@ export const checkOperatorValueBreach = async (
         return
     }
     logger.info('Check other operator\'s earnings for breach', { targetOperatorAddress })
-    const { sumDataWei, maxAllowedEarningsDataWei, sponsorshipAddresses } = await (await client.getOperator(targetOperatorAddress)).getEarnings(
+    const { sumDataWei, maxAllowedEarningsDataWei, sponsorshipAddresses } = await client.getOperator(targetOperatorAddress).getEarnings(
         minSponsorshipEarningsInWithdraw,
         maxSponsorshipsInWithdraw
     )

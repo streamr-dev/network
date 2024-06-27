@@ -47,7 +47,7 @@ export async function inspectRandomNode(
         return
     }
 
-    const flagAlreadyRaised = await (await streamrClient.getOperator(target.operatorAddress)).hasOpenFlag(target.sponsorshipAddress)
+    const flagAlreadyRaised = await streamrClient.getOperator(target.operatorAddress).hasOpenFlag(target.sponsorshipAddress)
     if (flagAlreadyRaised) {
         logger.info('Not raising flag (target already has open flag)', { target })
         return

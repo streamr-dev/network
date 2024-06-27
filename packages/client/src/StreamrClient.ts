@@ -705,7 +705,7 @@ export class StreamrClient {
      * @deprecated This in an internal method
      * @hidden
      */
-    async getOperator(operatorContractAddress: EthereumAddress): Promise<Operator> {
+    getOperator(operatorContractAddress: EthereumAddress): Operator {
         return new Operator(
             operatorContractAddress,
             this.contractFactory,

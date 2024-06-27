@@ -13,8 +13,7 @@ describe('announceNodeToContract', () => {
         const { operatorContract, nodeWallets } = await _operatorContractUtils.setupOperatorContract({
             nodeCount: 1
         })
-        operator = await createClient(nodeWallets[0].privateKey)
-            .getOperator(toEthereumAddress(await operatorContract.getAddress()))
+        operator = createClient(nodeWallets[0].privateKey).getOperator(toEthereumAddress(await operatorContract.getAddress()))
     }, TIMEOUT)
 
     it('read empty heartbeat, then write heartbeat then read timestamp', async () => {

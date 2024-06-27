@@ -77,7 +77,7 @@ export async function findTarget(
         return undefined
     }
 
-    const targetOperator = await streamrClient.getOperator(targetOperatorAddress)
+    const targetOperator = streamrClient.getOperator(targetOperatorAddress)
     const flagAlreadyRaised = await targetOperator.hasOpenFlag(targetSponsorship.sponsorshipAddress)
     if (flagAlreadyRaised) {
         logger.info('Skip inspection (target already has open flag)', { targetSponsorship, targetOperatorAddress })

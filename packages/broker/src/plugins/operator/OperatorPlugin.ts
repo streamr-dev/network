@@ -71,7 +71,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         const nodeId = await streamrClient.getNodeId()
         const operatorContractAddress = toEthereumAddress(this.pluginConfig.operatorContractAddress)
 
-        const operator = await streamrClient.getOperator(operatorContractAddress)
+        const operator = streamrClient.getOperator(operatorContractAddress)
         const redundancyFactor = await operator.fetchRedundancyFactor()
         if (redundancyFactor === undefined) {
             throw new Error('Failed to fetch my redundancy factor')
@@ -179,7 +179,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                         streamrClient,
                         this.pluginConfig.heartbeatTimeoutInMs,
                         async (targetOperatorContractAddress) => {
-                            return (await streamrClient.getOperator(targetOperatorContractAddress)).fetchRedundancyFactor()
+                            return streamrClient.getOperator(targetOperatorContractAddress).fetchRedundancyFactor()
                         },
                         createOperatorFleetState,
                         this.abortController.signal
@@ -215,7 +215,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                                     streamrClient,
                                     createOperatorFleetState,
                                     getRedundancyFactor: async (targetOperatorContractAddress) => {
-                                        return (await streamrClient.getOperator(targetOperatorContractAddress)).fetchRedundancyFactor()
+                                        return streamrClient.getOperator(targetOperatorContractAddress).fetchRedundancyFactor()
                                     },
                                     maxSleepTime: 5 * 60 * 1000,
                                     heartbeatTimeoutInMs: this.pluginConfig.heartbeatTimeoutInMs,

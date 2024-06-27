@@ -61,8 +61,7 @@ describe('checkOperatorValueBreach', () => {
         const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
         const allowedDifference = valueBeforeWithdraw * (await streamrConfig.maxAllowedEarningsFraction()) / ONE_ETHER
         const client = createClient(watcherWallets[0].privateKey)
-        const operator = await client
-            .getOperator(toEthereumAddress(await watcherOperatorContract.getAddress()))
+        const operator = client.getOperator(toEthereumAddress(await watcherOperatorContract.getAddress()))
 
         // overwrite (for this test only) the getRandomOperator method to deterministically return the operator's address
         operator.getRandomOperator = async () => {
