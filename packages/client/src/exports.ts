@@ -69,7 +69,7 @@ export {
     StreamMessageType
 } from '@streamr/protocol'
 
-// These are exported for the internal Operator class (TODO use more specific name for these exports?)
+// These are exported for the internal Operator class
 export {
     Operator,
     OperatorEvents,
