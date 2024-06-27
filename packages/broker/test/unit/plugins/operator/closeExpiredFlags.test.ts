@@ -4,7 +4,6 @@ import { mock } from 'jest-mock-extended'
 import { closeExpiredFlags } from '../../../../src/plugins/operator/closeExpiredFlags'
 
 const sponsorshipAddress = randomEthereumAddress()
-const operatorAddress = randomEthereumAddress()
 const targetAddress = randomEthereumAddress()
 
 const operatorMock = mock<Operator>()
@@ -37,7 +36,7 @@ describe('closeExpiredFlags', () => {
     const flagLifetime = 1000
 
     test('closes expired flags', async () => {
-        await closeExpiredFlags(flagLifetime, operatorAddress, operatorMock)
+        await closeExpiredFlags(flagLifetime, operatorMock)
         expect(operatorMock.closeFlag).toHaveBeenCalledTimes(1)
         // 3rd boolean param is ignored in actual usage
         expect(operatorMock.closeFlag).toHaveBeenCalledWith(sponsorshipAddress, targetAddress)

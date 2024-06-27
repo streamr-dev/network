@@ -193,7 +193,6 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 try {
                     await closeExpiredFlags(
                         this.pluginConfig.closeExpiredFlags.maxAgeInMs,
-                        operatorContractAddress,
                         operator
                     )
                 } catch (err) {

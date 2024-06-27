@@ -266,7 +266,7 @@ export class Operator {
         return toEthereumAddress(await this.contractReadonly.getAddress())
     }
 
-    async getSponsorshipsOfOperator(operatorAddress: EthereumAddress): Promise<SponsorshipResult[]> {
+    async getSponsorshipsOfOperator(): Promise<SponsorshipResult[]> {
         interface Stake {
             id: string
             sponsorship: {
@@ -277,6 +277,7 @@ export class Operator {
                 }
             }
         }
+        const operatorAddress = await this.getOperatorContractAddress()
         const createQuery = (lastId: string, pageSize: number) => {
             return {
                 query: `

@@ -105,11 +105,11 @@ describe('Operator', () => {
         const operator = await getOperator(undefined, deployedOperator)
 
         await waitForCondition(async (): Promise<boolean> => {
-            const res = await operator.getSponsorshipsOfOperator(toEthereumAddress(operatorContractAddress))
+            const res = await operator.getSponsorshipsOfOperator()
             return res.length === 2
         }, 10000, 500)
 
-        const sponsorships = await operator.getSponsorshipsOfOperator(toEthereumAddress(operatorContractAddress))
+        const sponsorships = await operator.getSponsorshipsOfOperator()
         expect(sponsorships).toIncludeSameMembers([
             {
                 sponsorshipAddress: toEthereumAddress(await sponsorship1.getAddress()),

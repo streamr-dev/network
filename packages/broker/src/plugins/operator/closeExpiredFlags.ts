@@ -1,16 +1,15 @@
 import { Operator, SponsorshipResult } from '@streamr/sdk'
-import { EthereumAddress, Logger } from '@streamr/utils'
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
 export const closeExpiredFlags = async (
     maxAgeInMs: number,
-    operatorContractAddress: EthereumAddress,
     operator: Operator
 ): Promise<void> => {
     logger.info('Start')
 
-    const sponsorships = (await operator.getSponsorshipsOfOperator(operatorContractAddress))
+    const sponsorships = (await operator.getSponsorshipsOfOperator())
         .map((sponsorship: SponsorshipResult) => sponsorship.sponsorshipAddress)
     logger.debug(`Found ${sponsorships.length} sponsorships`)
     if (sponsorships.length === 0) {

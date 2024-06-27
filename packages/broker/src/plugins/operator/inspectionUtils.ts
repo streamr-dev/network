@@ -45,7 +45,7 @@ export async function findTarget(
     logger: Logger
 ): Promise<Target | undefined> {
     // choose sponsorship
-    const sponsorships = await operator.getSponsorshipsOfOperator(myOperatorContractAddress)
+    const sponsorships = await operator.getSponsorshipsOfOperator()
     const suitableSponsorships = sponsorships
         .filter(({ operatorCount }) => operatorCount >= 2)  // exclude sponsorships with only self
         .filter(({ streamId }) => isAnyPartitionOfStreamAssignedToMe(assignments, streamId))
