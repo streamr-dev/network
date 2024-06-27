@@ -186,7 +186,6 @@ export class Operator {
     ): void {
         const chainEventPoller = new ChainEventPoller(this.rpcProviderSource.getSubProviders().map((p) => {
             return this.contractFactory.createEventContract(contractAddress, OperatorArtifact, p)
-        // eslint-disable-next-line no-underscore-dangle
         }), eventPollInterval)
         const stakeEventTransformation = (sponsorship: string) => ({
             sponsorship: toEthereumAddress(sponsorship)
