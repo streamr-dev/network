@@ -40,6 +40,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
+- Improve reliability of JSON RPC interactions by adding retry redundancy (https://github.com/streamr-dev/network/pull/2601)
+
 #### Deprecated
 
 #### Removed
