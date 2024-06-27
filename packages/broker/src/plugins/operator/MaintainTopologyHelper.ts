@@ -1,4 +1,4 @@
-import { StreamID, toStreamID } from '@streamr/protocol'
+import { StreamID } from '@streamr/protocol'
 import { Operator, StakeEvent } from '@streamr/sdk'
 import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
@@ -72,12 +72,10 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
         
         const queryResult = this.operator.pullStakedStreams(latestBlock)
         for await (const stake of queryResult) {
-            const sponsorshipId = toEthereumAddress(stake.sponsorship.id)
-            const streamId = toStreamID(stake.sponsorship.stream.id)
-            if (this.streamIdOfSponsorship.get(sponsorshipId) !== streamId) {
-                this.streamIdOfSponsorship.set(sponsorshipId, streamId)
-                const sponsorshipCount = (this.sponsorshipCountOfStream.get(streamId) || 0) + 1
-                this.sponsorshipCountOfStream.set(streamId, sponsorshipCount)
+            if (this.streamIdOfSponsorship.get(stake.sponsorship) !== stake.streamId) {
+                this.streamIdOfSponsorship.set(stake.sponsorship, stake.streamId)
+                const sponsorshipCount = (this.sponsorshipCountOfStream.get(stake.streamId) || 0) + 1
+                this.sponsorshipCountOfStream.set(stake.streamId, sponsorshipCount)
             }
         }
         if (this.sponsorshipCountOfStream.size > 0) {

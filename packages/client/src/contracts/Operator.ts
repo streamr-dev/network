@@ -485,7 +485,7 @@ export class Operator {
 
     async* pullStakedStreams(
         requiredBlockNumber: number
-    ): AsyncGenerator<{ sponsorship: { id: string, stream: { id: string } } }, undefined, undefined> {
+    ): AsyncGenerator<{ sponsorship: EthereumAddress, streamId: StreamID }, undefined, undefined> {
         const contractAddress = await this.getContractAddress()
         const createQuery = (lastId: string, pageSize: number) => {
             return {
@@ -518,7 +518,22 @@ export class Operator {
             return response.operator.stakes
         }
         this.theGraphClient.updateRequiredBlockNumber(requiredBlockNumber)
-        yield* this.theGraphClient.queryEntities<{ id: string, sponsorship: { id: string, stream: { id: string } } }>(createQuery, parseItems)
+        interface StakeEntity {
+            id: string
+            sponsorship: {
+                id: string
+                stream: { 
+                    id: string
+                }
+            }
+        }
+        const entities = this.theGraphClient.queryEntities<StakeEntity>(createQuery, parseItems)
+        for await (const entity of entities) {
+            yield {
+                sponsorship: toEthereumAddress(entity.sponsorship.id),
+                streamId: toStreamID(entity.sponsorship.stream.id)
+            }
+        }
     }
 
     async hasOpenFlag(sponsorshipAddress: EthereumAddress): Promise<boolean> {

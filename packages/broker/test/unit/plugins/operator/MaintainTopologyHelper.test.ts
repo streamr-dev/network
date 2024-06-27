@@ -131,31 +131,18 @@ describe(MaintainTopologyHelper, () => {
         beforeEach(() => {
             operator.pullStakedStreams.mockReturnValue(fromArray([
                 {
-                    sponsorship: {
-                        id: SPONSORSHIP_THREE,
-                        stream: {
-                            id: STREAM_ONE_ID
-                        }
-                    }
+                    sponsorship: SPONSORSHIP_THREE,
+                    streamId: STREAM_ONE_ID
                 },
                 {
-                    sponsorship: {
-                        id: SPONSORSHIP_FOUR,
-                        stream: {
-                            id: STREAM_TWO_ID
-                        }
-                    }
+                    sponsorship: SPONSORSHIP_FOUR,
+                    streamId: STREAM_TWO_ID
                 },
                 {
-                    sponsorship: {
-                        id: SPONSORSHIP_FIVE,
-                        stream: {
-                            id: STREAM_ONE_ID
-                        }
-                    }
+                    sponsorship: SPONSORSHIP_FIVE,
+                    streamId: STREAM_ONE_ID
                 }
             ]))
-
             operator.getStreamId.calledWith(SPONSORSHIP_ONE).mockResolvedValue(STREAM_ONE_ID)
             operator.getStreamId.calledWith(SPONSORSHIP_TWO).mockResolvedValue(STREAM_TWO_ID)
             operator.getStreamId.calledWith(SPONSORSHIP_SIX).mockResolvedValue(STREAM_THREE_ID)
