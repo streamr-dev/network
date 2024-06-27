@@ -130,12 +130,8 @@ export interface SponsorshipResult {
 export interface Flag {
     id: string
     flaggingTimestamp: number
-    target: {
-        id: string
-    }
-    sponsorship: {
-        id: string
-    }
+    targetOperator: EthereumAddress
+    sponsorship: EthereumAddress
 }
 
 /**
@@ -314,7 +310,7 @@ export class Operator {
     }
 
     // TODO could move this method as this is functionality is not specific to one Operator contract instance
-    async getExpiredFlags(sponsorships: EthereumAddress[], maxAgeInMs: number): Promise<Flag[]> {
+    async getExpiredFlags(sponsorshipAddresses: EthereumAddress[], maxAgeInMs: number): Promise<Flag[]> {
         const maxFlagStartTime = Math.floor((Date.now() - maxAgeInMs) / 1000)
         const createQuery = (lastId: string, pageSize: number) => {
             return {
@@ -324,7 +320,7 @@ export class Operator {
                         id_gt: "${lastId}",
                         flaggingTimestamp_lt: ${maxFlagStartTime},
                         result_in: ["waiting", "voting"],
-                        sponsorship_in: ${JSON.stringify(sponsorships)}
+                        sponsorship_in: ${JSON.stringify(sponsorshipAddresses)}
                     }, first: ${pageSize}) {
                         id
                         flaggingTimestamp
@@ -338,10 +334,25 @@ export class Operator {
                 }`
             }
         }
-        const flagEntities = this.theGraphClient.queryEntities<Flag>(createQuery)
+        interface FlagEntity {
+            id: string
+            flaggingTimestamp: number
+            target: {
+                id: string
+            }
+            sponsorship: {
+                id: string
+            }
+        }
+        const flagEntities = this.theGraphClient.queryEntities<FlagEntity>(createQuery)
         const flags: Flag[] = []
-        for await (const flag of flagEntities) {
-            flags.push(flag)
+        for await (const flagEntity of flagEntities) {
+            flags.push({
+                id: flagEntity.id,
+                flaggingTimestamp: flagEntity.flaggingTimestamp,
+                targetOperator: toEthereumAddress(flagEntity.target.id),
+                sponsorship: toEthereumAddress(flagEntity.sponsorship.id)
+            })
         }
         return flags
     }
@@ -550,23 +561,23 @@ export class Operator {
         return toStreamID(await sponsorship.streamId())
     }
 
-    async voteOnFlag(sponsorship: string, targetOperator: string, kick: boolean): Promise<void> {
+    async voteOnFlag(sponsorshipAddress: EthereumAddress, targetOperator: EthereumAddress, kick: boolean): Promise<void> {
         const voteData = kick ? VOTE_KICK : VOTE_NO_KICK
         await this.connectToContract()
         // typical gas cost 99336, but this has shown insufficient sometimes
         // TODO should we set gasLimit only here, or also for other transactions made by ContractFacade?
         await (await this.contract!.voteOnFlag(
-            sponsorship,
+            sponsorshipAddress,
             targetOperator,
             voteData,
             { ...this.getEthersOverrides(), gasLimit: '1300000' }
         )).wait()
     }
 
-    async closeFlag(sponsorship: string, targetOperator: string): Promise<void> {
+    async closeFlag(sponsorshipAddress: EthereumAddress, targetOperatorAddress: EthereumAddress): Promise<void> {
         // voteOnFlag is not used to vote here but to close the expired flag. The vote data gets ignored.
         // Anyone can call this function at this point.
-        await this.voteOnFlag(sponsorship, targetOperator, false)
+        await this.voteOnFlag(sponsorshipAddress, targetOperatorAddress, false)
     }
 
     async fetchRedundancyFactor(): Promise<number | undefined> {

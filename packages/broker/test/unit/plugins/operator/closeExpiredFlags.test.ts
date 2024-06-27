@@ -20,12 +20,8 @@ operatorMock.getExpiredFlags.mockImplementation(async () => {
     return [
         {
             id: 'flagId',
-            target: {
-                id: targetAddress
-            },
-            sponsorship: {
-                id: sponsorshipAddress
-            },
+            targetOperator: targetAddress,
+            sponsorship: sponsorshipAddress,
             flaggingTimestamp: 0
         }
     ]

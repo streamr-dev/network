@@ -18,8 +18,8 @@ export const closeExpiredFlags = async (
     const flags = await operator.getExpiredFlags(sponsorships, maxAgeInMs)
     logger.debug(`Found ${flags.length} expired flags to close`)
     for (const flag of flags) {
-        const operatorAddress = flag.target.id
-        const sponsorship = flag.sponsorship.id
+        const operatorAddress = flag.targetOperator
+        const sponsorship = flag.sponsorship
         logger.info('Close expired flag', { flag })
         await operator.closeFlag(sponsorship, operatorAddress)
     }
