@@ -37,7 +37,7 @@ interface EarningsData {
  * @deprecated
  * @hidden
  */
-export interface StakeEvent {  // TODO export, do we want to keep the current style where event payloads are always objects?
+export interface StakeEvent {
     sponsorship: EthereumAddress
 }
 
