@@ -75,7 +75,7 @@ export {
     OperatorEvents,
     StakeEvent,
     ReviewRequestEvent,
-    SponsorshipResult,
+    GetOperatorSponsorshipsResult,
     Flag
 } from './contracts/Operator'
 import {

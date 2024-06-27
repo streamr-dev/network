@@ -1,4 +1,4 @@
-import { Operator, SponsorshipResult } from '@streamr/sdk'
+import { Operator, GetOperatorSponsorshipsResult } from '@streamr/sdk'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { mock } from 'jest-mock-extended'
 import { closeExpiredFlags } from '../../../../src/plugins/operator/closeExpiredFlags'
@@ -13,7 +13,7 @@ operatorMock.getSponsorships.mockImplementation(async () => {
             sponsorshipAddress,
             operatorCount: 2,
             streamId: '0x123',
-        } as SponsorshipResult
+        } as GetOperatorSponsorshipsResult
     ]
 })
 operatorMock.getExpiredFlags.mockImplementation(async () => {

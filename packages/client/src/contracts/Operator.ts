@@ -117,7 +117,7 @@ const logger = new Logger(module)
  * @deprecated
  * @hidden
  */
-export interface SponsorshipResult {
+export interface GetOperatorSponsorshipsResult {
     sponsorshipAddress: EthereumAddress
     streamId: StreamID
     operatorCount: number
@@ -262,7 +262,7 @@ export class Operator {
         return toEthereumAddress(await this.contractReadonly.getAddress())
     }
 
-    async getSponsorships(): Promise<SponsorshipResult[]> {
+    async getSponsorships(): Promise<GetOperatorSponsorshipsResult[]> {
         interface Stake {
             id: string
             sponsorship: {
@@ -298,7 +298,7 @@ export class Operator {
             return response.operator?.stakes ?? []
         }
         const queryResult = this.theGraphClient.queryEntities<Stake>(createQuery, parseItems)
-        const results: SponsorshipResult[] = []
+        const results: GetOperatorSponsorshipsResult[] = []
         for await (const stake of queryResult) {
             results.push({
                 sponsorshipAddress: toEthereumAddress(stake.sponsorship.id),

@@ -1,4 +1,4 @@
-import { Operator, SponsorshipResult } from '@streamr/sdk'
+import { GetOperatorSponsorshipsResult, Operator } from '@streamr/sdk'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
@@ -10,7 +10,7 @@ export const closeExpiredFlags = async (
     logger.info('Start')
 
     const sponsorships = (await operator.getSponsorships())
-        .map((sponsorship: SponsorshipResult) => sponsorship.sponsorshipAddress)
+        .map((sponsorship: GetOperatorSponsorshipsResult) => sponsorship.sponsorshipAddress)
     logger.debug(`Found ${sponsorships.length} sponsorships`)
     if (sponsorships.length === 0) {
         return
