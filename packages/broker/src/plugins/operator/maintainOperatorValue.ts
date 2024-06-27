@@ -19,7 +19,7 @@ export const maintainOperatorValue = async (
     logger.trace(` -> is ${sumDataWei} > ${triggerWithdrawLimitDataWei} ?`)
     if (sumDataWei > triggerWithdrawLimitDataWei) {
         logger.info('Withdraw earnings from sponsorships', { sponsorshipAddresses })
-        await operator.withdrawMyEarningsFromSponsorships(sponsorshipAddresses)
+        await operator.withdrawEarningsFromSponsorships(sponsorshipAddresses)
     } else {
         logger.info('Skip withdrawing earnings')
     }

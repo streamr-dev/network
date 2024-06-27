@@ -428,7 +428,7 @@ export class Operator {
         }
     }
 
-    async withdrawMyEarningsFromSponsorships(sponsorshipAddresses: EthereumAddress[]): Promise<void> {
+    async withdrawEarningsFromSponsorships(sponsorshipAddresses: EthereumAddress[]): Promise<void> {
         await this.connectToContract()
         await (await this.contract!.withdrawEarningsFromSponsorships(
             sponsorshipAddresses,
