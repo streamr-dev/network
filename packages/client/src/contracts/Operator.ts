@@ -313,6 +313,7 @@ export class Operator {
         return results
     }
 
+    // TODO could move this method as this is functionality is not specific to one Operator contract instance
     async getExpiredFlags(sponsorships: EthereumAddress[], maxAgeInMs: number): Promise<Flag[]> {
         const maxFlagStartTime = Math.floor((Date.now() - maxAgeInMs) / 1000)
         const createQuery = (lastId: string, pageSize: number) => {
@@ -345,6 +346,7 @@ export class Operator {
         return flags
     }
 
+    // TODO could move this method as this is functionality is not specific to one Operator contract instance
     async getOperatorsInSponsorship(sponsorshipAddress: EthereumAddress): Promise<EthereumAddress[]> {
         interface Stake {
             id: string
@@ -385,6 +387,8 @@ export class Operator {
         await (await this.contract!.flag(sponsorship, operator, metadata, await this.getEthersOverrides())).wait()
     }
 
+    // TODO could move this method as this is functionality is not specific to one Operator contract instance
+    // (it excludes the current operator from the list, but that exclusion could be done by the caller of this method)
     async getRandomOperator(): Promise<EthereumAddress | undefined> {
         const latestBlock = await this.getCurrentBlockNumber()  // TODO maybe we should remove this "feature"?
         const operators = await this.getOperatorAddresses(latestBlock)
@@ -445,6 +449,7 @@ export class Operator {
         )).wait()
     }
 
+    // TODO could move this method as this is functionality is not specific to one Operator contract instance
     private async getOperatorAddresses(requiredBlockNumber: number): Promise<EthereumAddress[]> {
         // TODO: find a clever more efficient way of selecting a random operator? (NET-1113)
         const createQuery = (lastId: string, pageSize: number) => {
@@ -534,6 +539,7 @@ export class Operator {
         }
     }
 
+    // TODO could move this method as this is functionality is not specific to one Operator contract instance
     async getStreamId(sponsorshipAddress: string): Promise<StreamID> {
         const sponsorship = this.contractFactory.createReadContract<SponsorshipContract>(
             toEthereumAddress(sponsorshipAddress),
