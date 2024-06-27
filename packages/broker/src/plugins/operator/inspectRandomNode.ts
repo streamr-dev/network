@@ -21,7 +21,7 @@ export async function inspectRandomNode(
     const logger = new Logger(module, { traceId })
     logger.info('Select a random operator to inspect')
 
-    const target = await findTargetFn(operatorContractAddress, operator, assignments, logger)
+    const target = await findTargetFn(operatorContractAddress, operator, assignments, streamrClient, logger)
     if (target === undefined) {
         return
     }
@@ -47,7 +47,7 @@ export async function inspectRandomNode(
         return
     }
 
-    const flagAlreadyRaised = await operator.hasOpenFlag(target.operatorAddress, target.sponsorshipAddress)
+    const flagAlreadyRaised = await (await streamrClient.getOperator(target.operatorAddress)).hasOpenFlag(target.sponsorshipAddress)
     if (flagAlreadyRaised) {
         logger.info('Not raising flag (target already has open flag)', { target })
         return

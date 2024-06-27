@@ -53,7 +53,7 @@ describe(findTarget, () => {
 
     it('returns undefined if no sponsorships are found', async () => {
         setupEnv([])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, operator, assignments, logger)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, operator, assignments, undefined as any, logger)
         expect(result).toBeUndefined()
     })
 
@@ -63,7 +63,7 @@ describe(findTarget, () => {
             operators: [MY_OPERATOR_ADDRESS],
             streamId: STREAM_ID,
         }])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, operator, assignments, logger)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, operator, assignments, undefined as any, logger)
         expect(result).toBeUndefined()
     })
 
@@ -74,7 +74,7 @@ describe(findTarget, () => {
             streamId: STREAM_ID,
         }])
         setStreamPartsAssignedToMe([])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, operator, assignments, logger)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, operator, assignments, undefined as any, logger)
         expect(result).toBeUndefined()
     })
 
@@ -90,7 +90,12 @@ describe(findTarget, () => {
             toStreamPartID(STREAM_ID, 2),
         ])
 
-        const result = await findTarget(MY_OPERATOR_ADDRESS, operator, assignments, logger)
+        const client = { 
+            getOperator: async () => ({
+                hasOpenFlag: async () => false
+            })
+        }
+        const result = await findTarget(MY_OPERATOR_ADDRESS, operator, assignments, client as any, logger)
         expect(result).toMatchObject({
             sponsorshipAddress: SPONSORSHIP_ADDRESS,
             operatorAddress: OTHER_OPERATOR_ADDRESS,

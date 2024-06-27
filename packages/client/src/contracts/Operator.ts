@@ -506,14 +506,15 @@ export class Operator {
         yield* this.theGraphClient.queryEntities<{ id: string, sponsorship: { id: string, stream: { id: string } } }>(createQuery, parseItems)
     }
 
-    async hasOpenFlag(operatorAddress: EthereumAddress, sponsorshipAddress: EthereumAddress): Promise<boolean> {
+    async hasOpenFlag(sponsorshipAddress: EthereumAddress): Promise<boolean> {
+        const operatorContractAddress = await this.getOperatorContractAddress()
         const createQuery = () => {
             return {
                 query: `
                     {
                         flags(where: {
                             sponsorship: "${sponsorshipAddress}",
-                            target: "${operatorAddress}",
+                            target: "${operatorContractAddress}",
                             result_in: ["waiting", "voting"]
                         }) {
                             id
