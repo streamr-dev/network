@@ -8,7 +8,7 @@ import { findTarget } from './inspectionUtils'
 
 export async function inspectRandomNode(
     operatorContractAddress: EthereumAddress,
-    operator: Operator,
+    myOperator: Operator,
     assignments: StreamPartAssignments,
     streamrClient: StreamrClient,
     heartbeatTimeoutInMs: number,
@@ -21,7 +21,7 @@ export async function inspectRandomNode(
     const logger = new Logger(module, { traceId })
     logger.info('Select a random operator to inspect')
 
-    const target = await findTargetFn(operatorContractAddress, operator, assignments, streamrClient, logger)
+    const target = await findTargetFn(operatorContractAddress, myOperator, assignments, streamrClient, logger)
     if (target === undefined) {
         return
     }
@@ -54,7 +54,7 @@ export async function inspectRandomNode(
     }
 
     logger.info('Raise flag', { target })
-    await operator.flag(
+    await myOperator.flag(
         target.sponsorshipAddress,
         target.operatorAddress,
         StreamPartIDUtils.getStreamPartition(target.streamPart)

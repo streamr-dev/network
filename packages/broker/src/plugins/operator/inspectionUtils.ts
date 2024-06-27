@@ -40,13 +40,13 @@ function getPartitionsOfStreamAssignedToMe(
 
 export async function findTarget(
     myOperatorContractAddress: EthereumAddress,
-    operator: Operator,
+    myOperator: Operator,
     assignments: StreamPartAssignments,
     streamrClient: StreamrClient,
     logger: Logger
 ): Promise<Target | undefined> {
     // choose sponsorship
-    const sponsorships = await operator.getSponsorships()
+    const sponsorships = await myOperator.getSponsorships()
     const suitableSponsorships = sponsorships
         .filter(({ operatorCount }) => operatorCount >= 2)  // exclude sponsorships with only self
         .filter(({ streamId }) => isAnyPartitionOfStreamAssignedToMe(assignments, streamId))
@@ -60,7 +60,7 @@ export async function findTarget(
     )!
 
     // choose operator
-    const operators = await operator.getOperatorsInSponsorship(targetSponsorship.sponsorshipAddress)
+    const operators = await myOperator.getOperatorsInSponsorship(targetSponsorship.sponsorshipAddress)
     const targetOperatorAddress = sample(without(operators, myOperatorContractAddress))
     if (targetOperatorAddress === undefined) {
         // Only happens if during the async awaits the other operator(s) were removed from the sponsorship.

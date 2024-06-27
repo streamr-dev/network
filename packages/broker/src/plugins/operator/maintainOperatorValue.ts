@@ -8,10 +8,10 @@ export const maintainOperatorValue = async (
     withdrawLimitSafetyFraction: number,
     minSponsorshipEarningsInWithdraw: number,
     maxSponsorshipsInWithdraw: number,
-    operator: Operator
+    myOperator: Operator
 ): Promise<void> => {
     logger.info('Check whether it is time to withdraw my earnings')
-    const { sumDataWei, maxAllowedEarningsDataWei, sponsorshipAddresses } = await operator.getEarnings(
+    const { sumDataWei, maxAllowedEarningsDataWei, sponsorshipAddresses } = await myOperator.getEarnings(
         minSponsorshipEarningsInWithdraw,
         maxSponsorshipsInWithdraw
     )
@@ -19,7 +19,7 @@ export const maintainOperatorValue = async (
     logger.trace(` -> is ${sumDataWei} > ${triggerWithdrawLimitDataWei} ?`)
     if (sumDataWei > triggerWithdrawLimitDataWei) {
         logger.info('Withdraw earnings from sponsorships', { sponsorshipAddresses })
-        await operator.withdrawEarningsFromSponsorships(sponsorshipAddresses)
+        await myOperator.withdrawEarningsFromSponsorships(sponsorshipAddresses)
     } else {
         logger.info('Skip withdrawing earnings')
     }

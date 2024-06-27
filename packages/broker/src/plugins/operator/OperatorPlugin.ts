@@ -211,7 +211,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                                     sponsorshipAddress: event.sponsorship,
                                     targetOperator: event.targetOperator,
                                     partition: event.partition,
-                                    operator,
+                                    myOperator: operator,
                                     streamrClient,
                                     createOperatorFleetState,
                                     getRedundancyFactor: async (targetOperatorContractAddress) => {
