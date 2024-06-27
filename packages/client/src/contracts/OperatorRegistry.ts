@@ -4,7 +4,7 @@ import { Lifecycle, scoped } from 'tsyringe'
 import { NetworkPeerDescriptor } from '../Config'
 import { LoggerFactory } from '../utils/LoggerFactory'
 
-// TODO move the functionality of this class to Operator class?
+// TODO maybe this class could be removed/renamed (the method could be extracted to be a function as there is no state)
 
 @scoped(Lifecycle.ContainerScoped)
 export class OperatorRegistry {
