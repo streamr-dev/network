@@ -91,7 +91,7 @@ describe(findTarget, () => {
         ])
 
         const client = { 
-            getOperator: async () => ({
+            getOperator: () => ({
                 hasOpenFlag: async () => false
             })
         }
