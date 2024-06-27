@@ -550,7 +550,7 @@ export class Operator {
     }
 
     // TODO could move this method as this is functionality is not specific to one Operator contract instance
-    async getStreamId(sponsorshipAddress: string): Promise<StreamID> {
+    async getStreamId(sponsorshipAddress: EthereumAddress): Promise<StreamID> {
         const sponsorship = this.contractFactory.createReadContract<SponsorshipContract>(
             toEthereumAddress(sponsorshipAddress),
             SponsorshipArtifact,
