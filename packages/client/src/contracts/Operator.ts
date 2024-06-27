@@ -246,7 +246,7 @@ export class Operator {
     async getTimestampOfLastHeartbeat(): Promise<number | undefined> {
         const result = await this.theGraphClient.queryEntity<RawResult>({
             query: `{
-                operator(id: "${await this.getOperatorContractAddress()}") {
+                operator(id: "${await this.getContractAddress()}") {
                     latestHeartbeatTimestamp
                 }
             }`
@@ -262,7 +262,7 @@ export class Operator {
         }
     }
 
-    async getOperatorContractAddress(): Promise<EthereumAddress> {
+    async getContractAddress(): Promise<EthereumAddress> {
         return toEthereumAddress(await this.contractReadonly.getAddress())
     }
 
@@ -277,7 +277,7 @@ export class Operator {
                 }
             }
         }
-        const operatorAddress = await this.getOperatorContractAddress()
+        const operatorAddress = await this.getContractAddress()
         const createQuery = (lastId: string, pageSize: number) => {
             return {
                 query: `
@@ -388,7 +388,7 @@ export class Operator {
     async getRandomOperator(): Promise<EthereumAddress | undefined> {
         const latestBlock = await this.getCurrentBlockNumber()  // TODO maybe we should remove this "feature"?
         const operators = await this.getOperatorAddresses(latestBlock)
-        const excluded = await this.getOperatorContractAddress()
+        const excluded = await this.getContractAddress()
         const operatorAddresses = operators.filter((id) => id !== excluded)
         logger.debug(`Found ${operatorAddresses.length} operators`)
         return sample(operatorAddresses)
@@ -471,7 +471,7 @@ export class Operator {
     async* pullStakedStreams(
         requiredBlockNumber: number
     ): AsyncGenerator<{ sponsorship: { id: string, stream: { id: string } } }, undefined, undefined> {
-        const contractAddress = await this.getOperatorContractAddress()
+        const contractAddress = await this.getContractAddress()
         const createQuery = (lastId: string, pageSize: number) => {
             return {
                 query: `
@@ -507,7 +507,7 @@ export class Operator {
     }
 
     async hasOpenFlag(sponsorshipAddress: EthereumAddress): Promise<boolean> {
-        const operatorContractAddress = await this.getOperatorContractAddress()
+        const operatorContractAddress = await this.getContractAddress()
         const createQuery = () => {
             return {
                 query: `
@@ -577,7 +577,7 @@ export class Operator {
         try {
             metadata = JSON.parse(metadataAsString)
         } catch {
-            logger.warn('Encountered malformed metadata', { operatorAddress: await this.getOperatorContractAddress(), metadataAsString })
+            logger.warn('Encountered malformed metadata', { operatorAddress: await this.getContractAddress(), metadataAsString })
             return undefined
         }
         let validatedMetadata: z.infer<typeof MetadataSchema>
@@ -585,7 +585,7 @@ export class Operator {
             validatedMetadata = MetadataSchema.parse(metadata)
         } catch (err) {
             logger.warn('Encountered invalid metadata', {
-                operatorAddress: await this.getOperatorContractAddress(),
+                operatorAddress: await this.getContractAddress(),
                 metadataAsString,
                 reason: err?.reason
             })

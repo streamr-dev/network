@@ -18,7 +18,7 @@ const isHeartbeatStale = async (
     operator: Operator
 ): Promise<boolean> => {
     logger.debug('Polling last heartbeat timestamp', {
-        operatorContractAddress: await operator.getOperatorContractAddress()
+        operatorContractAddress: await operator.getContractAddress()
     })
     let lastHeartbeatTs
     try {
