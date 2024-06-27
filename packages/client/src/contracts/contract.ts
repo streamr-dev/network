@@ -1,4 +1,4 @@
-import { initEventGateway } from '@streamr/utils'
+import { initEventGateway, Events, ObservableEventEmitter } from '@streamr/utils'
 import type { TransactionResponse } from 'ethers'
 import {
     BaseContract,
@@ -10,7 +10,6 @@ import {
 import EventEmitter from 'eventemitter3'
 import without from 'lodash/without'
 import pLimit from 'p-limit'
-import { InternalEvents, StreamrClientEventEmitter, StreamrClientEvents } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
 
 export interface ContractEvent {
@@ -163,7 +162,8 @@ export const createDecoratedContract = <T extends BaseContract>(
 export const initContractEventGateway = <
     TSourcePayloads extends any[],
     TSourceName extends string,
-    TTargetName extends keyof (StreamrClientEvents & InternalEvents)
+    TTarget extends Events<TTarget>,
+    TTargetName extends keyof TTarget
 >(opts: {
     sourceName: TSourceName
     targetName: TTargetName
@@ -171,15 +171,15 @@ export const initContractEventGateway = <
         on: (name: TSourceName, listener: (...args: TSourcePayloads) => void) => void
         off: (name: TSourceName, listener: (...args: TSourcePayloads) => void) => void
     }
-    targetEmitter: StreamrClientEventEmitter
-    transformation: (...args: TSourcePayloads) => Parameters<(StreamrClientEvents & InternalEvents)[TTargetName]>[0]
+    targetEmitter: ObservableEventEmitter<TTarget>
+    transformation: (...args: TSourcePayloads) => Parameters<TTarget[TTargetName]>[0]
     loggerFactory: LoggerFactory
 }): void => {
     const logger = opts.loggerFactory.createLogger(module)
     type Listener = (...args: TSourcePayloads) => void
     initEventGateway(
         opts.targetName,
-        (emit: (payload: Parameters<(StreamrClientEvents & InternalEvents)[TTargetName]>[0]) => void) => {
+        (emit: (payload: Parameters<TTarget[TTargetName]>[0]) => void) => {
             const listener = (...args: TSourcePayloads) => {
                 let targetEvent
                 try {

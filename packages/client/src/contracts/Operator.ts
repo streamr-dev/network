@@ -195,21 +195,19 @@ export class Operator {
         const stakeEventTransformation = (sponsorship: string) => ({
             sponsorship: toEthereumAddress(sponsorship)
         })
-        // TODO change initContractEventGateway so that it doesn't requite target to be StreamrClientEventEmitter
-        // -> then "as any" casting is not needed
         initContractEventGateway({
             sourceName: 'Staked',
             sourceEmitter: chainEventPoller,
-            targetName: 'staked' as any,
-            targetEmitter: this.eventEmitter as any,
+            targetName: 'staked',
+            targetEmitter: this.eventEmitter,
             transformation: stakeEventTransformation,
             loggerFactory
         })
         initContractEventGateway({
             sourceName: 'Unstaked',
             sourceEmitter: chainEventPoller,
-            targetName: 'unstaked' as any,
-            targetEmitter: this.eventEmitter as any,
+            targetName: 'unstaked',
+            targetEmitter: this.eventEmitter,
             transformation: stakeEventTransformation,
             loggerFactory
         })
@@ -232,8 +230,8 @@ export class Operator {
         initContractEventGateway({
             sourceName: 'ReviewRequest',
             sourceEmitter: chainEventPoller,
-            targetName: 'reviewRequested' as any,
-            targetEmitter: this.eventEmitter as any,
+            targetName: 'reviewRequested',
+            targetEmitter: this.eventEmitter,
             transformation: reviewRequestTransform,
             loggerFactory
         })
