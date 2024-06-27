@@ -7,7 +7,7 @@ const sponsorshipAddress = randomEthereumAddress()
 const targetAddress = randomEthereumAddress()
 
 const operatorMock = mock<Operator>()
-operatorMock.getSponsorshipsOfOperator.mockImplementation(async () => {
+operatorMock.getSponsorships.mockImplementation(async () => {
     return [
         {
             sponsorshipAddress,

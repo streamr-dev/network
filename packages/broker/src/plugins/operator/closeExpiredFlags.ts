@@ -9,7 +9,7 @@ export const closeExpiredFlags = async (
 ): Promise<void> => {
     logger.info('Start')
 
-    const sponsorships = (await operator.getSponsorshipsOfOperator())
+    const sponsorships = (await operator.getSponsorships())
         .map((sponsorship: SponsorshipResult) => sponsorship.sponsorshipAddress)
     logger.debug(`Found ${sponsorships.length} sponsorships`)
     if (sponsorships.length === 0) {

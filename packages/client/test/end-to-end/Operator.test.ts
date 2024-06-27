@@ -96,7 +96,7 @@ describe('Operator', () => {
 
     }, 30 * 1000)
 
-    it('getSponsorshipsOfOperator, getOperatorsInSponsorship', async () => {
+    it('getSponsorships, getOperatorsInSponsorship', async () => {
         const operatorContractAddress = toEthereumAddress(await deployedOperator.operatorContract.getAddress())
         await delegate(deployedOperator.operatorWallet, operatorContractAddress, 20000)
         await stake(deployedOperator.operatorContract, await sponsorship1.getAddress(), 10000)
@@ -105,11 +105,11 @@ describe('Operator', () => {
         const operator = await getOperator(undefined, deployedOperator)
 
         await waitForCondition(async (): Promise<boolean> => {
-            const res = await operator.getSponsorshipsOfOperator()
+            const res = await operator.getSponsorships()
             return res.length === 2
         }, 10000, 500)
 
-        const sponsorships = await operator.getSponsorshipsOfOperator()
+        const sponsorships = await operator.getSponsorships()
         expect(sponsorships).toIncludeSameMembers([
             {
                 sponsorshipAddress: toEthereumAddress(await sponsorship1.getAddress()),

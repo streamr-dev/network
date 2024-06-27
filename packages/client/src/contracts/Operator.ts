@@ -266,7 +266,7 @@ export class Operator {
         return toEthereumAddress(await this.contractReadonly.getAddress())
     }
 
-    async getSponsorshipsOfOperator(): Promise<SponsorshipResult[]> {
+    async getSponsorships(): Promise<SponsorshipResult[]> {
         interface Stake {
             id: string
             sponsorship: {
