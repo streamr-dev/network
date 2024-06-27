@@ -50,10 +50,10 @@ describe('maintainOperatorValue', () => {
         await stake(operatorContract, await sponsorship.getAddress(), STAKE_AMOUNT)
         const operator = await createClient(nodeWallets[0].privateKey)
             .getOperator(toEthereumAddress(await operatorContract.getAddress()))
-        const { maxAllowedEarningsDataWei } = await operator.getMyEarnings(1, 20)
+        const { maxAllowedEarningsDataWei } = await operator.getEarnings(1, 20)
         const triggerWithdrawLimitDataWei = multiply(maxAllowedEarningsDataWei, 1 - SAFETY_FRACTION)
         await waitForCondition(async () => {
-            const { sumDataWei } = await operator.getMyEarnings(1, 20)
+            const { sumDataWei } = await operator.getEarnings(1, 20)
             const earnings = sumDataWei
             return earnings > triggerWithdrawLimitDataWei
         }, 10000, 1000)

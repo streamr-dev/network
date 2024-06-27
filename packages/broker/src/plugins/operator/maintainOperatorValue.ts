@@ -11,7 +11,7 @@ export const maintainOperatorValue = async (
     operator: Operator
 ): Promise<void> => {
     logger.info('Check whether it is time to withdraw my earnings')
-    const { sumDataWei, maxAllowedEarningsDataWei, sponsorshipAddresses } = await operator.getMyEarnings(
+    const { sumDataWei, maxAllowedEarningsDataWei, sponsorshipAddresses } = await operator.getEarnings(
         minSponsorshipEarningsInWithdraw,
         maxSponsorshipsInWithdraw
     )

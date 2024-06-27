@@ -400,23 +400,16 @@ export class Operator {
      *  - only take at most maxSponsorshipsInWithdraw addresses (those with most earnings), or all if undefined
      *  - only take sponsorships that have more than minSponsorshipEarningsInWithdraw, or all if undefined
      */
-    async getEarningsOf(
-        operatorContractAddress: EthereumAddress,
+    async getEarnings(
         minSponsorshipEarningsInWithdraw: number,
         maxSponsorshipsInWithdraw: number
     ): Promise<EarningsData> {
-        const operator = this.contractFactory.createReadContract<OperatorContract>(
-            toEthereumAddress(operatorContractAddress),
-            OperatorArtifact,
-            this.rpcProviderSource.getProvider(),
-            'operator'
-        )
         const minSponsorshipEarningsInWithdrawWei = BigInt(minSponsorshipEarningsInWithdraw ?? 0)
         const {
             addresses: allSponsorshipAddresses,
             earnings,
             maxAllowedEarnings,
-        } = await operator.getSponsorshipsAndEarnings() as {  // TODO why casting is needed?
+        } = await this.contractReadonly.getSponsorshipsAndEarnings() as {  // TODO why casting is needed?
             addresses: string[]
             earnings: bigint[]
             maxAllowedEarnings: bigint
@@ -435,17 +428,6 @@ export class Operator {
         }
     }
 
-    async getMyEarnings(
-        minSponsorshipEarningsInWithdraw: number,
-        maxSponsorshipsInWithdraw: number
-    ): Promise<EarningsData> {
-        return this.getEarningsOf(
-            await this.getOperatorContractAddress(),
-            minSponsorshipEarningsInWithdraw,
-            maxSponsorshipsInWithdraw
-        )
-    }
-
     async withdrawMyEarningsFromSponsorships(sponsorshipAddresses: EthereumAddress[]): Promise<void> {
         await this.connectToContract()
         await (await this.contract!.withdrawEarningsFromSponsorships(
@@ -454,7 +436,7 @@ export class Operator {
         )).wait()
     }
 
-    async triggerWithdraw(targetOperatorAddress: EthereumAddress, sponsorshipAddresses: EthereumAddress[]): Promise<void> {
+    async triggerAnotherOperatorWithdraw(targetOperatorAddress: EthereumAddress, sponsorshipAddresses: EthereumAddress[]): Promise<void> {
         await this.connectToContract()
         await (await this.contract!.triggerAnotherOperatorWithdraw(
             targetOperatorAddress,

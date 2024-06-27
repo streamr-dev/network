@@ -125,6 +125,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             await scheduleAtInterval(
                 async () => checkOperatorValueBreach(
                     operator,
+                    streamrClient,
                     this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
                     this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw
                 ).catch((err) => {
