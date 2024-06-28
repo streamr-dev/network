@@ -1,14 +1,13 @@
-import { shuffle } from 'lodash'
-import { NetworkPeerDescriptor, StreamrClient } from '@streamr/sdk'
-import { OperatorFleetState } from './OperatorFleetState'
 import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { NetworkPeerDescriptor, Operator, StreamrClient } from '@streamr/sdk'
 import { EthereumAddress, Logger } from '@streamr/utils'
-import { ConsistentHashRing } from './ConsistentHashRing'
-import { StreamPartAssignments } from './StreamPartAssignments'
-import { weightedSample } from '../../helpers/weightedSample'
+import { shuffle } from 'lodash'
 import sample from 'lodash/sample'
 import without from 'lodash/without'
-import { ContractFacade } from './ContractFacade'
+import { weightedSample } from '../../helpers/weightedSample'
+import { ConsistentHashRing } from './ConsistentHashRing'
+import { OperatorFleetState } from './OperatorFleetState'
+import { StreamPartAssignments } from './StreamPartAssignments'
 
 export type FindNodesForTargetGivenFleetStateFn = typeof findNodesForTargetGivenFleetState
 export type InspectTargetFn = typeof inspectTarget
@@ -41,12 +40,13 @@ function getPartitionsOfStreamAssignedToMe(
 
 export async function findTarget(
     myOperatorContractAddress: EthereumAddress,
-    contractFacade: ContractFacade,
+    myOperator: Operator,
     assignments: StreamPartAssignments,
+    streamrClient: StreamrClient,
     logger: Logger
 ): Promise<Target | undefined> {
     // choose sponsorship
-    const sponsorships = await contractFacade.getSponsorshipsOfOperator(myOperatorContractAddress)
+    const sponsorships = await myOperator.getSponsorships()
     const suitableSponsorships = sponsorships
         .filter(({ operatorCount }) => operatorCount >= 2)  // exclude sponsorships with only self
         .filter(({ streamId }) => isAnyPartitionOfStreamAssignedToMe(assignments, streamId))
@@ -60,7 +60,7 @@ export async function findTarget(
     )!
 
     // choose operator
-    const operators = await contractFacade.getOperatorsInSponsorship(targetSponsorship.sponsorshipAddress)
+    const operators = await myOperator.getOperatorsInSponsorship(targetSponsorship.sponsorshipAddress)
     const targetOperatorAddress = sample(without(operators, myOperatorContractAddress))
     if (targetOperatorAddress === undefined) {
         // Only happens if during the async awaits the other operator(s) were removed from the sponsorship.
@@ -77,7 +77,8 @@ export async function findTarget(
         return undefined
     }
 
-    const flagAlreadyRaised = await contractFacade.hasOpenFlag(targetOperatorAddress, targetSponsorship.sponsorshipAddress)
+    const targetOperator = streamrClient.getOperator(targetOperatorAddress)
+    const flagAlreadyRaised = await targetOperator.hasOpenFlag(targetSponsorship.sponsorshipAddress)
     if (flagAlreadyRaised) {
         logger.info('Skip inspection (target already has open flag)', { targetSponsorship, targetOperatorAddress })
         return undefined

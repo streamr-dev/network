@@ -1,11 +1,10 @@
-import { mock, MockProxy } from 'jest-mock-extended'
-import { StreamrClient, Subscription } from '@streamr/sdk'
 import { StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
+import { Operator, StreamrClient, Subscription } from '@streamr/sdk'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { EthereumAddress, Logger } from '@streamr/utils'
+import { mock, MockProxy } from 'jest-mock-extended'
 import { findTarget, inspectTarget } from '../../../../src/plugins/operator/inspectionUtils'
 import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
-import { EthereumAddress, Logger } from '@streamr/utils'
-import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 
 const MY_OPERATOR_ADDRESS = randomEthereumAddress()
 const OTHER_OPERATOR_ADDRESS = randomEthereumAddress()
@@ -25,20 +24,20 @@ const PEER_DESCRIPTOR_THREE = { nodeId: '0x3333' }
 const logger = new Logger(module)
 
 describe(findTarget, () => {
-    let contractFacade: MockProxy<ContractFacade>
+    let operator: MockProxy<Operator>
     let assignments: MockProxy<StreamPartAssignments>
 
     function setupEnv(sponsorships: Array<{ address: EthereumAddress, operators: EthereumAddress[], streamId: StreamID }>) {
-        contractFacade.getSponsorshipsOfOperator.mockImplementation(async (operatorAddress) => {
+        operator.getSponsorships.mockImplementation(async () => {
             return sponsorships
-                .filter(({ operators }) => operators.includes(operatorAddress))
+                .filter(({ operators }) => operators.includes(MY_OPERATOR_ADDRESS))
                 .map(({ address, operators, streamId }) => ({
                     sponsorshipAddress: address,
                     operatorCount: operators.length,
                     streamId,
                 }))
         })
-        contractFacade.getOperatorsInSponsorship.mockImplementation(async (sponsorshipAddress) => {
+        operator.getOperatorsInSponsorship.mockImplementation(async (sponsorshipAddress) => {
             return sponsorships.find(({ address }) => address === sponsorshipAddress)!.operators
         })
     }
@@ -48,13 +47,13 @@ describe(findTarget, () => {
     }
 
     beforeEach(() => {
-        contractFacade = mock<ContractFacade>()
+        operator = mock<Operator>()
         assignments = mock<StreamPartAssignments>()
     })
 
     it('returns undefined if no sponsorships are found', async () => {
         setupEnv([])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, contractFacade, assignments, logger)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, operator, assignments, undefined as any, logger)
         expect(result).toBeUndefined()
     })
 
@@ -64,7 +63,7 @@ describe(findTarget, () => {
             operators: [MY_OPERATOR_ADDRESS],
             streamId: STREAM_ID,
         }])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, contractFacade, assignments, logger)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, operator, assignments, undefined as any, logger)
         expect(result).toBeUndefined()
     })
 
@@ -75,7 +74,7 @@ describe(findTarget, () => {
             streamId: STREAM_ID,
         }])
         setStreamPartsAssignedToMe([])
-        const result = await findTarget(MY_OPERATOR_ADDRESS, contractFacade, assignments, logger)
+        const result = await findTarget(MY_OPERATOR_ADDRESS, operator, assignments, undefined as any, logger)
         expect(result).toBeUndefined()
     })
 
@@ -91,7 +90,12 @@ describe(findTarget, () => {
             toStreamPartID(STREAM_ID, 2),
         ])
 
-        const result = await findTarget(MY_OPERATOR_ADDRESS, contractFacade, assignments, logger)
+        const client = { 
+            getOperator: () => ({
+                hasOpenFlag: async () => false
+            })
+        }
+        const result = await findTarget(MY_OPERATOR_ADDRESS, operator, assignments, client as any, logger)
         expect(result).toMatchObject({
             sponsorshipAddress: SPONSORSHIP_ADDRESS,
             operatorAddress: OTHER_OPERATOR_ADDRESS,

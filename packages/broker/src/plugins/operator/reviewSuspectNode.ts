@@ -1,9 +1,8 @@
-import { EthereumAddress, Logger, randomString, setAbortableTimeout } from '@streamr/utils'
-import { ContractFacade } from './ContractFacade'
-import { StreamrClient } from '@streamr/sdk'
-import { CreateOperatorFleetStateFn } from './OperatorFleetState'
 import { toStreamPartID } from '@streamr/protocol'
+import { Operator, StreamrClient } from '@streamr/sdk'
+import { EthereumAddress, Logger, randomString, setAbortableTimeout } from '@streamr/utils'
 import random from 'lodash/random'
+import { CreateOperatorFleetStateFn } from './OperatorFleetState'
 import { inspectOverTime } from './inspectOverTime'
 
 const logger = new Logger(module)
@@ -12,7 +11,7 @@ export interface ReviewProcessOpts {
     sponsorshipAddress: EthereumAddress
     targetOperator: EthereumAddress
     partition: number
-    contractFacade: ContractFacade
+    myOperator: Operator
     streamrClient: StreamrClient
     createOperatorFleetState: CreateOperatorFleetStateFn
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>
@@ -31,7 +30,7 @@ export const reviewSuspectNode = async ({
     sponsorshipAddress,
     targetOperator,
     partition,
-    contractFacade,
+    myOperator,
     streamrClient,
     createOperatorFleetState,
     getRedundancyFactor,
@@ -45,7 +44,7 @@ export const reviewSuspectNode = async ({
     if (Date.now() + maxSleepTime > votingPeriod.startTime) {
         throw new Error('Max sleep time overlaps with voting period')
     }
-    const streamId = await contractFacade.getStreamId(sponsorshipAddress)
+    const streamId = await myOperator.getStreamId(sponsorshipAddress)
     // random sleep time to make sure multiple instances of voters don't all inspect at the same time
     const sleepTimeInMsBeforeFirstInspection = random(maxSleepTime)
     const consumeResults = inspectOverTime({
@@ -73,7 +72,7 @@ export const reviewSuspectNode = async ({
         const kick = results.filter((b) => b).length <= results.length / 2
         logger.info('Vote on flag', { sponsorshipAddress, targetOperator, kick })
         try {
-            await contractFacade.voteOnFlag(sponsorshipAddress, targetOperator, kick)
+            await myOperator.voteOnFlag(sponsorshipAddress, targetOperator, kick)
         } catch (err) {
             logger.warn('Encountered error while voting on flag', {
                 sponsorshipAddress,

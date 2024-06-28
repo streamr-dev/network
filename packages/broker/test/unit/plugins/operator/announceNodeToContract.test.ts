@@ -1,18 +1,17 @@
 import { DhtAddress } from '@streamr/dht'
+import { NetworkNodeType, Operator, StreamrClient } from '@streamr/sdk'
 import { MockProxy, mock } from 'jest-mock-extended'
-import { NetworkNodeType, StreamrClient } from '@streamr/sdk'
-import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
 import { announceNodeToContract } from '../../../../src/plugins/operator/announceNodeToContract'
 
 const NODE_ID = '0x1111' as DhtAddress
 
-const createHelper = (timestampOfLastHeartbeat: number | undefined): MockProxy<ContractFacade> => {
-    const helper = mock<ContractFacade>()
-    helper.getTimestampOfLastHeartbeat.mockImplementation(async () => {
+const createOperator = (timestampOfLastHeartbeat: number | undefined): MockProxy<Operator> => {
+    const operator = mock<Operator>()
+    operator.getTimestampOfLastHeartbeat.mockImplementation(async () => {
         return timestampOfLastHeartbeat
     })
-    helper.writeHeartbeat.mockResolvedValue(undefined)
-    return helper
+    operator.writeHeartbeat.mockResolvedValue(undefined)
+    return operator
 }
 
 describe('announceNodeToContract', () => {
@@ -25,20 +24,20 @@ describe('announceNodeToContract', () => {
     })
 
     it('writes heartbeat immediately if undefined at start', async () => {
-        const helper = createHelper(undefined)
-        await announceNodeToContract(500, helper, streamrClient)
-        expect(helper.writeHeartbeat).toHaveBeenCalledWith({ nodeId: NODE_ID, type: NetworkNodeType.NODEJS })
+        const operator = createOperator(undefined)
+        await announceNodeToContract(500, operator, streamrClient)
+        expect(operator.writeHeartbeat).toHaveBeenCalledWith({ nodeId: NODE_ID, type: NetworkNodeType.NODEJS })
     })
 
     it('writes heartbeat immediately if already stale at start', async () => {
-        const helper = createHelper(Date.now() - 600)
-        await announceNodeToContract(500, helper, streamrClient)
-        expect(helper.writeHeartbeat).toHaveBeenCalledWith({ nodeId: NODE_ID, type: NetworkNodeType.NODEJS })
+        const operator = createOperator(Date.now() - 600)
+        await announceNodeToContract(500, operator, streamrClient)
+        expect(operator.writeHeartbeat).toHaveBeenCalledWith({ nodeId: NODE_ID, type: NetworkNodeType.NODEJS })
     })
 
     it('does not write heartbeat immediately if not stale at start', async () => {
-        const helper = createHelper(Date.now())
-        await announceNodeToContract(500, helper, streamrClient)
-        expect(helper.writeHeartbeat).not.toHaveBeenCalled()
+        const operator = createOperator(Date.now())
+        await announceNodeToContract(500, operator, streamrClient)
+        expect(operator.writeHeartbeat).not.toHaveBeenCalled()
     })
 })

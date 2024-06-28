@@ -1,27 +1,26 @@
-import { EthereumAddress, Logger } from '@streamr/utils'
-import { ContractFacade, SponsorshipResult } from './ContractFacade'
+import { GetOperatorSponsorshipsResult, Operator } from '@streamr/sdk'
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
 export const closeExpiredFlags = async (
     maxAgeInMs: number,
-    operatorContractAddress: EthereumAddress,
-    contractFacade: ContractFacade
+    operator: Operator
 ): Promise<void> => {
     logger.info('Start')
 
-    const sponsorships = (await contractFacade.getSponsorshipsOfOperator(operatorContractAddress))
-        .map((sponsorship: SponsorshipResult) => sponsorship.sponsorshipAddress)
+    const sponsorships = (await operator.getSponsorships())
+        .map((sponsorship: GetOperatorSponsorshipsResult) => sponsorship.sponsorshipAddress)
     logger.debug(`Found ${sponsorships.length} sponsorships`)
     if (sponsorships.length === 0) {
         return
     }
-    const flags = await contractFacade.getExpiredFlags(sponsorships, maxAgeInMs)
+    const flags = await operator.getExpiredFlags(sponsorships, maxAgeInMs)
     logger.debug(`Found ${flags.length} expired flags to close`)
     for (const flag of flags) {
-        const operatorAddress = flag.target.id
-        const sponsorship = flag.sponsorship.id
+        const operatorAddress = flag.targetOperator
+        const sponsorship = flag.sponsorship
         logger.info('Close expired flag', { flag })
-        await contractFacade.closeFlag(sponsorship, operatorAddress)
+        await operator.closeFlag(sponsorship, operatorAddress)
     }
 }

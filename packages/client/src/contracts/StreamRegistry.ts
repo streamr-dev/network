@@ -1,10 +1,9 @@
 import { StreamID, StreamIDUtils, toStreamID } from '@streamr/protocol'
 import { EthereumAddress, GraphQLQuery, Logger, TheGraphClient, collect, isENSName, toEthereumAddress } from '@streamr/utils'
-import { Contract, ContractTransactionResponse } from 'ethers'
+import { ContractTransactionResponse } from 'ethers'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { ContractFactory } from '../ContractFactory'
 import { RpcProviderSource } from '../RpcProviderSource'
 import { Stream, StreamMetadata } from '../Stream'
 import { StreamIDBuilder } from '../StreamIDBuilder'
@@ -29,10 +28,11 @@ import {
 import { filter, map } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { CacheAsyncFn, CacheAsyncFnType } from '../utils/caches'
-import { ObservableContract, initContractEventGateway, waitForTx } from './contract'
 import { until } from '../utils/promises'
 import { StreamFactory } from './../StreamFactory'
 import { ChainEventPoller } from './ChainEventPoller'
+import { ContractFactory } from './ContractFactory'
+import { ObservableContract, initContractEventGateway, waitForTx } from './contract'
 import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, searchStreams as _searchStreams } from './searchStreams'
 
 /*
@@ -71,7 +71,7 @@ const CACHE_KEY_SEPARATOR = '|'
 export class StreamRegistry {
 
     private streamRegistryContract?: ObservableContract<StreamRegistryContract>
-    private streamRegistryContractReadonly: ObservableContract<StreamRegistryContract>
+    private readonly streamRegistryContractReadonly: ObservableContract<StreamRegistryContract>
     private readonly streamFactory: StreamFactory
     private readonly contractFactory: ContractFactory
     private readonly rpcProviderSource: RpcProviderSource
@@ -114,7 +114,7 @@ export class StreamRegistry {
             'streamRegistry'
         )
         const chainEventPoller = new ChainEventPoller(this.rpcProviderSource.getSubProviders().map((p) => {
-            return new Contract(toEthereumAddress(this.config.contracts.streamRegistryChainAddress), StreamRegistryArtifact, p)
+            return contractFactory.createEventContract(toEthereumAddress(this.config.contracts.streamRegistryChainAddress), StreamRegistryArtifact, p)
         // eslint-disable-next-line no-underscore-dangle
         }), config.contracts.pollInterval)
         initContractEventGateway({
@@ -173,7 +173,7 @@ export class StreamRegistry {
     }
 
     private async connectToContract(): Promise<void> {
-        if (!this.streamRegistryContract) {
+        if (this.streamRegistryContract === undefined) {
             const chainSigner = await this.authentication.getTransactionSigner(this.rpcProviderSource)
             this.streamRegistryContract = this.contractFactory.createWriteContract<StreamRegistryContract>(
                 toEthereumAddress(this.config.contracts.streamRegistryChainAddress),

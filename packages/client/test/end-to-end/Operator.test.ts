@@ -1,33 +1,61 @@
-import { Contract } from 'ethers'
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { OperatorFactory, operatorFactoryABI, type Sponsorship } from '@streamr/network-contracts-ethers6'
-import { toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
+import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { Logger, TheGraphClient, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { Contract, Wallet } from 'ethers'
+import fetch from 'node-fetch'
+import { CONFIG_TEST } from '../../src/ConfigTest'
+import { StreamrClient } from '../../src/StreamrClient'
+import { Operator } from '../../src/contracts/Operator'
 import {
-    createTheGraphClient,
+    SetupOperatorContractReturnType,
     delegate,
     deploySponsorshipContract,
     getAdminWallet,
     setupOperatorContract,
-    SetupOperatorContractReturnType,
     sponsor,
     stake
-} from './contractUtils'
-import { createClient, createTestStream } from '../../../utils'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+} from '../../src/contracts/operatorContractUtils'
+import type { Operator as OperatorContract } from '../../src/ethereumArtifacts/Operator'
+import OperatorArtifact from '../../src/ethereumArtifacts/OperatorAbi.json'
+import type { OperatorFactory as OperatorFactoryContract } from '../../src/ethereumArtifacts/OperatorFactory'
+import OperatorFactoryArtifact from '../../src/ethereumArtifacts/OperatorFactoryAbi.json'
+import type { Sponsorship as SponsorshipContract } from '../../src/ethereumArtifacts/Sponsorship'
+
+const createClient = (privateKey?: string): StreamrClient => {
+    return new StreamrClient({
+        ...CONFIG_TEST,
+        auth: (privateKey !== undefined) ? {
+            privateKey
+        } : undefined
+    })
+}
+
+const createTheGraphClient = (): TheGraphClient => {
+    return new TheGraphClient({
+        serverUrl: CHAIN_CONFIG.dev2.theGraphUrl,
+        fetch,
+        logger: new Logger(module)
+    })
+}
 
 async function createStream(): Promise<string> {
     const client = createClient(await fetchPrivateKeyWithGas())
-    const streamId = (await createTestStream(client, module)).id
+    const streamId = (await client.createStream(`/${Date.now()}`)).id
     await client.destroy()
     return streamId
 }
 
-describe('ContractFacade', () => {
+const getOperator = async (wallet: Wallet | undefined, operator: SetupOperatorContractReturnType): Promise<Operator> => {
+    const client = createClient(wallet?.privateKey)
+    const contractAddress = toEthereumAddress(await operator.operatorContract.getAddress())
+    return client.getOperator(contractAddress)
+}
+
+describe('Operator', () => {
     let streamId1: string
     let streamId2: string
-    let sponsorship1: Sponsorship
-    let sponsorship2: Sponsorship
+    let sponsorship1: SponsorshipContract
+    let sponsorship2: SponsorshipContract
     let deployedOperator: SetupOperatorContractReturnType
 
     beforeAll(async () => {
@@ -52,42 +80,36 @@ describe('ContractFacade', () => {
     }, 90 * 1000)
 
     it('getRandomOperator', async () => {
-        const contractFacade = ContractFacade.createInstance({
-            ...deployedOperator.operatorServiceConfig,
-            signer: deployedOperator.nodeWallets[0]
-        })
-        const randomOperatorAddress = await contractFacade.getRandomOperator()
+        const operator = await getOperator(deployedOperator.nodeWallets[0], deployedOperator)
+        const randomOperatorAddress = await operator.getRandomOperator()
         expect(randomOperatorAddress).toBeDefined()
         expect(randomOperatorAddress).not.toEqual(await deployedOperator.operatorContract.getAddress()) // should not be me
 
         // check it's a valid operator, deployed by the OperatorFactory
         const operatorFactory = new Contract(
             CHAIN_CONFIG.dev2.contracts.OperatorFactory,
-            operatorFactoryABI,
+            OperatorFactoryArtifact,
             getAdminWallet()
-        ) as unknown as OperatorFactory
+        ) as unknown as OperatorFactoryContract
         const isDeployedByFactory = (await operatorFactory.deploymentTimestamp(randomOperatorAddress!)) > 0
         expect(isDeployedByFactory).toBeTrue()
 
     }, 30 * 1000)
 
-    it('getSponsorshipsOfOperator, getOperatorsInSponsorship', async () => {
+    it('getSponsorships, getOperatorsInSponsorship', async () => {
         const operatorContractAddress = toEthereumAddress(await deployedOperator.operatorContract.getAddress())
         await delegate(deployedOperator.operatorWallet, operatorContractAddress, 20000)
         await stake(deployedOperator.operatorContract, await sponsorship1.getAddress(), 10000)
         await stake(deployedOperator.operatorContract, await sponsorship2.getAddress(), 10000)
 
-        const contractFacade = ContractFacade.createInstance({
-            ...deployedOperator.operatorServiceConfig,
-            signer: undefined as any
-        })
+        const operator = await getOperator(undefined, deployedOperator)
 
         await waitForCondition(async (): Promise<boolean> => {
-            const res = await contractFacade.getSponsorshipsOfOperator(toEthereumAddress(operatorContractAddress))
+            const res = await operator.getSponsorships()
             return res.length === 2
         }, 10000, 500)
 
-        const sponsorships = await contractFacade.getSponsorshipsOfOperator(toEthereumAddress(operatorContractAddress))
+        const sponsorships = await operator.getSponsorships()
         expect(sponsorships).toIncludeSameMembers([
             {
                 sponsorshipAddress: toEthereumAddress(await sponsorship1.getAddress()),
@@ -101,7 +123,7 @@ describe('ContractFacade', () => {
             }
         ])
 
-        const operators = await contractFacade.getOperatorsInSponsorship(toEthereumAddress(await sponsorship1.getAddress()))
+        const operators = await operator.getOperatorsInSponsorship(toEthereumAddress(await sponsorship1.getAddress()))
         expect(operators).toEqual([toEthereumAddress(await deployedOperator.operatorContract.getAddress())])
     }, 30 * 1000)
 
@@ -116,10 +138,7 @@ describe('ContractFacade', () => {
         await stake(flagger.operatorContract, await sponsorship2.getAddress(), 15000)
         await stake(target.operatorContract, await sponsorship2.getAddress(), 25000)
 
-        const contractFacade = ContractFacade.createInstance({
-            ...flagger.operatorServiceConfig,
-            signer: flagger.nodeWallets[0]
-        })
+        const contractFacade = await getOperator(deployedOperator.nodeWallets[0], flagger)
         await contractFacade.flag(
             toEthereumAddress(await sponsorship2.getAddress()),
             toEthereumAddress(await target.operatorContract.getAddress()),
@@ -157,4 +176,58 @@ describe('ContractFacade', () => {
             return result.operator.flagsTargeted.length === 1
         }, 10000, 1000)
     }, 60 * 1000)  // TODO why this is slower, takes ~35 seconds?
+
+    describe('fetchRedundancyFactor', () => {
+
+        let operator: Operator
+
+        async function updateMetadata(metadata: string): Promise<void> {
+            const operator = new Contract(
+                await deployedOperator.operatorContract.getAddress(),
+                OperatorArtifact,
+                deployedOperator.operatorWallet
+            ) as unknown as OperatorContract
+            await (await operator.updateMetadata(metadata)).wait()
+        }
+
+        beforeAll(async () => (
+            operator = await createClient(deployedOperator.operatorWallet.privateKey).getOperator(
+                toEthereumAddress(await deployedOperator.operatorContract.getAddress())
+            )
+        ))
+        
+        describe('happy paths', () => {
+            it('empty metadata', async () => {
+                await updateMetadata('')
+                const factor = await operator.fetchRedundancyFactor()
+                expect(factor).toEqual(1)
+            })
+    
+            it('explicit valid metadata', async () => {
+                await updateMetadata(JSON.stringify({ redundancyFactor: 6 }))
+                const factor = await operator.fetchRedundancyFactor()
+                expect(factor).toEqual(6)
+            })
+        })
+    
+        describe('no result cases', () => {
+            it('invalid json', async () => {
+                await updateMetadata('invalidjson')
+                const factor = await operator.fetchRedundancyFactor()
+                expect(factor).toBeUndefined()
+            })
+    
+            it('valid json but missing field', async () => {
+                await updateMetadata(JSON.stringify({ foo: 'bar' }))
+                const factor = await operator.fetchRedundancyFactor()
+                expect(factor).toBeUndefined()
+            })
+    
+            it('valid json but invalid value', async () => {
+                await updateMetadata(JSON.stringify({ redundancyFactor: 0 }))
+                const factor = await operator.fetchRedundancyFactor()
+                expect(factor).toBeUndefined()
+            })
+        })
+    })
 })

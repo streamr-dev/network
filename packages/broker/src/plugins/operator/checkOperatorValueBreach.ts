@@ -1,21 +1,21 @@
+import { StreamrClient, Operator } from '@streamr/sdk'
 import { Logger } from '@streamr/utils'
-import { ContractFacade } from './ContractFacade'
 
 const logger = new Logger(module)
 
 export const checkOperatorValueBreach = async (
-    contractFacade: ContractFacade,
+    myOperator: Operator,
+    client: StreamrClient,
     minSponsorshipEarningsInWithdraw: number,
     maxSponsorshipsInWithdraw: number
 ): Promise<void> => {
-    const targetOperatorAddress = await contractFacade.getRandomOperator()
+    const targetOperatorAddress = await myOperator.getRandomOperator()
     if (targetOperatorAddress === undefined) {
         logger.info('No operators found')
         return
     }
     logger.info('Check other operator\'s earnings for breach', { targetOperatorAddress })
-    const { sumDataWei, maxAllowedEarningsDataWei, sponsorshipAddresses } = await contractFacade.getEarningsOf(
-        targetOperatorAddress,
+    const { sumDataWei, maxAllowedEarningsDataWei, sponsorshipAddresses } = await client.getOperator(targetOperatorAddress).getEarnings(
         minSponsorshipEarningsInWithdraw,
         maxSponsorshipsInWithdraw
     )
@@ -23,6 +23,6 @@ export const checkOperatorValueBreach = async (
     if (sumDataWei > maxAllowedEarningsDataWei) {
         logger.info('Withdraw earnings from sponsorships (target operator value in breach)',
             { targetOperatorAddress, sponsorshipAddresses, sumDataWei, maxAllowedEarningsDataWei })
-        await contractFacade.triggerWithdraw(targetOperatorAddress, sponsorshipAddresses)
+        await myOperator.triggerAnotherOperatorWithdraw(targetOperatorAddress, sponsorshipAddresses)
     }
 }

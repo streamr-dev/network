@@ -1,11 +1,23 @@
 import type { Operator } from '@streamr/network-contracts-ethers6'
+import {
+    ProxyDirection,
+    StreamPermission,
+    _operatorContractUtils
+} from '@streamr/sdk'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { collect, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
-import { ProxyDirection, StreamPermission } from '@streamr/sdk'
 import { Broker, createBroker } from '../../../../src/broker'
 import { createClient, createTestStream, formConfig, startBroker } from '../../../utils'
-import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, setupOperatorContract, sponsor, stake } from './contractUtils'
+
+const {
+    delegate,
+    deploySponsorshipContract,
+    generateWalletWithGasAndTokens,
+    setupOperatorContract,
+    sponsor,
+    stake
+} = _operatorContractUtils
 
 describe('OperatorPlugin', () => {
 

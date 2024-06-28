@@ -2,13 +2,13 @@ import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { ContractFactory } from '../ContractFactory'
-import { getEthersOverrides } from '../ethereumUtils'
+import { RpcProviderSource } from '../RpcProviderSource'
 import { StreamrClientError } from '../StreamrClientError'
 import type { NodeRegistry as NodeRegistryContract } from '../ethereumArtifacts/NodeRegistry'
 import NodeRegistryArtifact from '../ethereumArtifacts/NodeRegistryAbi.json'
+import { getEthersOverrides } from '../ethereumUtils'
+import { ContractFactory } from './ContractFactory'
 import { waitForTx } from './contract'
-import { RpcProviderSource } from '../RpcProviderSource'
 
 export interface StorageNodeMetadata {
     urls: string[]
@@ -46,7 +46,7 @@ export class StorageNodeRegistry {
     }
 
     private async connectToContract() {
-        if (!this.nodeRegistryContract) {
+        if (this.nodeRegistryContract === undefined) {
             const chainSigner = await this.authentication.getTransactionSigner(this.rpcProviderSource)
             this.nodeRegistryContract = this.contractFactory.createWriteContract<NodeRegistryContract>(
                 toEthereumAddress(this.config.contracts.storageNodeRegistryChainAddress),

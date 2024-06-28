@@ -1,19 +1,27 @@
-import { Provider } from 'ethers'
-import { Operator, Sponsorship, operatorABI, sponsorshipABI } from '@streamr/network-contracts-ethers6'
 import { StreamID, ensureValidStreamPartitionIndex, toStreamID } from '@streamr/protocol'
+import { NetworkPeerDescriptor } from '@streamr/sdk'
 import {
     EthereumAddress,
     Logger,
+    ObservableEventEmitter,
     TheGraphClient,
-    addManagedEventListener,
-    toEthereumAddress,
-    collect
+    collect,
+    toEthereumAddress
 } from '@streamr/utils'
-import { Contract, Overrides } from 'ethers'
+import { Overrides } from 'ethers'
 import sample from 'lodash/sample'
-import fetch from 'node-fetch'
-import { NetworkPeerDescriptor } from '@streamr/sdk'
-import { OperatorServiceConfig } from './OperatorPlugin'
+import { Authentication } from '../Authentication'
+import { DestroySignal } from '../DestroySignal'
+import { RpcProviderSource } from '../RpcProviderSource'
+import type { Operator as OperatorContract } from '../ethereumArtifacts/Operator'
+import OperatorArtifact from '../ethereumArtifacts/OperatorAbi.json'
+import type { Sponsorship as SponsorshipContract } from '../ethereumArtifacts/Sponsorship'
+import SponsorshipArtifact from '../ethereumArtifacts/SponsorshipAbi.json'
+import { LoggerFactory } from '../utils/LoggerFactory'
+import { ChainEventPoller } from './ChainEventPoller'
+import { ContractFactory } from './ContractFactory'
+import { ObservableContract, initContractEventGateway } from './contract'
+import { z } from 'zod'
 
 interface RawResult {
     operator: null | { latestHeartbeatTimestamp: string | null }
@@ -23,6 +31,36 @@ interface EarningsData {
     sponsorshipAddresses: EthereumAddress[]
     sumDataWei: bigint
     maxAllowedEarningsDataWei: bigint
+}
+
+/**
+ * @deprecated
+ * @hidden
+ */
+export interface StakeEvent {
+    sponsorship: EthereumAddress
+}
+
+/**
+ * @deprecated
+ * @hidden
+ */
+export interface ReviewRequestEvent {
+    sponsorship: EthereumAddress
+    targetOperator: EthereumAddress
+    partition: number
+    votingPeriodStartTimestamp: number
+    votingPeriodEndTimestamp: number
+}
+
+/**
+ * @deprecated
+ * @hidden
+ */
+export interface OperatorEvents {
+    staked: (payload: StakeEvent) => void
+    unstaked: (payload: StakeEvent) => void
+    reviewRequested: (payload: ReviewRequestEvent) => void
 }
 
 export const VOTE_KICK = '0x0000000000000000000000000000000000000000000000000000000000000001'
@@ -73,67 +111,137 @@ const compareBigInts = (a: bigint, b: bigint) => {
     }
 }
 
-export type ReviewRequestListener = (
-    sponsorship: EthereumAddress,
-    operatorContractAddress: EthereumAddress,
-    partition: number,
-    votingPeriodStartTime: number,
-    votingPeriodEndTime: number
-) => void
-
 const logger = new Logger(module)
 
-export interface SponsorshipResult {
+/**
+ * @deprecated
+ * @hidden
+ */
+export interface GetOperatorSponsorshipsResult {
     sponsorshipAddress: EthereumAddress
     streamId: StreamID
     operatorCount: number
 }
 
+/**
+ * @deprecated
+ * @hidden
+ */
 export interface Flag {
     id: string
     flaggingTimestamp: number
-    target: {
-        id: string
-    }
-    sponsorship: {
-        id: string
-    }
+    targetOperator: EthereumAddress
+    sponsorship: EthereumAddress
 }
 
-export class ContractFacade {
+/**
+ * @deprecated This in an internal class
+ * @hidden
+ */
+export class Operator {
 
-    private readonly operatorContract: Operator
+    private readonly contractAddress: EthereumAddress
+    private contract?: ObservableContract<OperatorContract>
+    private readonly contractReadonly: ObservableContract<OperatorContract> // TODO: implement lazy loading because all methods don't use this
+    private readonly contractFactory: ContractFactory
+    private readonly rpcProviderSource: RpcProviderSource
     private readonly theGraphClient: TheGraphClient
-    private readonly config: OperatorServiceConfig
+    private readonly authentication: Authentication
+    private readonly getEthersOverrides: () => Promise<Overrides>
+    private readonly eventEmitter: ObservableEventEmitter<OperatorEvents> = new ObservableEventEmitter()
 
-    // for tests
-    constructor(operatorContract: Operator, theGraphClient: TheGraphClient, config: OperatorServiceConfig) {
-        this.operatorContract = operatorContract
+    constructor(
+        contractAddress: EthereumAddress,
+        contractFactory: ContractFactory,
+        rpcProviderSource: RpcProviderSource,
+        theGraphClient: TheGraphClient,
+        authentication: Authentication,
+        destroySignal: DestroySignal,
+        loggerFactory: LoggerFactory,
+        getEthersOverrides: () => Promise<Overrides>,
+        eventPollInterval: number
+    ) {
+        this.contractAddress = contractAddress
+        this.contractFactory = contractFactory
+        this.rpcProviderSource = rpcProviderSource
+        this.contractReadonly = contractFactory.createReadContract<OperatorContract>(
+            toEthereumAddress(contractAddress),
+            OperatorArtifact,
+            rpcProviderSource.getProvider(),
+            'operator'
+        )
         this.theGraphClient = theGraphClient
-        this.config = config
+        this.authentication = authentication
+        this.getEthersOverrides = getEthersOverrides
+        this.initEventGateways(contractAddress, loggerFactory, eventPollInterval)
+        destroySignal.onDestroy.listen(() => {
+            this.eventEmitter.removeAllListeners()
+        })
     }
 
-    static createInstance(config: OperatorServiceConfig): ContractFacade {
-        return new ContractFacade(
-            new Contract(config.operatorContractAddress, operatorABI, config.signer) as unknown as Operator,
-            new TheGraphClient({
-                serverUrl: config.theGraphUrl,
-                fetch,
-                logger
-            }),
-            config
-        )
+    private initEventGateways(
+        contractAddress: EthereumAddress,
+        loggerFactory: LoggerFactory,
+        eventPollInterval: number
+    ): void {
+        const chainEventPoller = new ChainEventPoller(this.rpcProviderSource.getSubProviders().map((p) => {
+            return this.contractFactory.createEventContract(contractAddress, OperatorArtifact, p)
+        }), eventPollInterval)
+        const stakeEventTransformation = (sponsorship: string) => ({
+            sponsorship: toEthereumAddress(sponsorship)
+        })
+        initContractEventGateway({
+            sourceName: 'Staked',
+            sourceEmitter: chainEventPoller,
+            targetName: 'staked',
+            targetEmitter: this.eventEmitter,
+            transformation: stakeEventTransformation,
+            loggerFactory
+        })
+        initContractEventGateway({
+            sourceName: 'Unstaked',
+            sourceEmitter: chainEventPoller,
+            targetName: 'unstaked',
+            targetEmitter: this.eventEmitter,
+            transformation: stakeEventTransformation,
+            loggerFactory
+        })
+        const reviewRequestTransform = (
+            sponsorship: string,
+            targetOperator: string,
+            voteStartTimestampInSecs: number,
+            voteEndTimestampInSecs: number,
+            metadataAsString?: string
+        ) => {
+            const partition = parsePartitionFromReviewRequestMetadata(metadataAsString)
+            return {
+                sponsorship: toEthereumAddress(sponsorship),
+                targetOperator: toEthereumAddress(targetOperator),
+                partition,
+                votingPeriodStartTimestamp: voteStartTimestampInSecs * 1000,
+                votingPeriodEndTimestamp: voteEndTimestampInSecs * 1000
+            }
+        }
+        initContractEventGateway({
+            sourceName: 'ReviewRequest',
+            sourceEmitter: chainEventPoller,
+            targetName: 'reviewRequested',
+            targetEmitter: this.eventEmitter,
+            transformation: reviewRequestTransform,
+            loggerFactory
+        })
     }
 
     async writeHeartbeat(nodeDescriptor: NetworkPeerDescriptor): Promise<void> {
         const metadata = JSON.stringify(nodeDescriptor)
-        await (await this.operatorContract.heartbeat(metadata, await this.getEthersOverrides())).wait()
+        await this.connectToContract()
+        await (await this.contract!.heartbeat(metadata, await this.getEthersOverrides())).wait()
     }
 
     async getTimestampOfLastHeartbeat(): Promise<number | undefined> {
         const result = await this.theGraphClient.queryEntity<RawResult>({
             query: `{
-                operator(id: "${await this.getOperatorContractAddress()}") {
+                operator(id: "${await this.getContractAddress()}") {
                     latestHeartbeatTimestamp
                 }
             }`
@@ -149,11 +257,11 @@ export class ContractFacade {
         }
     }
 
-    async getOperatorContractAddress(): Promise<EthereumAddress> {
-        return toEthereumAddress(await this.operatorContract.getAddress())
+    async getContractAddress(): Promise<EthereumAddress> {
+        return toEthereumAddress(await this.contractReadonly.getAddress())
     }
 
-    async getSponsorshipsOfOperator(operatorAddress: EthereumAddress): Promise<SponsorshipResult[]> {
+    async getSponsorships(): Promise<GetOperatorSponsorshipsResult[]> {
         interface Stake {
             id: string
             sponsorship: {
@@ -164,6 +272,7 @@ export class ContractFacade {
                 }
             }
         }
+        const operatorAddress = await this.getContractAddress()
         const createQuery = (lastId: string, pageSize: number) => {
             return {
                 query: `
@@ -188,7 +297,7 @@ export class ContractFacade {
             return response.operator?.stakes ?? []
         }
         const queryResult = this.theGraphClient.queryEntities<Stake>(createQuery, parseItems)
-        const results: SponsorshipResult[] = []
+        const results: GetOperatorSponsorshipsResult[] = []
         for await (const stake of queryResult) {
             results.push({
                 sponsorshipAddress: toEthereumAddress(stake.sponsorship.id),
@@ -199,7 +308,8 @@ export class ContractFacade {
         return results
     }
 
-    async getExpiredFlags(sponsorships: EthereumAddress[], maxAgeInMs: number): Promise<Flag[]> {
+    // TODO could move this method as this is functionality is not specific to one Operator contract instance
+    async getExpiredFlags(sponsorshipAddresses: EthereumAddress[], maxAgeInMs: number): Promise<Flag[]> {
         const maxFlagStartTime = Math.floor((Date.now() - maxAgeInMs) / 1000)
         const createQuery = (lastId: string, pageSize: number) => {
             return {
@@ -209,7 +319,7 @@ export class ContractFacade {
                         id_gt: "${lastId}",
                         flaggingTimestamp_lt: ${maxFlagStartTime},
                         result_in: ["waiting", "voting"],
-                        sponsorship_in: ${JSON.stringify(sponsorships)}
+                        sponsorship_in: ${JSON.stringify(sponsorshipAddresses)}
                     }, first: ${pageSize}) {
                         id
                         flaggingTimestamp
@@ -223,14 +333,30 @@ export class ContractFacade {
                 }`
             }
         }
-        const flagEntities = this.theGraphClient.queryEntities<Flag>(createQuery)
+        interface FlagEntity {
+            id: string
+            flaggingTimestamp: number
+            target: {
+                id: string
+            }
+            sponsorship: {
+                id: string
+            }
+        }
+        const flagEntities = this.theGraphClient.queryEntities<FlagEntity>(createQuery)
         const flags: Flag[] = []
-        for await (const flag of flagEntities) {
-            flags.push(flag)
+        for await (const flagEntity of flagEntities) {
+            flags.push({
+                id: flagEntity.id,
+                flaggingTimestamp: flagEntity.flaggingTimestamp,
+                targetOperator: toEthereumAddress(flagEntity.target.id),
+                sponsorship: toEthereumAddress(flagEntity.sponsorship.id)
+            })
         }
         return flags
     }
 
+    // TODO could move this method as this is functionality is not specific to one Operator contract instance
     async getOperatorsInSponsorship(sponsorshipAddress: EthereumAddress): Promise<EthereumAddress[]> {
         interface Stake {
             id: string
@@ -267,13 +393,16 @@ export class ContractFacade {
 
     async flag(sponsorship: EthereumAddress, operator: EthereumAddress, partition: number): Promise<void> {
         const metadata = JSON.stringify({ partition })
-        await (await this.operatorContract.flag(sponsorship, operator, metadata, await this.getEthersOverrides())).wait()
+        await this.connectToContract()
+        await (await this.contract!.flag(sponsorship, operator, metadata, await this.getEthersOverrides())).wait()
     }
 
+    // TODO could move this method as this is functionality is not specific to one Operator contract instance
+    // (it excludes the current operator from the list, but that exclusion could be done by the caller of this method)
     async getRandomOperator(): Promise<EthereumAddress | undefined> {
-        const latestBlock = await this.getProvider().getBlockNumber()
+        const latestBlock = await this.getCurrentBlockNumber()  // TODO maybe we should remove this "feature"?
         const operators = await this.getOperatorAddresses(latestBlock)
-        const excluded = await this.getOperatorContractAddress()
+        const excluded = await this.getContractAddress()
         const operatorAddresses = operators.filter((id) => id !== excluded)
         logger.debug(`Found ${operatorAddresses.length} operators`)
         return sample(operatorAddresses)
@@ -285,18 +414,20 @@ export class ContractFacade {
      *  - only take at most maxSponsorshipsInWithdraw addresses (those with most earnings), or all if undefined
      *  - only take sponsorships that have more than minSponsorshipEarningsInWithdraw, or all if undefined
      */
-    async getEarningsOf(
-        operatorContractAddress: EthereumAddress,
+    async getEarnings(
         minSponsorshipEarningsInWithdraw: number,
         maxSponsorshipsInWithdraw: number
     ): Promise<EarningsData> {
-        const operator = new Contract(operatorContractAddress, operatorABI, this.config.signer) as unknown as Operator
         const minSponsorshipEarningsInWithdrawWei = BigInt(minSponsorshipEarningsInWithdraw ?? 0)
         const {
             addresses: allSponsorshipAddresses,
             earnings,
             maxAllowedEarnings,
-        } = await operator.getSponsorshipsAndEarnings()
+        } = await this.contractReadonly.getSponsorshipsAndEarnings() as {  // TODO why casting is needed?
+            addresses: string[]
+            earnings: bigint[]
+            maxAllowedEarnings: bigint
+        }
 
         const sponsorships = allSponsorshipAddresses
             .map((address, i) => ({ address, earnings: earnings[i] }))
@@ -311,32 +442,24 @@ export class ContractFacade {
         }
     }
 
-    async getMyEarnings(
-        minSponsorshipEarningsInWithdraw: number,
-        maxSponsorshipsInWithdraw: number
-    ): Promise<EarningsData> {
-        return this.getEarningsOf(
-            await this.getOperatorContractAddress(),
-            minSponsorshipEarningsInWithdraw,
-            maxSponsorshipsInWithdraw
-        )
-    }
-
-    async withdrawMyEarningsFromSponsorships(sponsorshipAddresses: EthereumAddress[]): Promise<void> {
-        await (await this.operatorContract.withdrawEarningsFromSponsorships(
+    async withdrawEarningsFromSponsorships(sponsorshipAddresses: EthereumAddress[]): Promise<void> {
+        await this.connectToContract()
+        await (await this.contract!.withdrawEarningsFromSponsorships(
             sponsorshipAddresses,
             await this.getEthersOverrides()
         )).wait()
     }
 
-    async triggerWithdraw(targetOperatorAddress: EthereumAddress, sponsorshipAddresses: EthereumAddress[]): Promise<void> {
-        await (await this.operatorContract.triggerAnotherOperatorWithdraw(
+    async triggerAnotherOperatorWithdraw(targetOperatorAddress: EthereumAddress, sponsorshipAddresses: EthereumAddress[]): Promise<void> {
+        await this.connectToContract()
+        await (await this.contract!.triggerAnotherOperatorWithdraw(
             targetOperatorAddress,
             sponsorshipAddresses,
             await this.getEthersOverrides()
         )).wait()
     }
 
+    // TODO could move this method as this is functionality is not specific to one Operator contract instance
     private async getOperatorAddresses(requiredBlockNumber: number): Promise<EthereumAddress[]> {
         // TODO: find a clever more efficient way of selecting a random operator? (NET-1113)
         const createQuery = (lastId: string, pageSize: number) => {
@@ -362,8 +485,8 @@ export class ContractFacade {
 
     async* pullStakedStreams(
         requiredBlockNumber: number
-    ): AsyncGenerator<{ sponsorship: { id: string, stream: { id: string } } }, undefined, undefined> {
-        const contractAddress = await this.getOperatorContractAddress()
+    ): AsyncGenerator<{ sponsorship: EthereumAddress, streamId: StreamID }, undefined, undefined> {
+        const contractAddress = await this.getContractAddress()
         const createQuery = (lastId: string, pageSize: number) => {
             return {
                 query: `
@@ -395,17 +518,33 @@ export class ContractFacade {
             return response.operator.stakes
         }
         this.theGraphClient.updateRequiredBlockNumber(requiredBlockNumber)
-        yield* this.theGraphClient.queryEntities<{ id: string, sponsorship: { id: string, stream: { id: string } } }>(createQuery, parseItems)
+        interface StakeEntity {
+            id: string
+            sponsorship: {
+                id: string
+                stream: { 
+                    id: string
+                }
+            }
+        }
+        const entities = this.theGraphClient.queryEntities<StakeEntity>(createQuery, parseItems)
+        for await (const entity of entities) {
+            yield {
+                sponsorship: toEthereumAddress(entity.sponsorship.id),
+                streamId: toStreamID(entity.sponsorship.stream.id)
+            }
+        }
     }
 
-    async hasOpenFlag(operatorAddress: EthereumAddress, sponsorshipAddress: EthereumAddress): Promise<boolean> {
+    async hasOpenFlag(sponsorshipAddress: EthereumAddress): Promise<boolean> {
+        const operatorContractAddress = await this.getContractAddress()
         const createQuery = () => {
             return {
                 query: `
                     {
                         flags(where: {
                             sponsorship: "${sponsorshipAddress}",
-                            target: "${operatorAddress}",
+                            target: "${operatorContractAddress}",
                             result_in: ["waiting", "voting"]
                         }) {
                             id
@@ -425,86 +564,88 @@ export class ContractFacade {
         }
     }
 
-    addReviewRequestListener(listener: ReviewRequestListener, abortSignal: AbortSignal): void {
-        addManagedEventListener(
-            this.operatorContract,
-            'ReviewRequest',
-            async (
-                sponsorship: string,
-                targetOperator: string,
-                voteStartTimestampInSecs: number,
-                voteEndTimestampInSecs: number,
-                metadataAsString?: string
-            ) => {
-                let partition: number
-                try {
-                    partition = parsePartitionFromReviewRequestMetadata(metadataAsString)
-                } catch (err) {
-                    if (err instanceof ParseError) {
-                        logger.warn(`Skip review request (${err.reasonText})`, {
-                            address: await this.operatorContract.getAddress(),
-                            sponsorship,
-                            targetOperator,
-                        })
-                    } else {
-                        logger.warn('Encountered unexpected error', { err })
-                    }
-                    return
-                }
-                logger.debug('Receive review request', {
-                    address: await this.operatorContract.getAddress(),
-                    sponsorship,
-                    targetOperator,
-                    partition
-                })
-                listener(
-                    toEthereumAddress(sponsorship),
-                    toEthereumAddress(targetOperator),
-                    partition,
-                    voteStartTimestampInSecs * 1000,
-                    voteEndTimestampInSecs * 1000
-                )
-            },
-            abortSignal
+    // TODO could move this method as this is functionality is not specific to one Operator contract instance
+    async getStreamId(sponsorshipAddress: EthereumAddress): Promise<StreamID> {
+        const sponsorship = this.contractFactory.createReadContract<SponsorshipContract>(
+            toEthereumAddress(sponsorshipAddress),
+            SponsorshipArtifact,
+            this.rpcProviderSource.getProvider(),
+            'sponsorship'
         )
-    }
-
-    async getStreamId(sponsorshipAddress: string): Promise<StreamID> {
-        const sponsorship = new Contract(sponsorshipAddress, sponsorshipABI, this.config.signer) as unknown as Sponsorship
         return toStreamID(await sponsorship.streamId())
     }
 
-    async voteOnFlag(sponsorship: string, targetOperator: string, kick: boolean): Promise<void> {
+    async voteOnFlag(sponsorshipAddress: EthereumAddress, targetOperator: EthereumAddress, kick: boolean): Promise<void> {
         const voteData = kick ? VOTE_KICK : VOTE_NO_KICK
+        await this.connectToContract()
         // typical gas cost 99336, but this has shown insufficient sometimes
         // TODO should we set gasLimit only here, or also for other transactions made by ContractFacade?
-        await (await this.operatorContract.voteOnFlag(
-            sponsorship,
+        await (await this.contract!.voteOnFlag(
+            sponsorshipAddress,
             targetOperator,
             voteData,
             { ...this.getEthersOverrides(), gasLimit: '1300000' }
         )).wait()
     }
 
-    async closeFlag(sponsorship: string, targetOperator: string): Promise<void> {
+    async closeFlag(sponsorshipAddress: EthereumAddress, targetOperatorAddress: EthereumAddress): Promise<void> {
         // voteOnFlag is not used to vote here but to close the expired flag. The vote data gets ignored.
         // Anyone can call this function at this point.
-        await this.voteOnFlag(sponsorship, targetOperator, false)
+        await this.voteOnFlag(sponsorshipAddress, targetOperatorAddress, false)
     }
 
-    addOperatorContractStakeEventListener(eventName: 'Staked' | 'Unstaked', listener: (sponsorship: string) => unknown): void {
-        this.operatorContract.on(eventName as any, listener)  // TODO better type
+    async fetchRedundancyFactor(): Promise<number | undefined> {
+        const MetadataSchema = z.object({
+            redundancyFactor: z.number()
+                .int()
+                .gte(1)
+        })
+        const metadataAsString = await this.contractReadonly.metadata()
+        if (metadataAsString.length === 0) {
+            return 1
+        }
+        let metadata: Record<string, unknown>
+        try {
+            metadata = JSON.parse(metadataAsString)
+        } catch {
+            logger.warn('Encountered malformed metadata', { operatorAddress: await this.getContractAddress(), metadataAsString })
+            return undefined
+        }
+        let validatedMetadata: z.infer<typeof MetadataSchema>
+        try {
+            validatedMetadata = MetadataSchema.parse(metadata)
+        } catch (err) {
+            logger.warn('Encountered invalid metadata', {
+                operatorAddress: await this.getContractAddress(),
+                metadataAsString,
+                reason: err?.reason
+            })
+            return undefined
+        }
+        return validatedMetadata.redundancyFactor
     }
 
-    removeOperatorContractStakeEventListener(eventName: 'Staked' | 'Unstaked', listener: (sponsorship: string) => unknown): void {
-        this.operatorContract.off(eventName, listener)
+    getCurrentBlockNumber(): Promise<number> {
+        return this.rpcProviderSource.getProvider().getBlockNumber()
     }
 
-    getProvider(): Provider {
-        return this.config.signer.provider
+    on<E extends keyof OperatorEvents>(eventName: E, listener: OperatorEvents[E]): void {
+        this.eventEmitter.on(eventName, listener as any)  // TODO why casting?
     }
 
-    getEthersOverrides(): Promise<Overrides> {
-        return this.config.getEthersOverrides()
+    off<E extends keyof OperatorEvents>(eventName: E, listener: OperatorEvents[E]): void {
+        this.eventEmitter.off(eventName, listener as any)  // TODO why casting?
+    }
+
+    private async connectToContract(): Promise<void> {
+        if (this.contract === undefined) {
+            const signer = await this.authentication.getTransactionSigner(this.rpcProviderSource)
+            this.contract = this.contractFactory.createWriteContract<OperatorContract>(
+                this.contractAddress,
+                OperatorArtifact,
+                signer,
+                'operator'
+            )
+        }
     }
 }

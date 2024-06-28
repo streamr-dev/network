@@ -1,22 +1,23 @@
 import { StreamPartID } from '@streamr/protocol'
+import {
+    Stream, StreamrClient, _operatorContractUtils
+} from '@streamr/sdk'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { Stream, StreamrClient } from '@streamr/sdk'
+import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
+import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
+import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
+import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
 import { createClient, createTestStream } from '../../../utils'
-import {
-    TEST_CHAIN_CONFIG,
+
+const {
     delegate,
     deployOperatorContract,
     deploySponsorshipContract,
     generateWalletWithGasAndTokens,
     stake
-} from './contractUtils'
-import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
-import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
-import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
-import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
-import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
+} = _operatorContractUtils
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()
@@ -72,14 +73,7 @@ describe('MaintainTopologyService', () => {
         const operatorContract = await deployOperatorContract({ deployer: operatorWallet })
         await delegate(operatorWallet, await operatorContract.getAddress(), 20000)
         await stake(operatorContract, await sponsorship1.getAddress(), 10000)
-
-        const serviceHelperConfig = {
-            signer: operatorWallet,
-            operatorContractAddress: toEthereumAddress(await operatorContract.getAddress()),
-            theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl,
-            getEthersOverrides: async () => ({})
-        }
-
+        
         const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
             client,
             10 * 1000,
@@ -88,8 +82,11 @@ describe('MaintainTopologyService', () => {
             2 * 1000,
             0
         )
-        const operatorFleetState = createOperatorFleetState(formCoordinationStreamId(serviceHelperConfig.operatorContractAddress))
-        const maintainTopologyHelper = new MaintainTopologyHelper(ContractFacade.createInstance(serviceHelperConfig))
+        const operatorContractAddress = toEthereumAddress(await operatorContract.getAddress())
+        const operatorFleetState = createOperatorFleetState(formCoordinationStreamId(operatorContractAddress))
+        const maintainTopologyHelper = new MaintainTopologyHelper(
+            createClient(operatorWallet.privateKey).getOperator(toEthereumAddress(operatorContractAddress))
+        )
         const assignments = new StreamPartAssignments(
             await client.getNodeId(),
             3,
