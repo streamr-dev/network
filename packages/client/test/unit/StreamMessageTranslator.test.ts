@@ -1,17 +1,54 @@
 import {
-    EncryptionType,
-    MessageID,
+    EncryptionType as OldEncryptionType,
+    MessageID as OldMessageID,
     StreamMessage as OldStreamMessage,
     StreamMessageType as OldStreamMessageType,
+    StreamPartID,
     StreamPartIDUtils,
-    ContentType,
-    SignatureType
+    ContentType as OldContentType,
+    SignatureType as OldSignatureType
 } from '@streamr/protocol'
-import { binaryToHex, binaryToUtf8, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
-import { StreamMessageTranslator } from '../../src/logic/protocol-integration/stream-message/StreamMessageTranslator'
-import { createStreamMessage } from '../utils/utils'
+import { binaryToHex, binaryToUtf8, hexToBinary, toEthereumAddress, utf8ToBinary, EthereumAddress } from '@streamr/utils'
+import { StreamMessageTranslator } from '../../src/protocol/StreamMessageTranslator'
+import { 
+    ContentType as NewContentType,
+    EncryptionType as NewEncryptionType,
+    SignatureType as NewSignatureType,
+    StreamMessage as NewStreamMessage
+} from '@streamr/trackerless-network'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('TEST#0')
+
+export const createStreamMessage = (
+    content: string,
+    streamPartId: StreamPartID,
+    publisherId: EthereumAddress,
+    timestamp?: number,
+    sequenceNumber?: number
+): NewStreamMessage => {
+    const messageId = {
+        streamId: StreamPartIDUtils.getStreamID(streamPartId),
+        streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
+        sequenceNumber: sequenceNumber ?? 0,
+        timestamp: timestamp ?? Date.now(),
+        publisherId: hexToBinary(publisherId),
+        messageChainId: 'messageChain0',
+    }
+    const msg = {
+        messageId,
+        signatureType: NewSignatureType.SECP256K1,
+        signature: hexToBinary('0x1234'),
+        body: {
+            oneofKind: 'contentMessage' as const,
+            contentMessage: {
+                encryptionType: NewEncryptionType.NONE,
+                contentType: NewContentType.JSON,
+                content: utf8ToBinary(content)
+            }
+        }
+    }
+    return msg
+}
 
 describe('StreamMessageTranslator', () => {
 
@@ -22,7 +59,7 @@ describe('StreamMessageTranslator', () => {
         STREAM_PART_ID,
         publisherId
     )
-    const messageId = new MessageID(
+    const messageId = new OldMessageID(
         StreamPartIDUtils.getStreamID(STREAM_PART_ID),
         StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
         Date.now(),
@@ -33,10 +70,10 @@ describe('StreamMessageTranslator', () => {
     const oldProtocolMsg = new OldStreamMessage({
         messageId,
         content: utf8ToBinary(JSON.stringify({ hello: 'WORLD' })),
-        contentType: ContentType.JSON,
+        contentType: OldContentType.JSON,
         messageType: OldStreamMessageType.MESSAGE,
-        encryptionType: EncryptionType.NONE,
-        signatureType: SignatureType.SECP256K1,
+        encryptionType: OldEncryptionType.NONE,
+        signatureType: OldSignatureType.SECP256K1,
         signature,
     })
 

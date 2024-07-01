@@ -9,6 +9,7 @@ import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
+import { StreamMessageTranslator } from '../../src/protocol/StreamMessageTranslator'
 import { createTestClient, createTestStream } from '../test-utils/utils'
 
 const TIMEOUT = 30 * 1000
@@ -31,7 +32,7 @@ async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID)
         networkNode.join(toStreamPartID(streamId, 0))
         const messages: unknown[] = []
         networkNode.addMessageListener((msg) => {
-            messages.push(msg.getParsedContent())
+            messages.push(StreamMessageTranslator.toClientProtocol(msg).getParsedContent())
         })
         await waitForCondition(() => messages.length > 0, TIMEOUT)
         return messages

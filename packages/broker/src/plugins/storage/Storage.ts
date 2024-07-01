@@ -11,7 +11,7 @@ import { BucketManager, BucketManagerOptions } from './BucketManager'
 import { Logger } from '@streamr/utils'
 import { Bucket, BucketId } from './Bucket'
 import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE } from './dataQueryEndpoint'
-import { convertStreamMessageToBytes } from '@streamr/trackerless-network'
+import { convertStreamMessageToBytes } from '@streamr/sdk'
 
 const logger = new Logger(module)
 

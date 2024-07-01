@@ -100,7 +100,7 @@ export class SubscriptionSession {
     }
 
     private async subscribe(): Promise<void> {
-        await this.node.addMessageListener(this.onMessageInput)
+        this.node.addMessageListener(this.onMessageInput)
         if (!await this.node.isProxiedStreamPart(this.streamPartId)) {
             await this.node.join(this.streamPartId)
         }
@@ -110,7 +110,7 @@ export class SubscriptionSession {
         this.pipeline.end()
         this.pipeline.return()
         this.pipeline.onError.end(new Error('done'))
-        await this.node.removeMessageListener(this.onMessageInput)
+        this.node.removeMessageListener(this.onMessageInput)
         await this.node.leave(this.streamPartId)
     }
 

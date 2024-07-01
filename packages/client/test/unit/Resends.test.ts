@@ -10,9 +10,9 @@ import {
     toStreamID
 } from '@streamr/protocol'
 import { isRunningInElectron, randomEthereumAddress, startTestServer } from '@streamr/test-utils'
-import { convertStreamMessageToBytes } from '@streamr/trackerless-network'
 import { collect, hexToBinary, toLengthPrefixedFrame } from '@streamr/utils'
 import range from 'lodash/range'
+import { convertStreamMessageToBytes } from '../../src/protocol/oldStreamMessageBinaryUtils'
 import { Resends } from '../../src/subscribe/Resends'
 import { MOCK_CONTENT, mockLoggerFactory } from '../test-utils/utils'
 

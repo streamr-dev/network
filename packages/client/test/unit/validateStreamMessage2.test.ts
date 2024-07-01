@@ -14,16 +14,16 @@ import {
     ValidationError,
     toStreamID
 } from '@streamr/protocol'
-import {
-    convertGroupKeyRequestToBytes,
-    convertGroupKeyResponseToBytes
-} from '@streamr/trackerless-network'
 import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
 import { mock } from 'jest-mock-extended'
 import { Authentication } from '../../src/Authentication'
 import { Stream } from '../../src/Stream'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
+import {
+    convertGroupKeyRequestToBytes,
+    convertGroupKeyResponseToBytes
+} from '../../src/protocol/oldStreamMessageBinaryUtils'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { validateStreamMessage } from '../../src/utils/validateStreamMessage'

@@ -1,14 +1,15 @@
 import { DhtAddress, PeerDescriptor, getDhtAddressFromRaw } from '@streamr/dht'
-import { StreamMessage, StreamPartID } from '@streamr/protocol'
-import { NetworkOptions, ProxyDirection } from '@streamr/trackerless-network'
+import { StreamPartID } from '@streamr/protocol'
+import { NetworkOptions, ProxyDirection, StreamMessage as NewStreamMessage } from '@streamr/trackerless-network'
 import { EthereumAddress, MetricsContext } from '@streamr/utils'
 import crypto from 'crypto'
 import pull from 'lodash/pull'
 import { Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFacade'
 import { FakeNetwork } from './FakeNetwork'
+import { StreamMessageTranslator } from '../../../src/protocol/StreamMessageTranslator'
 
-type MessageListener = (msg: StreamMessage) => void
+type MessageListener = (msg: NewStreamMessage) => void
 
 export class FakeNetworkNode implements NetworkNodeStub {
 
@@ -29,11 +30,11 @@ export class FakeNetworkNode implements NetworkNodeStub {
         return this.id
     }
 
-    addMessageListener(listener: (msg: StreamMessage) => void): void {
+    addMessageListener(listener: (msg: NewStreamMessage) => void): void {
         this.messageListeners.push(listener)
     }
 
-    removeMessageListener(listener: (msg: StreamMessage) => void): void {
+    removeMessageListener(listener: (msg: NewStreamMessage) => void): void {
         pull(this.messageListeners, listener)
     }
 
@@ -48,7 +49,8 @@ export class FakeNetworkNode implements NetworkNodeStub {
         this.subscriptions.delete(streamPartId)
     }
 
-    async broadcast(msg: StreamMessage): Promise<void> {
+    async broadcast(newStreamMessage: NewStreamMessage): Promise<void> {
+        const msg = StreamMessageTranslator.toClientProtocol(newStreamMessage)
         // by adding a subscription we emulate the functionality of real network node, which subscribes to 
         // the stream topology when it publishes a message to a stream
         this.subscriptions.add(msg.getStreamPartID())

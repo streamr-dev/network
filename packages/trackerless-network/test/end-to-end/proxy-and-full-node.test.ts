@@ -1,42 +1,45 @@
-import {
-    ContentType,
-    EncryptionType,
-    MessageID,
-    MessageRef,
-    SignatureType,
-    StreamMessage,
-    StreamMessageType,
-    StreamPartID,
-    StreamPartIDUtils
-} from '@streamr/protocol'
+import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { StreamMessage as InternalStreamMessage, ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { 
+    ContentType,
+    EncryptionType,
+    ProxyDirection,
+    SignatureType,
+    StreamMessage 
+} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const PROXIED_NODE_USER_ID = randomEthereumAddress()
 
 const createMessage = (streamPartId: StreamPartID): StreamMessage => {
-    return new StreamMessage({ 
-        messageId: new MessageID(
-            StreamPartIDUtils.getStreamID(streamPartId),
-            StreamPartIDUtils.getStreamPartition(streamPartId),
-            666,
-            0,
-            randomEthereumAddress(),
-            'msgChainId'
-        ),
-        prevMsgRef: new MessageRef(665, 0),
-        content: utf8ToBinary(JSON.stringify({
-            hello: 'world'
-        })),
-        messageType: StreamMessageType.MESSAGE,
-        contentType: ContentType.JSON,
-        encryptionType: EncryptionType.NONE,
+    return { 
+        messageId: {
+            streamId: StreamPartIDUtils.getStreamID(streamPartId),
+            streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
+            timestamp: 666,
+            sequenceNumber: 0,
+            publisherId: hexToBinary(randomEthereumAddress()),
+            messageChainId: 'msgChainId'
+        },
+        previousMessageRef: {
+            timestamp: 665,
+            sequenceNumber: 0
+        },
+        body: {
+            oneofKind: 'contentMessage',
+            contentMessage: {
+                content: utf8ToBinary(JSON.stringify({
+                    hello: 'world'
+                })),
+                contentType: ContentType.JSON,
+                encryptionType: EncryptionType.NONE,
+            }
+        },
         signatureType: SignatureType.SECP256K1,
         signature: hexToBinary('0x1234'),
-    })
+    }
 }
 
 describe('proxy and full node', () => {
@@ -111,13 +114,13 @@ describe('proxy and full node', () => {
 
         await Promise.all([
             waitForEvent3(proxyNode.stack.getContentDeliveryManager() as any, 'newMessage', 5000, 
-                (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart1)),
+                (streamMessage: StreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart1)),
             waitForEvent3(proxyNode.stack.getContentDeliveryManager() as any, 'newMessage', 5000, 
-                (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart2)),
+                (streamMessage: StreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart2)),
             waitForEvent3(proxyNode.stack.getContentDeliveryManager() as any, 'newMessage', 5000, 
-                (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart3)),
+                (streamMessage: StreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart3)),
             waitForEvent3(proxyNode.stack.getContentDeliveryManager() as any, 'newMessage', 5000, 
-                (streamMessage: InternalStreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart4)),
+                (streamMessage: StreamMessage) => streamMessage.messageId!.streamId === StreamPartIDUtils.getStreamID(regularStreamPart4)),
             proxiedNode.broadcast(createMessage(regularStreamPart1)),
             proxiedNode.broadcast(createMessage(regularStreamPart2)),
             proxiedNode.broadcast(createMessage(regularStreamPart3)),

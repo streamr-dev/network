@@ -1,9 +1,9 @@
 import 'reflect-metadata'
 
-import { Wallet } from 'ethers'
 import { StreamMessage } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import range from 'lodash/range'
 import { Message } from '../../src/Message'
 import { Stream } from '../../src/Stream'

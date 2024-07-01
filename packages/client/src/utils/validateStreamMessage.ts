@@ -1,7 +1,7 @@
 import { StreamMessage, StreamMessageError, StreamMessageType, } from '@streamr/protocol'
-import { convertBytesToGroupKeyRequest, convertBytesToGroupKeyResponse } from '@streamr/trackerless-network'
 import { EthereumAddress } from '@streamr/utils'
 import { StreamRegistry } from '../contracts/StreamRegistry'
+import { convertBytesToGroupKeyRequest, convertBytesToGroupKeyResponse } from '../protocol/oldStreamMessageBinaryUtils'
 import { SignatureValidator } from '../signature/SignatureValidator'
 
 export const validateStreamMessage = async (

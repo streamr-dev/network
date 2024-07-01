@@ -7,7 +7,6 @@ import {
     toStreamPartID
 } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { convertStreamMessageToBytes } from '@streamr/trackerless-network'
 import { EthereumAddress, Multimap, toEthereumAddress, toLengthPrefixedFrame } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { once } from 'events'
@@ -18,6 +17,7 @@ import { AddressInfo } from 'net'
 import { NetworkNodeFacade } from '../../../src/NetworkNodeFacade'
 import { DEFAULT_PARTITION } from '../../../src/StreamIDBuilder'
 import { StreamPermission } from '../../../src/permission'
+import { convertStreamMessageToBytes } from '../../../src/protocol/oldStreamMessageBinaryUtils'
 import { ResendType } from '../../../src/subscribe/Resends'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
 import { createMockMessage } from '../utils'
@@ -139,7 +139,7 @@ export class FakeStorageNode {
         const streamParts = range(0, partitionCount).map((p) => toStreamPartID(streamId, p))
         streamParts.forEach(async (streamPartId) => {
             if (!(await this.node.getStreamParts()).includes(streamPartId)) {
-                await this.node.addMessageListener((msg: StreamMessage) => {
+                this.node.addMessageListener((msg: StreamMessage) => {
                     if ((msg.getStreamPartID() === streamPartId) && isStorableMessage(msg)) {
                         this.storeMessage(msg)
                     }

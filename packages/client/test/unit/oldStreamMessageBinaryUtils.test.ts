@@ -8,7 +8,7 @@ import {
     toStreamID
 } from '@streamr/protocol'
 import { toEthereumAddress } from '@streamr/utils'
-import { convertBytesToStreamMessage, convertStreamMessageToBytes } from '../../src/exports'
+import { convertBytesToStreamMessage, convertStreamMessageToBytes } from '../../src/protocol/oldStreamMessageBinaryUtils'
 
 describe('oldStreamMessageBinaryUtils', () => {
     it('convertStreamMessageToBytes and convertBytesToStreamMessage', () => {

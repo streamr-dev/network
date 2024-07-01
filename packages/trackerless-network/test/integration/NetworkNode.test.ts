@@ -1,15 +1,8 @@
 import { PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
-import {
-    ContentType,
-    EncryptionType,
-    MessageID,
-    MessageRef, SignatureType,
-    StreamMessage,
-    StreamMessageType,
-    StreamPartIDUtils
-} from '@streamr/protocol'
-import { EthereumAddress, hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
+import { StreamPartIDUtils } from '@streamr/protocol'
+import { hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
+import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
@@ -64,31 +57,38 @@ describe('NetworkNode', () => {
     })
 
     it('wait for join + broadcast and subscribe', async () => {
-        const streamMessage = new StreamMessage({
-            messageId: new MessageID(
-                StreamPartIDUtils.getStreamID(STREAM_PART_ID),
-                StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
-                666,
-                0,
-                '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as EthereumAddress,
-                'msgChainId'
-            ),
-            prevMsgRef: new MessageRef(665, 0),
-            content: utf8ToBinary(JSON.stringify({
-                hello: 'world'
-            })),
-            contentType: ContentType.JSON,
-            messageType: StreamMessageType.MESSAGE,
-            encryptionType: EncryptionType.NONE,
+        const streamMessage: StreamMessage = {
+            messageId: {
+                streamId: StreamPartIDUtils.getStreamID(STREAM_PART_ID),
+                streamPartition: StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
+                timestamp: 666,
+                sequenceNumber: 0,
+                publisherId: hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+                messageChainId: 'msgChainId'
+            },
+            previousMessageRef: {
+                timestamp: 665,
+                sequenceNumber: 0
+            },
+            body: {
+                oneofKind: 'contentMessage',
+                contentMessage: {
+                    content: utf8ToBinary(JSON.stringify({
+                        hello: 'world'
+                    })),
+                    contentType: ContentType.JSON,
+                    encryptionType: EncryptionType.NONE,
+                }
+            },
             signatureType: SignatureType.SECP256K1,
             signature: hexToBinary('0x1234'),
-        })
+        }
 
         let msgCount = 0
         await node1.join(STREAM_PART_ID)
         node1.addMessageListener((msg) => {
-            expect(msg.messageId.timestamp).toEqual(666)
-            expect(msg.getSequenceNumber()).toEqual(0)
+            expect(msg.messageId!.timestamp).toEqual(666)
+            expect(msg.messageId!.sequenceNumber).toEqual(0)
             msgCount += 1
         })
         await node2.broadcast(streamMessage)

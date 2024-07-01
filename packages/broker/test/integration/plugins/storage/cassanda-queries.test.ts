@@ -6,7 +6,7 @@ import { Storage } from '../../../../src/plugins/storage/Storage'
 import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, toStreamID } from '@streamr/protocol'
-import { convertBytesToStreamMessage } from '@streamr/trackerless-network'
+import { convertBytesToStreamMessage } from '@streamr/sdk'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'

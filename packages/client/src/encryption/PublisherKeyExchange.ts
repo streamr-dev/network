@@ -11,7 +11,6 @@ import {
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { convertBytesToGroupKeyRequest, convertGroupKeyResponseToBytes } from '@streamr/trackerless-network'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import without from 'lodash/without'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -19,6 +18,7 @@ import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { StreamrClientEventEmitter } from '../events'
+import { convertBytesToGroupKeyRequest, convertGroupKeyResponseToBytes } from '../protocol/oldStreamMessageBinaryUtils'
 import { createRandomMsgChainId } from '../publish/messageChain'
 import { MessageSigner } from '../signature/MessageSigner'
 import { SignatureValidator } from '../signature/SignatureValidator'
@@ -70,7 +70,7 @@ export class PublisherKeyExchange {
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
         networkNodeFacade.once('start', async () => {
-            await networkNodeFacade.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
+            networkNodeFacade.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.logger.debug('Started')
         })
         eventEmitter.on('messagePublished', (msg) => {

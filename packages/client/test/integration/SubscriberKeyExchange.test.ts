@@ -17,7 +17,7 @@ import { Wallet } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
-import { convertBytesToGroupKeyRequest } from '@streamr/trackerless-network'
+import { convertBytesToGroupKeyRequest } from '../../src/protocol/oldStreamMessageBinaryUtils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import {
     createMockMessage,

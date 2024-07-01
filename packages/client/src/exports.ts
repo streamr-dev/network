@@ -46,6 +46,7 @@ export { CONFIG_TEST } from './ConfigTest'
 export { StreamDefinition } from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/utils'
 export { SignerWithProvider } from './Authentication'
+export { convertBytesToStreamMessage, convertStreamMessageToBytes } from './protocol/oldStreamMessageBinaryUtils'
 
 export type { StreamID, StreamPartID } from '@streamr/protocol'
 export { DhtAddress } from '@streamr/dht'

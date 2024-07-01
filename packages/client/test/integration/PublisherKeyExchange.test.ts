@@ -10,12 +10,12 @@ import {
     StreamPartIDUtils
 } from '@streamr/protocol'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
-import { convertBytesToGroupKeyResponse } from '@streamr/trackerless-network'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
+import { convertBytesToGroupKeyResponse } from '../../src/protocol/oldStreamMessageBinaryUtils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createRelativeTestStreamId, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
 
