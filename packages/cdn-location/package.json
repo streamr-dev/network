@@ -1,6 +1,6 @@
 {
   "name": "@streamr/cdn-location",
-  "version": "101.0.0-beta.1",
+  "version": "101.0.0-beta.2",
   "description": "Library for getting own approximate location by querying CDN servers",
   "repository": {
     "type": "git",
