@@ -162,7 +162,7 @@ export const getLocalGroupKeyStore = (userAddress: EthereumAddress): LocalGroupK
 export const startPublisherKeyExchangeSubscription = async (
     publisherClient: StreamrClient,
     streamPartId: StreamPartID): Promise<void> => {
-    const node = await publisherClient.getNode()
+    const node = publisherClient.getNode()
     await node.join(streamPartId)
 }
 

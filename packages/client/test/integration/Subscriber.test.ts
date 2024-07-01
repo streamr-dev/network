@@ -74,7 +74,7 @@ describe('Subscriber', () => {
     
             const sub = await subscriber.subscribe(stream.id)
     
-            const publisherNode = await publisher.getNode()
+            const publisherNode = publisher.getNode()
             await publisherNode.broadcast(await createMockMessage({
                 stream,
                 publisher: publisherWallet,
@@ -126,7 +126,7 @@ describe('Subscriber', () => {
     
             const sub = await subscriber.subscribe({ streamId: stream.id, raw: true })
     
-            const publisherNode = await publisher.getNode()
+            const publisherNode = publisher.getNode()
             await publisherNode.broadcast(await createMockMessage({
                 stream,
                 publisher: publisherWallet,
