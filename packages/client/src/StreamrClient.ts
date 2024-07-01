@@ -23,7 +23,7 @@ import {
 import { DestroySignal } from './DestroySignal'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { MetricsPublisher } from './MetricsPublisher'
-import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
+import { NetworkNodeFacade } from './NetworkNodeFacade'
 import { RpcProviderSource } from './RpcProviderSource'
 import { Stream, StreamMetadata } from './Stream'
 import { StreamIDBuilder } from './StreamIDBuilder'
@@ -593,8 +593,8 @@ export class StreamrClient {
     /**
      * @deprecated This in an internal method
      */
-    getNode(): Promise<NetworkNodeStub> {
-        return this.node.getNode()
+    getNode(): NetworkNodeFacade {
+        return this.node
     }
 
     async inspect(node: NetworkPeerDescriptor, streamDefinition: StreamDefinition): Promise<boolean> {
@@ -667,7 +667,7 @@ export class StreamrClient {
     })
 
     async getPeerDescriptor(): Promise<NetworkPeerDescriptor> {
-        return convertPeerDescriptorToNetworkPeerDescriptor((await this.node.getNode()).getPeerDescriptor())
+        return convertPeerDescriptorToNetworkPeerDescriptor(await this.node.getPeerDescriptor())
     }
 
     /**
@@ -683,7 +683,7 @@ export class StreamrClient {
      * @remark returned object's structure can change without semver considerations
      */
     async getDiagnosticInfo(): Promise<Record<string, unknown>> {
-        return (await this.node.getNode()).getDiagnosticInfo()
+        return this.node.getDiagnosticInfo()
     }
 
     /**

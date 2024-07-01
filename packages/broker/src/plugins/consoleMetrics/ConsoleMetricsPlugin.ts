@@ -20,7 +20,7 @@ export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
     private readonly abortController = new AbortController()
 
     async start(streamrClient: StreamrClient): Promise<void> {
-        const metricsContext = (await (streamrClient.getNode())).getMetricsContext()
+        const metricsContext = await streamrClient.getNode().getMetricsContext()
         metricsContext.createReportProducer((report: MetricsReport) => {
             // omit timestamp info as that is printed by the logger
             const data = omit(report, 'period')

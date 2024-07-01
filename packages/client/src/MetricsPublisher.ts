@@ -68,9 +68,8 @@ export class MetricsPublisher {
         this.eventEmitter = eventEmitter
         this.destroySignal = destroySignal
         const ensureStarted = pOnce(async () => {
-            const node = await this.node.getNode()
-            const metricsContext = node.getMetricsContext()
-            const nodeId = node.getNodeId()
+            const metricsContext = await this.node.getMetricsContext()
+            const nodeId = await this.node.getNodeId()
             this.config.periods.forEach((config) => {
                 return metricsContext.createReportProducer(async (report: MetricsReport) => {
                     await this.publish(report, config.streamId, nodeId)

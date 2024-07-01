@@ -23,11 +23,9 @@ describe('MetricsPublisher', () => {
         const publisher: Pick<Publisher, 'publish'> = {
             publish: publishReportMessage
         }
-        const node: Pick<NetworkNodeFacade, 'getNode'> = {
-            getNode: async () => ({
-                getMetricsContext: () => metricsContext,
-                getNodeId: () => NODE_ID
-            }) as any,
+        const node: Pick<NetworkNodeFacade, 'getMetricsContext' | 'getNodeId'> = {
+            getMetricsContext: async () => metricsContext,
+            getNodeId: async () => NODE_ID
         }
         const eventEmitter = new StreamrClientEventEmitter()
         new MetricsPublisher(

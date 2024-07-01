@@ -1,16 +1,18 @@
+import 'reflect-metadata'
+
 import {
     ContentType,
     EncryptedGroupKey,
+    EncryptionType,
     GroupKeyRequest,
     GroupKeyResponse,
     MessageID,
     MessageRef,
+    SignatureType,
     StreamMessage,
-    ValidationError,
-    toStreamID,
     StreamMessageType,
-    EncryptionType,
-    SignatureType
+    ValidationError,
+    toStreamID
 } from '@streamr/protocol'
 import {
     convertGroupKeyRequestToBytes,
@@ -18,14 +20,14 @@ import {
 } from '@streamr/trackerless-network'
 import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
+import { mock } from 'jest-mock-extended'
 import { Authentication } from '../../src/Authentication'
 import { Stream } from '../../src/Stream'
-import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
-import { createRandomAuthentication, MOCK_CONTENT } from '../test-utils/utils'
-import { SignatureValidator } from '../../src/signature/SignatureValidator'
-import { mock } from 'jest-mock-extended'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import { MessageSigner } from '../../src/signature/MessageSigner'
+import { SignatureValidator } from '../../src/signature/SignatureValidator'
+import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
+import { MOCK_CONTENT, createRandomAuthentication } from '../test-utils/utils'
 
 const groupKeyMessageToStreamMessage = async (
     groupKeyMessage: GroupKeyRequest | GroupKeyResponse,

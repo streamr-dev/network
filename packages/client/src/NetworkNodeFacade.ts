@@ -3,7 +3,11 @@
  */
 import { DhtAddress, PeerDescriptor } from '@streamr/dht'
 import { StreamMessage, StreamPartID } from '@streamr/protocol'
-import { NetworkOptions, ProxyDirection, createNetworkNode as createNetworkNode_ } from '@streamr/trackerless-network'
+import {
+    NetworkOptions,
+    ProxyDirection,
+    createNetworkNode as createNetworkNode_
+} from '@streamr/trackerless-network'
 import { EthereumAddress, MetricsContext } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -158,7 +162,6 @@ export class NetworkNodeFacade {
             if (!this.destroySignal.isDestroyed()) {
                 await node.start(doJoin)
             }
-
             if (this.destroySignal.isDestroyed()) {
                 await node.stop()
             } else {
@@ -199,6 +202,67 @@ export class NetworkNodeFacade {
             )
         }
         return this.cachedNode!.broadcast(streamMessage)
+    }
+
+    async join(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }): Promise<void> {
+        const node = await this.getNode()
+        await node.join(streamPartId, neighborRequirement)
+    }
+
+    async leave(streamPartId: StreamPartID): Promise<void> {
+        const node = await this.getNode()
+        await node.leave(streamPartId)
+    }
+
+    // TODO should we remove publishToNode method and use the broacast method instead?
+    async broadcast(msg: StreamMessage): Promise<void> {
+        const node = await this.getNode()
+        node.broadcast(msg)
+    }
+    
+    async addMessageListener(listener: (msg: StreamMessage) => void): Promise<void> {
+        const node = await this.getNode()
+        node.addMessageListener(listener)
+    }
+
+    async removeMessageListener(listener: (msg: StreamMessage) => void): Promise<void> {
+        const node = await this.getNode()
+        node.removeMessageListener(listener)
+    }
+
+    async isProxiedStreamPart(streamPartId: StreamPartID): Promise<boolean> {
+        const node = await this.getNode()
+        return node.isProxiedStreamPart(streamPartId)
+    }
+
+    async getMetricsContext(): Promise<MetricsContext> {
+        const node = await this.getNode()
+        return node.getMetricsContext()
+    }
+
+    async getPeerDescriptor(): Promise<PeerDescriptor> {
+        const node = await this.getNode()
+        return node.getPeerDescriptor()
+    }
+
+    async getDiagnosticInfo(): Promise<Record<string, unknown>> {
+        const node = await this.getNode()
+        return node.getDiagnosticInfo()
+    }
+
+    async getStreamParts(): Promise<ReadonlyArray<StreamPartID>> {
+        const node = await this.getNode()
+        return node.getStreamParts()
+    }
+
+    async getNeighbors(streamPartId: StreamPartID): Promise<ReadonlyArray<DhtAddress>> {
+        const node = await this.getNode()
+        return node.getNeighbors(streamPartId)
+    }
+
+    async getOptions(): Promise<NetworkOptions> {
+        const node = await this.getNode()
+        return node.getOptions()
     }
 
     async inspect(node: NetworkPeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
