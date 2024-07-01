@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { Wallet } from '@ethersproject/wallet'
+import { Wallet } from 'ethers'
 import { toStreamID } from '@streamr/protocol'
 import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
 import { EthereumAddress, collect, toEthereumAddress, waitForCondition } from '@streamr/utils'
@@ -84,8 +84,8 @@ describe('StreamRegistry', () => {
         }, TIMEOUT)
 
         it('listener', async () => {
-            const onCreateSteam = jest.fn()
-            client.on('createStream', onCreateSteam)
+            const onStreamCreated = jest.fn()
+            client.on('streamCreated', onStreamCreated)
             const invalidStream = await client.createStream({
                 id: createRelativeTestStreamId(module, 'invalid'),
                 partitions: 150
@@ -96,12 +96,12 @@ describe('StreamRegistry', () => {
                 description: 'Foobar'
             })
             const hasBeenCalledFor = (stream: Stream) => {
-                const streamIds = onCreateSteam.mock.calls.map((c) => c[0].streamId)
+                const streamIds = onStreamCreated.mock.calls.map((c) => c[0].streamId)
                 return streamIds.includes(stream.id)
             }
             await waitForCondition(() => hasBeenCalledFor(validStream))
-            client.off('createStream', onCreateSteam)
-            expect(onCreateSteam).toHaveBeenCalledWith({
+            client.off('streamCreated', onStreamCreated)
+            expect(onStreamCreated).toHaveBeenCalledWith({
                 streamId: validStream.id,
                 metadata: {
                     partitions: 3,

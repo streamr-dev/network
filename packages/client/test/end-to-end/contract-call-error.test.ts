@@ -14,7 +14,7 @@ describe('contract call error', () => {
         })
         await expect(() => client.createStream('/path')).rejects.toThrow(
             // eslint-disable-next-line max-len
-            'Error while executing contract call "streamRegistry.createStream", reason=processing response error, code=SERVER_ERROR'
+            'Error while executing contract call "streamRegistry.createStream", code=UNKNOWN_ERROR'
         )
     })
 
@@ -22,17 +22,13 @@ describe('contract call error', () => {
         const client = new StreamrClient({
             ...CONFIG_TEST,
             contracts: {
-                streamRegistryChainRPCs: {
-                    name: 'streamr',
-                    chainId: 8997,
-                    rpcs: [{
-                        url: 'http://mock.test'
-                    }]
-                }
+                rpcs: [{
+                    url: 'http://mock.test'
+                }]
             }
         })
         await expect(() => client.createStream('/path')).rejects.toThrow(
-            'Error while executing contract call "streamRegistry.createStream", reason=could not detect network, code=NETWORK_ERROR'
+            'Error while executing contract call "streamRegistry.createStream"'
         )
     })
 
@@ -48,6 +44,6 @@ describe('contract call error', () => {
             client.createStream('/path1' + Date.now()),
             client.createStream('/path2' + Date.now())
             // eslint-disable-next-line max-len
-        ])).rejects.toThrow('Error while executing contract call "streamRegistry.createStream", reason=nonce has already been used, code=NONCE_EXPIRED')
+        ])).rejects.toThrow('Error while executing contract call "streamRegistry.createStream", code=NONCE_EXPIRED')
     })
 })

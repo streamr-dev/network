@@ -1,11 +1,10 @@
 /**
  * Config and utilities for interating with identity & Ethereum chain.
  */
-import { Wallet } from '@ethersproject/wallet'
-import type { Overrides } from '@ethersproject/contracts'
-import type { BigNumber } from '@ethersproject/bignumber'
+import type { Overrides } from 'ethers'
+import { FeeData, Wallet } from 'ethers'
 import { StrictStreamrClientConfig } from './Config'
-import { RpcProviderFactory } from './RpcProviderFactory'
+import { RpcProviderSource } from './RpcProviderSource'
 
 export const generateEthereumAccount = (): { address: string, privateKey: string } => {
     const wallet = Wallet.createRandom()
@@ -19,21 +18,21 @@ export const generateEthereumAccount = (): { address: string, privateKey: string
  * Apply the gasPriceStrategy to the estimated gas price, if given
  * Ethers.js will resolve the gas price promise before sending the tx
  */
-export const getEthersOverrides = (
-    rpcProviderFactory: RpcProviderFactory, // TODO: can this be done somewhat cleaner?
-    config: Pick<StrictStreamrClientConfig, 'contracts' | '_timeouts'>
-): Overrides => {
+export const getEthersOverrides = async (
+    rpcProviderSource: RpcProviderSource, // TODO: can this be done somewhat cleaner?
+    config: Pick<StrictStreamrClientConfig, 'contracts'>
+): Promise<Overrides> => {
     const chainConfig = config.contracts.ethereumNetwork
     const overrides = chainConfig.overrides ?? {}
     if ((chainConfig.highGasPriceStrategy) && (chainConfig.overrides?.gasPrice === undefined)) {
-        const primaryProvider = rpcProviderFactory.getPrimaryProvider()
-        const gasPriceStrategy = (estimatedGasPrice: BigNumber) => {
+        const feeData = await rpcProviderSource.getProvider().getFeeData()
+        const gasPriceStrategy = (feeData: FeeData) => {
             const INCREASE_PERCENTAGE = 30
-            return estimatedGasPrice.mul(100 + INCREASE_PERCENTAGE).div(100)
+            return feeData.gasPrice === null ? undefined : feeData.gasPrice * BigInt(100 + INCREASE_PERCENTAGE) / 100n
         }
         return {
             ...overrides,
-            gasPrice: primaryProvider.getGasPrice().then(gasPriceStrategy)
+            gasPrice: gasPriceStrategy(feeData)
         }
     }
     return overrides

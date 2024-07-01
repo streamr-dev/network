@@ -1,22 +1,23 @@
 import { StreamPartID } from '@streamr/protocol'
+import {
+    Stream, StreamrClient, _operatorContractUtils
+} from '@streamr/sdk'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { Stream, StreamrClient } from '@streamr/sdk'
+import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
+import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
+import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
+import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
 import { createClient, createTestStream } from '../../../utils'
-import {
-    TEST_CHAIN_CONFIG,
+
+const {
     delegate,
     deployOperatorContract,
     deploySponsorshipContract,
     generateWalletWithGasAndTokens,
     stake
-} from './contractUtils'
-import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
-import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
-import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
-import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
-import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
+} = _operatorContractUtils
 
 async function setUpStreams(): Promise<[Stream, Stream]> {
     const privateKey = await fetchPrivateKeyWithGas()
@@ -70,16 +71,9 @@ describe('MaintainTopologyService', () => {
         const sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream1.id })
         const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream2.id })
         const operatorContract = await deployOperatorContract({ deployer: operatorWallet })
-        await delegate(operatorWallet, operatorContract.address, 20000)
-        await stake(operatorContract, sponsorship1.address, 10000)
-
-        const serviceHelperConfig = {
-            signer: operatorWallet,
-            operatorContractAddress: toEthereumAddress(operatorContract.address),
-            theGraphUrl: TEST_CHAIN_CONFIG.theGraphUrl,
-            getEthersOverrides: () => ({})
-        }
-
+        await delegate(operatorWallet, await operatorContract.getAddress(), 20000)
+        await stake(operatorContract, await sponsorship1.getAddress(), 10000)
+        
         const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
             client,
             10 * 1000,
@@ -88,8 +82,11 @@ describe('MaintainTopologyService', () => {
             2 * 1000,
             0
         )
-        const operatorFleetState = createOperatorFleetState(formCoordinationStreamId(serviceHelperConfig.operatorContractAddress))
-        const maintainTopologyHelper = new MaintainTopologyHelper(ContractFacade.createInstance(serviceHelperConfig))
+        const operatorContractAddress = toEthereumAddress(await operatorContract.getAddress())
+        const operatorFleetState = createOperatorFleetState(formCoordinationStreamId(operatorContractAddress))
+        const maintainTopologyHelper = new MaintainTopologyHelper(
+            createClient(operatorWallet.privateKey).getOperator(toEthereumAddress(operatorContractAddress))
+        )
         const assignments = new StreamPartAssignments(
             await client.getNodeId(),
             3,
@@ -108,7 +105,7 @@ describe('MaintainTopologyService', () => {
             return containsAll(await getSubscribedStreamPartIds(client), stream1.getStreamParts())
         }, 10000, 1000)
 
-        await stake(operatorContract, sponsorship2.address, 10000)
+        await stake(operatorContract, await sponsorship2.getAddress(), 10000)
         await waitForCondition(async () => {
             return containsAll(await getSubscribedStreamPartIds(client), [
                 ...stream1.getStreamParts(),
@@ -116,7 +113,7 @@ describe('MaintainTopologyService', () => {
             ])
         }, 10000, 1000)
 
-        await (await operatorContract.unstake(sponsorship1.address)).wait()
+        await (await operatorContract.unstake(await sponsorship1.getAddress())).wait()
         await waitForCondition(async () => {
             const state = await getSubscribedStreamPartIds(client)
             return containsAll(state, stream2.getStreamParts()) && doesNotContainAny(state, stream1.getStreamParts())

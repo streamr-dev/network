@@ -25,7 +25,7 @@ export { StorageNodeMetadata } from './contracts/StorageNodeRegistry'
 export { SearchStreamsPermissionFilter, SearchStreamsOrderBy } from './contracts/searchStreams'
 export {
     StreamrClientConfig,
-    ChainConnectionInfo,
+    ConnectionInfo,
     EthereumNetworkConfig,
     ProviderAuthConfig,
     PrivateKeyAuthConfig,
@@ -69,8 +69,47 @@ export {
     StreamMessageType
 } from '@streamr/protocol'
 
-export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht' 
-export type { ConnectionInfo } from '@ethersproject/web'
-export type { Signer } from '@ethersproject/abstract-signer'
-export type { ExternalProvider, Provider } from '@ethersproject/providers'
-export type { Overrides } from '@ethersproject/contracts'
+// These are exported for the internal Operator class
+export {
+    Operator,
+    OperatorEvents,
+    StakeEvent,
+    ReviewRequestEvent,
+    GetOperatorSponsorshipsResult,
+    Flag
+} from './contracts/Operator'
+import {
+    delegate,
+    deploySponsorshipContract,
+    setupOperatorContract,
+    SetupOperatorContractOpts,
+    SetupOperatorContractReturnType,
+    deployOperatorContract,
+    DeployOperatorContractOpts,
+    sponsor,
+    stake,
+    getProvider,
+    generateWalletWithGasAndTokens,
+    DeploySponsorshipContractOpts,
+} from './contracts/operatorContractUtils'
+/**
+ * @deprecated
+ * @hidden
+ */
+// eslint-disable-next-line no-underscore-dangle
+const _operatorContractUtils = {
+    delegate,
+    deploySponsorshipContract,
+    setupOperatorContract,
+    sponsor,
+    stake,
+    getProvider,
+    generateWalletWithGasAndTokens,
+    deployOperatorContract
+}
+// eslint-disable-next-line no-underscore-dangle
+export { _operatorContractUtils }
+export type { SetupOperatorContractOpts, SetupOperatorContractReturnType, DeployOperatorContractOpts, DeploySponsorshipContractOpts }
+
+export type { IceServer, PeerDescriptor, PortRange } from '@streamr/dht'
+export type { Signer, Eip1193Provider, Overrides } from 'ethers'

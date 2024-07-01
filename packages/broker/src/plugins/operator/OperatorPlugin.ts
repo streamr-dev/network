@@ -1,24 +1,29 @@
-import { EthereumAddress, Logger, scheduleAtInterval, setAbortableInterval, toEthereumAddress } from '@streamr/utils'
+import { ReviewRequestEvent, SignerWithProvider, StreamrClient } from '@streamr/sdk'
+import { 
+    EthereumAddress,
+    Logger,
+    addManagedEventListener,
+    scheduleAtInterval,
+    setAbortableInterval,
+    toEthereumAddress
+} from '@streamr/utils'
 import { Schema } from 'ajv'
 import { Overrides } from 'ethers'
-import { StreamrClient, SignerWithProvider } from '@streamr/sdk'
 import { Plugin } from '../../Plugin'
-import { maintainOperatorValue } from './maintainOperatorValue'
+import { MaintainTopologyHelper } from './MaintainTopologyHelper'
 import { MaintainTopologyService } from './MaintainTopologyService'
 import { OperatorFleetState } from './OperatorFleetState'
-import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { createIsLeaderFn } from './createIsLeaderFn'
+import { StreamPartAssignments } from './StreamPartAssignments'
 import { announceNodeToContract } from './announceNodeToContract'
 import { announceNodeToStream } from './announceNodeToStream'
 import { checkOperatorValueBreach } from './checkOperatorValueBreach'
-import { fetchRedundancyFactor } from './fetchRedundancyFactor'
-import { formCoordinationStreamId } from './formCoordinationStreamId'
-import { StreamPartAssignments } from './StreamPartAssignments'
-import { MaintainTopologyHelper } from './MaintainTopologyHelper'
-import { inspectRandomNode } from './inspectRandomNode'
-import { ContractFacade } from './ContractFacade'
-import { reviewSuspectNode } from './reviewSuspectNode'
 import { closeExpiredFlags } from './closeExpiredFlags'
+import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
+import { createIsLeaderFn } from './createIsLeaderFn'
+import { formCoordinationStreamId } from './formCoordinationStreamId'
+import { inspectRandomNode } from './inspectRandomNode'
+import { maintainOperatorValue } from './maintainOperatorValue'
+import { reviewSuspectNode } from './reviewSuspectNode'
 
 export interface OperatorPluginConfig {
     operatorContractAddress: string
@@ -54,7 +59,7 @@ export interface OperatorServiceConfig {
     signer: SignerWithProvider
     operatorContractAddress: EthereumAddress
     theGraphUrl: string
-    getEthersOverrides: () => Overrides
+    getEthersOverrides: () => Promise<Overrides>
 }
 
 const logger = new Logger(module)
@@ -63,24 +68,17 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
     private readonly abortController: AbortController = new AbortController()
 
     async start(streamrClient: StreamrClient): Promise<void> {
-        const signer = await streamrClient.getSigner()
         const nodeId = await streamrClient.getNodeId()
         const operatorContractAddress = toEthereumAddress(this.pluginConfig.operatorContractAddress)
-        const serviceConfig = {
-            signer,
-            operatorContractAddress,
-            theGraphUrl: streamrClient.getConfig().contracts.theGraphUrl,
-            getEthersOverrides: () => streamrClient.getEthersOverrides()
-        }
 
-        const redundancyFactor = await fetchRedundancyFactor(serviceConfig)
+        const operator = streamrClient.getOperator(operatorContractAddress)
+        const redundancyFactor = await operator.fetchRedundancyFactor()
         if (redundancyFactor === undefined) {
             throw new Error('Failed to fetch my redundancy factor')
         }
         logger.info('Fetched my redundancy factor', { redundancyFactor })
 
-        const contractFacade = ContractFacade.createInstance(serviceConfig)
-        const maintainTopologyHelper = new MaintainTopologyHelper(contractFacade)
+        const maintainTopologyHelper = new MaintainTopologyHelper(operator)
         const createOperatorFleetState = OperatorFleetState.createOperatorFleetStateBuilder(
             streamrClient,
             this.pluginConfig.heartbeatUpdateIntervalInMs,
@@ -125,7 +123,8 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             }, this.pluginConfig.heartbeatUpdateIntervalInMs, this.abortController.signal)
             await scheduleAtInterval(
                 async () => checkOperatorValueBreach(
-                    contractFacade,
+                    operator,
+                    streamrClient,
                     this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
                     this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw
                 ).catch((err) => {
@@ -142,7 +141,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                     if (isLeader()) {
                         await announceNodeToContract(
                             this.pluginConfig.announceNodeToContract.writeIntervalInMs,
-                            contractFacade,
+                            operator,
                             streamrClient
                         )
                     }
@@ -159,7 +158,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                                 this.pluginConfig.maintainOperatorValue.withdrawLimitSafetyFraction,
                                 this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
                                 this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw,
-                                contractFacade
+                                operator
                             )
                         } catch (err) {
                             logger.error('Encountered error while checking earnings', { err })
@@ -175,14 +174,13 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 try {
                     await inspectRandomNode(
                         operatorContractAddress,
-                        contractFacade,
+                        operator,
                         streamPartAssignments,
                         streamrClient,
                         this.pluginConfig.heartbeatTimeoutInMs,
-                        (operatorContractAddress) => fetchRedundancyFactor({
-                            operatorContractAddress,
-                            signer
-                        }),
+                        async (targetOperatorContractAddress) => {
+                            return streamrClient.getOperator(targetOperatorContractAddress).fetchRedundancyFactor()
+                        },
                         createOperatorFleetState,
                         this.abortController.signal
                     )
@@ -195,49 +193,48 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 try {
                     await closeExpiredFlags(
                         this.pluginConfig.closeExpiredFlags.maxAgeInMs,
-                        serviceConfig.operatorContractAddress,
-                        contractFacade
+                        operator
                     )
                 } catch (err) {
                     logger.error('Encountered error while closing expired flags', { err })
                 }
             }, this.pluginConfig.closeExpiredFlags.intervalInMs, false, this.abortController.signal)
 
-            contractFacade.addReviewRequestListener(async (
-                sponsorshipAddress,
-                targetOperator,
-                partition,
-                votingPeriodStartTimestamp,
-                votingPeriodEndTimestamp
-            ) => {
-                try {
-                    if (isLeader()) {
-                        await reviewSuspectNode({
-                            sponsorshipAddress,
-                            targetOperator,
-                            partition,
-                            contractFacade,
-                            streamrClient,
-                            createOperatorFleetState,
-                            getRedundancyFactor: (operatorContractAddress) => fetchRedundancyFactor({
-                                operatorContractAddress,
-                                signer
-                            }),
-                            maxSleepTime: 5 * 60 * 1000,
-                            heartbeatTimeoutInMs: this.pluginConfig.heartbeatTimeoutInMs,
-                            votingPeriod: {
-                                startTime: votingPeriodStartTimestamp,
-                                endTime: votingPeriodEndTimestamp
-                            },
-                            inspectionIntervalInMs: 8 * 60 * 1000,
-                            maxInspections: 10,
-                            abortSignal: this.abortController.signal
-                        })
-                    }
-                } catch (err) {
-                    logger.error('Encountered error while processing review request', { err })
-                }
-            }, this.abortController.signal)
+            addManagedEventListener(
+                operator,
+                'reviewRequested',
+                (event: ReviewRequestEvent): void => {
+                    setImmediate(async () => {
+                        try {
+                            if (isLeader()) {
+                                await reviewSuspectNode({
+                                    sponsorshipAddress: event.sponsorship,
+                                    targetOperator: event.targetOperator,
+                                    partition: event.partition,
+                                    myOperator: operator,
+                                    streamrClient,
+                                    createOperatorFleetState,
+                                    getRedundancyFactor: async (targetOperatorContractAddress) => {
+                                        return streamrClient.getOperator(targetOperatorContractAddress).fetchRedundancyFactor()
+                                    },
+                                    maxSleepTime: 5 * 60 * 1000,
+                                    heartbeatTimeoutInMs: this.pluginConfig.heartbeatTimeoutInMs,
+                                    votingPeriod: {
+                                        startTime: event.votingPeriodStartTimestamp,
+                                        endTime: event.votingPeriodEndTimestamp
+                                    },
+                                    inspectionIntervalInMs: 8 * 60 * 1000,
+                                    maxInspections: 10,
+                                    abortSignal: this.abortController.signal
+                                })
+                            }
+                        } catch (err) {
+                            logger.error('Encountered error while processing review request', { err })
+                        }
+                    })
+                },
+                this.abortController.signal
+            )
         })
     }
 

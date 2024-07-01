@@ -1,7 +1,5 @@
 import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, toStreamID, StreamMessageType } from '@streamr/protocol'
 import { collect, toEthereumAddress, wait, utf8ToBinary } from '@streamr/utils'
-import { Authentication } from '../../src/Authentication'
-import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { pull } from '../../src/utils/PushBuffer'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { counterId, instanceId } from '../../src/utils/utils'
@@ -9,6 +7,7 @@ import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { Msg } from '../test-utils/publish'
 import { createRandomAuthentication } from '../test-utils/utils'
 import { testOnlyInNodeJs } from '@streamr/test-utils'
+import { MessageSigner } from '../../src/signature/MessageSigner'
 
 const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
@@ -16,23 +15,21 @@ describe('PushPipeline', () => {
 
     const streamId = toStreamID('streamId')
     let leaksDetector: LeaksDetector
-    let authentication: Authentication
+    let messageSigner: MessageSigner
 
     const createMockMessage = async () => {
-        return await createSignedMessage({
+        return await messageSigner.createSignedMessage({
             messageId: new MessageID(streamId, 0, 0, 0, PUBLISHER_ID, 'msgChainId'),
             messageType: StreamMessageType.MESSAGE,
             content: utf8ToBinary(JSON.stringify(Msg())),
-            authentication,
             contentType: ContentType.JSON,
-            encryptionType: EncryptionType.NONE,
-            signatureType: SignatureType.SECP256K1
-        })
+            encryptionType: EncryptionType.NONE
+        }, SignatureType.SECP256K1)
     }
 
     beforeEach(async () => {
         leaksDetector = new LeaksDetector()
-        authentication = createRandomAuthentication()
+        messageSigner = new MessageSigner(createRandomAuthentication())
     })
 
     afterEach(async () => {
@@ -87,15 +84,13 @@ describe('PushPipeline', () => {
         const err = new Error(counterId('expected error'))
         leaksDetector.add('err', err)
         leaksDetector.add('testMessage', testMessage)
-        const streamMessage = createSignedMessage({
+        const streamMessage = await messageSigner.createSignedMessage({
             messageId: new MessageID(streamId, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
             messageType: StreamMessageType.MESSAGE,
             content: utf8ToBinary(JSON.stringify(testMessage)),
-            authentication,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-            signatureType: SignatureType.SECP256K1
-        })
+        }, SignatureType.SECP256K1)
         leaksDetector.add('streamMessage', streamMessage)
         const s = new PushPipeline<StreamMessage>()
         leaksDetector.add(instanceId(s), s)
@@ -166,7 +161,7 @@ describe('PushPipeline', () => {
     testOnlyInNodeJs('processes buffer before handling errors with endWrite', async () => { // LeakDetector not supported by electron
         const testMessage = Msg()
         leaksDetector.add('testMessage', testMessage)
-        const s = new PushPipeline<StreamMessage>()
+        let s: PushPipeline<StreamMessage> | undefined = new PushPipeline<StreamMessage>()
         leaksDetector.add(instanceId(s), s)
         const err = new Error(counterId('expected error'))
 
@@ -174,15 +169,20 @@ describe('PushPipeline', () => {
         leaksDetector.add('streamMessage', streamMessage)
         s.push(streamMessage)
         s.endWrite(err)
-        const received: StreamMessage[] = []
+        let received: StreamMessage[] = []
         await expect(async () => {
-            for await (const msg of s) {
+            for await (const msg of s!) {
                 leaksDetector.add('receivedMessage', msg)
                 received.push(msg)
             }
         }).rejects.toThrow(err)
 
         expect(received).toEqual([streamMessage])
+
+        // TODO: why does this test require clearing these local vars?
+        // eslint-disable-next-line require-atomic-updates
+        s = undefined
+        received = []
     })
 
     testOnlyInNodeJs('can collect', async () => { // LeakDetector not supported by electron

@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { Wallet } from '@ethersproject/wallet'
+import { Wallet } from 'ethers'
 import {
     ContentType,
     EncryptionType,
@@ -24,11 +24,13 @@ import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../../src/events'
-import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { createMessagePipeline } from '../../src/subscribe/messagePipeline'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { mockLoggerFactory } from '../test-utils/utils'
+import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
+import { SignatureValidator } from '../../src/signature/SignatureValidator'
+import { MessageSigner } from '../../src/signature/MessageSigner'
 
 const CONTENT = {
     foo: 'bar'
@@ -48,7 +50,8 @@ describe('messagePipeline', () => {
         contentType?: ContentType
     } = {}): Promise<StreamMessage> => {
         const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-        return createSignedMessage({
+        const messageSigner = new MessageSigner(createPrivateKeyAuthentication(publisher.privateKey))
+        return messageSigner.createSignedMessage({
             messageId: new MessageID(
                 streamId,
                 partition,
@@ -59,12 +62,10 @@ describe('messagePipeline', () => {
             ),
             messageType: StreamMessageType.MESSAGE,
             content: opts.contentType === ContentType.BINARY ? opts.content! : utf8ToBinary(JSON.stringify(CONTENT)),
-            authentication: createPrivateKeyAuthentication(publisher.privateKey),
             contentType: opts.contentType ?? ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-            signatureType: SignatureType.SECP256K1,
             ...opts
-        })
+        }, SignatureType.SECP256K1)
     }
 
     beforeEach(async () => {
@@ -106,7 +107,7 @@ describe('messagePipeline', () => {
             getStorageNodes: undefined as any,
             resends: undefined as any,
             streamRegistry: streamRegistry as any,
-            erc1271ContractFacade: undefined as any,
+            signatureValidator: new SignatureValidator(mock<ERC1271ContractFacade>()),
             groupKeyManager: new GroupKeyManager(
                 mock<SubscriberKeyExchange>(),
                 mock<LitProtocolFacade>(),

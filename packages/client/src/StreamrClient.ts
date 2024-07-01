@@ -1,11 +1,11 @@
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
-import type { Overrides } from '@ethersproject/contracts'
 import { DhtAddress } from '@streamr/dht'
 import { StreamID } from '@streamr/protocol'
 import { ProxyDirection } from '@streamr/trackerless-network'
 import { EthereumAddress, TheGraphClient, toEthereumAddress } from '@streamr/utils'
+import type { Overrides } from 'ethers'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
 import omit from 'lodash/omit'
@@ -21,24 +21,27 @@ import {
     redactConfig
 } from './Config'
 import { DestroySignal } from './DestroySignal'
-import { generateEthereumAccount as _generateEthereumAccount, getEthersOverrides as _getEthersOverrides } from './ethereumUtils'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { MetricsPublisher } from './MetricsPublisher'
 import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
+import { RpcProviderSource } from './RpcProviderSource'
 import { Stream, StreamMetadata } from './Stream'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamrClientError } from './StreamrClientError'
-import { GroupKey } from './encryption/GroupKey'
-import { LocalGroupKeyStore, UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
-import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
-import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
-import { PermissionAssignment, PermissionQuery } from './permission'
-import { Publisher } from './publish/Publisher'
+import { ContractFactory } from './contracts/ContractFactory'
+import { Operator } from './contracts/Operator'
 import { OperatorRegistry } from './contracts/OperatorRegistry'
 import { StorageNodeMetadata, StorageNodeRegistry } from './contracts/StorageNodeRegistry'
 import { StreamRegistry } from './contracts/StreamRegistry'
 import { StreamStorageRegistry } from './contracts/StreamStorageRegistry'
 import { SearchStreamsOrderBy, SearchStreamsPermissionFilter } from './contracts/searchStreams'
+import { GroupKey } from './encryption/GroupKey'
+import { LocalGroupKeyStore, UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
+import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
+import { generateEthereumAccount as _generateEthereumAccount, getEthersOverrides as _getEthersOverrides } from './ethereumUtils'
+import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
+import { PermissionAssignment, PermissionQuery } from './permission'
+import { Publisher } from './publish/Publisher'
 import { MessageListener, MessageStream } from './subscribe/MessageStream'
 import { ResendOptions, Resends } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
@@ -49,7 +52,6 @@ import { StreamDefinition } from './types'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
-import { RpcProviderFactory } from './RpcProviderFactory'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -84,12 +86,14 @@ export class StreamrClient {
     private readonly subscriber: Subscriber
     private readonly resends: Resends
     private readonly node: NetworkNodeFacade
-    private readonly rpcProviderFactory: RpcProviderFactory
+    private readonly rpcProviderSource: RpcProviderSource
     private readonly streamRegistry: StreamRegistry
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
     private readonly operatorRegistry: OperatorRegistry
+    private readonly contractFactory: ContractFactory
     private readonly localGroupKeyStore: LocalGroupKeyStore
+    private readonly theGraphClient: TheGraphClient
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly config: StrictStreamrClientConfig
     private readonly authentication: Authentication
@@ -108,21 +112,22 @@ export class StreamrClient {
         const container = parentContainer.createChildContainer()
         container.register(AuthenticationInjectionToken, { useValue: authentication })
         container.register(ConfigInjectionToken, { useValue: strictConfig })
-
-        // eslint-disable-next-line max-len
-        container.register(TheGraphClient, { useValue: createTheGraphClient(container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig) })
+        const theGraphClient = createTheGraphClient(container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter), strictConfig)
+        container.register(TheGraphClient, { useValue: theGraphClient })
         this.id = strictConfig.id
         this.config = strictConfig
         this.authentication = authentication
+        this.theGraphClient = theGraphClient
         this.publisher = container.resolve<Publisher>(Publisher)
         this.subscriber = container.resolve<Subscriber>(Subscriber)
         this.resends = container.resolve<Resends>(Resends)
         this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
-        this.rpcProviderFactory = container.resolve(RpcProviderFactory)
+        this.rpcProviderSource = container.resolve(RpcProviderSource)
         this.streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
         this.streamStorageRegistry = container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
         this.storageNodeRegistry = container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
         this.operatorRegistry = container.resolve<OperatorRegistry>(OperatorRegistry)
+        this.contractFactory = container.resolve<ContractFactory>(ContractFactory)
         this.localGroupKeyStore = container.resolve<LocalGroupKeyStore>(LocalGroupKeyStore)
         this.streamIdBuilder = container.resolve<StreamIDBuilder>(StreamIDBuilder)
         this.eventEmitter = container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
@@ -152,7 +157,7 @@ export class StreamrClient {
         metadata?: PublishMetadata
     ): Promise<Message> {
         const result = await this.publisher.publish(streamDefinition, content, metadata)
-        this.eventEmitter.emit('publish', result)
+        this.eventEmitter.emit('messagePublished', result)
         return convertStreamMessageToMessage(result)
     }
 
@@ -232,7 +237,7 @@ export class StreamrClient {
         if (onMessage !== undefined) {
             sub.useLegacyOnMessageHandler(onMessage)
         }
-        this.eventEmitter.emit('subscribe', undefined)
+        this.eventEmitter.emit('streamPartSubscribed', undefined)
         return sub
     }
 
@@ -571,7 +576,7 @@ export class StreamrClient {
      * Gets the Signer associated with the current {@link StreamrClient} instance.
      */
     getSigner(): Promise<SignerWithProvider> {
-        return this.authentication.getStreamRegistryChainSigner(this.rpcProviderFactory)
+        return this.authentication.getTransactionSigner(this.rpcProviderSource)
     }
 
     /**
@@ -692,8 +697,26 @@ export class StreamrClient {
      * Get overrides for transaction options. Use as a parameter when submitting
      * transactions via ethers library.
      */
-    getEthersOverrides(): Overrides {
-        return _getEthersOverrides(this.rpcProviderFactory, this.config)
+    getEthersOverrides(): Promise<Overrides> {
+        return _getEthersOverrides(this.rpcProviderSource, this.config)
+    }
+
+    /**
+     * @deprecated This in an internal method
+     * @hidden
+     */
+    getOperator(operatorContractAddress: EthereumAddress): Operator {
+        return new Operator(
+            operatorContractAddress,
+            this.contractFactory,
+            this.rpcProviderSource,
+            this.theGraphClient,
+            this.authentication,
+            this.destroySignal,
+            this.loggerFactory,
+            () => this.getEthersOverrides(),
+            this.config.contracts.pollInterval
+        )
     }
 
     // --------------------------------------------------------------------------------------------

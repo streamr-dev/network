@@ -5,15 +5,15 @@ import { fastWallet } from '@streamr/test-utils'
 import { Defer, collect, waitForCondition, utf8ToBinary } from '@streamr/utils'
 import sample from 'lodash/sample'
 import shuffle from 'lodash/shuffle'
-import { Authentication, createPrivateKeyAuthentication } from '../../src/Authentication'
+import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { Message, MessageMetadata } from '../../src/Message'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
-import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
+import { MessageSigner } from '../../src/signature/MessageSigner'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
@@ -41,7 +41,7 @@ describe('Subscriber', () => {
     let streamId: StreamID
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let publisher: StreamrClient
-    let publisherAuthentication: Authentication
+    let messageSigner: MessageSigner
     let environment: FakeEnvironment
 
     const getSubscriptionCount = async (def?: StreamID) => {
@@ -50,15 +50,13 @@ describe('Subscriber', () => {
     }
 
     const createMockMessage = async (content: Uint8Array, timestamp: number) => {
-        return await createSignedMessage({
+        return await messageSigner.createSignedMessage({
             messageId: new MessageID(streamId, 0, timestamp, 0, await publisher.getAddress(), 'msgChainId'),
             messageType: StreamMessageType.MESSAGE,
             content,
-            authentication: publisherAuthentication,
             contentType: ContentType.JSON,
             encryptionType: EncryptionType.NONE,
-            signatureType: SignatureType.SECP256K1
-        })
+        }, SignatureType.SECP256K1)
     }
 
     beforeAll(async () => {
@@ -69,7 +67,8 @@ describe('Subscriber', () => {
                 privateKey: publisherWallet.privateKey
             }
         })
-        publisherAuthentication = createPrivateKeyAuthentication(publisherWallet.privateKey)
+        const publisherAuthentication = createPrivateKeyAuthentication(publisherWallet.privateKey)
+        messageSigner = new MessageSigner(publisherAuthentication)
     })
 
     afterAll(async () => {

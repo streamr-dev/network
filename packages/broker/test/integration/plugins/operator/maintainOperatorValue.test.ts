@@ -1,10 +1,18 @@
+import { _operatorContractUtils } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { Logger, waitForCondition } from '@streamr/utils'
-import { createClient, createTestStream } from '../../../utils'
-import { delegate, deploySponsorshipContract, generateWalletWithGasAndTokens, setupOperatorContract, sponsor, stake } from './contractUtils'
-import { maintainOperatorValue } from '../../../../src/plugins/operator/maintainOperatorValue'
+import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { multiply } from '../../../../src/helpers/multiply'
-import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
+import { maintainOperatorValue } from '../../../../src/plugins/operator/maintainOperatorValue'
+import { createClient, createTestStream } from '../../../utils'
+
+const {
+    delegate,
+    deploySponsorshipContract,
+    generateWalletWithGasAndTokens,
+    setupOperatorContract,
+    sponsor,
+    stake
+} = _operatorContractUtils
 
 const logger = new Logger(module)
 
@@ -29,7 +37,7 @@ describe('maintainOperatorValue', () => {
      * in network-contracts), and the configured safe limit in this test is 50%, i.e. 2.5 tokens.
      */
     it('withdraws sponsorship earnings when earnings are above the safe threshold', async () => {
-        const { operatorWallet, operatorContract, operatorServiceConfig, nodeWallets } = await setupOperatorContract({
+        const { operatorWallet, operatorContract, nodeWallets } = await setupOperatorContract({
             nodeCount: 1,
             operatorConfig: {
                 operatorsCutPercent: 10
@@ -37,17 +45,14 @@ describe('maintainOperatorValue', () => {
         })
         const sponsorer = await generateWalletWithGasAndTokens()
         const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 100, streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, sponsorship.address, 25000)
-        await delegate(operatorWallet, operatorContract.address, STAKE_AMOUNT)
-        await stake(operatorContract, sponsorship.address, STAKE_AMOUNT)
-        const contractFacade = ContractFacade.createInstance({
-            ...operatorServiceConfig,
-            signer: nodeWallets[0]
-        })
-        const { maxAllowedEarningsDataWei } = await contractFacade.getMyEarnings(1, 20)
+        await sponsor(sponsorer, await sponsorship.getAddress(), 25000)
+        await delegate(operatorWallet, await operatorContract.getAddress(), STAKE_AMOUNT)
+        await stake(operatorContract, await sponsorship.getAddress(), STAKE_AMOUNT)
+        const operator = createClient(nodeWallets[0].privateKey).getOperator(toEthereumAddress(await operatorContract.getAddress()))
+        const { maxAllowedEarningsDataWei } = await operator.getEarnings(1, 20)
         const triggerWithdrawLimitDataWei = multiply(maxAllowedEarningsDataWei, 1 - SAFETY_FRACTION)
         await waitForCondition(async () => {
-            const { sumDataWei } = await contractFacade.getMyEarnings(1, 20)
+            const { sumDataWei } = await operator.getEarnings(1, 20)
             const earnings = sumDataWei
             return earnings > triggerWithdrawLimitDataWei
         }, 10000, 1000)
@@ -57,9 +62,9 @@ describe('maintainOperatorValue', () => {
             SAFETY_FRACTION,
             1,
             20,
-            contractFacade
+            operator
         )
         const valueAfterWithdraw = await operatorContract.valueWithoutEarnings()
-        expect(valueAfterWithdraw.toBigInt()).toBeGreaterThan(valueBeforeWithdraw.toBigInt())
+        expect(valueAfterWithdraw).toBeGreaterThan(valueBeforeWithdraw)
     }, 60 * 1000)
 })

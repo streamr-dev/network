@@ -18,7 +18,7 @@ describe('events', () => {
 
         it('client', async () => {
             const client = environment.createClient()
-            client.on('addToStorageNode', () => {})
+            client.on('streamAddedToStorageNode', () => {})
             await client.destroy()
             // @ts-expect-error private
             expect(client.eventEmitter.getListenerCount()).toBe(0)
@@ -34,7 +34,7 @@ describe('events', () => {
                 }
             }, () => {})
             const onResendComplete = jest.fn()
-            subscription.once('resendComplete', onResendComplete)
+            subscription.once('resendCompleted', onResendComplete)
             await client.destroy()
             expect(onResendComplete).not.toBeCalled()
             // @ts-expect-error private

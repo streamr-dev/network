@@ -15,7 +15,7 @@ describe('ConnectivityChecking', () => {
     beforeEach(async () => {
         server = new ConnectionManager({
             createConnectorFacade: () => new DefaultConnectorFacade({
-                createLocalPeerDescriptor: () => {
+                createLocalPeerDescriptor: async () => {
                     return {
                         ...createMockPeerDescriptor(),
                         websocket: {
@@ -44,7 +44,7 @@ describe('ConnectivityChecking', () => {
             host: HOST,
             port: PORT,
             tls: false,
-            selfSigned: false
+            allowSelfSignedCertificate: false
         }
         const response = await sendConnectivityRequest(request, server.getLocalPeerDescriptor())
         expect(response.version).toEqual(LOCAL_PROTOCOL_VERSION)

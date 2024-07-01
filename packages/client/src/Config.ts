@@ -1,7 +1,5 @@
 import 'reflect-metadata'
-import type { Overrides } from '@ethersproject/contracts'
-import type { ExternalProvider } from '@ethersproject/providers'
-import type { ConnectionInfo } from '@ethersproject/web'
+import type { Overrides, Eip1193Provider } from 'ethers'
 import cloneDeep from 'lodash/cloneDeep'
 import { DeepRequired, MarkOptional } from 'ts-essentials'
 import { LogLevel, merge } from '@streamr/utils'
@@ -12,7 +10,7 @@ import { GapFillStrategy } from './subscribe/ordering/GapFiller'
 import { config as CHAIN_CONFIG } from '@streamr/config'
 
 export interface ProviderAuthConfig {
-    ethereum: ExternalProvider
+    ethereum: Eip1193Provider
 }
 
 export interface PrivateKeyAuthConfig {
@@ -156,6 +154,12 @@ export interface ControlLayerConfig {
      * (especially when starting the node for the first time on a new machine).
      */
     websocketServerEnableTls?: boolean
+
+    /**
+     * Define a geo ip database folder path to be used by the network node. When left undefined
+     * geoip functionality is disabled.
+     */
+    geoIpDatabaseFolder?: string
 }
 
 export interface NetworkNodeConfig {
@@ -215,14 +219,13 @@ export interface ConnectivityMethod {
     tls: boolean
 }
 
-export interface ChainConnectionInfo {
-    rpcs: ConnectionInfo[]
-    chainId?: number
-    name?: string
+export interface ConnectionInfo {
+    url: string
 }
 
 // these should come from ETH-184 config package when it's ready
 export interface EthereumNetworkConfig {
+    chainId: number
     overrides?: Overrides
     highGasPriceStrategy?: boolean
 }
@@ -234,7 +237,7 @@ export interface EthereumNetworkConfig {
 //   empty arrays will be applied as-is: we may want to remove "enthereum.rpcEndpoints" key 
 //   from @streamr/config as the intention is to use system-defaults (e.g. Metamask defaults)
 //   in Ethereum network
-export type EnvironmentId = 'polygon' | 'mumbai' | 'dev2'
+export type EnvironmentId = 'polygon' | 'polygonAmoy' | 'dev2'
 
 export const DEFAULT_ENVIRONMENT: EnvironmentId = 'polygon'
 
@@ -380,9 +383,10 @@ export interface StreamrClientConfig {
         streamRegistryChainAddress?: string
         streamStorageRegistryChainAddress?: string
         storageNodeRegistryChainAddress?: string
-        streamRegistryChainRPCs?: ChainConnectionInfo
         // most of the above should go into ethereumNetworks configs once ETH-184 is ready
         ethereumNetwork?: EthereumNetworkConfig
+        rpcs?: ConnectionInfo[]
+        rpcQuorum?: number
         /** Some TheGraph instance, that indexes the streamr registries */
         theGraphUrl?: string
         maxConcurrentCalls?: number
@@ -462,14 +466,14 @@ const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrCli
             }
         } as any,
         contracts: {
+            ethereumNetwork: {
+                chainId: defaults.id,
+                ...data.contracts?.ethereumNetwork
+            },
             streamRegistryChainAddress: defaults.contracts.StreamRegistry,
             streamStorageRegistryChainAddress: defaults.contracts.StreamStorageRegistry,
             storageNodeRegistryChainAddress: defaults.contracts.StorageNodeRegistry,
-            streamRegistryChainRPCs: {
-                name: defaults.name,
-                chainId: defaults.id,
-                rpcs: defaults.rpcEndpoints
-            },
+            rpcs: defaults.rpcEndpoints,
             theGraphUrl: defaults.theGraphUrl,
             ...data.contracts,
         } as any

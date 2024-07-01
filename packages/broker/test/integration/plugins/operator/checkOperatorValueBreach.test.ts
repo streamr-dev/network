@@ -1,10 +1,14 @@
-import { Contract } from '@ethersproject/contracts'
-import { Operator, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
-import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
-import { createClient, createTestStream } from '../../../utils'
+import { Operator, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts-ethers6'
 import {
     SetupOperatorContractOpts,
+    _operatorContractUtils,
+} from '@streamr/sdk'
+import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { Contract } from 'ethers'
+import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
+import { createClient, createTestStream } from '../../../utils'
+
+const {
     delegate,
     deploySponsorshipContract,
     generateWalletWithGasAndTokens,
@@ -12,8 +16,7 @@ import {
     setupOperatorContract,
     sponsor,
     stake
-} from './contractUtils'
-import { ContractFacade } from '../../../../src/plugins/operator/ContractFacade'
+} = _operatorContractUtils
 
 const logger = new Logger(module)
 
@@ -22,7 +25,7 @@ const ONE_ETHER = BigInt(1e18)
 
 const getEarnings = async (operatorContract: Operator): Promise<bigint> => {
     const { earnings } = await operatorContract.getSponsorshipsAndEarnings()
-    return earnings[0].toBigInt()
+    return earnings[0]
 }
 
 describe('checkOperatorValueBreach', () => {
@@ -43,37 +46,36 @@ describe('checkOperatorValueBreach', () => {
 
     it('withdraws the other Operators earnings when they are above the limit', async () => {
         // eslint-disable-next-line max-len
-        const { operatorServiceConfig: watcherConfig, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
+        const { operatorContract: watcherOperatorContract, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
         const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
         const sponsorer = await generateWalletWithGasAndTokens()
-        await delegate(operatorWallet, operatorContract.address, 20000)
+        await delegate(operatorWallet, await operatorContract.getAddress(), 20000)
         const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: 100, streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, sponsorship1.address, 25000)
-        await stake(operatorContract, sponsorship1.address, 10000)
+        await sponsor(sponsorer, await sponsorship1.getAddress(), 25000)
+        await stake(operatorContract, await sponsorship1.getAddress(), 10000)
         const sponsorship2 = await deploySponsorshipContract({ earningsPerSecond: 200, streamId, deployer: operatorWallet })
-        await sponsor(sponsorer, sponsorship2.address, 25000)
-        await stake(operatorContract, sponsorship2.address, 10000)
+        await sponsor(sponsorer, await sponsorship2.getAddress(), 25000)
+        await stake(operatorContract, await sponsorship2.getAddress(), 10000)
         const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
         const streamrConfigAddress = await operatorContract.streamrConfig()
         const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
-        const allowedDifference = valueBeforeWithdraw.mul(await streamrConfig.maxAllowedEarningsFraction()).div(ONE_ETHER).toBigInt()
-        const contractFacade = ContractFacade.createInstance({
-            ...watcherConfig,
-            signer: watcherWallets[0]
-        })
+        const allowedDifference = valueBeforeWithdraw * (await streamrConfig.maxAllowedEarningsFraction()) / ONE_ETHER
+        const client = createClient(watcherWallets[0].privateKey)
+        const operator = client.getOperator(toEthereumAddress(await watcherOperatorContract.getAddress()))
+
         // overwrite (for this test only) the getRandomOperator method to deterministically return the operator's address
-        contractFacade.getRandomOperator = async () => {
-            return toEthereumAddress(operatorContract.address)
+        operator.getRandomOperator = async () => {
+            return toEthereumAddress(await operatorContract.getAddress())
         }
 
         logger.debug('Waiting until above', { allowedDifference })
         await waitForCondition(async () => await getEarnings(operatorContract) > allowedDifference, 10000, 1000)
-        await checkOperatorValueBreach(contractFacade, 1, 20)
+        await checkOperatorValueBreach(operator, client, 1, 20)
 
         const earnings = await getEarnings(operatorContract)
         expect(earnings).toBeLessThan(allowedDifference)
         const valueAfterWithdraw = await operatorContract.valueWithoutEarnings()
-        expect(valueAfterWithdraw.toBigInt()).toBeGreaterThan(valueBeforeWithdraw.toBigInt())
+        expect(valueAfterWithdraw).toBeGreaterThan(valueBeforeWithdraw)
 
     }, 60 * 1000)
 })

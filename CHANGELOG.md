@@ -14,9 +14,20 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
+- Update to ethers.js library to v6 (https://github.com/streamr-dev/network/pull/2506)
+- Restructured `contracts` config structure (https://github.com/streamr-dev/network/pull/2581)
+- Improve reliability of JSON RPC interactions by adding retry redundancy (https://github.com/streamr-dev/network/pull/2562)
+- Renamed events: (https://github.com/streamr-dev/network/pull/2604, https://github.com/streamr-dev/network/pull/2605)
+  - `createStream` -> `streamCreated`
+  - `addToStorageNode` -> `streamAddedToStorageNode`
+  - `removeFromStorageNode` -> `streamRemovedFromFromStorageNode`
+  - Subscription: `resendComplete` -> `resendCompleted`
+
 #### Deprecated
 
 #### Removed
+
+- Removed obsolete RPC provider options (https://github.com/streamr-dev/network/pull/2583)
 
 #### Fixed
 
@@ -29,11 +40,15 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
+- Improve reliability of JSON RPC interactions by adding retry redundancy (https://github.com/streamr-dev/network/pull/2601)
+
 #### Deprecated
 
 #### Removed
 
 #### Fixed
+
+- Fix memory leak in SubscriberPlugin (https://github.com/streamr-dev/network/pull/2578)
 
 #### Security
 
@@ -51,6 +66,33 @@ Changes before Tatum release are not documented in this file.
 #### Fixed
 
 #### Security
+
+
+## [100.2.4] - 2024-05-06
+
+### @streamr/sdk
+
+#### Added
+
+- New geolocation detection by Nodes improves start up times and the decentralization of the network (https://github.com/streamr-dev/network/pull/2465)
+- Improved rejoining streams after losing internet connection (https://github.com/streamr-dev/network/pull/2502)
+- Discovering stream neighbors is more efficient as offline nodes are cleaned-up by sending pings (https://github.com/streamr-dev/network/pull/2501)
+
+#### Fixed
+
+- Hanging connection issue with WebSocket clients (https://github.com/streamr-dev/network/pull/2519)
+
+### @streamr/node
+
+#### Added
+
+- Nodes provide geolocation detection for newly joining nodes (https://github.com/streamr-dev/network/pull/2465)
+
+### @streamr/cli-tools
+
+#### Removed
+
+- Removed `governance vote' command (https://github.com/streamr-dev/network/pull/2538)
 
 
 ## [100.2.3] - 2024-04-15
@@ -134,7 +176,8 @@ Changes before Tatum release are not documented in this file.
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v100.2.3...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v100.2.4...HEAD
+[100.2.4]: https://github.com/streamr-dev/network/compare/v100.2.3...v100.2.4
 [100.2.3]: https://github.com/streamr-dev/network/compare/v100.2.2...v100.2.3
 [100.2.2]: https://github.com/streamr-dev/network/compare/v100.2.1...v100.2.2
 [100.2.1]: https://github.com/streamr-dev/network/compare/v100.2.1...v100.2.1

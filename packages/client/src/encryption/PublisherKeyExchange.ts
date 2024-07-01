@@ -17,7 +17,6 @@ import without from 'lodash/without'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { createSignedMessage } from '../publish/MessageFactory'
 import { createRandomMsgChainId } from '../publish/messageChain'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { LoggerFactory } from '../utils/LoggerFactory'
@@ -25,8 +24,9 @@ import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
-import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
 import { StreamrClientEventEmitter } from '../events'
+import { SignatureValidator } from '../signature/SignatureValidator'
+import { MessageSigner } from '../signature/MessageSigner'
 
 /*
  * Sends group key responses
@@ -45,7 +45,8 @@ export class PublisherKeyExchange {
 
     private readonly networkNodeFacade: NetworkNodeFacade
     private readonly streamRegistry: StreamRegistry
-    private readonly erc1271ContractFacade: ERC1271ContractFacade
+    private readonly signatureValidator: SignatureValidator
+    private readonly messageSigner: MessageSigner
     private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
     private readonly logger: Logger
@@ -54,7 +55,8 @@ export class PublisherKeyExchange {
     constructor(
         networkNodeFacade: NetworkNodeFacade,
         streamRegistry: StreamRegistry,
-        @inject(ERC1271ContractFacade) erc1271ContractFacade: ERC1271ContractFacade,
+        signatureValidator: SignatureValidator,
+        messageSigner: MessageSigner,
         store: LocalGroupKeyStore,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         eventEmitter: StreamrClientEventEmitter,
@@ -62,7 +64,8 @@ export class PublisherKeyExchange {
     ) {
         this.networkNodeFacade = networkNodeFacade
         this.streamRegistry = streamRegistry
-        this.erc1271ContractFacade = erc1271ContractFacade
+        this.signatureValidator = signatureValidator
+        this.messageSigner = messageSigner
         this.store = store
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
@@ -71,7 +74,7 @@ export class PublisherKeyExchange {
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.logger.debug('Started')
         })
-        eventEmitter.on('publish', (msg) => {
+        eventEmitter.on('messagePublished', (msg) => {
             if (msg.signatureType === SignatureType.ERC_1271) {
                 const address = msg.getPublisherId()
                 if (!this.erc1271ContractAddresses.has(address)) {
@@ -89,7 +92,7 @@ export class PublisherKeyExchange {
                 const responseType = await this.getResponseType(recipient)
                 if (responseType !== ResponseType.NONE) {
                     this.logger.debug('Handling group key request', { requestId, responseType })
-                    await validateStreamMessage(request, this.streamRegistry, this.erc1271ContractFacade)
+                    await validateStreamMessage(request, this.streamRegistry, this.signatureValidator)
                     const authenticatedUser = await this.authentication.getAddress()
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
@@ -152,7 +155,7 @@ export class PublisherKeyExchange {
             requestId,
             encryptedGroupKeys
         })
-        const response = createSignedMessage({
+        const response = this.messageSigner.createSignedMessage({
             messageId: new MessageID(
                 StreamPartIDUtils.getStreamID(streamPartId),
                 StreamPartIDUtils.getStreamPartition(streamPartId),
@@ -165,9 +168,7 @@ export class PublisherKeyExchange {
             contentType: ContentType.BINARY,
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             encryptionType: EncryptionType.NONE,
-            authentication: this.authentication,
-            signatureType: responseType === ResponseType.NORMAL ? SignatureType.SECP256K1 : SignatureType.ERC_1271,
-        })
+        }, responseType === ResponseType.NORMAL ? SignatureType.SECP256K1 : SignatureType.ERC_1271)
         return response
     }
 }

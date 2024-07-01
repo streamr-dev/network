@@ -1,6 +1,6 @@
 {
   "name": "@streamr/dht",
-  "version": "100.2.3",
+  "version": "101.0.0-beta.1",
   "description": "Streamr Network DHT",
   "repository": {
     "type": "git",
@@ -29,10 +29,11 @@
     "@js-sdsl/ordered-map": "^4.4.2",
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
-    "@streamr/autocertifier-client": "100.2.3",
-    "@streamr/cdn-location": "100.2.3",
-    "@streamr/proto-rpc": "100.2.3",
-    "@streamr/utils": "100.2.3",
+    "@streamr/autocertifier-client": "101.0.0-beta.1",
+    "@streamr/cdn-location": "101.0.0-beta.1",
+    "@streamr/geoip-location": "101.0.0-beta.1",
+    "@streamr/proto-rpc": "101.0.0-beta.1",
+    "@streamr/utils": "101.0.0-beta.1",
     "eventemitter3": "^5.0.0",
     "heap": "^0.2.6",
     "ipaddr.js": "^2.0.1",
@@ -43,11 +44,11 @@
     "querystring": "0.2.1",
     "uuid": "^9.0.1",
     "websocket": "^1.0.34",
-    "ws": "^8.16.0"
+    "ws": "^8.17.1"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
-    "@streamr/test-utils": "100.2.3",
+    "@streamr/test-utils": "101.0.0-beta.1",
     "@types/heap": "^0.2.34",
     "@types/k-bucket": "^5.0.1",
     "@types/lodash": "^4.14.202",

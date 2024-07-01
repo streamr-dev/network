@@ -8,9 +8,9 @@ import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 const logger = new Logger(module)
 
-interface RecursiveOperationSessionRpcLocalConfig {
+interface RecursiveOperationSessionRpcLocalOptions {
     onResponseReceived: (
-        sourceId: DhtAddress,
+        remoteNodeId: DhtAddress,
         routingPath: PeerDescriptor[],
         nodes: PeerDescriptor[],
         dataEntries: DataEntry[],
@@ -20,16 +20,16 @@ interface RecursiveOperationSessionRpcLocalConfig {
 
 export class RecursiveOperationSessionRpcLocal implements IRecursiveOperationSessionRpc {
 
-    private readonly config: RecursiveOperationSessionRpcLocalConfig
+    private readonly options: RecursiveOperationSessionRpcLocalOptions
 
-    constructor(config: RecursiveOperationSessionRpcLocalConfig) {
-        this.config = config
+    constructor(options: RecursiveOperationSessionRpcLocalOptions) {
+        this.options = options
     }
     
     async sendResponse(report: RecursiveOperationResponse, context: ServerCallContext): Promise<Empty> {
-        const sourceId = getNodeIdFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!)
+        const remoteNodeId = getNodeIdFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!)
         logger.trace('RecursiveOperationResponse arrived: ' + JSON.stringify(report))
-        this.config.onResponseReceived(sourceId, report.routingPath, report.closestConnectedNodes, report.dataEntries, report.noCloserNodesFound)
+        this.options.onResponseReceived(remoteNodeId, report.routingPath, report.closestConnectedNodes, report.dataEntries, report.noCloserNodesFound)
         return {}
     }
 }

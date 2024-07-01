@@ -1,27 +1,27 @@
 import { scheduleAtInterval } from '@streamr/utils'
-import { EntryPointDiscovery } from './EntryPointDiscovery'
-import { Layer1Node } from './Layer1Node'
+import { PeerDescriptorStoreManager } from './PeerDescriptorStoreManager'
+import { DiscoveryLayerNode } from './DiscoveryLayerNode'
 
 const DEFAULT_RECONNECT_INTERVAL = 30 * 1000
 export class StreamPartReconnect {
     private abortController?: AbortController
-    private readonly layer1Node: Layer1Node
-    private readonly entryPointDiscovery: EntryPointDiscovery
+    private readonly discoveryLayerNode: DiscoveryLayerNode
+    private readonly peerDescriptorStoreManager: PeerDescriptorStoreManager
 
-    constructor(layer1Node: Layer1Node, entryPointDiscovery: EntryPointDiscovery) {
-        this.layer1Node = layer1Node
-        this.entryPointDiscovery = entryPointDiscovery
+    constructor(discoveryLayerNode: DiscoveryLayerNode, peerDescriptorStoreManager: PeerDescriptorStoreManager) {
+        this.discoveryLayerNode = discoveryLayerNode
+        this.peerDescriptorStoreManager = peerDescriptorStoreManager
     }
 
     async reconnect(timeout = DEFAULT_RECONNECT_INTERVAL): Promise<void> {
         this.abortController = new AbortController()
         await scheduleAtInterval(async () => {
-            const entryPoints = await this.entryPointDiscovery.discoverEntryPointsFromDht(0)
-            await this.layer1Node.joinDht(entryPoints.discoveredEntryPoints)
-            if (this.entryPointDiscovery.isLocalNodeEntryPoint()) {
-                await this.entryPointDiscovery.storeSelfAsEntryPointIfNecessary(entryPoints.discoveredEntryPoints.length)
+            const entryPoints = await this.peerDescriptorStoreManager.fetchNodes()
+            await this.discoveryLayerNode.joinDht(entryPoints)
+            if (this.peerDescriptorStoreManager.isLocalNodeStored()) {
+                await this.peerDescriptorStoreManager.storeAndKeepLocalNode()
             }
-            if (this.layer1Node.getNeighborCount() > 0) {
+            if (this.discoveryLayerNode.getNeighborCount() > 0) {
                 this.abortController!.abort()
             }
         }, timeout, true, this.abortController.signal)

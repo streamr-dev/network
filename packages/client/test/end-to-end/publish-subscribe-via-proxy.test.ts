@@ -1,4 +1,4 @@
-import { Wallet } from '@ethersproject/wallet'
+import { Wallet } from 'ethers'
 import { describeOnlyInNodeJs, fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { ProxyDirection } from '@streamr/trackerless-network'
 import { collect, wait, withTimeout } from '@streamr/utils'
