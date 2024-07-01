@@ -1,8 +1,9 @@
 import 'reflect-metadata'
 
 import { fastPrivateKey } from '@streamr/test-utils'
-import { peerDescriptorTranslator } from '../../src/utils/utils'
+import { NetworkNodeStub } from '../../src/NetworkNodeFacade'
 import { StreamrClient } from '../../src/StreamrClient'
+import { peerDescriptorTranslator } from '../../src/utils/utils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { fakeEntrypoint } from '../test-utils/fake/FakeOperatorRegistry'
 
@@ -19,7 +20,12 @@ describe('NetworkNodeFacade', () => {
     })
 
     describe('create/destroy', () => {
+
         let client: StreamrClient
+
+        const getNode = (): Promise<NetworkNodeStub> => {
+            return client.getNode().getNode()
+        }
 
         beforeEach(async () => {
             client = environment.createClient({
@@ -30,51 +36,51 @@ describe('NetworkNodeFacade', () => {
         })
 
         it('caches node', async () => {
-            const node1 = await client.getNode()
-            const node2 = await client.getNode()
+            const node1 = await getNode()
+            const node2 = await getNode()
             expect(node1).toBe(node2)
         })
 
         it('caches node with parallel calls', async () => {
             const [node1, node2] = await Promise.all([
-                client.getNode(),
-                client.getNode(),
+                getNode(),
+                getNode()
             ])
             expect(node1).toBe(node2)
         })
 
         describe('getting node after destroy is an error', () => {
             it('can destroy after start', async () => {
-                await client.getNode()
+                await getNode()
                 await client.destroy()
                 await expect(async () => {
-                    await client.getNode()
+                    await getNode()
                 }).rejects.toThrowStreamrError({ code: 'CLIENT_DESTROYED' })
             })
 
             it('can call destroy multiple times', async () => {
-                await client.getNode()
+                await getNode()
                 await Promise.all([
                     client.destroy(),
                     client.destroy(),
                 ])
                 await client.destroy()
                 await expect(async () => {
-                    await client.getNode()
+                    await getNode()
                 }).rejects.toThrowStreamrError({ code: 'CLIENT_DESTROYED' })
             })
 
             it('can destroy before start', async () => {
                 await client.destroy()
                 await expect(async () => {
-                    await client.getNode()
+                    await getNode()
                 }).rejects.toThrowStreamrError({ code: 'CLIENT_DESTROYED' })
             })
 
             it('can destroy during start', async () => {
                 await expect(async () => {
                     const tasks = [
-                        client.getNode(),
+                        getNode(),
                         client.destroy(),
                     ]
                     await Promise.allSettled(tasks)
@@ -95,8 +101,8 @@ describe('NetworkNodeFacade', () => {
                     }
                 }
             })
-            const node = await client.getNode()
-            expect(node.getOptions().layer0?.entryPoints).toContainEqual(
+            const node = client.getNode()
+            expect((await node.getOptions()).layer0?.entryPoints).toContainEqual(
                 peerDescriptorTranslator(fakeEntrypoint)
             )
         })
@@ -111,8 +117,8 @@ describe('NetworkNodeFacade', () => {
                     }
                 }
             })
-            const node = await client.getNode()
-            expect(node.getOptions().layer0?.entryPoints).not.toContainEqual(
+            const node = client.getNode()
+            expect((await node.getOptions()).layer0?.entryPoints).not.toContainEqual(
                 peerDescriptorTranslator(fakeEntrypoint)
             )
         })

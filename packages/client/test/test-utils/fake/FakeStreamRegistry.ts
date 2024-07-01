@@ -38,7 +38,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     async createStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
-        if (this.chain.streams.has(streamId)) {
+        if (this.chain.getStream(streamId) !== undefined) {
             throw new Error(`Stream already exists: ${streamId}`)
         }
         const authenticatedUser: EthereumAddress = await this.authentication.getAddress()
@@ -48,12 +48,12 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
             metadata,
             permissions
         }
-        this.chain.streams.set(streamId, registryItem)
+        this.chain.setStream(streamId, registryItem)
         return this.streamFactory.createStream(streamId, metadata)
     }
 
     async getStream(id: StreamID): Promise<Stream> {
-        const registryItem = this.chain.streams.get(id)
+        const registryItem = this.chain.getStream(id)
         if (registryItem !== undefined) {
             return this.streamFactory.createStream(id, registryItem.metadata)
         } else {
@@ -63,7 +63,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
 
     // eslint-disable-next-line class-methods-use-this
     async updateStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
-        const registryItem = this.chain.streams.get(streamId)
+        const registryItem = this.chain.getStream(streamId)
         if (registryItem === undefined) {
             throw new Error('Stream not found')
         } else {
@@ -74,7 +74,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
 
     async hasPermission(query: PermissionQuery): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(query.streamId)
-        const registryItem = this.chain.streams.get(streamId)
+        const registryItem = this.chain.getStream(streamId)
         if (registryItem === undefined) {
             return false
         }
@@ -90,7 +90,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
 
     async getPermissions(streamIdOrPath: string): Promise<PermissionAssignment[]> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        const registryItem = this.chain.streams.get(streamId)
+        const registryItem = this.chain.getStream(streamId)
         if (registryItem === undefined) {
             return []
         }
@@ -142,7 +142,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         ) => void
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        const registryItem = this.chain.streams.get(streamId)
+        const registryItem = this.chain.getStream(streamId)
         if (registryItem === undefined) {
             throw new Error('Stream not found')
         } else {

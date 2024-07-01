@@ -1,18 +1,18 @@
 import 'reflect-metadata'
 
-import { Wallet } from 'ethers'
 import { StreamMessage } from '@streamr/protocol'
 import { fastWallet, testOnlyInNodeJs } from '@streamr/test-utils'
 import { collect, toEthereumAddress } from '@streamr/utils'
+import { Wallet } from 'ethers'
+import { mock } from 'jest-mock-extended'
 import { GroupKey } from '../../src/encryption/GroupKey'
+import { MessageSigner } from '../../src/signature/MessageSigner'
+import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createGroupKeyQueue, createStreamRegistry, createTestStream, startFailingStorageNode } from '../test-utils/utils'
 import { createPrivateKeyAuthentication } from './../../src/Authentication'
 import { Stream } from './../../src/Stream'
 import { MessageFactory } from './../../src/publish/MessageFactory'
-import { mock } from 'jest-mock-extended'
-import { SignatureValidator } from '../../src/signature/SignatureValidator'
-import { MessageSigner } from '../../src/signature/MessageSigner'
 
 const GROUP_KEY = GroupKey.generate()
 
@@ -26,7 +26,7 @@ describe('gap fill', () => {
     const createMessage = (timestamp: number) => messageFactory.createMessage({}, { timestamp })
 
     const publish = async (msg: StreamMessage) => {
-        const node = environment.startNode()
+        const node = environment.createNode()
         await node.broadcast(msg)
     }
 

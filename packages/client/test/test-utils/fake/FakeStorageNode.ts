@@ -1,4 +1,3 @@
-import { Wallet } from 'ethers'
 import {
     StreamID,
     StreamMessage,
@@ -7,21 +6,23 @@ import {
     toStreamID,
     toStreamPartID
 } from '@streamr/protocol'
+import { fastWallet } from '@streamr/test-utils'
+import { convertStreamMessageToBytes } from '@streamr/trackerless-network'
 import { EthereumAddress, Multimap, toEthereumAddress, toLengthPrefixedFrame } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import { once } from 'events'
 import express, { Request, Response } from 'express'
 import { Server } from 'http'
 import range from 'lodash/range'
 import { AddressInfo } from 'net'
+import { NetworkNodeFacade } from '../../../src/NetworkNodeFacade'
 import { DEFAULT_PARTITION } from '../../../src/StreamIDBuilder'
 import { StreamPermission } from '../../../src/permission'
 import { ResendType } from '../../../src/subscribe/Resends'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
 import { createMockMessage } from '../utils'
 import { FakeChain } from './FakeChain'
-import { FakeNetwork } from './FakeNetwork'
-import { FakeNetworkNode } from './FakeNetworkNode'
-import { convertStreamMessageToBytes } from '@streamr/trackerless-network'
+import { FakeEnvironment } from './FakeEnvironment'
 
 const MAX_TIMESTAMP = 8640000000000000 // https://262.ecma-international.org/5.1/#sec-15.9.1.1
 const MIN_SEQUENCE_NUMBER = 0
@@ -60,25 +61,33 @@ const parseNumberQueryParameter = (str: string | undefined): number | undefined 
     return (str !== undefined) ? Number(str) : undefined
 }
 
-export class FakeStorageNode extends FakeNetworkNode {
+export class FakeStorageNode {
 
     private readonly streamPartMessages: Multimap<StreamPartID, StreamMessage> = new Multimap()
     private server?: Server
     private readonly wallet: Wallet
+    private readonly node: NetworkNodeFacade
     private readonly chain: FakeChain
 
-    constructor(wallet: Wallet, network: FakeNetwork, chain: FakeChain) {
-        super(network)
-        this.wallet = wallet
-        this.chain = chain
+    constructor(environment: FakeEnvironment) {
+        this.wallet = fastWallet()
+        this.node = environment.createNode()
+        this.chain = environment.getChain()
+        this.chain.on('streamAddedToStorageNode', (event) => {
+            if (event.nodeAddress === this.getAddress()) {
+                this.addStream(event.streamId)
+            }
+        })
+        environment.getDestroySignal().onDestroy.listen(() => {
+            return this.stop()
+        })
     }
 
     getAddress(): EthereumAddress {
         return toEthereumAddress(this.wallet.address)
     }
 
-    override async start(): Promise<void> {
-        super.start()
+    async start(): Promise<void> {
         this.server = await startServer((streamPartId: StreamPartID, resendType: ResendType, queryParams: Record<string, any>) => {
             switch (resendType) {
                 case 'last':
@@ -107,12 +116,12 @@ export class FakeStorageNode extends FakeNetworkNode {
             }
         })
         const port = (this.server.address() as AddressInfo).port
-        this.chain.storageNodeMetadatas.set(this.getAddress(), {
+        this.chain.setStorageNodeMetadata(this.getAddress(), {
             urls: [`http://127.0.0.1:${port}`]
         })
         const storageNodeAssignmentStreamPermissions = new Multimap<EthereumAddress, StreamPermission>()
         storageNodeAssignmentStreamPermissions.add(this.getAddress(), StreamPermission.PUBLISH)
-        this.chain.streams.set(formStorageNodeAssignmentStreamId(this.getAddress()), {
+        this.chain.setStream(formStorageNodeAssignmentStreamId(this.getAddress()), {
             metadata: {
                 partitions: 1
             },
@@ -120,23 +129,22 @@ export class FakeStorageNode extends FakeNetworkNode {
         })
     }
 
-    override async stop(): Promise<void> {
-        super.stop()
+    async stop(): Promise<void> {
         this.server!.close()
         await once(this.server!, 'close')
     }
 
-    async addAssignment(streamId: StreamID): Promise<void> {
-        const partitionCount = this.chain.streams.get(streamId)!.metadata.partitions
+    private async addStream(streamId: StreamID): Promise<void> {
+        const partitionCount = this.chain.getStream(streamId)!.metadata.partitions
         const streamParts = range(0, partitionCount).map((p) => toStreamPartID(streamId, p))
         streamParts.forEach(async (streamPartId) => {
-            if (!this.subscriptions.has(streamPartId)) {
-                this.addMessageListener((msg: StreamMessage) => {
+            if (!(await this.node.getStreamParts()).includes(streamPartId)) {
+                await this.node.addMessageListener((msg: StreamMessage) => {
                     if ((msg.getStreamPartID() === streamPartId) && isStorableMessage(msg)) {
                         this.storeMessage(msg)
                     }
                 })
-                this.join(streamPartId)
+                await this.node.join(streamPartId)
                 const assignmentMessage = await createMockMessage({
                     streamPartId: toStreamPartID(formStorageNodeAssignmentStreamId(this.getAddress()), DEFAULT_PARTITION),
                     publisher: this.wallet,
@@ -144,7 +152,7 @@ export class FakeStorageNode extends FakeNetworkNode {
                         streamPart: streamPartId,
                     }
                 })
-                await this.broadcast(assignmentMessage)
+                await this.node.broadcast(assignmentMessage)
             }
         })
     }

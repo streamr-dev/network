@@ -55,9 +55,8 @@ export class FakeNetworkNode implements NetworkNodeStub {
         this.network.send(msg, this.id, (node: FakeNetworkNode) => node.subscriptions.has(msg.getStreamPartID()))
     }
 
-    // eslint-disable-next-line class-methods-use-this
     getStreamParts(): StreamPartID[] {
-        throw new Error('not implemented')
+        return [...this.subscriptions]
     }
 
     getNeighbors(streamPartId: StreamPartID): ReadonlyArray<DhtAddress> {

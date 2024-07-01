@@ -1,8 +1,8 @@
 import 'reflect-metadata'
 
-import { Wallet } from 'ethers'
 import { fastWallet } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -47,7 +47,7 @@ describe('Subscriber', () => {
     
             const sub = await subscriber.subscribe(stream.id)
     
-            const publisherNode = environment.startNode()
+            const publisherNode = environment.createNode()
             await publisherNode.broadcast(await createMockMessage({
                 stream,
                 publisher: publisherWallet,
@@ -99,7 +99,7 @@ describe('Subscriber', () => {
     
             const sub = await subscriber.subscribe({ streamId: stream.id, raw: true })
     
-            const publisherNode = environment.startNode()
+            const publisherNode = environment.createNode()
             await publisherNode.broadcast(await createMockMessage({
                 stream,
                 publisher: publisherWallet,

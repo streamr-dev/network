@@ -20,7 +20,7 @@ export class FakeStorageNodeRegistry implements Methods<StorageNodeRegistry> {
 
     // eslint-disable-next-line class-methods-use-this
     async getStorageNodeMetadata(nodeAddress: EthereumAddress): Promise<StorageNodeMetadata> {
-        const metadata = this.chain.storageNodeMetadatas.get(nodeAddress)
+        const metadata = this.chain.getStorageNodeMetadata(nodeAddress)
         if (metadata !== undefined) {
             return metadata
         } else {

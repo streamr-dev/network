@@ -1,14 +1,16 @@
 import 'reflect-metadata'
 
-import { Wallet } from 'ethers'
 import { MAX_PARTITION_COUNT, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { fastPrivateKey, fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { EthereumAddress, Logger, merge, wait, waitForCondition, utf8ToBinary } from '@streamr/utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { EthereumAddress, Logger, merge, utf8ToBinary, wait, waitForCondition } from '@streamr/utils'
 import crypto from 'crypto'
+import { Wallet } from 'ethers'
 import { once } from 'events'
 import express, { Request, Response } from 'express'
 import { mock } from 'jest-mock-extended'
 import { AddressInfo } from 'net'
+import fetch from 'node-fetch'
+import path from 'path'
 import { DependencyContainer } from 'tsyringe'
 import { Authentication, createPrivateKeyAuthentication } from '../../src/Authentication'
 import { StreamrClientConfig } from '../../src/Config'
@@ -17,6 +19,7 @@ import { DestroySignal } from '../../src/DestroySignal'
 import { PersistenceManager } from '../../src/PersistenceManager'
 import { Stream, StreamMetadata } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
+import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
@@ -25,16 +28,13 @@ import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchang
 import { StreamrClientEventEmitter } from '../../src/events'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { MessageFactory } from '../../src/publish/MessageFactory'
-import { StreamRegistry } from '../../src/contracts/StreamRegistry'
+import { MessageSigner } from '../../src/signature/MessageSigner'
+import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { LoggerFactory } from '../../src/utils/LoggerFactory'
 import { counterId } from '../../src/utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
 import { addAfterFn } from './jest-utils'
-import path from 'path'
-import fetch from 'node-fetch'
-import { SignatureValidator } from '../../src/signature/SignatureValidator'
-import { MessageSigner } from '../../src/signature/MessageSigner'
 
 const logger = new Logger(module)
 
@@ -279,7 +279,6 @@ export const startTestServer = async (
 }
 
 export const startFailingStorageNode = async (error: Error, environment: FakeEnvironment): Promise<FakeStorageNode> => {
-    const wallet = fastWallet()
     const node = new class extends FakeStorageNode {
         // eslint-disable-next-line class-methods-use-this, require-yield
         override async* getLast(): AsyncIterable<StreamMessage> {
@@ -289,7 +288,7 @@ export const startFailingStorageNode = async (error: Error, environment: FakeEnv
         override async* getRange(): AsyncIterable<StreamMessage> {
             throw error
         }
-    }(wallet, environment.getNetwork(), environment.getChain())
+    }(environment)
     await node.start()
     return node
 }
