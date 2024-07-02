@@ -1,21 +1,15 @@
 import 'reflect-metadata'
 
-import {
-    ContentType,
-    EncryptionType,
-    MessageID,
-    MessageRef,
-    SignatureType,
-    StreamMessage,
-    StreamMessageType,
-    toStreamID
-} from '@streamr/protocol'
-import { hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
-import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
-import { mock, MockProxy } from 'jest-mock-extended'
+import { toStreamID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { MockProxy, mock } from 'jest-mock-extended'
+import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
+import { MessageRef } from '../../src/protocol/MessageRef'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { createSignaturePayload } from '../../src/signature/createSignaturePayload'
+import { MessageID } from './../../src/protocol/MessageID'
+import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 
 describe('SignatureValidator', () => {
     let erc1271ContractFacade: MockProxy<ERC1271ContractFacade>

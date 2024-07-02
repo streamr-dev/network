@@ -1,9 +1,9 @@
 import { ObservableEventEmitter } from '@streamr/utils'
+import { ContractTransactionReceipt } from 'ethers'
 import { Lifecycle, scoped } from 'tsyringe'
 import { StreamCreationEvent } from './contracts/StreamRegistry'
 import { StorageNodeAssignmentEvent } from './contracts/StreamStorageRegistry'
-import { StreamMessage } from '@streamr/protocol'
-import { ContractTransactionReceipt } from 'ethers'
+import { StreamMessage } from './protocol/StreamMessage'
 
 export interface StreamrClientEvents {
     streamCreated: (payload: StreamCreationEvent) => void

@@ -1,6 +1,7 @@
-import { StreamMessage, StreamMessageError, StreamMessageType, } from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
 import { StreamRegistry } from '../contracts/StreamRegistry'
+import { StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
+import { StreamMessageError } from '../protocol/StreamMessageError'
 import { convertBytesToGroupKeyRequest, convertBytesToGroupKeyResponse } from '../protocol/oldStreamMessageBinaryUtils'
 import { SignatureValidator } from '../signature/SignatureValidator'
 

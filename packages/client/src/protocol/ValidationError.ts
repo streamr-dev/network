@@ -1,4 +1,4 @@
-export default class ValidationError extends Error {
+export class ValidationError extends Error {
 
     public code?: string
 

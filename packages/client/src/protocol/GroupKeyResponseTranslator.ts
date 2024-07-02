@@ -1,6 +1,7 @@
-import { GroupKeyResponse as OldGroupKeyResponse, EncryptedGroupKey as OldEncryptedGroupKey } from '@streamr/protocol'
 import { GroupKey as NewGroupKey, GroupKeyResponse as NewGroupKeyResponse } from '@streamr/trackerless-network'
-import { toEthereumAddress, binaryToHex, hexToBinary } from '@streamr/utils'
+import { binaryToHex, hexToBinary, toEthereumAddress } from '@streamr/utils'
+import { EncryptedGroupKey as OldEncryptedGroupKey } from './EncryptedGroupKey'
+import { GroupKeyResponse as OldGroupKeyResponse } from './GroupKeyResponse'
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class GroupKeyResponseTranslator {

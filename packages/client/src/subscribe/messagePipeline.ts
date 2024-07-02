@@ -1,25 +1,22 @@
 /**
  * Subscription message processing pipeline
  */
-import {
-    StreamID,
-    StreamMessage,
-    StreamMessageError,
-    StreamPartID
-} from '@streamr/protocol'
+import { StreamID, StreamPartID } from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../Config'
 import { DestroySignal } from '../DestroySignal'
+import { StreamRegistry } from '../contracts/StreamRegistry'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
 import { decrypt } from '../encryption/decrypt'
-import { StreamRegistry } from '../contracts/StreamRegistry'
+import { StreamMessage } from '../protocol/StreamMessage'
+import { StreamMessageError } from '../protocol/StreamMessageError'
+import { SignatureValidator } from '../signature/SignatureValidator'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { PushPipeline } from '../utils/PushPipeline'
 import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { MsgChainUtil } from './MsgChainUtil'
 import { Resends } from './Resends'
 import { OrderMessages } from './ordering/OrderMessages'
-import { SignatureValidator } from '../signature/SignatureValidator'
 
 export interface MessagePipelineOptions {
     streamPartId: StreamPartID

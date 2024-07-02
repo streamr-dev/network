@@ -1,16 +1,11 @@
 import {
-    ContentType,
-    EncryptionType,
-    MessageID,
-    MessageRef, SignatureType,
     StreamID,
-    StreamMessage,
     StreamPartID,
     StreamPartIDUtils,
     toStreamID
 } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, collect, waitForCondition, hexToBinary } from '@streamr/utils'
+import { EthereumAddress, collect, hexToBinary, waitForCondition } from '@streamr/utils'
 import last from 'lodash/last'
 import range from 'lodash/range'
 import without from 'lodash/without'
@@ -19,6 +14,9 @@ import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
 import { fromArray } from '../../src/utils/GeneratorUtils'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { MOCK_CONTENT } from '../test-utils/utils'
+import { MessageID } from './../../src/protocol/MessageID'
+import { MessageRef } from './../../src/protocol/MessageRef'
+import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 const PUBLISHER_ID = randomEthereumAddress()

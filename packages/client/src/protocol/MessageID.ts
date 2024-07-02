@@ -1,11 +1,9 @@
-import { validateIsNotNegativeInteger } from '../../utils/validations'
-
-import MessageRef from './MessageRef'
-import { StreamID } from '../../../src/utils/StreamID'
-import { StreamPartID, toStreamPartID } from '../../utils/StreamPartID'
+import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
+import { MessageRef } from './MessageRef'
+import { validateIsNotNegativeInteger } from './validations'
 
-export default class MessageID {
+export class MessageID {
 
     readonly streamId: StreamID
     readonly streamPartition: number

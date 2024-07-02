@@ -1,6 +1,5 @@
 import assert from 'assert'
-
-import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
+import { MessageRef } from '../../src/protocol/MessageRef'
 
 describe('MessageRef', () => {
     describe('comparison of MessageRefs', () => {

@@ -1,4 +1,5 @@
-import { StreamID, StreamMessage, toStreamPartID } from '@streamr/protocol'
+import { StreamID, toStreamPartID } from '@streamr/protocol'
+import { StreamMessage } from '../protocol/StreamMessage'
 import { Logger, collect, wait, areEqualBinaries } from '@streamr/utils'
 import { Message, convertStreamMessageToMessage } from '../Message'
 import { StreamrClientError } from '../StreamrClientError'

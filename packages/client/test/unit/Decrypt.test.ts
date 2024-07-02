@@ -1,15 +1,16 @@
 import 'reflect-metadata'
 
-import { StreamPartIDUtils, StreamMessageAESEncrypted, StreamMessage, EncryptionType } from '@streamr/protocol'
+import { StreamPartIDUtils } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
+import { utf8ToBinary } from '@streamr/utils'
+import { mock } from 'jest-mock-extended'
+import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { DestroySignal } from '../../src/DestroySignal'
 import { GroupKey } from '../../src/encryption/GroupKey'
+import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { decrypt } from '../../src/encryption/decrypt'
 import { createGroupKeyManager, createMockMessage } from '../test-utils/utils'
-import { createPrivateKeyAuthentication } from '../../src/Authentication'
-import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
-import { mock } from 'jest-mock-extended'
-import { utf8ToBinary } from '@streamr/utils'
+import { EncryptionType, StreamMessage, StreamMessageAESEncrypted } from './../../src/protocol/StreamMessage'
 
 describe('Decrypt', () => {
 

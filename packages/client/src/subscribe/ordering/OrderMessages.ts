@@ -1,6 +1,7 @@
-import { StreamID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { EthereumAddress, executeSafePromise } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../../Config'
+import { StreamMessage } from '../../protocol/StreamMessage'
 import { Mapping } from '../../utils/Mapping'
 import { PushBuffer } from '../../utils/PushBuffer'
 import { CacheAsyncFn } from '../../utils/caches'

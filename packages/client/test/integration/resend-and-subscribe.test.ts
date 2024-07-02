@@ -1,11 +1,11 @@
 import 'reflect-metadata'
 
-import { StreamMessageType } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
+import { StreamMessageType } from '../../src/protocol/StreamMessage'
 import { convertBytesToGroupKeyRequest } from '../../src/protocol/oldStreamMessageBinaryUtils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'

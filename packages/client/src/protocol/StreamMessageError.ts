@@ -1,7 +1,7 @@
-import StreamMessage from '../protocol/message_layer/StreamMessage'
-import ValidationError from './ValidationError'
+import { StreamMessage } from './StreamMessage'
+import { ValidationError } from './ValidationError'
 
-export default class StreamMessageError extends ValidationError {
+export class StreamMessageError extends ValidationError {
 
     readonly streamMessage: StreamMessage
 

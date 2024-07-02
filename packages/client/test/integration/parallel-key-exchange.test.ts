@@ -1,21 +1,21 @@
 import 'reflect-metadata'
 
-import { Wallet } from 'ethers'
-import { StreamMessageType } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { collect, toEthereumAddress, wait } from '@streamr/utils'
+import { Wallet } from 'ethers'
+import { mock } from 'jest-mock-extended'
 import range from 'lodash/range'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
+import { StreamMessageType } from '../../src/protocol/StreamMessage'
 import { MessageFactory } from '../../src/publish/MessageFactory'
+import { MessageSigner } from '../../src/signature/MessageSigner'
+import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
-import { mock } from 'jest-mock-extended'
-import { SignatureValidator } from '../../src/signature/SignatureValidator'
-import { MessageSigner } from '../../src/signature/MessageSigner'
 
 const PUBLISHER_COUNT = 50
 const MESSAGE_COUNT_PER_PUBLISHER = 3

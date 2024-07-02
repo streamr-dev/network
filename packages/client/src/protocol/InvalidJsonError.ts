@@ -1,7 +1,7 @@
-import StreamMessage from '../protocol/message_layer/StreamMessage'
-import StreamMessageError from './StreamMessageError'
+import { StreamMessage } from './StreamMessage'
+import { StreamMessageError } from './StreamMessageError'
 
-export default class InvalidJsonError extends StreamMessageError {
+export class InvalidJsonError extends StreamMessageError {
 
     readonly parseError: Error
 

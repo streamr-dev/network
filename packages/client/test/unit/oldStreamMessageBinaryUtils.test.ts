@@ -1,14 +1,9 @@
-import {
-    ContentType,
-    EncryptionType,
-    MessageID,
-    MessageRef,
-    SignatureType,
-    StreamMessage,
-    toStreamID
-} from '@streamr/protocol'
+import { toStreamID } from '@streamr/protocol'
 import { toEthereumAddress } from '@streamr/utils'
 import { convertBytesToStreamMessage, convertStreamMessageToBytes } from '../../src/protocol/oldStreamMessageBinaryUtils'
+import { MessageID } from './../../src/protocol/MessageID'
+import { MessageRef } from './../../src/protocol/MessageRef'
+import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
 
 describe('oldStreamMessageBinaryUtils', () => {
     it('convertStreamMessageToBytes and convertBytesToStreamMessage', () => {

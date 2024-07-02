@@ -1,6 +1,5 @@
 import 'reflect-metadata'
 
-import { StreamMessage } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { Wallet } from 'ethers'
@@ -9,6 +8,7 @@ import { Message } from '../../src/Message'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
+import { StreamMessage } from '../../src/protocol/StreamMessage'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createMockMessage, createTestStream } from '../test-utils/utils'
 

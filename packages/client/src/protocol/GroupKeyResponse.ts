@@ -1,8 +1,7 @@
-import ValidationError from '../../errors/ValidationError'
-
-import StreamMessage, { StreamMessageType } from './StreamMessage'
-import EncryptedGroupKey from './EncryptedGroupKey'
 import { EthereumAddress } from '@streamr/utils'
+import { EncryptedGroupKey } from './EncryptedGroupKey'
+import { StreamMessage, StreamMessageType } from './StreamMessage'
+import { ValidationError } from './ValidationError'
 
 interface Options {
     requestId: string
@@ -10,7 +9,7 @@ interface Options {
     encryptedGroupKeys: EncryptedGroupKey[]
 }
 
-export default class GroupKeyResponse {
+export class GroupKeyResponse {
     readonly requestId: string
     readonly recipient: EthereumAddress
     readonly encryptedGroupKeys: ReadonlyArray<EncryptedGroupKey>

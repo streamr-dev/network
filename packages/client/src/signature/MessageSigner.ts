@@ -1,7 +1,7 @@
-import { inject, Lifecycle, scoped } from 'tsyringe'
 import { MarkRequired } from 'ts-essentials'
-import { SignatureType, StreamMessage, StreamMessageOptions } from '@streamr/protocol'
+import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { SignatureType, StreamMessage, StreamMessageOptions } from '../protocol/StreamMessage'
 import { createSignaturePayload } from './createSignaturePayload'
 
 @scoped(Lifecycle.ContainerScoped)

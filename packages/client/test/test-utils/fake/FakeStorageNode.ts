@@ -1,7 +1,5 @@
 import {
     StreamID,
-    StreamMessage,
-    StreamMessageType,
     StreamPartID,
     toStreamID,
     toStreamPartID
@@ -17,6 +15,7 @@ import { AddressInfo } from 'net'
 import { NetworkNodeFacade } from '../../../src/NetworkNodeFacade'
 import { DEFAULT_PARTITION } from '../../../src/StreamIDBuilder'
 import { StreamPermission } from '../../../src/permission'
+import { StreamMessage, StreamMessageType } from '../../../src/protocol/StreamMessage'
 import { convertStreamMessageToBytes } from '../../../src/protocol/oldStreamMessageBinaryUtils'
 import { ResendType } from '../../../src/subscribe/Resends'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'

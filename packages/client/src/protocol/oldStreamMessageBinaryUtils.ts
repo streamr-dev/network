@@ -1,16 +1,14 @@
-import { 
-    StreamMessage as OldStreamMessage,
-    GroupKeyRequest as OldGroupKeyRequest,
-    GroupKeyResponse as OldGroupKeyResponse
-} from '@streamr/protocol'
-import { StreamMessageTranslator } from './StreamMessageTranslator'
 import {
-    StreamMessage as NewStreamMessage,
     GroupKeyRequest as NewGroupKeyRequest,
-    GroupKeyResponse as NewGroupKeyResponse
+    GroupKeyResponse as NewGroupKeyResponse,
+    StreamMessage as NewStreamMessage
 } from '@streamr/trackerless-network'
-import { GroupKeyResponseTranslator } from './GroupKeyResponseTranslator'
+import { GroupKeyRequest as OldGroupKeyRequest, } from './GroupKeyRequest'
 import { GroupKeyRequestTranslator } from './GroupKeyRequestTranslator'
+import { GroupKeyResponse as OldGroupKeyResponse } from './GroupKeyResponse'
+import { GroupKeyResponseTranslator } from './GroupKeyResponseTranslator'
+import { StreamMessage as OldStreamMessage, } from './StreamMessage'
+import { StreamMessageTranslator } from './StreamMessageTranslator'
 
 export function convertStreamMessageToBytes(oldStreamMessage: OldStreamMessage): Uint8Array {
     return NewStreamMessage.toBinary(StreamMessageTranslator.toProtobuf(oldStreamMessage))

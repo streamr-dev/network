@@ -1,17 +1,11 @@
-import {
-    ContentType,
-    EncryptionType,
-    MessageID,
-    MessageRef,
-    SignatureType,
-    StreamMessage,
-    StreamPartIDUtils
-} from '@streamr/protocol'
-import { Defer, EthereumAddress, toEthereumAddress, wait, waitForCondition, hexToBinary, utf8ToBinary } from '@streamr/utils'
-import { OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
-import { GapFiller, GapFillStrategy } from '../../src/subscribe/ordering/GapFiller'
-import { Gap } from '../../src/subscribe/ordering/OrderedMessageChain'
+import { StreamPartIDUtils } from '@streamr/protocol'
+import { Defer, EthereumAddress, hexToBinary, toEthereumAddress, utf8ToBinary, wait, waitForCondition } from '@streamr/utils'
+import { GapFillStrategy, GapFiller } from '../../src/subscribe/ordering/GapFiller'
+import { Gap, OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
 import { fromArray } from '../../src/utils/GeneratorUtils'
+import { MessageID } from './../../src/protocol/MessageID'
+import { MessageRef } from './../../src/protocol/MessageRef'
+import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
 
 const CONTEXT = {
     streamPartId: StreamPartIDUtils.parse('stream#0'),

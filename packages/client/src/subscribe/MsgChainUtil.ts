@@ -1,5 +1,5 @@
-import { StreamMessage } from '@streamr/protocol'
 import { Gate } from '@streamr/utils'
+import { StreamMessage } from '../protocol/StreamMessage'
 import { PushBuffer } from './../utils/PushBuffer'
 import { Signal } from './../utils/Signal'
 
