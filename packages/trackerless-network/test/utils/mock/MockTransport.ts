@@ -1,5 +1,4 @@
-import { ITransport, PeerDescriptor } from '@streamr/dht'
-import { TransportEvents } from '@streamr/dht'
+import { ITransport, PeerDescriptor, TransportEvents } from '@streamr/dht'
 import { EventEmitter } from 'eventemitter3'
 
 export class MockTransport extends EventEmitter<TransportEvents> implements ITransport {

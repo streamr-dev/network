@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { Defer } from '@streamr/utils'
+import { Defer, merge } from '@streamr/utils'
 import { fastPrivateKey } from '@streamr/test-utils'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
@@ -13,7 +13,6 @@ import {
     createTestStream
 } from '../test-utils/utils'
 import { Message } from '../../src/Message'
-import { merge } from '@streamr/utils'
 
 // this has publisher & subscriber clients
 // publisher begins publishing `maxMessages` messages

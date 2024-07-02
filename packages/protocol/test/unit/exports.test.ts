@@ -11,6 +11,7 @@ describe('exports.ts', () => {
         containers.forEach((container) => {
             Object.entries(container).forEach(([containerKey, containerValue]) => {
                 // @ts-expect-error figure out proper typing here
+                // eslint-disable-next-line import/namespace
                 expect(Protocol[containerKey]).toBe(containerValue)
             })
         })

@@ -1,6 +1,5 @@
-import { Client } from 'cassandra-driver'
+import cassandra, { Client } from 'cassandra-driver'
 import { StreamrClient, Stream, convertBytesToStreamMessage } from '@streamr/sdk'
-import cassandra from 'cassandra-driver'
 import { Wallet } from 'ethers'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import {

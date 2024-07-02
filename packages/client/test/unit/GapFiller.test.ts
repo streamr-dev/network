@@ -8,9 +8,8 @@ import {
     StreamPartIDUtils
 } from '@streamr/protocol'
 import { Defer, EthereumAddress, toEthereumAddress, wait, waitForCondition, hexToBinary, utf8ToBinary } from '@streamr/utils'
-import { OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
+import { OrderedMessageChain, Gap } from '../../src/subscribe/ordering/OrderedMessageChain'
 import { GapFiller, GapFillStrategy } from '../../src/subscribe/ordering/GapFiller'
-import { Gap } from '../../src/subscribe/ordering/OrderedMessageChain'
 import { fromArray } from '../../src/utils/GeneratorUtils'
 
 const CONTEXT = {

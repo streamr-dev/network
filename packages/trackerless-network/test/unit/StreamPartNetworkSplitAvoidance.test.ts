@@ -1,5 +1,4 @@
-import { MIN_NEIGHBOR_COUNT } from '../../src/logic/StreamPartNetworkSplitAvoidance'
-import { StreamPartNetworkSplitAvoidance } from '../../src/logic/StreamPartNetworkSplitAvoidance'
+import { MIN_NEIGHBOR_COUNT, StreamPartNetworkSplitAvoidance } from '../../src/logic/StreamPartNetworkSplitAvoidance'
 import { MockDiscoveryLayerNode } from '../utils/mock/MockDiscoveryLayerNode'
 
 describe('StreamPartNetworkSplitAvoidance', () => {

@@ -1,4 +1,4 @@
-import { DhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress } from '@streamr/dht'
+import { DhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress, NodeType, PeerDescriptor } from '@streamr/dht'
 import { StreamID, toStreamID } from '@streamr/protocol'
 import {
     composeAbortSignals,
@@ -17,7 +17,6 @@ import { NetworkNodeType, NetworkPeerDescriptor, StrictStreamrClientConfig } fro
 import { StreamrClientEventEmitter } from '../events'
 import { WebStreamToNodeStream } from './WebStreamToNodeStream'
 import { SEPARATOR } from './uuid'
-import { NodeType, PeerDescriptor } from '@streamr/dht'
 import { ContractTransactionReceipt } from 'ethers'
 
 const logger = new Logger(module)

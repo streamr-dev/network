@@ -1,4 +1,4 @@
-import { toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { toEthereumAddress, utf8ToBinary, hexToBinary } from '@streamr/utils'
 import assert from 'assert'
 import ValidationError from '../../../../src/errors/ValidationError'
 import EncryptedGroupKey from '../../../../src/protocol/message_layer/EncryptedGroupKey'
@@ -12,7 +12,6 @@ import StreamMessage, {
 } from '../../../../src/protocol/message_layer/StreamMessage'
 import { toStreamID } from '../../../../src/utils/StreamID'
 import { StreamPartIDUtils } from '../../../../src/utils/StreamPartID'
-import { hexToBinary } from '@streamr/utils'
 
 const content = {
     hello: 'world',

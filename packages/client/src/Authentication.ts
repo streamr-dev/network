@@ -1,6 +1,4 @@
-import { BrowserProvider, AbstractSigner, Provider } from 'ethers'
-import { computeAddress } from 'ethers'
-import { Wallet } from 'ethers'
+import { BrowserProvider, AbstractSigner, Provider, computeAddress, Wallet } from 'ethers'
 import { EthereumAddress, hexToBinary, toEthereumAddress, wait, createSignature } from '@streamr/utils'
 import pMemoize from 'p-memoize'
 import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'

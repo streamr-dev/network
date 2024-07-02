@@ -1,10 +1,10 @@
 import * as aedes from 'aedes'
 import * as net from 'net'
 import util from 'util'
-import { ISubscription } from 'mqtt-packet'
 import { Logger } from '@streamr/utils'
 import { ApiAuthentication, isValidAuthentication } from '../../apiAuthentication'
 import Aedes from 'aedes'
+import { ISubscription } from 'async-mqtt'
 
 const logger = new Logger(module)
 

@@ -1,4 +1,4 @@
-import { keyToArrayIndex, toEthereumAddress } from '@streamr/utils'
+import { keyToArrayIndex, toEthereumAddress, merge, utf8ToBinary } from '@streamr/utils'
 import random from 'lodash/random'
 import {
     ContentType,
@@ -17,7 +17,6 @@ import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { MessageFactory, MessageFactoryOptions } from '../../src/publish/MessageFactory'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
-import { merge, utf8ToBinary } from '@streamr/utils'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import { mock } from 'jest-mock-extended'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'

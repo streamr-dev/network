@@ -2,8 +2,7 @@ import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, waitForStableTopology } from '../utils/utils'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
-import { createRandomDhtAddress } from '../../src/identifiers'
-import { getDhtAddressFromRaw } from '../../src/identifiers'
+import { createRandomDhtAddress, getDhtAddressFromRaw } from '../../src/identifiers'
 import { wait } from '@streamr/utils'
 
 const NUM_NODES = 5

@@ -6,8 +6,7 @@ import {
 import { IWebsocketClientConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { Empty } from '../../proto/google/protobuf/empty'
-import { getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { DhtAddress } from '../../identifiers'
+import { getNodeIdFromPeerDescriptor, DhtAddress } from '../../identifiers'
 import { PendingConnection } from '../PendingConnection'
 
 interface WebsocketClientConnectorRpcLocalOptions {

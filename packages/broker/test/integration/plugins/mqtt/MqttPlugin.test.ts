@@ -1,5 +1,4 @@
-import { AsyncMqttClient } from 'async-mqtt'
-import mqtt from 'async-mqtt'
+import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import { Queue } from '@streamr/test-utils'
 import { Message } from '../../../../src/helpers/PayloadFormat'
 import { createMessagingPluginTest } from '../../createMessagingPluginTest'

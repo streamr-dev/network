@@ -1,10 +1,7 @@
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import { WebsocketClientConnectorRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
-import { createMockPeerDescriptor } from '../utils/utils'
-import {
-    WebsocketConnectionRequest
-} from '../../src/proto/packages/dht/protos/DhtRpc'
-import { mockWebsocketClientConnectorRpc } from '../utils/utils'
+import { createMockPeerDescriptor, mockWebsocketClientConnectorRpc } from '../utils/utils'
+import { WebsocketConnectionRequest } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
