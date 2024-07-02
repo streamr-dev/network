@@ -1,4 +1,4 @@
-import { DhtAddress, NodeType, PeerDescriptor, getDhtAddressFromRaw, getRawFromDhtAddress, NodeType, PeerDescriptor } from '@streamr/dht'
+import { DhtAddress, NodeType, PeerDescriptor, getDhtAddressFromRaw, getRawFromDhtAddress } from '@streamr/dht'
 import {
     LengthPrefixedFrameDecoder,
     Logger, StreamID, TheGraphClient, composeAbortSignals, merge,
