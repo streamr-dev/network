@@ -1,9 +1,8 @@
 import { Client } from 'cassandra-driver'
 import { EventEmitter } from 'events'
-import { Logger } from '@streamr/utils'
+import { Logger, merge } from '@streamr/utils'
 import { Batch, BatchId, DoneCallback, InsertRecord } from './Batch'
 import { BucketId } from './Bucket'
-import { merge } from '@streamr/utils'
 
 const INSERT_STATEMENT = 'INSERT INTO stream_data '
     + '(stream_id, partition, bucket_id, ts, sequence_no, publisher_id, msg_chain_id, payload) '

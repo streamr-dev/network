@@ -1,7 +1,6 @@
 import { randomFillSync } from 'crypto'
 import toArray from 'stream-to-array'
-import { Storage } from '../../../../src/plugins/storage/Storage'
-import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
+import { Storage, startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { getTestName, STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { buildMsg } from './Storage.test'
 import { Logger, toEthereumAddress } from '@streamr/utils'

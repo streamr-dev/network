@@ -1,11 +1,10 @@
-import { wait } from '@streamr/utils'
+import { wait, merge } from '@streamr/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
 import { StreamDefinition } from '../../src/types'
 import { PublishMetadata } from '../../src/publish/Publisher'
 import { uid } from './utils'
 import { Message } from './../../src/Message'
-import { merge } from '@streamr/utils'
 
 export function Msg<T extends object = object>(opts?: T): any {
     return merge(

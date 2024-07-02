@@ -1,11 +1,10 @@
 import WebSocket from 'ws'
 import qs from 'qs'
 import { StreamrClient, Subscription } from '@streamr/sdk'
-import { waitForEvent, waitForCondition } from '@streamr/utils'
+import { waitForEvent, waitForCondition, merge } from '@streamr/utils'
 import { WebsocketServer } from '../../../../src/plugins/websocket/WebsocketServer'
 import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'
 import { mock, MockProxy } from 'jest-mock-extended'
-import { merge } from '@streamr/utils'
 
 const PORT = 12398
 const MOCK_STREAM_ID = '0x1234567890123456789012345678901234567890/mock-path'

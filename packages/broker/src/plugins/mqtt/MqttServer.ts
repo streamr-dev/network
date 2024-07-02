@@ -1,7 +1,6 @@
 import * as aedes from 'aedes'
 import * as net from 'net'
 import util from 'util'
-import { ISubscription } from 'mqtt-packet'
 import { Logger } from '@streamr/utils'
 import { ApiAuthentication, isValidAuthentication } from '../../apiAuthentication'
 import Aedes from 'aedes'
@@ -35,7 +34,7 @@ export class MqttServer {
                 this.listener?.onMessageReceived(packet.topic, packet.payload.toString(), client.id)
             }
         })
-        this.aedes.on('subscribe', (subscriptions: ISubscription[], client: aedes.Client) => {
+        this.aedes.on('subscribe', (subscriptions: aedes.Subscription[], client: aedes.Client) => {
             const topics = subscriptions.map((subscription) => subscription.topic)
             topics.forEach((topic) => this.listener?.onSubscribed(topic, client.id))
         })

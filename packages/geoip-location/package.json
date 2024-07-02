@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@streamr/utils": "101.0.0-beta.2",
+    "eventemitter3": "^5.0.0",
     "long-timeout": "^0.1.1",
     "mmdb-lib": "^2.1.0",
     "tar": "^6.2.1",

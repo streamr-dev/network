@@ -11,8 +11,7 @@ import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { Msg, getPublishTestStreamMessages, getWaitForStorage } from '../test-utils/publish'
-import { createTestStream, readUtf8ExampleIndirectly } from '../test-utils/utils'
-import { startFailingStorageNode } from './../test-utils/utils'
+import { createTestStream, readUtf8ExampleIndirectly, startFailingStorageNode } from '../test-utils/utils'
 
 const MAX_MESSAGES = 5
 

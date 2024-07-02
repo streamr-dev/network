@@ -1,4 +1,5 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { RpcCommunicator, ProtoCallContext, toProtoRpcClient } from '@streamr/proto-rpc'
 import { HelloRequest, HelloResponse } from './proto/HelloRpc'
 import { IHelloRpcService } from './proto/HelloRpc.server'
