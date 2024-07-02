@@ -1,4 +1,3 @@
-import { NetworkPeerDescriptor } from '@streamr/sdk'
 import {
     EthereumAddress,
     Logger,
@@ -19,6 +18,7 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway } from './contract'
+import { NetworkPeerDescriptor } from '../Config'
 
 interface RawResult {
     operator: null | { latestHeartbeatTimestamp: string | null }
