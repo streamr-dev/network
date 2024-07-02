@@ -1,5 +1,5 @@
 import { StreamMessage } from '@streamr/protocol'
-import { convertBytesToStreamMessage } from '@streamr/trackerless-network'
+import { convertBytesToStreamMessage } from '@streamr/sdk'
 import { binaryToHex, toLengthPrefixedFrame } from '@streamr/utils'
 
 export interface Format {

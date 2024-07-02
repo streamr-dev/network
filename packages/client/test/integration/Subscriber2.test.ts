@@ -2,18 +2,19 @@ import 'reflect-metadata'
 
 import { ContentType, EncryptionType, MessageID, SignatureType, StreamID, StreamMessage, StreamMessageType } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { Defer, collect, waitForCondition, utf8ToBinary } from '@streamr/utils'
+import { Defer, collect, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import sample from 'lodash/sample'
 import shuffle from 'lodash/shuffle'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { Message, MessageMetadata } from '../../src/Message'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
+import { StreamMessageTranslator } from '../../src/protocol/StreamMessageTranslator'
+import { MessageSigner } from '../../src/signature/MessageSigner'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
-import { MessageSigner } from '../../src/signature/MessageSigner'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
@@ -340,7 +341,7 @@ describe('Subscriber', () => {
                 for (let i = 0; i < NUM_MESSAGES; i++) {
                     const content = (i === MAX_ITEMS) ? 'invalid-json' : JSON.stringify({ foo: i })
                     const msg = await createMockMessage(utf8ToBinary(content), i)
-                    await node.broadcast(msg)
+                    await node.broadcast(StreamMessageTranslator.toProtobuf(msg))
                     published.push(msg)
                 }
 

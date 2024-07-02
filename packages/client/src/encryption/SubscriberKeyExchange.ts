@@ -10,7 +10,6 @@ import {
     StreamPartID,
     StreamPartIDUtils
 } from '@streamr/protocol'
-import { convertBytesToGroupKeyResponse, convertGroupKeyRequestToBytes } from '@streamr/trackerless-network'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
@@ -18,6 +17,7 @@ import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamRegistry } from '../contracts/StreamRegistry'
+import { convertBytesToGroupKeyResponse, convertGroupKeyRequestToBytes } from '../protocol/oldStreamMessageBinaryUtils'
 import { createRandomMsgChainId } from '../publish/messageChain'
 import { MessageSigner } from '../signature/MessageSigner'
 import { SignatureValidator } from '../signature/SignatureValidator'
@@ -74,7 +74,7 @@ export class SubscriberKeyExchange {
         this.ensureStarted = pOnce(async () => {
             // eslint-disable-next-line no-underscore-dangle
             this.rsaKeyPair = await RSAKeyPair.create(config.encryption.rsaKeyLength)
-            await networkNodeFacade.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
+            networkNodeFacade.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.logger.debug('Started')
         })
         this.requestGroupKey = withThrottling((groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID) => {

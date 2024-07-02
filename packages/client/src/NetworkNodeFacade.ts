@@ -2,31 +2,34 @@
  * Wrap a network node.
  */
 import { DhtAddress, PeerDescriptor } from '@streamr/dht'
-import { StreamMessage, StreamPartID } from '@streamr/protocol'
-import {
+import { StreamPartID, StreamMessage as OldStreamMessage } from '@streamr/protocol'
+import { 
     NetworkOptions,
     ProxyDirection,
+    StreamMessage as NewStreamMessage,
     createNetworkNode as createNetworkNode_
 } from '@streamr/trackerless-network'
-import { EthereumAddress, MetricsContext } from '@streamr/utils'
+import { EthereumAddress, Logger, MetricsContext } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { ConfigInjectionToken, NetworkPeerDescriptor, StrictStreamrClientConfig } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { OperatorRegistry } from './contracts/OperatorRegistry'
+import { StreamMessageTranslator } from './protocol/StreamMessageTranslator'
 import { pOnce } from './utils/promises'
 import { peerDescriptorTranslator } from './utils/utils'
+import { pull } from 'lodash'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 /** @deprecated This in an internal interface */
 export interface NetworkNodeStub {
     getNodeId: () => DhtAddress
-    addMessageListener: (listener: (msg: StreamMessage) => void) => void
-    removeMessageListener: (listener: (msg: StreamMessage) => void) => void
+    addMessageListener: (listener: (msg: NewStreamMessage) => void) => void
+    removeMessageListener: (listener: (msg: NewStreamMessage) => void) => void
     join: (streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }) => Promise<void>
     leave: (streamPartId: StreamPartID) => Promise<void>
-    broadcast: (streamMessage: StreamMessage) => Promise<void>
+    broadcast: (streamMessage: NewStreamMessage) => Promise<void>
     getStreamParts: () => StreamPartID[]
     getNeighbors: (streamPartId: StreamPartID) => ReadonlyArray<DhtAddress>
     getPeerDescriptor: () => PeerDescriptor
@@ -66,6 +69,8 @@ export class NetworkNodeFactory {
     }
 }
 
+const logger = new Logger(module)
+
 /**
  * Wrap a network node.
  * Lazily creates & starts node on first call to getNode().
@@ -76,6 +81,7 @@ export class NetworkNodeFacade {
     private cachedNode?: NetworkNodeStub
     private startNodeCalled = false
     private startNodeComplete = false
+    private readonly messageListeners: ((msg: OldStreamMessage) => void)[] = []
     private readonly networkNodeFactory: NetworkNodeFactory
     private readonly operatorRegistry: OperatorRegistry
     private readonly config: Pick<StrictStreamrClientConfig, 'network' | 'contracts'>
@@ -148,6 +154,18 @@ export class NetworkNodeFacade {
             if (!this.destroySignal.isDestroyed()) {
                 await node.start(doJoin)
             }
+            node.addMessageListener((msg) => {
+                if (this.messageListeners.length > 0) {
+                    try {
+                        const translated = StreamMessageTranslator.toClientProtocol(msg)
+                        for (const listener of this.messageListeners) {
+                            listener(translated)
+                        }
+                    } catch (err) {
+                        logger.trace(`Could not translate message`, { err })
+                    }
+                }
+            })
             if (this.destroySignal.isDestroyed()) {
                 await node.stop()
             } else {
@@ -192,19 +210,17 @@ export class NetworkNodeFacade {
         await node.leave(streamPartId)
     }
 
-    async broadcast(msg: StreamMessage): Promise<void> {
+    async broadcast(msg: OldStreamMessage): Promise<void> {
         const node = await this.getNode()
-        node.broadcast(msg)
+        node.broadcast(StreamMessageTranslator.toProtobuf(msg))
     }
     
-    async addMessageListener(listener: (msg: StreamMessage) => void): Promise<void> {
-        const node = await this.getNode()
-        node.addMessageListener(listener)
+    addMessageListener(listener: (msg: OldStreamMessage) => void): void {
+        this.messageListeners.push(listener)
     }
 
-    async removeMessageListener(listener: (msg: StreamMessage) => void): Promise<void> {
-        const node = await this.getNode()
-        node.removeMessageListener(listener)
+    removeMessageListener(listener: (msg: OldStreamMessage) => void): void {
+        pull(this.messageListeners, listener)
     }
 
     async isProxiedStreamPart(streamPartId: StreamPartID): Promise<boolean> {

@@ -1,19 +1,19 @@
 import { StreamID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { EthereumAddress, Logger, randomString, toEthereumAddress } from '@streamr/utils'
 import random from 'lodash/random'
-import without from 'lodash/without'
 import sample from 'lodash/sample'
+import without from 'lodash/without'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { StreamrClientError } from '../StreamrClientError'
 import { StorageNodeRegistry } from '../contracts/StorageNodeRegistry'
+import { convertBytesToStreamMessage } from '../protocol/oldStreamMessageBinaryUtils'
 import { forEach, map, transformError } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { pull } from '../utils/PushBuffer'
 import { PushPipeline } from '../utils/PushPipeline'
 import { FetchHttpStreamResponseError, createQueryString, fetchLengthPrefixedFrameHttpBinaryStream } from '../utils/utils'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
-import { convertBytesToStreamMessage } from '@streamr/trackerless-network'
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 

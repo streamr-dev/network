@@ -11,7 +11,7 @@ import { Storage } from '../../../../src/plugins/storage/Storage'
 import { Readable } from 'stream'
 import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, toStreamID } from '@streamr/protocol'
 import { MetricsContext, toEthereumAddress, hexToBinary, utf8ToBinary, toLengthPrefixedFrame } from '@streamr/utils'
-import { convertStreamMessageToBytes } from '@streamr/trackerless-network'
+import { convertStreamMessageToBytes } from '@streamr/sdk'
 
 const createOutputStream = (msg: StreamMessage[]): Readable => {
     return toReadableStream(...msg.map(convertStreamMessageToBytes))

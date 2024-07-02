@@ -1,5 +1,5 @@
 import { Client } from 'cassandra-driver'
-import { StreamrClient, Stream } from '@streamr/sdk'
+import { StreamrClient, Stream, convertBytesToStreamMessage } from '@streamr/sdk'
 import cassandra from 'cassandra-driver'
 import { Wallet } from 'ethers'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
@@ -11,7 +11,6 @@ import {
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
 import { waitForCondition } from '@streamr/utils'
-import { convertBytesToStreamMessage } from '@streamr/trackerless-network'
 
 jest.setTimeout(30000)
 

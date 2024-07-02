@@ -9,12 +9,6 @@ import {
     Simulator
 } from '@streamr/dht'
 import {
-    ContentType,
-    EncryptionType,
-    MessageID,
-    SignatureType,
-    StreamMessage,
-    StreamMessageType,
     StreamPartID,
     StreamPartIDUtils,
     toStreamID,
@@ -22,11 +16,12 @@ import {
 } from '@streamr/protocol'
 import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import fs from 'fs'
-import { NetworkNode } from '../../src/NetworkNode'
-import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
-import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
-import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
+import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
+import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
+import { NetworkNode } from '../../src/NetworkNode'
+import { ContentType, EncryptionType, SignatureType } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
 
 const numNodes = 10000
 
@@ -86,25 +81,28 @@ const measureJoiningTime = async () => {
     console.log(stream)
     publishInterval = setInterval(() => {
         i += 1
-        const streamMessage = new StreamMessage({
-            messageId: new MessageID(
-                StreamPartIDUtils.getStreamID(stream),
-                0,
-                i,
-                Math.floor(Math.random() * 20000),
-                '2222' as any,
-                'msgChainId'
-            ),
-            content: utf8ToBinary(JSON.stringify({
-                hello: 'world'
-            })),
-            messageType: StreamMessageType.MESSAGE,
-            contentType: ContentType.JSON,
-            encryptionType: EncryptionType.NONE,
+        const streamMessage = {
+            messageId: {
+                streamId: StreamPartIDUtils.getStreamID(stream),
+                streamPartition: 0,
+                timestamp: i,
+                sequenceNumber: Math.floor(Math.random() * 20000),
+                publisherId: hexToBinary('0x2222'),
+                messageChainId: 'msgChainId'
+            },
+            body: {
+                oneofKind: 'contentMessage' as const,
+                contentMessage: {
+                    content: utf8ToBinary(JSON.stringify({
+                        hello: 'world'
+                    })),
+                    contentType: ContentType.JSON,
+                    encryptionType: EncryptionType.NONE,
+                }
+            },
             signature: hexToBinary('0x1234'),
             signatureType: SignatureType.SECP256K1,
-
-        })
+        }
         streamParts.get(stream)!.broadcast(streamMessage)
     }, 1000)
     // get random node from network to use as entrypoint

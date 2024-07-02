@@ -55,7 +55,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             }
         }
         const node = this.streamrClient.getNode()
-        await node.addMessageListener(this.messageListener)
+        node.addMessageListener(this.messageListener)
         this.addHttpServerEndpoint(createDataQueryEndpoint(this.cassandra, metricsContext))
         this.addHttpServerEndpoint(createDataMetadataEndpoint(this.cassandra))
         this.addHttpServerEndpoint(createStorageConfigEndpoint(this.storageConfig))
@@ -63,7 +63,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
 
     async stop(): Promise<void> {
         const node = this.streamrClient!.getNode()
-        await node.removeMessageListener(this.messageListener!)
+        node.removeMessageListener(this.messageListener!)
         await Promise.all(Array.from(this.storageConfig!.getStreamParts()).map((streamPart) => node.leave(streamPart)))
         await this.cassandra!.close()
         this.storageConfig!.destroy()

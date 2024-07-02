@@ -1,6 +1,7 @@
 import { DhtAddress } from '@streamr/dht'
 import { StreamMessage, StreamMessageType } from '@streamr/protocol'
 import { waitForCondition } from '@streamr/utils'
+import { StreamMessageTranslator } from '../../../src/protocol/StreamMessageTranslator'
 import { FakeNetworkNode } from './FakeNetworkNode'
 
 interface Send {
@@ -40,9 +41,10 @@ export class FakeNetwork {
     }
 
     send(msg: StreamMessage, sender: DhtAddress, isRecipient: (networkNode: FakeNetworkNode) => boolean): void {
+        const newStreamMessage = StreamMessageTranslator.toProtobuf(msg)
         const recipients = this.getNodes().filter((n) => isRecipient(n))
         recipients.forEach((n) => {
-            n.messageListeners.forEach((listener) => listener(msg))
+            n.messageListeners.forEach((listener) => listener(newStreamMessage))
         })
         this.sends.push({
             message: msg,
