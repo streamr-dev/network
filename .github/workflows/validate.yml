@@ -54,11 +54,6 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: geoip-location
-  protocol:
-    needs: build
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: protocol
   proto-rpc:
     needs: build
     uses: ./.github/workflows/test-setup.yml

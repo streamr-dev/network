@@ -31,10 +31,6 @@ client:
   - changed-files:
       - any-glob-to-any-file: 'packages/client/*'
       - any-glob-to-any-file: 'packages/client/**/*'
-protocol:
-  - changed-files:
-      - any-glob-to-any-file: 'packages/protocol/*'
-      - any-glob-to-any-file: 'packages/protocol/**/*'
 test-utils:
   - changed-files:
       - any-glob-to-any-file: 'packages/test-utils/*'
