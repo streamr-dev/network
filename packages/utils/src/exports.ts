@@ -119,3 +119,7 @@ export {
     MetricsReport,
     RateMetric
 }
+
+export { StreamID, toStreamID, StreamIDUtils } from './StreamID'
+export { MAX_PARTITION_COUNT, ensureValidStreamPartitionCount, ensureValidStreamPartitionIndex } from './partition'
+export { StreamPartID, toStreamPartID, StreamPartIDUtils } from './StreamPartID'
