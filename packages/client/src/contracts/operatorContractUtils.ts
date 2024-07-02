@@ -1,6 +1,5 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { SignerWithProvider } from '@streamr/sdk'
-import { fastPrivateKey } from '@streamr/test-utils'
 import { Logger, retry } from '@streamr/utils'
 import { Contract, EventLog, JsonRpcProvider, Provider, Wallet, ZeroAddress, parseEther } from 'ethers'
 import { range } from 'lodash'
@@ -14,6 +13,7 @@ import type { SponsorshipFactory as SponsorshipFactoryContract } from '../ethere
 import SponsorshipFactoryArtifact from '../ethereumArtifacts/SponsorshipFactoryAbi.json'
 import type { TestToken as TestTokenContract } from '../ethereumArtifacts/TestToken'
 import TestTokenArtifact from '../ethereumArtifacts/TestTokenAbi.json'
+import crypto from 'crypto'
 
 const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
 
@@ -198,7 +198,8 @@ interface GenerateWalletWithGasAndTokensOpts {
 
 export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGasAndTokensOpts): Promise<Wallet & SignerWithProvider> {
     const provider = getProvider()
-    const newWallet = new Wallet(fastPrivateKey())
+    const privateKey = crypto.randomBytes(32).toString('hex')
+    const newWallet = new Wallet(privateKey)
     const adminWallet = getAdminWallet()
     const token = (opts?.chainConfig !== undefined)
         ? new Contract(opts.chainConfig.contracts.DATA, TestTokenArtifact, adminWallet) as unknown as TestTokenContract
