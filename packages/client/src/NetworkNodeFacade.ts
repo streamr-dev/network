@@ -176,7 +176,10 @@ export class NetworkNodeFacade {
 
     startNode: () => Promise<unknown> = this.startNodeTask
 
-    getNode: () => Promise<NetworkNodeStub> = this.startNodeTask
+    getNode(): Promise<NetworkNodeStub> {
+        this.assertNotDestroyed()
+        return this.startNodeTask()
+    }
 
     async getNodeId(): Promise<DhtAddress> {
         const node = await this.getNode()
