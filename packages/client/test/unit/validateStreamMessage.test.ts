@@ -1,14 +1,17 @@
-import { Wallet } from 'ethers'
-import { EthereumAddress, toEthereumAddress, hexToBinary } from '@streamr/utils'
-import { StreamMessage, toStreamID, toStreamPartID } from '@streamr/protocol'
+import 'reflect-metadata'
+
+import { toStreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { StreamRegistry } from '../../src/contracts/StreamRegistry'
+import { EthereumAddress, hexToBinary, toEthereumAddress } from '@streamr/utils'
+import { Wallet } from 'ethers'
+import { mock } from 'jest-mock-extended'
 import { Stream } from '../../src/Stream'
+import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
+import { StreamRegistry } from '../../src/contracts/StreamRegistry'
+import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
 import { createMockMessage } from '../test-utils/utils'
-import { SignatureValidator } from '../../src/signature/SignatureValidator'
-import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
-import { mock } from 'jest-mock-extended'
+import { StreamMessage } from './../../src/protocol/StreamMessage'
 
 const publisherWallet = fastWallet()
 const PARTITION_COUNT = 3

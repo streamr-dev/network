@@ -1,16 +1,17 @@
-import { StreamID, StreamMessage } from '@streamr/protocol'
+import { StreamID } from '@streamr/protocol'
 import { MarkOptional } from 'ts-essentials'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken } from '../Config'
 import { DestroySignal } from '../DestroySignal'
-import { GroupKeyManager } from '../encryption/GroupKeyManager'
-import { StreamStorageRegistry } from '../contracts/StreamStorageRegistry'
 import { StreamRegistry } from '../contracts/StreamRegistry'
+import { StreamStorageRegistry } from '../contracts/StreamStorageRegistry'
+import { GroupKeyManager } from '../encryption/GroupKeyManager'
+import { StreamMessage } from '../protocol/StreamMessage'
+import { SignatureValidator } from '../signature/SignatureValidator'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { PushPipeline } from '../utils/PushPipeline'
 import { Resends } from './Resends'
 import { MessagePipelineOptions, createMessagePipeline as _createMessagePipeline } from './messagePipeline'
-import { SignatureValidator } from '../signature/SignatureValidator'
 
 type MessagePipelineFactoryOptions = MarkOptional<Omit<MessagePipelineOptions,
     'resends' |

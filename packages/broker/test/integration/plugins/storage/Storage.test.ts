@@ -1,12 +1,20 @@
-import { randomFillSync } from 'crypto'
+import { toStreamID } from '@streamr/protocol'
+import {
+    ContentType,
+    EncryptionType,
+    MessageID,
+    SignatureType,
+    StreamMessage,
+    convertBytesToStreamMessage,
+    convertStreamMessageToBytes
+} from '@streamr/sdk'
+import { EthereumAddress, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import { Client } from 'cassandra-driver'
+import { randomFillSync } from 'crypto'
+import { Readable } from 'stream'
 import toArray from 'stream-to-array'
 import { Storage, startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { ContentType, toStreamID, StreamMessage, MessageID, EncryptionType, SignatureType } from '@streamr/protocol'
-import { EthereumAddress, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
-import { convertBytesToStreamMessage, convertStreamMessageToBytes } from '@streamr/sdk'
-import { Readable } from 'stream'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'

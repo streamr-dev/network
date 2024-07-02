@@ -1,5 +1,6 @@
 import crypto, { CipherKey } from 'crypto'
-import { StreamMessage, StreamMessageAESEncrypted, StreamMessageError } from '@streamr/protocol'
+import { StreamMessage, StreamMessageAESEncrypted } from '../protocol/StreamMessage'
+import { StreamMessageError } from '../protocol/StreamMessageError'
 import { GroupKey } from './GroupKey'
 
 export class DecryptError extends StreamMessageError {

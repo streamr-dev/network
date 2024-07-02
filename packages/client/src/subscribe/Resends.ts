@@ -1,4 +1,5 @@
-import { StreamID, StreamMessage, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { StreamMessage } from '../protocol/StreamMessage'
 import { EthereumAddress, Logger, randomString, toEthereumAddress } from '@streamr/utils'
 import random from 'lodash/random'
 import sample from 'lodash/sample'

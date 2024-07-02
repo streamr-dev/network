@@ -1,4 +1,5 @@
-import { StreamID, StreamMessage } from '@streamr/protocol'
+import { StreamID } from '@streamr/protocol'
+import { StreamMessage } from '../protocol/StreamMessage'
 import { EthereumAddress } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { StrictStreamrClientConfig } from '../Config'

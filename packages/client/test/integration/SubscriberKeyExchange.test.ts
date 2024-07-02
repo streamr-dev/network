@@ -1,12 +1,7 @@
 import 'reflect-metadata'
 
 import {
-    ContentType,
-    EncryptionType,
-    SignatureType,
     StreamID,
-    StreamMessage,
-    StreamMessageType,
     StreamPartID,
     StreamPartIDUtils,
     toStreamPartID
@@ -24,6 +19,7 @@ import {
     createRelativeTestStreamId,
     getLocalGroupKeyStore
 } from '../test-utils/utils'
+import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 
 describe('SubscriberKeyExchange', () => {
 

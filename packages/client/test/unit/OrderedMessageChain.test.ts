@@ -1,14 +1,9 @@
-import {
-    ContentType,
-    EncryptionType,
-    MessageID,
-    MessageRef,
-    SignatureType,
-    StreamMessage,
-    toStreamID
-} from '@streamr/protocol'
-import { toEthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { toStreamID } from '@streamr/protocol'
+import { hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import { Gap, OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
+import { MessageID } from './../../src/protocol/MessageID'
+import { MessageRef } from './../../src/protocol/MessageRef'
+import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
 
 const STREAM_ID = toStreamID('stream')
 const PUBLISHER_ID = toEthereumAddress('0x0000000000000000000000000000000000000001')

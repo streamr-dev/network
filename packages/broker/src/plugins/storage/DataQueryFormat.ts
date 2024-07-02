@@ -1,5 +1,4 @@
-import { StreamMessage } from '@streamr/protocol'
-import { convertBytesToStreamMessage } from '@streamr/sdk'
+import { StreamMessage, convertBytesToStreamMessage } from '@streamr/sdk'
 import { binaryToHex, toLengthPrefixedFrame } from '@streamr/utils'
 
 export interface Format {

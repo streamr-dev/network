@@ -1,11 +1,11 @@
 import 'reflect-metadata'
 
-import { StreamMessage } from '@streamr/protocol'
 import { fastWallet, testOnlyInNodeJs } from '@streamr/test-utils'
 import { collect, toEthereumAddress } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
 import { GroupKey } from '../../src/encryption/GroupKey'
+import { StreamMessage } from '../../src/protocol/StreamMessage'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'

@@ -1,5 +1,5 @@
-import { validateIsDefined, validateIsNotNegativeInteger } from '../../../src/utils/validations'
-import ValidationError from '../../../src/errors/ValidationError'
+import { ValidationError } from '../../src/protocol/ValidationError'
+import { validateIsDefined, validateIsNotNegativeInteger } from '../../src/protocol/validations'
 
 describe('validations', () => {
     describe('validateIsDefined', () => {

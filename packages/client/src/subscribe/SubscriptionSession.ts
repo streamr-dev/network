@@ -1,11 +1,12 @@
-import { StreamMessage, StreamMessageType, StreamPartID } from '@streamr/protocol'
+import { StreamPartID } from '@streamr/protocol'
+import { EthereumAddress } from '@streamr/utils'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
+import { StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
 import { PushPipeline } from '../utils/PushPipeline'
 import { Scaffold } from '../utils/Scaffold'
 import { Signal } from '../utils/Signal'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
 import { Subscription } from './Subscription'
-import { EthereumAddress } from '@streamr/utils'
 
 /**
  * Manages adding & removing subscriptions to node as needed.

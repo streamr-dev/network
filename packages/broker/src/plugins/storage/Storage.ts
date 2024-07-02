@@ -1,15 +1,14 @@
-import { auth, Client, types, tracker } from 'cassandra-driver'
-import { MetricsContext, RateMetric, Logger } from '@streamr/utils'
-import { BatchManager } from './BatchManager'
-import { Readable, Transform, pipeline } from 'stream'
+import { StreamMessage, convertStreamMessageToBytes } from '@streamr/sdk'
+import { Logger, MetricsContext, RateMetric } from '@streamr/utils'
+import { Client, auth, tracker, types } from 'cassandra-driver'
 import { EventEmitter } from 'events'
-import { v1 as uuidv1 } from 'uuid'
 import merge2 from 'merge2'
-import { StreamMessage } from '@streamr/protocol'
-import { BucketManager, BucketManagerOptions } from './BucketManager'
+import { Readable, Transform, pipeline } from 'stream'
+import { v1 as uuidv1 } from 'uuid'
+import { BatchManager } from './BatchManager'
 import { Bucket, BucketId } from './Bucket'
+import { BucketManager, BucketManagerOptions } from './BucketManager'
 import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE } from './dataQueryEndpoint'
-import { convertStreamMessageToBytes } from '@streamr/sdk'
 
 const logger = new Logger(module)
 

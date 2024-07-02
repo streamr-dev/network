@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { ContentType, EncryptionType, MessageID, SignatureType, StreamID, StreamMessage, StreamMessageType } from '@streamr/protocol'
+import { StreamID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { Defer, collect, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import sample from 'lodash/sample'
@@ -15,6 +15,8 @@ import { Subscription } from '../../src/subscribe/Subscription'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { createTestStream } from '../test-utils/utils'
+import { MessageID } from './../../src/protocol/MessageID'
+import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8

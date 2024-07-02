@@ -1,19 +1,15 @@
-import { waitForAssignmentsToPropagate } from '../../src/utils/waitForAssignmentsToPropagate'
-import {
-    ContentType, EncryptionType,
-    MessageID, SignatureType,
-    StreamID,
-    StreamMessage,
-    toStreamID,
-    toStreamPartID,
-    StreamMessageType
-} from '@streamr/protocol'
+import 'reflect-metadata'
+
+import { StreamID, toStreamID, toStreamPartID } from '@streamr/protocol'
+import { utf8ToBinary, wait } from '@streamr/utils'
 import range from 'lodash/range'
 import shuffle from 'lodash/shuffle'
-import { wait, utf8ToBinary } from '@streamr/utils'
-import { createRandomAuthentication, mockLoggerFactory } from '../test-utils/utils'
-import { MessageStream } from '../../src/subscribe/MessageStream'
 import { MessageSigner } from '../../src/signature/MessageSigner'
+import { MessageStream } from '../../src/subscribe/MessageStream'
+import { waitForAssignmentsToPropagate } from '../../src/utils/waitForAssignmentsToPropagate'
+import { createRandomAuthentication, mockLoggerFactory } from '../test-utils/utils'
+import { MessageID } from './../../src/protocol/MessageID'
+import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 
 const authentication = createRandomAuthentication()
 const messageSigner = new MessageSigner(authentication)

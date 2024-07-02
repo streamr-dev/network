@@ -1,36 +1,29 @@
 import 'reflect-metadata'
 
-import { Wallet } from 'ethers'
-import {
-    ContentType,
-    EncryptionType,
-    MessageID,
-    SignatureType,
-    StreamMessage,
-    StreamPartID,
-    StreamPartIDUtils,
-    StreamMessageType
-} from '@streamr/protocol'
+import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
-import { collect, toEthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { collect, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { StrictStreamrClientConfig } from '../../src/Config'
 import { DestroySignal } from '../../src/DestroySignal'
 import { Stream } from '../../src/Stream'
+import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
+import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { DecryptError, EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../../src/events'
-import { StreamRegistry } from '../../src/contracts/StreamRegistry'
+import { MessageSigner } from '../../src/signature/MessageSigner'
+import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { createMessagePipeline } from '../../src/subscribe/messagePipeline'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { mockLoggerFactory } from '../test-utils/utils'
-import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
-import { SignatureValidator } from '../../src/signature/SignatureValidator'
-import { MessageSigner } from '../../src/signature/MessageSigner'
+import { MessageID } from './../../src/protocol/MessageID'
+import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 
 const CONTENT = {
     foo: 'bar'

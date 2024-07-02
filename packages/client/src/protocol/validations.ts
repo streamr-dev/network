@@ -1,4 +1,4 @@
-import ValidationError from '../errors/ValidationError'
+import { ValidationError } from './ValidationError'
 
 export function validateIsDefined(varName: string, varValue: unknown): void | never {
     if (varValue === undefined) {

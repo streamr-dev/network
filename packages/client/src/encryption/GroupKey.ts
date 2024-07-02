@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import { EncryptedGroupKey } from '@streamr/protocol'
+import { EncryptedGroupKey } from '../protocol/EncryptedGroupKey'
 import { uuid } from '../utils/uuid'
 import { EncryptionUtil } from './EncryptionUtil'
 export class GroupKeyError extends Error {

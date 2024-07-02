@@ -1,6 +1,6 @@
 import { DhtAddress } from '@streamr/dht'
-import { StreamMessage, StreamMessageType } from '@streamr/protocol'
 import { waitForCondition } from '@streamr/utils'
+import { StreamMessage, StreamMessageType } from '../../../src/protocol/StreamMessage'
 import { StreamMessageTranslator } from '../../../src/protocol/StreamMessageTranslator'
 import { FakeNetworkNode } from './FakeNetworkNode'
 

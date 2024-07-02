@@ -1,14 +1,4 @@
-import {
-    ContentType as OldContentType,
-    EncryptedGroupKey as OldEncryptedGroupKey,
-    EncryptionType as OldEncryptionType,
-    MessageID as OldMessageID,
-    MessageRef as OldMessageRef,
-    SignatureType as OldSignatureType,
-    StreamID,
-    StreamMessage as OldStreamMessage,
-    StreamMessageType as OldStreamMessageType
-} from '@streamr/protocol'
+import { StreamID } from '@streamr/protocol'
 import {
     ContentType as NewContentType,
     EncryptionType as NewEncryptionType,
@@ -21,6 +11,16 @@ import {
     StreamMessage as NewStreamMessage
 } from '@streamr/trackerless-network'
 import { binaryToHex, hexToBinary, toEthereumAddress } from '@streamr/utils'
+import { EncryptedGroupKey as OldEncryptedGroupKey } from './EncryptedGroupKey'
+import { MessageID as OldMessageID } from './MessageID'
+import { MessageRef as OldMessageRef } from './MessageRef'
+import {
+    ContentType as OldContentType,
+    EncryptionType as OldEncryptionType,
+    SignatureType as OldSignatureType,
+    StreamMessage as OldStreamMessage,
+    StreamMessageType as OldStreamMessageType
+} from './StreamMessage'
 
 const oldToNewEncryptionType = (type: OldEncryptionType): NewEncryptionType => {
     if (type === OldEncryptionType.AES) {

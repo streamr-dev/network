@@ -1,27 +1,27 @@
-import {
-    ContentType,
-    EncryptedGroupKey,
-    EncryptionType,
-    MessageID,
-    MessageRef,
-    SignatureType,
-    StreamID,
-    StreamMessage,
-    StreamMessageType
-} from '@streamr/protocol'
+import { StreamID } from '@streamr/protocol'
 import { EthereumAddress, keyToArrayIndex, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import random from 'lodash/random'
 import { Authentication } from '../Authentication'
 import { StreamrClientError } from '../StreamrClientError'
-import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { StreamRegistry } from '../contracts/StreamRegistry'
+import { EncryptionUtil } from '../encryption/EncryptionUtil'
+import { EncryptedGroupKey } from '../protocol/EncryptedGroupKey'
+import { MessageID } from '../protocol/MessageID'
+import { MessageRef } from '../protocol/MessageRef'
+import {
+    ContentType,
+    EncryptionType,
+    SignatureType,
+    StreamMessage,
+    StreamMessageType
+} from '../protocol/StreamMessage'
+import { MessageSigner } from '../signature/MessageSigner'
+import { SignatureValidator } from '../signature/SignatureValidator'
 import { Mapping } from '../utils/Mapping'
 import { formLookupKey } from '../utils/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { PublishMetadata } from './Publisher'
 import { createMessageRef, createRandomMsgChainId } from './messageChain'
-import { SignatureValidator } from '../signature/SignatureValidator'
-import { MessageSigner } from '../signature/MessageSigner'
 
 export interface MessageFactoryOptions {
     streamId: StreamID

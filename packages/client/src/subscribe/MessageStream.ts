@@ -3,8 +3,8 @@
  * Subscriptions are MessageStreams.
  * Not all MessageStreams are Subscriptions.
  */
-import { StreamMessage } from '@streamr/protocol'
 import omit from 'lodash/omit'
+import { StreamMessage } from '../protocol/StreamMessage'
 import { Pipeline, PipelineTransform } from '../utils/Pipeline'
 import { PushPipeline } from '../utils/PushPipeline'
 import { Signal } from '../utils/Signal'
