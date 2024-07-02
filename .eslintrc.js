@@ -3,6 +3,8 @@ module.exports = {
         "eslint:recommended",
         "plugin:@typescript-eslint/eslint-recommended",
         'plugin:@typescript-eslint/recommended-requiring-type-checking',
+        'plugin:import/recommended',
+        'plugin:import/typescript',
         'eslint-config-streamr-ts'
     ],
     parser: '@typescript-eslint/parser',
@@ -90,6 +92,9 @@ module.exports = {
         '@typescript-eslint/unbound-method': 'off',
         '@typescript-eslint/no-base-to-string': 'off',
         '@typescript-eslint/no-unsafe-enum-comparison': 'off',
-        '@typescript-eslint/no-redundant-type-constituents': 'off'
+        '@typescript-eslint/no-redundant-type-constituents': 'off',
+        'import/no-extraneous-dependencies': ['error', {
+            "packageDir": ['.', '../..']
+        }]
     }
 }
