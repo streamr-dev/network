@@ -37,7 +37,6 @@
     "eventemitter3": "^5.0.0",
     "heap": "^0.2.6",
     "ipaddr.js": "^2.0.1",
-    "jest-matcher-utils": "^29.5.0",
     "k-bucket": "^5.1.0",
     "lodash": "^4.17.21",
     "lru-cache": "10.2.0",
@@ -57,6 +56,7 @@
     "@types/websocket": "^1.0.10",
     "@types/ws": "^8.5.10",
     "jest-leak-detector": "^27.3.1",
+    "jest-matcher-utils": "^29.5.0",
     "patch-package": "^8.0.0",
     "ts-essentials": "^9.4.1",
     "ts-node": "^10.9.2"
