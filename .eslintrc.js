@@ -94,6 +94,10 @@ module.exports = {
         '@typescript-eslint/no-unsafe-enum-comparison': 'off',
         '@typescript-eslint/no-redundant-type-constituents': 'off',
         'import/no-extraneous-dependencies': ['error', {
+            'devDependencies': [
+                'test/**/*.ts',
+                'test/**/*.js'
+            ],
             "packageDir": ['.', '../..']
         }]
     }
