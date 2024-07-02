@@ -1,5 +1,5 @@
 import { StreamPartIDUtils, toStreamID } from '@streamr/protocol'
-import { hexToBinary, toEthereumAddress, utf8ToBinary, hexToBinary } from '@streamr/utils'
+import { hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
 import { EncryptedGroupKey } from '../../src/protocol/EncryptedGroupKey'
 import { MessageID } from '../../src/protocol/MessageID'
