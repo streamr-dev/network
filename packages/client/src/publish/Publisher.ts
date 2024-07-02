@@ -108,7 +108,7 @@ export class Publisher {
                     },
                     partition
                 )
-                await this.node.publishToNode(message)
+                await this.node.broadcast(message)
                 return message
             } catch (e) {
                 const errorCode = (e instanceof StreamrClientError) ? e.code : 'UNKNOWN_ERROR'

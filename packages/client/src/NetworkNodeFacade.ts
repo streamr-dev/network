@@ -185,27 +185,6 @@ export class NetworkNodeFacade {
         return node.getNodeId()
     }
 
-    /**
-     * Calls publish on node after starting it.
-     * Basically a wrapper around: (await getNode()).publish(…)
-     * but will be sync in case that node is already started.
-     * Zalgo intentional. See below.
-     */
-    async publishToNode(streamMessage: StreamMessage): Promise<void> {
-        // NOTE: function is intentionally not async for performance reasons.
-        // Will call cachedNode.publish immediately if cachedNode is set.
-        // Otherwise will wait for node to start.
-        this.destroySignal.assertNotDestroyed()
-        if (this.isStarting()) {
-            // use .then instead of async/await so
-            // this.cachedNode.publish call can be sync
-            return this.startNodeTask().then((node) =>
-                node.broadcast(streamMessage)
-            )
-        }
-        return this.cachedNode!.broadcast(streamMessage)
-    }
-
     async join(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }): Promise<void> {
         const node = await this.getNode()
         await node.join(streamPartId, neighborRequirement)
@@ -216,7 +195,6 @@ export class NetworkNodeFacade {
         await node.leave(streamPartId)
     }
 
-    // TODO should we remove publishToNode method and use the broacast method instead?
     async broadcast(msg: StreamMessage): Promise<void> {
         const node = await this.getNode()
         node.broadcast(msg)
