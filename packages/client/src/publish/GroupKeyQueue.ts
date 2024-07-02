@@ -1,7 +1,7 @@
-import { StreamID } from '@streamr/protocol'
+import { StreamID } from '@streamr/utils'
+import { Authentication } from '../Authentication'
 import { GroupKey } from '../encryption/GroupKey'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
-import { Authentication } from '../Authentication'
 
 export interface GroupKeySequence {
     current: GroupKey

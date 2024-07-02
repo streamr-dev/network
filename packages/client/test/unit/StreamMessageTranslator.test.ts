@@ -1,11 +1,10 @@
-import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import {
     ContentType as NewContentType,
     EncryptionType as NewEncryptionType,
     SignatureType as NewSignatureType,
     StreamMessage as NewStreamMessage
 } from '@streamr/trackerless-network'
-import { EthereumAddress, binaryToHex, binaryToUtf8, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { EthereumAddress, StreamPartID, StreamPartIDUtils, binaryToHex, binaryToUtf8, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import { MessageID as OldMessageID } from '../../src/protocol/MessageID'
 import {
     ContentType as OldContentType,

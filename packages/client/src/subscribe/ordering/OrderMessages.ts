@@ -1,5 +1,4 @@
-import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { EthereumAddress, executeSafePromise } from '@streamr/utils'
+import { EthereumAddress, StreamID, StreamPartID, StreamPartIDUtils, executeSafePromise } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../../Config'
 import { StreamMessage } from '../../protocol/StreamMessage'
 import { Mapping } from '../../utils/Mapping'

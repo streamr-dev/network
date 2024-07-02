@@ -1,19 +1,18 @@
-import { DhtAddress, PeerDescriptor, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '@streamr/dht'
-import { NodeList } from '../NodeList'
-import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
-import {
-    ContentDeliveryRpcClient, HandshakeRpcClient
-} from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { DhtAddress, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { Logger, StreamPartID } from '@streamr/utils'
 import {
     InterleaveRequest,
     InterleaveResponse,
     StreamPartHandshakeRequest,
     StreamPartHandshakeResponse
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { Logger } from '@streamr/utils'
-import { HandshakeRpcRemote, INTERLEAVE_REQUEST_TIMEOUT } from './HandshakeRpcRemote'
+import {
+    ContentDeliveryRpcClient, HandshakeRpcClient
+} from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
+import { NodeList } from '../NodeList'
 import { HandshakeRpcLocal } from './HandshakeRpcLocal'
-import { StreamPartID } from '@streamr/protocol'
+import { HandshakeRpcRemote, INTERLEAVE_REQUEST_TIMEOUT } from './HandshakeRpcRemote'
 
 interface HandshakerOptions {
     localPeerDescriptor: PeerDescriptor

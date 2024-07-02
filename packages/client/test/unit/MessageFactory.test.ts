@@ -1,6 +1,5 @@
-import { MAX_PARTITION_COUNT, toStreamID } from '@streamr/protocol'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
-import { keyToArrayIndex, merge, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { MAX_PARTITION_COUNT, keyToArrayIndex, merge, toEthereumAddress, toStreamID, utf8ToBinary } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'
 import random from 'lodash/random'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'

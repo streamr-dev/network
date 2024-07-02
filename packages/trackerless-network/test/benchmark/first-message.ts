@@ -9,12 +9,13 @@ import {
     Simulator
 } from '@streamr/dht'
 import {
+    hexToBinary,
     StreamPartID,
     StreamPartIDUtils,
     toStreamID,
-    toStreamPartID
-} from '@streamr/protocol'
-import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
+    toStreamPartID,
+    utf8ToBinary, waitForEvent3
+} from '@streamr/utils'
 import fs from 'fs'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'

@@ -1,4 +1,4 @@
-import { StreamPartID } from '@streamr/protocol'
+import { StreamPartID } from '@streamr/utils'
 
 export const createMockStorageConfig = (streamParts: StreamPartID[]): any => {
     return {

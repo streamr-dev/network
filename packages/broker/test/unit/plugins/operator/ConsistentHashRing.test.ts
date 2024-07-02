@@ -1,6 +1,5 @@
 import { DhtAddress } from '@streamr/dht'
-import { toStreamID, toStreamPartID } from '@streamr/protocol'
-import { randomString } from '@streamr/utils'
+import { randomString, toStreamID, toStreamPartID } from '@streamr/utils'
 import random from 'lodash/random'
 import range from 'lodash/range'
 import { ConsistentHashRing } from '../../../../src/plugins/operator/ConsistentHashRing'

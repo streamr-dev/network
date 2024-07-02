@@ -1,7 +1,6 @@
 import { DhtAddress } from '@streamr/dht'
-import { StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { eventsWithArgsToArray } from '@streamr/test-utils'
-import { wait } from '@streamr/utils'
+import { StreamID, StreamPartID, toStreamID, toStreamPartID, wait } from '@streamr/utils'
 import EventEmitter3 from 'eventemitter3'
 import range from 'lodash/range'
 import { MaintainTopologyHelperEvents } from '../../../../src/plugins/operator/MaintainTopologyHelper'

@@ -1,5 +1,4 @@
-import { toStreamID } from '@streamr/protocol'
-import { toEthereumAddress } from '@streamr/utils'
+import { toEthereumAddress, toStreamID } from '@streamr/utils'
 import { convertBytesToStreamMessage, convertStreamMessageToBytes } from '../../src/protocol/oldStreamMessageBinaryUtils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'

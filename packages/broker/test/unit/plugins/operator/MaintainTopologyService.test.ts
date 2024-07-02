@@ -1,10 +1,9 @@
-import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
-import { StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { mock, MockProxy } from 'jest-mock-extended'
 import { StreamrClient, Subscription } from '@streamr/sdk'
-import { wait, waitForCondition } from '@streamr/utils'
-import { StreamPartAssignmentEvents } from '../../../../src/plugins/operator/StreamPartAssignments'
+import { StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID, wait, waitForCondition } from '@streamr/utils'
 import EventEmitter3 from 'eventemitter3'
+import { MockProxy, mock } from 'jest-mock-extended'
+import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
+import { StreamPartAssignmentEvents } from '../../../../src/plugins/operator/StreamPartAssignments'
 
 interface MockSubscription {
     unsubscribe: jest.MockedFn<Subscription['unsubscribe']>

@@ -1,18 +1,17 @@
 import 'reflect-metadata'
 
-import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
-import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
+import { fastPrivateKey, randomEthereumAddress } from '@streamr/test-utils'
+import { toEthereumAddress, toStreamID, toStreamPartID } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import { mock, MockProxy } from 'jest-mock-extended'
-import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
-import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
-import { StreamrClientEventEmitter } from '../../src/events'
+import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { DestroySignal } from '../../src/DestroySignal'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { toStreamID, toStreamPartID } from '@streamr/protocol'
-import { fastPrivateKey, randomEthereumAddress } from '@streamr/test-utils'
-import { createPrivateKeyAuthentication } from '../../src/Authentication'
-import { Wallet } from 'ethers'
-import { toEthereumAddress } from '@streamr/utils'
+import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
+import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
+import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
+import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
+import { StreamrClientEventEmitter } from '../../src/events'
 
 describe('GroupKeyManager', () => {
     let groupKeyStore: MockProxy<LocalGroupKeyStore>

@@ -1,11 +1,10 @@
-import { PeerDescriptor, Simulator, SimulatorTransport, LatencyType } from '@streamr/dht'
+import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
+import { randomEthereumAddress } from '@streamr/test-utils'
+import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { NetworkStack } from '../../src/NetworkStack'
 import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
-import { StreamPartIDUtils } from '@streamr/protocol'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
-import { waitForCondition } from '@streamr/utils'
-import { randomEthereumAddress } from '@streamr/test-utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 

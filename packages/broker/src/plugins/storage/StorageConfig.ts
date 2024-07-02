@@ -1,9 +1,8 @@
-import { EthereumAddress, keyToArrayIndex, Logger } from '@streamr/utils'
-import { StreamPartID } from '@streamr/protocol'
 import { Stream, StreamrClient } from '@streamr/sdk'
+import { EthereumAddress, keyToArrayIndex, Logger, StreamPartID } from '@streamr/utils'
 import { Diff, SetMembershipSynchronizer } from './SetMembershipSynchronizer'
-import { StoragePoller } from './StoragePoller'
 import { StorageEventListener } from './StorageEventListener'
+import { StoragePoller } from './StoragePoller'
 
 const logger = new Logger(module)
 

@@ -8,14 +8,13 @@ import {
     getDhtAddressFromRaw,
     getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
-import { StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID } from '@streamr/protocol'
 import {
     EthereumAddress,
     Logger,
     Metric,
     MetricsContext,
     MetricsDefinition,
-    RateMetric
+    RateMetric, StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID
 } from '@streamr/utils'
 import { createHash } from 'crypto'
 import { EventEmitter } from 'eventemitter3'

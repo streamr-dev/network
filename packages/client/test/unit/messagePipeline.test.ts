@@ -1,8 +1,7 @@
 import 'reflect-metadata'
 
-import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
-import { collect, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, collect, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'

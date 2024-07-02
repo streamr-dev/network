@@ -1,9 +1,8 @@
-import { StreamID } from '@streamr/protocol'
-import { StreamMetadata } from '../../../src/Stream'
-import { StreamPermission } from '../../../src/permission'
-import { EthereumAddress, Multimap } from '@streamr/utils'
-import { StorageNodeMetadata } from '../../../src/contracts/StorageNodeRegistry'
+import { EthereumAddress, Multimap, StreamID } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
+import { StreamMetadata } from '../../../src/Stream'
+import { StorageNodeMetadata } from '../../../src/contracts/StorageNodeRegistry'
+import { StreamPermission } from '../../../src/permission'
 
 export type PublicPermissionTarget = 'public'
 export const PUBLIC_PERMISSION_TARGET: PublicPermissionTarget = 'public'

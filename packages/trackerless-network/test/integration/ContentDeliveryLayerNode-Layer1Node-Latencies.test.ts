@@ -1,11 +1,10 @@
 import { DhtNode, LatencyType, PeerDescriptor, Simulator, SimulatorTransport, getNodeIdFromPeerDescriptor } from '@streamr/dht'
-import { waitForCondition } from '@streamr/utils'
+import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
+import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 
 describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
     const otherNodeCount = 64

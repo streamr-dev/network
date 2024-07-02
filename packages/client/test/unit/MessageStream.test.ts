@@ -1,7 +1,6 @@
 import 'reflect-metadata'
 
-import { toStreamID } from '@streamr/protocol'
-import { toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { toEthereumAddress, toStreamID, utf8ToBinary } from '@streamr/utils'
 import omit from 'lodash/omit'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { MessageStream } from '../../src/subscribe/MessageStream'

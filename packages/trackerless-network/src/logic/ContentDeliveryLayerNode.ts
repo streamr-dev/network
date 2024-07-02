@@ -1,37 +1,36 @@
-import { EventEmitter } from 'eventemitter3'
 import {
-    PeerDescriptor,
-    ListeningRpcCommunicator,
-    ITransport,
     ConnectionLocker,
     DhtAddress,
+    ITransport,
+    ListeningRpcCommunicator,
+    PeerDescriptor,
     getNodeIdFromPeerDescriptor,
 } from '@streamr/dht'
+import { Logger, StreamPartID, addManagedEventListener } from '@streamr/utils'
+import { EventEmitter } from 'eventemitter3'
 import {
-    StreamMessage,
+    CloseTemporaryConnection,
     LeaveStreamPartNotice,
+    MessageID,
     MessageRef,
+    StreamMessage,
     TemporaryConnectionRequest,
     TemporaryConnectionResponse,
-    MessageID,
-    CloseTemporaryConnection,
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { NodeList } from './NodeList'
 import { ContentDeliveryRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { ContentDeliveryRpcLocal } from './ContentDeliveryRpcLocal'
 import { ContentDeliveryRpcRemote } from './ContentDeliveryRpcRemote'
+import { DiscoveryLayerNode } from './DiscoveryLayerNode'
 import { DuplicateMessageDetector } from './DuplicateMessageDetector'
-import { Logger, addManagedEventListener } from '@streamr/utils'
+import { NodeList } from './NodeList'
+import { Inspector } from './inspect/Inspector'
 import { Handshaker } from './neighbor-discovery/Handshaker'
-import { Propagation } from './propagation/Propagation'
 import { NeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
-import { ContentDeliveryRpcLocal } from './ContentDeliveryRpcLocal'
+import { Propagation } from './propagation/Propagation'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
-import { Inspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { markAndCheckDuplicate } from './utils'
-import { DiscoveryLayerNode } from './DiscoveryLayerNode'
-import { StreamPartID } from '@streamr/protocol'
 
 export interface Events {
     message: (message: StreamMessage) => void

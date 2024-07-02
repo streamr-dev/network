@@ -1,4 +1,4 @@
-import { 
+import {
     ConnectionLocker,
     DhtNode,
     NodeType,
@@ -9,7 +9,14 @@ import {
     getRandomRegion,
     getRawFromDhtAddress
 } from '@streamr/dht'
+import { RpcCommunicator } from '@streamr/proto-rpc'
+import { EthereumAddress, StreamPartID, StreamPartIDUtils, hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
+import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
+import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
+import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
+import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
 import {
     ContentType,
     EncryptionType,
@@ -17,15 +24,7 @@ import {
     SignatureType,
     StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
-import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
-import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
-import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
-import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { ContentDeliveryRpcClient, HandshakeRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { RpcCommunicator } from '@streamr/proto-rpc'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},

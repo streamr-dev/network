@@ -1,10 +1,9 @@
 import { DhtAddress } from '@streamr/dht'
-import { StreamID } from '@streamr/protocol'
-import { Gate, Logger, setAbortableInterval, setAbortableTimeout } from '@streamr/utils'
+import { NetworkPeerDescriptor, StreamrClient, Subscription } from '@streamr/sdk'
+import { Gate, Logger, StreamID, setAbortableInterval, setAbortableTimeout } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import min from 'lodash/min'
 import once from 'lodash/once'
-import { NetworkPeerDescriptor, StreamrClient, Subscription } from '@streamr/sdk'
 import { HeartbeatMessage, HeartbeatMessageSchema } from './heartbeatUtils'
 
 const logger = new Logger(module)

@@ -1,8 +1,7 @@
 import 'reflect-metadata'
 
-import { StreamID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { Defer, collect, utf8ToBinary, waitForCondition } from '@streamr/utils'
+import { Defer, StreamID, collect, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import sample from 'lodash/sample'
 import shuffle from 'lodash/shuffle'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'

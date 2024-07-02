@@ -1,8 +1,7 @@
 import 'reflect-metadata'
 
-import { toStreamID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { hexToBinary, toEthereumAddress, toStreamID, utf8ToBinary } from '@streamr/utils'
 import { MockProxy, mock } from 'jest-mock-extended'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import { MessageRef } from '../../src/protocol/MessageRef'

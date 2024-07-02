@@ -1,6 +1,5 @@
-import { toStreamPartID } from '@streamr/protocol'
 import { Operator, StreamrClient } from '@streamr/sdk'
-import { EthereumAddress, Logger, randomString, setAbortableTimeout } from '@streamr/utils'
+import { EthereumAddress, Logger, randomString, setAbortableTimeout, toStreamPartID } from '@streamr/utils'
 import random from 'lodash/random'
 import { CreateOperatorFleetStateFn } from './OperatorFleetState'
 import { inspectOverTime } from './inspectOverTime'

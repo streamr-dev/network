@@ -1,12 +1,12 @@
 import {
+    EthereumAddress,
     StreamID,
     StreamIDUtils,
     StreamPartID,
     StreamPartIDUtils,
     toStreamID,
     toStreamPartID
-} from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
+} from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { StreamDefinition } from './types'

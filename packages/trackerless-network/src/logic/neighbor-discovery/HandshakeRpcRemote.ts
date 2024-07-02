@@ -1,9 +1,8 @@
 import { DhtAddress, PeerDescriptor, RpcRemote, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '@streamr/dht'
-import { Logger } from '@streamr/utils'
+import { Logger, StreamPartID } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { InterleaveRequest, InterleaveResponse, StreamPartHandshakeRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { HandshakeRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { StreamPartID } from '@streamr/protocol'
 
 const logger = new Logger(module)
 

@@ -1,5 +1,4 @@
-import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
+import { EthereumAddress, StreamID, StreamPartID, toStreamPartID } from '@streamr/utils'
 import { MessageRef } from './MessageRef'
 import { validateIsNotNegativeInteger } from './validations'
 

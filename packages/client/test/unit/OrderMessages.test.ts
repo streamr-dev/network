@@ -1,11 +1,13 @@
+import { randomEthereumAddress } from '@streamr/test-utils'
 import {
+    EthereumAddress,
     StreamID,
     StreamPartID,
     StreamPartIDUtils,
-    toStreamID
-} from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, collect, hexToBinary, waitForCondition } from '@streamr/utils'
+    collect, hexToBinary,
+    toStreamID,
+    waitForCondition
+} from '@streamr/utils'
 import last from 'lodash/last'
 import range from 'lodash/range'
 import without from 'lodash/without'

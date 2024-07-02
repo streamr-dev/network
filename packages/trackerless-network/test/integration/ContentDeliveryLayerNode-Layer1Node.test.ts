@@ -1,11 +1,10 @@
 import { ConnectionManager, DhtNode, PeerDescriptor, Simulator, SimulatorTransport, getNodeIdFromPeerDescriptor, getRandomRegion } from '@streamr/dht'
-import { Logger, waitForCondition } from '@streamr/utils'
+import { Logger, StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
+import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 
 const logger = new Logger(module)
 

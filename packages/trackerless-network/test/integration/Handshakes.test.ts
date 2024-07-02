@@ -1,19 +1,19 @@
-import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
 import {
+    ListeningRpcCommunicator,
     NodeType,
     PeerDescriptor,
-    ListeningRpcCommunicator,
     Simulator,
     SimulatorTransport,
     getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
+import { StreamPartIDUtils } from '@streamr/utils'
+import { NodeList } from '../../src/logic/NodeList'
+import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
+import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
+import { StreamPartHandshakeRequest, StreamPartHandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import {
     HandshakeRpcClient
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { NodeList } from '../../src/logic/NodeList'
-import { StreamPartHandshakeRequest, StreamPartHandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
-import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('Handshakes', () => {
 

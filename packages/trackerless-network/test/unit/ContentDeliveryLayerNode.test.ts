@@ -1,15 +1,14 @@
-import { waitForCondition } from '@streamr/utils'
-import { NodeList } from '../../src/logic/NodeList'
+import { getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
+import { NodeList } from '../../src/logic/NodeList'
 import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
-import { MockHandshaker } from '../utils/mock/MockHandshaker'
 import { MockDiscoveryLayerNode } from '../utils/mock/MockDiscoveryLayerNode'
+import { MockHandshaker } from '../utils/mock/MockHandshaker'
 import { MockNeighborFinder } from '../utils/mock/MockNeighborFinder'
 import { MockNeighborUpdateManager } from '../utils/mock/MockNeighborUpdateManager'
 import { MockTransport } from '../utils/mock/MockTransport'
-import { createMockPeerDescriptor, createMockContentDeliveryRpcRemote, mockConnectionLocker } from '../utils/utils'
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { createMockContentDeliveryRpcRemote, createMockPeerDescriptor, mockConnectionLocker } from '../utils/utils'
 
 describe('ContentDeliveryLayerNode', () => {
 

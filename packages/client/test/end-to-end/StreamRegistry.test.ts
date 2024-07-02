@@ -1,9 +1,8 @@
 import 'reflect-metadata'
 
-import { Wallet } from 'ethers'
-import { toStreamID } from '@streamr/protocol'
 import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, collect, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, collect, toEthereumAddress, toStreamID, waitForCondition } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'

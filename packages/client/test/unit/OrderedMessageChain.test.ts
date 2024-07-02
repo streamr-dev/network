@@ -1,5 +1,4 @@
-import { toStreamID } from '@streamr/protocol'
-import { hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { hexToBinary, toEthereumAddress, toStreamID, utf8ToBinary } from '@streamr/utils'
 import { Gap, OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'

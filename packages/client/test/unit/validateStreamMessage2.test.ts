@@ -1,7 +1,6 @@
 import 'reflect-metadata'
 
-import { toStreamID } from '@streamr/protocol'
-import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { EthereumAddress, hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
 import { mock } from 'jest-mock-extended'
 import { Authentication } from '../../src/Authentication'

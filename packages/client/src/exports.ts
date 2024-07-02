@@ -48,10 +48,9 @@ export { formStorageNodeAssignmentStreamId } from './utils/utils'
 export { SignerWithProvider } from './Authentication'
 export { convertBytesToStreamMessage, convertStreamMessageToBytes } from './protocol/oldStreamMessageBinaryUtils'
 
-export type { StreamID, StreamPartID } from '@streamr/protocol'
 export { DhtAddress } from '@streamr/dht'
 export { ProxyDirection } from '@streamr/trackerless-network'
-export type { BrandedString, EthereumAddress, LogLevel, Metric, MetricsContext, MetricsDefinition, MetricsReport } from '@streamr/utils'
+export type { StreamID, StreamPartID, BrandedString, EthereumAddress, LogLevel, Metric, MetricsContext, MetricsDefinition, MetricsReport } from '@streamr/utils'
 
 // These are currently exported because NetworkNodeStub uses methods which operate on StreamMessage.
 // If we remove that semi-public class we can maybe remove these exports.
