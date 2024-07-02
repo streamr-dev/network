@@ -121,17 +121,6 @@ export class NetworkNodeFacade {
         }
     }
 
-    private async initNode(): Promise<NetworkNodeStub> {
-        this.assertNotDestroyed()
-        if (this.cachedNode) { return this.cachedNode }
-
-        const node = this.networkNodeFactory.createNetworkNode(await this.getNetworkOptions())
-        if (!this.destroySignal.isDestroyed()) {
-            this.cachedNode = node
-        }
-        return node
-    }
-
     /**
      * Stop network node, or wait for it to stop if already stopping.
      * Subsequent calls to getNode/start will fail.
@@ -173,6 +162,16 @@ export class NetworkNodeFacade {
             this.startNodeComplete = true
         }
     })
+
+    private async initNode(): Promise<NetworkNodeStub> {
+        this.assertNotDestroyed()
+        if (this.cachedNode) { return this.cachedNode }
+        const node = this.networkNodeFactory.createNetworkNode(await this.getNetworkOptions())
+        if (!this.destroySignal.isDestroyed()) {
+            this.cachedNode = node
+        }
+        return node
+    }
 
     startNode: () => Promise<unknown> = this.startNodeTask
 
