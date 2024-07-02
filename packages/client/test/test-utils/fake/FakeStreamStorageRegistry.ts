@@ -30,24 +30,20 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
     }
 
     async addStreamToStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
-        if (!(await this.isStoredStream(streamIdOrPath, nodeAddress))) {
-            const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-            if (this.isStorageNode(nodeAddress)) {
-                this.chain.addStorageAssignment(streamId, nodeAddress)
-            } else {
-                throw new Error(`No storage node ${nodeAddress} for ${streamId}`)
-            }
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        if (this.isStorageNode(nodeAddress)) {
+            this.chain.addStorageAssignment(streamId, nodeAddress)
+        } else {
+            throw new Error(`No storage node ${nodeAddress} for ${streamId}`)
         }
     }
 
     async removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
-        if (await this.isStoredStream(streamIdOrPath, nodeAddress)) {
-            const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-            if (this.isStorageNode(nodeAddress)) {
-                this.chain.removeStorageAssignment(streamId, nodeAddress)
-            } else {
-                throw new Error(`No storage node ${nodeAddress} for ${streamId}`)
-            }
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        if (this.isStorageNode(nodeAddress)) {
+            this.chain.removeStorageAssignment(streamId, nodeAddress)
+        } else {
+            throw new Error(`No storage node ${nodeAddress} for ${streamId}`)
         }
     }
 

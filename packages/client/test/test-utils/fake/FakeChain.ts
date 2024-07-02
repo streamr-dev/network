@@ -39,8 +39,11 @@ export class FakeChain {
     }
 
     addStorageAssignment(streamId: StreamID, nodeAddress: EthereumAddress): void {
+        const existedBefore = this.storageAssignments.has(streamId, nodeAddress)
         this.storageAssignments.add(streamId, nodeAddress)
+        if (!existedBefore) {
         this.eventEmitter.emit('streamAddedToStorageNode', { streamId, nodeAddress })
+        }
     }
 
     removeStorageAssignment(streamId: StreamID, nodeAddress: EthereumAddress): void {
