@@ -241,9 +241,12 @@ export class NetworkNodeFacade {
         return node.getOptions()
     }
 
-    async inspect(peerDescriptor: NetworkPeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
-        const node = await this.getNode()
-        return node.inspect(peerDescriptorTranslator(peerDescriptor), streamPartId)
+    async inspect(node: NetworkPeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
+        if (this.isStarting()) {
+            await this.startNodeTask(false)
+        }
+        const peerDescriptor = peerDescriptorTranslator(node)
+        return this.cachedNode!.inspect(peerDescriptor, streamPartId)
     }
 
     async setProxies(
@@ -252,9 +255,11 @@ export class NetworkNodeFacade {
         direction: ProxyDirection,
         connectionCount?: number
     ): Promise<void> {
+        if (this.isStarting()) {
+            await this.startNodeTask(false)
+        }
         const peerDescriptors = nodes.map(peerDescriptorTranslator)
-        const node = await this.getNode()
-        await node.setProxies(
+        await this.cachedNode!.setProxies(
             streamPartId,
             peerDescriptors,
             direction,
@@ -264,9 +269,11 @@ export class NetworkNodeFacade {
     }
 
     async setStreamPartEntryPoints(streamPartId: StreamPartID, nodeDescriptors: NetworkPeerDescriptor[]): Promise<void> {
+        if (this.isStarting()) {
+            await this.startNodeTask(false)
+        }
         const peerDescriptors = nodeDescriptors.map(peerDescriptorTranslator)
-        const node = await this.getNode()
-        node.setStreamPartEntryPoints(streamPartId, peerDescriptors)
+        this.cachedNode!.setStreamPartEntryPoints(streamPartId, peerDescriptors)
     }
 
     private isStarting(): boolean {
