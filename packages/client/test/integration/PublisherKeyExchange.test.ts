@@ -1,14 +1,6 @@
 import 'reflect-metadata'
 
-import {
-    ContentType,
-    EncryptionType,
-    SignatureType,
-    StreamMessage,
-    StreamMessageType,
-    StreamPartID,
-    StreamPartIDUtils
-} from '@streamr/protocol'
+import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
 import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 import { Wallet } from 'ethers'
@@ -18,6 +10,7 @@ import { StreamPermission } from '../../src/permission'
 import { convertBytesToGroupKeyResponse } from '../../src/protocol/oldStreamMessageBinaryUtils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createRelativeTestStreamId, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
+import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 
 describe('PublisherKeyExchange', () => {
 

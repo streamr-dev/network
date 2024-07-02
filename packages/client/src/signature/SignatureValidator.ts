@@ -1,9 +1,10 @@
-import { Lifecycle, scoped } from 'tsyringe'
-import { SignatureType, StreamMessage, StreamMessageError } from '@streamr/protocol'
-import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
 import { verifySignature } from '@streamr/utils'
-import { createSignaturePayload } from './createSignaturePayload'
+import { Lifecycle, scoped } from 'tsyringe'
+import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
+import { SignatureType, StreamMessage } from '../protocol/StreamMessage'
+import { StreamMessageError } from '../protocol/StreamMessageError'
 import { createLegacySignaturePayload } from './createLegacySignaturePayload'
+import { createSignaturePayload } from './createSignaturePayload'
 
 @scoped(Lifecycle.ContainerScoped)
 export class SignatureValidator {

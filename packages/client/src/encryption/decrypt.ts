@@ -1,8 +1,8 @@
-import { EncryptionType, StreamMessage, StreamMessageAESEncrypted } from '@streamr/protocol'
-import { EncryptionUtil, DecryptError } from '../encryption/EncryptionUtil'
 import { DestroySignal } from '../DestroySignal'
+import { DecryptError, EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKey } from '../encryption/GroupKey'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
+import { EncryptionType, StreamMessage, StreamMessageAESEncrypted } from '../protocol/StreamMessage'
 
 // TODO if this.destroySignal.isDestroyed() is true, would it make sense to reject the promise
 // and not to return the original encrypted message?

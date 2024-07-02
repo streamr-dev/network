@@ -1,20 +1,14 @@
 import 'reflect-metadata'
 
-import {
-    ContentType,
-    EncryptionType,
-    MessageID,
-    SignatureType,
-    StreamMessage,
-    StreamPartIDUtils,
-    toStreamID
-} from '@streamr/protocol'
+import { StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { isRunningInElectron, randomEthereumAddress, startTestServer } from '@streamr/test-utils'
 import { collect, hexToBinary, toLengthPrefixedFrame } from '@streamr/utils'
 import range from 'lodash/range'
 import { convertStreamMessageToBytes } from '../../src/protocol/oldStreamMessageBinaryUtils'
 import { Resends } from '../../src/subscribe/Resends'
 import { MOCK_CONTENT, mockLoggerFactory } from '../test-utils/utils'
+import { MessageID } from './../../src/protocol/MessageID'
+import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
 
 const createResends = (serverUrl: string) => {
     return new Resends(

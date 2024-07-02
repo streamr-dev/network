@@ -1,8 +1,8 @@
 import 'reflect-metadata'
 
-import { StreamMessageType } from '@streamr/protocol'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
+import { StreamMessageType } from '../../src/protocol/StreamMessage'
 import { nextValue } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createTestStream } from '../test-utils/utils'

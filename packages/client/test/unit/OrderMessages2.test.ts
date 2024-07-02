@@ -1,19 +1,14 @@
-import {
-    ContentType, EncryptionType,
-    MessageID,
-    MessageRef, SignatureType,
-    StreamMessage,
-    StreamPartID,
-    StreamPartIDUtils,
-    toStreamID
-} from '@streamr/protocol'
+import { StreamPartID, StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, toEthereumAddress, wait, waitForCondition, hexToBinary } from '@streamr/utils'
+import { EthereumAddress, hexToBinary, toEthereumAddress, wait, waitForCondition } from '@streamr/utils'
 import { shuffle } from 'lodash'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { MOCK_CONTENT } from '../test-utils/utils'
+import { MessageID } from './../../src/protocol/MessageID'
+import { MessageRef } from './../../src/protocol/MessageRef'
+import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
 
 const MESSAGES_PER_PUBLISHER = 1000
 const NUM_OF_DUPLICATE_MESSAGES = 500

@@ -1,21 +1,20 @@
+import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import {
-    EncryptionType as OldEncryptionType,
-    MessageID as OldMessageID,
-    StreamMessage as OldStreamMessage,
-    StreamMessageType as OldStreamMessageType,
-    StreamPartID,
-    StreamPartIDUtils,
-    ContentType as OldContentType,
-    SignatureType as OldSignatureType
-} from '@streamr/protocol'
-import { binaryToHex, binaryToUtf8, hexToBinary, toEthereumAddress, utf8ToBinary, EthereumAddress } from '@streamr/utils'
-import { StreamMessageTranslator } from '../../src/protocol/StreamMessageTranslator'
-import { 
     ContentType as NewContentType,
     EncryptionType as NewEncryptionType,
     SignatureType as NewSignatureType,
     StreamMessage as NewStreamMessage
 } from '@streamr/trackerless-network'
+import { EthereumAddress, binaryToHex, binaryToUtf8, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { MessageID as OldMessageID } from '../../src/protocol/MessageID'
+import {
+    ContentType as OldContentType,
+    EncryptionType as OldEncryptionType,
+    SignatureType as OldSignatureType,
+    StreamMessage as OldStreamMessage,
+    StreamMessageType as OldStreamMessageType
+} from '../../src/protocol/StreamMessage'
+import { StreamMessageTranslator } from '../../src/protocol/StreamMessageTranslator'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('TEST#0')
 

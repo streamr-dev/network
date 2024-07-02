@@ -1,6 +1,8 @@
-import { MessageRef, StreamMessage, StreamPartID } from '@streamr/protocol'
-import { Heap, Gate, Logger, EthereumAddress } from '@streamr/utils'
+import { StreamPartID } from '@streamr/protocol'
+import { EthereumAddress, Gate, Heap, Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
+import { MessageRef } from '../../protocol/MessageRef'
+import { StreamMessage } from '../../protocol/StreamMessage'
 
 /*
  * There are missing messages between these two messages. The "to" message is guaranteed to have prevMsgRef.

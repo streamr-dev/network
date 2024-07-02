@@ -1,16 +1,4 @@
-import {
-    ContentType,
-    EncryptedGroupKey,
-    EncryptionType,
-    MessageID,
-    GroupKeyRequest as OldGroupKeyRequest,
-    GroupKeyResponse as OldGroupKeyResponse,
-    SignatureType,
-    StreamMessage,
-    StreamMessageType,
-    StreamPartID,
-    StreamPartIDUtils
-} from '@streamr/protocol'
+import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import without from 'lodash/without'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -18,6 +6,11 @@ import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { StreamrClientEventEmitter } from '../events'
+import { EncryptedGroupKey } from '../protocol/EncryptedGroupKey'
+import { GroupKeyRequest as OldGroupKeyRequest } from '../protocol/GroupKeyRequest'
+import { GroupKeyResponse as OldGroupKeyResponse } from '../protocol/GroupKeyResponse'
+import { MessageID } from '../protocol/MessageID'
+import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
 import { convertBytesToGroupKeyRequest, convertGroupKeyResponseToBytes } from '../protocol/oldStreamMessageBinaryUtils'
 import { createRandomMsgChainId } from '../publish/messageChain'
 import { MessageSigner } from '../signature/MessageSigner'

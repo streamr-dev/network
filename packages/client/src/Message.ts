@@ -1,5 +1,6 @@
+import { StreamID } from '@streamr/protocol'
 import { EthereumAddress } from '@streamr/utils'
-import { SignatureType, StreamID, StreamMessage } from '@streamr/protocol'
+import { SignatureType, StreamMessage } from './protocol/StreamMessage'
 
 /**
  * Represents a message in the Streamr Network.

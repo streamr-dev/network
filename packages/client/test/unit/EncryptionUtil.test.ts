@@ -1,17 +1,11 @@
-import {
-    EncryptedGroupKey,
-    StreamMessage,
-    StreamMessageAESEncrypted,
-    StreamPartIDUtils,
-    toStreamID,
-    toStreamPartID
-} from '@streamr/protocol'
+import { StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { GroupKey } from '../../src/encryption/GroupKey'
+import { binaryToUtf8, hexToBinary } from '@streamr/utils'
 import { EncryptionUtil, INITIALIZATION_VECTOR_LENGTH } from '../../src/encryption/EncryptionUtil'
+import { GroupKey } from '../../src/encryption/GroupKey'
 import { createMockMessage } from '../test-utils/utils'
-import { hexToBinary, binaryToUtf8 } from '@streamr/utils'
-
+import { EncryptedGroupKey } from './../../src/protocol/EncryptedGroupKey'
+import { StreamMessage, StreamMessageAESEncrypted } from './../../src/protocol/StreamMessage'
 const STREAM_ID = toStreamID('streamId')
 
 describe('EncryptionUtil', () => {

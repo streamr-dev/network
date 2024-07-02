@@ -1,13 +1,14 @@
-import { SubscriptionSession } from '../../src/subscribe/SubscriptionSession'
-import { StreamMessage, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { MessagePipelineFactory } from '../../src/subscribe/MessagePipelineFactory'
-import { mock } from 'jest-mock-extended'
-import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
-import { Subscription } from '../../src'
+import { toStreamID, toStreamPartID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { EthereumAddress } from '@streamr/utils'
+import { mock } from 'jest-mock-extended'
+import { Subscription } from '../../src'
+import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
+import { MessagePipelineFactory } from '../../src/subscribe/MessagePipelineFactory'
+import { SubscriptionSession } from '../../src/subscribe/SubscriptionSession'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { ErrorSignal, Signal } from '../../src/utils/Signal'
-import { EthereumAddress } from '@streamr/utils'
+import { StreamMessage } from './../../src/protocol/StreamMessage'
 
 const STREAM_PART_ID = toStreamPartID(toStreamID('foobar.eth'), 0)
 const ADDRESS_ONE = randomEthereumAddress()

@@ -1,17 +1,17 @@
-import express from 'express'
-import request from 'supertest'
+import { toStreamID } from '@streamr/protocol'
+import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, convertStreamMessageToBytes } from '@streamr/sdk'
 import { toReadableStream } from '@streamr/test-utils'
-import {
-    createDataQueryEndpoint,
-    MIN_SEQUENCE_NUMBER_VALUE,
-    MAX_SEQUENCE_NUMBER_VALUE
-} from '../../../../src/plugins/storage/dataQueryEndpoint'
+import { MetricsContext, hexToBinary, toEthereumAddress, toLengthPrefixedFrame, utf8ToBinary } from '@streamr/utils'
+import express from 'express'
+import { Readable } from 'stream'
+import request from 'supertest'
 import { toObject } from '../../../../src/plugins/storage/DataQueryFormat'
 import { Storage } from '../../../../src/plugins/storage/Storage'
-import { Readable } from 'stream'
-import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, toStreamID } from '@streamr/protocol'
-import { MetricsContext, toEthereumAddress, hexToBinary, utf8ToBinary, toLengthPrefixedFrame } from '@streamr/utils'
-import { convertStreamMessageToBytes } from '@streamr/sdk'
+import {
+    MAX_SEQUENCE_NUMBER_VALUE,
+    MIN_SEQUENCE_NUMBER_VALUE,
+    createDataQueryEndpoint
+} from '../../../../src/plugins/storage/dataQueryEndpoint'
 
 const createOutputStream = (msg: StreamMessage[]): Readable => {
     return toReadableStream(...msg.map(convertStreamMessageToBytes))

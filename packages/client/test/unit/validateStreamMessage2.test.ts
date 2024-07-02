@@ -1,19 +1,6 @@
 import 'reflect-metadata'
 
-import {
-    ContentType,
-    EncryptedGroupKey,
-    EncryptionType,
-    GroupKeyRequest,
-    GroupKeyResponse,
-    MessageID,
-    MessageRef,
-    SignatureType,
-    StreamMessage,
-    StreamMessageType,
-    ValidationError,
-    toStreamID
-} from '@streamr/protocol'
+import { toStreamID } from '@streamr/protocol'
 import { EthereumAddress, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
 import { mock } from 'jest-mock-extended'
@@ -28,6 +15,13 @@ import { MessageSigner } from '../../src/signature/MessageSigner'
 import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { validateStreamMessage } from '../../src/utils/validateStreamMessage'
 import { MOCK_CONTENT, createRandomAuthentication } from '../test-utils/utils'
+import { EncryptedGroupKey } from './../../src/protocol/EncryptedGroupKey'
+import { GroupKeyRequest } from './../../src/protocol/GroupKeyRequest'
+import { GroupKeyResponse } from './../../src/protocol/GroupKeyResponse'
+import { MessageID } from './../../src/protocol/MessageID'
+import { MessageRef } from './../../src/protocol/MessageRef'
+import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { ValidationError } from './../../src/protocol/ValidationError'
 
 const groupKeyMessageToStreamMessage = async (
     groupKeyMessage: GroupKeyRequest | GroupKeyResponse,

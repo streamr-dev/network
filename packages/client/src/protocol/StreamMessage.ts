@@ -1,13 +1,12 @@
-import InvalidJsonError from '../../errors/InvalidJsonError'
-import StreamMessageError from '../../errors/StreamMessageError'
-import { validateIsDefined } from '../../utils/validations'
-import MessageRef from './MessageRef'
-import MessageID from './MessageID'
-import EncryptedGroupKey from './EncryptedGroupKey'
-import { StreamID } from '../../utils/StreamID'
-import { StreamPartID } from '../../utils/StreamPartID'
+import { StreamID, StreamPartID } from '@streamr/protocol'
 import { EthereumAddress, binaryToUtf8 } from '@streamr/utils'
-import ValidationError from '../../errors/ValidationError'
+import { EncryptedGroupKey } from './EncryptedGroupKey'
+import { InvalidJsonError } from './InvalidJsonError'
+import { MessageID } from './MessageID'
+import { MessageRef } from './MessageRef'
+import { StreamMessageError } from './StreamMessageError'
+import { ValidationError } from './ValidationError'
+import { validateIsDefined } from './validations'
 
 export enum StreamMessageType {
     MESSAGE = 27,
@@ -76,7 +75,7 @@ function validateSequence(messageId: MessageID, prevMsgRef: MessageRef | undefin
     }
 }
 
-export default class StreamMessage implements StreamMessageOptions {
+export class StreamMessage implements StreamMessageOptions {
     readonly messageId: MessageID
     readonly prevMsgRef?: MessageRef
     readonly messageType: StreamMessageType

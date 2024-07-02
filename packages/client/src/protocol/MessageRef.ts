@@ -1,6 +1,6 @@
-import { validateIsNotNegativeInteger } from '../../utils/validations'
+import { validateIsNotNegativeInteger } from './validations'
 
-export default class MessageRef {
+export class MessageRef {
 
     readonly timestamp: number
     readonly sequenceNumber: number

@@ -1,9 +1,12 @@
-import { EncryptedGroupKey, MessageID, MessageRef, StreamMessageType } from '@streamr/protocol'
 import {
     GroupKeyRequest as NewGroupKeyRequest,
     GroupKeyResponse as NewGroupKeyResponse
 } from '@streamr/trackerless-network'
 import { utf8ToBinary } from '@streamr/utils'
+import { EncryptedGroupKey } from '../protocol/EncryptedGroupKey'
+import { MessageID } from '../protocol/MessageID'
+import { MessageRef } from '../protocol/MessageRef'
+import { StreamMessageType } from '../protocol/StreamMessage'
 
 export const createSignaturePayload = (opts: {
     messageId: MessageID

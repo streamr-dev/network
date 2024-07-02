@@ -1,18 +1,17 @@
-import { toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { StreamPartIDUtils, toStreamID } from '@streamr/protocol'
+import { hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
-import ValidationError from '../../../../src/errors/ValidationError'
-import EncryptedGroupKey from '../../../../src/protocol/message_layer/EncryptedGroupKey'
-import MessageID from '../../../../src/protocol/message_layer/MessageID'
-import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
-import StreamMessage, {
+import { EncryptedGroupKey } from '../../src/protocol/EncryptedGroupKey'
+import { MessageID } from '../../src/protocol/MessageID'
+import { MessageRef } from '../../src/protocol/MessageRef'
+import {
     ContentType,
     EncryptionType,
     SignatureType,
+    StreamMessage,
     StreamMessageType
-} from '../../../../src/protocol/message_layer/StreamMessage'
-import { toStreamID } from '../../../../src/utils/StreamID'
-import { StreamPartIDUtils } from '../../../../src/utils/StreamPartID'
-import { hexToBinary } from '@streamr/utils'
+} from '../../src/protocol/StreamMessage'
+import { ValidationError } from '../../src/protocol/ValidationError'
 
 const content = {
     hello: 'world',

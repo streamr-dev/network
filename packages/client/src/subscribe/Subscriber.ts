@@ -1,6 +1,6 @@
 import { StreamPartID } from '@streamr/protocol'
 import { EthereumAddress, Logger } from '@streamr/utils'
-import { Lifecycle, scoped } from 'tsyringe'
+import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { MessagePipelineFactory } from './MessagePipelineFactory'
@@ -17,7 +17,7 @@ export class Subscriber {
 
     constructor(
         node: NetworkNodeFacade,
-        messagePipelineFactory: MessagePipelineFactory,
+        @inject(delay(() => MessagePipelineFactory)) messagePipelineFactory: MessagePipelineFactory,
         loggerFactory: LoggerFactory,
     ) {
         this.node = node

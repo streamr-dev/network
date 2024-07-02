@@ -1,11 +1,9 @@
 import * as Protocol from '../../src/exports'
-import * as MessageLayer from '../../src/protocol/message_layer/exports'
-import * as Errors from '../../src/errors/exports'
 import * as Utils from '../../src/utils/exports'
 
 describe('exports.ts', () => {
     it('exports all members of containers at top level also ensuring there are no duplicate names', () => {
-        const containers = [MessageLayer, Errors, Utils]
+        const containers = [Utils]
         const numKeys = containers.map((value) => Object.keys(value).length).reduce((a, b) => a + b)
         expect.assertions(numKeys)
         containers.forEach((container) => {
