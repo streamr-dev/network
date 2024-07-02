@@ -140,6 +140,7 @@ export class NetworkNodeFacade {
     /**
      * Start network node, or wait for it to start if already started.
      */
+    // TODO: doJoin parameter seems problematic here; see ticket NET-1319
     private startNodeTask = pOnce(async (doJoin: boolean = true) => {
         this.startNodeCalled = true
         try {
