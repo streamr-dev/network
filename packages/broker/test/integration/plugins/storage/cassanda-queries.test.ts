@@ -1,12 +1,11 @@
-import { Client } from 'cassandra-driver'
+import { toStreamID } from '@streamr/protocol'
+import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, convertBytesToStreamMessage } from '@streamr/sdk'
 import { waitForStreamToEnd } from '@streamr/test-utils'
-import { toEthereumAddress, waitForEvent, waitForCondition, hexToBinary, utf8ToBinary } from '@streamr/utils'
-import { Readable, PassThrough } from 'stream'
-import { Storage } from '../../../../src/plugins/storage/Storage'
-import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
+import { hexToBinary, toEthereumAddress, utf8ToBinary, waitForCondition, waitForEvent } from '@streamr/utils'
+import { Client } from 'cassandra-driver'
+import { PassThrough, Readable } from 'stream'
+import { Storage, startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, toStreamID } from '@streamr/protocol'
-import { convertBytesToStreamMessage } from '@streamr/sdk'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'

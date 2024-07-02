@@ -1,11 +1,12 @@
+import { toStreamID } from '@streamr/protocol'
+import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage } from '@streamr/sdk'
+import { randomEthereumAddress } from '@streamr/test-utils'
+import { hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import { Client, types as cassandraTypes } from 'cassandra-driver'
 import toArray from 'stream-to-array'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
+import { Storage, startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { startCassandraStorage, Storage } from '../../../../src/plugins/storage/Storage'
-import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, toStreamID } from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
-import { hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 
 jest.setTimeout(30000)
 

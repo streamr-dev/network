@@ -55,11 +55,18 @@ export type { BrandedString, EthereumAddress, LogLevel, Metric, MetricsContext, 
 
 // These are currently exported because NetworkNodeStub uses methods which operate on StreamMessage.
 // If we remove that semi-public class we can maybe remove these exports.
-export type { EncryptedGroupKey } from './protocol/EncryptedGroupKey' 
-export type { MessageID } from './protocol/MessageID'
-export type { MessageRef } from './protocol/MessageRef'
-export type { StreamMessage, StreamMessageOptions, StreamMessageAESEncrypted } from './protocol/StreamMessage'
-export { ContentType, EncryptionType, StreamMessageType } from './protocol/StreamMessage'
+export type { EncryptedGroupKey } from './protocol/EncryptedGroupKey'
+export { MessageID } from './protocol/MessageID'
+export { MessageRef } from './protocol/MessageRef'
+export {
+    ContentType,
+    EncryptionType,
+    SignatureType,
+    StreamMessage,
+    StreamMessageAESEncrypted,
+    StreamMessageOptions,
+    StreamMessageType
+} from './protocol/StreamMessage'
 
 // These are exported for the internal Operator class
 export {
