@@ -1,6 +1,6 @@
 import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { EthereumAddress, Logger } from '@streamr/utils'
-import { Lifecycle, inject, scoped } from 'tsyringe'
+import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
@@ -47,7 +47,7 @@ export class SubscriberKeyExchange {
 
     constructor(
         networkNodeFacade: NetworkNodeFacade,
-        streamRegistry: StreamRegistry,
+        @inject(delay(() => StreamRegistry)) streamRegistry: StreamRegistry,
         signatureValidator: SignatureValidator,
         messageSigner: MessageSigner,
         store: LocalGroupKeyStore,

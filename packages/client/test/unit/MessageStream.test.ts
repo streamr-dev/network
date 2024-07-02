@@ -1,3 +1,5 @@
+import 'reflect-metadata'
+
 import { toStreamID } from '@streamr/protocol'
 import { toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import omit from 'lodash/omit'

@@ -1,3 +1,5 @@
+import 'reflect-metadata'
+
 import { toStreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
 import { EthereumAddress, hexToBinary, toEthereumAddress } from '@streamr/utils'

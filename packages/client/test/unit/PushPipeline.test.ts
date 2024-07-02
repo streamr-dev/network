@@ -1,3 +1,5 @@
+import 'reflect-metadata'
+
 import { toStreamID } from '@streamr/protocol'
 import { testOnlyInNodeJs } from '@streamr/test-utils'
 import { collect, toEthereumAddress, utf8ToBinary, wait } from '@streamr/utils'
