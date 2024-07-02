@@ -99,10 +99,6 @@ export class NetworkNodeFacade {
         destroySignal.onDestroy.listen(this.destroy)
     }
 
-    private assertNotDestroyed(): void {
-        this.destroySignal.assertNotDestroyed()
-    }
-
     private async getNetworkOptions(): Promise<NetworkOptions> {
         const entryPoints = await this.getEntryPoints()
         const localPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer.peerDescriptor ? 
@@ -156,7 +152,7 @@ export class NetworkNodeFacade {
             } else {
                 this.eventEmitter.emit('start')
             }
-            this.assertNotDestroyed()
+            this.destroySignal.assertNotDestroyed()
             return node
         } finally {
             this.startNodeComplete = true
@@ -164,7 +160,7 @@ export class NetworkNodeFacade {
     })
 
     private async initNode(): Promise<NetworkNodeStub> {
-        this.assertNotDestroyed()
+        this.destroySignal.assertNotDestroyed()
         if (this.cachedNode) { return this.cachedNode }
         const node = this.networkNodeFactory.createNetworkNode(await this.getNetworkOptions())
         if (!this.destroySignal.isDestroyed()) {
@@ -176,7 +172,7 @@ export class NetworkNodeFacade {
     startNode: () => Promise<unknown> = this.startNodeTask
 
     getNode(): Promise<NetworkNodeStub> {
-        this.assertNotDestroyed()
+        this.destroySignal.assertNotDestroyed()
         return this.startNodeTask()
     }
 
