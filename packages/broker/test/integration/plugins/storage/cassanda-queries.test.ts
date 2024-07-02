@@ -1,7 +1,6 @@
-import { toStreamID } from '@streamr/protocol'
 import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, convertBytesToStreamMessage } from '@streamr/sdk'
 import { waitForStreamToEnd } from '@streamr/test-utils'
-import { hexToBinary, toEthereumAddress, utf8ToBinary, waitForCondition, waitForEvent } from '@streamr/utils'
+import { hexToBinary, toEthereumAddress, toStreamID, utf8ToBinary, waitForCondition, waitForEvent } from '@streamr/utils'
 import { Client } from 'cassandra-driver'
 import { PassThrough, Readable } from 'stream'
 import { Storage, startCassandraStorage } from '../../../../src/plugins/storage/Storage'

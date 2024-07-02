@@ -1,5 +1,4 @@
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { Defer, EthereumAddress, hexToBinary, toEthereumAddress, utf8ToBinary, wait, waitForCondition } from '@streamr/utils'
+import { Defer, EthereumAddress, StreamPartIDUtils, hexToBinary, toEthereumAddress, utf8ToBinary, wait, waitForCondition } from '@streamr/utils'
 import { GapFillStrategy, GapFiller } from '../../src/subscribe/ordering/GapFiller'
 import { Gap, OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
 import { fromArray } from '../../src/utils/GeneratorUtils'

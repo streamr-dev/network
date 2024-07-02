@@ -6,8 +6,7 @@ import {
     PeerDescriptor,
     getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
-import { StreamPartID } from '@streamr/protocol'
-import { EthereumAddress, Logger, addManagedEventListener, wait } from '@streamr/utils'
+import { EthereumAddress, Logger, StreamPartID, addManagedEventListener, wait } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
 import {
@@ -18,14 +17,14 @@ import {
     StreamMessage
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryRpcClient, ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { ContentDeliveryRpcLocal } from '../ContentDeliveryRpcLocal'
+import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 import { DuplicateMessageDetector } from '../DuplicateMessageDetector'
 import { NodeList } from '../NodeList'
-import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
-import { ContentDeliveryRpcLocal } from '../ContentDeliveryRpcLocal'
+import { formStreamPartContentDeliveryServiceId } from '../formStreamPartDeliveryServiceId'
 import { Propagation } from '../propagation/Propagation'
 import { markAndCheckDuplicate } from '../utils'
 import { ProxyConnectionRpcRemote } from './ProxyConnectionRpcRemote'
-import { formStreamPartContentDeliveryServiceId } from '../formStreamPartDeliveryServiceId'
 
 // TODO use options option or named constant?
 export const retry = async <T>(task: () => Promise<T>, description: string, abortSignal: AbortSignal, delay = 10000): Promise<T> => {

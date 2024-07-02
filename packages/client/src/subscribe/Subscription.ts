@@ -1,8 +1,7 @@
-import { StreamPartID } from '@streamr/protocol'
-import { MessageStream } from './MessageStream'
-import { LoggerFactory } from '../utils/LoggerFactory'
-import { EthereumAddress, Logger } from '@streamr/utils'
+import { EthereumAddress, Logger, StreamPartID } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
+import { LoggerFactory } from '../utils/LoggerFactory'
+import { MessageStream } from './MessageStream'
 
 /**
  * Events emitted by {@link Subscription}.

@@ -1,5 +1,4 @@
-import { StreamID, StreamPartID } from '@streamr/protocol'
-import { EthereumAddress, binaryToUtf8 } from '@streamr/utils'
+import { EthereumAddress, StreamID, StreamPartID, binaryToUtf8 } from '@streamr/utils'
 import { EncryptedGroupKey } from './EncryptedGroupKey'
 import { InvalidJsonError } from './InvalidJsonError'
 import { MessageID } from './MessageID'

@@ -1,8 +1,7 @@
 import 'reflect-metadata'
 
-import { toStreamID } from '@streamr/protocol'
 import { testOnlyInNodeJs } from '@streamr/test-utils'
-import { collect, toEthereumAddress, utf8ToBinary, wait } from '@streamr/utils'
+import { collect, toEthereumAddress, toStreamID, utf8ToBinary, wait } from '@streamr/utils'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { pull } from '../../src/utils/PushBuffer'
 import { PushPipeline } from '../../src/utils/PushPipeline'

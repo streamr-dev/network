@@ -1,6 +1,5 @@
-import { StreamPartIDUtils } from '@streamr/protocol'
 import { Operator, StreamrClient } from '@streamr/sdk'
-import { EthereumAddress, Logger, randomString } from '@streamr/utils'
+import { EthereumAddress, Logger, StreamPartIDUtils, randomString } from '@streamr/utils'
 import { CreateOperatorFleetStateFn } from './OperatorFleetState'
 import { StreamPartAssignments } from './StreamPartAssignments'
 import { inspectOverTime } from './inspectOverTime'

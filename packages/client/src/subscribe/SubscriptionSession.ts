@@ -1,5 +1,4 @@
-import { StreamPartID } from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
+import { EthereumAddress, StreamPartID } from '@streamr/utils'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
 import { PushPipeline } from '../utils/PushPipeline'

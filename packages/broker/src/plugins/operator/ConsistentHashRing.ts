@@ -1,5 +1,5 @@
 import { DhtAddress } from '@streamr/dht'
-import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
+import { StreamPartID, StreamPartIDUtils } from '@streamr/utils'
 import ConsistentHash from 'consistent-hash'
 
 /**

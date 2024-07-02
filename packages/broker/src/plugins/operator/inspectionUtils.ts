@@ -1,6 +1,5 @@
-import { StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { NetworkPeerDescriptor, Operator, StreamrClient } from '@streamr/sdk'
-import { EthereumAddress, Logger } from '@streamr/utils'
+import { EthereumAddress, Logger, StreamID, StreamPartID, StreamPartIDUtils } from '@streamr/utils'
 import { shuffle } from 'lodash'
 import sample from 'lodash/sample'
 import without from 'lodash/without'

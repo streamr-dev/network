@@ -1,13 +1,12 @@
-import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { 
+import {
     ContentType,
     EncryptionType,
     ProxyDirection,
     SignatureType,
-    StreamMessage 
+    StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 

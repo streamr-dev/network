@@ -1,8 +1,7 @@
 import 'reflect-metadata'
 
-import { toStreamPartID } from '@streamr/protocol'
 import { fastPrivateKey } from '@streamr/test-utils'
-import { collect } from '@streamr/utils'
+import { collect, toStreamPartID } from '@streamr/utils'
 import { Message } from '../../src/Message'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'

@@ -1,11 +1,10 @@
 import { Simulator } from '@streamr/dht'
-import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { waitForCondition } from '@streamr/utils'
+import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
-import { createMockPeerDescriptor, createMockContentDeliveryLayerNodeAndDhtNode, createStreamMessage } from '../utils/utils'
 import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
+import { createMockContentDeliveryLayerNodeAndDhtNode, createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 
 describe('Propagation', () => {
     const entryPointDescriptor = createMockPeerDescriptor()

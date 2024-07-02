@@ -1,5 +1,5 @@
-import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { StreamPartIDUtils } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { NetworkNode } from '../../src/NetworkNode'
 import { NetworkStack } from '../../src/NetworkStack'

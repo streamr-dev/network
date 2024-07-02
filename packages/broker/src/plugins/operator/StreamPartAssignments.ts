@@ -1,6 +1,5 @@
 import { DhtAddress } from '@streamr/dht'
-import { StreamID, StreamPartID } from '@streamr/protocol'
-import { Logger } from '@streamr/utils'
+import { Logger, StreamID, StreamPartID } from '@streamr/utils'
 import EventEmitter3 from 'eventemitter3'
 import pLimit from 'p-limit'
 import { ConsistentHashRing } from './ConsistentHashRing'

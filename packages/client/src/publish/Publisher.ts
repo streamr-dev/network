@@ -1,4 +1,4 @@
-import { StreamID } from '@streamr/protocol'
+import { StreamID } from '@streamr/utils'
 import isString from 'lodash/isString'
 import pLimit from 'p-limit'
 import { Lifecycle, inject, scoped } from 'tsyringe'

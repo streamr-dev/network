@@ -1,11 +1,12 @@
+import { fastWallet } from '@streamr/test-utils'
 import {
+    EthereumAddress, Multimap,
     StreamID,
     StreamPartID,
+    toEthereumAddress, toLengthPrefixedFrame,
     toStreamID,
     toStreamPartID
-} from '@streamr/protocol'
-import { fastWallet } from '@streamr/test-utils'
-import { EthereumAddress, Multimap, toEthereumAddress, toLengthPrefixedFrame } from '@streamr/utils'
+} from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { once } from 'events'
 import express, { Request, Response } from 'express'

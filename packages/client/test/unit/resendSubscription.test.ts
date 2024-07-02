@@ -1,6 +1,5 @@
-import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { Queue, randomEthereumAddress } from '@streamr/test-utils'
-import { waitForCondition } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { mock } from 'jest-mock-extended'
 import { isEqual } from 'lodash'

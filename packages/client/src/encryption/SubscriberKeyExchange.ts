@@ -1,5 +1,4 @@
-import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
-import { EthereumAddress, Logger } from '@streamr/utils'
+import { EthereumAddress, Logger, StreamPartID, StreamPartIDUtils } from '@streamr/utils'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'

@@ -1,7 +1,6 @@
-import { toStreamID } from '@streamr/protocol'
 import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, convertStreamMessageToBytes } from '@streamr/sdk'
 import { toReadableStream } from '@streamr/test-utils'
-import { MetricsContext, hexToBinary, toEthereumAddress, toLengthPrefixedFrame, utf8ToBinary } from '@streamr/utils'
+import { MetricsContext, hexToBinary, toEthereumAddress, toLengthPrefixedFrame, toStreamID, utf8ToBinary } from '@streamr/utils'
 import express from 'express'
 import { Readable } from 'stream'
 import request from 'supertest'

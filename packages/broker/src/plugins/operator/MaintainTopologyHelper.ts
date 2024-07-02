@@ -1,6 +1,5 @@
-import { StreamID } from '@streamr/protocol'
 import { Operator, StakeEvent } from '@streamr/sdk'
-import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, Logger, StreamID, toEthereumAddress } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 
 const logger = new Logger(module)

@@ -1,7 +1,6 @@
 import 'reflect-metadata'
 
-import { StreamID, toStreamID, toStreamPartID } from '@streamr/protocol'
-import { utf8ToBinary, wait } from '@streamr/utils'
+import { StreamID, toStreamID, toStreamPartID, utf8ToBinary, wait } from '@streamr/utils'
 import range from 'lodash/range'
 import shuffle from 'lodash/shuffle'
 import { MessageSigner } from '../../src/signature/MessageSigner'

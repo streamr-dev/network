@@ -1,6 +1,6 @@
-import { StreamPartIDUtils } from '@streamr/protocol'
+import { DhtAddress } from '@streamr/dht'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { hexToBinary, utf8ToBinary, wait, waitForCondition, waitForEvent3 } from '@streamr/utils'
+import { StreamPartIDUtils, hexToBinary, utf8ToBinary, wait, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { ProxyClient } from '../../src/logic/proxy/ProxyClient'
@@ -12,7 +12,6 @@ import {
     StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { DhtAddress } from '@streamr/dht'
 
 const PROXIED_NODE_USER_ID = randomEthereumAddress()
 const STREAM_PART_ID = StreamPartIDUtils.parse('proxy-test#0')

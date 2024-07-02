@@ -1,20 +1,19 @@
-import { StreamID } from '@streamr/protocol'
-import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
 import { Methods } from '@streamr/test-utils'
+import { EthereumAddress, Multimap, StreamID, toEthereumAddress } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
 import { Stream, StreamMetadata } from '../../../src/Stream'
 import { StreamFactory } from '../../../src/StreamFactory'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { StreamrClientError } from '../../../src/StreamrClientError'
+import { StreamRegistry } from '../../../src/contracts/StreamRegistry'
+import { SearchStreamsPermissionFilter } from '../../../src/contracts/searchStreams'
 import {
     PermissionAssignment,
     PermissionQuery, StreamPermission,
     isPublicPermissionAssignment,
     isPublicPermissionQuery
 } from '../../../src/permission'
-import { StreamRegistry } from '../../../src/contracts/StreamRegistry'
-import { SearchStreamsPermissionFilter } from '../../../src/contracts/searchStreams'
 import { FakeChain, PUBLIC_PERMISSION_TARGET, PublicPermissionTarget, StreamRegistryItem } from './FakeChain'
 
 @scoped(Lifecycle.ContainerScoped)

@@ -1,7 +1,6 @@
-import { toStreamID } from '@streamr/protocol'
 import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage } from '@streamr/sdk'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { hexToBinary, toEthereumAddress, toStreamID, utf8ToBinary } from '@streamr/utils'
 import { Client, types as cassandraTypes } from 'cassandra-driver'
 import toArray from 'stream-to-array'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'

@@ -1,19 +1,19 @@
 import {
-    StreamPartHandshakeRequest,
-    StreamPartHandshakeResponse
-} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import {
     ListeningRpcCommunicator,
     NodeType,
     PeerDescriptor,
     Simulator,
     SimulatorTransport
 } from '@streamr/dht'
+import { StreamPartIDUtils } from '@streamr/utils'
+import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
+import {
+    StreamPartHandshakeRequest,
+    StreamPartHandshakeResponse
+} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import {
     HandshakeRpcClient,
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
-import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('HandshakeRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator

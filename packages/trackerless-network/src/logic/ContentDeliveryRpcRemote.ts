@@ -1,11 +1,10 @@
 import { RpcRemote } from '@streamr/dht'
-import { Logger } from '@streamr/utils'
+import { Logger, StreamPartID } from '@streamr/utils'
 import {
     LeaveStreamPartNotice,
     StreamMessage
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { StreamPartID } from '@streamr/protocol'
 
 const logger = new Logger(module)
 

@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { toStreamID } from '@streamr/protocol'
+import { toStreamID } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { StreamFactory } from '../../src/StreamFactory'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'

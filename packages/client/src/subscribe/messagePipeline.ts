@@ -1,8 +1,7 @@
 /**
  * Subscription message processing pipeline
  */
-import { StreamID, StreamPartID } from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
+import { EthereumAddress, StreamID, StreamPartID } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../Config'
 import { DestroySignal } from '../DestroySignal'
 import { StreamRegistry } from '../contracts/StreamRegistry'

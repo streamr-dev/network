@@ -1,9 +1,8 @@
 import 'reflect-metadata'
 
-import { Wallet } from 'ethers'
-import { StreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { collect, waitForCondition } from '@streamr/utils'
+import { StreamID, collect, toStreamPartID, waitForCondition } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import { Message, MessageMetadata } from '../../src/Message'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'

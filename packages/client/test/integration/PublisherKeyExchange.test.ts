@@ -1,8 +1,7 @@
 import 'reflect-metadata'
 
-import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, StreamPartID, StreamPartIDUtils, toEthereumAddress } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'

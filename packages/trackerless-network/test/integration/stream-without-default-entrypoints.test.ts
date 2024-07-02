@@ -1,11 +1,10 @@
 import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
+import { StreamPartIDUtils, hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
-import { createMockPeerDescriptor } from '../utils/utils'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
 

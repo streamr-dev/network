@@ -1,14 +1,14 @@
+import 'reflect-metadata'
+
+import { randomEthereumAddress } from '@streamr/test-utils'
+import { EthereumAddress, toStreamID } from '@streamr/utils'
+import crypto from 'crypto'
+import range from 'lodash/range'
+import { DestroySignal } from '../../src/DestroySignal'
+import { PersistenceManager } from '../../src/PersistenceManager'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
-import { getLocalGroupKeyStore } from '../test-utils/utils'
-import { randomEthereumAddress } from '@streamr/test-utils'
-import range from 'lodash/range'
-import { EthereumAddress } from '@streamr/utils'
-import crypto from 'crypto'
-import { toStreamID } from '@streamr/protocol'
-import { PersistenceManager } from '../../src/PersistenceManager'
-import { DestroySignal } from '../../src/DestroySignal'
-import { mockLoggerFactory } from '../test-utils/utils'
+import { getLocalGroupKeyStore, mockLoggerFactory } from '../test-utils/utils'
 
 describe('LocalGroupKeyStore', () => {
     

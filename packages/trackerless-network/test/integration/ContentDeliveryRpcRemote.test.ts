@@ -1,21 +1,20 @@
 import {
     ListeningRpcCommunicator,
-    Simulator,
+    NodeType,
     PeerDescriptor,
-    SimulatorTransport,
-    NodeType
+    Simulator,
+    SimulatorTransport
 } from '@streamr/dht'
+import { randomEthereumAddress } from '@streamr/test-utils'
+import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
-import { ContentDeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { Empty } from '../../src/proto/google/protobuf/empty'
 import {
     LeaveStreamPartNotice,
     StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { Empty } from '../../src/proto/google/protobuf/empty'
-import { waitForCondition } from '@streamr/utils'
+import { ContentDeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { createStreamMessage } from '../utils/utils'
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
 
 describe('ContentDeliveryRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator

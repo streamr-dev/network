@@ -2,14 +2,13 @@
  * Wrap a network node.
  */
 import { DhtAddress, PeerDescriptor } from '@streamr/dht'
-import { StreamPartID } from '@streamr/protocol'
 import {
     NetworkOptions,
     StreamMessage as NewStreamMessage,
     ProxyDirection,
     createNetworkNode as createNetworkNode_
 } from '@streamr/trackerless-network'
-import { EthereumAddress, Logger, MetricsContext } from '@streamr/utils'
+import { EthereumAddress, Logger, MetricsContext, StreamPartID } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { pull } from 'lodash'
 import { Lifecycle, inject, scoped } from 'tsyringe'

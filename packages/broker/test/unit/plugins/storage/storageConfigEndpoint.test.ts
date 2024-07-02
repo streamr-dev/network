@@ -1,5 +1,5 @@
+import { StreamPartIDUtils } from '@streamr/utils'
 import express from 'express'
-import { StreamPartIDUtils } from '@streamr/protocol'
 import request from 'supertest'
 import { createStorageConfigEndpoint } from '../../../../src/plugins/storage/storageConfigEndpoint'
 import { createMockStorageConfig } from '../../../integration/plugins/storage/MockStorageConfig'

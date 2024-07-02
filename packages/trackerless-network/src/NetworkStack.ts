@@ -7,8 +7,7 @@ import {
     areEqualPeerDescriptors,
     getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
-import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
-import { Logger, MetricsContext, waitForCondition } from '@streamr/utils'
+import { Logger, MetricsContext, StreamID, StreamPartID, toStreamPartID, waitForCondition } from '@streamr/utils'
 import { pull } from 'lodash'
 import { version as applicationVersion } from '../package.json'
 import { ContentDeliveryManager, ContentDeliveryManagerOptions } from './logic/ContentDeliveryManager'

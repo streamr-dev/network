@@ -1,8 +1,8 @@
-import {
-    StreamPartIDUtils
-} from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { waitForCondition } from '@streamr/utils'
+import {
+    StreamPartIDUtils,
+    waitForCondition
+} from '@streamr/utils'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 
