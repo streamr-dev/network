@@ -3,7 +3,6 @@ import { StreamMetadata } from '../../../src/Stream'
 import { StreamPermission } from '../../../src/permission'
 import { EthereumAddress, Multimap } from '@streamr/utils'
 import { StorageNodeMetadata } from '../../../src/contracts/StorageNodeRegistry'
-import { StorageNodeAssignmentEvent } from '../../../src/contracts/StreamStorageRegistry'
 import { EventEmitter } from 'eventemitter3'
 
 export type PublicPermissionTarget = 'public'
@@ -14,8 +13,13 @@ export interface StreamRegistryItem {
     permissions: Multimap<EthereumAddress | PublicPermissionTarget, StreamPermission>
 }
 
+export interface FakeStorageNodeAssignmentEvent {
+    readonly streamId: StreamID
+    readonly nodeAddress: EthereumAddress
+}
+
 export interface Events {
-    streamAddedToStorageNode: (payload: Omit<StorageNodeAssignmentEvent, 'blockNumber'>) => void
+    streamAddedToStorageNode: (payload: FakeStorageNodeAssignmentEvent) => void
 }
 
 export class FakeChain {
@@ -42,7 +46,7 @@ export class FakeChain {
         const existedBefore = this.storageAssignments.has(streamId, nodeAddress)
         this.storageAssignments.add(streamId, nodeAddress)
         if (!existedBefore) {
-        this.eventEmitter.emit('streamAddedToStorageNode', { streamId, nodeAddress })
+            this.eventEmitter.emit('streamAddedToStorageNode', { streamId, nodeAddress })
         }
     }
 
