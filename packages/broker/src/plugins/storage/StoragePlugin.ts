@@ -46,7 +46,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         this.streamrClient = streamrClient
         const clusterId = this.pluginConfig.cluster.clusterAddress ?? await this.streamrClient.getAddress()
         const assignmentStream = await this.streamrClient.getStream(formStorageNodeAssignmentStreamId(clusterId))
-        const metricsContext = (await (this.streamrClient.getNode())).getMetricsContext()
+        const metricsContext = await this.streamrClient.getNode().getMetricsContext()
         this.cassandra = await this.startCassandraStorage(metricsContext)
         this.storageConfig = await this.startStorageConfig(clusterId, assignmentStream)
         this.messageListener = (msg) => {
@@ -54,16 +54,16 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
                 this.cassandra!.store(msg)
             }
         }
-        const node = await this.streamrClient.getNode()
-        node.addMessageListener(this.messageListener)
+        const node = this.streamrClient.getNode()
+        await node.addMessageListener(this.messageListener)
         this.addHttpServerEndpoint(createDataQueryEndpoint(this.cassandra, metricsContext))
         this.addHttpServerEndpoint(createDataMetadataEndpoint(this.cassandra))
         this.addHttpServerEndpoint(createStorageConfigEndpoint(this.storageConfig))
     }
 
     async stop(): Promise<void> {
-        const node = await this.streamrClient!.getNode()
-        node.removeMessageListener(this.messageListener!)
+        const node = this.streamrClient!.getNode()
+        await node.removeMessageListener(this.messageListener!)
         await Promise.all(Array.from(this.storageConfig!.getStreamParts()).map((streamPart) => node.leave(streamPart)))
         await this.cassandra!.close()
         this.storageConfig!.destroy()
@@ -90,7 +90,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
     }
 
     private async startStorageConfig(clusterId: EthereumAddress, assignmentStream: Stream): Promise<StorageConfig> {
-        const node = await this.streamrClient!.getNode()
+        const node = this.streamrClient!.getNode()
         const storageConfig = new StorageConfig(
             clusterId,
             this.pluginConfig.cluster.clusterSize,

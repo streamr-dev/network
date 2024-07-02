@@ -2,7 +2,7 @@ import { SubscriptionSession } from '../../src/subscribe/SubscriptionSession'
 import { StreamMessage, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { MessagePipelineFactory } from '../../src/subscribe/MessagePipelineFactory'
 import { mock } from 'jest-mock-extended'
-import { NetworkNodeFacade, NetworkNodeStub } from '../../src/NetworkNodeFacade'
+import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
 import { Subscription } from '../../src'
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { PushPipeline } from '../../src/utils/PushPipeline'
@@ -27,10 +27,7 @@ describe('SubscriptionSession', () => {
         pushPipeline.onBeforeFinally = Signal.once()
         pushPipeline.pipe.mockReturnValue(pushPipeline as any)
         pipelineFactory.createMessagePipeline.mockReturnValue(pushPipeline)
-
         const networkNodeFacade = mock<NetworkNodeFacade>()
-        networkNodeFacade.getNode.mockResolvedValue(mock<NetworkNodeStub>())
-
         session = new SubscriptionSession(STREAM_PART_ID, pipelineFactory, networkNodeFacade)
     })
 

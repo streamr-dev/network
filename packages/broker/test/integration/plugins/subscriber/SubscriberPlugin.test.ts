@@ -53,9 +53,9 @@ describe('Subscriber Plugin', () => {
     })
 
     it('subscribes to the configured list of streams', async () => {
-        const node = await client.getNode()
-        await waitForCondition(() => {
-            const streams = node.getStreamParts().map((stream) => stream.toString())
+        const node = client.getNode()
+        await waitForCondition(async () => {
+            const streams = (await node.getStreamParts()).map((stream) => stream.toString())
             return streams.includes('stream-0#0')
                 && streams.includes('stream-0#1')
                 && streams.includes('stream-1#0')

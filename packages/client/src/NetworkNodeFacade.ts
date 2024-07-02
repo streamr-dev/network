@@ -3,7 +3,11 @@
  */
 import { DhtAddress, PeerDescriptor } from '@streamr/dht'
 import { StreamMessage, StreamPartID } from '@streamr/protocol'
-import { NetworkOptions, ProxyDirection, createNetworkNode as createNetworkNode_ } from '@streamr/trackerless-network'
+import {
+    NetworkOptions,
+    ProxyDirection,
+    createNetworkNode as createNetworkNode_
+} from '@streamr/trackerless-network'
 import { EthereumAddress, MetricsContext } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -95,10 +99,6 @@ export class NetworkNodeFacade {
         destroySignal.onDestroy.listen(this.destroy)
     }
 
-    private assertNotDestroyed(): void {
-        this.destroySignal.assertNotDestroyed()
-    }
-
     private async getNetworkOptions(): Promise<NetworkOptions> {
         const entryPoints = await this.getEntryPoints()
         const localPeerDescriptor: PeerDescriptor | undefined = this.config.network.controlLayer.peerDescriptor ? 
@@ -115,17 +115,6 @@ export class NetworkNodeFacade {
             networkNode: this.config.network.node,
             metricsContext: new MetricsContext()
         }
-    }
-
-    private async initNode(): Promise<NetworkNodeStub> {
-        this.assertNotDestroyed()
-        if (this.cachedNode) { return this.cachedNode }
-
-        const node = this.networkNodeFactory.createNetworkNode(await this.getNetworkOptions())
-        if (!this.destroySignal.isDestroyed()) {
-            this.cachedNode = node
-        }
-        return node
     }
 
     /**
@@ -151,6 +140,7 @@ export class NetworkNodeFacade {
     /**
      * Start network node, or wait for it to start if already started.
      */
+    // TODO: doJoin parameter seems problematic here; see ticket NET-1319
     private startNodeTask = pOnce(async (doJoin: boolean = true) => {
         this.startNodeCalled = true
         try {
@@ -158,47 +148,98 @@ export class NetworkNodeFacade {
             if (!this.destroySignal.isDestroyed()) {
                 await node.start(doJoin)
             }
-
             if (this.destroySignal.isDestroyed()) {
                 await node.stop()
             } else {
                 this.eventEmitter.emit('start')
             }
-            this.assertNotDestroyed()
+            this.destroySignal.assertNotDestroyed()
             return node
         } finally {
             this.startNodeComplete = true
         }
     })
 
+    private async initNode(): Promise<NetworkNodeStub> {
+        this.destroySignal.assertNotDestroyed()
+        if (this.cachedNode) { return this.cachedNode }
+        const node = this.networkNodeFactory.createNetworkNode(await this.getNetworkOptions())
+        if (!this.destroySignal.isDestroyed()) {
+            this.cachedNode = node
+        }
+        return node
+    }
+
     startNode: () => Promise<unknown> = this.startNodeTask
 
-    getNode: () => Promise<NetworkNodeStub> = this.startNodeTask
+    getNode(): Promise<NetworkNodeStub> {
+        this.destroySignal.assertNotDestroyed()
+        return this.startNodeTask()
+    }
 
     async getNodeId(): Promise<DhtAddress> {
         const node = await this.getNode()
         return node.getNodeId()
     }
 
-    /**
-     * Calls publish on node after starting it.
-     * Basically a wrapper around: (await getNode()).publish(…)
-     * but will be sync in case that node is already started.
-     * Zalgo intentional. See below.
-     */
-    async publishToNode(streamMessage: StreamMessage): Promise<void> {
-        // NOTE: function is intentionally not async for performance reasons.
-        // Will call cachedNode.publish immediately if cachedNode is set.
-        // Otherwise will wait for node to start.
-        this.destroySignal.assertNotDestroyed()
-        if (this.isStarting()) {
-            // use .then instead of async/await so
-            // this.cachedNode.publish call can be sync
-            return this.startNodeTask().then((node) =>
-                node.broadcast(streamMessage)
-            )
-        }
-        return this.cachedNode!.broadcast(streamMessage)
+    async join(streamPartId: StreamPartID, neighborRequirement?: { minCount: number, timeout: number }): Promise<void> {
+        const node = await this.getNode()
+        await node.join(streamPartId, neighborRequirement)
+    }
+
+    async leave(streamPartId: StreamPartID): Promise<void> {
+        const node = await this.getNode()
+        await node.leave(streamPartId)
+    }
+
+    async broadcast(msg: StreamMessage): Promise<void> {
+        const node = await this.getNode()
+        node.broadcast(msg)
+    }
+    
+    async addMessageListener(listener: (msg: StreamMessage) => void): Promise<void> {
+        const node = await this.getNode()
+        node.addMessageListener(listener)
+    }
+
+    async removeMessageListener(listener: (msg: StreamMessage) => void): Promise<void> {
+        const node = await this.getNode()
+        node.removeMessageListener(listener)
+    }
+
+    async isProxiedStreamPart(streamPartId: StreamPartID): Promise<boolean> {
+        const node = await this.getNode()
+        return node.isProxiedStreamPart(streamPartId)
+    }
+
+    async getMetricsContext(): Promise<MetricsContext> {
+        const node = await this.getNode()
+        return node.getMetricsContext()
+    }
+
+    async getPeerDescriptor(): Promise<PeerDescriptor> {
+        const node = await this.getNode()
+        return node.getPeerDescriptor()
+    }
+
+    async getDiagnosticInfo(): Promise<Record<string, unknown>> {
+        const node = await this.getNode()
+        return node.getDiagnosticInfo()
+    }
+
+    async getStreamParts(): Promise<ReadonlyArray<StreamPartID>> {
+        const node = await this.getNode()
+        return node.getStreamParts()
+    }
+
+    async getNeighbors(streamPartId: StreamPartID): Promise<ReadonlyArray<DhtAddress>> {
+        const node = await this.getNode()
+        return node.getNeighbors(streamPartId)
+    }
+
+    async getOptions(): Promise<NetworkOptions> {
+        const node = await this.getNode()
+        return node.getOptions()
     }
 
     async inspect(node: NetworkPeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {

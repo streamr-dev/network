@@ -12,7 +12,7 @@ describe('start node', () => {
                 }
             }
         })
-        const node = await client.getNode()
-        expect(node.getPeerDescriptor().websocket).toBeUndefined()
+        const node = client.getNode()
+        expect((await node.getPeerDescriptor()).websocket).toBeUndefined()
     })
 })

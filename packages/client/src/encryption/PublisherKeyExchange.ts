@@ -2,9 +2,9 @@ import {
     ContentType,
     EncryptedGroupKey,
     EncryptionType,
+    MessageID,
     GroupKeyRequest as OldGroupKeyRequest,
     GroupKeyResponse as OldGroupKeyResponse,
-    MessageID,
     SignatureType,
     StreamMessage,
     StreamMessageType,
@@ -14,19 +14,19 @@ import {
 import { convertBytesToGroupKeyRequest, convertGroupKeyResponseToBytes } from '@streamr/trackerless-network'
 import { EthereumAddress, Logger } from '@streamr/utils'
 import without from 'lodash/without'
-import { inject, Lifecycle, scoped } from 'tsyringe'
+import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { createRandomMsgChainId } from '../publish/messageChain'
 import { StreamRegistry } from '../contracts/StreamRegistry'
+import { StreamrClientEventEmitter } from '../events'
+import { createRandomMsgChainId } from '../publish/messageChain'
+import { MessageSigner } from '../signature/MessageSigner'
+import { SignatureValidator } from '../signature/SignatureValidator'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
-import { StreamrClientEventEmitter } from '../events'
-import { SignatureValidator } from '../signature/SignatureValidator'
-import { MessageSigner } from '../signature/MessageSigner'
 
 /*
  * Sends group key responses
@@ -70,8 +70,7 @@ export class PublisherKeyExchange {
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
         networkNodeFacade.once('start', async () => {
-            const node = await networkNodeFacade.getNode()
-            node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
+            await networkNodeFacade.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.logger.debug('Started')
         })
         eventEmitter.on('messagePublished', (msg) => {
@@ -107,8 +106,7 @@ export class PublisherKeyExchange {
                             request.getPublisherId(),
                             requestId
                         )
-                        const node = await this.networkNodeFacade.getNode()
-                        await node.broadcast(response)
+                        await this.networkNodeFacade.broadcast(response)
                         this.logger.debug('Handled group key request (found keys)', {
                             groupKeyIds: keys.map((k) => k.id).join(),
                             recipient: request.getPublisherId()

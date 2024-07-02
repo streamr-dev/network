@@ -54,7 +54,7 @@ describe('client behaviour on invalid message', () => {
             streamPartId: toStreamPartID(streamId, 0),
             publisher: publisherWallet
         })
-        const networkNode = environment.startNode()
+        const networkNode = environment.createNode()
         await networkNode.broadcast(msg)
         await wait(PROPAGATION_WAIT_TIME)
         expect(true).toEqual(true) // we never get here if subscriberClient crashes

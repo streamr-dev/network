@@ -1,5 +1,5 @@
 import { StreamMessage, StreamMessageType, StreamPartID } from '@streamr/protocol'
-import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
+import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { PushPipeline } from '../utils/PushPipeline'
 import { Scaffold } from '../utils/Scaffold'
 import { Signal } from '../utils/Signal'
@@ -99,32 +99,27 @@ export class SubscriptionSession {
         await Promise.all(tasks)
     }
 
-    private async subscribe(): Promise<NetworkNodeStub> {
-        const node = await this.node.getNode()
-        node.addMessageListener(this.onMessageInput)
-        if (!node.isProxiedStreamPart(this.streamPartId)) {
-            await node.join(this.streamPartId)
+    private async subscribe(): Promise<void> {
+        await this.node.addMessageListener(this.onMessageInput)
+        if (!await this.node.isProxiedStreamPart(this.streamPartId)) {
+            await this.node.join(this.streamPartId)
         }
-        return node
     }
 
-    private async unsubscribe(node: NetworkNodeStub): Promise<void> {
+    private async unsubscribe(): Promise<void> {
         this.pipeline.end()
         this.pipeline.return()
         this.pipeline.onError.end(new Error('done'))
-        node.removeMessageListener(this.onMessageInput)
-        await node.leave(this.streamPartId)
+        await this.node.removeMessageListener(this.onMessageInput)
+        await this.node.leave(this.streamPartId)
     }
 
     updateNodeSubscriptions = (() => {
-        let node: NetworkNodeStub | undefined
         return Scaffold([
             async () => {
-                node = await this.subscribe()
+                await this.subscribe()
                 return async () => {
-                    const prevNode = node
-                    node = undefined
-                    await this.unsubscribe(prevNode!)
+                    await this.unsubscribe()
                     await this.stop()
                 }
             },

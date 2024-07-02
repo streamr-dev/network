@@ -1,7 +1,5 @@
 import 'reflect-metadata'
 
-import { EthereumAddress, toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { Wallet } from 'ethers'
 import {
     ContentType,
     EncryptionType,
@@ -14,16 +12,18 @@ import {
     toStreamPartID
 } from '@streamr/protocol'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
+import { EthereumAddress, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { Wallet } from 'ethers'
+import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
-import { StreamrClient } from '../../src/StreamrClient'
+import { convertBytesToGroupKeyRequest } from '@streamr/trackerless-network'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import {
     createMockMessage,
     createRelativeTestStreamId,
     getLocalGroupKeyStore
 } from '../test-utils/utils'
-import { convertBytesToGroupKeyRequest } from '@streamr/trackerless-network'
 
 describe('SubscriberKeyExchange', () => {
 
@@ -47,7 +47,7 @@ describe('SubscriberKeyExchange', () => {
     }
 
     const triggerGroupKeyRequest = async (streamPartId: StreamPartID, key: GroupKey, publisher: StreamrClient): Promise<void> => {
-        const publisherNode = await publisher.getNode()
+        const publisherNode = publisher.getNode()
         await publisherNode.broadcast(await createMockMessage({
             streamPartId,
             publisher: publisherWallet,
@@ -136,7 +136,7 @@ describe('SubscriberKeyExchange', () => {
             const erc1271Contract = randomEthereumAddress()
             const streamId = await createStream(toEthereumAddress(erc1271Contract))
             const streamPartId = toStreamPartID(streamId, 0)
-            environment.getChain().erc1271AllowedAddresses.add(erc1271Contract, toEthereumAddress(subscriberWallet.address))
+            environment.getChain().addErc1271AllowedAddress(erc1271Contract, toEthereumAddress(subscriberWallet.address))
 
             const groupKey = GroupKey.generate()
             const publisher = environment.createClient({

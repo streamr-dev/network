@@ -1,27 +1,27 @@
-import { fastPrivateKey, fastWallet } from '@streamr/test-utils'
-import { NetworkOptions } from '@streamr/trackerless-network'
+import { fastPrivateKey } from '@streamr/test-utils'
 import merge from 'lodash/merge'
 import { DependencyContainer, container } from 'tsyringe'
 import { StreamrClientConfig } from '../../../src/Config'
-import { NetworkNodeFactory } from '../../../src/NetworkNodeFacade'
+import { NetworkNodeFacade, NetworkNodeFactory } from '../../../src/NetworkNodeFacade'
 import { StreamrClient } from '../../../src/StreamrClient'
-import { MIN_KEY_LENGTH } from '../../../src/encryption/RSAKeyPair'
+import { ERC1271ContractFacade } from '../../../src/contracts/ERC1271ContractFacade'
+import { OperatorRegistry } from '../../../src/contracts/OperatorRegistry'
 import { StorageNodeRegistry } from '../../../src/contracts/StorageNodeRegistry'
 import { StreamRegistry } from '../../../src/contracts/StreamRegistry'
 import { StreamStorageRegistry } from '../../../src/contracts/StreamStorageRegistry'
-import { OperatorRegistry } from '../../../src/contracts/OperatorRegistry'
+import { MIN_KEY_LENGTH } from '../../../src/encryption/RSAKeyPair'
 import { LoggerFactory } from './../../../src/utils/LoggerFactory'
 import { FakeChain } from './FakeChain'
+import { FakeERC1271ContractFacade } from './FakeERC1271ContractFacade'
 import { FakeLogger } from './FakeLogger'
 import { FakeNetwork } from './FakeNetwork'
-import { FakeNetworkNode, FakeNetworkNodeFactory } from './FakeNetworkNode'
+import { FakeNetworkNodeFactory } from './FakeNetworkNode'
+import { FakeOperatorRegistry } from './FakeOperatorRegistry'
 import { FakeStorageNode } from './FakeStorageNode'
 import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
 import { FakeStreamRegistry } from './FakeStreamRegistry'
 import { FakeStreamStorageRegistry } from './FakeStreamStorageRegistry'
-import { FakeOperatorRegistry } from './FakeOperatorRegistry'
-import { ERC1271ContractFacade } from '../../../src/contracts/ERC1271ContractFacade'
-import { FakeERC1271ContractFacade } from './FakeERC1271ContractFacade'
+import { DestroySignal } from '../../../src/DestroySignal'
 
 const DEFAULT_CLIENT_OPTIONS: StreamrClientConfig = {
     encryption: {
@@ -35,7 +35,7 @@ export class FakeEnvironment {
     private chain: FakeChain
     private logger: FakeLogger
     private dependencyContainer: DependencyContainer
-    private clients: StreamrClient[] = []
+    private destroySignal = new DestroySignal()
 
     constructor() {
         this.network = new FakeNetwork()
@@ -67,19 +67,19 @@ export class FakeEnvironment {
         }
         const configWithDefaults = merge({}, DEFAULT_CLIENT_OPTIONS, authOpts, opts)
         const client = new StreamrClient(configWithDefaults, this.dependencyContainer)
-        this.clients.push(client)
+        this.destroySignal.onDestroy.listen(async () => {
+            await client.destroy()
+        })
         return client
     }
 
-    startNode(options: NetworkOptions = {}): FakeNetworkNode {
-        const node = new FakeNetworkNode(this.network, options)
-        node.start()
-        return node
+    createNode(opts?: StreamrClientConfig): NetworkNodeFacade {
+        const client = this.createClient(opts)
+        return client.getNode()
     }
 
     async startStorageNode(): Promise<FakeStorageNode> {
-        const wallet = fastWallet()
-        const node = new FakeStorageNode(wallet, this.network, this.chain)
+        const node = new FakeStorageNode(this)
         await node.start()
         return node
     }
@@ -96,8 +96,11 @@ export class FakeEnvironment {
         return this.logger
     }
 
+    getDestroySignal(): DestroySignal {
+        return this.destroySignal
+    }
+
     async destroy(): Promise<void> {
-        await Promise.all(this.clients.map((client) => client.destroy()))
-        await Promise.all(this.network.getNodes().map((node) => node.stop()))
+        this.destroySignal.trigger()
     }
 }

@@ -1,9 +1,9 @@
 import {
     ContentType,
     EncryptionType,
+    MessageID,
     GroupKeyRequest as OldGroupKeyRequest,
     GroupKeyResponse as OldGroupKeyResponse,
-    MessageID,
     SignatureType,
     StreamMessage,
     StreamMessageType,
@@ -12,13 +12,16 @@ import {
 } from '@streamr/protocol'
 import { convertBytesToGroupKeyResponse, convertGroupKeyRequestToBytes } from '@streamr/trackerless-network'
 import { EthereumAddress, Logger } from '@streamr/utils'
-import { inject, Lifecycle, scoped } from 'tsyringe'
+import { Lifecycle, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
-import { createRandomMsgChainId } from '../publish/messageChain'
 import { StreamRegistry } from '../contracts/StreamRegistry'
+import { createRandomMsgChainId } from '../publish/messageChain'
+import { MessageSigner } from '../signature/MessageSigner'
+import { SignatureValidator } from '../signature/SignatureValidator'
+import { Subscriber } from '../subscribe/Subscriber'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { pOnce, withThrottling } from '../utils/promises'
 import { MaxSizedSet } from '../utils/utils'
@@ -26,9 +29,6 @@ import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { RSAKeyPair } from './RSAKeyPair'
-import { Subscriber } from '../subscribe/Subscriber'
-import { SignatureValidator } from '../signature/SignatureValidator'
-import { MessageSigner } from '../signature/MessageSigner'
 
 const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed
 
@@ -74,8 +74,7 @@ export class SubscriberKeyExchange {
         this.ensureStarted = pOnce(async () => {
             // eslint-disable-next-line no-underscore-dangle
             this.rsaKeyPair = await RSAKeyPair.create(config.encryption.rsaKeyLength)
-            const node = await networkNodeFacade.getNode()
-            node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
+            await networkNodeFacade.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.logger.debug('Started')
         })
         this.requestGroupKey = withThrottling((groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID) => {
@@ -92,8 +91,7 @@ export class SubscriberKeyExchange {
             publisherId,
             this.rsaKeyPair!.getPublicKey(),
             requestId)
-        const node = await this.networkNodeFacade.getNode()
-        await node.broadcast(request)
+        await this.networkNodeFacade.broadcast(request)
         this.pendingRequests.add(requestId)
         this.logger.debug('Sent group key request (waiting for response)', {
             groupKeyId,
