@@ -4,6 +4,7 @@
  * Use of `eval` is not allowed e.g. in Chrome plugins.
  */
 /* eslint-disable @typescript-eslint/no-require-imports */
+/* eslint-disable import/no-extraneous-dependencies */
 
 const fs = require('fs')
 const path = require('path')
