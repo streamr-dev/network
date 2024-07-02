@@ -50,7 +50,17 @@ export { convertBytesToStreamMessage, convertStreamMessageToBytes } from './prot
 
 export { DhtAddress } from '@streamr/dht'
 export { ProxyDirection } from '@streamr/trackerless-network'
-export type { StreamID, StreamPartID, BrandedString, EthereumAddress, LogLevel, Metric, MetricsContext, MetricsDefinition, MetricsReport } from '@streamr/utils'
+export type { 
+    StreamID,
+    StreamPartID,
+    BrandedString,
+    EthereumAddress,
+    LogLevel,
+    Metric,
+    MetricsContext,
+    MetricsDefinition,
+    MetricsReport
+} from '@streamr/utils'
 
 // These are currently exported because NetworkNodeStub uses methods which operate on StreamMessage.
 // If we remove that semi-public class we can maybe remove these exports.

@@ -1,7 +1,17 @@
 import 'reflect-metadata'
 
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { EthereumAddress, Logger, MAX_PARTITION_COUNT, StreamPartID, StreamPartIDUtils, merge, utf8ToBinary, wait, waitForCondition } from '@streamr/utils'
+import { 
+    EthereumAddress,
+    Logger,
+    MAX_PARTITION_COUNT,
+    StreamPartID,
+    StreamPartIDUtils,
+    merge,
+    utf8ToBinary,
+    wait,
+    waitForCondition
+} from '@streamr/utils'
 import crypto from 'crypto'
 import { Wallet } from 'ethers'
 import { once } from 'events'

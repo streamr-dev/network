@@ -1,4 +1,15 @@
-import { EthereumAddress, GraphQLQuery, Logger, StreamID, StreamIDUtils, TheGraphClient, collect, isENSName, toEthereumAddress, toStreamID } from '@streamr/utils'
+import { 
+    EthereumAddress,
+    GraphQLQuery, 
+    Logger,
+    StreamID,
+    StreamIDUtils,
+    TheGraphClient,
+    collect,
+    isENSName,
+    toEthereumAddress,
+    toStreamID
+} from '@streamr/utils'
 import { ContractTransactionResponse } from 'ethers'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
