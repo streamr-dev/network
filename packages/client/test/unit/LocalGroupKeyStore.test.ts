@@ -1,3 +1,5 @@
+import 'reflect-metadata'
+
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { EthereumAddress, toStreamID } from '@streamr/utils'
 import crypto from 'crypto'
