@@ -1,9 +1,7 @@
-import {
-    BrandedString,
-    ENSName,
-    EthereumAddress,
-    toEthereumAddressOrENSName
-} from '@streamr/utils'
+import { ENSName } from './ENSName'
+import { EthereumAddress } from './EthereumAddress'
+import { toEthereumAddressOrENSName } from './toEthereumAddressOrENSName'
+import { BrandedString } from './types'
 
 export type StreamID = BrandedString<'StreamID'>
 

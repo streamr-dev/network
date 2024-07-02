@@ -1,7 +1,6 @@
-import { toStreamID } from '@streamr/protocol'
-import { OperatorEvents, Operator, StakeEvent } from '@streamr/sdk'
+import { Operator, OperatorEvents, StakeEvent } from '@streamr/sdk'
 import { eventsWithArgsToArray, randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, Multimap, wait } from '@streamr/utils'
+import { EthereumAddress, Multimap, toStreamID, wait } from '@streamr/utils'
 import { MockProxy, mock } from 'jest-mock-extended'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 

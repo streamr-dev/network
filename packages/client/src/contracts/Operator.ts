@@ -1,14 +1,13 @@
-import { StreamID, ensureValidStreamPartitionIndex, toStreamID } from '@streamr/protocol'
+import { NetworkPeerDescriptor } from '@streamr/sdk'
 import {
     EthereumAddress,
     Logger,
-    ObservableEventEmitter,
-    TheGraphClient,
-    collect,
-    toEthereumAddress
+    ObservableEventEmitter, StreamID, TheGraphClient,
+    collect, ensureValidStreamPartitionIndex, toEthereumAddress, toStreamID
 } from '@streamr/utils'
 import { Overrides } from 'ethers'
 import sample from 'lodash/sample'
+import { z } from 'zod'
 import { Authentication } from '../Authentication'
 import { DestroySignal } from '../DestroySignal'
 import { RpcProviderSource } from '../RpcProviderSource'
@@ -20,8 +19,6 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway } from './contract'
-import { z } from 'zod'
-import { NetworkPeerDescriptor } from '../Config'
 
 interface RawResult {
     operator: null | { latestHeartbeatTimestamp: string | null }

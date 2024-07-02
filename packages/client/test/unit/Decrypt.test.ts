@@ -1,8 +1,7 @@
 import 'reflect-metadata'
 
-import { StreamPartIDUtils } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { utf8ToBinary } from '@streamr/utils'
+import { StreamPartIDUtils, utf8ToBinary } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { DestroySignal } from '../../src/DestroySignal'

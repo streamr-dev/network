@@ -1,6 +1,5 @@
 import { DhtAddress, PeerDescriptor } from '@streamr/dht'
-import { StreamPartID } from '@streamr/protocol'
-import { EthereumAddress, MetricsContext } from '@streamr/utils'
+import { EthereumAddress, MetricsContext, StreamPartID } from '@streamr/utils'
 import { NetworkOptions, NetworkStack, NodeInfo } from './NetworkStack'
 import { ProxyDirection, StreamMessage } from './proto/packages/trackerless-network/protos/NetworkRpc'
 

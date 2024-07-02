@@ -1,5 +1,5 @@
-import { toEthereumAddress } from '@streamr/utils'
-import { StreamIDUtils, toStreamID } from '../../../src/utils/StreamID'
+import { toEthereumAddress } from '../src/EthereumAddress'
+import { StreamIDUtils, toStreamID } from '../src/StreamID'
 
 const address = '0xaAAAaaaaAA123456789012345678901234567890'
 

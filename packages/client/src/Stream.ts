@@ -1,21 +1,24 @@
 import {
     StreamID,
     StreamPartID,
+    collect,
     ensureValidStreamPartitionCount,
-    toStreamPartID
-} from '@streamr/protocol'
-import { collect, merge, toEthereumAddress, withTimeout } from '@streamr/utils'
+    merge, toEthereumAddress,
+    toStreamPartID,
+    withTimeout
+} from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import range from 'lodash/range'
-import { PublishMetadata, Publisher } from '../src/publish/Publisher'
+import { PublishMetadata } from '../src/publish/Publisher'
 import { StrictStreamrClientConfig } from './Config'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { DEFAULT_PARTITION } from './StreamIDBuilder'
 import { StreamrClientError } from './StreamrClientError'
-import { StreamrClientEventEmitter } from './events'
-import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
 import { StreamRegistry } from './contracts/StreamRegistry'
 import { StreamStorageRegistry } from './contracts/StreamStorageRegistry'
+import { StreamrClientEventEmitter } from './events'
+import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
+import { Publisher } from './publish/Publisher'
 import { Resends } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
 import { Subscription, SubscriptionEvents } from './subscribe/Subscription'

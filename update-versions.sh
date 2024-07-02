@@ -12,7 +12,6 @@ PKG_DIRS="utils
 test-utils
 cdn-location
 geoip-location
-protocol
 proto-rpc
 autocertifier-client
 dht
@@ -26,7 +25,6 @@ PKG_NAMES="@streamr/utils
 @streamr/test-utils
 @streamr/cdn-location
 @streamr/geoip-location
-@streamr/protocol
 @streamr/proto-rpc
 @streamr/autocertifier-client
 @streamr/dht

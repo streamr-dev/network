@@ -1,17 +1,16 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { 
+import { DhtAddress, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { EthereumAddress, Logger, StreamPartID, binaryToHex, toEthereumAddress } from '@streamr/utils'
+import { EventEmitter } from 'eventemitter3'
+import {
     ProxyConnectionRequest,
     ProxyConnectionResponse,
     ProxyDirection,
     StreamMessage
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { IProxyConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
-import { DhtAddress, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
-import { ContentDeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { EventEmitter } from 'eventemitter3'
-import { EthereumAddress, Logger, binaryToHex, toEthereumAddress } from '@streamr/utils'
-import { StreamPartID } from '@streamr/protocol'
 
 const logger = new Logger(module)
 

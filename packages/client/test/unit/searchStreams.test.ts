@@ -1,10 +1,10 @@
 import 'reflect-metadata'
 
-import { StreamID, toStreamID } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { collect, TheGraphClient } from '@streamr/utils'
+import { StreamID, TheGraphClient, collect, toStreamID } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { SearchStreamsResultItem, searchStreams } from '../../src/contracts/searchStreams'
+import { TheGraphClient } from '@streamr/utils'
 import { mockLoggerFactory } from '../test-utils/utils'
 
 const MOCK_USER = randomEthereumAddress()

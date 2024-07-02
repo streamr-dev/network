@@ -1,6 +1,5 @@
-import { StreamPartIDUtils, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { binaryToUtf8, hexToBinary } from '@streamr/utils'
+import { StreamPartIDUtils, binaryToUtf8, hexToBinary, toStreamID, toStreamPartID } from '@streamr/utils'
 import { EncryptionUtil, INITIALIZATION_VECTOR_LENGTH } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { createMockMessage } from '../test-utils/utils'

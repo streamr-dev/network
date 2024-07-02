@@ -1,4 +1,4 @@
-import { StreamID } from '@streamr/protocol'
+import { StreamID } from '@streamr/utils'
 import { MarkOptional } from 'ts-essentials'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { ConfigInjectionToken } from '../Config'

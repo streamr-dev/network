@@ -1,5 +1,4 @@
-import { StreamPartID } from '@streamr/protocol'
-import { EthereumAddress, Gate, Heap, Logger } from '@streamr/utils'
+import { EthereumAddress, Gate, Heap, Logger, StreamPartID } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { MessageRef } from '../../protocol/MessageRef'
 import { StreamMessage } from '../../protocol/StreamMessage'

@@ -25,7 +25,6 @@ Monorepo containing the main components of Streamr Network.
 * [browser-test-runner](packages/browser-test-runner/index.js) (@streamr/browser-test-runner)
 * [utils](packages/utils/README.md) (@streamr/utils)
 * [test-utils](packages/test-utils/README.md) (@streamr/test-utils)
-* [protocol](packages/protocol/README.md) (@streamr/protocol)
 * [proto-rpc](packages/proto-rpc/README.md) (@streamr/proto-rpc)
 * [autocertifier-client](packages/autocertifier-client/README.md) (@streamr/autocertifier-client)
 * [dht](packages/dht/README.md) (@streamr/dht)

@@ -1,10 +1,9 @@
-import { StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/protocol'
 import { Operator, StreamrClient, Subscription } from '@streamr/sdk'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, Logger } from '@streamr/utils'
-import { mock, MockProxy } from 'jest-mock-extended'
-import { findTarget, inspectTarget } from '../../../../src/plugins/operator/inspectionUtils'
+import { EthereumAddress, Logger, StreamID, StreamPartID, toStreamID, toStreamPartID } from '@streamr/utils'
+import { MockProxy, mock } from 'jest-mock-extended'
 import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
+import { findTarget, inspectTarget } from '../../../../src/plugins/operator/inspectionUtils'
 
 const MY_OPERATOR_ADDRESS = randomEthereumAddress()
 const OTHER_OPERATOR_ADDRESS = randomEthereumAddress()

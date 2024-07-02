@@ -1,14 +1,10 @@
-import { DhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress, NodeType, PeerDescriptor } from '@streamr/dht'
-import { StreamID, toStreamID } from '@streamr/protocol'
+import { DhtAddress, NodeType, PeerDescriptor, getDhtAddressFromRaw, getRawFromDhtAddress, NodeType, PeerDescriptor } from '@streamr/dht'
 import {
-    composeAbortSignals,
     LengthPrefixedFrameDecoder,
-    Logger,
-    merge,
-    randomString,
-    TheGraphClient,
-    toEthereumAddress
+    Logger, StreamID, TheGraphClient, composeAbortSignals, merge,
+    randomString, toEthereumAddress, toStreamID
 } from '@streamr/utils'
+import { ContractTransactionReceipt } from 'ethers'
 import compact from 'lodash/compact'
 import fetch, { Response } from 'node-fetch'
 import { Readable } from 'stream'
@@ -17,7 +13,6 @@ import { NetworkNodeType, NetworkPeerDescriptor, StrictStreamrClientConfig } fro
 import { StreamrClientEventEmitter } from '../events'
 import { WebStreamToNodeStream } from './WebStreamToNodeStream'
 import { SEPARATOR } from './uuid'
-import { ContractTransactionReceipt } from 'ethers'
 
 const logger = new Logger(module)
 

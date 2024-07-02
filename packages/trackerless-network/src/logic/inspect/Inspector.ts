@@ -1,10 +1,9 @@
-import { PeerDescriptor, ConnectionLocker, LockID, DhtAddress, getNodeIdFromPeerDescriptor, ListeningRpcCommunicator } from '@streamr/dht'
+import { ConnectionLocker, DhtAddress, ListeningRpcCommunicator, LockID, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { Logger, StreamPartID, waitForEvent3 } from '@streamr/utils'
 import { MessageID } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { InspectSession, Events as InspectSessionEvents } from './InspectSession'
 import { TemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { Logger, waitForEvent3 } from '@streamr/utils'
 import { TemporaryConnectionRpcRemote } from '../temporary-connection/TemporaryConnectionRpcRemote'
-import { StreamPartID } from '@streamr/protocol'
+import { InspectSession, Events as InspectSessionEvents } from './InspectSession'
 
 interface InspectorOptions {
     localPeerDescriptor: PeerDescriptor

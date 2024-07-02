@@ -1,5 +1,4 @@
-import { StreamID } from '@streamr/protocol'
-import { EthereumAddress, Logger } from '@streamr/utils'
+import { EthereumAddress, Logger, StreamID } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { NAMESPACES, PersistenceManager } from '../PersistenceManager'
 import { StreamrClientEventEmitter } from '../events'

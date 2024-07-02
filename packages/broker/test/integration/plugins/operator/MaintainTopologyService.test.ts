@@ -1,9 +1,8 @@
-import { StreamPartID } from '@streamr/protocol'
 import {
     Stream, StreamrClient, _operatorContractUtils
 } from '@streamr/sdk'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { StreamPartID, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'

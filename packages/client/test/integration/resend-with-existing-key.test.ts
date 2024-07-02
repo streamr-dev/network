@@ -1,8 +1,7 @@
 import 'reflect-metadata'
 
-import { toStreamID } from '@streamr/protocol'
 import { fastWallet } from '@streamr/test-utils'
-import { collect, toEthereumAddress } from '@streamr/utils'
+import { collect, toEthereumAddress, toStreamID } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { DecryptError } from '../../src/encryption/EncryptionUtil'

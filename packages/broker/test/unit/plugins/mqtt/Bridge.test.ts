@@ -1,7 +1,7 @@
 import { StreamrClient, Subscription } from '@streamr/sdk'
-import { toStreamID, toStreamPartID } from '@streamr/protocol'
-import { Bridge } from '../../../../src/plugins/mqtt/Bridge'
+import { toStreamID, toStreamPartID } from '@streamr/utils'
 import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'
+import { Bridge } from '../../../../src/plugins/mqtt/Bridge'
 
 const MOCK_TOPIC = 'mock-topic'
 const MOCK_STREAM_ID_DOMAIN = 'mock.ens'

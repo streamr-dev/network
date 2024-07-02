@@ -1,5 +1,4 @@
-import { StreamID } from '@streamr/protocol'
-import { EthereumAddress, keyToArrayIndex, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { EthereumAddress, StreamID, keyToArrayIndex, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
 import random from 'lodash/random'
 import { Authentication } from '../Authentication'
 import { StreamrClientError } from '../StreamrClientError'

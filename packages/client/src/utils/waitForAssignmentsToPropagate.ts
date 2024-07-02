@@ -1,6 +1,6 @@
-import { StreamID, StreamPartIDUtils } from '@streamr/protocol'
-import { LoggerFactory } from './LoggerFactory'
+import { StreamID, StreamPartIDUtils } from '@streamr/utils'
 import { Message } from '../Message'
+import { LoggerFactory } from './LoggerFactory'
 
 export async function waitForAssignmentsToPropagate(
     messages: AsyncIterable<Message>,

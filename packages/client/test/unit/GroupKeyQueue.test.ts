@@ -1,13 +1,13 @@
 import 'reflect-metadata'
 
-import { toStreamID } from '@streamr/protocol'
-import { GroupKey } from '../../src/encryption/GroupKey'
-import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
+import { toStreamID } from '@streamr/utils'
 import { mock, MockProxy } from 'jest-mock-extended'
+import { Authentication } from '../../src/Authentication'
+import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyManager } from '../../src/encryption/GroupKeyManager'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
+import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
 import { createGroupKeyManager, createRandomAuthentication } from '../test-utils/utils'
-import { Authentication } from '../../src/Authentication'
 
 const streamId = toStreamID('mock-stream')
 

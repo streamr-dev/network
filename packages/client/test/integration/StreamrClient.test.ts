@@ -1,8 +1,7 @@
 import 'reflect-metadata'
 
-import { StreamPartID, StreamPartIDUtils } from '@streamr/protocol'
 import { fastPrivateKey, fastWallet } from '@streamr/test-utils'
-import { Defer, collect, wait } from '@streamr/utils'
+import { Defer, StreamPartID, StreamPartIDUtils, collect, wait } from '@streamr/utils'
 import { MessageMetadata } from '../../src/Message'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'

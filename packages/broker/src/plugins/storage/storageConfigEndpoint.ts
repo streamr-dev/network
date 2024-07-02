@@ -1,7 +1,7 @@
+import { toStreamID, toStreamPartID } from '@streamr/utils'
 import { Request, RequestHandler, Response } from 'express'
-import { StorageConfig } from './StorageConfig'
-import { toStreamID, toStreamPartID } from '@streamr/protocol'
 import { HttpServerEndpoint } from '../../Plugin'
+import { StorageConfig } from './StorageConfig'
 
 const createHandler = (storageConfig: StorageConfig): RequestHandler => {
     return (req: Request, res: Response) => {

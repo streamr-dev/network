@@ -1,13 +1,13 @@
 import { DhtAddress, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { StreamPartIDUtils } from '@streamr/utils'
+import { range } from 'lodash'
+import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
+import { NodeList } from '../../src/logic/NodeList'
 import { NeighborFinder } from '../../src/logic/neighbor-discovery/NeighborFinder'
 import { NeighborUpdateRpcLocal } from '../../src/logic/neighbor-discovery/NeighborUpdateRpcLocal'
-import { createMockPeerDescriptor } from '../utils/utils'
-import { NodeList } from '../../src/logic/NodeList'
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { MockTransport } from '../utils/mock/MockTransport'
 import { ContentDeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
-import { range } from 'lodash'
+import { MockTransport } from '../utils/mock/MockTransport'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('NeighborUpdateRpcLocal', () => {
 

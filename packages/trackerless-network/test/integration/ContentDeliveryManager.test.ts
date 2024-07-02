@@ -3,12 +3,11 @@ import {
     Simulator,
     SimulatorTransport
 } from '@streamr/dht'
-import { ContentDeliveryManager, Events } from '../../src/logic/ContentDeliveryManager'
-import { waitForEvent3, waitForCondition } from '@streamr/utils'
-import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
-import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { StreamPartIDUtils, waitForCondition, waitForEvent3 } from '@streamr/utils'
+import { ContentDeliveryManager, Events } from '../../src/logic/ContentDeliveryManager'
 import { ControlLayerNode } from '../../src/logic/ControlLayerNode'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 
 describe('ContentDeliveryManager', () => {
 

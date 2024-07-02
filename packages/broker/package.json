@@ -33,7 +33,6 @@
     "@streamr/config": "^5.3.12",
     "@streamr/dht": "101.0.0-beta.2",
     "@streamr/network-contracts-ethers6": "^7.1.2",
-    "@streamr/protocol": "101.0.0-beta.2",
     "@streamr/sdk": "101.0.0-beta.2",
     "@streamr/utils": "101.0.0-beta.2",
     "aedes": "^0.51.0",

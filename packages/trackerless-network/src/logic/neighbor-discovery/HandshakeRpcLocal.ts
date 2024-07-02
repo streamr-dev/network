@@ -1,11 +1,4 @@
-import { 
-    InterleaveRequest,
-    InterleaveResponse,
-    StreamPartHandshakeRequest,
-    StreamPartHandshakeResponse
-} from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { NodeList } from '../NodeList'
 import {
     DhtAddress,
     DhtAddressRaw,
@@ -14,11 +7,17 @@ import {
     getDhtAddressFromRaw,
     getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
+import { Logger, StreamPartID } from '@streamr/utils'
+import {
+    InterleaveRequest,
+    InterleaveResponse,
+    StreamPartHandshakeRequest,
+    StreamPartHandshakeResponse
+} from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
-import { HandshakeRpcRemote } from './HandshakeRpcRemote'
 import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
-import { Logger } from '@streamr/utils'
-import { StreamPartID } from '@streamr/protocol'
+import { NodeList } from '../NodeList'
+import { HandshakeRpcRemote } from './HandshakeRpcRemote'
 
 interface HandshakeRpcLocalOptions {
     streamPartId: StreamPartID

@@ -1,4 +1,3 @@
-import { StreamID } from '@streamr/protocol'
 import {
     ContentType as NewContentType,
     EncryptionType as NewEncryptionType,
@@ -10,7 +9,7 @@ import {
     SignatureType as NewSignatureType,
     StreamMessage as NewStreamMessage
 } from '@streamr/trackerless-network'
-import { binaryToHex, hexToBinary, toEthereumAddress } from '@streamr/utils'
+import { StreamID, binaryToHex, hexToBinary, toEthereumAddress } from '@streamr/utils'
 import { EncryptedGroupKey as OldEncryptedGroupKey } from './EncryptedGroupKey'
 import { MessageID as OldMessageID } from './MessageID'
 import { MessageRef as OldMessageRef } from './MessageRef'

@@ -1,12 +1,11 @@
-import { Wallet } from 'ethers'
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { waitForCondition, areEqualBinaries, toEthereumAddress, EthereumAddress } from '@streamr/utils'
+import { EthereumAddress, StreamID, areEqualBinaries, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { Wallet } from 'ethers'
+import { MessageMetadata } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
-import { createTestStream, createTestClient } from '../test-utils/utils'
 import { StreamPermission } from '../../src/permission'
 import { deployTestERC1271Contract } from '../test-utils/deployTestERC1271Contract'
-import { StreamID } from '@streamr/protocol'
-import { MessageMetadata } from '../../src'
+import { createTestClient, createTestStream } from '../test-utils/utils'
 
 const PAYLOAD = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 const TIMEOUT = 30 * 1000

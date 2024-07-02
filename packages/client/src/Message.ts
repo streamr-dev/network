@@ -1,5 +1,4 @@
-import { StreamID } from '@streamr/protocol'
-import { EthereumAddress } from '@streamr/utils'
+import { EthereumAddress, StreamID } from '@streamr/utils'
 import { SignatureType, StreamMessage } from './protocol/StreamMessage'
 
 /**

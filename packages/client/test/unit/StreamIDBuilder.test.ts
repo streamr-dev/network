@@ -1,7 +1,6 @@
 import 'reflect-metadata'
 
-import { toEthereumAddress } from '@streamr/utils'
-import { StreamPartIDUtils } from '@streamr/protocol'
+import { StreamPartIDUtils, toEthereumAddress } from '@streamr/utils'
 import { Authentication } from '../../src/Authentication'
 import { StreamIDBuilder } from '../../src/StreamIDBuilder'
 import { StreamDefinition } from '../../src/types'

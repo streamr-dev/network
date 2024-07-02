@@ -1,8 +1,7 @@
 import 'reflect-metadata'
 
-import { StreamPartIDUtils, toStreamID } from '@streamr/protocol'
 import { isRunningInElectron, randomEthereumAddress, startTestServer } from '@streamr/test-utils'
-import { collect, hexToBinary, toLengthPrefixedFrame } from '@streamr/utils'
+import { StreamPartIDUtils, collect, hexToBinary, toLengthPrefixedFrame, toStreamID } from '@streamr/utils'
 import range from 'lodash/range'
 import { convertStreamMessageToBytes } from '../../src/protocol/oldStreamMessageBinaryUtils'
 import { Resends } from '../../src/subscribe/Resends'
