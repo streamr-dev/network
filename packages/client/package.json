@@ -86,7 +86,7 @@
     "@babel/runtime-corejs3": "^7.24.0",
     "@lit-protocol/core": "2.2.5",
     "@lit-protocol/uint8arrays": "^3.2.3",
-    "@streamr/config": "^5.3.12",
+    "@streamr/config": "^5.3.13",
     "@streamr/dht": "101.0.0-beta.3",
     "@streamr/trackerless-network": "101.0.0-beta.3",
     "@streamr/utils": "101.0.0-beta.3",

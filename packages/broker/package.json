@@ -30,7 +30,7 @@
   "dependencies": {
     "@ensdomains/ens-contracts": "1.1.4",
     "@inquirer/prompts": "^4.2.1",
-    "@streamr/config": "^5.3.12",
+    "@streamr/config": "^5.3.13",
     "@streamr/dht": "101.0.0-beta.3",
     "@streamr/network-contracts-ethers6": "^7.1.2",
     "@streamr/sdk": "101.0.0-beta.3",
