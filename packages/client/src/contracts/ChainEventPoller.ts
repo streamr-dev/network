@@ -6,6 +6,7 @@ type EventName = string
 type Listener = (...args: any[]) => void
 
 const BLOCK_NUMBER_QUERY_RETRY_DELAY = 1000
+const POLLS_SINCE_LAST_FROM_BLOCK_UPDATE_THRESHOLD = 30
 
 export class ChainEventPoller {
 
@@ -43,32 +44,65 @@ export class ChainEventPoller {
         setImmediate(async () => {
             const logger = new Logger(module, { sessionId: randomString(6) })
             logger.debug('Start polling', { pollInterval: this.pollInterval })
+
             let fromBlock: number | undefined = undefined
             do {
                 try {
                     fromBlock = await sample(this.getProviders())!.getBlockNumber()
                 } catch (err) {
                     logger.debug('Failed to query block number', { err })
-                    await wait(BLOCK_NUMBER_QUERY_RETRY_DELAY)
+                    await wait(BLOCK_NUMBER_QUERY_RETRY_DELAY) // TODO: pass signal?
                 }
             } while (fromBlock === undefined)
+
+            let pollsSinceFromBlockUpdate = 0
             await scheduleAtInterval(async () => {
+                const contract = sample(this.contracts)!
                 const eventNames = [...this.listeners.keys()]
-                logger.debug('Polling', { fromBlock, eventNames })
+                let newFromBlock = 0
+                let events: EventLog[] | undefined = undefined
+
                 try {
-                    const events = (await sample(this.contracts)!.queryFilter([eventNames], fromBlock)) as EventLog[]
-                    logger.debug('Polled', { fromBlock, events: events.length })
-                    if ((events.length > 0) && (!abortController.signal.aborted)) {
-                        for (const event of events) {
-                            const listeners = this.listeners.get(event.fragment.name)
-                            for (const listener of listeners) {
-                                listener(...event.args, event.blockNumber)
-                            }
+                    // If we haven't updated `fromBlock` for a while, fetch the latest block number explicitly. If
+                    // `fromBlock` falls too much behind the current block number, the RPCs may start rejecting our
+                    // eth_getLogs requests (presumably for performance reasons).
+                    if (pollsSinceFromBlockUpdate >= POLLS_SINCE_LAST_FROM_BLOCK_UPDATE_THRESHOLD) {
+                        newFromBlock = await contract.runner!.provider!.getBlockNumber() + 1
+                        logger.debug('Fetch next block number explicitly', { newFromBlock } )
+                        if (abortController.signal.aborted) {
+                            return
                         }
-                        fromBlock = Math.max(...events.map((e) => e.blockNumber)) + 1
                     }
+
+                    logger.debug('Polling', { fromBlock, eventNames })
+                    events = await contract.queryFilter([eventNames], fromBlock) as EventLog[]
+                    logger.debug('Polled', { fromBlock, events: events.length })
                 } catch (err) {
-                    logger.debug('Failed to poll', { err, eventNames, fromBlock })
+                    logger.debug('Failed to poll', { reason: err?.reason, eventNames, fromBlock })
+                }
+
+                if (abortController.signal.aborted) {
+                    return
+                }
+
+                if (events !== undefined && events.length > 0) {
+                    for (const event of events) {
+                        const listeners = this.listeners.get(event.fragment.name)
+                        for (const listener of listeners) {
+                            listener(...event.args, event.blockNumber)
+                        }
+                    }
+                    newFromBlock = Math.max(...events.map((e) => e.blockNumber)) + 1
+                }
+
+                // note: do not update fromBlock if polling events failed
+                if (events !== undefined && newFromBlock > fromBlock!) {
+                    logger.debug('Forward fromBlock', { before: fromBlock, after: newFromBlock })
+                    fromBlock = newFromBlock
+                    // eslint-disable-next-line require-atomic-updates
+                    pollsSinceFromBlockUpdate = 0
+                } else {
+                    pollsSinceFromBlockUpdate += 1
                 }
 
             }, this.pollInterval, true, abortController.signal)
