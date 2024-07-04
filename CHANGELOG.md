@@ -44,6 +44,9 @@ Changes before Tatum release are not documented in this file.
 
 #### Deprecated
 
+- Deprecate command `streamr-broker`. Use `streamr-node` instead.
+- Deprecate command `streamr-broker-init`. Use `streamr-node-init` instead.
+
 #### Removed
 
 #### Fixed
