@@ -7,11 +7,11 @@ on:
     types:
       - completed
 jobs:
-  broker-docker-image:
+  node-docker-image:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     uses: ./.github/workflows/docker-build.yml
     with:
-      docker_file: Dockerfile.broker
+      docker_file: Dockerfile.node
       image_name: streamr/node
       host_machine_platform: self-hosted
       build_platforms: linux/amd64,linux/arm64

@@ -7,10 +7,10 @@ docs:
   - changed-files:
       - any-glob-to-any-file: '**.md'
       - any-glob-to-any-file: '*.md'
-broker:
+node:
   - changed-files:
-      - any-glob-to-any-file: 'packages/broker/*'
-      - any-glob-to-any-file: 'packages/broker/**/*'
+      - any-glob-to-any-file: 'packages/node/*'
+      - any-glob-to-any-file: 'packages/node/**/*'
 browser-test-runner:
   - changed-files:
       - any-glob-to-any-file: 'package/browser-test-runner/*'

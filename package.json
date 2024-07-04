@@ -25,7 +25,7 @@
         "packages/autocertifier-server",
         "packages/trackerless-network",
         "packages/sdk",
-        "packages/broker",
+        "packages/node",
         "packages/cli-tools"
     ],
     "dependencies": {

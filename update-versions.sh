@@ -19,7 +19,7 @@ autocertifier-server
 trackerless-network
 sdk
 cli-tools
-broker"
+node"
 
 PKG_NAMES="@streamr/utils
 @streamr/test-utils
