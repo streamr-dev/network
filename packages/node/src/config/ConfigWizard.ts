@@ -172,7 +172,7 @@ export async function start(): Promise<void> {
         log(`
             >
             > You can start your Streamr node now with
-            > *streamr-broker ${storagePath}*
+            > *streamr-node ${storagePath}*
             >
             > For environment specific run instructions, see
             > *https://docs.streamr.network/guides/how-to-run-streamr-node*
