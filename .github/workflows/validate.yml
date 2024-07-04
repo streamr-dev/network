@@ -112,7 +112,7 @@ jobs:
       package: sdk
       docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
       run-entry-point: true
-      run-brokers: true
+      run-nodes: true
       command: npm run test-end-to-end
   node:
     needs: build
@@ -145,7 +145,7 @@ jobs:
       extra-log-prefix: '-browser'
       docker-services: init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
       run-entry-point: true
-      run-brokers: true
+      run-nodes: true
       command: |
         sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser-end-to-end
@@ -157,7 +157,7 @@ jobs:
       package: cli-tools
       docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
       run-entry-point: true
-      run-brokers: true
+      run-nodes: true
       command: npm run test
   node-docker-image:
     uses: ./.github/workflows/docker-build.yml
