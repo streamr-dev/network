@@ -67,10 +67,10 @@ jobs:
           username: ${{ secrets.dockerhub_username }}
           password: ${{ secrets.dockerhub_token }}
 
-      - name: Get current Broker git tag (for Docker meta)
+      - name: Get current version git tag (for Docker meta)
         run: |
           git fetch --tags origin --force
-          echo "broker_head_tag=$(git tag --points-at HEAD --list 'broker/v*')" >> $GITHUB_ENV
+          echo "version_head_tag=$(git tag --points-at HEAD --list 'v*')" >> $GITHUB_ENV
 
 
       - name: Docker meta
@@ -82,7 +82,7 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=match,pattern=broker/(v.*),group=1,value=${{ env.broker_head_tag }}
+            type=raw,value=${{ env.version_head_tag }},enable=${{ version_head_tag != '' }}
             type=raw,value=${{ inputs.branch }},enable=${{ inputs.branch != 'main' }}
             type=raw,value=dev,enable=${{ inputs.branch == 'main' }}
             type=raw,value=latest,enable=${{ inputs.include_latest_tag }}
