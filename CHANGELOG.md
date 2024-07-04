@@ -17,6 +17,11 @@ Changes before Tatum release are not documented in this file.
 - Update to ethers.js library to v6 (https://github.com/streamr-dev/network/pull/2506)
 - Restructured `contracts` config structure (https://github.com/streamr-dev/network/pull/2581)
 - Improve reliability of JSON RPC interactions by adding retry redundancy (https://github.com/streamr-dev/network/pull/2562)
+- Renamed events: (https://github.com/streamr-dev/network/pull/2604, https://github.com/streamr-dev/network/pull/2605)
+  - `createStream` -> `streamCreated`
+  - `addToStorageNode` -> `streamAddedToStorageNode`
+  - `removeFromStorageNode` -> `streamRemovedFromFromStorageNode`
+  - Subscription: `resendComplete` -> `resendCompleted`
 
 #### Deprecated
 
@@ -34,6 +39,8 @@ Changes before Tatum release are not documented in this file.
 #### Added
 
 #### Changed
+
+- Improve reliability of JSON RPC interactions by adding retry redundancy (https://github.com/streamr-dev/network/pull/2601)
 
 #### Deprecated
 

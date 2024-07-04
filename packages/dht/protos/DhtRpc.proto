@@ -35,7 +35,7 @@ service RecursiveOperationSessionRpc {
   rpc sendResponse(RecursiveOperationResponse) returns (google.protobuf.Empty);
 }
 
-service WebsocketConnectorRpc {
+service WebsocketClientConnectorRpc {
   rpc requestConnection (WebsocketConnectionRequest) returns (google.protobuf.Empty);
 }
 

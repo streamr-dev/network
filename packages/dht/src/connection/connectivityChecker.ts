@@ -7,12 +7,12 @@ import {
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ConnectionEvents, IConnection } from './IConnection'
 import { WebsocketClientConnection } from './websocket/NodeWebsocketClientConnection'
-import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
+import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketClientConnector'
 import { isMaybeSupportedVersion } from '../helpers/version'
 
 const logger = new Logger(module)
 
-// TODO use config option or named constant?
+// TODO use options option or named constant?
 export const connectAsync = async ({ url, allowSelfSignedCertificate, timeoutMs = 1000 }:
     { url: string, allowSelfSignedCertificate: boolean, timeoutMs?: number }
 ): Promise<IConnection> => {

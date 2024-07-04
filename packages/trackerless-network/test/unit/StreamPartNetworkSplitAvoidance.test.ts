@@ -1,32 +1,31 @@
-import { MIN_NEIGHBOR_COUNT } from '../../src/logic/StreamPartNetworkSplitAvoidance'
-import { StreamPartNetworkSplitAvoidance } from '../../src/logic/StreamPartNetworkSplitAvoidance'
-import { MockLayer1Node } from '../utils/mock/MockLayer1Node'
+import { MIN_NEIGHBOR_COUNT, StreamPartNetworkSplitAvoidance } from '../../src/logic/StreamPartNetworkSplitAvoidance'
+import { MockDiscoveryLayerNode } from '../utils/mock/MockDiscoveryLayerNode'
 
 describe('StreamPartNetworkSplitAvoidance', () => {
 
     let avoidance: StreamPartNetworkSplitAvoidance
-    let layer1Node: MockLayer1Node
+    let discoveryLayerNode: MockDiscoveryLayerNode
     
     beforeEach(() => {
-        layer1Node = new MockLayer1Node()
+        discoveryLayerNode = new MockDiscoveryLayerNode()
         avoidance = new StreamPartNetworkSplitAvoidance({
-            layer1Node,
+            discoveryLayerNode,
             discoverEntryPoints: async () => { 
-                layer1Node.addNewRandomPeerToKBucket() 
-                return layer1Node.getNeighbors()
+                discoveryLayerNode.addNewRandomPeerToKBucket() 
+                return discoveryLayerNode.getNeighbors()
             },
             exponentialRunOfBaseDelay: 1
         })
     })
 
     afterEach(() => {
-        layer1Node.stop()
+        discoveryLayerNode.stop()
         avoidance.destroy()
     })
 
     it('runs avoidance until number of neighbors is above MIN_NEIGHBOR_COUNT', async () => {
         await avoidance.avoidNetworkSplit()
-        expect(layer1Node.getNeighborCount()).toBeGreaterThan(MIN_NEIGHBOR_COUNT)
+        expect(discoveryLayerNode.getNeighborCount()).toBeGreaterThan(MIN_NEIGHBOR_COUNT)
     })
 
 })

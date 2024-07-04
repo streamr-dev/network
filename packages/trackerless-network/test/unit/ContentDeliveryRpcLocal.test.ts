@@ -1,6 +1,6 @@
 import { ListeningRpcCommunicator } from '@streamr/dht'
-import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { StreamPartIDUtils } from '@streamr/utils'
 import { ContentDeliveryRpcLocal } from '../../src/logic/ContentDeliveryRpcLocal'
 import { LeaveStreamPartNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { MockTransport } from '../utils/mock/MockTransport'

@@ -74,3 +74,55 @@ const streamr = new StreamrClient({
     }
 }
 ```
+
+## Blockchain RPC configuration
+The Streamr Network continuously communicates with a blockchain selected by the user, with the Polygon POS blockchain being the default choice. To facilitate this communication, the Streamr Node and Streamr SDK are configured with public RPC endpoints. Although Streamr ensures robust redundancy, these third-party dependencies may experience downtime. Therefore, you might prefer to use your own RPC provider. 
+
+Here’s how to set it up:
+
+In the case of updating your Streamr node, add this section to your Streamr node config file,
+```json
+{
+    "client": {
+        ...
+        "contracts": {
+            "ethereumNetwork": {
+                "chainId": 137
+                ...
+            },
+            "rpcs": [ ... ]
+        }
+    ...
+```
+
+In the case of updating your Streamr app which uses the Streamr SDK, add this section to the Client constructor,
+
+```ts
+const streamr = new StreamrClient({
+...
+    contracts: {
+        ethereumNetwork: {
+            chainId: 137
+            ...
+        },
+        rpcs: [ ... ]
+    }
+...
+})
+```
+
+Where the `137` chainId refers to [Polygon POS](https://chainlist.org/).
+
+Example RPC section:
+```
+rpcs: [{
+    url: "https://polygon-rpc.com",
+    timeout: 120000
+  },
+  {
+    url: "https://polygon-bor.publicnode.com",
+    timeout: 120000
+  }],
+```
+
+Note, this RPC config schema applies to Streamr node and SDK versions `100.2.5` and above.

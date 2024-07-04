@@ -1,6 +1,6 @@
 import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
-import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { StreamPartIDUtils } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
@@ -81,7 +81,7 @@ describe('inspect', () => {
         }, 200)
 
         for (const node of inspectedNodes) {
-            const result = await inspectorNode.getContentDeliveryManager().inspect(node.getLayer0Node().getLocalPeerDescriptor(), streamPartId)
+            const result = await inspectorNode.getContentDeliveryManager().inspect(node.getControlLayerNode().getLocalPeerDescriptor(), streamPartId)
             expect(result).toEqual(true)
         }
     }, 25000)

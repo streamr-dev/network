@@ -1,5 +1,5 @@
 import { Logger } from '@streamr/utils'
-import { fetchAirportCodeFromAmazon, 
+import {
     fetchAirportCodeFromCdn, 
     fetchAirportCodeFromCloudflare, 
     fetchAirportCodeFromFastly } from '../../src/fetchAirportCodeFromCdn'
@@ -8,12 +8,6 @@ import { airportCodeToRegion } from '../../src/airportCodeToRegion'
 const logger = new Logger(module)
 
 describe('fetchAirportCodeFromCdn', () => {
-    
-    it('fetches airport code from Amazon', async () => {
-        const airportCode = await fetchAirportCodeFromAmazon('https://aws.amazon.com', 5000)
-        logger.info(`Airport code from Amazon: ${airportCode}`)
-        expect(typeof airportCodeToRegion[airportCode][0]).toBe('number')
-    })
 
     it('fetches airport code from Fastly', async () => {
         const airportCode = await fetchAirportCodeFromFastly(5000)

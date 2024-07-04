@@ -24,7 +24,7 @@ import { LocalDataStore } from './LocalDataStore'
 import { StoreRpcLocal } from './StoreRpcLocal'
 import { StoreRpcRemote } from './StoreRpcRemote'
 
-interface StoreManagerConfig {
+interface StoreManagerOptions {
     rpcCommunicator: RoutingRpcCommunicator
     recursiveOperationManager: RecursiveOperationManager
     localPeerDescriptor: PeerDescriptor
@@ -40,28 +40,28 @@ const logger = new Logger(module)
 
 export class StoreManager {
 
-    private readonly config: StoreManagerConfig
+    private readonly options: StoreManagerOptions
 
-    constructor(config: StoreManagerConfig) {
-        this.config = config
+    constructor(options: StoreManagerOptions) {
+        this.options = options
         this.registerLocalRpcMethods()
     }
 
     private registerLocalRpcMethods() {
         const rpcLocal = new StoreRpcLocal({
-            localPeerDescriptor: this.config.localPeerDescriptor,
-            localDataStore: this.config.localDataStore,
+            localPeerDescriptor: this.options.localPeerDescriptor,
+            localDataStore: this.options.localDataStore,
             replicateDataToContact: (dataEntry: DataEntry, contact: PeerDescriptor) => this.replicateDataToContact(dataEntry, contact),
             getStorers: (dataKey: DhtAddress) => this.getStorers(dataKey)
         })
-        this.config.rpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
+        this.options.rpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData',
             (request: StoreDataRequest) => rpcLocal.storeData(request))
-        this.config.rpcCommunicator.registerRpcNotification(ReplicateDataRequest, 'replicateData',
+        this.options.rpcCommunicator.registerRpcNotification(ReplicateDataRequest, 'replicateData',
             (request: ReplicateDataRequest, context: ServerCallContext) => rpcLocal.replicateData(request, context))
     }
 
     onContactAdded(peerDescriptor: PeerDescriptor): void {
-        for (const key of this.config.localDataStore.keys()) {
+        for (const key of this.options.localDataStore.keys()) {
             this.replicateAndUpdateStaleState(key, peerDescriptor)
         }
     }
@@ -69,21 +69,21 @@ export class StoreManager {
     private replicateAndUpdateStaleState(dataKey: DhtAddress, newNode: PeerDescriptor): void {
         const storers = this.getStorers(dataKey)
         const storersBeforeContactAdded = storers.filter((p) => !areEqualPeerDescriptors(p, newNode))
-        const selfWasPrimaryStorer = areEqualPeerDescriptors(storersBeforeContactAdded[0], this.config.localPeerDescriptor)
+        const selfWasPrimaryStorer = areEqualPeerDescriptors(storersBeforeContactAdded[0], this.options.localPeerDescriptor)
         if (selfWasPrimaryStorer) {
             if (storers.some((p) => areEqualPeerDescriptors(p, newNode))) {
                 setImmediate(async () => {
-                    const dataEntries = Array.from(this.config.localDataStore.values(dataKey))
+                    const dataEntries = Array.from(this.options.localDataStore.values(dataKey))
                     await Promise.all(dataEntries.map(async (dataEntry) => this.replicateDataToContact(dataEntry, newNode)))
                 })
             }
-        } else if (!storers.some((p) => areEqualPeerDescriptors(p, this.config.localPeerDescriptor))) {
-            this.config.localDataStore.setAllEntriesAsStale(dataKey)
+        } else if (!storers.some((p) => areEqualPeerDescriptors(p, this.options.localPeerDescriptor))) {
+            this.options.localDataStore.setAllEntriesAsStale(dataKey)
         }
     }
 
     private async replicateDataToContact(dataEntry: DataEntry, contact: PeerDescriptor): Promise<void> {
-        const rpcRemote = this.config.createRpcRemote(contact)
+        const rpcRemote = this.options.createRpcRemote(contact)
         try {
             await rpcRemote.replicateData({ entry: dataEntry })
         } catch (e) {
@@ -92,17 +92,17 @@ export class StoreManager {
     }
 
     public async storeDataToDht(key: DhtAddress, data: Any, creator: DhtAddress): Promise<PeerDescriptor[]> {
-        logger.debug(`Storing data to DHT ${this.config.serviceId}`)
-        const result = await this.config.recursiveOperationManager.execute(key, RecursiveOperation.FIND_CLOSEST_NODES)
+        logger.debug(`Storing data to DHT ${this.options.serviceId}`)
+        const result = await this.options.recursiveOperationManager.execute(key, RecursiveOperation.FIND_CLOSEST_NODES)
         const closestNodes = result.closestNodes
         const successfulNodes: PeerDescriptor[] = []
-        const ttl = this.config.highestTtl // ToDo: make TTL decrease according to some nice curve
+        const ttl = this.options.highestTtl // ToDo: make TTL decrease according to some nice curve
         const createdAt = Timestamp.now()
-        for (let i = 0; i < closestNodes.length && successfulNodes.length < this.config.redundancyFactor; i++) {
+        for (let i = 0; i < closestNodes.length && successfulNodes.length < this.options.redundancyFactor; i++) {
             const keyRaw = getRawFromDhtAddress(key)
             const creatorRaw = getRawFromDhtAddress(creator)
-            if (areEqualPeerDescriptors(this.config.localPeerDescriptor, closestNodes[i])) {
-                this.config.localDataStore.storeEntry({
+            if (areEqualPeerDescriptors(this.options.localPeerDescriptor, closestNodes[i])) {
+                this.options.localDataStore.storeEntry({
                     key: keyRaw,
                     data,
                     creator: creatorRaw,
@@ -115,7 +115,7 @@ export class StoreManager {
                 successfulNodes.push(closestNodes[i])
                 continue
             }
-            const rpcRemote = this.config.createRpcRemote(closestNodes[i])
+            const rpcRemote = this.options.createRpcRemote(closestNodes[i])
             try {
                 await rpcRemote.storeData({
                     key: keyRaw,
@@ -134,16 +134,16 @@ export class StoreManager {
     }
 
     private async replicateDataToClosestNodes(): Promise<void> {
-        const dataEntries = Array.from(this.config.localDataStore.values())
+        const dataEntries = Array.from(this.options.localDataStore.values())
         await Promise.all(dataEntries.map(async (dataEntry) => {
             const dataKey = getDhtAddressFromRaw(dataEntry.key)
             const neighbors = getClosestNodes(
                 dataKey,
-                this.config.getNeighbors(),
-                { maxCount: this.config.redundancyFactor }
+                this.options.getNeighbors(),
+                { maxCount: this.options.redundancyFactor }
             )
             await Promise.all(neighbors.map(async (neighbor) => {
-                const rpcRemote = this.config.createRpcRemote(neighbor)
+                const rpcRemote = this.options.createRpcRemote(neighbor)
                 try {
                     await rpcRemote.replicateData({ entry: dataEntry })
                 } catch (err) {
@@ -156,9 +156,9 @@ export class StoreManager {
     private getStorers(dataKey: DhtAddress, excludedNode?: PeerDescriptor): PeerDescriptor[] {
         return getClosestNodes(
             dataKey,
-            [...this.config.getNeighbors(), this.config.localPeerDescriptor],
+            [...this.options.getNeighbors(), this.options.localPeerDescriptor],
             { 
-                maxCount: this.config.redundancyFactor,
+                maxCount: this.options.redundancyFactor,
                 excludedNodeIds: excludedNode !== undefined ? new Set([getNodeIdFromPeerDescriptor(excludedNode)]) : undefined
             }
         )

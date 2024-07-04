@@ -27,7 +27,7 @@ import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFro
 import { getDistance } from '../PeerManager'
 import { ConnectionsView } from '../../exports'
 
-interface RecursiveOperationManagerConfig {
+interface RecursiveOperationManagerOptions {
     rpcCommunicator: RoutingRpcCommunicator
     sessionTransport: ITransport
     router: Router
@@ -47,21 +47,21 @@ export class RecursiveOperationManager {
 
     private ongoingSessions: Map<string, RecursiveOperationSession> = new Map()
     private stopped = false
-    private readonly config: RecursiveOperationManagerConfig
+    private readonly options: RecursiveOperationManagerOptions
 
-    constructor(config: RecursiveOperationManagerConfig) {
-        this.config = config
+    constructor(options: RecursiveOperationManagerOptions) {
+        this.options = options
         this.registerLocalRpcMethods()
     }
 
     private registerLocalRpcMethods() {
         const rpcLocal = new RecursiveOperationRpcLocal({
             doRouteRequest: (routedMessage: RouteMessageWrapper) => this.doRouteRequest(routedMessage),
-            addContact: (contact: PeerDescriptor) => this.config.addContact(contact),
-            isMostLikelyDuplicate: (requestId: string) => this.config.router.isMostLikelyDuplicate(requestId),
-            addToDuplicateDetector: (requestId: string) => this.config.router.addToDuplicateDetector(requestId)
+            addContact: (contact: PeerDescriptor) => this.options.addContact(contact),
+            isMostLikelyDuplicate: (requestId: string) => this.options.router.isMostLikelyDuplicate(requestId),
+            addToDuplicateDetector: (requestId: string) => this.options.router.addToDuplicateDetector(requestId)
         })
-        this.config.rpcCommunicator.registerRpcMethod(
+        this.options.rpcCommunicator.registerRpcMethod(
             RouteMessageWrapper,
             RouteMessageAck,
             'routeRequest',
@@ -85,23 +85,23 @@ export class RecursiveOperationManager {
             return { closestNodes: [] }
         }
         const session = new RecursiveOperationSession({
-            transport: this.config.sessionTransport,
+            transport: this.options.sessionTransport,
             targetId,
-            localPeerDescriptor: this.config.localPeerDescriptor,
-            // TODO use config option or named constant?
-            waitedRoutingPathCompletions: this.config.connectionsView.getConnectionCount() > 1 ? 2 : 1,
+            localPeerDescriptor: this.options.localPeerDescriptor,
+            // TODO use options option or named constant?
+            waitedRoutingPathCompletions: this.options.connectionsView.getConnectionCount() > 1 ? 2 : 1,
             operation,
             // TODO would it make sense to give excludedPeer as one of the fields RecursiveOperationSession?
             doRouteRequest: (routedMessage: RouteMessageWrapper) => {
                 return this.doRouteRequest(routedMessage, excludedPeer)
             }
         })
-        if (this.config.connectionsView.getConnectionCount() === 0) {
-            const dataEntries = Array.from(this.config.localDataStore.values(targetId))
+        if (this.options.connectionsView.getConnectionCount() === 0) {
+            const dataEntries = Array.from(this.options.localDataStore.values(targetId))
             session.onResponseReceived(
-                getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor),
-                [this.config.localPeerDescriptor],
-                [this.config.localPeerDescriptor],
+                getNodeIdFromPeerDescriptor(this.options.localPeerDescriptor),
+                [this.options.localPeerDescriptor],
+                [this.options.localPeerDescriptor],
                 dataEntries,
                 true
             )
@@ -111,27 +111,27 @@ export class RecursiveOperationManager {
         if (waitForCompletion === true) {
             try {
                 await runAndWaitForEvents3<RecursiveOperationSessionEvents>(
-                    [() => session.start(this.config.serviceId)],
+                    [() => session.start(this.options.serviceId)],
                     [[session, 'completed']],
-                    // TODO use config option or named constant?
+                    // TODO use options option or named constant?
                     15000
                 )
             } catch (err) {
                 logger.debug('start failed', { err })
             }
         } else {
-            session.start(this.config.serviceId)
+            session.start(this.options.serviceId)
             // Wait for delete operation to be sent out by the router
             // TODO: Add a feature to wait for the router to pass the message?
             await wait(50)
         }
         if (operation === RecursiveOperation.FETCH_DATA) {
-            const dataEntries = Array.from(this.config.localDataStore.values(targetId))
+            const dataEntries = Array.from(this.options.localDataStore.values(targetId))
             if (dataEntries.length > 0) {
-                this.sendResponse([this.config.localPeerDescriptor], this.config.localPeerDescriptor, session.getId(), [], dataEntries, true)
+                this.sendResponse([this.options.localPeerDescriptor], this.options.localPeerDescriptor, session.getId(), [], dataEntries, true)
             }
         } else if (operation === RecursiveOperation.DELETE_DATA) {
-            this.config.localDataStore.markAsDeleted(targetId, getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor))
+            this.options.localDataStore.markAsDeleted(targetId, getNodeIdFromPeerDescriptor(this.options.localPeerDescriptor))
         }
         this.ongoingSessions.delete(session.getId())
         session.stop()
@@ -146,25 +146,25 @@ export class RecursiveOperationManager {
         dataEntries: DataEntry[],
         noCloserNodesFound: boolean = false
     ): void {
-        const isOwnNode = areEqualPeerDescriptors(this.config.localPeerDescriptor, targetPeerDescriptor)
+        const isOwnNode = areEqualPeerDescriptors(this.options.localPeerDescriptor, targetPeerDescriptor)
         if (isOwnNode && this.ongoingSessions.has(serviceId)) {
             this.ongoingSessions.get(serviceId)!
                 .onResponseReceived(
-                    getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor),
+                    getNodeIdFromPeerDescriptor(this.options.localPeerDescriptor),
                     routingPath,
                     closestConnectedNodes,
                     dataEntries,
                     noCloserNodesFound
                 )
         } else {
-            // TODO use config option or named constant?
-            const remoteCommunicator = new ListeningRpcCommunicator(serviceId, this.config.sessionTransport, { rpcRequestTimeout: 15000 })
+            // TODO use options option or named constant?
+            const remoteCommunicator = new ListeningRpcCommunicator(serviceId, this.options.sessionTransport, { rpcRequestTimeout: 15000 })
             const rpcRemote = new RecursiveOperationSessionRpcRemote(
-                this.config.localPeerDescriptor,
+                this.options.localPeerDescriptor,
                 targetPeerDescriptor,
                 remoteCommunicator,
                 RecursiveOperationSessionRpcClient,
-                // TODO use config option or named constant?
+                // TODO use options option or named constant?
                 10000
             )
             rpcRemote.sendResponse(routingPath, closestConnectedNodes, dataEntries, noCloserNodesFound)
@@ -178,15 +178,15 @@ export class RecursiveOperationManager {
         }
         const targetId = getDhtAddressFromRaw(routedMessage.target)
         const request = (routedMessage.message!.body as { recursiveOperationRequest: RecursiveOperationRequest }).recursiveOperationRequest
-        // TODO use config option or named constant?
+        // TODO use options option or named constant?
         const closestConnectedNodes = this.getClosestConnectedNodes(targetId, 5)
         const dataEntries = (request.operation === RecursiveOperation.FETCH_DATA) 
-            ? Array.from(this.config.localDataStore.values(targetId))
+            ? Array.from(this.options.localDataStore.values(targetId))
             : []
         if (request.operation === RecursiveOperation.DELETE_DATA) {
-            this.config.localDataStore.markAsDeleted(targetId, getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!))
+            this.options.localDataStore.markAsDeleted(targetId, getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!))
         }
-        if (areEqualBinaries(this.config.localPeerDescriptor.nodeId, routedMessage.target)) {
+        if (areEqualBinaries(this.options.localPeerDescriptor.nodeId, routedMessage.target)) {
             // TODO this is also very similar case to what we do at line 255, could simplify the code paths?
             this.sendResponse(
                 routedMessage.routingPath,
@@ -198,7 +198,7 @@ export class RecursiveOperationManager {
             )
             return createRouteMessageAck(routedMessage)
         } else {
-            const ack = this.config.router.doRouteMessage(routedMessage, RoutingMode.RECURSIVE, excludedPeer)
+            const ack = this.options.router.doRouteMessage(routedMessage, RoutingMode.RECURSIVE, excludedPeer)
             if ((ack.error === undefined) || (ack.error === RouteMessageError.NO_TARGETS)) {
                 const noCloserContactsFound = (ack.error === RouteMessageError.NO_TARGETS) ||
                     (
@@ -220,7 +220,7 @@ export class RecursiveOperationManager {
     }
 
     private getClosestConnectedNodes(referenceId: DhtAddress, limit: number): PeerDescriptor[] {
-        const connectedNodes = this.config.connectionsView.getConnections().map((c) => this.config.createDhtNodeRpcRemote(c))
+        const connectedNodes = this.options.connectionsView.getConnections().map((c) => this.options.createDhtNodeRpcRemote(c))
         const sorted = new SortedContactList<DhtNodeRpcRemote>({
             referenceId,
             maxSize: limit,
@@ -233,7 +233,7 @@ export class RecursiveOperationManager {
     private isPeerCloserToIdThanSelf(peer: PeerDescriptor, nodeIdOrDataKey: DhtAddress): boolean {
         const nodeIdOrDataKeyRaw = getRawFromDhtAddress(nodeIdOrDataKey)
         const distance1 = getDistance(peer.nodeId, nodeIdOrDataKeyRaw)
-        const distance2 = getDistance(this.config.localPeerDescriptor.nodeId, nodeIdOrDataKeyRaw)
+        const distance2 = getDistance(this.options.localPeerDescriptor.nodeId, nodeIdOrDataKeyRaw)
         return distance1 < distance2
     }
 

@@ -6,7 +6,7 @@ import { RoutingMode } from './RoutingSession'
 import { areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { v4 } from 'uuid'
 
-interface RouterRpcLocalConfig {
+interface RouterRpcLocalOptions {
     doRouteMessage: (routedMessage: RouteMessageWrapper, mode?: RoutingMode) => RouteMessageAck
     setForwardingEntries: (routedMessage: RouteMessageWrapper) => void
     handleMessage: (message: Message) => void
@@ -26,53 +26,53 @@ export const createRouteMessageAck = (routedMessage: RouteMessageWrapper, error?
 
 export class RouterRpcLocal implements IRouterRpc {
 
-    private readonly config: RouterRpcLocalConfig
+    private readonly options: RouterRpcLocalOptions
 
-    constructor(config: RouterRpcLocalConfig) {
-        this.config = config
+    constructor(options: RouterRpcLocalOptions) {
+        this.options = options
     }
 
     async routeMessage(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
-        if (this.config.duplicateRequestDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
+        if (this.options.duplicateRequestDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
             logger.trace(`Routing message ${routedMessage.requestId} from ${getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!)} `
                 + `to ${getDhtAddressFromRaw(routedMessage.target)} is likely a duplicate`)
             return createRouteMessageAck(routedMessage, RouteMessageError.DUPLICATE)
         }
         logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
-        this.config.duplicateRequestDetector.add(routedMessage.requestId)
-        if (areEqualBinaries(this.config.localPeerDescriptor.nodeId, routedMessage.target)) {
+        this.options.duplicateRequestDetector.add(routedMessage.requestId)
+        if (areEqualBinaries(this.options.localPeerDescriptor.nodeId, routedMessage.target)) {
             logger.trace(`routing message targeted to self ${routedMessage.requestId}`)
-            this.config.setForwardingEntries(routedMessage)
-            this.config.handleMessage(routedMessage.message!)
+            this.options.setForwardingEntries(routedMessage)
+            this.options.handleMessage(routedMessage.message!)
             return createRouteMessageAck(routedMessage)
         } else {
-            return this.config.doRouteMessage(routedMessage)
+            return this.options.doRouteMessage(routedMessage)
         }
     }
 
     async forwardMessage(forwardMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
-        if (this.config.duplicateRequestDetector.isMostLikelyDuplicate(forwardMessage.requestId)) {
+        if (this.options.duplicateRequestDetector.isMostLikelyDuplicate(forwardMessage.requestId)) {
             logger.trace(`Forwarding message ${forwardMessage.requestId} from ${getNodeIdFromPeerDescriptor(forwardMessage.sourcePeer!)} `
                 + `to ${getDhtAddressFromRaw(forwardMessage.target)} is likely a duplicate`)
             return createRouteMessageAck(forwardMessage, RouteMessageError.DUPLICATE)
         }
         logger.trace(`Processing received forward routeMessage ${forwardMessage.requestId}`)
-        this.config.duplicateRequestDetector.add(forwardMessage.requestId)
-        if (areEqualBinaries(this.config.localPeerDescriptor.nodeId, forwardMessage.target)) {
+        this.options.duplicateRequestDetector.add(forwardMessage.requestId)
+        if (areEqualBinaries(this.options.localPeerDescriptor.nodeId, forwardMessage.target)) {
             return this.forwardToDestination(forwardMessage)
         } else {
-            return this.config.doRouteMessage(forwardMessage, RoutingMode.FORWARD)
+            return this.options.doRouteMessage(forwardMessage, RoutingMode.FORWARD)
         }
     }
 
     private forwardToDestination(routedMessage: RouteMessageWrapper): RouteMessageAck {
         logger.trace(`Forwarding found message targeted to self ${routedMessage.requestId}`)
         const forwardedMessage = routedMessage.message!
-        if (areEqualPeerDescriptors(this.config.localPeerDescriptor, forwardedMessage.targetDescriptor!)) {
-            this.config.handleMessage(forwardedMessage)
+        if (areEqualPeerDescriptors(this.options.localPeerDescriptor, forwardedMessage.targetDescriptor!)) {
+            this.options.handleMessage(forwardedMessage)
             return createRouteMessageAck(routedMessage)
         }
-        return this.config.doRouteMessage({ ...routedMessage, requestId: v4(), target: forwardedMessage.targetDescriptor!.nodeId })
+        return this.options.doRouteMessage({ ...routedMessage, requestId: v4(), target: forwardedMessage.targetDescriptor!.nodeId })
     }
 
 }
