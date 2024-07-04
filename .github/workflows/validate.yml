@@ -97,19 +97,19 @@ jobs:
     uses: ./.github/workflows/test-setup.yml
     with:
       package: autocertifier-server
-  client:
+  sdk:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
-      package: client
+      package: sdk
       command: |
         npm run test-unit
         npm run test-integration
-  client-e2e:
+  sdk-e2e:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
-      package: client
+      package: sdk
       docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
       run-entry-point: true
       run-brokers: true
@@ -128,20 +128,20 @@ jobs:
       docker-services: cassandra init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
       run-entry-point: true
       command: npm run test-integration
-  client-browser:
+  sdk-browser:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
-      package: client
+      package: sdk
       command: |
         sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser-unit
         xvfb-run --auto-servernum npm run test-browser-integration
-  client-browser-e2e:
+  sdk-browser-e2e:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
-      package: client
+      package: sdk
       extra-log-prefix: '-browser'
       docker-services: init-keyspace dev-chain-fast deploy-network-subgraphs-fastchain
       run-entry-point: true

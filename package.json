@@ -24,7 +24,7 @@
         "packages/dht",
         "packages/autocertifier-server",
         "packages/trackerless-network",
-        "packages/client",
+        "packages/sdk",
         "packages/broker",
         "packages/cli-tools"
     ],
