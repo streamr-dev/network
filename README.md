@@ -190,6 +190,13 @@ To publish the Docker image, use [release-docker workflow](https://github.com/st
 Click button "Run Workflow". Select the right branch and you are good to go. The Docker tags are automatically chosen based on
 the associated Git branch and tag.
 
+### Step 4: Releasing the docs
+
+Firstly, ask yourself whether the docs need to be released or not.
+
+To publish the docs, use [Production Documentation workflow](https://github.com/streamr-dev/network/actions/workflows/deploy-docs.yml).
+Click button "Run workflow". Select the right branch and you are good to go.
+
 ### Manually adjusting Docker image tag `latest`
 
 GitHub actions will update the `latest` tag if told to do so in the workflow dispatch drop-down menu.
