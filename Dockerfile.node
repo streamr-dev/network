@@ -29,4 +29,4 @@ EXPOSE 32200/tcp
 WORKDIR /home/streamr/network/packages/node
 
 # start node from default config (needs mounted volume, e.g. docker run -v $(cd ~/.streamr/config;pwd):/home/streamr/.streamr/config IMAGE
-CMD ["/usr/local/bin/npm", "exec", "-c", "streamr-broker"]
+CMD ["/usr/local/bin/npm", "exec", "-c", "streamr-node"]

@@ -1,17 +1,9 @@
 #!/usr/bin/env node
-import { program } from 'commander'
-import pkg from '../package.json'
-import { start } from '../src/config/ConfigWizard'
 
-program
-    .version(pkg.version)
-    .name('broker-config-wizard')
-    .description('Run the configuration wizard for the broker')
+// TODO: remove this file and the package.json entry in the future
+// eslint-disable-next-line max-len
+const deprecationMessage = 'The command "streamr-broker-init" is deprecated and will be removed in the future. Please switch to command "streamr-node-init" instead.'
+console.warn(deprecationMessage)
 
-;(async () => {
-    try {
-        await start()
-    } catch (e) {
-        console.error('Streamr Node Config Wizard encountered an error:\n', e)
-    }
-})()
+// side-effect: runs the command
+import './streamr-node-init'

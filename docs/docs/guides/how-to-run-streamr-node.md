@@ -157,7 +157,7 @@ There can be plenty of output from npm. If the installation fails with an error,
 ### Step 2: Configure your node
 To activate the **Config Wizard**, run,
 ```
-streamr-broker-init
+streamr-node-init
 ```
 
 #### Using the Config Wizard
@@ -179,7 +179,7 @@ If you're running a node to become an Operator, then you could now jump back to 
 ### Step 3: Start the Streamr node
 To start your Streamr node, run,
 ```
-streamr-broker PATH_TO_CONFIG_FILE
+streamr-node PATH_TO_CONFIG_FILE
 ```
 
 You should start to see logging similar to this:

@@ -157,7 +157,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
+        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
     })
 
     it('prints out the generated private key onto the screen if told to', async () => {
@@ -220,7 +220,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Flee Kit Stomach\n`)
 
-        expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
+        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
     })
 
     it('validates given private key', async () => {
@@ -299,7 +299,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
+        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
     })
 
     it('validates the operator address', async () => {
@@ -387,7 +387,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
+        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
     })
 
     it('enables websocket plugin on a custom port', async () => {
@@ -445,7 +445,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
+        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
     })
 
     it('enables mqtt plugin on the default port', async () => {
@@ -507,7 +507,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
+        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
     })
 
     it('enables mqtt plugin on a custom port', async () => {
@@ -569,7 +569,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
+        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
     })
 
     it('enables http plugin on the default port', async () => {
@@ -632,7 +632,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
+        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
     })
 
     it('enables http plugin on a custom port', async () => {
@@ -693,7 +693,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
+        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
     })
 
     it('enables all pubsub plugins on default ports', async () => {
@@ -766,7 +766,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
+        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
     })
 
     it('enables all pubsub plugins on custom ports', async () => {
@@ -837,7 +837,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
+        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
     })
 
     it('validates port number values', async () => {
@@ -947,7 +947,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
+        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
     })
 
     it('disallows taking default ports if they are inexplicitly used', async () => {
@@ -1024,7 +1024,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
+        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
     })
 
     it('allows to uses a custom file path for the config file', async () => {
@@ -1234,7 +1234,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-broker ${storagePath}\n`)
+        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
     })
 
     it('tells the user to fund their node address if the balance is too low', async () => {

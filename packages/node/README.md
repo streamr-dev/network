@@ -34,11 +34,11 @@ First [install](#install) the package globally if you have not yet.
 
 Create a configuration file with interactive tool:
 ```
-streamr-broker-init 
+streamr-node-init
 ```
 Then run the command broker with the desired configuration file:
 ```
-streamr-broker <configFile>
+streamr-node <configFile>
 ```
 
 ## Configuration
