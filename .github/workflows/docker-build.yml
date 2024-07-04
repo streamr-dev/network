@@ -82,7 +82,7 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=raw,value=${{ env.version_head_tag }},enable=${{ version_head_tag != '' }}
+            type=raw,value=${{ env.version_head_tag }},enable=${{ env.version_head_tag != '' }}
             type=raw,value=${{ inputs.branch }},enable=${{ inputs.branch != 'main' }}
             type=raw,value=dev,enable=${{ inputs.branch == 'main' }}
             type=raw,value=latest,enable=${{ inputs.include_latest_tag }}
