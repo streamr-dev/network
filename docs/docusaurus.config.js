@@ -35,7 +35,7 @@ const config = {
 
             // Plugin / TypeDoc options
             {
-                entryPoints: ["../packages/client/src/exports.ts"],
+                entryPoints: ["../packages/sdk/src/exports.ts"],
                 disableSources: true,
                 name: "API reference",
                 excludePrivate: true,
@@ -51,7 +51,7 @@ const config = {
                     position: 5,
                 },
                 out: "usage/sdk/api",
-                tsconfig: "../packages/client/tsconfig.json",
+                tsconfig: "../packages/sdk/tsconfig.json",
             },
         ],
         path.resolve("plugins", "refine-docs"),

@@ -26,7 +26,7 @@ runs:
         key: cache-build-${{ github.sha }}
         path: |
           packages/*/dist
-          packages/client/vendor
+          packages/sdk/vendor
           packages/proto-rpc/src/proto
           packages/dht/src/proto
           packages/trackerless-network/src/proto

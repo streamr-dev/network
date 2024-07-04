@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://streamr.network">
-    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/network-monorepo/main/packages/client/readme-header.png" width="1320" />
+    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/network-monorepo/main/packages/sdk/readme-header.png" width="1320" />
   </a>
 </p>
 
@@ -18,7 +18,7 @@ Monorepo containing the main components of Streamr Network.
 
 ### User-Facing
 * [node](packages/broker/README.md) (@streamr/node)
-* [sdk](packages/client/README.md) (@streamr/sdk)
+* [sdk](packages/sdk/README.md) (@streamr/sdk)
 * [cli-tools](packages/cli-tools/README.md) (@streamr/cli-tools)
 
 ### Internal
@@ -144,17 +144,17 @@ npm install
 
 ## Environment variables
 
-| Variable                     | Description                                                                            | Packages                                    |
-|------------------------------|----------------------------------------------------------------------------------------|---------------------------------------------|
-| `BROWSER_TEST_DEBUG_MODE`    | Leaves the Electron window open while running browser tests                            | utils, proto-rpc, dht, network-node, client |
-| `STREAMR_DOCKER_DEV_HOST`    | Sets an alternative IP address for streamr-docker-dev in end-to-end tests              | client, broker                              |
-| `LOG_LEVEL`                  | Adjust logging level                                                                   | _all_                                       |
-| `DISABLE_PRETTY_LOG`         | Set to true to disable pretty printing of logs and print JSONL instead                 | _all_                                       |
-| `LOG_COLORS`                 | Set to false to disable coloring of log messages                                       | _all_                                       |
-| `NOLOG`                      | Set to true to disable all logging                                                     | _all_                                       |
-| `NODE_DATACHANNEL_LOG_LEVEL` | Adjust logging level of `node-datachannel` library                                     | network-node                                |
-| `BUNDLE_ANALYSIS`            | Whether to produce a bundle analysis when building client package for browser          | client (compile time)                       |
-| `STREAMR__BROKER__`          | Wildcard [set of variables](packages/broker/configuration.md) used to configure broker | broker                                      |
+| Variable                     | Description                                                                            | Packages                                 |
+|------------------------------|----------------------------------------------------------------------------------------|------------------------------------------|
+| `BROWSER_TEST_DEBUG_MODE`    | Leaves the Electron window open while running browser tests                            | utils, proto-rpc, dht, network-node, sdk |
+| `STREAMR_DOCKER_DEV_HOST`    | Sets an alternative IP address for streamr-docker-dev in end-to-end tests              | sdk, broker                              |
+| `LOG_LEVEL`                  | Adjust logging level                                                                   | _all_                                    |
+| `DISABLE_PRETTY_LOG`         | Set to true to disable pretty printing of logs and print JSONL instead                 | _all_                                    |
+| `LOG_COLORS`                 | Set to false to disable coloring of log messages                                       | _all_                                    |
+| `NOLOG`                      | Set to true to disable all logging                                                     | _all_                                    |
+| `NODE_DATACHANNEL_LOG_LEVEL` | Adjust logging level of `node-datachannel` library                                     | network-node                             |
+| `BUNDLE_ANALYSIS`            | Whether to produce a bundle analysis when building sdk package for browser             | sdk (compile time)                       |
+| `STREAMR__BROKER__`          | Wildcard [set of variables](packages/broker/configuration.md) used to configure broker | broker                                   |
 
 ## Release
 

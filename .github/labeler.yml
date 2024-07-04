@@ -27,10 +27,10 @@ proto-rpc:
   - changed-files:
       - any-glob-to-any-file: 'packages/proto-rpc/*'
       - any-glob-to-any-file: 'packages/proto-rpc/**/*'
-client:
+sdk:
   - changed-files:
-      - any-glob-to-any-file: 'packages/client/*'
-      - any-glob-to-any-file: 'packages/client/**/*'
+      - any-glob-to-any-file: 'packages/sdk/*'
+      - any-glob-to-any-file: 'packages/sdk/**/*'
 test-utils:
   - changed-files:
       - any-glob-to-any-file: 'packages/test-utils/*'

@@ -17,7 +17,7 @@ autocertifier-client
 dht
 autocertifier-server
 trackerless-network
-client
+sdk
 cli-tools
 broker"
 
