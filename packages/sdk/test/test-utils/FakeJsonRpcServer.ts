@@ -143,6 +143,10 @@ export class FakeJsonRpcServer {
         }
     }
 
+    clearRequests(): void {
+        this.requests = []
+    }
+
     getRequests(): JsonRpcRequest[] {
         return this.requests
     }
