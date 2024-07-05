@@ -37,7 +37,7 @@
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
     "uuid": "^9.0.1",
-    "yallist": "^4.0.0"
+    "yallist": "^5.0.0"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
