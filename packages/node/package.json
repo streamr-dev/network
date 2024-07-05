@@ -39,7 +39,7 @@
     "@streamr/utils": "101.0.0-beta.4",
     "aedes": "^0.51.2",
     "ajv": "^8.16.0",
-    "ajv-formats": "^2.1.1",
+    "ajv-formats": "^3.0.1",
     "cassandra-driver": "^4.7.2",
     "chalk": "^4.0.0",
     "commander": "^12.1.0",
