@@ -70,7 +70,7 @@
     "jest-matcher-utils": "^29.5.0",
     "lodash-webpack-plugin": "^0.11.6",
     "nightwatch": "^3.6.3",
-    "node-polyfill-webpack-plugin": "^2.0.1",
+    "node-polyfill-webpack-plugin": "^4.0.0",
     "terser-webpack-plugin": "^5.3.10",
     "ts-loader": "^9.5.1",
     "util": "^0.12.4",
