@@ -51,7 +51,7 @@
     "@jest/globals": "^29.5.0",
     "@streamr/test-utils": "101.0.0-beta.4",
     "@types/heap": "^0.2.34",
-    "@types/lodash": "^4.14.202",
+    "@types/lodash": "^4.17.6",
     "@types/node-fetch": "^2.6.4",
     "@types/uuid": "^9.0.8",
     "ajv": "^8.16.0",

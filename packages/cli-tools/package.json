@@ -38,7 +38,7 @@
   "devDependencies": {
     "@streamr/test-utils": "101.0.0-beta.4",
     "@types/event-stream": "^4.0.5",
-    "@types/lodash": "^4.14.202",
+    "@types/lodash": "^4.17.6",
     "@types/merge2": "^1.4.4",
     "merge2": "^1.4.1"
   }
