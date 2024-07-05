@@ -28,8 +28,7 @@ updates:
     groups:
       dependencies:
         patterns:
-          - "./packages/*/package.json"
-          - "./package.json"
+          - "*"
     reviewers:
       - harbu
   - package-ecosystem: docker
