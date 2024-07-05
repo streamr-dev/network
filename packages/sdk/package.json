@@ -83,7 +83,7 @@
   "#IMPORTANT": "babel-runtime must be in dependencies, not devDependencies",
   "dependencies": {
     "@babel/runtime": "^7.24.0",
-    "@babel/runtime-corejs3": "^7.24.0",
+    "@babel/runtime-corejs3": "^7.24.7",
     "@lit-protocol/core": "2.2.5",
     "@lit-protocol/uint8arrays": "^3.2.3",
     "@streamr/config": "^5.3.13",
