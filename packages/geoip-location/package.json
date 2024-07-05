@@ -29,7 +29,7 @@
     "eventemitter3": "^5.0.0",
     "long-timeout": "^0.1.1",
     "mmdb-lib": "^2.1.1",
-    "tar": "^6.2.1",
+    "tar": "^7.4.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
