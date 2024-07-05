@@ -1,5 +1,5 @@
 import { Readable, pipeline } from 'stream'
-import tar from 'tar'
+import { extract } from 'tar'
 import { ReadableStream } from 'stream/web'
 import NodePath from 'path'     // use NodePath to avoid conflict with other 'path' symbols
 import fs from 'fs'
@@ -9,7 +9,7 @@ const doExtractFileFromTarStream = (fileName: string, stream: ReadableStream<any
         try {
             const nodeStream = Readable.fromWeb(stream)
             pipeline(nodeStream,
-                tar.x({
+                extract({
                     cwd: downloadFolder,
                     filter: (entryPath: string): boolean => NodePath.basename(entryPath) === fileName,
                     strip: 1
