@@ -29,7 +29,7 @@
     "@snapshot-labs/snapshot.js": "^0.11.8",
     "@streamr/sdk": "101.0.0-beta.4",
     "@streamr/utils": "101.0.0-beta.4",
-    "commander": "^12.0.0",
+    "commander": "^12.1.0",
     "easy-table": "^1.1.1",
     "ethers": "^6.13.0",
     "event-stream": "^4.0.1",

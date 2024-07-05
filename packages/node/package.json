@@ -42,7 +42,7 @@
     "ajv-formats": "^2.1.1",
     "cassandra-driver": "^4.7.2",
     "chalk": "^4.0.0",
-    "commander": "^12.0.0",
+    "commander": "^12.1.0",
     "consistent-hash": "^1.1.1",
     "cors": "^2.8.5",
     "ethers": "^6.13.0",
