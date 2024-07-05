@@ -78,7 +78,7 @@
     "webpack": "^5.90.3",
     "webpack-bundle-analyzer": "^4.10.1",
     "webpack-cli": "^5.1.4",
-    "webpack-merge": "^5.10.0"
+    "webpack-merge": "^6.0.1"
   },
   "#IMPORTANT": "babel-runtime must be in dependencies, not devDependencies",
   "dependencies": {
