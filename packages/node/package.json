@@ -60,7 +60,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@inquirer/testing": "^2.1.12",
+    "@inquirer/testing": "^2.1.25",
     "@streamr/test-utils": "101.0.0-beta.4",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
