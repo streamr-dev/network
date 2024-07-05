@@ -37,7 +37,7 @@
     "@streamr/network-contracts-ethers6": "^7.1.2",
     "@streamr/sdk": "101.0.0-beta.4",
     "@streamr/utils": "101.0.0-beta.4",
-    "aedes": "^0.51.0",
+    "aedes": "^0.51.2",
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
     "cassandra-driver": "^4.7.2",
