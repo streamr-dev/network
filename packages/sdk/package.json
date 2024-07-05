@@ -75,7 +75,7 @@
     "ts-loader": "^9.5.1",
     "util": "^0.12.4",
     "weak-napi": "^2.0.2",
-    "webpack": "^5.90.3",
+    "webpack": "^5.92.1",
     "webpack-bundle-analyzer": "^4.10.1",
     "webpack-cli": "^5.1.4",
     "webpack-merge": "^5.10.0"
