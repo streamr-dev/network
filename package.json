@@ -37,7 +37,7 @@
         "@typescript-eslint/eslint-plugin": "^7.15.0",
         "@typescript-eslint/parser": "^7.15.0",
         "cli-table": "^0.3.6",
-        "eslint": "^8.57.0",
+        "eslint": "^9.6.0",
         "eslint-config-streamr-ts": "^4.1.0",
         "eslint-plugin-import": "^2.29.1",
         "eslint-plugin-promise": "^6.4.0",
