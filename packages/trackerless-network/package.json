@@ -46,7 +46,7 @@
     "@types/yallist": "^4.0.1",
     "commander": "^12.1.0",
     "expect": "^29.6.2",
-    "ts-essentials": "^9.4.1",
+    "ts-essentials": "^10.0.1",
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2"
   }
