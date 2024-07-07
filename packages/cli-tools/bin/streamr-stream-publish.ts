@@ -5,16 +5,20 @@ import { StreamrClient } from '@streamr/sdk'
 import { wait } from '@streamr/utils'
 import es from 'event-stream'
 import { createClientCommand, Options as BaseOptions } from '../src/command'
+import { createFnParseInt } from '../src/common'
 
 interface Options extends BaseOptions {
-    partitionKeyField?: string
+    partitionKeyField?: string,
+    partition?: string
 }
 
 const publishStream = (
     stream: string,
     partitionKeyField: string | undefined,
-    client: StreamrClient
+    partition: string | undefined,
+    client: StreamrClient,
 ): Writable => {
+    const parser = createFnParseInt('partition')
     const writable = new Writable({
         objectMode: true,
         write: (data: any, _: any, done: any) => {
@@ -32,7 +36,8 @@ const publishStream = (
                 return
             }
             const partitionKey = (partitionKeyField !== undefined) ? json[partitionKeyField] : undefined
-            client.publish(stream, json, { partitionKey }).then(
+            const streamOptions = (partition !== undefined) ? {id: stream, partition: parser(partition)} : stream
+            client.publish(streamOptions, json, { partitionKey }).then(
                 () => done(),
                 (err) => done(err)
             )
@@ -42,7 +47,12 @@ const publishStream = (
 }
 
 createClientCommand(async (client: StreamrClient, streamId: string, options: Options) => {
-    const ps = publishStream(streamId, options.partitionKeyField, client)
+    if (options.partitionKeyField !== undefined && options.partition !== undefined) {
+        console.error('Partition key and partition id are mutually exclusive. Use only one of these options.')
+        process.exit()
+    }
+
+    const ps = publishStream(streamId, options.partitionKeyField, options.partition, client)
     return new Promise((resolve, reject) => {
         process.stdin
             .pipe(es.split())
@@ -63,4 +73,5 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
     .arguments('<streamId>')
     .description('publish to a stream by reading JSON messages from stdin line-by-line')
     .option('-k, --partition-key-field <string>', 'field name in each message to use for assigning the message to a stream partition')
+    .option('-p, --partition [partition]', 'partition')
     .parseAsync()
