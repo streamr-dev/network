@@ -39,7 +39,7 @@
     "ipaddr.js": "^2.0.1",
     "k-bucket": "^5.1.0",
     "lodash": "^4.17.21",
-    "lru-cache": "10.3.0",
+    "lru-cache": "10.4.0",
     "node-datachannel": "^0.10.1",
     "querystring": "0.2.1",
     "uuid": "^10.0.0",
