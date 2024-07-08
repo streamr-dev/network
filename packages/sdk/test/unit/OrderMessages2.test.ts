@@ -1,5 +1,15 @@
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, StreamPartID, StreamPartIDUtils, hexToBinary, toEthereumAddress, toStreamID, wait, waitForCondition } from '@streamr/utils'
+import {
+    EthereumAddress,
+    StreamPartID,
+    StreamPartIDUtils,
+    hexToBinary,
+    toEthereumAddress,
+    toStreamID,
+    wait,
+    waitForCondition,
+    binaryToHex
+} from '@streamr/utils'
 import { shuffle } from 'lodash'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'

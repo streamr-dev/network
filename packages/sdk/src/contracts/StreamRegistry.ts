@@ -358,9 +358,9 @@ export class StreamRegistry {
         if (isPublicPermissionQuery(query)) {
             return this.streamRegistryContractReadonly.hasPublicPermission(streamId, permissionType)
         } else if (query.allowPublic) {
-            return this.streamRegistryContractReadonly.hasPermission(streamId, binaryToHex(query.user), permissionType)
+            return this.streamRegistryContractReadonly.hasPermission(streamId, binaryToHex(query.user, true), permissionType)
         } else {
-            return this.streamRegistryContractReadonly.hasDirectPermission(streamId, binaryToHex(query.user), permissionType)
+            return this.streamRegistryContractReadonly.hasDirectPermission(streamId, binaryToHex(query.user, true), permissionType)
         }
     }
 

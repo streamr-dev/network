@@ -1,11 +1,11 @@
 import { areEqualPeerDescriptors } from '@streamr/dht'
-import { randomEthereumAddress } from '@streamr/test-utils'
 import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { ContentDeliveryManager } from '../../src/logic/ContentDeliveryManager'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { MockControlLayerNode } from '../utils/mock/MockControlLayerNode'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor, createStreamMessage, mockConnectionLocker } from '../utils/utils'
+import { randomBytes } from 'crypto'
 
 describe('ContentDeliveryManager', () => {
 

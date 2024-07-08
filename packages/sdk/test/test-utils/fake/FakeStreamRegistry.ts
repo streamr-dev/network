@@ -1,5 +1,5 @@
 import { Methods } from '@streamr/test-utils'
-import { EthereumAddress, Multimap, StreamID, toEthereumAddress } from '@streamr/utils'
+import { binaryToHex, EthereumAddress, hexToBinary, Multimap, StreamID } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
 import { Stream, StreamMetadata } from '../../../src/Stream'

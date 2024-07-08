@@ -4,7 +4,8 @@ import {
     StreamID,
     StreamPartID,
     StreamPartIDUtils,
-    collect, hexToBinary,
+    collect,
+    hexToBinary,
     toStreamID,
     waitForCondition
 } from '@streamr/utils'
@@ -19,6 +20,7 @@ import { MOCK_CONTENT } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
+import { randomBytes } from 'crypto'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 const PUBLISHER_ID = randomBytes(20)

@@ -218,10 +218,7 @@ describe('StreamRegistry', () => {
             const valid = await client.isStreamPublisher(createdStream.id, userId)
             return expect(valid).toBe(true)
         }, TIMEOUT)
-        it('throws error for invalid address', async () => {
-            return expect(() => client.isStreamPublisher(createdStream.id, Uint8Array.from([1, 2, 3]))).rejects.toThrow()
-        }, TIMEOUT)
-        it('returns false for invalid publishers', async () => {
+        it('returns false for invalid user', async () => {
             const valid = await client.isStreamPublisher(createdStream.id, randomBytes(15))
             return expect(valid).toBe(false)
         }, TIMEOUT)
@@ -241,10 +238,7 @@ describe('StreamRegistry', () => {
             const valid = await client.isStreamSubscriber(createdStream.id, userId)
             return expect(valid).toBe(true)
         }, TIMEOUT)
-        it('throws error for invalid address', async () => {
-            return expect(() => client.isStreamSubscriber(createdStream.id, Uint8Array.from([1, 2, 3]))).rejects.toThrow()
-        }, TIMEOUT)
-        it('returns false for invalid subscribers', async () => {
+        it('returns false for invalid user', async () => {
             const valid = await client.isStreamSubscriber(createdStream.id, randomBytes(15))
             return expect(valid).toBe(false)
         }, TIMEOUT)

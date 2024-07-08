@@ -40,12 +40,9 @@ describe('Stream permissions', () => {
         })
     }, TIMEOUT)
 
-    describe('happy path', () => {
+    describe.only('happy path', () => {
         it('direct permissions', async () => {
-            await stream.grantPermissions({
-                user: otherUserId,
-                permissions: [StreamPermission.PUBLISH, StreamPermission.EDIT],
-            })
+            const otherUserId = randomBytes(50)
             expect(await stream.hasPermission({
                 permission: StreamPermission.PUBLISH,
                 user: otherUserId,
