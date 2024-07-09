@@ -15,7 +15,7 @@ const chain = 'polygon'
 
 const GROUP_KEY_ID_SEPARATOR = '::'
 
-const formEvmContractConditions = (streamRegistryChainAddress: string, streamId: StreamID) => ([
+export const formEvmContractConditions = (streamRegistryChainAddress: string, streamId: StreamID) => ([
     {
         contractAddress: streamRegistryChainAddress,
         chain,
@@ -95,14 +95,14 @@ function splitGroupKeyId(groupKeyId: string): { ciphertext: string, dataToEncryp
 @scoped(Lifecycle.ContainerScoped)
 export class LitProtocolFacade {
 
-    private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>
+    private readonly config: Pick<StrictStreamrClientConfig, 'contracts'>
     private readonly authentication: Authentication
     private readonly logger: Logger
     private litNodeClient?: LitNodeClient
 
     /* eslint-disable indent */
     constructor(
-        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts' | 'encryption'>,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'contracts'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         loggerFactory: LoggerFactory
     ) {
@@ -131,9 +131,6 @@ export class LitProtocolFacade {
                 evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
                 dataToEncrypt: symmetricKey
             })
-            if (ciphertext === undefined || dataToEncryptHash === undefined) {
-                return undefined
-            }
             const groupKeyId = ciphertext + GROUP_KEY_ID_SEPARATOR + dataToEncryptHash
             this.logger.debug('Stored key', { traceId, streamId, groupKeyId })
             return new GroupKey(groupKeyId, Buffer.from(symmetricKey))
@@ -162,9 +159,6 @@ export class LitProtocolFacade {
                 chain,
                 authSig
             })
-            if (decryptResponse?.decryptedData === undefined) {
-                return undefined
-            }
             this.logger.debug('Got key', { groupKeyId, streamId })
             return new GroupKey(groupKeyId, Buffer.from(decryptResponse.decryptedData))
         } catch (err) {
