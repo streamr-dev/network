@@ -15,7 +15,13 @@ const chain = 'polygon'
 
 const GROUP_KEY_ID_SEPARATOR = '::'
 
-export const formEvmContractConditions = (streamRegistryChainAddress: string, streamId: StreamID) => ([
+// TODO: can this type be imported directly from '@lit-protocol/lit-node-client'?
+type ContractConditions = Parameters<LitNodeClient['encrypt']>[0]['evmContractConditions']
+
+export const formEvmContractConditions = (
+    streamRegistryChainAddress: string,
+    streamId: StreamID
+): ContractConditions => ([
     {
         contractAddress: streamRegistryChainAddress,
         chain,

@@ -1,6 +1,5 @@
 import 'reflect-metadata'
 import type { Overrides, Eip1193Provider } from 'ethers'
-import type { LitNodeClient } from '@lit-protocol/lit-node-client'
 import cloneDeep from 'lodash/cloneDeep'
 import { DeepRequired, MarkOptional } from 'ts-essentials'
 import { LogLevel, merge } from '@streamr/utils'
