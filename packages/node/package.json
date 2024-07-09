@@ -50,7 +50,6 @@
     "heap": "^0.2.6",
     "lodash": "^4.17.21",
     "merge2": "^1.4.1",
-    "nat-type-identifier": "^2.0.9",
     "node-fetch": "^2.7.0",
     "p-limit": "^3.1.0",
     "qs": "^6.12.2",

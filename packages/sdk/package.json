@@ -104,7 +104,6 @@
     "quick-lru": "^7.0.0",
     "readable-stream": "^4.5.2",
     "reflect-metadata": "^0.2.1",
-    "sha3": "^2.1.4",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
     "ts-essentials": "^10.0.1",

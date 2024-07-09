@@ -35,9 +35,7 @@
     "@streamr/browser-test-runner": "^0.0.1",
     "@streamr/test-utils": "101.0.0",
     "@types/lodash": "^4.17.6",
-    "@types/uuid": "^10.0.0",
-    "patch-package": "^8.0.0",
-    "ts-node": "^10.9.2"
+    "@types/uuid": "^10.0.0"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8",
