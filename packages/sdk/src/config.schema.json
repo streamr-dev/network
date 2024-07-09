@@ -473,7 +473,7 @@
                 },
                 "jsonRpcTimeout": {
                     "type": "number",
-                    "default": 15000
+                    "default": 30000
                 }
             },
             "default": {}
