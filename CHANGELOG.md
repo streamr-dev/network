@@ -53,6 +53,15 @@ Changes before Tatum release are not documented in this file.
 #### Security
 
 
+## [101.0.1] - 2047-07-09
+
+### @streamr/sdk
+
+#### Changed
+
+- Set default RPC timeout to 30 seconds (https://github.com/streamr-dev/network/commit/131fb456d26486c12b2facd6e78bee47319c2533)
+
+
 ## [101.0.0] - 2024-07-08
 
 ### @streamr/sdk
@@ -196,7 +205,8 @@ Changes before Tatum release are not documented in this file.
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v101.0.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v101.0.1...HEAD
+[101.0.1]: https://github.com/streamr-dev/network/compare/v101.0.0...v101.0.1
 [101.0.0]: https://github.com/streamr-dev/network/compare/v100.2.4...v101.0.0
 [100.2.4]: https://github.com/streamr-dev/network/compare/v100.2.3...v100.2.4
 [100.2.3]: https://github.com/streamr-dev/network/compare/v100.2.2...v100.2.3
