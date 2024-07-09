@@ -50,6 +50,8 @@ import { StreamDefinition } from './types'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
+import type { LitNodeClient } from '@lit-protocol/lit-node-client'
+import { LitProtocolFacade } from './encryption/LitProtocolFacade'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -91,6 +93,7 @@ export class StreamrClient {
     private readonly operatorRegistry: OperatorRegistry
     private readonly contractFactory: ContractFactory
     private readonly localGroupKeyStore: LocalGroupKeyStore
+    private readonly litProtocolFacade: LitProtocolFacade
     private readonly theGraphClient: TheGraphClient
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly config: StrictStreamrClientConfig
@@ -127,6 +130,7 @@ export class StreamrClient {
         this.operatorRegistry = container.resolve<OperatorRegistry>(OperatorRegistry)
         this.contractFactory = container.resolve<ContractFactory>(ContractFactory)
         this.localGroupKeyStore = container.resolve<LocalGroupKeyStore>(LocalGroupKeyStore)
+        this.litProtocolFacade = container.resolve<LitProtocolFacade>(LitProtocolFacade)
         this.streamIdBuilder = container.resolve<StreamIDBuilder>(StreamIDBuilder)
         this.eventEmitter = container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
         this.destroySignal = container.resolve<DestroySignal>(DestroySignal)
@@ -159,6 +163,19 @@ export class StreamrClient {
         return convertStreamMessageToMessage(result)
     }
 
+    // --------------------------------------------------------------------------------------------
+    // Encryption
+    // --------------------------------------------------------------------------------------------
+
+    /**
+     * When enabled encryption key storing and fetching will primarily be done through the
+     * [Lit Protocol](https://litprotocol.com/) and secondarily through the standard Streamr
+     * key-exchange system.
+     */
+    enableLitProtocol(litProtocolClient: LitNodeClient): void {
+        this.litProtocolFacade.setLitNodeClient(litProtocolClient)
+    }
+
     /**
      * Manually updates the encryption key used when publishing messages to a given stream.
      */
@@ -166,7 +183,7 @@ export class StreamrClient {
         if (opts.streamId === undefined) {
             throw new Error('streamId required')
         }
-        if (opts.key !== undefined && this.config.encryption.litProtcolClient !== undefined) {
+        if (opts.key !== undefined && this.litProtocolFacade.isLitProtocolEnabled()) {
             throw new StreamrClientError('cannot pass "key" when Lit Protocol is enabled', 'UNSUPPORTED_OPERATION')
         }
         const streamId = await this.streamIdBuilder.toStreamID(opts.streamId)

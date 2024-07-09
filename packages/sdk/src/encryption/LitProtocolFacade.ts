@@ -1,12 +1,13 @@
 import type { LitNodeClient } from '@lit-protocol/lit-node-client'
-import { Logger, StreamID, randomString } from '@streamr/utils'
-//import * as siwe from 'lit-siwe'
+import { Logger, StreamID, randomString, binaryToHex } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { StreamPermission, streamPermissionToSolidityType } from '../permission'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { GroupKey } from './GroupKey'
+import { ethers } from 'ethers'
+import { SiweMessage } from 'lit-siwe'
 
 const logger = new Logger(module)
 
@@ -53,14 +54,14 @@ const formEvmContractConditions = (streamRegistryChainAddress: string, streamId:
     }
 ])
 
-/*const signAuthMessage = async (litNodeClient: LitNodeClient, authentication: Authentication) => {
+const signAuthMessage = async (litNodeClient: LitNodeClient, authentication: Authentication) => {
     const domain = 'localhost'
     const uri = 'https://localhost/login'
     const statement = 'dummy'
     const addressInChecksumCase = ethers.getAddress(await authentication.getAddress())
     const nonce = await litNodeClient.getLatestBlockhash()
     const expirationTime = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString()
-    const siweMessage = new siwe.SiweMessage({
+    const siweMessage = new SiweMessage({
         domain,
         uri,
         statement,
@@ -78,7 +79,7 @@ const formEvmContractConditions = (streamRegistryChainAddress: string, streamId:
         signedMessage: messageToSign,
         address: addressInChecksumCase
     }
-}*/
+}
 
 function splitGroupKeyId(groupKeyId: string): { ciphertext: string, dataToEncryptHash: string } | undefined {
     const [ciphertext, dataToEncryptHash] = groupKeyId.split(GROUP_KEY_ID_SEPARATOR)
@@ -108,7 +109,14 @@ export class LitProtocolFacade {
         this.config = config
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
-        this.litNodeClient = config.encryption.litProtcolClient
+    }
+
+    setLitNodeClient(litNodeClient: LitNodeClient): void {
+        this.litNodeClient = litNodeClient
+    }
+
+    isLitProtocolEnabled(): boolean {
+        return this.litNodeClient !== undefined
     }
 
     async store(streamId: StreamID, symmetricKey: Uint8Array): Promise<GroupKey | undefined> {
@@ -119,7 +127,6 @@ export class LitProtocolFacade {
         this.logger.debug('Storing key', { streamId, traceId })
         try {
             await this.litNodeClient.connect()
-            //const authSig = await signAuthMessage(client, this.authentication)
             const { ciphertext, dataToEncryptHash } = await this.litNodeClient.encrypt({
                 evmContractConditions: formEvmContractConditions(this.config.contracts.streamRegistryChainAddress, streamId),
                 dataToEncrypt: symmetricKey
