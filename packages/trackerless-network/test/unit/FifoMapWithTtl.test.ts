@@ -177,6 +177,30 @@ describe('FifoMapWithTtl', () => {
                 time = 150
                 expect(fifoMap.get('hello')).toEqual('world')
             })
+
+            it('#values returns non-expired items', () => {
+                time = 0
+                fifoMap.set('hello', 'world')
+                time = 50
+                fifoMap.set('foo', 'bar')
+                time = 100
+                fifoMap.set('lorem', 'ipsum')
+                time = 120
+                fifoMap.set('dolor', 'sit')
+
+                expect(fifoMap.values()).toEqual(['bar', 'ipsum', 'sit'])
+
+                time = 130
+                fifoMap.set('amet', 'consectetur')
+
+                expect(fifoMap.values()).toEqual(['bar', 'ipsum', 'sit', 'consectetur'])
+
+                time = 200
+                expect(fifoMap.values()).toEqual(['sit', 'consectetur'])
+
+                time = 300
+                expect(fifoMap.values()).toEqual([])
+            })
         })
 
         describe('onItemDropped callback', () => {

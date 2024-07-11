@@ -27,7 +27,7 @@ export class PropagationTaskStore {
     }
 
     get(): PropagationTask[] {
-        return this.tasks.values().map((task) => task.value)
+        return this.tasks.values()
     }
 
     add(task: PropagationTask): void {

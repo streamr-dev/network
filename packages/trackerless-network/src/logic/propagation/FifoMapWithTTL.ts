@@ -102,7 +102,15 @@ export class FifoMapWithTTL<K, V> {
         return item.value
     }
 
-    values(): Item<K, V>[] {
-        return [...this.items.values()]
+    values(): V[] {
+        const keys = [...this.items.keys()]
+        const values = []
+        for (const key of keys) {
+            const value = this.get(key)
+            if (value !== undefined) {
+                values.push(value)
+            }
+        }
+        return values
     }
 }
