@@ -168,6 +168,8 @@ export class StreamrClient {
     // --------------------------------------------------------------------------------------------
 
     /**
+     * Enable experimental Lit Protocol key exchange.
+     *
      * When enabled encryption key storing and fetching will primarily be done through the
      * [Lit Protocol](https://litprotocol.com/) and secondarily through the standard Streamr
      * key-exchange system.
