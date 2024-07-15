@@ -32,7 +32,7 @@
     "karma-webpack": "^5.0.1",
     "node-polyfill-webpack-plugin": "^4.0.0",
     "timers-browserify": "^2.0.12",
-    "webpack": "^5.92.1",
+    "webpack": "^5.93.0",
     "webpack-cli": "^5.1.4"
   }
 }

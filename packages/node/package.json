@@ -37,7 +37,7 @@
     "@streamr/sdk": "101.0.1",
     "@streamr/utils": "101.0.1",
     "aedes": "^0.51.2",
-    "ajv": "^8.16.0",
+    "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "cassandra-driver": "^4.7.2",
     "chalk": "^4.0.0",
@@ -71,7 +71,7 @@
     "@types/stream-to-array": "^2.3.3",
     "@types/supertest": "^6.0.2",
     "@types/uuid": "^10.0.0",
-    "@types/ws": "^8.5.10",
+    "@types/ws": "^8.5.11",
     "async-mqtt": "^2.6.1",
     "stream-to-array": "^2.3.0",
     "supertest": "^7.0.0"
