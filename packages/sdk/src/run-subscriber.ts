@@ -1,5 +1,5 @@
 import { StreamrClient } from './StreamrClient'
-import { StreamPartIDUtils } from '@streamr/protocol'
+import { StreamPartIDUtils } from '@streamr/utils'
 import { getNodeIdFromPeerDescriptor, ConnectionManager, PeerDescriptor } from '@streamr/dht'
 
 const main = async () => {
