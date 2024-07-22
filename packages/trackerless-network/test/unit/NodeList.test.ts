@@ -6,14 +6,14 @@ import {
     getDhtAddressFromRaw,
     getNodeIdFromPeerDescriptor,
 } from '@streamr/dht'
-import { StreamPartIDUtils } from '@streamr/protocol'
+import { StreamPartIDUtils } from '@streamr/utils'
 import { expect } from 'expect'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
 import { NodeList } from '../../src/logic/NodeList'
 import { formStreamPartContentDeliveryServiceId } from '../../src/logic/formStreamPartDeliveryServiceId'
 import { ContentDeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { createMockPeerDescriptor } from '../utils/utils'
 import { MockTransport } from '../utils/mock/MockTransport'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 const streamPartId = StreamPartIDUtils.parse('stream#0')
 

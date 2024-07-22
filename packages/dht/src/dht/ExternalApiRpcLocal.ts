@@ -11,10 +11,9 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'
 import { Any } from '../proto/google/protobuf/any'
-import { DhtAddress, getNodeIdFromPeerDescriptor } from '../identifiers'
-import { getDhtAddressFromRaw } from '../identifiers'
+import { DhtAddress, getNodeIdFromPeerDescriptor, getDhtAddressFromRaw } from '../identifiers'
 
-interface ExternalApiRpcLocalConfig {
+interface ExternalApiRpcLocalOptions {
     executeRecursiveOperation: (
         targetId: DhtAddress,
         operation: RecursiveOperation,
@@ -29,15 +28,15 @@ interface ExternalApiRpcLocalConfig {
 
 export class ExternalApiRpcLocal implements IExternalApiRpc {
 
-    private readonly config: ExternalApiRpcLocalConfig
+    private readonly options: ExternalApiRpcLocalOptions
 
-    constructor(config: ExternalApiRpcLocalConfig) {
-        this.config = config
+    constructor(options: ExternalApiRpcLocalOptions) {
+        this.options = options
     }
 
     async externalFetchData(request: ExternalFetchDataRequest, context: ServerCallContext): Promise<ExternalFetchDataResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const result = await this.config.executeRecursiveOperation(
+        const result = await this.options.executeRecursiveOperation(
             getDhtAddressFromRaw(request.key),
             RecursiveOperation.FETCH_DATA,
             getNodeIdFromPeerDescriptor(senderPeerDescriptor)
@@ -47,7 +46,7 @@ export class ExternalApiRpcLocal implements IExternalApiRpc {
 
     async externalStoreData(request: ExternalStoreDataRequest, context: ServerCallContext): Promise<ExternalStoreDataResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const result = await this.config.storeDataToDht(
+        const result = await this.options.storeDataToDht(
             getDhtAddressFromRaw(request.key),
             request.data!,
             getNodeIdFromPeerDescriptor(senderPeerDescriptor)

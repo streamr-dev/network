@@ -50,7 +50,7 @@ const main = async () => {
         }
     })
     await stack.start()
-    console.log("has websocket…", !!stack.getLayer0Node().getLocalPeerDescriptor().websocket)
+    console.log("has websocket…", !!stack.getControlLayerNode().getLocalPeerDescriptor().websocket)
     await wait(10000) // garbage collect connections
 
     const node = new NetworkNode(stack)

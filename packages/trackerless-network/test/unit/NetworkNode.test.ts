@@ -1,12 +1,11 @@
-import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { StreamPartIDUtils } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { NetworkNode } from '../../src/NetworkNode'
 import { NetworkStack } from '../../src/NetworkStack'
 import { Events } from '../../src/logic/ContentDeliveryManager'
 import { StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createStreamMessage } from '../utils/utils'
-import { StreamMessageTranslator } from '../../src/logic/protocol-integration/stream-message/StreamMessageTranslator'
 
 const STREAM_PART = StreamPartIDUtils.parse('stream#0')
 const PUBLISHER_ID = randomEthereumAddress()
@@ -32,8 +31,8 @@ describe('NetworkNode', () => {
         const msg2 = createMessage(2)
         contentDeliveryManager.emit('newMessage', msg1)
         contentDeliveryManager.emit('newMessage', msg2)
-        expect(onMessage.mock.calls[0][0]).toEqual(StreamMessageTranslator.toClientProtocol(msg1))
-        expect(onMessage.mock.calls[1][0]).toEqual(StreamMessageTranslator.toClientProtocol(msg2))
+        expect(onMessage.mock.calls[0][0]).toEqual(msg1)
+        expect(onMessage.mock.calls[1][0]).toEqual(msg2)
         expect(onMessage).toBeCalledTimes(2)
 
         node.removeMessageListener(onMessage)

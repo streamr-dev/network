@@ -1,17 +1,16 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { 
+import { DhtAddress, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { EthereumAddress, Logger, StreamPartID, binaryToHex, toEthereumAddress } from '@streamr/utils'
+import { EventEmitter } from 'eventemitter3'
+import {
     ProxyConnectionRequest,
     ProxyConnectionResponse,
     ProxyDirection,
     StreamMessage
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { IProxyConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
 import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
-import { DhtAddress, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
-import { ContentDeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { EventEmitter } from 'eventemitter3'
-import { EthereumAddress, Logger, binaryToHex, toEthereumAddress } from '@streamr/utils'
-import { StreamPartID } from '@streamr/protocol'
 
 const logger = new Logger(module)
 
@@ -21,7 +20,7 @@ interface ProxyConnection {
     remote: ContentDeliveryRpcRemote
 }
 
-interface ProxyConnectionRpcLocalConfig {
+interface ProxyConnectionRpcLocalOptions {
     localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     rpcCommunicator: ListeningRpcCommunicator
@@ -33,13 +32,13 @@ export interface Events {
 
 export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IProxyConnectionRpc {
 
-    private readonly config: ProxyConnectionRpcLocalConfig
+    private readonly options: ProxyConnectionRpcLocalOptions
     private readonly connections: Map<DhtAddress, ProxyConnection> = new Map()
 
-    constructor(config: ProxyConnectionRpcLocalConfig) {
+    constructor(options: ProxyConnectionRpcLocalOptions) {
         super()
-        this.config = config
-        this.config.rpcCommunicator.registerRpcMethod(ProxyConnectionRequest, ProxyConnectionResponse, 'requestConnection',
+        this.options = options
+        this.options.rpcCommunicator.registerRpcMethod(ProxyConnectionRequest, ProxyConnectionResponse, 'requestConnection',
             (msg: ProxyConnectionRequest, context) => this.requestConnection(msg, context))
     }
 
@@ -56,7 +55,7 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
     }
 
     stop(): void {
-        this.connections.forEach((connection) => connection.remote.leaveStreamPartNotice(this.config.streamPartId, false))
+        this.connections.forEach((connection) => connection.remote.leaveStreamPartNotice(this.options.streamPartId, false))
         this.connections.clear()
         this.removeAllListeners()
     }
@@ -86,22 +85,22 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
     // IProxyConnectionRpc server method
     async requestConnection(request: ProxyConnectionRequest, context: ServerCallContext): Promise<ProxyConnectionResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const senderId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
-        this.connections.set(senderId, {
+        const remoteNodeId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
+        this.connections.set(remoteNodeId, {
             direction: request.direction,
             userId: toEthereumAddress(binaryToHex(request.userId, true)),
             remote: new ContentDeliveryRpcRemote(
-                this.config.localPeerDescriptor,
+                this.options.localPeerDescriptor,
                 senderPeerDescriptor,
-                this.config.rpcCommunicator,
+                this.options.rpcCommunicator,
                 ContentDeliveryRpcClient
             )
         })
         const response: ProxyConnectionResponse = {
             accepted: true
         }
-        logger.trace(`Accepted connection request from ${senderId} to ${this.config.streamPartId}`)
-        this.emit('newConnection', senderId)
+        logger.trace(`Accepted connection request from ${remoteNodeId} to ${this.options.streamPartId}`)
+        this.emit('newConnection', remoteNodeId)
         return response
     }
 }

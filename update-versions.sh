@@ -11,20 +11,20 @@ fi
 PKG_DIRS="utils
 test-utils
 cdn-location
-protocol
+geoip-location
 proto-rpc
 autocertifier-client
 dht
 autocertifier-server
 trackerless-network
-client
+sdk
 cli-tools
-broker"
+node"
 
 PKG_NAMES="@streamr/utils
 @streamr/test-utils
 @streamr/cdn-location
-@streamr/protocol
+@streamr/geoip-location
 @streamr/proto-rpc
 @streamr/autocertifier-client
 @streamr/dht

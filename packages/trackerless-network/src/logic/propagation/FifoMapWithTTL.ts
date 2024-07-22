@@ -1,4 +1,4 @@
-import { Node, create } from 'yallist'
+import { Node, Yallist } from 'yallist'
 
 interface Item<K, V> {
     value: V
@@ -26,7 +26,7 @@ export interface FifoMapWithTtlOptions<K> {
 export class FifoMapWithTTL<K, V> {
     // class invariant: the keys present in `items` and `dropQueue` are the same set.
     private readonly items = new Map<K, Item<K, V>>()
-    private readonly dropQueue = create<K>() // queue is used to determine deletion order when full
+    private readonly dropQueue = Yallist.create<K>() // queue is used to determine deletion order when full
     private readonly ttlInMs: number
     private readonly maxSize: number
     private readonly onItemDropped: (key: K) => void

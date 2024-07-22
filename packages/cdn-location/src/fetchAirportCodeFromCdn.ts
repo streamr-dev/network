@@ -56,12 +56,6 @@ export const fetchAirportCodeFromCdn: () => Promise<string> = async () => {
     }
 
     try {
-        return await fetchAirportCodeFromAmazon('https://aws.amazon.com', timeout)
-    } catch (error) {
-        logger.warn(error)
-    }
-
-    try {
         return await fetchAirportCodeFromFastly(timeout)
     } catch (error) {
         logger.warn(error)

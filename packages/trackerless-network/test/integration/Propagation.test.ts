@@ -1,15 +1,14 @@
 import { Simulator } from '@streamr/dht'
-import { StreamPartIDUtils } from '@streamr/protocol'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { waitForCondition } from '@streamr/utils'
+import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
-import { createMockPeerDescriptor, createMockContentDeliveryLayerNodeAndDhtNode, createStreamMessage } from '../utils/utils'
-import { Layer1Node } from '../../src/logic/Layer1Node'
+import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
+import { createMockContentDeliveryLayerNodeAndDhtNode, createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 
 describe('Propagation', () => {
     const entryPointDescriptor = createMockPeerDescriptor()
-    let layer1Nodes: Layer1Node[]
+    let discoveryLayerNodes: DiscoveryLayerNode[]
     let contentDeliveryLayerNodes: ContentDeliveryLayerNode[]
     const STREAM_PART_ID = StreamPartIDUtils.parse('testingtesting#0')
     let totalReceived: number
@@ -18,7 +17,7 @@ describe('Propagation', () => {
     beforeEach(async () => {
         const simulator = new Simulator()
         totalReceived = 0
-        layer1Nodes = []
+        discoveryLayerNodes = []
         contentDeliveryLayerNodes = []
         const [entryPoint, node1] = await createMockContentDeliveryLayerNodeAndDhtNode(
             entryPointDescriptor,
@@ -30,7 +29,7 @@ describe('Propagation', () => {
         await entryPoint.joinDht([entryPointDescriptor])
         await node1.start()
         node1.on('message', () => {totalReceived += 1})
-        layer1Nodes.push(entryPoint)
+        discoveryLayerNodes.push(entryPoint)
         contentDeliveryLayerNodes.push(node1)
 
         await Promise.all(range(NUM_OF_NODES).map(async (_i) => {
@@ -45,7 +44,7 @@ describe('Propagation', () => {
             await contentDeliveryLayerNode.start()
             await layer1.joinDht([entryPointDescriptor]).then(() => {
                 contentDeliveryLayerNode.on('message', () => { totalReceived += 1 })
-                layer1Nodes.push(layer1)
+                discoveryLayerNodes.push(layer1)
                 contentDeliveryLayerNodes.push(contentDeliveryLayerNode)
             })
         }))
@@ -53,7 +52,7 @@ describe('Propagation', () => {
 
     afterEach(async () => {
         await Promise.all(contentDeliveryLayerNodes.map((node) => node.stop()))
-        await Promise.all(layer1Nodes.map((node) => node.stop()))
+        await Promise.all(discoveryLayerNodes.map((node) => node.stop()))
     })
 
     it('All nodes receive messages', async () => {

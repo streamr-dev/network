@@ -1,0 +1,32 @@
+ARG NODE_VERSION=20
+FROM node:${NODE_VERSION}-bullseye as build
+WORKDIR /usr/src/network
+COPY . .
+RUN --mount=type=cache,target=/root/.npm \
+	npm run bootstrap-pkg --package=@streamr/sdk && \
+	npm run bootstrap-pkg --package=@streamr/node && \
+	npm run prune-pkg -- @streamr/node
+
+FROM node:${NODE_VERSION}-bullseye-slim
+ARG NODE_ENV
+ENV NODE_ENV=${NODE_ENV:-production}
+RUN apt-get update && apt-get --assume-yes --no-install-recommends install \
+	curl \
+	&& apt-get clean \
+	&& rm -rf /var/lib/apt/lists/*
+RUN usermod -d /home/streamr -l streamr node && groupmod -n streamr node
+USER streamr
+WORKDIR /home/streamr/network
+COPY --chown=root:root --from=build /usr/src/network/ .
+
+ENV LOG_LEVEL=info
+
+EXPOSE 1883/tcp
+EXPOSE 7170/tcp
+EXPOSE 7171/tcp
+EXPOSE 32200/tcp
+
+WORKDIR /home/streamr/network/packages/node
+
+# start node from default config (needs mounted volume, e.g. docker run -v $(cd ~/.streamr/config;pwd):/home/streamr/.streamr/config IMAGE
+CMD ["/usr/local/bin/npm", "exec", "-c", "streamr-node"]

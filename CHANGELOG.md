@@ -48,11 +48,80 @@ Changes before Tatum release are not documented in this file.
 
 #### Removed
 
-- Removed `governance vote' command
-
 #### Fixed
 
 #### Security
+
+
+## [101.0.1] - 2047-07-09
+
+### @streamr/sdk
+
+#### Changed
+
+- Set default RPC timeout to 30 seconds (https://github.com/streamr-dev/network/commit/131fb456d26486c12b2facd6e78bee47319c2533)
+
+
+## [101.0.0] - 2024-07-08
+
+### @streamr/sdk
+
+#### Changed
+
+- Update ethers.js library to v6 (https://github.com/streamr-dev/network/pull/2506)
+- Restructure `contracts` config section (https://github.com/streamr-dev/network/pull/2581)
+- Improve reliability of JSON RPC interactions by adding retry redundancy (https://github.com/streamr-dev/network/pull/2562, https://github.com/streamr-dev/network/pull/2601)
+- Rename events (https://github.com/streamr-dev/network/pull/2604, https://github.com/streamr-dev/network/pull/2605) as denoted below
+  - `createStream` => `streamCreated`
+  - `addToStorageNode` => `streamAddedToStorageNode`
+  - `removeFromStorageNode` => `streamRemovedFromFromStorageNode`
+  - `resendComplete` => `resendCompleted` (on instances of `Subscription`)
+
+#### Removed
+
+- Remove obsolete RPC provider options (https://github.com/streamr-dev/network/pull/2583)
+
+### @streamr/node
+
+#### Changed
+
+- Improve reliability of JSON RPC interactions by adding retry redundancy (https://github.com/streamr-dev/network/pull/2562, https://github.com/streamr-dev/network/pull/2601)
+
+#### Deprecated
+
+- Deprecate command `streamr-broker`. Use `streamr-node` instead. (https://github.com/streamr-dev/network/pull/2626)
+- Deprecate command `streamr-broker-init`. Use `streamr-node-init` instead. (https://github.com/streamr-dev/network/pull/2626)
+
+#### Fixed
+
+- Fix memory leak in SubscriberPlugin (https://github.com/streamr-dev/network/pull/2578)
+
+
+## [100.2.4] - 2024-05-06
+
+### @streamr/sdk
+
+#### Added
+
+- New geolocation detection by Nodes improves start up times and the decentralization of the network (https://github.com/streamr-dev/network/pull/2465)
+- Improved rejoining streams after losing internet connection (https://github.com/streamr-dev/network/pull/2502)
+- Discovering stream neighbors is more efficient as offline nodes are cleaned-up by sending pings (https://github.com/streamr-dev/network/pull/2501)
+
+#### Fixed
+
+- Hanging connection issue with WebSocket clients (https://github.com/streamr-dev/network/pull/2519)
+
+### @streamr/node
+
+#### Added
+
+- Nodes provide geolocation detection for newly joining nodes (https://github.com/streamr-dev/network/pull/2465)
+
+### @streamr/cli-tools
+
+#### Removed
+
+- Removed `governance vote' command (https://github.com/streamr-dev/network/pull/2538)
 
 
 ## [100.2.3] - 2024-04-15
@@ -136,7 +205,10 @@ Changes before Tatum release are not documented in this file.
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v100.2.3...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v101.0.1...HEAD
+[101.0.1]: https://github.com/streamr-dev/network/compare/v101.0.0...v101.0.1
+[101.0.0]: https://github.com/streamr-dev/network/compare/v100.2.4...v101.0.0
+[100.2.4]: https://github.com/streamr-dev/network/compare/v100.2.3...v100.2.4
 [100.2.3]: https://github.com/streamr-dev/network/compare/v100.2.2...v100.2.3
 [100.2.2]: https://github.com/streamr-dev/network/compare/v100.2.1...v100.2.2
 [100.2.1]: https://github.com/streamr-dev/network/compare/v100.2.1...v100.2.1

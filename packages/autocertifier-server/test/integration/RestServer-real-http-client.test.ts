@@ -1,9 +1,6 @@
-import request from 'request'
-import { Response } from 'request'
+import request, { Response } from 'request'
 import { RestServer } from '../../src/RestServer'
-import { CertifiedSubdomain } from '@streamr/autocertifier-client'
-import { ApiError } from '@streamr/autocertifier-client'
-import { Session } from '@streamr/autocertifier-client'
+import { CertifiedSubdomain, ApiError, Session } from '@streamr/autocertifier-client'
 import { v4 } from 'uuid'
 import path from 'path'
 

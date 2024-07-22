@@ -1,0 +1,13 @@
+---
+name: "run nodes"
+description: "run nodes directly from the monorepo codebase"
+
+runs:
+  using: "composite"
+  steps:
+    - name: run nodes
+      run: |
+        mkdir -p logs
+        ./bin/run-nodes.sh >logs/node-logs.txt 2>&1 &
+      shell: bash
+      working-directory: './'
