@@ -1,10 +1,11 @@
 import { DhtAddress } from '@streamr/dht'
+import { NetworkPeerDescriptor } from '@streamr/sdk'
 import { eventsWithArgsToArray } from '@streamr/test-utils'
 import { StreamID, StreamPartID, toStreamID, toStreamPartID, wait } from '@streamr/utils'
 import EventEmitter3 from 'eventemitter3'
 import range from 'lodash/range'
 import { MaintainTopologyHelperEvents } from '../../../../src/plugins/operator/MaintainTopologyHelper'
-import { OperatorFleetStateEvents } from '../../../../src/plugins/operator/OperatorFleetState'
+import { OperatorFleetStateEvents, OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
 import { StreamPartAssignments } from '../../../../src/plugins/operator/StreamPartAssignments'
 
 const MY_NODE_ID = '0x0000' as DhtAddress
@@ -41,13 +42,18 @@ describe(StreamPartAssignments, () => {
             }
             return streamParts
         })
-        operatorFleetState = new EventEmitter3()
+        operatorFleetState = new class extends EventEmitter3 {
+            getPeerDescriptor(nodeId: DhtAddress): NetworkPeerDescriptor | undefined {
+                return { nodeId } as unknown as NetworkPeerDescriptor
+            }
+        } as unknown as OperatorFleetState
+        // operatorFleetState.getPeerDescriptor = jest.fn()
         maintainTopologyHelper = new EventEmitter3()
         assigments = new StreamPartAssignments(
             MY_NODE_ID,
             1,
             getStreamParts,
-            operatorFleetState,
+            operatorFleetState as OperatorFleetState,
             maintainTopologyHelper
         )
         events = eventsWithArgsToArray(assigments as any, ['assigned', 'unassigned'])
@@ -210,6 +216,33 @@ describe(StreamPartAssignments, () => {
                 ['unassigned', toStreamPartID(S3, 2)],
             ]
         }).flat())
+    })
+
+    it('returns assigned nodes for a stream part', async () => {
+        operatorFleetState.emit('added', N1)
+        operatorFleetState.emit('added', N2)
+        await wait(0)
+        expect(assigments.getAssignedNodesFor(toStreamPartID(S2, 0))).toEqual([ ])
+        expect(assigments.getAssignedNodesFor(toStreamPartID(S3, 0))).toEqual([ ])
+
+        maintainTopologyHelper.emit('addStakedStreams', [S2])
+        await wait(0)
+        expect(assigments.getAssignedNodesFor(toStreamPartID(S2, 0))).toEqual([ { nodeId: '0x2222' } ])
+        expect(assigments.getAssignedNodesFor(toStreamPartID(S3, 0))).toEqual([ ])
+
+        maintainTopologyHelper.emit('addStakedStreams', [S3])
+        await wait(0)
+        expect(assigments.getAssignedNodesFor(toStreamPartID(S2, 0))).toEqual([ { nodeId: '0x2222' } ])
+        expect(assigments.getAssignedNodesFor(toStreamPartID(S3, 0))).toEqual([ { nodeId: '0x0000' } ])
+        expect(assigments.getAssignedNodesFor(toStreamPartID(S3, 1))).toEqual([ { nodeId: '0x1111' } ])
+        expect(assigments.getAssignedNodesFor(toStreamPartID(S3, 2))).toEqual([ { nodeId: '0x2222' } ])
+
+        operatorFleetState.emit('removed', N2)
+        await wait(0)
+        expect(assigments.getAssignedNodesFor(toStreamPartID(S2, 0))).toEqual([ { nodeId: '0x0000' } ])
+        expect(assigments.getAssignedNodesFor(toStreamPartID(S3, 0))).toEqual([ { nodeId: '0x0000' } ])
+        expect(assigments.getAssignedNodesFor(toStreamPartID(S3, 1))).toEqual([ { nodeId: '0x1111' } ])
+        expect(assigments.getAssignedNodesFor(toStreamPartID(S3, 2))).toEqual([ { nodeId: '0x1111' } ])
     })
 
     // TODO: test with multiple StreamPartAssignments instances, verify that partitioning is complete
