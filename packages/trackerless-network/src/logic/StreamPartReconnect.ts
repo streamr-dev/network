@@ -18,6 +18,7 @@ export class StreamPartReconnect {
         await scheduleAtInterval(async () => {
             const entryPoints = await this.peerDescriptorStoreManager.fetchNodes()
             await this.discoveryLayerNode.joinDht(entryPoints)
+            // Is is necessary to store the node as an entry point here?
             if (!this.peerDescriptorStoreManager.isLocalNodeStored() && entryPoints.length < MAX_NODE_COUNT) {
                 await this.peerDescriptorStoreManager.storeAndKeepLocalNode()
             }
