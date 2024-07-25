@@ -1,5 +1,5 @@
 import { scheduleAtInterval } from '@streamr/utils'
-import { PeerDescriptorStoreManager } from './PeerDescriptorStoreManager'
+import { MAX_NODE_COUNT, PeerDescriptorStoreManager } from './PeerDescriptorStoreManager'
 import { DiscoveryLayerNode } from './DiscoveryLayerNode'
 
 const DEFAULT_RECONNECT_INTERVAL = 30 * 1000
@@ -18,7 +18,8 @@ export class StreamPartReconnect {
         await scheduleAtInterval(async () => {
             const entryPoints = await this.peerDescriptorStoreManager.fetchNodes()
             await this.discoveryLayerNode.joinDht(entryPoints)
-            if (this.peerDescriptorStoreManager.isLocalNodeStored()) {
+            // Is is necessary to store the node as an entry point here?
+            if (!this.peerDescriptorStoreManager.isLocalNodeStored() && entryPoints.length < MAX_NODE_COUNT) {
                 await this.peerDescriptorStoreManager.storeAndKeepLocalNode()
             }
             if (this.discoveryLayerNode.getNeighborCount() > 0) {
