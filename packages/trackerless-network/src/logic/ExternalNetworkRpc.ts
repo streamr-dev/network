@@ -26,4 +26,8 @@ export class ExternalNetworkRpc {
         this.rpcCommunicator.registerRpcMethod(request, response, name, fn)
     }
 
+    destroy(): void {
+        this.rpcCommunicator.destroy()
+    }
+
 }

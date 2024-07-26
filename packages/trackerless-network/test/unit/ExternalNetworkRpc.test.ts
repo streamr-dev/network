@@ -2,7 +2,7 @@ import { Message } from '@streamr/dht'
 import { ExternalNetworkRpc, SERVICE_ID } from '../../src/logic/ExternalNetworkRpc'
 import { HandshakeRequest, HandshakeResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { MockTransport } from '../utils/mock/MockTransport'
-import { RpcMessage } from '@streamr/proto-rpc/dist/src/proto/ProtoRpc'
+import { RpcMessage } from '@streamr/proto-rpc'
 import { Any } from '../../src/proto/google/protobuf/any'
 
 describe('ExternalNetworkRpc', () => {
@@ -15,6 +15,10 @@ describe('ExternalNetworkRpc', () => {
         transport = new MockTransport
         rpc = new ExternalNetworkRpc(transport)
         fn = jest.fn()
+    })
+
+    afterEach(() => {
+        rpc.destroy()
     })
 
     it('registers method', async () => {
