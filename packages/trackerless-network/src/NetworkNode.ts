@@ -4,7 +4,8 @@ import { NetworkOptions, NetworkStack, NodeInfo } from './NetworkStack'
 import { ProxyDirection, StreamMessage } from './proto/packages/trackerless-network/protos/NetworkRpc'
 import { ExternalNetworkRpc } from './logic/ExternalNetworkRpc'
 import { IMessageType } from '@protobuf-ts/runtime'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { ServerCallContext, ServiceInfo } from '@protobuf-ts/runtime-rpc'
+import { ClassType, ClientTransport, ProtoRpcClient } from '@streamr/proto-rpc'
 
 export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
     return new NetworkNode(new NetworkStack(opts))
@@ -129,6 +130,11 @@ export class NetworkNode {
         fn: (req: RequestType, context: ServerCallContext) => Promise<ResponseType>
     ): void {
         this.externalNetworkRpc!.registerRpcMethod(request, response, name, fn)
+    }
+
+    // eslint-disable-next-line @typescript-eslint/prefer-function-type
+    createExternalRpcClient<T extends ServiceInfo & ClassType>(clientClass: { new (clientTransport: ClientTransport): T }): ProtoRpcClient<T> {
+        return this.externalNetworkRpc!.createRpcClient(clientClass)
     }
 
 }
