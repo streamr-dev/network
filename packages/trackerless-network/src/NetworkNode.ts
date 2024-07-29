@@ -2,6 +2,9 @@ import { DhtAddress, PeerDescriptor } from '@streamr/dht'
 import { EthereumAddress, MetricsContext, StreamPartID } from '@streamr/utils'
 import { NetworkOptions, NetworkStack, NodeInfo } from './NetworkStack'
 import { ProxyDirection, StreamMessage } from './proto/packages/trackerless-network/protos/NetworkRpc'
+import { ExternalNetworkRpc } from './logic/ExternalNetworkRpc'
+import { IMessageType } from '@protobuf-ts/runtime'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
     return new NetworkNode(new NetworkStack(opts))
@@ -14,6 +17,7 @@ export class NetworkNode {
 
     readonly stack: NetworkStack
     private stopped = false
+    private externalNetworkRpc?: ExternalNetworkRpc
 
     /** @internal */
     constructor(stack: NetworkStack) {
@@ -22,6 +26,7 @@ export class NetworkNode {
 
     async start(doJoin?: boolean): Promise<void> {
         await this.stack.start(doJoin)
+        this.externalNetworkRpc = new ExternalNetworkRpc(this.stack.getControlLayerNode().getTransport())
     }
 
     async inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
@@ -79,6 +84,7 @@ export class NetworkNode {
 
     async stop(): Promise<void> {
         this.stopped = true
+        this.externalNetworkRpc!.destroy()
         await this.stack.stop()
     }
 
@@ -110,4 +116,19 @@ export class NetworkNode {
     getDiagnosticInfo(): Record<string, unknown> {
         return {}
     }
+
+    registerExternalNetworkRpcMethod<
+        RequestClass extends IMessageType<RequestType>,
+        ResponseClass extends IMessageType<ResponseType>,
+        RequestType extends object,
+        ResponseType extends object
+    >(
+        request: RequestClass,
+        response: ResponseClass,
+        name: string, 
+        fn: (req: RequestType, context: ServerCallContext) => Promise<ResponseType>
+    ): void {
+        this.externalNetworkRpc!.registerRpcMethod(request, response, name, fn)
+    }
+
 }
