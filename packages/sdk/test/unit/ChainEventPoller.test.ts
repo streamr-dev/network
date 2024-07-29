@@ -1,6 +1,7 @@
 import { wait, waitForCondition } from '@streamr/utils'
-import { Contract } from 'ethers'
-import { ChainEventPoller } from './../../src/contracts/ChainEventPoller'
+import { Contract, EventLog, Provider } from 'ethers'
+import { ChainEventPoller, POLLS_SINCE_LAST_FROM_BLOCK_UPDATE_THRESHOLD } from './../../src/contracts/ChainEventPoller'
+import range from 'lodash/range'
 
 const POLL_INTERVAL = 100
 
@@ -136,5 +137,60 @@ describe('ChainEventPoller', () => {
         poller.off(EVENT_NAME_1, listener1)
         poller.off(EVENT_NAME_2, listener2)
         poller.off(EVENT_NAME_2, listener3)
+    })
+
+    describe('explicit block number fetching', () => {
+        let invocationHistory: string[]
+        let onGetBlockNumber: (nthCall: number) => number
+        let onQueryFilter: (nthCall: number) => EventLog[]
+        let poller: ChainEventPoller
+
+        beforeEach(() => {
+            invocationHistory = []
+            let getBlockNumberCallCount = 0
+            const provider = {
+                getBlockNumber: async () => {
+                    invocationHistory.push('getBlockNumber')
+                    return onGetBlockNumber(getBlockNumberCallCount++)
+                }
+            } as Pick<Provider, 'getBlockNumber'>
+            let queryFilterCallCount = 0
+            const contract = {
+                runner: {
+                    provider
+                },
+                queryFilter: async (eventName, blockNumber) => {
+                    invocationHistory.push(`queryFilter(${eventName}, ${blockNumber})`)
+                    return onQueryFilter(queryFilterCallCount++)
+                }
+            } as Pick<Contract, 'queryFilter'>
+            poller = new ChainEventPoller([contract as Contract, contract as Contract], 10)
+        })
+
+        it('when no events, fetches block number explicitly after every POLLS_SINCE_LAST_FROM_BLOCK_UPDATE_THRESHOLD', async () => {
+            let currentRpcBlockNumber = 10
+            onGetBlockNumber = () => {
+                return currentRpcBlockNumber++
+            }
+            onQueryFilter = () => []
+            const eventCb = () => {}
+            poller.on('event', eventCb)
+            const expectedLength = 3 * POLLS_SINCE_LAST_FROM_BLOCK_UPDATE_THRESHOLD + 6
+            await waitForCondition(() => invocationHistory.length >= expectedLength)
+            expect(invocationHistory.slice(0, expectedLength)).toEqual([
+                'getBlockNumber',
+                ...range(POLLS_SINCE_LAST_FROM_BLOCK_UPDATE_THRESHOLD).map(() => 'queryFilter(event, 10)'),
+                'getBlockNumber',
+                'queryFilter(event, 10)',
+                ...range(POLLS_SINCE_LAST_FROM_BLOCK_UPDATE_THRESHOLD).map(() => 'queryFilter(event, 12)'),
+                'getBlockNumber',
+                'queryFilter(event, 12)',
+                ...range(POLLS_SINCE_LAST_FROM_BLOCK_UPDATE_THRESHOLD).map(() => 'queryFilter(event, 13)'),
+                'getBlockNumber',
+            ])
+            poller.off('event', eventCb)
+        })
+
+        // TODO: test other cases
     })
 })
