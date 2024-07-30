@@ -15,7 +15,7 @@ export interface StreamPartAssignmentEvents {
 }
 
 export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEvents> {
-    private readonly assigments = new Map<StreamPartID, DhtAddress[]>()
+    private readonly assignments = new Map<StreamPartID, DhtAddress[]>()
     private readonly myStreamParts = new Set<StreamPartID>()
     private readonly concurrencyLimit = pLimit(1)
     private readonly consistentHashRing: ConsistentHashRing
@@ -49,7 +49,7 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
     }
 
     getAssignedNodesFor(streamPartId: StreamPartID): NetworkPeerDescriptor[] {
-        const nodeList = this.assigments.get(streamPartId) ?? []
+        const nodeList = this.assignments.get(streamPartId) ?? []
         const descriptorList: NetworkPeerDescriptor[] = []
         for (const nodeId of nodeList) {
             const descriptor = this.operatorFleetState.getPeerDescriptor(nodeId)
@@ -80,7 +80,7 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
     private streamsStaked = this.concurrencyLimiter(async (streamIds: StreamID[]): Promise<void> => {
         const streamPartIds = (await Promise.all(streamIds.map(this.getStreamPartIds))).flat()
         for (const streamPartId of streamPartIds) {
-            this.assigments.set(streamPartId, [])
+            this.assignments.set(streamPartId, [])
         }
         // TODO: optimize; calculate efficiently by only considering added stream parts
         this.recalculateAssignments(`streamsStaked:${streamIds.join()}`)
@@ -89,7 +89,7 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
     private streamUnstaked = this.concurrencyLimiter(async (streamId: StreamID): Promise<void> => {
         const streamPartIds = await this.getStreamPartIds(streamId)
         for (const streamPartId of streamPartIds) {
-            this.assigments.delete(streamPartId)
+            this.assignments.delete(streamPartId)
         }
         // TODO: optimize; calculate efficiently by only considering removed stream parts
         this.recalculateAssignments(`streamUnstaked:${streamId}`)
@@ -98,10 +98,10 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
     private recalculateAssignments(context: string): void {
         const assigned: StreamPartID[] = []
         const unassigned: StreamPartID[] = []
-        for (const streamPartId of this.assigments.keys()) {
+        for (const streamPartId of this.assignments.keys()) {
             const nodeList: DhtAddress[] = this.consistentHashRing.get(streamPartId)
             console.log('recalculateAssignments', streamPartId, nodeList)
-            this.assigments.set(streamPartId, nodeList)
+            this.assignments.set(streamPartId, nodeList)
             if (nodeList.includes(this.myNodeId) && !this.myStreamParts.has(streamPartId)) {
                 assigned.push(streamPartId)
                 this.myStreamParts.add(streamPartId)
@@ -109,7 +109,7 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
             }
         }
         for (const streamPartId of this.myStreamParts) {
-            if (!this.assigments.has(streamPartId) || !this.consistentHashRing.get(streamPartId).includes(this.myNodeId)) {
+            if (!this.assignments.has(streamPartId) || !this.consistentHashRing.get(streamPartId).includes(this.myNodeId)) {
                 unassigned.push(streamPartId)
                 this.myStreamParts.delete(streamPartId)
                 this.emit('unassigned', streamPartId)
