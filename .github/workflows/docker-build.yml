@@ -53,11 +53,11 @@ jobs:
             ${{ runner.os }}-buildx-v1-
       - name: Setup qemu
         if: contains(inputs.build_platforms, 'arm64')
-        uses: docker/setup-qemu-action@v3.1.0
+        uses: docker/setup-qemu-action@v3.2.0
         with:
           platforms: arm64
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3.4.0
+        uses: docker/setup-buildx-action@v3.5.0
         with:
           driver-opts: |
             network=host
