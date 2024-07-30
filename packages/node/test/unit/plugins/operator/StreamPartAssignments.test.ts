@@ -43,6 +43,7 @@ describe(StreamPartAssignments, () => {
             return streamParts
         })
         operatorFleetState = new class extends EventEmitter3 {
+            // eslint-disable-next-line class-methods-use-this
             getPeerDescriptor(nodeId: DhtAddress): NetworkPeerDescriptor | undefined {
                 return { nodeId } as unknown as NetworkPeerDescriptor
             }

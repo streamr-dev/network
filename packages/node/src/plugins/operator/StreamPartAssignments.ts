@@ -61,7 +61,6 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
     }
 
     private nodeAdded = this.concurrencyLimiter(async (nodeId: DhtAddress): Promise<void> => {
-        console.log('nodeAdded', nodeId)
         if (nodeId === this.myNodeId) {
             return
         }
@@ -100,7 +99,6 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
         const unassigned: StreamPartID[] = []
         for (const streamPartId of this.assignments.keys()) {
             const nodeList: DhtAddress[] = this.consistentHashRing.get(streamPartId)
-            console.log('recalculateAssignments', streamPartId, nodeList)
             this.assignments.set(streamPartId, nodeList)
             if (nodeList.includes(this.myNodeId) && !this.myStreamParts.has(streamPartId)) {
                 assigned.push(streamPartId)
