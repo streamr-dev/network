@@ -1,5 +1,10 @@
 import { DhtAddress, PeerDescriptor, getDhtAddressFromRaw } from '@streamr/dht'
-import { ExternalRpcClient, ExternalRpcClientClass, NetworkOptions, StreamMessage as NewStreamMessage, ProxyDirection } from '@streamr/trackerless-network'
+import { 
+    ExternalRpcClient,
+    NetworkOptions,
+    StreamMessage as NewStreamMessage,
+    ProxyDirection
+} from '@streamr/trackerless-network'
 import { EthereumAddress, MetricsContext, StreamPartID } from '@streamr/utils'
 import crypto from 'crypto'
 import pull from 'lodash/pull'
@@ -7,9 +12,7 @@ import { Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFacade'
 import { StreamMessageTranslator } from '../../../src/protocol/StreamMessageTranslator'
 import { FakeNetwork } from './FakeNetwork'
-import { ProtoRpcClient, toProtoRpcClient } from '@streamr/proto-rpc'
-import { IMessageType } from '@protobuf-ts/runtime'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { ProtoRpcClient } from '@streamr/proto-rpc'
 
 type MessageListener = (msg: NewStreamMessage) => void
 
@@ -131,10 +134,12 @@ export class FakeNetworkNode implements NetworkNodeStub {
         return {}
     }
 
-    createExternalRpcClient<T extends ExternalRpcClient>(clientClass: ExternalRpcClientClass<T>): ProtoRpcClient<T> {
+    // eslint-disable-next-line class-methods-use-this
+    createExternalRpcClient<T extends ExternalRpcClient>(): ProtoRpcClient<T> {
         return {} as any
     }
 
+    // eslint-disable-next-line class-methods-use-this
     registerExternalNetworkRpcMethod(): void {}
 
 }
