@@ -98,7 +98,7 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
         const assigned: StreamPartID[] = []
         const unassigned: StreamPartID[] = []
         for (const streamPartId of this.assignments.keys()) {
-            const nodeList: DhtAddress[] = this.consistentHashRing.get(streamPartId)
+            const nodeList = this.consistentHashRing.get(streamPartId)
             this.assignments.set(streamPartId, nodeList)
             if (nodeList.includes(this.myNodeId) && !this.myStreamParts.has(streamPartId)) {
                 assigned.push(streamPartId)
