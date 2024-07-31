@@ -2,10 +2,10 @@ import { DhtAddress, PeerDescriptor } from '@streamr/dht'
 import { EthereumAddress, MetricsContext, StreamPartID } from '@streamr/utils'
 import { NetworkOptions, NetworkStack, NodeInfo } from './NetworkStack'
 import { ProxyDirection, StreamMessage } from './proto/packages/trackerless-network/protos/NetworkRpc'
-import { ExternalNetworkRpc } from './logic/ExternalNetworkRpc'
+import { ExternalNetworkRpc, ExternalRpcClient, ExternalRpcClientClass } from './logic/ExternalNetworkRpc'
 import { IMessageType } from '@protobuf-ts/runtime'
-import { ServerCallContext, ServiceInfo } from '@protobuf-ts/runtime-rpc'
-import { ClassType, ClientTransport, ProtoRpcClient } from '@streamr/proto-rpc'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { ProtoRpcClient } from '@streamr/proto-rpc'
 
 export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
     return new NetworkNode(new NetworkStack(opts))
@@ -132,8 +132,7 @@ export class NetworkNode {
         this.externalNetworkRpc!.registerRpcMethod(request, response, name, fn)
     }
 
-    // eslint-disable-next-line @typescript-eslint/prefer-function-type
-    createExternalRpcClient<T extends ServiceInfo & ClassType>(clientClass: { new (clientTransport: ClientTransport): T }): ProtoRpcClient<T> {
+    createExternalRpcClient<T extends ExternalRpcClient>(clientClass: ExternalRpcClientClass<T> ): ProtoRpcClient<T> {
         return this.externalNetworkRpc!.createRpcClient(clientClass)
     }
 
