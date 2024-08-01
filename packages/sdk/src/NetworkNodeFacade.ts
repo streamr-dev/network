@@ -3,6 +3,8 @@
  */
 import { DhtAddress, PeerDescriptor } from '@streamr/dht'
 import {
+    ExternalRpcClient,
+    ExternalRpcClientClass,
     NetworkOptions,
     StreamMessage as NewStreamMessage,
     ProxyDirection,
@@ -20,6 +22,9 @@ import { StreamMessage as OldStreamMessage } from './protocol/StreamMessage'
 import { StreamMessageTranslator } from './protocol/StreamMessageTranslator'
 import { pOnce } from './utils/promises'
 import { peerDescriptorTranslator } from './utils/utils'
+import { ProtoRpcClient } from '@streamr/proto-rpc'
+import { IMessageType } from '@protobuf-ts/runtime'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 /** @deprecated This in an internal interface */
@@ -52,6 +57,19 @@ export interface NetworkNodeStub {
     ) => Promise<void>
     isProxiedStreamPart(streamPartId: StreamPartID): boolean
     setStreamPartEntryPoints: (streamPartId: StreamPartID, peerDescriptors: PeerDescriptor[]) => void
+    createExternalRpcClient<T extends ExternalRpcClient>(clientClass: ExternalRpcClientClass<T> ): ProtoRpcClient<T>
+    registerExternalNetworkRpcMethod<
+        RequestClass extends IMessageType<RequestType>,
+        ResponseClass extends IMessageType<ResponseType>,
+        RequestType extends object,
+        ResponseType extends object
+    >(
+        request: RequestClass,
+        response: ResponseClass,
+        name: string, 
+        fn: (req: RequestType, context: ServerCallContext) => Promise<ResponseType>
+    ): void
+
 }
 
 export interface Events {

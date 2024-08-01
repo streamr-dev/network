@@ -5,6 +5,11 @@ import { ClassType, ClientTransport, ProtoRpcClient, toProtoRpcClient } from '@s
 
 export const SERVICE_ID = 'external-network-service'
 
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+export type ExternalRpcClient = ServiceInfo & ClassType
+// eslint-disable-next-line @typescript-eslint/prefer-function-type, @typescript-eslint/consistent-type-definitions
+export type ExternalRpcClientClass<T extends ExternalRpcClient> = { new (clientTransport: ClientTransport): T }
+
 export class ExternalNetworkRpc {
 
     private readonly rpcCommunicator: ListeningRpcCommunicator
@@ -27,8 +32,7 @@ export class ExternalNetworkRpc {
         this.rpcCommunicator.registerRpcMethod(request, response, name, fn)
     }
 
-    // eslint-disable-next-line @typescript-eslint/prefer-function-type
-    createRpcClient<T extends ServiceInfo & ClassType>(clientClass: { new (clientTransport: ClientTransport): T }): ProtoRpcClient<T> {
+    createRpcClient<T extends ExternalRpcClient>(clientClass: ExternalRpcClientClass<T>): ProtoRpcClient<T> {
         return toProtoRpcClient(new clientClass(this.rpcCommunicator.getRpcClientTransport()))
     }
 
