@@ -1,10 +1,11 @@
 import { DhtAddress } from '@streamr/dht'
 import { Logger, StreamID, StreamPartID } from '@streamr/utils'
+import { NetworkPeerDescriptor } from '@streamr/sdk'
 import EventEmitter3 from 'eventemitter3'
 import pLimit from 'p-limit'
 import { ConsistentHashRing } from './ConsistentHashRing'
 import { MaintainTopologyHelperEvents } from './MaintainTopologyHelper'
-import { OperatorFleetStateEvents } from './OperatorFleetState'
+import { OperatorFleetState } from './OperatorFleetState'
 
 const logger = new Logger(module)
 
@@ -14,20 +15,20 @@ export interface StreamPartAssignmentEvents {
 }
 
 export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEvents> {
-    private readonly allStreamParts = new Set<StreamPartID>()
+    private readonly assignments = new Map<StreamPartID, DhtAddress[]>()
     private readonly myStreamParts = new Set<StreamPartID>()
     private readonly concurrencyLimit = pLimit(1)
     private readonly consistentHashRing: ConsistentHashRing
     private readonly myNodeId: DhtAddress
     private readonly getStreamParts: (streamId: StreamID) => Promise<StreamPartID[]>
-    private readonly operatorFleetState: EventEmitter3<OperatorFleetStateEvents>
+    private readonly operatorFleetState: OperatorFleetState
     private readonly maintainTopologyHelper: EventEmitter3<MaintainTopologyHelperEvents>
 
     constructor(
         myNodeId: DhtAddress,
         redundancyFactor: number,
         getStreamParts: (streamId: StreamID) => Promise<StreamPartID[]>,
-        operatorFleetState: EventEmitter3<OperatorFleetStateEvents>,
+        operatorFleetState: OperatorFleetState,
         maintainTopologyHelper: EventEmitter3<MaintainTopologyHelperEvents>,
     ) {
         super()
@@ -45,6 +46,18 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
 
     getMyStreamParts(): StreamPartID[] {
         return Array.from(this.myStreamParts)
+    }
+
+    getAssignedNodesForStreamPart(streamPartId: StreamPartID): NetworkPeerDescriptor[] {
+        const nodeList = this.assignments.get(streamPartId) ?? []
+        const descriptorList = []
+        for (const nodeId of nodeList) {
+            const descriptor = this.operatorFleetState.getPeerDescriptor(nodeId)
+            if (descriptor !== undefined) {
+                descriptorList.push(descriptor)
+            }
+        }
+        return descriptorList
     }
 
     private nodeAdded = this.concurrencyLimiter(async (nodeId: DhtAddress): Promise<void> => {
@@ -66,7 +79,7 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
     private streamsStaked = this.concurrencyLimiter(async (streamIds: StreamID[]): Promise<void> => {
         const streamPartIds = (await Promise.all(streamIds.map(this.getStreamPartIds))).flat()
         for (const streamPartId of streamPartIds) {
-            this.allStreamParts.add(streamPartId)
+            this.assignments.set(streamPartId, [])
         }
         // TODO: optimize; calculate efficiently by only considering added stream parts
         this.recalculateAssignments(`streamsStaked:${streamIds.join()}`)
@@ -75,7 +88,7 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
     private streamUnstaked = this.concurrencyLimiter(async (streamId: StreamID): Promise<void> => {
         const streamPartIds = await this.getStreamPartIds(streamId)
         for (const streamPartId of streamPartIds) {
-            this.allStreamParts.delete(streamPartId)
+            this.assignments.delete(streamPartId)
         }
         // TODO: optimize; calculate efficiently by only considering removed stream parts
         this.recalculateAssignments(`streamUnstaked:${streamId}`)
@@ -84,15 +97,17 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
     private recalculateAssignments(context: string): void {
         const assigned: StreamPartID[] = []
         const unassigned: StreamPartID[] = []
-        for (const streamPartId of this.allStreamParts) {
-            if (this.consistentHashRing.get(streamPartId).includes(this.myNodeId) && !this.myStreamParts.has(streamPartId)) {
+        for (const streamPartId of this.assignments.keys()) {
+            const nodeList = this.consistentHashRing.get(streamPartId)
+            this.assignments.set(streamPartId, nodeList)
+            if (nodeList.includes(this.myNodeId) && !this.myStreamParts.has(streamPartId)) {
                 assigned.push(streamPartId)
                 this.myStreamParts.add(streamPartId)
                 this.emit('assigned', streamPartId)
             }
         }
         for (const streamPartId of this.myStreamParts) {
-            if (!this.allStreamParts.has(streamPartId) || !this.consistentHashRing.get(streamPartId).includes(this.myNodeId)) {
+            if (!this.assignments.has(streamPartId) || !this.consistentHashRing.get(streamPartId).includes(this.myNodeId)) {
                 unassigned.push(streamPartId)
                 this.myStreamParts.delete(streamPartId)
                 this.emit('unassigned', streamPartId)
