@@ -322,7 +322,7 @@ export class NetworkNodeFacade {
         return response.operators.map((operator) => convertPeerDescriptorToNetworkPeerDescriptor(operator))   
     }
 
-    async createExternalRpcClient<T extends ExternalRpcClient>(clientClass: ExternalRpcClientClass<T> ): Promise<ProtoRpcClient<T>> {
+    private async createExternalRpcClient<T extends ExternalRpcClient>(clientClass: ExternalRpcClientClass<T> ): Promise<ProtoRpcClient<T>> {
         if (this.isStarting()) {
             await this.startNodeTask(false)
         }
