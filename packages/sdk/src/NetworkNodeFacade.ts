@@ -344,7 +344,6 @@ export class NetworkNodeFacade {
         node.registerExternalNetworkRpcMethod(request, response, name, fn)
     }
 
-
     private isStarting(): boolean {
         return !this.cachedNode || !this.startNodeComplete
     }
