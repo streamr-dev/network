@@ -48,9 +48,9 @@ export class StreamPartAssignments extends EventEmitter3<StreamPartAssignmentEve
         return Array.from(this.myStreamParts)
     }
 
-    getAssignedNodesFor(streamPartId: StreamPartID): NetworkPeerDescriptor[] {
+    getAssignedNodesForStreamPart(streamPartId: StreamPartID): NetworkPeerDescriptor[] {
         const nodeList = this.assignments.get(streamPartId) ?? []
-        const descriptorList: NetworkPeerDescriptor[] = []
+        const descriptorList = []
         for (const nodeId of nodeList) {
             const descriptor = this.operatorFleetState.getPeerDescriptor(nodeId)
             if (descriptor !== undefined) {
