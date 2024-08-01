@@ -21,10 +21,12 @@ import { OperatorRegistry } from './contracts/OperatorRegistry'
 import { StreamMessage as OldStreamMessage } from './protocol/StreamMessage'
 import { StreamMessageTranslator } from './protocol/StreamMessageTranslator'
 import { pOnce } from './utils/promises'
-import { peerDescriptorTranslator } from './utils/utils'
+import { convertPeerDescriptorToNetworkPeerDescriptor, peerDescriptorTranslator } from './utils/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { IMessageType } from '@protobuf-ts/runtime'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { OperatorDiscoveryClient } from './generated/packages/sdk/protos/SdkRpc.client'
+import { OperatorDiscoveryRequest } from './generated/packages/sdk/protos/SdkRpc'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 /** @deprecated This in an internal interface */
@@ -309,6 +311,37 @@ export class NetworkNodeFacade {
         }
         const peerDescriptors = nodeDescriptors.map(peerDescriptorTranslator)
         this.cachedNode!.setStreamPartEntryPoints(streamPartId, peerDescriptors)
+    }
+
+    async discoverOperators(leader: NetworkPeerDescriptor, streamPartId: StreamPartID): Promise<NetworkPeerDescriptor[]> {
+        const client = await this.createExternalRpcClient(OperatorDiscoveryClient)
+        const response = await client.discoverOperators(OperatorDiscoveryRequest.create({ streamPartId }), {
+            sourceDescriptor: await this.getPeerDescriptor(),
+            targetDescriptor: peerDescriptorTranslator(leader)
+        })
+        return response.operators.map((operator) => convertPeerDescriptorToNetworkPeerDescriptor(operator))   
+    }
+
+    private async createExternalRpcClient<T extends ExternalRpcClient>(clientClass: ExternalRpcClientClass<T> ): Promise<ProtoRpcClient<T>> {
+        if (this.isStarting()) {
+            await this.startNodeTask(false)
+        }
+        return this.cachedNode!.createExternalRpcClient(clientClass)
+    }
+
+    async registerExternalRpcMethod<
+        RequestClass extends IMessageType<RequestType>,
+        ResponseClass extends IMessageType<ResponseType>,
+        RequestType extends object,
+        ResponseType extends object
+    >(
+        request: RequestClass,
+        response: ResponseClass,
+        name: string, 
+        fn: (req: RequestType, context: ServerCallContext) => Promise<ResponseType>
+    ): Promise<void> {
+        const node = await this.getNode()
+        node.registerExternalNetworkRpcMethod(request, response, name, fn)
     }
 
     private isStarting(): boolean {
