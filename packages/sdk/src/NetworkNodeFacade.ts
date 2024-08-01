@@ -311,6 +311,29 @@ export class NetworkNodeFacade {
         this.cachedNode!.setStreamPartEntryPoints(streamPartId, peerDescriptors)
     }
 
+    async createExternalRpcClient<T extends ExternalRpcClient>(clientClass: ExternalRpcClientClass<T> ): Promise<ProtoRpcClient<T>> {
+        if (this.isStarting()) {
+            await this.startNodeTask(false)
+        }
+        return this.cachedNode!.createExternalRpcClient(clientClass)
+    }
+
+    async registerExternalRpcMethod<
+        RequestClass extends IMessageType<RequestType>,
+        ResponseClass extends IMessageType<ResponseType>,
+        RequestType extends object,
+        ResponseType extends object
+    >(
+        request: RequestClass,
+        response: ResponseClass,
+        name: string, 
+        fn: (req: RequestType, context: ServerCallContext) => Promise<ResponseType>
+    ): Promise<void> {
+        const node = await this.getNode()
+        node.registerExternalNetworkRpcMethod(request, response, name, fn)
+    }
+
+
     private isStarting(): boolean {
         return !this.cachedNode || !this.startNodeComplete
     }
