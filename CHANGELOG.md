@@ -14,20 +14,9 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
-- Update to ethers.js library to v6 (https://github.com/streamr-dev/network/pull/2506)
-- Restructured `contracts` config structure (https://github.com/streamr-dev/network/pull/2581)
-- Improve reliability of JSON RPC interactions by adding retry redundancy (https://github.com/streamr-dev/network/pull/2562)
-- Renamed events: (https://github.com/streamr-dev/network/pull/2604, https://github.com/streamr-dev/network/pull/2605)
-  - `createStream` -> `streamCreated`
-  - `addToStorageNode` -> `streamAddedToStorageNode`
-  - `removeFromStorageNode` -> `streamRemovedFromFromStorageNode`
-  - Subscription: `resendComplete` -> `resendCompleted`
-
 #### Deprecated
 
 #### Removed
-
-- Removed obsolete RPC provider options (https://github.com/streamr-dev/network/pull/2583)
 
 #### Fixed
 
@@ -40,15 +29,11 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
-- Improve reliability of JSON RPC interactions by adding retry redundancy (https://github.com/streamr-dev/network/pull/2601)
-
 #### Deprecated
 
 #### Removed
 
 #### Fixed
-
-- Fix memory leak in SubscriberPlugin (https://github.com/streamr-dev/network/pull/2578)
 
 #### Security
 
@@ -66,6 +51,50 @@ Changes before Tatum release are not documented in this file.
 #### Fixed
 
 #### Security
+
+
+## [101.0.1] - 2047-07-09
+
+### @streamr/sdk
+
+#### Changed
+
+- Set default RPC timeout to 30 seconds (https://github.com/streamr-dev/network/commit/131fb456d26486c12b2facd6e78bee47319c2533)
+
+
+## [101.0.0] - 2024-07-08
+
+### @streamr/sdk
+
+#### Changed
+
+- Update ethers.js library to v6 (https://github.com/streamr-dev/network/pull/2506)
+- Restructure `contracts` config section (https://github.com/streamr-dev/network/pull/2581)
+- Improve reliability of JSON RPC interactions by adding retry redundancy (https://github.com/streamr-dev/network/pull/2562, https://github.com/streamr-dev/network/pull/2601)
+- Rename events (https://github.com/streamr-dev/network/pull/2604, https://github.com/streamr-dev/network/pull/2605) as denoted below
+  - `createStream` => `streamCreated`
+  - `addToStorageNode` => `streamAddedToStorageNode`
+  - `removeFromStorageNode` => `streamRemovedFromFromStorageNode`
+  - `resendComplete` => `resendCompleted` (on instances of `Subscription`)
+
+#### Removed
+
+- Remove obsolete RPC provider options (https://github.com/streamr-dev/network/pull/2583)
+
+### @streamr/node
+
+#### Changed
+
+- Improve reliability of JSON RPC interactions by adding retry redundancy (https://github.com/streamr-dev/network/pull/2562, https://github.com/streamr-dev/network/pull/2601)
+
+#### Deprecated
+
+- Deprecate command `streamr-broker`. Use `streamr-node` instead. (https://github.com/streamr-dev/network/pull/2626)
+- Deprecate command `streamr-broker-init`. Use `streamr-node-init` instead. (https://github.com/streamr-dev/network/pull/2626)
+
+#### Fixed
+
+- Fix memory leak in SubscriberPlugin (https://github.com/streamr-dev/network/pull/2578)
 
 
 ## [100.2.4] - 2024-05-06
@@ -176,7 +205,9 @@ Changes before Tatum release are not documented in this file.
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v100.2.4...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v101.0.1...HEAD
+[101.0.1]: https://github.com/streamr-dev/network/compare/v101.0.0...v101.0.1
+[101.0.0]: https://github.com/streamr-dev/network/compare/v100.2.4...v101.0.0
 [100.2.4]: https://github.com/streamr-dev/network/compare/v100.2.3...v100.2.4
 [100.2.3]: https://github.com/streamr-dev/network/compare/v100.2.2...v100.2.3
 [100.2.2]: https://github.com/streamr-dev/network/compare/v100.2.1...v100.2.2

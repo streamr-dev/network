@@ -27,7 +27,7 @@ $ npm i -g @streamr/node
 Before the Streamr node can be started, its configuration files need to be created using the following command:
 
 ```shell
-$ streamr-broker-init
+$ streamr-node-init
 ```
 
 During initiziliation make sure to enable the `mqtt-plugin` and assign a port to it (default is 1883). Other plugins are unnecessary. For more in depth information on installing a Streamr node, see the guide on [running a Streamr node](../guides/how-to-run-streamr-node.md).
@@ -43,7 +43,7 @@ $ cat ~/.streamr/config/default.json
 #### Start the Streamr node
 
 ```shell
-$ streamr-broker
+$ streamr-node
 ```
 
 The node's address (its public key) is displayed when the Streamr node is started. Record this as the `BrokerNodeAddress`, it's needed in the next step!
@@ -204,7 +204,7 @@ The most common issues are:
 To include more verbose logging you could run the Streamr node with these additional flags:
 
 ```shell
-$ LOG_LEVEL=trace DEBUG=Streamr* streamr-broker
+$ LOG_LEVEL=trace DEBUG=Streamr* streamr-node
 ```
 
 ## All done 🎉

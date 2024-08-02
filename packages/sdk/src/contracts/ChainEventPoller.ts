@@ -6,7 +6,7 @@ type EventName = string
 type Listener = (...args: any[]) => void
 
 const BLOCK_NUMBER_QUERY_RETRY_DELAY = 1000
-const POLLS_SINCE_LAST_FROM_BLOCK_UPDATE_THRESHOLD = 30
+export const POLLS_SINCE_LAST_FROM_BLOCK_UPDATE_THRESHOLD = 30
 
 export class ChainEventPoller {
 

@@ -28,8 +28,8 @@ describe('use JsonRpcProvider', () => {
         return sortBy(servers.map((s) => s.getRequests()).flat(), (r) => r.timestamp)
     }
 
-    const getNewRequests = (minTimestamp: number): JsonRpcRequest[] => {
-        return getRequests().filter((r) => r.timestamp >= minTimestamp)
+    const clearRequests = () => {
+        servers.forEach((s) => s.clearRequests())
     }
 
     beforeEach(async () => {
@@ -66,20 +66,16 @@ describe('use JsonRpcProvider', () => {
             await client.isStreamPublisher('/stream1', randomEthereumAddress())
             const errorServer = servers[0]
             errorServer.setError('eth_call', errorState)
-            let now: number
-            let hasQueriedErrorServer = false
             do {
-                now = Date.now()
+                clearRequests()
                 await client.isStreamPublisher('/stream1', randomEthereumAddress())
-                hasQueriedErrorServer = getNewRequests(now).some((r) => r.serverPort === errorServer.getPort())
-            } while (!hasQueriedErrorServer)
-            return getNewRequests(now).filter((r) => r.method === 'eth_call')
+            } while (!getRequests().some((r) => r.serverPort === errorServer.getPort()))
+            return getRequests().filter((r) => r.method === 'eth_call')
         }
 
         it('reads from multiple servers', async () => {
-            const now = Date.now()
             await client.isStreamPublisher('/stream1', '0x0000000000000000000000000000000000000010')
-            const requests = getNewRequests(now).filter((r) => r.method === 'eth_call')
+            const requests = getRequests().filter((r) => r.method === 'eth_call')
             expect(requests).toHaveLength(QUORUM)
         })
 
@@ -100,10 +96,10 @@ describe('use JsonRpcProvider', () => {
 
         it('reading information from contract doesn\'t cause multiple chainId requests', async () => {
             await client.isStreamPublisher('/stream1', randomEthereumAddress())
-            const now = Date.now()
+            clearRequests()
             await client.isStreamPublisher('/stream1', randomEthereumAddress())
             await client.isStreamPublisher('/stream1', randomEthereumAddress())
-            const requests = getNewRequests(now).filter((r) => r.method === 'eth_chainId')
+            const requests = getRequests().filter((r) => r.method === 'eth_chainId')
             expect(requests).toHaveLength(0)
         })
     })
@@ -130,14 +126,13 @@ describe('use JsonRpcProvider', () => {
 
         it('happy path', async () => {
             const receivedEvents: StreamCreationEvent[] = []
-            const now = Date.now()
             client.on('streamCreated', (event: StreamCreationEvent) => {
                 receivedEvents.push(event)
             })
             await wait(0.5 * POLL_INTERVAL)
-            expect(getNewRequests(now).filter((r) => r.method === 'eth_getLogs')).toHaveLength(1)
+            expect(getRequests().filter((r) => r.method === 'eth_getLogs')).toHaveLength(1)
             await wait(1.5 * POLL_INTERVAL)
-            expect(getNewRequests(now).filter((r) => r.method === 'eth_getLogs')).toHaveLength(2)
+            expect(getRequests().filter((r) => r.method === 'eth_getLogs')).toHaveLength(2)
             expect(receivedEvents).toEqual([{
                 streamId: '0x0000000000000000000000000000000000000001/foo',
                 metadata: {

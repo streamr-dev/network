@@ -117,11 +117,9 @@ Example RPC section:
 ```
 rpcs: [{
     url: "https://polygon-rpc.com",
-    timeout: 120000
   },
   {
     url: "https://polygon-bor.publicnode.com",
-    timeout: 120000
   }],
 ```
 

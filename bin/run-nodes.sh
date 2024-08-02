@@ -6,7 +6,7 @@ cd "${0%/*}"
 trap stop_applications SIGINT
 
 stop_applications(){
-    pkill -TERM -P $$ 
+    pkill -TERM -P $$
 }
 
 run_application() {
@@ -23,4 +23,4 @@ run_application node ./dist/bin/broker.js S1 '136;136;255' configs/development-1
 run_application node ./dist/bin/broker.js B1 '0;136;255' configs/development-2.env.json &
 run_application node ./dist/bin/broker.js B2 '136;204;255' configs/development-3.env.json &
 
-wait 
+wait

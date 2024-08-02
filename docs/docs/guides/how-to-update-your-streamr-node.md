@@ -57,5 +57,5 @@ npm install -g @streamr/node
 
 And then you can run the node:
 ```
-`streamr-broker`
+`streamr-node`
 ```
