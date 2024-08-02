@@ -44,7 +44,7 @@ export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
 export { CONFIG_TEST } from './ConfigTest'
 export { StreamDefinition } from './types'
-export { formStorageNodeAssignmentStreamId } from './utils/utils'
+export { formStorageNodeAssignmentStreamId, peerDescriptorTranslator } from './utils/utils'
 export { SignerWithProvider } from './Authentication'
 export { convertBytesToStreamMessage, convertStreamMessageToBytes } from './protocol/oldStreamMessageBinaryUtils'
 
@@ -76,6 +76,8 @@ export {
     StreamMessageOptions,
     StreamMessageType
 } from './protocol/StreamMessage'
+
+export { OperatorDiscoveryRequest, OperatorDiscoveryResponse } from './generated/packages/sdk/protos/SdkRpc'
 
 // These are exported for the internal Operator class
 export {
