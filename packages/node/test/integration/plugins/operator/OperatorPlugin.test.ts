@@ -102,7 +102,7 @@ describe('OperatorPlugin', () => {
         }).rejects.toThrow('Plugin operator doesn\'t support client config value "false" in network.node.acceptProxyConnections')
     })
     
-    it('Accepts OperatorDiscoveryRequests', async () => {
+    it('accepts OperatorDiscoveryRequests', async () => {
         const client = createClient(await fetchPrivateKeyWithGas())
         const stream = await createTestStream(client, module)
 
