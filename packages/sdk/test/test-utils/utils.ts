@@ -215,8 +215,6 @@ export const createGroupKeyManager = (
         groupKeyStore,
         {
             encryption: {
-                litProtocolEnabled: false,
-                litProtocolLogging: false,
                 maxKeyRequestsPerSecond: 10,
                 keyRequestTimeout: 50,
                 // eslint-disable-next-line no-underscore-dangle

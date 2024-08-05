@@ -50,11 +50,8 @@ describe('StreamrClient', () => {
         })
 
         it('updateEncryptionKey: throws error message if lit protocol enabled and passing explicit key', async () => {
-            const client = createClient({
-                encryption: {
-                    litProtocolEnabled: true
-                }
-            })
+            const client = createClient({})
+            client.enableLitProtocol({} as any)
             await expect(() => {
                 return client.updateEncryptionKey({
                     streamId: 'foobar.eth/foobar',
