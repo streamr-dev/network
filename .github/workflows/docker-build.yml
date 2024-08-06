@@ -66,6 +66,8 @@ jobs:
         with:
           username: ${{ secrets.dockerhub_username }}
           password: ${{ secrets.dockerhub_token }}
+      - name: install docker compose
+        run: sudo apt-get install -y docker-compose
 
       - name: Get current version git tag (for Docker meta)
         run: |
