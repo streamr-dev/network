@@ -718,7 +718,7 @@ export class StreamrClient {
     }
 
     findOperators(streamId: StreamID): Promise<NetworkPeerDescriptor[]> {
-        return this.operatorRegistry.findOperatorsOnStream(streamId, 10)
+        return this.operatorRegistry.findOperatorsOnStream(streamId, 10, 1)
     } 
 
     // --------------------------------------------------------------------------------------------

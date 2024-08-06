@@ -12,6 +12,18 @@ interface OperatorMetadata {
     latestHeartbeatMetadata: string
 }
 
+interface StreamOperators {
+    stream: {
+        sponsorships: Sponsorship[]
+    }
+}
+
+interface Sponsorship {
+    stakes: {
+        operator: OperatorMetadata
+    }[]
+}
+
 @scoped(Lifecycle.ContainerScoped)
 export class OperatorRegistry {
     private readonly theGraphClient: TheGraphClient
@@ -58,13 +70,18 @@ export class OperatorRegistry {
         return picked
     }
 
-    async findOperatorsOnStream(streamId: StreamID, maxQueryResults: number): Promise<NetworkPeerDescriptor[]> {
+    async findOperatorsOnStream(streamId: StreamID, maxQueryResults: number, maxHeartbeatAgeHours: number): Promise<NetworkPeerDescriptor[]> {
         const query: GraphQLQuery = { 
             query: `{
                 stream(id: "${streamId}") {
                     sponsorships(where: { isRunning: true }) {
                         stakes(first: ${maxQueryResults}, orderBy: updateTimestamp, orderDirection: desc) {
-                            operator {
+                            operator (
+                                where: {
+                                    latestHeartbeatMetadata_contains: "\\"tls\\":true", 
+                                    latestHeartbeatTimestamp_gt: "${Math.floor(Date.now() / 1000) - (maxHeartbeatAgeHours * 60 * 60)}"
+                                }
+                            ) {
                                 id
                                 latestHeartbeatMetadata
                             }
@@ -73,9 +90,10 @@ export class OperatorRegistry {
                 }
             }`
         }
-        const operatorMetadatas = await this.theGraphClient.queryEntity<any>(query)
+        const operatorMetadatas = await this.theGraphClient.queryEntity<StreamOperators>(query)
         const peerDescriptors: NetworkPeerDescriptor[] = operatorMetadatas.stream.sponsorships
-            .flatMap((stakes: any) => stakes.stakes.map((operator: any) => JSON.parse(operator.operator.latestHeartbeatMetadata)))
+            .flatMap((sponsorship: Sponsorship) => sponsorship.stakes
+                .map((stake: { operator: OperatorMetadata }) => JSON.parse(stake.operator.latestHeartbeatMetadata)))
         return peerDescriptors
     }
 
