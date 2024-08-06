@@ -45,7 +45,7 @@ export interface Message {
     /**
      * Publisher of message.
      */
-    publisherId: EthereumAddress
+    publisherId: Uint8Array
 
     /**
      * Identifies the message chain the message was published to.

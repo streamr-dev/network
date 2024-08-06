@@ -54,7 +54,7 @@ export interface NetworkNodeStub {
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: EthereumAddress,
+        userId: Uint8Array,
         connectionCount?: number
     ) => Promise<void>
     isProxiedStreamPart(streamPartId: StreamPartID): boolean
@@ -234,7 +234,7 @@ export class NetworkNodeFacade {
         const node = await this.getNode()
         node.broadcast(StreamMessageTranslator.toProtobuf(msg))
     }
-    
+
     addMessageListener(listener: (msg: OldStreamMessage) => void): void {
         this.messageListeners.push(listener)
     }
@@ -300,7 +300,7 @@ export class NetworkNodeFacade {
             streamPartId,
             peerDescriptors,
             direction,
-            await this.authentication.getAddress(),
+            await this.authentication.getUserId(),
             connectionCount
         )
     }

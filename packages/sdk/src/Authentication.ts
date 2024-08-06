@@ -10,16 +10,18 @@ export const AuthenticationInjectionToken = Symbol('Authentication')
 export type SignerWithProvider = AbstractSigner<Provider>
 
 export interface Authentication {
-    // always in lowercase
-    getAddress: () => Promise<EthereumAddress>
-    createMessageSignature: (payload: Uint8Array) => Promise<Uint8Array>
+    getUserId: () => Promise<Uint8Array>
+    getUserIdAsEthereumAddress: () => Promise<EthereumAddress>
     getTransactionSigner: (rpcProviderSource: RpcProviderSource) => Promise<SignerWithProvider>
+    createMessageSignature: (payload: Uint8Array) => Promise<Uint8Array>
 }
 
 export const createPrivateKeyAuthentication = (key: string): Authentication => {
     const address = toEthereumAddress(computeAddress(key))
+    const userId = hexToBinary(address)
     return {
-        getAddress: async () => address,
+        getUserId: async () => userId,
+        getUserIdAsEthereumAddress: async () => address,
         createMessageSignature: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
         getTransactionSigner: async (rpcProviderSource: RpcProviderSource) => {
             const primaryProvider = rpcProviderSource.getProvider()
@@ -40,16 +42,11 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
         const provider = new BrowserProvider(ethereum)
         const signer = provider.getSigner()
         return {
-            getAddress: pMemoize(async () => {
-                try {
-                    if (!('request' in ethereum && typeof ethereum.request === 'function')) {
-                        throw new Error(`invalid ethereum provider ${ethereum}`)
-                    }
-                    const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
-                    return toEthereumAddress(accounts[0])
-                } catch {
-                    throw new Error('no addresses connected and selected in the custom authentication provider')
-                }
+            getUserId: pMemoize(async () => {
+                return hexToBinary(await (await signer).getAddress())
+            }),
+            getUserIdAsEthereumAddress: pMemoize(async () => {
+                return toEthereumAddress(await (await signer).getAddress())
             }),
             createMessageSignature: pLimitFn(async (payload: Uint8Array) => {
                 // sign one at a time & wait a moment before asking for next signature

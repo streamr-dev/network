@@ -5,14 +5,12 @@ import {
     StreamMessage as NewStreamMessage
 } from '@streamr/trackerless-network'
 import {
-    EthereumAddress,
     StreamPartID,
     StreamPartIDUtils,
     binaryToHex,
     binaryToUtf8,
     hexToBinary,
-    toEthereumAddress,
-    utf8ToBinary 
+    utf8ToBinary
 } from '@streamr/utils'
 import { MessageID as OldMessageID } from '../../src/protocol/MessageID'
 import {
@@ -29,7 +27,7 @@ const STREAM_PART_ID = StreamPartIDUtils.parse('TEST#0')
 export const createStreamMessage = (
     content: string,
     streamPartId: StreamPartID,
-    publisherId: EthereumAddress,
+    publisherId: Uint8Array,
     timestamp?: number,
     sequenceNumber?: number
 ): NewStreamMessage => {
@@ -38,7 +36,7 @@ export const createStreamMessage = (
         streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
         sequenceNumber: sequenceNumber ?? 0,
         timestamp: timestamp ?? Date.now(),
-        publisherId: hexToBinary(publisherId),
+        publisherId,
         messageChainId: 'messageChain0',
     }
     const msg = {
@@ -59,7 +57,7 @@ export const createStreamMessage = (
 
 describe('StreamMessageTranslator', () => {
 
-    const publisherId = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+    const publisherId = hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
     const signature = hexToBinary('0x1234')
     const protobufMsg = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
@@ -104,7 +102,7 @@ describe('StreamMessageTranslator', () => {
         expect(translated.messageId.streamPartition).toEqual(StreamPartIDUtils.getStreamPartition(STREAM_PART_ID))
         expect(translated.messageId.timestamp).toBeGreaterThanOrEqual(0)
         expect(translated.messageId.sequenceNumber).toEqual(0)
-        expect(translated.getPublisherId()).toEqual('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        expect(translated.getPublisherId()).toEqual(publisherId)
         expect(translated.prevMsgRef).toEqual(undefined)
         expect(translated.messageType).toEqual(OldStreamMessageType.MESSAGE)
         expect(translated.contentType).toEqual(0)

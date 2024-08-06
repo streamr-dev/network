@@ -59,7 +59,7 @@ const signAuthMessage = async (authentication: Authentication) => {
     const domain = 'dummy.com'
     const uri = 'https://dummy.com'
     const statement = 'dummy'
-    const addressInChecksumCase = ethers.getAddress(await authentication.getAddress())
+    const addressInChecksumCase = ethers.getAddress(await authentication.getUserIdAsEthereumAddress())
     const siweMessage = new siwe.SiweMessage({
         domain,
         uri,

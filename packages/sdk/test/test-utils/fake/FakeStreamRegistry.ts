@@ -1,5 +1,5 @@
 import { Methods } from '@streamr/test-utils'
-import { EthereumAddress, Multimap, StreamID, toEthereumAddress } from '@streamr/utils'
+import { binaryToHex, EthereumAddress, hexToBinary, Multimap, StreamID } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
 import { Stream, StreamMetadata } from '../../../src/Stream'
@@ -23,7 +23,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     private readonly streamFactory: StreamFactory
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
-    
+
     constructor(
         chain: FakeChain,
         streamFactory: StreamFactory,
@@ -40,9 +40,9 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         if (this.chain.getStream(streamId) !== undefined) {
             throw new Error(`Stream already exists: ${streamId}`)
         }
-        const authenticatedUser: EthereumAddress = await this.authentication.getAddress()
-        const permissions = new Multimap<EthereumAddress, StreamPermission>()
-        permissions.addAll(authenticatedUser, Object.values(StreamPermission))
+        const authenticatedUserId = binaryToHex(await this.authentication.getUserId())
+        const permissions = new Multimap<string, StreamPermission>()
+        permissions.addAll(authenticatedUserId, Object.values(StreamPermission))
         const registryItem: StreamRegistryItem = {
             metadata,
             permissions
@@ -77,12 +77,12 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         if (registryItem === undefined) {
             return false
         }
-        const targets: Array<EthereumAddress | PublicPermissionTarget> = []
+        const targets: Array<string | PublicPermissionTarget> = []
         if (isPublicPermissionQuery(query) || query.allowPublic) {
             targets.push(PUBLIC_PERMISSION_TARGET)
         }
         if ((query as any).user !== undefined) {
-            targets.push(toEthereumAddress((query as any).user))
+            targets.push(binaryToHex((query as any).user))
         }
         return targets.some((target) => registryItem.permissions.get(target).includes(query.permission))
     }
@@ -103,7 +103,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
                 }
             } else {
                 return {
-                    user: target,
+                    user: hexToBinary(target),
                     permissions
                 }
             }
@@ -114,7 +114,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         return this.updatePermissions(
             streamIdOrPath,
             assignments,
-            (registryItem: StreamRegistryItem, target: EthereumAddress | PublicPermissionTarget, permissions: StreamPermission[]) => {
+            (registryItem: StreamRegistryItem, target: string | PublicPermissionTarget, permissions: StreamPermission[]) => {
                 const nonExistingPermissions = permissions.filter((p) => !registryItem.permissions.has(target, p))
                 registryItem.permissions.addAll(target, nonExistingPermissions)
             }
@@ -125,7 +125,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         return this.updatePermissions(
             streamIdOrPath,
             assignments,
-            (registryItem: StreamRegistryItem, target: EthereumAddress | PublicPermissionTarget, permissions: StreamPermission[]) => {
+            (registryItem: StreamRegistryItem, target: string | PublicPermissionTarget, permissions: StreamPermission[]) => {
                 registryItem.permissions.removeAll(target, permissions)
             }
         )
@@ -136,7 +136,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         assignments: PermissionAssignment[],
         modifyRegistryItem: (
             registryItem: StreamRegistryItem,
-            target: EthereumAddress | PublicPermissionTarget,
+            target: string | PublicPermissionTarget,
             permissions: StreamPermission[]
         ) => void
     ): Promise<void> {
@@ -148,7 +148,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
             for (const assignment of assignments) {
                 const target = isPublicPermissionAssignment(assignment)
                     ? PUBLIC_PERMISSION_TARGET
-                    : toEthereumAddress(assignment.user)
+                    : binaryToHex(assignment.user)
                 modifyRegistryItem(registryItem, target, assignment.permissions)
             }
         }
@@ -171,17 +171,17 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
             permission: StreamPermission.SUBSCRIBE
         })
     }
-    
+
     // eslint-disable-next-line class-methods-use-this
     clearStreamCache(): void {
         // no-op
     }
 
-    async isStreamPublisher(streamIdOrPath: string, user: EthereumAddress): Promise<boolean> {
+    async isStreamPublisher(streamIdOrPath: string, user: Uint8Array): Promise<boolean> {
         return this.hasPermission({ streamId: streamIdOrPath, user, permission: StreamPermission.PUBLISH, allowPublic: true })
     }
 
-    async isStreamSubscriber(streamIdOrPath: string, user: EthereumAddress): Promise<boolean> {
+    async isStreamSubscriber(streamIdOrPath: string, user: Uint8Array): Promise<boolean> {
         return this.hasPermission({ streamId: streamIdOrPath, user, permission: StreamPermission.SUBSCRIBE, allowPublic: true })
     }
 

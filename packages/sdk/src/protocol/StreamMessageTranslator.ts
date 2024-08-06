@@ -79,7 +79,7 @@ export class StreamMessageTranslator {
             sequenceNumber: msg.getSequenceNumber(),
             streamId: msg.getStreamId() as string,
             streamPartition: msg.getStreamPartition(),
-            publisherId: hexToBinary(msg.getPublisherId()),
+            publisherId: msg.getPublisherId(),
             messageChainId: msg.getMsgChainId()
         }
         let previousMessageRef: NewMessageRef | undefined = undefined
@@ -172,7 +172,7 @@ export class StreamMessageTranslator {
             msg.messageId!.streamPartition,
             Number(msg.messageId!.timestamp),
             msg.messageId!.sequenceNumber,
-            toEthereumAddress(binaryToHex(msg.messageId!.publisherId, true)),
+            msg.messageId!.publisherId,
             msg.messageId!.messageChainId
         )
         let prevMsgRef: OldMessageRef | undefined = undefined

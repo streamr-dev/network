@@ -1,4 +1,4 @@
-import { StreamPartIDUtils, hexToBinary, toEthereumAddress, toStreamID, utf8ToBinary } from '@streamr/utils'
+import { StreamPartIDUtils, hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
 import { EncryptedGroupKey } from '../../src/protocol/EncryptedGroupKey'
 import { MessageID } from '../../src/protocol/MessageID'
@@ -34,7 +34,7 @@ const msg = ({ timestamp = 1564046332168, sequenceNumber = 10, ...overrides } = 
     })
 }
 
-const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const PUBLISHER_ID = hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 describe('StreamMessage', () => {
     describe('constructor', () => {

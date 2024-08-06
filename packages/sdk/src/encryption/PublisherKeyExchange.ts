@@ -1,4 +1,4 @@
-import { EthereumAddress, Logger, StreamPartID, StreamPartIDUtils } from '@streamr/utils'
+import { areEqualBinaries, binaryToHex, Logger, ObjectSet, StreamPartID, StreamPartIDUtils } from '@streamr/utils'
 import without from 'lodash/without'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -42,7 +42,7 @@ export class PublisherKeyExchange {
     private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
     private readonly logger: Logger
-    private readonly erc1271ContractAddresses = new Set<EthereumAddress>()
+    private readonly erc1271ContractAddresses = new ObjectSet<Uint8Array>((u) => binaryToHex(u, true))
 
     constructor(
         networkNodeFacade: NetworkNodeFacade,
@@ -84,7 +84,7 @@ export class PublisherKeyExchange {
                 if (responseType !== ResponseType.NONE) {
                     this.logger.debug('Handling group key request', { requestId, responseType })
                     await validateStreamMessage(request, this.streamRegistry, this.signatureValidator)
-                    const authenticatedUser = await this.authentication.getAddress()
+                    const authenticatedUser = await this.authentication.getUserId()
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
                         undefined) as GroupKey[]
@@ -116,9 +116,9 @@ export class PublisherKeyExchange {
         }
     }
 
-    private async getResponseType(publisher: EthereumAddress): Promise<ResponseType> {
-        const authenticatedUser = await this.authentication.getAddress()
-        if (publisher === authenticatedUser) {
+    private async getResponseType(publisher: Uint8Array): Promise<ResponseType> {
+        const authenticatedUser = await this.authentication.getUserId()
+        if (areEqualBinaries(publisher, authenticatedUser)) {
             return ResponseType.NORMAL
         } else if (this.erc1271ContractAddresses.has(publisher)) {
             return ResponseType.ERC_1271
@@ -130,10 +130,10 @@ export class PublisherKeyExchange {
     private async createResponse(
         keys: GroupKey[],
         responseType: ResponseType,
-        publisher: EthereumAddress,
+        publisher: Uint8Array,
         streamPartId: StreamPartID,
         rsaPublicKey: string,
-        recipient: EthereumAddress,
+        recipient: Uint8Array,
         requestId: string
     ): Promise<StreamMessage> {
         const encryptedGroupKeys = await Promise.all(keys.map((key) => {
