@@ -1,4 +1,4 @@
-import { Logger, TheGraphClient } from '@streamr/utils'
+import { Logger, TheGraphClient, GraphQLQuery } from '@streamr/utils'
 import { shuffle } from 'lodash'
 import { Lifecycle, scoped } from 'tsyringe'
 import { NetworkPeerDescriptor } from '../Config'
@@ -10,10 +10,6 @@ import { StreamID } from '../exports'
 interface OperatorMetadata {
     id: string
     latestHeartbeatMetadata: string
-}
-
-interface Query {
-    query: string
 }
 
 @scoped(Lifecycle.ContainerScoped)
@@ -34,7 +30,7 @@ export class OperatorRegistry {
         maxQueryResults: number, 
         maxHeartbeatAgeHours: number,
     ): Promise<NetworkPeerDescriptor[]> {
-        const createQuery = (): Query => {
+        const createQuery = (): GraphQLQuery => {
             return {
                 query: `{
                     operators(
@@ -52,39 +48,34 @@ export class OperatorRegistry {
                 }`
             }
         }
-        const peerDescriptors = await this.queryPeerDescriptors(createQuery)
+        const operatorMetadatas = this.theGraphClient.queryEntities<OperatorMetadata>(createQuery)
+        const peerDescriptors: NetworkPeerDescriptor[] = []
+        for await (const operator of operatorMetadatas) {
+            peerDescriptors.push(JSON.parse(operator.latestHeartbeatMetadata))
+        }
         const picked = shuffle(peerDescriptors).slice(0, maxEntryPoints)
         this.logger.debug(`Found ${peerDescriptors.length} network entrypoints, picked ${picked.length}`, { picked })
         return picked
     }
 
     async findOperatorsOnStream(streamId: StreamID, maxQueryResults: number): Promise<NetworkPeerDescriptor[]> {
-        const createQuery = (): Query => {
-            return {
-                query: `{
-                    stream(id: ${streamId}) {
-                        sponsorships(where: {isRunning: true}) {
-                            stakes(first: ${maxQueryResults}, orderBy: updateTimestamp, orderDirection: desc) {
-                                operator {
-                                    latestHeartbeatMetadata
-                                    latestHeartbeatTimestamp
-                                }
+        const query: GraphQLQuery = { 
+            query: `{
+                stream(id: "${streamId}") {
+                    sponsorships(where: { isRunning: true }) {
+                        stakes(first: ${maxQueryResults}, orderBy: updateTimestamp, orderDirection: desc) {
+                            operator {
+                                id
+                                latestHeartbeatMetadata
                             }
                         }
                     }
-                }`
-            }
+                }
+            }`
         }
-        const peerDescriptors = await this.queryPeerDescriptors(createQuery)
-        return peerDescriptors
-    }
-
-    private async queryPeerDescriptors(createQuery: () => Query): Promise<NetworkPeerDescriptor[]> {
-        const operatorMetadatas = this.theGraphClient.queryEntities<OperatorMetadata>(createQuery)
-        const peerDescriptors: NetworkPeerDescriptor[] = []
-        for await (const operator of operatorMetadatas) {
-            peerDescriptors.push(JSON.parse(operator.latestHeartbeatMetadata))
-        }
+        const operatorMetadatas = await this.theGraphClient.queryEntity<any>(query)
+        const peerDescriptors: NetworkPeerDescriptor[] = operatorMetadatas.stream.sponsorships
+            .flatMap((stakes: any) => stakes.stakes.map((operator: any) => JSON.parse(operator.operator.latestHeartbeatMetadata)))
         return peerDescriptors
     }
 
