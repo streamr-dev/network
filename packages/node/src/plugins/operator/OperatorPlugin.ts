@@ -122,7 +122,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
             return OperatorDiscoveryResponse.create({ operators: operators.map((operator) => peerDescriptorTranslator(operator)) })
         }
 
-        networkNode.registerExternalRpcMethod(OperatorDiscoveryRequest, OperatorDiscoveryResponse, 'discoverOperators', rpcServerFunction)
+        await networkNode.registerExternalRpcMethod(OperatorDiscoveryRequest, OperatorDiscoveryResponse, 'discoverOperators', rpcServerFunction)
 
         this.abortController.signal.addEventListener('abort', async () => {
             await fleetState.destroy()
