@@ -23,19 +23,19 @@ export class LoggingJsonRpcProvider extends JsonRpcProvider {
                 timeout: this.urlConfig.timeout
             }
         }
-        logger.debug('Send request', logContext)
+        logger.trace('Send request', logContext)
         let result
         try {
             result = await super.send(method, params)
         } catch (err) {
-            logger.debug('Encountered error while requesting', {
+            logger.trace('Encountered error while requesting', {
                 ...logContext,
                 err,
                 elapsedTime: Date.now() - startTime
             })
             throw err
         }
-        logger.debug('Received response', {
+        logger.trace('Received response', {
             ...logContext,
             elapsedTime: Date.now() - startTime
         })
