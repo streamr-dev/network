@@ -1,19 +1,18 @@
 import { StreamrClient } from './StreamrClient'
-import { Logger, toStreamID, toStreamPartID, wait } from '@streamr/utils'
-import { NetworkNodeType, StreamrClientConfig, StrictStreamrClientConfig } from './Config'
+import { Logger, toStreamID, toStreamPartID } from '@streamr/utils'
+import { NetworkNodeType } from './Config'
 import { ProxyDirection } from '@streamr/trackerless-network'
 
 enum RunMode {
-    NORMAL,
-    STREAM_ENTRYPOINT,
-    PROXY
+    NORMAL = 'normal',
+    STREAM_ENTRYPOINT = 'entrypoint',
+    PROXY = 'proxy'
 }
 
 const logger = new Logger(module)
 
-const RUN_MODE = RunMode.NORMAL
 const STREAM_ID = toStreamID('streamr.eth/demos/video')
-const NODE_ID = 'f8619ca67b65ec5310426a8715345afd6c0bac1c'
+const NODE_ID = 'f8619ca67b65ec5310426a8715aade1c7c6e3e1b'
 const HOST = 'e12f6842-d716-4379-a1a8-5051ed202d04.streamr-nodes.xyz'
 const PORT = 32200
 
@@ -29,17 +28,34 @@ const targetPeerDescriptor = {
 }
 
 ;(async () => {
+    const runModeString = process.argv[2]
+    let runMode: RunMode
+    if (!runModeString) {
+        throw new Error('run mode must be provided')
+    }
+    if (runModeString === 'normal') {
+        runMode = RunMode.NORMAL
+    } else if (runModeString === 'entrypoint') {
+        runMode = RunMode.STREAM_ENTRYPOINT
+    } else if (runModeString === 'proxy') {
+        runMode = RunMode.PROXY
+    } else {
+        throw new Error('unknown run mode')
+    }
+
     let streamrClient: StreamrClient
-    if (RUN_MODE === RunMode.NORMAL) {
+    if (runMode === RunMode.NORMAL) {
         streamrClient = new StreamrClient({
+            metrics: false,
             network: {
                 controlLayer: {
                     websocketPortRange: null
                 }
             }
         })
-    } else if (RUN_MODE === RunMode.PROXY) {
+    } else if (runMode === RunMode.PROXY) {
         streamrClient = new StreamrClient({
+            metrics: false,
             network: {
                 controlLayer: {
                     websocketPortRange: null
@@ -47,8 +63,9 @@ const targetPeerDescriptor = {
             }
         })
         await streamrClient.setProxies(targetStreamPartId, [targetPeerDescriptor], ProxyDirection.SUBSCRIBE)
-    } else if (RUN_MODE === RunMode.STREAM_ENTRYPOINT) {
+    } else {
         streamrClient = new StreamrClient({
+            metrics: false,
             network: {
                 controlLayer: {
                     websocketPortRange: null,
@@ -60,14 +77,13 @@ const targetPeerDescriptor = {
             }
         })
         await streamrClient.setStreamPartitionEntryPoints(targetStreamPartId, [targetPeerDescriptor])
-    } else {
-        throw new Error('unknown run mode')
     }
+
     const startTime = Date.now()
     await streamrClient.subscribe(targetStreamPartId, async (_message) => {
         const diff = Date.now() - startTime
-        //console.info(`Received 1st message in ${diff} ms`)
-        logger.info(`Received 1st message in ${diff} ms`)
+        console.info(`Received 1st message in ${diff} ms (runMode=${runMode})`)
+        //logger.info(`Received 1st message in ${diff} ms`)
         process.exit(0)
     })
 })()
