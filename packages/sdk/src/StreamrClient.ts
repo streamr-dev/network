@@ -720,7 +720,6 @@ export class StreamrClient {
     /* 
      * Discover operators that have been recently online on a given stream
      */
-
     findOperators(streamId: StreamID): Promise<NetworkPeerDescriptor[]> {
         return this.operatorRegistry.findOperatorsOnStream(streamId, 10, 1)
     } 
