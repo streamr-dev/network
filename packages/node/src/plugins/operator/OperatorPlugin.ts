@@ -1,7 +1,15 @@
-import { ReviewRequestEvent, SignerWithProvider, StreamrClient } from '@streamr/sdk'
+import { 
+    OperatorDiscoveryRequest,
+    OperatorDiscoveryResponse,
+    peerDescriptorTranslator,
+    ReviewRequestEvent,
+    SignerWithProvider,
+    StreamrClient
+} from '@streamr/sdk'
 import { 
     EthereumAddress,
     Logger,
+    StreamPartIDUtils,
     addManagedEventListener,
     scheduleAtInterval,
     setAbortableInterval,
@@ -105,6 +113,16 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         const maintainTopologyService = new MaintainTopologyService(streamrClient, streamPartAssignments)
         await fleetState.start()
         await maintainTopologyHelper.start()
+
+        const networkNode = await streamrClient.getNode()
+
+        const rpcServerFunction = async (request: OperatorDiscoveryRequest) => {
+            const streamPartId = StreamPartIDUtils.parse(request.streamPartId)
+            const operators = streamPartAssignments.getAssignedNodesForStreamPart(streamPartId)
+            return OperatorDiscoveryResponse.create({ operators: operators.map((operator) => peerDescriptorTranslator(operator)) })
+        }
+
+        await networkNode.registerExternalRpcMethod(OperatorDiscoveryRequest, OperatorDiscoveryResponse, 'discoverOperators', rpcServerFunction)
 
         this.abortController.signal.addEventListener('abort', async () => {
             await fleetState.destroy()

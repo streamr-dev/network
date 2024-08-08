@@ -13,4 +13,4 @@ export {
     SignatureType,
     StreamMessage
 } from './proto/packages/trackerless-network/protos/NetworkRpc'
-
+export { ExternalRpcClient, ExternalRpcClientClass } from './logic/ExternalNetworkRpc'
