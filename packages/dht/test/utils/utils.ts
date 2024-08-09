@@ -252,13 +252,13 @@ export const createMockPeers = (): PeerDescriptor[] => {
  * unlocked connections have been garbage collected, i.e. we typically have connections only to the nodes which
  * are neighbors.
  */
-export const waitForStableTopology = async (nodes: DhtNode[], maxConnectionCount: number = 10000): Promise<void> => {
+export const waitForStableTopology = async (nodes: DhtNode[], maxConnectionCount: number = 10000, waitTime = 20000): Promise<void> => {
     const MAX_IDLE_TIME = 100
     const connectionManagers = nodes.map((n) => n.getTransport() as ConnectionManager)
     await Promise.all(connectionManagers.map(async (connectionManager) => {
         connectionManager.garbageCollectConnections(maxConnectionCount, MAX_IDLE_TIME)
         try {
-            await waitForCondition(() => connectionManager.getConnections().length <= maxConnectionCount, 20000)
+            await waitForCondition(() => connectionManager.getConnections().length <= maxConnectionCount, waitTime)
         } catch (err) {
             // the topology is very likely stable, but we can't be sure (maybe the node has more than maxConnectionCount
             // locked connections and therefore it is ok to that garbage collector was not able to remove any of those
