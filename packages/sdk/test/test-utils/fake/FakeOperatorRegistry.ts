@@ -20,4 +20,9 @@ export class FakeOperatorRegistry implements Methods<OperatorRegistry> {
         return [fakeEntrypoint]
     }
 
+    // eslint-disable-next-line class-methods-use-this
+    async findOperatorsOnStream(): Promise<NetworkPeerDescriptor[]> {
+        return [fakeEntrypoint]
+    }
+
 }
