@@ -206,8 +206,8 @@ export class Operator {
         const reviewRequestTransform = (
             sponsorship: string,
             targetOperator: string,
-            voteStartTimestampInSecs: number,
-            voteEndTimestampInSecs: number,
+            voteStartTimestampInSecs: bigint,
+            voteEndTimestampInSecs: bigint,
             metadataAsString?: string
         ) => {
             const partition = parsePartitionFromReviewRequestMetadata(metadataAsString)
@@ -215,8 +215,8 @@ export class Operator {
                 sponsorship: toEthereumAddress(sponsorship),
                 targetOperator: toEthereumAddress(targetOperator),
                 partition,
-                votingPeriodStartTimestamp: voteStartTimestampInSecs * 1000,
-                votingPeriodEndTimestamp: voteEndTimestampInSecs * 1000
+                votingPeriodStartTimestamp: Number(voteStartTimestampInSecs) * 1000,
+                votingPeriodEndTimestamp: Number(voteEndTimestampInSecs) * 1000
             }
         }
         initContractEventGateway({

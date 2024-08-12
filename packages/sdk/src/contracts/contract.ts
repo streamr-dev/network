@@ -185,7 +185,7 @@ export const initContractEventGateway = <
                 try {
                     targetEvent = opts.transformation(...args)
                 } catch (err) {
-                    logger.debug('Skip emit event', {
+                    logger.error('Skip emit event', {
                         eventName: opts.targetName,
                         reason: err?.message
                     })
