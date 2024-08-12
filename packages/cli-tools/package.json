@@ -1,6 +1,6 @@
 {
   "name": "@streamr/cli-tools",
-  "version": "101.0.1",
+  "version": "101.0.2-beta.0",
   "description": "Command line tools for Streamr",
   "repository": {
     "type": "git",
@@ -26,8 +26,8 @@
   "author": "Streamr Network AG <contact@streamr.com>",
   "license": "AGPL-3.0",
   "dependencies": {
-    "@streamr/sdk": "101.0.1",
-    "@streamr/utils": "101.0.1",
+    "@streamr/sdk": "101.0.2-beta.0",
+    "@streamr/utils": "101.0.2-beta.0",
     "commander": "^12.1.0",
     "easy-table": "^1.1.1",
     "ethers": "^6.13.0",
@@ -35,7 +35,7 @@
     "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "@streamr/test-utils": "101.0.1",
+    "@streamr/test-utils": "101.0.2-beta.0",
     "@types/event-stream": "^4.0.5",
     "@types/lodash": "^4.17.7",
     "@types/merge2": "^1.4.4",
