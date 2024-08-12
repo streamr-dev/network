@@ -20,6 +20,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Fixed
 
+- Fix operator review request event parsing
+
 #### Security
 
 
