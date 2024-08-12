@@ -91,7 +91,7 @@ describe('Operator', () => {
         it('emitting ReviewRequest with valid metadata causes listener to be invoked', async () => {
             const operator = createOperator(
                 'ReviewRequest',
-                [SPONSORSHIP_ADDRESS, OPERATOR_CONTRACT_ADDRESS, 1000, 1050, '{ "partition": 7 }']
+                [SPONSORSHIP_ADDRESS, OPERATOR_CONTRACT_ADDRESS, 1000n, 1050n, '{ "partition": 7 }']
             )
             const listener = jest.fn()
             operator.on('reviewRequested', listener)
@@ -109,7 +109,7 @@ describe('Operator', () => {
         it('emitting ReviewRequest with invalid metadata causes listener to not be invoked', async () => {
             const operator = createOperator(
                 'ReviewRequest',
-                [SPONSORSHIP_ADDRESS, OPERATOR_CONTRACT_ADDRESS, 1000, 1050, '{ "partition": 666 }']
+                [SPONSORSHIP_ADDRESS, OPERATOR_CONTRACT_ADDRESS, 1000n, 1050n, '{ "partition": 666 }']
             )
             const listener = jest.fn()
             operator.on('reviewRequested', listener)
