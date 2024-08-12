@@ -221,7 +221,7 @@ export class StreamRegistry {
                     // eslint-disable-next-line no-underscore-dangle
                     this.config._timeouts.ensStreamCreation.retryInterval
                 )
-            } catch (e) {
+            } catch {
                 throw new Error(`unable to create stream "${streamId}"`)
             }
         } else {

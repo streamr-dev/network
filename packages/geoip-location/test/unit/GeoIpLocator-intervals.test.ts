@@ -37,7 +37,7 @@ describe('GeoIpLocator', () => {
 
         try {
             fs.unlinkSync(dbDir + '/' + DB_FILENAME)
-        } catch (e) {
+        } catch {
             // ignore
         }
 
@@ -49,7 +49,7 @@ describe('GeoIpLocator', () => {
         // delete the db
         try {
             fs.unlinkSync(dbDir + '/' + DB_FILENAME)
-        } catch (e) {
+        } catch {
             // ignore
         }
 

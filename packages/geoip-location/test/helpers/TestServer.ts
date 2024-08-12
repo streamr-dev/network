@@ -60,7 +60,7 @@ export class TestServer extends EventEmitter<TestServerEvents> {
         // save db and hash data to CACHE_PATH
         try {
             fs.mkdirSync(CACHE_PATH, { recursive: true })
-        } catch (e) {
+        } catch {
             // ignore error when creating the cache folder
         }
         // ensure there is never an incomplete file in the fs

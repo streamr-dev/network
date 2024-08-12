@@ -259,7 +259,7 @@ export const waitForStableTopology = async (nodes: DhtNode[], maxConnectionCount
         connectionManager.garbageCollectConnections(maxConnectionCount, MAX_IDLE_TIME)
         try {
             await waitForCondition(() => connectionManager.getConnections().length <= maxConnectionCount, waitTime)
-        } catch (err) {
+        } catch {
             // the topology is very likely stable, but we can't be sure (maybe the node has more than maxConnectionCount
             // locked connections and therefore it is ok to that garbage collector was not able to remove any of those
             // connections

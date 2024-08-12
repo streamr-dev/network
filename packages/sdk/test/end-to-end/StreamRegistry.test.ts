@@ -257,7 +257,7 @@ describe('StreamRegistry', () => {
             await until(async () => {
                 try {
                     return (await client.getStream(createdStream.id)).getMetadata().description === createdStream.getMetadata().description
-                } catch (err) {
+                } catch {
                     return false
                 }
             }, 100000, 1000)

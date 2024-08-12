@@ -181,7 +181,7 @@ export class PeerDiscovery {
         try {
             await this.joinThroughEntryPoint(entryPoint, contactedPeers, { enabled: true, contactedPeers: distantJoinContactPeers })
             logger.debug(`Rejoined DHT successfully ${this.options.serviceId}!`)
-        } catch (err) {
+        } catch {
             logger.warn(`Rejoining DHT ${this.options.serviceId} failed`)
             if (!this.isStopped()) {
                 // TODO should we catch possible promise rejection?
