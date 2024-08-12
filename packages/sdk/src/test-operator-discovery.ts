@@ -3,7 +3,7 @@ import { Logger, toStreamID, toStreamPartID } from '@streamr/utils'
 import { NetworkNodeType } from './Config'
 
 const STREAM_ID = toStreamID('streamr.eth/demos/video')
-const NODE_ID = 'f8619ca67b65ec5310426a871535f9e61880e91b'
+const NODE_ID = 'f8619ca67b65ec5310426a8715d7a6b2253c8d1b'
 const HOST = 'e12f6842-d716-4379-a1a8-5051ed202d04.streamr-nodes.xyz'
 const PORT = 32200
 
@@ -29,13 +29,11 @@ const streamrClient = new StreamrClient({
 
 ;(async () => {
     const node = streamrClient.getNode()
-    for (let i = 0; i < 8; ++i) {
-        const startTime = Date.now()
-        const peerDescriptors = await node.discoverOperators(targetPeerDescriptor, toStreamPartID(STREAM_ID, i))
-        console.log('Discovered', JSON.stringify({
-            peerDescriptors,
-            elapsedTime: Date.now() - startTime
-        }))
-    }
+    const startTime = Date.now()
+    const peerDescriptors = await node.discoverOperators(targetPeerDescriptor, toStreamPartID(STREAM_ID, 0))
+    console.log('Discovered', JSON.stringify({
+        peerDescriptors,<
+        elapsedTime: Date.now() - startTime
+    }))
     process.exit(0)
 })()

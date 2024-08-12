@@ -12,7 +12,7 @@ enum RunMode {
 const logger = new Logger(module)
 
 const STREAM_ID = toStreamID('streamr.eth/demos/video')
-const NODE_ID = 'f8619ca67b65ec5310426a871535f9e61880e91b'
+const NODE_ID = 'f8619ca67b65ec5310426a8715d7a6b2253c8d1b'
 const HOST = 'e12f6842-d716-4379-a1a8-5051ed202d04.streamr-nodes.xyz'
 const PORT = 32200
 
