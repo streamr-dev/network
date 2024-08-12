@@ -27,7 +27,7 @@ const exponentialRunOff = async (
         const delay = baseDelay * factor
         try {
             await task()
-        } catch (e: any) {
+        } catch {
             logger.debug(`${description} failed, retrying in ${delay} ms`)
         }
         try { // Abort controller throws unexpected errors in destroy?

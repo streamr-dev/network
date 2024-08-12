@@ -73,7 +73,7 @@ export class Inspector {
         try {
             await waitForEvent3<InspectSessionEvents>(session, 'done', this.inspectionTimeout)
             success = true
-        } catch (err) {
+        } catch {
             logger.trace('Inspect session timed out, removing')
         } finally {
             await this.closeInspectConnection(peerDescriptor, lockId)

@@ -83,7 +83,7 @@ describe('Kademlia correctness', () => {
                     }
                     correctNeighbors++
                 }
-            } catch (e) {
+            } catch {
                 console.error('Node ' + getNodeIdFromPeerDescriptor(nodes[i].getLocalPeerDescriptor()) + ' had only ' 
                     + kademliaNeighbors.length + ' kademlia neighbors')
             }

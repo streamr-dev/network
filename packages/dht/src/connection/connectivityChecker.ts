@@ -23,7 +23,7 @@ export const connectAsync = async ({ url, allowSelfSignedCertificate, timeoutMs 
             () => { socket.connect(url, allowSelfSignedCertificate) }],
         socket, ['connected', 'error'],
         timeoutMs)
-    } catch (e) {
+    } catch {
         throw new Err.ConnectionFailed('WebSocket connection timed out')
     }
     if (result.winnerName === 'error') {

@@ -123,7 +123,7 @@ export async function start(): Promise<void> {
                 } else {
                     log(`> ${content}`)
                 }
-            } catch (e) {
+            } catch {
                 resume()
 
                 log('> x Failed to fetch node\'s balance')
@@ -162,7 +162,7 @@ export async function start(): Promise<void> {
                 }
 
                 log(`> *https://streamr.network/hub/network/operators/${operator}*`)
-            } catch (e) {
+            } catch {
                 resume()
 
                 log('> x Failed to fetch operator nodes')

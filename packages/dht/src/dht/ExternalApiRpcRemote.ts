@@ -17,7 +17,7 @@ export class ExternalApiRpcRemote extends RpcRemote<ExternalApiRpcClient> {
         try {
             const data = await this.getClient().externalFetchData(request, options)
             return data.entries
-        } catch (err) {
+        } catch {
             return []
         }
     }
@@ -34,7 +34,7 @@ export class ExternalApiRpcRemote extends RpcRemote<ExternalApiRpcClient> {
         try {
             const response = await this.getClient().externalStoreData(request, options)
             return response.storers
-        } catch (err) {
+        } catch {
             return []
         }
     }
