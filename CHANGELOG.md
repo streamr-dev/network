@@ -12,6 +12,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- Add method `findOperators` to client (https://github.com/streamr-dev/network/pull/2703)
+
 #### Changed
 
 #### Deprecated
@@ -29,6 +31,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- Operators now register external RPC endpoints for accelerated stream entrypoint discovery (https://github.com/streamr-dev/network/pull/2702)
+
 #### Changed
 
 #### Deprecated
@@ -36,6 +40,9 @@ Changes before Tatum release are not documented in this file.
 #### Removed
 
 #### Fixed
+
+- Fix propagation buffer TTL issue (https://github.com/streamr-dev/network/pull/2682)
+- Fix operator review request event parsing (https://github.com/streamr-dev/network/pull/2714)
 
 #### Security
 
