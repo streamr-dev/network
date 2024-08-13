@@ -152,10 +152,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const lockRpcLocal = new ConnectionLockRpcLocal({
             addRemoteLocked: (id: DhtAddress, lockId: LockID) => this.locks.addRemoteLocked(id, lockId),
             removeRemoteLocked: (id: DhtAddress, lockId: LockID) => this.locks.removeRemoteLocked(id, lockId),
-            closeConnection: async (peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string) => {
-                // TODO should we have some handling for this floating promise?
-                await this.closeConnection(peerDescriptor, gracefulLeave, reason)
-            },
+            closeConnection: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string) => 
+                this.closeConnection(peerDescriptor, gracefulLeave, reason),
             getLocalPeerDescriptor: () => this.getLocalPeerDescriptor()
         })
         this.rpcCommunicator.registerRpcMethod(LockRequest, LockResponse, 'lockRequest',

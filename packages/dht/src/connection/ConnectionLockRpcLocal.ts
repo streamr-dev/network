@@ -18,7 +18,7 @@ import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from
 interface ConnectionLockRpcLocalOptions {
     addRemoteLocked: (id: DhtAddress, lockId: LockID) => void
     removeRemoteLocked: (id: DhtAddress, lockId: LockID) => void
-    closeConnection: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string) => void
+    closeConnection: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string) => Promise<void>
     getLocalPeerDescriptor: () => PeerDescriptor
 }
 
@@ -60,9 +60,9 @@ export class ConnectionLockRpcLocal implements IConnectionLockRpc {
         logger.trace(getNodeIdOrUnknownFromPeerDescriptor(senderPeerDescriptor) + ' received gracefulDisconnect notice')
 
         if (disconnectNotice.disconnectMode === DisconnectMode.LEAVING) {
-            this.options.closeConnection(senderPeerDescriptor, true, 'graceful leave notified')
+            await this.options.closeConnection(senderPeerDescriptor, true, 'graceful leave notified')
         } else {
-            this.options.closeConnection(senderPeerDescriptor, false, 'graceful disconnect notified')
+            await this.options.closeConnection(senderPeerDescriptor, false, 'graceful disconnect notified')
         }
         return {}
     }

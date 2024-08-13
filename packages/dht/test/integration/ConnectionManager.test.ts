@@ -1,4 +1,4 @@
-import { Logger, MetricsContext, wait, waitForEvent3 } from '@streamr/utils'
+import { Logger, MetricsContext, waitForEvent3 } from '@streamr/utils'
 import { MarkOptional } from 'ts-essentials'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../../src/connection/ConnectorFacade'
