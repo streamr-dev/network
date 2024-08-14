@@ -56,7 +56,7 @@ const downloadNewDb = async (
     } catch (e) {
         try {
             fs.rmSync(downloadFolder, { recursive: true })
-        } catch (e2) {
+        } catch {
             // ignore error when removing the temporary folder
         }
         throw e
@@ -67,7 +67,7 @@ const downloadNewDb = async (
     if (!isDbFileValid(dbFileInDownloadFolder, remoteHash)) {
         try {
             fs.rmSync(downloadFolder, { recursive: true })
-        } catch (e2) {
+        } catch {
             // ignore error when removing the temporary folder
         }
         throw new Error('Downloaded database hash does not match the expected hash')
@@ -81,7 +81,7 @@ const downloadNewDb = async (
     } finally {
         try {
             fs.rmSync(downloadFolder, { recursive: true })
-        } catch (e2) {
+        } catch {
             // ignore error when removing the temporary folder
         }
     }
@@ -131,7 +131,7 @@ const isDbFileValid = async (dbFile: string, remoteHash: string): Promise<boolea
         } else {
             return true
         }
-    } catch (e) {
+    } catch {
         // if the local db does not exist, or some other exception occurres db is not considered valid
         return false
     }

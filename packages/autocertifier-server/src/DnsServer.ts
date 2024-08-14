@@ -170,7 +170,7 @@ export class DnsServer {
             let subdomainRecord: Subdomain | undefined
             try {
                 subdomainRecord = await this.db.getSubdomain(subdomain)
-            } catch (e) {
+            } catch {
                 logger.error('handleAQuery exception')
             }
 

@@ -135,7 +135,7 @@ export class Router {
                     // TODO use options option or named constant?
                     await withTimeout(eventReceived, 10000)
                     logger.trace('raceEvents ended from routingSession: ' + session.sessionId)
-                } catch (e) {
+                } catch {
                     logger.trace('raceEvents timed out for routingSession ' + session.sessionId) 
                 }
                 session.stop()

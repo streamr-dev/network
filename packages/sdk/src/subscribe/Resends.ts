@@ -85,7 +85,7 @@ const getHttpErrorTransform = (): (error: any) => Promise<StreamrClientError> =>
             try {
                 const json = JSON.parse(body)
                 descriptionSnippet = `: ${json.error}`
-            } catch (err) {
+            } catch {
                 descriptionSnippet = ''
             }
             message = `Storage node fetch failed${descriptionSnippet}, httpStatus=${err.response.status}, url=${err.response.url}`

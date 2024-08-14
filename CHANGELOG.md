@@ -52,8 +52,31 @@ Changes before Tatum release are not documented in this file.
 
 #### Security
 
+## [101.1.0] - 2024-08-13
 
-## [101.0.1] - 2047-07-09
+### @streamr/sdk
+
+#### Added
+
+- Add method `findOperators` to client (https://github.com/streamr-dev/network/pull/2703)
+
+#### Fixed
+
+- Fix operator review request event parsing (https://github.com/streamr-dev/network/pull/2714)
+
+### @streamr/node
+
+#### Added
+
+- Operators now register external RPC endpoints for accelerated stream entrypoint discovery (https://github.com/streamr-dev/network/pull/2702)
+
+#### Fixed
+
+- Fix propagation buffer TTL issue (https://github.com/streamr-dev/network/pull/2682)
+- Fix operator review request event parsing (https://github.com/streamr-dev/network/pull/2714)
+
+
+## [101.0.1] - 2024-07-09
 
 ### @streamr/sdk
 
@@ -205,7 +228,8 @@ Changes before Tatum release are not documented in this file.
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v101.0.1...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v101.1.0...HEAD
+[101.1.0]: https://github.com/streamr-dev/network/compare/v101.0.1...v101.1.0
 [101.0.1]: https://github.com/streamr-dev/network/compare/v101.0.0...v101.0.1
 [101.0.0]: https://github.com/streamr-dev/network/compare/v100.2.4...v101.0.0
 [100.2.4]: https://github.com/streamr-dev/network/compare/v100.2.3...v100.2.4

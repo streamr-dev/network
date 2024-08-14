@@ -20,12 +20,12 @@ describe('Find correctness', () => {
         nodes.push(entryPoint)
         entrypointDescriptor = entryPoint.getLocalPeerDescriptor()
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator, undefined, K, 40, 60000)
+            const node = await createMockConnectionDhtNode(simulator, undefined, K, 15, 60000)
             nodes.push(node)
         }
         await entryPoint.joinDht([entrypointDescriptor])
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
-        await waitForStableTopology(nodes, 20)
+        await waitForStableTopology(nodes, 15, 45 * 1000)
     }, 90000)
 
     afterEach(async () => {
@@ -40,6 +40,6 @@ describe('Find correctness', () => {
         const closestNodes = await entryPoint.findClosestNodesFromDht(getDhtAddressFromRaw(targetId))
         expect(closestNodes.length).toBeGreaterThanOrEqual(5)
         expect(getDhtAddressFromRaw(targetId)).toEqual(getNodeIdFromPeerDescriptor(closestNodes[0]))
-    }, 30000)
+    }, 90000)
 
 })

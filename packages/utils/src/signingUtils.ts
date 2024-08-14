@@ -59,7 +59,7 @@ export function verifySignature(address: EthereumAddress, payload: Uint8Array, s
     try {
         const recoveredAddress = toEthereumAddress(recoverAddress(signature, payload))
         return recoveredAddress === address
-    } catch (err) {
+    } catch {
         return false
     }
 }
