@@ -6,7 +6,7 @@ import {
     PeerDescriptor,
     getNodeIdFromPeerDescriptor,
 } from '@streamr/dht'
-import { Logger, StreamPartID, addManagedEventListener } from '@streamr/utils'
+import { Logger, StreamPartID, addManagedEventListener, setAbortableTimeout } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import {
     CloseTemporaryConnection,
@@ -17,7 +17,7 @@ import {
     TemporaryConnectionRequest,
     TemporaryConnectionResponse,
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { ContentDeliveryRpcClient, TemporaryConnectionRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { ContentDeliveryRpcLocal } from './ContentDeliveryRpcLocal'
 import { ContentDeliveryRpcRemote } from './ContentDeliveryRpcRemote'
 import { DiscoveryLayerNode } from './DiscoveryLayerNode'
@@ -31,6 +31,7 @@ import { Propagation } from './propagation/Propagation'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { markAndCheckDuplicate } from './utils'
+import { TemporaryConnectionRpcRemote } from './temporary-connection/TemporaryConnectionRpcRemote'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -364,6 +365,18 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
 
     inspect(peerDescriptor: PeerDescriptor): Promise<boolean> {
         return this.options.inspector.inspect(peerDescriptor)
+    }
+
+    async openTemporaryConnection(node: PeerDescriptor): Promise<void> {
+        const rpcRemote = new TemporaryConnectionRpcRemote(
+            this.options.localPeerDescriptor,
+            node,
+            this.options.rpcCommunicator,
+            TemporaryConnectionRpcClient
+        )
+        const result = await rpcRemote.openConnection()
+        console.log(result)
+        setAbortableTimeout(() => rpcRemote.closeConnection(), 15 * 1000, this.abortController.signal)
     }
 
     private getPropagationTargets(msg: StreamMessage): DhtAddress[] {

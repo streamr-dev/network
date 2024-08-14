@@ -18,7 +18,7 @@ import {
 } from '@streamr/utils'
 import { createHash } from 'crypto'
 import { EventEmitter } from 'eventemitter3'
-import { sampleSize } from 'lodash'
+import { join, sampleSize } from 'lodash'
 import { ProxyDirection, StreamMessage, StreamPartitionInfo } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
 import { ControlLayerNode } from './ControlLayerNode'
@@ -64,6 +64,8 @@ export interface ContentDeliveryManagerOptions {
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): DhtAddress => {
     return getDhtAddressFromRaw(new Uint8Array((createHash('sha1').update(streamPartId).digest())))
 }
+
+const INITIAL_TEMPORARY_CONNECTION_COUNT = 2
 
 export class ContentDeliveryManager extends EventEmitter<Events> {
 
@@ -209,18 +211,19 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         }
         await streamPart.discoveryLayerNode.start()
         await streamPart.node.start()
+        const joinStream = async (entryPoints: PeerDescriptor[]): Promise<void> => {
+            await Promise.all([
+                streamPart.discoveryLayerNode.joinDht(entryPoints),
+                streamPart.discoveryLayerNode.joinRing(),
+                ...sampleSize(entryPoints, INITIAL_TEMPORARY_CONNECTION_COUNT).map((node) => streamPart.node.openTemporaryConnection(node))
+            ])
+        }
         const knownEntryPoints = this.knownStreamPartEntryPoints.get(streamPartId)
         if (knownEntryPoints !== undefined) {
-            await Promise.all([
-                streamPart.discoveryLayerNode.joinDht(knownEntryPoints),
-                streamPart.discoveryLayerNode.joinRing()
-            ])
+            await joinStream(knownEntryPoints)
         } else {
-            const entryPoints = await peerDescriptorStoreManager.fetchNodes()
-            await Promise.all([
-                streamPart.discoveryLayerNode.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT)),
-                streamPart.discoveryLayerNode.joinRing()
-            ])
+            const entryPoints = sampleSize((await peerDescriptorStoreManager.fetchNodes()), NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT)
+            await joinStream(entryPoints)
             if (entryPoints.length < MAX_NODE_COUNT) {
                 await peerDescriptorStoreManager.storeAndKeepLocalNode()
                 if (streamPart.discoveryLayerNode.getNeighborCount() < NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT) {
