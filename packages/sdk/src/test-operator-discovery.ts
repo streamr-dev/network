@@ -32,7 +32,7 @@ const streamrClient = new StreamrClient({
     const startTime = Date.now()
     const peerDescriptors = await node.discoverOperators(targetPeerDescriptor, toStreamPartID(STREAM_ID, 0))
     console.log('Discovered', JSON.stringify({
-        peerDescriptors,<
+        peerDescriptors,
         elapsedTime: Date.now() - startTime
     }))
     process.exit(0)
