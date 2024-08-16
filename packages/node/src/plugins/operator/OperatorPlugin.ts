@@ -1,4 +1,4 @@
-import { 
+import {
     OperatorDiscoveryRequest,
     OperatorDiscoveryResponse,
     peerDescriptorTranslator,
@@ -6,13 +6,14 @@ import {
     SignerWithProvider,
     StreamrClient
 } from '@streamr/sdk'
-import { 
+import {
+    addManagedEventListener,
+    Cache,
     EthereumAddress,
     Logger,
-    StreamPartIDUtils,
-    addManagedEventListener,
     scheduleAtInterval,
     setAbortableInterval,
+    StreamPartIDUtils,
     toEthereumAddress
 } from '@streamr/utils'
 import { Schema } from 'ajv'
@@ -69,6 +70,8 @@ export interface OperatorServiceConfig {
     theGraphUrl: string
     getEthersOverrides: () => Promise<Overrides>
 }
+
+const STAKED_OPERATORS_CACHE_MAX_AGE = 7 * 24 * 60 * 60 * 1000
 
 const logger = new Logger(module)
 
@@ -139,10 +142,12 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                     )
                 })()
             }, this.pluginConfig.heartbeatUpdateIntervalInMs, this.abortController.signal)
+            const stakedOperatorsCache = new Cache(() => operator.getStakedOperators(), STAKED_OPERATORS_CACHE_MAX_AGE)
             await scheduleAtInterval(
                 async () => checkOperatorValueBreach(
                     operator,
                     streamrClient,
+                    () => stakedOperatorsCache.get(),
                     this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
                     this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw
                 ).catch((err) => {

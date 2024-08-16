@@ -63,14 +63,11 @@ describe('checkOperatorValueBreach', () => {
         const client = createClient(watcherWallets[0].privateKey)
         const operator = client.getOperator(toEthereumAddress(await watcherOperatorContract.getAddress()))
 
-        // overwrite (for this test only) the getRandomOperator method to deterministically return the operator's address
-        operator.getRandomOperator = async () => {
-            return toEthereumAddress(await operatorContract.getAddress())
-        }
-
         logger.debug('Waiting until above', { allowedDifference })
         await waitForCondition(async () => await getEarnings(operatorContract) > allowedDifference, 10000, 1000)
-        await checkOperatorValueBreach(operator, client, 1, 20)
+        await checkOperatorValueBreach(operator, client, async () => {
+            return [toEthereumAddress(await operatorContract.getAddress())]
+        }, 1, 20)
 
         const earnings = await getEarnings(operatorContract)
         expect(earnings).toBeLessThan(allowedDifference)
