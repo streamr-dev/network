@@ -5,7 +5,6 @@ import {
     collect, ensureValidStreamPartitionIndex, toEthereumAddress, toStreamID
 } from '@streamr/utils'
 import { Overrides } from 'ethers'
-import sample from 'lodash/sample'
 import { z } from 'zod'
 import { Authentication } from '../Authentication'
 import { DestroySignal } from '../DestroySignal'
@@ -394,17 +393,6 @@ export class Operator {
         await (await this.contract!.flag(sponsorship, operator, metadata, await this.getEthersOverrides())).wait()
     }
 
-    // TODO could move this method as this is functionality is not specific to one Operator contract instance
-    // (it excludes the current operator from the list, but that exclusion could be done by the caller of this method)
-    async getRandomOperator(): Promise<EthereumAddress | undefined> {
-        const latestBlock = await this.getCurrentBlockNumber()  // TODO maybe we should remove this "feature"?
-        const operators = await this.getOperatorAddresses(latestBlock)
-        const excluded = await this.getContractAddress()
-        const operatorAddresses = operators.filter((id) => id !== excluded)
-        logger.debug(`Found ${operatorAddresses.length} operators`)
-        return sample(operatorAddresses)
-    }
-
     /**
      * Find the sum of earnings in Sponsorships (that the Operator must withdraw before the sum reaches a limit),
      * SUBJECT TO the constraints, set in the OperatorServiceConfig:
@@ -457,8 +445,7 @@ export class Operator {
     }
 
     // TODO could move this method as this is functionality is not specific to one Operator contract instance
-    private async getOperatorAddresses(requiredBlockNumber: number): Promise<EthereumAddress[]> {
-        // TODO: find a clever more efficient way of selecting a random operator? (NET-1113)
+    async getStakedOperators(): Promise<EthereumAddress[]> {
         const createQuery = (lastId: string, pageSize: number) => {
             return {
                 query: `
@@ -470,9 +457,7 @@ export class Operator {
                     `
             }
         }
-        this.theGraphClient.updateRequiredBlockNumber(requiredBlockNumber)
         const queryResult = this.theGraphClient.queryEntities<{ id: string }>(createQuery)
-
         const operatorAddresses: EthereumAddress[] = []
         for await (const operator of queryResult) {
             operatorAddresses.push(toEthereumAddress(operator.id))

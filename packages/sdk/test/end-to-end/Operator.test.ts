@@ -20,6 +20,7 @@ import OperatorArtifact from '../../src/ethereumArtifacts/OperatorAbi.json'
 import type { OperatorFactory as OperatorFactoryContract } from '../../src/ethereumArtifacts/OperatorFactory'
 import OperatorFactoryArtifact from '../../src/ethereumArtifacts/OperatorFactoryAbi.json'
 import type { Sponsorship as SponsorshipContract } from '../../src/ethereumArtifacts/Sponsorship'
+import { sample } from 'lodash'
 
 const createClient = (privateKey?: string): StreamrClient => {
     return new StreamrClient({
@@ -79,11 +80,12 @@ describe('Operator', () => {
 
     }, 90 * 1000)
 
-    it('getRandomOperator', async () => {
-        const operator = await getOperator(deployedOperator.nodeWallets[0], deployedOperator)
-        const randomOperatorAddress = await operator.getRandomOperator()
+    it('getStakedOperators', async () => {
+        await delegate(deployedOperator.operatorWallet, await deployedOperator.operatorContract.getAddress(), 20000)
+        await stake(deployedOperator.operatorContract, await sponsorship1.getAddress(), 10000)
+        const dummyOperator = await getOperator(deployedOperator.nodeWallets[0], deployedOperator)
+        const randomOperatorAddress = sample(await dummyOperator.getStakedOperators())
         expect(randomOperatorAddress).toBeDefined()
-        expect(randomOperatorAddress).not.toEqual(await deployedOperator.operatorContract.getAddress()) // should not be me
 
         // check it's a valid operator, deployed by the OperatorFactory
         const operatorFactory = new Contract(
@@ -93,7 +95,13 @@ describe('Operator', () => {
         ) as unknown as OperatorFactoryContract
         const isDeployedByFactory = (await operatorFactory.deploymentTimestamp(randomOperatorAddress!)) > 0
         expect(isDeployedByFactory).toBeTrue()
-
+        // check that there is a stake
+        const operatorContract = new Contract(
+            randomOperatorAddress!,
+            OperatorArtifact,
+            deployedOperator.operatorWallet
+        ) as unknown as OperatorContract
+        expect(await operatorContract.totalStakedIntoSponsorshipsWei()).toBeGreaterThan(0n)
     }, 30 * 1000)
 
     it('getSponsorships, getOperatorsInSponsorship', async () => {
