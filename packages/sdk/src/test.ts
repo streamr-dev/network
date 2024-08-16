@@ -1,7 +1,8 @@
 import { StreamrClient } from './StreamrClient'
 import { Logger, toStreamID, toStreamPartID } from '@streamr/utils'
-import { NetworkNodeType } from './Config'
+import { NetworkNodeType, NetworkPeerDescriptor } from './Config'
 import { ProxyDirection } from '@streamr/trackerless-network'
+import { shuffle } from 'lodash'
 
 enum RunMode {
     NORMAL = 'normal',
@@ -27,6 +28,31 @@ const targetPeerDescriptor = {
     }
 }
 
+async function findEntryPoint(streamrClient: StreamrClient): Promise<{ operatorDescriptors: NetworkPeerDescriptor[], timeTaken: number }> {
+    const node = streamrClient.getNode()
+    const startTime = Date.now()
+    const peerDescriptors = await streamrClient.findOperators(STREAM_ID)
+    const diff1 = Date.now() - startTime
+    //console.log(`findOperators took ${diff1} ms`)
+    for (const targetPeerDescriptor of shuffle(peerDescriptors)) {
+        try {
+            const startTime = Date.now()
+            const operatorDescriptors = await node.discoverOperators(targetPeerDescriptor, targetStreamPartId)
+            if (operatorDescriptors.length > 0) {
+                const diff2 = Date.now() - startTime
+                //console.log(`discoverOperators took ${diff2} ms (${operatorDescriptors.length} results)`)
+                return {
+                    operatorDescriptors,
+                    timeTaken: diff1 + diff2
+                }
+            }
+        } catch {
+            // noop
+        }
+    }
+    throw new Error('Unable to find any operator entrypoints')
+}
+
 ;(async () => {
     const runModeString = process.argv[2]
     let runMode: RunMode
@@ -44,6 +70,7 @@ const targetPeerDescriptor = {
     }
 
     let streamrClient: StreamrClient
+    let additionalTimeTaken = 0
     if (runMode === RunMode.NORMAL) {
         streamrClient = new StreamrClient({
             metrics: false,
@@ -62,7 +89,11 @@ const targetPeerDescriptor = {
                 }
             }
         })
-        await streamrClient.setProxies(targetStreamPartId, [targetPeerDescriptor], ProxyDirection.SUBSCRIBE)
+        const { operatorDescriptors, timeTaken } = await findEntryPoint(streamrClient)
+        const startTime = Date.now()
+        await streamrClient.setProxies(targetStreamPartId, operatorDescriptors, ProxyDirection.SUBSCRIBE)
+        const diff = Date.now() - startTime
+        additionalTimeTaken += timeTaken + diff
     } else {
         streamrClient = new StreamrClient({
             metrics: false,
@@ -84,7 +115,7 @@ const targetPeerDescriptor = {
         streamrClient.getStream(STREAM_ID), // start pre-populating cache while waiting for 1st message to arrive
         streamrClient.subscribe(targetStreamPartId, async (_message) => {
             const diff = Date.now() - startTime
-            console.info(`Received 1st message in ${diff} ms (runMode=${runMode})`)
+            console.info(`Received 1st message in ${diff + additionalTimeTaken} ms (runMode=${runMode})`)
             //logger.info(`Received 1st message in ${diff} ms`)
             process.exit(0)
         })
