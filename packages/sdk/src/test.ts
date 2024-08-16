@@ -80,10 +80,13 @@ const targetPeerDescriptor = {
     }
 
     const startTime = Date.now()
-    await streamrClient.subscribe(targetStreamPartId, async (_message) => {
-        const diff = Date.now() - startTime
-        console.info(`Received 1st message in ${diff} ms (runMode=${runMode})`)
-        //logger.info(`Received 1st message in ${diff} ms`)
-        process.exit(0)
-    })
+    await Promise.all([
+        streamrClient.getStream(STREAM_ID), // start pre-populating cache while waiting for 1st message to arrive
+        streamrClient.subscribe(targetStreamPartId, async (_message) => {
+            const diff = Date.now() - startTime
+            console.info(`Received 1st message in ${diff} ms (runMode=${runMode})`)
+            //logger.info(`Received 1st message in ${diff} ms`)
+            process.exit(0)
+        })
+    ])
 })()
