@@ -45,7 +45,7 @@
     "@types/uuid": "^10.0.0",
     "@types/yallist": "^4.0.1",
     "expect": "^29.6.2",
-    "ts-essentials": "^10.0.1",
+    "ts-essentials": "^10.0.2",
     "ts-node": "^10.9.2"
   }
 }

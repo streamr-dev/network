@@ -33,7 +33,7 @@
         "@protobuf-ts/plugin": "^2.9.3",
         "@tsconfig/node18": "^18.2.4",
         "@types/jest": "^29.5.12",
-        "@types/node": "^18.19.44",
+        "@types/node": "^18.19.45",
         "@typescript-eslint/eslint-plugin": "^7.18.0",
         "@typescript-eslint/parser": "^7.18.0",
         "cli-table": "^0.3.6",
