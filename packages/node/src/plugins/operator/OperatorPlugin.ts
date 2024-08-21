@@ -71,7 +71,7 @@ export interface OperatorServiceConfig {
     getEthersOverrides: () => Promise<Overrides>
 }
 
-const STAKED_OPERATORS_CACHE_MAX_AGE = 7 * 24 * 60 * 60 * 1000
+const STAKED_OPERATORS_CACHE_MAX_AGE = 2 * 24 * 60 * 60 * 1000
 
 const logger = new Logger(module)
 
