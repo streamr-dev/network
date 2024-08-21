@@ -1,3 +1,4 @@
+import { Cache } from './Cache'
 import { pTransaction } from './pTransaction'
 import { AbortError, asAbortable } from './asAbortable'
 import { setAbortableInterval, setAbortableTimeout } from './abortableTimers'
@@ -107,7 +108,8 @@ export {
     ipv4ToNumber,
     numberToIpv4,
     hash,
-    MapWithTtl
+    MapWithTtl,
+    Cache
 }
 
 export {

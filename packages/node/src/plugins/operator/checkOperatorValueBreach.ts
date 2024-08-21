@@ -1,15 +1,17 @@
 import { StreamrClient, Operator } from '@streamr/sdk'
-import { Logger } from '@streamr/utils'
+import { EthereumAddress, Logger } from '@streamr/utils'
+import { sample, without } from 'lodash'
 
 const logger = new Logger(module)
 
 export const checkOperatorValueBreach = async (
     myOperator: Operator,
     client: StreamrClient,
+    getStakedOperators: () => Promise<EthereumAddress[]>,
     minSponsorshipEarningsInWithdraw: number,
     maxSponsorshipsInWithdraw: number
 ): Promise<void> => {
-    const targetOperatorAddress = await myOperator.getRandomOperator()
+    const targetOperatorAddress = sample(without(await getStakedOperators(), await myOperator.getContractAddress()))
     if (targetOperatorAddress === undefined) {
         logger.info('No operators found')
         return
