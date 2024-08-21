@@ -575,6 +575,8 @@ export class Operator {
     async voteOnFlag(sponsorshipAddress: EthereumAddress, targetOperator: EthereumAddress, kick: boolean): Promise<void> {
         const voteData = kick ? VOTE_KICK : VOTE_NO_KICK
         await this.connectToContract()
+        // estimateGas throws if transaction would fail, ignore the return value
+        await this.contract!.voteOnFlag.estimateGas(sponsorshipAddress, targetOperator, voteData)
         // typical gas cost 99336, but this has shown insufficient sometimes
         // TODO should we set gasLimit only here, or also for other transactions made by ContractFacade?
         await (await this.contract!.voteOnFlag(

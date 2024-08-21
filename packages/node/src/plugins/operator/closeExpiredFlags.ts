@@ -21,6 +21,10 @@ export const closeExpiredFlags = async (
         const operatorAddress = flag.targetOperator
         const sponsorship = flag.sponsorship
         logger.info('Close expired flag', { flag })
-        await operator.closeFlag(sponsorship, operatorAddress)
+        try {
+            await operator.closeFlag(sponsorship, operatorAddress)
+        } catch (e) {
+            logger.warn('Failed to close flag (does it exist?)', { sponsorship, operatorAddress, error: e })
+        }
     }
 }

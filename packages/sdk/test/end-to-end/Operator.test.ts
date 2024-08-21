@@ -177,6 +177,18 @@ describe('Operator', () => {
         }, 10000, 1000)
     }, 60 * 1000)  // TODO why this is slower, takes ~35 seconds?
 
+    it('avoids sending a transaction when trying to close non-existing flags', async () => {
+        const wallet = deployedOperator.nodeWallets[0] as Wallet
+        const operator = await getOperator(wallet, deployedOperator)
+        const nonceBefore = await wallet.getNonce() // nonce = "how many transactions sent so far"
+        await expect(operator.closeFlag(
+            toEthereumAddress(await sponsorship1.getAddress()),
+            toEthereumAddress(await deployedOperator.operatorContract.getAddress())
+        )).rejects.toThrowError()
+        const nonceAfter = await wallet.getNonce()
+        expect(nonceAfter).toEqual(nonceBefore)
+    })
+
     describe('fetchRedundancyFactor', () => {
 
         let operator: Operator
@@ -195,34 +207,34 @@ describe('Operator', () => {
                 toEthereumAddress(await deployedOperator.operatorContract.getAddress())
             )
         ))
-        
+
         describe('happy paths', () => {
             it('empty metadata', async () => {
                 await updateMetadata('')
                 const factor = await operator.fetchRedundancyFactor()
                 expect(factor).toEqual(1)
             })
-    
+
             it('explicit valid metadata', async () => {
                 await updateMetadata(JSON.stringify({ redundancyFactor: 6 }))
                 const factor = await operator.fetchRedundancyFactor()
                 expect(factor).toEqual(6)
             })
         })
-    
+
         describe('no result cases', () => {
             it('invalid json', async () => {
                 await updateMetadata('invalidjson')
                 const factor = await operator.fetchRedundancyFactor()
                 expect(factor).toBeUndefined()
             })
-    
+
             it('valid json but missing field', async () => {
                 await updateMetadata(JSON.stringify({ foo: 'bar' }))
                 const factor = await operator.fetchRedundancyFactor()
                 expect(factor).toBeUndefined()
             })
-    
+
             it('valid json but invalid value', async () => {
                 await updateMetadata(JSON.stringify({ redundancyFactor: 0 }))
                 const factor = await operator.fetchRedundancyFactor()
