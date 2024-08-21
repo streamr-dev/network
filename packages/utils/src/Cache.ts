@@ -13,8 +13,8 @@ export class Cache<V> {
     async get(): Promise<V> {
         const now = Date.now()
         if ((this.valueTimestamp === undefined) || (now > (this.valueTimestamp + this.maxAgeInMilliseconds))) {
-            this.valueTimestamp = now
             this.value = await this.valueFactory()
+            this.valueTimestamp = now
         }
         return this.value!
     }
