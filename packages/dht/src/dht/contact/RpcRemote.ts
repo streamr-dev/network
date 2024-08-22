@@ -12,7 +12,7 @@ const WEBSOCKET_CLIENT_TIMEOUT = 5000
 // takes a little bit longer than WEBSOCKET_CLIENT
 const WEBSOCKET_SERVER_TIMEOUT = 7500
 // WebRTC connections require lots of signalling to open and might take a longer time.
-const WEBRTC_TIMEOUT = 15000
+const WEBRTC_TIMEOUT = 10000
 // default timeout for existing connections
 export const EXISTING_CONNECTION_TIMEOUT = 5000
 

@@ -12,7 +12,7 @@ import { RoutingMode } from '../routing/RoutingSession'
 import { Logger, areEqualBinaries, runAndWaitForEvents3, wait } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RecursiveOperationSessionRpcRemote } from './RecursiveOperationSessionRpcRemote'
-import { RecursiveOperationSession, RecursiveOperationSessionEvents } from './RecursiveOperationSession'
+import { RECURSIVE_OPERATION_TIMEOUT, RecursiveOperationSession, RecursiveOperationSessionEvents } from './RecursiveOperationSession'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { ITransport } from '../../transport/ITransport'
 import { LocalDataStore } from '../store/LocalDataStore'
@@ -114,7 +114,7 @@ export class RecursiveOperationManager {
                     [() => session.start(this.options.serviceId)],
                     [[session, 'completed']],
                     // TODO use options option or named constant?
-                    15000
+                    RECURSIVE_OPERATION_TIMEOUT
                 )
             } catch (err) {
                 logger.debug('start failed', { err })
@@ -158,7 +158,11 @@ export class RecursiveOperationManager {
                 )
         } else {
             // TODO use options option or named constant?
-            const remoteCommunicator = new ListeningRpcCommunicator(serviceId, this.options.sessionTransport, { rpcRequestTimeout: 15000 })
+            const remoteCommunicator = new ListeningRpcCommunicator(
+                serviceId,
+                this.options.sessionTransport,
+                { rpcRequestTimeout: RECURSIVE_OPERATION_TIMEOUT }
+            )
             const rpcRemote = new RecursiveOperationSessionRpcRemote(
                 this.options.localPeerDescriptor,
                 targetPeerDescriptor,
