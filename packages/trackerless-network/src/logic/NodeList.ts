@@ -8,10 +8,16 @@ export interface Events {
     nodeRemoved: (id: DhtAddress, remote: ContentDeliveryRpcRemote) => void
 }
 
-const getValuesOfIncludedKeys = (nodes: Map<DhtAddress, ContentDeliveryRpcRemote>, exclude: DhtAddress[], wsOnly = false): ContentDeliveryRpcRemote[] => {
-    const values = wsOnly ? Array.from(nodes.entries()).filter(([_, node]) => node.getPeerDescriptor().websocket !== undefined) : Array.from(nodes.entries())
+const getValuesOfIncludedKeys = (
+    nodes: Map<DhtAddress, ContentDeliveryRpcRemote>,
+    exclude: DhtAddress[],
+    wsOnly = false
+): ContentDeliveryRpcRemote[] => {
+    const values = wsOnly 
+        ? Array.from(nodes.entries()).filter(([_, node]) => node.getPeerDescriptor().websocket !== undefined)
+        : Array.from(nodes.entries())
     return values
-        .filter(([id, node]) => !exclude.includes(id))
+        .filter(([id]) => !exclude.includes(id))
         .map(([_id, node]) => node)
 }
 
