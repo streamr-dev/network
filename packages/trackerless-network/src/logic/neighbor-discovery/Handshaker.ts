@@ -76,7 +76,17 @@ export class Handshaker {
 
     private selectParallelTargets(excludedIds: DhtAddress[]): HandshakeRpcRemote[] {
         const neighbors: Map<DhtAddress, ContentDeliveryRpcRemote> = new Map()
-        // First add the closest left and then right contacts from the ring if possible.
+        // If the node has 0 neighbors find a node in the stream with a WS server to connect to for faster time to data.
+        if (this.options.neighbors.size() === 0) {
+            const wsNode = this.options.nearbyNodeView.getFirst(
+                [...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[],
+                true
+            )
+            if (wsNode) {
+                neighbors.set(getNodeIdFromPeerDescriptor(wsNode.getPeerDescriptor()), wsNode)
+            }   
+        }
+        // Add the closest left and then right contacts from the ring if possible.
         const left = this.options.leftNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
         const right = this.options.rightNodeView.getFirst([...excludedIds, ...Array.from(neighbors.keys())] as DhtAddress[])
         if (left) {
