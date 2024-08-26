@@ -1,6 +1,6 @@
 {
   "name": "@streamr/node",
-  "version": "101.1.1-beta.0",
+  "version": "101.1.1-beta.1",
   "description": "A full-featured node implementation for the Streamr Network",
   "repository": {
     "type": "git",
@@ -32,9 +32,9 @@
   "dependencies": {
     "@inquirer/prompts": "^5.3.8",
     "@streamr/config": "^5.3.13",
-    "@streamr/dht": "101.1.1-beta.0",
-    "@streamr/sdk": "101.1.1-beta.0",
-    "@streamr/utils": "101.1.1-beta.0",
+    "@streamr/dht": "101.1.1-beta.1",
+    "@streamr/sdk": "101.1.1-beta.1",
+    "@streamr/utils": "101.1.1-beta.1",
     "aedes": "^0.51.2",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
@@ -59,7 +59,7 @@
   "devDependencies": {
     "@inquirer/testing": "^2.1.31",
     "@streamr/network-contracts-ethers6": "^7.1.4",
-    "@streamr/test-utils": "101.1.1-beta.0",
+    "@streamr/test-utils": "101.1.1-beta.1",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/heap": "^0.2.34",

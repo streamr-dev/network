@@ -1,6 +1,6 @@
 {
   "name": "@streamr/autocertifier-server",
-  "version": "101.1.1-beta.0",
+  "version": "101.1.1-beta.1",
   "description": "Server for providing TLS Certificates",
   "repository": {
     "type": "git",
@@ -26,10 +26,10 @@
   },
   "dependencies": {
     "@aws-sdk/client-route-53": "^3.632.0",
-    "@streamr/autocertifier-client": "101.1.1-beta.0",
-    "@streamr/dht": "101.1.1-beta.0",
-    "@streamr/proto-rpc": "101.1.1-beta.0",
-    "@streamr/utils": "101.1.1-beta.0",
+    "@streamr/autocertifier-client": "101.1.1-beta.1",
+    "@streamr/dht": "101.1.1-beta.1",
+    "@streamr/proto-rpc": "101.1.1-beta.1",
+    "@streamr/utils": "101.1.1-beta.1",
     "acme-client": "^5.4.0",
     "body-parser": "^1.20.2",
     "dns2": "^2.1.0",
@@ -41,7 +41,7 @@
     "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "@streamr/test-utils": "101.1.1-beta.0",
+    "@streamr/test-utils": "101.1.1-beta.1",
     "@types/dns2": "^2.0.9",
     "@types/express": "^4.17.21",
     "@types/request": "^2.48.8",
