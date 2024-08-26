@@ -83,7 +83,9 @@ export class Handshaker {
                 true
             )
             if (wsNode) {
-                neighbors.set(getNodeIdFromPeerDescriptor(wsNode.getPeerDescriptor()), wsNode)
+                const wsNodeId = getNodeIdFromPeerDescriptor(wsNode.getPeerDescriptor())
+                excludedIds.push(wsNodeId)
+                neighbors.set(wsNodeId, wsNode)
             }   
         }
         // Add the closest left and then right contacts from the ring if possible.
