@@ -181,10 +181,10 @@ describe('Operator', () => {
         const wallet = deployedOperator.nodeWallets[0] as Wallet
         const operator = await getOperator(wallet, deployedOperator)
         const nonceBefore = await wallet.getNonce() // nonce = "how many transactions sent so far"
-        await expect(operator.closeFlag(
+        await expect(async () => operator.closeFlag(
             toEthereumAddress(await sponsorship1.getAddress()),
             toEthereumAddress(await deployedOperator.operatorContract.getAddress())
-        )).rejects.toThrowError()
+        )).rejects.toThrow()
         const nonceAfter = await wallet.getNonce()
         expect(nonceAfter).toEqual(nonceBefore)
     })
