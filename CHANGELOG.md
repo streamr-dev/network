@@ -22,7 +22,6 @@ Changes before Tatum release are not documented in this file.
 
 #### Security
 
-
 ### @streamr/node
 
 #### Added
@@ -37,7 +36,6 @@ Changes before Tatum release are not documented in this file.
 
 #### Security
 
-
 ### @streamr/cli-tools
 
 #### Added
@@ -51,6 +49,26 @@ Changes before Tatum release are not documented in this file.
 #### Fixed
 
 #### Security
+
+
+## [101.1.1] - 2024-08-29
+
+### @streamr/sdk
+
+#### Changed
+
+- Numerous improvements to time-to-data (https://github.com/streamr-dev/network/pull/2723, https://github.com/streamr-dev/network/pull/2724, https://github.com/streamr-dev/network/pull/2726, https://github.com/streamr-dev/network/pull/2727)
+
+### @streamr/node
+
+### Changed
+
+- Optimize the "operator value breach" task to be less demanding on EVM RPCs (https://github.com/streamr-dev/network/pull/2721)
+
+#### Fixed
+
+- Add better checks to the "expired flag closing" task so that the likelihood of submitting reverting transactions to the blockchain is reduced (https://github.com/streamr-dev/network/pull/2725)
+
 
 ## [101.1.0] - 2024-08-13
 
