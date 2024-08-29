@@ -247,7 +247,8 @@ Changes before Tatum release are not documented in this file.
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v101.1.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v101.1.1...HEAD
+[101.1.1]: https://github.com/streamr-dev/network/compare/v101.1.0...v101.1.1
 [101.1.0]: https://github.com/streamr-dev/network/compare/v101.0.1...v101.1.0
 [101.0.1]: https://github.com/streamr-dev/network/compare/v101.0.0...v101.0.1
 [101.0.0]: https://github.com/streamr-dev/network/compare/v100.2.4...v101.0.0
