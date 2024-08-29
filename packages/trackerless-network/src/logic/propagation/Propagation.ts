@@ -12,7 +12,7 @@ interface ConstructorOptions {
 }
 
 const DEFAULT_MAX_MESSAGES = 150
-const DEFAULT_TTL = 30 * 1000
+const DEFAULT_TTL = 5 * 1000
 
 /**
  * Message propagation logic of a node. Given a message, this class will actively attempt to propagate it to
