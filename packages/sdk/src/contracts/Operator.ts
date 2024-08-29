@@ -560,13 +560,23 @@ export class Operator {
     async voteOnFlag(sponsorshipAddress: EthereumAddress, targetOperator: EthereumAddress, kick: boolean): Promise<void> {
         const voteData = kick ? VOTE_KICK : VOTE_NO_KICK
         await this.connectToContract()
+
         // typical gas cost 99336, but this has shown insufficient sometimes
+        // this estimate should be very conservative, i.e. higher than any observed flag-resolution gas cost
+        const gasLimit = 1300000n
+
+        // estimateGas throws if transaction would fail, so doing the gas estimation will avoid sending failing transactions
+        const gasEstimate = await this.contract!.voteOnFlag.estimateGas(sponsorshipAddress, targetOperator, voteData) as bigint
+        if (gasEstimate > gasLimit) {
+            throw new Error(`Gas estimate (${gasEstimate}) exceeds limit (${gasLimit})`)
+        }
+
         // TODO should we set gasLimit only here, or also for other transactions made by ContractFacade?
         await (await this.contract!.voteOnFlag(
             sponsorshipAddress,
             targetOperator,
             voteData,
-            { ...this.getEthersOverrides(), gasLimit: '1300000' }
+            { ...this.getEthersOverrides(), gasLimit }
         )).wait()
     }
 
