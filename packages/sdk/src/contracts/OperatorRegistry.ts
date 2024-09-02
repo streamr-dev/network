@@ -90,8 +90,8 @@ export class OperatorRegistry {
                 }
             }`
         }
-        const operatorMetadatas = await this.theGraphClient.queryEntity<StreamOperators>(query)
-        const peerDescriptors: NetworkPeerDescriptor[] = operatorMetadatas.stream.sponsorships
+        const result = await this.theGraphClient.queryEntity<StreamOperators>(query)
+        const peerDescriptors: NetworkPeerDescriptor[] = result.stream.sponsorships
             .flatMap((sponsorship: Sponsorship) => sponsorship.stakes
                 .map((stake: { operator: OperatorMetadata }) => JSON.parse(stake.operator.latestHeartbeatMetadata)))
         return peerDescriptors

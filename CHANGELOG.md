@@ -22,7 +22,6 @@ Changes before Tatum release are not documented in this file.
 
 #### Security
 
-
 ### @streamr/node
 
 #### Added
@@ -36,7 +35,6 @@ Changes before Tatum release are not documented in this file.
 #### Fixed
 
 #### Security
-
 
 ### @streamr/cli-tools
 
@@ -53,7 +51,51 @@ Changes before Tatum release are not documented in this file.
 #### Security
 
 
-## [101.0.1] - 2047-07-09
+## [101.1.1] - 2024-08-29
+
+### @streamr/sdk
+
+#### Changed
+
+- Numerous improvements to time-to-data (https://github.com/streamr-dev/network/pull/2723, https://github.com/streamr-dev/network/pull/2724, https://github.com/streamr-dev/network/pull/2726, https://github.com/streamr-dev/network/pull/2727)
+- Reduce message propagation cache TTL from 30 seconds to 10 seconds (https://github.com/streamr-dev/network/pull/2732)
+
+### @streamr/node
+
+### Changed
+
+- Optimize the "operator value breach" task to be less demanding on EVM RPCs (https://github.com/streamr-dev/network/pull/2721)
+
+#### Fixed
+
+- Add better checks to the "expired flag closing" task so that the likelihood of submitting reverting transactions to the blockchain is reduced (https://github.com/streamr-dev/network/pull/2725)
+
+
+## [101.1.0] - 2024-08-13
+
+### @streamr/sdk
+
+#### Added
+
+- Add method `findOperators` to client (https://github.com/streamr-dev/network/pull/2703)
+
+#### Fixed
+
+- Fix operator review request event parsing (https://github.com/streamr-dev/network/pull/2714)
+
+### @streamr/node
+
+#### Added
+
+- Operators now register external RPC endpoints for accelerated stream entrypoint discovery (https://github.com/streamr-dev/network/pull/2702)
+
+#### Fixed
+
+- Fix propagation buffer TTL issue (https://github.com/streamr-dev/network/pull/2682)
+- Fix operator review request event parsing (https://github.com/streamr-dev/network/pull/2714)
+
+
+## [101.0.1] - 2024-07-09
 
 ### @streamr/sdk
 
@@ -205,7 +247,9 @@ Changes before Tatum release are not documented in this file.
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v101.0.1...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v101.1.1...HEAD
+[101.1.1]: https://github.com/streamr-dev/network/compare/v101.1.0...v101.1.1
+[101.1.0]: https://github.com/streamr-dev/network/compare/v101.0.1...v101.1.0
 [101.0.1]: https://github.com/streamr-dev/network/compare/v101.0.0...v101.0.1
 [101.0.0]: https://github.com/streamr-dev/network/compare/v100.2.4...v101.0.0
 [100.2.4]: https://github.com/streamr-dev/network/compare/v100.2.3...v100.2.4

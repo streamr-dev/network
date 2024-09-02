@@ -3,12 +3,11 @@ import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
 import { PeerDescriptor, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
-import { RouterRpcRemote } from './RouterRpcRemote'
+import { RouterRpcRemote, ROUTING_TIMEOUT } from './RouterRpcRemote'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RecursiveOperationRpcClient, RouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { Contact } from '../contact/Contact'
 import { RecursiveOperationRpcRemote } from '../recursive-operation/RecursiveOperationRpcRemote'
-import { EXISTING_CONNECTION_TIMEOUT } from '../contact/RpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
 import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../identifiers'
 import { pull } from 'lodash'
@@ -31,14 +30,14 @@ export class RoutingRemoteContact extends Contact {
             peer,
             rpcCommunicator,
             RouterRpcClient,
-            EXISTING_CONNECTION_TIMEOUT
+            ROUTING_TIMEOUT
         )
         this.recursiveOperationRpcRemote = new RecursiveOperationRpcRemote(
             localPeerDescriptor,
             peer,
             rpcCommunicator,
             RecursiveOperationRpcClient,
-            EXISTING_CONNECTION_TIMEOUT
+            ROUTING_TIMEOUT
         )
     }
 

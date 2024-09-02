@@ -24,6 +24,8 @@ export interface RecursiveOperationSessionEvents {
     completed: () => void
 }
 
+export const RECURSIVE_OPERATION_TIMEOUT = 10 * 1000
+
 export interface RecursiveOperationSessionOptions {
     transport: ITransport
     targetId: DhtAddress
@@ -56,7 +58,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             allowToContainReferenceId: true
         })
         this.rpcCommunicator = new ListeningRpcCommunicator(this.id, options.transport, {
-            rpcRequestTimeout: 15000  // TODO use options option or named constant?
+            rpcRequestTimeout: RECURSIVE_OPERATION_TIMEOUT
         })
         this.registerLocalRpcMethods()
     }

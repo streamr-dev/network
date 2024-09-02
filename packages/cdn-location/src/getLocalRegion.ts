@@ -14,7 +14,7 @@ export const getLocalAirportCode: () => Promise<string | undefined> = async () =
     let airportCode: string
     try {
         airportCode = await fetchAirportCodeFromCdn()
-    } catch (error) {
+    } catch {
         return undefined
     }
     return airportCode

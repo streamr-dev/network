@@ -22,7 +22,7 @@ describe('downloadGeoIpDatabase', () => {
     beforeEach(() => {
         try {
             fs.rmSync(path, { recursive: true })
-        } catch (e) {
+        } catch {
             // ignore error when removing the test data
         }
     })

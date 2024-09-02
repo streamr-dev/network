@@ -45,7 +45,7 @@ export class PeerDescriptorStoreManager {
         try {
             const result = await this.options.fetchDataFromDht(this.options.key)
             return parsePeerDescriptor(result)
-        } catch (err) {
+        } catch {
             return []
         }
     }
@@ -65,7 +65,7 @@ export class PeerDescriptorStoreManager {
         const dataToStore = Any.pack(localPeerDescriptor, PeerDescriptor)
         try {
             await this.options.storeDataToDht(this.options.key, dataToStore)
-        } catch (err) {
+        } catch {
             logger.warn('Failed to store local node', { key: this.options.key })
         }
     }
@@ -79,7 +79,7 @@ export class PeerDescriptorStoreManager {
                     || discovered.some((peerDescriptor) => areEqualPeerDescriptors(peerDescriptor, this.options.localPeerDescriptor))) {
                     await this.storeLocalNode()
                 }
-            } catch (err) {
+            } catch {
                 logger.debug('Failed to keep local node', { key: this.options.key })
             }
         }, this.options.storeInterval ?? 60000, false, this.abortController.signal)
