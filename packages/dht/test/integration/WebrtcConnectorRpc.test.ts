@@ -64,11 +64,11 @@ describe('WebRTC rpc messages', () => {
         rpcCommunicator2.registerRpcNotification(IceCandidate, 'iceCandidate', serverFunctions.iceCandidate)
         rpcCommunicator2.registerRpcNotification(WebrtcConnectionRequest, 'requestConnection', serverFunctions.requestConnection)
 
-        rpcCommunicator1.on('outgoingMessage', (message: RpcMessage) => {
+        rpcCommunicator1.setOutgoingMessageListener(async (message: RpcMessage) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
 
-        rpcCommunicator2.on('outgoingMessage', (message: RpcMessage) => {
+        rpcCommunicator2.setOutgoingMessageListener(async (message: RpcMessage) => {
             rpcCommunicator1.handleIncomingMessage(message)
         })
 

@@ -12,7 +12,6 @@ import {
 } from './proto/ProtoRpc'
 import { Empty } from './proto/google/protobuf/empty'
 import { MethodOptions, ServerRegistry } from './ServerRegistry'
-import EventEmitter from 'eventemitter3'
 import { DeferredState, ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '@streamr/utils'
 import { ProtoCallContext, ProtoRpcOptions } from './ProtoCallContext'
