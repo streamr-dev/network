@@ -192,7 +192,7 @@ describe('Operator', () => {
         await expect(async () => operator.closeFlag(
             toEthereumAddress(await sponsorship1.getAddress()),
             toEthereumAddress(await deployedOperator.operatorContract.getAddress())
-        )).rejects.toThrow()
+        )).rejects.toThrow('action="estimateGas"')
         const nonceAfter = await wallet.getNonce()
         expect(nonceAfter).toEqual(nonceBefore)
     })
