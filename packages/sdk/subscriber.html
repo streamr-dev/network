@@ -9,8 +9,16 @@
     const STREAM_ID = '0x0472476943d7570b368e2a02123321518568a66e/yolo'
 
     const streamrClient = new StreamrClient({
-            metrics: false
-        })
+            metrics: false,
+            network: {
+                controlLayer: {
+                    iceServers: [{
+                        url: 'stun.l.google.com',
+                        port: 19302
+                    }]
+                }
+            }
+    })
 
     ;(async () => {
         const node = await (streamrClient.getNode().getNode())

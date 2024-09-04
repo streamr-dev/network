@@ -12,7 +12,15 @@
             auth: {
                 privateKey: '0xf0e82cd2f354c60edcd2c23b40eb2fe8996397b096e47e3fc24d1e9c0a2c874a',
             },
-            metrics: false
+            metrics: false,
+            network: {
+                controlLayer: {
+                    iceServers: [{
+                        url: 'stun.l.google.com',
+                        port: 19302
+                    }]
+                }
+            }
         })
 
     ;(() => {
