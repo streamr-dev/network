@@ -97,4 +97,14 @@ describe('ContentDeliveryLayerNode', () => {
         expect(nearbyNodeView.get(getNodeIdFromPeerDescriptor(peerDescriptor2))).toBeTruthy()
     }, 25000)
 
+    it('getRtts', () => {
+        const nodeWithRtt = createMockContentDeliveryRpcRemote()
+        neighbors.add(nodeWithRtt)
+        const nodeWithoutRtt = createMockContentDeliveryRpcRemote()
+        neighbors.add(nodeWithoutRtt)
+        nodeWithRtt.setRtt(100)
+        const rtts = contentDeliveryLayerNode.getRtts()
+        expect(rtts[0].rtt).toEqual(100)
+        expect(rtts[1].rtt).toBeUndefined()
+    })
 })

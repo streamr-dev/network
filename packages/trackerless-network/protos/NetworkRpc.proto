@@ -164,6 +164,12 @@ message StreamPartitionInfo {
   string id = 1;
   repeated dht.PeerDescriptor controlLayerNeighbors = 2;
   repeated dht.PeerDescriptor contentDeliveryLayerNeighbors = 3;
+  repeated ContentDeliveryRtt rtts = 4;
+}
+
+message ContentDeliveryRtt {
+  string nodeId = 1;
+  optional int32 rtt = 2;
 }
 
 message ControlLayerInfo {

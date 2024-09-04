@@ -319,6 +319,23 @@ export interface StreamPartitionInfo {
      * @generated from protobuf field: repeated dht.PeerDescriptor contentDeliveryLayerNeighbors = 3;
      */
     contentDeliveryLayerNeighbors: PeerDescriptor[];
+    /**
+     * @generated from protobuf field: repeated ContentDeliveryRtt rtts = 4;
+     */
+    rtts: ContentDeliveryRtt[];
+}
+/**
+ * @generated from protobuf message ContentDeliveryRtt
+ */
+export interface ContentDeliveryRtt {
+    /**
+     * @generated from protobuf field: string nodeId = 1;
+     */
+    nodeId: string;
+    /**
+     * @generated from protobuf field: optional int32 rtt = 2;
+     */
+    rtt?: number;
 }
 /**
  * @generated from protobuf message ControlLayerInfo
@@ -665,7 +682,8 @@ class StreamPartitionInfo$Type extends MessageType<StreamPartitionInfo> {
         super("StreamPartitionInfo", [
             { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "controlLayerNeighbors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
-            { no: 3, name: "contentDeliveryLayerNeighbors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+            { no: 3, name: "contentDeliveryLayerNeighbors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 4, name: "rtts", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ContentDeliveryRtt }
         ]);
     }
 }
@@ -673,6 +691,19 @@ class StreamPartitionInfo$Type extends MessageType<StreamPartitionInfo> {
  * @generated MessageType for protobuf message StreamPartitionInfo
  */
 export const StreamPartitionInfo = new StreamPartitionInfo$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ContentDeliveryRtt$Type extends MessageType<ContentDeliveryRtt> {
+    constructor() {
+        super("ContentDeliveryRtt", [
+            { no: 1, name: "nodeId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "rtt", kind: "scalar", opt: true, T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ContentDeliveryRtt
+ */
+export const ContentDeliveryRtt = new ContentDeliveryRtt$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class ControlLayerInfo$Type extends MessageType<ControlLayerInfo> {
     constructor() {

@@ -4,7 +4,7 @@ import {
     SimulatorTransport
 } from '@streamr/dht'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { StreamPartIDUtils, waitForCondition, waitForEvent3 } from '@streamr/utils'
+import { StreamPartIDUtils, wait, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { ContentDeliveryManager, Events } from '../../src/logic/ContentDeliveryManager'
 import { ControlLayerNode } from '../../src/logic/ControlLayerNode'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
@@ -62,8 +62,8 @@ describe('ContentDeliveryManager', () => {
             controlLayerNode2.joinDht([peerDescriptor1])
         ])
 
-        manager1 = new ContentDeliveryManager({})
-        manager2 = new ContentDeliveryManager({})
+        manager1 = new ContentDeliveryManager({ neighborUpdateInterval: 100 })
+        manager2 = new ContentDeliveryManager({ neighborUpdateInterval: 100 })
         await manager1.start(controlLayerNode1, transport1, transport1)
         manager1.setStreamPartEntryPoints(STREAM_PART_ID, [peerDescriptor1])
         await manager2.start(controlLayerNode2, transport2, transport2)
@@ -131,6 +131,21 @@ describe('ContentDeliveryManager', () => {
         ])
         await manager2.leaveStreamPart(STREAM_PART_ID)
         await waitForCondition(() => manager1.getNeighbors(STREAM_PART_ID).length === 0)
+    })
+
+    it('RTTs are updated for node info', async () => {
+        manager1.joinStreamPart(STREAM_PART_ID)
+        manager2.joinStreamPart(STREAM_PART_ID)
+        await Promise.all([
+            waitForCondition(() => manager1.getNeighbors(STREAM_PART_ID).length === 1),
+            waitForCondition(() => manager2.getNeighbors(STREAM_PART_ID).length === 1)
+        ])
+        // Wait for RTTs to be updated
+        await wait(500)
+        const nodeInfo1 = await manager1.getNodeInfo()
+        const nodeInfo2 = await manager2.getNodeInfo()
+        expect(nodeInfo1[0].rtts[0].rtt).toBeGreaterThanOrEqual(0)
+        expect(nodeInfo2[0].rtts[0].rtt).toBeGreaterThanOrEqual(0)
     })
 
 })
