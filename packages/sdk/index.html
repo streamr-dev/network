@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Subscriber testi</title>
+    <script type="text/javascript" src="./dist/streamr-sdk.web.js"></script>
+</head>
+<body>
+<script>
+    const STREAM_ID = '0x0472476943d7570b368e2a02123321518568a66e/yolo'
+
+    const streamrClient = new StreamrClient({
+            metrics: false
+        })
+
+    ;(async () => {
+        const node = await (streamrClient.getNode().getNode())
+        await streamrClient.subscribe({ stream: STREAM_ID, raw: true }, (msg) => {
+            console.info('Received message')
+        })
+    })()
+</script>
+</body>
+</html>
