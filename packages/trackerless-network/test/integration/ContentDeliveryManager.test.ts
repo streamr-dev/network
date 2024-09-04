@@ -27,16 +27,10 @@ describe('ContentDeliveryManager', () => {
         STREAM_PART_ID,
         randomEthereumAddress()
     )
-
-    afterEach(async () => {
-        await Promise.all([
-            manager1.destroy(),
-            manager2.destroy()
-        ])
-    })
+    let simulator: Simulator
 
     beforeEach(async () => {
-        const simulator = new Simulator()
+        simulator = new Simulator()
         transport1 = new SimulatorTransport(peerDescriptor1, simulator)
         await transport1.start()
         transport2 = new SimulatorTransport(peerDescriptor2, simulator)
@@ -68,6 +62,18 @@ describe('ContentDeliveryManager', () => {
         manager1.setStreamPartEntryPoints(STREAM_PART_ID, [peerDescriptor1])
         await manager2.start(controlLayerNode2, transport2, transport2)
         manager2.setStreamPartEntryPoints(STREAM_PART_ID, [peerDescriptor1])
+    })
+
+    afterEach(async () => {
+        await Promise.all([
+            manager1.destroy(),
+            manager2.destroy(),
+            controlLayerNode1.stop(),
+            controlLayerNode2.stop(),
+            transport1.stop(),
+            transport2.stop()
+        ])
+        simulator.stop()
     })
 
     it('starts', async () => {
