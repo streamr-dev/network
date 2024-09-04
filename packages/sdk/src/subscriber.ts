@@ -11,7 +11,7 @@ const streamrClient = new StreamrClient({
         controlLayer: {
             websocketPortRange: null,
             iceServers: [{
-                url: 'stun.l.google.com',
+                url: 'stun:stun.l.google.com',
                 port: 19302
             }]
         }
