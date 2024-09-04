@@ -1,6 +1,6 @@
 {
   "name": "@streamr/trackerless-network",
-  "version": "101.1.1",
+  "version": "101.1.2",
   "description": "Minimal and extendable implementation of the Streamr Network node.",
   "repository": {
     "type": "git",
@@ -30,10 +30,10 @@
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
-    "@streamr/dht": "101.1.1",
-    "@streamr/proto-rpc": "101.1.1",
-    "@streamr/test-utils": "101.1.1",
-    "@streamr/utils": "101.1.1",
+    "@streamr/dht": "101.1.2",
+    "@streamr/proto-rpc": "101.1.2",
+    "@streamr/test-utils": "101.1.2",
+    "@streamr/utils": "101.1.2",
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
     "uuid": "^10.0.0",
