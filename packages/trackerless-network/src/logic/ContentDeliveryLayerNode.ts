@@ -394,6 +394,12 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         return this.options.nearbyNodeView
     }
 
+    public getDiagnosticInfo(): Record<string, unknown> {
+        return {
+            
+        }
+    }
+
     private isStopped() {
         return this.abortController.signal.aborted
     }
