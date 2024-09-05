@@ -396,9 +396,9 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             const nodeId = getNodeIdFromPeerDescriptor(n.getPeerDescriptor())
             return {
                 nodeId,
-                rtt: this.options.neighbors.get(nodeId)?.getRtt()
+                rtt: this.options.neighbors.get(nodeId)!.getRtt()
             }
-        })
+        }).filter((result) => result.rtt !== undefined)
     }
 
     getNearbyNodeView(): NodeList {

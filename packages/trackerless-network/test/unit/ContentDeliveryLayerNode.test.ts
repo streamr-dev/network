@@ -105,6 +105,6 @@ describe('ContentDeliveryLayerNode', () => {
         nodeWithRtt.setRtt(100)
         const rtts = contentDeliveryLayerNode.getRtts()
         expect(rtts[0].rtt).toEqual(100)
-        expect(rtts[1].rtt).toBeUndefined()
+        expect(rtts[1]).toBeUndefined()
     })
 })
