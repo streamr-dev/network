@@ -142,7 +142,7 @@
         },
         "maxAgeInMs": {
           "type": "integer",
-          "description": "The maximum age (in milliseconds) of a flag before it is expired",
+          "description": "After the voting ends, how soon (in milliseconds) does the flag expire",
           "minimum": 0,
           "default": 86400000
         }

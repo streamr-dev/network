@@ -306,14 +306,14 @@ export class Operator {
 
     // TODO could move this method as this is functionality is not specific to one Operator contract instance
     async getExpiredFlags(sponsorshipAddresses: EthereumAddress[], maxAgeInMs: number): Promise<Flag[]> {
-        const maxFlagStartTime = Math.floor((Date.now() - maxAgeInMs) / 1000)
+        const maxVoteEndTimestamp = Math.floor((Date.now() - maxAgeInMs) / 1000)
         const createQuery = (lastId: string, pageSize: number) => {
             return {
                 query: `
                 {
                     flags (where : {
                         id_gt: "${lastId}",
-                        flaggingTimestamp_lt: ${maxFlagStartTime},
+                        voteEndTimestamp_lt: ${maxVoteEndTimestamp},
                         result_in: ["waiting", "voting"],
                         sponsorship_in: ${JSON.stringify(sponsorshipAddresses)}
                     }, first: ${pageSize}) {
