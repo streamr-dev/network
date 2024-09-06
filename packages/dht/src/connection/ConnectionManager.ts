@@ -152,10 +152,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         const lockRpcLocal = new ConnectionLockRpcLocal({
             addRemoteLocked: (id: DhtAddress, lockId: LockID) => this.locks.addRemoteLocked(id, lockId),
             removeRemoteLocked: (id: DhtAddress, lockId: LockID) => this.locks.removeRemoteLocked(id, lockId),
-            closeConnection: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string) => {
-                // TODO should we have some handling for this floating promise?
-                this.closeConnection(peerDescriptor, gracefulLeave, reason)
-            },
+            closeConnection: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string) => 
+                this.closeConnection(peerDescriptor, gracefulLeave, reason),
             getLocalPeerDescriptor: () => this.getLocalPeerDescriptor()
         })
         this.rpcCommunicator.registerRpcMethod(LockRequest, LockResponse, 'lockRequest',
@@ -224,8 +222,6 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         if (this.disconnectorIntervalRef) {
             clearInterval(this.disconnectorIntervalRef)
         }
-        await this.connectorFacade.stop()
-
         await Promise.all(Array.from(this.endpoints.values()).map(async (endpoint) => {
             if (endpoint.connected) {
                 try {
@@ -249,7 +245,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
                 }
             }
         }))
-
+        await this.connectorFacade.stop()
         this.state = ConnectionManagerState.STOPPED
         this.rpcCommunicator!.stop()
         this.duplicateMessageDetector.clear()

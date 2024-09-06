@@ -8,6 +8,9 @@ import { getNodeIdFromPeerDescriptor } from '../../identifiers'
 
 const logger = new Logger(module)
 
+// default timeout
+export const ROUTING_TIMEOUT = 2000
+
 export class RouterRpcRemote extends RpcRemote<RouterRpcClient> {
 
     async routeMessage(params: RouteMessageWrapper): Promise<boolean> {

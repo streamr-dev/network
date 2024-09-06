@@ -1,6 +1,6 @@
 {
   "name": "@streamr/geoip-location",
-  "version": "101.1.0",
+  "version": "101.1.2",
   "description": "Library for getting location information from IP addresses based on MaxMind GeoLite2 databases",
   "repository": {
     "type": "git",
@@ -25,7 +25,7 @@
     "test-unit": "jest test/unit"
   },
   "dependencies": {
-    "@streamr/utils": "101.1.0",
+    "@streamr/utils": "101.1.2",
     "eventemitter3": "^5.0.0",
     "long-timeout": "^0.1.1",
     "mmdb-lib": "^2.1.1",
