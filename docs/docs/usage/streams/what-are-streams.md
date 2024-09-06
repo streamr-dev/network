@@ -22,7 +22,7 @@ Let's say you have a temperature measurement device that publishes the temperatu
 | 2019-08-01 11:30:04.122 | 312.64      |
 | 2019-08-01 11:30:05.882 | 312.32      |
 
-Your stream would grow over time and you can add more colums/data fields to your timestamp.
+Your stream would grow over time and you can add more columns/data fields to your timestamp.
 
 :::tip Good to know:
 [Learn more about pub/sub networking](../../help/pub-sub.md)
