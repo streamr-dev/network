@@ -89,12 +89,16 @@ describe('NetworkStack NodeInfoRpc', () => {
                 {
                     id: streamPartId1,
                     controlLayerNeighbors: [normalizePeerDescriptor(otherPeerDescriptor)],
-                    contentDeliveryLayerNeighbors: [normalizePeerDescriptor(otherPeerDescriptor)]
+                    contentDeliveryLayerNeighbors: [{
+                        peerDescriptor: normalizePeerDescriptor(otherPeerDescriptor)
+                    }]
                 },
                 {
                     id: streamPartId2,
                     controlLayerNeighbors: [normalizePeerDescriptor(otherPeerDescriptor)],
-                    contentDeliveryLayerNeighbors: [normalizePeerDescriptor(otherPeerDescriptor)]
+                    contentDeliveryLayerNeighbors: [{
+                        peerDescriptor: normalizePeerDescriptor(otherPeerDescriptor)
+                    }]
                 }
             ],
             version: expect.any(String)

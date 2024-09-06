@@ -144,8 +144,8 @@ describe('ContentDeliveryManager', () => {
         await wait(500)
         const nodeInfo1 = await manager1.getNodeInfo()
         const nodeInfo2 = await manager2.getNodeInfo()
-        expect(nodeInfo1[0].rtts[0].rtt).toBeGreaterThanOrEqual(0)
-        expect(nodeInfo2[0].rtts[0].rtt).toBeGreaterThanOrEqual(0)
+        expect(nodeInfo1[0].contentDeliveryLayerNeighbors[0].rtt).toBeGreaterThanOrEqual(0)
+        expect(nodeInfo2[0].contentDeliveryLayerNeighbors[0].rtt).toBeGreaterThanOrEqual(0)
     })
 
 })

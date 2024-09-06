@@ -163,12 +163,11 @@ enum ProxyDirection {
 message StreamPartitionInfo {
   string id = 1;
   repeated dht.PeerDescriptor controlLayerNeighbors = 2;
-  repeated dht.PeerDescriptor contentDeliveryLayerNeighbors = 3;
-  repeated ContentDeliveryRtt rtts = 4;
+  repeated ContentDeliveryLayerNeighborInfo contentDeliveryLayerNeighbors = 3;
 }
 
-message ContentDeliveryRtt {
-  string nodeId = 1;
+message ContentDeliveryLayerNeighborInfo {
+  dht.PeerDescriptor peerDescriptor = 1;
   optional int32 rtt = 2;
 }
 
