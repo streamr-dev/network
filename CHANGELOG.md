@@ -20,6 +20,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Fixed
 
+- Fixed flag expiration time in `Operator#getExpiredFlags` (https://github.com/streamr-dev/network/pull/2739)
+
 #### Security
 
 ### @streamr/node
