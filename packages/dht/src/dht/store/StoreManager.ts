@@ -85,7 +85,7 @@ export class StoreManager {
     private async replicateDataToContact(dataEntry: DataEntry, contact: PeerDescriptor): Promise<void> {
         const rpcRemote = this.options.createRpcRemote(contact)
         try {
-            await rpcRemote.replicateData({ entry: dataEntry })
+            await rpcRemote.replicateData({ entry: dataEntry }, true)
         } catch (e) {
             logger.trace('replicateData() threw an exception ' + e)
         }
@@ -145,7 +145,7 @@ export class StoreManager {
             await Promise.all(neighbors.map(async (neighbor) => {
                 const rpcRemote = this.options.createRpcRemote(neighbor)
                 try {
-                    await rpcRemote.replicateData({ entry: dataEntry })
+                    await rpcRemote.replicateData({ entry: dataEntry }, false)
                 } catch (err) {
                     logger.trace('Failed to replicate data in replicateDataToClosestNodes', { err })
                 }

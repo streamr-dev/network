@@ -70,7 +70,7 @@ describe('StoreManager', () => {
                 await waitForCondition(() => replicateData.mock.calls.length === 1)
                 expect(replicateData).toHaveBeenCalledWith({
                     entry: DATA_ENTRY
-                })
+                }, true)
                 expect(setAllEntriesAsStale).not.toHaveBeenCalled()
             })
     
