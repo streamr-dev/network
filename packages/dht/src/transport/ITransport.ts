@@ -33,5 +33,5 @@ export interface ITransport {
     send(msg: Message, opts?: SendOptions): Promise<void>
     getLocalPeerDescriptor(): PeerDescriptor
     stop(): void | Promise<void>
-    getDiagnosticsInfo(): Record<string, unknown>
+    getDiagnosticInfo(): Record<string, unknown>
 }

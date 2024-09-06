@@ -20,7 +20,7 @@ export class MockTransport extends EventEmitter<TransportEvents> implements ITra
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getDiagnosticsInfo(): Record<string, unknown> {
+    getDiagnosticInfo(): Record<string, unknown> {
         return {}
     }
 }

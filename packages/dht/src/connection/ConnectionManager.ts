@@ -593,7 +593,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         this.metrics.connectionAverageCount.record(this.endpoints.size)
     }
 
-    public getDiagnosticsInfo(): Record<string, unknown> {
+    public getDiagnosticInfo(): Record<string, unknown> {
         const managedConnections: ManagedConnection[] = Array.from(this.endpoints.values())
             .filter((endpoint) => endpoint.connected)
             .map((endpoint) => endpoint.connection as ManagedConnection)

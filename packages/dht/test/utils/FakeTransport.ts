@@ -58,7 +58,7 @@ class FakeTransport extends EventEmitter<TransportEvents> implements ITransport,
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getDiagnosticsInfo(): Record<string, unknown> {
+    getDiagnosticInfo(): Record<string, unknown> {
         return {}
     }
 }
