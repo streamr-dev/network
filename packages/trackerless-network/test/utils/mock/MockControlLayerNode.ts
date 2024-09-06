@@ -72,7 +72,7 @@ export class MockControlLayerNode extends EventEmitter<TransportEvents> implemen
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getDiagnosticsInfo(): Record<string, unknown> {
+    getDiagnosticInfo(): Record<string, unknown> {
         return {}
     }
 }
