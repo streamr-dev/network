@@ -129,7 +129,7 @@ class InspectionOverTimeTask {
 
         await this.initializeNewOperatorFleetState()
 
-        this.logger.info('Sleep', { timeInMs: this.delayBeforeFirstInspectionInMs })
+        this.logger.debug('Sleep', { timeInMs: this.delayBeforeFirstInspectionInMs })
         await wait(this.delayBeforeFirstInspectionInMs, this.abortSignal)
 
         for (const attemptNo of range(1, this.maxInspectionCount + 1)) {
@@ -176,7 +176,7 @@ class InspectionOverTimeTask {
                 }
 
                 const sleepTime = Math.max(this.inspectionIntervalInMs - timeElapsedInMs, 0)
-                this.logger.info('Sleep', { timeInMs: sleepTime })
+                this.logger.debug('Sleep', { timeInMs: sleepTime })
                 await wait(sleepTime, this.abortSignal)
             }
         }
