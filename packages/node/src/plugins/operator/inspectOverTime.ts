@@ -19,7 +19,7 @@ interface InspectOverTimeOpts {
     sleepTimeInMsBeforeFirstInspection: number
     heartbeatTimeoutInMs: number
     inspectionIntervalInMs: number
-    maxInspections: number
+    maxInspectionCount: number
     waitUntilPassOrDone: boolean
     abortSignal: AbortSignal
     traceId: string
@@ -47,7 +47,7 @@ class InspectionOverTimeTask {
     private readonly sleepTimeInMsBeforeFirstInspection: number
     private readonly heartbeatTimeoutInMs: number
     private readonly inspectionIntervalInMs: number
-    private readonly maxInspections: number
+    private readonly maxInspectionCount: number
     private readonly abortSignal: AbortSignal
     private readonly findNodesForTargetGivenFleetStateFn: FindNodesForTargetGivenFleetStateFn
     private readonly inspectTargetFn: InspectTargetFn
@@ -67,7 +67,7 @@ class InspectionOverTimeTask {
         sleepTimeInMsBeforeFirstInspection,
         heartbeatTimeoutInMs,
         inspectionIntervalInMs,
-        maxInspections,
+        maxInspectionCount,
         abortSignal: userAbortSignal,
         traceId,
         findNodesForTargetGivenFleetStateFn = findNodesForTargetGivenFleetState,
@@ -80,7 +80,7 @@ class InspectionOverTimeTask {
         this.sleepTimeInMsBeforeFirstInspection = sleepTimeInMsBeforeFirstInspection
         this.heartbeatTimeoutInMs = heartbeatTimeoutInMs
         this.inspectionIntervalInMs = inspectionIntervalInMs
-        this.maxInspections = maxInspections
+        this.maxInspectionCount = maxInspectionCount
         this.abortSignal = composeAbortSignals(userAbortSignal, this.abortController.signal)
         this.findNodesForTargetGivenFleetStateFn = findNodesForTargetGivenFleetStateFn
         this.inspectTargetFn = inspectTargetFn
@@ -124,7 +124,7 @@ class InspectionOverTimeTask {
             target: this.target,
             heartbeatTimeoutInMs: this.heartbeatTimeoutInMs,
             inspectionIntervalInMs: this.inspectionIntervalInMs,
-            maxInspections: this.maxInspections
+            maxInspectionCount: this.maxInspectionCount
         })
 
         await this.initializeNewOperatorFleetState()
@@ -132,7 +132,7 @@ class InspectionOverTimeTask {
         this.logger.info('Sleep', { timeInMs: this.sleepTimeInMsBeforeFirstInspection })
         await wait(this.sleepTimeInMsBeforeFirstInspection, this.abortSignal)
 
-        for (const attemptNo of range(1, this.maxInspections + 1)) {
+        for (const attemptNo of range(1, this.maxInspectionCount + 1)) {
             const startTime = Date.now()
             this.logger.info('Inspecting target', { attemptNo, target: this.target })
 
@@ -162,7 +162,7 @@ class InspectionOverTimeTask {
                 target: this.target
             })
 
-            if (attemptNo !== this.maxInspections) {
+            if (attemptNo !== this.maxInspectionCount) {
                 // TODO: remove when NET-1169 landed;
                 //  workaround subscribe bug in @streamr/sdk (sometimes messages don't come thru to heartbeat stream)
                 if (this.fleetState?.getNodeIds().length === 0) {

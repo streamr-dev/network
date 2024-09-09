@@ -125,6 +125,26 @@
           "description": "How often to run (in milliseconds)",
           "minimum": 0,
           "default": 900000
+        },
+        "maxInspectionCount": {
+          "type": "integer",
+          "description": "How many rounds of analysis are performed at most",
+          "minimum": 1,
+          "default": 10
+        }
+      }
+    },
+    "reviewSuspectNode": {
+      "type": "object",
+      "description": "Review suspect node settings",
+      "additionalProperties": false,
+      "default": {},
+      "properties": {
+        "maxInspectionCount": {
+          "type": "integer",
+          "description": "How many rounds of analysis are performed at most",
+          "minimum": 1,
+          "default": 10
         }
       }
     },

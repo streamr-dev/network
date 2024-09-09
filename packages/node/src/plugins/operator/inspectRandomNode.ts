@@ -11,6 +11,7 @@ export async function inspectRandomNode(
     assignments: StreamPartAssignments,
     streamrClient: StreamrClient,
     heartbeatTimeoutInMs: number,
+    maxInspectionCount: number,
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>,
     createOperatorFleetState: CreateOperatorFleetStateFn,
     abortSignal: AbortSignal,
@@ -34,7 +35,7 @@ export async function inspectRandomNode(
         sleepTimeInMsBeforeFirstInspection: 0,
         heartbeatTimeoutInMs,
         inspectionIntervalInMs: 8 * 60 * 1000,
-        maxInspections: 10,
+        maxInspectionCount,
         waitUntilPassOrDone: true,
         abortSignal,
         traceId

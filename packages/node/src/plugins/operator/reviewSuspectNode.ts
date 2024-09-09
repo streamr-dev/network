@@ -21,7 +21,7 @@ export interface ReviewProcessOpts {
         endTime: number
     }
     inspectionIntervalInMs: number
-    maxInspections: number
+    maxInspectionCount: number
     abortSignal: AbortSignal
 }
 
@@ -37,7 +37,7 @@ export const reviewSuspectNode = async ({
     heartbeatTimeoutInMs,
     votingPeriod,
     inspectionIntervalInMs,
-    maxInspections,
+    maxInspectionCount,
     abortSignal
 }: ReviewProcessOpts): Promise<void> => {
     if (Date.now() + maxSleepTime > votingPeriod.startTime) {
@@ -58,7 +58,7 @@ export const reviewSuspectNode = async ({
         sleepTimeInMsBeforeFirstInspection,
         heartbeatTimeoutInMs,
         inspectionIntervalInMs,
-        maxInspections,
+        maxInspectionCount,
         waitUntilPassOrDone: false,
         abortSignal,
         traceId: randomString(6)

@@ -57,6 +57,10 @@ export interface OperatorPluginConfig {
     }
     inspectRandomNode: {
         intervalInMs: number
+        maxInspectionCount: number
+    }
+    reviewSuspectNode: {
+        maxInspectionCount: number
     }
     closeExpiredFlags: {
         intervalInMs: number
@@ -201,6 +205,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                         streamPartAssignments,
                         streamrClient,
                         this.pluginConfig.heartbeatTimeoutInMs,
+                        this.pluginConfig.inspectRandomNode.maxInspectionCount,
                         async (targetOperatorContractAddress) => {
                             return streamrClient.getOperator(targetOperatorContractAddress).fetchRedundancyFactor()
                         },
@@ -247,7 +252,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                                         endTime: event.votingPeriodEndTimestamp
                                     },
                                     inspectionIntervalInMs: 8 * 60 * 1000,
-                                    maxInspections: 10,
+                                    maxInspectionCount: this.pluginConfig.reviewSuspectNode.maxInspectionCount,
                                     abortSignal: this.abortController.signal
                                 })
                             }
