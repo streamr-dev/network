@@ -16,7 +16,7 @@ interface InspectOverTimeOpts {
     streamrClient: StreamrClient
     createOperatorFleetState: CreateOperatorFleetStateFn
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>
-    sleepTimeInMsBeforeFirstInspection: number
+    delayBeforeFirstInspectionInMs: number
     heartbeatTimeoutInMs: number
     inspectionIntervalInMs: number
     maxInspectionCount: number
@@ -44,7 +44,7 @@ class InspectionOverTimeTask {
     private readonly streamrClient: StreamrClient
     private readonly createOperatorFleetState: CreateOperatorFleetStateFn
     private readonly getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>
-    private readonly sleepTimeInMsBeforeFirstInspection: number
+    private readonly delayBeforeFirstInspectionInMs: number
     private readonly heartbeatTimeoutInMs: number
     private readonly inspectionIntervalInMs: number
     private readonly maxInspectionCount: number
@@ -64,7 +64,7 @@ class InspectionOverTimeTask {
         streamrClient,
         createOperatorFleetState,
         getRedundancyFactor,
-        sleepTimeInMsBeforeFirstInspection,
+        delayBeforeFirstInspectionInMs,
         heartbeatTimeoutInMs,
         inspectionIntervalInMs,
         maxInspectionCount,
@@ -77,7 +77,7 @@ class InspectionOverTimeTask {
         this.streamrClient = streamrClient
         this.createOperatorFleetState = createOperatorFleetState
         this.getRedundancyFactor = getRedundancyFactor
-        this.sleepTimeInMsBeforeFirstInspection = sleepTimeInMsBeforeFirstInspection
+        this.delayBeforeFirstInspectionInMs = delayBeforeFirstInspectionInMs
         this.heartbeatTimeoutInMs = heartbeatTimeoutInMs
         this.inspectionIntervalInMs = inspectionIntervalInMs
         this.maxInspectionCount = maxInspectionCount
@@ -129,8 +129,8 @@ class InspectionOverTimeTask {
 
         await this.initializeNewOperatorFleetState()
 
-        this.logger.info('Sleep', { timeInMs: this.sleepTimeInMsBeforeFirstInspection })
-        await wait(this.sleepTimeInMsBeforeFirstInspection, this.abortSignal)
+        this.logger.info('Sleep', { timeInMs: this.delayBeforeFirstInspectionInMs })
+        await wait(this.delayBeforeFirstInspectionInMs, this.abortSignal)
 
         for (const attemptNo of range(1, this.maxInspectionCount + 1)) {
             const startTime = Date.now()

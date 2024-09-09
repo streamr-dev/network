@@ -145,6 +145,12 @@
           "description": "How many rounds of analysis are performed at most",
           "minimum": 1,
           "default": 10
+        },
+        "maxDelayBeforeFirstInspectionInMs": {
+          "type": "integer",
+          "description": "The maximum time (in milliseconds) to wait before the 1st inspection round",
+          "minimum": 0,
+          "default": 300000
         }
       }
     },

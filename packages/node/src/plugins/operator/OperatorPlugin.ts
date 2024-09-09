@@ -61,6 +61,7 @@ export interface OperatorPluginConfig {
     }
     reviewSuspectNode: {
         maxInspectionCount: number
+        maxDelayBeforeFirstInspectionInMs: number
     }
     closeExpiredFlags: {
         intervalInMs: number
@@ -245,7 +246,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                                     getRedundancyFactor: async (targetOperatorContractAddress) => {
                                         return streamrClient.getOperator(targetOperatorContractAddress).fetchRedundancyFactor()
                                     },
-                                    maxSleepTime: 5 * 60 * 1000,
+                                    maxDelayBeforeFirstInspectionInMs: this.pluginConfig.reviewSuspectNode.maxDelayBeforeFirstInspectionInMs,
                                     heartbeatTimeoutInMs: this.pluginConfig.heartbeatTimeoutInMs,
                                     votingPeriod: {
                                         startTime: event.votingPeriodStartTimestamp,

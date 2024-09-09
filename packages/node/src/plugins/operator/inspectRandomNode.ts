@@ -32,7 +32,7 @@ export async function inspectRandomNode(
         streamrClient,
         createOperatorFleetState,
         getRedundancyFactor,
-        sleepTimeInMsBeforeFirstInspection: 0,
+        delayBeforeFirstInspectionInMs: 0,
         heartbeatTimeoutInMs,
         inspectionIntervalInMs: 8 * 60 * 1000,
         maxInspectionCount,
