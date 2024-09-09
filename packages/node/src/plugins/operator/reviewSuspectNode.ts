@@ -14,14 +14,14 @@ export interface ReviewProcessOpts {
     streamrClient: StreamrClient
     createOperatorFleetState: CreateOperatorFleetStateFn
     getRedundancyFactor: (operatorContractAddress: EthereumAddress) => Promise<number | undefined>
-    maxSleepTime: number
+    maxDelayBeforeFirstInspectionInMs: number
     heartbeatTimeoutInMs: number
     votingPeriod: {
         startTime: number
         endTime: number
     }
     inspectionIntervalInMs: number
-    maxInspections: number
+    maxInspectionCount: number
     abortSignal: AbortSignal
 }
 
@@ -33,19 +33,19 @@ export const reviewSuspectNode = async ({
     streamrClient,
     createOperatorFleetState,
     getRedundancyFactor,
-    maxSleepTime,
+    maxDelayBeforeFirstInspectionInMs,
     heartbeatTimeoutInMs,
     votingPeriod,
     inspectionIntervalInMs,
-    maxInspections,
+    maxInspectionCount,
     abortSignal
 }: ReviewProcessOpts): Promise<void> => {
-    if (Date.now() + maxSleepTime > votingPeriod.startTime) {
-        throw new Error('Max sleep time overlaps with voting period')
+    if (Date.now() + maxDelayBeforeFirstInspectionInMs > votingPeriod.startTime) {
+        throw new Error('Max delay time overlaps with voting period')
     }
     const streamId = await myOperator.getStreamId(sponsorshipAddress)
-    // random sleep time to make sure multiple instances of voters don't all inspect at the same time
-    const sleepTimeInMsBeforeFirstInspection = random(maxSleepTime)
+    // random wait time to make sure multiple instances of voters don't all inspect at the same time
+    const delayBeforeFirstInspectionInMs = random(maxDelayBeforeFirstInspectionInMs)
     const consumeResults = inspectOverTime({
         target: {
             sponsorshipAddress: sponsorshipAddress,
@@ -55,10 +55,10 @@ export const reviewSuspectNode = async ({
         streamrClient,
         createOperatorFleetState,
         getRedundancyFactor,
-        sleepTimeInMsBeforeFirstInspection,
+        delayBeforeFirstInspectionInMs,
         heartbeatTimeoutInMs,
         inspectionIntervalInMs,
-        maxInspections,
+        maxInspectionCount,
         waitUntilPassOrDone: false,
         abortSignal,
         traceId: randomString(6)

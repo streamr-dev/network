@@ -57,6 +57,11 @@ export interface OperatorPluginConfig {
     }
     inspectRandomNode: {
         intervalInMs: number
+        maxInspectionCount: number
+    }
+    reviewSuspectNode: {
+        maxInspectionCount: number
+        maxDelayBeforeFirstInspectionInMs: number
     }
     closeExpiredFlags: {
         intervalInMs: number
@@ -201,6 +206,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                         streamPartAssignments,
                         streamrClient,
                         this.pluginConfig.heartbeatTimeoutInMs,
+                        this.pluginConfig.inspectRandomNode.maxInspectionCount,
                         async (targetOperatorContractAddress) => {
                             return streamrClient.getOperator(targetOperatorContractAddress).fetchRedundancyFactor()
                         },
@@ -240,14 +246,14 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                                     getRedundancyFactor: async (targetOperatorContractAddress) => {
                                         return streamrClient.getOperator(targetOperatorContractAddress).fetchRedundancyFactor()
                                     },
-                                    maxSleepTime: 5 * 60 * 1000,
+                                    maxDelayBeforeFirstInspectionInMs: this.pluginConfig.reviewSuspectNode.maxDelayBeforeFirstInspectionInMs,
                                     heartbeatTimeoutInMs: this.pluginConfig.heartbeatTimeoutInMs,
                                     votingPeriod: {
                                         startTime: event.votingPeriodStartTimestamp,
                                         endTime: event.votingPeriodEndTimestamp
                                     },
                                     inspectionIntervalInMs: 8 * 60 * 1000,
-                                    maxInspections: 10,
+                                    maxInspectionCount: this.pluginConfig.reviewSuspectNode.maxInspectionCount,
                                     abortSignal: this.abortController.signal
                                 })
                             }
