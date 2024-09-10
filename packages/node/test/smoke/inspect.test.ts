@@ -41,7 +41,6 @@ const {
     getProvider,
     generateWalletWithGasAndTokens,
     deploySponsorshipContract,
-    sponsor,
     delegate,
     stake,
     getTestTokenContract,
@@ -221,7 +220,6 @@ describe('inspect', () => {
         const streamId = await createStream()
         const sponsorer = await generateWalletWithGasAndTokens()
         const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 0, streamId, deployer: sponsorer })
-        await sponsor(sponsorer, await sponsorship.getAddress(), 25000)
         logger.info('Create operators')
         freeriderOperator = await createOperator({}, await sponsorship.getAddress(), true)
         const CONFIG = {
