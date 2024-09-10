@@ -184,7 +184,7 @@ export function getProvider(): Provider {
     })
 }
 
-export function getTokenContract(): TestTokenContract {
+export function getTestTokenContract(): TestTokenContract {
     return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, TestTokenArtifact) as unknown as TestTokenContract
 }
 
@@ -203,7 +203,7 @@ export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGa
     const adminWallet = getAdminWallet()
     const token = (opts?.chainConfig !== undefined)
         ? new Contract(opts.chainConfig.contracts.DATA, TestTokenArtifact, adminWallet) as unknown as TestTokenContract
-        : getTokenContract().connect(adminWallet)
+        : getTestTokenContract().connect(adminWallet)
     await retry(
         async () => {
             await (await token.mint(newWallet.address, parseEther('1000000'))).wait()
@@ -248,6 +248,6 @@ export const sponsor = async (sponsorer: Wallet, sponsorshipContractAddress: str
 }
 
 export const transferTokens = async (from: Wallet, to: string, amount: number, data?: string, token?: TestTokenContract): Promise<void> => {
-    const tx = await ((token ?? getTokenContract()).connect(from).transferAndCall(to, parseEther(amount.toString()), data ?? '0x'))
+    const tx = await ((token ?? getTestTokenContract()).connect(from).transferAndCall(to, parseEther(amount.toString()), data ?? '0x'))
     await tx.wait()
 }
