@@ -167,8 +167,8 @@ const getFlags = async (
             }
         }
     }`
-    const flagsResponse = await theGraphClient.queryEntity<any>({ query: flagsQuery })
-    return flagsResponse.flags.map((flag: any) => ({
+    const response = await theGraphClient.queryEntity<any>({ query: flagsQuery })
+    return response.flags.map((flag: any) => ({
         result: flag.result,
         target: flag.target.id,
         flagger: flag.flagger.id,
