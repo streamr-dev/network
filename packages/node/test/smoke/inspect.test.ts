@@ -122,7 +122,7 @@ const createTheGraphClient = (): TheGraphClient => {
 }
 
 const configureBlockchain = async (): Promise<void> => {
-    const MINING_INTREVAL = 1100
+    const MINING_INTERVAL = 1100
     logger.info('Configure blockchain')
     const provider = getProvider() as JsonRpcProvider
     await provider.send('evm_setAutomine', [true])
@@ -137,12 +137,12 @@ const configureBlockchain = async (): Promise<void> => {
         logger.info(`Wait, blockchain drift is ${(drift / 1000)}s`, { blockNumber, blockTimestamp })
         await wait(drift + 1000)
         logger.info('Set evm_setIntervalMining and evm_setNextBlockTimestamp')
-        await provider.send('evm_setIntervalMining', [MINING_INTREVAL])
+        await provider.send('evm_setIntervalMining', [MINING_INTERVAL])
         await provider.send('evm_setNextBlockTimestamp', [Math.round(Date.now() / 1000)])
     } else {
         logger.warn('Blockchain drift is negative')
         logger.info('Set evm_setIntervalMining')
-        await provider.send('evm_setIntervalMining', [MINING_INTREVAL])
+        await provider.send('evm_setIntervalMining', [MINING_INTERVAL])
     }
 }
 
@@ -242,10 +242,10 @@ describe('inspect', () => {
             validOperators.push(await createOperator(CONFIG, await sponsorship.getAddress(), false))
         }
 
-        // Unstake from pre-baked operators so that the won't be selected as voters
+        // Unstake from pre-baked operators so that they won't be selected as voters
         // It would be ok to have some pre-baked operators, but that reduces the probability
         // of selecting the freerider to be inspected when we select a random node.
-        // It would also reduce the probablity that the nodes started in this test are selected
+        // It would also reduce the probability that the nodes started in this test are selected
         // to be reviewers of the suspect node (there would be a subsequent re-flagging if we
         // select only offline nodes, but because of ETH-784 the reviewer set won't change).
         logger.info('Unstake pre-baked operators')
