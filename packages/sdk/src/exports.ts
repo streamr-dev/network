@@ -101,7 +101,8 @@ import {
     getProvider,
     generateWalletWithGasAndTokens,
     DeploySponsorshipContractOpts,
-    getTestTokenContract
+    getTestTokenContract,
+    getOperatorContract
 } from './contracts/operatorContractUtils'
 /**
  * @deprecated
@@ -117,7 +118,8 @@ const _operatorContractUtils = {
     getProvider,
     generateWalletWithGasAndTokens,
     deployOperatorContract,
-    getTestTokenContract
+    getTestTokenContract,
+    getOperatorContract
 }
 // eslint-disable-next-line no-underscore-dangle
 export { _operatorContractUtils }

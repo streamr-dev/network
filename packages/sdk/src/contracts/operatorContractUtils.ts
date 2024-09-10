@@ -251,3 +251,7 @@ export const transferTokens = async (from: Wallet, to: string, amount: number, d
     const tx = await ((token ?? getTestTokenContract()).connect(from).transferAndCall(to, parseEther(amount.toString()), data ?? '0x'))
     await tx.wait()
 }
+
+export const getOperatorContract = (operatorAddress: string): OperatorContract => {
+    return new Contract(operatorAddress, OperatorArtifact) as unknown as OperatorContract
+}
