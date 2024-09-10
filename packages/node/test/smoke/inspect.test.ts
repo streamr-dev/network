@@ -144,6 +144,7 @@ const configureBlockchain = async (): Promise<void> => {
         logger.info('Set evm_setIntervalMining')
         await provider.send('evm_setIntervalMining', [MINING_INTERVAL])
     }
+    await createStream()  // just some transaction
 }
 
 const getFlags = async (
