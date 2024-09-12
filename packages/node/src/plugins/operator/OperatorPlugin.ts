@@ -159,7 +159,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                     logger.warn('Encountered error', { err })
                 }),
                 this.pluginConfig.checkOperatorValueBreachIntervalInMs,
-                true,
+                false,
                 this.abortController.signal
             )
             await fleetState.waitUntilReady()
