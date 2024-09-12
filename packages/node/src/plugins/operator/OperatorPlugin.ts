@@ -139,6 +139,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         // start tasks in background so that operations which take significant amount of time (e.g. fleetState.waitUntilReady())
         // don't block the startup of Broker
         setImmediate(async () => {
+
             setAbortableInterval(() => {
                 (async () => {
                     await announceNodeToStream(
@@ -147,23 +148,10 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                     )
                 })()
             }, this.pluginConfig.heartbeatUpdateIntervalInMs, this.abortController.signal)
-            const stakedOperatorsCache = new Cache(() => operator.getStakedOperators(), STAKED_OPERATORS_CACHE_MAX_AGE)
-            await scheduleAtInterval(
-                async () => checkOperatorValueBreach(
-                    operator,
-                    streamrClient,
-                    () => stakedOperatorsCache.get(),
-                    this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
-                    this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw
-                ).catch((err) => {
-                    logger.warn('Encountered error', { err })
-                }),
-                this.pluginConfig.checkOperatorValueBreachIntervalInMs,
-                true,
-                this.abortController.signal
-            )
+
             await fleetState.waitUntilReady()
             const isLeader = await createIsLeaderFn(streamrClient, fleetState, logger)
+
             try {
                 await scheduleAtInterval(async () => {
                     if (isLeader()) {
@@ -178,6 +166,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 logger.fatal('Encountered fatal error in announceNodeToContract', { err })
                 process.exit(1)
             }
+
             await scheduleAtInterval(
                 async () => {
                     if (isLeader()) {
@@ -228,6 +217,22 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                     logger.error('Encountered error while closing expired flags', { err })
                 }
             }, this.pluginConfig.closeExpiredFlags.intervalInMs, false, this.abortController.signal)
+
+            const stakedOperatorsCache = new Cache(() => operator.getStakedOperators(), STAKED_OPERATORS_CACHE_MAX_AGE)
+            await scheduleAtInterval(
+                async () => checkOperatorValueBreach(
+                    operator,
+                    streamrClient,
+                    () => stakedOperatorsCache.get(),
+                    this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
+                    this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw
+                ).catch((err) => {
+                    logger.warn('Encountered error', { err })
+                }),
+                this.pluginConfig.checkOperatorValueBreachIntervalInMs,
+                false,
+                this.abortController.signal
+            )
 
             addManagedEventListener(
                 operator,
