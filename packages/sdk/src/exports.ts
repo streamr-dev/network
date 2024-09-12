@@ -90,6 +90,7 @@ export {
 } from './contracts/Operator'
 import {
     delegate,
+    undelegate,
     deploySponsorshipContract,
     setupOperatorContract,
     SetupOperatorContractOpts,
@@ -98,6 +99,7 @@ import {
     DeployOperatorContractOpts,
     sponsor,
     stake,
+    unstake,
     getProvider,
     generateWalletWithGasAndTokens,
     DeploySponsorshipContractOpts,
@@ -112,10 +114,12 @@ import {
 // eslint-disable-next-line no-underscore-dangle
 const _operatorContractUtils = {
     delegate,
+    undelegate,
     deploySponsorshipContract,
     setupOperatorContract,
     sponsor,
     stake,
+    unstake,
     getProvider,
     generateWalletWithGasAndTokens,
     deployOperatorContract,
