@@ -44,6 +44,7 @@ const {
     delegate,
     stake,
     getTestTokenContract,
+    getTestAdminWallet,
     getOperatorContract
 } = _operatorContractUtils
 
@@ -208,7 +209,7 @@ describe('inspect', () => {
         const streamrConfig = new Contract(
             CHAIN_CONFIG.dev2.contracts.StreamrConfig,
             streamrConfigABI
-        ).connect(new Wallet(CHAIN_CONFIG.dev2.adminPrivateKey, getProvider())) as unknown as StreamrConfig
+        ).connect(getTestAdminWallet()) as unknown as StreamrConfig
         await streamrConfig.setFlagReviewerCount(REVIEWER_COUNT)
         await streamrConfig.setReviewPeriodSeconds(REVIEW_PERIOD)
         await streamrConfig.setVotingPeriodSeconds(VOTING_PERIOD)

@@ -102,6 +102,7 @@ import {
     generateWalletWithGasAndTokens,
     DeploySponsorshipContractOpts,
     getTestTokenContract,
+    getTestAdminWallet,
     getOperatorContract
 } from './contracts/operatorContractUtils'
 /**
@@ -119,6 +120,7 @@ const _operatorContractUtils = {
     generateWalletWithGasAndTokens,
     deployOperatorContract,
     getTestTokenContract,
+    getTestAdminWallet,
     getOperatorContract
 }
 // eslint-disable-next-line no-underscore-dangle

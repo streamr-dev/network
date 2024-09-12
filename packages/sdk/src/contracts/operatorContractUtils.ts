@@ -188,7 +188,7 @@ export function getTestTokenContract(): TestTokenContract {
     return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, TestTokenArtifact) as unknown as TestTokenContract
 }
 
-export const getAdminWallet = (adminKey?: string, provider?: Provider): Wallet => {
+export const getTestAdminWallet = (adminKey?: string, provider?: Provider): Wallet => {
     return new Wallet(adminKey ?? TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider ?? getProvider())
 }
 
@@ -200,7 +200,7 @@ export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGa
     const provider = getProvider()
     const privateKey = crypto.randomBytes(32).toString('hex')
     const newWallet = new Wallet(privateKey)
-    const adminWallet = getAdminWallet()
+    const adminWallet = getTestAdminWallet()
     const token = (opts?.chainConfig !== undefined)
         ? new Contract(opts.chainConfig.contracts.DATA, TestTokenArtifact, adminWallet) as unknown as TestTokenContract
         : getTestTokenContract().connect(adminWallet)
