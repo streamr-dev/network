@@ -243,6 +243,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     private setupDataChannel(dataChannel: RTCDataChannel): void {
         this.dataChannel = dataChannel
         dataChannel.bufferedAmountLowThreshold = 32000
+        this.dataChannel.binaryType = 'arraybuffer'
         dataChannel.onopen = () => {
             logger.trace('dc.onOpen')
             this.onDataChannelOpen()
