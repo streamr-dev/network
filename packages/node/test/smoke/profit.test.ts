@@ -23,7 +23,7 @@ import { createClient, createTestStream, startBroker } from '../utils'
  * - the operator self-delegates some DATA tokens
  * - the delegator delegates some DATA tokens
  * - operator stakes all delegated tokens
- * - operator runs the node until the sponsorship no longer funded
+ * - operator runs the node until the sponsorship is no longer funded
  *
  * Then:
  * - operator value is updated
