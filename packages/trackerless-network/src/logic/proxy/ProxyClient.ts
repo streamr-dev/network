@@ -33,7 +33,7 @@ export const retry = async <T>(task: () => Promise<T>, description: string, abor
         try {
             const result = await task()
             return result
-        } catch (e: any) {
+        } catch {
             logger.warn(`Failed ${description} (retrying after delay)`, {
                 delayInMs: delay
             })

@@ -27,7 +27,7 @@ const tryReadConfigFile = (fileName: string): Config | undefined | never => {
     let content
     try {
         content = readFileSync(fileName, 'utf8')
-    } catch (e: any) {
+    } catch {
         return undefined
     }
     const json = JSON.parse(content)

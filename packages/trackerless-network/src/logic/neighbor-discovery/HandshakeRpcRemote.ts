@@ -11,7 +11,7 @@ interface HandshakeResponse {
     interleaveTargetDescriptor?: PeerDescriptor
 }
 
-export const INTERLEAVE_REQUEST_TIMEOUT = 15000
+export const INTERLEAVE_REQUEST_TIMEOUT = 10000
 
 export class HandshakeRpcRemote extends RpcRemote<HandshakeRpcClient> {
 

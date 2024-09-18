@@ -10,7 +10,7 @@ import {
     SetupOperatorContractReturnType,
     delegate,
     deploySponsorshipContract,
-    getAdminWallet,
+    getTestAdminWallet,
     setupOperatorContract,
     sponsor,
     stake
@@ -20,6 +20,7 @@ import OperatorArtifact from '../../src/ethereumArtifacts/OperatorAbi.json'
 import type { OperatorFactory as OperatorFactoryContract } from '../../src/ethereumArtifacts/OperatorFactory'
 import OperatorFactoryArtifact from '../../src/ethereumArtifacts/OperatorFactoryAbi.json'
 import type { Sponsorship as SponsorshipContract } from '../../src/ethereumArtifacts/Sponsorship'
+import { sample } from 'lodash'
 
 const createClient = (privateKey?: string): StreamrClient => {
     return new StreamrClient({
@@ -79,21 +80,28 @@ describe('Operator', () => {
 
     }, 90 * 1000)
 
-    it('getRandomOperator', async () => {
-        const operator = await getOperator(deployedOperator.nodeWallets[0], deployedOperator)
-        const randomOperatorAddress = await operator.getRandomOperator()
+    it('getStakedOperators', async () => {
+        await delegate(deployedOperator.operatorWallet, await deployedOperator.operatorContract.getAddress(), 20000)
+        await stake(deployedOperator.operatorContract, await sponsorship1.getAddress(), 10000)
+        const dummyOperator = await getOperator(deployedOperator.nodeWallets[0], deployedOperator)
+        const randomOperatorAddress = sample(await dummyOperator.getStakedOperators())
         expect(randomOperatorAddress).toBeDefined()
-        expect(randomOperatorAddress).not.toEqual(await deployedOperator.operatorContract.getAddress()) // should not be me
 
         // check it's a valid operator, deployed by the OperatorFactory
         const operatorFactory = new Contract(
             CHAIN_CONFIG.dev2.contracts.OperatorFactory,
             OperatorFactoryArtifact,
-            getAdminWallet()
+            getTestAdminWallet()
         ) as unknown as OperatorFactoryContract
         const isDeployedByFactory = (await operatorFactory.deploymentTimestamp(randomOperatorAddress!)) > 0
         expect(isDeployedByFactory).toBeTrue()
-
+        // check that there is a stake
+        const operatorContract = new Contract(
+            randomOperatorAddress!,
+            OperatorArtifact,
+            deployedOperator.operatorWallet
+        ) as unknown as OperatorContract
+        expect(await operatorContract.totalStakedIntoSponsorshipsWei()).toBeGreaterThan(0n)
     }, 30 * 1000)
 
     it('getSponsorships, getOperatorsInSponsorship', async () => {
@@ -177,6 +185,18 @@ describe('Operator', () => {
         }, 10000, 1000)
     }, 60 * 1000)  // TODO why this is slower, takes ~35 seconds?
 
+    it('avoids sending a transaction when trying to close non-existing flags', async () => {
+        const wallet = deployedOperator.nodeWallets[0] as Wallet
+        const operator = await getOperator(wallet, deployedOperator)
+        const nonceBefore = await wallet.getNonce() // nonce = "how many transactions sent so far"
+        await expect(async () => operator.closeFlag(
+            toEthereumAddress(await sponsorship1.getAddress()),
+            toEthereumAddress(await deployedOperator.operatorContract.getAddress())
+        )).rejects.toThrow('action="estimateGas"')
+        const nonceAfter = await wallet.getNonce()
+        expect(nonceAfter).toEqual(nonceBefore)
+    })
+
     describe('fetchRedundancyFactor', () => {
 
         let operator: Operator
@@ -195,34 +215,34 @@ describe('Operator', () => {
                 toEthereumAddress(await deployedOperator.operatorContract.getAddress())
             )
         ))
-        
+
         describe('happy paths', () => {
             it('empty metadata', async () => {
                 await updateMetadata('')
                 const factor = await operator.fetchRedundancyFactor()
                 expect(factor).toEqual(1)
             })
-    
+
             it('explicit valid metadata', async () => {
                 await updateMetadata(JSON.stringify({ redundancyFactor: 6 }))
                 const factor = await operator.fetchRedundancyFactor()
                 expect(factor).toEqual(6)
             })
         })
-    
+
         describe('no result cases', () => {
             it('invalid json', async () => {
                 await updateMetadata('invalidjson')
                 const factor = await operator.fetchRedundancyFactor()
                 expect(factor).toBeUndefined()
             })
-    
+
             it('valid json but missing field', async () => {
                 await updateMetadata(JSON.stringify({ foo: 'bar' }))
                 const factor = await operator.fetchRedundancyFactor()
                 expect(factor).toBeUndefined()
             })
-    
+
             it('valid json but invalid value', async () => {
                 await updateMetadata(JSON.stringify({ redundancyFactor: 0 }))
                 const factor = await operator.fetchRedundancyFactor()

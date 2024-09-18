@@ -416,4 +416,57 @@ describe('ConnectionManager', () => {
         expect(connectionManager1.getLocalPeerDescriptor().websocket!.tls).toEqual(false)
         await connectionManager1.stop()
     })
+
+    it('Stopping ConnectionManager is cleaned up from peers', async () => {
+        const connectionManager1 = createConnectionManager({
+            transport: mockTransport,
+            websocketHost: '127.0.0.1',
+            websocketServerEnableTls: false,
+            websocketPortRange: { min: 10005, max: 10005 }
+        })
+
+        await connectionManager1.start()
+
+        const connectionManager2 = createConnectionManager({
+            transport: mockTransport,
+            websocketHost: '127.0.0.1',
+            websocketServerEnableTls: false,
+            websocketPortRange: { min: 10006, max: 10006 }
+        })
+
+        await connectionManager2.start()
+
+        const msg: Message = {
+            serviceId: SERVICE_ID,
+            messageId: '1',
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            },
+            targetDescriptor: connectionManager1.getLocalPeerDescriptor()
+        }
+
+        const connectedPromise1 = new Promise<void>((resolve, _reject) => {
+            connectionManager1.on('connected', () => {
+                resolve()
+            })
+        })
+
+        const connectedPromise2 = new Promise<void>((resolve, _reject) => {
+            connectionManager2.on('connected', () => {
+                resolve()
+            })
+        })
+        await Promise.all([connectedPromise1, connectedPromise2, connectionManager2.send(msg)])
+
+        expect(connectionManager1.getConnections().length).toEqual(1)
+        expect(connectionManager2.getConnections().length).toEqual(1)
+
+        await connectionManager1.stop()
+
+        expect(connectionManager2.getConnections().length).toEqual(0)
+
+        await connectionManager2.stop()
+    })
+
 })

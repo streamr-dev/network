@@ -1,10 +1,19 @@
-import { ReviewRequestEvent, SignerWithProvider, StreamrClient } from '@streamr/sdk'
-import { 
+import {
+    OperatorDiscoveryRequest,
+    OperatorDiscoveryResponse,
+    peerDescriptorTranslator,
+    ReviewRequestEvent,
+    SignerWithProvider,
+    StreamrClient
+} from '@streamr/sdk'
+import {
+    addManagedEventListener,
+    Cache,
     EthereumAddress,
     Logger,
-    addManagedEventListener,
     scheduleAtInterval,
     setAbortableInterval,
+    StreamPartIDUtils,
     toEthereumAddress
 } from '@streamr/utils'
 import { Schema } from 'ajv'
@@ -48,6 +57,11 @@ export interface OperatorPluginConfig {
     }
     inspectRandomNode: {
         intervalInMs: number
+        maxInspectionCount: number
+    }
+    reviewSuspectNode: {
+        maxInspectionCount: number
+        maxDelayBeforeFirstInspectionInMs: number
     }
     closeExpiredFlags: {
         intervalInMs: number
@@ -61,6 +75,8 @@ export interface OperatorServiceConfig {
     theGraphUrl: string
     getEthersOverrides: () => Promise<Overrides>
 }
+
+const STAKED_OPERATORS_CACHE_MAX_AGE = 2 * 24 * 60 * 60 * 1000
 
 const logger = new Logger(module)
 
@@ -106,6 +122,16 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         await fleetState.start()
         await maintainTopologyHelper.start()
 
+        const networkNode = await streamrClient.getNode()
+
+        const rpcServerFunction = async (request: OperatorDiscoveryRequest) => {
+            const streamPartId = StreamPartIDUtils.parse(request.streamPartId)
+            const operators = streamPartAssignments.getAssignedNodesForStreamPart(streamPartId)
+            return OperatorDiscoveryResponse.create({ operators: operators.map((operator) => peerDescriptorTranslator(operator)) })
+        }
+
+        await networkNode.registerExternalRpcMethod(OperatorDiscoveryRequest, OperatorDiscoveryResponse, 'discoverOperators', rpcServerFunction)
+
         this.abortController.signal.addEventListener('abort', async () => {
             await fleetState.destroy()
         })
@@ -113,6 +139,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         // start tasks in background so that operations which take significant amount of time (e.g. fleetState.waitUntilReady())
         // don't block the startup of Broker
         setImmediate(async () => {
+
             setAbortableInterval(() => {
                 (async () => {
                     await announceNodeToStream(
@@ -121,21 +148,10 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                     )
                 })()
             }, this.pluginConfig.heartbeatUpdateIntervalInMs, this.abortController.signal)
-            await scheduleAtInterval(
-                async () => checkOperatorValueBreach(
-                    operator,
-                    streamrClient,
-                    this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
-                    this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw
-                ).catch((err) => {
-                    logger.warn('Encountered error', { err })
-                }),
-                this.pluginConfig.checkOperatorValueBreachIntervalInMs,
-                true,
-                this.abortController.signal
-            )
+
             await fleetState.waitUntilReady()
             const isLeader = await createIsLeaderFn(streamrClient, fleetState, logger)
+
             try {
                 await scheduleAtInterval(async () => {
                     if (isLeader()) {
@@ -150,6 +166,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 logger.fatal('Encountered fatal error in announceNodeToContract', { err })
                 process.exit(1)
             }
+
             await scheduleAtInterval(
                 async () => {
                     if (isLeader()) {
@@ -178,6 +195,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                         streamPartAssignments,
                         streamrClient,
                         this.pluginConfig.heartbeatTimeoutInMs,
+                        this.pluginConfig.inspectRandomNode.maxInspectionCount,
                         async (targetOperatorContractAddress) => {
                             return streamrClient.getOperator(targetOperatorContractAddress).fetchRedundancyFactor()
                         },
@@ -200,6 +218,22 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                 }
             }, this.pluginConfig.closeExpiredFlags.intervalInMs, false, this.abortController.signal)
 
+            const stakedOperatorsCache = new Cache(() => operator.getStakedOperators(), STAKED_OPERATORS_CACHE_MAX_AGE)
+            await scheduleAtInterval(
+                async () => checkOperatorValueBreach(
+                    operator,
+                    streamrClient,
+                    () => stakedOperatorsCache.get(),
+                    this.pluginConfig.maintainOperatorValue.minSponsorshipEarningsInWithdraw,
+                    this.pluginConfig.maintainOperatorValue.maxSponsorshipsInWithdraw
+                ).catch((err) => {
+                    logger.warn('Encountered error', { err })
+                }),
+                this.pluginConfig.checkOperatorValueBreachIntervalInMs,
+                false,
+                this.abortController.signal
+            )
+
             addManagedEventListener(
                 operator,
                 'reviewRequested',
@@ -217,14 +251,14 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
                                     getRedundancyFactor: async (targetOperatorContractAddress) => {
                                         return streamrClient.getOperator(targetOperatorContractAddress).fetchRedundancyFactor()
                                     },
-                                    maxSleepTime: 5 * 60 * 1000,
+                                    maxDelayBeforeFirstInspectionInMs: this.pluginConfig.reviewSuspectNode.maxDelayBeforeFirstInspectionInMs,
                                     heartbeatTimeoutInMs: this.pluginConfig.heartbeatTimeoutInMs,
                                     votingPeriod: {
                                         startTime: event.votingPeriodStartTimestamp,
                                         endTime: event.votingPeriodEndTimestamp
                                     },
                                     inspectionIntervalInMs: 8 * 60 * 1000,
-                                    maxInspections: 10,
+                                    maxInspectionCount: this.pluginConfig.reviewSuspectNode.maxInspectionCount,
                                     abortSignal: this.abortController.signal
                                 })
                             }

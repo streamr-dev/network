@@ -90,7 +90,7 @@ const createWrappedContractMethod = (
 ) => {
     const originalMethod = contract[methodName]
     const methodFullName = `${contractName}.${methodName}`
-    return async (...args: any) => {
+    const fn = async (...args: any) => {
         const returnValue = await withErrorHandling(() => concurrencyLimit(() => {
             eventEmitter.emit('onMethodExecute', methodFullName)
             return originalMethod(...args)
@@ -106,6 +106,10 @@ const createWrappedContractMethod = (
         }
         return returnValue
     }
+    // TODO add also other methods in the future if needed:
+    // https://docs.ethers.org/v6/api/contract/#BaseContractMethod
+    fn.estimateGas = (...args: any) => originalMethod.estimateGas(...args)
+    return fn
 }
 
 /**
@@ -185,7 +189,7 @@ export const initContractEventGateway = <
                 try {
                     targetEvent = opts.transformation(...args)
                 } catch (err) {
-                    logger.debug('Skip emit event', {
+                    logger.error('Skip emit event', {
                         eventName: opts.targetName,
                         reason: err?.message
                     })
