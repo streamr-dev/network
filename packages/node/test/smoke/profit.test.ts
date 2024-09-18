@@ -109,7 +109,7 @@ describe('profit', () => {
         sponsorshipContract = await deploySponsorshipContract({
             earningsPerSecond: EARNINGS_PER_SECOND,
             streamId,
-            deployer: operatorWallet
+            deployer: operatorWallet // could be any wallet with gas
         })
         sponsorWallet = await generateWalletWithGasAndTokens()
         delegatorWallet = await generateWalletWithGasAndTokens()
