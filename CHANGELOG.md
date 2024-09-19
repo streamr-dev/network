@@ -18,7 +18,7 @@ Changes before Tatum release are not documented in this file.
 
 #### Removed
 
-- Remove support for legacy encryption keys
+- Remove support for legacy encryption keys (https://github.com/streamr-dev/network/pull/2757)
 
 #### Fixed
 
