@@ -1,3 +1,4 @@
+import { UserID } from '@streamr/dht'
 import {
     ContentType as NewContentType,
     EncryptionType as NewEncryptionType,
@@ -5,10 +6,9 @@ import {
     StreamMessage as NewStreamMessage
 } from '@streamr/trackerless-network'
 import {
-    EthereumAddress,
     StreamPartID,
     StreamPartIDUtils,
-     binaryToHex, binaryToUtf8, hexToBinary,
+    binaryToHex, binaryToUtf8, hexToBinary,
     utf8ToBinary
 } from '@streamr/utils'
 import { MessageID as OldMessageID } from '../../src/protocol/MessageID'
@@ -20,7 +20,6 @@ import {
     StreamMessageType as OldStreamMessageType
 } from '../../src/protocol/StreamMessage'
 import { StreamMessageTranslator } from '../../src/protocol/StreamMessageTranslator'
-import { UserID } from '../../src/userId'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('TEST#0')
 

@@ -22,7 +22,7 @@ import {
     getLocalGroupKeyStore
 } from '../test-utils/utils'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
-import { UserID } from '../../src/userId'
+import { UserID } from '@streamr/dht'
 
 describe('SubscriberKeyExchange', () => {
 

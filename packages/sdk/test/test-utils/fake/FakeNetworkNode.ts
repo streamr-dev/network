@@ -1,4 +1,4 @@
-import { DhtAddress, PeerDescriptor, getDhtAddressFromRaw } from '@streamr/dht'
+import { DhtAddress, PeerDescriptor, UserID, getDhtAddressFromRaw } from '@streamr/dht'
 import { 
     ExternalRpcClient,
     NetworkOptions,
@@ -13,7 +13,6 @@ import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFac
 import { StreamMessageTranslator } from '../../../src/protocol/StreamMessageTranslator'
 import { FakeNetwork } from './FakeNetwork'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
-import { UserID } from '../../../src/userId'
 
 type MessageListener = (msg: NewStreamMessage) => void
 

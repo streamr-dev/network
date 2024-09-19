@@ -6,7 +6,7 @@ import range from 'lodash/range'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { getLocalGroupKeyStore } from '../test-utils/utils'
-import { UserID } from '../../src/userId'
+import { UserID } from '@streamr/dht'
 
 describe('LocalGroupKeyStore', () => {
     
