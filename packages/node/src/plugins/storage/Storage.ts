@@ -1,5 +1,5 @@
 import { StreamMessage, convertStreamMessageToBytes } from '@streamr/sdk'
-import { Logger, MetricsContext, RateMetric } from '@streamr/utils'
+import { binaryToHex, Logger, MetricsContext, RateMetric } from '@streamr/utils'
 import { Client, auth, tracker, types } from 'cassandra-driver'
 import { EventEmitter } from 'events'
 import merge2 from 'merge2'
@@ -87,7 +87,7 @@ export class Storage extends EventEmitter {
                     partition: streamMessage.getStreamPartition(),
                     timestamp: streamMessage.getTimestamp(),
                     sequenceNo: streamMessage.getSequenceNumber(),
-                    publisherId: streamMessage.getPublisherId(),
+                    publisherId: binaryToHex(streamMessage.getPublisherId(), true),
                     msgChainId: streamMessage.getMsgChainId(),
                     payload: Buffer.from(convertStreamMessageToBytes(streamMessage))
                 }
