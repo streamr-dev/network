@@ -6,11 +6,12 @@ import range from 'lodash/range'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { getLocalGroupKeyStore } from '../test-utils/utils'
+import { UserID } from '../../src/userId'
 
 describe('LocalGroupKeyStore', () => {
     
     let clientId: EthereumAddress
-    let publisherId: EthereumAddress
+    let publisherId: UserID
     let store: LocalGroupKeyStore
     let store2: LocalGroupKeyStore
 

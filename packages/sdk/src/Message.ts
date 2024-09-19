@@ -1,5 +1,6 @@
-import { EthereumAddress, StreamID } from '@streamr/utils'
+import { StreamID } from '@streamr/utils'
 import { SignatureType, StreamMessage } from './protocol/StreamMessage'
+import { UserID } from './userId'
 
 /**
  * Represents a message in the Streamr Network.
@@ -45,7 +46,7 @@ export interface Message {
     /**
      * Publisher of message.
      */
-    publisherId: EthereumAddress
+    publisherId: UserID
 
     /**
      * Identifies the message chain the message was published to.

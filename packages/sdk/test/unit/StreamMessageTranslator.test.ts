@@ -20,13 +20,14 @@ import {
     StreamMessageType as OldStreamMessageType
 } from '../../src/protocol/StreamMessage'
 import { StreamMessageTranslator } from '../../src/protocol/StreamMessageTranslator'
+import { UserID } from '../../src/userId'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('TEST#0')
 
 export const createStreamMessage = (
     content: string,
     streamPartId: StreamPartID,
-    publisherId: EthereumAddress,
+    publisherId: UserID,
     timestamp?: number,
     sequenceNumber?: number
 ): NewStreamMessage => {

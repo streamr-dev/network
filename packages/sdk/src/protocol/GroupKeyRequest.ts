@@ -2,14 +2,14 @@ import { StreamMessage, StreamMessageType } from './StreamMessage'
 
 interface Options {
     requestId: string
-    recipient: Uint8Array
+    recipient: Uint8Array  // TODO UserID
     rsaPublicKey: string
     groupKeyIds: string[]
 }
 
 export class GroupKeyRequest {
     readonly requestId: string
-    readonly recipient: Uint8Array
+    readonly recipient: Uint8Array  // TODO UserID
     readonly rsaPublicKey: string
     readonly groupKeyIds: ReadonlyArray<string>
 

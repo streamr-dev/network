@@ -22,6 +22,7 @@ import {
     getLocalGroupKeyStore
 } from '../test-utils/utils'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { UserID } from '../../src/userId'
 
 describe('SubscriberKeyExchange', () => {
 
@@ -57,7 +58,7 @@ describe('SubscriberKeyExchange', () => {
         message: StreamMessage,
         expectedStreamPartId: StreamPartID,
         expectedRequestedKeyIds: string[],
-        expectedPublisherId: EthereumAddress,
+        expectedPublisherId: UserID,
         expectedSignatureType: SignatureType
     ): Promise<void> => {
         expect(message).toMatchObject({

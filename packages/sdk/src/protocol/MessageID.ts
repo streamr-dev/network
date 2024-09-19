@@ -8,7 +8,7 @@ export class MessageID {
     readonly streamPartition: number
     readonly timestamp: number
     readonly sequenceNumber: number
-    readonly publisherId: Uint8Array
+    readonly publisherId: Uint8Array  // TODO UserID
     readonly msgChainId: string
 
     constructor(
@@ -16,7 +16,7 @@ export class MessageID {
         streamPartition: number,
         timestamp: number,
         sequenceNumber: number,
-        publisherId: Uint8Array,
+        publisherId: Uint8Array,  // TODO UserID
         msgChainId: string
     ) {
         validateIsNotNegativeInteger('streamPartition', streamPartition)

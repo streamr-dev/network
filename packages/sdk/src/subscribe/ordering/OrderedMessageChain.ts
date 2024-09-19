@@ -1,7 +1,8 @@
-import { EthereumAddress, Gate, Heap, Logger, StreamPartID } from '@streamr/utils'
+import { Gate, Heap, Logger, StreamPartID } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { MessageRef } from '../../protocol/MessageRef'
 import { StreamMessage } from '../../protocol/StreamMessage'
+import { UserID } from '../../userId'
 
 /*
  * There are missing messages between these two messages. The "to" message is guaranteed to have prevMsgRef.
@@ -13,7 +14,7 @@ export interface Gap {
 
 export interface OrderedMessageChainContext {
     streamPartId: StreamPartID
-    publisherId: EthereumAddress
+    publisherId: UserID
     msgChainId: string
 }
 

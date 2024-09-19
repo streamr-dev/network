@@ -50,6 +50,7 @@ import { StreamDefinition } from './types'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
+import { UserID } from './userId'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -186,7 +187,7 @@ export class StreamrClient {
      * @remarks Keys will be added to the store automatically by the client as encountered. This method can be used to
      * manually add some known keys into the store.
      */
-    async addEncryptionKey(key: GroupKey, publisherId: EthereumAddress): Promise<void> {
+    async addEncryptionKey(key: GroupKey, publisherId: UserID): Promise<void> {
         await this.localGroupKeyStore.set(key.id, publisherId, key.data)
     }
 

@@ -10,7 +10,7 @@ export const AuthenticationInjectionToken = Symbol('Authentication')
 export type SignerWithProvider = AbstractSigner<Provider>
 
 export interface Authentication {
-    getUserId: () => Promise<Uint8Array>
+    getUserId: () => Promise<Uint8Array>  // TODO UserID
     getUserIdAsEthereumAddress: () => Promise<EthereumAddress>
     getTransactionSigner: (rpcProviderSource: RpcProviderSource) => Promise<SignerWithProvider>
     createMessageSignature: (payload: Uint8Array) => Promise<Uint8Array>

@@ -10,6 +10,7 @@ import { convertBytesToGroupKeyResponse } from '../../src/protocol/oldStreamMess
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createRelativeTestStreamId, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { UserID } from '../../src/userId'
 
 describe('PublisherKeyExchange', () => {
 
@@ -41,7 +42,7 @@ describe('PublisherKeyExchange', () => {
     const assertValidResponse = async (
         actualResponse: StreamMessage,
         expectedGroupKey: GroupKey,
-        expectedPublisherId: EthereumAddress,
+        expectedPublisherId: UserID,
         expectedSignatureType: SignatureType
     ): Promise<void> => {
         expect(actualResponse).toMatchObject({

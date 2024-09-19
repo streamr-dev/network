@@ -10,7 +10,7 @@ import {
     ProxyDirection,
     createNetworkNode as createNetworkNode_
 } from '@streamr/trackerless-network'
-import { EthereumAddress, Logger, MetricsContext, StreamPartID } from '@streamr/utils'
+import { Logger, MetricsContext, StreamPartID } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { pull } from 'lodash'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -27,6 +27,7 @@ import { IMessageType } from '@protobuf-ts/runtime'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { OperatorDiscoveryClient } from './generated/packages/sdk/protos/SdkRpc.client'
 import { OperatorDiscoveryRequest } from './generated/packages/sdk/protos/SdkRpc'
+import { UserID } from './userId'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 /** @deprecated This in an internal interface */
@@ -54,7 +55,7 @@ export interface NetworkNodeStub {
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: EthereumAddress,
+        userId: UserID,
         connectionCount?: number
     ) => Promise<void>
     isProxiedStreamPart(streamPartId: StreamPartID): boolean

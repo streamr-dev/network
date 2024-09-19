@@ -1,3 +1,5 @@
+// TODO move to userId.ts
+
 /**
  * Zero-pads the given data to the specified length.
  */
@@ -7,6 +9,6 @@ function zeroPad(data: Uint8Array, length: number): Uint8Array {
     return result
 }
 
-export function zeroPadUserId(userId: Uint8Array): Uint8Array {
+export function zeroPadUserId(userId: Uint8Array): Uint8Array {  // TODO UserID
     return zeroPad(userId, 32)
 }

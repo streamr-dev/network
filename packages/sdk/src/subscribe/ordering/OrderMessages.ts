@@ -7,6 +7,7 @@ import { CacheAsyncFn } from '../../utils/caches'
 import { Resends } from '../Resends'
 import { GapFiller } from './GapFiller'
 import { Gap, OrderedMessageChain, OrderedMessageChainContext } from './OrderedMessageChain'
+import { UserID } from '../../userId'
 
 const createMessageChain = (
     context: OrderedMessageChainContext,
@@ -66,7 +67,7 @@ export class OrderMessages {
         resends: Resends,
         config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
     ) {
-        this.chains = new Mapping(async (publisherId: EthereumAddress, msgChainId: string) => {
+        this.chains = new Mapping(async (publisherId: UserID, msgChainId: string) => {
             const chain = createMessageChain(
                 {
                     streamPartId, 

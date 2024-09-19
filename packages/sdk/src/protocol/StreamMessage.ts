@@ -135,7 +135,7 @@ export class StreamMessage implements StreamMessageOptions {
         return this.messageId.sequenceNumber
     }
 
-    getPublisherId(): Uint8Array {
+    getPublisherId(): Uint8Array {  // TODO UserID
         return this.messageId.publisherId
     }
 
