@@ -1,3 +1,4 @@
+import { UserID } from '@streamr/dht'
 import {
     ContentType,
     EncryptionType,
@@ -7,23 +8,24 @@ import {
     convertBytesToStreamMessage,
     convertStreamMessageToBytes
 } from '@streamr/sdk'
-import { EthereumAddress, hexToBinary, toEthereumAddress, toStreamID, utf8ToBinary } from '@streamr/utils'
+import { hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
 import { Client } from 'cassandra-driver'
 import { randomFillSync } from 'crypto'
 import { Readable } from 'stream'
 import toArray from 'stream-to-array'
 import { Storage, startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
+import { binaryToHex } from './../../../../../utils/src/binaryUtils'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 const MAX_BUCKET_MESSAGE_COUNT = 20
 
-const publisherZero = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
-const publisherOne = toEthereumAddress('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
-const publisherTwo = toEthereumAddress('0xcccccccccccccccccccccccccccccccccccccccc')
-const publisherThree = toEthereumAddress('0xdddddddddddddddddddddddddddddddddddddddd')
+const publisherZero = hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const publisherOne = hexToBinary('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
+const publisherTwo = hexToBinary('0xcccccccccccccccccccccccccccccccccccccccc')
+const publisherThree = hexToBinary('0xdddddddddddddddddddddddddddddddddddddddd')
 
 export function buildMsg({
     streamId,
@@ -38,7 +40,7 @@ export function buildMsg({
     streamPartition: number
     timestamp: number
     sequenceNumber: number
-    publisherId?: EthereumAddress
+    publisherId?: UserID
     msgChainId?: string
     content?: any
 }): StreamMessage {
@@ -64,7 +66,7 @@ function buildEncryptedMsg({
     streamPartition: number
     timestamp: number
     sequenceNumber: number
-    publisherId?: EthereumAddress
+    publisherId?: UserID
     msgChainId?: string
 }) {
     return new StreamMessage({
@@ -307,7 +309,7 @@ describe('Storage', () => {
                 }))
             ])
 
-            const streamingResults = storage.requestRange(streamId, 10, 1500, 3, 3000, 2, publisherOne, '1')
+            const streamingResults = storage.requestRange(streamId, 10, 1500, 3, 3000, 2, binaryToHex(publisherOne, true), '1')
             const results = await readStreamToEnd(streamingResults)
 
             expect(results).toEqual([msg1, msg2, msg3, msg4])

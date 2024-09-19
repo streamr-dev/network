@@ -1,17 +1,19 @@
+import { UserID } from '@streamr/dht'
 import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, convertBytesToStreamMessage } from '@streamr/sdk'
 import { waitForStreamToEnd } from '@streamr/test-utils'
-import { hexToBinary, toEthereumAddress, toStreamID, utf8ToBinary, waitForCondition, waitForEvent } from '@streamr/utils'
+import { hexToBinary, toStreamID, utf8ToBinary, waitForCondition, waitForEvent } from '@streamr/utils'
 import { Client } from 'cassandra-driver'
 import { PassThrough, Readable } from 'stream'
 import { Storage, startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
+import { binaryToHex } from './../../../../../utils/src/binaryUtils'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
 const MOCK_STREAM_ID = `mock-stream-id-${Date.now()}`
-const MOCK_PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const MOCK_PUBLISHER_ID = hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 const MOCK_MSG_CHAIN_ID = 'msgChainId'
 const createMockMessage = (i: number) => {
     return new StreamMessage({
@@ -172,15 +174,29 @@ describe('cassanda-queries', () => {
         [REQUEST_TYPE_FROM, MOCK_PUBLISHER_ID, undefined],
         [REQUEST_TYPE_RANGE, undefined, undefined],
         [REQUEST_TYPE_RANGE, MOCK_PUBLISHER_ID, MOCK_MSG_CHAIN_ID],
-    ])('%s, publisher: %p', (requestType: string, publisherId: string | undefined, msgChainId: string | undefined) => {
+    ])('%s, publisher: %p', (requestType: string, publisherId: UserID | undefined, msgChainId: string | undefined) => {
 
         const getResultStream = (streamId: string): Readable => {
             const minMockTimestamp = MOCK_MESSAGES[0].getTimestamp()
             const maxMockTimestamp = MOCK_MESSAGES[MOCK_MESSAGES.length - 1].getTimestamp()
             if (requestType === REQUEST_TYPE_FROM) {
-                return storage.requestFrom(streamId, 0, minMockTimestamp, 0, publisherId)
+                return storage.requestFrom(
+                    streamId,
+                    0,
+                    minMockTimestamp,
+                    0,
+                    publisherId !== undefined ? binaryToHex(publisherId, true) : undefined
+                )
             } else if (requestType === REQUEST_TYPE_RANGE) {
-                return storage.requestRange(streamId, 0, minMockTimestamp, 0, maxMockTimestamp, 0, publisherId, msgChainId)
+                return storage.requestRange(
+                    streamId,
+                    0,
+                    minMockTimestamp,
+                    0,
+                    maxMockTimestamp,
+                    0,
+                    publisherId !== undefined ? binaryToHex(publisherId, true) : undefined, msgChainId
+                )
             } else {
                 throw new Error('Assertion failed')
             }

@@ -1,6 +1,6 @@
 import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, convertStreamMessageToBytes } from '@streamr/sdk'
 import { toReadableStream } from '@streamr/test-utils'
-import { MetricsContext, hexToBinary, toEthereumAddress, toLengthPrefixedFrame, toStreamID, utf8ToBinary } from '@streamr/utils'
+import { MetricsContext, hexToBinary, toLengthPrefixedFrame, toStreamID, utf8ToBinary } from '@streamr/utils'
 import express from 'express'
 import { Readable } from 'stream'
 import request from 'supertest'
@@ -33,7 +33,7 @@ describe('dataQueryEndpoint', () => {
                 0,
                 new Date(2017, 3, 1, 12, 0, 0).getTime(),
                 0,
-                toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+                hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
                 'msgChainId'
             ),
             content: utf8ToBinary(JSON.stringify(content)),

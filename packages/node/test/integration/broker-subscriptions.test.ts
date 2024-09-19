@@ -1,3 +1,4 @@
+import { hexToBinary } from './../../../utils/src/binaryUtils'
 import { Wallet } from 'ethers'
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import { StreamrClient, Stream, StreamPartID, StreamPermission } from '@streamr/sdk'
@@ -18,7 +19,7 @@ const createMqttClient = (mqttPort: number) => {
 const grantPermissions = async (streams: Stream[], brokerUsers: Wallet[]) => {
     for await (const s of streams) {
         const assignments = brokerUsers.map((user) => {
-            return { permissions: [StreamPermission.SUBSCRIBE], user: user.address }
+            return { permissions: [StreamPermission.SUBSCRIBE], user: hexToBinary(user.address) }
         })
         await s.grantPermissions(...assignments)
     }
