@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
-import { fastPrivateKey, randomEthereumAddress } from '@streamr/test-utils'
-import { toEthereumAddress, toStreamID, toStreamPartID } from '@streamr/utils'
+import { fastPrivateKey } from '@streamr/test-utils'
+import { hexToBinary, toStreamID, toStreamPartID } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
@@ -12,6 +12,7 @@ import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../../src/events'
+import { randomUserId } from '../test-utils/utils'
 
 describe('GroupKeyManager', () => {
     let groupKeyStore: MockProxy<LocalGroupKeyStore>
@@ -23,7 +24,7 @@ describe('GroupKeyManager', () => {
     const groupKeyId = 'groupKeyId-123'
     const streamId = toStreamID('test.eth/foobar')
     const wallet = new Wallet(fastPrivateKey())
-    const publisherId = toEthereumAddress(wallet.address)
+    const publisherId = hexToBinary(wallet.address)
     const groupKey = GroupKey.generate(groupKeyId)
 
     function createGroupKeyManager(litProtocolEnabled: boolean): GroupKeyManager {
@@ -177,7 +178,7 @@ describe('GroupKeyManager', () => {
 
         it('not own key', async () => {
             await expect(() => {
-                return groupKeyManager.fetchLatestEncryptionKey(randomEthereumAddress(), streamId)
+                return groupKeyManager.fetchLatestEncryptionKey(randomUserId(), streamId)
             }).rejects.toThrow('not supported')
         })
     })

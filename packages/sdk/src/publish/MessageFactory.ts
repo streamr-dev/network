@@ -3,7 +3,8 @@ import {
     keyToArrayIndex,
     toEthereumAddress,
     utf8ToBinary,
-    hexToBinary
+    hexToBinary,
+    binaryToHex
 } from '@streamr/utils'
 import random from 'lodash/random'
 import { Authentication } from '../Authentication'
@@ -73,7 +74,10 @@ export class MessageFactory {
         const isPublisher = await this.streamRegistry.isStreamPublisher(this.streamId, publisherId)
         if (!isPublisher) {
             this.streamRegistry.clearStreamCache(this.streamId)
-            throw new StreamrClientError(`You don't have permission to publish to this stream. Using address: ${publisherId}`, 'MISSING_PERMISSION')
+            throw new StreamrClientError(
+                `You don't have permission to publish to this stream. Using address: ${binaryToHex(publisherId, true)}`, 
+                'MISSING_PERMISSION'
+            )
         }
 
         const partitionCount = (await this.streamRegistry.getStream(this.streamId)).getMetadata().partitions

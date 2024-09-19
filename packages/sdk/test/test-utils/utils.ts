@@ -7,12 +7,13 @@ import {
     MAX_PARTITION_COUNT,
     StreamPartID,
     StreamPartIDUtils,
+    hexToBinary,
     merge,
     utf8ToBinary,
     wait,
     waitForCondition
 } from '@streamr/utils'
-import crypto from 'crypto'
+import crypto, { randomBytes } from 'crypto'
 import { Wallet } from 'ethers'
 import { once } from 'events'
 import express, { Request, Response } from 'express'
@@ -45,6 +46,7 @@ import { counterId } from '../../src/utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
 import { addAfterFn } from './jest-utils'
+import { random } from 'lodash'
 
 const logger = new Logger(module)
 
@@ -155,7 +157,7 @@ export const MOCK_CONTENT = utf8ToBinary(JSON.stringify({}))
 
 export const getLocalGroupKeyStore = (userAddress: EthereumAddress): LocalGroupKeyStore => {
     const authentication = {
-        getAddress: () => userAddress
+        getUserId: () => hexToBinary(userAddress)
     } as any
     const loggerFactory = mockLoggerFactory()
     return new LocalGroupKeyStore(
@@ -319,4 +321,9 @@ export const readUtf8ExampleIndirectly = async (): Promise<string> => {
             })
         })
     })
+}
+
+export const randomUserId = (): Uint8Array => {
+    const length = random(10, 40)
+    return randomBytes(length)
 }

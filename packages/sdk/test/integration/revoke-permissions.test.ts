@@ -102,7 +102,7 @@ describe('revoke permissions', () => {
             distributionMethod: 'rotate'
         })
         await stream.grantPermissions({
-            user: await subscriber.getAddress(),
+            user: await subscriber.getUserId(),
             permissions: [StreamPermission.SUBSCRIBE]
         })
         const sub = await subscriber.subscribe({
@@ -127,7 +127,7 @@ describe('revoke permissions', () => {
                 if (count === revokeAfter) {
                     await gotMessages
                     await stream.revokePermissions({
-                        user: await subscriber.getAddress(),
+                        user: await subscriber.getUserId(),
                         permissions: [StreamPermission.SUBSCRIBE]
                     })
                     await publisher.updateEncryptionKey({

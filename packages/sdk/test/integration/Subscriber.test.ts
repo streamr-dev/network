@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastWallet } from '@streamr/test-utils'
-import { toEthereumAddress } from '@streamr/utils'
+import { hexToBinary } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -61,7 +61,7 @@ describe('Subscriber', () => {
         it('with encryption', async () => {
             await stream.grantPermissions({
                 permissions: [StreamPermission.PUBLISH],
-                user: publisherWallet.address
+                user: hexToBinary(publisherWallet.address)
             })
     
             const groupKey = GroupKey.generate()
@@ -70,7 +70,7 @@ describe('Subscriber', () => {
                     privateKey: publisherWallet.privateKey
                 }
             })
-            await publisher.addEncryptionKey(groupKey, toEthereumAddress(publisherWallet.address))
+            await publisher.addEncryptionKey(groupKey, hexToBinary(publisherWallet.address))
     
             const sub = await subscriber.subscribe(stream.id)
     
@@ -113,7 +113,7 @@ describe('Subscriber', () => {
         it('with encryption', async () => {
             await stream.grantPermissions({
                 permissions: [StreamPermission.PUBLISH],
-                user: publisherWallet.address
+                user: hexToBinary(publisherWallet.address)
             })
     
             const groupKey = GroupKey.generate()
@@ -122,7 +122,7 @@ describe('Subscriber', () => {
                     privateKey: publisherWallet.privateKey
                 }
             })
-            await publisher.addEncryptionKey(groupKey, toEthereumAddress(publisherWallet.address))
+            await publisher.addEncryptionKey(groupKey, hexToBinary(publisherWallet.address))
     
             const sub = await subscriber.subscribe({ streamId: stream.id, raw: true })
     

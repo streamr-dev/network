@@ -1,7 +1,8 @@
 import 'reflect-metadata'
 
+import { UserID } from '@streamr/dht'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, StreamPartID, StreamPartIDUtils, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, hexToBinary, StreamPartID, StreamPartIDUtils, toEthereumAddress } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -10,7 +11,6 @@ import { convertBytesToGroupKeyResponse } from '../../src/protocol/oldStreamMess
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createRelativeTestStreamId, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
-import { UserID } from '@streamr/dht'
 
 describe('PublisherKeyExchange', () => {
 
@@ -24,7 +24,7 @@ describe('PublisherKeyExchange', () => {
         const stream = await publisherClient.createStream(createRelativeTestStreamId(module))
         await publisherClient.grantPermissions(stream.id, {
             permissions: [StreamPermission.SUBSCRIBE],
-            user: subscriberWallet.address
+            user: hexToBinary(subscriberWallet.address)
         })
         return stream
     }
@@ -49,7 +49,7 @@ describe('PublisherKeyExchange', () => {
             messageId: {
                 streamId: StreamPartIDUtils.getStreamID(streamPartId),
                 streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
-                publisherId: expectedPublisherId,
+                publisherId: expect.toEqualBinary(expectedPublisherId),
             },
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,
             contentType: ContentType.BINARY,
@@ -101,7 +101,7 @@ describe('PublisherKeyExchange', () => {
             const response = await environment.getNetwork().waitForSentMessage({
                 messageType: StreamMessageType.GROUP_KEY_RESPONSE
             })
-            await assertValidResponse(response, key, toEthereumAddress(publisherWallet.address), SignatureType.SECP256K1)
+            await assertValidResponse(response, key, hexToBinary(publisherWallet.address), SignatureType.SECP256K1)
         })
     })
 
@@ -109,7 +109,7 @@ describe('PublisherKeyExchange', () => {
         const erc1271ContractAddress = randomEthereumAddress()
         await publisherClient.grantPermissions(StreamPartIDUtils.getStreamID(streamPartId), {
             permissions: [StreamPermission.PUBLISH],
-            user: erc1271ContractAddress
+            user: hexToBinary(erc1271ContractAddress)
         })
         environment.getChain().addErc1271AllowedAddress(erc1271ContractAddress, toEthereumAddress(publisherWallet.address))
 
@@ -125,6 +125,6 @@ describe('PublisherKeyExchange', () => {
         const response = await environment.getNetwork().waitForSentMessage({
             messageType: StreamMessageType.GROUP_KEY_RESPONSE
         })
-        await assertValidResponse(response, key, erc1271ContractAddress, SignatureType.ERC_1271)
+        await assertValidResponse(response, key, hexToBinary(erc1271ContractAddress), SignatureType.ERC_1271)
     })
 })

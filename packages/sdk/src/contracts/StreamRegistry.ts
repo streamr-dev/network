@@ -8,7 +8,9 @@ import {
     collect,
     isENSName,
     toEthereumAddress,
-    toStreamID, binaryToHex
+    toStreamID,
+    binaryToHex,
+    hexToBinary
 } from '@streamr/utils'
 import { ContractTransactionResponse } from 'ethers'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -358,9 +360,11 @@ export class StreamRegistry {
         if (isPublicPermissionQuery(query)) {
             return this.streamRegistryContractReadonly.hasPublicPermission(streamId, permissionType)
         } else if (query.allowPublic) {
-            return this.streamRegistryContractReadonly.hasPermission(streamId, toEthereumAddress(query.user), permissionType)
+            // TODO use hasPermissionForUserId if that is available, or query all permissions and check the permissionType for the result
+            return this.streamRegistryContractReadonly.hasPermission(streamId, toEthereumAddress(binaryToHex(query.user, true)), permissionType)
         } else {
-            return this.streamRegistryContractReadonly.hasDirectPermission(streamId, toEthereumAddress(query.user), permissionType)
+            // TODO use hasPermissionForUserId if that is available, or query all permissions and check the permissionType for the result
+            return this.streamRegistryContractReadonly.hasDirectPermission(streamId, toEthereumAddress(binaryToHex(query.user, true)), permissionType)
         }
     }
 
@@ -410,7 +414,7 @@ export class StreamRegistry {
                     })
                 } else {
                     assignments.push({
-                        user: permissionResult.userAddress,
+                        user: hexToBinary(permissionResult.userAddress),
                         permissions
                     })
                 }
@@ -421,26 +425,28 @@ export class StreamRegistry {
 
     async grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
         const overrides = await getEthersOverrides(this.rpcProviderSource, this.config)
-        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: EthereumAddress | undefined, solidityType: bigint) => {
+        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: UserID | undefined, solidityType: bigint) => {
             return (user === undefined)
                 ? this.streamRegistryContract!.grantPublicPermission(streamId, solidityType, overrides)
-                : this.streamRegistryContract!.grantPermission(streamId, user, solidityType, overrides)
+                // TODO use grantPermissionForUserId
+                : this.streamRegistryContract!.grantPermission(streamId, toEthereumAddress(binaryToHex(user, true)), solidityType, overrides)
         }, ...assignments)
     }
 
     /* eslint-disable max-len */
     async revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
         const overrides = await getEthersOverrides(this.rpcProviderSource, this.config)
-        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: EthereumAddress | undefined, solidityType: bigint) => {
+        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: UserID | undefined, solidityType: bigint) => {
             return (user === undefined)
                 ? this.streamRegistryContract!.revokePublicPermission(streamId, solidityType, overrides)
-                : this.streamRegistryContract!.revokePermission(streamId, user, solidityType, overrides)
+                    // TODO use revokePermissionForUserId
+                : this.streamRegistryContract!.revokePermission(streamId, toEthereumAddress(binaryToHex(user, true)), solidityType, overrides)
         }, ...assignments)
     }
 
     private async updatePermissions(
         streamIdOrPath: string,
-        createTransaction: (streamId: StreamID, user: EthereumAddress | undefined, solidityType: bigint) => Promise<ContractTransactionResponse>,
+        createTransaction: (streamId: StreamID, user: UserID | undefined, solidityType: bigint) => Promise<ContractTransactionResponse>,
         ...assignments: PermissionAssignment[]
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
@@ -449,7 +455,7 @@ export class StreamRegistry {
         for (const assignment of assignments) {
             for (const permission of assignment.permissions) {
                 const solidityType = streamPermissionToSolidityType(permission)
-                const user = isPublicPermissionAssignment(assignment) ? undefined : toEthereumAddress(assignment.user)
+                const user = isPublicPermissionAssignment(assignment) ? undefined : assignment.user
                 const txToSubmit = createTransaction(streamId, user, solidityType)
                 // eslint-disable-next-line no-await-in-loop
                 await waitForTx(txToSubmit)
@@ -470,7 +476,7 @@ export class StreamRegistry {
             this.clearStreamCache(streamId)
             streamIds.push(streamId)
             targets.push(item.assignments.map((assignment) => {
-                return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_ADDRESS : assignment.user
+                return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_ADDRESS : binaryToHex(assignment.user, true)
             }))
             chainPermissions.push(item.assignments.map((assignment) => {
                 return convertStreamPermissionsToChainPermission(assignment.permissions)
@@ -478,6 +484,7 @@ export class StreamRegistry {
         }
         await this.connectToContract()
         const ethersOverrides = await getEthersOverrides(this.rpcProviderSource, this.config)
+        // TODO maybe this doesn't support arbitrary length userIds yet?
         const txToSubmit = this.streamRegistryContract!.setPermissionsMultipleStreams(
             streamIds,
             targets,

@@ -1,6 +1,6 @@
 import { Methods } from '@streamr/test-utils'
 import { ERC1271ContractFacade } from '../../../src/contracts/ERC1271ContractFacade'
-import { EthereumAddress, recoverAddress, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, recoverAddress, toEthereumAddress, binaryToHex } from '@streamr/utils'
 // TODO: Why is eslint import rule complaining about this import?
 // eslint-disable-next-line import/no-unresolved
 import { IERC1271 } from '../../../src/ethereumArtifacts/IERC1271'
@@ -17,7 +17,7 @@ export class FakeERC1271ContractFacade implements Methods<ERC1271ContractFacade>
 
     // eslint-disable-next-line class-methods-use-this
     async isValidSignature(contractAddress: EthereumAddress, payload: Uint8Array, signature: Uint8Array): Promise<boolean> {
-        const clientWalletAddress = toEthereumAddress(recoverAddress(signature, payload))
+        const clientWalletAddress = toEthereumAddress(binaryToHex(recoverAddress(signature, payload), true))
         return this.chain.hasErc1271AllowedAddress(contractAddress, clientWalletAddress)
     }
 

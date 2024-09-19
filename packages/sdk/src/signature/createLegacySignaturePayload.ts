@@ -25,5 +25,5 @@ export const createLegacySignaturePayload = (opts: {
         ? binaryToUtf8(opts.content)
         : binaryToHex(opts.content)
     return Buffer.from(`${opts.messageId.streamId}${opts.messageId.streamPartition}${opts.messageId.timestamp}${opts.messageId.sequenceNumber}`
-        + `${opts.messageId.publisherId}${opts.messageId.msgChainId}${prev}${contentAsString}${newGroupKey}`)
+        + `${binaryToHex(opts.messageId.publisherId, true)}${opts.messageId.msgChainId}${prev}${contentAsString}${newGroupKey}`)
 }

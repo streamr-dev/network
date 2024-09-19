@@ -24,7 +24,7 @@ describe('pre-agreed encryption key', () => {
         const subscriber = environment.createClient()
         const stream = await createTestStream(publisher, module)
         await stream.grantPermissions({
-            user: await subscriber.getAddress(),
+            user: await subscriber.getUserId(),
             permissions: [StreamPermission.SUBSCRIBE]
         })
 
@@ -34,7 +34,7 @@ describe('pre-agreed encryption key', () => {
             streamId: stream.id,
             distributionMethod: 'rekey'
         })
-        await subscriber.addEncryptionKey(key, await publisher.getAddress())
+        await subscriber.addEncryptionKey(key, await publisher.getUserId())
         const sub = await subscriber.subscribe(stream.id)
         await publisher.publish(stream.id, { foo: 'bar' })
         const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())

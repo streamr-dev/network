@@ -12,15 +12,15 @@ import {
     uid
 } from '../test-utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
-import { waitForCondition } from '@streamr/utils'
+import { waitForCondition, binaryToHex, hexToBinary, EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 // this number should be at least 10, otherwise late subscribers might not join
 // in time to see any realtime messages
 const MAX_MESSAGES = 10
 
 const waitMessagesReceived = async (
-    received: Record<string, MessageMetadata[]>,
-    published: Record<string, MessageMetadata[]>
+    received: Record<EthereumAddress, MessageMetadata[]>,
+    published: Record<EthereumAddress, MessageMetadata[]>
 ) => {
     await waitForCondition(() => {
         const receivedCount = Object.values(received).flat().length
@@ -64,7 +64,7 @@ describe('PubSub with multiple clients', () => {
         const pubUser = await pubClient.getAddress()
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE],
-            user: pubUser
+            user: hexToBinary(pubUser)
         })
         return pubClient
     }
@@ -73,14 +73,14 @@ describe('PubSub with multiple clients', () => {
         const client = environment.createClient({
             id: 'subscriber-other'
         })
-        const user = await client.getAddress()
+        const user = await client.getUserId()
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user })
         return client
     }
 
-    function checkMessages(published: Record<string, Message[]>, received: Record<string, MessageMetadata[]>) {
+    function checkMessages(published: Record<EthereumAddress, Message[]>, received: Record<EthereumAddress, MessageMetadata[]>) {
         for (const [key, msgs] of Object.entries(published)) {
-            expect(received[key].map((m) => m.signature)).toEqual(msgs.map((m) => m.signature))
+            expect(received[key as EthereumAddress].map((m) => m.signature)).toEqual(msgs.map((m) => m.signature))
         }
     }
 
@@ -122,31 +122,33 @@ describe('PubSub with multiple clients', () => {
 
             otherClient = await createSubscriber()
 
-            const receivedMessagesOther: Record<string, MessageMetadata[]> = {}
-            const receivedMessagesMain: Record<string, MessageMetadata[]> = {}
+            const receivedMessagesOther: Record<EthereumAddress, MessageMetadata[]> = {}
+            const receivedMessagesMain: Record<EthereumAddress, MessageMetadata[]> = {}
             // subscribe to stream from other client instance
             await otherClient.subscribe({
                 stream: stream.id,
             }, (_content, metadata) => {
-                const msgs = receivedMessagesOther[metadata.publisherId] || []
+                const key = toEthereumAddress(binaryToHex(metadata.publisherId, true))
+                const msgs = receivedMessagesOther[key] || []
                 msgs.push(metadata)
-                receivedMessagesOther[metadata.publisherId] = msgs
+                receivedMessagesOther[key] = msgs
             })
 
             // subscribe to stream from main client instance
             await mainClient.subscribe({
                 stream: stream.id,
             }, (_content, metadata) => {
-                const msgs = receivedMessagesMain[metadata.publisherId] || []
+                const key = toEthereumAddress(binaryToHex(metadata.publisherId, true))
+                const msgs = receivedMessagesMain[key] || []
                 msgs.push(metadata)
-                receivedMessagesMain[metadata.publisherId] = msgs
+                receivedMessagesMain[key] = msgs
             })
 
             const publishers: StreamrClient[] = []
             for (let i = 0; i < 3; i++) {
                 publishers.push(await createPublisher(i))
             }
-            const published: Record<string, Message[]> = {}
+            const published: Record<EthereumAddress, Message[]> = {}
             await Promise.all(publishers.map(async (pubClient) => {
                 const publisherId = await pubClient.getAddress()
                 addAfter(() => {
@@ -176,14 +178,14 @@ describe('PubSub with multiple clients', () => {
             // the otherClient subscribes after the 3rd message hits storage
             otherClient = await createSubscriber()
 
-            const receivedMessagesOther: Record<string, MessageMetadata[]> = {}
-            const receivedMessagesMain: Record<string, MessageMetadata[]> = {}
+            const receivedMessagesOther: Record<EthereumAddress, MessageMetadata[]> = {}
+            const receivedMessagesMain: Record<EthereumAddress, MessageMetadata[]> = {}
 
             // subscribe to stream from main client instance
             const mainSub = await mainClient.subscribe({
                 stream: stream.id,
             }, (_content, metadata) => {
-                const key = metadata.publisherId
+                const key = toEthereumAddress(binaryToHex(metadata.publisherId, true))
                 const msgs = receivedMessagesMain[key] || []
                 msgs.push(metadata)
                 receivedMessagesMain[key] = msgs
@@ -200,7 +202,7 @@ describe('PubSub with multiple clients', () => {
 
             /* eslint-enable no-await-in-loop */
             let counter = 0
-            const published: Record<string, Message[]> = {}
+            const published: Record<EthereumAddress, Message[]> = {}
             await Promise.all(publishers.map(async (pubClient) => {
                 const publisherId = await pubClient.getAddress()
                 addAfter(() => {
@@ -226,7 +228,7 @@ describe('PubSub with multiple clients', () => {
                             from: lastMessage.streamMessage.getMessageRef()
                         }
                     }, (_content, metadata) => {
-                        const key = metadata.publisherId
+                        const key = toEthereumAddress(binaryToHex(metadata.publisherId, true))
                         const msgs = receivedMessagesOther[key] || []
                         msgs.push(metadata)
                         receivedMessagesOther[key] = msgs
@@ -269,13 +271,13 @@ describe('PubSub with multiple clients', () => {
         otherClient = await createSubscriber()
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
 
-        const receivedMessagesOther: Record<string, MessageMetadata[]> = {}
-        const receivedMessagesMain: Record<string, MessageMetadata[]> = {}
+        const receivedMessagesOther: Record<EthereumAddress, MessageMetadata[]> = {}
+        const receivedMessagesMain: Record<EthereumAddress, MessageMetadata[]> = {}
         // subscribe to stream from other client instance
         await otherClient.subscribe({
             stream: stream.id,
         }, (_content, metadata) => {
-            const key = metadata.publisherId
+            const key = toEthereumAddress(binaryToHex(metadata.publisherId, true))
             const msgs = receivedMessagesOther[key] || []
             msgs.push(metadata)
             receivedMessagesOther[key] = msgs
@@ -285,7 +287,7 @@ describe('PubSub with multiple clients', () => {
         await mainClient.subscribe({
             stream: stream.id,
         }, (_content, metadata) => {
-            const key = metadata.publisherId
+            const key = toEthereumAddress(binaryToHex(metadata.publisherId, true))
             const msgs = receivedMessagesMain[key] || []
             msgs.push(metadata)
             receivedMessagesMain[key] = msgs
@@ -296,7 +298,7 @@ describe('PubSub with multiple clients', () => {
             publishers.push(await createPublisher(i))
         }
 
-        const published: Record<string, Message[]> = {}
+        const published: Record<EthereumAddress, Message[]> = {}
         await Promise.all(publishers.map(async (pubClient) => {
             const publisherId = await pubClient.getAddress()
             const publishTestMessages = getPublishTestStreamMessages(pubClient, stream, {
@@ -323,21 +325,21 @@ describe('PubSub with multiple clients', () => {
     // late subscriber test is super unreliable. Doesn't seem to be a good way to make the
     // late subscriber reliably get all of both realtime and resent messages
     test.skip('works with multiple publishers on one stream with late subscriber (resend)', async () => {
-        const published: Record<string, Message[]> = {}
+        const published: Record<EthereumAddress, Message[]> = {}
 
         otherClient = environment.createClient()
-        const otherUser = await otherClient.getAddress()
+        const otherUser = await otherClient.getUserId()
 
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: otherUser })
 
-        const receivedMessagesOther: Record<string, MessageMetadata[]> = {}
-        const receivedMessagesMain: Record<string, MessageMetadata[]> = {}
+        const receivedMessagesOther: Record<EthereumAddress, MessageMetadata[]> = {}
+        const receivedMessagesMain: Record<EthereumAddress, MessageMetadata[]> = {}
 
         // subscribe to stream from main client instance
         const mainSub = await mainClient.subscribe({
             stream: stream.id,
         }, (_content, metadata) => {
-            const key = metadata.publisherId
+            const key = toEthereumAddress(binaryToHex(metadata.publisherId, true))
             const msgs = receivedMessagesMain[key] || []
             msgs.push(metadata)
             receivedMessagesMain[key] = msgs
@@ -369,7 +371,7 @@ describe('PubSub with multiple clients', () => {
                         from: lastMessage.streamMessage.getMessageRef()
                     }
                 }, (_content, metadata) => {
-                    const key = metadata.publisherId
+                    const key = toEthereumAddress(binaryToHex(metadata.publisherId, true))
                     const msgs = receivedMessagesOther[key] || []
                     msgs.push(metadata)
                     receivedMessagesOther[key] = msgs

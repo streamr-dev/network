@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { Wallet } from 'ethers'
 import { fastWallet } from '@streamr/test-utils'
-import { collect } from '@streamr/utils'
+import { collect, hexToBinary } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
@@ -33,7 +33,7 @@ describe('publisher key reuse', () => {
         stream = await publisher.createStream('/path')
         await stream.grantPermissions({
             permissions: [StreamPermission.SUBSCRIBE],
-            user: await subscriber.getAddress()
+            user: await subscriber.getUserId()
         })
     })
 
@@ -60,7 +60,7 @@ describe('publisher key reuse', () => {
         const otherWallet = fastWallet()
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
-            user: otherWallet.address
+            user: hexToBinary(otherWallet.address)
         })
 
         const sub = await subscriber.subscribe(stream.id)

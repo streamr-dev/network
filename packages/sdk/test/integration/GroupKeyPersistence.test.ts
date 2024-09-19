@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastPrivateKey } from '@streamr/test-utils'
-import { collect, toStreamPartID } from '@streamr/utils'
+import { collect, hexToBinary, toStreamPartID } from '@streamr/utils'
 import { Message } from '../../src/Message'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -68,7 +68,7 @@ describe('Group Key Persistence', () => {
             })
             const otherUser = await subscriber.getAddress()
             await stream.grantPermissions({
-                user: otherUser,
+                user: hexToBinary(otherUser),
                 permissions: [StreamPermission.SUBSCRIBE]
             })
             const groupKey = GroupKey.generate()

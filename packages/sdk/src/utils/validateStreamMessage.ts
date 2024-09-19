@@ -1,9 +1,10 @@
+import { UserID } from '@streamr/dht'
+import { binaryToHex } from '@streamr/utils'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
 import { StreamMessageError } from '../protocol/StreamMessageError'
 import { convertBytesToGroupKeyRequest, convertBytesToGroupKeyResponse } from '../protocol/oldStreamMessageBinaryUtils'
 import { SignatureValidator } from '../signature/SignatureValidator'
-import { UserID } from '@streamr/dht'
 
 export const validateStreamMessage = async (
     msg: StreamMessage,
@@ -72,7 +73,7 @@ const validateMessage = async (
     const sender = streamMessage.getPublisherId()
     const isPublisher = await streamRegistry.isStreamPublisher(streamId, sender)
     if (!isPublisher) {
-        throw new StreamMessageError(`${sender} is not a publisher on stream ${streamId}`, streamMessage)
+        throw new StreamMessageError(`${binaryToHex(sender, true)} is not a publisher on stream ${streamId}`, streamMessage)
     }
 }
 
@@ -85,10 +86,10 @@ const validateGroupKeyMessage = async (
     const streamId = streamMessage.getStreamId()
     const isPublisher = await streamRegistry.isStreamPublisher(streamId, expectedPublisher)
     if (!isPublisher) {
-        throw new StreamMessageError(`${expectedPublisher} is not a publisher on stream ${streamId}`, streamMessage)
+        throw new StreamMessageError(`${binaryToHex(expectedPublisher, true)} is not a publisher on stream ${streamId}`, streamMessage)
     }
     const isSubscriber = await streamRegistry.isStreamSubscriber(streamId, expectedSubscriber)
     if (!isSubscriber) {
-        throw new StreamMessageError(`${expectedSubscriber} is not a subscriber on stream ${streamId}`, streamMessage)
+        throw new StreamMessageError(`${binaryToHex(expectedSubscriber, true)} is not a subscriber on stream ${streamId}`, streamMessage)
     }
 }

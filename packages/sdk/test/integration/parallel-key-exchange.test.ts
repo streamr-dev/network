@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastWallet } from '@streamr/test-utils'
-import { collect, toEthereumAddress, wait } from '@streamr/utils'
+import { collect, hexToBinary, wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
 import range from 'lodash/range'
@@ -43,7 +43,7 @@ describe('parallel key exchange', () => {
         stream = await subscriber.createStream('/path')
         await Promise.all(PUBLISHERS.map(async (publisher) => {
             await stream.grantPermissions({
-                user: publisher.wallet.address,
+                user: hexToBinary(publisher.wallet.address),
                 permissions: [StreamPermission.PUBLISH]
             })
             publisher.client = environment.createClient({
@@ -51,7 +51,7 @@ describe('parallel key exchange', () => {
                     privateKey: publisher.wallet.privateKey
                 }
             })
-            await publisher.client.addEncryptionKey(publisher.groupKey, toEthereumAddress(publisher.wallet.address))
+            await publisher.client.addEncryptionKey(publisher.groupKey, hexToBinary(publisher.wallet.address))
         }))
     }, 20000)
 

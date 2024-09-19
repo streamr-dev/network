@@ -35,7 +35,7 @@ describe('Resends', () => {
             gapFillTimeout: 100
         })
         await stream.grantPermissions({
-            user: await subscriber.getAddress(),
+            user: await subscriber.getUserId(),
             permissions: [StreamPermission.SUBSCRIBE]
         })
         const groupKey = GroupKey.generate()

@@ -1,5 +1,5 @@
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
-import { MAX_PARTITION_COUNT, keyToArrayIndex, merge, toEthereumAddress, toStreamID, utf8ToBinary } from '@streamr/utils'
+import { MAX_PARTITION_COUNT, keyToArrayIndex, merge, toEthereumAddress, toStreamID, utf8ToBinary, hexToBinary } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'
 import random from 'lodash/random'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
@@ -67,7 +67,7 @@ describe('MessageFactory', () => {
         expect(msg).toMatchObject({
             messageId: {
                 msgChainId: expect.any(String),
-                publisherId: toEthereumAddress(WALLET.address),
+                publisherId: hexToBinary(WALLET.address),
                 sequenceNumber: 0,
                 streamId: STREAM_ID,
                 streamPartition: expect.toBeWithin(0, PARTITION_COUNT),
@@ -98,7 +98,7 @@ describe('MessageFactory', () => {
         expect(msg).toMatchObject({
             messageId: {
                 msgChainId: expect.any(String),
-                publisherId: contractAddress,
+                publisherId: hexToBinary(contractAddress),
                 sequenceNumber: 0,
                 streamId: STREAM_ID,
                 streamPartition: expect.toBeWithin(0, PARTITION_COUNT),

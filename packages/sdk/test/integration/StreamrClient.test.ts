@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastPrivateKey, fastWallet } from '@streamr/test-utils'
-import { Defer, StreamPartID, StreamPartIDUtils, collect, wait } from '@streamr/utils'
+import { Defer, StreamPartID, StreamPartIDUtils, collect, hexToBinary, wait } from '@streamr/utils'
 import { MessageMetadata } from '../../src/Message'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
@@ -38,7 +38,7 @@ describe('StreamrClient', () => {
         streamDefinition = stream.getStreamParts()[0]
         const publisherWallet = fastWallet()
         await stream.grantPermissions({
-            user: publisherWallet.address,
+            user: hexToBinary(publisherWallet.address),
             permissions: [StreamPermission.PUBLISH]
         })
         publishTestMessages = getPublishTestStreamMessages(environment.createClient({

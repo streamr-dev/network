@@ -1,6 +1,6 @@
 import { UserID } from '@streamr/dht'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { StreamPartID, StreamPartIDUtils, hexToBinary, toEthereumAddress, toStreamID, wait, waitForCondition } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, binaryToHex, hexToBinary, toStreamID, wait, waitForCondition } from '@streamr/utils'
 import { shuffle } from 'lodash'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
@@ -24,7 +24,7 @@ const PUBLISHER_IDS = [
     '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
     '0xcccccccccccccccccccccccccccccccccccccccc'
-].map(toEthereumAddress)
+].map(hexToBinary)
 
 enum Delivery {
     REAL_TIME,
@@ -116,24 +116,26 @@ describe.skip('OrderMessages2', () => {
         const expected: Record<string, number[]> = {}
 
         for (const publisherId of PUBLISHER_IDS) {
-            groundTruthMessages[publisherId] = formChainOfMessages(publisherId)
-            actual[publisherId] = []
-            expected[publisherId] = groundTruthMessages[publisherId]
+            const key = binaryToHex(publisherId)
+            groundTruthMessages[key] = formChainOfMessages(publisherId)
+            actual[key] = []
+            expected[key] = groundTruthMessages[key]
                 .filter(({ delivery }) => delivery !== Delivery.UNAVAILABLE)
                 .map(({ timestamp }) => timestamp)
         }
 
         const totalUnfillableGaps = PUBLISHER_IDS.reduce((sum, publisherId) => (
-            sum + calculateUnfillableGapCount(groundTruthMessages[publisherId])
+            sum + calculateUnfillableGapCount(groundTruthMessages[binaryToHex(publisherId)])
         ), 0)
 
         const inOrderHandler = (msg: StreamMessage) => {
-            actual[msg.getPublisherId()].push(msg.getTimestamp())
+            actual[binaryToHex(msg.getPublisherId())].push(msg.getTimestamp())
         }
 
-        const gapHandler = async (from: number, to: number, publisherId: string): Promise<PushPipeline<StreamMessage>> => {
+        const gapHandler = async (from: number, to: number, publisherId: Uint8Array): Promise<PushPipeline<StreamMessage>> => {
             const pipeline = new PushPipeline<StreamMessage>
-            const requestedMessages = groundTruthMessages[publisherId].filter(({ delivery, timestamp }) => {
+            const key = binaryToHex(publisherId)
+            const requestedMessages = groundTruthMessages[key].filter(({ delivery, timestamp }) => {
                 return delivery === Delivery.GAP_FILL && (timestamp > from && timestamp <= to)
             })
             for (const msgInfo of requestedMessages) {
@@ -173,7 +175,8 @@ describe.skip('OrderMessages2', () => {
         const producer = async function* (): AsyncGenerator<StreamMessage> {
             // supply 1st message of chain always to set gap detection to work from 1st message onwards
             for (const publisherId of PUBLISHER_IDS) {
-                yield createMsg(groundTruthMessages[publisherId][0])
+                const key = binaryToHex(publisherId)
+                yield createMsg(groundTruthMessages[key][0])
             }
             const realTimeMessages = Object.values(groundTruthMessages)
                 .flat()
@@ -199,7 +202,8 @@ describe.skip('OrderMessages2', () => {
         await orderMessages.addMessages(producer)
 
         await waitForCondition(() => PUBLISHER_IDS.every((publisherId) => {
-            return expected[publisherId].length === actual[publisherId].length
+            const key = binaryToHex(publisherId)
+            return expected[key].length === actual[key].length
         }), 60 * 1000)
         expect(onUnfillableGap).toHaveBeenCalledTimes(totalUnfillableGaps)
         expect(actual).toStrictEqual(expected)

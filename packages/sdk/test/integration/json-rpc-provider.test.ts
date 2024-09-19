@@ -1,11 +1,11 @@
 import 'reflect-metadata'
 
-import { randomEthereumAddress } from '@streamr/test-utils'
-import { wait, waitForCondition } from '@streamr/utils'
+import { hexToBinary, wait, waitForCondition } from '@streamr/utils'
 import { range, sortBy } from 'lodash'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamCreationEvent } from '../../src/contracts/StreamRegistry'
 import { CHAIN_ID, ErrorState, FakeJsonRpcServer, JsonRpcRequest } from '../test-utils/FakeJsonRpcServer'
+import { randomUserId } from '../test-utils/utils'
 
 const SERVER_COUNT = 3
 const POLL_INTERVAL = 500
@@ -63,18 +63,19 @@ describe('use JsonRpcProvider', () => {
     describe('read', () => {
 
         const runErrorTest = async (errorState: ErrorState): Promise<JsonRpcRequest[]> => {
-            await client.isStreamPublisher('/stream1', randomEthereumAddress())
+            await client.isStreamPublisher('/stream1', randomUserId())
             const errorServer = servers[0]
             errorServer.setError('eth_call', errorState)
             do {
                 clearRequests()
-                await client.isStreamPublisher('/stream1', randomEthereumAddress())
+                await client.isStreamPublisher('/stream1', randomUserId())
             } while (!getRequests().some((r) => r.serverPort === errorServer.getPort()))
             return getRequests().filter((r) => r.method === 'eth_call')
         }
 
         it('reads from multiple servers', async () => {
-            await client.isStreamPublisher('/stream1', '0x0000000000000000000000000000000000000010')
+            const publisherId = hexToBinary('0x0000000000000000000000000000000000000010')
+            await client.isStreamPublisher('/stream1', publisherId)
             const requests = getRequests().filter((r) => r.method === 'eth_call')
             expect(requests).toHaveLength(QUORUM)
         })
@@ -95,10 +96,10 @@ describe('use JsonRpcProvider', () => {
         })
 
         it('reading information from contract doesn\'t cause multiple chainId requests', async () => {
-            await client.isStreamPublisher('/stream1', randomEthereumAddress())
+            await client.isStreamPublisher('/stream1', randomUserId())
             clearRequests()
-            await client.isStreamPublisher('/stream1', randomEthereumAddress())
-            await client.isStreamPublisher('/stream1', randomEthereumAddress())
+            await client.isStreamPublisher('/stream1', randomUserId())
+            await client.isStreamPublisher('/stream1', randomUserId())
             const requests = getRequests().filter((r) => r.method === 'eth_chainId')
             expect(requests).toHaveLength(0)
         })

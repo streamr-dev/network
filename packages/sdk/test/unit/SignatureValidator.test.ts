@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { hexToBinary, toEthereumAddress, toStreamID, utf8ToBinary } from '@streamr/utils'
+import { binaryToHex, hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
 import { MockProxy, mock } from 'jest-mock-extended'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import { MessageRef } from '../../src/protocol/MessageRef'
@@ -28,7 +28,7 @@ describe('SignatureValidator', () => {
                     0,
                     1704972511765,
                     0,
-                    toEthereumAddress('0x7e5f4552091a69125d5dfcb7b8c2659029395bdf'),
+                    hexToBinary('0x7e5f4552091a69125d5dfcb7b8c2659029395bdf'),
                     '401zi3b84sd64qn31fte'
                 ),
                 prevMsgRef: new MessageRef(1704972444019, 0),
@@ -50,7 +50,7 @@ describe('SignatureValidator', () => {
                     0,
                     1704972170055,
                     0,
-                    toEthereumAddress('0x7e5f4552091a69125d5dfcb7b8c2659029395bdf'),
+                    hexToBinary('0x7e5f4552091a69125d5dfcb7b8c2659029395bdf'),
                     'vGDg4KzqASGpHCrG6Qao'
                 ),
                 prevMsgRef: new MessageRef(1704972169554, 0),
@@ -95,7 +95,7 @@ describe('SignatureValidator', () => {
                     0,
                     1704972511765,
                     0,
-                    toEthereumAddress('0xbd968096c7f0a363212e9bb524890ac1ea2c2af9'),
+                    hexToBinary('0xbd968096c7f0a363212e9bb524890ac1ea2c2af9'),
                     '401zi3b84sd64qn31fte'
                 ),
                 prevMsgRef: new MessageRef(1704972444019, 0),
@@ -118,7 +118,7 @@ describe('SignatureValidator', () => {
                     0,
                     1704972170055,
                     0,
-                    toEthereumAddress('0x0472476943d7570b368e2a02123321518568a66e'),
+                    hexToBinary('0x0472476943d7570b368e2a02123321518568a66e'),
                     'vGDg4KzqASGpHCrG6Qao'
                 ),
                 prevMsgRef: new MessageRef(1704972169554, 0),
@@ -147,7 +147,7 @@ describe('SignatureValidator', () => {
                     0,
                     1704972511765,
                     0,
-                    contractAddress,
+                    hexToBinary(contractAddress),
                     '401zi3b84sd64qn31fte'
                 ),
                 prevMsgRef: new MessageRef(1704972444019, 0),
@@ -165,7 +165,7 @@ describe('SignatureValidator', () => {
             erc1271ContractFacade.isValidSignature.mockResolvedValueOnce(true)
             await signatureValidator.assertSignatureIsValid(message)
             expect(erc1271ContractFacade.isValidSignature).toHaveBeenCalledWith(
-                message.getPublisherId(),
+                binaryToHex(message.getPublisherId(), true),
                 createSignaturePayload(message),
                 message.signature
             )
@@ -177,7 +177,7 @@ describe('SignatureValidator', () => {
                 new Error('Signature validation failed')
             )
             expect(erc1271ContractFacade.isValidSignature).toHaveBeenCalledWith(
-                message.getPublisherId(),
+                binaryToHex(message.getPublisherId(), true),
                 createSignaturePayload(message),
                 message.signature
             )
@@ -189,7 +189,7 @@ describe('SignatureValidator', () => {
                 new Error('An error occurred during address recovery from signature: Error: random issue')
             )
             expect(erc1271ContractFacade.isValidSignature).toHaveBeenCalledWith(
-                message.getPublisherId(),
+                binaryToHex(message.getPublisherId(), true),
                 createSignaturePayload(message),
                 message.signature
             )

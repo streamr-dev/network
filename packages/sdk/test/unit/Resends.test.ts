@@ -5,7 +5,7 @@ import { StreamPartIDUtils, collect, hexToBinary, toLengthPrefixedFrame, toStrea
 import range from 'lodash/range'
 import { convertStreamMessageToBytes } from '../../src/protocol/oldStreamMessageBinaryUtils'
 import { Resends } from '../../src/subscribe/Resends'
-import { MOCK_CONTENT, mockLoggerFactory } from '../test-utils/utils'
+import { MOCK_CONTENT, mockLoggerFactory, randomUserId } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
 
@@ -59,7 +59,7 @@ describe('Resends', () => {
         const MESSAGE_COUNT = 257
         const streamPartId = StreamPartIDUtils.parse('stream#0')
         const server = await startTestServer('/streams/:streamId/data/partitions/:partition/:resendType', async (_req, res) => {
-            const publisherId = randomEthereumAddress()
+            const publisherId = randomUserId()
             for (const _ of range(MESSAGE_COUNT)) {
                 const msg = new StreamMessage({
                     messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisherId, ''),

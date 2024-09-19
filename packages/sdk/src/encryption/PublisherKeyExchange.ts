@@ -78,7 +78,7 @@ export class PublisherKeyExchange {
             if (msg.signatureType === SignatureType.ERC_1271) {
                 let address: EthereumAddress | undefined
                 try {
-                    address = toEthereumAddress(binaryToHex(msg.getPublisherId()))
+                    address = toEthereumAddress(binaryToHex(msg.getPublisherId(), true))
                 } catch (err) {
                     this.logger.debug('Encountered error while parsing ERC1271 publisher address', { err })
                     return

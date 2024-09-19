@@ -2,7 +2,7 @@ import { config as CHAIN_CONFIG } from '@streamr/config'
 import { DhtAddress, NodeType, getRawFromDhtAddress } from '@streamr/dht'
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { createNetworkNode } from '@streamr/trackerless-network'
-import { StreamID, toStreamPartID, waitForCondition } from '@streamr/utils'
+import { hexToBinary, StreamID, toStreamPartID, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
@@ -88,7 +88,7 @@ describe('publish-subscribe', () => {
         beforeAll(async () => {
             stream = await createStreamWithPermissions(publisherPk, {
                 permissions: [StreamPermission.SUBSCRIBE],
-                user: subscriberWallet.address
+                user: hexToBinary(subscriberWallet.address)
             })
         }, TIMEOUT * 2)
 

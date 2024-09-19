@@ -86,7 +86,7 @@ describe('SigningUtil', () => {
     
         it('verify', async () => {
             const elapsedTimeOur = await run(async () => {
-                return verifySignature(toEthereumAddress(wallet.address), payload, binarySignature)
+                return verifySignature(hexToBinary(wallet.address), payload, binarySignature)
             }, true, 'Verify-our')
     
             const elapsedTimeEthers = await run(async () => {

@@ -1,6 +1,7 @@
 import 'reflect-metadata'
 
-import { EthereumAddress, hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
+import { UserID } from '@streamr/dht'
+import { areEqualBinaries, hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
 import { mock } from 'jest-mock-extended'
 import { Authentication } from '../../src/Authentication'
@@ -48,8 +49,8 @@ const subscriberAuthentication = createRandomAuthentication()
 
 describe('Validator2', () => {
     let getStream: (streamId: string) => Promise<Stream>
-    let isPublisher: (address: EthereumAddress, streamId: string) => Promise<boolean>
-    let isSubscriber: (address: EthereumAddress, streamId: string) => Promise<boolean>
+    let isPublisher: jest.Mock<(userId: UserID, streamId: string) => Promise<boolean>>
+    let isSubscriber: jest.Mock<(userId: UserID, streamId: string) => Promise<boolean>>
     let msg: StreamMessage
     let msgWithNewGroupKey: StreamMessage
     let msgWithPrevMsgRef: StreamMessage
@@ -60,15 +61,15 @@ describe('Validator2', () => {
         return {
             validate: (msg: StreamMessage) => validateStreamMessage(msg, { 
                 getStream,
-                isStreamPublisher: (streamId: string, address: EthereumAddress) => isPublisher(address, streamId),
-                isStreamSubscriber: (streamId: string, address: EthereumAddress) => isSubscriber(address, streamId)
+                isStreamPublisher: (streamId: string, userId: UserID) => isPublisher(userId, streamId),
+                isStreamSubscriber: (streamId: string, userId: UserID) => isSubscriber(userId, streamId)
             } as any, new SignatureValidator(mock<ERC1271ContractFacade>()))
         }
     }
 
     beforeEach(async () => {
-        const publisher = await publisherAuthentication.getAddress()
-        const subscriber = await subscriberAuthentication.getAddress()
+        const publisher = await publisherAuthentication.getUserId()
+        const subscriber = await subscriberAuthentication.getUserId()
         // Default stubs
         getStream = async () => {
             return {
@@ -77,12 +78,12 @@ describe('Validator2', () => {
                 })
             } as any
         }
-        isPublisher = async (address: EthereumAddress, streamId: string) => {
-            return address === publisher && streamId === 'streamId'
-        }
-        isSubscriber = async (address: EthereumAddress, streamId: string) => {
-            return address === subscriber && streamId === 'streamId'
-        }
+        isPublisher = jest.fn().mockImplementation(async (userId: UserID, streamId: string) => {
+            return areEqualBinaries(userId, publisher) && streamId === 'streamId'
+        })
+        isSubscriber = jest.fn().mockImplementation(async (userId: UserID, streamId: string) => {
+            return areEqualBinaries(userId, subscriber) && streamId === 'streamId'
+        })
 
         const publisherSigner = new MessageSigner(publisherAuthentication)
 
@@ -248,22 +249,26 @@ describe('Validator2', () => {
 
         it('rejects messages to invalid publishers', async () => {
             isPublisher = jest.fn().mockResolvedValue(false)
-            const publisher = await publisherAuthentication.getAddress()
+            const publisher = await publisherAuthentication.getUserId()
 
             await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                expect(isPublisher).toHaveBeenCalledWith(publisher, 'streamId')
+                expect(isPublisher).toHaveBeenCalledTimes(1)
+                expect(isPublisher.mock.calls[0][0]).toEqualBinary(publisher)
+                expect(isPublisher.mock.calls[0][1]).toEqual('streamId')
                 return true
             })
         })
 
         it('rejects messages from unpermitted subscribers', async () => {
             isSubscriber = jest.fn().mockResolvedValue(false)
-            const subscriber = await subscriberAuthentication.getAddress()
+            const subscriber = await subscriberAuthentication.getUserId()
 
             await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                expect(isSubscriber).toHaveBeenCalledWith(subscriber, 'streamId')
+                expect(isSubscriber).toHaveBeenCalledTimes(1)
+                expect(isSubscriber.mock.calls[0][0]).toEqualBinary(subscriber)
+                expect(isSubscriber.mock.calls[0][1]).toEqual('streamId')
                 return true
             })
         })
@@ -315,22 +320,26 @@ describe('Validator2', () => {
 
         it('rejects messages from invalid publishers', async () => {
             isPublisher = jest.fn().mockResolvedValue(false)
-            const publisher = await publisherAuthentication.getAddress()
+            const publisher = await publisherAuthentication.getUserId()
 
             await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                expect(isPublisher).toHaveBeenCalledWith(publisher, 'streamId')
+                expect(isPublisher).toHaveBeenCalledTimes(1)
+                expect(isPublisher.mock.calls[0][0]).toEqualBinary(publisher)
+                expect(isPublisher.mock.calls[0][1]).toEqual('streamId')
                 return true
             })
         })
 
         it('rejects messages to unpermitted subscribers', async () => {
             isSubscriber = jest.fn().mockResolvedValue(false)
-            const subscriber = await subscriberAuthentication.getAddress()
+            const subscriber = await subscriberAuthentication.getUserId()
 
             await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                expect(isSubscriber).toHaveBeenCalledWith(subscriber, 'streamId')
+                expect(isSubscriber).toHaveBeenCalledTimes(1)
+                expect(isSubscriber.mock.calls[0][0]).toEqualBinary(subscriber)
+                expect(isSubscriber.mock.calls[0][1]).toEqual('streamId')
                 return true
             })
         })
