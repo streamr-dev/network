@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import '../src/logLevel'
-import { StreamrClient } from '@streamr/sdk'
+import { StreamrClient, UserPermissionAssignment } from '@streamr/sdk'
 import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { getPermissionId } from '../src/permission'
+import { binaryToHex } from '@streamr/utils'
 
 interface Options extends BaseOptions {
     includePermissions: boolean
@@ -16,6 +17,8 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
         obj.permissions = assigments.map((assignment) => {
             return {
                 ...assignment,
+                // eslint-disable-next-line max-len
+                user: ((assignment as UserPermissionAssignment).user !== undefined) ? binaryToHex((assignment as UserPermissionAssignment).user, true) : undefined,
                 permissions: assignment.permissions.map(getPermissionId)
             }
         })

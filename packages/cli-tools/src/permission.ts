@@ -1,6 +1,7 @@
 import { Argument } from 'commander'
 import { PermissionAssignment, Stream, StreamPermission, StreamrClient } from '@streamr/sdk'
 import { createClientCommand } from './command'
+import { hexToBinary } from '@streamr/utils'
 
 const PUBLIC_USER_ID = 'public'
 
@@ -40,7 +41,7 @@ export const runModifyPermissionsCommand = (
         } else {
             assignment = {
                 permissions,
-                user
+                user: hexToBinary(user)
             }
         }
         await modify(stream, assignment) 
