@@ -1,4 +1,12 @@
-import { EthereumAddress, Logger, StreamID, StreamPartID, StreamPartIDUtils, randomString, toEthereumAddress } from '@streamr/utils'
+import {
+    EthereumAddress,
+    Logger,
+    StreamID,
+    StreamPartID,
+    StreamPartIDUtils,
+    randomString,
+    binaryToHex
+} from '@streamr/utils'
 import random from 'lodash/random'
 import sample from 'lodash/sample'
 import without from 'lodash/without'
@@ -34,7 +42,7 @@ export interface ResendLastOptions {
  */
 export interface ResendFromOptions {
     from: ResendRef
-    publisherId?: string
+    publisherId?: Uint8Array
 }
 
 /**
@@ -44,7 +52,7 @@ export interface ResendRangeOptions {
     from: ResendRef
     to: ResendRef
     msgChainId?: string
-    publisherId?: string
+    publisherId?: Uint8Array
 }
 
 /**
@@ -139,14 +147,14 @@ export class Resends {
                 fromSequenceNumber: options.from.sequenceNumber,
                 toTimestamp: new Date(options.to.timestamp).getTime(),
                 toSequenceNumber: options.to.sequenceNumber,
-                publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
+                publisherId: options.publisherId !== undefined ? binaryToHex(options.publisherId, true) : undefined,
                 msgChainId: options.msgChainId
             }, raw, getStorageNodes, abortSignal)
         } else if (isResendFrom(options)) {
             return this.fetchStream('from', streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
-                publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined
+                publisherId: options.publisherId !== undefined ? binaryToHex(options.publisherId, true) : undefined
             }, raw, getStorageNodes, abortSignal)
         } else {
             throw new StreamrClientError(

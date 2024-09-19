@@ -7,6 +7,7 @@ import { DestroySignal } from './DestroySignal'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { Persistence } from './utils/persistence/Persistence'
 import ServerPersistence from './utils/persistence/ServerPersistence'
+import { binaryToHex } from '@streamr/utils'
 
 export const NAMESPACES = {
     ENCRYPTION_KEYS: 'EncryptionKeys',
@@ -39,7 +40,7 @@ export class PersistenceManager {
         if (this.persistence === undefined) {
             this.persistence = await ServerPersistence.createInstance({
                 loggerFactory: this.loggerFactory,
-                clientId: await this.authentication.getAddress(),
+                clientId: binaryToHex(await this.authentication.getUserId(), true),
                 namespaces: Object.values(NAMESPACES),
                 migrationsPath: join(__dirname, 'encryption/migrations') // TODO move migrations to some generic place?
             })

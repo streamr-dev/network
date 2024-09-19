@@ -1,5 +1,5 @@
 import { GroupKeyRequest as NewGroupKeyRequest } from '@streamr/trackerless-network'
-import { binaryToHex, binaryToUtf8, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { binaryToUtf8, utf8ToBinary } from '@streamr/utils'
 import { GroupKeyRequest as OldGroupKeyRequest } from './GroupKeyRequest'
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class

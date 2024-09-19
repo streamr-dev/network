@@ -1,4 +1,4 @@
-import { EthereumAddress, Logger, StreamPartID, StreamPartIDUtils } from '@streamr/utils'
+import { areEqualBinaries, hexToBinary, Logger, StreamPartID, StreamPartIDUtils } from '@streamr/utils'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -113,7 +113,7 @@ export class SubscriberKeyExchange {
                 StreamPartIDUtils.getStreamPartition(streamPartId),
                 Date.now(),
                 0,
-                erc1271contract === undefined ? await this.authentication.getAddress() : erc1271contract,
+                erc1271contract === undefined ? await this.authentication.getUserId() : hexToBinary(erc1271contract),
                 createRandomMsgChainId()
             ),
             content: convertGroupKeyRequestToBytes(requestContent),
@@ -142,11 +142,15 @@ export class SubscriberKeyExchange {
         }
     }
 
-    private async isAssignedToMe(streamPartId: StreamPartID, recipient: EthereumAddress, requestId: string): Promise<boolean> {
+    private async isAssignedToMe(streamPartId: StreamPartID, recipient: UserID, requestId: string): Promise<boolean> {
         if (this.pendingRequests.has(requestId)) {
-            const authenticatedUser = await this.authentication.getAddress()
-            const erc1271Contract = this.subscriber.getERC1271ContractAddress(streamPartId)
-            return (recipient === authenticatedUser) || (recipient === erc1271Contract)
+            const authenticatedUser = await this.authentication.getUserId()
+            if (areEqualBinaries(recipient, authenticatedUser)) {
+                return true
+            } else {
+                const erc1271Contract = this.subscriber.getERC1271ContractAddress(streamPartId)
+                return erc1271Contract !== undefined && areEqualBinaries(recipient, hexToBinary(erc1271Contract))
+            }
         }
         return false
     }

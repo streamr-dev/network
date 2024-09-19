@@ -1,9 +1,9 @@
-import { EthereumAddress } from '@streamr/utils'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
 import { StreamMessageError } from '../protocol/StreamMessageError'
 import { convertBytesToGroupKeyRequest, convertBytesToGroupKeyResponse } from '../protocol/oldStreamMessageBinaryUtils'
 import { SignatureValidator } from '../signature/SignatureValidator'
+import { UserID } from '@streamr/dht'
 
 export const validateStreamMessage = async (
     msg: StreamMessage,
@@ -78,8 +78,8 @@ const validateMessage = async (
 
 const validateGroupKeyMessage = async (
     streamMessage: StreamMessage,
-    expectedPublisher: EthereumAddress,
-    expectedSubscriber: EthereumAddress,
+    expectedPublisher: UserID,
+    expectedSubscriber: UserID,
     streamRegistry: StreamRegistry
 ): Promise<void> => {
     const streamId = streamMessage.getStreamId()

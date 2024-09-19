@@ -1,6 +1,6 @@
-import { 
+import {
     EthereumAddress,
-    GraphQLQuery, 
+    GraphQLQuery,
     Logger,
     StreamID,
     StreamIDUtils,
@@ -8,7 +8,7 @@ import {
     collect,
     isENSName,
     toEthereumAddress,
-    toStreamID
+    toStreamID, binaryToHex
 } from '@streamr/utils'
 import { ContractTransactionResponse } from 'ethers'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -44,6 +44,8 @@ import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway, waitForTx } from './contract'
 import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, searchStreams as _searchStreams } from './searchStreams'
+import { UserID } from '@streamr/dht'
+import { normalizeUserId } from './normalizeUserId'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -92,8 +94,8 @@ export class StreamRegistry {
     private readonly authentication: Authentication
     private readonly logger: Logger
     private readonly getStream_cached: CacheAsyncFnType<[StreamID], Stream, string>
-    private readonly isStreamPublisher_cached: CacheAsyncFnType<[StreamID, EthereumAddress], boolean, string>
-    private readonly isStreamSubscriber_cached: CacheAsyncFnType<[StreamID, EthereumAddress], boolean, string>
+    private readonly isStreamPublisher_cached: CacheAsyncFnType<[StreamID, UserID], boolean, string>
+    private readonly isStreamSubscriber_cached: CacheAsyncFnType<[StreamID, UserID], boolean, string>
     private readonly hasPublicSubscribePermission_cached: CacheAsyncFnType<[StreamID], boolean, string>
     
     /* eslint-disable indent */
@@ -147,20 +149,20 @@ export class StreamRegistry {
                 return `${streamId}${CACHE_KEY_SEPARATOR}`
             }
         })
-        this.isStreamPublisher_cached = CacheAsyncFn((streamId: StreamID, ethAddress: EthereumAddress) => {
-            return this.isStreamPublisher_nonCached(streamId, ethAddress)
+        this.isStreamPublisher_cached = CacheAsyncFn((streamId: StreamID, userId: UserID) => {
+            return this.isStreamPublisher_nonCached(streamId, userId)
         }, {
             ...config.cache,
-            cacheKey([streamId, ethAddress]): string {
-                return [streamId, ethAddress].join(CACHE_KEY_SEPARATOR)
+            cacheKey([streamId, userId]): string {
+                return [streamId, binaryToHex(userId)].join(CACHE_KEY_SEPARATOR)
             }
         })
-        this.isStreamSubscriber_cached = CacheAsyncFn((streamId: StreamID, ethAddress: EthereumAddress) => {
-            return this.isStreamSubscriber_nonCached(streamId, ethAddress)
+        this.isStreamSubscriber_cached = CacheAsyncFn((streamId: StreamID, userId: UserID) => {
+            return this.isStreamSubscriber_nonCached(streamId, userId)
         }, {
             ...config.cache,
-            cacheKey([streamId, ethAddress]): string {
-                return [streamId, ethAddress].join(CACHE_KEY_SEPARATOR)
+            cacheKey([streamId, userId]): string {
+                return [streamId, binaryToHex(userId)].join(CACHE_KEY_SEPARATOR)
             }
         })
         this.hasPublicSubscribePermission_cached = CacheAsyncFn((streamId: StreamID) => {
@@ -232,7 +234,7 @@ export class StreamRegistry {
     }
 
     private async ensureStreamIdInNamespaceOfAuthenticatedUser(address: EthereumAddress, streamId: StreamID): Promise<void> {
-        const userAddress = await this.authentication.getAddress()
+        const userAddress = await this.authentication.getUserIdAsEthereumAddress()
         if (address !== userAddress) {
             throw new Error(`stream id "${streamId}" not in namespace of authenticated user "${userAddress}"`)
         }
@@ -485,17 +487,19 @@ export class StreamRegistry {
         await waitForTx(txToSubmit)
     }
 
-    private async isStreamPublisher_nonCached(streamId: StreamID, userAddress: EthereumAddress): Promise<boolean> {
+    private async isStreamPublisher_nonCached(streamId: StreamID, userId: UserID): Promise<boolean> {
         try {
-            return await this.streamRegistryContractReadonly.hasPermission(streamId, userAddress, streamPermissionToSolidityType(StreamPermission.PUBLISH))
+            const permissionsRecord = await this.streamRegistryContractReadonly.getPermissionsForUserId(streamId, normalizeUserId(userId))
+            return permissionsRecord.publishExpiration > (Date.now() / 1000)
         } catch (err) {
             return streamContractErrorProcessor(err, streamId, 'StreamPermission')
         }
     }
 
-    private async isStreamSubscriber_nonCached(streamId: StreamID, userAddress: EthereumAddress): Promise<boolean> {
+    private async isStreamSubscriber_nonCached(streamId: StreamID, userId: UserID): Promise<boolean> {
         try {
-            return await this.streamRegistryContractReadonly.hasPermission(streamId, userAddress, streamPermissionToSolidityType(StreamPermission.SUBSCRIBE))
+            const permissionsRecord = await this.streamRegistryContractReadonly.getPermissionsForUserId(streamId, normalizeUserId(userId))
+            return permissionsRecord.subscribeExpiration > (Date.now() / 1000)
         } catch (err) {
             return streamContractErrorProcessor(err, streamId, 'StreamPermission')
         }
@@ -513,19 +517,19 @@ export class StreamRegistry {
         }
     }
 
-    isStreamPublisher(streamId: StreamID, ethAddress: EthereumAddress, useCache = true): Promise<boolean> {
+    isStreamPublisher(streamId: StreamID, userId: UserID, useCache = true): Promise<boolean> {
         if (useCache) {
-            return this.isStreamPublisher_cached(streamId, ethAddress)
+            return this.isStreamPublisher_cached(streamId, userId)
         } else {
-            return this.isStreamPublisher_nonCached(streamId, ethAddress)
+            return this.isStreamPublisher_nonCached(streamId, userId)
         }
     }
 
-    isStreamSubscriber(streamId: StreamID, ethAddress: EthereumAddress, useCache = true): Promise<boolean> {
+    isStreamSubscriber(streamId: StreamID, userId: UserID, useCache = true): Promise<boolean> {
         if (useCache) {
-            return this.isStreamSubscriber_cached(streamId, ethAddress)
+            return this.isStreamSubscriber_cached(streamId, userId)
         } else {
-            return this.isStreamSubscriber_nonCached(streamId, ethAddress)
+            return this.isStreamSubscriber_nonCached(streamId, userId)
         }
     }
 

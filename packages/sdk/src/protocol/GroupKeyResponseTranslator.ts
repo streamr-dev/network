@@ -1,5 +1,4 @@
 import { GroupKey as NewGroupKey, GroupKeyResponse as NewGroupKeyResponse } from '@streamr/trackerless-network'
-import { binaryToHex, hexToBinary, toEthereumAddress } from '@streamr/utils'
 import { EncryptedGroupKey as OldEncryptedGroupKey } from './EncryptedGroupKey'
 import { GroupKeyResponse as OldGroupKeyResponse } from './GroupKeyResponse'
 

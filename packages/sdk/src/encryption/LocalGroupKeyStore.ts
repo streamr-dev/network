@@ -1,5 +1,5 @@
 import { UserID } from '@streamr/dht'
-import { Logger, StreamID } from '@streamr/utils'
+import { binaryToHex, Logger, StreamID } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { NAMESPACES, PersistenceManager } from '../PersistenceManager'
 import { StreamrClientEventEmitter } from '../events'
@@ -39,12 +39,12 @@ export interface UpdateEncryptionKeyOptions {
     key?: GroupKey
 }
 
-function formLookupKey1(keyId: string, publisherId: string): string {
-    return `${publisherId}::${keyId}`
+function formLookupKey1(keyId: string, publisherId: UserID): string {
+    return `${binaryToHex(publisherId, true)}::${keyId}`
 }
 
 function formLookupKey2(publisherId: UserID, streamId: StreamID): string {
-    return `${publisherId}::${streamId}`
+    return `${binaryToHex(publisherId, true)}::${streamId}`
 }
 
 @scoped(Lifecycle.ContainerScoped)

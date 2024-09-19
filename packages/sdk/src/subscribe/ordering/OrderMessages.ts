@@ -1,4 +1,11 @@
-import { EthereumAddress, StreamID, StreamPartID, StreamPartIDUtils, executeSafePromise } from '@streamr/utils'
+import {
+    EthereumAddress,
+    StreamID,
+    StreamPartID,
+    StreamPartIDUtils,
+    executeSafePromise,
+    hexToBinary, binaryToHex
+} from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../../Config'
 import { StreamMessage } from '../../protocol/StreamMessage'
 import { Mapping } from '../../utils/Mapping'
@@ -7,7 +14,6 @@ import { CacheAsyncFn } from '../../utils/caches'
 import { Resends } from '../Resends'
 import { GapFiller } from './GapFiller'
 import { Gap, OrderedMessageChain, OrderedMessageChainContext } from './OrderedMessageChain'
-import { UserID } from '@streamr/dht'
 
 const createMessageChain = (
     context: OrderedMessageChainContext,
@@ -56,7 +62,7 @@ const createMessageChain = (
  */
 export class OrderMessages {
 
-    private readonly chains: Mapping<[EthereumAddress, string], OrderedMessageChain>
+    private readonly chains: Mapping<[string, string], OrderedMessageChain>
     private readonly outBuffer = new PushBuffer<StreamMessage>()
     private readonly abortController = new AbortController()
 
@@ -67,11 +73,11 @@ export class OrderMessages {
         resends: Resends,
         config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
     ) {
-        this.chains = new Mapping(async (publisherId: UserID, msgChainId: string) => {
+        this.chains = new Mapping(async (publisherIdAsHex: string, msgChainId: string) => {
             const chain = createMessageChain(
                 {
                     streamPartId, 
-                    publisherId, 
+                    publisherId: hexToBinary(publisherIdAsHex),
                     msgChainId
                 },
                 getStorageNodes,
@@ -102,7 +108,7 @@ export class OrderMessages {
                 if (this.abortController.signal.aborted) {
                     return
                 }
-                const chain = await this.chains.get(msg.getPublisherId(), msg.getMsgChainId())
+                const chain = await this.chains.get(binaryToHex(msg.getPublisherId()), msg.getMsgChainId())
                 chain.addMessage(msg)
             }
             await Promise.all(this.chains.values().map((chain) => chain.waitUntilIdle()))
