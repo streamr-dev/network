@@ -1,5 +1,5 @@
-import { DhtAddress, PeerDescriptor } from '@streamr/dht'
-import { EthereumAddress, MetricsContext, StreamPartID } from '@streamr/utils'
+import { DhtAddress, PeerDescriptor, UserID } from '@streamr/dht'
+import { MetricsContext, StreamPartID } from '@streamr/utils'
 import { NetworkOptions, NetworkStack, NodeInfo } from './NetworkStack'
 import { ProxyDirection, StreamMessage } from './proto/packages/trackerless-network/protos/NetworkRpc'
 import { ExternalNetworkRpc, ExternalRpcClient, ExternalRpcClientClass } from './logic/ExternalNetworkRpc'
@@ -46,7 +46,7 @@ export class NetworkNode {
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: Uint8Array,
+        userId: UserID,
         connectionCount?: number
     ): Promise<void> {
         await this.stack.getContentDeliveryManager().setProxies(streamPartId, nodes, direction, userId, connectionCount)

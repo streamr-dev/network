@@ -1,10 +1,10 @@
-import { EthereumAddress, Logger, StreamID } from '@streamr/utils'
+import { UserID } from '@streamr/dht'
+import { Logger, StreamID } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { NAMESPACES, PersistenceManager } from '../PersistenceManager'
 import { StreamrClientEventEmitter } from '../events'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { GroupKey } from './GroupKey'
-import { UserID } from '../userId'
 
 /**
  * @privateRemarks

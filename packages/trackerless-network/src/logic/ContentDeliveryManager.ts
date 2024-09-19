@@ -5,6 +5,7 @@ import {
     EXISTING_CONNECTION_TIMEOUT,
     ITransport,
     PeerDescriptor,
+    UserID,
     getDhtAddressFromRaw,
     getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
@@ -267,7 +268,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: Uint8Array,
+        userId: UserID,
         connectionCount?: number
     ): Promise<void> {
         // TODO explicit default value for "acceptProxyConnections" or make it required

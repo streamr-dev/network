@@ -1,4 +1,4 @@
-import { EthereumAddress, StreamID, StreamPartID, StreamPartIDUtils, waitForEvent } from '@streamr/utils'
+import { StreamID, StreamPartID, StreamPartIDUtils, waitForEvent } from '@streamr/utils'
 import crypto from 'crypto'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -10,7 +10,7 @@ import { GroupKey } from './GroupKey'
 import { LitProtocolFacade } from './LitProtocolFacade'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { SubscriberKeyExchange } from './SubscriberKeyExchange'
-import { UserID } from '../userId'
+import { UserID } from '@streamr/dht'
 
 @scoped(Lifecycle.ContainerScoped)
 export class GroupKeyManager {

@@ -1,6 +1,6 @@
+import { UserID } from '@streamr/dht'
 import { StreamID } from '@streamr/utils'
 import { SignatureType, StreamMessage } from './protocol/StreamMessage'
-import { UserID } from './userId'
 
 /**
  * Represents a message in the Streamr Network.

@@ -4,6 +4,7 @@ import {
     ITransport,
     ListeningRpcCommunicator,
     PeerDescriptor,
+    UserID,
     getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
 import { Logger, StreamPartID, addManagedEventListener, wait } from '@streamr/utils'
@@ -54,7 +55,7 @@ interface ProxyDefinition {
     nodes: Map<DhtAddress, PeerDescriptor>
     connectionCount: number
     direction: ProxyDirection
-    userId: Uint8Array
+    userId: UserID
 }
 
 interface ProxyConnection {
@@ -128,7 +129,7 @@ export class ProxyClient extends EventEmitter<Events> {
     async setProxies(
         nodes: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: Uint8Array,
+        userId: UserID,
         connectionCount?: number
     ): Promise<void> {
         logger.trace('Setting proxies', { streamPartId: this.options.streamPartId, peerDescriptors: nodes, direction, userId, connectionCount })
@@ -176,7 +177,7 @@ export class ProxyClient extends EventEmitter<Events> {
         ))
     }
 
-    private async attemptConnection(nodeId: DhtAddress, direction: ProxyDirection, userId: Uint8Array): Promise<void> {
+    private async attemptConnection(nodeId: DhtAddress, direction: ProxyDirection, userId: UserID): Promise<void> {
         const peerDescriptor = this.definition!.nodes.get(nodeId)!
         const rpcRemote = new ProxyConnectionRpcRemote(
             this.options.localPeerDescriptor,

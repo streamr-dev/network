@@ -6,6 +6,7 @@ import { MessageRef } from './MessageRef'
 import { StreamMessageError } from './StreamMessageError'
 import { ValidationError } from './ValidationError'
 import { validateIsDefined } from './validations'
+import { UserID } from '@streamr/dht'
 
 export enum StreamMessageType {
     MESSAGE = 27,
@@ -135,7 +136,7 @@ export class StreamMessage implements StreamMessageOptions {
         return this.messageId.sequenceNumber
     }
 
-    getPublisherId(): Uint8Array {  // TODO UserID
+    getPublisherId(): UserID {
         return this.messageId.publisherId
     }
 

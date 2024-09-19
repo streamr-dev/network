@@ -4,13 +4,14 @@ import pMemoize from 'p-memoize'
 import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'
 import { pLimitFn } from './utils/promises'
 import { RpcProviderSource } from './RpcProviderSource'
+import { UserID } from '@streamr/dht'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 
 export type SignerWithProvider = AbstractSigner<Provider>
 
 export interface Authentication {
-    getUserId: () => Promise<Uint8Array>  // TODO UserID
+    getUserId: () => Promise<UserID>
     getUserIdAsEthereumAddress: () => Promise<EthereumAddress>
     getTransactionSigner: (rpcProviderSource: RpcProviderSource) => Promise<SignerWithProvider>
     createMessageSignature: (payload: Uint8Array) => Promise<Uint8Array>

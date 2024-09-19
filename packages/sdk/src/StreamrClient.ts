@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
-import { DhtAddress } from '@streamr/dht'
+import { DhtAddress, UserID } from '@streamr/dht'
 import { ProxyDirection } from '@streamr/trackerless-network'
 import { EthereumAddress, StreamID, TheGraphClient, toEthereumAddress } from '@streamr/utils'
 import type { Overrides } from 'ethers'
@@ -50,7 +50,6 @@ import { StreamDefinition } from './types'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
-import { UserID } from './userId'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions

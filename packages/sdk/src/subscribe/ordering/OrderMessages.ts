@@ -7,7 +7,7 @@ import { CacheAsyncFn } from '../../utils/caches'
 import { Resends } from '../Resends'
 import { GapFiller } from './GapFiller'
 import { Gap, OrderedMessageChain, OrderedMessageChainContext } from './OrderedMessageChain'
-import { UserID } from '../../userId'
+import { UserID } from '@streamr/dht'
 
 const createMessageChain = (
     context: OrderedMessageChainContext,

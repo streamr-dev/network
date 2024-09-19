@@ -1,16 +1,17 @@
+import { UserID } from '@streamr/dht'
 import { EncryptedGroupKey } from './EncryptedGroupKey'
 import { StreamMessage, StreamMessageType } from './StreamMessage'
 import { ValidationError } from './ValidationError'
 
 interface Options {
     requestId: string
-    recipient: Uint8Array  // TODO UserID
+    recipient: UserID
     encryptedGroupKeys: EncryptedGroupKey[]
 }
 
 export class GroupKeyResponse {
     readonly requestId: string
-    readonly recipient: Uint8Array  // TODO UserID
+    readonly recipient: UserID
     readonly encryptedGroupKeys: ReadonlyArray<EncryptedGroupKey>
 
     constructor({ requestId, recipient, encryptedGroupKeys }: Options) {

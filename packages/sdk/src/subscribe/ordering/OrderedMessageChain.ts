@@ -2,7 +2,7 @@ import { Gate, Heap, Logger, StreamPartID } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { MessageRef } from '../../protocol/MessageRef'
 import { StreamMessage } from '../../protocol/StreamMessage'
-import { UserID } from '../../userId'
+import { UserID } from '@streamr/dht'
 
 /*
  * There are missing messages between these two messages. The "to" message is guaranteed to have prevMsgRef.

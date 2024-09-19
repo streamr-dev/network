@@ -25,6 +25,7 @@ export { createOutgoingHandshaker } from './connection/Handshaker'
 export { 
     DhtAddress,
     DhtAddressRaw,
+    UserID,
     getDhtAddressFromRaw,
     getRawFromDhtAddress,
     createRandomDhtAddress,

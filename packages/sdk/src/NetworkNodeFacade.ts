@@ -1,7 +1,10 @@
 /**
  * Wrap a network node.
  */
-import { DhtAddress, PeerDescriptor } from '@streamr/dht'
+import { IMessageType } from '@protobuf-ts/runtime'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { DhtAddress, PeerDescriptor, UserID } from '@streamr/dht'
+import { ProtoRpcClient } from '@streamr/proto-rpc'
 import {
     ExternalRpcClient,
     ExternalRpcClientClass,
@@ -18,16 +21,12 @@ import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { ConfigInjectionToken, NetworkPeerDescriptor, StrictStreamrClientConfig } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { OperatorRegistry } from './contracts/OperatorRegistry'
+import { OperatorDiscoveryRequest } from './generated/packages/sdk/protos/SdkRpc'
+import { OperatorDiscoveryClient } from './generated/packages/sdk/protos/SdkRpc.client'
 import { StreamMessage as OldStreamMessage } from './protocol/StreamMessage'
 import { StreamMessageTranslator } from './protocol/StreamMessageTranslator'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, peerDescriptorTranslator } from './utils/utils'
-import { ProtoRpcClient } from '@streamr/proto-rpc'
-import { IMessageType } from '@protobuf-ts/runtime'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { OperatorDiscoveryClient } from './generated/packages/sdk/protos/SdkRpc.client'
-import { OperatorDiscoveryRequest } from './generated/packages/sdk/protos/SdkRpc'
-import { UserID } from './userId'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 /** @deprecated This in an internal interface */
