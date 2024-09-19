@@ -230,6 +230,10 @@ export const delegate = async (delegator: Wallet, operatorContractAddress: strin
     await transferTokens(delegator, operatorContractAddress, amount, delegator.address, token)
 }
 
+export const undelegate = async (delegator: Wallet, operatorContract: OperatorContract, amount: number): Promise<void> => {
+    await (await operatorContract.connect(delegator).undelegate(parseEther(amount.toString()))).wait()
+}
+
 export const stake = async (operatorContract: OperatorContract, sponsorshipContractAddress: string, amount: number): Promise<void> => {
     logger.debug('Stake', { amount })
     await (await operatorContract.stake(sponsorshipContractAddress, parseEther(amount.toString()))).wait()

@@ -69,20 +69,8 @@ export class LocalGroupKeyStore {
         if (value !== undefined) {
             return new GroupKey(keyId, Buffer.from(value, 'hex'))
         } else {
-            return this.getLegacyKey(keyId)
+            return undefined
         }
-    }
-
-    /**
-     * Legacy keys refer to group keys migrated from a previous version of the client where group keys were not tied
-     * to a specific publisherId, therefore any publisherId for a given legacy key id is considered a match.
-     *
-     * TODO: remove this functionality in the future
-     */
-    private async getLegacyKey(keyId: string): Promise<GroupKey | undefined> {
-        const persistence = await this.persistenceManager.getPersistence(NAMESPACES.ENCRYPTION_KEYS)
-        const value = await persistence.get(formLookupKey1(keyId, 'LEGACY'))
-        return value !== undefined ? new GroupKey(keyId, Buffer.from(value, 'hex')) : undefined
     }
 
     async set(keyId: string, publisherId: EthereumAddress, data: Buffer): Promise<void> {
