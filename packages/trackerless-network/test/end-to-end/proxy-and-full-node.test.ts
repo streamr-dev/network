@@ -11,7 +11,7 @@ import {
 import { createMockPeerDescriptor } from '../utils/utils'
 import { randomBytes } from 'crypto'
 
-const PROXIED_NODE_USER_ID = randomBytes(40)
+const PROXIED_NODE_USER_ID = randomBytes(30)
 
 const createMessage = (streamPartId: StreamPartID): StreamMessage => {
     return {

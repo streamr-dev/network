@@ -1,6 +1,6 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtAddress, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor, UserID } from '@streamr/dht'
-import { Logger, StreamPartID, binaryToHex, toEthereumAddress } from '@streamr/utils'
+import { Logger, StreamPartID, areEqualBinaries } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import {
     ProxyConnectionRequest,
@@ -75,7 +75,7 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
     }
 
     private getNodeIdsForUserId(userId: UserID): DhtAddress[] {
-        return Array.from(this.connections.keys()).filter((nodeId) => this.connections.get(nodeId)!.userId === userId)
+        return Array.from(this.connections.keys()).filter((nodeId) => areEqualBinaries(this.connections.get(nodeId)!.userId, userId))
     }
 
     private getSubscribers(): DhtAddress[] {

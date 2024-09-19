@@ -1,5 +1,4 @@
 import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
-import { randomEthereumAddress } from '@streamr/test-utils'
 import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { NetworkStack } from '../../src/NetworkStack'
 import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'

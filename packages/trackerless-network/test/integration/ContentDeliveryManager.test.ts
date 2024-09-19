@@ -3,11 +3,11 @@ import {
     Simulator,
     SimulatorTransport
 } from '@streamr/dht'
-import { randomEthereumAddress } from '@streamr/test-utils'
 import { StreamPartIDUtils, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { ContentDeliveryManager, Events } from '../../src/logic/ContentDeliveryManager'
 import { ControlLayerNode } from '../../src/logic/ControlLayerNode'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import { randomBytes } from 'crypto'
 
 describe('ContentDeliveryManager', () => {
 
@@ -25,7 +25,7 @@ describe('ContentDeliveryManager', () => {
     const msg = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
         STREAM_PART_ID,
-        randomBytes(40)
+        randomBytes(18)
     )
     let simulator: Simulator
 

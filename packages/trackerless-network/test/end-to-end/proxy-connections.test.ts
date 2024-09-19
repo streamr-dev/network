@@ -12,6 +12,7 @@ import {
     StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
+import { randomBytes } from 'crypto'
 
 const PROXIED_NODE_USER_ID = randomBytes(40)
 const STREAM_PART_ID = StreamPartIDUtils.parse('proxy-test#0')

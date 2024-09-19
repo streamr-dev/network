@@ -1,4 +1,3 @@
-import { randomEthereumAddress } from '@streamr/test-utils'
 import {
     StreamPartIDUtils,
     waitForCondition

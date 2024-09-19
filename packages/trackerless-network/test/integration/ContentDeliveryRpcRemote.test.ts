@@ -5,7 +5,6 @@ import {
     Simulator,
     SimulatorTransport
 } from '@streamr/dht'
-import { randomEthereumAddress } from '@streamr/test-utils'
 import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
 import { Empty } from '../../src/proto/google/protobuf/empty'
@@ -15,6 +14,7 @@ import {
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { createStreamMessage } from '../utils/utils'
+import { randomBytes } from 'crypto'
 
 describe('ContentDeliveryRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator

@@ -69,14 +69,14 @@ describe('proxy group key exchange', () => {
                 streamPartition: StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
                 timestamp: Date.now(),
                 sequenceNumber: 0,
-                publisherId: hexToBinary(subscriberUserId),
+                publisherId: subscriberUserId,
                 messageChainId: '0'
             },
             body: {
                 oneofKind: 'groupKeyRequest' as const,
                 groupKeyRequest: {
                     requestId: 'requestId',
-                    recipientId: hexToBinary(publisherUserId),
+                    recipientId: publisherUserId,
                     rsaPublicKey: new Uint8Array(),
                     groupKeyIds: ['mock']
                 }
@@ -101,14 +101,14 @@ describe('proxy group key exchange', () => {
                 streamPartition: StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
                 timestamp: Date.now(),
                 sequenceNumber: 0,
-                publisherId: hexToBinary(publisherUserId),
+                publisherId: publisherUserId,
                 messageChainId: '0'
             },
             body: {
                 oneofKind: 'groupKeyResponse' as const,
                 groupKeyResponse: {
                     requestId: 'requestId',
-                    recipientId: hexToBinary(publisherUserId),
+                    recipientId: publisherUserId,
                     groupKeys: []
                 }
             },

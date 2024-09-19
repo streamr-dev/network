@@ -1,11 +1,11 @@
 import { ConnectionManager, DhtNode, PeerDescriptor } from '@streamr/dht'
-import { randomEthereumAddress } from '@streamr/test-utils'
 import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { ControlLayerNode } from '../../src/logic/ControlLayerNode'
 import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import { randomBytes } from 'crypto'
 
 describe('content delivery layer node with real connections', () => {
 

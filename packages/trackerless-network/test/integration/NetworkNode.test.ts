@@ -3,7 +3,6 @@ import { StreamPartIDUtils, hexToBinary, utf8ToBinary, waitForCondition } from '
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { randomBytes } from 'crypto'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
 

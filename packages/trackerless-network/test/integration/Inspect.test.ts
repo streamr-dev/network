@@ -1,5 +1,4 @@
 import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
-import { randomEthereumAddress } from '@streamr/test-utils'
 import { StreamPartIDUtils } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkStack } from '../../src/NetworkStack'
