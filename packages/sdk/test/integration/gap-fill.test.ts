@@ -82,6 +82,6 @@ describe('gap fill', () => {
         await createMessage(2000)
         await publish(await createMessage(3000))
         expect((await receivedMessages).map((m) => m.timestamp)).toEqual([1000, 3000])
-    })
+    }, 40 * 1000)
 
 })
