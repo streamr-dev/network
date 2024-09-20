@@ -7,9 +7,11 @@ import { StreamPermission } from '../../../src/permission'
 export type PublicPermissionTarget = 'public'
 export const PUBLIC_PERMISSION_TARGET: PublicPermissionTarget = 'public'
 
+export type UserIDAsHex = string
+
 export interface StreamRegistryItem {
     metadata: StreamMetadata
-    permissions: Multimap<EthereumAddress | PublicPermissionTarget, StreamPermission>
+    permissions: Multimap<UserIDAsHex | PublicPermissionTarget, StreamPermission>
 }
 
 export interface FakeStorageNodeAssignmentEvent {
@@ -71,5 +73,22 @@ export class FakeChain {
 
     on<E extends keyof Events>(eventName: E, listener: Events[E]): void {
         this.eventEmitter.on(eventName, listener)
+    }
+
+    dumpStreams(): void {
+        const result: any = {}
+        for (const streamId of this.streams.keys()) {
+            result[streamId] = {
+                metadata: this.getStream(streamId)!.metadata,
+                permissions: [...this.getStream(streamId)!.permissions.keys()].map((userIdAsHex) => {
+                    return {
+                        user: userIdAsHex,
+                        permissions: this.getStream(streamId)!.permissions.get(userIdAsHex)
+                    }
+                })
+            }
+        }
+        // eslint-disable-next-line no-console
+        console.log(JSON.stringify(result, undefined, 4))
     }
 }

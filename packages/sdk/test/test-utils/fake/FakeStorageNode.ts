@@ -22,7 +22,7 @@ import { convertStreamMessageToBytes } from '../../../src/protocol/oldStreamMess
 import { ResendType } from '../../../src/subscribe/Resends'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
 import { createMockMessage } from '../utils'
-import { FakeChain } from './FakeChain'
+import { FakeChain, UserIDAsHex } from './FakeChain'
 import { FakeEnvironment } from './FakeEnvironment'
 
 const MAX_TIMESTAMP = 8640000000000000 // https://262.ecma-international.org/5.1/#sec-15.9.1.1
@@ -120,8 +120,9 @@ export class FakeStorageNode {
         this.chain.setStorageNodeMetadata(this.getAddress(), {
             urls: [`http://127.0.0.1:${port}`]
         })
-        const storageNodeAssignmentStreamPermissions = new Multimap<EthereumAddress, StreamPermission>()
-        storageNodeAssignmentStreamPermissions.add(this.getAddress(), StreamPermission.PUBLISH)
+        const storageNodeAssignmentStreamPermissions = new Multimap<UserIDAsHex, StreamPermission>()
+        const userIdAsHex = this.getAddress().substring(2)  // remove "0x" prefix
+        storageNodeAssignmentStreamPermissions.add(userIdAsHex, StreamPermission.PUBLISH)
         this.chain.setStream(formStorageNodeAssignmentStreamId(this.getAddress()), {
             metadata: {
                 partitions: 1
