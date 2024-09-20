@@ -128,7 +128,7 @@ describe('SubscriberKeyExchange', () => {
                 hexToBinary(subscriberWallet.address),
                 SignatureType.SECP256K1
             )
-            const keyStore = getLocalGroupKeyStore(toEthereumAddress(subscriberWallet.address))
+            const keyStore = getLocalGroupKeyStore(hexToBinary(subscriberWallet.address))
             await waitForCondition(async () => (await keyStore.get(groupKey.id, hexToBinary(publisherWallet.address))) !== undefined)
         })
 
@@ -158,7 +158,7 @@ describe('SubscriberKeyExchange', () => {
                 messageType: StreamMessageType.GROUP_KEY_REQUEST
             })
             await assertGroupKeyRequest(request, streamPartId, [groupKey.id], hexToBinary(erc1271Contract), SignatureType.ERC_1271)
-            const keyStore = getLocalGroupKeyStore(await subscriber.getAddress())
+            const keyStore = getLocalGroupKeyStore(hexToBinary(await subscriber.getAddress()))
             await waitForCondition(async () => (await keyStore.get(groupKey.id, hexToBinary(publisherWallet.address))) !== undefined)
         })
     })

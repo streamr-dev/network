@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { UserID } from '@streamr/dht'
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, toStreamID } from '@streamr/utils'
+import { toStreamID } from '@streamr/utils'
 import range from 'lodash/range'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
@@ -10,13 +10,13 @@ import { getLocalGroupKeyStore, randomUserId } from '../test-utils/utils'
 
 describe('LocalGroupKeyStore', () => {
     
-    let clientId: EthereumAddress
+    let clientId: UserID
     let publisherId: UserID
     let store: LocalGroupKeyStore
     let store2: LocalGroupKeyStore
 
     beforeEach(() => {
-        clientId = randomEthereumAddress()
+        clientId = randomUserId()
         publisherId = randomUserId()
         store = getLocalGroupKeyStore(clientId)
     })
@@ -44,7 +44,7 @@ describe('LocalGroupKeyStore', () => {
     })
 
     it('key stores are clientId specific', async () => {
-        const clientId2 = randomEthereumAddress()
+        const clientId2 = randomUserId()
         store2 = getLocalGroupKeyStore(clientId2)
 
         const groupKey = GroupKey.generate()
