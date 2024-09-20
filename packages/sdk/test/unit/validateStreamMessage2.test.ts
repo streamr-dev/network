@@ -196,7 +196,7 @@ describe('Validator2', () => {
 
             await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                expect(isPublisher).toHaveBeenCalledWith(msg.getPublisherId(), msg.getStreamId())
+                expect(isPublisher).toHaveBeenCalledWith(expect.toEqualBinary(msg.getPublisherId()), msg.getStreamId())
                 return true
             })
         })
@@ -253,9 +253,7 @@ describe('Validator2', () => {
 
             await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                expect(isPublisher).toHaveBeenCalledTimes(1)
-                expect(isPublisher.mock.calls[0][0]).toEqualBinary(publisher)
-                expect(isPublisher.mock.calls[0][1]).toEqual('streamId')
+                expect(isPublisher).toHaveBeenCalledWith(expect.toEqualBinary(publisher), 'streamId')
                 return true
             })
         })
@@ -266,9 +264,7 @@ describe('Validator2', () => {
 
             await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                expect(isSubscriber).toHaveBeenCalledTimes(1)
-                expect(isSubscriber.mock.calls[0][0]).toEqualBinary(subscriber)
-                expect(isSubscriber.mock.calls[0][1]).toEqual('streamId')
+                expect(isSubscriber).toHaveBeenCalledWith(expect.toEqualBinary(subscriber), 'streamId')
                 return true
             })
         })
@@ -324,9 +320,7 @@ describe('Validator2', () => {
 
             await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                expect(isPublisher).toHaveBeenCalledTimes(1)
-                expect(isPublisher.mock.calls[0][0]).toEqualBinary(publisher)
-                expect(isPublisher.mock.calls[0][1]).toEqual('streamId')
+                expect(isPublisher).toHaveBeenCalledWith(expect.toEqualBinary(publisher), 'streamId')
                 return true
             })
         })
@@ -337,9 +331,7 @@ describe('Validator2', () => {
 
             await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                expect(isSubscriber).toHaveBeenCalledTimes(1)
-                expect(isSubscriber.mock.calls[0][0]).toEqualBinary(subscriber)
-                expect(isSubscriber.mock.calls[0][1]).toEqual('streamId')
+                expect(isSubscriber).toHaveBeenCalledWith(expect.toEqualBinary(subscriber), 'streamId')
                 return true
             })
         })
