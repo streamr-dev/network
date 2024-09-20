@@ -1,10 +1,11 @@
-import { fastWallet, fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
-import { collect, hexToBinary } from '@streamr/utils'
+import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { collect } from '@streamr/utils'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { PermissionAssignment, StreamPermission } from '../../src/permission'
 import { SearchStreamsPermissionFilter } from '../../src/contracts/searchStreams'
+import { PermissionAssignment, StreamPermission } from '../../src/permission'
+import { randomUserId } from '../test-utils/utils'
 
 const TIMEOUT = 2 * 60 * 1000
 
@@ -18,7 +19,7 @@ describe('searchStreams', () => {
     let streamWithPublicPermission: Stream
     let streamWithUserAndPublicPermission: Stream
     let streamWithGrantedAndRevokedPermission: Stream
-    const searcher = fastWallet()
+    const searcher = randomUserId()
 
     const createTestStreams = async (items: {
         streamId: string
@@ -49,17 +50,17 @@ describe('searchStreams', () => {
         const streams = await createTestStreams([
             { streamId: `/${SEARCH_TERM}/1-no-permissions`, assignments: [] },
             { streamId: `/${SEARCH_TERM}/2-user-permission`, assignments: [
-                { user: hexToBinary(searcher.address), permissions: [StreamPermission.SUBSCRIBE] }
+                { user: searcher, permissions: [StreamPermission.SUBSCRIBE] }
             ] },
             { streamId: `/${SEARCH_TERM}/3-public-permissions`, assignments: [
                 { public: true, permissions: [StreamPermission.SUBSCRIBE] }
             ] },
             { streamId: `/${SEARCH_TERM}/4-user-and-public-permissions`, assignments: [
-                { user: hexToBinary(searcher.address), permissions: [StreamPermission.SUBSCRIBE] },
+                { user: searcher, permissions: [StreamPermission.SUBSCRIBE] },
                 { public: true, permissions: [StreamPermission.SUBSCRIBE] }
             ] },
             { streamId: `/${SEARCH_TERM}/5-granted-and-revoked-permissions`, assignments: [
-                { user: hexToBinary(searcher.address), permissions: [StreamPermission.SUBSCRIBE] },
+                { user: searcher, permissions: [StreamPermission.SUBSCRIBE] },
                 { public: true, permissions: [StreamPermission.SUBSCRIBE] }
             ] },
             { streamId: `/${Date.now()}`, assignments: [] }
@@ -70,7 +71,7 @@ describe('searchStreams', () => {
         streamWithUserAndPublicPermission = streams[3]
         streamWithGrantedAndRevokedPermission = streams[4]
         await streamWithGrantedAndRevokedPermission.revokePermissions(
-            { user: hexToBinary(searcher.address), permissions: [StreamPermission.SUBSCRIBE] },
+            { user: searcher, permissions: [StreamPermission.SUBSCRIBE] },
             { public: true, permissions: [StreamPermission.SUBSCRIBE] }
         )
     }, TIMEOUT)
@@ -105,7 +106,7 @@ describe('searchStreams', () => {
 
         it('user permissions', async () => {
             const streamIds = await searchStreamIds(SEARCH_TERM, {
-                user: searcher.address,
+                user: searcher,
                 allowPublic: false
             })
             expect(streamIds).toEqual([
@@ -116,7 +117,7 @@ describe('searchStreams', () => {
 
         it('user permissions and public permissions', async () => {
             const streamIds = await searchStreamIds(SEARCH_TERM, {
-                user: searcher.address,
+                user: searcher,
                 allowPublic: true
             })
             expect(streamIds).toEqual([
@@ -128,7 +129,7 @@ describe('searchStreams', () => {
 
         it('public permissions', async () => {
             const streamIds = await searchStreamIds(SEARCH_TERM, {
-                user: randomEthereumAddress(),
+                user: randomUserId(),
                 allowPublic: true
             })
             expect(streamIds).toEqual([
@@ -140,7 +141,7 @@ describe('searchStreams', () => {
         describe('all of', () => {
             it('match', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
-                    user: searcher.address,
+                    user: searcher,
                     allOf: [StreamPermission.SUBSCRIBE],
                     allowPublic: false
                 })
@@ -152,7 +153,7 @@ describe('searchStreams', () => {
 
             it('no match', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
-                    user: searcher.address,
+                    user: searcher,
                     allOf: [StreamPermission.SUBSCRIBE, StreamPermission.PUBLISH],
                     allowPublic: false
                 })
@@ -161,7 +162,7 @@ describe('searchStreams', () => {
 
             it('all permission types match', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
-                    user: searcher.address,
+                    user: searcher,
                     allOf: [],
                     allowPublic: false
                 })
@@ -175,7 +176,7 @@ describe('searchStreams', () => {
         describe('any of', () => {
             it('match', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
-                    user: searcher.address,
+                    user: searcher,
                     anyOf: [StreamPermission.SUBSCRIBE, StreamPermission.PUBLISH],
                     allowPublic: false
                 })
@@ -187,7 +188,7 @@ describe('searchStreams', () => {
 
             it('no match', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
-                    user: searcher.address,
+                    user: searcher,
                     anyOf: [StreamPermission.GRANT],
                     allowPublic: false
                 })
@@ -196,7 +197,7 @@ describe('searchStreams', () => {
 
             it('no possible results', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
-                    user: searcher.address,
+                    user: searcher,
                     anyOf: [],
                     allowPublic: false
                 })
