@@ -1,7 +1,8 @@
-import { EXISTING_CONNECTION_TIMEOUT, RpcRemote, UserID } from '@streamr/dht'
+import { EXISTING_CONNECTION_TIMEOUT, RpcRemote } from '@streamr/dht'
 import { Logger } from '@streamr/utils'
 import { ProxyConnectionRequest, ProxyDirection } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { UserID } from '../../UserID'
 
 const logger = new Logger(module)
 

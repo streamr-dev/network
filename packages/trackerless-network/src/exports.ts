@@ -14,3 +14,4 @@ export {
     StreamMessage
 } from './proto/packages/trackerless-network/protos/NetworkRpc'
 export { ExternalRpcClient, ExternalRpcClientClass } from './logic/ExternalNetworkRpc'
+export { UserID } from './UserID'

@@ -1,5 +1,6 @@
+import { UserID } from '@streamr/trackerless-network'
 import { areEqualBinaries, hexToBinary, Logger, StreamPartID, StreamPartIDUtils } from '@streamr/utils'
-import { Lifecycle, delay, inject, scoped } from 'tsyringe'
+import { delay, inject, Lifecycle, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
@@ -21,7 +22,6 @@ import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { RSAKeyPair } from './RSAKeyPair'
-import { UserID } from '@streamr/dht'
 
 const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed
 

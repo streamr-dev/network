@@ -45,7 +45,7 @@ import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from './../test-utils/fake/FakeStorageNode'
 import { addAfterFn } from './jest-utils'
 import { random } from 'lodash'
-import { UserID } from '@streamr/dht'
+import { UserID } from '@streamr/trackerless-network'
 
 const logger = new Logger(module)
 

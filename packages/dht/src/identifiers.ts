@@ -7,7 +7,6 @@ export const KADEMLIA_ID_LENGTH_IN_BYTES = 20
 
 export type DhtAddress = BrandedString<'DhtAddress'>
 export type DhtAddressRaw = Uint8Array
-export type UserID = Uint8Array
 
 export const getDhtAddressFromRaw = (raw: DhtAddressRaw): DhtAddress => {
     return binaryToHex(raw) as unknown as DhtAddress

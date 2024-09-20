@@ -1,10 +1,10 @@
-import { BrowserProvider, AbstractSigner, Provider, computeAddress, Wallet } from 'ethers'
-import { EthereumAddress, hexToBinary, toEthereumAddress, wait, createSignature } from '@streamr/utils'
+import { UserID } from '@streamr/trackerless-network'
+import { createSignature, EthereumAddress, hexToBinary, toEthereumAddress, wait } from '@streamr/utils'
+import { AbstractSigner, BrowserProvider, computeAddress, Provider, Wallet } from 'ethers'
 import pMemoize from 'p-memoize'
 import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'
-import { pLimitFn } from './utils/promises'
 import { RpcProviderSource } from './RpcProviderSource'
-import { UserID } from '@streamr/dht'
+import { pLimitFn } from './utils/promises'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 

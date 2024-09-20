@@ -1,6 +1,7 @@
 import 'reflect-metadata'
 
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
+import { UserID } from '@streamr/trackerless-network'
 import {
     EthereumAddress,
     hexToBinary,
@@ -23,7 +24,6 @@ import {
     getLocalGroupKeyStore
 } from '../test-utils/utils'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
-import { UserID } from '@streamr/dht'
 
 describe('SubscriberKeyExchange', () => {
 

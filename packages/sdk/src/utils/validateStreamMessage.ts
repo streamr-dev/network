@@ -1,4 +1,4 @@
-import { UserID } from '@streamr/dht'
+import { UserID } from '@streamr/trackerless-network'
 import { binaryToHex } from '@streamr/utils'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { StreamMessage, StreamMessageType } from '../protocol/StreamMessage'

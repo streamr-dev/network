@@ -1,6 +1,6 @@
-import { UserID } from '@streamr/dht'
 import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, convertBytesToStreamMessage } from '@streamr/sdk'
 import { waitForStreamToEnd } from '@streamr/test-utils'
+import { UserID } from '@streamr/trackerless-network'
 import { hexToBinary, toStreamID, utf8ToBinary, waitForCondition, waitForEvent } from '@streamr/utils'
 import { Client } from 'cassandra-driver'
 import { PassThrough, Readable } from 'stream'

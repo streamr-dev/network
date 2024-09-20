@@ -3,7 +3,7 @@
  */
 import { IMessageType } from '@protobuf-ts/runtime'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { DhtAddress, PeerDescriptor, UserID } from '@streamr/dht'
+import { DhtAddress, PeerDescriptor } from '@streamr/dht'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import {
     ExternalRpcClient,
@@ -11,6 +11,7 @@ import {
     NetworkOptions,
     StreamMessage as NewStreamMessage,
     ProxyDirection,
+    UserID,
     createNetworkNode as createNetworkNode_
 } from '@streamr/trackerless-network'
 import { Logger, MetricsContext, StreamPartID } from '@streamr/utils'

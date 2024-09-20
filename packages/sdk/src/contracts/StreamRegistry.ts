@@ -1,3 +1,4 @@
+import { UserID } from '@streamr/trackerless-network'
 import {
     EthereumAddress,
     GraphQLQuery,
@@ -5,12 +6,12 @@ import {
     StreamID,
     StreamIDUtils,
     TheGraphClient,
+    binaryToHex,
     collect,
+    hexToBinary,
     isENSName,
     toEthereumAddress,
-    toStreamID,
-    binaryToHex,
-    hexToBinary
+    toStreamID
 } from '@streamr/utils'
 import { ContractTransactionResponse } from 'ethers'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -45,9 +46,8 @@ import { StreamFactory } from './../StreamFactory'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway, waitForTx } from './contract'
-import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, searchStreams as _searchStreams } from './searchStreams'
-import { UserID } from '@streamr/dht'
 import { normalizeUserId } from './normalizeUserId'
+import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, searchStreams as _searchStreams } from './searchStreams'
 
 /*
  * On-chain registry of stream metadata and permissions.

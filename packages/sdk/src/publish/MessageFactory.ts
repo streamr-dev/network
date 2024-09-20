@@ -1,10 +1,11 @@
+import { UserID } from '@streamr/trackerless-network'
 import {
     StreamID,
+    binaryToHex,
+    hexToBinary,
     keyToArrayIndex,
     toEthereumAddress,
-    utf8ToBinary,
-    hexToBinary,
-    binaryToHex
+    utf8ToBinary
 } from '@streamr/utils'
 import random from 'lodash/random'
 import { Authentication } from '../Authentication'
@@ -28,7 +29,6 @@ import { formLookupKey } from '../utils/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { PublishMetadata } from './Publisher'
 import { createMessageRef, createRandomMsgChainId } from './messageChain'
-import { UserID } from '@streamr/dht'
 
 export interface MessageFactoryOptions {
     streamId: StreamID

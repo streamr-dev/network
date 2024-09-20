@@ -1,4 +1,4 @@
-import { UserID } from '@streamr/dht'
+import { UserID } from '@streamr/trackerless-network'
 import { binaryToHex, Logger, StreamID } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { NAMESPACES, PersistenceManager } from '../PersistenceManager'

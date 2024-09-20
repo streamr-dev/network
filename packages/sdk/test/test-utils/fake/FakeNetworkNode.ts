@@ -1,9 +1,11 @@
-import { DhtAddress, PeerDescriptor, UserID, getDhtAddressFromRaw } from '@streamr/dht'
-import { 
+import { DhtAddress, PeerDescriptor, getDhtAddressFromRaw } from '@streamr/dht'
+import { ProtoRpcClient } from '@streamr/proto-rpc'
+import {
     ExternalRpcClient,
     NetworkOptions,
     StreamMessage as NewStreamMessage,
-    ProxyDirection
+    ProxyDirection,
+    UserID
 } from '@streamr/trackerless-network'
 import { MetricsContext, StreamPartID } from '@streamr/utils'
 import crypto from 'crypto'
@@ -12,7 +14,6 @@ import { Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFacade'
 import { StreamMessageTranslator } from '../../../src/protocol/StreamMessageTranslator'
 import { FakeNetwork } from './FakeNetwork'
-import { ProtoRpcClient } from '@streamr/proto-rpc'
 
 type MessageListener = (msg: NewStreamMessage) => void
 

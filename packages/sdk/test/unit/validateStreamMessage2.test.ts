@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { UserID } from '@streamr/dht'
+import { UserID } from '@streamr/trackerless-network'
 import { areEqualBinaries, hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
 import { mock } from 'jest-mock-extended'

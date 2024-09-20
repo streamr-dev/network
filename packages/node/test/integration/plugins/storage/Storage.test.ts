@@ -1,4 +1,3 @@
-import { UserID } from '@streamr/dht'
 import {
     ContentType,
     EncryptionType,
@@ -8,6 +7,7 @@ import {
     convertBytesToStreamMessage,
     convertStreamMessageToBytes
 } from '@streamr/sdk'
+import { UserID } from '@streamr/trackerless-network'
 import { hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
 import { Client } from 'cassandra-driver'
 import { randomFillSync } from 'crypto'

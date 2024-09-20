@@ -5,7 +5,6 @@ import {
     EXISTING_CONNECTION_TIMEOUT,
     ITransport,
     PeerDescriptor,
-    UserID,
     getDhtAddressFromRaw,
     getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
@@ -28,6 +27,7 @@ import { MIN_NEIGHBOR_COUNT as NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT, Strea
 import { StreamPartReconnect } from './StreamPartReconnect'
 import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode'
 import { ProxyClient } from './proxy/ProxyClient'
+import { UserID } from '../UserID'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void

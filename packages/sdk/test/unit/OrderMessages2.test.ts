@@ -1,5 +1,5 @@
-import { UserID } from '@streamr/dht'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { UserID } from '@streamr/trackerless-network'
 import { StreamPartID, StreamPartIDUtils, binaryToHex, hexToBinary, toStreamID, wait, waitForCondition } from '@streamr/utils'
 import { shuffle } from 'lodash'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'

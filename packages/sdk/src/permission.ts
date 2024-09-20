@@ -1,6 +1,6 @@
-import { MaxInt256 } from 'ethers'
+import { UserID } from '@streamr/trackerless-network'
 import { EthereumAddress } from '@streamr/utils'
-import { UserID } from '@streamr/dht'
+import { MaxInt256 } from 'ethers'
 
 export enum StreamPermission {
     EDIT = 'edit',

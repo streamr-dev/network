@@ -4,7 +4,6 @@ import {
     ITransport,
     ListeningRpcCommunicator,
     PeerDescriptor,
-    UserID,
     getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
 import { Logger, StreamPartID, addManagedEventListener, wait } from '@streamr/utils'
@@ -26,6 +25,7 @@ import { formStreamPartContentDeliveryServiceId } from '../formStreamPartDeliver
 import { Propagation } from '../propagation/Propagation'
 import { markAndCheckDuplicate } from '../utils'
 import { ProxyConnectionRpcRemote } from './ProxyConnectionRpcRemote'
+import { UserID } from '../../UserID'
 
 // TODO use options option or named constant?
 export const retry = async <T>(task: () => Promise<T>, description: string, abortSignal: AbortSignal, delay = 10000): Promise<T> => {

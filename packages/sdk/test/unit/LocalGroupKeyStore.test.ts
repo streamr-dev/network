@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
-import { UserID } from '@streamr/dht'
 import { randomEthereumAddress } from '@streamr/test-utils'
+import { UserID } from '@streamr/trackerless-network'
 import { toStreamID } from '@streamr/utils'
 import range from 'lodash/range'
 import { GroupKey } from '../../src/encryption/GroupKey'

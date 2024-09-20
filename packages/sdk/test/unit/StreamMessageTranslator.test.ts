@@ -1,9 +1,8 @@
-import { UserID } from '@streamr/dht'
 import {
     ContentType as NewContentType,
     EncryptionType as NewEncryptionType,
     SignatureType as NewSignatureType,
-    StreamMessage as NewStreamMessage
+    StreamMessage as NewStreamMessage, UserID
 } from '@streamr/trackerless-network'
 import {
     StreamPartID,

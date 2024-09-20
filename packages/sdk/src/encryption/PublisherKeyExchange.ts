@@ -1,3 +1,4 @@
+import { UserID } from '@streamr/trackerless-network'
 import {
     areEqualBinaries,
     binaryToHex,
@@ -8,7 +9,7 @@ import {
     toEthereumAddress
 } from '@streamr/utils'
 import without from 'lodash/without'
-import { Lifecycle, inject, scoped } from 'tsyringe'
+import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { StreamRegistry } from '../contracts/StreamRegistry'
@@ -27,7 +28,6 @@ import { validateStreamMessage } from '../utils/validateStreamMessage'
 import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey } from './GroupKey'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
-import { UserID } from '@streamr/dht'
 
 /*
  * Sends group key responses

@@ -1,6 +1,7 @@
+import { UserID } from '@streamr/trackerless-network'
 import { areEqualBinaries, StreamID, StreamPartID, StreamPartIDUtils, waitForEvent } from '@streamr/utils'
 import crypto from 'crypto'
-import { Lifecycle, inject, scoped } from 'tsyringe'
+import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { DestroySignal } from '../DestroySignal'
@@ -10,7 +11,6 @@ import { GroupKey } from './GroupKey'
 import { LitProtocolFacade } from './LitProtocolFacade'
 import { LocalGroupKeyStore } from './LocalGroupKeyStore'
 import { SubscriberKeyExchange } from './SubscriberKeyExchange'
-import { UserID } from '@streamr/dht'
 
 @scoped(Lifecycle.ContainerScoped)
 export class GroupKeyManager {

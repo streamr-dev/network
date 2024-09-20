@@ -1,5 +1,5 @@
-import { UserID } from '@streamr/dht'
 import { Methods } from '@streamr/test-utils'
+import { UserID } from '@streamr/trackerless-network'
 import { Multimap, StreamID, binaryToHex, hexToBinary } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'

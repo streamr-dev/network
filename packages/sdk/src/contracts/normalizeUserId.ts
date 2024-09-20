@@ -1,4 +1,4 @@
-import { UserID } from '@streamr/dht'
+import { UserID } from '@streamr/trackerless-network'
 
 /**
  * Zero-pads the given data to the specified length.

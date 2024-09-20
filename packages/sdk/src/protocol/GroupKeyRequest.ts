@@ -1,4 +1,4 @@
-import { UserID } from '@streamr/dht'
+import { UserID } from '@streamr/trackerless-network'
 import { StreamMessage, StreamMessageType } from './StreamMessage'
 
 interface Options {

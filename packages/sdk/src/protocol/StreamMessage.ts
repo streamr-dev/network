@@ -1,3 +1,4 @@
+import { UserID } from '@streamr/trackerless-network'
 import { StreamID, StreamPartID, binaryToUtf8 } from '@streamr/utils'
 import { EncryptedGroupKey } from './EncryptedGroupKey'
 import { InvalidJsonError } from './InvalidJsonError'
@@ -6,7 +7,6 @@ import { MessageRef } from './MessageRef'
 import { StreamMessageError } from './StreamMessageError'
 import { ValidationError } from './ValidationError'
 import { validateIsDefined } from './validations'
-import { UserID } from '@streamr/dht'
 
 export enum StreamMessageType {
     MESSAGE = 27,

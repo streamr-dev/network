@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
-import { UserID } from '@streamr/dht'
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
+import { UserID } from '@streamr/trackerless-network'
 import { EthereumAddress, hexToBinary, StreamPartID, StreamPartIDUtils, toEthereumAddress } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'

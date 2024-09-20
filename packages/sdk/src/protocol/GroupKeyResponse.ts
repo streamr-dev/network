@@ -1,4 +1,4 @@
-import { UserID } from '@streamr/dht'
+import { UserID } from '@streamr/trackerless-network'
 import { EncryptedGroupKey } from './EncryptedGroupKey'
 import { StreamMessage, StreamMessageType } from './StreamMessage'
 import { ValidationError } from './ValidationError'
