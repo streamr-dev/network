@@ -19,22 +19,23 @@ interface Params {
     iceServers?: IceServer[]
 }
 
+const MESSAGE_QUEUE_MAX_SIZE = 10000
+
 class MessageQueue {
     
     private readonly queue: Array<Uint8Array>
-    private readonly maxSize: number
     private readonly sendFn: (message: Uint8Array) => void
     private running: boolean
 
     constructor(sendFn: (message: Uint8Array) => void) {
         this.running = false
-        this.maxSize = 100000
         this.queue = []
         this.sendFn = sendFn
     }
 
     push(message: Uint8Array): void {
-        if (this.queue.length >= this.maxSize) {
+        if (this.queue.length >= MESSAGE_QUEUE_MAX_SIZE) {
+            logger.warn('Dropping message due to buffer overflow')
             throw new Error('Cannot add to buffer queue full')
         }
         this.queue.push(message)
@@ -55,13 +56,12 @@ class MessageQueue {
                     this.queue.unshift(messageToSend)
                 }
                 sendAttempts++
-                if (sendAttempts % 50 === 0) {
-                    await wait(1) // give up CPU cycle 
+                if (sendAttempts % 200 === 0) {
+                    await wait(0) // give up CPU cycle 
                 }
             }
             this.running = false
-        })()
-            
+        })()   
     }
     
     isRunning(): boolean {
@@ -243,7 +243,6 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     private setupDataChannel(dataChannel: RTCDataChannel): void {
         this.dataChannel = dataChannel
         dataChannel.bufferedAmountLowThreshold = 32000
-        this.dataChannel.binaryType = 'arraybuffer'
         dataChannel.onopen = () => {
             logger.trace('dc.onOpen')
             this.onDataChannelOpen()
