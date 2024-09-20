@@ -1,6 +1,6 @@
 import { UserID } from '@streamr/dht'
 import { Methods } from '@streamr/test-utils'
-import { EthereumAddress, Multimap, StreamID, binaryToHex, hexToBinary } from '@streamr/utils'
+import { Multimap, StreamID, binaryToHex, hexToBinary } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
 import { Stream, StreamMetadata } from '../../../src/Stream'
@@ -207,12 +207,12 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamPublishers(): AsyncIterable<EthereumAddress> {
+    getStreamPublishers(): AsyncIterable<UserID> {
         throw new Error('not implemented')
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamSubscribers(): AsyncIterable<EthereumAddress> {
+    getStreamSubscribers(): AsyncIterable<UserID> {
         throw new Error('not implemented')
     }
 }

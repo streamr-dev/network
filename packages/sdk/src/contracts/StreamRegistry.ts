@@ -295,15 +295,15 @@ export class StreamRegistry {
             this.logger)
     }
 
-    getStreamPublishers(streamIdOrPath: string): AsyncIterable<EthereumAddress> {
+    getStreamPublishers(streamIdOrPath: string): AsyncIterable<UserID> {
         return this.getStreamPublishersOrSubscribersList(streamIdOrPath, 'publishExpiration')
     }
 
-    getStreamSubscribers(streamIdOrPath: string): AsyncIterable<EthereumAddress> {
+    getStreamSubscribers(streamIdOrPath: string): AsyncIterable<UserID> {
         return this.getStreamPublishersOrSubscribersList(streamIdOrPath, 'subscribeExpiration')
     }
 
-    private async* getStreamPublishersOrSubscribersList(streamIdOrPath: string, fieldName: string): AsyncIterable<EthereumAddress> {
+    private async* getStreamPublishersOrSubscribersList(streamIdOrPath: string, fieldName: string): AsyncIterable<UserID> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         const backendResults = this.theGraphClient.queryEntities<StreamPublisherOrSubscriberItem>(
             (lastId: string, pageSize: number) => StreamRegistry.buildStreamPublishersOrSubscribersQuery(streamId, fieldName, lastId, pageSize)
@@ -316,9 +316,9 @@ export class StreamRegistry {
          * no longer needed
          */
         const validItems = filter<StreamPublisherOrSubscriberItem>(backendResults, (p) => (p as any).stream !== null)
-        yield* map<StreamPublisherOrSubscriberItem, EthereumAddress>(
+        yield* map<StreamPublisherOrSubscriberItem, UserID>(
             validItems,
-            (item) => item.userAddress
+            (item) => hexToBinary(item.userAddress)
         )
     }
 

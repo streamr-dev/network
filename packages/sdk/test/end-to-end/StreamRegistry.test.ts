@@ -206,8 +206,8 @@ describe('StreamRegistry', () => {
     describe('getStreamPublishers', () => {
         it('retrieves a list of publishers', async () => {
             const publishers = await collect(client.getStreamPublishers(createdStream.id))
-            const address = await client.getAddress()
-            return expect(publishers).toEqual([address])
+            expect(publishers).toHaveLength(1)
+            expect(publishers[0]).toEqualBinary(await client.getUserId())
         }, TIMEOUT)
     })
 
@@ -226,8 +226,8 @@ describe('StreamRegistry', () => {
     describe('getStreamSubscribers', () => {
         it('retrieves a list of subscribers', async () => {
             const subscribers = await collect(client.getStreamSubscribers(createdStream.id))
-            const address = await client.getAddress()
-            return expect(subscribers).toEqual([address])
+            expect(subscribers).toHaveLength(1)
+            expect(subscribers[0]).toEqual(await client.getUserId())
         }, TIMEOUT)
     })
 
