@@ -220,7 +220,7 @@ describe('Stream permissions', () => {
         const message = {
             foo: Date.now()
         }
-        const errorSnippet = `You don't have permission to publish to this stream. Using address: ${otherUser.address}`
+        const errorSnippet = `You don't have permission to publish to this stream. Using address: ${otherUser.address.toLowerCase()}`
         await expect(() => otherUserClient.publish(stream.id, message)).rejects.toThrow(errorSnippet)
         await client.grantPermissions(stream.id, {
             user: hexToBinary(otherUser.address),
