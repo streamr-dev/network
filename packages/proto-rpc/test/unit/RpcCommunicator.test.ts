@@ -68,7 +68,7 @@ describe('RpcCommunicator', () => {
         rpcCommunicator.onOutgoingMessage(request, promises)
         // @ts-expect-error private 
         expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
-        rpcCommunicator.handleIncomingMessage(responseRpcMessage)
+        rpcCommunicator.handleIncomingMessage(responseRpcMessage, new ProtoCallContext())
         const pong = await promises.message.promise
         expect(pong).toEqual({ requestId: 'requestId' })
         // @ts-expect-error private 
@@ -98,7 +98,7 @@ describe('RpcCommunicator', () => {
         rpcCommunicator.onOutgoingMessage(request, promises)
         // @ts-expect-error private 
         expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
-        rpcCommunicator.handleIncomingMessage(errorResponse)
+        rpcCommunicator.handleIncomingMessage(errorResponse, new ProtoCallContext())
         await expect(promises.message.promise)
             .rejects
             .toEqual(new Err.RpcServerError('Server error on request'))
@@ -116,7 +116,7 @@ describe('RpcCommunicator', () => {
         rpcCommunicator.onOutgoingMessage(request, promises)
         // @ts-expect-error private 
         expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
-        rpcCommunicator.handleIncomingMessage(errorResponse)
+        rpcCommunicator.handleIncomingMessage(errorResponse, new ProtoCallContext())
         await expect(promises.message.promise)
             .rejects
             .toEqual(new Err.RpcTimeout('Server timed out on request'))
@@ -134,7 +134,7 @@ describe('RpcCommunicator', () => {
         rpcCommunicator.onOutgoingMessage(request, promises)
         // @ts-expect-error private 
         expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
-        rpcCommunicator.handleIncomingMessage(errorResponse)
+        rpcCommunicator.handleIncomingMessage(errorResponse, new ProtoCallContext())
         await expect(promises.message.promise)
             .rejects
             .toEqual(new Err.RpcRequest(`Server does not implement method ping`))
@@ -151,7 +151,7 @@ describe('RpcCommunicator', () => {
             }
         })
         
-        rpcCommunicator.handleIncomingMessage(request)
+        rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
         await waitForCondition(() => successCounter === 1)
     })
 
@@ -177,7 +177,7 @@ describe('RpcCommunicator', () => {
             }
         })
        
-        rpcCommunicator.handleIncomingMessage(request)
+        rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
         await waitForCondition(() => errorCounter === 1)
     })
 
@@ -191,7 +191,7 @@ describe('RpcCommunicator', () => {
             }
         })
        
-        rpcCommunicator.handleIncomingMessage(request)
+        rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
         await waitForCondition(() => errorCounter === 1)
     })
 
@@ -204,7 +204,16 @@ describe('RpcCommunicator', () => {
             }
         })
        
-        rpcCommunicator.handleIncomingMessage(request)
+        rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
         await waitForCondition(() => errorCounter === 1)
+    })
+
+    it.only('getRequests', () => {
+        // @ts-expect-error private 
+        rpcCommunicator.onOutgoingMessage(request, promises, {targetDescriptor: {nodeId: 'test'}})
+        // @ts-expect-error private 
+        expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
+        const ongoingRequests = rpcCommunicator.getRequests((request) => true)
+        console.log(ongoingRequests)
     })
 })

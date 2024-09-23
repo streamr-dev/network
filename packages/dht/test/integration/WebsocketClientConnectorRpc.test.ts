@@ -33,11 +33,11 @@ describe('WebsocketClientConnectorRpc', () => {
         )
 
         rpcCommunicator1.setOutgoingMessageListener(async (message: RpcMessage) => {
-            rpcCommunicator2.handleIncomingMessage(message)
+            rpcCommunicator2.handleIncomingMessage(message, new DhtCallContext())
         })
 
         rpcCommunicator2.setOutgoingMessageListener(async (message: RpcMessage) => {
-            rpcCommunicator1.handleIncomingMessage(message)
+            rpcCommunicator1.handleIncomingMessage(message, new DhtCallContext())
         })
 
         client1 = toProtoRpcClient(new WebsocketClientConnectorRpcClient(rpcCommunicator1.getRpcClientTransport()))
