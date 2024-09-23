@@ -95,7 +95,7 @@ describe('RpcCommunicator', () => {
         }
         //response.body = RpcMessage.toBinary(errorResponse)
         // @ts-expect-error private 
-        rpcCommunicator.onOutgoingMessage(request, new ProtoCallContext(),promises)
+        rpcCommunicator.onOutgoingMessage(request, new ProtoCallContext(), promises)
         // @ts-expect-error private 
         expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
         rpcCommunicator.handleIncomingMessage(errorResponse, new ProtoCallContext())
@@ -208,9 +208,9 @@ describe('RpcCommunicator', () => {
         await waitForCondition(() => errorCounter === 1)
     })
 
-    it('getRequests', () => {
+    it('getRequestIds', () => {
         // @ts-expect-error private 
-        rpcCommunicator.onOutgoingMessage(request,  { nodeId: 'test' }, promises)
+        rpcCommunicator.onOutgoingMessage(request, { nodeId: 'test' }, promises)
         // @ts-expect-error private 
         expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
         const matchingOngoingRequests = rpcCommunicator.getRequestIds((request) => request.getCallContext().nodeId === 'test')
@@ -218,4 +218,5 @@ describe('RpcCommunicator', () => {
         const noMatchingOngoingRequests = rpcCommunicator.getRequestIds((request) => request.getCallContext().nodeId === 'nope')
         expect(noMatchingOngoingRequests.length).toEqual(0)
     })
+
 })

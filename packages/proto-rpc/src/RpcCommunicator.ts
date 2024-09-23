@@ -29,7 +29,7 @@ export interface RpcCommunicatorOptions {
     rpcRequestTimeout?: number
 }
 
-class OngoingRequest<T extends ProtoCallContext>  {
+class OngoingRequest<T extends ProtoCallContext> {
 
     private deferredPromises: ResultParts
     private callContext: T
@@ -362,7 +362,7 @@ export class RpcCommunicator<T extends ProtoCallContext> {
     }
 
     public getRequestIds(predicate: (request: OngoingRequest<T>) => boolean): string[] {
-        return Array.from(this.ongoingRequests.entries()).filter(([id, request]) => request.fulfillsPredicate(predicate)).map(([id]) => id)
+        return Array.from(this.ongoingRequests.entries()).filter(([_, request]) => request.fulfillsPredicate(predicate)).map(([id]) => id)
     }
 
     // eslint-disable-next-line class-methods-use-this

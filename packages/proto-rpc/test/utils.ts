@@ -10,7 +10,6 @@ import {
 } from './proto/TestProtos'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { IDhtRpcService } from './proto/TestProtos.server'
-import { ProtoCallContext } from '../src/ProtoCallContext'
 
 interface IDhtRpcWithError extends IDhtRpcService {
     throwPingError: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse>
