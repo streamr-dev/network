@@ -21,7 +21,7 @@ describe('Network RPC', () => {
     beforeEach(() => {
         rpcCommunicator1 = new RpcCommunicator()
         rpcCommunicator2 = new RpcCommunicator()
-        rpcCommunicator1.on('outgoingMessage', (message: RpcMessage) => {
+        rpcCommunicator1.setOutgoingMessageListener(async (message: RpcMessage) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
         client = toProtoRpcClient(new ContentDeliveryRpcClient(rpcCommunicator1.getRpcClientTransport()))

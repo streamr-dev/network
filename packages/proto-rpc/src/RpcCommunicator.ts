@@ -12,7 +12,6 @@ import {
 } from './proto/ProtoRpc'
 import { Empty } from './proto/google/protobuf/empty'
 import { MethodOptions, ServerRegistry } from './ServerRegistry'
-import EventEmitter from 'eventemitter3'
 import { DeferredState, ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '@streamr/utils'
 import { ProtoCallContext, ProtoRpcOptions } from './ProtoCallContext'
@@ -24,10 +23,6 @@ export enum StatusCode {
     STOPPED = 'STOPPED',
     DEADLINE_EXCEEDED = 'DEADLINE_EXCEEDED',
     SERVER_ERROR = 'SERVER_ERROR'
-}
-
-interface RpcCommunicatorEvents<T extends ProtoCallContext> {
-    outgoingMessage: (message: RpcMessage, requestId: string, callContext?: T) => void
 }
 
 export interface RpcCommunicatorOptions {
@@ -116,7 +111,7 @@ interface RpcResponseParams {
 
 type OutgoingMessageListener<T extends ProtoCallContext> = (message: RpcMessage, requestId: string, callContext?: T) => Promise<void>
 
-export class RpcCommunicator<T extends ProtoCallContext> extends EventEmitter<RpcCommunicatorEvents<T>> {
+export class RpcCommunicator<T extends ProtoCallContext> {
     private stopped = false
     private readonly rpcClientTransport: ClientTransport
     private readonly rpcServerRegistry: ServerRegistry
@@ -125,7 +120,6 @@ export class RpcCommunicator<T extends ProtoCallContext> extends EventEmitter<Rp
     private outgoingMessageListener?: OutgoingMessageListener<T>
 
     constructor(params?: RpcCommunicatorOptions) {
-        super()
 
         this.rpcRequestTimeout = params?.rpcRequestTimeout ?? 5000
         this.rpcClientTransport = new ClientTransport(this.rpcRequestTimeout)
@@ -181,7 +175,6 @@ export class RpcCommunicator<T extends ProtoCallContext> extends EventEmitter<Rp
         this.ongoingRequests.forEach((ongoingRequest: OngoingRequest) => {
             ongoingRequest.rejectRequest(new Error('stopped'), StatusCode.STOPPED)
         })
-        this.removeAllListeners()
         this.ongoingRequests.clear()
         this.rpcClientTransport.stop()
     }
@@ -202,8 +195,6 @@ export class RpcCommunicator<T extends ProtoCallContext> extends EventEmitter<Rp
         }
 
         logger.trace(`onOutGoingMessage, messageId: ${rpcMessage.requestId}`)
-
-        this.emit('outgoingMessage', rpcMessage, rpcMessage.requestId, callContext)
 
         if (this.outgoingMessageListener) {
             this.outgoingMessageListener(rpcMessage, rpcMessage.requestId, callContext)
