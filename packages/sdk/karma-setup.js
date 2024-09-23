@@ -13,3 +13,6 @@ if (toThrowStreamrError !== undefined) {
         toThrowStreamrError
     })
 }
+
+const { customMatchers } = require('@streamr/test-utils')
+expect.extend(customMatchers)
