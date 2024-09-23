@@ -33,7 +33,7 @@ export const toObject = (msg: StreamMessage): any => {
         streamPartition: msg.getStreamPartition(),
         timestamp: msg.getTimestamp(),
         sequenceNumber: msg.getSequenceNumber(),
-        publisherId: msg.getPublisherId(),
+        publisherId: binaryToHex(msg.getPublisherId(), true),
         msgChainId: msg.getMsgChainId(),
         messageType: msg.messageType,
         contentType: msg.contentType,

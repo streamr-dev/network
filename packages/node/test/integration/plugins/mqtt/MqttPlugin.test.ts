@@ -1,11 +1,13 @@
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import { Queue } from '@streamr/test-utils'
-import { Message } from '../../../../src/helpers/PayloadFormat'
+import { Message, MetadataPayloadFormat } from '../../../../src/helpers/PayloadFormat'
 import { createMessagingPluginTest } from '../../createMessagingPluginTest'
 
 const MQTT_PORT = 12430
 
 jest.setTimeout(30000)
+
+const PAYLOAD_FORMAT = new MetadataPayloadFormat()
 
 createMessagingPluginTest('mqtt',
     {
@@ -20,12 +22,12 @@ createMessagingPluginTest('mqtt',
             await client.end(true)
         },
         publish: async (msg: Message, streamId: string, client: AsyncMqttClient): Promise<void> => {
-            await client.publish(streamId, JSON.stringify(msg))
+            await client.publish(streamId, PAYLOAD_FORMAT.createPayload(msg.content, msg.metadata))
         },
         subscribe: async (messageQueue: Queue<Message>, streamId: string, client: AsyncMqttClient): Promise<void> => {
             client.once('message', (topic: string, message: Buffer) => {
                 if (topic === streamId) {
-                    messageQueue.push(JSON.parse(message.toString()))
+                    messageQueue.push(PAYLOAD_FORMAT.createMessage(message.toString()))
                 }
             })
             await client.subscribe(streamId)

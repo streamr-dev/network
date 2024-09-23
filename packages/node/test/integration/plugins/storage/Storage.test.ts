@@ -185,7 +185,7 @@ describe('Storage', () => {
             partition: 10,
             ts: new Date(1545144750494),
             sequence_no: 0,
-            publisher_id: publisherZero,
+            publisher_id: binaryToHex(publisherZero, true),
             msg_chain_id: '1',
             payload: Buffer.from(convertStreamMessageToBytes(msg)),
         })

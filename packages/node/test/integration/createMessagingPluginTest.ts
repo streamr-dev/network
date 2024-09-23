@@ -4,7 +4,7 @@ import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
 import { Broker } from '../../src/broker'
 import { Message } from '../../src/helpers/PayloadFormat'
 import { createClient, startBroker, createTestStream } from '../utils'
-import { wait, merge } from '@streamr/utils'
+import { wait, merge, hexToBinary } from '@streamr/utils'
 
 interface MessagingPluginApi<T> {
     createClient: (action: 'publish' | 'subscribe', streamId: string, apiKey?: string) => Promise<T>
@@ -37,7 +37,7 @@ const assertReceivedMessage = (message: Message) => {
     expect(content).toEqual(MOCK_MESSAGE.content)
     expect(metadata.timestamp).toEqual(MOCK_MESSAGE.metadata.timestamp)
     expect(metadata.sequenceNumber).toEqual(0)
-    expect(metadata.publisherId).toEqual(brokerUser.address.toLocaleLowerCase())
+    expect(metadata.publisherId).toEqualBinary(hexToBinary(brokerUser.address))
     expect(metadata.msgChainId).toBeDefined()
 }
 

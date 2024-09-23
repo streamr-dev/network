@@ -1,6 +1,6 @@
-import { hexToBinary } from './../../../../utils/src/binaryUtils'
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { randomBytes } from 'crypto'
 import { MetadataPayloadFormat, PlainPayloadFormat } from '../../../src/helpers/PayloadFormat'
+import { binaryToHex } from './../../../../utils/src/binaryUtils'
 
 const MOCK_CONTENT = {
     foo: 'bar'
@@ -8,8 +8,12 @@ const MOCK_CONTENT = {
 const MOCK_METADATA = {
     timestamp: 123,
     sequenceNumber: 456,
-    publisherId: hexToBinary(randomEthereumAddress()),
+    publisherId: randomBytes(10),
     msgChainId: 'm'
+}
+const MOCK_METADATA_SERIALIZED = {
+    ...MOCK_METADATA,
+    publisherId: binaryToHex(MOCK_METADATA.publisherId, true)
 }
 
 describe('PayloadFormat', () => {
@@ -66,7 +70,7 @@ describe('PayloadFormat', () => {
             it('happy path', () => {
                 expect(format.createMessage(JSON.stringify({
                     content: MOCK_CONTENT,
-                    metadata: MOCK_METADATA
+                    metadata: MOCK_METADATA_SERIALIZED
                 }))).toEqual({
                     content: MOCK_CONTENT,
                     metadata: MOCK_METADATA
@@ -92,7 +96,7 @@ describe('PayloadFormat', () => {
             it('happy path', () => {
                 expect(JSON.parse(format.createPayload(MOCK_CONTENT, MOCK_METADATA))).toEqual({
                     content: MOCK_CONTENT,
-                    metadata: MOCK_METADATA
+                    metadata: MOCK_METADATA_SERIALIZED
                 })
             })
 
