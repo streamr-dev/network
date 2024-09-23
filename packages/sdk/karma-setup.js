@@ -10,7 +10,9 @@ const { toThrowStreamrError, toEqualBinary } = require('./test/test-utils/custom
 if (toThrowStreamrError !== undefined) {
     // eslint-disable-next-line no-undef
     expect.extend({
-        toThrowStreamrError,
-        toEqualBinary
+        toThrowStreamrError
     })
 }
+
+const { customMatchers } = require('@streamr/test-utils')
+expect.extend(customMatchers)

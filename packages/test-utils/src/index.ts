@@ -362,3 +362,6 @@ type MethodNames<T> = {
 
 // Pick only methods of T
 export type Methods<T> = Pick<T, MethodNames<T>>
+
+import * as customMatchers from './customMatchers'
+export { customMatchers }

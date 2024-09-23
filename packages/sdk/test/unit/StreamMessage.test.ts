@@ -52,7 +52,7 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.encryptionType, EncryptionType.NONE)
             assert.strictEqual(streamMessage.groupKeyId, undefined)
             assert.deepStrictEqual(streamMessage.getParsedContent(), content)
-            expect(streamMessage.content).toEqual(utf8ToBinary(JSON.stringify(content)))
+            expect(streamMessage.content).toEqualBinary(utf8ToBinary(JSON.stringify(content)))
             assert.strictEqual(streamMessage.signature, signature)
             assert.strictEqual(streamMessage.getStreamPartID(), StreamPartIDUtils.parse('streamId#0'))
         })
@@ -78,7 +78,7 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.encryptionType, EncryptionType.NONE)
             assert.strictEqual(streamMessage.groupKeyId, undefined)
             assert.deepStrictEqual(streamMessage.getParsedContent(), content)
-            expect(streamMessage.content).toEqual(utf8ToBinary(JSON.stringify(content)))
+            expect(streamMessage.content).toEqualBinary(utf8ToBinary(JSON.stringify(content)))
             assert.strictEqual(streamMessage.signature, signature)
         })
 

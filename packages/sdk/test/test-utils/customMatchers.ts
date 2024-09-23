@@ -1,16 +1,10 @@
 import { printExpected, printReceived } from 'jest-matcher-utils'
 import isFunction from 'lodash/isFunction'
 import { StreamrClientError, StreamrClientErrorCode } from './../../src/StreamrClientError'
-import { areEqualBinaries, binaryToHex } from '@streamr/utils'
 
 interface PartialStreamrClientError {
     code: StreamrClientErrorCode
     message?: string
-}
-
-interface CustomMatchers<R = unknown> {
-    toThrowStreamrError(expectedError: PartialStreamrClientError): R
-    toEqualBinary(expected: Uint8Array): R
 }
 
 // we could ES2015 module syntax (https://jestjs.io/docs/expect#expectextendmatchers),
@@ -18,8 +12,9 @@ interface CustomMatchers<R = unknown> {
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace jest {
-        interface Expect extends CustomMatchers {}
-        interface Matchers<R> extends CustomMatchers<R> {}
+        interface Matchers<R> {
+            toThrowStreamrError(expectedError: PartialStreamrClientError): R
+        }
     }
 }
 
@@ -70,30 +65,6 @@ const toThrowStreamrError = (
     }
 }
 
-const toEqualBinary = (
-    actual: unknown,
-    expected: Uint8Array
-): jest.CustomMatcherResult => {
-    if (!(actual instanceof Uint8Array)) {
-        return {
-            pass: false,
-            message: () => 'Expected an instance of Uint8Array'
-        }
-    }
-    const areEqual = areEqualBinaries(actual, expected)
-    return {
-        pass: areEqual,
-        message: () => {
-            if (!areEqual) {
-                return formErrorMessage('Binaries are not equal', binaryToHex(expected, true), binaryToHex(actual, true))
-            } else {
-                return `Binaries are equal\nReceived:${printReceived(binaryToHex(actual, true))}`
-            }
-        }
-    }
-}
-
 expect.extend({
-    toThrowStreamrError,
-    toEqualBinary
+    toThrowStreamrError
 })
