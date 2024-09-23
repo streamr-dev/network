@@ -99,7 +99,11 @@ class OngoingRequest<T extends ProtoCallContext>  {
         }
     }
 
-    public getCallContext(): T {
+    fulfillsPredicate(predicate: (request: OngoingRequest<T>) => boolean): boolean {
+        return predicate(this)
+    }
+
+    getCallContext(): T {
         return this.callContext
     } 
 }
@@ -358,7 +362,7 @@ export class RpcCommunicator<T extends ProtoCallContext> {
     }
 
     public getRequests(predicate: (request: OngoingRequest<T>) => boolean): OngoingRequest<T>[] {
-        return Array.from(this.ongoingRequests.values()).filter(predicate)
+        return Array.from(this.ongoingRequests.values()).filter((request) => request.fulfillsPredicate(predicate))
     }
 
     // eslint-disable-next-line class-methods-use-this
