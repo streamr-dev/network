@@ -1,3 +1,5 @@
+import {} from '../src/customMatcherTypes'
+
 describe('custom matchers', () => {
     it('happy path', () => {
         expect(new Uint8Array([1, 2, 3])).toEqualBinary(new Uint8Array([1, 2, 3]))
