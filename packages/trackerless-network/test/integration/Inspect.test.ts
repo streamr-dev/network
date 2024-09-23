@@ -2,8 +2,7 @@ import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@str
 import { StreamPartIDUtils } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkStack } from '../../src/NetworkStack'
-import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
-import { randomBytes } from 'crypto'
+import { createMockPeerDescriptor, createStreamMessage, randomUserId } from '../utils/utils'
 
 describe('inspect', () => {
 
@@ -72,7 +71,7 @@ describe('inspect', () => {
             const msg = createStreamMessage(
                 JSON.stringify({ hello: 'WORLD' }),
                 streamPartId,
-                randomBytes(40),
+                randomUserId(),
                 123123,
                 sequenceNumber
             )

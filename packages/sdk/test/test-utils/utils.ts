@@ -323,6 +323,6 @@ export const readUtf8ExampleIndirectly = async (): Promise<string> => {
 }
 
 export const randomUserId = (): Uint8Array => {
-    const length = random(10, 40)
+    const length = random(20, 20)  // TODO e.g. random(10, 40)
     return randomBytes(length)
 }

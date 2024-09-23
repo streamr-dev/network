@@ -4,11 +4,10 @@ import { NetworkNode } from '../../src/NetworkNode'
 import { NetworkStack } from '../../src/NetworkStack'
 import { Events } from '../../src/logic/ContentDeliveryManager'
 import { StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { createStreamMessage } from '../utils/utils'
-import { randomBytes } from 'crypto'
+import { createStreamMessage, randomUserId } from '../utils/utils'
 
 const STREAM_PART = StreamPartIDUtils.parse('stream#0')
-const PUBLISHER_ID = randomBytes(40)
+const PUBLISHER_ID = randomUserId()
 
 const createMessage = (id: number): StreamMessage => {
     return createStreamMessage(`${id}`, STREAM_PART, PUBLISHER_ID)

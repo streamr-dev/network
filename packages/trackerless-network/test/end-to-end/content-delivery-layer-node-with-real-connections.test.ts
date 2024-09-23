@@ -4,8 +4,7 @@ import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNo
 import { ControlLayerNode } from '../../src/logic/ControlLayerNode'
 import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
-import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
-import { randomBytes } from 'crypto'
+import { createMockPeerDescriptor, createStreamMessage, randomUserId } from '../utils/utils'
 
 describe('content delivery layer node with real connections', () => {
 
@@ -152,7 +151,7 @@ describe('content delivery layer node with real connections', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             streamPartId,
-            randomBytes(40)
+            randomUserId()
         )
         contentDeliveryLayerNode1.broadcast(msg)
         await waitForCondition(() => receivedMessageCount >= 4)

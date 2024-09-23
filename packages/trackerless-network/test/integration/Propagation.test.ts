@@ -3,8 +3,7 @@ import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
-import { createMockContentDeliveryLayerNodeAndDhtNode, createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
-import { randomBytes } from 'crypto'
+import { createMockContentDeliveryLayerNodeAndDhtNode, createMockPeerDescriptor, createStreamMessage, randomUserId } from '../utils/utils'
 
 describe('Propagation', () => {
     const entryPointDescriptor = createMockPeerDescriptor()
@@ -68,7 +67,7 @@ describe('Propagation', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             STREAM_PART_ID,
-            randomBytes(11)
+            randomUserId()
         )
         contentDeliveryLayerNodes[0].broadcast(msg)
         await waitForCondition(() => totalReceived >= NUM_OF_NODES, 10000)

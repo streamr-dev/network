@@ -25,6 +25,8 @@ import {
     StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryRpcClient, HandshakeRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { random } from 'lodash'
+import { randomBytes } from 'crypto'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -140,4 +142,9 @@ export const createNetworkNodeWithSimulator = async (
             storeMaxTtl: 120000
         }
     })
+}
+
+export const randomUserId = (): Uint8Array => {
+    const length = random(20, 20)  // TODO e.g. random(10, 40)
+    return randomBytes(length)
 }

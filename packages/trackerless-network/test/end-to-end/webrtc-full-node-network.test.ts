@@ -2,8 +2,7 @@ import { getNodeIdFromPeerDescriptor, getRandomRegion } from '@streamr/dht'
 import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkStack } from '../../src/NetworkStack'
-import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
-import { randomBytes } from 'crypto'
+import { createMockPeerDescriptor, createStreamMessage, randomUserId } from '../utils/utils'
 
 describe('Full node network with WebRTC connections', () => {
 
@@ -76,7 +75,7 @@ describe('Full node network with WebRTC connections', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             streamPartId,
-            randomBytes(40)
+            randomUserId()
         )
         entryPoint.getContentDeliveryManager().broadcast(msg)
         await waitForCondition(() => receivedMessageCount === NUM_OF_NODES)

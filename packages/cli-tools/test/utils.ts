@@ -2,6 +2,8 @@ import { collect, waitForCondition } from '@streamr/utils'
 import { spawn } from 'child_process'
 import merge2 from 'merge2'
 import { CONFIG_TEST, Stream, StreamrClient } from '@streamr/sdk'
+import { random } from 'lodash'
+import { randomBytes } from 'crypto'
 
 export const DOCKER_DEV_STORAGE_NODE = '0xde1112f631486CfC759A50196853011528bC5FA0'
 
@@ -82,4 +84,9 @@ export const waitForTheGraphToHaveIndexed = async (stream: Stream, client: Strea
         }
         return false
     }, 15 * 1000, 600)
+}
+
+export const randomUserId = (): Uint8Array => {
+    const length = random(20, 20)  // TODO e.g. random(10, 40)
+    return randomBytes(length)
 }

@@ -6,8 +6,7 @@ import {
 import { StreamPartIDUtils, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { ContentDeliveryManager, Events } from '../../src/logic/ContentDeliveryManager'
 import { ControlLayerNode } from '../../src/logic/ControlLayerNode'
-import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
-import { randomBytes } from 'crypto'
+import { createMockPeerDescriptor, createStreamMessage, randomUserId } from '../utils/utils'
 
 describe('ContentDeliveryManager', () => {
 
@@ -25,7 +24,7 @@ describe('ContentDeliveryManager', () => {
     const msg = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
         STREAM_PART_ID,
-        randomBytes(18)
+        randomUserId()
     )
     let simulator: Simulator
 
@@ -118,7 +117,7 @@ describe('ContentDeliveryManager', () => {
         const msg2 = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             streamPartId2,
-            randomBytes(40)
+            randomUserId()
         )
         await Promise.all([
             waitForEvent3<Events>(manager1, 'newMessage'),
