@@ -8,11 +8,9 @@ import {
     EthereumAddress,
     StreamPartID,
     StreamPartIDUtils,
-    binaryToHex,
-    binaryToUtf8,
     hexToBinary,
     toEthereumAddress,
-    utf8ToBinary 
+    utf8ToBinary
 } from '@streamr/utils'
 import { MessageID as OldMessageID } from '../../src/protocol/MessageID'
 import {
@@ -90,12 +88,12 @@ describe('StreamMessageTranslator', () => {
         expect(translated.messageId!.streamPartition).toEqual(StreamPartIDUtils.getStreamPartition(STREAM_PART_ID))
         expect(translated.messageId!.timestamp).toBeGreaterThanOrEqual(0)
         expect(translated.messageId!.sequenceNumber).toEqual(0)
-        expect(binaryToHex(translated.messageId!.publisherId, true)).toEqual('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        expect(translated.messageId!.publisherId).toEqualBinary(hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'))
         expect(translated.previousMessageRef).toEqual(undefined)
         expect(translated.body.oneofKind).toEqual('contentMessage')
         expect((translated.body as any).contentMessage.groupKeyId).toEqual(undefined)
         expect(translated.signature).toStrictEqual(signature)
-        expect(JSON.parse(binaryToUtf8((translated.body as any).contentMessage.content))).toEqual({ hello: 'WORLD' })
+        expect((translated.body as any).contentMessage.content).toEqualBinary(utf8ToBinary(JSON.stringify({ hello: 'WORLD' })))
     })
 
     it('translates protobuf to old protocol', () => {
