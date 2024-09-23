@@ -361,8 +361,8 @@ export class RpcCommunicator<T extends ProtoCallContext> {
         this.outgoingMessageListener = listener
     }
 
-    public getRequests(predicate: (request: OngoingRequest<T>) => boolean): OngoingRequest<T>[] {
-        return Array.from(this.ongoingRequests.values()).filter((request) => request.fulfillsPredicate(predicate))
+    public getRequestIds(predicate: (request: OngoingRequest<T>) => boolean): string[] {
+        return Array.from(this.ongoingRequests.entries()).filter(([id, request]) => request.fulfillsPredicate(predicate)).map(([id]) => id)
     }
 
     // eslint-disable-next-line class-methods-use-this

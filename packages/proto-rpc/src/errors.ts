@@ -9,7 +9,8 @@ export enum ErrorCode {
     NOT_IMPLEMENTED = 'NOT_IMPLEMENTED',
     UNKNOWN_RPC_METHOD = 'UNKNOWN_RPC_METHOD',
     FAILED_TO_PARSE = 'FAILED_TO_PARSE',
-    FAILED_TO_SERIALIZE = 'FAILED_TO_SERIALIZE'
+    FAILED_TO_SERIALIZE = 'FAILED_TO_SERIALIZE',
+    DISCONNECTED = 'DISCONNECTED'
 }
 
 class Err extends Error {
@@ -41,3 +42,4 @@ export class NotImplemented extends Err { constructor(message?: string, original
 export class UnknownRpcMethod extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.UNKNOWN_RPC_METHOD, message, originalError) } }
 export class FailedToParse extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.FAILED_TO_PARSE, message, originalError) } }
 export class FailedToSerialize extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.FAILED_TO_SERIALIZE, message, originalError) } }
+export class Disconnected extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.DISCONNECTED, message, originalError) } }

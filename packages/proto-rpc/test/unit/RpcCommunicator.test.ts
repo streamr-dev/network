@@ -213,9 +213,9 @@ describe('RpcCommunicator', () => {
         rpcCommunicator.onOutgoingMessage(request,  { nodeId: 'test' }, promises)
         // @ts-expect-error private 
         expect(rpcCommunicator.ongoingRequests.size).toEqual(1)
-        const matchingOngoingRequests = rpcCommunicator.getRequests((request) => request.getCallContext().nodeId === 'test')
+        const matchingOngoingRequests = rpcCommunicator.getRequestIds((request) => request.getCallContext().nodeId === 'test')
         expect(matchingOngoingRequests.length).toEqual(1)
-        const noMatchingOngoingRequests = rpcCommunicator.getRequests((request) => request.getCallContext().nodeId === 'nope')
+        const noMatchingOngoingRequests = rpcCommunicator.getRequestIds((request) => request.getCallContext().nodeId === 'nope')
         expect(noMatchingOngoingRequests.length).toEqual(0)
     })
 })
