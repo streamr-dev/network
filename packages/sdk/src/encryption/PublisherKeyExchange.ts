@@ -3,6 +3,7 @@ import {
     areEqualBinaries,
     binaryToHex,
     EthereumAddress,
+    isEthereumAddressByteArray,
     Logger,
     StreamPartID,
     StreamPartIDUtils,
@@ -135,7 +136,7 @@ export class PublisherKeyExchange {
         const authenticatedUser = await this.authentication.getUserId()
         if (areEqualBinaries(publisher, authenticatedUser)) {
             return ResponseType.NORMAL
-        } else if (this.erc1271ContractAddresses.has(toEthereumAddress(binaryToHex(publisher, true)))) {
+        } else if (isEthereumAddressByteArray(publisher) && this.erc1271ContractAddresses.has(toEthereumAddress(binaryToHex(publisher, true)))) {
             return ResponseType.ERC_1271
         } else {
             return ResponseType.NONE

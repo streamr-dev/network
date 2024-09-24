@@ -4,7 +4,7 @@ import { AbortError, asAbortable } from './asAbortable'
 import { setAbortableInterval, setAbortableTimeout } from './abortableTimers'
 import { Defer } from './Defer'
 import { ENSName, toENSName } from './ENSName'
-import { EthereumAddress, toEthereumAddress } from './EthereumAddress'
+import { EthereumAddress, toEthereumAddress, isEthereumAddressByteArray } from './EthereumAddress'
 import { isENSName } from './isENSName'
 import { keyToArrayIndex } from './keyToArrayIndex'
 import { Logger, LogLevel } from './Logger'
@@ -68,8 +68,9 @@ export {
     scheduleAtInterval,
     setAbortableInterval,
     setAbortableTimeout,
-    toENSName,
     toEthereumAddress,
+    isEthereumAddressByteArray,
+    toENSName,
     toEthereumAddressOrENSName,
     wait,
     waitForCondition,
