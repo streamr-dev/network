@@ -15,7 +15,7 @@ module.exports = function({ entry, libraryName, alias = {} }) {
                 rules: [
                     {
                         test: /\.ts?$/,
-                        exclude: /(node_modules|simulation)/,
+                        exclude: [/(node_modules|simulation)/, /\.d\.ts$/],
                         use: [{
                             loader: 'ts-loader',
                             options: { configFile: 'tsconfig.browser.json' },
