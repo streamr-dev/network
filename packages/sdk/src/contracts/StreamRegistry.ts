@@ -46,7 +46,6 @@ import { StreamFactory } from './../StreamFactory'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway, waitForTx } from './contract'
-import { normalizeUserId } from './normalizeUserId'
 import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, searchStreams as _searchStreams } from './searchStreams'
 
 /*
@@ -496,7 +495,7 @@ export class StreamRegistry {
 
     private async isStreamPublisher_nonCached(streamId: StreamID, userId: UserID): Promise<boolean> {
         try {
-            const permissionsRecord = await this.streamRegistryContractReadonly.getPermissionsForUserId(streamId, normalizeUserId(userId))
+            const permissionsRecord = await this.streamRegistryContractReadonly.getPermissionsForUserId(streamId, userId)
             return permissionsRecord.publishExpiration > (Date.now() / 1000)
         } catch (err) {
             return streamContractErrorProcessor(err, streamId, 'StreamPermission')
@@ -505,7 +504,7 @@ export class StreamRegistry {
 
     private async isStreamSubscriber_nonCached(streamId: StreamID, userId: UserID): Promise<boolean> {
         try {
-            const permissionsRecord = await this.streamRegistryContractReadonly.getPermissionsForUserId(streamId, normalizeUserId(userId))
+            const permissionsRecord = await this.streamRegistryContractReadonly.getPermissionsForUserId(streamId, userId)
             return permissionsRecord.subscribeExpiration > (Date.now() / 1000)
         } catch (err) {
             return streamContractErrorProcessor(err, streamId, 'StreamPermission')
