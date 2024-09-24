@@ -11,6 +11,8 @@ import { StreamrClient,
 } from '@streamr/sdk'
 import { Broker, createBroker } from '../src/broker'
 import { Config } from '../src/config/config'
+import { random } from 'lodash'
+import { randomBytes } from 'crypto'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 
@@ -163,4 +165,9 @@ async function createAssignmentStream(client: StreamrClient): Promise<Stream> {
         permissions: [StreamPermission.SUBSCRIBE]
     })
     return stream
+}
+
+export const randomUserId = (): Uint8Array => {
+    const length = random(20, 20)  // TODO e.g. random(10, 40)
+    return randomBytes(length)
 }
