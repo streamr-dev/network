@@ -49,7 +49,7 @@ The delegators can expect to get their tokens back as soon as there is activity 
 A `forceUnstake` is an exceptional DATA token flow, not pictured in the diagram below. Exhaustive list of minor and exceptional DATA token transfers:
 - Forced unstaking related
     - Delegator-initiated after `maxQueueSeconds`, to Operator then to delegator(s) ([source](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/Operator.sol#L441))
-    - Operator-initiated: leave penalty for leaving too early, to protocol ([source](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/Sponsorship.sol#L332)
+    - Operator-initiated: leave penalty for leaving too early, to protocol ([source](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/Sponsorship.sol#L332))
 - Flagging, voting, and kicking related
     - stake returned to the Operator that gets kicked out of a Sponsorship (after penalty deducted)
     - reviewer rewards to Operator: peer-reviewing flags results in a small reward when you vote with the majority
@@ -69,17 +69,17 @@ A `forceUnstake` is an exceptional DATA token flow, not pictured in the diagram 
 There are two processes in the normal operation of Streamr tokenomics: the staking process and the delegation process.
 
 Staking process DATA flows:
-- Stakers send DATA tokens to the Sponsorship contract via [the `stake` method](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/OperatorPolicies/StakeModule.sol#L12).
-- Sponsors send DATA tokens to the Operator contract by calling the `sponsor` method, or `transferAndCall`, or simply transferring (not recommended, the system will lose track of who sponsored).
-- Every second, the remaining sponsorship is allocated to the stakers in proportion to their stake. The allocation is governed by the [StakeWeightedAllocationPolicy](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/SponsorshipPolicies/StakeWeightedAllocationPolicy.sol), as of 2024 the only available allocation policy.
-- Sponsorship returns the staked DATA tokens to Operator contract when `reduceStakeTo` or `unstake` is called.
+- Stakers send DATA tokens to the Sponsorship contract via [the `stake` method](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/OperatorPolicies/StakeModule.sol#L12)
+- Sponsors send DATA tokens to the Operator contract by calling the `sponsor` method, or `transferAndCall`, or simply transferring (not recommended, the system will lose track of who sponsored)
+- Every second, the remaining sponsorship is allocated to the stakers in proportion to their stake. The allocation is governed by the [StakeWeightedAllocationPolicy](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/SponsorshipPolicies/StakeWeightedAllocationPolicy.sol), as of 2024 the only available allocation policy
+- Sponsorship returns the staked DATA tokens to Operator contract when `reduceStakeTo` or `unstake` is called
     - Unstaking also returns the earnings
-- Sponsorship sends DATA token earnings to the Operator contract when `withdraw` is called.
+- Sponsorship sends DATA token earnings to the Operator contract when `withdraw` is called
 
 Delegation process DATA flows:
-- Delegators send DATA tokens to the Operator contract by sending the tokens by calling [the `transferAndCall` method](https://github.com/streamr-dev/DATAv2/blob/main/contracts/DATAv2.sol#L57) or [the `delegate` method](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/Operator.sol#L315).
-- When Operator contract receives DATA tokens, if there is a delegator in the undelegation queue, the DATA tokens are sent forward to the delegator.
-- The DATA tokens the Operator contract receives during `unstake`, `reduceStake`, or `withdraw` calls go through the profit sharing process (see [below section](#profit-sharing)).
+- Delegators send DATA tokens to the Operator contract by sending the tokens by calling [the `transferAndCall` method](https://github.com/streamr-dev/DATAv2/blob/main/contracts/DATAv2.sol#L57) or [the `delegate` method](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/Operator.sol#L315)
+- When Operator contract receives DATA tokens, if there is a delegator in the undelegation queue, the DATA tokens are sent forward to the delegator
+- The DATA tokens the Operator contract receives during `unstake`, `reduceStake`, or `withdraw` calls go through the profit sharing process (see [below section](#profit-sharing))
 
 ![Ordinary staking, allocation, and withdrawing; exceptional flagging, voting, and kicking DATA token flows](@site/static/img/DATA-flows-Sponsorship-contract.jpg)
 
