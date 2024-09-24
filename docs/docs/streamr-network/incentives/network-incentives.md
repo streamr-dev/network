@@ -30,6 +30,109 @@ The introduction of token economics defines three new roles: [Sponsor](../networ
 
 It should be noted that the roles are independent of each other and can be mixed and matched by all actors depending on their goals, for example, the same person could be a Sponsor, Publisher, and a Delegator.
 
+## Technical description
+
+The tokenomics are mainly governed by the following two smart contracts: the Operator contract and the Sponsorship contract. The Operator contract represents an [operator running a Streamr node in the Streamr network](../network-roles/operators.md). The Sponsorship contract holds [the sponsors'](../network-roles/sponsors.md) DATA tokens that `sponsor` a stream, and allocates them as earnings to the stakers.
+
+Stakers are Operator contracts controlled by their operators. The DATA tokens held by the Operator contract are the funds that the operator can `stake` into Sponsorship contracts. By staking into Sponsorship, the operator commits to servicing the sponsored stream.
+
+Stakers may `reduceStakeTo` a lower staked DATA amount, or `unstake` entirely. By unstaking they remove their commitment to servicing the sponsored stream.
+
+Stakers earn from the Sponsorship contract, and those earnings they can `withdraw`. The withdrawn profits are split between protocol, delegators, and the operator (see [Profit sharing](#profit-sharing)).
+
+It is for this profit share that [the delegators](../network-roles/delegators.md) will want to `delegate` their DATA tokens to the Operator contract. The operator can then use those delegated tokens to stake more DATA into Sponsorship contracts, increasing their share of the sponsorship earnings.
+
+When a delegator wants to `undelegate` their tokens, they will be added to the undelegation queue. Whenever funds become available, the delegator's DATA tokens are paid back as the first priority. Whether it's DATA from new incoming delegation, withdrawn earnings, or unstaking, the queued delegators are always paid back first, and only then can the operator resume staking DATA into sponsorships.
+
+The delegators can expect to get their tokens back as soon as there is activity in the contract; but at the very latest after [`maxQueueSeconds`](https://polygonscan.com/address/0x869e88dB146ECAF20dDf199a12684cD80c263c8f#readProxyContract) (currently set to 30 days) they can `forceUnstake` the Operator contract's stake from any Sponsorship(s) until their undelegation is paid.
+
+A `forceUnstake` is an exceptional DATA token flow, not pictured in the diagram below. Exhaustive list of minor and exceptional DATA token transfers:
+- Forced unstaking related
+    - Delegator-initiated after `maxQueueSeconds`, to Operator then to delegator(s) ([source](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/Operator.sol#L441))
+    - Operator-initiated: leave penalty for leaving too early, to protocol ([source](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/Sponsorship.sol#L332)
+- Flagging, voting, and kicking related
+    - stake returned to the Operator that gets kicked out of a Sponsorship (after penalty deducted)
+    - reviewer rewards to Operator: peer-reviewing flags results in a small reward when you vote with the majority
+    - flagger rewards to Operator: flagging a node that then gets kicked out of a Sponsorship results in a small reward
+    - leftover slashings go to protocol: after kicked node gets slashed and rewards paid, there maybe DATA tokens left over that should belong to no one in particular
+    - forfeited locked stake to protocol: raising flags then getting kicked out before they resolve (flag-stake forfeited)
+- Profit sharing related (see [below section](#profit-sharing) for more details)
+    - Protocol fee during profit sharing
+    - "fisherman reward" to Operator: finding other Operators that have too much unwithdrawn earnings results getting a share of the profits ([source](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/Operator.sol#L483))
+
+<!-- above list should be exhaustive in order to be a useful reference! If some other flow/transfer is found, add here! -->
+
+![Sponsor's DATA is sent to stakers via withdraws, earnings in Sponsorship contract become profit in Operator contract, profit is shared between delegators](@site/static/img/DATA-flows-high-level.jpg)
+
+### DATA token flows
+
+There are two processes in the normal operation of Streamr tokenomics: the staking process and the delegation process.
+
+Staking process DATA flows:
+- Stakers send DATA tokens to the Sponsorship contract via [the `stake` method](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/OperatorPolicies/StakeModule.sol#L12).
+- Sponsors send DATA tokens to the Operator contract by calling the `sponsor` method, or `transferAndCall`, or simply transferring (not recommended, the system will lose track of who sponsored).
+- Every second, the remaining sponsorship is allocated to the stakers in proportion to their stake. The allocation is governed by the [StakeWeightedAllocationPolicy](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/SponsorshipPolicies/StakeWeightedAllocationPolicy.sol), as of 2024 the only available allocation policy.
+- Sponsorship returns the staked DATA tokens to Operator contract when `reduceStakeTo` or `unstake` is called.
+    - Unstaking also returns the earnings
+- Sponsorship sends DATA token earnings to the Operator contract when `withdraw` is called.
+
+Delegation process DATA flows:
+- Delegators send DATA tokens to the Operator contract by sending the tokens by calling [the `transferAndCall` method](https://github.com/streamr-dev/DATAv2/blob/main/contracts/DATAv2.sol#L57) or [the `delegate` method](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/Operator.sol#L315).
+- When Operator contract receives DATA tokens, if there is a delegator in the undelegation queue, the DATA tokens are sent forward to the delegator.
+- The DATA tokens the Operator contract receives during `unstake`, `reduceStake`, or `withdraw` calls go through the profit sharing process (see [below section](#profit-sharing)).
+
+![Ordinary staking, allocation, and withdrawing; exceptional flagging, voting, and kicking DATA token flows](@site/static/img/DATA-flows-Sponsorship-contract.jpg)
+
+Additionally in the picture you can see the flagging (voting and kicking) process. It provides the smart contract support for the peer-reviewing of the network. The process is not directly related to the tokenomics, but it does cause DATA transfers.
+
+Since the smart contracts can't know about the nodes' performance, the nodes themselves have to [monitor and inspect each other](./node-inspection.md). Reviewer can flag a suspected target. Reviewers who vote with the majority receive a reward. If the vote concludes with "kick", we call the flag successful, and the flagger receives a reward as well. The kicked node loses the [`slashingFraction`](https://polygonscan.com/address/0x869e88dB146ECAF20dDf199a12684cD80c263c8f#readProxyContract) (currently set to 1%) of its stake.
+
+### Profit sharing
+
+Earnings enter the Operator contract during `unstake`, `forceUnstake` and `withdrawEarningsFromSponsorships` method calls. When unstaking, what is returned in addition to the staked DATA tokens are assumed to be the earnings that have accumulated in the Sponsorship contract. When withdrawing, all received DATA tokens are assumed to be earnings.
+
+Earnings are split between stakeholders, for example **2000 DATA** would be split as follows:
+- first [`protocolFeeFraction`](https://polygonscan.com/address/0x869e88dB146ECAF20dDf199a12684cD80c263c8f#readProxyContract) (currently set to 5%) is send to the protocol treasury: **100 DATA**
+- then the operator gets their cut, for example 10%: **199 DATA**
+- the remaining **1701 DATA** is profit that is split between the delegators (including operator themselves!) in proportion to their stake
+
+Note that the operator gets paid from two sources: the operator cut and the profit share due to self-delegation. So if in the example above the operator had delegated an amount equal to external delegation, the operator's income from the example transaction would in fact be 50% * 1701 DATA + 199 DATA = **1049.5 DATA**.
+
+![Delegated tokens generate profit that is shared between protocol, delegators, and operator](@site/static/img/DATA-flows-Operator-contract.jpg)
+
+What's missing from the picture is the case where the profit sharing was due to a `triggerAnotherOperatorWithdraw` method call into a "fisherman's" Operator contract. The fisherman would receive a reward for finding another Operator that has too much unwithdrawn earnings. The reward is [`fishermanRewardFraction`](https://polygonscan.com/address/0x869e88dB146ECAF20dDf199a12684cD80c263c8f#readProxyContract) (currently set to 25%) of the withdrawn earnings. It's slashed from the operator's self-delegation and transferred to the fisherman's Operator contract.
+
+So the split of **2000 DATA** in case of fisherman-initiated withdraw would be:
+- protocol fee: **100 DATA**
+- operator's cut: **199 DATA**
+- profit: **1701 DATA**
+- fisherman's reward: 25% of earnings, or **500 DATA**
+
+And finally the operator's income would be 1049.5 DATA - 500 DATA = **549.5 DATA**. The fisherman's reward could even take the operator's income negative if the operator's cut is low enough.
+
+### Contract internal bookkeeping
+
+Sponsorship contracts hold different kinds of DATA that are internally kept separate:
+- `totalStakedWei`: total amount of tokens staked by all operators
+  - each operator has their `stakedWei`, part of which can be `lockedStakeWei` if there are flags on/by them
+  - stake belongs to the stakers, they can claim it via `unstake`, `forceUnstake` and `reduceStakeTo` methods
+  - the contract can slash the stake for early leaving or getting kicked after a vote
+- `remainingWei` that comes from the sponsor: part of the sponsorship that hasn't been paid out yet
+  - remaining sponsorship doesn't belong to anybody
+  - will be allocated to stakers according to the `StakeWeightedAllocationPolicy` when the contract is running
+- `earningsWei`: the part of the sponsorship that has been allocated to stakers but not yet withdrawn
+  - belongs to the stakers, they can claim it via `withdraw` method
+- `forfeitedStakeWei`: stakes that were locked to pay for a flag by a past operator who `forceUnstake`d (or was kicked)
+  - should be zero when there are no active flags
+
+Operator contract holds only "one kind" of DATA but itself functions as a "delegation token" [ERC-20 contract](https://ethereum.org/en/developers/docs/standards/tokens/erc-20/). All DATA the Operator contract holds is considered "free funds" that the operator can use to stake into Sponsorship contracts. The only detail here is that the operator must first pay out the queued delegators (if any), though usually the payouts will happen automatically. Note that the Operator contract's DATA balance does not belong to the operator but to all of the delegators (including the operator via self-delegation) in proportion to their delegation.
+
+The ERC-20 "delegation token" works in a manner similar to a liquidity pool: during delegation, DATA tokens are swapped for newly minted delegation tokens; and undelegation again returns the DATA tokens and burns the corresponding amount of delegation tokens. This exchange rate set by the [`DefaultExchangeRatePolicy`](https://github.com/streamr-dev/network-contracts/blob/master/packages/network-contracts/contracts/OperatorTokenomics/OperatorPolicies/DefaultExchangeRatePolicy.sol) is such that the total supply of operator tokens corresponds to the total amount of DATA tokens either held in the contract or staked in Sponsorship contracts (the `valueWithoutEarnings` of the Operator contract). In the code, it's called "Operator token", and for the most part its existence is hidden from the user interface, APIs and the subgraph schema.
+
+Being an ERC-20, the Operator contract address can be added to wallet and its delegation tokens transferred, albeit with two restrictions: one for the operator and one for the rest of the delegators. The operator's self-delegation must remain above the [`minimumSelfDelegationFraction`](https://polygonscan.com/address/0x869e88dB146ECAF20dDf199a12684cD80c263c8f#readProxyContract) (currently set to 5%) of the total "delegation token" supply. Other delegations must still be above [`minimumDelegationWei`](https://polygonscan.com/address/0x869e88dB146ECAF20dDf199a12684cD80c263c8f#readProxyContract) (currently set to 1 delegation token), or completely undelegate to zero. The value of 1 delegation token starts at 1 DATA, but appreciates as profits accumulate. This limitation prevents rounding error shenanigans in contracts with very low self-delegation.
+
+The outcome of the linear exchange rate between DATA and delegation token is: in the user interfaces we can ignore the delegation token and just convert the values to DATA by simple multiplication. The profits are shared in direct proportion to delegations, much like in Sponsorships where stakers share the sponsorship in direct proportion to their stake. Should a non-linear bonding curve be introduced later, the interpretation should remain the same: the value of the delegation tokens is the amount of DATA tokens the delegator would receive after undelegating them. Note that the DATA tokens themselves might not exist in the contract yet, since mostly we expect the Operator contract's value be staked out into Sponsorship contracts. But delegation bookkeeping is still done in the form of the ERC-20 delegation token.
+
 <!-- TODO - re-add these images -->
 
 <!-- <Image
