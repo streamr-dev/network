@@ -37,7 +37,7 @@
         "@typescript-eslint/eslint-plugin": "^7.18.0",
         "@typescript-eslint/parser": "^7.18.0",
         "cli-table": "^0.3.6",
-        "eslint": "^8.57.0",
+        "eslint": "^8.57.1",
         "eslint-config-streamr-ts": "^4.1.0",
         "eslint-plugin-import": "^2.30.0",
         "eslint-plugin-promise": "^7.1.0",
@@ -49,6 +49,6 @@
         "ts-jest": "^29.2.5",
         "typescript": "^5.3.3",
         "yarn": "^1.22.22",
-        "zx": "^8.1.6"
+        "zx": "^8.1.8"
     }
 }
