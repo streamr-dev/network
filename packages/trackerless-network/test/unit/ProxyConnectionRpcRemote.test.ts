@@ -26,7 +26,7 @@ describe('ProxyConnectionRpcRemote', () => {
         const request = ProxyConnectionRequest.fromBinary(rpcMessage.body.value)
         expect(request).toEqual({
             direction: ProxyDirection.PUBLISH,
-            userId
+            userId: expect.toEqualBinary(userId)
         })
         expect(callContext).toMatchObject({
             sourceDescriptor: clientPeerDescriptor,
