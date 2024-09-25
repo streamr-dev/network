@@ -30,10 +30,10 @@ describe('StoreRpcRemote', () => {
         clientRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator.registerRpcMethod(StoreDataRequest, StoreDataResponse, 'storeData', mockStoreRpc.storeData)
-        clientRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
+        clientRpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage) => {
             serverRpcCommunicator.handleIncomingMessage(message)
         })
-        serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
+        serverRpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage) => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
         rpcRemote = new StoreRpcRemote(clientPeerDescriptor, serverPeerDescriptor, clientRpcCommunicator, StoreRpcClient)

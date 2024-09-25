@@ -1,10 +1,11 @@
 import { fastWallet } from '@streamr/test-utils'
-import { StreamPartIDUtils, binaryToUtf8, hexToBinary, toStreamID, toStreamPartID } from '@streamr/utils'
+import { StreamPartIDUtils, hexToBinary, toStreamID, toStreamPartID, utf8ToBinary } from '@streamr/utils'
 import { EncryptionUtil, INITIALIZATION_VECTOR_LENGTH } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { createMockMessage } from '../test-utils/utils'
 import { EncryptedGroupKey } from './../../src/protocol/EncryptedGroupKey'
 import { StreamMessage, StreamMessageAESEncrypted } from './../../src/protocol/StreamMessage'
+
 const STREAM_ID = toStreamID('streamId')
 
 describe('EncryptionUtil', () => {
@@ -45,8 +46,7 @@ describe('EncryptionUtil', () => {
             nextEncryptionKey: nextKey
         }) as StreamMessageAESEncrypted
         const [content, newGroupKey] = EncryptionUtil.decryptStreamMessage(streamMessage, key)
-        // Coparing this way as jest does not like comparing buffers to Uint8Arrays
-        expect(binaryToUtf8(content)).toStrictEqual('{"foo":"bar"}')
+        expect(content).toEqualBinary(utf8ToBinary('{"foo":"bar"}'))
         expect(newGroupKey).toEqual(nextKey)
     })
 
