@@ -15,13 +15,13 @@ import { ResendOptions, ResendRangeOptions, Resends } from '../../src/subscribe/
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
 import { fromArray } from '../../src/utils/GeneratorUtils'
 import { PushPipeline } from '../../src/utils/PushPipeline'
-import { MOCK_CONTENT } from '../test-utils/utils'
+import { MOCK_CONTENT, randomUserId } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
-const PUBLISHER_ID = randomEthereumAddress()
+const PUBLISHER_ID = randomUserId()
 const MSG_CHAIN_ID = 'mock-msg-chain-id'
 
 const CONFIG = {

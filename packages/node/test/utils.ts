@@ -11,6 +11,8 @@ import { StreamrClient,
 } from '@streamr/sdk'
 import { Broker, createBroker } from '../src/broker'
 import { Config } from '../src/config/config'
+import { UserID } from '@streamr/trackerless-network'
+import { randomEthereumAddress } from '@streamr/test-utils'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 
@@ -164,3 +166,8 @@ async function createAssignmentStream(client: StreamrClient): Promise<Stream> {
     })
     return stream
 }
+
+export const randomUserId = (): UserID => {
+    return randomEthereumAddress()
+}
+

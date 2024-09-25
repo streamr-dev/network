@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fastPrivateKey, randomEthereumAddress } from '@streamr/test-utils'
+import { fastPrivateKey } from '@streamr/test-utils'
 import { toEthereumAddress, toStreamID, toStreamPartID } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock, MockProxy } from 'jest-mock-extended'
@@ -12,6 +12,7 @@ import { LitProtocolFacade } from '../../src/encryption/LitProtocolFacade'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../../src/events'
+import { randomUserId } from '../test-utils/utils'
 
 describe('GroupKeyManager', () => {
     let groupKeyStore: MockProxy<LocalGroupKeyStore>
@@ -177,7 +178,7 @@ describe('GroupKeyManager', () => {
 
         it('not own key', async () => {
             await expect(() => {
-                return groupKeyManager.fetchLatestEncryptionKey(randomEthereumAddress(), streamId)
+                return groupKeyManager.fetchLatestEncryptionKey(randomUserId(), streamId)
             }).rejects.toThrow('not supported')
         })
     })

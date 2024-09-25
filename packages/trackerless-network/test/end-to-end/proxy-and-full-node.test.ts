@@ -8,12 +8,12 @@ import {
     SignatureType,
     StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { createMockPeerDescriptor } from '../utils/utils'
+import { createMockPeerDescriptor, randomUserId } from '../utils/utils'
 
-const PROXIED_NODE_USER_ID = randomEthereumAddress()
+const PROXIED_NODE_USER_ID = randomUserId()
 
 const createMessage = (streamPartId: StreamPartID): StreamMessage => {
-    return { 
+    return {
         messageId: {
             streamId: StreamPartIDUtils.getStreamID(streamPartId),
             streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),

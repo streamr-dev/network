@@ -1,13 +1,13 @@
 import 'reflect-metadata'
 
-import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
+import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { EthereumAddress, collect, toEthereumAddress, toStreamID, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils/promises'
-import { createRelativeTestStreamId, createTestStream } from '../test-utils/utils'
+import { createRelativeTestStreamId, createTestStream, randomUserId } from '../test-utils/utils'
 
 const TIMEOUT = 20000
 const PARTITION_COUNT = 3
@@ -192,7 +192,7 @@ describe('StreamRegistry', () => {
 
         it('fails if stream prefixed with other users address', async () => {
             // can't create streams for other users
-            const otherAddress = randomEthereumAddress()
+            const otherAddress = randomUserId()
             const newPath = `/StreamRegistry-getOrCreate-newPath-${Date.now()}`
             // backend should error
             await expect(async () => {
@@ -221,7 +221,7 @@ describe('StreamRegistry', () => {
             return expect(() => client.isStreamPublisher(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         }, TIMEOUT)
         it('returns false for invalid publishers', async () => {
-            const valid = await client.isStreamPublisher(createdStream.id, randomEthereumAddress())
+            const valid = await client.isStreamPublisher(createdStream.id, randomUserId())
             return expect(valid).toBe(false)
         }, TIMEOUT)
     })
@@ -244,7 +244,7 @@ describe('StreamRegistry', () => {
             return expect(() => client.isStreamSubscriber(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         }, TIMEOUT)
         it('returns false for invalid subscribers', async () => {
-            const valid = await client.isStreamSubscriber(createdStream.id, randomEthereumAddress())
+            const valid = await client.isStreamSubscriber(createdStream.id, randomUserId())
             return expect(valid).toBe(false)
         }, TIMEOUT)
     })

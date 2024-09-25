@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
 import { UserID } from '@streamr/trackerless-network'
 import {
     Logger,
@@ -320,3 +320,8 @@ export const readUtf8ExampleIndirectly = async (): Promise<string> => {
         })
     })
 }
+
+export const randomUserId = (): UserID => {
+    return randomEthereumAddress()
+}
+

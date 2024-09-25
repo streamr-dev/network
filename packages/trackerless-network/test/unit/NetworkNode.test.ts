@@ -1,14 +1,13 @@
-import { randomEthereumAddress } from '@streamr/test-utils'
 import { StreamPartIDUtils } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { NetworkNode } from '../../src/NetworkNode'
 import { NetworkStack } from '../../src/NetworkStack'
 import { Events } from '../../src/logic/ContentDeliveryManager'
 import { StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { createStreamMessage } from '../utils/utils'
+import { createStreamMessage, randomUserId } from '../utils/utils'
 
 const STREAM_PART = StreamPartIDUtils.parse('stream#0')
-const PUBLISHER_ID = randomEthereumAddress()
+const PUBLISHER_ID = randomUserId()
 
 const createMessage = (id: number): StreamMessage => {
     return createStreamMessage(`${id}`, STREAM_PART, PUBLISHER_ID)

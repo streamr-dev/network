@@ -1,11 +1,11 @@
 import { Wallet } from 'ethers'
 
-import { createRelativeTestStreamId } from '../test-utils/utils'
+import { createRelativeTestStreamId, randomUserId } from '../test-utils/utils'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
-import { fastWallet, fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
+import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { toEthereumAddress } from '@streamr/utils'
 
 const TIMEOUT = 40000
@@ -157,8 +157,8 @@ describe('Stream permissions', () => {
         const otherStream = await client.createStream({
             id: createRelativeTestStreamId(module)
         })
-        const user1 = randomEthereumAddress()
-        const user2 = randomEthereumAddress()
+        const user1 = randomUserId()
+        const user2 = randomUserId()
         await stream.grantPermissions({
             user: user1,
             permissions: [StreamPermission.GRANT]
@@ -192,7 +192,7 @@ describe('Stream permissions', () => {
         expect(await stream.hasPermission({ permission: StreamPermission.SUBSCRIBE, allowPublic: false, user: user2 })).toBe(false)
         expect(await stream.hasPermission({ permission: StreamPermission.EDIT, allowPublic: false, user: user2 })).toBe(false)
         expect(await otherStream.hasPermission(
-            { permission: StreamPermission.PUBLISH, allowPublic: true, user: randomEthereumAddress() }
+            { permission: StreamPermission.PUBLISH, allowPublic: true, user: randomUserId() }
         )).toBe(true)
     }, TIMEOUT)
 

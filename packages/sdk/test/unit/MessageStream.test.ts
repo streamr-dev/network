@@ -1,16 +1,16 @@
 import 'reflect-metadata'
 
-import { toEthereumAddress, toStreamID, utf8ToBinary } from '@streamr/utils'
+import { toStreamID, utf8ToBinary } from '@streamr/utils'
 import omit from 'lodash/omit'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { MessageStream } from '../../src/subscribe/MessageStream'
 import { Msg } from '../test-utils/publish'
-import { createRandomAuthentication, waitForCalls } from '../test-utils/utils'
+import { createRandomAuthentication, randomUserId, waitForCalls } from '../test-utils/utils'
 import { convertStreamMessageToMessage } from './../../src/Message'
 import { MessageID } from './../../src/protocol/MessageID'
 import { ContentType, EncryptionType, SignatureType, StreamMessageType } from './../../src/protocol/StreamMessage'
 
-const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const PUBLISHER_ID = randomUserId()
 
 describe('MessageStream', () => {
 

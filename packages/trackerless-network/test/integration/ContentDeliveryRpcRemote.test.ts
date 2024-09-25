@@ -5,7 +5,6 @@ import {
     Simulator,
     SimulatorTransport
 } from '@streamr/dht'
-import { randomEthereumAddress } from '@streamr/test-utils'
 import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
 import { Empty } from '../../src/proto/google/protobuf/empty'
@@ -14,7 +13,7 @@ import {
     StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { createStreamMessage } from '../utils/utils'
+import { createStreamMessage, randomUserId } from '../utils/utils'
 
 describe('ContentDeliveryRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator
@@ -85,7 +84,7 @@ describe('ContentDeliveryRpcRemote', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             StreamPartIDUtils.parse('test-stream#0'),
-            randomEthereumAddress()
+            randomUserId()
         )
 
         await rpcRemote.sendStreamMessage(msg)
