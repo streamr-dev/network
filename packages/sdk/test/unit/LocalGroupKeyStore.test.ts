@@ -10,15 +10,15 @@ import { getLocalGroupKeyStore, randomUserId } from '../test-utils/utils'
 
 describe('LocalGroupKeyStore', () => {
     
-    let clientId: UserID
+    let ownerId: UserID
     let publisherId: UserID
     let store: LocalGroupKeyStore
     let store2: LocalGroupKeyStore
 
     beforeEach(() => {
-        clientId = randomUserId()
+        ownerId = randomUserId()
         publisherId = randomUserId()
-        store = getLocalGroupKeyStore(clientId)
+        store = getLocalGroupKeyStore(ownerId)
     })
 
     afterEach(async () => {
@@ -43,9 +43,9 @@ describe('LocalGroupKeyStore', () => {
         expect(await store.get(groupKey.id, randomUserId())).toBeUndefined()
     })
 
-    it('key stores are clientId specific', async () => {
-        const clientId2 = randomUserId()
-        store2 = getLocalGroupKeyStore(clientId2)
+    it('key stores are ownerId specific', async () => {
+        const ownerId2 = randomUserId()
+        store2 = getLocalGroupKeyStore(ownerId2)
 
         const groupKey = GroupKey.generate()
         await store.set(groupKey.id, publisherId, groupKey.data)
@@ -57,7 +57,7 @@ describe('LocalGroupKeyStore', () => {
         const groupKey = GroupKey.generate()
         await store.set(groupKey.id, publisherId, groupKey.data)
 
-        const store2 = getLocalGroupKeyStore(clientId)
+        const store2 = getLocalGroupKeyStore(ownerId)
         expect(await store2.get(groupKey.id, publisherId)).toEqual(groupKey)
     })
 

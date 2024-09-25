@@ -153,9 +153,9 @@ export const createMockMessage = async (
 // When binary contents are supported we don't need this anymore.
 export const MOCK_CONTENT = utf8ToBinary(JSON.stringify({}))
 
-export const getLocalGroupKeyStore = (userId: UserID): LocalGroupKeyStore => {
+export const getLocalGroupKeyStore = (ownerId: UserID): LocalGroupKeyStore => {
     const authentication = {
-        getAddress: () => userId
+        getAddress: () => ownerId
     } as any
     const loggerFactory = mockLoggerFactory()
     return new LocalGroupKeyStore(
