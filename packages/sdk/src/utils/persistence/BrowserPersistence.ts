@@ -6,7 +6,7 @@ export default class BrowserPersistence implements PersistenceContext {
     private readonly db: IDBPDatabase
 
     static async createInstance(opts: PersistenceContextOptions): Promise<BrowserPersistence> {
-        const db = await openDB(`streamr-sdk::${opts.clientId}`, 1, {
+        const db = await openDB(`streamr-sdk::${opts.ownerId}`, 1, {
             upgrade(db) {
                 opts.namespaces.forEach((namespace) => db.createObjectStore(namespace))
             }

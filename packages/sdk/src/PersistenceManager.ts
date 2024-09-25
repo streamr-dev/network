@@ -39,7 +39,7 @@ export class PersistenceManager {
         if (this.persistence === undefined) {
             this.persistence = await ServerPersistence.createInstance({
                 loggerFactory: this.loggerFactory,
-                clientId: await this.authentication.getAddress(),
+                ownerId: await this.authentication.getAddress(),
                 namespaces: Object.values(NAMESPACES),
                 migrationsPath: join(__dirname, 'encryption/migrations') // TODO move migrations to some generic place?
             })

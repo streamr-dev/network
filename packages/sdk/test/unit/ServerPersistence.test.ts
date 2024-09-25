@@ -12,10 +12,10 @@ describe('ServerPersistence', () => {
     let persistence: ServerPersistence
 
     beforeEach(async () => {
-        const clientId = randomEthereumAddress()
+        const ownerId = randomEthereumAddress()
         persistence = await ServerPersistence.createInstance({
             loggerFactory: mockLoggerFactory(),
-            clientId,
+            ownerId,
             namespaces: [NAMESPACE],
             onInit: async (db: Database) => {
                 await db.exec(`CREATE TABLE IF NOT EXISTS ${NAMESPACE} (key_ TEXT NOT NULL PRIMARY KEY, value_ TEXT);`)
@@ -55,11 +55,11 @@ describe('ServerPersistence', () => {
     // enable when NET-1057 done
     it.skip('concurrency', async () => {
         const instanceCount = 10
-        const clientId = randomEthereumAddress()
+        const userId = randomEthereumAddress()
         const values = await Promise.all(range(instanceCount).map(async (i: number) => {
             const instance = await ServerPersistence.createInstance({
                 loggerFactory: mockLoggerFactory(),
-                clientId,
+                ownerId: userId,
                 namespaces: ['EncryptionKeys'],
                 migrationsPath: join(__dirname, '../../src/encryption/migrations')
             })
