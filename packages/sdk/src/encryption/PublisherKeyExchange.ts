@@ -1,3 +1,4 @@
+import { UserID } from '@streamr/trackerless-network'
 import { EthereumAddress, Logger, StreamPartID, StreamPartIDUtils } from '@streamr/utils'
 import without from 'lodash/without'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -116,7 +117,7 @@ export class PublisherKeyExchange {
         }
     }
 
-    private async getResponseType(publisher: EthereumAddress): Promise<ResponseType> {
+    private async getResponseType(publisher: UserID): Promise<ResponseType> {
         const authenticatedUser = await this.authentication.getAddress()
         if (publisher === authenticatedUser) {
             return ResponseType.NORMAL
@@ -130,10 +131,10 @@ export class PublisherKeyExchange {
     private async createResponse(
         keys: GroupKey[],
         responseType: ResponseType,
-        publisher: EthereumAddress,
+        publisher: UserID,
         streamPartId: StreamPartID,
         rsaPublicKey: string,
-        recipient: EthereumAddress,
+        recipient: UserID,
         requestId: string
     ): Promise<StreamMessage> {
         const encryptedGroupKeys = await Promise.all(keys.map((key) => {

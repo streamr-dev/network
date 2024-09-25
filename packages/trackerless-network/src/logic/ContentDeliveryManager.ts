@@ -9,7 +9,6 @@ import {
     getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
 import {
-    EthereumAddress,
     Logger,
     Metric,
     MetricsContext,
@@ -19,6 +18,7 @@ import {
 import { createHash } from 'crypto'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
+import { UserID } from '../UserID'
 import { ProxyDirection, StreamMessage, StreamPartitionInfo } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
 import { ControlLayerNode } from './ControlLayerNode'
@@ -268,7 +268,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: EthereumAddress,
+        userId: UserID,
         connectionCount?: number
     ): Promise<void> {
         // TODO explicit default value for "acceptProxyConnections" or make it required

@@ -1,7 +1,8 @@
 import 'reflect-metadata'
 
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, toStreamID } from '@streamr/utils'
+import { UserID } from '@streamr/trackerless-network'
+import { toStreamID } from '@streamr/utils'
 import range from 'lodash/range'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
@@ -9,8 +10,8 @@ import { getLocalGroupKeyStore } from '../test-utils/utils'
 
 describe('LocalGroupKeyStore', () => {
     
-    let clientId: EthereumAddress
-    let publisherId: EthereumAddress
+    let clientId: UserID
+    let publisherId: UserID
     let store: LocalGroupKeyStore
     let store2: LocalGroupKeyStore
 

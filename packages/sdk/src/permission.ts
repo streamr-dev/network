@@ -1,5 +1,5 @@
+import { UserID } from '@streamr/trackerless-network'
 import { MaxInt256 } from 'ethers'
-import { EthereumAddress } from '@streamr/utils'
 
 export enum StreamPermission {
     EDIT = 'edit',
@@ -40,7 +40,7 @@ export const PUBLIC_PERMISSION_ADDRESS = '0x000000000000000000000000000000000000
 
 export type PermissionQueryResult = {
     id: string
-    userAddress: EthereumAddress
+    userAddress: UserID
 } & ChainPermissions
 
 export interface ChainPermissions {

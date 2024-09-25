@@ -1,3 +1,4 @@
+import { UserID } from '@streamr/trackerless-network'
 import { EthereumAddress, StreamID, StreamPartID, StreamPartIDUtils, executeSafePromise } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../../Config'
 import { StreamMessage } from '../../protocol/StreamMessage'
@@ -55,7 +56,7 @@ const createMessageChain = (
  */
 export class OrderMessages {
 
-    private readonly chains: Mapping<[EthereumAddress, string], OrderedMessageChain>
+    private readonly chains: Mapping<[UserID, string], OrderedMessageChain>
     private readonly outBuffer = new PushBuffer<StreamMessage>()
     private readonly abortController = new AbortController()
 
@@ -66,7 +67,7 @@ export class OrderMessages {
         resends: Resends,
         config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
     ) {
-        this.chains = new Mapping(async (publisherId: EthereumAddress, msgChainId: string) => {
+        this.chains = new Mapping(async (publisherId: UserID, msgChainId: string) => {
             const chain = createMessageChain(
                 {
                     streamPartId, 

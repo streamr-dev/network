@@ -1,4 +1,5 @@
-import { EthereumAddress, StreamID } from '@streamr/utils'
+import { UserID } from '@streamr/trackerless-network'
+import { StreamID } from '@streamr/utils'
 import { SignatureType, StreamMessage } from './protocol/StreamMessage'
 
 /**
@@ -45,7 +46,7 @@ export interface Message {
     /**
      * Publisher of message.
      */
-    publisherId: EthereumAddress
+    publisherId: UserID
 
     /**
      * Identifies the message chain the message was published to.

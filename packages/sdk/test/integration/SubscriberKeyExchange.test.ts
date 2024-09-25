@@ -1,8 +1,8 @@
 import 'reflect-metadata'
 
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
+import { UserID } from '@streamr/trackerless-network'
 import {
-    EthereumAddress,
     StreamID,
     StreamPartID,
     StreamPartIDUtils,
@@ -30,7 +30,7 @@ describe('SubscriberKeyExchange', () => {
     let subscriber: StreamrClient
     let environment: FakeEnvironment
 
-    const createStream = async (subscriberAddress: EthereumAddress): Promise<StreamID> => {
+    const createStream = async (subscriberAddress: UserID): Promise<StreamID> => {
         const creator = environment.createClient()
         const s = await creator.createStream(createRelativeTestStreamId(module))
         await s.grantPermissions({
@@ -57,7 +57,7 @@ describe('SubscriberKeyExchange', () => {
         message: StreamMessage,
         expectedStreamPartId: StreamPartID,
         expectedRequestedKeyIds: string[],
-        expectedPublisherId: EthereumAddress,
+        expectedPublisherId: UserID,
         expectedSignatureType: SignatureType
     ): Promise<void> => {
         expect(message).toMatchObject({

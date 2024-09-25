@@ -1,7 +1,8 @@
 import 'reflect-metadata'
 
 import { fastWallet } from '@streamr/test-utils'
-import { EthereumAddress, hexToBinary, toEthereumAddress, toStreamID, toStreamPartID } from '@streamr/utils'
+import { UserID } from '@streamr/trackerless-network'
+import { hexToBinary, toEthereumAddress, toStreamID, toStreamPartID } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
 import { Stream } from '../../src/Stream'
@@ -38,8 +39,8 @@ const validate = async (messageOptions: MessageOptions) => {
                 partitions: PARTITION_COUNT
             })
         } as any),
-        isStreamPublisher: async (_streamIdOrPath: string, userAddress: EthereumAddress) => {
-            return userAddress === toEthereumAddress(publisherWallet.address)
+        isStreamPublisher: async (_streamIdOrPath: string, userId: UserID) => {
+            return userId === toEthereumAddress(publisherWallet.address)
         }
     }
     await validateStreamMessage(msg, streamRegistry as any, new SignatureValidator(mock<ERC1271ContractFacade>()))

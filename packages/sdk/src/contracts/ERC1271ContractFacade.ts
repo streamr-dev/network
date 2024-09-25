@@ -1,3 +1,4 @@
+import { UserID } from '@streamr/trackerless-network'
 import { BrandedString, EthereumAddress, MapWithTtl, hash, recoverAddress, toEthereumAddress } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { RpcProviderSource } from '../RpcProviderSource'
@@ -12,7 +13,7 @@ export type CacheKey = BrandedString<string>
 
 const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
 
-function formCacheKey(contractAddress: EthereumAddress, clientWalletAddress: EthereumAddress): CacheKey {
+function formCacheKey(contractAddress: EthereumAddress, clientWalletAddress: UserID): CacheKey {
     return `${contractAddress}_${clientWalletAddress}` as CacheKey
 }
 

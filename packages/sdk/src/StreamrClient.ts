@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import './utils/PatchTsyringe'
 
 import { DhtAddress } from '@streamr/dht'
-import { ProxyDirection } from '@streamr/trackerless-network'
+import { ProxyDirection, UserID } from '@streamr/trackerless-network'
 import { EthereumAddress, StreamID, TheGraphClient, toEthereumAddress } from '@streamr/utils'
 import type { Overrides } from 'ethers'
 import EventEmitter from 'eventemitter3'
@@ -186,7 +186,7 @@ export class StreamrClient {
      * @remarks Keys will be added to the store automatically by the client as encountered. This method can be used to
      * manually add some known keys into the store.
      */
-    async addEncryptionKey(key: GroupKey, publisherId: EthereumAddress): Promise<void> {
+    async addEncryptionKey(key: GroupKey, publisherId: UserID): Promise<void> {
         await this.localGroupKeyStore.set(key.id, publisherId, key.data)
     }
 
@@ -580,7 +580,7 @@ export class StreamrClient {
     /**
      * Gets the Ethereum address of the wallet associated with the current {@link StreamrClient} instance.
      */
-    getAddress(): Promise<EthereumAddress> {
+    getAddress(): Promise<UserID> {
         return this.authentication.getAddress()
     }
 

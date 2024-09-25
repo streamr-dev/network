@@ -1,9 +1,10 @@
 import { BrowserProvider, AbstractSigner, Provider, computeAddress, Wallet } from 'ethers'
-import { EthereumAddress, hexToBinary, toEthereumAddress, wait, createSignature } from '@streamr/utils'
+import { hexToBinary, toEthereumAddress, wait, createSignature } from '@streamr/utils'
 import pMemoize from 'p-memoize'
 import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'
 import { pLimitFn } from './utils/promises'
 import { RpcProviderSource } from './RpcProviderSource'
+import { UserID } from '@streamr/trackerless-network'
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 
@@ -11,7 +12,7 @@ export type SignerWithProvider = AbstractSigner<Provider>
 
 export interface Authentication {
     // always in lowercase
-    getAddress: () => Promise<EthereumAddress>
+    getAddress: () => Promise<UserID>
     createMessageSignature: (payload: Uint8Array) => Promise<Uint8Array>
     getTransactionSigner: (rpcProviderSource: RpcProviderSource) => Promise<SignerWithProvider>
 }

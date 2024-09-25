@@ -1,4 +1,4 @@
-import { EthereumAddress } from '@streamr/utils'
+import { UserID } from '@streamr/trackerless-network'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
 import { StreamMessageError } from '../protocol/StreamMessageError'
@@ -78,8 +78,8 @@ const validateMessage = async (
 
 const validateGroupKeyMessage = async (
     streamMessage: StreamMessage,
-    expectedPublisher: EthereumAddress,
-    expectedSubscriber: EthereumAddress,
+    expectedPublisher: UserID,
+    expectedSubscriber: UserID,
     streamRegistry: StreamRegistry
 ): Promise<void> => {
     const streamId = streamMessage.getStreamId()

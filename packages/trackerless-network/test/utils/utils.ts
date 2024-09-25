@@ -10,8 +10,9 @@ import {
     getRawFromDhtAddress
 } from '@streamr/dht'
 import { RpcCommunicator } from '@streamr/proto-rpc'
-import { EthereumAddress, StreamPartID, StreamPartIDUtils, hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
+import { UserID } from '../../src/UserID'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
 import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
@@ -67,7 +68,7 @@ export const createMockContentDeliveryLayerNodeAndDhtNode = async (
 export const createStreamMessage = (
     content: string,
     streamPartId: StreamPartID,
-    publisherId: EthereumAddress,
+    publisherId: UserID,
     timestamp?: number,
     sequenceNumber?: number
 ): StreamMessage => {
