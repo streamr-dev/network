@@ -1,4 +1,4 @@
-import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
+import { fetchPrivateKeyWithGas, randomUserId } from '@streamr/test-utils'
 import 'jest-extended'
 import { StreamPermission } from '@streamr/sdk'
 import { createTestClient, runCommand } from './utils'
@@ -9,7 +9,7 @@ describe('permission', () => {
         const privateKey = await fetchPrivateKeyWithGas()
         const client = createTestClient(privateKey)
         const stream = await client.createStream(`/${Date.now()}`)
-        const otherUser = randomEthereumAddress()
+        const otherUser = randomUserId()
         const hasPermission = () => client.hasPermission({
             user: otherUser,
             permission: StreamPermission.PUBLISH,

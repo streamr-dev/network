@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
 import { toStreamID, UserID } from '@streamr/utils'
 import range from 'lodash/range'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -15,8 +15,8 @@ describe('LocalGroupKeyStore', () => {
     let store2: LocalGroupKeyStore
 
     beforeEach(() => {
-        ownerId = randomEthereumAddress()
-        publisherId = randomEthereumAddress()
+        ownerId = randomUserId()
+        publisherId = randomUserId()
         store = getLocalGroupKeyStore(ownerId)
     })
 
@@ -39,11 +39,11 @@ describe('LocalGroupKeyStore', () => {
         const groupKey = GroupKey.generate()
         await store.set(groupKey.id, publisherId, groupKey.data)
         expect(await store.get(groupKey.id, publisherId)).toEqual(groupKey)
-        expect(await store.get(groupKey.id, randomEthereumAddress())).toBeUndefined()
+        expect(await store.get(groupKey.id, randomUserId())).toBeUndefined()
     })
 
     it('key stores are ownerId specific', async () => {
-        const ownerId2 = randomEthereumAddress()
+        const ownerId2 = randomUserId()
         store2 = getLocalGroupKeyStore(ownerId2)
 
         const groupKey = GroupKey.generate()
@@ -62,7 +62,7 @@ describe('LocalGroupKeyStore', () => {
 
     it('add multiple keys in parallel', async () => {
         const assignments = range(10).map(() => {
-            return { key: GroupKey.generate(), publisherId: randomEthereumAddress() }
+            return { key: GroupKey.generate(), publisherId: randomUserId() }
         })
         await Promise.all(assignments.map(({ key, publisherId }) => store.set(key.id, publisherId, key.data)))
         for (const assignment of assignments) {
@@ -75,7 +75,7 @@ describe('LocalGroupKeyStore', () => {
         it('add and get key', async () => {
             await store.setLatestEncryptionKeyId('keyId', publisherId, streamId)
             expect(await store.getLatestEncryptionKeyId(publisherId, streamId)).toEqual('keyId')
-            expect(await store.getLatestEncryptionKeyId(randomEthereumAddress(), streamId)).toBeUndefined()
+            expect(await store.getLatestEncryptionKeyId(randomUserId(), streamId)).toBeUndefined()
             expect(await store.getLatestEncryptionKeyId(publisherId, toStreamID('foobar'))).toBeUndefined()
         })
     })

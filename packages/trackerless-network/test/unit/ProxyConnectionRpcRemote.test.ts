@@ -1,10 +1,10 @@
 import { RpcCommunicator } from '@streamr/proto-rpc'
-import { randomEthereumAddress } from '@streamr/test-utils'
-import { hexToBinary } from '@streamr/utils'
 import { ProxyConnectionRpcRemote } from '../../src/logic/proxy/ProxyConnectionRpcRemote'
 import { ProxyConnectionRequest, ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ProxyConnectionRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { createMockPeerDescriptor } from '../utils/utils'
+import { hexToBinary } from '@streamr/utils'
+import { randomUserId } from '@streamr/test-utils'
 
 describe('ProxyConnectionRpcRemote', () => {
 
@@ -21,7 +21,7 @@ describe('ProxyConnectionRpcRemote', () => {
             ProxyConnectionRpcClient
         )
 
-        const userId = randomEthereumAddress()
+        const userId = randomUserId()
         await rpcRemote.requestConnection(ProxyDirection.PUBLISH, userId)
 
         const [rpcMessage, _, callContext] = onOutgoingMessage.mock.calls[0]
