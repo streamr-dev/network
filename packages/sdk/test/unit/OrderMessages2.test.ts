@@ -1,6 +1,5 @@
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { UserID } from '@streamr/trackerless-network'
-import { StreamPartID, StreamPartIDUtils, hexToBinary, toEthereumAddress, toStreamID, wait, waitForCondition } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toEthereumAddress, toStreamID, wait, waitForCondition } from '@streamr/utils'
 import { shuffle } from 'lodash'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'

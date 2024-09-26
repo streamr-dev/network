@@ -1,13 +1,11 @@
 import 'reflect-metadata'
 
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { UserID } from '@streamr/trackerless-network'
 import {
     Logger,
     MAX_PARTITION_COUNT,
     StreamPartID,
-    StreamPartIDUtils,
-    merge,
+    StreamPartIDUtils, UserID, merge,
     utf8ToBinary,
     wait,
     waitForCondition

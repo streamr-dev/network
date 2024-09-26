@@ -1,5 +1,4 @@
-import { UserID } from '@streamr/trackerless-network'
-import { BrandedString, EthereumAddress, MapWithTtl, hash, recoverAddress, toEthereumAddress } from '@streamr/utils'
+import { BrandedString, EthereumAddress, MapWithTtl, UserID, hash, recoverAddress, toEthereumAddress } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { RpcProviderSource } from '../RpcProviderSource'
 import type { IERC1271 as ERC1271Contract } from '../ethereumArtifacts/IERC1271'

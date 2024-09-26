@@ -10,9 +10,8 @@ import {
     getRawFromDhtAddress
 } from '@streamr/dht'
 import { RpcCommunicator } from '@streamr/proto-rpc'
-import { StreamPartID, StreamPartIDUtils, hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, utf8ToBinary } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { UserID } from '../../src/UserID'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
 import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'

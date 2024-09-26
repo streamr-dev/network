@@ -1,4 +1,4 @@
-import { UserID } from '@streamr/trackerless-network'
+import { UserID } from '@streamr/utils'
 import { MaxInt256 } from 'ethers'
 
 export enum StreamPermission {

@@ -1,6 +1,5 @@
 import { Methods } from '@streamr/test-utils'
-import { UserID } from '@streamr/trackerless-network'
-import { Multimap, StreamID, toEthereumAddress } from '@streamr/utils'
+import { Multimap, StreamID, UserID, toEthereumAddress } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
 import { Stream, StreamMetadata } from '../../../src/Stream'

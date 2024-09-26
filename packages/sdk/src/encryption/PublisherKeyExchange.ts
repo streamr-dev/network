@@ -1,5 +1,4 @@
-import { UserID } from '@streamr/trackerless-network'
-import { EthereumAddress, Logger, StreamPartID, StreamPartIDUtils } from '@streamr/utils'
+import { EthereumAddress, Logger, StreamPartID, StreamPartIDUtils, UserID } from '@streamr/utils'
 import without from 'lodash/without'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'

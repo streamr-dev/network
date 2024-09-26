@@ -6,10 +6,9 @@ import {
     PeerDescriptor,
     getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
-import { Logger, StreamPartID, addManagedEventListener, wait } from '@streamr/utils'
+import { Logger, StreamPartID, UserID, addManagedEventListener, wait } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
-import { UserID } from '../../UserID'
 import {
     LeaveStreamPartNotice,
     MessageID,

@@ -1,4 +1,4 @@
-import { UserID } from '@streamr/trackerless-network'
+import { UserID } from '@streamr/utils'
 import { EncryptedGroupKey } from './EncryptedGroupKey'
 import { StreamMessage, StreamMessageType } from './StreamMessage'
 import { ValidationError } from './ValidationError'

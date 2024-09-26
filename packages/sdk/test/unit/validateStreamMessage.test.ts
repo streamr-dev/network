@@ -1,8 +1,7 @@
 import 'reflect-metadata'
 
 import { fastWallet } from '@streamr/test-utils'
-import { UserID } from '@streamr/trackerless-network'
-import { hexToBinary, toEthereumAddress, toStreamID, toStreamPartID } from '@streamr/utils'
+import { hexToBinary, toEthereumAddress, toStreamID, toStreamPartID, UserID } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
 import { Stream } from '../../src/Stream'

@@ -2,11 +2,10 @@ import { IMessageType } from '@protobuf-ts/runtime'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtAddress, PeerDescriptor } from '@streamr/dht'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
-import { MetricsContext, StreamPartID } from '@streamr/utils'
+import { MetricsContext, StreamPartID, UserID } from '@streamr/utils'
 import { ExternalNetworkRpc, ExternalRpcClient, ExternalRpcClientClass } from './logic/ExternalNetworkRpc'
 import { NetworkOptions, NetworkStack, NodeInfo } from './NetworkStack'
 import { ProxyDirection, StreamMessage } from './proto/packages/trackerless-network/protos/NetworkRpc'
-import { UserID } from './UserID'
 
 export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
     return new NetworkNode(new NetworkStack(opts))

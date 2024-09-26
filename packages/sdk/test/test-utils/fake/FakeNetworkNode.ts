@@ -4,10 +4,9 @@ import {
     ExternalRpcClient,
     NetworkOptions,
     StreamMessage as NewStreamMessage,
-    ProxyDirection,
-    UserID
+    ProxyDirection
 } from '@streamr/trackerless-network'
-import { MetricsContext, StreamPartID } from '@streamr/utils'
+import { MetricsContext, StreamPartID, UserID } from '@streamr/utils'
 import crypto from 'crypto'
 import pull from 'lodash/pull'
 import { Lifecycle, scoped } from 'tsyringe'
