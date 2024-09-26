@@ -2,7 +2,8 @@ import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@str
 import { StreamPartIDUtils } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkStack } from '../../src/NetworkStack'
-import { createMockPeerDescriptor, createStreamMessage, randomUserId } from '../utils/utils'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import { randomUserId } from '@streamr/test-utils'
 
 describe('inspect', () => {
 

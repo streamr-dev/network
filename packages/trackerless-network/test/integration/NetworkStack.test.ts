@@ -3,7 +3,8 @@ import {
     waitForCondition
 } from '@streamr/utils'
 import { NetworkStack } from '../../src/NetworkStack'
-import { createMockPeerDescriptor, createStreamMessage, randomUserId } from '../utils/utils'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import { randomUserId } from '@streamr/test-utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 

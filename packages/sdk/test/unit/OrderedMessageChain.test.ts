@@ -1,9 +1,9 @@
 import { hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
 import { Gap, OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
-import { randomUserId } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
+import { randomUserId } from '@streamr/test-utils'
 
 const STREAM_ID = toStreamID('stream')
 const PUBLISHER_ID = randomUserId()

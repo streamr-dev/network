@@ -4,7 +4,8 @@ import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNo
 import { ControlLayerNode } from '../../src/logic/ControlLayerNode'
 import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
-import { createMockPeerDescriptor, createStreamMessage, randomUserId } from '../utils/utils'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import { randomUserId } from '@streamr/test-utils'
 
 describe('content delivery layer node with real connections', () => {
 

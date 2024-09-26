@@ -3,7 +3,8 @@ import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkStack } from '../../src/NetworkStack'
 import { MAX_NODE_COUNT } from '../../src/logic/PeerDescriptorStoreManager'
-import { createMockPeerDescriptor, createStreamMessage, randomUserId } from '../utils/utils'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import { randomUserId } from '@streamr/test-utils'
 
 describe('Stream Entry Points are replaced when known entry points leave streams', () => {
     

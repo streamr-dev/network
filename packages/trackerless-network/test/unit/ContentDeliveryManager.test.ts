@@ -4,7 +4,8 @@ import { ContentDeliveryManager } from '../../src/logic/ContentDeliveryManager'
 import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { MockControlLayerNode } from '../utils/mock/MockControlLayerNode'
 import { MockTransport } from '../utils/mock/MockTransport'
-import { createMockPeerDescriptor, createStreamMessage, mockConnectionLocker, randomUserId } from '../utils/utils'
+import { createMockPeerDescriptor, createStreamMessage, mockConnectionLocker } from '../utils/utils'
+import { randomUserId } from '@streamr/test-utils'
 
 describe('ContentDeliveryManager', () => {
 

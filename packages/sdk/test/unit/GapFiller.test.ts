@@ -5,7 +5,7 @@ import { fromArray } from '../../src/utils/GeneratorUtils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
-import { randomUserId } from '../test-utils/utils'
+import { randomUserId } from '@streamr/test-utils'
 
 const CONTEXT = {
     streamPartId: StreamPartIDUtils.parse('stream#0'),

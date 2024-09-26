@@ -1,9 +1,9 @@
-import { testOnlyInNodeJs } from '@streamr/test-utils'
+import { randomUserId, testOnlyInNodeJs } from '@streamr/test-utils'
 import range from 'lodash/range'
 import { join } from 'path'
 import { Database } from 'sqlite'
 import ServerPersistence from '../../src/utils/persistence/ServerPersistence'
-import { mockLoggerFactory, randomUserId } from '../test-utils/utils'
+import { mockLoggerFactory } from '../test-utils/utils'
 
 const NAMESPACE = 'MockTable'
 

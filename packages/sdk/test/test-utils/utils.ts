@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fastPrivateKey, fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import {
     Logger,
     MAX_PARTITION_COUNT,
@@ -318,8 +318,3 @@ export const readUtf8ExampleIndirectly = async (): Promise<string> => {
         })
     })
 }
-
-export const randomUserId = (): UserID => {
-    return randomEthereumAddress()
-}
-

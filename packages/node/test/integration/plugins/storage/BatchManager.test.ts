@@ -3,7 +3,8 @@ import { Client, types as cassandraTypes } from 'cassandra-driver'
 import { InsertRecord } from '../../../../src/plugins/storage/Batch'
 import { BatchManager } from '../../../../src/plugins/storage/BatchManager'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
-import { randomUserId, STREAMR_DOCKER_DEV_HOST } from '../../../utils'
+import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
+import { randomUserId } from '@streamr/test-utils'
 
 const { TimeUuid } = cassandraTypes
 

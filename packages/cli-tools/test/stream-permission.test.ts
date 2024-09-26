@@ -1,7 +1,7 @@
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { fetchPrivateKeyWithGas, randomUserId } from '@streamr/test-utils'
 import 'jest-extended'
 import { StreamPermission } from '@streamr/sdk'
-import { createTestClient, randomUserId, runCommand } from './utils'
+import { createTestClient, runCommand } from './utils'
 
 describe('permission', () => {
 

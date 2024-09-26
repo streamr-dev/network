@@ -1,11 +1,10 @@
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { fetchPrivateKeyWithGas, randomUserId } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { SearchStreamsPermissionFilter } from '../../src/contracts/searchStreams'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
-import { randomUserId } from '../test-utils/utils'
 
 const TIMEOUT = 2 * 60 * 1000
 

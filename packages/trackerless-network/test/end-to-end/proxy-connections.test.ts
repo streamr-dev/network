@@ -1,5 +1,5 @@
 import { DhtAddress } from '@streamr/dht'
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
 import { StreamPartIDUtils, hexToBinary, utf8ToBinary, wait, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
@@ -11,7 +11,7 @@ import {
     SignatureType,
     StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { createMockPeerDescriptor, randomUserId } from '../utils/utils'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 const PROXIED_NODE_USER_ID = randomUserId()
 const STREAM_PART_ID = StreamPartIDUtils.parse('proxy-test#0')

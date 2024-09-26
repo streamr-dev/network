@@ -6,7 +6,8 @@ import {
 import { StreamPartIDUtils, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { ContentDeliveryManager, Events } from '../../src/logic/ContentDeliveryManager'
 import { ControlLayerNode } from '../../src/logic/ControlLayerNode'
-import { createMockPeerDescriptor, createStreamMessage, randomUserId } from '../utils/utils'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import { randomUserId } from '@streamr/test-utils'
 
 describe('ContentDeliveryManager', () => {
 

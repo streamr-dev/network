@@ -8,7 +8,7 @@ import {
     SignatureType,
     StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { randomUserId } from '../utils/utils'
+import { randomUserId } from '@streamr/test-utils'
 
 const PUBLISHER_ID = randomUserId()
 

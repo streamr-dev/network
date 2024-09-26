@@ -1,4 +1,4 @@
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
 import {
     EthereumAddress,
     StreamID,
@@ -15,7 +15,7 @@ import { ResendOptions, ResendRangeOptions, Resends } from '../../src/subscribe/
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
 import { fromArray } from '../../src/utils/GeneratorUtils'
 import { PushPipeline } from '../../src/utils/PushPipeline'
-import { MOCK_CONTENT, randomUserId } from '../test-utils/utils'
+import { MOCK_CONTENT } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'

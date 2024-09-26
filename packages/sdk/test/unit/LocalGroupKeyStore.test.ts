@@ -1,11 +1,11 @@
 import 'reflect-metadata'
 
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
 import { toStreamID, UserID } from '@streamr/utils'
 import range from 'lodash/range'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
-import { getLocalGroupKeyStore, randomUserId } from '../test-utils/utils'
+import { getLocalGroupKeyStore } from '../test-utils/utils'
 
 describe('LocalGroupKeyStore', () => {
     

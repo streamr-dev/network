@@ -2,8 +2,6 @@ import { collect, waitForCondition } from '@streamr/utils'
 import { spawn } from 'child_process'
 import merge2 from 'merge2'
 import { CONFIG_TEST, Stream, StreamrClient } from '@streamr/sdk'
-import { randomEthereumAddress } from '@streamr/test-utils'
-import { UserID } from '@streamr/trackerless-network'
 
 export const DOCKER_DEV_STORAGE_NODE = '0xde1112f631486CfC759A50196853011528bC5FA0'
 
@@ -84,8 +82,4 @@ export const waitForTheGraphToHaveIndexed = async (stream: Stream, client: Strea
         }
         return false
     }, 15 * 1000, 600)
-}
-
-export const randomUserId = (): UserID => {
-    return randomEthereumAddress()
 }

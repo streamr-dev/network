@@ -25,8 +25,6 @@ import {
     StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryRpcClient, HandshakeRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { UserID } from '../../src/UserID'
-import { randomEthereumAddress } from '@streamr/test-utils'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},
@@ -143,8 +141,3 @@ export const createNetworkNodeWithSimulator = async (
         }
     })
 }
-
-export const randomUserId = (): UserID => {
-    return randomEthereumAddress()
-}
-

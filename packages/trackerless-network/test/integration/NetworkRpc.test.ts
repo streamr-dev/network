@@ -9,7 +9,8 @@ import { Empty } from '../../src/proto/google/protobuf/empty'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { createStreamMessage, randomUserId } from '../utils/utils'
+import { createStreamMessage } from '../utils/utils'
+import { randomUserId } from '@streamr/test-utils'
 
 describe('Network RPC', () => {
     let rpcCommunicator1: RpcCommunicator<DhtCallContext>

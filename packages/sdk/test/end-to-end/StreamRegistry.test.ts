@@ -1,13 +1,13 @@
 import 'reflect-metadata'
 
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { fetchPrivateKeyWithGas, randomUserId } from '@streamr/test-utils'
 import { EthereumAddress, collect, toEthereumAddress, toStreamID, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils/promises'
-import { createRelativeTestStreamId, createTestStream, randomUserId } from '../test-utils/utils'
+import { createRelativeTestStreamId, createTestStream } from '../test-utils/utils'
 
 const TIMEOUT = 20000
 const PARTITION_COUNT = 3

@@ -5,10 +5,11 @@ import omit from 'lodash/omit'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { MessageStream } from '../../src/subscribe/MessageStream'
 import { Msg } from '../test-utils/publish'
-import { createRandomAuthentication, randomUserId, waitForCalls } from '../test-utils/utils'
+import { createRandomAuthentication, waitForCalls } from '../test-utils/utils'
 import { convertStreamMessageToMessage } from './../../src/Message'
 import { MessageID } from './../../src/protocol/MessageID'
 import { ContentType, EncryptionType, SignatureType, StreamMessageType } from './../../src/protocol/StreamMessage'
+import { randomUserId } from '@streamr/test-utils'
 
 const PUBLISHER_ID = randomUserId()
 
