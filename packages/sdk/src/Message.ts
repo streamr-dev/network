@@ -1,5 +1,4 @@
-import { UserID } from '@streamr/trackerless-network'
-import { StreamID } from '@streamr/utils'
+import { StreamID, UserID } from '@streamr/utils'
 import { SignatureType, StreamMessage } from './protocol/StreamMessage'
 
 /**

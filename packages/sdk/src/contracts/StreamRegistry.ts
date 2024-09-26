@@ -1,12 +1,10 @@
-import { UserID } from '@streamr/trackerless-network'
 import {
     EthereumAddress,
     GraphQLQuery,
     Logger,
     StreamID,
     StreamIDUtils,
-    TheGraphClient,
-    collect,
+    TheGraphClient, UserID, collect,
     isENSName,
     toEthereumAddress,
     toStreamID

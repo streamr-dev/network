@@ -1,5 +1,4 @@
-import { UserID } from '@streamr/trackerless-network'
-import { Logger, StreamID } from '@streamr/utils'
+import { Logger, StreamID, UserID } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { NAMESPACES, PersistenceManager } from '../PersistenceManager'
 import { StreamrClientEventEmitter } from '../events'

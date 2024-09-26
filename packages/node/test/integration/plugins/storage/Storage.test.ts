@@ -7,8 +7,7 @@ import {
     convertBytesToStreamMessage,
     convertStreamMessageToBytes
 } from '@streamr/sdk'
-import { UserID } from '@streamr/trackerless-network'
-import { EthereumAddress, hexToBinary, toEthereumAddress, toStreamID, utf8ToBinary } from '@streamr/utils'
+import { EthereumAddress, UserID, hexToBinary, toEthereumAddress, toStreamID, utf8ToBinary } from '@streamr/utils'
 import { Client } from 'cassandra-driver'
 import { randomFillSync } from 'crypto'
 import { Readable } from 'stream'

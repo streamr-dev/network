@@ -1,6 +1,5 @@
 /* eslint-disable padding-line-between-statements */
-import { UserID } from '@streamr/trackerless-network'
-import { GraphQLQuery, Logger, StreamID, TheGraphClient, toEthereumAddress, toStreamID } from '@streamr/utils'
+import { GraphQLQuery, Logger, StreamID, TheGraphClient, UserID, toEthereumAddress, toStreamID } from '@streamr/utils'
 import { Stream } from '../Stream'
 import { ChainPermissions, PUBLIC_PERMISSION_ADDRESS, StreamPermission, convertChainPermissionsToStreamPermissions } from '../permission'
 import { filter, map, unique } from '../utils/GeneratorUtils'

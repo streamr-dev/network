@@ -1,5 +1,4 @@
-import { UserID } from '@streamr/trackerless-network'
-import { EthereumAddress, Multimap, StreamID } from '@streamr/utils'
+import { EthereumAddress, Multimap, StreamID, UserID } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { StreamMetadata } from '../../../src/Stream'
 import { StorageNodeMetadata } from '../../../src/contracts/StorageNodeRegistry'

@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, StreamPartID, StreamPartIDUtils, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, StreamPartID, StreamPartIDUtils, toEthereumAddress, UserID } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -10,7 +10,6 @@ import { convertBytesToGroupKeyResponse } from '../../src/protocol/oldStreamMess
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createRelativeTestStreamId, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
-import { UserID } from '@streamr/trackerless-network'
 
 describe('PublisherKeyExchange', () => {
 

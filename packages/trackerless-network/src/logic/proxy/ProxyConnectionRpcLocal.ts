@@ -1,6 +1,6 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtAddress, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
-import { Logger, StreamPartID, binaryToHex, toEthereumAddress } from '@streamr/utils'
+import { Logger, StreamPartID, UserID, binaryToHex, toEthereumAddress } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import {
     ProxyConnectionRequest,
@@ -10,7 +10,6 @@ import {
 } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { IProxyConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
-import { UserID } from '../../UserID'
 import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 
 const logger = new Logger(module)

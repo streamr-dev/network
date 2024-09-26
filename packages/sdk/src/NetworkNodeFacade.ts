@@ -11,10 +11,9 @@ import {
     NetworkOptions,
     StreamMessage as NewStreamMessage,
     ProxyDirection,
-    UserID,
     createNetworkNode as createNetworkNode_
 } from '@streamr/trackerless-network'
-import { Logger, MetricsContext, StreamPartID } from '@streamr/utils'
+import { Logger, MetricsContext, StreamPartID, UserID } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { pull } from 'lodash'
 import { Lifecycle, inject, scoped } from 'tsyringe'

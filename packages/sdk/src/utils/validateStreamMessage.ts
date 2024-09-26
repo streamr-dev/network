@@ -1,4 +1,4 @@
-import { UserID } from '@streamr/trackerless-network'
+import { UserID } from '@streamr/utils'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
 import { StreamMessageError } from '../protocol/StreamMessageError'

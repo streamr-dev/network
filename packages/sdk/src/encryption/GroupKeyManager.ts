@@ -1,5 +1,4 @@
-import { UserID } from '@streamr/trackerless-network'
-import { StreamID, StreamPartID, StreamPartIDUtils, waitForEvent } from '@streamr/utils'
+import { StreamID, StreamPartID, StreamPartIDUtils, UserID, waitForEvent } from '@streamr/utils'
 import crypto from 'crypto'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'

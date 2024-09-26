@@ -13,12 +13,13 @@ import {
     Metric,
     MetricsContext,
     MetricsDefinition,
-    RateMetric, StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID
+    RateMetric, StreamID, StreamPartID, StreamPartIDUtils,
+    UserID,
+    toStreamPartID
 } from '@streamr/utils'
 import { createHash } from 'crypto'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
-import { UserID } from '../UserID'
 import { ProxyDirection, StreamMessage, StreamPartitionInfo } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
 import { ControlLayerNode } from './ControlLayerNode'

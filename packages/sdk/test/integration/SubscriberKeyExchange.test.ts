@@ -1,14 +1,12 @@
 import 'reflect-metadata'
 
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
-import { UserID } from '@streamr/trackerless-network'
 import {
     StreamID,
     StreamPartID,
     StreamPartIDUtils,
     toEthereumAddress,
-    toStreamPartID,
-    waitForCondition
+    toStreamPartID, UserID, waitForCondition
 } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'

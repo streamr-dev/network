@@ -3,11 +3,11 @@ import {
     EncryptionType as NewEncryptionType,
     SignatureType as NewSignatureType,
     StreamMessage as NewStreamMessage,
-    UserID
 } from '@streamr/trackerless-network'
 import {
     StreamPartID,
     StreamPartIDUtils,
+    UserID,
     hexToBinary,
     toEthereumAddress,
     utf8ToBinary

@@ -1,5 +1,4 @@
-import { UserID } from '@streamr/trackerless-network'
-import { StreamID, StreamPartID, toStreamPartID } from '@streamr/utils'
+import { StreamID, StreamPartID, toStreamPartID, UserID } from '@streamr/utils'
 import { MessageRef } from './MessageRef'
 import { validateIsNotNegativeInteger } from './validations'
 
