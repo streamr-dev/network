@@ -1,7 +1,10 @@
 /**
  * Wrap a network node.
  */
+import { IMessageType } from '@protobuf-ts/runtime'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtAddress, PeerDescriptor } from '@streamr/dht'
+import { ProtoRpcClient } from '@streamr/proto-rpc'
 import {
     ExternalRpcClient,
     ExternalRpcClientClass,
@@ -10,7 +13,7 @@ import {
     ProxyDirection,
     createNetworkNode as createNetworkNode_
 } from '@streamr/trackerless-network'
-import { EthereumAddress, Logger, MetricsContext, StreamPartID } from '@streamr/utils'
+import { Logger, MetricsContext, StreamPartID, UserID } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { pull } from 'lodash'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -18,15 +21,12 @@ import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { ConfigInjectionToken, NetworkPeerDescriptor, StrictStreamrClientConfig } from './Config'
 import { DestroySignal } from './DestroySignal'
 import { OperatorRegistry } from './contracts/OperatorRegistry'
+import { OperatorDiscoveryRequest } from './generated/packages/sdk/protos/SdkRpc'
+import { OperatorDiscoveryClient } from './generated/packages/sdk/protos/SdkRpc.client'
 import { StreamMessage as OldStreamMessage } from './protocol/StreamMessage'
 import { StreamMessageTranslator } from './protocol/StreamMessageTranslator'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, peerDescriptorTranslator } from './utils/utils'
-import { ProtoRpcClient } from '@streamr/proto-rpc'
-import { IMessageType } from '@protobuf-ts/runtime'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { OperatorDiscoveryClient } from './generated/packages/sdk/protos/SdkRpc.client'
-import { OperatorDiscoveryRequest } from './generated/packages/sdk/protos/SdkRpc'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 /** @deprecated This in an internal interface */
@@ -54,7 +54,7 @@ export interface NetworkNodeStub {
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: EthereumAddress,
+        userId: UserID,
         connectionCount?: number
     ) => Promise<void>
     isProxiedStreamPart(streamPartId: StreamPartID): boolean
