@@ -3,7 +3,7 @@
     "display": "Node 18 – Streamr",
     "extends": "@tsconfig/node18/tsconfig.json",
     "compilerOptions": {
-        "allowJs": true,
+        "allowJs": false,
         "composite": true,
         "declaration": true,
         "noImplicitOverride": true,

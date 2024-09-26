@@ -22,7 +22,7 @@
   "scripts": {
     "prebuild": "node bin/generate-config-validator.js && bash vendor-hack.sh",
     "postbuild": "bash copy-package.sh && bash fix-esm.sh",
-    "build": "tsc --build ./tsconfig.node.json",
+    "build": "tsc --build ./tsconfig.node.json && cp src/exports-commonjs.js dist/src/",
     "build-browser": "npm run build-browser-development && npm run build-browser-production",
     "build-browser-development": "NODE_ENV=development webpack --mode=development --progress",
     "build-browser-production": "NODE_ENV=production webpack --mode=production --progress",
