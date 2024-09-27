@@ -456,6 +456,7 @@ describe('Iterator Utils', () => {
                 expect(received).toEqual(receievedAtCallTime)
                 expect(itr.isCancelled()).toEqual(true)
             } catch (err) {
+                // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
                 done.reject(err)
             } finally {
                 await done
