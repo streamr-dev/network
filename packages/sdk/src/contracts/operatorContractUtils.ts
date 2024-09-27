@@ -184,11 +184,11 @@ export function getProvider(): Provider {
     })
 }
 
-export function getTokenContract(): TestTokenContract {
+export function getTestTokenContract(): TestTokenContract {
     return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, TestTokenArtifact) as unknown as TestTokenContract
 }
 
-export const getAdminWallet = (adminKey?: string, provider?: Provider): Wallet => {
+export const getTestAdminWallet = (adminKey?: string, provider?: Provider): Wallet => {
     return new Wallet(adminKey ?? TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider ?? getProvider())
 }
 
@@ -200,10 +200,10 @@ export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGa
     const provider = getProvider()
     const privateKey = crypto.randomBytes(32).toString('hex')
     const newWallet = new Wallet(privateKey)
-    const adminWallet = getAdminWallet()
+    const adminWallet = getTestAdminWallet()
     const token = (opts?.chainConfig !== undefined)
         ? new Contract(opts.chainConfig.contracts.DATA, TestTokenArtifact, adminWallet) as unknown as TestTokenContract
-        : getTokenContract().connect(adminWallet)
+        : getTestTokenContract().connect(adminWallet)
     await retry(
         async () => {
             await (await token.mint(newWallet.address, parseEther('1000000'))).wait()
@@ -230,6 +230,10 @@ export const delegate = async (delegator: Wallet, operatorContractAddress: strin
     await transferTokens(delegator, operatorContractAddress, amount, delegator.address, token)
 }
 
+export const undelegate = async (delegator: Wallet, operatorContract: OperatorContract, amount: number): Promise<void> => {
+    await (await operatorContract.connect(delegator).undelegate(parseEther(amount.toString()))).wait()
+}
+
 export const stake = async (operatorContract: OperatorContract, sponsorshipContractAddress: string, amount: number): Promise<void> => {
     logger.debug('Stake', { amount })
     await (await operatorContract.stake(sponsorshipContractAddress, parseEther(amount.toString()))).wait()
@@ -248,6 +252,10 @@ export const sponsor = async (sponsorer: Wallet, sponsorshipContractAddress: str
 }
 
 export const transferTokens = async (from: Wallet, to: string, amount: number, data?: string, token?: TestTokenContract): Promise<void> => {
-    const tx = await ((token ?? getTokenContract()).connect(from).transferAndCall(to, parseEther(amount.toString()), data ?? '0x'))
+    const tx = await ((token ?? getTestTokenContract()).connect(from).transferAndCall(to, parseEther(amount.toString()), data ?? '0x'))
     await tx.wait()
+}
+
+export const getOperatorContract = (operatorAddress: string): OperatorContract => {
+    return new Contract(operatorAddress, OperatorArtifact) as unknown as OperatorContract
 }

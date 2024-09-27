@@ -11,7 +11,7 @@
   "types": "./dist/src/exports.d.ts",
   "scripts": {
     "build": "tsc --build tsconfig.node.json",
-    "check": "tsc -p ./tsconfig.jest.json --noEmit",
+    "check": "tsc -p ./tsconfig.jest.json",
     "clean": "jest --clearCache || true; rm -rf dist vendor *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "jest",
@@ -22,7 +22,7 @@
   "dependencies": {
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
-    "pino": "^9.3.2",
+    "pino": "^9.4.0",
     "pino-pretty": "^11.2.2",
     "secp256k1": "^5.0.0",
     "sha3": "^2.1.4"

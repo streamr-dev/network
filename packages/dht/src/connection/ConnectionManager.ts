@@ -283,7 +283,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         if (!connection && opts.connect) {
             connection = this.connectorFacade.createConnection(peerDescriptor)
             this.onNewConnection(connection)
-        } else if (!connection) {
+        } else if (!connection || (connection && !this.endpoints.get(nodeId)!.connected && !opts.connect)) {
             throw new Err.SendFailed('No connection to target, connect flag is false')
         }
         const binary = Message.toBinary(message)

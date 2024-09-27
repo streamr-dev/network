@@ -9,12 +9,13 @@ import {
     getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
 import {
-    EthereumAddress,
     Logger,
     Metric,
     MetricsContext,
     MetricsDefinition,
-    RateMetric, StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID
+    RateMetric, StreamID, StreamPartID, StreamPartIDUtils,
+    UserID,
+    toStreamPartID
 } from '@streamr/utils'
 import { createHash } from 'crypto'
 import { EventEmitter } from 'eventemitter3'
@@ -271,7 +272,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: EthereumAddress,
+        userId: UserID,
         connectionCount?: number
     ): Promise<void> {
         // TODO explicit default value for "acceptProxyConnections" or make it required

@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { EthereumAddress, hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
+import { UserID, hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
 import { mock } from 'jest-mock-extended'
 import { Authentication } from '../../src/Authentication'
@@ -48,8 +48,8 @@ const subscriberAuthentication = createRandomAuthentication()
 
 describe('Validator2', () => {
     let getStream: (streamId: string) => Promise<Stream>
-    let isPublisher: (address: EthereumAddress, streamId: string) => Promise<boolean>
-    let isSubscriber: (address: EthereumAddress, streamId: string) => Promise<boolean>
+    let isPublisher: (userId: UserID, streamId: string) => Promise<boolean>
+    let isSubscriber: (userId: UserID, streamId: string) => Promise<boolean>
     let msg: StreamMessage
     let msgWithNewGroupKey: StreamMessage
     let msgWithPrevMsgRef: StreamMessage
@@ -60,8 +60,8 @@ describe('Validator2', () => {
         return {
             validate: (msg: StreamMessage) => validateStreamMessage(msg, { 
                 getStream,
-                isStreamPublisher: (streamId: string, address: EthereumAddress) => isPublisher(address, streamId),
-                isStreamSubscriber: (streamId: string, address: EthereumAddress) => isSubscriber(address, streamId)
+                isStreamPublisher: (streamId: string, userId: UserID) => isPublisher(userId, streamId),
+                isStreamSubscriber: (streamId: string, userId: UserID) => isSubscriber(userId, streamId)
             } as any, new SignatureValidator(mock<ERC1271ContractFacade>()))
         }
     }
@@ -77,11 +77,11 @@ describe('Validator2', () => {
                 })
             } as any
         }
-        isPublisher = async (address: EthereumAddress, streamId: string) => {
-            return address === publisher && streamId === 'streamId'
+        isPublisher = async (userId: UserID, streamId: string) => {
+            return userId === publisher && streamId === 'streamId'
         }
-        isSubscriber = async (address: EthereumAddress, streamId: string) => {
-            return address === subscriber && streamId === 'streamId'
+        isSubscriber = async (userId: UserID, streamId: string) => {
+            return userId === subscriber && streamId === 'streamId'
         }
 
         const publisherSigner = new MessageSigner(publisherAuthentication)

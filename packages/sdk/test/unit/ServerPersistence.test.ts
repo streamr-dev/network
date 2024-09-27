@@ -1,4 +1,4 @@
-import { randomEthereumAddress, testOnlyInNodeJs } from '@streamr/test-utils'
+import { randomUserId, testOnlyInNodeJs } from '@streamr/test-utils'
 import range from 'lodash/range'
 import { join } from 'path'
 import { Database } from 'sqlite'
@@ -12,10 +12,10 @@ describe('ServerPersistence', () => {
     let persistence: ServerPersistence
 
     beforeEach(async () => {
-        const clientId = randomEthereumAddress()
+        const ownerId = randomUserId()
         persistence = await ServerPersistence.createInstance({
             loggerFactory: mockLoggerFactory(),
-            clientId,
+            ownerId,
             namespaces: [NAMESPACE],
             onInit: async (db: Database) => {
                 await db.exec(`CREATE TABLE IF NOT EXISTS ${NAMESPACE} (key_ TEXT NOT NULL PRIMARY KEY, value_ TEXT);`)
@@ -55,11 +55,11 @@ describe('ServerPersistence', () => {
     // enable when NET-1057 done
     it.skip('concurrency', async () => {
         const instanceCount = 10
-        const clientId = randomEthereumAddress()
+        const ownerId = randomUserId()
         const values = await Promise.all(range(instanceCount).map(async (i: number) => {
             const instance = await ServerPersistence.createInstance({
                 loggerFactory: mockLoggerFactory(),
-                clientId,
+                ownerId,
                 namespaces: ['EncryptionKeys'],
                 migrationsPath: join(__dirname, '../../src/encryption/migrations')
             })

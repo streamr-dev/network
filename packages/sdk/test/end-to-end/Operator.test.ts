@@ -10,7 +10,7 @@ import {
     SetupOperatorContractReturnType,
     delegate,
     deploySponsorshipContract,
-    getAdminWallet,
+    getTestAdminWallet,
     setupOperatorContract,
     sponsor,
     stake
@@ -91,7 +91,7 @@ describe('Operator', () => {
         const operatorFactory = new Contract(
             CHAIN_CONFIG.dev2.contracts.OperatorFactory,
             OperatorFactoryArtifact,
-            getAdminWallet()
+            getTestAdminWallet()
         ) as unknown as OperatorFactoryContract
         const isDeployedByFactory = (await operatorFactory.deploymentTimestamp(randomOperatorAddress!)) > 0
         expect(isDeployedByFactory).toBeTrue()
