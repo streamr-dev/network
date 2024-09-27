@@ -397,4 +397,5 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
     private isStopped() {
         return this.abortController.signal.aborted
     }
+
 }

@@ -16,4 +16,9 @@ export class MockTransport extends EventEmitter<TransportEvents> implements ITra
     // eslint-disable-next-line class-methods-use-this
     stop(): void {
     }
+
+    // eslint-disable-next-line class-methods-use-this
+    getDiagnosticsInfo(): Record<string, unknown> {
+        return {}
+    }
 }

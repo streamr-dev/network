@@ -31,6 +31,8 @@ export class Router {
     private readonly duplicateRequestDetector: DuplicateDetector = new DuplicateDetector(10000)
     private stopped = false
     private readonly options: RouterOptions
+    private messagesRouted = 0
+    private messagesSent = 0
 
     constructor(options: RouterOptions) {
         this.options = options
@@ -107,6 +109,7 @@ export class Router {
                 throw new Error(error)
             }
         }
+        this.messagesSent += 1
     }
 
     public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE, excludedPeer?: DhtAddress): RouteMessageAck {
@@ -142,6 +145,7 @@ export class Router {
                 this.removeRoutingSession(session.sessionId) 
             })
             session.sendMoreRequests(contacts)
+            this.messagesRouted += 1
             return createRouteMessageAck(routedMessage)
         } else {
             logger.trace('no targets', { sessionId: session.sessionId })
@@ -211,6 +215,13 @@ export class Router {
         this.forwardingTable.clear()
         this.duplicateRequestDetector.clear()
         this.routingTablesCache.reset()
+    }
+
+    getDiagnosticInfo(): Record<string, unknown> {
+        return {
+            messagesRouted: this.messagesRouted,
+            messagesSent: this.messagesSent
+        }
     }
 
     private setForwardingEntries(routedMessage: RouteMessageWrapper): void {
