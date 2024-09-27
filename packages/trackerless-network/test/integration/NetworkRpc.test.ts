@@ -4,13 +4,13 @@ import {
     RpcCommunicator,
     toProtoRpcClient
 } from '@streamr/proto-rpc'
-import { randomEthereumAddress } from '@streamr/test-utils'
 import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { createStreamMessage } from '../utils/utils'
+import { randomUserId } from '@streamr/test-utils'
 
 describe('Network RPC', () => {
     let rpcCommunicator1: RpcCommunicator<DhtCallContext>
@@ -21,8 +21,8 @@ describe('Network RPC', () => {
     beforeEach(() => {
         rpcCommunicator1 = new RpcCommunicator()
         rpcCommunicator2 = new RpcCommunicator()
-        rpcCommunicator1.on('outgoingMessage', (message: RpcMessage) => {
-            rpcCommunicator2.handleIncomingMessage(message)
+        rpcCommunicator1.setOutgoingMessageListener(async (message: RpcMessage) => {
+            rpcCommunicator2.handleIncomingMessage(message, new DhtCallContext())
         })
         client = toProtoRpcClient(new ContentDeliveryRpcClient(rpcCommunicator1.getRpcClientTransport()))
         rpcCommunicator2.registerRpcNotification(
@@ -44,7 +44,7 @@ describe('Network RPC', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             StreamPartIDUtils.parse('testStream#0'),
-            randomEthereumAddress()
+            randomUserId()
         )
         await client.sendStreamMessage(msg)
         await waitForCondition(() => recvCounter === 1)

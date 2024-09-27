@@ -9,9 +9,13 @@
   },
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
+  "files": [
+    "customMatchers.d.ts",
+    "setupCustomMatchers.js"
+  ],
   "scripts": {
     "build": "tsc --build tsconfig.node.json",
-    "check": "tsc -p ./tsconfig.jest.json --noEmit",
+    "check": "tsc -p ./tsconfig.jest.json",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "test": "jest",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'"
@@ -22,7 +26,9 @@
     "@streamr/utils": "101.1.2",
     "cors": "^2.8.5",
     "ethers": "^6.13.0",
-    "express": "^4.19.2",
+    "express": "^4.21.0",
+    "jest": "^29.7.0",
+    "jest-matcher-utils": "^29.7.0",
     "node-fetch": "^2.7.0"
   },
   "devDependencies": {

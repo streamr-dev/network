@@ -1,10 +1,10 @@
 import { ListeningRpcCommunicator } from '@streamr/dht'
-import { randomEthereumAddress } from '@streamr/test-utils'
 import { StreamPartIDUtils } from '@streamr/utils'
 import { ContentDeliveryRpcLocal } from '../../src/logic/ContentDeliveryRpcLocal'
 import { LeaveStreamPartNotice } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import { randomUserId } from '@streamr/test-utils'
 
 describe('ContentDeliveryRpcLocal', () => {
 
@@ -16,7 +16,7 @@ describe('ContentDeliveryRpcLocal', () => {
     const message = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
         StreamPartIDUtils.parse('random-graph#0'),
-        randomEthereumAddress()
+        randomUserId()
     )
 
     let mockBroadcast: jest.Mock

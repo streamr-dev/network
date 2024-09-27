@@ -631,6 +631,17 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         return this.peerDiscovery!.isJoinCalled()
     }
 
+    public getDiagnosticInfo(): Record<string, unknown> {
+        return {
+            localPeerDescriptor: this.localPeerDescriptor,
+            transport: this.transport!.getDiagnosticInfo(),
+            router: this.router!.getDiagnosticInfo(),
+            neighborCount: this.getNeighborCount(),
+            nearbyContactCount: Array.from(this.peerManager!.getNearbyContacts().getAllContactsInUndefinedOrder()).length,
+            randomContactCount: this.peerManager!.getRandomContacts().getSize()
+        }
+    }
+
     public async stop(): Promise<void> {
         if (this.abortController.signal.aborted || !this.started) {
             return

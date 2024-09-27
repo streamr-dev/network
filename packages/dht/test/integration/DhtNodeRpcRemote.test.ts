@@ -27,11 +27,11 @@ describe('DhtNodeRpcRemote', () => {
         serverRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', mockDhtRpc.getClosestPeers)
         serverRpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', mockDhtRpc.ping)
-        clientRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
-            serverRpcCommunicator.handleIncomingMessage(message)
+        clientRpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage) => {
+            serverRpcCommunicator.handleIncomingMessage(message, new DhtCallContext())
         })
-        serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
-            clientRpcCommunicator.handleIncomingMessage(message)
+        serverRpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage) => {
+            clientRpcCommunicator.handleIncomingMessage(message, new DhtCallContext())
         })
         rpcRemote = new DhtNodeRpcRemote(clientPeerDescriptor, serverPeerDescriptor, SERVICE_ID, clientRpcCommunicator)
     })

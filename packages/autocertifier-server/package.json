@@ -17,7 +17,7 @@
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
     "build": "tsc -b tsconfig.node.json",
-    "check": "tsc -p ./tsconfig.jest.json --noEmit",
+    "check": "tsc -p ./tsconfig.jest.json",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "jest test/unit test/integration",
@@ -25,16 +25,16 @@
     "test-integration": "jest test/integration"
   },
   "dependencies": {
-    "@aws-sdk/client-route-53": "^3.645.0",
+    "@aws-sdk/client-route-53": "^3.654.0",
     "@streamr/autocertifier-client": "101.1.2",
     "@streamr/dht": "101.1.2",
     "@streamr/proto-rpc": "101.1.2",
     "@streamr/utils": "101.1.2",
     "acme-client": "^5.4.0",
-    "body-parser": "^1.20.2",
+    "body-parser": "^1.20.3",
     "dns2": "^2.1.0",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2",
+    "express": "^4.21.0",
     "lodash": "^4.17.21",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",

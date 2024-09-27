@@ -19,7 +19,7 @@
   "types": "./dist/src/exports.d.ts",
   "scripts": {
     "build": "tsc -b tsconfig.node.json",
-    "check": "tsc -p ./tsconfig.jest.json --noEmit",
+    "check": "tsc -p ./tsconfig.jest.json",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "npm run test-unit && npm run test-integration && npm run test-sequential",
@@ -30,7 +30,7 @@
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "dependencies": {
-    "@inquirer/prompts": "^5.5.0",
+    "@inquirer/prompts": "^6.0.1",
     "@streamr/config": "^5.3.13",
     "@streamr/dht": "101.1.2",
     "@streamr/sdk": "101.1.2",
@@ -45,7 +45,7 @@
     "cors": "^2.8.5",
     "ethers": "^6.13.0",
     "eventemitter3": "^5.0.0",
-    "express": "^4.19.2",
+    "express": "^4.21.0",
     "heap": "^0.2.6",
     "lodash": "^4.17.21",
     "merge2": "^1.4.1",
@@ -57,7 +57,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@inquirer/testing": "^2.1.32",
+    "@inquirer/testing": "^2.1.34",
     "@streamr/network-contracts-ethers6": "^7.1.4",
     "@streamr/test-utils": "101.1.2",
     "@types/cors": "^2.8.17",
@@ -66,7 +66,7 @@
     "@types/lodash": "^4.17.7",
     "@types/merge2": "^1.4.4",
     "@types/node-fetch": "^2.6.4",
-    "@types/qs": "^6.9.12",
+    "@types/qs": "^6.9.16",
     "@types/stream-to-array": "^2.3.3",
     "@types/supertest": "^6.0.2",
     "@types/uuid": "^10.0.0",

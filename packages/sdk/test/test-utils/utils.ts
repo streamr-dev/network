@@ -1,13 +1,11 @@
 import 'reflect-metadata'
 
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { 
-    EthereumAddress,
+import {
     Logger,
     MAX_PARTITION_COUNT,
     StreamPartID,
-    StreamPartIDUtils,
-    merge,
+    StreamPartIDUtils, UserID, merge,
     utf8ToBinary,
     wait,
     waitForCondition
@@ -153,9 +151,9 @@ export const createMockMessage = async (
 // When binary contents are supported we don't need this anymore.
 export const MOCK_CONTENT = utf8ToBinary(JSON.stringify({}))
 
-export const getLocalGroupKeyStore = (userAddress: EthereumAddress): LocalGroupKeyStore => {
+export const getLocalGroupKeyStore = (ownerId: UserID): LocalGroupKeyStore => {
     const authentication = {
-        getAddress: () => userAddress
+        getAddress: () => ownerId
     } as any
     const loggerFactory = mockLoggerFactory()
     return new LocalGroupKeyStore(
