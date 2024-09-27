@@ -23,6 +23,7 @@ export class SignatureValidator {
         try {
             success = await this.validate(streamMessage)
         } catch (err) {
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             throw new StreamMessageError(`An error occurred during address recovery from signature: ${err}`, streamMessage)
         }
         if (!success) {

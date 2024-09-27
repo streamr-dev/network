@@ -43,6 +43,7 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
             getAddress: pMemoize(async () => {
                 try {
                     if (!('request' in ethereum && typeof ethereum.request === 'function')) {
+                        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                         throw new Error(`invalid ethereum provider ${ethereum}`)
                     }
                     const accounts = await ethereum.request({ method: 'eth_requestAccounts' })

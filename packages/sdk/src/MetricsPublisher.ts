@@ -97,6 +97,7 @@ export class MetricsPublisher {
                 partitionKey: nodeId
             })
         } catch (e: any) {
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             console.warn(`Unable to publish metrics: ${e.message}`)
         }
     }

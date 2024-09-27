@@ -33,6 +33,7 @@ const exponentialRunOff = async (
         try { // Abort controller throws unexpected errors in destroy?
             await wait(delay, abortSignal)
         } catch (err) {
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             logger.trace(`${err}`)  // TODO Do we need logging?
         }
     }

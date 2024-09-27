@@ -15,6 +15,7 @@ export class StoreRpcRemote extends RpcRemote<StoreRpcClient> {
         } catch (err) {
             const to = getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
             const from = getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor())
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             throw new Error(`Could not store data to ${to} from ${from} ${err}`)
         }
     }

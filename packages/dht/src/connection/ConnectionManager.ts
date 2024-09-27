@@ -365,6 +365,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         try {
             message = Message.fromBinary(data)
         } catch (e) {
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             logger.debug(`Parsing incoming data into Message failed: ${e}`)
             return
         }
@@ -372,6 +373,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         try {
             this.handleMessage(message)
         } catch (e) {
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             logger.debug(`Handling incoming data failed: ${e}`)
         }
     }

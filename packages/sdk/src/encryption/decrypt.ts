@@ -26,6 +26,7 @@ export const decrypt = async (
         if (destroySignal.isDestroyed()) {
             return streamMessage
         }
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         throw new DecryptError(streamMessage, `Could not get GroupKey ${streamMessage.groupKeyId}: ${e.message}`)
     }
     if (destroySignal.isDestroyed()) {

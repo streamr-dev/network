@@ -31,6 +31,7 @@ describe('StreamrClient', () => {
     after(async (browser) => {
         await browser.getLog('browser', (logs) => {
             logs.forEach((l) => {
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 console.info(`[${l.level}]: ${l.message}`)
             })
         })

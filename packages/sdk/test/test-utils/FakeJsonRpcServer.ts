@@ -88,7 +88,7 @@ export class FakeJsonRpcServer {
         } else if (request.method === 'eth_blockNumber') {
             return toHex(BLOCK_NUMBER)
         } else if (request.method === 'eth_call') {
-            const data = request.params[0].data
+            const data: string = request.params[0].data
             const contractMethodHash = data.substring(2, 10)
             if (contractMethodHash === getContractMethodHash('hasPermission(string,address,uint8)')) {
                 return TRUE
