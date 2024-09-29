@@ -12,6 +12,7 @@ export class TemporaryConnectionRpcRemote extends RpcRemote<TemporaryConnectionR
             return response.accepted
         } catch (err: any) {
             logger.debug(`temporaryConnection to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed`, { err })
+            console.log(err)
             return false
         }
     }

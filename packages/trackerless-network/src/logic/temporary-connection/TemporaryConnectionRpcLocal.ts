@@ -21,7 +21,7 @@ interface TemporaryConnectionRpcLocalOptions {
 } 
 
 const LOCK_ID_BASE = 'system/content-delivery/temporary-connection/'
-
+const CONNECTION_LIMIT = 100
 export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
 
     private readonly options: TemporaryConnectionRpcLocalOptions
@@ -30,7 +30,7 @@ export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
     constructor(options: TemporaryConnectionRpcLocalOptions) {
         this.options = options
         // TODO use options option or named constant?
-        this.temporaryNodes = new NodeList(getNodeIdFromPeerDescriptor(options.localPeerDescriptor), 10)
+        this.temporaryNodes = new NodeList(getNodeIdFromPeerDescriptor(options.localPeerDescriptor), CONNECTION_LIMIT)
         this.lockId = LOCK_ID_BASE + options.streamPartId
     }
 
