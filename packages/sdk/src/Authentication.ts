@@ -41,15 +41,7 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
         const signer = provider.getSigner()
         return {
             getAddress: pMemoize(async () => {
-                try {
-                    if (!('request' in ethereum && typeof ethereum.request === 'function')) {
-                        throw new Error(`invalid ethereum provider ${ethereum}`)
-                    }
-                    const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
-                    return toEthereumAddress(accounts[0])
-                } catch {
-                    throw new Error('no addresses connected and selected in the custom authentication provider')
-                }
+                return toEthereumAddress(await (await signer).getAddress())
             }),
             createMessageSignature: pLimitFn(async (payload: Uint8Array) => {
                 // sign one at a time & wait a moment before asking for next signature

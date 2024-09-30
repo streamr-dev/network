@@ -4,7 +4,7 @@ import { fastWallet } from '@streamr/test-utils'
 import { createSignature, verifySignature } from '@streamr/utils'
 
 /*
- * Benchmarking SigningUtil against ether.js implementation. This test is skipped
+ * Benchmarking signingUtils against ether.js implementation. This test is skipped
  * because we don't need to run this in CI. It is reasonable to run this
  * test e.g. when ethers.js releases a new major version. (If that version
  * provides equal performance compared to our implementation we could start to
@@ -86,7 +86,7 @@ describe('SigningUtil', () => {
     
         it('verify', async () => {
             const elapsedTimeOur = await run(async () => {
-                return verifySignature(toEthereumAddress(wallet.address), payload, binarySignature)
+                return verifySignature(hexToBinary(wallet.address), payload, binarySignature)
             }, true, 'Verify-our')
     
             const elapsedTimeEthers = await run(async () => {

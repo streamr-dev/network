@@ -75,6 +75,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
     private options: StrictContentDeliveryLayerNodeOptions
     private readonly contentDeliveryRpcLocal: ContentDeliveryRpcLocal
     private abortController: AbortController = new AbortController()
+    private messagesPropagated = 0
 
     constructor(options: StrictContentDeliveryLayerNodeOptions) {
         super()
@@ -360,6 +361,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         this.emit('message', msg)
         const skipBackPropagation = previousNode !== undefined && !this.options.temporaryConnectionRpcLocal.hasNode(previousNode)
         this.options.propagation.feedUnseenMessage(msg, this.getPropagationTargets(msg), skipBackPropagation ? previousNode : null)
+        this.messagesPropagated += 1
     }
 
     inspect(peerDescriptor: PeerDescriptor): Promise<boolean> {
@@ -394,7 +396,19 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         return this.options.nearbyNodeView
     }
 
+    public getDiagnosticInfo(): Record<string, unknown> {
+        return {
+            neighborCount: this.options.neighbors.size(),
+            nearbyNodeViewCount: this.options.nearbyNodeView.size(),
+            randomNodeViewCount: this.options.randomNodeView.size(),
+            leftNodeViewCount: this.options.leftNodeView.size(),
+            rightNodeViewCount: this.options.rightNodeView.size(),
+            messagesPropagated: this.messagesPropagated
+        }
+    }
+
     private isStopped() {
         return this.abortController.signal.aborted
     }
+
 }

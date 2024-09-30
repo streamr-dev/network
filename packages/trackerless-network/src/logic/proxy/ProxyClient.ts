@@ -267,6 +267,12 @@ export class ProxyClient extends EventEmitter<Events> {
         )
     }
 
+    public getDiagnosticInfo(): Record<string, unknown> {
+        return {
+            neighbors: this.neighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor()),
+        }
+    }
+
     stop(): void {
         this.neighbors.getAll().forEach((remote) => {
             this.options.connectionLocker.unlockConnection(remote.getPeerDescriptor(), SERVICE_ID)
