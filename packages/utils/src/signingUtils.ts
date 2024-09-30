@@ -56,10 +56,10 @@ export function recoverSignerUserId(signature: Uint8Array, payload: Uint8Array):
     return hashOfPubKey.subarray(12, hashOfPubKey.length)
 }
 
-export function verifySignature(userId: UserIDRaw, payload: Uint8Array, signature: Uint8Array): boolean {
+export function verifySignature(expectedUserId: UserIDRaw, payload: Uint8Array, signature: Uint8Array): boolean {
     try {
         const recoveredAddress = recoverSignerUserId(signature, payload)
-        return areEqualBinaries(recoveredAddress, userId)
+        return areEqualBinaries(recoveredAddress, expectedUserId)
     } catch {
         return false
     }
