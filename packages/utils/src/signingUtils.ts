@@ -47,7 +47,7 @@ export function createSignature(payload: Uint8Array, privateKey: Uint8Array): Ui
     return result
 }
 
-export function recoverAddress(signature: Uint8Array, payload: Uint8Array): UserIDRaw {
+export function recoverSignerUserId(signature: Uint8Array, payload: Uint8Array): UserIDRaw {
     const publicKey = recoverPublicKey(signature, payload)
     const pubKeyWithoutFirstByte = publicKey.subarray(1, publicKey.length)
     keccak.reset()
@@ -58,7 +58,7 @@ export function recoverAddress(signature: Uint8Array, payload: Uint8Array): User
 
 export function verifySignature(userId: UserIDRaw, payload: Uint8Array, signature: Uint8Array): boolean {
     try {
-        const recoveredAddress = recoverAddress(signature, payload)
+        const recoveredAddress = recoverSignerUserId(signature, payload)
         return areEqualBinaries(recoveredAddress, userId)
     } catch {
         return false
