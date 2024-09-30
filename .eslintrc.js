@@ -8,7 +8,7 @@ module.exports = {
         'plugin:@typescript-eslint/recommended-requiring-type-checking',
         'plugin:import/recommended',
         'plugin:import/typescript',
-        'eslint-config-streamr-ts',
+        'eslint-config-streamr-ts'
     ],
     parser: '@typescript-eslint/parser',
     parserOptions: {
