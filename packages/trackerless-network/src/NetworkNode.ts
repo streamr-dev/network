@@ -115,7 +115,10 @@ export class NetworkNode {
 
     // eslint-disable-next-line class-methods-use-this
     getDiagnosticInfo(): Record<string, unknown> {
-        return {}
+        return {
+            controlLayer: this.stack.getControlLayerNode().getDiagnosticInfo(),
+            contentLayer: this.stack.getContentDeliveryManager().getDiagnosticInfo()
+        }
     }
 
     registerExternalNetworkRpcMethod<
