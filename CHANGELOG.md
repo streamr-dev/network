@@ -18,9 +18,11 @@ Changes before Tatum release are not documented in this file.
 
 #### Removed
 
+- Remove support for legacy encryption keys (https://github.com/streamr-dev/network/pull/2757)
+
 #### Fixed
 
-- Fixed gas estimation in `Operator#voteOnFlag` (https://github.com/streamr-dev/network/pull/2734)
+- Fixed flag expiration time in `Operator#getExpiredFlags` (https://github.com/streamr-dev/network/pull/2739)
 
 #### Security
 
@@ -51,6 +53,15 @@ Changes before Tatum release are not documented in this file.
 #### Fixed
 
 #### Security
+
+
+## [101.1.2] - 2024-09-04
+
+### @streamr/sdk
+
+#### Fixed
+
+- Fixed gas estimation in `Operator#voteOnFlag` (https://github.com/streamr-dev/network/pull/2734)
 
 
 ## [101.1.1] - 2024-08-29
@@ -249,7 +260,8 @@ Changes before Tatum release are not documented in this file.
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v101.1.1...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v101.1.2...HEAD
+[101.1.2]: https://github.com/streamr-dev/network/compare/v101.1.1...v101.1.2
 [101.1.1]: https://github.com/streamr-dev/network/compare/v101.1.0...v101.1.1
 [101.1.0]: https://github.com/streamr-dev/network/compare/v101.0.1...v101.1.0
 [101.0.1]: https://github.com/streamr-dev/network/compare/v101.0.0...v101.0.1

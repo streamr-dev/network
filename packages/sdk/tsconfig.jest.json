@@ -1,8 +1,7 @@
 {
     "extends": "../../tsconfig.jest.json",
     "compilerOptions": {
-        "outDir": "dist",
-        "declarationDir": "dist/types",
+        "noEmit": true,
         "lib": ["es2021", "dom"],
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,

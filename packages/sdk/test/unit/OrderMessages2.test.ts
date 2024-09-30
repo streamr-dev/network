@@ -1,5 +1,5 @@
 import { randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, StreamPartID, StreamPartIDUtils, hexToBinary, toEthereumAddress, toStreamID, wait, waitForCondition } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toEthereumAddress, toStreamID, wait, waitForCondition } from '@streamr/utils'
 import { shuffle } from 'lodash'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
@@ -32,7 +32,7 @@ enum Delivery {
 }
 
 interface MessageInfo {
-    publisherId: EthereumAddress
+    publisherId: UserID
     timestamp: number
     delivery: Delivery
 }
@@ -53,7 +53,7 @@ function intoChunks<T>(arr: readonly T[], chunkSize: number): T[][] {
     return chunks
 }
 
-function formChainOfMessages(publisherId: EthereumAddress): Array<MessageInfo> {
+function formChainOfMessages(publisherId: UserID): Array<MessageInfo> {
     const chainOfMessages: MessageInfo[] = [{
         publisherId,
         timestamp: 1,

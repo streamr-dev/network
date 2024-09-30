@@ -20,11 +20,11 @@ describe('RemoteRouter', () => {
         clientRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', mockRouterRpc.routeMessage)
-        clientRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
-            serverRpcCommunicator.handleIncomingMessage(message)
+        clientRpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage) => {
+            serverRpcCommunicator.handleIncomingMessage(message, new DhtCallContext())
         })
-        serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
-            clientRpcCommunicator.handleIncomingMessage(message)
+        serverRpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage) => {
+            clientRpcCommunicator.handleIncomingMessage(message, new DhtCallContext())
         })
         remoteRouter = new RouterRpcRemote(clientPeerDescriptor, serverPeerDescriptor, clientRpcCommunicator, RouterRpcClient)
     })

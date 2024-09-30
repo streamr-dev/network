@@ -2,17 +2,15 @@ import {
     ContentType as NewContentType,
     EncryptionType as NewEncryptionType,
     SignatureType as NewSignatureType,
-    StreamMessage as NewStreamMessage
+    StreamMessage as NewStreamMessage,
 } from '@streamr/trackerless-network'
 import {
-    EthereumAddress,
     StreamPartID,
     StreamPartIDUtils,
-    binaryToHex,
-    binaryToUtf8,
+    UserID,
     hexToBinary,
     toEthereumAddress,
-    utf8ToBinary 
+    utf8ToBinary
 } from '@streamr/utils'
 import { MessageID as OldMessageID } from '../../src/protocol/MessageID'
 import {
@@ -29,7 +27,7 @@ const STREAM_PART_ID = StreamPartIDUtils.parse('TEST#0')
 export const createStreamMessage = (
     content: string,
     streamPartId: StreamPartID,
-    publisherId: EthereumAddress,
+    publisherId: UserID,
     timestamp?: number,
     sequenceNumber?: number
 ): NewStreamMessage => {
@@ -90,12 +88,12 @@ describe('StreamMessageTranslator', () => {
         expect(translated.messageId!.streamPartition).toEqual(StreamPartIDUtils.getStreamPartition(STREAM_PART_ID))
         expect(translated.messageId!.timestamp).toBeGreaterThanOrEqual(0)
         expect(translated.messageId!.sequenceNumber).toEqual(0)
-        expect(binaryToHex(translated.messageId!.publisherId, true)).toEqual('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        expect(translated.messageId!.publisherId).toEqualBinary(hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'))
         expect(translated.previousMessageRef).toEqual(undefined)
         expect(translated.body.oneofKind).toEqual('contentMessage')
         expect((translated.body as any).contentMessage.groupKeyId).toEqual(undefined)
         expect(translated.signature).toStrictEqual(signature)
-        expect(JSON.parse(binaryToUtf8((translated.body as any).contentMessage.content))).toEqual({ hello: 'WORLD' })
+        expect((translated.body as any).contentMessage.content).toEqualBinary(utf8ToBinary(JSON.stringify({ hello: 'WORLD' })))
     })
 
     it('translates protobuf to old protocol', () => {

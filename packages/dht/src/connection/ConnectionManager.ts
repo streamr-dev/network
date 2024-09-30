@@ -283,7 +283,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         if (!connection && opts.connect) {
             connection = this.connectorFacade.createConnection(peerDescriptor)
             this.onNewConnection(connection)
-        } else if (!connection) {
+        } else if (!connection || (connection && !this.endpoints.get(nodeId)!.connected && !opts.connect)) {
             throw new Err.SendFailed('No connection to target, connect flag is false')
         }
         const binary = Message.toBinary(message)
@@ -591,5 +591,15 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
 
     private onConnectionCountChange() {
         this.metrics.connectionAverageCount.record(this.endpoints.size)
+    }
+
+    public getDiagnosticInfo(): Record<string, unknown> {
+        const managedConnections: ManagedConnection[] = Array.from(this.endpoints.values())
+            .filter((endpoint) => endpoint.connected)
+            .map((endpoint) => endpoint.connection as ManagedConnection)
+        return {
+            connections: managedConnections.map((connection) => connection.getDiagnosticInfo()),
+            connectionCount: this.endpoints.size
+        }
     }
 }

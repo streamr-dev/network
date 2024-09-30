@@ -56,6 +56,11 @@ class FakeTransport extends EventEmitter<TransportEvents> implements ITransport,
     // eslint-disable-next-line class-methods-use-this
     stop(): void | Promise<void> {
     }
+
+    // eslint-disable-next-line class-methods-use-this
+    getDiagnosticInfo(): Record<string, unknown> {
+        return {}
+    }
 }
 
 export class FakeEnvironment {

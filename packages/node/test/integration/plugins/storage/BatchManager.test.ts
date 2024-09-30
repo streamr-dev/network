@@ -1,9 +1,11 @@
+import { waitForCondition } from '@streamr/utils'
 import { Client, types as cassandraTypes } from 'cassandra-driver'
+import { InsertRecord } from '../../../../src/plugins/storage/Batch'
 import { BatchManager } from '../../../../src/plugins/storage/BatchManager'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { toEthereumAddress, waitForCondition } from '@streamr/utils'
-import { InsertRecord } from '../../../../src/plugins/storage/Batch'
+import { randomUserId } from '@streamr/test-utils'
+
 const { TimeUuid } = cassandraTypes
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
@@ -21,7 +23,7 @@ function buildRecord(
         partition,
         timestamp,
         sequenceNo,
-        publisherId: toEthereumAddress('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'),
+        publisherId: randomUserId(),
         msgChainId: 'msgChainId',
         payload: Buffer.from(new Uint8Array([1, 2]))
     }

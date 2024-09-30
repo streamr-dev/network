@@ -70,4 +70,9 @@ export class MockControlLayerNode extends EventEmitter<TransportEvents> implemen
     // eslint-disable-next-line class-methods-use-this
     async stop(): Promise<void> {
     }
+
+    // eslint-disable-next-line class-methods-use-this
+    getDiagnosticInfo(): Record<string, unknown> {
+        return {}
+    }
 }

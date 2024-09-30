@@ -9,12 +9,13 @@ import {
     getNodeIdFromPeerDescriptor
 } from '@streamr/dht'
 import {
-    EthereumAddress,
     Logger,
     Metric,
     MetricsContext,
     MetricsDefinition,
-    RateMetric, StreamID, StreamPartID, StreamPartIDUtils, toStreamPartID
+    RateMetric, StreamID, StreamPartID, StreamPartIDUtils,
+    UserID,
+    toStreamPartID
 } from '@streamr/utils'
 import { createHash } from 'crypto'
 import { EventEmitter } from 'eventemitter3'
@@ -37,9 +38,11 @@ export type StreamPartDelivery = {
     discoveryLayerNode: DiscoveryLayerNode
     node: ContentDeliveryLayerNode
     networkSplitAvoidance: StreamPartNetworkSplitAvoidance
+    getDiagnosticInfo: () => Record<string, unknown>
 } | {
     proxied: true
     client: ProxyClient
+    getDiagnosticInfo: () => Record<string, unknown>
 })
 
 export interface Events {
@@ -170,7 +173,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
                 await peerDescriptorStoreManager.destroy()
                 node.stop()
                 await discoveryLayerNode.stop()
-            }
+            },
+            getDiagnosticInfo: () => node.getDiagnosticInfo()
         }
         this.streamParts.set(streamPartId, streamPart)
         node.on('message', (message: StreamMessage) => {
@@ -270,7 +274,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: EthereumAddress,
+        userId: UserID,
         connectionCount?: number
     ): Promise<void> {
         // TODO explicit default value for "acceptProxyConnections" or make it required
@@ -289,7 +293,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
                     proxied: true,
                     client,
                     broadcast: (msg: StreamMessage) => client.broadcast(msg),
-                    stop: async () => client.stop()
+                    stop: async () => client.stop(),
+                    getDiagnosticInfo: () => client.getDiagnosticInfo()
                 })
                 client.on('message', (message: StreamMessage) => {
                     this.emit('newMessage', message)
@@ -371,5 +376,16 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
 
     getStreamParts(): StreamPartID[] {
         return Array.from(this.streamParts.keys()).map((id) => StreamPartIDUtils.parse(id))
+    }
+
+    getDiagnosticInfo(): Record<string, unknown> {
+        return {
+            streamParts: this.getStreamParts().map((id) => { 
+                return {
+                    id,
+                    info: this.getStreamPartDelivery(id)!.getDiagnosticInfo()
+                }
+            })
+        }
     }
 }
