@@ -1,5 +1,5 @@
 import { Wallet } from 'ethers'
-import { EthereumAddress, toEthereumAddress, waitForCondition, waitForEvent } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, UserID, waitForCondition, waitForEvent } from '@streamr/utils'
 import cors from 'cors'
 import crypto from 'crypto'
 import { EventEmitter, once } from 'events'
@@ -187,6 +187,10 @@ export function fastWallet(): Wallet {
 
 export function randomEthereumAddress(): EthereumAddress {
     return toEthereumAddress('0x' + crypto.randomBytes(20).toString('hex'))
+}
+
+export const randomUserId = (): UserID => {
+    return randomEthereumAddress()
 }
 
 // eslint-disable-next-line no-underscore-dangle

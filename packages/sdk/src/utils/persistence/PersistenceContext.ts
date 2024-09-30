@@ -1,3 +1,5 @@
+import { UserID } from '@streamr/utils'
+
 // TODO: make into abstract base class and define abstract constructor to enforce options?
 export interface PersistenceContext {
     get(key: string, namespace: string): Promise<string | undefined>
@@ -6,6 +8,6 @@ export interface PersistenceContext {
 }
 
 export interface PersistenceContextOptions {
-    clientId: string
+    ownerId: UserID
     namespaces: string[]
 }

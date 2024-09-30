@@ -7,7 +7,7 @@ import {
     convertBytesToStreamMessage,
     convertStreamMessageToBytes
 } from '@streamr/sdk'
-import { EthereumAddress, hexToBinary, toEthereumAddress, toStreamID, utf8ToBinary } from '@streamr/utils'
+import { EthereumAddress, UserID, hexToBinary, toEthereumAddress, toStreamID, utf8ToBinary } from '@streamr/utils'
 import { Client } from 'cassandra-driver'
 import { randomFillSync } from 'crypto'
 import { Readable } from 'stream'
@@ -38,7 +38,7 @@ export function buildMsg({
     streamPartition: number
     timestamp: number
     sequenceNumber: number
-    publisherId?: EthereumAddress
+    publisherId?: UserID
     msgChainId?: string
     content?: any
 }): StreamMessage {

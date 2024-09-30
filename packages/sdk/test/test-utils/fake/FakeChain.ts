@@ -1,4 +1,4 @@
-import { EthereumAddress, Multimap, StreamID } from '@streamr/utils'
+import { EthereumAddress, Multimap, StreamID, UserID } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { StreamMetadata } from '../../../src/Stream'
 import { StorageNodeMetadata } from '../../../src/contracts/StorageNodeRegistry'
@@ -9,7 +9,7 @@ export const PUBLIC_PERMISSION_TARGET: PublicPermissionTarget = 'public'
 
 export interface StreamRegistryItem {
     metadata: StreamMetadata
-    permissions: Multimap<EthereumAddress | PublicPermissionTarget, StreamPermission>
+    permissions: Multimap<UserID | PublicPermissionTarget, StreamPermission>
 }
 
 export interface FakeStorageNodeAssignmentEvent {
@@ -61,12 +61,12 @@ export class FakeChain {
         this.storageNodeMetadatas.set(nodeAddress, metadata)
     }
 
-    hasErc1271AllowedAddress(contractAddress: EthereumAddress, clientWalletAddress: EthereumAddress): boolean {
-        return this.erc1271AllowedAddresses.has(contractAddress, clientWalletAddress)
+    hasErc1271AllowedAddress(contractAddress: EthereumAddress, clientUserId: UserID): boolean {
+        return this.erc1271AllowedAddresses.has(contractAddress, clientUserId)
     }
 
-    addErc1271AllowedAddress(contractAddress: EthereumAddress, clientWalletAddress: EthereumAddress): void {
-        this.erc1271AllowedAddresses.add(contractAddress, clientWalletAddress)
+    addErc1271AllowedAddress(contractAddress: EthereumAddress, clientUserId: UserID): void {
+        this.erc1271AllowedAddresses.add(contractAddress, clientUserId)
     }
 
     on<E extends keyof Events>(eventName: E, listener: Events[E]): void {

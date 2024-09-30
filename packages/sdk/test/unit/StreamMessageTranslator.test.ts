@@ -2,12 +2,12 @@ import {
     ContentType as NewContentType,
     EncryptionType as NewEncryptionType,
     SignatureType as NewSignatureType,
-    StreamMessage as NewStreamMessage
+    StreamMessage as NewStreamMessage,
 } from '@streamr/trackerless-network'
 import {
-    EthereumAddress,
     StreamPartID,
     StreamPartIDUtils,
+    UserID,
     hexToBinary,
     toEthereumAddress,
     utf8ToBinary
@@ -27,7 +27,7 @@ const STREAM_PART_ID = StreamPartIDUtils.parse('TEST#0')
 export const createStreamMessage = (
     content: string,
     streamPartId: StreamPartID,
-    publisherId: EthereumAddress,
+    publisherId: UserID,
     timestamp?: number,
     sequenceNumber?: number
 ): NewStreamMessage => {

@@ -19,7 +19,7 @@ describe('DhtRpc', () => {
     const mockDhtRpc = createMockDhtRpc(neighbors)
 
     const outgoingListener2 = async (message: RpcMessage) => {
-        rpcCommunicator1.handleIncomingMessage(message)
+        rpcCommunicator1.handleIncomingMessage(message, new DhtCallContext())
     }
 
     beforeEach(() => {
@@ -30,7 +30,7 @@ describe('DhtRpc', () => {
         rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', mockDhtRpc.getClosestPeers)
 
         rpcCommunicator1.setOutgoingMessageListener(async (message: RpcMessage) => {
-            rpcCommunicator2.handleIncomingMessage(message)
+            rpcCommunicator2.handleIncomingMessage(message, new DhtCallContext())
         })
 
         rpcCommunicator2.setOutgoingMessageListener(outgoingListener2)
