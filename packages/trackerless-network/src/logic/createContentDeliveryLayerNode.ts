@@ -2,17 +2,17 @@ import { DhtAddress, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } fro
 import { Handshaker } from './neighbor-discovery/Handshaker'
 import { NeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
-import { StrictContentDeliveryLayerNodeConfig, ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
+import { StrictContentDeliveryLayerNodeOptions, ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
 import { NodeList } from './NodeList'
 import { Propagation } from './propagation/Propagation'
 import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { MarkOptional } from 'ts-essentials'
+import type { MarkOptional } from 'ts-essentials'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { Inspector } from './inspect/Inspector'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { formStreamPartContentDeliveryServiceId } from './formStreamPartDeliveryServiceId'
 
-type ContentDeliveryLayerNodeConfig = MarkOptional<StrictContentDeliveryLayerNodeConfig,
+type ContentDeliveryLayerNodeOptions = MarkOptional<StrictContentDeliveryLayerNodeOptions,
     'nearbyNodeView' | 'randomNodeView' | 'neighbors' | 'leftNodeView' | 'rightNodeView' | 'propagation'
     | 'handshaker' | 'neighborFinder' | 'neighborUpdateManager' | 'neighborTargetCount'
     | 'rpcCommunicator' | 'nodeViewSize'
@@ -23,36 +23,36 @@ type ContentDeliveryLayerNodeConfig = MarkOptional<StrictContentDeliveryLayerNod
         neighborUpdateInterval?: number
     }
 
-const createConfigWithDefaults = (config: ContentDeliveryLayerNodeConfig): StrictContentDeliveryLayerNodeConfig => {
-    const ownNodeId = getNodeIdFromPeerDescriptor(config.localPeerDescriptor)
-    const rpcCommunicator = config.rpcCommunicator ?? new ListeningRpcCommunicator(
-        formStreamPartContentDeliveryServiceId(config.streamPartId),
-        config.transport
+const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): StrictContentDeliveryLayerNodeOptions => {
+    const ownNodeId = getNodeIdFromPeerDescriptor(options.localPeerDescriptor)
+    const rpcCommunicator = options.rpcCommunicator ?? new ListeningRpcCommunicator(
+        formStreamPartContentDeliveryServiceId(options.streamPartId),
+        options.transport
     )
-    const neighborTargetCount = config.neighborTargetCount ?? 4
-    const maxContactCount = config.maxContactCount ?? 20
-    const minPropagationTargets = config.minPropagationTargets ?? 2
-    const acceptProxyConnections = config.acceptProxyConnections ?? false
-    const neighborUpdateInterval = config.neighborUpdateInterval ?? 10000
-    const neighbors = config.neighbors ?? new NodeList(ownNodeId, maxContactCount)
-    const leftNodeView = config.leftNodeView ?? new NodeList(ownNodeId, maxContactCount)
-    const rightNodeView = config.rightNodeView ?? new NodeList(ownNodeId, maxContactCount)
-    const nearbyNodeView = config.nearbyNodeView ?? new NodeList(ownNodeId, maxContactCount)
-    const randomNodeView = config.randomNodeView ?? new NodeList(ownNodeId, maxContactCount)
+    const neighborTargetCount = options.neighborTargetCount ?? 4
+    const maxContactCount = options.maxContactCount ?? 20
+    const minPropagationTargets = options.minPropagationTargets ?? 2
+    const acceptProxyConnections = options.acceptProxyConnections ?? false
+    const neighborUpdateInterval = options.neighborUpdateInterval ?? 10000
+    const neighbors = options.neighbors ?? new NodeList(ownNodeId, maxContactCount)
+    const leftNodeView = options.leftNodeView ?? new NodeList(ownNodeId, maxContactCount)
+    const rightNodeView = options.rightNodeView ?? new NodeList(ownNodeId, maxContactCount)
+    const nearbyNodeView = options.nearbyNodeView ?? new NodeList(ownNodeId, maxContactCount)
+    const randomNodeView = options.randomNodeView ?? new NodeList(ownNodeId, maxContactCount)
     const ongoingHandshakes = new Set<DhtAddress>()
 
     const temporaryConnectionRpcLocal = new TemporaryConnectionRpcLocal({
         rpcCommunicator,
-        localPeerDescriptor: config.localPeerDescriptor,
-        streamPartId: config.streamPartId,
-        connectionLocker: config.connectionLocker
+        localPeerDescriptor: options.localPeerDescriptor,
+        streamPartId: options.streamPartId,
+        connectionLocker: options.connectionLocker
     })
     const proxyConnectionRpcLocal = acceptProxyConnections ? new ProxyConnectionRpcLocal({
-        localPeerDescriptor: config.localPeerDescriptor,
-        streamPartId: config.streamPartId,
+        localPeerDescriptor: options.localPeerDescriptor,
+        streamPartId: options.streamPartId,
         rpcCommunicator
     }) : undefined
-    const propagation = config.propagation ?? new Propagation({
+    const propagation = options.propagation ?? new Propagation({
         minPropagationTargets,
         sendToNeighbor: async (neighborId: DhtAddress, msg: StreamMessage): Promise<void> => {
             const remote = neighbors.get(neighborId) ?? temporaryConnectionRpcLocal.getNodes().get(neighborId)
@@ -66,9 +66,9 @@ const createConfigWithDefaults = (config: ContentDeliveryLayerNodeConfig): Stric
             }
         }
     })
-    const handshaker = config.handshaker ?? new Handshaker({
-        localPeerDescriptor: config.localPeerDescriptor,
-        streamPartId: config.streamPartId,
+    const handshaker = options.handshaker ?? new Handshaker({
+        localPeerDescriptor: options.localPeerDescriptor,
+        streamPartId: options.streamPartId,
         rpcCommunicator,
         neighbors,
         leftNodeView,
@@ -76,10 +76,10 @@ const createConfigWithDefaults = (config: ContentDeliveryLayerNodeConfig): Stric
         nearbyNodeView,
         randomNodeView,
         maxNeighborCount: neighborTargetCount,
-        rpcRequestTimeout: config.rpcRequestTimeout,
+        rpcRequestTimeout: options.rpcRequestTimeout,
         ongoingHandshakes
     })
-    const neighborFinder = config.neighborFinder ?? new NeighborFinder({
+    const neighborFinder = options.neighborFinder ?? new NeighborFinder({
         neighbors,
         leftNodeView,
         rightNodeView,
@@ -88,25 +88,25 @@ const createConfigWithDefaults = (config: ContentDeliveryLayerNodeConfig): Stric
         doFindNeighbors: (excludedIds) => handshaker.attemptHandshakesOnContacts(excludedIds),
         minCount: neighborTargetCount
     })
-    const neighborUpdateManager = config.neighborUpdateManager ?? new NeighborUpdateManager({
+    const neighborUpdateManager = options.neighborUpdateManager ?? new NeighborUpdateManager({
         neighbors,
         nearbyNodeView,
-        localPeerDescriptor: config.localPeerDescriptor,
+        localPeerDescriptor: options.localPeerDescriptor,
         neighborFinder,
-        streamPartId: config.streamPartId,
+        streamPartId: options.streamPartId,
         rpcCommunicator,
         neighborUpdateInterval,
         neighborTargetCount,
         ongoingHandshakes
     })
-    const inspector = config.inspector ?? new Inspector({
-        localPeerDescriptor: config.localPeerDescriptor,
+    const inspector = options.inspector ?? new Inspector({
+        localPeerDescriptor: options.localPeerDescriptor,
         rpcCommunicator,
-        streamPartId: config.streamPartId,
-        connectionLocker: config.connectionLocker
+        streamPartId: options.streamPartId,
+        connectionLocker: options.connectionLocker
     })
     return {
-        ...config,
+        ...options,
         neighbors,
         leftNodeView,
         rightNodeView,
@@ -125,6 +125,6 @@ const createConfigWithDefaults = (config: ContentDeliveryLayerNodeConfig): Stric
     }
 }
 
-export const createContentDeliveryLayerNode = (config: ContentDeliveryLayerNodeConfig): ContentDeliveryLayerNode => {
-    return new ContentDeliveryLayerNode(createConfigWithDefaults(config))
+export const createContentDeliveryLayerNode = (options: ContentDeliveryLayerNodeOptions): ContentDeliveryLayerNode => {
+    return new ContentDeliveryLayerNode(createConfigWithDefaults(options))
 }

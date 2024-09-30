@@ -1,7 +1,9 @@
 // Loads non-browser compatible components to Electron's NodeJS sandbox during tests
 
 process.once('loaded', () => {
+    // eslint-disable-next-line import/no-extraneous-dependencies
     window.WebSocket = require('ws')
+    // eslint-disable-next-line import/no-extraneous-dependencies
     window.Express = require('express')
     window.HTTP = require('http')
     window.HTTPS = require('https')

@@ -12,7 +12,7 @@ const NODE_COUNT = 40
 const MIN_NEIGHBOR_COUNT = 2  // nodes can get more neighbors when we merge network partitions
 const PARALLELISM = 1
 const NO_PROGRESS_LIMIT = 1
-const QUERY_BATCH_SIZE = 5  // the default value in DhtNode's config, not relevant in this test
+const QUERY_BATCH_SIZE = 5  // the default value in DhtNode's options, not relevant in this test
 
 const createPeerDescriptor = (nodeId: DhtAddress): PeerDescriptor => {
     return {

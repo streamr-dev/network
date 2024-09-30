@@ -55,4 +55,8 @@ export class MockRouter implements Methods<Router> {
     // eslint-disable-next-line class-methods-use-this
     resetCache(): void {}
 
+    // eslint-disable-next-line class-methods-use-this
+    getDiagnosticInfo(): Record<string, unknown> {
+        return {}
+    }
 }

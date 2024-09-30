@@ -1,52 +1,40 @@
-import { StreamMessage, StreamPartID } from '@streamr/protocol'
+import { IMessageType } from '@protobuf-ts/runtime'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtAddress, PeerDescriptor } from '@streamr/dht'
-import { StreamMessageTranslator } from './logic/protocol-integration/stream-message/StreamMessageTranslator'
+import { ProtoRpcClient } from '@streamr/proto-rpc'
+import { MetricsContext, StreamPartID, UserID } from '@streamr/utils'
+import { ExternalNetworkRpc, ExternalRpcClient, ExternalRpcClientClass } from './logic/ExternalNetworkRpc'
 import { NetworkOptions, NetworkStack, NodeInfo } from './NetworkStack'
-import { EthereumAddress, Logger, MetricsContext } from '@streamr/utils'
-import { ProxyDirection } from './proto/packages/trackerless-network/protos/NetworkRpc'
-import { pull } from 'lodash'
+import { ProxyDirection, StreamMessage } from './proto/packages/trackerless-network/protos/NetworkRpc'
 
 export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
     return new NetworkNode(new NetworkStack(opts))
 }
 
-const logger = new Logger(module)
 /**
  * Convenience wrapper for building client-facing functionality. Used by client.
  */
 export class NetworkNode {
 
     readonly stack: NetworkStack
-    private readonly messageListeners: ((msg: StreamMessage) => void)[] = []
     private stopped = false
+    private externalNetworkRpc?: ExternalNetworkRpc
 
     /** @internal */
     constructor(stack: NetworkStack) {
         this.stack = stack
-        this.stack.getContentDeliveryManager().on('newMessage', (msg) => {
-            if (this.messageListeners.length > 0) {
-                try {
-                    const translated = StreamMessageTranslator.toClientProtocol(msg)
-                    for (const listener of this.messageListeners) {
-                        listener(translated)
-                    }
-                } catch (err) {
-                    logger.trace(`Could not translate message`, { err })
-                }
-            }
-        })
     }
 
     async start(doJoin?: boolean): Promise<void> {
         await this.stack.start(doJoin)
+        this.externalNetworkRpc = new ExternalNetworkRpc(this.stack.getControlLayerNode().getTransport())
     }
 
     async inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
         return this.stack.getContentDeliveryManager().inspect(node, streamPartId)
     }
 
-    async broadcast(streamMessage: StreamMessage): Promise<void> {
-        const msg = StreamMessageTranslator.toProtobuf(streamMessage)
+    async broadcast(msg: StreamMessage): Promise<void> {
         await this.stack.broadcast(msg)
     }
 
@@ -58,7 +46,7 @@ export class NetworkNode {
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: EthereumAddress,
+        userId: UserID,
         connectionCount?: number
     ): Promise<void> {
         await this.stack.getContentDeliveryManager().setProxies(streamPartId, nodes, direction, userId, connectionCount)
@@ -68,16 +56,16 @@ export class NetworkNode {
         return this.stack.getContentDeliveryManager().isProxiedStreamPart(streamPartId)
     }
 
-    addMessageListener(cb: (msg: StreamMessage) => void): void {
-        this.messageListeners.push(cb)
+    addMessageListener(listener: (msg: StreamMessage) => void): void {
+        this.stack.getContentDeliveryManager().on('newMessage', listener)
     }
 
     setStreamPartEntryPoints(streamPartId: StreamPartID, contactPeerDescriptors: PeerDescriptor[]): void {
         this.stack.getContentDeliveryManager().setStreamPartEntryPoints(streamPartId, contactPeerDescriptors)
     }
 
-    removeMessageListener(cb: (msg: StreamMessage) => void): void {
-        pull(this.messageListeners, cb)
+    removeMessageListener(listener: (msg: StreamMessage) => void): void {
+        this.stack.getContentDeliveryManager().off('newMessage', listener)
     }
 
     async leave(streamPartId: StreamPartID): Promise<void> {
@@ -97,11 +85,12 @@ export class NetworkNode {
 
     async stop(): Promise<void> {
         this.stopped = true
+        this.externalNetworkRpc!.destroy()
         await this.stack.stop()
     }
 
     getPeerDescriptor(): PeerDescriptor {
-        return this.stack.getLayer0Node().getLocalPeerDescriptor()
+        return this.stack.getControlLayerNode().getLocalPeerDescriptor()
     }
 
     getMetricsContext(): MetricsContext {
@@ -126,6 +115,28 @@ export class NetworkNode {
 
     // eslint-disable-next-line class-methods-use-this
     getDiagnosticInfo(): Record<string, unknown> {
-        return {}
+        return {
+            controlLayer: this.stack.getControlLayerNode().getDiagnosticInfo(),
+            contentLayer: this.stack.getContentDeliveryManager().getDiagnosticInfo()
+        }
     }
+
+    registerExternalNetworkRpcMethod<
+        RequestClass extends IMessageType<RequestType>,
+        ResponseClass extends IMessageType<ResponseType>,
+        RequestType extends object,
+        ResponseType extends object
+    >(
+        request: RequestClass,
+        response: ResponseClass,
+        name: string, 
+        fn: (req: RequestType, context: ServerCallContext) => Promise<ResponseType>
+    ): void {
+        this.externalNetworkRpc!.registerRpcMethod(request, response, name, fn)
+    }
+
+    createExternalRpcClient<T extends ExternalRpcClient>(clientClass: ExternalRpcClientClass<T> ): ProtoRpcClient<T> {
+        return this.externalNetworkRpc!.createRpcClient(clientClass)
+    }
+
 }

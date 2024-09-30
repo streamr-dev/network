@@ -1,3 +1,6 @@
+import { DhtAddress } from '@streamr/dht'
+import { hexToBinary, wait } from '@streamr/utils'
+import { Propagation } from '../../src/logic/propagation/Propagation'
 import {
     ContentType,
     EncryptionType,
@@ -5,11 +8,9 @@ import {
     SignatureType,
     StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { Propagation } from '../../src/logic/propagation/Propagation'
-import { hexToBinary, toEthereumAddress, utf8ToBinary, wait } from '@streamr/utils'
-import { DhtAddress } from '@streamr/dht'
+import { randomUserId } from '@streamr/test-utils'
 
-const PUBLISHER_ID = toEthereumAddress('0x1111111111111111111111111111111111111111')
+const PUBLISHER_ID = randomUserId()
 
 function makeMsg(streamId: string, partition: number, ts: number, msgNo: number): StreamMessage {
     const messageId: MessageID = {
@@ -18,7 +19,7 @@ function makeMsg(streamId: string, partition: number, ts: number, msgNo: number)
         timestamp: ts,
         sequenceNumber: msgNo,
         messageChainId: 'msgChain',
-        publisherId: utf8ToBinary(PUBLISHER_ID)
+        publisherId: hexToBinary(PUBLISHER_ID)
     }
     return {
         messageId,

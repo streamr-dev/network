@@ -16,9 +16,12 @@ export { IceServer } from './connection/webrtc/WebrtcConnector'
 export { DhtCallContext } from './rpc-protocol/DhtCallContext'
 export { WebsocketClientConnection } from './connection/websocket/NodeWebsocketClientConnection'
 export { ManagedConnection } from './connection/ManagedConnection'
+export { PendingConnection } from './connection/PendingConnection'
+export { IConnection } from './connection/IConnection'
 export { ConnectionType } from './connection/IConnection'
 export { ServiceID } from './types/ServiceID'
 export { RingContacts } from './dht/contact/RingContactList'
+export { createOutgoingHandshaker } from './connection/Handshaker'
 export { 
     DhtAddress,
     DhtAddressRaw,

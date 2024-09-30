@@ -10,12 +10,12 @@ module.exports = function({ entry, libraryName, alias = {} }) {
             },
             mode: 'development',
             entry,
-            devtool: 'source-map',
+            devtool: 'eval-source-map',
             module: {
                 rules: [
                     {
                         test: /\.ts?$/,
-                        exclude: /(node_modules|simulation)/,
+                        exclude: [/(node_modules|simulation)/, /\.d\.ts$/],
                         use: [{
                             loader: 'ts-loader',
                             options: { configFile: 'tsconfig.browser.json' },

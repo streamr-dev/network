@@ -1,11 +1,10 @@
-import { Simulator, SimulatorTransport, LatencyType } from '@streamr/dht'
-import { NetworkStack } from '../../src/NetworkStack'
-import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
-import { ENTRYPOINT_STORE_LIMIT } from '../../src/logic/EntryPointDiscovery'
+import { LatencyType, Simulator, SimulatorTransport } from '@streamr/dht'
+import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { waitForCondition } from '@streamr/utils'
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { NetworkStack } from '../../src/NetworkStack'
+import { MAX_NODE_COUNT } from '../../src/logic/PeerDescriptorStoreManager'
+import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
+import { randomUserId } from '@streamr/test-utils'
 
 describe('Stream Entry Points are replaced when known entry points leave streams', () => {
     
@@ -50,7 +49,7 @@ describe('Stream Entry Points are replaced when known entry points leave streams
         await entryPointTransport.start()
         await layer0EntryPoint.start()
 
-        initialNodesOnStream = await Promise.all(range(ENTRYPOINT_STORE_LIMIT).map(async () => {
+        initialNodesOnStream = await Promise.all(range(MAX_NODE_COUNT).map(async () => {
             return await startNode()
         }))
 
@@ -90,7 +89,7 @@ describe('Stream Entry Points are replaced when known entry points leave streams
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             STREAM_PART_ID,
-            randomEthereumAddress()
+            randomUserId()
         )
         newNodeInStream.getContentDeliveryManager().broadcast(msg)
         await waitForCondition(() => receivedMessages === NUM_OF_LATER_NODES, 30000)

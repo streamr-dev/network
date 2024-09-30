@@ -1,7 +1,7 @@
 {
     "extends": "../../tsconfig.jest.json",
     "compilerOptions": {
-        "outDir": "dist",
+        "noEmit": true,
         "noImplicitOverride": false
     },
     "include": [
@@ -10,7 +10,6 @@
         "package.json"
     ],
     "references": [
-        { "path": "../protocol/tsconfig.node.json" },
         { "path": "../proto-rpc/tsconfig.node.json" },
         { "path": "../dht/tsconfig.node.json" }
     ]

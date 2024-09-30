@@ -10,7 +10,7 @@ import { Any } from '../../src/proto/google/protobuf/any'
 describe('DhtClientRpcTransport', () => {
     it('Happy Path getClosestNeighbors', async () => {
         const rpcCommunicator = new RpcCommunicator()
-        rpcCommunicator.on('outgoingMessage', (message: RpcMessage, _requestId: string, _ucallContext?: ProtoCallContext) => {
+        rpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage, _requestId: string, _ucallContext?: ProtoCallContext) => {
             //const request = RpcMessage.fromBinary(message)
             const responseBody: ClosestPeersResponse = {
                 peers: getMockPeers(),
@@ -25,7 +25,7 @@ describe('DhtClientRpcTransport', () => {
                 requestId: message.requestId
             }
             
-            rpcCommunicator.handleIncomingMessage(response)
+            rpcCommunicator.handleIncomingMessage(response, new ProtoCallContext())
         })
 
         const client = toProtoRpcClient(new DhtRpcServiceClient(rpcCommunicator.getRpcClientTransport()))

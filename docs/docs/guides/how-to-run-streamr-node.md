@@ -5,8 +5,6 @@ sidebar_position: 5
 # How to run a Streamr node
 
 :::info
-These instructions are for running a Streamr node in the "1.0" Network. If you're looking for instructions on running a Streamr node in the Brubeck network, [go here](../streamr-network/brubeck-network/run-a-node.md).
-
 For those looking to earn, running a node is part of becoming an earning Operator. If that's new to you, then visit the [Become an Operator Guide](./become-an-operator.md)
 :::
 
@@ -159,7 +157,7 @@ There can be plenty of output from npm. If the installation fails with an error,
 ### Step 2: Configure your node
 To activate the **Config Wizard**, run,
 ```
-streamr-broker-init
+streamr-node-init
 ```
 
 #### Using the Config Wizard
@@ -181,7 +179,7 @@ If you're running a node to become an Operator, then you could now jump back to 
 ### Step 3: Start the Streamr node
 To start your Streamr node, run,
 ```
-streamr-broker PATH_TO_CONFIG_FILE
+streamr-node PATH_TO_CONFIG_FILE
 ```
 
 You should start to see logging similar to this:

@@ -35,7 +35,7 @@ service RecursiveOperationSessionRpc {
   rpc sendResponse(RecursiveOperationResponse) returns (google.protobuf.Empty);
 }
 
-service WebsocketConnectorRpc {
+service WebsocketClientConnectorRpc {
   rpc requestConnection (WebsocketConnectionRequest) returns (google.protobuf.Empty);
 }
 
@@ -206,7 +206,7 @@ message ConnectivityRequest {
   uint32 port = 1;
   bool tls = 2;
   optional string host = 3;
-  bool selfSigned = 4;
+  bool allowSelfSignedCertificate = 4;
 }
 
 message ConnectivityResponse {
@@ -215,6 +215,8 @@ message ConnectivityResponse {
   ConnectivityMethod websocket = 3;
   uint32 ipAddress = 4;
   string version = 5;
+  optional double latitude = 6;
+  optional double longitude = 7;
 }
 
 message HandshakeRequest {

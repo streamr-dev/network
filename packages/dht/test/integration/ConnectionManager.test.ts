@@ -1,7 +1,7 @@
 import { Logger, MetricsContext, waitForEvent3 } from '@streamr/utils'
 import { MarkOptional } from 'ts-essentials'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { DefaultConnectorFacade, DefaultConnectorFacadeConfig } from '../../src/connection/ConnectorFacade'
+import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../../src/connection/ConnectorFacade'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { createPeerDescriptor } from '../../src/helpers/createPeerDescriptor'
@@ -30,10 +30,10 @@ describe('ConnectionManager', () => {
     const mockConnectorTransport2 = new SimulatorTransport(mockPeerDescriptor2, simulator)
     let createLocalPeerDescriptor: jest.Mock<PeerDescriptor, [ConnectivityResponse]>
 
-    const createConnectionManager = (opts: MarkOptional<DefaultConnectorFacadeConfig, 'createLocalPeerDescriptor'>) => {
+    const createConnectionManager = (opts: MarkOptional<DefaultConnectorFacadeOptions, 'createLocalPeerDescriptor'>) => {
         return new ConnectionManager({
             createConnectorFacade: () => new DefaultConnectorFacade({
-                createLocalPeerDescriptor,
+                createLocalPeerDescriptor: async (response) => createLocalPeerDescriptor(response),
                 websocketServerEnableTls: false,
                 ...opts
             }),
@@ -304,6 +304,7 @@ describe('ConnectionManager', () => {
         })
         msg.targetDescriptor = mockPeerDescriptor4
         connectionManager3.send(msg)
+
         await Promise.all([dataPromise, connectedPromise1, connectedPromise2])
 
         // @ts-expect-error private field
@@ -363,7 +364,7 @@ describe('ConnectionManager', () => {
             transport: mockTransport,
             websocketHost: '127.0.0.1',
             websocketPortRange: { min: 10002, max: 10002 },
-            createLocalPeerDescriptor: () => peerDescriptor1 
+            createLocalPeerDescriptor: async () => peerDescriptor1 
         })
 
         await connectionManager1.start()
@@ -372,7 +373,7 @@ describe('ConnectionManager', () => {
             transport: mockTransport,
             websocketHost: '127.0.0.1',
             websocketPortRange: { min: 10003, max: 10003 },
-            createLocalPeerDescriptor: () => peerDescriptor2
+            createLocalPeerDescriptor: async () => peerDescriptor2
         })
 
         await connectionManager2.start()
@@ -415,4 +416,57 @@ describe('ConnectionManager', () => {
         expect(connectionManager1.getLocalPeerDescriptor().websocket!.tls).toEqual(false)
         await connectionManager1.stop()
     })
+
+    it('Stopping ConnectionManager is cleaned up from peers', async () => {
+        const connectionManager1 = createConnectionManager({
+            transport: mockTransport,
+            websocketHost: '127.0.0.1',
+            websocketServerEnableTls: false,
+            websocketPortRange: { min: 10005, max: 10005 }
+        })
+
+        await connectionManager1.start()
+
+        const connectionManager2 = createConnectionManager({
+            transport: mockTransport,
+            websocketHost: '127.0.0.1',
+            websocketServerEnableTls: false,
+            websocketPortRange: { min: 10006, max: 10006 }
+        })
+
+        await connectionManager2.start()
+
+        const msg: Message = {
+            serviceId: SERVICE_ID,
+            messageId: '1',
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            },
+            targetDescriptor: connectionManager1.getLocalPeerDescriptor()
+        }
+
+        const connectedPromise1 = new Promise<void>((resolve, _reject) => {
+            connectionManager1.on('connected', () => {
+                resolve()
+            })
+        })
+
+        const connectedPromise2 = new Promise<void>((resolve, _reject) => {
+            connectionManager2.on('connected', () => {
+                resolve()
+            })
+        })
+        await Promise.all([connectedPromise1, connectedPromise2, connectionManager2.send(msg)])
+
+        expect(connectionManager1.getConnections().length).toEqual(1)
+        expect(connectionManager2.getConnections().length).toEqual(1)
+
+        await connectionManager1.stop()
+
+        expect(connectionManager2.getConnections().length).toEqual(0)
+
+        await connectionManager2.stop()
+    })
+
 })

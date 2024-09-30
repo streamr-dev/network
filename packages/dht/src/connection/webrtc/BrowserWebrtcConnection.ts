@@ -13,12 +13,6 @@ enum DisconnectedRtcPeerConnectionStateEnum {
 
 const logger = new Logger(module)
 
-export const WEBRTC_CLEANUP = new class {
-    // eslint-disable-next-line class-methods-use-this
-    cleanUp(): void {
-    }
-}
-
 type Events = WebrtcConnectionEvents & ConnectionEvents
 
 interface Params {
@@ -181,6 +175,8 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
 
     private setupDataChannel(dataChannel: RTCDataChannel): void {
         this.dataChannel = dataChannel
+        this.dataChannel.binaryType = 'arraybuffer'
+
         dataChannel.onopen = () => {
             logger.trace('dc.onOpen')
             this.onDataChannelOpen()

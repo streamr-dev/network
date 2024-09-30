@@ -1,4 +1,4 @@
-import { Wallet } from '@ethersproject/wallet'
+import { Wallet } from 'ethers'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { StreamPermission } from '@streamr/sdk'

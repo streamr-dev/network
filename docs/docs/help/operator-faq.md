@@ -16,18 +16,6 @@ If you’ve been running a Streamr node in the past you might be familiar with a
 - There is no need for a "beneficiary address" in Streamr 1.0. Instead, the node configuration contains the Operator contract address.
 :::
 
-#### Migrating from the Mumbai testing environment to Stream 1.0
-If you've created your node in the Mumbai testing environment and you want to participate with real token rewards and risks, then you'll need to recreate your Operator using the Streamr Network [Hub](https://streamr.network/hub/network/operators). The same funding and pairing steps that you did for your Mumbai Operator need to be repeated here too. Mainnet runs on the Polygon POS Blockchain.
-
-- **Mainnet node config:** Your node config should resemble the [Mainnet config template](../guides/how-to-run-streamr-node.md#mainnet-node-config).
-
-#### Migrating from Streamr 1.0 testnet to Streamr 1.0
-If you participated in the Streamr 1.0 testnets as an Operator, your Operator smart contract is the testnet version. There is a new version available, the 1.0 mainnet version.
-
-**Upgrading is optional but recommended** - you can continue using your current Operator contract, however there is a new feature, minimum delegation period, which is only available on the newer version. This article describes how to upgrade and why.
-
-Note that you own your Operator. No one else - including the Streamr team - has any power over it. This is why upgrading it is also completely up to you.
-
 ##### Why upgrade?
 The 1.0 mainnet Operator contract supports the minimum delegation period feature introduced as part of [SIP-20](https://vote.streamr.network/#/proposal/0x12f43b57d6f636875197bbadfff2b75de05bf866332353aa0cf11b993aaffc5d). While it sounds like a relatively minor new feature, it was introduced for a good reason, so upgrading is recommended.
 
@@ -201,7 +189,7 @@ WARN [2023-11-10T10:01:42.867] (NodeWebRtcConnection): Failed to set remote cand
 Connectivity issue. 
 
 **Solution:**
-Port 32200 or configured port for streamr-broker is not open. Check your firewall/docker/router configuration that the port 32200 is open and/or traffic is forwarded through this port.
+Port 32200 or configured port for streamr-node is not open. Check your firewall/docker/router configuration that the port 32200 is open and/or traffic is forwarded through this port.
 
 #### Issue: 
 I’m receiving the following warning message.
@@ -213,7 +201,7 @@ I’m receiving the following warning message.
       "message": "The Graph did not synchronize to block 42303755 (timed out after 60000 ms)",
       "stack":
           Error: The Graph did not synchronize to block 42303755 (timed out after 60000 ms)
-              at Timeout.<anonymous> (C:\Users\jarno\AppData\Roaming\nvm\v18.16.0\node_modules\streamr-broker\node_modules\@streamr\utils\dist\src\withTimeout.js:20:24)
+              at Timeout.<anonymous> (C:\Users\jarno\AppData\Roaming\nvm\v18.16.0\node_modules\@streamr\node\node_modules\@streamr\utils\dist\src\withTimeout.js:20:24)
               at listOnTimeout (node:internal/timers:569:17)
               at process.processTimers (node:internal/timers:512:7)
       "code": "TimeoutError"
@@ -224,7 +212,7 @@ I’m receiving the following warning message.
 Could not synchronize with thegraph blockchain indexing service.
 
 **Solution:**
-This is likely to only be an issue on the Mumbai environment where The Graph support is limited. Check that your internet connection is active and try to restart the Streamr node. If this doesn’t help, try again in a while, The Graph service may be updating.
+This is likely an issue with The Graph. Check that your internet connection is active and try to restart the Streamr node. If this doesn’t help, try again in a while, The Graph service may be updating.
 
 ## Staking on, and earning from Sponsorships
 #### How many sponsorships should I stake on as an operator?

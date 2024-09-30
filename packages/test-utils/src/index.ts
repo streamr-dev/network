@@ -1,5 +1,5 @@
-import { Wallet } from '@ethersproject/wallet'
-import { EthereumAddress, toEthereumAddress, waitForCondition, waitForEvent } from '@streamr/utils'
+import { Wallet } from 'ethers'
+import { EthereumAddress, toEthereumAddress, UserID, waitForCondition, waitForEvent } from '@streamr/utils'
 import cors from 'cors'
 import crypto from 'crypto'
 import { EventEmitter, once } from 'events'
@@ -189,6 +189,10 @@ export function randomEthereumAddress(): EthereumAddress {
     return toEthereumAddress('0x' + crypto.randomBytes(20).toString('hex'))
 }
 
+export const randomUserId = (): UserID => {
+    return randomEthereumAddress()
+}
+
 // eslint-disable-next-line no-underscore-dangle
 declare let _streamr_electron_test: any
 export function isRunningInElectron(): boolean {
@@ -362,3 +366,6 @@ type MethodNames<T> = {
 
 // Pick only methods of T
 export type Methods<T> = Pick<T, MethodNames<T>>
+
+import * as customMatchers from './customMatchers'
+export { customMatchers }

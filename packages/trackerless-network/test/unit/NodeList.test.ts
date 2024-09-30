@@ -6,14 +6,14 @@ import {
     getDhtAddressFromRaw,
     getNodeIdFromPeerDescriptor,
 } from '@streamr/dht'
-import { StreamPartIDUtils } from '@streamr/protocol'
+import { StreamPartIDUtils } from '@streamr/utils'
 import { expect } from 'expect'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
 import { NodeList } from '../../src/logic/NodeList'
 import { formStreamPartContentDeliveryServiceId } from '../../src/logic/formStreamPartDeliveryServiceId'
 import { ContentDeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { createMockPeerDescriptor } from '../utils/utils'
 import { MockTransport } from '../utils/mock/MockTransport'
+import { createMockContentDeliveryRpcRemote, createMockPeerDescriptor } from '../utils/utils'
 
 const streamPartId = StreamPartIDUtils.parse('stream#0')
 
@@ -85,6 +85,12 @@ describe('NodeList', () => {
         const closest = nodeList.getFirst([getDhtAddressFromRaw(new Uint8Array([1, 1, 1]))])
         expect(getNodeIdFromPeerDescriptor(closest!.getPeerDescriptor()))
             .toEqual(getDhtAddressFromRaw(new Uint8Array([1, 1, 2])))
+    })
+
+    it('getFirst wsOnly', () => {
+        nodeList.add(createMockContentDeliveryRpcRemote(createMockPeerDescriptor({ websocket: { port: 111, host: '', tls: false } })))
+        const closest = nodeList.getFirst([], true)
+        expect(closest).toBeDefined()
     })
 
     it('getLast', () => {

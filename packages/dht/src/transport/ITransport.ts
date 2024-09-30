@@ -20,4 +20,5 @@ export interface ITransport extends EventEmitterType<TransportEvents> {
     send(msg: Message, opts?: SendOptions): Promise<void>
     getLocalPeerDescriptor(): PeerDescriptor
     stop(): void | Promise<void>
+    getDiagnosticInfo(): Record<string, unknown>
 }

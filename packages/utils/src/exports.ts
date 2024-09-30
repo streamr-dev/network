@@ -1,3 +1,4 @@
+import { Cache } from './Cache'
 import { pTransaction } from './pTransaction'
 import { AbortError, asAbortable } from './asAbortable'
 import { setAbortableInterval, setAbortableTimeout } from './abortableTimers'
@@ -109,7 +110,8 @@ export {
     numberToIpv4,
     hash,
     MapWithTtl,
-    EventEmitterType
+    EventEmitterType,
+    Cache
 }
 
 export {
@@ -121,3 +123,8 @@ export {
     MetricsReport,
     RateMetric
 }
+
+export { StreamID, toStreamID, StreamIDUtils } from './StreamID'
+export { MAX_PARTITION_COUNT, ensureValidStreamPartitionCount, ensureValidStreamPartitionIndex } from './partition'
+export { StreamPartID, toStreamPartID, StreamPartIDUtils } from './StreamPartID'
+export { UserID } from './UserID'

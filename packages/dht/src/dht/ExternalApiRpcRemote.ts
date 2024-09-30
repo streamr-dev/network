@@ -11,13 +11,13 @@ export class ExternalApiRpcRemote extends RpcRemote<ExternalApiRpcClient> {
             key: getRawFromDhtAddress(key)
         }
         const options = this.formDhtRpcOptions({
-            // TODO use config option or named constant?
+            // TODO use options option or named constant?
             timeout: 10000
         })
         try {
             const data = await this.getClient().externalFetchData(request, options)
             return data.entries
-        } catch (err) {
+        } catch {
             return []
         }
     }
@@ -28,13 +28,13 @@ export class ExternalApiRpcRemote extends RpcRemote<ExternalApiRpcClient> {
             data
         }
         const options = this.formDhtRpcOptions({
-            // TODO use config option or named constant?
+            // TODO use options option or named constant?
             timeout: 10000
         })
         try {
             const response = await this.getClient().externalStoreData(request, options)
             return response.storers
-        } catch (err) {
+        } catch {
             return []
         }
     }

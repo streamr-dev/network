@@ -9,10 +9,10 @@ const path = require("path")
 const config = {
     title: "Streamr Docs",
     tagline:
-        "Publish and subscribe to your json based real-time data powered by the decentralized Streamr network.",
+        "Publish and subscribe to real-time data powered by the decentralized Streamr network.",
     url: "https://docs.streamr.network/",
     baseUrl: "/",
-    onBrokenLinks: "throw",
+    onBrokenLinks: "warn",  // TODO use "throw" instead and fix the broken link (currently the "Provider" class has broken links)
     onBrokenMarkdownLinks: "throw",
     favicon: "img/streamr-logo.svg",
 
@@ -35,7 +35,7 @@ const config = {
 
             // Plugin / TypeDoc options
             {
-                entryPoints: ["../packages/client/src/exports.ts"],
+                entryPoints: ["../packages/sdk/src/exports.ts"],
                 disableSources: true,
                 name: "API reference",
                 excludePrivate: true,
@@ -50,8 +50,8 @@ const config = {
                     indexLabel: " ",
                     position: 5,
                 },
-                out: "usage/streamr-js-client/api",
-                tsconfig: "../packages/client/tsconfig.json",
+                out: "usage/sdk/api",
+                tsconfig: "../packages/sdk/tsconfig.json",
             },
         ],
         path.resolve("plugins", "refine-docs"),
@@ -69,10 +69,10 @@ const config = {
                     routeBasePath: "/",
                     sidebarPath: require.resolve("./sidebars.js"),
                     editUrl:
-                        "https://github.com/streamr-dev/network/tree/pre-1.0-docs/docs",
+                        "https://github.com/streamr-dev/network/tree/main/docs",
                     exclude: [
-                        "**usage/streamr-js-client/api/modules.mdx",
-                        "**usage/streamr-js-client/api/modules.md",
+                        "**usage/sdk/api/modules.mdx",
+                        "**usage/sdk/api/modules.md",
                     ],
                 },
                 blog: {

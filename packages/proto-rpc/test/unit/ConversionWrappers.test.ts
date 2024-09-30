@@ -18,7 +18,7 @@ describe('ConversionWrappers', () => {
         let errorCount = 0
         try {
             parseWrapper<RpcMessage>(() => RpcMessage.fromBinary(Buffer.from('adda')))
-        } catch (err) {
+        } catch {
             errorCount += 1
         }
         expect(errorCount).toEqual(1)
@@ -41,7 +41,7 @@ describe('ConversionWrappers', () => {
                 )
             )
 
-        } catch (err) {
+        } catch {
             errorCount += 1
         }
         expect(errorCount).toEqual(1)
