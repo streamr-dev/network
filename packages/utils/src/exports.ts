@@ -125,4 +125,4 @@ export {
 export { StreamID, toStreamID, StreamIDUtils } from './StreamID'
 export { MAX_PARTITION_COUNT, ensureValidStreamPartitionCount, ensureValidStreamPartitionIndex } from './partition'
 export { StreamPartID, toStreamPartID, StreamPartIDUtils } from './StreamPartID'
-export { UserIDOld } from './UserID'
+export { UserID, UserIDRaw, toUserId, toUserIdRaw, isEthereumAddressUserId, UserIDOld, toUserIdOld } from './UserID'
