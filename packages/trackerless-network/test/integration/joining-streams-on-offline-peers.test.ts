@@ -4,7 +4,7 @@ import { NetworkStack } from '../../src/NetworkStack'
 import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
-import { randomUserIdOld } from '@streamr/test-utils'
+import { randomUserId } from '@streamr/test-utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
 
@@ -74,7 +74,7 @@ describe('Joining stream parts on offline nodes', () => {
         
         node1.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
         node1.getContentDeliveryManager().on('newMessage', () => { messageReceived = true })
-        const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), STREAM_PART_ID, randomUserIdOld())
+        const msg = createStreamMessage(JSON.stringify({ hello: 'WORLD' }), STREAM_PART_ID, randomUserId())
         node2.getContentDeliveryManager().broadcast(msg)
         await waitForCondition(() => messageReceived, 40000)
     }, 60000)

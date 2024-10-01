@@ -13,7 +13,7 @@ import {
     ProxyDirection,
     createNetworkNode as createNetworkNode_
 } from '@streamr/trackerless-network'
-import { Logger, MetricsContext, StreamPartID, UserIDOld } from '@streamr/utils'
+import { Logger, MetricsContext, StreamPartID, UserID } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { pull } from 'lodash'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -54,7 +54,7 @@ export interface NetworkNodeStub {
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: UserIDOld,
+        userId: UserID,
         connectionCount?: number
     ) => Promise<void>
     isProxiedStreamPart(streamPartId: StreamPartID): boolean
@@ -300,7 +300,7 @@ export class NetworkNodeFacade {
             streamPartId,
             peerDescriptors,
             direction,
-            await this.authentication.getAddress(),
+            await this.authentication.getUserId(),
             connectionCount
         )
     }

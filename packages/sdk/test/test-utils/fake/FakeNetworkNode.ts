@@ -6,7 +6,7 @@ import {
     StreamMessage as NewStreamMessage,
     ProxyDirection
 } from '@streamr/trackerless-network'
-import { MetricsContext, StreamPartID, UserIDOld } from '@streamr/utils'
+import { MetricsContext, StreamPartID, UserID } from '@streamr/utils'
 import crypto from 'crypto'
 import pull from 'lodash/pull'
 import { Lifecycle, scoped } from 'tsyringe'
@@ -114,7 +114,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
         _direction: ProxyDirection,
-        _userId: UserIDOld,
+        _userId: UserID,
         connectionCount?: number
     ): Promise<void> {
         const enable = (nodes.length > 0) && ((connectionCount === undefined) || (connectionCount > 0))

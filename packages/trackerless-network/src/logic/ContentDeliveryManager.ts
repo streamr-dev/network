@@ -14,7 +14,7 @@ import {
     MetricsContext,
     MetricsDefinition,
     RateMetric, StreamID, StreamPartID, StreamPartIDUtils,
-    UserIDOld,
+    UserID,
     toStreamPartID
 } from '@streamr/utils'
 import { createHash } from 'crypto'
@@ -272,7 +272,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: UserIDOld,
+        userId: UserID,
         connectionCount?: number
     ): Promise<void> {
         // TODO explicit default value for "acceptProxyConnections" or make it required

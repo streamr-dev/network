@@ -4,7 +4,7 @@ import { range } from 'lodash'
 import { NetworkStack } from '../../src/NetworkStack'
 import { MAX_NODE_COUNT } from '../../src/logic/PeerDescriptorStoreManager'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
-import { randomUserIdOld } from '@streamr/test-utils'
+import { randomUserId } from '@streamr/test-utils'
 
 describe('Stream Entry Points are replaced when known entry points leave streams', () => {
     
@@ -89,7 +89,7 @@ describe('Stream Entry Points are replaced when known entry points leave streams
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             STREAM_PART_ID,
-            randomUserIdOld()
+            randomUserId()
         )
         newNodeInStream.getContentDeliveryManager().broadcast(msg)
         await waitForCondition(() => receivedMessages === NUM_OF_LATER_NODES, 30000)
