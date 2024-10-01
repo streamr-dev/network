@@ -1,4 +1,5 @@
 import { MessageMetadata } from '@streamr/sdk'
+import { toUserId, toUserIdRaw } from '@streamr/utils'
 
 export interface PayloadFormat {
     createMessage: (payload: string) => Message | never
@@ -11,14 +12,6 @@ export interface Message {
 }
 
 export type Metadata = Partial<Pick<MessageMetadata, 'timestamp' | 'sequenceNumber' | 'publisherId' | 'msgChainId'>>
-
-const METADATA_FIELDS = [ 'timestamp', 'sequenceNumber', 'publisherId', 'msgChainId' ]
-
-const pickProperties = (fields: string[], from: Record<string, unknown>): Record<string, unknown> => {
-    const result: any = {}
-    fields.forEach((field) => result[field] = from[field])
-    return result
-}
 
 const isJavascriptObject = (content: any): boolean => {
     return (content instanceof Object) && (!(content instanceof Array))
@@ -76,7 +69,10 @@ export class MetadataPayloadFormat implements PayloadFormat {
         let metadata
         if (json.metadata !== undefined) {
             assertMetadata(json.metadata)
-            metadata = pickProperties(METADATA_FIELDS, json.metadata)
+            metadata = { 
+                ...json.metadata,
+                publisherId: (json.metadata.publisherId !== undefined) ? toUserIdRaw(json.metadata.publisherId) : undefined
+            }
         } else {
             metadata = {}
         }
@@ -90,7 +86,10 @@ export class MetadataPayloadFormat implements PayloadFormat {
         }
         if (metadata !== undefined) {
             assertMetadata(metadata)
-            payload.metadata = pickProperties(METADATA_FIELDS, metadata as Record<string, unknown>)
+            payload.metadata = { 
+                ...metadata,
+                publisherId: (metadata.publisherId !== undefined) ? toUserId(metadata.publisherId) : undefined
+            }
         }
         return JSON.stringify(payload)
     }

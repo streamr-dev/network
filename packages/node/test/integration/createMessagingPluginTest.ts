@@ -1,10 +1,10 @@
-import { Wallet } from 'ethers'
 import { MessageMetadata, Stream, StreamrClient } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
+import { merge, toUserId, toUserIdRaw, wait } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import { Broker } from '../../src/broker'
-import { Message } from '../../src/helpers/PayloadFormat'
-import { createClient, startBroker, createTestStream } from '../utils'
-import { wait, merge } from '@streamr/utils'
+import { Message, MetadataPayloadFormat } from '../../src/helpers/PayloadFormat'
+import { createClient, createTestStream, startBroker } from '../utils'
 
 interface MessagingPluginApi<T> {
     createClient: (action: 'publish' | 'subscribe', streamId: string, apiKey?: string) => Promise<T>
@@ -21,6 +21,7 @@ interface Ports {
     plugin: number
 }
 
+export const PAYLOAD_FORMAT = new MetadataPayloadFormat()
 const MOCK_MESSAGE = {
     content: {
         foo: 'bar'
@@ -37,7 +38,7 @@ const assertReceivedMessage = (message: Message) => {
     expect(content).toEqual(MOCK_MESSAGE.content)
     expect(metadata.timestamp).toEqual(MOCK_MESSAGE.metadata.timestamp)
     expect(metadata.sequenceNumber).toEqual(0)
-    expect(metadata.publisherId).toEqual(brokerUser.address.toLocaleLowerCase())
+    expect(metadata.publisherId).toEqualBinary(toUserIdRaw(toUserId(brokerUser.address)))
     expect(metadata.msgChainId).toBeDefined()
 }
 
