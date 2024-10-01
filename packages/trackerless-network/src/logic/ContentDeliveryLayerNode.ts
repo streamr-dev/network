@@ -20,7 +20,7 @@ import {
 import { ContentDeliveryRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { ContentDeliveryRpcLocal } from './ContentDeliveryRpcLocal'
 import { ContentDeliveryRpcRemote } from './ContentDeliveryRpcRemote'
-import { DiscoveryLayerNode, DiscoveryLayerNodeEvents } from './DiscoveryLayerNode'
+import { DiscoveryLayerNode } from './DiscoveryLayerNode'
 import { DuplicateMessageDetector } from './DuplicateMessageDetector'
 import { NodeList } from './NodeList'
 import { Inspector } from './inspect/Inspector'
@@ -117,43 +117,43 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
     async start(): Promise<void> {
         this.started = true
         this.registerDefaultServerMethods()
-        addManagedEventListener(
+        addManagedEventListener<'nearbyContactAdded', (node: PeerDescriptor) => void>(
             this.options.discoveryLayerNode,
             'nearbyContactAdded', 
             () => this.onNearbyContactAdded(),
             this.abortController.signal
         )
-        addManagedEventListener(
+        addManagedEventListener<'nearbyContactRemoved', (node: PeerDescriptor) => void>(
             this.options.discoveryLayerNode,
             'nearbyContactRemoved',
             () => this.onNearbyContactRemoved(),
             this.abortController.signal
         )
-        addManagedEventListener(
+        addManagedEventListener<'randomContactAdded', (node: PeerDescriptor) => void>(
             this.options.discoveryLayerNode,
             'randomContactAdded',
             () => this.onRandomContactAdded(),
             this.abortController.signal
         )
-        addManagedEventListener(
+        addManagedEventListener<'randomContactRemoved', (node: PeerDescriptor) => void>(
             this.options.discoveryLayerNode,
             'randomContactRemoved',
             () => this.onRandomContactRemoved(),
             this.abortController.signal
         )
-        addManagedEventListener(
+        addManagedEventListener<'ringContactAdded', (node: PeerDescriptor) => void>(
             this.options.discoveryLayerNode,
             'ringContactAdded',
             () => this.onRingContactsUpdated(),
             this.abortController.signal
         )
-        addManagedEventListener(
+        addManagedEventListener<'ringContactRemoved', (node: PeerDescriptor) => void>(
             this.options.discoveryLayerNode,
             'ringContactRemoved',
             () => this.onRingContactsUpdated(),
             this.abortController.signal
         )
-        addManagedEventListener(
+        addManagedEventListener<'disconnected', (node: PeerDescriptor) => void>(
             this.options.transport,
             'disconnected',
             (peerDescriptor: PeerDescriptor) => this.onNodeDisconnected(peerDescriptor),

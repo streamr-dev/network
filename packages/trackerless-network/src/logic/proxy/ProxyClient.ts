@@ -258,7 +258,7 @@ export class ProxyClient extends EventEmitter<Events> {
 
     async start(): Promise<void> {
         this.registerDefaultServerMethods()
-        addManagedEventListener(
+        addManagedEventListener<'disconnected', (node: PeerDescriptor) => void>(
             this.options.transport,
             'disconnected',
             // TODO should we catch possible promise rejection?

@@ -1,4 +1,4 @@
-import { DhtAddress, DhtNodeEvents, PeerDescriptor, RingContacts } from '@streamr/dht'
+import { DhtAddress, PeerDescriptor, RingContacts } from '@streamr/dht'
 import { EventEmitterType } from '@streamr/utils'
 
 export interface DiscoveryLayerNodeEvents {
