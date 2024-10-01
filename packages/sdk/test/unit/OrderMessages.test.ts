@@ -1,4 +1,4 @@
-import { randomEthereumAddress, randomUserIdOld } from '@streamr/test-utils'
+import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
 import {
     EthereumAddress,
     StreamID,
@@ -6,6 +6,7 @@ import {
     StreamPartIDUtils,
     collect, hexToBinary,
     toStreamID,
+    toUserIdOld,
     waitForCondition
 } from '@streamr/utils'
 import last from 'lodash/last'
@@ -21,7 +22,7 @@ import { MessageRef } from './../../src/protocol/MessageRef'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
-const PUBLISHER_ID = randomUserIdOld()
+const PUBLISHER_ID = randomUserId()
 const MSG_CHAIN_ID = 'mock-msg-chain-id'
 
 const CONFIG = {
@@ -53,7 +54,7 @@ const createOrderMessages = (
 
 const createMessage = (timestamp: number) => {
     return new StreamMessage({
-        messageId: new MessageID(toStreamID('streamId'), 0, timestamp, 0, PUBLISHER_ID, MSG_CHAIN_ID),
+        messageId: new MessageID(toStreamID('streamId'), 0, timestamp, 0, toUserIdOld(PUBLISHER_ID), MSG_CHAIN_ID),
         prevMsgRef: new MessageRef(timestamp - 1000, 0),
         content: MOCK_CONTENT,
         signature: hexToBinary('0x1234'),

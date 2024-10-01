@@ -1,4 +1,4 @@
-import { Gate, Heap, Logger, StreamPartID, UserIDOld } from '@streamr/utils'
+import { Gate, Heap, Logger, StreamPartID, UserID } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { MessageRef } from '../../protocol/MessageRef'
 import { StreamMessage } from '../../protocol/StreamMessage'
@@ -13,7 +13,7 @@ export interface Gap {
 
 export interface OrderedMessageChainContext {
     streamPartId: StreamPartID
-    publisherId: UserIDOld
+    publisherId: UserID
     msgChainId: string
 }
 

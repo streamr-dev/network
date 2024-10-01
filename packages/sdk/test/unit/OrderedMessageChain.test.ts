@@ -1,17 +1,17 @@
-import { hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
+import { hexToBinary, toStreamID, utf8ToBinary, toUserIdOld } from '@streamr/utils'
 import { Gap, OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
-import { randomUserIdOld } from '@streamr/test-utils'
+import { randomUserId } from '@streamr/test-utils'
 
 const STREAM_ID = toStreamID('stream')
-const PUBLISHER_ID = randomUserIdOld()
+const PUBLISHER_ID = randomUserId()
 const MSG_CHAIN_ID = 'msgChainId'
 
 const createMessage = (timestamp: number, hasPrevRef = true) => {
     return new StreamMessage({
-        messageId: new MessageID(STREAM_ID, 0, timestamp, 0, PUBLISHER_ID, MSG_CHAIN_ID),
+        messageId: new MessageID(STREAM_ID, 0, timestamp, 0, toUserIdOld(PUBLISHER_ID), MSG_CHAIN_ID),
         prevMsgRef: hasPrevRef ? new MessageRef(timestamp - 1, 0) : undefined,
         content: utf8ToBinary('{}'),
         signature: hexToBinary('0x1234'),

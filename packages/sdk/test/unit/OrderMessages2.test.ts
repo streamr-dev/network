@@ -1,6 +1,6 @@
-import { randomEthereumAddress } from '@streamr/test-utils'
-import { StreamPartID, StreamPartIDUtils, UserIDOld, hexToBinary, toEthereumAddress, toStreamID, wait, waitForCondition } from '@streamr/utils'
-import { shuffle } from 'lodash'
+import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
+import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toStreamID, toUserIdOld, wait, waitForCondition } from '@streamr/utils'
+import { range, shuffle } from 'lodash'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
 import { PushPipeline } from '../../src/utils/PushPipeline'
@@ -19,11 +19,7 @@ const PROPAGATION_TIMEOUT = 200
 const RESEND_TIMEOUT = 100
 const MAX_GAP_REQUESTS = 5
 
-const PUBLISHER_IDS = [
-    '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-    '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-    '0xcccccccccccccccccccccccccccccccccccccccc'
-].map(toEthereumAddress)
+const PUBLISHER_IDS = range(3).map(() => randomUserId())
 
 enum Delivery {
     REAL_TIME,
@@ -32,7 +28,7 @@ enum Delivery {
 }
 
 interface MessageInfo {
-    publisherId: UserIDOld
+    publisherId: UserID
     timestamp: number
     delivery: Delivery
 }
@@ -53,7 +49,7 @@ function intoChunks<T>(arr: readonly T[], chunkSize: number): T[][] {
     return chunks
 }
 
-function formChainOfMessages(publisherId: UserIDOld): Array<MessageInfo> {
+function formChainOfMessages(publisherId: UserID): Array<MessageInfo> {
     const chainOfMessages: MessageInfo[] = [{
         publisherId,
         timestamp: 1,
@@ -80,7 +76,7 @@ function formChainOfMessages(publisherId: UserIDOld): Array<MessageInfo> {
 }
 
 function createMsg({ publisherId, timestamp }: MessageInfo): StreamMessage {
-    const messageId = new MessageID(toStreamID('streamId'), 0, timestamp, 0, publisherId, '')
+    const messageId = new MessageID(toStreamID('streamId'), 0, timestamp, 0, toUserIdOld(publisherId), '')
     const prevMsgRef = timestamp > 1 ? new MessageRef(timestamp - 1, 0) : undefined
     return new StreamMessage({
         messageId,

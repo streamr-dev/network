@@ -1,15 +1,25 @@
-import { Defer, EthereumAddress, StreamPartIDUtils, hexToBinary, toEthereumAddress, utf8ToBinary, wait, waitForCondition } from '@streamr/utils'
+import {
+    Defer,
+    EthereumAddress,
+    StreamPartIDUtils,
+    hexToBinary,
+    toEthereumAddress,
+    toUserIdOld,
+    utf8ToBinary,
+    wait,
+    waitForCondition
+} from '@streamr/utils'
 import { GapFillStrategy, GapFiller } from '../../src/subscribe/ordering/GapFiller'
 import { Gap, OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
 import { fromArray } from '../../src/utils/GeneratorUtils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
-import { randomUserIdOld } from '@streamr/test-utils'
+import { randomUserId } from '@streamr/test-utils'
 
 const CONTEXT = {
     streamPartId: StreamPartIDUtils.parse('stream#0'),
-    publisherId: randomUserIdOld(),
+    publisherId: randomUserId(),
     msgChainId: 'msgChainId'
 }
 const STORAGE_NODE_ADDRESS = toEthereumAddress('0x0000000000000000000000000000000000000002')
@@ -21,7 +31,7 @@ const createMessage = (timestamp: number, hasPrevRef = true) => {
             StreamPartIDUtils.getStreamPartition(CONTEXT.streamPartId),
             timestamp,
             0,
-            CONTEXT.publisherId, 
+            toUserIdOld(CONTEXT.publisherId), 
             CONTEXT.msgChainId
         ),
         prevMsgRef: hasPrevRef ? new MessageRef(timestamp - 1, 0) : undefined,
