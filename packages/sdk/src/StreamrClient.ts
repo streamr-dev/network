@@ -3,7 +3,7 @@ import './utils/PatchTsyringe'
 
 import { DhtAddress } from '@streamr/dht'
 import { ProxyDirection } from '@streamr/trackerless-network'
-import { EthereumAddress, StreamID, TheGraphClient, toEthereumAddress, toUserId, UserID, UserIDOld } from '@streamr/utils'
+import { EthereumAddress, StreamID, TheGraphClient, toEthereumAddress, toUserId, toUserIdRaw, UserID, UserIDOld, UserIDRaw } from '@streamr/utils'
 import type { Overrides } from 'ethers'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
@@ -47,6 +47,7 @@ import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
 import { initResendSubscription } from './subscribe/resendSubscription'
 import { waitForStorage } from './subscribe/waitForStorage'
 import { StreamDefinition } from './types'
+import { map } from './utils/GeneratorUtils'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
@@ -431,17 +432,19 @@ export class StreamrClient {
     // --------------------------------------------------------------------------------------------
 
     /**
-     * Gets all ethereum addresses that have {@link StreamPermission.PUBLISH} permission to the stream.
+     * Gets all user ids that have {@link StreamPermission.PUBLISH} permission to the stream.
      */
-    getStreamPublishers(streamIdOrPath: string): AsyncIterable<EthereumAddress> {
-        return this.streamRegistry.getStreamPublishers(streamIdOrPath)
+    async* getStreamPublishers(streamIdOrPath: string): AsyncIterable<UserIDRaw> {
+        const userIds = this.streamRegistry.getStreamPublishers(streamIdOrPath)
+        yield* map<UserID, UserIDRaw>(userIds, (userId) => toUserIdRaw(userId)) 
     }
 
     /**
-     * Gets all ethereum addresses that have {@link StreamPermission.SUBSCRIBE} permission to the stream.
+     * Gets all user ids that have {@link StreamPermission.SUBSCRIBE} permission to the stream.
      */
-    getStreamSubscribers(streamIdOrPath: string): AsyncIterable<EthereumAddress> {
-        return this.streamRegistry.getStreamSubscribers(streamIdOrPath)
+    async* getStreamSubscribers(streamIdOrPath: string): AsyncIterable<UserIDRaw> {
+        const userIds = this.streamRegistry.getStreamSubscribers(streamIdOrPath)
+        yield* map<UserID, UserIDRaw>(userIds, (userId) => toUserIdRaw(userId)) 
     }
 
     /**

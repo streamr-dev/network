@@ -7,7 +7,8 @@ import {
     TheGraphClient, UserID, UserIDOld, collect,
     isENSName,
     toEthereumAddress,
-    toStreamID
+    toStreamID,
+    toUserId
 } from '@streamr/utils'
 import { ContractTransactionResponse } from 'ethers'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -57,7 +58,7 @@ export interface StreamQueryResult {
 
 interface StreamPublisherOrSubscriberItem {
     id: string
-    userAddress: UserIDOld
+    userAddress: string
 }
 
 export interface StreamCreationEvent {
@@ -290,15 +291,15 @@ export class StreamRegistry {
             this.logger)
     }
 
-    getStreamPublishers(streamIdOrPath: string): AsyncIterable<UserIDOld> {
+    getStreamPublishers(streamIdOrPath: string): AsyncGenerator<UserID> {
         return this.getStreamPublishersOrSubscribersList(streamIdOrPath, 'publishExpiration')
     }
 
-    getStreamSubscribers(streamIdOrPath: string): AsyncIterable<UserIDOld> {
+    getStreamSubscribers(streamIdOrPath: string): AsyncGenerator<UserID> {
         return this.getStreamPublishersOrSubscribersList(streamIdOrPath, 'subscribeExpiration')
     }
 
-    private async* getStreamPublishersOrSubscribersList(streamIdOrPath: string, fieldName: string): AsyncIterable<UserIDOld> {
+    private async* getStreamPublishersOrSubscribersList(streamIdOrPath: string, fieldName: string): AsyncGenerator<UserID> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         const backendResults = this.theGraphClient.queryEntities<StreamPublisherOrSubscriberItem>(
             (lastId: string, pageSize: number) => StreamRegistry.buildStreamPublishersOrSubscribersQuery(streamId, fieldName, lastId, pageSize)
@@ -311,9 +312,9 @@ export class StreamRegistry {
          * no longer needed
          */
         const validItems = filter<StreamPublisherOrSubscriberItem>(backendResults, (p) => (p as any).stream !== null)
-        yield* map<StreamPublisherOrSubscriberItem, UserIDOld>(
+        yield* map<StreamPublisherOrSubscriberItem, UserID>(
             validItems,
-            (item) => item.userAddress
+            (item) => toUserId(item.userAddress)
         )
     }
 

@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fetchPrivateKeyWithGas, randomUserId, randomUserIdOld } from '@streamr/test-utils'
-import { EthereumAddress, collect, toEthereumAddress, toStreamID, toUserIdRaw, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, collect, toEthereumAddress, toStreamID, toUserIdRaw, waitForCondition, toUserId } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
@@ -207,7 +207,8 @@ describe('StreamRegistry', () => {
         it('retrieves a list of publishers', async () => {
             const publishers = await collect(client.getStreamPublishers(createdStream.id))
             const address = await client.getAddress()
-            return expect(publishers).toEqual([address])
+            expect(publishers).toHaveLength(1)
+            expect(publishers[0]).toEqualBinary(toUserIdRaw(toUserId(address)))
         }, TIMEOUT)
     })
 
@@ -227,7 +228,8 @@ describe('StreamRegistry', () => {
         it('retrieves a list of subscribers', async () => {
             const subscribers = await collect(client.getStreamSubscribers(createdStream.id))
             const address = await client.getAddress()
-            return expect(subscribers).toEqual([address])
+            expect(subscribers).toHaveLength(1)
+            expect(subscribers[0]).toEqualBinary(toUserIdRaw(toUserId(address)))
         }, TIMEOUT)
     })
 

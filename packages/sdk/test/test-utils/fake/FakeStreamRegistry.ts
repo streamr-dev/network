@@ -1,5 +1,5 @@
 import { Methods } from '@streamr/test-utils'
-import { Multimap, StreamID, UserID, UserIDOld, toUserId } from '@streamr/utils'
+import { Multimap, StreamID, UserID, toUserId } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
 import { Stream, StreamMetadata } from '../../../src/Stream'
@@ -206,12 +206,12 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamPublishers(): AsyncIterable<UserIDOld> {
+    getStreamPublishers(): AsyncGenerator<UserID> {
         throw new Error('not implemented')
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamSubscribers(): AsyncIterable<UserIDOld> {
+    getStreamSubscribers(): AsyncGenerator<UserID> {
         throw new Error('not implemented')
     }
 }
