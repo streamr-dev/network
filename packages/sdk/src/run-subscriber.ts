@@ -30,6 +30,7 @@ const main = async () => {
         StreamPartIDUtils.parse('binance-streamr.eth/DATAUSDT/trades#0'),
         StreamPartIDUtils.parse('binance-streamr.eth/DATAUSDT/ticker#0'),
         StreamPartIDUtils.parse('0xd37dc4d7e2c1bdf3edd89db0e505394ea69af43d/gas-station/polygon#0'),
+        StreamPartIDUtils.parse('minimaglobal.eth/minima#0')
     ]
 
     setInterval(() => {
