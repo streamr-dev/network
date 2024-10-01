@@ -1,4 +1,4 @@
-import { UserID } from '@streamr/utils'
+import { UserIDOld } from '@streamr/utils'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
 import { StreamMessageError } from '../protocol/StreamMessageError'
@@ -78,8 +78,8 @@ const validateMessage = async (
 
 const validateGroupKeyMessage = async (
     streamMessage: StreamMessage,
-    expectedPublisher: UserID,
-    expectedSubscriber: UserID,
+    expectedPublisher: UserIDOld,
+    expectedSubscriber: UserIDOld,
     streamRegistry: StreamRegistry
 ): Promise<void> => {
     const streamId = streamMessage.getStreamId()

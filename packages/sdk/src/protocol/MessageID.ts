@@ -1,4 +1,4 @@
-import { StreamID, StreamPartID, toStreamPartID, UserID } from '@streamr/utils'
+import { StreamID, StreamPartID, toStreamPartID, UserIDOld } from '@streamr/utils'
 import { MessageRef } from './MessageRef'
 import { validateIsNotNegativeInteger } from './validations'
 
@@ -8,7 +8,7 @@ export class MessageID {
     readonly streamPartition: number
     readonly timestamp: number
     readonly sequenceNumber: number
-    readonly publisherId: UserID
+    readonly publisherId: UserIDOld
     readonly msgChainId: string
 
     constructor(
@@ -16,7 +16,7 @@ export class MessageID {
         streamPartition: number,
         timestamp: number,
         sequenceNumber: number,
-        publisherId: UserID,
+        publisherId: UserIDOld,
         msgChainId: string
     ) {
         validateIsNotNegativeInteger('streamPartition', streamPartition)

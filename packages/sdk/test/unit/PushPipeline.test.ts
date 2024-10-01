@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { randomUserId, testOnlyInNodeJs } from '@streamr/test-utils'
+import { randomUserIdOld, testOnlyInNodeJs } from '@streamr/test-utils'
 import { collect, toStreamID, utf8ToBinary, wait } from '@streamr/utils'
 import { MessageSigner } from '../../src/signature/MessageSigner'
 import { pull } from '../../src/utils/PushBuffer'
@@ -12,7 +12,7 @@ import { createRandomAuthentication } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { ContentType, EncryptionType, SignatureType, StreamMessage, StreamMessageType } from './../../src/protocol/StreamMessage'
 
-const PUBLISHER_ID = randomUserId()
+const PUBLISHER_ID = randomUserIdOld()
 
 describe('PushPipeline', () => {
 

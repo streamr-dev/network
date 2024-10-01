@@ -5,11 +5,11 @@ import { fromArray } from '../../src/utils/GeneratorUtils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
-import { randomUserId } from '@streamr/test-utils'
+import { randomUserIdOld } from '@streamr/test-utils'
 
 const CONTEXT = {
     streamPartId: StreamPartIDUtils.parse('stream#0'),
-    publisherId: randomUserId(),
+    publisherId: randomUserIdOld(),
     msgChainId: 'msgChainId'
 }
 const STORAGE_NODE_ADDRESS = toEthereumAddress('0x0000000000000000000000000000000000000002')

@@ -1,4 +1,4 @@
-import { UserID } from '@streamr/utils'
+import { UserIDOld } from '@streamr/utils'
 
 // TODO: make into abstract base class and define abstract constructor to enforce options?
 export interface PersistenceContext {
@@ -8,6 +8,6 @@ export interface PersistenceContext {
 }
 
 export interface PersistenceContextOptions {
-    ownerId: UserID
+    ownerId: UserIDOld
     namespaces: string[]
 }

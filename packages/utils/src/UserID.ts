@@ -1,3 +1,3 @@
 import { EthereumAddress } from './EthereumAddress'
 
-export type UserID = EthereumAddress
+export type UserIDOld = EthereumAddress  // TODO remove this type

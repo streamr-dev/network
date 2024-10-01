@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { UserID, hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
+import { UserIDOld, hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
 import { mock } from 'jest-mock-extended'
 import { Authentication } from '../../src/Authentication'
@@ -48,8 +48,8 @@ const subscriberAuthentication = createRandomAuthentication()
 
 describe('Validator2', () => {
     let getStream: (streamId: string) => Promise<Stream>
-    let isPublisher: (userId: UserID, streamId: string) => Promise<boolean>
-    let isSubscriber: (userId: UserID, streamId: string) => Promise<boolean>
+    let isPublisher: (userId: UserIDOld, streamId: string) => Promise<boolean>
+    let isSubscriber: (userId: UserIDOld, streamId: string) => Promise<boolean>
     let msg: StreamMessage
     let msgWithNewGroupKey: StreamMessage
     let msgWithPrevMsgRef: StreamMessage
@@ -60,8 +60,8 @@ describe('Validator2', () => {
         return {
             validate: (msg: StreamMessage) => validateStreamMessage(msg, { 
                 getStream,
-                isStreamPublisher: (streamId: string, userId: UserID) => isPublisher(userId, streamId),
-                isStreamSubscriber: (streamId: string, userId: UserID) => isSubscriber(userId, streamId)
+                isStreamPublisher: (streamId: string, userId: UserIDOld) => isPublisher(userId, streamId),
+                isStreamSubscriber: (streamId: string, userId: UserIDOld) => isSubscriber(userId, streamId)
             } as any, new SignatureValidator(mock<ERC1271ContractFacade>()))
         }
     }
@@ -77,10 +77,10 @@ describe('Validator2', () => {
                 })
             } as any
         }
-        isPublisher = async (userId: UserID, streamId: string) => {
+        isPublisher = async (userId: UserIDOld, streamId: string) => {
             return userId === publisher && streamId === 'streamId'
         }
-        isSubscriber = async (userId: UserID, streamId: string) => {
+        isSubscriber = async (userId: UserIDOld, streamId: string) => {
             return userId === subscriber && streamId === 'streamId'
         }
 

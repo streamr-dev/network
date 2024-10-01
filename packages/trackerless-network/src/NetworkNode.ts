@@ -2,7 +2,7 @@ import { IMessageType } from '@protobuf-ts/runtime'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtAddress, PeerDescriptor } from '@streamr/dht'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
-import { MetricsContext, StreamPartID, UserID } from '@streamr/utils'
+import { MetricsContext, StreamPartID, UserIDOld } from '@streamr/utils'
 import { ExternalNetworkRpc, ExternalRpcClient, ExternalRpcClientClass } from './logic/ExternalNetworkRpc'
 import { NetworkOptions, NetworkStack, NodeInfo } from './NetworkStack'
 import { ProxyDirection, StreamMessage } from './proto/packages/trackerless-network/protos/NetworkRpc'
@@ -46,7 +46,7 @@ export class NetworkNode {
         streamPartId: StreamPartID,
         nodes: PeerDescriptor[],
         direction: ProxyDirection,
-        userId: UserID,
+        userId: UserIDOld,
         connectionCount?: number
     ): Promise<void> {
         await this.stack.getContentDeliveryManager().setProxies(streamPartId, nodes, direction, userId, connectionCount)

@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, StreamPartID, StreamPartIDUtils, toEthereumAddress, UserID } from '@streamr/utils'
+import { EthereumAddress, StreamPartID, StreamPartIDUtils, toEthereumAddress, UserIDOld } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -41,7 +41,7 @@ describe('PublisherKeyExchange', () => {
     const assertValidResponse = async (
         actualResponse: StreamMessage,
         expectedGroupKey: GroupKey,
-        expectedPublisherId: UserID,
+        expectedPublisherId: UserIDOld,
         expectedSignatureType: SignatureType
     ): Promise<void> => {
         expect(actualResponse).toMatchObject({

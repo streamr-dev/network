@@ -1,6 +1,6 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtAddress, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
-import { Logger, StreamPartID, UserID, binaryToHex, toEthereumAddress } from '@streamr/utils'
+import { Logger, StreamPartID, UserIDOld, binaryToHex, toEthereumAddress } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import {
     ProxyConnectionRequest,
@@ -16,7 +16,7 @@ const logger = new Logger(module)
 
 interface ProxyConnection {
     direction: ProxyDirection // Direction is from the client's point of view
-    userId: UserID
+    userId: UserIDOld
     remote: ContentDeliveryRpcRemote
 }
 
@@ -74,7 +74,7 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
         }
     }
 
-    private getNodeIdsForUserId(userId: UserID): DhtAddress[] {
+    private getNodeIdsForUserId(userId: UserIDOld): DhtAddress[] {
         return Array.from(this.connections.keys()).filter((nodeId) => this.connections.get(nodeId)!.userId === userId)
     }
 

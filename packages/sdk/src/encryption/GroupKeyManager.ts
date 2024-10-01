@@ -1,4 +1,4 @@
-import { StreamID, StreamPartID, StreamPartIDUtils, UserID, waitForEvent } from '@streamr/utils'
+import { StreamID, StreamPartID, StreamPartIDUtils, UserIDOld, waitForEvent } from '@streamr/utils'
 import crypto from 'crypto'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -40,7 +40,7 @@ export class GroupKeyManager {
         this.destroySignal = destroySignal
     }
 
-    async fetchKey(streamPartId: StreamPartID, groupKeyId: string, publisherId: UserID): Promise<GroupKey> {
+    async fetchKey(streamPartId: StreamPartID, groupKeyId: string, publisherId: UserIDOld): Promise<GroupKey> {
         const streamId = StreamPartIDUtils.getStreamID(streamPartId)
 
         // 1st try: local storage
@@ -72,7 +72,7 @@ export class GroupKeyManager {
         return groupKey!
     }
 
-    async fetchLatestEncryptionKey(publisherId: UserID, streamId: StreamID): Promise<GroupKey | undefined> {
+    async fetchLatestEncryptionKey(publisherId: UserIDOld, streamId: StreamID): Promise<GroupKey | undefined> {
         if (publisherId !== (await this.authentication.getAddress())) {
             throw new Error('storeKey: fetching latest encryption keys for other publishers not supported.')
         }
@@ -80,7 +80,7 @@ export class GroupKeyManager {
         return keyId !== undefined ? this.localGroupKeyStore.get(keyId, publisherId) : undefined
     }
 
-    async storeKey(groupKey: GroupKey | undefined, publisherId: UserID, streamId: StreamID): Promise<GroupKey> {
+    async storeKey(groupKey: GroupKey | undefined, publisherId: UserIDOld, streamId: StreamID): Promise<GroupKey> {
         if (publisherId !== (await this.authentication.getAddress())) { // TODO: unit test?
             throw new Error('storeKey: storing latest encryption keys for other publishers not supported.')
         }
@@ -99,7 +99,7 @@ export class GroupKeyManager {
         return groupKey
     }
 
-    addKeyToLocalStore(groupKey: GroupKey, publisherId: UserID): Promise<void> {
+    addKeyToLocalStore(groupKey: GroupKey, publisherId: UserIDOld): Promise<void> {
         return this.localGroupKeyStore.set(groupKey.id, publisherId, groupKey.data)
     }
 }

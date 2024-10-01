@@ -4,7 +4,7 @@ import { InsertRecord } from '../../../../src/plugins/storage/Batch'
 import { BatchManager } from '../../../../src/plugins/storage/BatchManager'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { randomUserId } from '@streamr/test-utils'
+import { randomUserIdOld } from '@streamr/test-utils'
 
 const { TimeUuid } = cassandraTypes
 
@@ -23,7 +23,7 @@ function buildRecord(
         partition,
         timestamp,
         sequenceNo,
-        publisherId: randomUserId(),
+        publisherId: randomUserIdOld(),
         msgChainId: 'msgChainId',
         payload: Buffer.from(new Uint8Array([1, 2]))
     }

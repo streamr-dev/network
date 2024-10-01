@@ -1,5 +1,5 @@
 import { GroupKey, GroupKeyResponse } from '@streamr/trackerless-network'
-import { hexToBinary, UserID } from '@streamr/utils'
+import { hexToBinary, UserIDOld } from '@streamr/utils'
 import { EncryptedGroupKey as OldEncryptedGroupKey } from '../../src/protocol/EncryptedGroupKey'
 import { GroupKeyResponse as OldGroupKeyResponse } from '../../src/protocol/GroupKeyResponse'
 import { GroupKeyResponseTranslator } from '../../src/protocol/GroupKeyResponseTranslator'
@@ -8,7 +8,7 @@ describe('GroupKeyResponseTranslator', () => {
 
     const oldGroupKeyResponse = new OldGroupKeyResponse({
         requestId: 'request',
-        recipient: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as UserID,
+        recipient: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as UserIDOld,
         encryptedGroupKeys: [ new OldEncryptedGroupKey('id', hexToBinary('0000')) ]
     })
     const newGroupKey: GroupKey = {

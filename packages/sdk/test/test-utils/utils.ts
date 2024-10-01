@@ -5,7 +5,7 @@ import {
     Logger,
     MAX_PARTITION_COUNT,
     StreamPartID,
-    StreamPartIDUtils, UserID, merge,
+    StreamPartIDUtils, UserIDOld, merge,
     utf8ToBinary,
     wait,
     waitForCondition
@@ -151,7 +151,7 @@ export const createMockMessage = async (
 // When binary contents are supported we don't need this anymore.
 export const MOCK_CONTENT = utf8ToBinary(JSON.stringify({}))
 
-export const getLocalGroupKeyStore = (ownerId: UserID): LocalGroupKeyStore => {
+export const getLocalGroupKeyStore = (ownerId: UserIDOld): LocalGroupKeyStore => {
     const authentication = {
         getAddress: () => ownerId
     } as any

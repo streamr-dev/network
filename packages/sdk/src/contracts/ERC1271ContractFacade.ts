@@ -1,4 +1,4 @@
-import { BrandedString, EthereumAddress, MapWithTtl, UserID, binaryToHex, hash, recoverSignerUserId, toEthereumAddress } from '@streamr/utils'
+import { BrandedString, EthereumAddress, MapWithTtl, UserIDOld, binaryToHex, hash, recoverSignerUserId, toEthereumAddress } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { RpcProviderSource } from '../RpcProviderSource'
 import type { IERC1271 as ERC1271Contract } from '../ethereumArtifacts/IERC1271'
@@ -12,7 +12,7 @@ export type CacheKey = BrandedString<string>
 
 const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
 
-function formCacheKey(contractAddress: EthereumAddress, signerUserId: UserID): CacheKey {
+function formCacheKey(contractAddress: EthereumAddress, signerUserId: UserIDOld): CacheKey {
     return `${contractAddress}_${signerUserId}` as CacheKey
 }
 

@@ -6,7 +6,7 @@ import {
     StreamPartID,
     StreamPartIDUtils,
     toEthereumAddress,
-    toStreamPartID, UserID, waitForCondition
+    toStreamPartID, UserIDOld, waitForCondition
 } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -28,7 +28,7 @@ describe('SubscriberKeyExchange', () => {
     let subscriber: StreamrClient
     let environment: FakeEnvironment
 
-    const createStream = async (subscriberAddress: UserID): Promise<StreamID> => {
+    const createStream = async (subscriberAddress: UserIDOld): Promise<StreamID> => {
         const creator = environment.createClient()
         const s = await creator.createStream(createRelativeTestStreamId(module))
         await s.grantPermissions({
@@ -55,7 +55,7 @@ describe('SubscriberKeyExchange', () => {
         message: StreamMessage,
         expectedStreamPartId: StreamPartID,
         expectedRequestedKeyIds: string[],
-        expectedPublisherId: UserID,
+        expectedPublisherId: UserIDOld,
         expectedSignatureType: SignatureType
     ): Promise<void> => {
         expect(message).toMatchObject({

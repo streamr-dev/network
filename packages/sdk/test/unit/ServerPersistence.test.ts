@@ -1,4 +1,4 @@
-import { randomUserId, testOnlyInNodeJs } from '@streamr/test-utils'
+import { randomUserIdOld, testOnlyInNodeJs } from '@streamr/test-utils'
 import range from 'lodash/range'
 import { join } from 'path'
 import { Database } from 'sqlite'
@@ -12,7 +12,7 @@ describe('ServerPersistence', () => {
     let persistence: ServerPersistence
 
     beforeEach(async () => {
-        const ownerId = randomUserId()
+        const ownerId = randomUserIdOld()
         persistence = await ServerPersistence.createInstance({
             loggerFactory: mockLoggerFactory(),
             ownerId,
@@ -55,7 +55,7 @@ describe('ServerPersistence', () => {
     // enable when NET-1057 done
     it.skip('concurrency', async () => {
         const instanceCount = 10
-        const ownerId = randomUserId()
+        const ownerId = randomUserIdOld()
         const values = await Promise.all(range(instanceCount).map(async (i: number) => {
             const instance = await ServerPersistence.createInstance({
                 loggerFactory: mockLoggerFactory(),

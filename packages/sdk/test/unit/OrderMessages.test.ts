@@ -1,4 +1,4 @@
-import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
+import { randomEthereumAddress, randomUserIdOld } from '@streamr/test-utils'
 import {
     EthereumAddress,
     StreamID,
@@ -21,7 +21,7 @@ import { MessageRef } from './../../src/protocol/MessageRef'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('stream#0')
-const PUBLISHER_ID = randomUserId()
+const PUBLISHER_ID = randomUserIdOld()
 const MSG_CHAIN_ID = 'mock-msg-chain-id'
 
 const CONFIG = {

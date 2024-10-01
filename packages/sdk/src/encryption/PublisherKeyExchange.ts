@@ -1,4 +1,4 @@
-import { EthereumAddress, Logger, StreamPartID, StreamPartIDUtils, UserID } from '@streamr/utils'
+import { EthereumAddress, Logger, StreamPartID, StreamPartIDUtils, UserIDOld } from '@streamr/utils'
 import without from 'lodash/without'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -116,7 +116,7 @@ export class PublisherKeyExchange {
         }
     }
 
-    private async getResponseType(publisher: UserID): Promise<ResponseType> {
+    private async getResponseType(publisher: UserIDOld): Promise<ResponseType> {
         const authenticatedUser = await this.authentication.getAddress()
         if (publisher === authenticatedUser) {
             return ResponseType.NORMAL
@@ -130,10 +130,10 @@ export class PublisherKeyExchange {
     private async createResponse(
         keys: GroupKey[],
         responseType: ResponseType,
-        publisher: UserID,
+        publisher: UserIDOld,
         streamPartId: StreamPartID,
         rsaPublicKey: string,
-        recipient: UserID,
+        recipient: UserIDOld,
         requestId: string
     ): Promise<StreamMessage> {
         const encryptedGroupKeys = await Promise.all(keys.map((key) => {

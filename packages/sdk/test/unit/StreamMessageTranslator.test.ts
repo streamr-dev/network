@@ -7,7 +7,7 @@ import {
 import {
     StreamPartID,
     StreamPartIDUtils,
-    UserID,
+    UserIDOld,
     hexToBinary,
     toEthereumAddress,
     utf8ToBinary
@@ -27,7 +27,7 @@ const STREAM_PART_ID = StreamPartIDUtils.parse('TEST#0')
 export const createStreamMessage = (
     content: string,
     streamPartId: StreamPartID,
-    publisherId: UserID,
+    publisherId: UserIDOld,
     timestamp?: number,
     sequenceNumber?: number
 ): NewStreamMessage => {

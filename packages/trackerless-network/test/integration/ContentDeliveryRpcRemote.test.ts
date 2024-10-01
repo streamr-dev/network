@@ -14,7 +14,7 @@ import {
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { createStreamMessage } from '../utils/utils'
-import { randomUserId } from '@streamr/test-utils'
+import { randomUserIdOld } from '@streamr/test-utils'
 
 describe('ContentDeliveryRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator
@@ -85,7 +85,7 @@ describe('ContentDeliveryRpcRemote', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             StreamPartIDUtils.parse('test-stream#0'),
-            randomUserId()
+            randomUserIdOld()
         )
 
         await rpcRemote.sendStreamMessage(msg)

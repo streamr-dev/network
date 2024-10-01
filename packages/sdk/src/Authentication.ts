@@ -1,4 +1,4 @@
-import { createSignature, hexToBinary, toEthereumAddress, UserID, wait } from '@streamr/utils'
+import { createSignature, hexToBinary, toEthereumAddress, UserIDOld, wait } from '@streamr/utils'
 import { AbstractSigner, BrowserProvider, computeAddress, Provider, Wallet } from 'ethers'
 import pMemoize from 'p-memoize'
 import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'
@@ -11,7 +11,7 @@ export type SignerWithProvider = AbstractSigner<Provider>
 
 export interface Authentication {
     // always in lowercase
-    getAddress: () => Promise<UserID>
+    getAddress: () => Promise<UserIDOld>
     createMessageSignature: (payload: Uint8Array) => Promise<Uint8Array>
     getTransactionSigner: (rpcProviderSource: RpcProviderSource) => Promise<SignerWithProvider>
 }

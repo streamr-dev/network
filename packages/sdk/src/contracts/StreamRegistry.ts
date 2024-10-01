@@ -4,7 +4,7 @@ import {
     Logger,
     StreamID,
     StreamIDUtils,
-    TheGraphClient, UserID, collect,
+    TheGraphClient, UserIDOld, collect,
     isENSName,
     toEthereumAddress,
     toStreamID
@@ -57,7 +57,7 @@ export interface StreamQueryResult {
 
 interface StreamPublisherOrSubscriberItem {
     id: string
-    userAddress: UserID
+    userAddress: UserIDOld
 }
 
 export interface StreamCreationEvent {
@@ -91,8 +91,8 @@ export class StreamRegistry {
     private readonly authentication: Authentication
     private readonly logger: Logger
     private readonly getStream_cached: CacheAsyncFnType<[StreamID], Stream, string>
-    private readonly isStreamPublisher_cached: CacheAsyncFnType<[StreamID, UserID], boolean, string>
-    private readonly isStreamSubscriber_cached: CacheAsyncFnType<[StreamID, UserID], boolean, string>
+    private readonly isStreamPublisher_cached: CacheAsyncFnType<[StreamID, UserIDOld], boolean, string>
+    private readonly isStreamSubscriber_cached: CacheAsyncFnType<[StreamID, UserIDOld], boolean, string>
     private readonly hasPublicSubscribePermission_cached: CacheAsyncFnType<[StreamID], boolean, string>
     
     /* eslint-disable indent */
@@ -146,7 +146,7 @@ export class StreamRegistry {
                 return `${streamId}${CACHE_KEY_SEPARATOR}`
             }
         })
-        this.isStreamPublisher_cached = CacheAsyncFn((streamId: StreamID, userId: UserID) => {
+        this.isStreamPublisher_cached = CacheAsyncFn((streamId: StreamID, userId: UserIDOld) => {
             return this.isStreamPublisher_nonCached(streamId, userId)
         }, {
             ...config.cache,
@@ -154,7 +154,7 @@ export class StreamRegistry {
                 return [streamId, ethAddress].join(CACHE_KEY_SEPARATOR)
             }
         })
-        this.isStreamSubscriber_cached = CacheAsyncFn((streamId: StreamID, userId: UserID) => {
+        this.isStreamSubscriber_cached = CacheAsyncFn((streamId: StreamID, userId: UserIDOld) => {
             return this.isStreamSubscriber_nonCached(streamId, userId)
         }, {
             ...config.cache,
@@ -290,15 +290,15 @@ export class StreamRegistry {
             this.logger)
     }
 
-    getStreamPublishers(streamIdOrPath: string): AsyncIterable<UserID> {
+    getStreamPublishers(streamIdOrPath: string): AsyncIterable<UserIDOld> {
         return this.getStreamPublishersOrSubscribersList(streamIdOrPath, 'publishExpiration')
     }
 
-    getStreamSubscribers(streamIdOrPath: string): AsyncIterable<UserID> {
+    getStreamSubscribers(streamIdOrPath: string): AsyncIterable<UserIDOld> {
         return this.getStreamPublishersOrSubscribersList(streamIdOrPath, 'subscribeExpiration')
     }
 
-    private async* getStreamPublishersOrSubscribersList(streamIdOrPath: string, fieldName: string): AsyncIterable<UserID> {
+    private async* getStreamPublishersOrSubscribersList(streamIdOrPath: string, fieldName: string): AsyncIterable<UserIDOld> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         const backendResults = this.theGraphClient.queryEntities<StreamPublisherOrSubscriberItem>(
             (lastId: string, pageSize: number) => StreamRegistry.buildStreamPublishersOrSubscribersQuery(streamId, fieldName, lastId, pageSize)
@@ -311,7 +311,7 @@ export class StreamRegistry {
          * no longer needed
          */
         const validItems = filter<StreamPublisherOrSubscriberItem>(backendResults, (p) => (p as any).stream !== null)
-        yield* map<StreamPublisherOrSubscriberItem, UserID>(
+        yield* map<StreamPublisherOrSubscriberItem, UserIDOld>(
             validItems,
             (item) => item.userAddress
         )
@@ -418,7 +418,7 @@ export class StreamRegistry {
 
     async grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
         const overrides = await getEthersOverrides(this.rpcProviderSource, this.config)
-        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: UserID | undefined, solidityType: bigint) => {
+        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: UserIDOld | undefined, solidityType: bigint) => {
             return (user === undefined)
                 ? this.streamRegistryContract!.grantPublicPermission(streamId, solidityType, overrides)
                 : this.streamRegistryContract!.grantPermission(streamId, user, solidityType, overrides)
@@ -428,7 +428,7 @@ export class StreamRegistry {
     /* eslint-disable max-len */
     async revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
         const overrides = await getEthersOverrides(this.rpcProviderSource, this.config)
-        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: UserID | undefined, solidityType: bigint) => {
+        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: UserIDOld | undefined, solidityType: bigint) => {
             return (user === undefined)
                 ? this.streamRegistryContract!.revokePublicPermission(streamId, solidityType, overrides)
                 : this.streamRegistryContract!.revokePermission(streamId, user, solidityType, overrides)
@@ -437,7 +437,7 @@ export class StreamRegistry {
 
     private async updatePermissions(
         streamIdOrPath: string,
-        createTransaction: (streamId: StreamID, user: UserID | undefined, solidityType: bigint) => Promise<ContractTransactionResponse>,
+        createTransaction: (streamId: StreamID, user: UserIDOld | undefined, solidityType: bigint) => Promise<ContractTransactionResponse>,
         ...assignments: PermissionAssignment[]
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
@@ -484,7 +484,7 @@ export class StreamRegistry {
         await waitForTx(txToSubmit)
     }
 
-    private async isStreamPublisher_nonCached(streamId: StreamID, userId: UserID): Promise<boolean> {
+    private async isStreamPublisher_nonCached(streamId: StreamID, userId: UserIDOld): Promise<boolean> {
         try {
             return await this.streamRegistryContractReadonly.hasPermission(streamId, userId, streamPermissionToSolidityType(StreamPermission.PUBLISH))
         } catch (err) {
@@ -492,7 +492,7 @@ export class StreamRegistry {
         }
     }
 
-    private async isStreamSubscriber_nonCached(streamId: StreamID, userId: UserID): Promise<boolean> {
+    private async isStreamSubscriber_nonCached(streamId: StreamID, userId: UserIDOld): Promise<boolean> {
         try {
             return await this.streamRegistryContractReadonly.hasPermission(streamId, userId, streamPermissionToSolidityType(StreamPermission.SUBSCRIBE))
         } catch (err) {
@@ -512,7 +512,7 @@ export class StreamRegistry {
         }
     }
 
-    isStreamPublisher(streamId: StreamID, userId: UserID, useCache = true): Promise<boolean> {
+    isStreamPublisher(streamId: StreamID, userId: UserIDOld, useCache = true): Promise<boolean> {
         if (useCache) {
             return this.isStreamPublisher_cached(streamId, userId)
         } else {
@@ -520,7 +520,7 @@ export class StreamRegistry {
         }
     }
 
-    isStreamSubscriber(streamId: StreamID, userId: UserID, useCache = true): Promise<boolean> {
+    isStreamSubscriber(streamId: StreamID, userId: UserIDOld, useCache = true): Promise<boolean> {
         if (useCache) {
             return this.isStreamSubscriber_cached(streamId, userId)
         } else {

@@ -1,4 +1,4 @@
-import { UserID } from '@streamr/utils'
+import { UserIDOld } from '@streamr/utils'
 import { MaxInt256 } from 'ethers'
 
 export enum StreamPermission {
@@ -40,7 +40,7 @@ export const PUBLIC_PERMISSION_ADDRESS = '0x000000000000000000000000000000000000
 
 export type PermissionQueryResult = {
     id: string
-    userAddress: UserID
+    userAddress: UserIDOld
 } & ChainPermissions
 
 export interface ChainPermissions {

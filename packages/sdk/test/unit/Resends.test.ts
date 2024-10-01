@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { isRunningInElectron, randomEthereumAddress, randomUserId, startTestServer } from '@streamr/test-utils'
+import { isRunningInElectron, randomEthereumAddress, randomUserIdOld, startTestServer } from '@streamr/test-utils'
 import { StreamPartIDUtils, collect, hexToBinary, toLengthPrefixedFrame, toStreamID } from '@streamr/utils'
 import range from 'lodash/range'
 import { convertStreamMessageToBytes } from '../../src/protocol/oldStreamMessageBinaryUtils'
@@ -59,7 +59,7 @@ describe('Resends', () => {
         const MESSAGE_COUNT = 257
         const streamPartId = StreamPartIDUtils.parse('stream#0')
         const server = await startTestServer('/streams/:streamId/data/partitions/:partition/:resendType', async (_req, res) => {
-            const publisherId = randomUserId()
+            const publisherId = randomUserIdOld()
             for (const _ of range(MESSAGE_COUNT)) {
                 const msg = new StreamMessage({
                     messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisherId, ''),

@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
-import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
-import { toStreamID, UserID } from '@streamr/utils'
+import { randomEthereumAddress, randomUserIdOld } from '@streamr/test-utils'
+import { toStreamID, UserIDOld } from '@streamr/utils'
 import range from 'lodash/range'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { LocalGroupKeyStore } from '../../src/encryption/LocalGroupKeyStore'
@@ -9,14 +9,14 @@ import { getLocalGroupKeyStore } from '../test-utils/utils'
 
 describe('LocalGroupKeyStore', () => {
     
-    let ownerId: UserID
-    let publisherId: UserID
+    let ownerId: UserIDOld
+    let publisherId: UserIDOld
     let store: LocalGroupKeyStore
     let store2: LocalGroupKeyStore
 
     beforeEach(() => {
-        ownerId = randomUserId()
-        publisherId = randomUserId()
+        ownerId = randomUserIdOld()
+        publisherId = randomUserIdOld()
         store = getLocalGroupKeyStore(ownerId)
     })
 
@@ -39,11 +39,11 @@ describe('LocalGroupKeyStore', () => {
         const groupKey = GroupKey.generate()
         await store.set(groupKey.id, publisherId, groupKey.data)
         expect(await store.get(groupKey.id, publisherId)).toEqual(groupKey)
-        expect(await store.get(groupKey.id, randomUserId())).toBeUndefined()
+        expect(await store.get(groupKey.id, randomUserIdOld())).toBeUndefined()
     })
 
     it('key stores are ownerId specific', async () => {
-        const ownerId2 = randomUserId()
+        const ownerId2 = randomUserIdOld()
         store2 = getLocalGroupKeyStore(ownerId2)
 
         const groupKey = GroupKey.generate()
@@ -62,7 +62,7 @@ describe('LocalGroupKeyStore', () => {
 
     it('add multiple keys in parallel', async () => {
         const assignments = range(10).map(() => {
-            return { key: GroupKey.generate(), publisherId: randomUserId() }
+            return { key: GroupKey.generate(), publisherId: randomUserIdOld() }
         })
         await Promise.all(assignments.map(({ key, publisherId }) => store.set(key.id, publisherId, key.data)))
         for (const assignment of assignments) {
@@ -75,7 +75,7 @@ describe('LocalGroupKeyStore', () => {
         it('add and get key', async () => {
             await store.setLatestEncryptionKeyId('keyId', publisherId, streamId)
             expect(await store.getLatestEncryptionKeyId(publisherId, streamId)).toEqual('keyId')
-            expect(await store.getLatestEncryptionKeyId(randomUserId(), streamId)).toBeUndefined()
+            expect(await store.getLatestEncryptionKeyId(randomUserIdOld(), streamId)).toBeUndefined()
             expect(await store.getLatestEncryptionKeyId(publisherId, toStreamID('foobar'))).toBeUndefined()
         })
     })

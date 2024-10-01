@@ -8,9 +8,9 @@ import {
     SignatureType,
     StreamMessage
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { randomUserId } from '@streamr/test-utils'
+import { randomUserIdOld } from '@streamr/test-utils'
 
-const PUBLISHER_ID = randomUserId()
+const PUBLISHER_ID = randomUserIdOld()
 
 function makeMsg(streamId: string, partition: number, ts: number, msgNo: number): StreamMessage {
     const messageId: MessageID = {

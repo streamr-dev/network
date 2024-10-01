@@ -3,7 +3,7 @@ import { StreamPartIDUtils } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
-import { randomUserId } from '@streamr/test-utils'
+import { randomUserIdOld } from '@streamr/test-utils'
 
 describe('inspect', () => {
 
@@ -72,7 +72,7 @@ describe('inspect', () => {
             const msg = createStreamMessage(
                 JSON.stringify({ hello: 'WORLD' }),
                 streamPartId,
-                randomUserId(),
+                randomUserIdOld(),
                 123123,
                 sequenceNumber
             )

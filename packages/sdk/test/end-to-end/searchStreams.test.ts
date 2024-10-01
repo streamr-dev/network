@@ -1,4 +1,4 @@
-import { fetchPrivateKeyWithGas, randomUserId } from '@streamr/test-utils'
+import { fetchPrivateKeyWithGas, randomUserIdOld } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
@@ -18,7 +18,7 @@ describe('searchStreams', () => {
     let streamWithPublicPermission: Stream
     let streamWithUserAndPublicPermission: Stream
     let streamWithGrantedAndRevokedPermission: Stream
-    const searcher = randomUserId()
+    const searcher = randomUserIdOld()
 
     const createTestStreams = async (items: {
         streamId: string
@@ -128,7 +128,7 @@ describe('searchStreams', () => {
 
         it('public permissions', async () => {
             const streamIds = await searchStreamIds(SEARCH_TERM, {
-                user: randomUserId(),
+                user: randomUserIdOld(),
                 allowPublic: true
             })
             expect(streamIds).toEqual([

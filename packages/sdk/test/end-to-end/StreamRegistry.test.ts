@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fetchPrivateKeyWithGas, randomUserId } from '@streamr/test-utils'
+import { fetchPrivateKeyWithGas, randomUserIdOld } from '@streamr/test-utils'
 import { EthereumAddress, collect, toEthereumAddress, toStreamID, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { CONFIG_TEST } from '../../src/ConfigTest'
@@ -192,7 +192,7 @@ describe('StreamRegistry', () => {
 
         it('fails if stream prefixed with other users address', async () => {
             // can't create streams for other users
-            const otherAddress = randomUserId()
+            const otherAddress = randomUserIdOld()
             const newPath = `/StreamRegistry-getOrCreate-newPath-${Date.now()}`
             // backend should error
             await expect(async () => {
@@ -221,7 +221,7 @@ describe('StreamRegistry', () => {
             return expect(() => client.isStreamPublisher(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         }, TIMEOUT)
         it('returns false for invalid publishers', async () => {
-            const valid = await client.isStreamPublisher(createdStream.id, randomUserId())
+            const valid = await client.isStreamPublisher(createdStream.id, randomUserIdOld())
             return expect(valid).toBe(false)
         }, TIMEOUT)
     })
@@ -244,7 +244,7 @@ describe('StreamRegistry', () => {
             return expect(() => client.isStreamSubscriber(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         }, TIMEOUT)
         it('returns false for invalid subscribers', async () => {
-            const valid = await client.isStreamSubscriber(createdStream.id, randomUserId())
+            const valid = await client.isStreamSubscriber(createdStream.id, randomUserIdOld())
             return expect(valid).toBe(false)
         }, TIMEOUT)
     })

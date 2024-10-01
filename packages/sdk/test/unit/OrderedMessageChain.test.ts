@@ -3,10 +3,10 @@ import { Gap, OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMe
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
-import { randomUserId } from '@streamr/test-utils'
+import { randomUserIdOld } from '@streamr/test-utils'
 
 const STREAM_ID = toStreamID('stream')
-const PUBLISHER_ID = randomUserId()
+const PUBLISHER_ID = randomUserIdOld()
 const MSG_CHAIN_ID = 'msgChainId'
 
 const createMessage = (timestamp: number, hasPrevRef = true) => {
