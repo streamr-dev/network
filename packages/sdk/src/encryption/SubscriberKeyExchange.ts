@@ -1,4 +1,4 @@
-import { Logger, StreamPartID, StreamPartIDUtils, UserIDOld } from '@streamr/utils'
+import { Logger, StreamPartID, StreamPartIDUtils, UserID, toUserId, toUserIdOld } from '@streamr/utils'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -42,7 +42,7 @@ export class SubscriberKeyExchange {
     private readonly authentication: Authentication
     private readonly logger: Logger
     private readonly ensureStarted: () => Promise<void>
-    requestGroupKey: (groupKeyId: string, publisherId: UserIDOld, streamPartId: StreamPartID) => Promise<void>
+    requestGroupKey: (groupKeyId: string, publisherId: UserID, streamPartId: StreamPartID) => Promise<void>
 
     constructor(
         networkNodeFacade: NetworkNodeFacade,
@@ -69,12 +69,12 @@ export class SubscriberKeyExchange {
             networkNodeFacade.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.logger.debug('Started')
         })
-        this.requestGroupKey = withThrottling((groupKeyId: string, publisherId: UserIDOld, streamPartId: StreamPartID) => {
+        this.requestGroupKey = withThrottling((groupKeyId: string, publisherId: UserID, streamPartId: StreamPartID) => {
             return this.doRequestGroupKey(groupKeyId, publisherId, streamPartId)
         }, config.encryption.maxKeyRequestsPerSecond)
     }
 
-    private async doRequestGroupKey(groupKeyId: string, publisherId: UserIDOld, streamPartId: StreamPartID): Promise<void> {
+    private async doRequestGroupKey(groupKeyId: string, publisherId: UserID, streamPartId: StreamPartID): Promise<void> {
         await this.ensureStarted()
         const requestId = uuidv4()
         const request = await this.createRequest(
@@ -95,12 +95,12 @@ export class SubscriberKeyExchange {
     private async createRequest(
         groupKeyId: string,
         streamPartId: StreamPartID,
-        publisherId: UserIDOld,
+        publisherId: UserID,
         rsaPublicKey: string,
         requestId: string
     ): Promise<StreamMessage> {
         const requestContent = new OldGroupKeyRequest({
-            recipient: publisherId,
+            recipient: toUserIdOld(publisherId),
             requestId,
             rsaPublicKey,
             groupKeyIds: [groupKeyId],
@@ -126,13 +126,13 @@ export class SubscriberKeyExchange {
         if (OldGroupKeyResponse.is(msg)) {
             try {
                 const { requestId, recipient, encryptedGroupKeys } = convertBytesToGroupKeyResponse(msg.content)
-                if (await this.isAssignedToMe(msg.getStreamPartID(), recipient, requestId)) {
+                if (await this.isAssignedToMe(msg.getStreamPartID(), toUserId(recipient), requestId)) {
                     this.logger.debug('Handle group key response', { requestId })
                     this.pendingRequests.delete(requestId)
                     await validateStreamMessage(msg, this.streamRegistry, this.signatureValidator)
                     await Promise.all(encryptedGroupKeys.map(async (encryptedKey) => {
                         const key = GroupKey.decryptRSAEncrypted(encryptedKey, this.rsaKeyPair!.getPrivateKey())
-                        await this.store.set(key.id, msg.getPublisherId(), key.data)
+                        await this.store.set(key.id, toUserId(msg.getPublisherId()), key.data)
                     }))
                 }
             } catch (err: any) {
@@ -141,11 +141,11 @@ export class SubscriberKeyExchange {
         }
     }
 
-    private async isAssignedToMe(streamPartId: StreamPartID, recipient: UserIDOld, requestId: string): Promise<boolean> {
+    private async isAssignedToMe(streamPartId: StreamPartID, recipient: UserID, requestId: string): Promise<boolean> {
         if (this.pendingRequests.has(requestId)) {
-            const authenticatedUser = await this.authentication.getAddress()
+            const authenticatedUser = await this.authentication.getUserId()
             const erc1271Contract = this.subscriber.getERC1271ContractAddress(streamPartId)
-            return (recipient === authenticatedUser) || (recipient === erc1271Contract)
+            return (recipient === authenticatedUser) || ((erc1271Contract !== undefined) && (recipient === toUserId(erc1271Contract)))
         }
         return false
     }

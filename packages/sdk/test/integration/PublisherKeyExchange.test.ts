@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, StreamPartID, StreamPartIDUtils, toEthereumAddress, toUserId, toUserIdRaw, UserIDOld } from '@streamr/utils'
+import { EthereumAddress, StreamPartID, StreamPartIDUtils, toEthereumAddress, toUserId, toUserIdRaw, UserID } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -41,7 +41,7 @@ describe('PublisherKeyExchange', () => {
     const assertValidResponse = async (
         actualResponse: StreamMessage,
         expectedGroupKey: GroupKey,
-        expectedPublisherId: UserIDOld,
+        expectedPublisherId: UserID,
         expectedSignatureType: SignatureType
     ): Promise<void> => {
         expect(actualResponse).toMatchObject({
@@ -100,7 +100,7 @@ describe('PublisherKeyExchange', () => {
             const response = await environment.getNetwork().waitForSentMessage({
                 messageType: StreamMessageType.GROUP_KEY_RESPONSE
             })
-            await assertValidResponse(response, key, toEthereumAddress(publisherWallet.address), SignatureType.SECP256K1)
+            await assertValidResponse(response, key, toUserId(publisherWallet.address), SignatureType.SECP256K1)
         })
     })
 
@@ -124,6 +124,6 @@ describe('PublisherKeyExchange', () => {
         const response = await environment.getNetwork().waitForSentMessage({
             messageType: StreamMessageType.GROUP_KEY_RESPONSE
         })
-        await assertValidResponse(response, key, erc1271ContractAddress, SignatureType.ERC_1271)
+        await assertValidResponse(response, key, toUserId(erc1271ContractAddress), SignatureType.ERC_1271)
     })
 })

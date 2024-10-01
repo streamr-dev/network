@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastWallet } from '@streamr/test-utils'
-import { toEthereumAddress, toUserId, toUserIdRaw } from '@streamr/utils'
+import { toUserId, toUserIdRaw } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -70,7 +70,7 @@ describe('Subscriber', () => {
                     privateKey: publisherWallet.privateKey
                 }
             })
-            await publisher.addEncryptionKey(groupKey, toEthereumAddress(publisherWallet.address))
+            await publisher.addEncryptionKey(groupKey, toUserIdRaw(toUserId(publisherWallet.address)))
     
             const sub = await subscriber.subscribe(stream.id)
     
@@ -122,7 +122,7 @@ describe('Subscriber', () => {
                     privateKey: publisherWallet.privateKey
                 }
             })
-            await publisher.addEncryptionKey(groupKey, toEthereumAddress(publisherWallet.address))
+            await publisher.addEncryptionKey(groupKey, toUserIdRaw(toUserId(publisherWallet.address)))
     
             const sub = await subscriber.subscribe({ streamId: stream.id, raw: true })
     

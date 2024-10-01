@@ -6,7 +6,11 @@ import {
     StreamPartID,
     StreamPartIDUtils,
     toEthereumAddress,
-    toStreamPartID, toUserId, toUserIdRaw, UserID, UserIDOld, waitForCondition
+    toStreamPartID,
+    toUserId,
+    toUserIdRaw,
+    UserID,
+    waitForCondition
 } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -55,7 +59,7 @@ describe('SubscriberKeyExchange', () => {
         message: StreamMessage,
         expectedStreamPartId: StreamPartID,
         expectedRequestedKeyIds: string[],
-        expectedPublisherId: UserIDOld,
+        expectedPublisherId: UserID,
         expectedSignatureType: SignatureType
     ): Promise<void> => {
         expect(message).toMatchObject({
@@ -109,7 +113,7 @@ describe('SubscriberKeyExchange', () => {
                     privateKey: publisherWallet.privateKey
                 }
             })
-            await publisher.addEncryptionKey(groupKey, toEthereumAddress(publisherWallet.address))
+            await publisher.addEncryptionKey(groupKey, toUserIdRaw(toUserId(publisherWallet.address)))
             await subscriber.subscribe(streamPartId, () => {})
 
             await triggerGroupKeyRequest(streamPartId, groupKey, publisher)
@@ -121,11 +125,11 @@ describe('SubscriberKeyExchange', () => {
                 request,
                 streamPartId,
                 [groupKey.id],
-                toEthereumAddress(subscriberWallet.address),
+                toUserId(subscriberWallet.address),
                 SignatureType.SECP256K1
             )
-            const keyStore = getLocalGroupKeyStore(toEthereumAddress(subscriberWallet.address))
-            await waitForCondition(async () => (await keyStore.get(groupKey.id, toEthereumAddress(publisherWallet.address))) !== undefined)
+            const keyStore = getLocalGroupKeyStore(toUserId(subscriberWallet.address))
+            await waitForCondition(async () => (await keyStore.get(groupKey.id, toUserId(publisherWallet.address))) !== undefined)
         })
 
         it('happy path: ERC-1271', async () => {
@@ -140,7 +144,7 @@ describe('SubscriberKeyExchange', () => {
                     privateKey: publisherWallet.privateKey
                 }
             })
-            await publisher.addEncryptionKey(groupKey, toEthereumAddress(publisherWallet.address))
+            await publisher.addEncryptionKey(groupKey, toUserIdRaw(toUserId(publisherWallet.address)))
 
             await subscriber.subscribe({
                 id: StreamPartIDUtils.getStreamID(streamPartId),
@@ -153,9 +157,9 @@ describe('SubscriberKeyExchange', () => {
             const request = await environment.getNetwork().waitForSentMessage({
                 messageType: StreamMessageType.GROUP_KEY_REQUEST
             })
-            await assertGroupKeyRequest(request, streamPartId, [groupKey.id], erc1271Contract, SignatureType.ERC_1271)
-            const keyStore = getLocalGroupKeyStore(await subscriber.getAddress())
-            await waitForCondition(async () => (await keyStore.get(groupKey.id, toEthereumAddress(publisherWallet.address))) !== undefined)
+            await assertGroupKeyRequest(request, streamPartId, [groupKey.id], toUserId(erc1271Contract), SignatureType.ERC_1271)
+            const keyStore = getLocalGroupKeyStore(await subscriber.getUserId())
+            await waitForCondition(async () => (await keyStore.get(groupKey.id, toUserId(publisherWallet.address))) !== undefined)
         })
     })
 })

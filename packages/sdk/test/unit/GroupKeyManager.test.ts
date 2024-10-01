@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
-import { fastPrivateKey, randomUserIdOld } from '@streamr/test-utils'
-import { toEthereumAddress, toStreamID, toStreamPartID } from '@streamr/utils'
+import { fastPrivateKey, randomUserId } from '@streamr/test-utils'
+import { toStreamID, toStreamPartID, toUserId } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
@@ -23,7 +23,7 @@ describe('GroupKeyManager', () => {
     const groupKeyId = 'groupKeyId-123'
     const streamId = toStreamID('test.eth/foobar')
     const wallet = new Wallet(fastPrivateKey())
-    const publisherId = toEthereumAddress(wallet.address)
+    const publisherId = toUserId(wallet.address)
     const groupKey = GroupKey.generate(groupKeyId)
 
     function createGroupKeyManager(litProtocolEnabled: boolean): GroupKeyManager {
@@ -177,7 +177,7 @@ describe('GroupKeyManager', () => {
 
         it('not own key', async () => {
             await expect(() => {
-                return groupKeyManager.fetchLatestEncryptionKey(randomUserIdOld(), streamId)
+                return groupKeyManager.fetchLatestEncryptionKey(randomUserId(), streamId)
             }).rejects.toThrow('not supported')
         })
     })

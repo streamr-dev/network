@@ -1,4 +1,14 @@
-import { EthereumAddress, Logger, StreamPartID, StreamPartIDUtils, UserIDOld } from '@streamr/utils'
+import { 
+    EthereumAddress,
+    Logger,
+    StreamPartID,
+    StreamPartIDUtils,
+    UserID,
+    isEthereumAddressUserId,
+    toEthereumAddress,
+    toUserId,
+    toUserIdOld
+} from '@streamr/utils'
 import without from 'lodash/without'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -80,11 +90,11 @@ export class PublisherKeyExchange {
         if (OldGroupKeyRequest.is(request)) {
             try {
                 const { recipient, requestId, rsaPublicKey, groupKeyIds } = convertBytesToGroupKeyRequest(request.content)
-                const responseType = await this.getResponseType(recipient)
+                const responseType = await this.getResponseType(toUserId(recipient))
                 if (responseType !== ResponseType.NONE) {
                     this.logger.debug('Handling group key request', { requestId, responseType })
                     await validateStreamMessage(request, this.streamRegistry, this.signatureValidator)
-                    const authenticatedUser = await this.authentication.getAddress()
+                    const authenticatedUser = await this.authentication.getUserId()
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: string) => this.store.get(id, authenticatedUser))),
                         undefined) as GroupKey[]
@@ -92,10 +102,10 @@ export class PublisherKeyExchange {
                         const response = await this.createResponse(
                             keys,
                             responseType,
-                            recipient,
+                            toUserId(recipient),
                             request.getStreamPartID(),
                             rsaPublicKey,
-                            request.getPublisherId(),
+                            toUserId(request.getPublisherId()),
                             requestId
                         )
                         await this.networkNodeFacade.broadcast(response)
@@ -116,11 +126,11 @@ export class PublisherKeyExchange {
         }
     }
 
-    private async getResponseType(publisher: UserIDOld): Promise<ResponseType> {
-        const authenticatedUser = await this.authentication.getAddress()
+    private async getResponseType(publisher: UserID): Promise<ResponseType> {
+        const authenticatedUser = await this.authentication.getUserId()
         if (publisher === authenticatedUser) {
             return ResponseType.NORMAL
-        } else if (this.erc1271ContractAddresses.has(publisher)) {
+        } else if (isEthereumAddressUserId(publisher) && this.erc1271ContractAddresses.has(toEthereumAddress(publisher))) {
             return ResponseType.ERC_1271
         } else {
             return ResponseType.NONE
@@ -130,10 +140,10 @@ export class PublisherKeyExchange {
     private async createResponse(
         keys: GroupKey[],
         responseType: ResponseType,
-        publisher: UserIDOld,
+        publisher: UserID,
         streamPartId: StreamPartID,
         rsaPublicKey: string,
-        recipient: UserIDOld,
+        recipient: UserID,
         requestId: string
     ): Promise<StreamMessage> {
         const encryptedGroupKeys = await Promise.all(keys.map((key) => {
@@ -141,7 +151,7 @@ export class PublisherKeyExchange {
             return new EncryptedGroupKey(key.id, encryptedGroupKey)
         }))
         const responseContent = new OldGroupKeyResponse({
-            recipient,
+            recipient: toUserIdOld(recipient),
             requestId,
             encryptedGroupKeys
         })
@@ -151,7 +161,7 @@ export class PublisherKeyExchange {
                 StreamPartIDUtils.getStreamPartition(streamPartId),
                 Date.now(),
                 0,
-                publisher,
+                toUserIdOld(publisher),
                 createRandomMsgChainId()
             ),
             content: convertGroupKeyResponseToBytes(responseContent),
