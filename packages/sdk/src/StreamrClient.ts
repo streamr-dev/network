@@ -3,7 +3,7 @@ import './utils/PatchTsyringe'
 
 import { DhtAddress } from '@streamr/dht'
 import { ProxyDirection } from '@streamr/trackerless-network'
-import { EthereumAddress, StreamID, TheGraphClient, toEthereumAddress, UserID, UserIDOld } from '@streamr/utils'
+import { EthereumAddress, StreamID, TheGraphClient, toEthereumAddress, toUserId, UserID, UserIDOld } from '@streamr/utils'
 import type { Overrides } from 'ethers'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
@@ -489,17 +489,17 @@ export class StreamrClient {
     /**
      * Checks whether a given ethereum address has {@link StreamPermission.PUBLISH} permission to a stream.
      */
-    async isStreamPublisher(streamIdOrPath: string, userAddress: string): Promise<boolean> {
+    async isStreamPublisher(streamIdOrPath: string, userId: Uint8Array): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.streamRegistry.isStreamPublisher(streamId, toEthereumAddress(userAddress), false)
+        return this.streamRegistry.isStreamPublisher(streamId, toUserId(userId), false)
     }
 
     /**
      * Checks whether a given ethereum address has {@link StreamPermission.SUBSCRIBE} permission to a stream.
      */
-    async isStreamSubscriber(streamIdOrPath: string, userAddress: string): Promise<boolean> {
+    async isStreamSubscriber(streamIdOrPath: string, userId: Uint8Array): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.streamRegistry.isStreamSubscriber(streamId, toEthereumAddress(userAddress), false)
+        return this.streamRegistry.isStreamSubscriber(streamId, toUserId(userId), false)
     }
 
     // --------------------------------------------------------------------------------------------

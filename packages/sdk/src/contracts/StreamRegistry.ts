@@ -4,7 +4,7 @@ import {
     Logger,
     StreamID,
     StreamIDUtils,
-    TheGraphClient, UserIDOld, collect,
+    TheGraphClient, UserID, UserIDOld, collect,
     isENSName,
     toEthereumAddress,
     toStreamID
@@ -91,8 +91,8 @@ export class StreamRegistry {
     private readonly authentication: Authentication
     private readonly logger: Logger
     private readonly getStream_cached: CacheAsyncFnType<[StreamID], Stream, string>
-    private readonly isStreamPublisher_cached: CacheAsyncFnType<[StreamID, UserIDOld], boolean, string>
-    private readonly isStreamSubscriber_cached: CacheAsyncFnType<[StreamID, UserIDOld], boolean, string>
+    private readonly isStreamPublisher_cached: CacheAsyncFnType<[StreamID, UserID], boolean, string>
+    private readonly isStreamSubscriber_cached: CacheAsyncFnType<[StreamID, UserID], boolean, string>
     private readonly hasPublicSubscribePermission_cached: CacheAsyncFnType<[StreamID], boolean, string>
     
     /* eslint-disable indent */
@@ -146,20 +146,20 @@ export class StreamRegistry {
                 return `${streamId}${CACHE_KEY_SEPARATOR}`
             }
         })
-        this.isStreamPublisher_cached = CacheAsyncFn((streamId: StreamID, userId: UserIDOld) => {
+        this.isStreamPublisher_cached = CacheAsyncFn((streamId: StreamID, userId: UserID) => {
             return this.isStreamPublisher_nonCached(streamId, userId)
         }, {
             ...config.cache,
-            cacheKey([streamId, ethAddress]): string {
-                return [streamId, ethAddress].join(CACHE_KEY_SEPARATOR)
+            cacheKey([streamId, userId]): string {
+                return [streamId, userId].join(CACHE_KEY_SEPARATOR)
             }
         })
-        this.isStreamSubscriber_cached = CacheAsyncFn((streamId: StreamID, userId: UserIDOld) => {
+        this.isStreamSubscriber_cached = CacheAsyncFn((streamId: StreamID, userId: UserID) => {
             return this.isStreamSubscriber_nonCached(streamId, userId)
         }, {
             ...config.cache,
-            cacheKey([streamId, ethAddress]): string {
-                return [streamId, ethAddress].join(CACHE_KEY_SEPARATOR)
+            cacheKey([streamId, userId]): string {
+                return [streamId, userId].join(CACHE_KEY_SEPARATOR)
             }
         })
         this.hasPublicSubscribePermission_cached = CacheAsyncFn((streamId: StreamID) => {
@@ -484,7 +484,7 @@ export class StreamRegistry {
         await waitForTx(txToSubmit)
     }
 
-    private async isStreamPublisher_nonCached(streamId: StreamID, userId: UserIDOld): Promise<boolean> {
+    private async isStreamPublisher_nonCached(streamId: StreamID, userId: UserID): Promise<boolean> {
         try {
             return await this.streamRegistryContractReadonly.hasPermission(streamId, userId, streamPermissionToSolidityType(StreamPermission.PUBLISH))
         } catch (err) {
@@ -492,7 +492,7 @@ export class StreamRegistry {
         }
     }
 
-    private async isStreamSubscriber_nonCached(streamId: StreamID, userId: UserIDOld): Promise<boolean> {
+    private async isStreamSubscriber_nonCached(streamId: StreamID, userId: UserID): Promise<boolean> {
         try {
             return await this.streamRegistryContractReadonly.hasPermission(streamId, userId, streamPermissionToSolidityType(StreamPermission.SUBSCRIBE))
         } catch (err) {
@@ -512,7 +512,7 @@ export class StreamRegistry {
         }
     }
 
-    isStreamPublisher(streamId: StreamID, userId: UserIDOld, useCache = true): Promise<boolean> {
+    isStreamPublisher(streamId: StreamID, userId: UserID, useCache = true): Promise<boolean> {
         if (useCache) {
             return this.isStreamPublisher_cached(streamId, userId)
         } else {
@@ -520,7 +520,7 @@ export class StreamRegistry {
         }
     }
 
-    isStreamSubscriber(streamId: StreamID, userId: UserIDOld, useCache = true): Promise<boolean> {
+    isStreamSubscriber(streamId: StreamID, userId: UserID, useCache = true): Promise<boolean> {
         if (useCache) {
             return this.isStreamSubscriber_cached(streamId, userId)
         } else {

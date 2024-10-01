@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
-import { fetchPrivateKeyWithGas, randomUserIdOld } from '@streamr/test-utils'
-import { EthereumAddress, collect, toEthereumAddress, toStreamID, waitForCondition } from '@streamr/utils'
+import { fetchPrivateKeyWithGas, randomUserId, randomUserIdOld } from '@streamr/test-utils'
+import { EthereumAddress, collect, toEthereumAddress, toStreamID, toUserIdRaw, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
@@ -213,15 +213,12 @@ describe('StreamRegistry', () => {
 
     describe('isStreamPublisher', () => {
         it('returns true for valid publishers', async () => {
-            const address = await client.getAddress()
-            const valid = await client.isStreamPublisher(createdStream.id, address)
+            const userId = await client.getUserId()
+            const valid = await client.isStreamPublisher(createdStream.id, toUserIdRaw(userId))
             return expect(valid).toBe(true)
         }, TIMEOUT)
-        it('throws error for invalid address', async () => {
-            return expect(() => client.isStreamPublisher(createdStream.id, 'some-invalid-address')).rejects.toThrow()
-        }, TIMEOUT)
         it('returns false for invalid publishers', async () => {
-            const valid = await client.isStreamPublisher(createdStream.id, randomUserIdOld())
+            const valid = await client.isStreamPublisher(createdStream.id, toUserIdRaw(randomUserId()))
             return expect(valid).toBe(false)
         }, TIMEOUT)
     })
@@ -236,15 +233,12 @@ describe('StreamRegistry', () => {
 
     describe('isStreamSubscriber', () => {
         it('returns true for valid subscribers', async () => {
-            const address = await client.getAddress()
-            const valid = await client.isStreamSubscriber(createdStream.id, address)
+            const userId = await client.getUserId()
+            const valid = await client.isStreamSubscriber(createdStream.id, toUserIdRaw(userId))
             return expect(valid).toBe(true)
         }, TIMEOUT)
-        it('throws error for invalid address', async () => {
-            return expect(() => client.isStreamSubscriber(createdStream.id, 'some-invalid-address')).rejects.toThrow()
-        }, TIMEOUT)
         it('returns false for invalid subscribers', async () => {
-            const valid = await client.isStreamSubscriber(createdStream.id, randomUserIdOld())
+            const valid = await client.isStreamSubscriber(createdStream.id, toUserIdRaw(randomUserId()))
             return expect(valid).toBe(false)
         }, TIMEOUT)
     })

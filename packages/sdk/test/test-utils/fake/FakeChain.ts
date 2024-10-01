@@ -1,4 +1,4 @@
-import { EthereumAddress, Multimap, StreamID, UserIDOld } from '@streamr/utils'
+import { EthereumAddress, Multimap, StreamID, UserID, UserIDOld } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { StreamMetadata } from '../../../src/Stream'
 import { StorageNodeMetadata } from '../../../src/contracts/StorageNodeRegistry'
@@ -9,7 +9,7 @@ export const PUBLIC_PERMISSION_TARGET: PublicPermissionTarget = 'public'
 
 export interface StreamRegistryItem {
     metadata: StreamMetadata
-    permissions: Multimap<UserIDOld | PublicPermissionTarget, StreamPermission>
+    permissions: Multimap<UserID | PublicPermissionTarget, StreamPermission>
 }
 
 export interface FakeStorageNodeAssignmentEvent {
