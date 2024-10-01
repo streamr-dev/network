@@ -1,4 +1,4 @@
-import { fetchPrivateKeyWithGas, randomUserId, randomUserIdOld } from '@streamr/test-utils'
+import { fetchPrivateKeyWithGas, randomUserId } from '@streamr/test-utils'
 import { collect, toUserIdRaw } from '@streamr/utils'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
@@ -105,7 +105,7 @@ describe('searchStreams', () => {
 
         it('user permissions', async () => {
             const streamIds = await searchStreamIds(SEARCH_TERM, {
-                user: searcher,
+                user: toUserIdRaw(searcher),
                 allowPublic: false
             })
             expect(streamIds).toEqual([
@@ -116,7 +116,7 @@ describe('searchStreams', () => {
 
         it('user permissions and public permissions', async () => {
             const streamIds = await searchStreamIds(SEARCH_TERM, {
-                user: searcher,
+                user: toUserIdRaw(searcher),
                 allowPublic: true
             })
             expect(streamIds).toEqual([
@@ -128,7 +128,7 @@ describe('searchStreams', () => {
 
         it('public permissions', async () => {
             const streamIds = await searchStreamIds(SEARCH_TERM, {
-                user: randomUserIdOld(),
+                user: toUserIdRaw(randomUserId()),
                 allowPublic: true
             })
             expect(streamIds).toEqual([
@@ -140,7 +140,7 @@ describe('searchStreams', () => {
         describe('all of', () => {
             it('match', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
-                    user: searcher,
+                    user: toUserIdRaw(searcher),
                     allOf: [StreamPermission.SUBSCRIBE],
                     allowPublic: false
                 })
@@ -152,7 +152,7 @@ describe('searchStreams', () => {
 
             it('no match', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
-                    user: searcher,
+                    user: toUserIdRaw(searcher),
                     allOf: [StreamPermission.SUBSCRIBE, StreamPermission.PUBLISH],
                     allowPublic: false
                 })
@@ -161,7 +161,7 @@ describe('searchStreams', () => {
 
             it('all permission types match', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
-                    user: searcher,
+                    user: toUserIdRaw(searcher),
                     allOf: [],
                     allowPublic: false
                 })
@@ -175,7 +175,7 @@ describe('searchStreams', () => {
         describe('any of', () => {
             it('match', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
-                    user: searcher,
+                    user: toUserIdRaw(searcher),
                     anyOf: [StreamPermission.SUBSCRIBE, StreamPermission.PUBLISH],
                     allowPublic: false
                 })
@@ -187,7 +187,7 @@ describe('searchStreams', () => {
 
             it('no match', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
-                    user: searcher,
+                    user: toUserIdRaw(searcher),
                     anyOf: [StreamPermission.GRANT],
                     allowPublic: false
                 })
@@ -196,7 +196,7 @@ describe('searchStreams', () => {
 
             it('no possible results', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
-                    user: searcher,
+                    user: toUserIdRaw(searcher),
                     anyOf: [],
                     allowPublic: false
                 })

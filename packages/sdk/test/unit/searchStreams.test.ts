@@ -11,7 +11,6 @@ const MOCK_USER = randomEthereumAddress()
 const createMockResultItem = (streamId: StreamID, metadata: string): SearchStreamsResultItem => {
     return {
         id: streamId,
-        userAddress: MOCK_USER,
         stream: {
             id: streamId,
             metadata

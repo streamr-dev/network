@@ -1,12 +1,12 @@
 /* eslint-disable padding-line-between-statements */
-import { GraphQLQuery, Logger, StreamID, TheGraphClient, UserIDOld, toEthereumAddress, toStreamID } from '@streamr/utils'
+import { GraphQLQuery, Logger, StreamID, TheGraphClient, toStreamID, toUserId } from '@streamr/utils'
 import { Stream } from '../Stream'
 import { ChainPermissions, PUBLIC_PERMISSION_ADDRESS, StreamPermission, convertChainPermissionsToStreamPermissions } from '../permission'
 import { filter, map, unique } from '../utils/GeneratorUtils'
 import { StreamQueryResult } from './StreamRegistry'
 
 export interface SearchStreamsPermissionFilter {
-    user: string
+    user: Uint8Array
     /*
      * If possible, prefer allOf to anyOf because the query performance is better
      */
@@ -22,7 +22,6 @@ export interface SearchStreamsOrderBy {
 
 export type SearchStreamsResultItem = {
     id: string
-    userAddress: UserIDOld
     stream: StreamQueryResult
 } & ChainPermissions
 
@@ -112,7 +111,7 @@ const buildQuery = (
         id_gt: lastId
     }
     if (permissionFilter !== undefined) {
-        variables.userAddress_in = [toEthereumAddress(permissionFilter.user)]
+        variables.userAddress_in = [toUserId(permissionFilter.user)]
         if (permissionFilter.allowPublic) {
             variables.userAddress_in.push(PUBLIC_PERMISSION_ADDRESS)
         }
