@@ -209,10 +209,6 @@
                             "type": "boolean",
                             "default": false
                         },
-                        "webNewrtcConnectionTimeout": {
-                            "type": "number",
-                            "default": 15000
-                        },
                         "webrtcDatachannelBufferThresholdLow": {
                             "type": "number",
                             "default": 32768
