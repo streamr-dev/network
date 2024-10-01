@@ -1,4 +1,4 @@
-import { StreamID, UserIDOld } from '@streamr/utils'
+import { StreamID, toUserIdOld, UserIDOld } from '@streamr/utils'
 import { SignatureType, StreamMessage } from './protocol/StreamMessage'
 
 /**
@@ -85,7 +85,7 @@ export const convertStreamMessageToMessage = (msg: StreamMessage): Message => {
         sequenceNumber: msg.getSequenceNumber(),
         signature: msg.signature,
         signatureType: signatureTypeToString(msg.signatureType),
-        publisherId: msg.getPublisherId(),
+        publisherId: toUserIdOld(msg.getPublisherId()),
         msgChainId: msg.getMsgChainId(),
         groupKeyId: msg.groupKeyId,
         streamMessage: msg

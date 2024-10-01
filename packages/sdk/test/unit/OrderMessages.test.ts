@@ -6,7 +6,6 @@ import {
     StreamPartIDUtils,
     collect, hexToBinary,
     toStreamID,
-    toUserIdOld,
     waitForCondition
 } from '@streamr/utils'
 import last from 'lodash/last'
@@ -54,7 +53,7 @@ const createOrderMessages = (
 
 const createMessage = (timestamp: number) => {
     return new StreamMessage({
-        messageId: new MessageID(toStreamID('streamId'), 0, timestamp, 0, toUserIdOld(PUBLISHER_ID), MSG_CHAIN_ID),
+        messageId: new MessageID(toStreamID('streamId'), 0, timestamp, 0, PUBLISHER_ID, MSG_CHAIN_ID),
         prevMsgRef: new MessageRef(timestamp - 1000, 0),
         content: MOCK_CONTENT,
         signature: hexToBinary('0x1234'),

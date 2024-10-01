@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
-import { StreamPartID, StreamPartIDUtils, collect, hexToBinary, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, collect, hexToBinary, toUserId, utf8ToBinary } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
@@ -49,7 +49,7 @@ describe('messagePipeline', () => {
                 partition,
                 Date.now(),
                 0,
-                toEthereumAddress(publisher.address),
+                toUserId(publisher.address),
                 'mock-msgChainId'
             ),
             messageType: StreamMessageType.MESSAGE,

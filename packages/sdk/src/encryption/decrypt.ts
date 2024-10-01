@@ -1,4 +1,3 @@
-import { toUserId } from '@streamr/utils'
 import { DestroySignal } from '../DestroySignal'
 import { DecryptError, EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKey } from '../encryption/GroupKey'
@@ -21,7 +20,7 @@ export const decrypt = async (
         groupKey = await groupKeyManager.fetchKey(
             streamMessage.getStreamPartID(),
             streamMessage.groupKeyId,
-            toUserId(streamMessage.getPublisherId())
+            streamMessage.getPublisherId()
         )
     } catch (e: any) {
         if (destroySignal.isDestroyed()) {
@@ -34,7 +33,7 @@ export const decrypt = async (
     }
     const [content, newGroupKey] = EncryptionUtil.decryptStreamMessage(streamMessage, groupKey)
     if (newGroupKey !== undefined) {
-        await groupKeyManager.addKeyToLocalStore(newGroupKey, toUserId(streamMessage.getPublisherId()))
+        await groupKeyManager.addKeyToLocalStore(newGroupKey, streamMessage.getPublisherId())
     }
 
     return new StreamMessage({

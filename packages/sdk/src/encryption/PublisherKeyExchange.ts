@@ -1,13 +1,11 @@
-import { 
+import {
     EthereumAddress,
     Logger,
     StreamPartID,
     StreamPartIDUtils,
     UserID,
     isEthereumAddressUserId,
-    toEthereumAddress,
-    toUserId,
-    toUserIdOld
+    toEthereumAddress
 } from '@streamr/utils'
 import without from 'lodash/without'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -77,10 +75,13 @@ export class PublisherKeyExchange {
         })
         eventEmitter.on('messagePublished', (msg) => {
             if (msg.signatureType === SignatureType.ERC_1271) {
-                const address = msg.getPublisherId()
-                if (!this.erc1271ContractAddresses.has(address)) {
-                    logger.debug('Add ERC-1271 publisher', { address })
-                    this.erc1271ContractAddresses.add(address)
+                const signerUserId = msg.getPublisherId()
+                if (isEthereumAddressUserId(signerUserId)) {
+                    const address = toEthereumAddress(signerUserId)
+                    if (!this.erc1271ContractAddresses.has(address)) {
+                        logger.debug('Add ERC-1271 publisher', { address })
+                        this.erc1271ContractAddresses.add(address)
+                    }
                 }
             }
         })
@@ -90,7 +91,7 @@ export class PublisherKeyExchange {
         if (OldGroupKeyRequest.is(request)) {
             try {
                 const { recipient, requestId, rsaPublicKey, groupKeyIds } = convertBytesToGroupKeyRequest(request.content)
-                const responseType = await this.getResponseType(toUserId(recipient))
+                const responseType = await this.getResponseType(recipient)
                 if (responseType !== ResponseType.NONE) {
                     this.logger.debug('Handling group key request', { requestId, responseType })
                     await validateStreamMessage(request, this.streamRegistry, this.signatureValidator)
@@ -102,10 +103,10 @@ export class PublisherKeyExchange {
                         const response = await this.createResponse(
                             keys,
                             responseType,
-                            toUserId(recipient),
+                            recipient,
                             request.getStreamPartID(),
                             rsaPublicKey,
-                            toUserId(request.getPublisherId()),
+                            request.getPublisherId(),
                             requestId
                         )
                         await this.networkNodeFacade.broadcast(response)
@@ -151,7 +152,7 @@ export class PublisherKeyExchange {
             return new EncryptedGroupKey(key.id, encryptedGroupKey)
         }))
         const responseContent = new OldGroupKeyResponse({
-            recipient: toUserIdOld(recipient),
+            recipient,
             requestId,
             encryptedGroupKeys
         })
@@ -161,7 +162,7 @@ export class PublisherKeyExchange {
                 StreamPartIDUtils.getStreamPartition(streamPartId),
                 Date.now(),
                 0,
-                toUserIdOld(publisher),
+                publisher,
                 createRandomMsgChainId()
             ),
             content: convertGroupKeyResponseToBytes(responseContent),

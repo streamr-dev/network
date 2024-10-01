@@ -1,4 +1,4 @@
-import { toUserId, UserID } from '@streamr/utils'
+import { UserID } from '@streamr/utils'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
 import { StreamMessageError } from '../protocol/StreamMessageError'
@@ -43,15 +43,15 @@ const doValidate = async (
         case StreamMessageType.GROUP_KEY_REQUEST:
             return validateGroupKeyMessage(
                 streamMessage,
-                toUserId(convertBytesToGroupKeyRequest(streamMessage.content).recipient),
-                toUserId(streamMessage.getPublisherId()),
+                convertBytesToGroupKeyRequest(streamMessage.content).recipient,
+                streamMessage.getPublisherId(),
                 streamRegistry
             )
         case StreamMessageType.GROUP_KEY_RESPONSE:
             return validateGroupKeyMessage(
                 streamMessage,
-                toUserId(streamMessage.getPublisherId()),
-                toUserId(convertBytesToGroupKeyResponse(streamMessage.content).recipient),
+                streamMessage.getPublisherId(),
+                convertBytesToGroupKeyResponse(streamMessage.content).recipient,
                 streamRegistry
             )
         default:
@@ -69,7 +69,7 @@ const validateMessage = async (
     if (streamMessage.getStreamPartition() < 0 || streamMessage.getStreamPartition() >= partitionCount) {
         throw new StreamMessageError(`Partition ${streamMessage.getStreamPartition()} is out of range (0..${partitionCount - 1})`, streamMessage)
     }
-    const sender = toUserId(streamMessage.getPublisherId())
+    const sender = streamMessage.getPublisherId()
     const isPublisher = await streamRegistry.isStreamPublisher(streamId, sender)
     if (!isPublisher) {
         throw new StreamMessageError(`${sender} is not a publisher on stream ${streamId}`, streamMessage)

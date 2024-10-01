@@ -1,4 +1,4 @@
-import { StreamID, keyToArrayIndex, utf8ToBinary, toUserId, toUserIdOld, UserID, toEthereumAddress } from '@streamr/utils'
+import { StreamID, keyToArrayIndex, utf8ToBinary, toUserId, UserID, toEthereumAddress } from '@streamr/utils'
 import random from 'lodash/random'
 import { Authentication } from '../Authentication'
 import { StreamrClientError } from '../StreamrClientError'
@@ -90,7 +90,7 @@ export class MessageFactory {
         const prevMsgRef = this.prevMsgRefs.get(msgChainKey)
         const msgRef = createMessageRef(metadata.timestamp, prevMsgRef)
         this.prevMsgRefs.set(msgChainKey, msgRef)
-        const messageId = new MessageID(this.streamId, partition, msgRef.timestamp, msgRef.sequenceNumber, toUserIdOld(publisherId), msgChainId)
+        const messageId = new MessageID(this.streamId, partition, msgRef.timestamp, msgRef.sequenceNumber, publisherId, msgChainId)
 
         const encryptionType = (await this.streamRegistry.hasPublicSubscribePermission(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
         let groupKeyId: string | undefined

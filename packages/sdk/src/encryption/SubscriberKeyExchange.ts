@@ -1,4 +1,4 @@
-import { Logger, StreamPartID, StreamPartIDUtils, UserID, toUserId, toUserIdOld } from '@streamr/utils'
+import { Logger, StreamPartID, StreamPartIDUtils, UserID, toUserId } from '@streamr/utils'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -100,7 +100,7 @@ export class SubscriberKeyExchange {
         requestId: string
     ): Promise<StreamMessage> {
         const requestContent = new OldGroupKeyRequest({
-            recipient: toUserIdOld(publisherId),
+            recipient: publisherId,
             requestId,
             rsaPublicKey,
             groupKeyIds: [groupKeyId],
@@ -112,7 +112,7 @@ export class SubscriberKeyExchange {
                 StreamPartIDUtils.getStreamPartition(streamPartId),
                 Date.now(),
                 0,
-                erc1271contract === undefined ? await this.authentication.getAddress() : erc1271contract,
+                erc1271contract === undefined ? await this.authentication.getUserId() : toUserId(erc1271contract),
                 createRandomMsgChainId()
             ),
             content: convertGroupKeyRequestToBytes(requestContent),
@@ -126,13 +126,13 @@ export class SubscriberKeyExchange {
         if (OldGroupKeyResponse.is(msg)) {
             try {
                 const { requestId, recipient, encryptedGroupKeys } = convertBytesToGroupKeyResponse(msg.content)
-                if (await this.isAssignedToMe(msg.getStreamPartID(), toUserId(recipient), requestId)) {
+                if (await this.isAssignedToMe(msg.getStreamPartID(), recipient, requestId)) {
                     this.logger.debug('Handle group key response', { requestId })
                     this.pendingRequests.delete(requestId)
                     await validateStreamMessage(msg, this.streamRegistry, this.signatureValidator)
                     await Promise.all(encryptedGroupKeys.map(async (encryptedKey) => {
                         const key = GroupKey.decryptRSAEncrypted(encryptedKey, this.rsaKeyPair!.getPrivateKey())
-                        await this.store.set(key.id, toUserId(msg.getPublisherId()), key.data)
+                        await this.store.set(key.id, msg.getPublisherId(), key.data)
                     }))
                 }
             } catch (err: any) {

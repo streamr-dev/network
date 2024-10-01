@@ -53,7 +53,7 @@ describe('Subscriber', () => {
 
     const createMockMessage = async (content: Uint8Array, timestamp: number) => {
         return await messageSigner.createSignedMessage({
-            messageId: new MessageID(streamId, 0, timestamp, 0, await publisher.getAddress(), 'msgChainId'),
+            messageId: new MessageID(streamId, 0, timestamp, 0, await publisher.getUserId(), 'msgChainId'),
             messageType: StreamMessageType.MESSAGE,
             content,
             contentType: ContentType.JSON,

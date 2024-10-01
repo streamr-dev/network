@@ -1,5 +1,5 @@
 import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
-import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toStreamID, toUserIdOld, wait, waitForCondition } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toStreamID, wait, waitForCondition } from '@streamr/utils'
 import { range, shuffle } from 'lodash'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
@@ -76,7 +76,7 @@ function formChainOfMessages(publisherId: UserID): Array<MessageInfo> {
 }
 
 function createMsg({ publisherId, timestamp }: MessageInfo): StreamMessage {
-    const messageId = new MessageID(toStreamID('streamId'), 0, timestamp, 0, toUserIdOld(publisherId), '')
+    const messageId = new MessageID(toStreamID('streamId'), 0, timestamp, 0, publisherId, '')
     const prevMsgRef = timestamp > 1 ? new MessageRef(timestamp - 1, 0) : undefined
     return new StreamMessage({
         messageId,

@@ -1,16 +1,16 @@
-import { UserIDOld } from '@streamr/utils'
+import { UserID } from '@streamr/utils'
 import { StreamMessage, StreamMessageType } from './StreamMessage'
 
 interface Options {
     requestId: string
-    recipient: UserIDOld
+    recipient: UserID
     rsaPublicKey: string
     groupKeyIds: string[]
 }
 
 export class GroupKeyRequest {
     readonly requestId: string
-    readonly recipient: UserIDOld
+    readonly recipient: UserID
     readonly rsaPublicKey: string
     readonly groupKeyIds: ReadonlyArray<string>
 

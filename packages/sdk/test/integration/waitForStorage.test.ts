@@ -11,9 +11,9 @@ import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { MOCK_CONTENT, createRandomAuthentication, createRelativeTestStreamId } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { ContentType, EncryptionType, SignatureType, StreamMessageType } from './../../src/protocol/StreamMessage'
-import { randomUserIdOld } from '@streamr/test-utils'
+import { randomUserId } from '@streamr/test-utils'
 
-const PUBLISHER_ID = randomUserIdOld()
+const PUBLISHER_ID = randomUserId()
 
 describe('waitForStorage', () => {
 

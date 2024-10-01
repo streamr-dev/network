@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { UserID, hexToBinary, toStreamID, utf8ToBinary, toUserIdOld } from '@streamr/utils'
+import { UserID, hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
 import { mock } from 'jest-mock-extended'
 import { Authentication } from '../../src/Authentication'
@@ -87,7 +87,7 @@ describe('Validator2', () => {
         const publisherSigner = new MessageSigner(publisherAuthentication)
 
         msg = await publisherSigner.createSignedMessage({
-            messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, toUserIdOld(publisher), 'msgChainId'),
+            messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
             messageType: StreamMessageType.MESSAGE,
             content: MOCK_CONTENT,
             contentType: ContentType.JSON,
@@ -95,7 +95,7 @@ describe('Validator2', () => {
         }, SignatureType.SECP256K1)
 
         msgWithNewGroupKey = await publisherSigner.createSignedMessage({
-            messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, toUserIdOld(publisher), 'msgChainId'),
+            messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
             messageType: StreamMessageType.MESSAGE,
             content: MOCK_CONTENT,
             newGroupKey: new EncryptedGroupKey('groupKeyId', hexToBinary('0x1111')),
@@ -105,7 +105,7 @@ describe('Validator2', () => {
         assert.notStrictEqual(msg.signature, msgWithNewGroupKey.signature)
 
         msgWithPrevMsgRef = await publisherSigner.createSignedMessage({
-            messageId: new MessageID(toStreamID('streamId'), 0, 2000, 0, toUserIdOld(publisher), 'msgChainId'),
+            messageId: new MessageID(toStreamID('streamId'), 0, 2000, 0, publisher, 'msgChainId'),
             messageType: StreamMessageType.MESSAGE,
             content: MOCK_CONTENT,
             prevMsgRef: new MessageRef(1000, 0),
@@ -116,19 +116,19 @@ describe('Validator2', () => {
 
         groupKeyRequest = await groupKeyMessageToStreamMessage(new GroupKeyRequest({
             requestId: 'requestId',
-            recipient: toUserIdOld(publisher),
+            recipient: publisher,
             rsaPublicKey: 'rsaPublicKey',
             groupKeyIds: ['groupKeyId1', 'groupKeyId2']
-        }), new MessageID(toStreamID('streamId'), 0, 0, 0, toUserIdOld(subscriber), 'msgChainId'), undefined, subscriberAuthentication)
+        }), new MessageID(toStreamID('streamId'), 0, 0, 0, subscriber, 'msgChainId'), undefined, subscriberAuthentication)
 
         groupKeyResponse = await groupKeyMessageToStreamMessage(new GroupKeyResponse({
             requestId: 'requestId',
-            recipient: toUserIdOld(subscriber),
+            recipient: subscriber,
             encryptedGroupKeys: [
                 new EncryptedGroupKey('groupKeyId1', hexToBinary('0x1111')),
                 new EncryptedGroupKey('groupKeyId2', hexToBinary('0x2222'))
             ],
-        }), new MessageID(toStreamID('streamId'), 0, 0, 0, toUserIdOld(publisher), 'msgChainId'), undefined, publisherAuthentication)
+        }), new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'), undefined, publisherAuthentication)
     })
 
     describe('validate(unknown message type)', () => {

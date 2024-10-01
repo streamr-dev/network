@@ -4,7 +4,6 @@ import {
     StreamPartIDUtils,
     hexToBinary,
     toEthereumAddress,
-    toUserIdOld,
     utf8ToBinary,
     wait,
     waitForCondition
@@ -31,7 +30,7 @@ const createMessage = (timestamp: number, hasPrevRef = true) => {
             StreamPartIDUtils.getStreamPartition(CONTEXT.streamPartId),
             timestamp,
             0,
-            toUserIdOld(CONTEXT.publisherId), 
+            CONTEXT.publisherId,
             CONTEXT.msgChainId
         ),
         prevMsgRef: hasPrevRef ? new MessageRef(timestamp - 1, 0) : undefined,

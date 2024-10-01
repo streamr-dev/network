@@ -9,9 +9,9 @@ import { createRandomAuthentication, waitForCalls } from '../test-utils/utils'
 import { convertStreamMessageToMessage } from './../../src/Message'
 import { MessageID } from './../../src/protocol/MessageID'
 import { ContentType, EncryptionType, SignatureType, StreamMessageType } from './../../src/protocol/StreamMessage'
-import { randomUserIdOld } from '@streamr/test-utils'
+import { randomUserId } from '@streamr/test-utils'
 
-const PUBLISHER_ID = randomUserIdOld()
+const PUBLISHER_ID = randomUserId()
 
 describe('MessageStream', () => {
 
