@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { fetchPrivateKeyWithGas, randomUserId, randomUserIdOld } from '@streamr/test-utils'
+import { fetchPrivateKeyWithGas, randomEthereumAddress, randomUserId } from '@streamr/test-utils'
 import { EthereumAddress, collect, toEthereumAddress, toStreamID, toUserIdRaw, waitForCondition, toUserId } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { CONFIG_TEST } from '../../src/ConfigTest'
@@ -192,7 +192,7 @@ describe('StreamRegistry', () => {
 
         it('fails if stream prefixed with other users address', async () => {
             // can't create streams for other users
-            const otherAddress = randomUserIdOld()
+            const otherAddress = randomEthereumAddress()
             const newPath = `/StreamRegistry-getOrCreate-newPath-${Date.now()}`
             // backend should error
             await expect(async () => {
