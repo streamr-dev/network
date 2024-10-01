@@ -1,4 +1,4 @@
-import { EthereumAddress, Multimap, StreamID, UserID, UserIDOld } from '@streamr/utils'
+import { EthereumAddress, Multimap, StreamID, UserID } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { StreamMetadata } from '../../../src/Stream'
 import { StorageNodeMetadata } from '../../../src/contracts/StorageNodeRegistry'
@@ -26,7 +26,7 @@ export class FakeChain {
     private readonly streams: Map<StreamID, StreamRegistryItem> = new Map()
     private readonly storageAssignments: Multimap<StreamID, EthereumAddress> = new Multimap()
     private readonly storageNodeMetadatas: Map<EthereumAddress, StorageNodeMetadata> = new Map()
-    private readonly erc1271AllowedAddresses: Multimap<EthereumAddress, EthereumAddress> = new Multimap()
+    private readonly erc1271AllowedAddresses: Multimap<EthereumAddress, UserID> = new Multimap()
     private readonly eventEmitter = new EventEmitter<Events>
 
     getStream(streamId: StreamID): StreamRegistryItem | undefined {
@@ -61,12 +61,12 @@ export class FakeChain {
         this.storageNodeMetadatas.set(nodeAddress, metadata)
     }
 
-    hasErc1271AllowedAddress(contractAddress: EthereumAddress, clientUserId: UserIDOld): boolean {
-        return this.erc1271AllowedAddresses.has(contractAddress, clientUserId)
+    hasErc1271AllowedAddress(contractAddress: EthereumAddress, signerUserId: UserID): boolean {
+        return this.erc1271AllowedAddresses.has(contractAddress, signerUserId)
     }
 
-    addErc1271AllowedAddress(contractAddress: EthereumAddress, clientUserId: UserIDOld): void {
-        this.erc1271AllowedAddresses.add(contractAddress, clientUserId)
+    addErc1271AllowedAddress(contractAddress: EthereumAddress, signerUserId: UserID): void {
+        this.erc1271AllowedAddresses.add(contractAddress, signerUserId)
     }
 
     on<E extends keyof Events>(eventName: E, listener: Events[E]): void {

@@ -5,7 +5,6 @@ import {
     StreamID,
     StreamPartID,
     StreamPartIDUtils,
-    toEthereumAddress,
     toStreamPartID,
     toUserId,
     toUserIdRaw,
@@ -136,7 +135,7 @@ describe('SubscriberKeyExchange', () => {
             const erc1271Contract = randomEthereumAddress()
             const streamId = await createStream(toUserId(erc1271Contract))
             const streamPartId = toStreamPartID(streamId, 0)
-            environment.getChain().addErc1271AllowedAddress(erc1271Contract, toEthereumAddress(subscriberWallet.address))
+            environment.getChain().addErc1271AllowedAddress(erc1271Contract, toUserId(subscriberWallet.address))
 
             const groupKey = GroupKey.generate()
             const publisher = environment.createClient({

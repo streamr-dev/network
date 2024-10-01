@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastWallet, randomEthereumAddress } from '@streamr/test-utils'
-import { EthereumAddress, StreamPartID, StreamPartIDUtils, toEthereumAddress, toUserId, toUserIdRaw, UserID } from '@streamr/utils'
+import { EthereumAddress, StreamPartID, StreamPartIDUtils, toUserId, toUserIdRaw, UserID } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -110,7 +110,7 @@ describe('PublisherKeyExchange', () => {
             permissions: [StreamPermission.PUBLISH],
             user: toUserIdRaw(toUserId(erc1271ContractAddress))
         })
-        environment.getChain().addErc1271AllowedAddress(erc1271ContractAddress, toEthereumAddress(publisherWallet.address))
+        environment.getChain().addErc1271AllowedAddress(erc1271ContractAddress, toUserId(publisherWallet.address))
 
         const key = GroupKey.generate()
         await publisherClient.updateEncryptionKey({
