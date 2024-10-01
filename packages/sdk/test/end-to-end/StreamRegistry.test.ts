@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fetchPrivateKeyWithGas, randomEthereumAddress, randomUserId } from '@streamr/test-utils'
-import { EthereumAddress, collect, toEthereumAddress, toStreamID, toUserIdRaw, waitForCondition, toUserId } from '@streamr/utils'
+import { EthereumAddress, collect, toEthereumAddress, toStreamID, toUserId, toUserIdRaw, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
@@ -55,7 +55,7 @@ describe('StreamRegistry', () => {
             const stream = await client.createStream({
                 id: path
             })
-            expect(stream.id).toBe(toStreamID(path, await client.getAddress()))
+            expect(stream.id).toBe(toStreamID(path, toEthereumAddress(toUserId(await client.getUserId()))))
         }, TIMEOUT)
 
         it('valid id', async () => {
@@ -206,16 +206,16 @@ describe('StreamRegistry', () => {
     describe('getStreamPublishers', () => {
         it('retrieves a list of publishers', async () => {
             const publishers = await collect(client.getStreamPublishers(createdStream.id))
-            const address = await client.getAddress()
+            const userId = await client.getUserId()
             expect(publishers).toHaveLength(1)
-            expect(publishers[0]).toEqualBinary(toUserIdRaw(toUserId(address)))
+            expect(publishers[0]).toEqualBinary(toUserIdRaw(toUserId(userId)))
         }, TIMEOUT)
     })
 
     describe('isStreamPublisher', () => {
         it('returns true for valid publishers', async () => {
             const userId = await client.getUserId()
-            const valid = await client.isStreamPublisher(createdStream.id, toUserIdRaw(userId))
+            const valid = await client.isStreamPublisher(createdStream.id, userId)
             return expect(valid).toBe(true)
         }, TIMEOUT)
         it('returns false for invalid publishers', async () => {
@@ -227,16 +227,16 @@ describe('StreamRegistry', () => {
     describe('getStreamSubscribers', () => {
         it('retrieves a list of subscribers', async () => {
             const subscribers = await collect(client.getStreamSubscribers(createdStream.id))
-            const address = await client.getAddress()
+            const userId = await client.getUserId()
             expect(subscribers).toHaveLength(1)
-            expect(subscribers[0]).toEqualBinary(toUserIdRaw(toUserId(address)))
+            expect(subscribers[0]).toEqualBinary(toUserIdRaw(toUserId(userId)))
         }, TIMEOUT)
     })
 
     describe('isStreamSubscriber', () => {
         it('returns true for valid subscribers', async () => {
             const userId = await client.getUserId()
-            const valid = await client.isStreamSubscriber(createdStream.id, toUserIdRaw(userId))
+            const valid = await client.isStreamSubscriber(createdStream.id, userId)
             return expect(valid).toBe(true)
         }, TIMEOUT)
         it('returns false for invalid subscribers', async () => {

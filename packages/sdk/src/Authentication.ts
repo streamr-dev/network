@@ -1,4 +1,4 @@
-import { createSignature, hexToBinary, toEthereumAddress, toUserId, UserID, UserIDOld, wait } from '@streamr/utils'
+import { createSignature, hexToBinary, toUserId, UserID, wait } from '@streamr/utils'
 import { AbstractSigner, BrowserProvider, computeAddress, Provider, Wallet } from 'ethers'
 import pMemoize from 'p-memoize'
 import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'
@@ -11,17 +11,14 @@ export type SignerWithProvider = AbstractSigner<Provider>
 
 export interface Authentication {
     getUserId: () => Promise<UserID>
-    getAddress: () => Promise<UserIDOld>  // TODO rename to getUserIdAsEthereumAddress?
     createMessageSignature: (payload: Uint8Array) => Promise<Uint8Array>
     getTransactionSigner: (rpcProviderSource: RpcProviderSource) => Promise<SignerWithProvider>
 }
 
 export const createPrivateKeyAuthentication = (key: string): Authentication => {
-    const address = toEthereumAddress(computeAddress(key))
-    const userId = toUserId(address)
+    const userId = toUserId(computeAddress(key))
     return {
         getUserId: async () => userId,
-        getAddress: async () => address,
         createMessageSignature: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
         getTransactionSigner: async (rpcProviderSource: RpcProviderSource) => {
             const primaryProvider = rpcProviderSource.getProvider()
@@ -41,15 +38,10 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
         const ethereum = (config.auth as ProviderAuthConfig)?.ethereum
         const provider = new BrowserProvider(ethereum)
         const signer = provider.getSigner()
-        const getAddress = pMemoize(async () => {
-            return toEthereumAddress(await (await signer).getAddress())
-        })
         return {
-            getUserId: async () => {
-                const address = await getAddress()
-                return address as unknown as UserID
-            },
-            getAddress,
+            getUserId: pMemoize(async () => {
+                return toUserId(await (await signer).getAddress())
+            }),
             createMessageSignature: pLimitFn(async (payload: Uint8Array) => {
                 // sign one at a time & wait a moment before asking for next signature
                 // otherwise MetaMask extension may not show the prompt window

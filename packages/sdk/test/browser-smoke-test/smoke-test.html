@@ -38,7 +38,7 @@
             // 2. Grant permissions
             await stream.grantPermissions({
                 permissions: ['subscribe'],
-                user: toUserIdRaw(await subscriberClient.getUserId())
+                user: await subscriberClient.getUserId()
             })
             document.getElementById('permissionGranted').checked = true
             document.getElementById('permissionGrantedValue').value = await subscriberClient.getAddress()

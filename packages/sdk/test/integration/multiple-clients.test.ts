@@ -1,5 +1,6 @@
 import 'reflect-metadata'
 
+import { toUserId, UserID, waitForCondition } from '@streamr/utils'
 import { Message, MessageMetadata } from '../../src/Message'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
@@ -12,7 +13,6 @@ import {
     uid
 } from '../test-utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
-import { toUserId, toUserIdRaw, UserID, waitForCondition } from '@streamr/utils'
 
 // this number should be at least 10, otherwise late subscribers might not join
 // in time to see any realtime messages
@@ -55,16 +55,15 @@ describe('PubSub with multiple clients', () => {
         const pubClient = environment.createClient({
             id: `publisher${id}`
         })
-        const publisherId = await pubClient.getAddress()
+        const publisherId = await pubClient.getUserId()
 
         addAfter(async () => {
-            counterId.clear(publisherId) // prevent overflows in counter
+            counterId.clear(toUserId(publisherId)) // prevent overflows in counter
         })
 
-        const pubUser = await pubClient.getUserId()
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE],
-            user: toUserIdRaw(pubUser)
+            user: publisherId
         })
         return pubClient
     }
@@ -74,7 +73,7 @@ describe('PubSub with multiple clients', () => {
             id: 'subscriber-other'
         })
         const user = await client.getUserId()
-        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: toUserIdRaw(user) })
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user })
         return client
     }
 
@@ -150,7 +149,7 @@ describe('PubSub with multiple clients', () => {
             }
             const published: Record<UserID, Message[]> = {}
             await Promise.all(publishers.map(async (pubClient) => {
-                const publisherId = await pubClient.getUserId()
+                const publisherId = toUserId(await pubClient.getUserId())
                 addAfter(() => {
                     counterId.clear(publisherId) // prevent overflows in counter
                 })
@@ -204,7 +203,7 @@ describe('PubSub with multiple clients', () => {
             let counter = 0
             const published: Record<string, Message[]> = {}
             await Promise.all(publishers.map(async (pubClient) => {
-                const publisherId = await pubClient.getAddress()
+                const publisherId = toUserId(await pubClient.getUserId())
                 addAfter(() => {
                     counterId.clear(publisherId) // prevent overflows in counter
                 })
@@ -300,7 +299,7 @@ describe('PubSub with multiple clients', () => {
 
         const published: Record<UserID, Message[]> = {}
         await Promise.all(publishers.map(async (pubClient) => {
-            const publisherId = await pubClient.getUserId()
+            const publisherId = toUserId(await pubClient.getUserId())
             const publishTestMessages = getPublishTestStreamMessages(pubClient, stream, {
                 waitForLast: true,
                 waitForLastTimeout: 35000,
@@ -330,7 +329,7 @@ describe('PubSub with multiple clients', () => {
         otherClient = environment.createClient()
         const otherUser = await otherClient.getUserId()
 
-        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: toUserIdRaw(otherUser) })
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: otherUser })
 
         const receivedMessagesOther: Record<UserID, MessageMetadata[]> = {}
         const receivedMessagesMain: Record<UserID, MessageMetadata[]> = {}
@@ -355,7 +354,6 @@ describe('PubSub with multiple clients', () => {
 
         let counter = 0
         await Promise.all(publishers.map(async (pubClient) => {
-            const publisherId = await pubClient.getAddress()
             const publishTestMessages = getPublishTestStreamMessages(pubClient, stream, {
                 waitForLast: true,
                 waitForLastTimeout: 35000,
@@ -388,6 +386,7 @@ describe('PubSub with multiple clients', () => {
                     firstMessage = streamMessage
                 }
             }) // ensure first message stored
+            const publisherId = toUserId(await pubClient.getUserId())
             published[publisherId] = msgs.concat(await publishTestMessages(MAX_MESSAGES - 1, {
                 async afterEach() {
                     counter += 1

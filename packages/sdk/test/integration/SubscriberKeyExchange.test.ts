@@ -157,7 +157,7 @@ describe('SubscriberKeyExchange', () => {
                 messageType: StreamMessageType.GROUP_KEY_REQUEST
             })
             await assertGroupKeyRequest(request, streamPartId, [groupKey.id], toUserId(erc1271Contract), SignatureType.ERC_1271)
-            const keyStore = getLocalGroupKeyStore(await subscriber.getUserId())
+            const keyStore = getLocalGroupKeyStore(toUserId(await subscriber.getUserId()))
             await waitForCondition(async () => (await keyStore.get(groupKey.id, toUserId(publisherWallet.address))) !== undefined)
         })
     })
