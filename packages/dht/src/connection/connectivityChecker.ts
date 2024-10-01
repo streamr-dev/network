@@ -85,6 +85,7 @@ export const sendConnectivityRequest = async (
                         if (isMaybeSupportedVersion(remoteVersion)) {
                             resolve(connectivityResponseMessage)
                         } else {
+                            // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
                             reject(`Unsupported version: ${remoteVersion}`)
                         }
                     }

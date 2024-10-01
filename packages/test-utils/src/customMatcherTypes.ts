@@ -5,7 +5,9 @@ import { CustomMatchers } from './customMatchers'
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace jest {
+        // eslint-disable-next-line @typescript-eslint/no-empty-object-type
         interface Expect extends CustomMatchers {}
+        // eslint-disable-next-line @typescript-eslint/no-empty-object-type
         interface Matchers<R> extends CustomMatchers<R> {}
     }
 }

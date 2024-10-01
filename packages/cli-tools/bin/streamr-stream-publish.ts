@@ -57,6 +57,7 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
                 await wait(2000)
                 resolve(undefined)
             })
+            // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
             .once('error', (err: any) => reject(err) )
     })
 })

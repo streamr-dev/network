@@ -366,6 +366,7 @@ export class BucketManager {
             const currentBuckets = stream.buckets.toArray()
             for (let i = 0; i < currentBuckets.length; i++) {
                 if (currentBuckets[i].getId() === bucketId) {
+                    // eslint-disable-next-line @typescript-eslint/no-array-delete
                     delete currentBuckets[i]
                     break
                 }
