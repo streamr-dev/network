@@ -1,9 +1,9 @@
 import { Message, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
-
+import { EventEmitterType } from '@streamr/utils'
 export interface TransportEvents {
+    connected: (peerDescriptor: PeerDescriptor) => void
     disconnected: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => void
     message: (message: Message) => void
-    connected: (peerDescriptor: PeerDescriptor) => void
 }
 
 export interface SendOptions {
@@ -16,20 +16,7 @@ export const DEFAULT_SEND_OPTIONS = {
     sendIfStopped: false
 }
 
-export interface ITransport {
-    on<T extends keyof TransportEvents>(eventName: T, listener: (message: Message) => void): void
-    on<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
-    on<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => void): void
-
-    once<T extends keyof TransportEvents>(eventName: T, listener: (message: Message) => void): void
-    once<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
-    once<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, 
-        gracefulLeave: boolean) => void): void
-
-    off<T extends keyof TransportEvents>(eventName: T, listener: (message: Message) => void): void
-    off<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
-    off<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => void): void
-
+export interface ITransport extends EventEmitterType<TransportEvents> {
     send(msg: Message, opts?: SendOptions): Promise<void>
     getLocalPeerDescriptor(): PeerDescriptor
     stop(): void | Promise<void>
