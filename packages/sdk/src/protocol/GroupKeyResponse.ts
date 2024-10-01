@@ -22,6 +22,7 @@ export class GroupKeyResponse {
         this.encryptedGroupKeys.forEach((it: EncryptedGroupKey) => {
             if (!(it instanceof EncryptedGroupKey)) {
                 throw new ValidationError(
+                    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                     `Expected 'encryptedGroupKeys' to be a list of EncryptedGroupKey instances! Was: ${this.encryptedGroupKeys}`
                 )
             }

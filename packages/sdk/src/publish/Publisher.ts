@@ -113,6 +113,7 @@ export class Publisher {
                 return message
             } catch (e) {
                 const errorCode = (e instanceof StreamrClientError) ? e.code : 'UNKNOWN_ERROR'
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 throw new StreamrClientError(`Failed to publish to stream ${streamId}. Cause: ${e.message}`, errorCode)
             }
         })

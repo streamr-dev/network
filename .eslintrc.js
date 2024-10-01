@@ -79,6 +79,15 @@ module.exports = {
         'promise/always-return': ['error', { ignoreLastCallback: true }],
         'no-unneeded-ternary': 'error',
         'no-lonely-if': 'error',
+        '@typescript-eslint/restrict-template-expressions': ['error', { 
+            allowAny: false,
+            allowBoolean: true,
+            allowNullish: true,
+            allowNumber: true,
+            allowRegExp: true,
+            allowNever: true,
+            allow: [{ from: 'lib', name: ['Error'] }]
+        }],
         // TODO: in follow up PRs, select which rules we should enable and fix the code. When all recommended rules
         //  have been enabled, consider enabling the "strict" preset.
         '@typescript-eslint/require-await': 'off',
@@ -90,7 +99,6 @@ module.exports = {
         '@typescript-eslint/no-unsafe-assignment': 'off',
         '@typescript-eslint/no-unsafe-member-access': 'off',
         '@typescript-eslint/no-unsafe-call': 'off',
-        '@typescript-eslint/restrict-template-expressions': 'off',
         '@typescript-eslint/restrict-plus-operands': 'off',
         '@typescript-eslint/unbound-method': 'off',
         '@typescript-eslint/no-base-to-string': 'off',

@@ -1653,7 +1653,7 @@ async function scenario(mocks: AnswerMock[]): Promise<Scenario> {
             if (!inq) {
                 // eslint-disable-next-line @typescript-eslint/only-throw-error
                 throw `Missing mock for ${chalk.whiteBright(
-                    `"${config.message}"`
+                    `"${config.message}"`  // eslint-disable-line @typescript-eslint/restrict-template-expressions
                 )}`
             }
 

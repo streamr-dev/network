@@ -492,6 +492,7 @@ export const validateConfig = (data: unknown): StrictStreamrClientConfig | never
         throw new Error((validate as any).errors!.map((e: any) => {
             let text = e.instancePath + ' ' + e.message
             if (e.params.additionalProperty) {
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 text += `: ${e.params.additionalProperty}`
             }
             return text

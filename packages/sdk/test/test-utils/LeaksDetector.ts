@@ -83,6 +83,7 @@ export class LeaksDetector {
             const pathString = path.join('/')
             const constructor = value.constructor?.name
             const type = constructor === 'Object' ? undefined : constructor
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             return pathString + (type ? `-${type}` : '')
         })()
 
@@ -176,6 +177,7 @@ export class LeaksDetector {
         const leaks = await this.getLeaks()
         const numLeaks = Object.keys(leaks).length
         if (Object.keys(leaks).includes(id)) {
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             const msg = `Leaking ${numLeaks} of ${this.leakDetectors.size} items, including id ${id}: ${leaks}`
             this.clear()
             throw new Error(msg)
