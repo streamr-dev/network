@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastPrivateKey } from '@streamr/test-utils'
-import { collect, toStreamPartID } from '@streamr/utils'
+import { collect, toStreamPartID, toUserIdRaw } from '@streamr/utils'
 import { Message } from '../../src/Message'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -66,9 +66,9 @@ describe('Group Key Persistence', () => {
                     privateKey: subscriberPrivateKey,
                 }
             })
-            const otherUser = await subscriber.getAddress()
+            const otherUser = await subscriber.getUserId()
             await stream.grantPermissions({
-                user: otherUser,
+                user: toUserIdRaw(otherUser),
                 permissions: [StreamPermission.SUBSCRIBE]
             })
             const groupKey = GroupKey.generate()

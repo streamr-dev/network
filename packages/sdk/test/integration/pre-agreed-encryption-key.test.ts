@@ -6,6 +6,7 @@ import { StreamMessageType } from '../../src/protocol/StreamMessage'
 import { nextValue } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createTestStream } from '../test-utils/utils'
+import { toUserIdRaw } from '@streamr/utils'
 
 describe('pre-agreed encryption key', () => {
 
@@ -24,7 +25,7 @@ describe('pre-agreed encryption key', () => {
         const subscriber = environment.createClient()
         const stream = await createTestStream(publisher, module)
         await stream.grantPermissions({
-            user: await subscriber.getAddress(),
+            user: toUserIdRaw(await subscriber.getUserId()),
             permissions: [StreamPermission.SUBSCRIBE]
         })
 

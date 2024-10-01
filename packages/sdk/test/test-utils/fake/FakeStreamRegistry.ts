@@ -1,5 +1,5 @@
 import { Methods } from '@streamr/test-utils'
-import { Multimap, StreamID, UserID, toUserId } from '@streamr/utils'
+import { Multimap, StreamID, UserID, toUserId, toUserIdRaw } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
 import { Stream, StreamMetadata } from '../../../src/Stream'
@@ -103,7 +103,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
                 }
             } else {
                 return {
-                    user: target,
+                    user: toUserIdRaw(target),
                     permissions
                 }
             }
@@ -177,12 +177,12 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         // no-op
     }
 
-    async isStreamPublisher(streamIdOrPath: string, user: UserID): Promise<boolean> {
-        return this.hasPermission({ streamId: streamIdOrPath, user, permission: StreamPermission.PUBLISH, allowPublic: true })
+    async isStreamPublisher(streamIdOrPath: string, userId: UserID): Promise<boolean> {
+        return this.hasPermission({ streamId: streamIdOrPath, user: toUserIdRaw(userId), permission: StreamPermission.PUBLISH, allowPublic: true })
     }
 
-    async isStreamSubscriber(streamIdOrPath: string, user: UserID): Promise<boolean> {
-        return this.hasPermission({ streamId: streamIdOrPath, user, permission: StreamPermission.SUBSCRIBE, allowPublic: true })
+    async isStreamSubscriber(streamIdOrPath: string, userId: UserID): Promise<boolean> {
+        return this.hasPermission({ streamId: streamIdOrPath, user: toUserIdRaw(userId), permission: StreamPermission.SUBSCRIBE, allowPublic: true })
     }
 
     // eslint-disable-next-line class-methods-use-this

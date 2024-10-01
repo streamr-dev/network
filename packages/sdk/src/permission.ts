@@ -12,7 +12,7 @@ export enum StreamPermission {
 export interface UserPermissionQuery {
     streamId: string
     permission: StreamPermission
-    user: string
+    user: Uint8Array
     allowPublic: boolean
 }
 
@@ -26,7 +26,7 @@ export type PermissionQuery = UserPermissionQuery | PublicPermissionQuery
 
 export interface UserPermissionAssignment {
     permissions: StreamPermission[]
-    user: string
+    user: Uint8Array
 }
 
 export interface PublicPermissionAssignment {

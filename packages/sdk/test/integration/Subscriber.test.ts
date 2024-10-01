@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastWallet } from '@streamr/test-utils'
-import { toEthereumAddress } from '@streamr/utils'
+import { toEthereumAddress, toUserId, toUserIdRaw } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -61,7 +61,7 @@ describe('Subscriber', () => {
         it('with encryption', async () => {
             await stream.grantPermissions({
                 permissions: [StreamPermission.PUBLISH],
-                user: publisherWallet.address
+                user: toUserIdRaw(toUserId(publisherWallet.address))
             })
     
             const groupKey = GroupKey.generate()
@@ -113,7 +113,7 @@ describe('Subscriber', () => {
         it('with encryption', async () => {
             await stream.grantPermissions({
                 permissions: [StreamPermission.PUBLISH],
-                user: publisherWallet.address
+                user: toUserIdRaw(toUserId(publisherWallet.address))
             })
     
             const groupKey = GroupKey.generate()

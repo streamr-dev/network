@@ -2,7 +2,7 @@ import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { createTestStream, createTestClient } from '../test-utils/utils'
 import range from 'lodash/range'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
-import { wait, waitForCondition } from '@streamr/utils'
+import { toUserIdRaw, wait, waitForCondition } from '@streamr/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
@@ -41,7 +41,7 @@ describe('resend', () => {
             stream = await createTestStream(publisherClient, module, { partitions: 3 })
             await stream.grantPermissions({
                 permissions: [StreamPermission.SUBSCRIBE],
-                user: await resendClient.getAddress()
+                user: toUserIdRaw(await resendClient.getUserId())
             })
             await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
             for (const payload of payloads) {

@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { Defer, merge } from '@streamr/utils'
+import { Defer, merge, toUserIdRaw } from '@streamr/utils'
 import { fastPrivateKey } from '@streamr/test-utils'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
@@ -102,7 +102,7 @@ describe('revoke permissions', () => {
             distributionMethod: 'rotate'
         })
         await stream.grantPermissions({
-            user: await subscriber.getAddress(),
+            user: toUserIdRaw(await subscriber.getUserId()),
             permissions: [StreamPermission.SUBSCRIBE]
         })
         const sub = await subscriber.subscribe({
@@ -127,7 +127,7 @@ describe('revoke permissions', () => {
                 if (count === revokeAfter) {
                     await gotMessages
                     await stream.revokePermissions({
-                        user: await subscriber.getAddress(),
+                        user: toUserIdRaw(await subscriber.getUserId()),
                         permissions: [StreamPermission.SUBSCRIBE]
                     })
                     await publisher.updateEncryptionKey({

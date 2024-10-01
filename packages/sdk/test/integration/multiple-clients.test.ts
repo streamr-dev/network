@@ -12,7 +12,7 @@ import {
     uid
 } from '../test-utils/utils'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
-import { waitForCondition } from '@streamr/utils'
+import { toUserIdRaw, waitForCondition } from '@streamr/utils'
 
 // this number should be at least 10, otherwise late subscribers might not join
 // in time to see any realtime messages
@@ -61,10 +61,10 @@ describe('PubSub with multiple clients', () => {
             counterId.clear(publisherId) // prevent overflows in counter
         })
 
-        const pubUser = await pubClient.getAddress()
+        const pubUser = await pubClient.getUserId()
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE],
-            user: pubUser
+            user: toUserIdRaw(pubUser)
         })
         return pubClient
     }
@@ -73,8 +73,8 @@ describe('PubSub with multiple clients', () => {
         const client = environment.createClient({
             id: 'subscriber-other'
         })
-        const user = await client.getAddress()
-        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user })
+        const user = await client.getUserId()
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: toUserIdRaw(user) })
         return client
     }
 
@@ -326,9 +326,9 @@ describe('PubSub with multiple clients', () => {
         const published: Record<string, Message[]> = {}
 
         otherClient = environment.createClient()
-        const otherUser = await otherClient.getAddress()
+        const otherUser = await otherClient.getUserId()
 
-        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: otherUser })
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: toUserIdRaw(otherUser) })
 
         const receivedMessagesOther: Record<string, MessageMetadata[]> = {}
         const receivedMessagesMain: Record<string, MessageMetadata[]> = {}

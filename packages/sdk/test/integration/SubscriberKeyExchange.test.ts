@@ -6,7 +6,7 @@ import {
     StreamPartID,
     StreamPartIDUtils,
     toEthereumAddress,
-    toStreamPartID, UserIDOld, waitForCondition
+    toStreamPartID, toUserId, toUserIdRaw, UserID, UserIDOld, waitForCondition
 } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -28,16 +28,16 @@ describe('SubscriberKeyExchange', () => {
     let subscriber: StreamrClient
     let environment: FakeEnvironment
 
-    const createStream = async (subscriberAddress: UserIDOld): Promise<StreamID> => {
+    const createStream = async (subscriberUserId: UserID): Promise<StreamID> => {
         const creator = environment.createClient()
         const s = await creator.createStream(createRelativeTestStreamId(module))
         await s.grantPermissions({
             permissions: [StreamPermission.SUBSCRIBE],
-            user: subscriberAddress
+            user: toUserIdRaw(subscriberUserId)
         })
         await s.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
-            user: publisherWallet.address
+            user: toUserIdRaw(toUserId(publisherWallet.address))
         })
         return s.id
     }
@@ -100,7 +100,7 @@ describe('SubscriberKeyExchange', () => {
          * - tests that we store the received key
         */
         it('happy path', async () => {
-            const streamId = await createStream(toEthereumAddress(subscriberWallet.address))
+            const streamId = await createStream(toUserId(subscriberWallet.address))
             const streamPartId = toStreamPartID(streamId, 0)
 
             const groupKey = GroupKey.generate()
@@ -130,7 +130,7 @@ describe('SubscriberKeyExchange', () => {
 
         it('happy path: ERC-1271', async () => {
             const erc1271Contract = randomEthereumAddress()
-            const streamId = await createStream(toEthereumAddress(erc1271Contract))
+            const streamId = await createStream(toUserId(erc1271Contract))
             const streamPartId = toStreamPartID(streamId, 0)
             environment.getChain().addErc1271AllowedAddress(erc1271Contract, toEthereumAddress(subscriberWallet.address))
 
