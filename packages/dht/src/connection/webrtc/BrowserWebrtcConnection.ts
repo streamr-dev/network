@@ -55,6 +55,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         }
 
         this.peerConnection.onicegatheringstatechange = () => {
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             logger.trace(`conn.onGatheringStateChange: ${this.peerConnection?.iceGatheringState}`)
         }
 

@@ -245,6 +245,7 @@ export class DnsServer {
             return this.handleAQuery(mixedCaseName, send, response)
         } else {
             // @ts-ignore private field
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             logger.warn(`Unsupported query type ${question.type}`)
         }
     }

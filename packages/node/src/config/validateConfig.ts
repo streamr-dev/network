@@ -15,6 +15,7 @@ export const validateConfig = (data: unknown, schema: Schema, contextName?: stri
         throw new Error(prefix + ajv.errors!.map((e: ErrorObject) => {
             let text = ajv.errorsText([e], { dataVar: '' } ).trim()
             if (e.params.additionalProperty) {
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 text += ` (${e.params.additionalProperty})`
             }
             return text

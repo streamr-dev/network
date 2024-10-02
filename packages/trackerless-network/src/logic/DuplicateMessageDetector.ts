@@ -54,7 +54,7 @@ export class InvalidNumberingError extends Error {
 export class GapMisMatchError extends Error {
     constructor(state: string, previousNumber: NumberPair, number: NumberPair) {
         super('pre-condition: gap overlap in given numbers:'
-            + ` previousNumber=${previousNumber}, number=${number}, state=${state}`)
+            + ` previousNumber=${previousNumber.toString()}, number=${number.toString()}, state=${state}`)
     }
 }
 
@@ -162,6 +162,6 @@ export class DuplicateMessageDetector {
     }
 
     toString(): string {
-        return this.gaps.map(([lower, upper]) => `(${lower}, ${upper}]`).join(', ')
+        return this.gaps.map(([lower, upper]) => `(${lower.toString()}, ${upper.toString()}]`).join(', ')
     }
 }

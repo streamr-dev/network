@@ -1,4 +1,4 @@
-import { MaxInt256 } from 'ethers'
+import { MaxUint256 } from 'ethers'
 
 export enum StreamPermission {
     EDIT = 'edit',
@@ -101,8 +101,8 @@ export const convertStreamPermissionsToChainPermission = (permissions: StreamPer
     return {
         canEdit: permissions.includes(StreamPermission.EDIT),
         canDelete: permissions.includes(StreamPermission.DELETE),
-        publishExpiration: permissions.includes(StreamPermission.PUBLISH) ? MaxInt256 : 0n,
-        subscribeExpiration: permissions.includes(StreamPermission.SUBSCRIBE) ? MaxInt256 : 0n,
+        publishExpiration: permissions.includes(StreamPermission.PUBLISH) ? MaxUint256 : 0n,
+        subscribeExpiration: permissions.includes(StreamPermission.SUBSCRIBE) ? MaxUint256 : 0n,
         canGrant: permissions.includes(StreamPermission.GRANT)
     }
 }

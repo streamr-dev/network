@@ -1477,6 +1477,7 @@ function act(
         for (const action of actions) {
             await (async () => {
                 if (action === 'abort') {
+                    // eslint-disable-next-line @typescript-eslint/only-throw-error
                     throw 'abort'
                 }
 
@@ -1497,6 +1498,7 @@ function act(
                             : screen.includes(find)
 
                     if (!found) {
+                        // eslint-disable-next-line @typescript-eslint/only-throw-error
                         throw `Failed to find ${find} in\n${screen}`
                     }
 
@@ -1607,6 +1609,7 @@ async function scenario(mocks: AnswerMock[]): Promise<Scenario> {
             case select:
                 return inquirer.select
             default:
+                // eslint-disable-next-line @typescript-eslint/only-throw-error
                 throw 'Unknown prompt mock'
         }
     }
@@ -1648,8 +1651,9 @@ async function scenario(mocks: AnswerMock[]): Promise<Scenario> {
             )
 
             if (!inq) {
+                // eslint-disable-next-line @typescript-eslint/only-throw-error
                 throw `Missing mock for ${chalk.whiteBright(
-                    `"${config.message}"`
+                    `"${config.message}"`  // eslint-disable-line @typescript-eslint/restrict-template-expressions
                 )}`
             }
 

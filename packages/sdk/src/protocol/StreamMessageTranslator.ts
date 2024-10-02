@@ -155,6 +155,7 @@ export class StreamMessageTranslator {
             try {
                 content = NewGroupKeyRequest.toBinary(msg.body.groupKeyRequest)
             } catch (err) {
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 throw new Error(`invalid group key request: ${err}`)
             }
         } else if (msg.body.oneofKind === 'groupKeyResponse') {
@@ -162,6 +163,7 @@ export class StreamMessageTranslator {
             try {
                 content = NewGroupKeyResponse.toBinary(msg.body.groupKeyResponse)
             } catch (err) {
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 throw new Error(`invalid group key response: ${err}`)
             }
         } else {

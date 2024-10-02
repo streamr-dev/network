@@ -74,6 +74,7 @@ const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: st
     if (err.reason?.code === 'CALL_EXCEPTION') {
         throw new StreamrClientError('Stream not found: id=' + streamId, 'STREAM_NOT_FOUND')
     } else {
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         throw new Error(`Could not reach the ${registry} Smart Contract: ${err.message}`)
     }
 }

@@ -228,6 +228,7 @@ const createHandler = (storage: Storage, metrics: MetricsDefinition): RequestHan
         }
         const format = getFormat(req.query.format as string)
         if (format === undefined) {
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             sendError(`Query parameter "format" is invalid: ${req.query.format}`, res)
             return
         }

@@ -58,6 +58,7 @@ module.exports = function({ entry, libraryName, alias = {} }) {
                 }
             },
             output: {
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 filename: `${libraryName}.js`,
                 sourceMapFilename: `[name].[contenthash].js.map`,
                 chunkFilename: '[id].[contenthash].js',

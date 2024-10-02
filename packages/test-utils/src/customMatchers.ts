@@ -11,6 +11,7 @@ const formErrorMessage = (description: string, expected: string, actual: string)
 
 const formTypeDescription = (value: unknown): string => {
     if ((value !== undefined) && (value !== null)) {
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         return `an instance of ${(value as any).constructor.name}`
     } else {
         return String(value)
