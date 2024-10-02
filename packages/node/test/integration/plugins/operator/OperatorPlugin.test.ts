@@ -7,6 +7,7 @@ import {
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { EthereumAddress, StreamPartIDUtils, collect, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
+import { cloneDeep, set } from 'lodash'
 import { Broker, createBroker } from '../../../../src/broker'
 import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
 import { createClient, createTestStream, formConfig, startBroker } from '../../../utils'
@@ -89,7 +90,7 @@ describe('OperatorPlugin', () => {
 
     it('invalid configuration', async () => {
         await expect(async () => {
-            const config = formConfig({
+            let config = formConfig({
                 privateKey: brokerWallet.privateKey,
                 extraPlugins: {
                     operator: {
@@ -97,7 +98,10 @@ describe('OperatorPlugin', () => {
                     }
                 }
             })
-            config.client!.network!.node!.acceptProxyConnections = false
+            // clone the config as we inject some TEST_CONFIG properties by refence in formConfig
+            // -> without cloning we'd modify also the TEST_CONFIG object
+            config = cloneDeep(config)
+            set(config, 'client.network.node.acceptProxyConnections', false)
             await createBroker(config)
         }).rejects.toThrow('Plugin operator doesn\'t support client config value "false" in network.node.acceptProxyConnections')
     })

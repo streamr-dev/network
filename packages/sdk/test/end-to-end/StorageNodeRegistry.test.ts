@@ -63,12 +63,6 @@ describe('StorageNodeRegistry', () => {
             ...CONFIG_TEST,
             auth: {
                 privateKey: storageNodeWallet.privateKey
-            },
-            network: {
-                ...CONFIG_TEST.network,
-                node: {
-                    id: storageNodeWallet.address
-                }
             }
         })
         await storageNodeManager.setStorageNodeMetadata({ urls: ['mock-url'] })
