@@ -426,7 +426,7 @@ export class StreamRegistry {
         return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: UserID | undefined, solidityType: bigint) => {
             return (user === undefined)
                 ? this.streamRegistryContract!.grantPublicPermission(streamId, solidityType, overrides)
-                : this.streamRegistryContract!.grantPermission(streamId, user, solidityType, overrides)
+                : this.streamRegistryContract!.grantPermissionForUserId(streamId, user, solidityType, overrides)
         }, ...assignments)
     }
 
@@ -436,7 +436,7 @@ export class StreamRegistry {
         return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: UserID | undefined, solidityType: bigint) => {
             return (user === undefined)
                 ? this.streamRegistryContract!.revokePublicPermission(streamId, solidityType, overrides)
-                : this.streamRegistryContract!.revokePermission(streamId, user, solidityType, overrides)
+                : this.streamRegistryContract!.revokePermissionForUserId(streamId, user, solidityType, overrides)
         }, ...assignments)
     }
 
