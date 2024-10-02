@@ -155,9 +155,6 @@ export interface ControlLayerConfig {
 
 export interface NetworkNodeConfig {
 
-    /** The Ethereum address of the node. */
-    id?: string
-
     /**
      * The number of connections the client's network node should have
      * on each stream partition.

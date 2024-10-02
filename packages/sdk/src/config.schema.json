@@ -258,9 +258,6 @@
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {
-                        "id": {
-                            "type": "string"
-                        },
                         "streamPartitionNeighborTargetCount": {
                             "type": "number",
                             "default": 4
