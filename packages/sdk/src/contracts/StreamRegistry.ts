@@ -356,13 +356,15 @@ export class StreamRegistry {
     /* eslint-disable no-else-return */
     async hasPermission(query: PermissionQuery): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(query.streamId)
-        const permissionType = streamPermissionToSolidityType(query.permission)
         if (isPublicPermissionQuery(query)) {
+            const permissionType = streamPermissionToSolidityType(query.permission)
             return this.streamRegistryContractReadonly.hasPublicPermission(streamId, permissionType)
-        } else if (query.allowPublic) {
-            return this.streamRegistryContractReadonly.hasPermission(streamId, toUserId(query.user), permissionType)
         } else {
-            return this.streamRegistryContractReadonly.hasDirectPermission(streamId, toUserId(query.user), permissionType)
+            const chainPermissions = query.allowPublic
+                ? await this.streamRegistryContractReadonly.getPermissionsForUserId(streamId, toUserId(query.user))
+                : await this.streamRegistryContractReadonly.getDirectPermissionsForUserId(streamId, toUserId(query.user))
+            const permissions = convertChainPermissionsToStreamPermissions(chainPermissions)
+            return permissions.includes(query.permission)
         }
     }
 
