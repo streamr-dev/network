@@ -66,7 +66,7 @@ async function* fetchSearchStreamsResultFromTheGraph(
     const withoutOrphaned = filter(backendResults, (p) => p.stream !== null)
     /*
      * As we query via permissions entity, any stream can appear multiple times (once per
-     * permission user) if we don't do have exactly one userAddress in the GraphQL query.
+     * permission user) if we don't do have exactly one userId in the GraphQL query.
      * That is the case if no permission filter is defined at all, or if permission.allowPublic
      * is true (then it appears twice: once for the user, and once for the public address).
      */
@@ -111,9 +111,9 @@ const buildQuery = (
         id_gt: lastId
     }
     if (permissionFilter !== undefined) {
-        variables.userAddress_in = [toUserId(permissionFilter.user)]
+        variables.userId_in = [toUserId(permissionFilter.user)]
         if (permissionFilter.allowPublic) {
-            variables.userAddress_in.push(PUBLIC_PERMISSION_ADDRESS)
+            variables.userId_in.push(PUBLIC_PERMISSION_ADDRESS)
         }
         if (permissionFilter.allOf !== undefined) {
             const now = String(Math.round(Date.now() / 1000))
@@ -127,7 +127,7 @@ const buildQuery = (
     const query = `
         query (
             $stream_contains: String,
-            $userAddress_in: [Bytes!]
+            $userId_in: [Bytes!]
             $canEdit: Boolean
             $canDelete: Boolean
             $publishExpiration_gt: BigInt
@@ -146,7 +146,7 @@ const buildQuery = (
                     id
                     metadata
                 }
-                userAddress
+                userId
                 canEdit
                 canDelete
                 publishExpiration

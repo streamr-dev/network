@@ -61,7 +61,7 @@ export interface StreamQueryResult {
 
 interface StreamPublisherOrSubscriberItem {
     id: string
-    userAddress: string
+    userId: string
 }
 
 export interface StreamCreationEvent {
@@ -318,7 +318,7 @@ export class StreamRegistry {
         const validItems = filter<StreamPublisherOrSubscriberItem>(backendResults, (p) => (p as any).stream !== null)
         yield* map<StreamPublisherOrSubscriberItem, UserID>(
             validItems,
-            (item) => toUserId(item.userAddress)
+            (item) => toUserId(item.userId)
         )
     }
 
@@ -340,7 +340,7 @@ export class StreamRegistry {
                 }
             ) {
                 id
-                userAddress
+                userId
                 stream {
                     id
                 }
@@ -376,7 +376,7 @@ export class StreamRegistry {
                         metadata
                         permissions(first: ${pageSize} orderBy: "id" where: { id_gt: "${lastId}"}) {
                             id
-                            userAddress
+                            userId
                             canEdit
                             canDelete
                             publishExpiration
@@ -405,14 +405,14 @@ export class StreamRegistry {
             * empty assignments cleanup in The Graph.
             */
             if (permissions.length > 0) {
-                if (permissionResult.userAddress === PUBLIC_PERMISSION_ADDRESS) {
+                if (permissionResult.userId === PUBLIC_PERMISSION_ADDRESS) {
                     assignments.push({
                         public: true,
                         permissions
                     })
                 } else {
                     assignments.push({
-                        user: toUserIdRaw(toUserId(permissionResult.userAddress)),
+                        user: toUserIdRaw(toUserId(permissionResult.userId)),
                         permissions
                     })
                 }
