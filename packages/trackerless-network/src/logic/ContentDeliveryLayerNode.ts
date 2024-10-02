@@ -393,7 +393,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         return this.options.neighbors.getAll().map((n) => n.getPeerDescriptor())
     }
 
-    getInfo(): ContentDeliveryLayerNeighborInfo[] {
+    getInfos(): ContentDeliveryLayerNeighborInfo[] {
         return this.options.neighbors.getAll().map((n) => {
             return {
                 peerDescriptor: n.getPeerDescriptor(),

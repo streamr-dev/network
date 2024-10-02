@@ -103,7 +103,7 @@ describe('ContentDeliveryLayerNode', () => {
         const nodeWithoutRtt = createMockContentDeliveryRpcRemote()
         neighbors.add(nodeWithoutRtt)
         nodeWithRtt.setRtt(100)
-        const info = contentDeliveryLayerNode.getInfo()
+        const info = contentDeliveryLayerNode.getInfos()
         expect(info[0].rtt).toEqual(100)
         expect(info[0].peerDescriptor).toEqual(nodeWithRtt.getPeerDescriptor())
         expect(info[1].rtt).toBeUndefined()
