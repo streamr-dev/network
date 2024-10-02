@@ -152,7 +152,7 @@ export class StreamRegistry {
             }
         })
         this.isStreamPublisher_cached = CacheAsyncFn((streamId: StreamID, userId: UserID) => {
-            return this.isStreamPublisher_nonCached(streamId, userId)
+            return this.isStreamPublisher(streamId, userId, false)
         }, {
             ...config.cache,
             cacheKey([streamId, userId]): string {
@@ -160,7 +160,7 @@ export class StreamRegistry {
             }
         })
         this.isStreamSubscriber_cached = CacheAsyncFn((streamId: StreamID, userId: UserID) => {
-            return this.isStreamSubscriber_nonCached(streamId, userId)
+            return this.isStreamSubscriber(streamId, userId, false)
         }, {
             ...config.cache,
             cacheKey([streamId, userId]): string {
@@ -491,17 +491,9 @@ export class StreamRegistry {
         await waitForTx(txToSubmit)
     }
 
-    private async isStreamPublisher_nonCached(streamId: StreamID, userId: UserID): Promise<boolean> {
+    private async isStreamPublisherOrSubscriber_nonCached(streamId: StreamID, userId: UserID, permission: StreamPermission): Promise<boolean> {
         try {
-            return await this.streamRegistryContractReadonly.hasPermission(streamId, userId, streamPermissionToSolidityType(StreamPermission.PUBLISH))
-        } catch (err) {
-            return streamContractErrorProcessor(err, streamId, 'StreamPermission')
-        }
-    }
-
-    private async isStreamSubscriber_nonCached(streamId: StreamID, userId: UserID): Promise<boolean> {
-        try {
-            return await this.streamRegistryContractReadonly.hasPermission(streamId, userId, streamPermissionToSolidityType(StreamPermission.SUBSCRIBE))
+            return await this.hasPermission({ streamId, user: toUserIdRaw(userId), permission, allowPublic: true })
         } catch (err) {
             return streamContractErrorProcessor(err, streamId, 'StreamPermission')
         }
@@ -523,7 +515,7 @@ export class StreamRegistry {
         if (useCache) {
             return this.isStreamPublisher_cached(streamId, userId)
         } else {
-            return this.isStreamPublisher_nonCached(streamId, userId)
+            return this.isStreamPublisherOrSubscriber_nonCached(streamId, userId, StreamPermission.PUBLISH)
         }
     }
 
@@ -531,7 +523,7 @@ export class StreamRegistry {
         if (useCache) {
             return this.isStreamSubscriber_cached(streamId, userId)
         } else {
-            return this.isStreamSubscriber_nonCached(streamId, userId)
+            return this.isStreamPublisherOrSubscriber_nonCached(streamId, userId, StreamPermission.SUBSCRIBE)
         }
     }
 
