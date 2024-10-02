@@ -63,15 +63,6 @@ export interface ControlLayerConfig {
     webrtcAllowPrivateAddresses?: boolean
 
     /**
-     * Defines WebRTC connection establishment timeout in milliseconds.
-     *
-     * When attempting to form a new connection, if not established within
-     * this timeout, the attempt is considered as failed and further
-     * waiting for it will cease.
-    */
-    webrtcNewConnectionTimeout?: number
-
-    /**
      * Sets the low-water mark used by send buffers of WebRTC connections.
     */
     webrtcDatachannelBufferThresholdLow?: number
