@@ -482,7 +482,7 @@ export class StreamRegistry {
         }
         await this.connectToContract()
         const ethersOverrides = await getEthersOverrides(this.rpcProviderSource, this.config)
-        const txToSubmit = this.streamRegistryContract!.setPermissionsMultipleStreams(
+        const txToSubmit = this.streamRegistryContract!.setMultipleStreamPermissionsForUserIds(
             streamIds,
             targets,
             chainPermissions,
