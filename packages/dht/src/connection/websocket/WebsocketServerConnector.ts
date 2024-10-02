@@ -280,7 +280,7 @@ export class WebsocketServerConnector {
         await Promise.allSettled(requests.map((ongoingConnectRequest) => ongoingConnectRequest.pendingConnection.close(true)))
 
         await this.websocketServer?.stop()
-        await this.geoIpLocator?.stop()
+        this.geoIpLocator?.stop()
     }
 
 }
