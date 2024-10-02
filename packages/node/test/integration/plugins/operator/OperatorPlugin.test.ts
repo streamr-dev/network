@@ -1,4 +1,4 @@
-import type { Operator } from '@streamr/network-contracts-ethers6'
+import type { Operator } from '@streamr/network-contracts'
 import {
     ProxyDirection,
     StreamPermission,
