@@ -1,7 +1,7 @@
 import EventEmitter from 'eventemitter3'
 import { WebrtcConnectionEvents, IWebrtcConnection, RtcDescription } from './IWebrtcConnection'
 import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from '../IConnection'
-import { Logger } from '@streamr/utils'
+import { Logger, wait } from '@streamr/utils'
 import { IceServer } from './WebrtcConnector'
 import { createRandomConnectionId } from '../Connection'
 
@@ -19,6 +19,61 @@ interface Params {
     iceServers?: IceServer[]
 }
 
+const MESSAGE_QUEUE_MAX_SIZE = 10000
+
+class MessageQueue {
+    
+    private readonly queue: Array<Uint8Array>
+    private readonly sendFn: (message: Uint8Array) => void
+    private running: boolean
+
+    constructor(sendFn: (message: Uint8Array) => void) {
+        this.running = false
+        this.queue = []
+        this.sendFn = sendFn
+    }
+
+    push(message: Uint8Array): void {
+        if (this.queue.length >= MESSAGE_QUEUE_MAX_SIZE) {
+            logger.warn('Dropping message due to buffer overflow')
+            throw new Error('Cannot add to buffer queue full')
+        }
+        this.queue.push(message)
+    }
+
+    sendBuffer(): void {
+        if (this.running === true) {
+            return
+        }
+        this.running = true
+        let sendAttempts = 0;
+        (async () => {
+            while (this.queue.length > 0 && this.running) {
+                const messageToSend = this.queue.shift()!
+                try {
+                    this.sendFn(messageToSend)
+                } catch (err) {
+                    this.queue.unshift(messageToSend)
+                }
+                sendAttempts++
+                if (sendAttempts % 200 === 0) {
+                    await wait(0) // give up CPU cycle 
+                }
+            }
+            this.running = false
+        })()   
+    }
+    
+    isRunning(): boolean {
+        return this.running
+    }
+
+    pause(): void {
+        this.running = false
+    }
+    
+}
+
 export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrtcConnection, IConnection {
 
     public connectionId: ConnectionID
@@ -32,11 +87,13 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     private makingOffer = false
     private isOffering = false
     private closed = false
+    private messageQueue: MessageQueue
 
     constructor(params: Params) {
         super()
         this.connectionId = createRandomConnectionId()
         this.iceServers = params.iceServers ?? []
+        this.messageQueue = new MessageQueue((message: Uint8Array) => this.doSend(message))
     }
 
     public start(isOffering: boolean): void {
@@ -167,8 +224,18 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
     }
 
     public send(data: Uint8Array): void {
+        this.messageQueue.push(data)
+        this.messageQueue.sendBuffer()
+    }
+
+    private doSend(data: Uint8Array): void {
         if (this.lastState === 'connected') {
-            this.dataChannel?.send(data as Buffer)
+            if (this.dataChannel!.bufferedAmount > 1 * 1000 * 1000) {
+                this.messageQueue.pause()
+                throw 'buffer high'
+            } else {
+                this.dataChannel?.send(data as Buffer)
+            }
         } else {
             logger.warn('Tried to send on a connection with last state ' + this.lastState)
         }
@@ -176,8 +243,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
 
     private setupDataChannel(dataChannel: RTCDataChannel): void {
         this.dataChannel = dataChannel
-        this.dataChannel.binaryType = 'arraybuffer'
-
+        dataChannel.bufferedAmountLowThreshold = 32000
         dataChannel.onopen = () => {
             logger.trace('dc.onOpen')
             this.onDataChannelOpen()
@@ -195,6 +261,10 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         dataChannel.onmessage = (msg) => {
             logger.trace('dc.onmessage')
             this.emit('data', new Uint8Array(msg.data))
+        }
+
+        dataChannel.onbufferedamountlow = () => {
+            this.messageQueue.sendBuffer()
         }
     }
 
