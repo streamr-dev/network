@@ -1,6 +1,6 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import type { Operator, Sponsorship } from '@streamr/network-contracts-ethers6'
-import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts-ethers6'
+import type { Operator, Sponsorship } from '@streamr/network-contracts'
+import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { waitForCondition } from '@streamr/utils'
