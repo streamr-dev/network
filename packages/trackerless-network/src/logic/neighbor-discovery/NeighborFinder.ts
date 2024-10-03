@@ -41,7 +41,7 @@ export class NeighborFinder {
         if (this.options.neighbors.size() < this.options.minCount && newExcludes.length < uniqueContactCount) {
             // TODO should we catch possible promise rejection?
             setAbortableTimeout(() => this.findNeighbors(newExcludes), INTERVAL, this.abortController.signal)
-        } else if (this.options.neighbors.size() === 0 && newExcludes.length >= uniqueContactCount && uniqueContactCount > 0) {
+        } else if (this.options.neighbors.size() === 0 && uniqueContactCount > 0) {
             logger.debug('No neighbors found yet contacts are available, restarting handshaking process')
             setAbortableTimeout(() => this.findNeighbors([]), INTERVAL, this.abortController.signal)
         } else {
