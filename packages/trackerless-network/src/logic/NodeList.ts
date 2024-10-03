@@ -110,4 +110,5 @@ export class NodeList extends EventEmitter<Events> {
         this.nodes.forEach((node) => this.remove(getNodeIdFromPeerDescriptor(node.getPeerDescriptor())))
         this.removeAllListeners()
     }
+
 }
