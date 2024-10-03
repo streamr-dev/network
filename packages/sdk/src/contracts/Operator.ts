@@ -576,7 +576,7 @@ export class Operator {
             sponsorshipAddress,
             targetOperator,
             voteData,
-            { ...this.getEthersOverrides(), gasLimit }
+            { ...(await this.getEthersOverrides()), gasLimit }
         )).wait()
     }
 
