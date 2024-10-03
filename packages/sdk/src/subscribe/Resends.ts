@@ -1,4 +1,4 @@
-import { EthereumAddress, Logger, StreamID, StreamPartID, StreamPartIDUtils, randomString, toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, Logger, StreamID, StreamPartID, StreamPartIDUtils, UserID, randomString, toUserId } from '@streamr/utils'
 import random from 'lodash/random'
 import sample from 'lodash/sample'
 import without from 'lodash/without'
@@ -8,6 +8,7 @@ import { StreamrClientError } from '../StreamrClientError'
 import { StorageNodeRegistry } from '../contracts/StorageNodeRegistry'
 import { StreamMessage } from '../protocol/StreamMessage'
 import { convertBytesToStreamMessage } from '../protocol/oldStreamMessageBinaryUtils'
+import { ChangeFieldType } from '../types'
 import { forEach, map, transformError } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { pull } from '../utils/PushBuffer'
@@ -34,7 +35,7 @@ export interface ResendLastOptions {
  */
 export interface ResendFromOptions {
     from: ResendRef
-    publisherId?: string
+    publisherId?: Uint8Array
 }
 
 /**
@@ -44,13 +45,17 @@ export interface ResendRangeOptions {
     from: ResendRef
     to: ResendRef
     msgChainId?: string
-    publisherId?: string
+    publisherId?: Uint8Array
 }
 
 /**
  * The supported resend types.
  */
 export type ResendOptions = ResendLastOptions | ResendFromOptions | ResendRangeOptions
+
+export type InternalResendOptions = ResendLastOptions
+    | ChangeFieldType<ResendFromOptions, 'publisherId', UserID | undefined>
+    | ChangeFieldType<ResendRangeOptions, 'publisherId', UserID | undefined>
 
 export type ResendType = 'last' | 'from' | 'range'
 
@@ -97,6 +102,13 @@ const getHttpErrorTransform = (): (error: any) => Promise<StreamrClientError> =>
     }
 }
 
+export const getInternalResendOptions = (options: ResendOptions): InternalResendOptions => {
+    return {
+        ...options,
+        publisherId: (('publisherId' in options) && (options.publisherId !== undefined)) ? toUserId(options.publisherId) : undefined
+    }
+}
+
 @scoped(Lifecycle.ContainerScoped)
 export class Resends {
 
@@ -120,7 +132,7 @@ export class Resends {
 
     async resend(
         streamPartId: StreamPartID,
-        options: ResendOptions & { raw?: boolean },
+        options: InternalResendOptions & { raw?: boolean },
         getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>,
         abortSignal?: AbortSignal
     ): Promise<PushPipeline<StreamMessage, StreamMessage>> {
@@ -140,14 +152,14 @@ export class Resends {
                 fromSequenceNumber: options.from.sequenceNumber,
                 toTimestamp: new Date(options.to.timestamp).getTime(),
                 toSequenceNumber: options.to.sequenceNumber,
-                publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined,
+                publisherId: options.publisherId !== undefined ? options.publisherId : undefined,
                 msgChainId: options.msgChainId
             }, raw, getStorageNodes, abortSignal)
         } else if (isResendFrom(options)) {
             return this.fetchStream('from', streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
-                publisherId: options.publisherId !== undefined ? toEthereumAddress(options.publisherId) : undefined
+                publisherId: options.publisherId !== undefined ? options.publisherId : undefined
             }, raw, getStorageNodes, abortSignal)
         } else {
             throw new StreamrClientError(
