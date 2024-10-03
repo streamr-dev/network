@@ -146,7 +146,6 @@ const buildQuery = (
                     id
                     metadata
                 }
-                userId
                 canEdit
                 canDelete
                 publishExpiration

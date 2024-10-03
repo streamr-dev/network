@@ -1,6 +1,6 @@
 import { LitCore } from '@lit-protocol/core'
 import { uint8arrayToString } from '@lit-protocol/uint8arrays'
-import { Logger, StreamID, randomString, withRateLimit, toUserId, toEthereumAddress } from '@streamr/utils'
+import { Logger, StreamID, randomString, withRateLimit, toEthereumAddress } from '@streamr/utils'
 import { ethers } from 'ethers'
 import * as siwe from 'lit-siwe'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -59,7 +59,7 @@ const signAuthMessage = async (authentication: Authentication) => {
     const domain = 'dummy.com'
     const uri = 'https://dummy.com'
     const statement = 'dummy'
-    const addressInChecksumCase = ethers.getAddress(toEthereumAddress(toUserId(await authentication.getUserId())))
+    const addressInChecksumCase = ethers.getAddress(toEthereumAddress(await authentication.getUserId()))
     const siweMessage = new siwe.SiweMessage({
         domain,
         uri,

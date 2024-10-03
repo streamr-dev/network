@@ -62,6 +62,7 @@ export interface ContentDeliveryManagerOptions {
     streamPartitionMinPropagationTargets?: number
     acceptProxyConnections?: boolean
     rpcRequestTimeout?: number
+    neighborUpdateInterval?: number
 }
 
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): DhtAddress => {
@@ -264,6 +265,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             neighborTargetCount: this.options.streamPartitionNeighborTargetCount,
             acceptProxyConnections: this.options.acceptProxyConnections,
             rpcRequestTimeout: this.options.rpcRequestTimeout,
+            neighborUpdateInterval: this.options.neighborUpdateInterval,
             isLocalNodeEntryPoint
         })
     }
@@ -332,7 +334,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             return {
                 id: streamPartId,
                 controlLayerNeighbors: stream.discoveryLayerNode.getNeighbors(),
-                contentDeliveryLayerNeighbors: stream.node.getNeighbors()
+                contentDeliveryLayerNeighbors: stream.node.getInfos()
             }
         })
 
