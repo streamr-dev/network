@@ -1,4 +1,4 @@
-import { setAbortableTimeout } from '@streamr/utils'
+import { Logger, setAbortableTimeout } from '@streamr/utils'
 import { NodeList } from '../NodeList'
 import { DhtAddress } from '@streamr/dht'
 
@@ -14,6 +14,8 @@ interface FindNeighborsSessionOptions {
 
 const INITIAL_WAIT = 100
 const INTERVAL = 250
+
+const logger = new Logger(module)
 
 export class NeighborFinder {
     private readonly abortController: AbortController
@@ -39,6 +41,9 @@ export class NeighborFinder {
         if (this.options.neighbors.size() < this.options.minCount && newExcludes.length < uniqueContactCount) {
             // TODO should we catch possible promise rejection?
             setAbortableTimeout(() => this.findNeighbors(newExcludes), INTERVAL, this.abortController.signal)
+        } else if (this.options.neighbors.size() === 0 && newExcludes.length >= uniqueContactCount && uniqueContactCount > 0) {
+            logger.debug('No neighbors found yet contacts are available, restarting handshaking process')
+            setAbortableTimeout(() => this.findNeighbors([]), INTERVAL, this.abortController.signal)
         } else {
             this.running = false
         }
