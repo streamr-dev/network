@@ -21,8 +21,8 @@ import { RpcProviderSource } from '../RpcProviderSource'
 import { Stream, StreamMetadata } from '../Stream'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamrClientError } from '../StreamrClientError'
-import type { StreamRegistry as StreamRegistryContract } from '@streamr/network-contracts'
-import { streamRegistryABI } from '@streamr/network-contracts'
+import type { StreamRegistryV5 as StreamRegistryContract } from '../ethereumArtifacts/StreamRegistryV5'
+import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV5Abi.json'
 import { getEthersOverrides } from '../ethereumUtils'
 import { StreamrClientEventEmitter } from '../events'
 import {
@@ -123,12 +123,12 @@ export class StreamRegistry {
         this.logger = loggerFactory.createLogger(module)
         this.streamRegistryContractReadonly = this.contractFactory.createReadContract<StreamRegistryContract>(
             toEthereumAddress(this.config.contracts.streamRegistryChainAddress),
-            streamRegistryABI,
+            StreamRegistryArtifact,
             this.rpcProviderSource.getProvider(),
             'streamRegistry'
         )
         const chainEventPoller = new ChainEventPoller(this.rpcProviderSource.getSubProviders().map((p) => {
-            return contractFactory.createEventContract(toEthereumAddress(this.config.contracts.streamRegistryChainAddress), streamRegistryABI, p)
+            return contractFactory.createEventContract(toEthereumAddress(this.config.contracts.streamRegistryChainAddress), StreamRegistryArtifact, p)
         // eslint-disable-next-line no-underscore-dangle
         }), config.contracts.pollInterval)
         initContractEventGateway({
@@ -191,7 +191,7 @@ export class StreamRegistry {
             const chainSigner = await this.authentication.getTransactionSigner(this.rpcProviderSource)
             this.streamRegistryContract = this.contractFactory.createWriteContract<StreamRegistryContract>(
                 toEthereumAddress(this.config.contracts.streamRegistryChainAddress),
-                streamRegistryABI,
+                StreamRegistryArtifact,
                 chainSigner,
                 'streamRegistry'
             )
