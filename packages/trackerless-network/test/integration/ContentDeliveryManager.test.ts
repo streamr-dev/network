@@ -148,8 +148,8 @@ describe('ContentDeliveryManager', () => {
         ])
         // Wait for RTTs to be updated
         await wait(500)
-        const nodeInfo1 = await manager1.getNodeInfo()
-        const nodeInfo2 = await manager2.getNodeInfo()
+        const nodeInfo1 = manager1.getNodeInfo()
+        const nodeInfo2 = manager2.getNodeInfo()
         expect(nodeInfo1[0].contentDeliveryLayerNeighbors[0].rtt).toBeGreaterThanOrEqual(0)
         expect(nodeInfo2[0].contentDeliveryLayerNeighbors[0].rtt).toBeGreaterThanOrEqual(0)
     })
