@@ -75,9 +75,9 @@ export class PublisherKeyExchange {
         })
         eventEmitter.on('messagePublished', (msg) => {
             if (msg.signatureType === SignatureType.ERC_1271) {
-                const signerUserId = msg.getPublisherId()
-                if (isEthereumAddressUserId(signerUserId)) {
-                    const address = toEthereumAddress(signerUserId)
+                const publisherId = msg.getPublisherId()
+                if (isEthereumAddressUserId(publisherId)) {
+                    const address = toEthereumAddress(publisherId)
                     if (!this.erc1271ContractAddresses.has(address)) {
                         logger.debug('Add ERC-1271 publisher', { address })
                         this.erc1271ContractAddresses.add(address)
