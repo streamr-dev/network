@@ -14,6 +14,16 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
+- Changed how user IDs are represented in the API (https://github.com/streamr-dev/network/pull/2774)
+  - Replaced `getAddress()` with `getUserId()`, now returning a `Uint8Array`
+  - Updated `Message#publisherId` field type to `Uint8Array`
+  - Modified the following methods to use `Uint8Array`:
+    - `hasPermission()`, `getPermissions()`, `grantPermissions()`, `revokePermissions()` and `setPermissions()`
+    - `isStreamPublisher()`, `isStreamSubscriber()`, `getStreamPublishers()` and `getStreamSubscribers()`
+    - `searchStreams()`
+    - `resend()`
+    - `addEncryptionKey()`
+
 #### Deprecated
 
 #### Removed
