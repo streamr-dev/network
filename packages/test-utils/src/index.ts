@@ -191,7 +191,7 @@ export function randomEthereumAddress(): EthereumAddress {
 }
 
 export const randomUserId = (): UserID => {
-    return toUserId(randomBytes(random(10, 30)))
+    return toUserId(randomBytes(random(10, 40)))
 }
 
 // eslint-disable-next-line no-underscore-dangle
