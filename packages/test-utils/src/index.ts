@@ -1,13 +1,14 @@
 import { Wallet } from 'ethers'
 import { EthereumAddress, toEthereumAddress, toUserId, UserID, waitForCondition, waitForEvent } from '@streamr/utils'
 import cors from 'cors'
-import crypto from 'crypto'
+import crypto, { randomBytes } from 'crypto'
 import { EventEmitter, once } from 'events'
 import express, { Request, Response } from 'express'
 import http from 'http'
 import { AddressInfo } from 'net'
 import fetch from 'node-fetch'
 import { Readable } from 'stream'
+import random from 'lodash/random'
 
 export type Event = string
 
@@ -190,7 +191,7 @@ export function randomEthereumAddress(): EthereumAddress {
 }
 
 export const randomUserId = (): UserID => {
-    return toUserId(randomEthereumAddress())  // TODO random length, e.g. binaryToHex(randomBytes(random(10, 30)))
+    return toUserId(randomBytes(random(10, 30)))
 }
 
 // eslint-disable-next-line no-underscore-dangle
