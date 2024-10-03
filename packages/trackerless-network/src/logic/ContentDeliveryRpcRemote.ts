@@ -10,6 +10,8 @@ const logger = new Logger(module)
 
 export class ContentDeliveryRpcRemote extends RpcRemote<ContentDeliveryRpcClient> {
 
+    private rtt?: number
+
     async sendStreamMessage(msg: StreamMessage): Promise<void> {
         const options = this.formDhtRpcOptions({
             notification: true
@@ -30,5 +32,13 @@ export class ContentDeliveryRpcRemote extends RpcRemote<ContentDeliveryRpcClient
         this.getClient().leaveStreamPartNotice(notification, options).catch(() => {
             logger.debug('Failed to send leaveStreamPartNotice')
         })
+    }
+
+    setRtt(rtt: number): void {
+        this.rtt = rtt
+    }
+
+    getRtt(): number | undefined {
+        return this.rtt
     }
 }

@@ -316,9 +316,22 @@ export interface StreamPartitionInfo {
      */
     controlLayerNeighbors: PeerDescriptor[];
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor contentDeliveryLayerNeighbors = 3;
+     * @generated from protobuf field: repeated ContentDeliveryLayerNeighborInfo contentDeliveryLayerNeighbors = 3;
      */
-    contentDeliveryLayerNeighbors: PeerDescriptor[];
+    contentDeliveryLayerNeighbors: ContentDeliveryLayerNeighborInfo[];
+}
+/**
+ * @generated from protobuf message ContentDeliveryLayerNeighborInfo
+ */
+export interface ContentDeliveryLayerNeighborInfo {
+    /**
+     * @generated from protobuf field: dht.PeerDescriptor peerDescriptor = 1;
+     */
+    peerDescriptor?: PeerDescriptor;
+    /**
+     * @generated from protobuf field: optional int32 rtt = 2;
+     */
+    rtt?: number;
 }
 /**
  * @generated from protobuf message ControlLayerInfo
@@ -665,7 +678,7 @@ class StreamPartitionInfo$Type extends MessageType<StreamPartitionInfo> {
         super("StreamPartitionInfo", [
             { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "controlLayerNeighbors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
-            { no: 3, name: "contentDeliveryLayerNeighbors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+            { no: 3, name: "contentDeliveryLayerNeighbors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ContentDeliveryLayerNeighborInfo }
         ]);
     }
 }
@@ -673,6 +686,19 @@ class StreamPartitionInfo$Type extends MessageType<StreamPartitionInfo> {
  * @generated MessageType for protobuf message StreamPartitionInfo
  */
 export const StreamPartitionInfo = new StreamPartitionInfo$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ContentDeliveryLayerNeighborInfo$Type extends MessageType<ContentDeliveryLayerNeighborInfo> {
+    constructor() {
+        super("ContentDeliveryLayerNeighborInfo", [
+            { no: 1, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 2, name: "rtt", kind: "scalar", opt: true, T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ContentDeliveryLayerNeighborInfo
+ */
+export const ContentDeliveryLayerNeighborInfo = new ContentDeliveryLayerNeighborInfo$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class ControlLayerInfo$Type extends MessageType<ControlLayerInfo> {
     constructor() {
