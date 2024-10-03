@@ -16,7 +16,7 @@
   "license": "Apache-2.0",
   "dependencies": {},
   "devDependencies": {
-    "@electron/rebuild": "^3.6.0",
+    "@electron/rebuild": "^3.6.2",
     "@jest/fake-timers": "^29.6.2",
     "buffer": "^6.0.3",
     "electron": "^31.2.0",
@@ -32,7 +32,7 @@
     "karma-webpack": "^5.0.1",
     "node-polyfill-webpack-plugin": "^4.0.0",
     "timers-browserify": "^2.0.12",
-    "webpack": "^5.94.0",
+    "webpack": "^5.95.0",
     "webpack-cli": "^5.1.4"
   }
 }
