@@ -3,7 +3,7 @@ import { range } from 'lodash'
 import { RecursiveOperationSession } from '../../src/dht/recursive-operation/RecursiveOperationSession'
 import { RecursiveOperationSessionRpcRemote } from '../../src/dht/recursive-operation/RecursiveOperationSessionRpcRemote'
 import { ServiceID } from '../../src/types/ServiceID'
-import { createRandomDhtAddress } from '../../src/identifiers'
+import { randomDhtAddress } from '../../src/identifiers'
 import { Message, PeerDescriptor, RecursiveOperation } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RecursiveOperationSessionRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
 import { RoutingRpcCommunicator } from '../../src/transport/RoutingRpcCommunicator'
@@ -36,7 +36,7 @@ describe('RecursiveOperationSession', () => {
         const doRouteRequest = jest.fn()
         const session = new RecursiveOperationSession({
             transport: environment.createTransport(localPeerDescriptor),
-            targetId: createRandomDhtAddress(),
+            targetId: randomDhtAddress(),
             localPeerDescriptor,
             waitedRoutingPathCompletions: 3,
             operation: RecursiveOperation.FIND_CLOSEST_NODES,

@@ -1,5 +1,5 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { ConnectionLocker, DhtAddress, DhtCallContext, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { ConnectionLocker, DhtAddress, DhtCallContext, ListeningRpcCommunicator, toNodeId } from '@streamr/dht'
 import { StreamPartID } from '@streamr/utils'
 import { Empty } from '../../proto/google/protobuf/empty'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
@@ -30,7 +30,7 @@ export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
     constructor(options: TemporaryConnectionRpcLocalOptions) {
         this.options = options
         // TODO use options option or named constant?
-        this.temporaryNodes = new NodeList(getNodeIdFromPeerDescriptor(options.localPeerDescriptor), 10)
+        this.temporaryNodes = new NodeList(toNodeId(options.localPeerDescriptor), 10)
         this.lockId = LOCK_ID_BASE + options.streamPartId
     }
 
@@ -59,14 +59,14 @@ export class TemporaryConnectionRpcLocal implements ITemporaryConnectionRpc {
             ContentDeliveryRpcClient
         )
         this.temporaryNodes.add(remote)
-        this.options.connectionLocker.weakLockConnection(getNodeIdFromPeerDescriptor(sender), this.lockId)
+        this.options.connectionLocker.weakLockConnection(toNodeId(sender), this.lockId)
         return {
             accepted: true
         }
     }
 
     async closeConnection(_request: CloseTemporaryConnection, context: ServerCallContext): Promise<Empty> {
-        const remoteNodeId = getNodeIdFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!)
+        const remoteNodeId = toNodeId((context as DhtCallContext).incomingSourceDescriptor!)
         this.removeNode(remoteNodeId)
         return {}
     }

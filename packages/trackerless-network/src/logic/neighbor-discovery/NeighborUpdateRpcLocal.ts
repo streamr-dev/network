@@ -1,5 +1,5 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { DhtAddress, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { DhtAddress, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, toNodeId } from '@streamr/dht'
 import { StreamPartID } from '@streamr/utils'
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -28,9 +28,9 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
     }
 
     private updateContacts(neighborDescriptors: PeerDescriptor[]): void {
-        const ownNodeId = getNodeIdFromPeerDescriptor(this.options.localPeerDescriptor)
+        const ownNodeId = toNodeId(this.options.localPeerDescriptor)
         const newPeerDescriptors = neighborDescriptors.filter((peerDescriptor) => {
-            const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+            const nodeId = toNodeId(peerDescriptor)
             return nodeId !== ownNodeId && !this.options.neighbors.getIds().includes(nodeId)
         })
         newPeerDescriptors.forEach((peerDescriptor) => this.options.nearbyNodeView.add(
@@ -54,7 +54,7 @@ export class NeighborUpdateRpcLocal implements INeighborUpdateRpc {
     // INeighborUpdateRpc server method
     async neighborUpdate(message: NeighborUpdate, context: ServerCallContext): Promise<NeighborUpdate> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const remoteNodeId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
+        const remoteNodeId = toNodeId(senderPeerDescriptor)
         this.updateContacts(message.neighborDescriptors)
         if (!this.options.neighbors.has(remoteNodeId) && !this.options.ongoingHandshakes.has(remoteNodeId)) {
             return this.createResponse(true)

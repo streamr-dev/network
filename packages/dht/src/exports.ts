@@ -25,9 +25,9 @@ export { createOutgoingHandshaker } from './connection/Handshaker'
 export { 
     DhtAddress,
     DhtAddressRaw,
-    getDhtAddressFromRaw,
-    getRawFromDhtAddress,
-    createRandomDhtAddress,
+    toDhtAddress,
+    toDhtAddressRaw,
+    randomDhtAddress,
     areEqualPeerDescriptors,
-    getNodeIdFromPeerDescriptor
+    toNodeId
 } from './identifiers'

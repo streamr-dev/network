@@ -9,7 +9,7 @@ import {
 } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { toNodeId } from '../../src/identifiers'
 
 const SERVICE_ID = 'test'
 
@@ -47,7 +47,7 @@ describe('DhtNodeRpcRemote', () => {
     })
 
     it('getClosestPeers happy path', async () => {
-        const neighbors = await rpcRemote.getClosestPeers(getNodeIdFromPeerDescriptor(clientPeerDescriptor))
+        const neighbors = await rpcRemote.getClosestPeers(toNodeId(clientPeerDescriptor))
         expect(neighbors.length).toEqual(createMockPeers().length)
     })
 
@@ -59,7 +59,7 @@ describe('DhtNodeRpcRemote', () => {
 
     it('getClosestPeers error path', async () => {
         serverRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', mockDhtRpc.throwGetClosestPeersError)
-        await expect(rpcRemote.getClosestPeers(getNodeIdFromPeerDescriptor(clientPeerDescriptor)))
+        await expect(rpcRemote.getClosestPeers(toNodeId(clientPeerDescriptor)))
             .rejects.toThrow('Closest peers error')
     })
 

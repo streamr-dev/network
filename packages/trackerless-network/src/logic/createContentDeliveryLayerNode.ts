@@ -1,4 +1,4 @@
-import { DhtAddress, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { DhtAddress, ListeningRpcCommunicator, toNodeId } from '@streamr/dht'
 import { Handshaker } from './neighbor-discovery/Handshaker'
 import { NeighborFinder } from './neighbor-discovery/NeighborFinder'
 import { NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManager'
@@ -24,7 +24,7 @@ type ContentDeliveryLayerNodeOptions = MarkOptional<StrictContentDeliveryLayerNo
     }
 
 const createConfigWithDefaults = (options: ContentDeliveryLayerNodeOptions): StrictContentDeliveryLayerNodeOptions => {
-    const ownNodeId = getNodeIdFromPeerDescriptor(options.localPeerDescriptor)
+    const ownNodeId = toNodeId(options.localPeerDescriptor)
     const rpcCommunicator = options.rpcCommunicator ?? new ListeningRpcCommunicator(
         formStreamPartContentDeliveryServiceId(options.streamPartId),
         options.transport

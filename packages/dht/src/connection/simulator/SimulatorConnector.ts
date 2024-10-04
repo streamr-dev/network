@@ -7,7 +7,7 @@ import {
 import { Logger } from '@streamr/utils'
 import { Simulator } from './Simulator'
 import { SimulatorConnection } from './SimulatorConnection'
-import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { DhtAddress, toNodeId } from '../../identifiers'
 import { acceptHandshake, createIncomingHandshaker, createOutgoingHandshaker, rejectHandshake } from '../Handshaker'
 import { PendingConnection } from '../PendingConnection'
 
@@ -32,8 +32,8 @@ export class SimulatorConnector {
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): PendingConnection {
-        logger.trace('connect() ' + getNodeIdFromPeerDescriptor(targetPeerDescriptor))
-        const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
+        logger.trace('connect() ' + toNodeId(targetPeerDescriptor))
+        const nodeId = toNodeId(targetPeerDescriptor)
         const existingConnection = this.connectingConnections.get(nodeId)
         if (existingConnection) {
             return existingConnection
@@ -65,7 +65,7 @@ export class SimulatorConnector {
     public handleIncomingConnection(sourceConnection: SimulatorConnection): void {
         // connection is incoming, so remotePeerDescriptor is localPeerDescriptor
         const remotePeerDescriptor = sourceConnection.localPeerDescriptor
-        const remoteNodeId = getNodeIdFromPeerDescriptor(sourceConnection.localPeerDescriptor)
+        const remoteNodeId = toNodeId(sourceConnection.localPeerDescriptor)
         logger.trace(remoteNodeId + ' incoming connection, stopped: ' + this.stopped)
         if (this.stopped) {
             return

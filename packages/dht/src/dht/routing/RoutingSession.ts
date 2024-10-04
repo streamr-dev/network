@@ -9,7 +9,7 @@ import { RecursiveOperationRpcClient, RouterRpcClient } from '../../proto/packag
 import { Contact } from '../contact/Contact'
 import { RecursiveOperationRpcRemote } from '../recursive-operation/RecursiveOperationRpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
-import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { DhtAddress, areEqualPeerDescriptors, toDhtAddress, toNodeId } from '../../identifiers'
 import { pull } from 'lodash'
 import { RoutingTable, RoutingTablesCache } from './RoutingTablesCache'
 
@@ -160,14 +160,14 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     updateAndGetRoutablePeers(): RoutingRemoteContact[] {
         logger.trace('getRoutablePeers() sessionId: ' + this.sessionId)
         const previousPeer = getPreviousPeer(this.options.routedMessage)
-        const previousId = previousPeer ? getNodeIdFromPeerDescriptor(previousPeer) : undefined
-        const targetId = getDhtAddressFromRaw(this.options.routedMessage.target)
+        const previousId = previousPeer ? toNodeId(previousPeer) : undefined
+        const targetId = toDhtAddress(this.options.routedMessage.target)
         let routingTable: RoutingTable
         if (this.options.routingTablesCache.has(targetId, previousId)) {
             routingTable = this.options.routingTablesCache.get(targetId, previousId)!
         } else {
             routingTable = new SortedContactList<RoutingRemoteContact>({
-                referenceId: getDhtAddressFromRaw(this.options.routedMessage.target),
+                referenceId: toDhtAddress(this.options.routedMessage.target),
                 maxSize: ROUTING_TABLE_MAX_SIZE,
                 allowToContainReferenceId: true,
                 nodeIdDistanceLimit: previousId
@@ -197,7 +197,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         while ((this.ongoingRequests.size < this.options.parallelism) && (uncontacted.length > 0) && !this.stopped) {
             const nextPeer = uncontacted.shift()
             // eslint-disable-next-line max-len
-            logger.trace(`Sending routeMessage request to contact: ${getNodeIdFromPeerDescriptor(nextPeer!.getPeerDescriptor())} (sessionId=${this.sessionId})`)
+            logger.trace(`Sending routeMessage request to contact: ${toNodeId(nextPeer!.getPeerDescriptor())} (sessionId=${this.sessionId})`)
             this.contactedPeers.add(nextPeer!.getNodeId())
             this.ongoingRequests.add(nextPeer!.getNodeId())
             this.addParallelRootIfSource(nextPeer!.getNodeId())
