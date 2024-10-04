@@ -13,7 +13,7 @@ import { IConnectionLockRpc } from '../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
 import { LockID } from './ConnectionLockStates'
-import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { DhtAddress, areEqualPeerDescriptors, toNodeId } from '../identifiers'
 
 interface ConnectionLockRpcLocalOptions {
     addRemoteLocked: (id: DhtAddress, lockId: LockID) => void
@@ -40,7 +40,7 @@ export class ConnectionLockRpcLocal implements IConnectionLockRpc {
             }
             return response
         }
-        const remoteNodeId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
+        const remoteNodeId = toNodeId(senderPeerDescriptor)
         this.options.addRemoteLocked(remoteNodeId, lockRequest.lockId)
         const response: LockResponse = {
             accepted: true
@@ -50,7 +50,7 @@ export class ConnectionLockRpcLocal implements IConnectionLockRpc {
 
     async unlockRequest(unlockRequest: UnlockRequest, context: ServerCallContext): Promise<Empty> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const nodeId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
+        const nodeId = toNodeId(senderPeerDescriptor)
         this.options.removeRemoteLocked(nodeId, unlockRequest.lockId)
         return {}
     }

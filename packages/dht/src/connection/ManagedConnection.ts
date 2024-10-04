@@ -4,7 +4,7 @@ import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
-import { DhtAddress, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { DhtAddress, toNodeId } from '../identifiers'
 import { createRandomConnectionId } from './Connection'
 
 export interface ManagedConnectionEvents {
@@ -83,7 +83,7 @@ export class ManagedConnection extends EventEmitter<ManagedConnectionEvents> {
     }
 
     getNodeId(): DhtAddress {
-        return getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)
+        return toNodeId(this.remotePeerDescriptor)
     }
 
     getLastUsedTimestamp(): number {

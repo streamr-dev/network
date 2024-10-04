@@ -11,7 +11,7 @@ import {
 import { IStoreRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { LocalDataStore } from './LocalDataStore'
-import { areEqualPeerDescriptors, DhtAddress, getDhtAddressFromRaw } from '../../identifiers'
+import { areEqualPeerDescriptors, DhtAddress, toDhtAddress } from '../../identifiers'
 
 interface StoreRpcLocalOptions {
     localDataStore: LocalDataStore
@@ -32,7 +32,7 @@ export class StoreRpcLocal implements IStoreRpc {
 
     async storeData(request: StoreDataRequest): Promise<StoreDataResponse> {
         logger.trace('storeData()')
-        const key = getDhtAddressFromRaw(request.key)
+        const key = toDhtAddress(request.key)
         const isLocalNodeStorer = this.isLocalNodeStorer(key)
         this.options.localDataStore.storeEntry({ 
             key: request.key,
@@ -57,7 +57,7 @@ export class StoreRpcLocal implements IStoreRpc {
         if (wasStored) {
             this.replicateDataToNeighbors((context as DhtCallContext).incomingSourceDescriptor!, request.entry!)
         }
-        const key = getDhtAddressFromRaw(dataEntry.key)
+        const key = toDhtAddress(dataEntry.key)
         if (!this.isLocalNodeStorer(key)) {
             this.options.localDataStore.setAllEntriesAsStale(key)
         }
@@ -70,7 +70,7 @@ export class StoreRpcLocal implements IStoreRpc {
     }
 
     private replicateDataToNeighbors(requestor: PeerDescriptor, dataEntry: DataEntry): void {
-        const dataKey = getDhtAddressFromRaw(dataEntry.key)
+        const dataKey = toDhtAddress(dataEntry.key)
         const storers = this.options.getStorers(dataKey)
         const isLocalNodePrimaryStorer = areEqualPeerDescriptors(storers[0], this.options.localPeerDescriptor)
         // If we are the closest to the data, get storageRedundancyFactor - 1 nearest node to the data, and

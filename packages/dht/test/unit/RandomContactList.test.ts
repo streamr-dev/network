@@ -1,9 +1,9 @@
 import { RandomContactList } from '../../src/dht/contact/RandomContactList'
-import { DhtAddress, DhtAddressRaw, getDhtAddressFromRaw } from '../../src/identifiers'
+import { DhtAddress, DhtAddressRaw, toDhtAddress } from '../../src/identifiers'
 
 const createItem = (nodeId: DhtAddressRaw): { getNodeId: () => DhtAddress } => {
     return { 
-        getNodeId: () => getDhtAddressFromRaw(nodeId)
+        getNodeId: () => toDhtAddress(nodeId)
     }
 }
 

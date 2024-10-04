@@ -4,7 +4,7 @@ import {
     ITransport,
     ListeningRpcCommunicator,
     PeerDescriptor,
-    getNodeIdFromPeerDescriptor
+    toNodeId
 } from '@streamr/dht'
 import { Logger, StreamPartID, UserID, addManagedEventListener, wait } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
@@ -87,7 +87,7 @@ export class ProxyClient extends EventEmitter<Events> {
         this.options = options
         this.rpcCommunicator = new ListeningRpcCommunicator(formStreamPartContentDeliveryServiceId(options.streamPartId), options.transport)
         // TODO use options option or named constant?
-        this.neighbors = new NodeList(getNodeIdFromPeerDescriptor(this.options.localPeerDescriptor), 1000)
+        this.neighbors = new NodeList(toNodeId(this.options.localPeerDescriptor), 1000)
         this.contentDeliveryRpcLocal = new ContentDeliveryRpcLocal({
             localPeerDescriptor: this.options.localPeerDescriptor,
             streamPartId: this.options.streamPartId,
@@ -137,7 +137,7 @@ export class ProxyClient extends EventEmitter<Events> {
         }
         const nodesIds = new Map<DhtAddress, PeerDescriptor>()
         nodes.forEach((peerDescriptor) => {
-            nodesIds.set(getNodeIdFromPeerDescriptor(peerDescriptor), peerDescriptor)
+            nodesIds.set(toNodeId(peerDescriptor), peerDescriptor)
         })
         this.definition = {
             nodes: nodesIds,
@@ -225,7 +225,7 @@ export class ProxyClient extends EventEmitter<Events> {
     }
 
     private removeConnection(peerDescriptor: PeerDescriptor): void {
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        const nodeId = toNodeId(peerDescriptor)
         this.connections.delete(nodeId)
         this.neighbors.remove(nodeId)
         this.options.connectionLocker.unlockConnection(peerDescriptor, SERVICE_ID)
@@ -248,7 +248,7 @@ export class ProxyClient extends EventEmitter<Events> {
     }
 
     private async onNodeDisconnected(peerDescriptor: PeerDescriptor): Promise<void> {
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        const nodeId = toNodeId(peerDescriptor)
         if (this.connections.has(nodeId)) {
             this.options.connectionLocker.unlockConnection(peerDescriptor, SERVICE_ID)
             this.removeConnection(peerDescriptor)

@@ -1,4 +1,4 @@
-import { RpcRemote, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { RpcRemote, toNodeId } from '@streamr/dht'
 import { Logger } from '@streamr/utils'
 import { TemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
 
@@ -11,7 +11,7 @@ export class TemporaryConnectionRpcRemote extends RpcRemote<TemporaryConnectionR
             const response = await this.getClient().openConnection({}, this.formDhtRpcOptions())
             return response.accepted
         } catch (err: any) {
-            logger.debug(`temporaryConnection to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed`, { err })
+            logger.debug(`temporaryConnection to ${toNodeId(this.getPeerDescriptor())} failed`, { err })
             return false
         }
     }
@@ -23,7 +23,7 @@ export class TemporaryConnectionRpcRemote extends RpcRemote<TemporaryConnectionR
                 notification: true
             }))
         } catch (err) {
-            logger.trace(`closeConnection to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed`, { err })
+            logger.trace(`closeConnection to ${toNodeId(this.getPeerDescriptor())} failed`, { err })
         }
     }
 }

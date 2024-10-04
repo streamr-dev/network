@@ -2,7 +2,7 @@ import { Logger } from '@streamr/utils'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils/utils'
-import { createRandomDhtAddress } from '../../src/identifiers'
+import { randomDhtAddress } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
@@ -22,11 +22,11 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
 
     beforeEach(async () => {
 
-        layer0EntryPoint = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
-        layer0Node1 = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
-        layer0Node2 = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
-        layer0Node3 = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
-        layer0Node4 = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
+        layer0EntryPoint = await createMockConnectionDhtNode(simulator, randomDhtAddress())
+        layer0Node1 = await createMockConnectionDhtNode(simulator, randomDhtAddress())
+        layer0Node2 = await createMockConnectionDhtNode(simulator, randomDhtAddress())
+        layer0Node3 = await createMockConnectionDhtNode(simulator, randomDhtAddress())
+        layer0Node4 = await createMockConnectionDhtNode(simulator, randomDhtAddress())
 
         layer1EntryPoint = await createMockConnectionLayer1Node(layer0EntryPoint)
 

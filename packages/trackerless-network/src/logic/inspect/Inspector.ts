@@ -1,4 +1,4 @@
-import { ConnectionLocker, DhtAddress, ListeningRpcCommunicator, LockID, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { ConnectionLocker, DhtAddress, ListeningRpcCommunicator, LockID, PeerDescriptor, toNodeId } from '@streamr/dht'
 import { Logger, StreamPartID, waitForEvent3 } from '@streamr/utils'
 import { MessageID } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { TemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -47,7 +47,7 @@ export class Inspector {
             TemporaryConnectionRpcClient
         )
         await rpcRemote.openConnection()
-        this.connectionLocker.weakLockConnection(getNodeIdFromPeerDescriptor(peerDescriptor), lockId)
+        this.connectionLocker.weakLockConnection(toNodeId(peerDescriptor), lockId)
     }
 
     async defaultCloseInspectConnection(peerDescriptor: PeerDescriptor, lockId: LockID): Promise<void> {
@@ -58,11 +58,11 @@ export class Inspector {
             TemporaryConnectionRpcClient
         )
         await rpcRemote.closeConnection()
-        this.connectionLocker.weakUnlockConnection(getNodeIdFromPeerDescriptor(peerDescriptor), lockId)
+        this.connectionLocker.weakUnlockConnection(toNodeId(peerDescriptor), lockId)
     }
 
     async inspect(peerDescriptor: PeerDescriptor): Promise<boolean> {
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        const nodeId = toNodeId(peerDescriptor)
         const session = new InspectSession({
             inspectedNode: nodeId
         })

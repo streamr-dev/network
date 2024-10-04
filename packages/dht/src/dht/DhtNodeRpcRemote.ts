@@ -1,7 +1,7 @@
 import { RpcCommunicator } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
-import { DhtAddress, DhtAddressRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../identifiers'
+import { DhtAddress, DhtAddressRaw, toNodeId, toDhtAddressRaw } from '../identifiers'
 import {
     ClosestPeersRequest,
     ClosestRingPeersRequest,
@@ -46,7 +46,7 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
     async getClosestPeers(nodeId: DhtAddress): Promise<PeerDescriptor[]> {
         logger.trace(`Requesting getClosestPeers on ${this.serviceId} from ${this.getNodeId()}`)
         const request: ClosestPeersRequest = {
-            nodeId: getRawFromDhtAddress(nodeId),
+            nodeId: toDhtAddressRaw(nodeId),
             requestId: v4()
         }
         try {
@@ -102,6 +102,6 @@ export class DhtNodeRpcRemote extends RpcRemote<DhtNodeRpcClient> implements KBu
     }
 
     getNodeId(): DhtAddress {
-        return getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
+        return toNodeId(this.getPeerDescriptor())
     }
 }

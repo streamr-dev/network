@@ -6,7 +6,7 @@ import { execSync } from 'child_process'
 import fs from 'fs'
 import { Logger, wait } from '@streamr/utils'
 import { debugVars } from '../../src/helpers/debugHelpers'
-import { getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { toDhtAddress, toNodeId } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
@@ -26,10 +26,10 @@ describe('Find correctness', () => {
     beforeEach(async () => {
 
         nodes = []
-        entryPoint = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[0].data)), undefined)
+        entryPoint = await createMockConnectionDhtNode(simulator, toDhtAddress(Uint8Array.from(dhtIds[0].data)), undefined)
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[i].data)), undefined)
+            const node = await createMockConnectionDhtNode(simulator, toDhtAddress(Uint8Array.from(dhtIds[i].data)), undefined)
             nodes.push(node)
         }
     })
@@ -55,7 +55,7 @@ describe('Find correctness', () => {
         debugVars['waiting'] = false
         logger.info('waiting over')
 
-        nodes.forEach((node) => logger.info(getNodeIdFromPeerDescriptor(node.getLocalPeerDescriptor()) + ': connections:' +
+        nodes.forEach((node) => logger.info(toNodeId(node.getLocalPeerDescriptor()) + ': connections:' +
             node.getConnectionsView().getConnectionCount() + ', kbucket: ' + node.getNeighborCount()
             + ', localLocked: ' + node.getLocalLockedConnectionCount()
             + ', remoteLocked: ' + node.getRemoteLockedConnectionCount()
@@ -63,10 +63,10 @@ describe('Find correctness', () => {
 
         logger.info('starting find')
         const targetId = Uint8Array.from(dhtIds[9].data)
-        const closestNodes = await nodes[159].findClosestNodesFromDht(getDhtAddressFromRaw(targetId))
+        const closestNodes = await nodes[159].findClosestNodesFromDht(toDhtAddress(targetId))
         logger.info('find over')
         expect(closestNodes).toBeGreaterThanOrEqual(5)
-        expect(getDhtAddressFromRaw(targetId)).toEqual(getNodeIdFromPeerDescriptor(closestNodes[0]))
+        expect(toDhtAddress(targetId)).toEqual(toNodeId(closestNodes[0]))
 
     }, 180000)
 })

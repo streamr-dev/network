@@ -27,11 +27,11 @@ import { Empty } from '../../src/proto/google/protobuf/empty'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { wait, waitForCondition } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
-import { DhtAddress, createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
+import { DhtAddress, randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
 
 export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'nodeId'>>): PeerDescriptor => {
     return {
-        nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
+        nodeId: toDhtAddressRaw(randomDhtAddress()),
         type: NodeType.NODEJS,
         ...opts
     }
@@ -46,7 +46,7 @@ export const createMockRingNode = async (
     const dhtJoinTimeout = 45000
 
     const peerDescriptor: PeerDescriptor = {
-        nodeId: getRawFromDhtAddress(nodeId ?? createRandomDhtAddress()),
+        nodeId: toDhtAddressRaw(nodeId ?? randomDhtAddress()),
         type: NodeType.NODEJS,
         region
         //ipAddress: ipv4ToNumber(ipAddress)
@@ -80,7 +80,7 @@ export const createMockConnectionDhtNode = async (
     dhtJoinTimeout = 45000
 ): Promise<DhtNode> => {
     const peerDescriptor: PeerDescriptor = {
-        nodeId: getRawFromDhtAddress(nodeId ?? createRandomDhtAddress()),
+        nodeId: toDhtAddressRaw(nodeId ?? randomDhtAddress()),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }

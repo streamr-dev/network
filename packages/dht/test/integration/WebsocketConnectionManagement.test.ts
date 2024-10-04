@@ -9,7 +9,7 @@ import * as Err from '../../src/helpers/errors'
 import { Message, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { TransportEvents } from '../../src/transport/ITransport'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { toNodeId } from '../../src/identifiers'
 
 const SERVICE_ID = 'test'
 
@@ -145,7 +145,7 @@ describe('Websocket Connection Management', () => {
             waitForEvent3<TransportEvents>(wsServerManager, 'disconnected', 15000),
             wsServerManager.send(dummyMessage)
         ])
-        expect(wsServerManager.hasConnection(getNodeIdFromPeerDescriptor(dummyMessage.targetDescriptor!))).toBeFalse()
+        expect(wsServerManager.hasConnection(toNodeId(dummyMessage.targetDescriptor!))).toBeFalse()
     }, 20000)
     
     it('Can open connections to peer with server', async () => {
@@ -161,12 +161,12 @@ describe('Websocket Connection Management', () => {
         await noWsServerManager.send(dummyMessage)
         await waitForCondition(
             () => {
-                const nodeId = getNodeIdFromPeerDescriptor(noWsServerConnectorPeerDescriptor)
+                const nodeId = toNodeId(noWsServerConnectorPeerDescriptor)
                 return wsServerManager.hasConnection(nodeId)
             }
         )
         await waitForCondition(
-            () => noWsServerManager.hasConnection(getNodeIdFromPeerDescriptor(wsServerConnectorPeerDescriptor))
+            () => noWsServerManager.hasConnection(toNodeId(wsServerConnectorPeerDescriptor))
         )
     })
 
