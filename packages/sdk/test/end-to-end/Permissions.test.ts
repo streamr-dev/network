@@ -162,11 +162,11 @@ describe('Stream permissions', () => {
         const user2 = randomUserId()
         await stream.grantPermissions({
             user: toUserIdRaw(user1),
-            permissions: [StreamPermission.GRANT]
+            permissions: [StreamPermission.PUBLISH]
         })
         await stream.grantPermissions({
             user: toUserIdRaw(user2),
-            permissions: [StreamPermission.EDIT]
+            permissions: [StreamPermission.SUBSCRIBE]
         })
         await client.setPermissions({
             streamId: stream.id,
@@ -188,10 +188,10 @@ describe('Stream permissions', () => {
                 }
             ]
         })
+        expect(await stream.hasPermission({ permission: StreamPermission.PUBLISH, allowPublic: false, user: toUserIdRaw(user1) })).toBe(false)
         expect(await stream.hasPermission({ permission: StreamPermission.SUBSCRIBE, allowPublic: false, user: toUserIdRaw(user1) })).toBe(true)
-        expect(await stream.hasPermission({ permission: StreamPermission.GRANT, allowPublic: false, user: toUserIdRaw(user1) })).toBe(false)
+        expect(await stream.hasPermission({ permission: StreamPermission.PUBLISH, allowPublic: false, user: toUserIdRaw(user2) })).toBe(false)
         expect(await stream.hasPermission({ permission: StreamPermission.SUBSCRIBE, allowPublic: false, user: toUserIdRaw(user2) })).toBe(false)
-        expect(await stream.hasPermission({ permission: StreamPermission.EDIT, allowPublic: false, user: toUserIdRaw(user2) })).toBe(false)
         expect(await otherStream.hasPermission(
             { permission: StreamPermission.PUBLISH, allowPublic: true, user: toUserIdRaw(randomUserId()) }
         )).toBe(true)
