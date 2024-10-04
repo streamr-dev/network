@@ -7,6 +7,7 @@ import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
 import { createRelativeTestStreamId } from '../test-utils/utils'
+import { randomBytes } from 'crypto'
 
 const TIMEOUT = 40000
 
@@ -161,11 +162,11 @@ describe('Stream permissions', () => {
         const user2 = randomUserId()
         await stream.grantPermissions({
             user: toUserIdRaw(user1),
-            permissions: [StreamPermission.GRANT]
+            permissions: [StreamPermission.PUBLISH]
         })
         await stream.grantPermissions({
             user: toUserIdRaw(user2),
-            permissions: [StreamPermission.EDIT]
+            permissions: [StreamPermission.SUBSCRIBE]
         })
         await client.setPermissions({
             streamId: stream.id,
@@ -187,10 +188,10 @@ describe('Stream permissions', () => {
                 }
             ]
         })
+        expect(await stream.hasPermission({ permission: StreamPermission.PUBLISH, allowPublic: false, user: toUserIdRaw(user1) })).toBe(false)
         expect(await stream.hasPermission({ permission: StreamPermission.SUBSCRIBE, allowPublic: false, user: toUserIdRaw(user1) })).toBe(true)
-        expect(await stream.hasPermission({ permission: StreamPermission.GRANT, allowPublic: false, user: toUserIdRaw(user1) })).toBe(false)
+        expect(await stream.hasPermission({ permission: StreamPermission.PUBLISH, allowPublic: false, user: toUserIdRaw(user2) })).toBe(false)
         expect(await stream.hasPermission({ permission: StreamPermission.SUBSCRIBE, allowPublic: false, user: toUserIdRaw(user2) })).toBe(false)
-        expect(await stream.hasPermission({ permission: StreamPermission.EDIT, allowPublic: false, user: toUserIdRaw(user2) })).toBe(false)
         expect(await otherStream.hasPermission(
             { permission: StreamPermission.PUBLISH, allowPublic: true, user: toUserIdRaw(randomUserId()) }
         )).toBe(true)
@@ -229,4 +230,14 @@ describe('Stream permissions', () => {
         await expect(otherUserClient.publish(stream.id, message)).resolves.toBeDefined()
         await otherUserClient.destroy()
     }, TIMEOUT)
+
+    it('unsupported permission type', async () => {
+        await expect(() => client.grantPermissions(stream.id, {
+            user: randomBytes(50),
+            permissions: [StreamPermission.EDIT]
+        })).rejects.toThrowStreamrError({
+            message: 'Non-Ethereum address is not supported for permission types: edit',
+            code: 'UNSUPPORTED_OPERATION'
+        })
+    })
 })
