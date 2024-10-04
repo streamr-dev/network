@@ -10,6 +10,7 @@ import { Logger, StreamPartID, addManagedEventListener } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import {
     CloseTemporaryConnection,
+    ContentDeliveryLayerNeighborInfo,
     LeaveStreamPartNotice,
     MessageID,
     MessageRef,
@@ -390,6 +391,15 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             return []
         }
         return this.options.neighbors.getAll().map((n) => n.getPeerDescriptor())
+    }
+
+    getInfos(): ContentDeliveryLayerNeighborInfo[] {
+        return this.options.neighbors.getAll().map((n) => {
+            return {
+                peerDescriptor: n.getPeerDescriptor(),
+                rtt: n.getRtt()
+            }
+        })
     }
 
     getNearbyNodeView(): NodeList {
