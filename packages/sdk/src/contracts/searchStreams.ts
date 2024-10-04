@@ -1,7 +1,7 @@
 /* eslint-disable padding-line-between-statements */
 import { GraphQLQuery, Logger, StreamID, TheGraphClient, toStreamID, toUserId } from '@streamr/utils'
 import { Stream } from '../Stream'
-import { ChainPermissions, PUBLIC_PERMISSION_ADDRESS, StreamPermission, convertChainPermissionsToStreamPermissions } from '../permission'
+import { ChainPermissions, PUBLIC_PERMISSION_USER_ID, StreamPermission, convertChainPermissionsToStreamPermissions } from '../permission'
 import { filter, map, unique } from '../utils/GeneratorUtils'
 import { StreamQueryResult } from './StreamRegistry'
 
@@ -113,7 +113,7 @@ const buildQuery = (
     if (permissionFilter !== undefined) {
         variables.userId_in = [toUserId(permissionFilter.user)]
         if (permissionFilter.allowPublic) {
-            variables.userId_in.push(PUBLIC_PERMISSION_ADDRESS)
+            variables.userId_in.push(PUBLIC_PERMISSION_USER_ID)
         }
         if (permissionFilter.allOf !== undefined) {
             const now = String(Math.round(Date.now() / 1000))

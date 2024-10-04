@@ -35,7 +35,7 @@ export interface PublicPermissionAssignment {
 
 export type PermissionAssignment = UserPermissionAssignment | PublicPermissionAssignment
 
-export const PUBLIC_PERMISSION_ADDRESS = '0x0000000000000000000000000000000000000000'
+export const PUBLIC_PERMISSION_USER_ID = '0x0000000000000000000000000000000000000000'
 
 export type PermissionQueryResult = {
     id: string

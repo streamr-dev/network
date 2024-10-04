@@ -27,7 +27,7 @@ import { getEthersOverrides } from '../ethereumUtils'
 import { StreamrClientEventEmitter } from '../events'
 import {
     ChainPermissions,
-    PUBLIC_PERMISSION_ADDRESS,
+    PUBLIC_PERMISSION_USER_ID,
     PermissionAssignment,
     PermissionQuery,
     PermissionQueryResult,
@@ -407,7 +407,7 @@ export class StreamRegistry {
             * empty assignments cleanup in The Graph.
             */
             if (permissions.length > 0) {
-                if (permissionResult.userId === PUBLIC_PERMISSION_ADDRESS) {
+                if (permissionResult.userId === PUBLIC_PERMISSION_USER_ID) {
                     assignments.push({
                         public: true,
                         permissions
@@ -466,7 +466,7 @@ export class StreamRegistry {
         assignments: PermissionAssignment[]
     }[]): Promise<void> {
         const streamIds: StreamID[] = []
-        const targets: (UserID | typeof PUBLIC_PERMISSION_ADDRESS)[][] = []
+        const targets: (UserID | typeof PUBLIC_PERMISSION_USER_ID)[][] = []
         const chainPermissions: ChainPermissions[][] = []
         for (const item of items) {
             // eslint-disable-next-line no-await-in-loop
@@ -474,7 +474,7 @@ export class StreamRegistry {
             this.clearStreamCache(streamId)
             streamIds.push(streamId)
             targets.push(item.assignments.map((assignment) => {
-                return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_ADDRESS : toUserId(assignment.user)
+                return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_USER_ID : toUserId(assignment.user)
             }))
             chainPermissions.push(item.assignments.map((assignment) => {
                 return convertStreamPermissionsToChainPermission(assignment.permissions)
