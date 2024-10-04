@@ -91,11 +91,11 @@ module.exports = {
         '@typescript-eslint/no-misused-promises': ['error', {
             'checksVoidReturn': false
          }],
+        '@typescript-eslint/await-thenable': 'error',
         // TODO: in follow up PRs, select which rules we should enable and fix the code. When all recommended rules
         //  have been enabled, consider enabling the "strict" preset.
         '@typescript-eslint/require-await': 'off',
         '@typescript-eslint/no-floating-promises': 'off',
-        '@typescript-eslint/await-thenable': 'off',
         '@typescript-eslint/no-unsafe-return': 'off',
         '@typescript-eslint/no-unsafe-argument': 'off',
         '@typescript-eslint/no-unsafe-assignment': 'off',

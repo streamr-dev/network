@@ -114,6 +114,6 @@ export class WebsocketClientConnector {
         await Promise.allSettled(requests.map((conn) => conn.close(true)))
 
         await this.websocketServer?.stop()
-        await this.geoIpLocator?.stop()
+        this.geoIpLocator?.stop()
     }
 }

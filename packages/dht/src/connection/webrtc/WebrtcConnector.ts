@@ -224,7 +224,7 @@ export class WebrtcConnector {
         const attempts = Array.from(this.ongoingConnectAttempts.values())
         await Promise.allSettled(attempts.map(async (conn) => {
             conn.connection.destroy()
-            await conn.managedConnection.close(false)
+            conn.managedConnection.close(false)
         }))
 
         this.rpcCommunicator.destroy()
