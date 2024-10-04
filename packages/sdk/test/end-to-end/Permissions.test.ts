@@ -7,6 +7,7 @@ import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
 import { createRelativeTestStreamId } from '../test-utils/utils'
+import { randomBytes } from 'crypto'
 
 const TIMEOUT = 40000
 
@@ -229,4 +230,14 @@ describe('Stream permissions', () => {
         await expect(otherUserClient.publish(stream.id, message)).resolves.toBeDefined()
         await otherUserClient.destroy()
     }, TIMEOUT)
+
+    it('unsupported permission type', async () => {
+        await expect(() => client.grantPermissions(stream.id, {
+            user: randomBytes(50),
+            permissions: [StreamPermission.EDIT]
+        })).rejects.toThrowStreamrError({
+            message: 'Non-Ethereum address is not supported for permission types: edit',
+            code: 'UNSUPPORTED_OPERATION'
+        })
+    })
 })

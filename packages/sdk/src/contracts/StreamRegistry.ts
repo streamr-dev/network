@@ -1,3 +1,4 @@
+import { intersection } from 'lodash'
 import {
     EthereumAddress,
     GraphQLQuery,
@@ -8,6 +9,7 @@ import {
     UserID,
     collect,
     isENSName,
+    isEthereumAddressUserId,
     toEthereumAddress,
     toStreamID,
     toUserId,
@@ -68,6 +70,24 @@ export interface StreamCreationEvent {
     readonly streamId: StreamID
     readonly metadata: StreamMetadata
     readonly blockNumber: number
+}
+
+const validatePermissionAssignments = (assignments: PermissionAssignment[]): void | never => {
+    for (const assignment of assignments) {
+        if (!isPublicPermissionAssignment(assignment)) {
+            if (!isEthereumAddressUserId(toUserId(assignment.user))) {
+                // not supported by StreamRegistry v5 contract
+                const ETHEREUM_ONLY_PERMISSION_TYPES = [StreamPermission.EDIT, StreamPermission.DELETE, StreamPermission.GRANT] 
+                const invalidPermissions = intersection(assignment.permissions, ETHEREUM_ONLY_PERMISSION_TYPES)
+                if (invalidPermissions.length > 0) {
+                    throw new StreamrClientError(
+                        `Non-Ethereum address is not supported for permission types: ${invalidPermissions.join()}`,
+                        'UNSUPPORTED_OPERATION'
+                    )
+                }
+            }
+        }
+    }
 }
 
 const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: string): never => {
@@ -424,6 +444,7 @@ export class StreamRegistry {
     }
 
     async grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
+        validatePermissionAssignments(assignments)
         const overrides = await getEthersOverrides(this.rpcProviderSource, this.config)
         return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: UserID | undefined, solidityType: bigint) => {
             return (user === undefined)
@@ -434,6 +455,7 @@ export class StreamRegistry {
 
     /* eslint-disable max-len */
     async revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
+        validatePermissionAssignments(assignments)
         const overrides = await getEthersOverrides(this.rpcProviderSource, this.config)
         return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: UserID | undefined, solidityType: bigint) => {
             return (user === undefined)
@@ -469,6 +491,7 @@ export class StreamRegistry {
         const targets: (UserID | typeof PUBLIC_PERMISSION_USER_ID)[][] = []
         const chainPermissions: ChainPermissions[][] = []
         for (const item of items) {
+            validatePermissionAssignments(item.assignments)
             // eslint-disable-next-line no-await-in-loop
             const streamId = await this.streamIdBuilder.toStreamID(item.streamId)
             this.clearStreamCache(streamId)
