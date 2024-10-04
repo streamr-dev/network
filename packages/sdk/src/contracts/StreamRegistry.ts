@@ -4,10 +4,14 @@ import {
     Logger,
     StreamID,
     StreamIDUtils,
-    TheGraphClient, UserID, collect,
+    TheGraphClient,
+    UserID,
+    collect,
     isENSName,
     toEthereumAddress,
-    toStreamID
+    toStreamID,
+    toUserId,
+    toUserIdRaw
 } from '@streamr/utils'
 import { ContractTransactionResponse } from 'ethers'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -57,7 +61,7 @@ export interface StreamQueryResult {
 
 interface StreamPublisherOrSubscriberItem {
     id: string
-    userAddress: UserID
+    userAddress: string
 }
 
 export interface StreamCreationEvent {
@@ -151,16 +155,16 @@ export class StreamRegistry {
             return this.isStreamPublisher_nonCached(streamId, userId)
         }, {
             ...config.cache,
-            cacheKey([streamId, ethAddress]): string {
-                return [streamId, ethAddress].join(CACHE_KEY_SEPARATOR)
+            cacheKey([streamId, userId]): string {
+                return [streamId, userId].join(CACHE_KEY_SEPARATOR)
             }
         })
         this.isStreamSubscriber_cached = CacheAsyncFn((streamId: StreamID, userId: UserID) => {
             return this.isStreamSubscriber_nonCached(streamId, userId)
         }, {
             ...config.cache,
-            cacheKey([streamId, ethAddress]): string {
-                return [streamId, ethAddress].join(CACHE_KEY_SEPARATOR)
+            cacheKey([streamId, userId]): string {
+                return [streamId, userId].join(CACHE_KEY_SEPARATOR)
             }
         })
         this.hasPublicSubscribePermission_cached = CacheAsyncFn((streamId: StreamID) => {
@@ -232,7 +236,7 @@ export class StreamRegistry {
     }
 
     private async ensureStreamIdInNamespaceOfAuthenticatedUser(address: EthereumAddress, streamId: StreamID): Promise<void> {
-        const userAddress = await this.authentication.getAddress()
+        const userAddress = toEthereumAddress(await this.authentication.getUserId())
         if (address !== userAddress) {
             throw new Error(`stream id "${streamId}" not in namespace of authenticated user "${userAddress}"`)
         }
@@ -291,15 +295,15 @@ export class StreamRegistry {
             this.logger)
     }
 
-    getStreamPublishers(streamIdOrPath: string): AsyncIterable<UserID> {
+    getStreamPublishers(streamIdOrPath: string): AsyncGenerator<UserID> {
         return this.getStreamPublishersOrSubscribersList(streamIdOrPath, 'publishExpiration')
     }
 
-    getStreamSubscribers(streamIdOrPath: string): AsyncIterable<UserID> {
+    getStreamSubscribers(streamIdOrPath: string): AsyncGenerator<UserID> {
         return this.getStreamPublishersOrSubscribersList(streamIdOrPath, 'subscribeExpiration')
     }
 
-    private async* getStreamPublishersOrSubscribersList(streamIdOrPath: string, fieldName: string): AsyncIterable<UserID> {
+    private async* getStreamPublishersOrSubscribersList(streamIdOrPath: string, fieldName: string): AsyncGenerator<UserID> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         const backendResults = this.theGraphClient.queryEntities<StreamPublisherOrSubscriberItem>(
             (lastId: string, pageSize: number) => StreamRegistry.buildStreamPublishersOrSubscribersQuery(streamId, fieldName, lastId, pageSize)
@@ -314,7 +318,7 @@ export class StreamRegistry {
         const validItems = filter<StreamPublisherOrSubscriberItem>(backendResults, (p) => (p as any).stream !== null)
         yield* map<StreamPublisherOrSubscriberItem, UserID>(
             validItems,
-            (item) => item.userAddress
+            (item) => toUserId(item.userAddress)
         )
     }
 
@@ -356,9 +360,9 @@ export class StreamRegistry {
         if (isPublicPermissionQuery(query)) {
             return this.streamRegistryContractReadonly.hasPublicPermission(streamId, permissionType)
         } else if (query.allowPublic) {
-            return this.streamRegistryContractReadonly.hasPermission(streamId, toEthereumAddress(query.user), permissionType)
+            return this.streamRegistryContractReadonly.hasPermission(streamId, toUserId(query.user), permissionType)
         } else {
-            return this.streamRegistryContractReadonly.hasDirectPermission(streamId, toEthereumAddress(query.user), permissionType)
+            return this.streamRegistryContractReadonly.hasDirectPermission(streamId, toUserId(query.user), permissionType)
         }
     }
 
@@ -408,7 +412,7 @@ export class StreamRegistry {
                     })
                 } else {
                     assignments.push({
-                        user: permissionResult.userAddress,
+                        user: toUserIdRaw(toUserId(permissionResult.userAddress)),
                         permissions
                     })
                 }
@@ -447,7 +451,7 @@ export class StreamRegistry {
         for (const assignment of assignments) {
             for (const permission of assignment.permissions) {
                 const solidityType = streamPermissionToSolidityType(permission)
-                const user = isPublicPermissionAssignment(assignment) ? undefined : toEthereumAddress(assignment.user)
+                const user = isPublicPermissionAssignment(assignment) ? undefined : toUserId(assignment.user)
                 const txToSubmit = createTransaction(streamId, user, solidityType)
                 // eslint-disable-next-line no-await-in-loop
                 await waitForTx(txToSubmit)
@@ -460,7 +464,7 @@ export class StreamRegistry {
         assignments: PermissionAssignment[]
     }[]): Promise<void> {
         const streamIds: StreamID[] = []
-        const targets: string[][] = []
+        const targets: (UserID | typeof PUBLIC_PERMISSION_ADDRESS)[][] = []
         const chainPermissions: ChainPermissions[][] = []
         for (const item of items) {
             // eslint-disable-next-line no-await-in-loop
@@ -468,7 +472,7 @@ export class StreamRegistry {
             this.clearStreamCache(streamId)
             streamIds.push(streamId)
             targets.push(item.assignments.map((assignment) => {
-                return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_ADDRESS : assignment.user
+                return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_ADDRESS : toUserId(assignment.user)
             }))
             chainPermissions.push(item.assignments.map((assignment) => {
                 return convertStreamPermissionsToChainPermission(assignment.permissions)

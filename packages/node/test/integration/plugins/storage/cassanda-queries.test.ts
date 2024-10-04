@@ -1,6 +1,6 @@
 import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, convertBytesToStreamMessage } from '@streamr/sdk'
-import { waitForStreamToEnd } from '@streamr/test-utils'
-import { hexToBinary, toEthereumAddress, toStreamID, utf8ToBinary, waitForCondition, waitForEvent } from '@streamr/utils'
+import { randomUserId, waitForStreamToEnd } from '@streamr/test-utils'
+import { hexToBinary, toStreamID, utf8ToBinary, waitForCondition, waitForEvent } from '@streamr/utils'
 import { Client } from 'cassandra-driver'
 import { PassThrough, Readable } from 'stream'
 import { Storage, startCassandraStorage } from '../../../../src/plugins/storage/Storage'
@@ -11,7 +11,7 @@ const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
 const MOCK_STREAM_ID = `mock-stream-id-${Date.now()}`
-const MOCK_PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const MOCK_PUBLISHER_ID = randomUserId()
 const MOCK_MSG_CHAIN_ID = 'msgChainId'
 const createMockMessage = (i: number) => {
     return new StreamMessage({

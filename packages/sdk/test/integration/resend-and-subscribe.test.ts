@@ -11,6 +11,7 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { createMockMessage, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
 import { nextValue } from './../../src/utils/iterators'
+import { toUserId, toUserIdRaw } from '@streamr/utils'
 
 /*
  * Subscriber fetches a historical message and can use the encryption key from the message
@@ -34,7 +35,7 @@ describe('resend and subscribe', () => {
         })
         stream = await subscriber.createStream('/path')
         await stream.grantPermissions({
-            user: publisherWallet.address,
+            user: toUserIdRaw(toUserId(publisherWallet.address)),
             permissions: [StreamPermission.PUBLISH]
         })
         storageNode = await environment.startStorageNode()

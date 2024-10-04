@@ -1,4 +1,5 @@
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { randomUserId } from '@streamr/test-utils'
+import { toUserId, toUserIdRaw } from '@streamr/utils'
 import { MetadataPayloadFormat, PlainPayloadFormat } from '../../../src/helpers/PayloadFormat'
 
 const MOCK_CONTENT = {
@@ -7,8 +8,12 @@ const MOCK_CONTENT = {
 const MOCK_METADATA = {
     timestamp: 123,
     sequenceNumber: 456,
-    publisherId: randomEthereumAddress(),
+    publisherId: toUserIdRaw(randomUserId()),
     msgChainId: 'm'
+}
+const MOCK_METADATA_SERIALIZED = {
+    ...MOCK_METADATA,
+    publisherId: toUserId(MOCK_METADATA.publisherId)
 }
 
 describe('PayloadFormat', () => {
@@ -65,7 +70,7 @@ describe('PayloadFormat', () => {
             it('happy path', () => {
                 expect(format.createMessage(JSON.stringify({
                     content: MOCK_CONTENT,
-                    metadata: MOCK_METADATA
+                    metadata: MOCK_METADATA_SERIALIZED
                 }))).toEqual({
                     content: MOCK_CONTENT,
                     metadata: MOCK_METADATA
@@ -91,7 +96,7 @@ describe('PayloadFormat', () => {
             it('happy path', () => {
                 expect(JSON.parse(format.createPayload(MOCK_CONTENT, MOCK_METADATA))).toEqual({
                     content: MOCK_CONTENT,
-                    metadata: MOCK_METADATA
+                    metadata: MOCK_METADATA_SERIALIZED
                 })
             })
 

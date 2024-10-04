@@ -3,7 +3,7 @@ import './utils/PatchTsyringe'
 
 import { DhtAddress } from '@streamr/dht'
 import { ProxyDirection } from '@streamr/trackerless-network'
-import { EthereumAddress, StreamID, TheGraphClient, toEthereumAddress, UserID } from '@streamr/utils'
+import { EthereumAddress, StreamID, TheGraphClient, UserID, UserIDRaw, toEthereumAddress, toUserId, toUserIdRaw } from '@streamr/utils'
 import type { Overrides } from 'ethers'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
@@ -41,12 +41,13 @@ import { generateEthereumAccount as _generateEthereumAccount, getEthersOverrides
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
 import { PermissionAssignment, PermissionQuery } from './permission'
 import { MessageListener, MessageStream } from './subscribe/MessageStream'
-import { ResendOptions, Resends } from './subscribe/Resends'
+import { getInternalResendOptions, ResendOptions, Resends } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
 import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
 import { initResendSubscription } from './subscribe/resendSubscription'
 import { waitForStorage } from './subscribe/waitForStorage'
 import { StreamDefinition } from './types'
+import { map } from './utils/GeneratorUtils'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
@@ -186,8 +187,8 @@ export class StreamrClient {
      * @remarks Keys will be added to the store automatically by the client as encountered. This method can be used to
      * manually add some known keys into the store.
      */
-    async addEncryptionKey(key: GroupKey, publisherId: string): Promise<void> {
-        await this.localGroupKeyStore.set(key.id, toEthereumAddress(publisherId), key.data)
+    async addEncryptionKey(key: GroupKey, publisherId: Uint8Array): Promise<void> {
+        await this.localGroupKeyStore.set(key.id, toUserId(publisherId), key.data)
     }
 
     // --------------------------------------------------------------------------------------------
@@ -294,7 +295,7 @@ export class StreamrClient {
     ): Promise<MessageStream> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         const getStorageNodes = (streamId: StreamID) => this.streamStorageRegistry.getStorageNodes(streamId)
-        const pipeline = await this.resends.resend(streamPartId, options, getStorageNodes)
+        const pipeline = await this.resends.resend(streamPartId, getInternalResendOptions(options), getStorageNodes)
         const messageStream = new MessageStream(pipeline)
         if (onMessage !== undefined) {
             messageStream.useLegacyOnMessageHandler(onMessage)
@@ -431,17 +432,19 @@ export class StreamrClient {
     // --------------------------------------------------------------------------------------------
 
     /**
-     * Gets all ethereum addresses that have {@link StreamPermission.PUBLISH} permission to the stream.
+     * Gets all user ids that have {@link StreamPermission.PUBLISH} permission to the stream.
      */
-    getStreamPublishers(streamIdOrPath: string): AsyncIterable<EthereumAddress> {
-        return this.streamRegistry.getStreamPublishers(streamIdOrPath)
+    async* getStreamPublishers(streamIdOrPath: string): AsyncIterable<UserIDRaw> {
+        const userIds = this.streamRegistry.getStreamPublishers(streamIdOrPath)
+        yield* map<UserID, UserIDRaw>(userIds, (userId) => toUserIdRaw(userId)) 
     }
 
     /**
-     * Gets all ethereum addresses that have {@link StreamPermission.SUBSCRIBE} permission to the stream.
+     * Gets all user ids that have {@link StreamPermission.SUBSCRIBE} permission to the stream.
      */
-    getStreamSubscribers(streamIdOrPath: string): AsyncIterable<EthereumAddress> {
-        return this.streamRegistry.getStreamSubscribers(streamIdOrPath)
+    async* getStreamSubscribers(streamIdOrPath: string): AsyncIterable<UserIDRaw> {
+        const userIds = this.streamRegistry.getStreamSubscribers(streamIdOrPath)
+        yield* map<UserID, UserIDRaw>(userIds, (userId) => toUserIdRaw(userId)) 
     }
 
     /**
@@ -489,17 +492,17 @@ export class StreamrClient {
     /**
      * Checks whether a given ethereum address has {@link StreamPermission.PUBLISH} permission to a stream.
      */
-    async isStreamPublisher(streamIdOrPath: string, userAddress: string): Promise<boolean> {
+    async isStreamPublisher(streamIdOrPath: string, userId: Uint8Array): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.streamRegistry.isStreamPublisher(streamId, toEthereumAddress(userAddress), false)
+        return this.streamRegistry.isStreamPublisher(streamId, toUserId(userId), false)
     }
 
     /**
      * Checks whether a given ethereum address has {@link StreamPermission.SUBSCRIBE} permission to a stream.
      */
-    async isStreamSubscriber(streamIdOrPath: string, userAddress: string): Promise<boolean> {
+    async isStreamSubscriber(streamIdOrPath: string, userId: Uint8Array): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.streamRegistry.isStreamSubscriber(streamId, toEthereumAddress(userAddress), false)
+        return this.streamRegistry.isStreamSubscriber(streamId, toUserId(userId), false)
     }
 
     // --------------------------------------------------------------------------------------------
@@ -578,10 +581,10 @@ export class StreamrClient {
     }
 
     /**
-     * Gets the Ethereum address of the wallet associated with the current {@link StreamrClient} instance.
+     * Gets the user id (e.g. Ethereum address) of the wallet associated with the current {@link StreamrClient} instance.
      */
-    getAddress(): Promise<UserID> {
-        return this.authentication.getAddress()
+    async getUserId(): Promise<UserIDRaw> {
+        return toUserIdRaw(await this.authentication.getUserId())
     }
 
     // --------------------------------------------------------------------------------------------

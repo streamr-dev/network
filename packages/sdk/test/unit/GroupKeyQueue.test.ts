@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { toStreamID } from '@streamr/utils'
+import { toStreamID, toUserId } from '@streamr/utils'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { Authentication } from '../../src/Authentication'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -29,7 +29,7 @@ describe('GroupKeyQueue', () => {
         const groupKey = GroupKey.generate()
         await queue.rotate(groupKey)
         expect(groupKeyStore.set).toBeCalledTimes(1)
-        expect(groupKeyStore.set).toBeCalledWith(groupKey.id, await authentication.getAddress(), groupKey.data)
+        expect(groupKeyStore.set).toBeCalledWith(groupKey.id, toUserId(await authentication.getUserId()), groupKey.data)
         expect(await queue.useGroupKey()).toEqual({ current: groupKey })
         expect(await queue.useGroupKey()).toEqual({ current: groupKey })
         const groupKey2 = GroupKey.generate()

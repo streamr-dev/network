@@ -1,5 +1,5 @@
 import { Methods } from '@streamr/test-utils'
-import { Multimap, StreamID, UserID, toEthereumAddress } from '@streamr/utils'
+import { Multimap, StreamID, UserID, toUserId, toUserIdRaw } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
 import { Stream, StreamMetadata } from '../../../src/Stream'
@@ -40,7 +40,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         if (this.chain.getStream(streamId) !== undefined) {
             throw new Error(`Stream already exists: ${streamId}`)
         }
-        const authenticatedUser: UserID = await this.authentication.getAddress()
+        const authenticatedUser = await this.authentication.getUserId()
         const permissions = new Multimap<UserID, StreamPermission>()
         permissions.addAll(authenticatedUser, Object.values(StreamPermission))
         const registryItem: StreamRegistryItem = {
@@ -82,7 +82,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
             targets.push(PUBLIC_PERMISSION_TARGET)
         }
         if ((query as any).user !== undefined) {
-            targets.push(toEthereumAddress((query as any).user))
+            targets.push(toUserId((query as any).user))
         }
         return targets.some((target) => registryItem.permissions.get(target).includes(query.permission))
     }
@@ -103,7 +103,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
                 }
             } else {
                 return {
-                    user: target,
+                    user: toUserIdRaw(target),
                     permissions
                 }
             }
@@ -148,7 +148,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
             for (const assignment of assignments) {
                 const target = isPublicPermissionAssignment(assignment)
                     ? PUBLIC_PERMISSION_TARGET
-                    : toEthereumAddress(assignment.user)
+                    : toUserId(assignment.user)
                 modifyRegistryItem(registryItem, target, assignment.permissions)
             }
         }
@@ -177,12 +177,12 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         // no-op
     }
 
-    async isStreamPublisher(streamIdOrPath: string, user: UserID): Promise<boolean> {
-        return this.hasPermission({ streamId: streamIdOrPath, user, permission: StreamPermission.PUBLISH, allowPublic: true })
+    async isStreamPublisher(streamIdOrPath: string, userId: UserID): Promise<boolean> {
+        return this.hasPermission({ streamId: streamIdOrPath, user: toUserIdRaw(userId), permission: StreamPermission.PUBLISH, allowPublic: true })
     }
 
-    async isStreamSubscriber(streamIdOrPath: string, user: UserID): Promise<boolean> {
-        return this.hasPermission({ streamId: streamIdOrPath, user, permission: StreamPermission.SUBSCRIBE, allowPublic: true })
+    async isStreamSubscriber(streamIdOrPath: string, userId: UserID): Promise<boolean> {
+        return this.hasPermission({ streamId: streamIdOrPath, user: toUserIdRaw(userId), permission: StreamPermission.SUBSCRIBE, allowPublic: true })
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -206,12 +206,12 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamPublishers(): AsyncIterable<UserID> {
+    getStreamPublishers(): AsyncGenerator<UserID> {
         throw new Error('not implemented')
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamSubscribers(): AsyncIterable<UserID> {
+    getStreamSubscribers(): AsyncGenerator<UserID> {
         throw new Error('not implemented')
     }
 }

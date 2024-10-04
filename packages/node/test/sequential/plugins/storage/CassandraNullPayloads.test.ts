@@ -1,6 +1,6 @@
 import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage } from '@streamr/sdk'
-import { randomEthereumAddress } from '@streamr/test-utils'
-import { hexToBinary, toEthereumAddress, toStreamID, utf8ToBinary } from '@streamr/utils'
+import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
+import { hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
 import { Client, types as cassandraTypes } from 'cassandra-driver'
 import toArray from 'stream-to-array'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
@@ -51,6 +51,7 @@ async function storeMockMessages({
     storage: Storage
 }) {
     const storePromises = []
+    const publisherId = randomUserId()
     for (let i = 0; i < count; i++) {
         const timestamp = Math.floor((i / (count - 1)) * (1E10))
         const msg = new StreamMessage({
@@ -59,7 +60,7 @@ async function storeMockMessages({
                 0,
                 timestamp,
                 0,
-                toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+                publisherId,
                 ''
             ),
             content: utf8ToBinary(JSON.stringify({})),

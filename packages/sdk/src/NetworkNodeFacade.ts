@@ -300,7 +300,7 @@ export class NetworkNodeFacade {
             streamPartId,
             peerDescriptors,
             direction,
-            await this.authentication.getAddress(),
+            await this.authentication.getUserId(),
             connectionCount
         )
     }

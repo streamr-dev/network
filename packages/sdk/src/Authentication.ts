@@ -1,4 +1,4 @@
-import { createSignature, hexToBinary, toEthereumAddress, UserID, wait } from '@streamr/utils'
+import { createSignature, hexToBinary, toUserId, UserID, wait } from '@streamr/utils'
 import { AbstractSigner, BrowserProvider, computeAddress, Provider, Wallet } from 'ethers'
 import pMemoize from 'p-memoize'
 import { PrivateKeyAuthConfig, ProviderAuthConfig, StrictStreamrClientConfig } from './Config'
@@ -10,16 +10,15 @@ export const AuthenticationInjectionToken = Symbol('Authentication')
 export type SignerWithProvider = AbstractSigner<Provider>
 
 export interface Authentication {
-    // always in lowercase
-    getAddress: () => Promise<UserID>
+    getUserId: () => Promise<UserID>
     createMessageSignature: (payload: Uint8Array) => Promise<Uint8Array>
     getTransactionSigner: (rpcProviderSource: RpcProviderSource) => Promise<SignerWithProvider>
 }
 
 export const createPrivateKeyAuthentication = (key: string): Authentication => {
-    const address = toEthereumAddress(computeAddress(key))
+    const userId = toUserId(computeAddress(key))
     return {
-        getAddress: async () => address,
+        getUserId: async () => userId,
         createMessageSignature: async (payload: Uint8Array) => createSignature(payload, hexToBinary(key)),
         getTransactionSigner: async (rpcProviderSource: RpcProviderSource) => {
             const primaryProvider = rpcProviderSource.getProvider()
@@ -40,8 +39,8 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
         const provider = new BrowserProvider(ethereum)
         const signer = provider.getSigner()
         return {
-            getAddress: pMemoize(async () => {
-                return toEthereumAddress(await (await signer).getAddress())
+            getUserId: pMemoize(async () => {
+                return toUserId(await (await signer).getAddress())
             }),
             createMessageSignature: pLimitFn(async (payload: Uint8Array) => {
                 // sign one at a time & wait a moment before asking for next signature

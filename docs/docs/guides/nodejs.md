@@ -83,7 +83,7 @@ By default, the creator of the stream has full read, write and manage permission
 ```ts
 // Requires MATIC tokens (Polygon blockchain gas token)
 await stream.grantPermissions({
-    user: "0x12345...",
+    user: new Uint8Array([1, 2, 3, 4]),
     permissions: [StreamPermission.PUBLISH],
 })
 ```

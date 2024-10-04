@@ -1,3 +1,4 @@
+import { toUserIdRaw } from '@streamr/utils'
 import { fetchPrivateKeyWithGas, randomUserId } from '@streamr/test-utils'
 import 'jest-extended'
 import { StreamPermission } from '@streamr/sdk'
@@ -11,7 +12,7 @@ describe('permission', () => {
         const stream = await client.createStream(`/${Date.now()}`)
         const otherUser = randomUserId()
         const hasPermission = () => client.hasPermission({
-            user: otherUser,
+            user: toUserIdRaw(otherUser),
             permission: StreamPermission.PUBLISH,
             streamId: stream.id,
             allowPublic: false

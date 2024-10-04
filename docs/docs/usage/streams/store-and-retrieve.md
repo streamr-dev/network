@@ -106,7 +106,7 @@ const sub2 = await streamr.resend(streamId, {
     timestamp: Date.now() - 1000 * 60 * 5, // 5 minutes ago
     sequenceNumber: 0, // optional
   },
-  publisher: '0x12345...', // optional
+  publisher: new Uint8Array([1, 2, 3, 4]), // optional
 });
 ```
 
@@ -122,7 +122,7 @@ const sub3 = await streamr.resend(streamId, {
   },
   // when using from and to the following parameters are optional
   // but, if specified, both must be present
-  publisher: '0x12345...',
+  publisher: new Uint8Array([1, 2, 3, 4]),
   msgChainId: 'ihuzetvg0c88ydd82z5o',
 });
 ```
