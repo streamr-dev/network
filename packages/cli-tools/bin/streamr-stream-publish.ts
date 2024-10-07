@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import '../src/logLevel'
+
 import { Writable } from 'stream'
 import { StreamrClient } from '@streamr/sdk'
 import { wait } from '@streamr/utils'

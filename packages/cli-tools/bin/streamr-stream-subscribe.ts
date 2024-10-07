@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import '../src/logLevel'
+
 import omit from 'lodash/omit'
 import isString from 'lodash/isString'
 import { StreamrClient, MessageMetadata } from '@streamr/sdk'

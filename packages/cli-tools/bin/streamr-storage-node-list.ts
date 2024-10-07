@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import '../src/logLevel'
+
 import { StreamrClient } from '@streamr/sdk'
 import EasyTable from 'easy-table'
 import { createClientCommand, Options as BaseOptions } from '../src/command'
