@@ -26,7 +26,9 @@
   "author": "Streamr Network AG <contact@streamr.com>",
   "license": "AGPL-3.0",
   "dependencies": {
+    "@streamr/dht": "101.1.2",
     "@streamr/sdk": "101.1.2",
+    "@streamr/trackerless-network": "101.1.2",
     "@streamr/utils": "101.1.2",
     "commander": "^12.1.0",
     "easy-table": "^1.1.1",
