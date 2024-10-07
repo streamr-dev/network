@@ -1,5 +1,5 @@
 import { DhtNode } from '../../src/dht/DhtNode'
-import { createRandomDhtAddress, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { randomDhtAddress, toNodeId } from '../../src/identifiers'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('Layer 1 on Layer 0 with mocked connections', () => {
@@ -26,25 +26,25 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
 
         layer0EntryPoint = new DhtNode({ peerDescriptor: entrypointDescriptor, websocketServerEnableTls: false })
 
-        const layer0Node1Id = createRandomDhtAddress()
+        const layer0Node1Id = randomDhtAddress()
         layer0Node1 = new DhtNode({
             nodeId: layer0Node1Id,
             entryPoints: [entrypointDescriptor]
         })
 
-        const layer0Node2Id = createRandomDhtAddress()
+        const layer0Node2Id = randomDhtAddress()
         layer0Node2 = new DhtNode({
             nodeId: layer0Node2Id,
             entryPoints: [entrypointDescriptor]
         })
 
-        const layer0Node3Id = createRandomDhtAddress()
+        const layer0Node3Id = randomDhtAddress()
         layer0Node3 = new DhtNode({
             nodeId: layer0Node3Id,
             entryPoints: [entrypointDescriptor]
         })
 
-        const layer0Node4Id = createRandomDhtAddress()
+        const layer0Node4Id = randomDhtAddress()
         layer0Node4 = new DhtNode({
             nodeId: layer0Node4Id,
             entryPoints: [entrypointDescriptor]
@@ -57,7 +57,7 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
         await layer0Node4.start()
 
         layer1EntryPoint = new DhtNode({
-            nodeId: getNodeIdFromPeerDescriptor(entrypointDescriptor),
+            nodeId: toNodeId(entrypointDescriptor),
             transport: layer0EntryPoint,
             connectionsView: layer0EntryPoint.getConnectionsView(),
             serviceId: 'layer1'

@@ -46,6 +46,7 @@ const parsePayloadJson = (payload: string) => {
     try {
         return JSON.parse(payload)
     } catch (e) {
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         throw new Error(`Payload is not a JSON string: ${e.message}`)
     }
 }

@@ -1,4 +1,7 @@
 module.exports = {
+    plugins: [
+        '@stylistic'
+    ],
     extends: [
         "eslint:recommended",
         "plugin:@typescript-eslint/eslint-recommended",
@@ -27,7 +30,7 @@ module.exports = {
         '@typescript-eslint/consistent-indexed-object-style': ['error'],
         '@typescript-eslint/consistent-type-assertions': ['error'],
         '@typescript-eslint/consistent-type-definitions': ['error'],
-        '@typescript-eslint/member-delimiter-style': ['error', {
+        '@stylistic/member-delimiter-style': ['error', {
             'singleline': {
                 'delimiter': 'comma'
             },
@@ -45,25 +48,25 @@ module.exports = {
         '@typescript-eslint/prefer-for-of': ['error'],
         '@typescript-eslint/prefer-function-type': ['error'],
         '@typescript-eslint/prefer-literal-enum-member': ['error'],
-        '@typescript-eslint/comma-spacing': ['error'],
-        '@typescript-eslint/brace-style': ['error', '1tbs', {
+        '@stylistic/comma-spacing': ['error'],
+        '@stylistic/brace-style': ['error', '1tbs', {
             'allowSingleLine': true
         }],
         '@typescript-eslint/default-param-last': ['error'],
-        '@typescript-eslint/func-call-spacing': ['error'],
-        '@typescript-eslint/keyword-spacing': ['error'],
+        '@stylistic/func-call-spacing': ['error'],
+        '@stylistic/keyword-spacing': ['error'],
         '@typescript-eslint/no-invalid-this': ['error'],
         '@typescript-eslint/no-unused-expressions': ['error'],
         '@typescript-eslint/no-useless-constructor': ['error'],
-        '@typescript-eslint/object-curly-spacing': ['error', 'always'],
+        '@stylistic/object-curly-spacing': ['error', 'always'],
         '@typescript-eslint/parameter-properties': ['error'],
-        '@typescript-eslint/space-before-blocks': ['error'],
-        '@typescript-eslint/space-before-function-paren': ['error', {
+        '@stylistic/space-before-blocks': ['error'],
+        '@stylistic/space-before-function-paren': ['error', {
             'anonymous': 'never',
             'named': 'never',
             'asyncArrow': 'always'
         }],
-        '@typescript-eslint/space-infix-ops': ['error'],
+        '@stylistic/space-infix-ops': ['error'],
         'no-unused-vars': 'off',
         '@typescript-eslint/no-unused-vars': ['error', { 'vars': 'all', 'args': 'all', 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_', 'caughtErrorsIgnorePattern': '^_' }],
         'class-methods-use-this': ['error'],
@@ -76,18 +79,28 @@ module.exports = {
         'promise/always-return': ['error', { ignoreLastCallback: true }],
         'no-unneeded-ternary': 'error',
         'no-lonely-if': 'error',
+        '@typescript-eslint/restrict-template-expressions': ['error', { 
+            allowAny: false,
+            allowBoolean: true,
+            allowNullish: true,
+            allowNumber: true,
+            allowRegExp: true,
+            allowNever: true,
+            allow: [{ from: 'lib', name: ['Error'] }]
+        }],
+        '@typescript-eslint/no-misused-promises': ['error', {
+            'checksVoidReturn': false
+         }],
+        '@typescript-eslint/await-thenable': 'error',
         // TODO: in follow up PRs, select which rules we should enable and fix the code. When all recommended rules
         //  have been enabled, consider enabling the "strict" preset.
         '@typescript-eslint/require-await': 'off',
         '@typescript-eslint/no-floating-promises': 'off',
-        '@typescript-eslint/await-thenable': 'off',
-        '@typescript-eslint/no-misused-promises': 'off',
         '@typescript-eslint/no-unsafe-return': 'off',
         '@typescript-eslint/no-unsafe-argument': 'off',
         '@typescript-eslint/no-unsafe-assignment': 'off',
         '@typescript-eslint/no-unsafe-member-access': 'off',
         '@typescript-eslint/no-unsafe-call': 'off',
-        '@typescript-eslint/restrict-template-expressions': 'off',
         '@typescript-eslint/restrict-plus-operands': 'off',
         '@typescript-eslint/unbound-method': 'off',
         '@typescript-eslint/no-base-to-string': 'off',

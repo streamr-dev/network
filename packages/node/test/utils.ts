@@ -1,5 +1,4 @@
 import { EthereumAddress, merge, toEthereumAddress } from '@streamr/utils'
-import { Wallet } from 'ethers'
 import padEnd from 'lodash/padEnd'
 import { StreamrClient,
     CONFIG_TEST,
@@ -55,13 +54,7 @@ export const formConfig = ({
             ...CONFIG_TEST,
             auth: {
                 privateKey
-            },
-            network: {
-                ...CONFIG_TEST.network,
-                node: {
-                    id: toEthereumAddress(new Wallet(privateKey).address),
-                }
-            },
+            }
         },
         httpServer: {
             port: httpPort ? httpPort : 7171

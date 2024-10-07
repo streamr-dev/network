@@ -1,4 +1,4 @@
-import { Operator, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts-ethers6'
+import { Operator, StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import {
     SetupOperatorContractOpts,
     _operatorContractUtils,

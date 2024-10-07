@@ -3,14 +3,14 @@ import { RpcRemote } from '../dht/contact/RpcRemote'
 import { DisconnectMode, DisconnectNotice, LockRequest, UnlockRequest } from '../proto/packages/dht/protos/DhtRpc'
 import { ConnectionLockRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import { LockID } from './ConnectionLockStates'
-import { getNodeIdFromPeerDescriptor } from '../identifiers'
+import { toNodeId } from '../identifiers'
 
 const logger = new Logger(module)
 
 export class ConnectionLockRpcRemote extends RpcRemote<ConnectionLockRpcClient> {
 
     public async lockRequest(lockId: LockID): Promise<boolean> {
-        logger.trace(`Requesting locked connection to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
+        logger.trace(`Requesting locked connection to ${toNodeId(this.getPeerDescriptor())}`)
         const request: LockRequest = {
             lockId
         }
@@ -25,7 +25,7 @@ export class ConnectionLockRpcRemote extends RpcRemote<ConnectionLockRpcClient> 
     }
 
     public unlockRequest(lockId: LockID): void {
-        logger.trace(`Requesting connection to be unlocked from ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
+        logger.trace(`Requesting connection to be unlocked from ${toNodeId(this.getPeerDescriptor())}`)
         const request: UnlockRequest = {
             lockId
         }
@@ -38,7 +38,7 @@ export class ConnectionLockRpcRemote extends RpcRemote<ConnectionLockRpcClient> 
     }
 
     public async gracefulDisconnect(disconnectMode: DisconnectMode): Promise<void> {
-        logger.trace(`Notifying a graceful disconnect to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())}`)
+        logger.trace(`Notifying a graceful disconnect to ${toNodeId(this.getPeerDescriptor())}`)
         const request: DisconnectNotice = {
             disconnectMode
         }

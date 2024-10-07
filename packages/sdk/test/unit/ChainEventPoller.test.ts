@@ -160,6 +160,7 @@ describe('ChainEventPoller', () => {
                     provider
                 },
                 queryFilter: async (eventName, blockNumber) => {
+                    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                     invocationHistory.push(`queryFilter(${eventName}, ${blockNumber})`)
                     return onQueryFilter(queryFilterCallCount++)
                 }

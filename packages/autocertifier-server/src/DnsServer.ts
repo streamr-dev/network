@@ -4,6 +4,10 @@ import { DnsHandler, DnsRequest, DnsResponse, Packet, createServer } from 'dns2'
 import { Database, Subdomain } from './Database'
 import { Logger } from '@streamr/utils'
 
+type AsyncDnsHandler = (
+    ...args: Parameters<DnsHandler>
+) => Promise<void>
+
 const logger = new Logger(module)
 
 // https://help.dnsfilter.com/hc/en-us/articles/4408415850003-DNS-Return-Codes
@@ -193,7 +197,7 @@ export class DnsServer {
         send(response)
     }
 
-    private handleQuery: DnsHandler = async (request: DnsRequest, send: (response: DnsResponse) => void): Promise<void> => {
+    private handleQuery: AsyncDnsHandler = async (request: DnsRequest, send: (response: DnsResponse) => void): Promise<void> => {
 
         const response = Packet.createResponseFromRequest(request)
         // @ts-ignore private field
@@ -245,6 +249,7 @@ export class DnsServer {
             return this.handleAQuery(mixedCaseName, send, response)
         } else {
             // @ts-ignore private field
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             logger.warn(`Unsupported query type ${question.type}`)
         }
     }

@@ -1,6 +1,6 @@
 import { Gate, Logger, withTimeout } from '@streamr/utils'
 import { v4 } from 'uuid'
-import { DhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
+import { DhtAddress, toNodeId, toDhtAddressRaw } from '../../identifiers'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { PeerManager, getDistance } from '../PeerManager'
@@ -44,7 +44,7 @@ export class DiscoverySession {
         if (this.options.abortSignal.aborted || this.doneGate.isOpen()) {
             return []
         }
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        const nodeId = toNodeId(peerDescriptor)
         logger.trace(`Getting closest neighbors from remote: ${nodeId}`)
         this.options.contactedPeers.add(nodeId)
         const remote = this.options.createDhtNodeRpcRemote(peerDescriptor)
@@ -58,7 +58,7 @@ export class DiscoverySession {
             return
         }
         this.ongoingRequests.delete(nodeId)
-        const targetId = getRawFromDhtAddress(this.options.targetId)
+        const targetId = toDhtAddressRaw(this.options.targetId)
         const oldClosestNeighbor = this.getClosestNeighbor()
         const oldClosestDistance = getDistance(targetId, oldClosestNeighbor.nodeId)
         this.addContacts(contacts)
@@ -105,7 +105,7 @@ export class DiscoverySession {
             if (this.ongoingRequests.size >= this.options.parallelism) {
                 break
             }
-            const nodeId = getNodeIdFromPeerDescriptor(node)
+            const nodeId = toNodeId(node)
             this.ongoingRequests.add(nodeId)
             // eslint-disable-next-line promise/catch-or-return
             this.fetchClosestNeighborsFromRemote(node)

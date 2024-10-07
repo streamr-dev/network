@@ -1,4 +1,5 @@
 /* eslint-disable no-underscore-dangle */
+import { binaryToHex } from '../src/binaryUtils'
 import { LengthPrefixedFrameDecoder, toLengthPrefixedFrame } from '../src/lengthPrefixedFrameUtils'
 
 describe('LengthPrefixedFrameUtils', () => {
@@ -103,7 +104,7 @@ describe('LengthPrefixedFrameUtils', () => {
             const frame = toLengthPrefixedFrame(payload)
 
             decoder.on('data', (data: Buffer) => {
-                fail(`Should not have received data: ${data}`)
+                fail(`Should not have received data: ${binaryToHex(data)}`)
             })
             decoder.on('end', () => {
                 done()

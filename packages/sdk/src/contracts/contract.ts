@@ -69,6 +69,7 @@ const withErrorHandling = async <T>(
         return await execute()
     } catch (e: any) {
         const suffixes = without(
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             ['reason', 'code'].map((field) => (e[field] !== undefined ? `${field}=${e[field]}` : undefined)),
             undefined
         )

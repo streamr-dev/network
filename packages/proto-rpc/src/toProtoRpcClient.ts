@@ -1,5 +1,5 @@
 /* eslint-disable prefer-spread, @typescript-eslint/consistent-indexed-object-style, 
-@typescript-eslint/ban-types, @typescript-eslint/no-invalid-void-type */
+@typescript-eslint/no-invalid-void-type */
 
 import type { ServiceInfo } from '@protobuf-ts/runtime-rpc'
 import { Empty } from './proto/google/protobuf/empty'
@@ -10,6 +10,7 @@ interface Indexable {
 
 export type ClassType = Record<any | symbol | number, (...args: any) => any> & object | Indexable
 type ProtoRpcRealApi<T extends ClassType> = {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     [k in keyof T as T[k] extends Function
         ? k
         : never]:

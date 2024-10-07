@@ -1,4 +1,4 @@
-import { verifySignature } from '@streamr/utils'
+import { verifySignature, hexToBinary } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { ERC1271ContractFacade } from '../contracts/ERC1271ContractFacade'
 import { SignatureType, StreamMessage } from '../protocol/StreamMessage'
@@ -23,6 +23,7 @@ export class SignatureValidator {
         try {
             success = await this.validate(streamMessage)
         } catch (err) {
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             throw new StreamMessageError(`An error occurred during address recovery from signature: ${err}`, streamMessage)
         }
         if (!success) {
@@ -34,13 +35,13 @@ export class SignatureValidator {
         switch (streamMessage.signatureType) {
             case SignatureType.LEGACY_SECP256K1:
                 return verifySignature(
-                    streamMessage.getPublisherId(),
+                    hexToBinary(streamMessage.getPublisherId()),
                     createLegacySignaturePayload(streamMessage),
                     streamMessage.signature
                 )
             case SignatureType.SECP256K1:
                 return verifySignature(
-                    streamMessage.getPublisherId(),
+                    hexToBinary(streamMessage.getPublisherId()),
                     createSignaturePayload(streamMessage),
                     streamMessage.signature
                 )

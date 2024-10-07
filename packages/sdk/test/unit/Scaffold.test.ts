@@ -22,6 +22,7 @@ describe('Scaffold', () => {
         emitter = new Emitter()
 
         emitter.on('next', (name: string, v = '') => {
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             const msg = `${name} ${v}`.trim()
             currentOrder.push(msg)
         })

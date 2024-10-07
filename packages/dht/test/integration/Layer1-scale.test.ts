@@ -1,6 +1,6 @@
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { getDhtAddressFromRaw } from '../../src/identifiers'
+import { toDhtAddress } from '../../src/identifiers'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node, createMockPeerDescriptor } from '../utils/utils'
 
 const NODE_COUNT = 48
@@ -16,7 +16,7 @@ describe('Layer1', () => {
 
     beforeEach(async () => {
         simulator = new Simulator()
-        layer0EntryPoint = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(entryPoint0Descriptor.nodeId))
+        layer0EntryPoint = await createMockConnectionDhtNode(simulator, toDhtAddress(entryPoint0Descriptor.nodeId))
         await layer0EntryPoint.joinDht([entryPoint0Descriptor])
 
         nodes = []

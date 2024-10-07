@@ -3,10 +3,10 @@ import { ConnectionLocker } from '../../connection/ConnectionManager'
 import {
     DhtAddress,
     areEqualPeerDescriptors,
-    createRandomDhtAddress,
-    getDhtAddressFromRaw,
-    getNodeIdFromPeerDescriptor,
-    getRawFromDhtAddress
+    randomDhtAddress,
+    toDhtAddress,
+    toNodeId,
+    toDhtAddressRaw
 } from '../../identifiers'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { ServiceID } from '../../types/ServiceID'
@@ -31,9 +31,9 @@ interface PeerDiscoveryOptions {
 }
 
 export const createDistantDhtAddress = (address: DhtAddress): DhtAddress => {
-    const raw = getRawFromDhtAddress(address)
+    const raw = toDhtAddressRaw(address)
     const flipped = raw.map((val) => ~val)
-    return getDhtAddressFromRaw(flipped)
+    return toDhtAddress(flipped)
 }
 
 const logger = new Logger(module)
@@ -82,14 +82,14 @@ export class PeerDiscovery {
         logger.debug(
             `Joining ${this.options.serviceId === CONTROL_LAYER_NODE_SERVICE_ID
                 ? 'The Streamr Network' : `Control Layer for ${this.options.serviceId}`}`
-            + ` via entrypoint ${getNodeIdFromPeerDescriptor(entryPointDescriptor)}`
+            + ` via entrypoint ${toNodeId(entryPointDescriptor)}`
         )
         if (areEqualPeerDescriptors(entryPointDescriptor, this.options.localPeerDescriptor)) {
             return
         }
         this.options.connectionLocker?.lockConnection(entryPointDescriptor, `${this.options.serviceId}::joinDht`)
         this.options.peerManager.addContact(entryPointDescriptor)
-        const targetId = getNodeIdFromPeerDescriptor(this.options.localPeerDescriptor)
+        const targetId = toNodeId(this.options.localPeerDescriptor)
         const sessions = [this.createSession(targetId, contactedPeers)]
         if (additionalDistantJoin.enabled) {
             sessions.push(this.createSession(createDistantDhtAddress(targetId), additionalDistantJoin.contactedPeers))
@@ -205,9 +205,9 @@ export class PeerDiscovery {
         if (this.isStopped()) {
             return
         }
-        const localNodeId = getNodeIdFromPeerDescriptor(this.options.localPeerDescriptor)
+        const localNodeId = toNodeId(this.options.localPeerDescriptor)
         const nodes = this.getClosestNeighbors(localNodeId, this.options.parallelism)
-        const randomNodes = this.getClosestNeighbors(createRandomDhtAddress(), 1)
+        const randomNodes = this.getClosestNeighbors(randomDhtAddress(), 1)
         await Promise.allSettled([
             ...nodes.map(async (node: PeerDescriptor) => {
                 const remote = this.options.createDhtNodeRpcRemote(node)
@@ -218,7 +218,7 @@ export class PeerDiscovery {
             }),
             ...randomNodes.map(async (node: PeerDescriptor) => {
                 const remote = this.options.createDhtNodeRpcRemote(node)
-                const contacts = await remote.getClosestPeers(createRandomDhtAddress())
+                const contacts = await remote.getClosestPeers(randomDhtAddress())
                 for (const contact of contacts) {
                     this.options.peerManager.addContact(contact)
                 }

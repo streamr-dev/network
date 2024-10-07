@@ -84,6 +84,7 @@ const getHttpErrorTransform = (): (error: any) => Promise<StreamrClientError> =>
             let descriptionSnippet
             try {
                 const json = JSON.parse(body)
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 descriptionSnippet = `: ${json.error}`
             } catch {
                 descriptionSnippet = ''

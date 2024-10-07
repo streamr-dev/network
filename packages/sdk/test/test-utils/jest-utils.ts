@@ -12,6 +12,7 @@ export function describeRepeats(msg: string, fn: any, describeFn = describe): vo
 }
 
 describeRepeats.skip = (msg: any, fn: any) => {
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     describe.skip(`${msg} – test repeat ALL of ${TEST_REPEATS}`, fn)
 }
 

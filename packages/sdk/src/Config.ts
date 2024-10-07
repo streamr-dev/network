@@ -63,15 +63,6 @@ export interface ControlLayerConfig {
     webrtcAllowPrivateAddresses?: boolean
 
     /**
-     * Defines WebRTC connection establishment timeout in milliseconds.
-     *
-     * When attempting to form a new connection, if not established within
-     * this timeout, the attempt is considered as failed and further
-     * waiting for it will cease.
-    */
-    webrtcNewConnectionTimeout?: number
-
-    /**
      * Sets the low-water mark used by send buffers of WebRTC connections.
     */
     webrtcDatachannelBufferThresholdLow?: number
@@ -163,9 +154,6 @@ export interface ControlLayerConfig {
 }
 
 export interface NetworkNodeConfig {
-
-    /** The Ethereum address of the node. */
-    id?: string
 
     /**
      * The number of connections the client's network node should have
@@ -492,6 +480,7 @@ export const validateConfig = (data: unknown): StrictStreamrClientConfig | never
         throw new Error((validate as any).errors!.map((e: any) => {
             let text = e.instancePath + ' ' + e.message
             if (e.params.additionalProperty) {
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 text += `: ${e.params.additionalProperty}`
             }
             return text

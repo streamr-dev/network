@@ -1,5 +1,5 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts-ethers6'
+import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, StreamID, TheGraphClient, wait, waitForCondition } from '@streamr/utils'
@@ -109,6 +109,7 @@ const createOperator = async (
             }
         }
     }))
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     logger.info(`Operator: ${(await operator.operatorContract.getAddress()).toLowerCase()} freerider=${isFreerider}`)
     return { node, contractAddress: await operator.operatorContract.getAddress() }
 }

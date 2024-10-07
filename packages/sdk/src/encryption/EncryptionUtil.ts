@@ -62,6 +62,7 @@ export class EncryptionUtil {
             try {
                 newGroupKey = groupKey.decryptNextGroupKey(streamMessage.newGroupKey)
             } catch (err) {
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 throw new DecryptError(streamMessage, `Could not decrypt new group key: ${err.stack}`)
             }
         }

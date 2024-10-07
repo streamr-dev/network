@@ -5,8 +5,8 @@ import {
     WebsocketClientConnection,
     ManagedConnection,
     RoutingRpcCommunicator,
-    createRandomDhtAddress,
-    getRawFromDhtAddress,
+    randomDhtAddress,
+    toDhtAddressRaw,
     PendingConnection,
     IConnection,
     createOutgoingHandshaker
@@ -20,7 +20,7 @@ const logger = new Logger(module)
 // This is a dummy peer descriptor that is used to connect to the streamr websocket
 // To ensure that the autocertified subdomain is used for the Streamr Network
 const LOCAL_PEER_DESCRIPTOR: PeerDescriptor = {
-    nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
+    nodeId: toDhtAddressRaw(randomDhtAddress()),
     type: NodeType.NODEJS,
 }
 
@@ -32,7 +32,7 @@ export const runStreamrChallenge = (
 ): Promise<void> => {
     return new Promise((resolve, reject) => {
         const remotePeerDescriptor: PeerDescriptor = {
-            nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
+            nodeId: toDhtAddressRaw(randomDhtAddress()),
             type: NodeType.NODEJS,
             websocket: {
                 host: streamrWebSocketIp,
@@ -63,6 +63,7 @@ export const runStreamrChallenge = (
             rpcClient.hasSession({ sessionId }).then(() => {
                 resolve()
             }).catch((e) => {
+                // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
                 reject(e)
             }).finally(() => {
                 communicator.stop()

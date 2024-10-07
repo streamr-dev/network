@@ -1,6 +1,6 @@
 import { Gate, Logger, withTimeout } from '@streamr/utils'
 import { v4 } from 'uuid'
-import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { DhtAddress, toNodeId } from '../../identifiers'
 import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { PeerManager } from '../PeerManager'
@@ -47,7 +47,7 @@ export class RingDiscoverySession {
         if (this.options.abortSignal.aborted || this.doneGate.isOpen()) {
             return { left: [], right: [] }
         }
-        logger.trace(`Getting closest ring peers from contact: ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
+        logger.trace(`Getting closest ring peers from contact: ${toNodeId(contact.getPeerDescriptor())}`)
         this.numContactedPeers++
         this.options.contactedPeers.add(contact.getNodeId())
         const returnedContacts = await contact.getClosestRingPeers(this.options.targetId)

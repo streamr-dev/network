@@ -5,7 +5,7 @@ import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../../src
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { createPeerDescriptor } from '../../src/helpers/createPeerDescriptor'
-import { createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
+import { randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
 import { ConnectivityResponse, Message, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { TransportEvents } from '../../src/transport/ITransport'
@@ -383,7 +383,7 @@ describe('ConnectionManager', () => {
             messageId: '1',
             targetDescriptor: {
                 // This is not the correct nodeId of peerDescriptor2
-                nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
+                nodeId: toDhtAddressRaw(randomDhtAddress()),
                 type: NodeType.NODEJS,
                 websocket: peerDescriptor2.websocket
             },

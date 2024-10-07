@@ -122,7 +122,7 @@ export class OperatorPlugin extends Plugin<OperatorPluginConfig> {
         await fleetState.start()
         await maintainTopologyHelper.start()
 
-        const networkNode = await streamrClient.getNode()
+        const networkNode = streamrClient.getNode()
 
         const rpcServerFunction = async (request: OperatorDiscoveryRequest) => {
             const streamPartId = StreamPartIDUtils.parse(request.streamPartId)

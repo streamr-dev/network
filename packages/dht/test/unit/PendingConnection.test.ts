@@ -21,7 +21,7 @@ describe('PendingConnection', () => {
             throw new Error('disconnected')
         })
         pendingConnection.replaceAsDuplicate()
-        await pendingConnection.close(false)
+        pendingConnection.close(false)
         await wait(50)
     })
 

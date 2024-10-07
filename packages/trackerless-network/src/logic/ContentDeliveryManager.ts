@@ -5,8 +5,8 @@ import {
     EXISTING_CONNECTION_TIMEOUT,
     ITransport,
     PeerDescriptor,
-    getDhtAddressFromRaw,
-    getNodeIdFromPeerDescriptor
+    toDhtAddress,
+    toNodeId
 } from '@streamr/dht'
 import {
     Logger,
@@ -62,10 +62,11 @@ export interface ContentDeliveryManagerOptions {
     streamPartitionMinPropagationTargets?: number
     acceptProxyConnections?: boolean
     rpcRequestTimeout?: number
+    neighborUpdateInterval?: number
 }
 
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): DhtAddress => {
-    return getDhtAddressFromRaw(new Uint8Array((createHash('sha1').update(streamPartId).digest())))
+    return toDhtAddress(new Uint8Array((createHash('sha1').update(streamPartId).digest())))
 }
 
 export class ContentDeliveryManager extends EventEmitter<Events> {
@@ -264,6 +265,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             neighborTargetCount: this.options.streamPartitionNeighborTargetCount,
             acceptProxyConnections: this.options.acceptProxyConnections,
             rpcRequestTimeout: this.options.rpcRequestTimeout,
+            neighborUpdateInterval: this.options.neighborUpdateInterval,
             isLocalNodeEntryPoint
         })
     }
@@ -332,7 +334,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             return {
                 id: streamPartId,
                 controlLayerNeighbors: stream.discoveryLayerNode.getNeighbors(),
-                contentDeliveryLayerNeighbors: stream.node.getNeighbors()
+                deprecatedContentDeliveryLayerNeighbors: [],
+                contentDeliveryLayerNeighbors: stream.node.getInfos()
             }
         })
 
@@ -362,13 +365,13 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
     }
 
     getNodeId(): DhtAddress {
-        return getNodeIdFromPeerDescriptor(this.controlLayerNode!.getLocalPeerDescriptor())
+        return toNodeId(this.controlLayerNode!.getLocalPeerDescriptor())
     }
 
     getNeighbors(streamPartId: StreamPartID): DhtAddress[] {
         const streamPart = this.streamParts.get(streamPartId)
         return (streamPart !== undefined) && (streamPart.proxied === false)
-            ? streamPart.node.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
+            ? streamPart.node.getNeighbors().map((n) => toNodeId(n))
             : []
     }
 

@@ -4,7 +4,7 @@ import { Message, PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { Connection } from '../Connection'
 import { Logger } from '@streamr/utils'
 import { protoToString } from '../../helpers/protoToString'
-import { getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { toNodeId } from '../../identifiers'
 
 const logger = new Logger(module)
 
@@ -45,15 +45,15 @@ export class SimulatorConnection extends Connection implements IConnection {
             this.simulator.send(this, data)
 
         } else {
-            const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor)
-            const targetNodeId = getNodeIdFromPeerDescriptor(this.targetPeerDescriptor)
+            const localNodeId = toNodeId(this.localPeerDescriptor)
+            const targetNodeId = toNodeId(this.targetPeerDescriptor)
             logger.error(localNodeId + ', ' + targetNodeId + 'tried to send() on a stopped connection')
         }
     }
 
     public async close(gracefulLeave: boolean): Promise<void> {
-        const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor)
-        const targetNodeId = getNodeIdFromPeerDescriptor(this.targetPeerDescriptor)
+        const localNodeId = toNodeId(this.localPeerDescriptor)
+        const targetNodeId = toNodeId(this.targetPeerDescriptor)
 
         logger.trace(localNodeId + ', ' + targetNodeId + ' close()')
         if (!this.stopped) {
@@ -104,7 +104,7 @@ export class SimulatorConnection extends Connection implements IConnection {
 
     public handleIncomingDisconnection(): void {
         if (!this.stopped) {
-            const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor)
+            const localNodeId = toNodeId(this.localPeerDescriptor)
             logger.trace(localNodeId + ' handleIncomingDisconnection()')
             this.stopped = true
             this.doDisconnect(false)
@@ -114,7 +114,7 @@ export class SimulatorConnection extends Connection implements IConnection {
     }
 
     public destroy(): void {
-        const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor)
+        const localNodeId = toNodeId(this.localPeerDescriptor)
         if (!this.stopped) {
             logger.trace(localNodeId + ' destroy()')
             this.removeAllListeners()
@@ -125,8 +125,8 @@ export class SimulatorConnection extends Connection implements IConnection {
     }
 
     private doDisconnect(gracefulLeave: boolean) {
-        const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor)
-        const targetNodeId = getNodeIdFromPeerDescriptor(this.targetPeerDescriptor)
+        const localNodeId = toNodeId(this.localPeerDescriptor)
+        const targetNodeId = toNodeId(this.targetPeerDescriptor)
         logger.trace(localNodeId + ' doDisconnect()')
         this.stopped = true
 

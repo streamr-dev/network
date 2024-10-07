@@ -1,4 +1,4 @@
-import { getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { toNodeId } from '../../identifiers'
 import {
     ReplicateDataRequest,
     StoreDataRequest
@@ -13,8 +13,9 @@ export class StoreRpcRemote extends RpcRemote<StoreRpcClient> {
         try {
             await this.getClient().storeData(request, options)
         } catch (err) {
-            const to = getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
-            const from = getNodeIdFromPeerDescriptor(this.getLocalPeerDescriptor())
+            const to = toNodeId(this.getPeerDescriptor())
+            const from = toNodeId(this.getLocalPeerDescriptor())
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             throw new Error(`Could not store data to ${to} from ${from} ${err}`)
         }
     }
