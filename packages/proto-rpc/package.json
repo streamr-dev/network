@@ -34,7 +34,7 @@
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
     "@streamr/test-utils": "101.1.2",
-    "@types/lodash": "^4.17.7",
+    "@types/lodash": "^4.17.10",
     "@types/uuid": "^10.0.0"
   },
   "optionalDependencies": {
