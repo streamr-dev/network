@@ -77,7 +77,6 @@ export class StreamStorageRegistry {
                 StreamStorageRegistryArtifact,
                 p
             )
-        // eslint-disable-next-line no-underscore-dangle
         }), config.contracts.pollInterval)
         this.initStreamAssignmentEventListeners(eventEmitter, chainEventPoller, loggerFactory)
     }

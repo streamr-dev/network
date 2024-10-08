@@ -118,7 +118,6 @@ export class Storage extends EventEmitter {
 
     requestLast(streamId: string, partition: number, limit: number): Readable {
         if (limit > MAX_RESEND_LAST) {
-            // eslint-disable-next-line no-param-reassign
             limit = MAX_RESEND_LAST
         }
 
@@ -561,7 +560,6 @@ export const startCassandraStorage = async ({
     let retryCount = nbTrials
     let lastError = ''
     while (retryCount > 0) {
-        /* eslint-disable no-await-in-loop */
         try {
             await cassandraClient.connect().catch((err) => { throw err })
             return new Storage(cassandraClient, opts || {})
@@ -572,7 +570,6 @@ export const startCassandraStorage = async ({
             await sleep(5000)
             lastError = err
         }
-        /* eslint-enable no-await-in-loop */
     }
     throw new Error(`Failed to connect to Cassandra after ${nbTrials} trials: ${lastError.toString()}`)
 }

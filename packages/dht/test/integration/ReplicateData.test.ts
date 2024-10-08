@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, waitForStableTopology } from '../utils/utils'

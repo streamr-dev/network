@@ -54,7 +54,6 @@ async function pull(fromBrowserStream: ReadableStream | WebStream.ReadableStream
         reader.cancel()
         toNodeStream.end()
     }
-    /* eslint-enable no-constant-condition, no-await-in-loop */
 }
 
 /**

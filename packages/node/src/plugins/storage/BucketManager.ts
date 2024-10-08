@@ -150,7 +150,6 @@ export class BucketManager {
 
             // minTimestamp is undefined if all buckets are found
             if (minTimestamp === undefined) {
-                // eslint-disable-next-line no-continue
                 continue
             }
 
@@ -179,14 +178,12 @@ export class BucketManager {
 
             // if latest is not found or it's full => try to find latest in database
             if (!latestBucket || latestBucket.isAlmostFull()) {
-                // eslint-disable-next-line no-await-in-loop
                 const foundBuckets = await this.getLastBuckets(streamId, partition, 1)
                 checkFoundBuckets(foundBuckets)
             }
 
             // check in database that we have bucket for minTimestamp
             if (!insertNewBucket && !this.findBucketId(key, minTimestamp)) {
-                // eslint-disable-next-line no-await-in-loop
                 const foundBuckets = await this.getLastBuckets(streamId, partition, 1, minTimestamp)
                 checkFoundBuckets(foundBuckets)
             }
@@ -202,11 +199,9 @@ export class BucketManager {
 
                 stream.buckets.push(newBucket)
                 this.buckets[newBucket.getId()] = newBucket
-                // eslint-disable-next-line require-atomic-updates
                 stream.minTimestamp = undefined
             }
         }
-
         this.checkFullBucketsTimeout = setTimeout(() => this.checkFullBuckets(), this.opts.checkFullBucketsTimeout)
     }
 
@@ -258,7 +253,7 @@ export class BucketManager {
         if (fromTimestamp !== undefined) {
             return Promise.all([getExplicitFirst(), getRest()])
                 .then(([first, rest]) => rest.concat(first))
-        } else { // eslint-disable-line no-else-return
+        } else {
             return getRest()
         }
     }

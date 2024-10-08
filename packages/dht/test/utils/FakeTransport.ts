@@ -43,12 +43,10 @@ class FakeTransport extends EventEmitter<TransportEvents> implements ITransport,
         return this.connections
     }
 
-    // eslint-disable-next-line class-methods-use-this
     getConnectionCount(): number {
         return this.connections.length
     }
 
-    // eslint-disable-next-line class-methods-use-this
     hasConnection(nodeId: DhtAddress): boolean {
         return this.connections.some((c) => toNodeId(c) === nodeId)
     }
