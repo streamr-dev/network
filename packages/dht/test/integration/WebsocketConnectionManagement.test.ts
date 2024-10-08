@@ -1,5 +1,3 @@
-/* eslint-disable promise/no-nesting */
-
 import { MetricsContext, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../../src/connection/ConnectorFacade'

@@ -252,7 +252,6 @@ export class Stream {
             await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
             await withTimeout(
                 propagationPromise,
-                // eslint-disable-next-line no-underscore-dangle
                 waitOptions.timeout ?? this._config._timeouts.storageNode.timeout,
                 'storage node did not respond'
             )

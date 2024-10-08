@@ -17,7 +17,6 @@ describe('BucketManager', () => {
     const insertBuckets = async (startTimestamp: Date) => {
         for (let i = 0; i < 100; i++) {
             const currentTimestamp = new Date(startTimestamp.getTime() + i * 60 * 1000) // + "i" minutes
-            // eslint-disable-next-line no-await-in-loop
             await cassandraClient.execute('INSERT INTO bucket (stream_id, partition, date_create, id, records, size) '
                 + 'VALUES (?, 0, ?, ?, 5, 5)', [
                 streamId,

@@ -196,7 +196,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
         while ((this.ongoingRequests.size < this.options.parallelism) && (uncontacted.length > 0) && !this.stopped) {
             const nextPeer = uncontacted.shift()
-            // eslint-disable-next-line max-len
             logger.trace(`Sending routeMessage request to contact: ${toNodeId(nextPeer!.getPeerDescriptor())} (sessionId=${this.sessionId})`)
             this.contactedPeers.add(nextPeer!.getNodeId())
             this.ongoingRequests.add(nextPeer!.getNodeId())

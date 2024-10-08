@@ -1,4 +1,3 @@
-/* eslint-disable no-new */
 import { Batch, InsertRecord, State } from '../../../../src/plugins/storage/Batch'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 

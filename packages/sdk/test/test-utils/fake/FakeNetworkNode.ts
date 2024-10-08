@@ -88,7 +88,6 @@ export class FakeNetworkNode implements NetworkNodeStub {
         throw new Error('not implemented')
     }
 
-    // eslint-disable-next-line class-methods-use-this
     getOptions(): NetworkOptions {
         return this.options
     }

@@ -92,7 +92,6 @@ describe('dataQueryEndpoint', () => {
             })
 
             it('responds 400 and error message if publisherId+msgChainId combination is invalid in range request', async () => {
-                // eslint-disable-next-line max-len
                 const base = '/streams/streamId/data/partitions/0/range?fromTimestamp=1000&toTimestamp=2000&fromSequenceNumber=1&toSequenceNumber=2'
                 const suffixes = ['publisherId=foo', 'msgChainId=bar']
                 for (const suffix of suffixes) {
@@ -303,14 +302,12 @@ describe('dataQueryEndpoint', () => {
             })
 
             it('responds 200 and Content-Type JSON', (done) => {
-                // eslint-disable-next-line max-len
                 testGetRequest('/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
                     .expect('Content-Type', /json/)
                     .expect(200, done)
             })
 
             it('responds with data points as body', (done) => {
-                // eslint-disable-next-line max-len
                 testGetRequest('/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
                     .expect(streamMessages.map((msg) => toObject(msg)), done)
             })
@@ -318,7 +315,6 @@ describe('dataQueryEndpoint', () => {
             it('invokes storage#requestRange once with correct arguments', async () => {
                 storage.requestRange = jest.fn().mockReturnValue(createOutputStream([]))
 
-                // eslint-disable-next-line max-len
                 await testGetRequest('/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
 
                 expect(storage.requestRange).toHaveBeenCalledTimes(1)
@@ -337,7 +333,6 @@ describe('dataQueryEndpoint', () => {
             it('responds 500 and error message if storage signals error', (done) => {
                 storage.requestRange = () => toReadableStream(new Error('error'))
 
-                // eslint-disable-next-line max-len
                 testGetRequest('/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
                     .expect('Content-Type', /json/)
                     .expect(500, {
