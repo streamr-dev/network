@@ -10,7 +10,8 @@ import {
     LockResponse,
     Message,
     PeerDescriptor,
-    UnlockRequest
+    UnlockRequest,
+    SetPrivateRequest
 } from '../proto/packages/dht/protos/DhtRpc'
 import { ConnectionLockRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
 import { DEFAULT_SEND_OPTIONS, ITransport, SendOptions, TransportEvents } from '../transport/ITransport'
@@ -127,6 +128,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     private rpcCommunicator?: RoutingRpcCommunicator
     private disconnectorIntervalRef?: NodeJS.Timeout
     private state = ConnectionManagerState.IDLE
+    private isPrivate = false
 
     constructor(options: ConnectionManagerOptions) {
         super()
@@ -154,7 +156,14 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             removeRemoteLocked: (id: DhtAddress, lockId: LockID) => this.locks.removeRemoteLocked(id, lockId),
             closeConnection: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string) => 
                 this.closeConnection(peerDescriptor, gracefulLeave, reason),
-            getLocalPeerDescriptor: () => this.getLocalPeerDescriptor()
+            getLocalPeerDescriptor: () => this.getLocalPeerDescriptor(),
+            setPrivate: (id: DhtAddress, isPrivate: boolean) => {
+                if (isPrivate) {
+                    this.locks.addPrivate(id)
+                } else {
+                    this.locks.removePrivate(id)
+                }
+            }
         })
         this.rpcCommunicator.registerRpcMethod(LockRequest, LockResponse, 'lockRequest',
             (req: LockRequest, context: ServerCallContext) => lockRpcLocal.lockRequest(req, context))
@@ -162,6 +171,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             (req: UnlockRequest, context: ServerCallContext) => lockRpcLocal.unlockRequest(req, context))
         this.rpcCommunicator.registerRpcNotification(DisconnectNotice, 'gracefulDisconnect',
             (req: DisconnectNotice, context: ServerCallContext) => lockRpcLocal.gracefulDisconnect(req, context))
+        this.rpcCommunicator.registerRpcNotification(SetPrivateRequest, 'setPrivate',
+            (req: SetPrivateRequest, context: ServerCallContext) => lockRpcLocal.setPrivate(req, context))
     }
 
     /*
@@ -398,6 +409,9 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             connected: true,
             connection: managedConnection
         })
+        if (this.isPrivate) {
+            this.setPrivateForConnection(peerDescriptor, this.isPrivate).catch(() => {})
+        }
         this.emit('connected', peerDescriptor)
         this.onConnectionCountChange()
     }
@@ -529,6 +543,36 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         this.locks.removeWeakLocked(nodeId, lockId)
     }
 
+    public async setPrivate(): Promise<void> {
+        this.isPrivate = true
+        await Promise.all(Array.from(this.endpoints.values()).map((endpoint) => {
+            if (endpoint.connected) {
+                const peerDescription = endpoint.connection.getPeerDescriptor()
+                return this.setPrivateForConnection(peerDescription!, true)
+            }
+        }))
+    }
+
+    public async setPublic(): Promise<void> {
+        this.isPrivate = false
+        await Promise.all(Array.from(this.endpoints.values()).map((endpoint) => {
+            if (endpoint.connected) {
+                const peerDescription = endpoint.connection.getPeerDescriptor()
+                return this.setPrivateForConnection(peerDescription!, false)
+            }
+        }))
+    }
+
+    private async setPrivateForConnection(targetDescriptor: PeerDescriptor, isPrivate: boolean): Promise<void> {
+        const rpcRemote = new ConnectionLockRpcRemote(
+            this.getLocalPeerDescriptor(),
+            targetDescriptor,
+            this.rpcCommunicator!,
+            ConnectionLockRpcClient
+        )
+        await rpcRemote.setPrivate(isPrivate)
+    }
+
     private async gracefullyDisconnectAsync(targetDescriptor: PeerDescriptor, disconnectMode: DisconnectMode): Promise<void> {
         const endpoint = this.endpoints.get(toNodeId(targetDescriptor))
 
@@ -587,7 +631,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             .map((endpoint) => endpoint)
             // TODO is this filtering needed? (if it is, should we do the same filtering e.g.
             // in getConnection() or in other methods which access this.endpoints directly?)
-            .filter((endpoint) => endpoint.connected)
+            .filter((endpoint) => endpoint.connected && !this.locks.isPrivate(toNodeId(endpoint.connection.getPeerDescriptor()!)))
             .map((endpoint) => endpoint.connection.getPeerDescriptor()!)
     }
 

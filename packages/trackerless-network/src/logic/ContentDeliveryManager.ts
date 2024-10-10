@@ -29,6 +29,7 @@ import { MIN_NEIGHBOR_COUNT as NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT, Strea
 import { StreamPartReconnect } from './StreamPartReconnect'
 import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode'
 import { ProxyClient } from './proxy/ProxyClient'
+import { ConnectionManager } from '@streamr/dht/src/exports'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void
@@ -299,6 +300,9 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
                 client.on('message', (message: StreamMessage) => {
                     this.emit('newMessage', message)
                 })
+                if (Array.from(this.streamParts.values()).every((streamPart) => streamPart.proxied)) {
+                    await (this.transport! as ConnectionManager).setPrivate()
+                }
                 await client.start()
             }
             await client.setProxies(nodes, direction, userId, connectionCount)
