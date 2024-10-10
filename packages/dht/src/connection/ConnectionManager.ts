@@ -191,7 +191,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         this.endpoints.forEach((endpoint) => {
             if (endpoint.connected) {
                 const connection = endpoint.connection
-                if (!this.locks.isLocked(connection.getNodeId()) && Date.now() - connection.getLastUsedTimestamp() > maxIdleTime) {
+                const nodeId = connection.getNodeId()
+                if (!this.locks.isLocked(nodeId) && !this.locks.isPrivate(nodeId) && Date.now() - connection.getLastUsedTimestamp() > maxIdleTime) {
                     logger.trace('disconnecting in timeout interval: ' + getNodeIdOrUnknownFromPeerDescriptor(connection.getPeerDescriptor()))
                     disconnectionCandidates.addContact(connection)
                 }
@@ -561,6 +562,10 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
                 return this.setPrivateForConnection(peerDescription!, false)
             }
         }))
+    }
+
+    public getIsPrivate(): boolean {
+        return this.isPrivate
     }
 
     private async setPrivateForConnection(targetDescriptor: PeerDescriptor, isPrivate: boolean): Promise<void> {
