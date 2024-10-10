@@ -12,6 +12,8 @@ export class ConnectionLockStates {
     // TODO: remove weakLocks use localLocks instead. When opening weakLocks from the ConnectioManager,
     // simply do not send lock requests.
     private weakLocks: Map<DhtAddress, Set<LockID>> = new Map()
+    // Used to filter proxy connections from the connections view
+    private remotePrivateConnections: Set<DhtAddress> = new Set()
 
     public getLocalLockedConnectionCount(): number {
         return this.localLocks.size
@@ -97,6 +99,22 @@ export class ConnectionLockStates {
                 this.weakLocks.delete(id)
             }
         }
+    }
+
+    public addPrivate(id: DhtAddress): void {
+        this.remotePrivateConnections.add(id)
+    }
+
+    public removePrivate(id: DhtAddress): void {
+        this.remotePrivateConnections.delete(id)
+    }
+
+    public getPrivateConnections(): Set<DhtAddress> {
+        return this.remotePrivateConnections
+    }
+
+    public isPrivate(id: DhtAddress): boolean {
+        return this.remotePrivateConnections.has(id)
     }
 
     public clearAllLocks(id: DhtAddress): void {

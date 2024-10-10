@@ -50,6 +50,7 @@ service ConnectionLockRpc {
   rpc lockRequest (LockRequest) returns (LockResponse);
   rpc unlockRequest (UnlockRequest) returns (google.protobuf.Empty);
   rpc gracefulDisconnect (DisconnectNotice) returns (google.protobuf.Empty);
+  rpc setPrivate (SetPrivateRequest) returns (google.protobuf.Empty);
 }
 
 service ExternalApiRpc {
@@ -299,6 +300,10 @@ enum DisconnectMode {
 
 message DisconnectNotice {
   DisconnectMode disconnectMode = 1;
+}
+
+message SetPrivateRequest {
+  bool isPrivate = 1;
 }
 
 message ExternalFetchDataRequest {
