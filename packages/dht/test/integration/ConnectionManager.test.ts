@@ -514,6 +514,7 @@ describe('ConnectionManager', () => {
         await connectionManager1.setPrivate()
         await waitForCondition(() => connectionManager2.getConnections().length === 0)
         expect(connectionManager1.getConnections().length).toEqual(1)
+
         await connectionManager1.setPublic()
         await waitForCondition(() => connectionManager2.getConnections().length === 1)
         expect(connectionManager1.getConnections().length).toEqual(1)
