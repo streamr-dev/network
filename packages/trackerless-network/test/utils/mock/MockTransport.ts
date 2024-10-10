@@ -26,4 +26,5 @@ export class MockTransport extends EventEmitter<TransportEvents> implements ITra
     setPrivate(): void {
 
     }
+
 }

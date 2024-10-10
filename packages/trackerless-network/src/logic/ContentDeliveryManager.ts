@@ -213,6 +213,9 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             // leaveStreamPart has been called (or leaveStreamPart called, and then setProxies called)
             return
         }
+        if ((this.transport! as ConnectionManager).getIsPrivate()) {
+            await (this.transport! as ConnectionManager).setPublic()
+        }
         await streamPart.discoveryLayerNode.start()
         await streamPart.node.start()
         const knownEntryPoints = this.knownStreamPartEntryPoints.get(streamPartId)
