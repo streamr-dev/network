@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 import '../src/logLevel'
 
-import { StreamrClient, UserPermissionAssignment } from '@streamr/sdk'
-import { createClientCommand, Options as BaseOptions } from '../src/command'
+import { StreamrClient } from '@streamr/sdk'
+import { Options as BaseOptions, createClientCommand } from '../src/command'
 import { getPermissionId } from '../src/permission'
-import { toUserId } from '@streamr/utils'
 
 interface Options extends BaseOptions {
     includePermissions: boolean
@@ -18,9 +17,6 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: Opt
         obj.permissions = assigments.map((assignment) => {
             return {
                 ...assignment,
-                user: ((assignment as UserPermissionAssignment).user !== undefined) 
-                    ? toUserId((assignment as UserPermissionAssignment).user)
-                    : undefined,
                 permissions: assignment.permissions.map(getPermissionId)
             }
         })

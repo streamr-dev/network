@@ -5,7 +5,7 @@ import {
     _operatorContractUtils
 } from '@streamr/sdk'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { EthereumAddress, StreamPartIDUtils, collect, toEthereumAddress, waitForCondition, toUserIdRaw, toUserId } from '@streamr/utils'
+import { EthereumAddress, StreamPartIDUtils, collect, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { cloneDeep, set } from 'lodash'
 import { Broker, createBroker } from '../../../../src/broker'
@@ -61,7 +61,7 @@ describe('OperatorPlugin', () => {
         const publisher = createClient(fastPrivateKey())
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
-            user: toUserIdRaw(toUserId(await publisher.getUserId()))
+            user: await publisher.getUserId()
         })
         const publishTimer = setInterval(async () => {
             await publisher.publish({ id: stream.id }, { foo: 'bar' })

@@ -1,5 +1,5 @@
 import { Methods } from '@streamr/test-utils'
-import { Multimap, StreamID, UserID, toUserId, toUserIdRaw } from '@streamr/utils'
+import { Multimap, StreamID, UserID, toUserId } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
 import { Stream, StreamMetadata } from '../../../src/Stream'
@@ -9,8 +9,8 @@ import { StreamrClientError } from '../../../src/StreamrClientError'
 import { StreamRegistry } from '../../../src/contracts/StreamRegistry'
 import { SearchStreamsPermissionFilter } from '../../../src/contracts/searchStreams'
 import {
+    InternalPermissionAssignment,
     InternalPermissionQuery,
-    PermissionAssignment,
     StreamPermission,
     isPublicPermissionAssignment,
     isPublicPermissionQuery
@@ -87,7 +87,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         return targets.some((target) => registryItem.permissions.get(target).includes(query.permission))
     }
 
-    async getPermissions(streamIdOrPath: string): Promise<PermissionAssignment[]> {
+    async getPermissions(streamIdOrPath: string): Promise<InternalPermissionAssignment[]> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         const registryItem = this.chain.getStream(streamId)
         if (registryItem === undefined) {
@@ -103,14 +103,14 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
                 }
             } else {
                 return {
-                    user: toUserIdRaw(target),
+                    user: target,
                     permissions
                 }
             }
         })
     }
 
-    async grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
+    async grantPermissions(streamIdOrPath: string, ...assignments: InternalPermissionAssignment[]): Promise<void> {
         return this.updatePermissions(
             streamIdOrPath,
             assignments,
@@ -121,7 +121,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         )
     }
 
-    async revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
+    async revokePermissions(streamIdOrPath: string, ...assignments: InternalPermissionAssignment[]): Promise<void> {
         return this.updatePermissions(
             streamIdOrPath,
             assignments,
@@ -133,7 +133,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
 
     async updatePermissions(
         streamIdOrPath: string,
-        assignments: PermissionAssignment[],
+        assignments: InternalPermissionAssignment[],
         modifyRegistryItem: (
             registryItem: StreamRegistryItem,
             target: UserID | PublicPermissionTarget,
@@ -156,7 +156,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
 
     async setPermissions(...streams: {
         streamId: string
-        assignments: PermissionAssignment[]
+        assignments: InternalPermissionAssignment[]
     }[]): Promise<void> {
         await Promise.all(streams.map(async (stream) => {
             await this.revokePermissions(stream.streamId, ...await this.getPermissions(stream.streamId))

@@ -29,7 +29,7 @@ export type InternalPermissionQuery = ChangeFieldType<UserPermissionQuery, 'user
 
 export interface UserPermissionAssignment {
     permissions: StreamPermission[]
-    user: Uint8Array
+    user: HexString
 }
 
 export interface PublicPermissionAssignment {
@@ -38,6 +38,8 @@ export interface PublicPermissionAssignment {
 }
 
 export type PermissionAssignment = UserPermissionAssignment | PublicPermissionAssignment
+
+export type InternalPermissionAssignment = ChangeFieldType<UserPermissionAssignment, 'user', UserID> | PublicPermissionAssignment
 
 export const PUBLIC_PERMISSION_ADDRESS = '0x0000000000000000000000000000000000000000'
 
@@ -64,8 +66,14 @@ export const toInternalPermissionQuery = (query: PermissionQuery): InternalPermi
         : query
 }
 
-export const isPublicPermissionAssignment = (query: PermissionAssignment): query is PublicPermissionAssignment => {
-    return (query as PublicPermissionAssignment).public === true
+export const isPublicPermissionAssignment = (assignment: InternalPermissionAssignment): assignment is PublicPermissionAssignment => {
+    return (assignment as PublicPermissionAssignment).public === true
+}
+
+export const toInternalPermissionAssignment = (assignment: PermissionAssignment): InternalPermissionAssignment => {
+    return ('user' in assignment) 
+        ? { ...assignment, user: toUserId(assignment.user) }
+        : assignment
 }
 
 export const streamPermissionToSolidityType = (permission: StreamPermission): bigint => {

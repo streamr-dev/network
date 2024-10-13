@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { toUserId, toUserIdRaw, UserID, waitForCondition } from '@streamr/utils'
+import { toUserId, UserID, waitForCondition } from '@streamr/utils'
 import { Message, MessageMetadata } from '../../src/Message'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
@@ -63,7 +63,7 @@ describe('PubSub with multiple clients', () => {
 
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE],
-            user: toUserIdRaw(toUserId(publisherId))
+            user: publisherId
         })
         return pubClient
     }
@@ -73,7 +73,7 @@ describe('PubSub with multiple clients', () => {
             id: 'subscriber-other'
         })
         const user = await client.getUserId()
-        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: toUserIdRaw(toUserId(user)) })
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user })
         return client
     }
 
@@ -327,7 +327,7 @@ describe('PubSub with multiple clients', () => {
         otherClient = environment.createClient()
         const otherUser = await otherClient.getUserId()
 
-        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: toUserIdRaw(toUserId(otherUser)) })
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: otherUser })
 
         const receivedMessagesOther: Record<UserID, MessageMetadata[]> = {}
         const receivedMessagesMain: Record<UserID, MessageMetadata[]> = {}

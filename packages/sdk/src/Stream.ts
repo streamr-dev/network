@@ -17,7 +17,13 @@ import { StreamrClientError } from './StreamrClientError'
 import { StreamRegistry } from './contracts/StreamRegistry'
 import { StreamStorageRegistry } from './contracts/StreamStorageRegistry'
 import { StreamrClientEventEmitter } from './events'
-import { PermissionAssignment, PublicPermissionQuery, toInternalPermissionQuery, UserPermissionQuery } from './permission'
+import { 
+    PermissionAssignment,
+    PublicPermissionQuery,
+    toInternalPermissionAssignment,
+    toInternalPermissionQuery,
+    UserPermissionQuery
+} from './permission'
 import { Resends } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
 import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
@@ -348,7 +354,7 @@ export class Stream {
      * @category Important
      */
     async grantPermissions(...assignments: PermissionAssignment[]): Promise<void> {
-        return this._streamRegistry.grantPermissions(this.id, ...assignments)
+        return this._streamRegistry.grantPermissions(this.id, ...assignments.map((a) => toInternalPermissionAssignment(a)))
     }
 
     /**
@@ -357,7 +363,7 @@ export class Stream {
      * @category Important
      */
     async revokePermissions(...assignments: PermissionAssignment[]): Promise<void> {
-        return this._streamRegistry.revokePermissions(this.id, ...assignments)
+        return this._streamRegistry.revokePermissions(this.id, ...assignments.map((a) => toInternalPermissionAssignment(a)))
     }
 
 }

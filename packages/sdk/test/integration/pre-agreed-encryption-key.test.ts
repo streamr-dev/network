@@ -25,7 +25,7 @@ describe('pre-agreed encryption key', () => {
         const subscriber = environment.createClient()
         const stream = await createTestStream(publisher, module)
         await stream.grantPermissions({
-            user: toUserIdRaw(toUserId(await subscriber.getUserId())),
+            user: await subscriber.getUserId(),
             permissions: [StreamPermission.SUBSCRIBE]
         })
 

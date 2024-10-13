@@ -10,8 +10,7 @@ import {
     isENSName,
     toEthereumAddress,
     toStreamID,
-    toUserId,
-    toUserIdRaw
+    toUserId
 } from '@streamr/utils'
 import { ContractTransactionResponse } from 'ethers'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -27,9 +26,9 @@ import { getEthersOverrides } from '../ethereumUtils'
 import { StreamrClientEventEmitter } from '../events'
 import {
     ChainPermissions,
+    InternalPermissionAssignment,
     InternalPermissionQuery,
     PUBLIC_PERMISSION_ADDRESS,
-    PermissionAssignment,
     PermissionQueryResult,
     StreamPermission,
     convertChainPermissionsToStreamPermissions,
@@ -363,7 +362,7 @@ export class StreamRegistry {
         }
     }
 
-    async getPermissions(streamIdOrPath: string): Promise<PermissionAssignment[]> {
+    async getPermissions(streamIdOrPath: string): Promise<InternalPermissionAssignment[]> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         const queryResults = await collect(this.theGraphClient.queryEntities<PermissionQueryResult>(
             (lastId: string, pageSize: number) => {
@@ -392,7 +391,7 @@ export class StreamRegistry {
                 }
             }
         ))
-        const assignments: PermissionAssignment[] = []
+        const assignments: InternalPermissionAssignment[] = []
         queryResults.forEach((permissionResult: PermissionQueryResult) => {
             const permissions = convertChainPermissionsToStreamPermissions(permissionResult)
             /*
@@ -409,7 +408,7 @@ export class StreamRegistry {
                     })
                 } else {
                     assignments.push({
-                        user: toUserIdRaw(toUserId(permissionResult.userAddress)),
+                        user: toUserId(permissionResult.userAddress),
                         permissions
                     })
                 }
@@ -418,7 +417,7 @@ export class StreamRegistry {
         return assignments
     }
 
-    async grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
+    async grantPermissions(streamIdOrPath: string, ...assignments: InternalPermissionAssignment[]): Promise<void> {
         const overrides = await getEthersOverrides(this.rpcProviderSource, this.config)
         return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: UserID | undefined, solidityType: bigint) => {
             return (user === undefined)
@@ -428,7 +427,7 @@ export class StreamRegistry {
     }
 
     /* eslint-disable max-len */
-    async revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
+    async revokePermissions(streamIdOrPath: string, ...assignments: InternalPermissionAssignment[]): Promise<void> {
         const overrides = await getEthersOverrides(this.rpcProviderSource, this.config)
         return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: UserID | undefined, solidityType: bigint) => {
             return (user === undefined)
@@ -440,7 +439,7 @@ export class StreamRegistry {
     private async updatePermissions(
         streamIdOrPath: string,
         createTransaction: (streamId: StreamID, user: UserID | undefined, solidityType: bigint) => Promise<ContractTransactionResponse>,
-        ...assignments: PermissionAssignment[]
+        ...assignments: InternalPermissionAssignment[]
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.clearStreamCache(streamId)
@@ -457,7 +456,7 @@ export class StreamRegistry {
 
     async setPermissions(...items: {
         streamId: string
-        assignments: PermissionAssignment[]
+        assignments: InternalPermissionAssignment[]
     }[]): Promise<void> {
         const streamIds: StreamID[] = []
         const targets: (UserID | typeof PUBLIC_PERMISSION_ADDRESS)[][] = []

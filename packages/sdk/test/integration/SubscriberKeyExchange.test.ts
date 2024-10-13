@@ -36,11 +36,11 @@ describe('SubscriberKeyExchange', () => {
         const s = await creator.createStream(createRelativeTestStreamId(module))
         await s.grantPermissions({
             permissions: [StreamPermission.SUBSCRIBE],
-            user: toUserIdRaw(subscriberUserId)
+            user: subscriberUserId
         })
         await s.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
-            user: toUserIdRaw(toUserId(publisherWallet.address))
+            user: publisherWallet.address
         })
         return s.id
     }

@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastWallet } from '@streamr/test-utils'
-import { collect, toUserId, toUserIdRaw } from '@streamr/utils'
+import { collect } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { Stream } from '../../src/Stream'
@@ -35,7 +35,7 @@ describe('Resends', () => {
             gapFillTimeout: 100
         })
         await stream.grantPermissions({
-            user: toUserIdRaw(toUserId(await subscriber.getUserId())),
+            user: await subscriber.getUserId(),
             permissions: [StreamPermission.SUBSCRIBE]
         })
         const groupKey = GroupKey.generate()

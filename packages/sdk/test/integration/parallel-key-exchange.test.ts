@@ -43,7 +43,7 @@ describe('parallel key exchange', () => {
         stream = await subscriber.createStream('/path')
         await Promise.all(PUBLISHERS.map(async (publisher) => {
             await stream.grantPermissions({
-                user: toUserIdRaw(toUserId(publisher.wallet.address)),
+                user: publisher.wallet.address,
                 permissions: [StreamPermission.PUBLISH]
             })
             publisher.client = environment.createClient({

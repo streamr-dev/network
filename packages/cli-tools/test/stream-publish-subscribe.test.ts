@@ -1,7 +1,7 @@
-import { Wallet } from 'ethers'
-import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { collect, toUserId, toUserIdRaw } from '@streamr/utils'
 import { StreamPermission } from '@streamr/sdk'
+import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
+import { collect } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import { createTestClient, runCommand, startCommand } from './utils'
 
 const TIMEOUT = 30 * 1000
@@ -18,7 +18,7 @@ describe('publish and subscribe', () => {
         const client = createTestClient(publisherPrivateKey)
         const stream = await client.createStream(`/${Date.now()}`)
         await stream.grantPermissions({
-            user: toUserIdRaw(toUserId(new Wallet(subscriberPrivateKey).address)),
+            user: new Wallet(subscriberPrivateKey).address,
             permissions: [StreamPermission.SUBSCRIBE]
         })
         streamId = stream.id

@@ -49,17 +49,17 @@ describe('searchStreams', () => {
         const streams = await createTestStreams([
             { streamId: `/${SEARCH_TERM}/1-no-permissions`, assignments: [] },
             { streamId: `/${SEARCH_TERM}/2-user-permission`, assignments: [
-                { user: toUserIdRaw(searcher), permissions: [StreamPermission.SUBSCRIBE] }
+                { user: searcher, permissions: [StreamPermission.SUBSCRIBE] }
             ] },
             { streamId: `/${SEARCH_TERM}/3-public-permissions`, assignments: [
                 { public: true, permissions: [StreamPermission.SUBSCRIBE] }
             ] },
             { streamId: `/${SEARCH_TERM}/4-user-and-public-permissions`, assignments: [
-                { user: toUserIdRaw(searcher), permissions: [StreamPermission.SUBSCRIBE] },
+                { user: searcher, permissions: [StreamPermission.SUBSCRIBE] },
                 { public: true, permissions: [StreamPermission.SUBSCRIBE] }
             ] },
             { streamId: `/${SEARCH_TERM}/5-granted-and-revoked-permissions`, assignments: [
-                { user: toUserIdRaw(searcher), permissions: [StreamPermission.SUBSCRIBE] },
+                { user: searcher, permissions: [StreamPermission.SUBSCRIBE] },
                 { public: true, permissions: [StreamPermission.SUBSCRIBE] }
             ] },
             { streamId: `/${Date.now()}`, assignments: [] }
@@ -70,7 +70,7 @@ describe('searchStreams', () => {
         streamWithUserAndPublicPermission = streams[3]
         streamWithGrantedAndRevokedPermission = streams[4]
         await streamWithGrantedAndRevokedPermission.revokePermissions(
-            { user: toUserIdRaw(searcher), permissions: [StreamPermission.SUBSCRIBE] },
+            { user: searcher, permissions: [StreamPermission.SUBSCRIBE] },
             { public: true, permissions: [StreamPermission.SUBSCRIBE] }
         )
     }, TIMEOUT)

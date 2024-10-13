@@ -1,10 +1,10 @@
-import { Wallet } from 'ethers'
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { waitForCondition, areEqualBinaries, toUserId, toUserIdRaw } from '@streamr/utils'
-import { StreamrClient } from '../../src/StreamrClient'
-import { Stream } from '../../src/Stream'
-import { createTestStream, createTestClient } from '../test-utils/utils'
+import { areEqualBinaries, waitForCondition } from '@streamr/utils'
+import { Wallet } from 'ethers'
 import { StreamPermission } from '../../src/permission'
+import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
+import { createTestClient, createTestStream } from '../test-utils/utils'
 
 describe('binary publish', () => {
 
@@ -33,7 +33,7 @@ describe('binary publish', () => {
             await publisher.setPermissions({
                 streamId: stream.id,
                 assignments: [
-                    { permissions: [StreamPermission.SUBSCRIBE], user: toUserIdRaw(toUserId(subscriberWallet.address)) }
+                    { permissions: [StreamPermission.SUBSCRIBE], user: subscriberWallet.address }
                 ]
             })
         }, TIMEOUT)

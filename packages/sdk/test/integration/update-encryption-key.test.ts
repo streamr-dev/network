@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { StreamPartID, StreamPartIDUtils, toUserId, toUserIdRaw, waitForCondition } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { Message } from '../../src/Message'
 import { DecryptError } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -32,7 +32,7 @@ describe('update encryption key', () => {
         })
         const stream = await publisher.createStream('/path')
         await stream.grantPermissions({
-            user: toUserIdRaw(toUserId(await subscriber.getUserId())),
+            user: await subscriber.getUserId(),
             permissions: [StreamPermission.SUBSCRIBE]
         })
         streamPartId = stream.getStreamParts()[0]
@@ -119,7 +119,7 @@ describe('update encryption key', () => {
             })
 
             await publisher.revokePermissions(StreamPartIDUtils.getStreamID(streamPartId), {
-                user: toUserIdRaw(toUserId(await subscriber.getUserId())),
+                user: await subscriber.getUserId(),
                 permissions: [StreamPermission.SUBSCRIBE]
             })
             const rotatedKey = GroupKey.generate()
@@ -148,7 +148,7 @@ describe('update encryption key', () => {
             })
 
             await publisher.revokePermissions(StreamPartIDUtils.getStreamID(streamPartId), {
-                user: toUserIdRaw(toUserId(await subscriber.getUserId())),
+                user: await subscriber.getUserId(),
                 permissions: [StreamPermission.SUBSCRIBE]
             })
             await publisher.updateEncryptionKey({

@@ -39,7 +39,7 @@ import { LocalGroupKeyStore, UpdateEncryptionKeyOptions } from './encryption/Loc
 import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
 import { generateEthereumAccount as _generateEthereumAccount, getEthersOverrides as _getEthersOverrides } from './ethereumUtils'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
-import { PermissionAssignment, PermissionQuery, toInternalPermissionQuery } from './permission'
+import { PermissionAssignment, PermissionQuery, toInternalPermissionAssignment, toInternalPermissionQuery } from './permission'
 import { MessageListener, MessageStream } from './subscribe/MessageStream'
 import { ResendOptions, Resends, getInternalResendOptions } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
@@ -462,14 +462,14 @@ export class StreamrClient {
      * Grants permissions on a given stream.
      */
     grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
-        return this.streamRegistry.grantPermissions(streamIdOrPath, ...assignments)
+        return this.streamRegistry.grantPermissions(streamIdOrPath, ...assignments.map((a) => toInternalPermissionAssignment(a)))
     }
 
     /**
      * Revokes permissions on a given stream.
      */
     revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
-        return this.streamRegistry.revokePermissions(streamIdOrPath, ...assignments)
+        return this.streamRegistry.revokePermissions(streamIdOrPath, ...assignments.map((a) => toInternalPermissionAssignment(a)))
     }
 
     /**
@@ -483,7 +483,9 @@ export class StreamrClient {
         streamId: string
         assignments: PermissionAssignment[]
     }[]): Promise<void> {
-        return this.streamRegistry.setPermissions(...items)
+        return this.streamRegistry.setPermissions(...items.map((item) => (
+            { ...item, assignments: item.assignments.map((a) => toInternalPermissionAssignment(a)) }
+        )))
     }
 
     /**
