@@ -6,7 +6,7 @@ import isString from 'lodash/isString'
 import { StreamrClient, MessageMetadata } from '@streamr/sdk'
 import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { createFnParseInt } from '../src/common'
-import { binaryToHex, toUserId } from '@streamr/utils'
+import { binaryToHex } from '@streamr/utils'
 
 interface Options extends BaseOptions {
     partition: number
@@ -18,15 +18,7 @@ interface Options extends BaseOptions {
 createClientCommand(async (client: StreamrClient, streamId: string, options: Options) => {
     const formContent = (content: unknown) => options.raw ? binaryToHex(content as Uint8Array) : content
     const formMessage = options.withMetadata
-        ? (content: unknown, metadata: MessageMetadata) => (
-            {
-                content: formContent(content),
-                metadata: {
-                    ...omit(metadata, 'streamMessage'),
-                    publisherId: toUserId(metadata.publisherId)
-                }
-            }
-        )
+        ? (content: unknown, metadata: MessageMetadata) => ({ content: formContent(content), metadata: omit(metadata, 'streamMessage') })
         : (content: unknown) => formContent(content)
     await client.subscribe({
         streamId,
