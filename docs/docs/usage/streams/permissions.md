@@ -36,7 +36,7 @@ The returned value is an array of permissions containing an item for each user, 
 
 ```ts
 permissions = [
-  { user: Uint8Array([1, 2, 3, 4]), permissions: ['subscribe', 'publish'] },
+  { user: '0x12345...', permissions: ['subscribe', 'publish'] },
   { public: true, permissions: ['subscribe'] },
 ];
 ```
@@ -46,7 +46,7 @@ You can query the existence of a user's permission with `hasPermission()`. Usual
 ```ts
 await stream.hasPermission({
     permission: StreamPermission.PUBLISH,
-    user: new Uint8Array([1, 2, 3, 4]),
+    user: '0x12345...',
     allowPublic: true
 }
 ```
@@ -71,7 +71,7 @@ You may also use the [Streamr CLI tool to query permissions](../cli-tool#permiss
 
 ```ts
 await stream.grantPermissions({
-  user: new Uint8Array([1, 2, 3, 4]),
+  user: '0x12345...',
   permissions: [StreamPermission.PUBLISH],
 });
 ```
@@ -80,7 +80,7 @@ await stream.grantPermissions({
 
 ```ts
 await stream.revokePermissions({
-  user: new Uint8Array([1, 2, 3, 4]),
+  user: '0x12345...',
   permissions: [StreamPermission.PUBLISH],
 });
 ```
@@ -120,19 +120,15 @@ await streamr.setPermissions({
     streamId,
     assignments: [
         {
-            user: new Uint8Array([1, 1, 1, 1]),
-            permissions: [StreamPermission.PUBLISH]
+            user: '0x11111...',
+            permissions: [StreamPermission.EDIT]
         }, {
-            user: new Uint8Array([2, 2, 2, 2])
-            permissions: [StreamPermission.PUBLISH]
+            user: '0x22222...'
+            permissions: [StreamPermission.GRANT]
         }, {
             public: true,
-            permissions: [StreamPermission.SUBSCRIBE]
+            permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE]
         }
     ]
 })
 ```
-
-## Multichain support
-
-The user ID is typically a 20-byte Ethereum address, but Streamr supports arbitrary-length IDs for non-Ethereum chains. These longer IDs can be used for publish and subscribe permissions. Other permissions types (edit, grant, delete) aren't supported at the moment.

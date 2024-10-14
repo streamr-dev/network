@@ -43,7 +43,7 @@ To get all streams for which a user has any direct permission:
 
 ```ts
 const streams = await streamr.searchStreams('foo', {
-  user: new Uint8Array([1, 2, 3, 4]),
+  user: '0x12345...',
 });
 ```
 
@@ -51,7 +51,7 @@ To get all streams for which a user has any permission (direct or public):
 
 ```ts
 const streams = await streamr.searchStreams('foo', {
-  user: new Uint8Array([1, 2, 3, 4]),
+  user: '0x12345...',
   allowPublic: true,
 });
 ```
@@ -62,7 +62,7 @@ If you want to find the streams you can subscribe to:
 
 ```ts
 const streams = await streamr.searchStreams(undefined, {
-  user: new Uint8Array([1, 2, 3, 4]),
+  user: '0x12345...',
   allOf: [StreamPermission.SUBSCRIBE],
   allowPublic: true,
 });
