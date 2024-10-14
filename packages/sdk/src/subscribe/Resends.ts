@@ -1,4 +1,4 @@
-import { EthereumAddress, Logger, StreamID, StreamPartID, StreamPartIDUtils, UserID, randomString, toUserId } from '@streamr/utils'
+import { EthereumAddress, HexString, Logger, StreamID, StreamPartID, StreamPartIDUtils, UserID, randomString, toUserId } from '@streamr/utils'
 import random from 'lodash/random'
 import sample from 'lodash/sample'
 import without from 'lodash/without'
@@ -35,7 +35,7 @@ export interface ResendLastOptions {
  */
 export interface ResendFromOptions {
     from: ResendRef
-    publisherId?: Uint8Array
+    publisherId?: HexString
 }
 
 /**
@@ -102,7 +102,7 @@ const getHttpErrorTransform = (): (error: any) => Promise<StreamrClientError> =>
     }
 }
 
-export const getInternalResendOptions = (options: ResendOptions): InternalResendOptions => {
+export const toInternalResendOptions = (options: ResendOptions): InternalResendOptions => {
     return {
         ...options,
         publisherId: (('publisherId' in options) && (options.publisherId !== undefined)) ? toUserId(options.publisherId) : undefined

@@ -41,7 +41,7 @@ import { generateEthereumAccount as _generateEthereumAccount, getEthersOverrides
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
 import { PermissionAssignment, PermissionQuery, toInternalPermissionAssignment, toInternalPermissionQuery } from './permission'
 import { MessageListener, MessageStream } from './subscribe/MessageStream'
-import { ResendOptions, Resends, getInternalResendOptions } from './subscribe/Resends'
+import { ResendOptions, Resends, toInternalResendOptions } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
 import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
 import { initResendSubscription } from './subscribe/resendSubscription'
@@ -294,7 +294,7 @@ export class StreamrClient {
     ): Promise<MessageStream> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         const getStorageNodes = (streamId: StreamID) => this.streamStorageRegistry.getStorageNodes(streamId)
-        const pipeline = await this.resends.resend(streamPartId, getInternalResendOptions(options), getStorageNodes)
+        const pipeline = await this.resends.resend(streamPartId, toInternalResendOptions(options), getStorageNodes)
         const messageStream = new MessageStream(pipeline)
         if (onMessage !== undefined) {
             messageStream.useLegacyOnMessageHandler(onMessage)
