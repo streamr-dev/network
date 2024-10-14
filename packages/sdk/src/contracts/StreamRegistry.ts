@@ -27,9 +27,9 @@ import { getEthersOverrides } from '../ethereumUtils'
 import { StreamrClientEventEmitter } from '../events'
 import {
     ChainPermissions,
+    InternalPermissionQuery,
     PUBLIC_PERMISSION_ADDRESS,
     PermissionAssignment,
-    PermissionQuery,
     PermissionQueryResult,
     StreamPermission,
     convertChainPermissionsToStreamPermissions,
@@ -351,7 +351,7 @@ export class StreamRegistry {
     // Permissions
     // --------------------------------------------------------------------------------------------
 
-    async hasPermission(query: PermissionQuery): Promise<boolean> {
+    async hasPermission(query: InternalPermissionQuery): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(query.streamId)
         const permissionType = streamPermissionToSolidityType(query.permission)
         if (isPublicPermissionQuery(query)) {

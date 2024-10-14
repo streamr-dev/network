@@ -9,8 +9,9 @@ import { StreamrClientError } from '../../../src/StreamrClientError'
 import { StreamRegistry } from '../../../src/contracts/StreamRegistry'
 import { SearchStreamsPermissionFilter } from '../../../src/contracts/searchStreams'
 import {
+    InternalPermissionQuery,
     PermissionAssignment,
-    PermissionQuery, StreamPermission,
+    StreamPermission,
     isPublicPermissionAssignment,
     isPublicPermissionQuery
 } from '../../../src/permission'
@@ -70,7 +71,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         return this.streamFactory.createStream(streamId, metadata)
     }
 
-    async hasPermission(query: PermissionQuery): Promise<boolean> {
+    async hasPermission(query: InternalPermissionQuery): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(query.streamId)
         const registryItem = this.chain.getStream(streamId)
         if (registryItem === undefined) {
@@ -177,11 +178,11 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     async isStreamPublisher(streamIdOrPath: string, userId: UserID): Promise<boolean> {
-        return this.hasPermission({ streamId: streamIdOrPath, user: toUserIdRaw(userId), permission: StreamPermission.PUBLISH, allowPublic: true })
+        return this.hasPermission({ streamId: streamIdOrPath, user: userId, permission: StreamPermission.PUBLISH, allowPublic: true })
     }
 
     async isStreamSubscriber(streamIdOrPath: string, userId: UserID): Promise<boolean> {
-        return this.hasPermission({ streamId: streamIdOrPath, user: toUserIdRaw(userId), permission: StreamPermission.SUBSCRIBE, allowPublic: true })
+        return this.hasPermission({ streamId: streamIdOrPath, user: userId, permission: StreamPermission.SUBSCRIBE, allowPublic: true })
     }
 
     // eslint-disable-next-line class-methods-use-this

@@ -39,7 +39,7 @@ import { LocalGroupKeyStore, UpdateEncryptionKeyOptions } from './encryption/Loc
 import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
 import { generateEthereumAccount as _generateEthereumAccount, getEthersOverrides as _getEthersOverrides } from './ethereumUtils'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
-import { PermissionAssignment, PermissionQuery } from './permission'
+import { PermissionAssignment, PermissionQuery, toInternalPermissionQuery } from './permission'
 import { MessageListener, MessageStream } from './subscribe/MessageStream'
 import { ResendOptions, Resends, getInternalResendOptions } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
@@ -448,7 +448,7 @@ export class StreamrClient {
      * Checks whether the given permission is in effect.
      */
     hasPermission(query: PermissionQuery): Promise<boolean> {
-        return this.streamRegistry.hasPermission(query)
+        return this.streamRegistry.hasPermission(toInternalPermissionQuery(query))
     }
 
     /**
