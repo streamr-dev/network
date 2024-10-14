@@ -45,7 +45,7 @@ export interface ResendRangeOptions {
     from: ResendRef
     to: ResendRef
     msgChainId?: string
-    publisherId?: Uint8Array
+    publisherId?: HexString
 }
 
 /**
