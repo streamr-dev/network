@@ -128,7 +128,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     private rpcCommunicator?: RoutingRpcCommunicator
     private disconnectorIntervalRef?: NodeJS.Timeout
     private state = ConnectionManagerState.IDLE
-    private isPrivate = false
+    private privateMode = false
 
     constructor(options: ConnectionManagerOptions) {
         super()
@@ -410,8 +410,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             connected: true,
             connection: managedConnection
         })
-        if (this.isPrivate) {
-            this.setPrivateForConnection(peerDescriptor, this.isPrivate).catch(() => {})
+        if (this.privateMode) {
+            this.setPrivateForConnection(peerDescriptor, this.privateMode).catch(() => {})
         }
         this.emit('connected', peerDescriptor)
         this.onConnectionCountChange()
@@ -544,8 +544,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         this.locks.removeWeakLocked(nodeId, lockId)
     }
 
-    public async setPrivate(): Promise<void> {
-        this.isPrivate = true
+    public async enablePrivateMode(): Promise<void> {
+        this.privateMode = true
         await Promise.all(Array.from(this.endpoints.values()).map((endpoint) => {
             if (endpoint.connected) {
                 const peerDescription = endpoint.connection.getPeerDescriptor()
@@ -554,8 +554,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         }))
     }
 
-    public async setPublic(): Promise<void> {
-        this.isPrivate = false
+    public async disablePrivateMode(): Promise<void> {
+        this.privateMode = false
         await Promise.all(Array.from(this.endpoints.values()).map((endpoint) => {
             if (endpoint.connected) {
                 const peerDescription = endpoint.connection.getPeerDescriptor()
@@ -564,8 +564,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         }))
     }
 
-    public getIsPrivate(): boolean {
-        return this.isPrivate
+    public isPrivateMode(): boolean {
+        return this.privateMode
     }
 
     private async setPrivateForConnection(targetDescriptor: PeerDescriptor, isPrivate: boolean): Promise<void> {

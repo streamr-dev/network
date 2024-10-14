@@ -213,8 +213,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             // leaveStreamPart has been called (or leaveStreamPart called, and then setProxies called)
             return
         }
-        if ((this.transport! as ConnectionManager).getIsPrivate()) {
-            await (this.transport! as ConnectionManager).setPublic()
+        if ((this.transport! as ConnectionManager).isPrivateMode()) {
+            await (this.transport! as ConnectionManager).disablePrivateMode()
         }
         await streamPart.discoveryLayerNode.start()
         await streamPart.node.start()
@@ -304,7 +304,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
                     this.emit('newMessage', message)
                 })
                 if (Array.from(this.streamParts.values()).every((streamPart) => streamPart.proxied)) {
-                    await (this.transport! as ConnectionManager).setPrivate()
+                    await (this.transport! as ConnectionManager).enablePrivateMode()
                 }
                 await client.start()
             }

@@ -511,11 +511,11 @@ describe('ConnectionManager', () => {
         })
         await Promise.all([connectedPromise1, connectedPromise2, connectionManager2.send(msg)])
 
-        await connectionManager1.setPrivate()
+        await connectionManager1.enablePrivateMode()
         await waitForCondition(() => connectionManager2.getConnections().length === 0)
         expect(connectionManager1.getConnections().length).toEqual(1)
 
-        await connectionManager1.setPublic()
+        await connectionManager1.disablePrivateMode()
         await waitForCondition(() => connectionManager2.getConnections().length === 1)
         expect(connectionManager1.getConnections().length).toEqual(1)
 
