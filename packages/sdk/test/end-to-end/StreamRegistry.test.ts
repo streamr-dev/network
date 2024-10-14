@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fetchPrivateKeyWithGas, randomEthereumAddress, randomUserId } from '@streamr/test-utils'
-import { EthereumAddress, collect, toEthereumAddress, toStreamID, toUserId, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, collect, toEthereumAddress, toStreamID, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
@@ -55,7 +55,7 @@ describe('StreamRegistry', () => {
             const stream = await client.createStream({
                 id: path
             })
-            expect(stream.id).toBe(toStreamID(path, toEthereumAddress(toUserId(await client.getUserId()))))
+            expect(stream.id).toBe(toStreamID(path, toEthereumAddress(await client.getUserId())))
         }, TIMEOUT)
 
         it('valid id', async () => {

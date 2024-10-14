@@ -1,5 +1,5 @@
 import { Methods } from '@streamr/test-utils'
-import { Multimap, StreamID, UserID, toUserId } from '@streamr/utils'
+import { Multimap, StreamID, UserID } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
 import { Stream, StreamMetadata } from '../../../src/Stream'
@@ -81,8 +81,8 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         if (isPublicPermissionQuery(query) || query.allowPublic) {
             targets.push(PUBLIC_PERMISSION_TARGET)
         }
-        if ((query as any).user !== undefined) {
-            targets.push(toUserId((query as any).user))
+        if ('user' in query) {
+            targets.push(query.user)
         }
         return targets.some((target) => registryItem.permissions.get(target).includes(query.permission))
     }
@@ -148,7 +148,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
             for (const assignment of assignments) {
                 const target = isPublicPermissionAssignment(assignment)
                     ? PUBLIC_PERMISSION_TARGET
-                    : toUserId(assignment.user)
+                    : assignment.user
                 modifyRegistryItem(registryItem, target, assignment.permissions)
             }
         }

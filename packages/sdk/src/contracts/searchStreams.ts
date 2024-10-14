@@ -60,7 +60,7 @@ export const searchStreams = (
 
 async function* fetchSearchStreamsResultFromTheGraph(
     term: string | undefined,
-    permissionFilter: SearchStreamsPermissionFilter | undefined,
+    permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
     orderBy: SearchStreamsOrderBy,
     theGraphClient: TheGraphClient,
 ): AsyncGenerator<SearchStreamsResultItem> {
@@ -110,7 +110,7 @@ async function* fetchSearchStreamsResultFromTheGraph(
  */
 const buildQuery = (
     term: string | undefined,
-    permissionFilter: SearchStreamsPermissionFilter | undefined,
+    permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
     orderBy: SearchStreamsOrderBy,
     lastId: string,
     pageSize: number
@@ -120,7 +120,7 @@ const buildQuery = (
         id_gt: lastId
     }
     if (permissionFilter !== undefined) {
-        variables.userAddress_in = [toUserId(permissionFilter.user)]
+        variables.userAddress_in = [permissionFilter.user]
         if (permissionFilter.allowPublic) {
             variables.userAddress_in.push(PUBLIC_PERMISSION_ADDRESS)
         }

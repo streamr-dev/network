@@ -1,6 +1,5 @@
 import 'reflect-metadata'
 
-import { toUserId } from '@streamr/utils'
 import { mock } from 'jest-mock-extended'
 import { Publisher } from '../../src/publish/Publisher'
 import { MessageSigner } from '../../src/signature/MessageSigner'
@@ -31,7 +30,7 @@ describe('Publisher', () => {
         }).rejects.toThrowStreamrError({
             code: 'MISSING_PERMISSION',
             // eslint-disable-next-line max-len
-            message: `Failed to publish to stream ${streamId}. Cause: You don't have permission to publish to this stream. Using address: ${toUserId(await authentication.getUserId())}`
+            message: `Failed to publish to stream ${streamId}. Cause: You don't have permission to publish to this stream. Using address: ${await authentication.getUserId()}`
         })
     })
 })
