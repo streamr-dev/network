@@ -515,21 +515,21 @@ export class StreamrClient {
     /**
      * Assigns a stream to a storage node.
      */
-    async addStreamToStorageNode(streamIdOrPath: string, storageNodeAddress: string): Promise<void> {
+    async addStreamToStorageNode(streamIdOrPath: string, storageNodeAddress: HexString): Promise<void> {
         return this.streamStorageRegistry.addStreamToStorageNode(streamIdOrPath, toEthereumAddress(storageNodeAddress))
     }
 
     /**
      * Unassigns a stream from a storage node.
      */
-    async removeStreamFromStorageNode(streamIdOrPath: string, storageNodeAddress: string): Promise<void> {
+    async removeStreamFromStorageNode(streamIdOrPath: string, storageNodeAddress: HexString): Promise<void> {
         return this.streamStorageRegistry.removeStreamFromStorageNode(streamIdOrPath, toEthereumAddress(storageNodeAddress))
     }
 
     /**
      * Checks whether a stream is assigned to a storage node.
      */
-    async isStoredStream(streamIdOrPath: string, storageNodeAddress: string): Promise<boolean> {
+    async isStoredStream(streamIdOrPath: string, storageNodeAddress: HexString): Promise<boolean> {
         return this.streamStorageRegistry.isStoredStream(streamIdOrPath, toEthereumAddress(storageNodeAddress))
     }
 
@@ -538,7 +538,7 @@ export class StreamrClient {
      *
      * @returns a list of {@link Stream} as well as `blockNumber` of result (i.e. blockchain state)
      */
-    async getStoredStreams(storageNodeAddress: string): Promise<{ streams: Stream[], blockNumber: number }> {
+    async getStoredStreams(storageNodeAddress: HexString): Promise<{ streams: Stream[], blockNumber: number }> {
         return this.streamStorageRegistry.getStoredStreams(toEthereumAddress(storageNodeAddress))
     }
 
@@ -568,7 +568,7 @@ export class StreamrClient {
      *
      * @returns rejects if the storage node is not found
      */
-    async getStorageNodeMetadata(nodeAddress: string): Promise<StorageNodeMetadata> {
+    async getStorageNodeMetadata(nodeAddress: HexString): Promise<StorageNodeMetadata> {
         return this.storageNodeRegistry.getStorageNodeMetadata(toEthereumAddress(nodeAddress))
     }
 
