@@ -37,7 +37,8 @@ describe('ConnectionManager', () => {
                 websocketServerEnableTls: false,
                 ...opts
             }),
-            metricsContext: new MetricsContext()
+            metricsContext: new MetricsContext(),
+            allowPrivateConnections: true
         })
     }
 

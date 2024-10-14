@@ -25,7 +25,8 @@ const createConnectionManager = (localPeerDescriptor: PeerDescriptor, opts: Omit
             createLocalPeerDescriptor: async () => localPeerDescriptor,
             ...opts
         }),
-        metricsContext: new MetricsContext()
+        metricsContext: new MetricsContext(),
+        allowPrivateConnections: false
     })
 }
 

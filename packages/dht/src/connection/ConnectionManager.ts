@@ -32,6 +32,7 @@ import { PendingConnection } from './PendingConnection'
 export interface ConnectionManagerOptions {
     maxConnections?: number
     metricsContext: MetricsContext
+    allowPrivateConnections: boolean
     createConnectorFacade: () => ConnectorFacade
 }
 
@@ -158,6 +159,10 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
                 this.closeConnection(peerDescriptor, gracefulLeave, reason),
             getLocalPeerDescriptor: () => this.getLocalPeerDescriptor(),
             setPrivate: (id: DhtAddress, isPrivate: boolean) => {
+                if (!this.options.allowPrivateConnections) {
+                    logger.debug(`node ${id} attemted to set a connection as private, but it is not allowed`)
+                    return
+                }
                 if (isPrivate) {
                     this.locks.addPrivate(id)
                 } else {

@@ -52,7 +52,8 @@ describe('StreamrChallenger', () => {
                 websocketPortRange: { min: 12323, max: 12323 },
                 createLocalPeerDescriptor: async () => mockPeerDescriptor1
             }),
-            metricsContext: new MetricsContext()
+            metricsContext: new MetricsContext(),
+            allowPrivateConnections: false
         })
         await challengedClientTransport.start()
         challengedClient = new ListeningRpcCommunicator(SERVICE_ID, challengedClientTransport)

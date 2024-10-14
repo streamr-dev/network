@@ -30,7 +30,8 @@ describe('ConnectivityChecking', () => {
                 websocketServerEnableTls: false,
                 transport: new MockTransport()
             }),
-            metricsContext: new MetricsContext()
+            metricsContext: new MetricsContext(),
+            allowPrivateConnections: false
         })
         await server.start()
     })

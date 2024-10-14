@@ -15,6 +15,7 @@ describe('ConnetionManager', () => {
     beforeEach(async () => {
         connectionManager = new ConnectionManager({
             metricsContext: new MetricsContext(),
+            allowPrivateConnections: false,
             createConnectorFacade: () => { 
                 fakeConnectorFacade = new FakeConnectorFacade(localPeerDescriptor)
                 return fakeConnectorFacade
