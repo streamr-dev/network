@@ -215,11 +215,11 @@ describe('StreamRegistry', () => {
     describe('isStreamPublisher', () => {
         it('returns true for valid publishers', async () => {
             const userId = await client.getUserId()
-            const valid = await client.isStreamPublisher(createdStream.id, toUserIdRaw(toUserId(userId)))
+            const valid = await client.isStreamPublisher(createdStream.id, userId)
             return expect(valid).toBe(true)
         }, TIMEOUT)
         it('returns false for invalid publishers', async () => {
-            const valid = await client.isStreamPublisher(createdStream.id, toUserIdRaw(randomUserId()))
+            const valid = await client.isStreamPublisher(createdStream.id, randomUserId())
             return expect(valid).toBe(false)
         }, TIMEOUT)
     })
@@ -236,11 +236,11 @@ describe('StreamRegistry', () => {
     describe('isStreamSubscriber', () => {
         it('returns true for valid subscribers', async () => {
             const userId = await client.getUserId()
-            const valid = await client.isStreamSubscriber(createdStream.id, toUserIdRaw(toUserId(userId)))
+            const valid = await client.isStreamSubscriber(createdStream.id, userId)
             return expect(valid).toBe(true)
         }, TIMEOUT)
         it('returns false for invalid subscribers', async () => {
-            const valid = await client.isStreamSubscriber(createdStream.id, toUserIdRaw(randomUserId()))
+            const valid = await client.isStreamSubscriber(createdStream.id, randomUserId())
             return expect(valid).toBe(false)
         }, TIMEOUT)
     })

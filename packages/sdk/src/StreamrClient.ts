@@ -492,7 +492,7 @@ export class StreamrClient {
     /**
      * Checks whether a given ethereum address has {@link StreamPermission.PUBLISH} permission to a stream.
      */
-    async isStreamPublisher(streamIdOrPath: string, userId: Uint8Array): Promise<boolean> {
+    async isStreamPublisher(streamIdOrPath: string, userId: HexString): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         return this.streamRegistry.isStreamPublisher(streamId, toUserId(userId), false)
     }
@@ -500,7 +500,7 @@ export class StreamrClient {
     /**
      * Checks whether a given ethereum address has {@link StreamPermission.SUBSCRIBE} permission to a stream.
      */
-    async isStreamSubscriber(streamIdOrPath: string, userId: Uint8Array): Promise<boolean> {
+    async isStreamSubscriber(streamIdOrPath: string, userId: HexString): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         return this.streamRegistry.isStreamSubscriber(streamId, toUserId(userId), false)
     }
