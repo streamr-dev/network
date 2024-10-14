@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import type { Overrides, Eip1193Provider } from 'ethers'
 import cloneDeep from 'lodash/cloneDeep'
 import { DeepRequired, MarkOptional } from 'ts-essentials'
-import { LogLevel, merge } from '@streamr/utils'
+import { HexString, LogLevel, merge } from '@streamr/utils'
 import { IceServer, PortRange, TlsCertificate } from '@streamr/dht'
 import { generateClientId } from './utils/utils'
 import validate from './generated/validateConfig'
@@ -18,7 +18,7 @@ export interface PrivateKeyAuthConfig {
     // The address property is not used. It is included to make the object
     // compatible with StreamrClient.generateEthereumAccount(), as we typically
     // use that method to generate the client "auth" option.
-    address?: string
+    address?: HexString
 }
 
 export interface ControlLayerConfig {
@@ -368,9 +368,9 @@ export interface StreamrClientConfig {
     }
 
     contracts?: {
-        streamRegistryChainAddress?: string
-        streamStorageRegistryChainAddress?: string
-        storageNodeRegistryChainAddress?: string
+        streamRegistryChainAddress?: HexString
+        streamStorageRegistryChainAddress?: HexString
+        storageNodeRegistryChainAddress?: HexString
         // most of the above should go into ethereumNetworks configs once ETH-184 is ready
         ethereumNetwork?: EthereumNetworkConfig
         rpcs?: ConnectionInfo[]
