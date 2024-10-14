@@ -2,7 +2,7 @@
 import '../src/logLevel'
 
 import { StreamrClient } from '@streamr/sdk'
-import { Options as BaseOptions, createClientCommand } from '../src/command'
+import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { getPermissionId } from '../src/permission'
 
 interface Options extends BaseOptions {

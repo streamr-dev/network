@@ -1,7 +1,7 @@
-import { StreamPermission } from '@streamr/sdk'
+import { Wallet } from 'ethers'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
-import { Wallet } from 'ethers'
+import { StreamPermission } from '@streamr/sdk'
 import { createTestClient, runCommand, startCommand } from './utils'
 
 const TIMEOUT = 30 * 1000

@@ -1,10 +1,10 @@
-import { Stream, StreamPartID, StreamPermission, StreamrClient } from '@streamr/sdk'
+import { Wallet } from 'ethers'
+import mqtt, { AsyncMqttClient } from 'async-mqtt'
+import { StreamrClient, Stream, StreamPartID, StreamPermission } from '@streamr/sdk'
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { wait, waitForCondition } from '@streamr/utils'
-import mqtt, { AsyncMqttClient } from 'async-mqtt'
-import { Wallet } from 'ethers'
 import { Broker } from '../../src/broker'
-import { createClient, createTestStream, startBroker } from '../utils'
+import { startBroker, createClient, createTestStream } from '../utils'
 
 jest.setTimeout(50000)
 
