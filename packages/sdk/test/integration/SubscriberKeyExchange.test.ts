@@ -7,7 +7,6 @@ import {
     StreamPartIDUtils,
     toStreamPartID,
     toUserId,
-    toUserIdRaw,
     UserID,
     waitForCondition
 } from '@streamr/utils'
@@ -112,7 +111,7 @@ describe('SubscriberKeyExchange', () => {
                     privateKey: publisherWallet.privateKey
                 }
             })
-            await publisher.addEncryptionKey(groupKey, toUserIdRaw(toUserId(publisherWallet.address)))
+            await publisher.addEncryptionKey(groupKey, publisherWallet.address)
             await subscriber.subscribe(streamPartId, () => {})
 
             await triggerGroupKeyRequest(streamPartId, groupKey, publisher)
@@ -143,7 +142,7 @@ describe('SubscriberKeyExchange', () => {
                     privateKey: publisherWallet.privateKey
                 }
             })
-            await publisher.addEncryptionKey(groupKey, toUserIdRaw(toUserId(publisherWallet.address)))
+            await publisher.addEncryptionKey(groupKey, publisherWallet.address)
 
             await subscriber.subscribe({
                 id: StreamPartIDUtils.getStreamID(streamPartId),
