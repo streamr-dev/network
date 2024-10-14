@@ -99,8 +99,7 @@ export class StreamRegistry {
     private readonly isStreamPublisher_cached: CacheAsyncFnType<[StreamID, UserID], boolean, string>
     private readonly isStreamSubscriber_cached: CacheAsyncFnType<[StreamID, UserID], boolean, string>
     private readonly hasPublicSubscribePermission_cached: CacheAsyncFnType<[StreamID], boolean, string>
-    
-    /* eslint-disable indent */
+
     /** @internal */
     constructor(
         streamFactory: StreamFactory,
@@ -129,7 +128,6 @@ export class StreamRegistry {
         )
         const chainEventPoller = new ChainEventPoller(this.rpcProviderSource.getSubProviders().map((p) => {
             return contractFactory.createEventContract(toEthereumAddress(this.config.contracts.streamRegistryChainAddress), StreamRegistryArtifact, p)
-        // eslint-disable-next-line no-underscore-dangle
         }), config.contracts.pollInterval)
         initContractEventGateway({
             sourceName: 'StreamCreated', 
@@ -353,7 +351,6 @@ export class StreamRegistry {
     // Permissions
     // --------------------------------------------------------------------------------------------
 
-    /* eslint-disable no-else-return */
     async hasPermission(query: PermissionQuery): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(query.streamId)
         const permissionType = streamPermissionToSolidityType(query.permission)
@@ -453,7 +450,6 @@ export class StreamRegistry {
                 const solidityType = streamPermissionToSolidityType(permission)
                 const user = isPublicPermissionAssignment(assignment) ? undefined : toUserId(assignment.user)
                 const txToSubmit = createTransaction(streamId, user, solidityType)
-                // eslint-disable-next-line no-await-in-loop
                 await waitForTx(txToSubmit)
             }
         }
@@ -467,7 +463,6 @@ export class StreamRegistry {
         const targets: (UserID | typeof PUBLIC_PERMISSION_ADDRESS)[][] = []
         const chainPermissions: ChainPermissions[][] = []
         for (const item of items) {
-            // eslint-disable-next-line no-await-in-loop
             const streamId = await this.streamIdBuilder.toStreamID(item.streamId)
             this.clearStreamCache(streamId)
             streamIds.push(streamId)

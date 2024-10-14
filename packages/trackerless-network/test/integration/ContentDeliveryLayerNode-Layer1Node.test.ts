@@ -1,4 +1,4 @@
-import { ConnectionManager, DhtNode, PeerDescriptor, Simulator, SimulatorTransport, getNodeIdFromPeerDescriptor, getRandomRegion } from '@streamr/dht'
+import { ConnectionManager, DhtNode, PeerDescriptor, Simulator, SimulatorTransport, toNodeId, getRandomRegion } from '@streamr/dht'
 import { Logger, StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
@@ -117,7 +117,7 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
                 const neighbor = allNodes.find((node) => {
                     return node.getOwnNodeId() === nodeId
                 })
-                const neighborNodeIds = neighbor!.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
+                const neighborNodeIds = neighbor!.getNeighbors().map((n) => toNodeId(n))
                 expect(neighborNodeIds.includes(allNodes[i].getOwnNodeId())).toEqual(true)
             })
         })
@@ -145,10 +145,10 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
             otherContentDeliveryLayerNodes.forEach((node) => {
                 const nodeId = node.getOwnNodeId()
                 node.getNeighbors().forEach((neighbor) => {
-                    const neighborId = getNodeIdFromPeerDescriptor(neighbor)
+                    const neighborId = toNodeId(neighbor)
                     if (neighborId !== entryPointContentDeliveryLayerNode.getOwnNodeId()) {
                         const neighbor = otherContentDeliveryLayerNodes.find((n) => n.getOwnNodeId() === neighborId)
-                        const neighborNodeIds = neighbor!.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
+                        const neighborNodeIds = neighbor!.getNeighbors().map((n) => toNodeId(n))
                         if (!neighborNodeIds.includes(nodeId)) {
                             mismatchCounter += 1
                         }

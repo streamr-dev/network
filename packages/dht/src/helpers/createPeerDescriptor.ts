@@ -5,7 +5,7 @@ import {
 import crypto from 'crypto'
 import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
 import { createPeerDescriptorSignaturePayload } from '../helpers/createPeerDescriptorSignaturePayload'
-import { DhtAddress, DhtAddressRaw, getRawFromDhtAddress } from '../identifiers'
+import { DhtAddress, DhtAddressRaw, toDhtAddressRaw } from '../identifiers'
 import {
     ConnectivityResponse,
     NodeType,
@@ -34,7 +34,7 @@ export const createPeerDescriptor = (connectivityResponse: ConnectivityResponse,
     const publicKey = crypto.randomBytes(20)  // TODO calculate publicKey from privateKey
     let nodeIdRaw: DhtAddressRaw
     if (nodeId !== undefined) {
-        nodeIdRaw = getRawFromDhtAddress(nodeId)
+        nodeIdRaw = toDhtAddressRaw(nodeId)
     } else {
         nodeIdRaw = calculateNodeIdRaw(connectivityResponse.ipAddress, privateKey)
     }

@@ -316,7 +316,11 @@ export interface StreamPartitionInfo {
      */
     controlLayerNeighbors: PeerDescriptor[];
     /**
-     * @generated from protobuf field: repeated ContentDeliveryLayerNeighborInfo contentDeliveryLayerNeighbors = 3;
+     * @generated from protobuf field: repeated dht.PeerDescriptor deprecatedContentDeliveryLayerNeighbors = 3;
+     */
+    deprecatedContentDeliveryLayerNeighbors: PeerDescriptor[];
+    /**
+     * @generated from protobuf field: repeated ContentDeliveryLayerNeighborInfo contentDeliveryLayerNeighbors = 4;
      */
     contentDeliveryLayerNeighbors: ContentDeliveryLayerNeighborInfo[];
 }
@@ -678,7 +682,8 @@ class StreamPartitionInfo$Type extends MessageType<StreamPartitionInfo> {
         super("StreamPartitionInfo", [
             { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "controlLayerNeighbors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
-            { no: 3, name: "contentDeliveryLayerNeighbors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ContentDeliveryLayerNeighborInfo }
+            { no: 3, name: "deprecatedContentDeliveryLayerNeighbors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 4, name: "contentDeliveryLayerNeighbors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ContentDeliveryLayerNeighborInfo }
         ]);
     }
 }

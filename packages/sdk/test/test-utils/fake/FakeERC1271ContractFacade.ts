@@ -15,7 +15,6 @@ export class FakeERC1271ContractFacade implements Methods<ERC1271ContractFacade>
         this.chain = chain
     }
 
-    // eslint-disable-next-line class-methods-use-this
     async isValidSignature(contractAddress: EthereumAddress, payload: Uint8Array, signature: Uint8Array): Promise<boolean> {
         const recoveredSignerUserId = toUserId(recoverSignerUserId(signature, payload))
         if (isEthereumAddressUserId(recoveredSignerUserId)) {

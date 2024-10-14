@@ -205,10 +205,10 @@ export async function until(
     try {
         // Promise wrapped condition function works for normal functions just the same as Promises
         let wasDone = false
-        while (!wasDone && !isTimedOut) { // eslint-disable-line no-await-in-loop
-            wasDone = await Promise.resolve().then(condition) // eslint-disable-line no-await-in-loop
+        while (!wasDone && !isTimedOut) {
+            wasDone = await Promise.resolve().then(condition)
             if (!wasDone && !isTimedOut) {
-                await wait(pollingIntervalMs) // eslint-disable-line no-await-in-loop
+                await wait(pollingIntervalMs)
             }
         }
 

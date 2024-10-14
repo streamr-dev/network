@@ -34,8 +34,6 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
 
     const logger = opts.loggerFactory.createLogger(module)
 
-    /* eslint-enable object-curly-newline */
-
     const onError = (error: Error | StreamMessageError, streamMessage?: StreamMessage) => {
         if (streamMessage) {
             ignoreMessages.add(streamMessage)

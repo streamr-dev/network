@@ -4,7 +4,7 @@ import {
     ITransport,
     ListeningRpcCommunicator,
     PeerDescriptor,
-    getNodeIdFromPeerDescriptor,
+    toNodeId,
 } from '@streamr/dht'
 import { Logger, StreamPartID, addManagedEventListener } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
@@ -166,7 +166,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             (id, remote) => {
                 this.options.propagation.onNeighborJoined(id)
                 this.options.connectionLocker.weakLockConnection(
-                    getNodeIdFromPeerDescriptor(remote.getPeerDescriptor()),
+                    toNodeId(remote.getPeerDescriptor()),
                     this.options.streamPartId
                 )
                 this.emit('neighborConnected', id)
@@ -178,7 +178,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             'nodeRemoved',
             (_id, remote) => {
                 this.options.connectionLocker.weakUnlockConnection(
-                    getNodeIdFromPeerDescriptor(remote.getPeerDescriptor()),
+                    toNodeId(remote.getPeerDescriptor()),
                     this.options.streamPartId
                 )
             },
@@ -317,7 +317,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
     }
 
     private onNodeDisconnected(peerDescriptor: PeerDescriptor): void {
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        const nodeId = toNodeId(peerDescriptor)
         if (this.options.neighbors.has(nodeId)) {
             this.options.neighbors.remove(nodeId)
             this.options.neighborFinder.start([nodeId])
@@ -341,7 +341,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         this.options.neighbors.getAll().map((remote) => {
             remote.leaveStreamPartNotice(this.options.streamPartId, this.options.isLocalNodeEntryPoint())
             this.options.connectionLocker.weakUnlockConnection(
-                getNodeIdFromPeerDescriptor(remote.getPeerDescriptor()),
+                toNodeId(remote.getPeerDescriptor()),
                 this.options.streamPartId
             )
         })
@@ -379,7 +379,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
     }
 
     getOwnNodeId(): DhtAddress {
-        return getNodeIdFromPeerDescriptor(this.options.localPeerDescriptor)
+        return toNodeId(this.options.localPeerDescriptor)
     }
 
     getOutgoingHandshakeCount(): number {

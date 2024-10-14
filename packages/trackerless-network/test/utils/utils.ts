@@ -5,9 +5,9 @@ import {
     PeerDescriptor,
     Simulator,
     SimulatorTransport,
-    createRandomDhtAddress,
+    randomDhtAddress,
     getRandomRegion,
-    getRawFromDhtAddress
+    toDhtAddressRaw
 } from '@streamr/dht'
 import { RpcCommunicator } from '@streamr/proto-rpc'
 import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, utf8ToBinary } from '@streamr/utils'
@@ -98,7 +98,7 @@ export const createStreamMessage = (
 export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'nodeId' | 'type'>): PeerDescriptor => {
     return {
         ...opts,
-        nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
+        nodeId: toDhtAddressRaw(randomDhtAddress()),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }

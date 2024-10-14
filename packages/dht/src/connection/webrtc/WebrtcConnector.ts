@@ -15,7 +15,7 @@ import * as Err from '../../helpers/errors'
 import { PortRange } from '../ConnectionManager'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { WebrtcConnectorRpcLocal } from './WebrtcConnectorRpcLocal'
-import { DhtAddress, areEqualPeerDescriptors, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { DhtAddress, areEqualPeerDescriptors, toNodeId } from '../../identifiers'
 import { getOfferer } from '../../helpers/offering'
 import { acceptHandshake, createIncomingHandshaker, createOutgoingHandshaker, rejectHandshake } from '../Handshaker'
 import { isMaybeSupportedVersion } from '../../helpers/version'
@@ -127,9 +127,9 @@ export class WebrtcConnector {
             throw new Err.CannotConnectToSelf('Cannot open WebRTC Connection to self')
         }
 
-        logger.trace(`Opening WebRTC connection to ${getNodeIdFromPeerDescriptor(targetPeerDescriptor)}`)
+        logger.trace(`Opening WebRTC connection to ${toNodeId(targetPeerDescriptor)}`)
 
-        const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
+        const nodeId = toNodeId(targetPeerDescriptor)
         const existingConnection = this.ongoingConnectAttempts.get(nodeId)
         if (existingConnection) {
             return existingConnection.managedConnection
@@ -137,8 +137,8 @@ export class WebrtcConnector {
 
         const connection = this.createConnection(targetPeerDescriptor)
 
-        const localNodeId = getNodeIdFromPeerDescriptor(this.localPeerDescriptor!)
-        const targetNodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
+        const localNodeId = toNodeId(this.localPeerDescriptor!)
+        const targetNodeId = toNodeId(targetPeerDescriptor)
         const offering = (getOfferer(localNodeId, targetNodeId) === 'local')
         let pendingConnection: PendingConnection
         const remoteConnector = new WebrtcConnectorRpcRemote(
@@ -224,7 +224,7 @@ export class WebrtcConnector {
         const attempts = Array.from(this.ongoingConnectAttempts.values())
         await Promise.allSettled(attempts.map(async (conn) => {
             conn.connection.destroy()
-            await conn.managedConnection.close(false)
+            conn.managedConnection.close(false)
         }))
 
         this.rpcCommunicator.destroy()

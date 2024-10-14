@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-import { StreamrClient, UserPermissionAssignment } from '@streamr/sdk'
-import { Options as BaseOptions, createClientCommand } from '../src/command'
 import '../src/logLevel'
+
+import { StreamrClient, UserPermissionAssignment } from '@streamr/sdk'
+import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { getPermissionId } from '../src/permission'
 import { toUserId } from '@streamr/utils'
 

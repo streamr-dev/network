@@ -219,7 +219,6 @@ export const createGroupKeyManager = (
                 litProtocolLogging: false,
                 maxKeyRequestsPerSecond: 10,
                 keyRequestTimeout: 50,
-                // eslint-disable-next-line no-underscore-dangle
                 rsaKeyLength: CONFIG_TEST.encryption!.rsaKeyLength!
             }
         },

@@ -4,7 +4,7 @@ import { v4 } from 'uuid'
 import { Message, HandshakeRequest, HandshakeResponse, PeerDescriptor, HandshakeError } from '../proto/packages/dht/protos/DhtRpc'
 import { IConnection } from './IConnection'
 import { LOCAL_PROTOCOL_VERSION, isMaybeSupportedVersion } from '../helpers/version'
-import { getNodeIdFromPeerDescriptor } from '../identifiers'
+import { toNodeId } from '../identifiers'
 import { PendingConnection } from './PendingConnection'
 
 const logger = new Logger(module)
@@ -43,7 +43,7 @@ export const createOutgoingHandshaker = (
         }
     }
     const handshakeCompletedListener = (peerDescriptor: PeerDescriptor) => {
-        logger.trace('handshake completed for outgoing connection, ' + getNodeIdFromPeerDescriptor(peerDescriptor))
+        logger.trace('handshake completed for outgoing connection, ' + toNodeId(peerDescriptor))
         pendingConnection.onHandshakeCompleted(connection)
         stopHandshaker()
     }

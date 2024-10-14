@@ -29,10 +29,13 @@ Changes before Tatum release are not documented in this file.
 #### Removed
 
 - Remove support for legacy encryption keys (https://github.com/streamr-dev/network/pull/2757)
+- Remove obsolete config options:
+  - `network.node.id` (https://github.com/streamr-dev/network/pull/2777)
+  - `network.controlLayer.webNewrtcConnectionTimeout` (https://github.com/streamr-dev/network/pull/2776)
 
 #### Fixed
 
-- Fixed flag expiration time in `Operator#getExpiredFlags` (https://github.com/streamr-dev/network/pull/2739)
+- Fix flag expiration time in `Operator#getExpiredFlags` (https://github.com/streamr-dev/network/pull/2739)
 
 #### Security
 

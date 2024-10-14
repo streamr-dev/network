@@ -113,7 +113,6 @@ export class NetworkNode {
         return this.stack.fetchNodeInfo(node)
     }
 
-    // eslint-disable-next-line class-methods-use-this
     getDiagnosticInfo(): Record<string, unknown> {
         return {
             controlLayer: this.stack.getControlLayerNode().getDiagnosticInfo(),

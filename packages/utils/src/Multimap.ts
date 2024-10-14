@@ -17,7 +17,6 @@ export class Multimap<K, V> {
         const items = this.delegatee.get(key)
         if (items !== undefined) {
             return items.includes(value)
-            // eslint-disable-next-line no-else-return
         } else {
             return false
         }

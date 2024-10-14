@@ -2,7 +2,7 @@ import { GeoIpLocator } from '@streamr/geoip-location'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { Action, connectivityMethodToWebsocketUrl } from './WebsocketClientConnector'
 import { WebsocketServer } from './WebsocketServer'
-import { areEqualPeerDescriptors, DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { areEqualPeerDescriptors, DhtAddress, toNodeId } from '../../identifiers'
 import { AutoCertifierClientFacade } from './AutoCertifierClientFacade'
 import { ConnectivityResponse, HandshakeError, PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
 import { NatType, PortRange, TlsCertificate } from '../ConnectionManager'
@@ -126,7 +126,7 @@ export class WebsocketServerConnector {
         remoteVersion: string,
         targetPeerDescriptor?: PeerDescriptor
     ) {
-        const nodeId = getNodeIdFromPeerDescriptor(sourcePeerDescriptor)
+        const nodeId = toNodeId(sourcePeerDescriptor)
         if (this.ongoingConnectRequests.has(nodeId)) {
             const { pendingConnection, delFunc } = this.ongoingConnectRequests.get(nodeId)!
             if (!isMaybeSupportedVersion(remoteVersion)) {
@@ -195,7 +195,7 @@ export class WebsocketServerConnector {
                     throw new Err.ConnectionFailed('ConnectivityChecker is destroyed')
                 }
             } catch (err) {
-                const error = `Failed to connect to entrypoint with id ${getNodeIdFromPeerDescriptor(entryPoint)} `
+                const error = `Failed to connect to entrypoint with id ${toNodeId(entryPoint)} `
                     + `and URL ${connectivityMethodToWebsocketUrl(entryPoint.websocket!)}`
                 logger.error(error, { err })
                 shuffledEntrypoints.shift()
@@ -227,7 +227,7 @@ export class WebsocketServerConnector {
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): PendingConnection {
-        const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
+        const nodeId = toNodeId(targetPeerDescriptor)
         if (this.ongoingConnectRequests.has(nodeId)) {
             return this.ongoingConnectRequests.get(nodeId)!.pendingConnection
         }
@@ -251,7 +251,7 @@ export class WebsocketServerConnector {
             })
         })
         const pendingConnection = new PendingConnection(targetPeerDescriptor)
-        const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
+        const nodeId = toNodeId(targetPeerDescriptor)
         // TODO: can this leak?
         const delFunc = () => {
             pendingConnection.off('connected', delFunc)
@@ -280,7 +280,7 @@ export class WebsocketServerConnector {
         await Promise.allSettled(requests.map((ongoingConnectRequest) => ongoingConnectRequest.pendingConnection.close(true)))
 
         await this.websocketServer?.stop()
-        await this.geoIpLocator?.stop()
+        this.geoIpLocator?.stop()
     }
 
 }

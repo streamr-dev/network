@@ -4,7 +4,7 @@ import { RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
 import { RecursiveOperationRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
 import { RpcRemote } from '../contact/RpcRemote'
 import { getPreviousPeer } from '../routing/getPreviousPeer'
-import { getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { toNodeId } from '../../identifiers'
 
 const logger = new Logger(module)
 
@@ -32,9 +32,9 @@ export class RecursiveOperationRpcRemote extends RpcRemote<RecursiveOperationRpc
         } catch (err) {
             const previousPeer = getPreviousPeer(params)
             const fromNode = previousPeer
-                ? getNodeIdFromPeerDescriptor(previousPeer)
-                : getNodeIdFromPeerDescriptor(params.sourcePeer!)
-            const toNode = getNodeIdFromPeerDescriptor(this.getPeerDescriptor())
+                ? toNodeId(previousPeer)
+                : toNodeId(params.sourcePeer!)
+            const toNode = toNodeId(this.getPeerDescriptor())
             logger.debug(`Failed to send routeRequest message from ${fromNode} to ${toNode}`, { err })
             return false
         }

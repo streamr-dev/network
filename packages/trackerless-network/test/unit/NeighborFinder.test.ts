@@ -4,11 +4,11 @@ import { waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { expect } from 'expect'
 import { createMockContentDeliveryRpcRemote } from '../utils/utils'
-import { DhtAddress, createRandomDhtAddress, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { DhtAddress, randomDhtAddress, toNodeId } from '@streamr/dht'
 
 describe('NeighborFinder', () => {
 
-    const nodeId = createRandomDhtAddress()
+    const nodeId = randomDhtAddress()
     let neighbors: NodeList
     let nearbyNodeView: NodeList
     let neighborFinder: NeighborFinder
@@ -24,7 +24,7 @@ describe('NeighborFinder', () => {
             if (Math.random() < 0.5) {
                 neighbors.add(target!)
             } else {
-                excluded.push(getNodeIdFromPeerDescriptor(target!.getPeerDescriptor()))
+                excluded.push(toNodeId(target!.getPeerDescriptor()))
             }
             return excluded
         }

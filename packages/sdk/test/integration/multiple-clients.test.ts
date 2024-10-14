@@ -193,13 +193,11 @@ describe('PubSub with multiple clients', () => {
                 }
             })
 
-            /* eslint-disable no-await-in-loop */
             const publishers: StreamrClient[] = []
             for (let i = 0; i < 3; i++) {
                 publishers.push(await createPublisher(i))
             }
 
-            /* eslint-enable no-await-in-loop */
             let counter = 0
             const published: Record<string, Message[]> = {}
             await Promise.all(publishers.map(async (pubClient) => {

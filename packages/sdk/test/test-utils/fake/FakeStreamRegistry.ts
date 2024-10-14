@@ -60,7 +60,6 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         }
     }
 
-    // eslint-disable-next-line class-methods-use-this
     async updateStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
         const registryItem = this.chain.getStream(streamId)
         if (registryItem === undefined) {

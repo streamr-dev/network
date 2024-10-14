@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle */
 import { binaryToHex } from '../src/binaryUtils'
 import { LengthPrefixedFrameDecoder, toLengthPrefixedFrame } from '../src/lengthPrefixedFrameUtils'
 

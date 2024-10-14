@@ -13,7 +13,6 @@ describe('contract call error', () => {
             }
         })
         await expect(() => client.createStream('/path')).rejects.toThrow(
-            // eslint-disable-next-line max-len
             'Error while executing contract call "streamRegistry.createStream", code=UNKNOWN_ERROR'
         )
     })
@@ -43,7 +42,6 @@ describe('contract call error', () => {
         await expect(() => Promise.all([
             client.createStream('/path1' + Date.now()),
             client.createStream('/path2' + Date.now())
-            // eslint-disable-next-line max-len
         ])).rejects.toThrow('Error while executing contract call "streamRegistry.createStream", code=NONCE_EXPIRED')
     })
 })

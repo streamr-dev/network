@@ -57,7 +57,6 @@ export const createAuthentication = (config: Pick<StrictStreamrClientConfig, 'au
                 const actualChainId = (await provider.getNetwork()).chainId
                 if (actualChainId !== BigInt(expectedChainId)) {
                     throw new Error(
-                        // eslint-disable-next-line max-len
                         `Please connect the custom authentication provider with chainId ${expectedChainId} (current chainId is ${actualChainId})`
                     )
                 }

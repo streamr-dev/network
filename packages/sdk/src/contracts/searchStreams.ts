@@ -1,4 +1,3 @@
-/* eslint-disable padding-line-between-statements */
 import { GraphQLQuery, Logger, StreamID, TheGraphClient, toStreamID, toUserId } from '@streamr/utils'
 import { Stream } from '../Stream'
 import { ChainPermissions, PUBLIC_PERMISSION_ADDRESS, StreamPermission, convertChainPermissionsToStreamPermissions } from '../permission'

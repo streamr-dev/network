@@ -2,7 +2,7 @@
 
 import {
     DhtNode,
-    getNodeIdFromPeerDescriptor,
+    toNodeId,
     getRandomRegion,
     LatencyType,
     PeerDescriptor,
@@ -75,7 +75,7 @@ const measureJoiningTime = async () => {
     const peerDescriptor = createMockPeerDescriptor({
         region: getRandomRegion()
     })
-    console.log('starting node with id ', getNodeIdFromPeerDescriptor(peerDescriptor))
+    console.log('starting node with id ', toNodeId(peerDescriptor))
 
     // start publishing ons stream
     const stream = Array.from(streamParts.keys())[Math.floor(Math.random() * streamParts.size)]
@@ -147,7 +147,6 @@ const run = async () => {
     await shutdownNetwork()
 } 
 
-// eslint-disable-next-line promise/catch-or-return
 run().then(() => {
     console.log('done')
 }).catch((err) => {

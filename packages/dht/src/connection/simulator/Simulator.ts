@@ -7,7 +7,7 @@ import { Logger } from '@streamr/utils'
 import { getRegionDelayMatrix } from './pings'
 import Heap from 'heap'
 import { debugVars } from '../../helpers/debugHelpers'
-import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { DhtAddress, toNodeId } from '../../identifiers'
 
 const logger = new Logger(module)
 
@@ -183,11 +183,11 @@ export class Simulator {
     }
 
     public addConnector(connector: SimulatorConnector): void {
-        this.connectors.set(getNodeIdFromPeerDescriptor(connector.getPeerDescriptor()), connector)
+        this.connectors.set(toNodeId(connector.getPeerDescriptor()), connector)
     }
 
     private executeConnectOperation(operation: ConnectOperation): void {
-        const target = this.connectors.get(getNodeIdFromPeerDescriptor(operation.targetDescriptor))
+        const target = this.connectors.get(toNodeId(operation.targetDescriptor))
 
         if (!target) {
             logger.error('Target connector not found when executing connect operation')

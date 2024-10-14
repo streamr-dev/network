@@ -2,7 +2,7 @@ import { InspectSession, Events } from '../../src/logic/inspect/InspectSession'
 import { MessageID } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForEvent3 } from '../../../utils/dist/src/waitForEvent3'
 import { utf8ToBinary } from '@streamr/utils'
-import { DhtAddress, createRandomDhtAddress } from '@streamr/dht'
+import { DhtAddress, randomDhtAddress } from '@streamr/dht'
 
 describe('InspectSession', () => {
 
@@ -30,8 +30,8 @@ describe('InspectSession', () => {
     }
 
     beforeEach(() => {
-        inspectedNode = createRandomDhtAddress()
-        anotherNode = createRandomDhtAddress()
+        inspectedNode = randomDhtAddress()
+        anotherNode = randomDhtAddress()
         inspectSession = new InspectSession({
             inspectedNode
         })

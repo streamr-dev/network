@@ -1,4 +1,4 @@
-import { ListeningRpcCommunicator, getDhtAddressFromRaw } from '@streamr/dht'
+import { ListeningRpcCommunicator, toDhtAddress } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/utils'
 import { TemporaryConnectionRpcLocal } from '../../src/logic/temporary-connection/TemporaryConnectionRpcLocal'
 import { MockTransport } from '../utils/mock/MockTransport'
@@ -30,9 +30,9 @@ describe('TemporaryConnectionRpcLocal', () => {
     it('Open and Close Connection', async () => {
         const caller = createMockPeerDescriptor()
         await rpcLocal.openConnection({}, { incomingSourceDescriptor: caller } as any)
-        expect(rpcLocal.getNodes().get(getDhtAddressFromRaw(caller.nodeId))).toBeDefined()
+        expect(rpcLocal.getNodes().get(toDhtAddress(caller.nodeId))).toBeDefined()
         await rpcLocal.closeConnection({}, { incomingSourceDescriptor: caller } as any)
-        expect(rpcLocal.getNodes().get(getDhtAddressFromRaw(caller.nodeId))).toBeUndefined()
+        expect(rpcLocal.getNodes().get(toDhtAddress(caller.nodeId))).toBeUndefined()
     })
 
 })

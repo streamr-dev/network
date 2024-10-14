@@ -196,7 +196,6 @@ export const randomUserId = (): UserID => {
 // eslint-disable-next-line no-underscore-dangle
 declare let _streamr_electron_test: any
 export function isRunningInElectron(): boolean {
-    // eslint-disable-next-line no-underscore-dangle
     return typeof _streamr_electron_test !== 'undefined'
 }
 
@@ -212,7 +211,6 @@ export function describeOnlyInNodeJs(...args: Parameters<typeof describe>): void
  * Used to spin up an HTTP server used by integration tests to fetch private keys having non-zero ERC-20 token
  * balances in streamr-docker-dev environment.
  */
-/* eslint-disable no-console */
 export class KeyServer {
     public static readonly KEY_SERVER_PORT = 45454
     private static singleton: KeyServer | undefined
