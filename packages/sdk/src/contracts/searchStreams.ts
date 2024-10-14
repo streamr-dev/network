@@ -1,11 +1,12 @@
-import { GraphQLQuery, Logger, StreamID, TheGraphClient, toStreamID, toUserId } from '@streamr/utils'
+import { ChangeFieldType } from './../types'
+import { GraphQLQuery, HexString, Logger, StreamID, TheGraphClient, toStreamID, toUserId, UserID } from '@streamr/utils'
 import { Stream } from '../Stream'
 import { ChainPermissions, PUBLIC_PERMISSION_ADDRESS, StreamPermission, convertChainPermissionsToStreamPermissions } from '../permission'
 import { filter, map, unique } from '../utils/GeneratorUtils'
 import { StreamQueryResult } from './StreamRegistry'
 
 export interface SearchStreamsPermissionFilter {
-    user: Uint8Array
+    user: HexString
     /*
      * If possible, prefer allOf to anyOf because the query performance is better
      */
@@ -13,6 +14,8 @@ export interface SearchStreamsPermissionFilter {
     anyOf?: StreamPermission[]
     allowPublic: boolean
 }
+
+export type InternalSearchStreamsPermissionFilter = ChangeFieldType<SearchStreamsPermissionFilter, 'user', UserID>
 
 export interface SearchStreamsOrderBy {
     field: 'id' | 'createdAt' | 'updatedAt'
@@ -24,9 +27,16 @@ export type SearchStreamsResultItem = {
     stream: StreamQueryResult
 } & ChainPermissions
 
+export const toInternalSearchStreamsPermissionFilter = (filter: SearchStreamsPermissionFilter): InternalSearchStreamsPermissionFilter => {
+    return {
+        ...filter,
+        user: toUserId(filter.user)
+    }
+}
+
 export const searchStreams = (
     term: string | undefined,
-    permissionFilter: SearchStreamsPermissionFilter | undefined,
+    permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
     orderBy: SearchStreamsOrderBy,
     theGraphClient: TheGraphClient,
     parseStream: (id: StreamID, metadata: string) => Stream,

@@ -7,7 +7,7 @@ import { StreamFactory } from '../../../src/StreamFactory'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { StreamrClientError } from '../../../src/StreamrClientError'
 import { StreamRegistry } from '../../../src/contracts/StreamRegistry'
-import { SearchStreamsPermissionFilter } from '../../../src/contracts/searchStreams'
+import { InternalSearchStreamsPermissionFilter } from '../../../src/contracts/searchStreams'
 import {
     InternalPermissionAssignment,
     InternalPermissionQuery,
@@ -201,7 +201,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    searchStreams(_term: string | undefined, _permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncIterable<Stream> {
+    searchStreams(_term: string | undefined, _permissionFilter: InternalSearchStreamsPermissionFilter | undefined): AsyncIterable<Stream> {
         throw new Error('not implemented')
     }
 

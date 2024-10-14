@@ -45,7 +45,7 @@ import { StreamFactory } from './../StreamFactory'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway, waitForTx } from './contract'
-import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, searchStreams as _searchStreams } from './searchStreams'
+import { InternalSearchStreamsPermissionFilter, SearchStreamsOrderBy, searchStreams as _searchStreams } from './searchStreams'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -280,7 +280,7 @@ export class StreamRegistry {
 
     searchStreams(
         term: string | undefined,
-        permissionFilter: SearchStreamsPermissionFilter | undefined,
+        permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
         orderBy: SearchStreamsOrderBy
     ): AsyncIterable<Stream> {
         return _searchStreams(

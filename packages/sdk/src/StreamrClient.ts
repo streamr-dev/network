@@ -33,7 +33,7 @@ import { OperatorRegistry } from './contracts/OperatorRegistry'
 import { StorageNodeMetadata, StorageNodeRegistry } from './contracts/StorageNodeRegistry'
 import { StreamRegistry } from './contracts/StreamRegistry'
 import { StreamStorageRegistry } from './contracts/StreamStorageRegistry'
-import { SearchStreamsOrderBy, SearchStreamsPermissionFilter } from './contracts/searchStreams'
+import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, toInternalSearchStreamsPermissionFilter } from './contracts/searchStreams'
 import { GroupKey } from './encryption/GroupKey'
 import { LocalGroupKeyStore, UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
 import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
@@ -423,7 +423,11 @@ export class StreamrClient {
         permissionFilter: SearchStreamsPermissionFilter | undefined,
         orderBy: SearchStreamsOrderBy = { field: 'id', direction: 'asc' }
     ): AsyncIterable<Stream> {
-        return this.streamRegistry.searchStreams(term, permissionFilter, orderBy)
+        return this.streamRegistry.searchStreams(
+            term,
+            (permissionFilter !== undefined) ? toInternalSearchStreamsPermissionFilter(permissionFilter) : undefined,
+            orderBy
+        )
     }
 
     // --------------------------------------------------------------------------------------------
