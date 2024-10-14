@@ -24,7 +24,9 @@ const createPermissionFilter = async (
 ): Promise<SearchStreamsPermissionFilter | undefined> => {
     if (user !== undefined) {
         return {
-            user: (getOptionType(user) === OptionType.ARGUMENT) ? toUserIdRaw(toUserId(user as string)) : await client.getUserId(),
+            user: (getOptionType(user) === OptionType.ARGUMENT) 
+                ? toUserIdRaw(toUserId(user as string)) 
+                : toUserIdRaw(toUserId(await client.getUserId())),
             allowPublic: allowPublic ?? false,
             allOf,
             anyOf

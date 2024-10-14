@@ -3,7 +3,7 @@ import './utils/PatchTsyringe'
 
 import { DhtAddress } from '@streamr/dht'
 import { ProxyDirection } from '@streamr/trackerless-network'
-import { EthereumAddress, StreamID, TheGraphClient, UserID, UserIDRaw, toEthereumAddress, toUserId, toUserIdRaw } from '@streamr/utils'
+import { EthereumAddress, HexString, StreamID, TheGraphClient, UserID, UserIDRaw, toEthereumAddress, toUserId, toUserIdRaw } from '@streamr/utils'
 import type { Overrides } from 'ethers'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
@@ -41,7 +41,7 @@ import { generateEthereumAccount as _generateEthereumAccount, getEthersOverrides
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
 import { PermissionAssignment, PermissionQuery } from './permission'
 import { MessageListener, MessageStream } from './subscribe/MessageStream'
-import { getInternalResendOptions, ResendOptions, Resends } from './subscribe/Resends'
+import { ResendOptions, Resends, getInternalResendOptions } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
 import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
 import { initResendSubscription } from './subscribe/resendSubscription'
@@ -583,8 +583,8 @@ export class StreamrClient {
     /**
      * Gets the user id (e.g. Ethereum address) of the wallet associated with the current {@link StreamrClient} instance.
      */
-    async getUserId(): Promise<UserIDRaw> {
-        return toUserIdRaw(await this.authentication.getUserId())
+    async getUserId(): Promise<HexString> {
+        return await this.authentication.getUserId()
     }
 
     // --------------------------------------------------------------------------------------------

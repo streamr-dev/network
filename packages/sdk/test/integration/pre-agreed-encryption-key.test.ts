@@ -6,6 +6,7 @@ import { StreamMessageType } from '../../src/protocol/StreamMessage'
 import { nextValue } from '../../src/utils/iterators'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createTestStream } from '../test-utils/utils'
+import { toUserId, toUserIdRaw } from '@streamr/utils'
 
 describe('pre-agreed encryption key', () => {
 
@@ -24,7 +25,7 @@ describe('pre-agreed encryption key', () => {
         const subscriber = environment.createClient()
         const stream = await createTestStream(publisher, module)
         await stream.grantPermissions({
-            user: await subscriber.getUserId(),
+            user: toUserIdRaw(toUserId(await subscriber.getUserId())),
             permissions: [StreamPermission.SUBSCRIBE]
         })
 
@@ -34,7 +35,7 @@ describe('pre-agreed encryption key', () => {
             streamId: stream.id,
             distributionMethod: 'rekey'
         })
-        await subscriber.addEncryptionKey(key, await publisher.getUserId())
+        await subscriber.addEncryptionKey(key, toUserIdRaw(toUserId(await publisher.getUserId())))
         const sub = await subscriber.subscribe(stream.id)
         await publisher.publish(stream.id, { foo: 'bar' })
         const receivedMessage = await nextValue(sub[Symbol.asyncIterator]())

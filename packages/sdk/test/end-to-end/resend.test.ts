@@ -1,5 +1,5 @@
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { wait, waitForCondition } from '@streamr/utils'
+import { toUserId, toUserIdRaw, wait, waitForCondition } from '@streamr/utils'
 import { randomBytes } from 'crypto'
 import random from 'lodash/random'
 import range from 'lodash/range'
@@ -41,7 +41,7 @@ describe('resend', () => {
             stream = await createTestStream(publisherClient, module, { partitions: 3 })
             await stream.grantPermissions({
                 permissions: [StreamPermission.SUBSCRIBE],
-                user: await resendClient.getUserId()
+                user: toUserIdRaw(toUserId(await resendClient.getUserId()))
             })
             await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
             for (const payload of payloads) {

@@ -33,7 +33,7 @@ describe('publisher key reuse', () => {
         stream = await publisher.createStream('/path')
         await stream.grantPermissions({
             permissions: [StreamPermission.SUBSCRIBE],
-            user: await subscriber.getUserId()
+            user: toUserIdRaw(toUserId(await subscriber.getUserId()))
         })
     })
 
