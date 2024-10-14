@@ -152,14 +152,14 @@ export class Resends {
                 fromSequenceNumber: options.from.sequenceNumber,
                 toTimestamp: new Date(options.to.timestamp).getTime(),
                 toSequenceNumber: options.to.sequenceNumber,
-                publisherId: options.publisherId !== undefined ? options.publisherId : undefined,
+                publisherId: options.publisherId,
                 msgChainId: options.msgChainId
             }, raw, getStorageNodes, abortSignal)
         } else if (isResendFrom(options)) {
             return this.fetchStream('from', streamPartId, {
                 fromTimestamp: new Date(options.from.timestamp).getTime(),
                 fromSequenceNumber: options.from.sequenceNumber,
-                publisherId: options.publisherId !== undefined ? options.publisherId : undefined
+                publisherId: options.publisherId
             }, raw, getStorageNodes, abortSignal)
         } else {
             throw new StreamrClientError(
