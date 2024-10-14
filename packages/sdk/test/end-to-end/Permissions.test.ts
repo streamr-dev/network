@@ -1,7 +1,7 @@
 import { Wallet } from 'ethers'
 
 import { fastWallet, fetchPrivateKeyWithGas, randomUserId } from '@streamr/test-utils'
-import { toEthereumAddress } from '@streamr/utils'
+import { toUserId } from '@streamr/utils'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -220,7 +220,7 @@ describe('Stream permissions', () => {
         const message = {
             foo: Date.now()
         }
-        const errorSnippet = `You don't have permission to publish to this stream. Using address: ${toEthereumAddress(otherUser.address)}`
+        const errorSnippet = `You don't have permission to publish to this stream. Using address: ${toUserId(otherUser.address)}`
         await expect(() => otherUserClient.publish(stream.id, message)).rejects.toThrow(errorSnippet)
         await client.grantPermissions(stream.id, {
             user: otherUser.address,
