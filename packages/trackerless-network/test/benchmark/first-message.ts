@@ -14,6 +14,8 @@ import {
     StreamPartIDUtils,
     toStreamID,
     toStreamPartID,
+    toUserId,
+    toUserIdRaw,
     utf8ToBinary, waitForEvent3
 } from '@streamr/utils'
 import fs from 'fs'
@@ -88,7 +90,7 @@ const measureJoiningTime = async () => {
                 streamPartition: 0,
                 timestamp: i,
                 sequenceNumber: Math.floor(Math.random() * 20000),
-                publisherId: hexToBinary('0x2222'),
+                publisherId: toUserIdRaw(toUserId('0x2222')),
                 messageChainId: 'msgChainId'
             },
             body: {
