@@ -11,7 +11,7 @@ export const toUserId = (input: string | UserIDRaw): UserID | never => {
     if (input instanceof Uint8Array) {
         return binaryToHex(input, true) as UserID
     } else {
-        if (input.match(REGEX)) {
+        if (REGEX.test(input)) {
             return input.toLowerCase() as UserID
         }
         throw new Error(`not a valid UserID: "${input}"`)
