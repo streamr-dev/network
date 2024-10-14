@@ -1,4 +1,4 @@
-import { randomEthereumAddress } from '@streamr/test-utils'
+import { randomUserId } from '@streamr/test-utils'
 import { StreamPartIDUtils, hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
@@ -44,7 +44,7 @@ describe('inspect', () => {
             streamPartition: StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
             timestamp: 666,
             sequenceNumber: 0,
-            publisherId: hexToBinary(randomEthereumAddress()),
+            publisherId: hexToBinary(randomUserId()),
             messageChainId: 'msgChainId'
         },
         previousMessageRef: {

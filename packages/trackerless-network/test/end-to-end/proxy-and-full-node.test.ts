@@ -1,4 +1,4 @@
-import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
+import { randomUserId } from '@streamr/test-utils'
 import { StreamPartID, StreamPartIDUtils, hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import {
@@ -19,7 +19,7 @@ const createMessage = (streamPartId: StreamPartID): StreamMessage => {
             streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
             timestamp: 666,
             sequenceNumber: 0,
-            publisherId: hexToBinary(randomEthereumAddress()),
+            publisherId: hexToBinary(randomUserId()),
             messageChainId: 'msgChainId'
         },
         previousMessageRef: {
