@@ -1,6 +1,6 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtAddress, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, toNodeId } from '@streamr/dht'
-import { Logger, StreamPartID, UserID } from '@streamr/utils'
+import { Logger, StreamPartID, toUserId, UserID } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import {
     ProxyConnectionRequest,
