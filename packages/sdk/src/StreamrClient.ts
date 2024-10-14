@@ -548,7 +548,7 @@ export class StreamrClient {
      * @param streamIdOrPath - if a stream is given, returns the list of storage nodes the stream has been assigned to;
      * leave as `undefined` to return all storage nodes
      */
-    async getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
+    async getStorageNodes(streamIdOrPath?: string): Promise<HexString[]> {
         return this.streamStorageRegistry.getStorageNodes(streamIdOrPath)
     }
 

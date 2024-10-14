@@ -1,4 +1,5 @@
 import {
+    HexString,
     StreamID,
     StreamPartID,
     collect,
@@ -281,7 +282,7 @@ export class Stream {
     /**
      * See {@link StreamrClient.getStorageNodes | StreamrClient.getStorageNodes}.
      */
-    async getStorageNodes(): Promise<string[]> {
+    async getStorageNodes(): Promise<HexString[]> {
         return this._streamStorageRegistry.getStorageNodes(this.id)
     }
 
