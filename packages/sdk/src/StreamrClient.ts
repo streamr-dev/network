@@ -68,7 +68,7 @@ export interface ExtraSubscribeOptions {
      * Subscribe on behalf of a contract implementing the [ERC-1271](https://eips.ethereum.org/EIPS/eip-1271) standard.
      * The streamr client wallet address must be an authorized signer for the contract.
      */
-    erc1271Contract?: string
+    erc1271Contract?: HexString
 }
 
 /**
