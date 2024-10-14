@@ -38,7 +38,7 @@ const assertReceivedMessage = (message: Message) => {
     expect(content).toEqual(MOCK_MESSAGE.content)
     expect(metadata.timestamp).toEqual(MOCK_MESSAGE.metadata.timestamp)
     expect(metadata.sequenceNumber).toEqual(0)
-    expect(metadata.publisherId).toEqual(brokerUser.address)
+    expect(metadata.publisherId).toEqual(brokerUser.address.toLowerCase())
     expect(metadata.msgChainId).toBeDefined()
 }
 
