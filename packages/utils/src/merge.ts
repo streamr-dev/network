@@ -2,7 +2,7 @@ import { isArray, mergeWith } from 'lodash'
 
 /*
  * Does deep merge. This is similar to `lodash` merge, but handles arrays differently:
- * `lodash` merges elements of arrays by their indices, this overrites the existing
+ * `lodash` merges elements of arrays by their indices, this overwrites the existing
  * value with the array
  */
 export const merge = <TTarget>(...sources: (Partial<TTarget> | undefined)[]): TTarget => {
