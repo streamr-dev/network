@@ -159,7 +159,6 @@ describe('ERC-1271: publish and subscribe', () => {
         await stream.grantPermissions({
             permissions: [StreamPermission.SUBSCRIBE],
             user: erc1271SubscriberContractAddress
-
         })
         await creator.destroy()
         return stream.id

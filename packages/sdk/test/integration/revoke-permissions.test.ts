@@ -1,7 +1,8 @@
 import 'reflect-metadata'
 
-import { Defer, merge } from '@streamr/utils'
 import { fastPrivateKey } from '@streamr/test-utils'
+import { Defer, merge } from '@streamr/utils'
+import { Message } from '../../src/Message'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -12,7 +13,6 @@ import {
 import {
     createTestStream
 } from '../test-utils/utils'
-import { Message } from '../../src/Message'
 
 // this has publisher & subscriber clients
 // publisher begins publishing `maxMessages` messages
@@ -102,7 +102,7 @@ describe('revoke permissions', () => {
             distributionMethod: 'rotate'
         })
         await stream.grantPermissions({
-            user: await subscriber.getAddress(),
+            user: await subscriber.getUserId(),
             permissions: [StreamPermission.SUBSCRIBE]
         })
         const sub = await subscriber.subscribe({
@@ -127,7 +127,7 @@ describe('revoke permissions', () => {
                 if (count === revokeAfter) {
                     await gotMessages
                     await stream.revokePermissions({
-                        user: await subscriber.getAddress(),
+                        user: await subscriber.getUserId(),
                         permissions: [StreamPermission.SUBSCRIBE]
                     })
                     await publisher.updateEncryptionKey({
