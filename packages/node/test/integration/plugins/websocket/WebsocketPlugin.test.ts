@@ -1,8 +1,8 @@
-import WebSocket from 'ws'
 import { Queue } from '@streamr/test-utils'
 import { waitForEvent } from '@streamr/utils'
+import WebSocket from 'ws'
 import { Message } from '../../../../src/helpers/PayloadFormat'
-import { createMessagingPluginTest } from '../../createMessagingPluginTest'
+import { createMessagingPluginTest, PAYLOAD_FORMAT } from '../../createMessagingPluginTest'
 
 jest.setTimeout(30000)
 
@@ -28,12 +28,12 @@ createMessagingPluginTest('websocket',
             client.close()
         },
         publish: async (msg: Message, _streamId: string, client: WebSocket): Promise<void> => {
-            client.send(JSON.stringify(msg))
+            client.send(PAYLOAD_FORMAT.createPayload(msg.content, msg.metadata))
         },
         subscribe: async (messageQueue: Queue<Message>, _streamId: string, client: WebSocket): Promise<void> => {
             client.on('message', (data: WebSocket.RawData) => {
                 const payload = data.toString()
-                messageQueue.push(JSON.parse(payload))
+                messageQueue.push(PAYLOAD_FORMAT.createMessage(payload))
             })
         },
         errors: {
