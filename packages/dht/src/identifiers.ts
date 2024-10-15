@@ -1,6 +1,6 @@
 import { BrandedString, areEqualBinaries, binaryToHex, hexToBinary } from '@streamr/utils'
 import crypto from 'crypto'
-import { PeerDescriptor } from './proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../generated/packages/dht/protos/DhtRpc'
 
 // https://www.scs.stanford.edu/~dm/home/papers/kpos.pdf
 export const KADEMLIA_ID_LENGTH_IN_BYTES = 20

@@ -12,8 +12,8 @@ import {
     PeerDescriptor,
     UnlockRequest,
     SetPrivateRequest
-} from '../proto/packages/dht/protos/DhtRpc'
-import { ConnectionLockRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
+} from '../../generated/packages/dht/protos/DhtRpc'
+import { ConnectionLockRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { DEFAULT_SEND_OPTIONS, ITransport, SendOptions, TransportEvents } from '../transport/ITransport'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { ConnectionLockStates, LockID } from './ConnectionLockStates'

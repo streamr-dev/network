@@ -7,7 +7,7 @@ import {
     RouteMessageAck,
     RouteMessageError,
     RouteMessageWrapper
-} from '../../src/proto/packages/dht/protos/DhtRpc'
+} from '../../generated/packages/dht/protos/DhtRpc'
 import { createMockPeerDescriptor, createWrappedClosestPeersRequest } from '../utils/utils'
 import { FakeRpcCommunicator } from '../utils/FakeRpcCommunicator'
 import { DhtAddress, toNodeId, randomDhtAddress } from '../../src/identifiers'

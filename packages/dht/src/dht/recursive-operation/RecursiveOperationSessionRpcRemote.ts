@@ -3,8 +3,8 @@ import {
     DataEntry,
     PeerDescriptor,
     RecursiveOperationResponse
-} from '../../proto/packages/dht/protos/DhtRpc'
-import { RecursiveOperationSessionRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+} from '../../../generated/packages/dht/protos/DhtRpc'
+import { RecursiveOperationSessionRpcClient } from '../../../generated/packages/dht/protos/DhtRpc.client'
 import { RpcRemote } from '../contact/RpcRemote'
 
 const logger = new Logger(module)
