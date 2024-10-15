@@ -116,7 +116,7 @@ describe('Stream permissions', () => {
         const permissions = await stream.getPermissions()
         const owner = await client.getUserId()
         return expect(permissions).toIncludeSameMembers([{
-            user: owner,
+            userId: owner,
             permissions: [
                 StreamPermission.EDIT,
                 StreamPermission.DELETE,
