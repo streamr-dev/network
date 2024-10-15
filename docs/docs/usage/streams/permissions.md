@@ -36,7 +36,7 @@ The returned value is an array of permissions containing an item for each user, 
 
 ```ts
 permissions = [
-  { user: '0x12345...', permissions: ['subscribe', 'publish'] },
+  { userId: '0x12345...', permissions: ['subscribe', 'publish'] },
   { public: true, permissions: ['subscribe'] },
 ];
 ```
@@ -71,7 +71,7 @@ You may also use the [Streamr CLI tool to query permissions](../cli-tool#permiss
 
 ```ts
 await stream.grantPermissions({
-  user: '0x12345...',
+  userId: '0x12345...',
   permissions: [StreamPermission.PUBLISH],
 });
 ```
@@ -80,7 +80,7 @@ await stream.grantPermissions({
 
 ```ts
 await stream.revokePermissions({
-  user: '0x12345...',
+  userId: '0x12345...',
   permissions: [StreamPermission.PUBLISH],
 });
 ```
@@ -120,10 +120,10 @@ await streamr.setPermissions({
     streamId,
     assignments: [
         {
-            user: '0x11111...',
+            userId: '0x11111...',
             permissions: [StreamPermission.EDIT]
         }, {
-            user: '0x22222...'
+            userId: '0x22222...'
             permissions: [StreamPermission.GRANT]
         }, {
             public: true,

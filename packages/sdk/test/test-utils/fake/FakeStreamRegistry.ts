@@ -103,7 +103,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
                 }
             } else {
                 return {
-                    user: target,
+                    userId: target,
                     permissions
                 }
             }
@@ -148,7 +148,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
             for (const assignment of assignments) {
                 const target = isPublicPermissionAssignment(assignment)
                     ? PUBLIC_PERMISSION_TARGET
-                    : assignment.user
+                    : assignment.userId
                 modifyRegistryItem(registryItem, target, assignment.permissions)
             }
         }

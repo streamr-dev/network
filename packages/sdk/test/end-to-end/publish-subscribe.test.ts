@@ -88,7 +88,7 @@ describe('publish-subscribe', () => {
         beforeAll(async () => {
             stream = await createStreamWithPermissions(publisherPk, {
                 permissions: [StreamPermission.SUBSCRIBE],
-                user: subscriberWallet.address
+                userId: subscriberWallet.address
             })
         }, TIMEOUT * 2)
 

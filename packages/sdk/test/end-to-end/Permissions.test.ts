@@ -40,7 +40,7 @@ describe('Stream permissions', () => {
     describe('happy path', () => {
         it('direct permissions', async () => {
             await stream.grantPermissions({
-                user: otherUser.address,
+                userId: otherUser.address,
                 permissions: [StreamPermission.PUBLISH, StreamPermission.EDIT],
             })
             expect(await stream.hasPermission({
@@ -54,7 +54,7 @@ describe('Stream permissions', () => {
                 allowPublic: false
             })).toBe(true)
             await stream.revokePermissions({
-                user: otherUser.address,
+                userId: otherUser.address,
                 permissions: [StreamPermission.PUBLISH, StreamPermission.EDIT],
             })
             expect(await stream.hasPermission({
@@ -144,7 +144,7 @@ describe('Stream permissions', () => {
 
     it('can revoke non-existing permissions', async () => {
         await stream.revokePermissions({
-            user: otherUser.address,
+            userId: otherUser.address,
             permissions: [StreamPermission.SUBSCRIBE]
         })
         await stream.revokePermissions({
@@ -160,21 +160,21 @@ describe('Stream permissions', () => {
         const user1 = randomUserId()
         const user2 = randomUserId()
         await stream.grantPermissions({
-            user: user1,
+            userId: user1,
             permissions: [StreamPermission.GRANT]
         })
         await stream.grantPermissions({
-            user: user2,
+            userId: user2,
             permissions: [StreamPermission.EDIT]
         })
         await client.setPermissions({
             streamId: stream.id,
             assignments: [
                 {
-                    user: user1,
+                    userId: user1,
                     permissions: [StreamPermission.SUBSCRIBE]
                 }, {
-                    user: user2,
+                    userId: user2,
                     permissions: []
                 }
             ]
@@ -198,12 +198,12 @@ describe('Stream permissions', () => {
 
     it('grant same permission multiple times', async () => {
         await stream.grantPermissions({
-            user: otherUser.address,
+            userId: otherUser.address,
             permissions: [StreamPermission.SUBSCRIBE]
         })
         const previousPermissions = await stream.getPermissions()
         await stream.grantPermissions({
-            user: otherUser.address,
+            userId: otherUser.address,
             permissions: [StreamPermission.SUBSCRIBE]
         })
         const permissions = await stream.getPermissions()
@@ -223,7 +223,7 @@ describe('Stream permissions', () => {
         const errorSnippet = `You don't have permission to publish to this stream. Using address: ${toUserId(otherUser.address)}`
         await expect(() => otherUserClient.publish(stream.id, message)).rejects.toThrow(errorSnippet)
         await client.grantPermissions(stream.id, {
-            user: otherUser.address,
+            userId: otherUser.address,
             permissions: [StreamPermission.PUBLISH]
         })
         await expect(otherUserClient.publish(stream.id, message)).resolves.toBeDefined()
