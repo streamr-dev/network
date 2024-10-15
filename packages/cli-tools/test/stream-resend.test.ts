@@ -18,7 +18,7 @@ describe('resend stream', () => {
         privateKey = await fetchPrivateKeyWithGas()
         const client = createTestClient(privateKey)
         stream = await client.createStream(`/${Date.now()}`)
-        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE, { wait: true })
         for (const msgId of range(10)) {
             await wait(10) // to prevent duplicate timestamps (to make test assertions simpler)
             const msg = await stream.publish({ msgId })
