@@ -118,15 +118,31 @@ describe('merge', () => {
 
     it('class instances are handled as object references', () => {
         // eslint-disable-next-line @typescript-eslint/no-extraneous-class
-        class Foo {}
+        class Foo {
+            values: Record<string, unknown> = {}
+        }
+        const foo1 = new Foo()
+        foo1.values = {
+            x: 5,
+            y: 6
+        }
+        const foo2 = new Foo()
+        foo2.values = {
+            y: 7,
+            z: 8
+        }
         const o1 = {
-            foo: 1
+            foo: foo1
         }
-        const foo = new Foo()
         const o2 = {
-            foo
+            foo: foo2
         }
-        expect(merge(o1, o2).foo).toBe(foo)
+        const result = merge(o1, o2)
+        expect(result.foo).toBe(foo2)
+        expect(result.foo.values).toEqual({
+            y: 7,
+            z: 8
+        })
     })
 
     it('arrays are overwritten', () => {
