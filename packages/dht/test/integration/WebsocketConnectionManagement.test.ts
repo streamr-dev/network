@@ -18,7 +18,7 @@ const createOptions = (localPeerDescriptor: PeerDescriptor, opts: Omit<DefaultCo
             ...opts
         }),
         metricsContext: new MetricsContext(),
-        allowPrivateConnections: false
+        allowIncomingPrivateConnections: false
     }
 }
 

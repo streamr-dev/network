@@ -104,7 +104,7 @@ export interface DhtNodeOptions {
     autoCertifierUrl?: string
     autoCertifierConfigFile?: string
     geoIpDatabaseFolder?: string
-    allowPrivateConnections?: boolean
+    allowIncomingPrivateConnections?: boolean
 }
 
 type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
@@ -244,7 +244,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
                 createConnectorFacade: () => new DefaultConnectorFacade(connectorFacadeOptions),
                 maxConnections: this.options.maxConnections,
                 metricsContext: this.options.metricsContext,
-                allowPrivateConnections: this.options.allowPrivateConnections ?? false
+                allowIncomingPrivateConnections: this.options.allowIncomingPrivateConnections ?? false
             })
             await connectionManager.start()
             this.connectionsView = connectionManager

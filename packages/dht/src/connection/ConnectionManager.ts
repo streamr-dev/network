@@ -32,7 +32,7 @@ import { PendingConnection } from './PendingConnection'
 export interface ConnectionManagerOptions {
     maxConnections?: number
     metricsContext: MetricsContext
-    allowPrivateConnections: boolean
+    allowIncomingPrivateConnections: boolean
     createConnectorFacade: () => ConnectorFacade
 }
 
@@ -129,7 +129,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
     private rpcCommunicator?: RoutingRpcCommunicator
     private disconnectorIntervalRef?: NodeJS.Timeout
     private state = ConnectionManagerState.IDLE
-    private privateMode = false
+    private privateClientMode = false
 
     constructor(options: ConnectionManagerOptions) {
         super()
@@ -159,7 +159,7 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
                 this.closeConnection(peerDescriptor, gracefulLeave, reason),
             getLocalPeerDescriptor: () => this.getLocalPeerDescriptor(),
             setPrivate: (id: DhtAddress, isPrivate: boolean) => {
-                if (!this.options.allowPrivateConnections) {
+                if (!this.options.allowIncomingPrivateConnections) {
                     logger.debug(`node ${id} attemted to set a connection as private, but it is not allowed`)
                     return
                 }
@@ -415,8 +415,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
             connected: true,
             connection: managedConnection
         })
-        if (this.privateMode) {
-            this.setPrivateForConnection(peerDescriptor, this.privateMode).catch(() => {})
+        if (this.privateClientMode) {
+            this.setPrivateForConnection(peerDescriptor, this.privateClientMode).catch(() => {})
         }
         this.emit('connected', peerDescriptor)
         this.onConnectionCountChange()
@@ -549,8 +549,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         this.locks.removeWeakLocked(nodeId, lockId)
     }
 
-    public async enablePrivateMode(): Promise<void> {
-        this.privateMode = true
+    public async enablePrivateClientMode(): Promise<void> {
+        this.privateClientMode = true
         await Promise.all(Array.from(this.endpoints.values()).map((endpoint) => {
             if (endpoint.connected) {
                 const peerDescription = endpoint.connection.getPeerDescriptor()
@@ -559,8 +559,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         }))
     }
 
-    public async disablePrivateMode(): Promise<void> {
-        this.privateMode = false
+    public async disablePrivateClientMode(): Promise<void> {
+        this.privateClientMode = false
         await Promise.all(Array.from(this.endpoints.values()).map((endpoint) => {
             if (endpoint.connected) {
                 const peerDescription = endpoint.connection.getPeerDescriptor()
@@ -569,8 +569,8 @@ export class ConnectionManager extends EventEmitter<TransportEvents> implements 
         }))
     }
 
-    public isPrivateMode(): boolean {
-        return this.privateMode
+    public isPrivateClientMode(): boolean {
+        return this.privateClientMode
     }
 
     private async setPrivateForConnection(targetDescriptor: PeerDescriptor, isPrivate: boolean): Promise<void> {

@@ -9,7 +9,7 @@ export class SimulatorTransport extends ConnectionManager {
         super({
             createConnectorFacade: () => new SimulatorConnectorFacade(localPeerDescriptor, simulator),
             metricsContext: new MetricsContext(),
-            allowPrivateConnections: false
+            allowIncomingPrivateConnections: false
         })
     }
 }

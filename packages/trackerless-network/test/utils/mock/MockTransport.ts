@@ -23,7 +23,7 @@ export class MockTransport extends EventEmitter<TransportEvents> implements ITra
     }
 
     // eslint-disable-next-line class-methods-use-this
-    enablePrivateMode(): void {
+    enablePrivateClientMode(): void {
 
     }
 

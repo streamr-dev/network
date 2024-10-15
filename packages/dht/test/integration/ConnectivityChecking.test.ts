@@ -31,7 +31,7 @@ describe('ConnectivityChecking', () => {
                 transport: new MockTransport()
             }),
             metricsContext: new MetricsContext(),
-            allowPrivateConnections: false
+            allowIncomingPrivateConnections: false
         })
         await server.start()
     })

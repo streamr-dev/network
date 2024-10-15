@@ -53,7 +53,7 @@ describe('StreamrChallenger', () => {
                 createLocalPeerDescriptor: async () => mockPeerDescriptor1
             }),
             metricsContext: new MetricsContext(),
-            allowPrivateConnections: false
+            allowIncomingPrivateConnections: false
         })
         await challengedClientTransport.start()
         challengedClient = new ListeningRpcCommunicator(SERVICE_ID, challengedClientTransport)

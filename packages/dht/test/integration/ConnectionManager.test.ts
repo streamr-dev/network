@@ -38,7 +38,7 @@ describe('ConnectionManager', () => {
                 ...opts
             }),
             metricsContext: new MetricsContext(),
-            allowPrivateConnections: true
+            allowIncomingPrivateConnections: true
         })
     }
 
@@ -512,11 +512,11 @@ describe('ConnectionManager', () => {
         })
         await Promise.all([connectedPromise1, connectedPromise2, connectionManager2.send(msg)])
 
-        await connectionManager1.enablePrivateMode()
+        await connectionManager1.enablePrivateClientMode()
         await waitForCondition(() => connectionManager2.getConnections().length === 0)
         expect(connectionManager1.getConnections().length).toEqual(1)
 
-        await connectionManager1.disablePrivateMode()
+        await connectionManager1.disablePrivateClientMode()
         await waitForCondition(() => connectionManager2.getConnections().length === 1)
         expect(connectionManager1.getConnections().length).toEqual(1)
 

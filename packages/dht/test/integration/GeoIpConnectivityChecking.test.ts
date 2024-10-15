@@ -44,7 +44,7 @@ describe('ConnectivityChecking', () => {
                 geoIpDatabaseFolder: dbPath
             }),
             metricsContext: new MetricsContext(),
-            allowPrivateConnections: false
+            allowIncomingPrivateConnections: false
         })
         await server.start()
         mock = jest.spyOn(WebsocketServerConnection.prototype, 'getRemoteIpAddress').mockImplementation(() => testIp)

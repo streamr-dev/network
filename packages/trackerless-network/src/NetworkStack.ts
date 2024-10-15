@@ -67,7 +67,7 @@ export class NetworkStack {
         this.controlLayerNode = new DhtNode({
             ...options.layer0,
             metricsContext: this.metricsContext,
-            allowPrivateConnections: options.networkNode?.acceptProxyConnections
+            allowIncomingPrivateConnections: options.networkNode?.acceptProxyConnections
         })
         this.contentDeliveryManager = new ContentDeliveryManager({
             ...options.networkNode,
