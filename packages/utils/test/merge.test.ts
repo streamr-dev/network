@@ -62,30 +62,44 @@ describe('merge', () => {
         })
     })
 
-    it('not deeply', () => {
+    it('deeply', () => {
         interface Bar {
             lorem: number | undefined
             ipsum: number | undefined
+            dolor: Record<string, number>
         }
         const o1 = {
             foo: 1,
             bar: {
                 lorem: undefined,
-                ipsum: 1
+                ipsum: 1,
+                dolor: {
+                    x: 1,
+                    y: 2
+                }
             } as Bar
         }
         const o2 = {
             foo: 2,
             bar: {
                 lorem: 2,
-                ipsum: undefined
+                ipsum: undefined,
+                dolor: {
+                    y: 3,
+                    z: 4
+                }
             } as Bar
         }
         expect(merge(o1, o2)).toEqual({
             foo: 2,
             bar: {
                 lorem: 2,
-                ipsum: undefined
+                ipsum: 1,
+                dolor: {
+                    x: 1,
+                    y: 3,
+                    z: 4
+                }
             }
         })
     })
@@ -99,6 +113,31 @@ describe('merge', () => {
         }
         expect(merge(undefined, o1, undefined, o2, undefined)).toEqual({
             foo: 2
+        })
+    })
+
+    it('class instances are handled as object references', () => {
+        // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+        class Foo {}
+        const o1 = {
+            foo: 1
+        }
+        const foo = new Foo()
+        const o2 = {
+            foo
+        }
+        expect(merge(o1, o2).foo).toBe(foo)
+    })
+
+    it('arrays are overwritten', () => {
+        const o1 = {
+            foo: [1, 2, 3, { x: 1 }]
+        }
+        const o2 = {
+            foo: [4, 5, 6, { y: 2 }]
+        }
+        expect(merge<any>(o1, o2)).toEqual({
+            foo: [4, 5, 6, { y: 2 }]
         })
     })
 })
