@@ -127,11 +127,11 @@ export class PublisherKeyExchange {
         }
     }
 
-    private async getResponseType(publisher: UserID): Promise<ResponseType> {
+    private async getResponseType(publisherId: UserID): Promise<ResponseType> {
         const authenticatedUser = await this.authentication.getUserId()
-        if (publisher === authenticatedUser) {
+        if (publisherId === authenticatedUser) {
             return ResponseType.NORMAL
-        } else if (isEthereumAddressUserId(publisher) && this.erc1271ContractAddresses.has(toEthereumAddress(publisher))) {
+        } else if (isEthereumAddressUserId(publisherId) && this.erc1271ContractAddresses.has(toEthereumAddress(publisherId))) {
             return ResponseType.ERC_1271
         } else {
             return ResponseType.NONE
@@ -141,10 +141,10 @@ export class PublisherKeyExchange {
     private async createResponse(
         keys: GroupKey[],
         responseType: ResponseType,
-        publisher: UserID,
+        publisherId: UserID,
         streamPartId: StreamPartID,
         rsaPublicKey: string,
-        recipient: UserID,
+        recipientId: UserID,
         requestId: string
     ): Promise<StreamMessage> {
         const encryptedGroupKeys = await Promise.all(keys.map((key) => {
@@ -152,7 +152,7 @@ export class PublisherKeyExchange {
             return new EncryptedGroupKey(key.id, encryptedGroupKey)
         }))
         const responseContent = new OldGroupKeyResponse({
-            recipient,
+            recipient: recipientId,
             requestId,
             encryptedGroupKeys
         })
@@ -162,7 +162,7 @@ export class PublisherKeyExchange {
                 StreamPartIDUtils.getStreamPartition(streamPartId),
                 Date.now(),
                 0,
-                publisher,
+                publisherId,
                 createRandomMsgChainId()
             ),
             content: convertGroupKeyResponseToBytes(responseContent),
