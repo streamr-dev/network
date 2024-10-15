@@ -1,4 +1,4 @@
-import { DhtAddress, PeerDescriptor, getDhtAddressFromRaw } from '@streamr/dht'
+import { DhtAddress, PeerDescriptor, toDhtAddress } from '@streamr/dht'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import {
     ExternalRpcClient,
@@ -26,7 +26,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
     private readonly network: FakeNetwork
 
     constructor(network: FakeNetwork, options: NetworkOptions = {}) {
-        this.id = getDhtAddressFromRaw(crypto.randomBytes(10))
+        this.id = toDhtAddress(crypto.randomBytes(10))
         this.options = options
         this.network = network
     }
@@ -88,7 +88,6 @@ export class FakeNetworkNode implements NetworkNodeStub {
         throw new Error('not implemented')
     }
 
-    // eslint-disable-next-line class-methods-use-this
     getOptions(): NetworkOptions {
         return this.options
     }

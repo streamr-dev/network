@@ -1,5 +1,5 @@
 import { EventEmitter } from 'eventemitter3'
-import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { DhtAddress, toDhtAddress, toNodeId } from '../../src/identifiers'
 import { Message, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { DEFAULT_SEND_OPTIONS, ITransport, SendOptions, TransportEvents } from '../../src/transport/ITransport'
 import { ConnectionsView } from '../../src/exports'
@@ -22,8 +22,8 @@ class FakeTransport extends EventEmitter<TransportEvents> implements ITransport,
 
     async send(msg: Message, opts?: SendOptions): Promise<void> {
         const connect = opts?.connect ?? DEFAULT_SEND_OPTIONS.connect
-        const targetNodeId = getNodeIdFromPeerDescriptor(msg.targetDescriptor!)
-        if (connect && !this.connections.some((c) => getNodeIdFromPeerDescriptor(c) === targetNodeId)) {
+        const targetNodeId = toNodeId(msg.targetDescriptor!)
+        if (connect && !this.connections.some((c) => toNodeId(c) === targetNodeId)) {
             this.connect(msg.targetDescriptor!)
         }
         msg.sourceDescriptor = this.localPeerDescriptor
@@ -43,14 +43,12 @@ class FakeTransport extends EventEmitter<TransportEvents> implements ITransport,
         return this.connections
     }
 
-    // eslint-disable-next-line class-methods-use-this
     getConnectionCount(): number {
         return this.connections.length
     }
 
-    // eslint-disable-next-line class-methods-use-this
     hasConnection(nodeId: DhtAddress): boolean {
-        return this.connections.some((c) => getNodeIdFromPeerDescriptor(c) === nodeId)
+        return this.connections.some((c) => toNodeId(c) === nodeId)
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -69,8 +67,8 @@ export class FakeEnvironment {
 
     createTransport(peerDescriptor: PeerDescriptor): FakeTransport {
         const transport = new FakeTransport(peerDescriptor, (msg) => {
-            const targetNode = getDhtAddressFromRaw(msg.targetDescriptor!.nodeId)
-            const targetTransport = this.transports.find((t) => getNodeIdFromPeerDescriptor(t.getLocalPeerDescriptor()) === targetNode)
+            const targetNode = toDhtAddress(msg.targetDescriptor!.nodeId)
+            const targetTransport = this.transports.find((t) => toNodeId(t.getLocalPeerDescriptor()) === targetNode)
             if (targetTransport !== undefined) {
                 targetTransport.emit('message', msg)
             }

@@ -43,10 +43,10 @@ const createHandler = (msgChainId: string, streamrClient: StreamrClient): Reques
                 partitionKey,
                 msgChainId
             })
-            return res.sendStatus(200)
+            res.sendStatus(200)
         } catch (err) {
             logger.error('Unable to publish to message', { streamId, err })
-            return res.sendStatus(500)
+            res.sendStatus(500)
         }
     }
 }

@@ -1,6 +1,6 @@
 import { MessageMetadata, Stream, StreamrClient } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas, Queue } from '@streamr/test-utils'
-import { merge, toUserId, toUserIdRaw, wait } from '@streamr/utils'
+import { merge, wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { Broker } from '../../src/broker'
 import { Message, MetadataPayloadFormat } from '../../src/helpers/PayloadFormat'
@@ -38,7 +38,7 @@ const assertReceivedMessage = (message: Message) => {
     expect(content).toEqual(MOCK_MESSAGE.content)
     expect(metadata.timestamp).toEqual(MOCK_MESSAGE.metadata.timestamp)
     expect(metadata.sequenceNumber).toEqual(0)
-    expect(metadata.publisherId).toEqualBinary(toUserIdRaw(toUserId(brokerUser.address)))
+    expect(metadata.publisherId).toEqual(brokerUser.address.toLowerCase())
     expect(metadata.msgChainId).toBeDefined()
 }
 

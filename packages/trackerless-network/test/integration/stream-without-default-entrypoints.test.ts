@@ -1,5 +1,6 @@
 import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
-import { StreamPartIDUtils, hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
+import { randomUserId } from '@streamr/test-utils'
+import { StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
@@ -21,7 +22,7 @@ describe('stream without default entrypoints', () => {
             streamPartition: StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
             timestamp: 666,
             sequenceNumber: 0,
-            publisherId: hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+            publisherId: toUserIdRaw(randomUserId()),
             messageChainId: 'msgChainId'
         },
         previousMessageRef: {

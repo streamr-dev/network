@@ -56,7 +56,6 @@ export class MessageFactory {
         })
     }
 
-    /* eslint-disable padding-line-between-statements */
     async createMessage(
         content: unknown,
         metadata: PublishMetadata & { timestamp: number },

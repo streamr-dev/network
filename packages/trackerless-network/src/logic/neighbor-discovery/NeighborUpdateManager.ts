@@ -1,4 +1,4 @@
-import { DhtAddress, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { DhtAddress, ListeningRpcCommunicator, PeerDescriptor, toNodeId } from '@streamr/dht'
 import { Logger, StreamPartID, scheduleAtInterval } from '@streamr/utils'
 import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { NeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -49,7 +49,7 @@ export class NeighborUpdateManager {
         const startTime = Date.now()
         await Promise.allSettled(this.options.neighbors.getAll().map(async (neighbor) => {
             const res = await this.createRemote(neighbor.getPeerDescriptor()).updateNeighbors(this.options.streamPartId, neighborDescriptors)
-            const nodeId = getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor())
+            const nodeId = toNodeId(neighbor.getPeerDescriptor())
             this.options.neighbors.get(nodeId)!.setRtt(Date.now() - startTime)
             if (res.removeMe) {
                 this.options.neighbors.remove(nodeId)

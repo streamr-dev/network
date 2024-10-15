@@ -1,6 +1,6 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { DhtAddress, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
-import { Logger, StreamPartID, UserID, toUserId } from '@streamr/utils'
+import { DhtAddress, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, toNodeId } from '@streamr/dht'
+import { Logger, StreamPartID, toUserId, UserID } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import {
     ProxyConnectionRequest,
@@ -85,7 +85,7 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
     // IProxyConnectionRpc server method
     async requestConnection(request: ProxyConnectionRequest, context: ServerCallContext): Promise<ProxyConnectionResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
-        const remoteNodeId = getNodeIdFromPeerDescriptor(senderPeerDescriptor)
+        const remoteNodeId = toNodeId(senderPeerDescriptor)
         this.connections.set(remoteNodeId, {
             direction: request.direction,
             userId: toUserId(request.userId),

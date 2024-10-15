@@ -7,7 +7,7 @@ import { ITransport } from '../../src/transport/ITransport'
 import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { getRandomRegion } from '../../dist/src/connection/simulator/pings'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { toNodeId } from '../../src/identifiers'
 
 const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport: ITransport) => {
     return new ConnectionManager({
@@ -15,7 +15,8 @@ const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport:
             transport,
             createLocalPeerDescriptor: async () => localPeerDescriptor
         }),
-        metricsContext: new MetricsContext()
+        metricsContext: new MetricsContext(),
+        allowIncomingPrivateConnections: true
     })
 }
 
@@ -56,8 +57,8 @@ describe('Connection Locking', () => {
     })
 
     it('can lock connections', async () => {
-        const nodeId1 = getNodeIdFromPeerDescriptor(mockPeerDescriptor1)
-        const nodeId2 = getNodeIdFromPeerDescriptor(mockPeerDescriptor2)
+        const nodeId1 = toNodeId(mockPeerDescriptor1)
+        const nodeId2 = toNodeId(mockPeerDescriptor2)
         await Promise.all([
             waitForCondition(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock')
@@ -68,8 +69,8 @@ describe('Connection Locking', () => {
     })
 
     it('Multiple services on the same peer', async () => {
-        const nodeId1 = getNodeIdFromPeerDescriptor(mockPeerDescriptor1)
-        const nodeId2 = getNodeIdFromPeerDescriptor(mockPeerDescriptor2)
+        const nodeId1 = toNodeId(mockPeerDescriptor1)
+        const nodeId2 = toNodeId(mockPeerDescriptor2)
         await Promise.all([
             waitForCondition(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock1')
@@ -84,8 +85,8 @@ describe('Connection Locking', () => {
     })
 
     it('can unlock connections', async () => {
-        const nodeId1 = getNodeIdFromPeerDescriptor(mockPeerDescriptor1)
-        const nodeId2 = getNodeIdFromPeerDescriptor(mockPeerDescriptor2)
+        const nodeId1 = toNodeId(mockPeerDescriptor1)
+        const nodeId2 = toNodeId(mockPeerDescriptor2)
         await Promise.all([
             waitForCondition(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock')
@@ -101,8 +102,8 @@ describe('Connection Locking', () => {
     })
 
     it('unlocking multiple services', async () => {
-        const nodeId1 = getNodeIdFromPeerDescriptor(mockPeerDescriptor1)
-        const nodeId2 = getNodeIdFromPeerDescriptor(mockPeerDescriptor2)
+        const nodeId1 = toNodeId(mockPeerDescriptor1)
+        const nodeId2 = toNodeId(mockPeerDescriptor2)
         await Promise.all([
             waitForCondition(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock1')
@@ -124,8 +125,8 @@ describe('Connection Locking', () => {
     })
 
     it('maintains connection if both sides initially lock and then one end unlocks', async () => {
-        const nodeId1 = getNodeIdFromPeerDescriptor(mockPeerDescriptor1)
-        const nodeId2 = getNodeIdFromPeerDescriptor(mockPeerDescriptor2)
+        const nodeId1 = toNodeId(mockPeerDescriptor1)
+        const nodeId2 = toNodeId(mockPeerDescriptor2)
         await Promise.all([
             waitForCondition(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
             waitForCondition(() => connectionManager1.hasRemoteLockedConnection(nodeId2)),
@@ -149,8 +150,8 @@ describe('Connection Locking', () => {
     })
 
     it('unlocks after graceful disconnect', async () => {
-        const nodeId1 = getNodeIdFromPeerDescriptor(mockPeerDescriptor1)
-        const nodeId2 = getNodeIdFromPeerDescriptor(mockPeerDescriptor2)
+        const nodeId1 = toNodeId(mockPeerDescriptor1)
+        const nodeId2 = toNodeId(mockPeerDescriptor2)
         await Promise.all([
             waitForCondition(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
             waitForCondition(() => connectionManager1.hasRemoteLockedConnection(nodeId2)),

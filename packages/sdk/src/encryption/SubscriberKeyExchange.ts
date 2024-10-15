@@ -64,7 +64,6 @@ export class SubscriberKeyExchange {
         this.authentication = authentication
         this.logger = loggerFactory.createLogger(module)
         this.ensureStarted = pOnce(async () => {
-            // eslint-disable-next-line no-underscore-dangle
             this.rsaKeyPair = await RSAKeyPair.create(config.encryption.rsaKeyLength)
             networkNodeFacade.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.logger.debug('Started')
@@ -141,11 +140,11 @@ export class SubscriberKeyExchange {
         }
     }
 
-    private async isAssignedToMe(streamPartId: StreamPartID, recipient: UserID, requestId: string): Promise<boolean> {
+    private async isAssignedToMe(streamPartId: StreamPartID, recipientId: UserID, requestId: string): Promise<boolean> {
         if (this.pendingRequests.has(requestId)) {
             const authenticatedUser = await this.authentication.getUserId()
             const erc1271Contract = this.subscriber.getERC1271ContractAddress(streamPartId)
-            return (recipient === authenticatedUser) || ((erc1271Contract !== undefined) && (recipient === toUserId(erc1271Contract)))
+            return (recipientId === authenticatedUser) || ((erc1271Contract !== undefined) && (recipientId === toUserId(erc1271Contract)))
         }
         return false
     }

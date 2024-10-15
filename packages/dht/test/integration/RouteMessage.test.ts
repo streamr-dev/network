@@ -7,7 +7,7 @@ import { Simulator } from '../../src/connection/simulator/Simulator'
 import { v4 } from 'uuid'
 import { Any } from '../../src/proto/google/protobuf/any'
 import { RoutingMode } from '../../src/dht/routing/RoutingSession'
-import { DhtAddress, createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
+import { DhtAddress, randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
 
 const logger = new Logger(module)
 
@@ -25,18 +25,18 @@ describe('Route Message With Mock Connections', () => {
     beforeEach(async () => {
         routerNodes = []
         simulator = new Simulator()
-        entryPoint = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
+        entryPoint = await createMockConnectionDhtNode(simulator, randomDhtAddress())
 
         entryPointDescriptor = {
-            nodeId: getRawFromDhtAddress(entryPoint.getNodeId()),
+            nodeId: toDhtAddressRaw(entryPoint.getNodeId()),
             type: NodeType.NODEJS
         }
 
-        sourceNode = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
-        destinationNode = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
+        sourceNode = await createMockConnectionDhtNode(simulator, randomDhtAddress())
+        destinationNode = await createMockConnectionDhtNode(simulator, randomDhtAddress())
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator, createRandomDhtAddress())
+            const node = await createMockConnectionDhtNode(simulator, randomDhtAddress())
             routerNodes.push(node)
         }
 

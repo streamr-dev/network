@@ -1,4 +1,4 @@
-import { DhtAddress, NodeType, PeerDescriptor, getDhtAddressFromRaw, getRawFromDhtAddress } from '@streamr/dht'
+import { DhtAddress, NodeType, PeerDescriptor, toDhtAddress, toDhtAddressRaw } from '@streamr/dht'
 import {
     LengthPrefixedFrameDecoder,
     Logger, StreamID, TheGraphClient, composeAbortSignals, merge,
@@ -130,7 +130,7 @@ export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescr
     const type = json.type === NetworkNodeType.BROWSER ? NodeType.BROWSER : NodeType.NODEJS
     const peerDescriptor: PeerDescriptor = {
         ...json,
-        nodeId: getRawFromDhtAddress((json.nodeId ?? (json as any).id) as DhtAddress),
+        nodeId: toDhtAddressRaw((json.nodeId ?? (json as any).id) as DhtAddress),
         type,
         websocket: json.websocket
     }
@@ -143,7 +143,7 @@ export function peerDescriptorTranslator(json: NetworkPeerDescriptor): PeerDescr
 export function convertPeerDescriptorToNetworkPeerDescriptor(descriptor: PeerDescriptor): NetworkPeerDescriptor {
     // TODO maybe we should copy most/all fields of PeerDescription (NET-1255)
     return {
-        nodeId: getDhtAddressFromRaw(descriptor.nodeId),
+        nodeId: toDhtAddress(descriptor.nodeId),
         type: descriptor.type === NodeType.NODEJS ? NetworkNodeType.NODEJS : NetworkNodeType.BROWSER,
         websocket: descriptor.websocket,
         region: descriptor.region

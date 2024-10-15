@@ -8,7 +8,7 @@ import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
 import { MockTransport } from '../utils/mock/MockTransport'
-import { getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { toNodeId } from '../../src/identifiers'
 
 const BASE_MESSAGE: Message = {
     serviceId: 'serviceId',
@@ -25,7 +25,8 @@ const createConnectionManager = (localPeerDescriptor: PeerDescriptor, opts: Omit
             createLocalPeerDescriptor: async () => localPeerDescriptor,
             ...opts
         }),
-        metricsContext: new MetricsContext()
+        metricsContext: new MetricsContext(),
+        allowIncomingPrivateConnections: false
     })
 }
 
@@ -78,8 +79,8 @@ describe('SimultaneousConnections', () => {
             simTransport1.send(msg1),
             simTransport2.send(msg2)
         ])
-        await waitForCondition(() => simTransport2.hasConnection(getNodeIdFromPeerDescriptor(peerDescriptor1)))
-        await waitForCondition(() => simTransport1.hasConnection(getNodeIdFromPeerDescriptor(peerDescriptor2)))
+        await waitForCondition(() => simTransport2.hasConnection(toNodeId(peerDescriptor1)))
+        await waitForCondition(() => simTransport1.hasConnection(toNodeId(peerDescriptor2)))
     })
 
     describe('Websocket 2 servers', () => {
@@ -159,8 +160,8 @@ describe('SimultaneousConnections', () => {
                 connectionManager2.send(msg2)
             ])
 
-            await waitForCondition(() => connectionManager1.hasConnection(getNodeIdFromPeerDescriptor(wsPeerDescriptor2)))
-            await waitForCondition(() => connectionManager2.hasConnection(getNodeIdFromPeerDescriptor(wsPeerDescriptor1)))
+            await waitForCondition(() => connectionManager1.hasConnection(toNodeId(wsPeerDescriptor2)))
+            await waitForCondition(() => connectionManager2.hasConnection(toNodeId(wsPeerDescriptor1)))
         })
     })
 
@@ -239,8 +240,8 @@ describe('SimultaneousConnections', () => {
                 connectionManager2.send(msg2)
             ])
 
-            await waitForCondition(() => connectionManager1.hasConnection(getNodeIdFromPeerDescriptor(wsPeerDescriptor2)))
-            await waitForCondition(() => connectionManager2.hasConnection(getNodeIdFromPeerDescriptor(wsPeerDescriptor1)))
+            await waitForCondition(() => connectionManager1.hasConnection(toNodeId(wsPeerDescriptor2)))
+            await waitForCondition(() => connectionManager2.hasConnection(toNodeId(wsPeerDescriptor1)))
         })
     })
 
@@ -307,8 +308,8 @@ describe('SimultaneousConnections', () => {
                 connectionManager2.send(msg2)
             ])
 
-            await waitForCondition(() => connectionManager1.hasConnection(getNodeIdFromPeerDescriptor(wrtcPeerDescriptor2)))
-            await waitForCondition(() => connectionManager2.hasConnection(getNodeIdFromPeerDescriptor(wrtcPeerDescriptor1)))
+            await waitForCondition(() => connectionManager1.hasConnection(toNodeId(wrtcPeerDescriptor2)))
+            await waitForCondition(() => connectionManager2.hasConnection(toNodeId(wrtcPeerDescriptor1)))
         })
     })
 

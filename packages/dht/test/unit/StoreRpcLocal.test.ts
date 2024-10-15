@@ -1,6 +1,6 @@
 import { range } from 'lodash'
 import { StoreRpcLocal } from '../../src/dht/store/StoreRpcLocal'
-import { areEqualPeerDescriptors, createRandomDhtAddress, DhtAddress, getDhtAddressFromRaw, getRawFromDhtAddress } from '../../src/identifiers'
+import { areEqualPeerDescriptors, randomDhtAddress, DhtAddress, toDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
 import { DataEntry, PeerDescriptor, StoreDataRequest } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { getClosestNodes } from '../../src/dht/contact/getClosestNodes'
@@ -10,14 +10,14 @@ describe('StoreRpcLocal', () => {
 
     const NODE_COUNT = 5
     const DATA_ENTRY = {
-        key: getRawFromDhtAddress(createRandomDhtAddress()),
-        creator: getRawFromDhtAddress(createRandomDhtAddress())
+        key: toDhtAddressRaw(randomDhtAddress()),
+        creator: toDhtAddressRaw(randomDhtAddress())
     }
 
     const ALL_NODES = range(NODE_COUNT).map(() => createMockPeerDescriptor())
 
     const getNodeCloseToData = (distanceIndex: number) => {
-        const dataKey = getDhtAddressFromRaw(DATA_ENTRY.key)
+        const dataKey = toDhtAddress(DATA_ENTRY.key)
         return getClosestNodes(dataKey, ALL_NODES)[distanceIndex]
     }
 
@@ -41,7 +41,7 @@ describe('StoreRpcLocal', () => {
                 } as any,
                 localPeerDescriptor,
                 replicateDataToContact,
-                getStorers: () => getClosestNodes(getDhtAddressFromRaw(DATA_ENTRY.key), ALL_NODES)
+                getStorers: () => getClosestNodes(toDhtAddress(DATA_ENTRY.key), ALL_NODES)
             })
         })
 
@@ -76,7 +76,7 @@ describe('StoreRpcLocal', () => {
                 } as any,
                 localPeerDescriptor,
                 replicateDataToContact,
-                getStorers: () => getClosestNodes(getDhtAddressFromRaw(DATA_ENTRY.key), ALL_NODES)
+                getStorers: () => getClosestNodes(toDhtAddress(DATA_ENTRY.key), ALL_NODES)
             })
         })
 
@@ -110,7 +110,7 @@ describe('StoreRpcLocal', () => {
                 } as any,
                 localPeerDescriptor,
                 replicateDataToContact,
-                getStorers: () => getClosestNodes(getDhtAddressFromRaw(DATA_ENTRY.key), ALL_NODES)
+                getStorers: () => getClosestNodes(toDhtAddress(DATA_ENTRY.key), ALL_NODES)
                     .filter((peerDescriptor) => !areEqualPeerDescriptors(peerDescriptor, localPeerDescriptor))
             })
         })
@@ -147,7 +147,7 @@ describe('StoreRpcLocal', () => {
                 } as any,
                 localPeerDescriptor,
                 replicateDataToContact,
-                getStorers: () => getClosestNodes(getDhtAddressFromRaw(DATA_ENTRY.key), ALL_NODES)
+                getStorers: () => getClosestNodes(toDhtAddress(DATA_ENTRY.key), ALL_NODES)
             })
         })
 

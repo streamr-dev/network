@@ -1,4 +1,3 @@
-import { intersection } from 'lodash'
 import {
     EthereumAddress,
     GraphQLQuery,
@@ -12,10 +11,10 @@ import {
     isEthereumAddressUserId,
     toEthereumAddress,
     toStreamID,
-    toUserId,
-    toUserIdRaw
+    toUserId
 } from '@streamr/utils'
 import { ContractTransactionResponse } from 'ethers'
+import { intersection } from 'lodash'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
@@ -29,9 +28,9 @@ import { getEthersOverrides } from '../ethereumUtils'
 import { StreamrClientEventEmitter } from '../events'
 import {
     ChainPermissions,
+    InternalPermissionAssignment,
+    InternalPermissionQuery,
     PUBLIC_PERMISSION_USER_ID,
-    PermissionAssignment,
-    PermissionQuery,
     PermissionQueryResult,
     StreamPermission,
     convertChainPermissionsToStreamPermissions,
@@ -48,7 +47,7 @@ import { StreamFactory } from './../StreamFactory'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway, waitForTx } from './contract'
-import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, searchStreams as _searchStreams } from './searchStreams'
+import { InternalSearchStreamsPermissionFilter, SearchStreamsOrderBy, searchStreams as _searchStreams } from './searchStreams'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -72,10 +71,10 @@ export interface StreamCreationEvent {
     readonly blockNumber: number
 }
 
-const validatePermissionAssignments = (assignments: PermissionAssignment[]): void | never => {
+const validatePermissionAssignments = (assignments: InternalPermissionAssignment[]): void | never => {
     for (const assignment of assignments) {
         if (!isPublicPermissionAssignment(assignment)) {
-            if (!isEthereumAddressUserId(toUserId(assignment.user))) {
+            if (!isEthereumAddressUserId(assignment.user)) {
                 // not supported by StreamRegistry v5 contract
                 const ETHEREUM_ONLY_PERMISSION_TYPES = [StreamPermission.EDIT, StreamPermission.DELETE, StreamPermission.GRANT] 
                 const invalidPermissions = intersection(assignment.permissions, ETHEREUM_ONLY_PERMISSION_TYPES)
@@ -119,8 +118,7 @@ export class StreamRegistry {
     private readonly isStreamPublisher_cached: CacheAsyncFnType<[StreamID, UserID], boolean, string>
     private readonly isStreamSubscriber_cached: CacheAsyncFnType<[StreamID, UserID], boolean, string>
     private readonly hasPublicSubscribePermission_cached: CacheAsyncFnType<[StreamID], boolean, string>
-    
-    /* eslint-disable indent */
+
     /** @internal */
     constructor(
         streamFactory: StreamFactory,
@@ -149,7 +147,6 @@ export class StreamRegistry {
         )
         const chainEventPoller = new ChainEventPoller(this.rpcProviderSource.getSubProviders().map((p) => {
             return contractFactory.createEventContract(toEthereumAddress(this.config.contracts.streamRegistryChainAddress), StreamRegistryArtifact, p)
-        // eslint-disable-next-line no-underscore-dangle
         }), config.contracts.pollInterval)
         initContractEventGateway({
             sourceName: 'StreamCreated', 
@@ -303,7 +300,7 @@ export class StreamRegistry {
 
     searchStreams(
         term: string | undefined,
-        permissionFilter: SearchStreamsPermissionFilter | undefined,
+        permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
         orderBy: SearchStreamsOrderBy
     ): AsyncIterable<Stream> {
         return _searchStreams(
@@ -373,22 +370,21 @@ export class StreamRegistry {
     // Permissions
     // --------------------------------------------------------------------------------------------
 
-    /* eslint-disable no-else-return */
-    async hasPermission(query: PermissionQuery): Promise<boolean> {
+    async hasPermission(query: InternalPermissionQuery): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(query.streamId)
         if (isPublicPermissionQuery(query)) {
             const permissionType = streamPermissionToSolidityType(query.permission)
             return this.streamRegistryContractReadonly.hasPublicPermission(streamId, permissionType)
         } else {
             const chainPermissions = query.allowPublic
-                ? await this.streamRegistryContractReadonly.getPermissionsForUserId(streamId, toUserId(query.user))
-                : await this.streamRegistryContractReadonly.getDirectPermissionsForUserId(streamId, toUserId(query.user))
+                ? await this.streamRegistryContractReadonly.getPermissionsForUserId(streamId, query.user)
+                : await this.streamRegistryContractReadonly.getDirectPermissionsForUserId(streamId, query.user)
             const permissions = convertChainPermissionsToStreamPermissions(chainPermissions)
             return permissions.includes(query.permission)
         }
     }
 
-    async getPermissions(streamIdOrPath: string): Promise<PermissionAssignment[]> {
+    async getPermissions(streamIdOrPath: string): Promise<InternalPermissionAssignment[]> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         const queryResults = await collect(this.theGraphClient.queryEntities<PermissionQueryResult>(
             (lastId: string, pageSize: number) => {
@@ -417,7 +413,7 @@ export class StreamRegistry {
                 }
             }
         ))
-        const assignments: PermissionAssignment[] = []
+        const assignments: InternalPermissionAssignment[] = []
         queryResults.forEach((permissionResult: PermissionQueryResult) => {
             const permissions = convertChainPermissionsToStreamPermissions(permissionResult)
             /*
@@ -434,7 +430,7 @@ export class StreamRegistry {
                     })
                 } else {
                     assignments.push({
-                        user: toUserIdRaw(toUserId(permissionResult.userId)),
+                        user: toUserId(permissionResult.userId),
                         permissions
                     })
                 }
@@ -443,31 +439,31 @@ export class StreamRegistry {
         return assignments
     }
 
-    async grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
+    async grantPermissions(streamIdOrPath: string, ...assignments: InternalPermissionAssignment[]): Promise<void> {
         validatePermissionAssignments(assignments)
         const overrides = await getEthersOverrides(this.rpcProviderSource, this.config)
-        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: UserID | undefined, solidityType: bigint) => {
-            return (user === undefined)
+        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, userId: UserID | undefined, solidityType: bigint) => {
+            return (userId === undefined)
                 ? this.streamRegistryContract!.grantPublicPermission(streamId, solidityType, overrides)
-                : this.streamRegistryContract!.grantPermissionForUserId(streamId, user, solidityType, overrides)
+                : this.streamRegistryContract!.grantPermissionForUserId(streamId, userId, solidityType, overrides)
         }, ...assignments)
     }
 
     /* eslint-disable max-len */
-    async revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
+    async revokePermissions(streamIdOrPath: string, ...assignments: InternalPermissionAssignment[]): Promise<void> {
         validatePermissionAssignments(assignments)
         const overrides = await getEthersOverrides(this.rpcProviderSource, this.config)
-        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: UserID | undefined, solidityType: bigint) => {
-            return (user === undefined)
+        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, userId: UserID | undefined, solidityType: bigint) => {
+            return (userId === undefined)
                 ? this.streamRegistryContract!.revokePublicPermission(streamId, solidityType, overrides)
-                : this.streamRegistryContract!.revokePermissionForUserId(streamId, user, solidityType, overrides)
+                : this.streamRegistryContract!.revokePermissionForUserId(streamId, userId, solidityType, overrides)
         }, ...assignments)
     }
 
     private async updatePermissions(
         streamIdOrPath: string,
-        createTransaction: (streamId: StreamID, user: UserID | undefined, solidityType: bigint) => Promise<ContractTransactionResponse>,
-        ...assignments: PermissionAssignment[]
+        createTransaction: (streamId: StreamID, userId: UserID | undefined, solidityType: bigint) => Promise<ContractTransactionResponse>,
+        ...assignments: InternalPermissionAssignment[]
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.clearStreamCache(streamId)
@@ -475,9 +471,8 @@ export class StreamRegistry {
         for (const assignment of assignments) {
             for (const permission of assignment.permissions) {
                 const solidityType = streamPermissionToSolidityType(permission)
-                const user = isPublicPermissionAssignment(assignment) ? undefined : toUserId(assignment.user)
-                const txToSubmit = createTransaction(streamId, user, solidityType)
-                // eslint-disable-next-line no-await-in-loop
+                const userId = isPublicPermissionAssignment(assignment) ? undefined : assignment.user
+                const txToSubmit = createTransaction(streamId, userId, solidityType)
                 await waitForTx(txToSubmit)
             }
         }
@@ -485,19 +480,18 @@ export class StreamRegistry {
 
     async setPermissions(...items: {
         streamId: string
-        assignments: PermissionAssignment[]
+        assignments: InternalPermissionAssignment[]
     }[]): Promise<void> {
         const streamIds: StreamID[] = []
         const targets: (UserID | typeof PUBLIC_PERMISSION_USER_ID)[][] = []
         const chainPermissions: ChainPermissions[][] = []
         for (const item of items) {
             validatePermissionAssignments(item.assignments)
-            // eslint-disable-next-line no-await-in-loop
             const streamId = await this.streamIdBuilder.toStreamID(item.streamId)
             this.clearStreamCache(streamId)
             streamIds.push(streamId)
             targets.push(item.assignments.map((assignment) => {
-                return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_USER_ID : toUserId(assignment.user)
+                return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_USER_ID : assignment.user
             }))
             chainPermissions.push(item.assignments.map((assignment) => {
                 return convertStreamPermissionsToChainPermission(assignment.permissions)
@@ -516,7 +510,7 @@ export class StreamRegistry {
 
     private async isStreamPublisherOrSubscriber_nonCached(streamId: StreamID, userId: UserID, permission: StreamPermission): Promise<boolean> {
         try {
-            return await this.hasPermission({ streamId, user: toUserIdRaw(userId), permission, allowPublic: true })
+            return await this.hasPermission({ streamId, user: userId, permission, allowPublic: true })
         } catch (err) {
             return streamContractErrorProcessor(err, streamId, 'StreamPermission')
         }

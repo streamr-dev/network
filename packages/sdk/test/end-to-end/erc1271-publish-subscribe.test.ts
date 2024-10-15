@@ -1,5 +1,5 @@
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { EthereumAddress, StreamID, areEqualBinaries, toEthereumAddress, toUserId, toUserIdRaw, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, StreamID, areEqualBinaries, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { MessageMetadata } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -26,14 +26,14 @@ describe('ERC-1271: publish', () => {
         const stream = await createTestStream(creator, module)
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
-            user: toUserIdRaw(toUserId(erc1271ContractAddress))
+            user: erc1271ContractAddress
         })
         await creator.setPermissions({
             streamId: stream.id,
             assignments: publicSubscribePermission ? [
                 { permissions: [StreamPermission.SUBSCRIBE], public: true }
             ] : [
-                { permissions: [StreamPermission.SUBSCRIBE], user: toUserIdRaw(toUserId(subscriberWallet.address)) }
+                { permissions: [StreamPermission.SUBSCRIBE], user: subscriberWallet.address }
             ]
         })
         await creator.destroy()
@@ -92,11 +92,11 @@ describe('ERC-1271: subscribe', () => {
         const stream = await createTestStream(creator, module)
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
-            user: toUserIdRaw(toUserId(publisherWallet.address))
+            user: publisherWallet.address
         })
         await stream.grantPermissions({
             permissions: [StreamPermission.SUBSCRIBE],
-            user: toUserIdRaw(toUserId(erc1271ContractAddress))
+            user: erc1271ContractAddress
 
         })
         await creator.destroy()
@@ -154,11 +154,11 @@ describe('ERC-1271: publish and subscribe', () => {
         const stream = await createTestStream(creator, module)
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
-            user: toUserIdRaw(toUserId(erc1271PublisherContractAddress))
+            user: erc1271PublisherContractAddress
         })
         await stream.grantPermissions({
             permissions: [StreamPermission.SUBSCRIBE],
-            user: toUserIdRaw(toUserId(erc1271SubscriberContractAddress))
+            user: erc1271SubscriberContractAddress
         })
         await creator.destroy()
         return stream.id

@@ -55,7 +55,6 @@ export type {
     StreamPartID,
     BrandedString,
     EthereumAddress,
-    UserIDRaw,
     LogLevel,
     Metric,
     MetricsContext,
@@ -129,7 +128,6 @@ const _operatorContractUtils = {
     getTestAdminWallet,
     getOperatorContract
 }
-// eslint-disable-next-line no-underscore-dangle
 export { _operatorContractUtils }
 export type { SetupOperatorContractOpts, SetupOperatorContractReturnType, DeployOperatorContractOpts, DeploySponsorshipContractOpts }
 

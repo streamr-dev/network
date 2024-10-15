@@ -15,7 +15,7 @@ import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../connec
 import { IceServer } from '../connection/webrtc/WebrtcConnector'
 import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
 import { createPeerDescriptor } from '../helpers/createPeerDescriptor'
-import { DhtAddress, KADEMLIA_ID_LENGTH_IN_BYTES, getNodeIdFromPeerDescriptor } from '../identifiers'
+import { DhtAddress, KADEMLIA_ID_LENGTH_IN_BYTES, toNodeId } from '../identifiers'
 import { Any } from '../proto/google/protobuf/any'
 import {
     ClosestPeersRequest,
@@ -104,6 +104,7 @@ export interface DhtNodeOptions {
     autoCertifierUrl?: string
     autoCertifierConfigFile?: string
     geoIpDatabaseFolder?: string
+    allowIncomingPrivateConnections?: boolean
 }
 
 type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
@@ -242,7 +243,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             const connectionManager = new ConnectionManager({
                 createConnectorFacade: () => new DefaultConnectorFacade(connectorFacadeOptions),
                 maxConnections: this.options.maxConnections,
-                metricsContext: this.options.metricsContext
+                metricsContext: this.options.metricsContext,
+                allowIncomingPrivateConnections: this.options.allowIncomingPrivateConnections ?? false
             })
             await connectionManager.start()
             this.connectionsView = connectionManager
@@ -381,7 +383,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
         this.transport!.on('disconnected', (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => {
             const isControlLayerNode = (this.connectionLocker !== undefined)
             if (isControlLayerNode) {
-                const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+                const nodeId = toNodeId(peerDescriptor)
                 if (gracefulLeave) {
                     this.peerManager!.removeContact(nodeId)
                 } else {
@@ -500,7 +502,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
 
     public getNodeId(): DhtAddress {
-        return getNodeIdFromPeerDescriptor(this.localPeerDescriptor!)
+        return toNodeId(this.localPeerDescriptor!)
     }
 
     public getNeighborCount(): number {
@@ -524,7 +526,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
 
     private getConnectedEntryPoints(): PeerDescriptor[] {
         return this.options.entryPoints !== undefined ? this.options.entryPoints.filter((entryPoint) =>
-            this.connectionsView!.hasConnection(getNodeIdFromPeerDescriptor(entryPoint))
+            this.connectionsView!.hasConnection(toNodeId(entryPoint))
         ) : []
     }
 

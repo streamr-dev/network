@@ -172,7 +172,6 @@ describe('Storage', () => {
         ])
 
         const {
-            // eslint-disable-next-line camelcase
             stream_id, partition, ts, sequence_no, publisher_id, msg_chain_id, payload
         } = result.first()
 

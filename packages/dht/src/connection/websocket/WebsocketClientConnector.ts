@@ -12,7 +12,7 @@ import { createOutgoingHandshaker } from '../Handshaker'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { expectedConnectionType } from '../../helpers/Connectivity'
 import { Empty } from '../../proto/google/protobuf/empty'
-import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { DhtAddress, toNodeId } from '../../identifiers'
 import { GeoIpLocator } from '@streamr/geoip-location'
 import { PendingConnection } from '../PendingConnection'
 
@@ -73,7 +73,7 @@ export class WebsocketClientConnector {
     }
 
     public connect(targetPeerDescriptor: PeerDescriptor): PendingConnection {
-        const nodeId = getNodeIdFromPeerDescriptor(targetPeerDescriptor)
+        const nodeId = toNodeId(targetPeerDescriptor)
         const existingConnection = this.connectingConnections.get(nodeId)
         if (existingConnection) {
             return existingConnection
@@ -114,6 +114,6 @@ export class WebsocketClientConnector {
         await Promise.allSettled(requests.map((conn) => conn.close(true)))
 
         await this.websocketServer?.stop()
-        await this.geoIpLocator?.stop()
+        this.geoIpLocator?.stop()
     }
 }

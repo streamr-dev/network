@@ -5,7 +5,7 @@ import {
     ListeningRpcCommunicator,
     PeerDescriptor,
     areEqualPeerDescriptors,
-    getNodeIdFromPeerDescriptor
+    toNodeId
 } from '@streamr/dht'
 import { Logger, MetricsContext, StreamID, StreamPartID, toStreamPartID, waitForCondition } from '@streamr/utils'
 import { pull } from 'lodash'
@@ -66,7 +66,8 @@ export class NetworkStack {
         this.metricsContext = options.metricsContext ?? new MetricsContext()
         this.controlLayerNode = new DhtNode({
             ...options.layer0,
-            metricsContext: this.metricsContext
+            metricsContext: this.metricsContext,
+            allowIncomingPrivateConnections: options.networkNode?.acceptProxyConnections
         })
         this.contentDeliveryManager = new ContentDeliveryManager({
             ...options.networkNode,
@@ -106,7 +107,7 @@ export class NetworkStack {
     async start(doJoin = true): Promise<void> {
         logger.info('Starting a Streamr Network Node')
         await this.controlLayerNode!.start()
-        logger.info(`Node id is ${getNodeIdFromPeerDescriptor(this.controlLayerNode!.getLocalPeerDescriptor())}`)
+        logger.info(`Node id is ${toNodeId(this.controlLayerNode!.getLocalPeerDescriptor())}`)
         const connectionManager = this.controlLayerNode!.getTransport() as ConnectionManager
         if ((this.options.layer0?.entryPoints !== undefined) && (this.options.layer0.entryPoints.some((entryPoint) => 
             areEqualPeerDescriptors(entryPoint, this.controlLayerNode!.getLocalPeerDescriptor())

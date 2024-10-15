@@ -155,7 +155,6 @@ describe('SignatureValidator', () => {
                 messageType: StreamMessageType.MESSAGE,
                 contentType: ContentType.JSON,
                 encryptionType: EncryptionType.NONE,
-                // eslint-disable-next-line max-len
                 signature: hexToBinary('aaaaaaaaaaaaaaaaaaaa'),
                 signatureType: SignatureType.ERC_1271
             })

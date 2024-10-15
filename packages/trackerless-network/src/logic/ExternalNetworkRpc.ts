@@ -5,7 +5,6 @@ import { ClassType, ClientTransport, ProtoRpcClient, toProtoRpcClient } from '@s
 
 export const SERVICE_ID = 'external-network-service'
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export type ExternalRpcClient = ServiceInfo & ClassType
 // eslint-disable-next-line @typescript-eslint/prefer-function-type, @typescript-eslint/consistent-type-definitions
 export type ExternalRpcClientClass<T extends ExternalRpcClient> = { new (clientTransport: ClientTransport): T }

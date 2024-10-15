@@ -118,7 +118,7 @@ const downloadRemoteHash = async (remoteHashUrl: string, abortSignal: AbortSigna
     return (await response.text()).trim()
 }
 
-const isDbFileValid = async (dbFile: string, remoteHash: string): Promise<boolean> => {
+const isDbFileValid = (dbFile: string, remoteHash: string): boolean => {
     // check if the local db exists and calculate its hash
 
     try {
@@ -166,7 +166,7 @@ export const downloadGeoIpDatabase = async (
     const dbFileInDbFolder = dbFolder + DB_NAME + DB_SUFFIX
 
     const remoteHash = await downloadRemoteHash(remoteHashUrl, abortSignal)
-    const dbValid = await isDbFileValid(dbFileInDbFolder, remoteHash)
+    const dbValid = isDbFileValid(dbFileInDbFolder, remoteHash)
     if (dbValid === false) {
         await downloadNewDb(dbDownloadUrl, dbFolder, remoteHash, abortSignal)
         // return new reader if db was downloaded

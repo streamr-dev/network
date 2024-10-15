@@ -2,7 +2,7 @@
 
 import {
     DhtNode,
-    getNodeIdFromPeerDescriptor,
+    toNodeId,
     getRandomRegion,
     LatencyType,
     PeerDescriptor,
@@ -14,6 +14,8 @@ import {
     StreamPartIDUtils,
     toStreamID,
     toStreamPartID,
+    toUserId,
+    toUserIdRaw,
     utf8ToBinary, waitForEvent3
 } from '@streamr/utils'
 import fs from 'fs'
@@ -75,7 +77,7 @@ const measureJoiningTime = async () => {
     const peerDescriptor = createMockPeerDescriptor({
         region: getRandomRegion()
     })
-    console.log('starting node with id ', getNodeIdFromPeerDescriptor(peerDescriptor))
+    console.log('starting node with id ', toNodeId(peerDescriptor))
 
     // start publishing ons stream
     const stream = Array.from(streamParts.keys())[Math.floor(Math.random() * streamParts.size)]
@@ -88,7 +90,7 @@ const measureJoiningTime = async () => {
                 streamPartition: 0,
                 timestamp: i,
                 sequenceNumber: Math.floor(Math.random() * 20000),
-                publisherId: hexToBinary('0x2222'),
+                publisherId: toUserIdRaw(toUserId('0x2222')),
                 messageChainId: 'msgChainId'
             },
             body: {
@@ -147,7 +149,6 @@ const run = async () => {
     await shutdownNetwork()
 } 
 
-// eslint-disable-next-line promise/catch-or-return
 run().then(() => {
     console.log('done')
 }).catch((err) => {

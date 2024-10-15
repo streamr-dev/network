@@ -211,7 +211,7 @@ describe('Operator', () => {
         }
 
         beforeAll(async () => (
-            operator = await createClient(deployedOperator.operatorWallet.privateKey).getOperator(
+            operator = createClient(deployedOperator.operatorWallet.privateKey).getOperator(
                 toEthereumAddress(await deployedOperator.operatorContract.getAddress())
             )
         ))

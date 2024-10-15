@@ -1,4 +1,4 @@
-import { areEqualPeerDescriptors, DhtAddress, getNodeIdFromPeerDescriptor, PeerDescriptor } from '@streamr/dht'
+import { areEqualPeerDescriptors, DhtAddress, toNodeId, PeerDescriptor } from '@streamr/dht'
 import { Logger, wait } from '@streamr/utils'
 import { DiscoveryLayerNode } from './DiscoveryLayerNode'
 
@@ -28,7 +28,7 @@ const exponentialRunOff = async (
         try {
             await task()
         } catch {
-            logger.debug(`${description} failed, retrying in ${delay} ms`)
+            logger.trace(`${description} failed, retrying in ${delay} ms`)
         }
         try { // Abort controller throws unexpected errors in destroy?
             await wait(delay, abortSignal)
@@ -63,14 +63,14 @@ export class StreamPartNetworkSplitAvoidance {
         this.running = true
         await exponentialRunOff(async () => {
             const discoveredEntrypoints = await this.options.discoverEntryPoints()
-            const filteredEntryPoints = discoveredEntrypoints.filter((peer) => !this.excludedNodes.has(getNodeIdFromPeerDescriptor(peer)))
+            const filteredEntryPoints = discoveredEntrypoints.filter((peer) => !this.excludedNodes.has(toNodeId(peer)))
             await this.options.discoveryLayerNode.joinDht(filteredEntryPoints, false, false)
             if (this.options.discoveryLayerNode.getNeighborCount() < MIN_NEIGHBOR_COUNT) {
                 // Filter out nodes that are not neighbors as those nodes are assumed to be offline
                 const newExcludes = filteredEntryPoints
                     .filter((peer) => !this.options.discoveryLayerNode.getNeighbors()
                         .some((neighbor) => areEqualPeerDescriptors(neighbor, peer)))
-                    .map((peer) => getNodeIdFromPeerDescriptor(peer))
+                    .map((peer) => toNodeId(peer))
                 newExcludes.forEach((node) => this.excludedNodes.add(node))
                 throw new Error(`Network split is still possible`)
             }

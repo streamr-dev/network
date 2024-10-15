@@ -1,7 +1,7 @@
 import { waitForCondition } from '@streamr/utils'
 import { range, without } from 'lodash'
 import { DhtNodeRpcLocal } from '../../src/dht/DhtNodeRpcLocal'
-import { DhtNode, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '../../src/exports'
+import { DhtNode, ListeningRpcCommunicator, toNodeId } from '../../src/exports'
 import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor, PingRequest, PingResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
 import { FakeEnvironment } from '../utils/FakeTransport'
 import { createMockPeerDescriptor } from '../utils/utils'
@@ -59,8 +59,8 @@ describe('DhtNode', () => {
         await localNode.waitForNetworkConnectivity()
 
         await waitForCondition(() => localNode.getNeighborCount() === otherPeerDescriptors.length + 1)
-        const expectedNodeIds = without(getAllPeerDescriptors(), localPeerDescriptor).map((n) => getNodeIdFromPeerDescriptor(n))
-        const actualNodeIds = localNode.getClosestContacts().map((n) => getNodeIdFromPeerDescriptor(n))
+        const expectedNodeIds = without(getAllPeerDescriptors(), localPeerDescriptor).map((n) => toNodeId(n))
+        const actualNodeIds = localNode.getClosestContacts().map((n) => toNodeId(n))
         expect(actualNodeIds).toIncludeSameMembers(expectedNodeIds)
     })
 })

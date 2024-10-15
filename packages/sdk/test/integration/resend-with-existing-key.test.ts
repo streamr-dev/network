@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastWallet } from '@streamr/test-utils'
-import { collect, toEthereumAddress, toStreamID, toUserId, toUserIdRaw } from '@streamr/utils'
+import { collect, toEthereumAddress, toStreamID, toUserId } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { DecryptError } from '../../src/encryption/EncryptionUtil'
@@ -86,7 +86,7 @@ describe('resend with existing key', () => {
             id: streamId
         })
         await stream.grantPermissions({
-            user: toUserIdRaw(toUserId(publisherWallet.address)),
+            user: publisherWallet.address,
             permissions: [StreamPermission.PUBLISH]
         })
         const storageNode = await environment.startStorageNode()

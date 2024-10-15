@@ -5,8 +5,8 @@ import {
     EXISTING_CONNECTION_TIMEOUT,
     ITransport,
     PeerDescriptor,
-    getDhtAddressFromRaw,
-    getNodeIdFromPeerDescriptor
+    toDhtAddress,
+    toNodeId
 } from '@streamr/dht'
 import {
     Logger,
@@ -29,6 +29,7 @@ import { MIN_NEIGHBOR_COUNT as NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT, Strea
 import { StreamPartReconnect } from './StreamPartReconnect'
 import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode'
 import { ProxyClient } from './proxy/ProxyClient'
+import { ConnectionManager } from '@streamr/dht/src/exports'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void
@@ -66,7 +67,7 @@ export interface ContentDeliveryManagerOptions {
 }
 
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): DhtAddress => {
-    return getDhtAddressFromRaw(new Uint8Array((createHash('sha1').update(streamPartId).digest())))
+    return toDhtAddress(new Uint8Array((createHash('sha1').update(streamPartId).digest())))
 }
 
 export class ContentDeliveryManager extends EventEmitter<Events> {
@@ -212,6 +213,9 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             // leaveStreamPart has been called (or leaveStreamPart called, and then setProxies called)
             return
         }
+        if ((this.transport! as ConnectionManager).isPrivateClientMode()) {
+            await (this.transport! as ConnectionManager).disablePrivateClientMode()
+        }
         await streamPart.discoveryLayerNode.start()
         await streamPart.node.start()
         const knownEntryPoints = this.knownStreamPartEntryPoints.get(streamPartId)
@@ -299,6 +303,9 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
                 client.on('message', (message: StreamMessage) => {
                     this.emit('newMessage', message)
                 })
+                if (Array.from(this.streamParts.values()).every((streamPart) => streamPart.proxied)) {
+                    await (this.transport! as ConnectionManager).enablePrivateClientMode()
+                }
                 await client.start()
             }
             await client.setProxies(nodes, direction, userId, connectionCount)
@@ -334,6 +341,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             return {
                 id: streamPartId,
                 controlLayerNeighbors: stream.discoveryLayerNode.getNeighbors(),
+                deprecatedContentDeliveryLayerNeighbors: [],
                 contentDeliveryLayerNeighbors: stream.node.getInfos()
             }
         })
@@ -364,13 +372,13 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
     }
 
     getNodeId(): DhtAddress {
-        return getNodeIdFromPeerDescriptor(this.controlLayerNode!.getLocalPeerDescriptor())
+        return toNodeId(this.controlLayerNode!.getLocalPeerDescriptor())
     }
 
     getNeighbors(streamPartId: StreamPartID): DhtAddress[] {
         const streamPart = this.streamParts.get(streamPartId)
         return (streamPart !== undefined) && (streamPart.proxied === false)
-            ? streamPart.node.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
+            ? streamPart.node.getNeighbors().map((n) => toNodeId(n))
             : []
     }
 

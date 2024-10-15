@@ -65,7 +65,6 @@ export class Propagation {
 
     private sendAndAwaitThenMark({ message, source, handledNeighbors }: PropagationTask, neighborId: DhtAddress): void {
         if (!handledNeighbors.has(neighborId) && neighborId !== source) {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             (async () => {
                 try {
                     await this.sendToNeighbor(neighborId, message)

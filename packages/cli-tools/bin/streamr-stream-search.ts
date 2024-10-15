@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 import '../src/logLevel'
+
 import { StreamrClient, SearchStreamsPermissionFilter, StreamPermission } from '@streamr/sdk'
 import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { Option } from 'commander'
 import { getPermission, PERMISSIONS } from '../src/permission'
 import { getOptionType, OptionType } from '../src/common'
-import { toUserId, toUserIdRaw } from '@streamr/utils'
 
 interface Options extends BaseOptions {
     user?: string | true
@@ -23,7 +23,7 @@ const createPermissionFilter = async (
 ): Promise<SearchStreamsPermissionFilter | undefined> => {
     if (user !== undefined) {
         return {
-            user: (getOptionType(user) === OptionType.ARGUMENT) ? toUserIdRaw(toUserId(user as string)) : await client.getUserId(),
+            user: (getOptionType(user) === OptionType.ARGUMENT) ? user as string : await client.getUserId(),
             allowPublic: allowPublic ?? false,
             allOf,
             anyOf

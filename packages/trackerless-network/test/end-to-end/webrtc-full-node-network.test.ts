@@ -1,4 +1,4 @@
-import { getNodeIdFromPeerDescriptor, getRandomRegion } from '@streamr/dht'
+import { toNodeId, getRandomRegion } from '@streamr/dht'
 import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkStack } from '../../src/NetworkStack'
@@ -69,7 +69,7 @@ describe('Full node network with WebRTC connections', () => {
         const successIds: string[] = []
         nodes.forEach((node) => {
             node.getContentDeliveryManager().on('newMessage', () => {
-                successIds.push(getNodeIdFromPeerDescriptor(node.getContentDeliveryManager().getPeerDescriptor()))
+                successIds.push(toNodeId(node.getContentDeliveryManager().getPeerDescriptor()))
                 receivedMessageCount += 1
             })
         })

@@ -1,5 +1,5 @@
 import { Methods } from '@streamr/test-utils'
-import { Multimap, StreamID, UserID, toUserId, toUserIdRaw } from '@streamr/utils'
+import { Multimap, StreamID, UserID } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
 import { Stream, StreamMetadata } from '../../../src/Stream'
@@ -7,10 +7,11 @@ import { StreamFactory } from '../../../src/StreamFactory'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { StreamrClientError } from '../../../src/StreamrClientError'
 import { StreamRegistry } from '../../../src/contracts/StreamRegistry'
-import { SearchStreamsPermissionFilter } from '../../../src/contracts/searchStreams'
+import { InternalSearchStreamsPermissionFilter } from '../../../src/contracts/searchStreams'
 import {
-    PermissionAssignment,
-    PermissionQuery, StreamPermission,
+    InternalPermissionAssignment,
+    InternalPermissionQuery,
+    StreamPermission,
     isPublicPermissionAssignment,
     isPublicPermissionQuery
 } from '../../../src/permission'
@@ -60,7 +61,6 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         }
     }
 
-    // eslint-disable-next-line class-methods-use-this
     async updateStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
         const registryItem = this.chain.getStream(streamId)
         if (registryItem === undefined) {
@@ -71,7 +71,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         return this.streamFactory.createStream(streamId, metadata)
     }
 
-    async hasPermission(query: PermissionQuery): Promise<boolean> {
+    async hasPermission(query: InternalPermissionQuery): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(query.streamId)
         const registryItem = this.chain.getStream(streamId)
         if (registryItem === undefined) {
@@ -81,13 +81,13 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         if (isPublicPermissionQuery(query) || query.allowPublic) {
             targets.push(PUBLIC_PERMISSION_TARGET)
         }
-        if ((query as any).user !== undefined) {
-            targets.push(toUserId((query as any).user))
+        if ('user' in query) {
+            targets.push(query.user)
         }
         return targets.some((target) => registryItem.permissions.get(target).includes(query.permission))
     }
 
-    async getPermissions(streamIdOrPath: string): Promise<PermissionAssignment[]> {
+    async getPermissions(streamIdOrPath: string): Promise<InternalPermissionAssignment[]> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         const registryItem = this.chain.getStream(streamId)
         if (registryItem === undefined) {
@@ -103,14 +103,14 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
                 }
             } else {
                 return {
-                    user: toUserIdRaw(target),
+                    user: target,
                     permissions
                 }
             }
         })
     }
 
-    async grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
+    async grantPermissions(streamIdOrPath: string, ...assignments: InternalPermissionAssignment[]): Promise<void> {
         return this.updatePermissions(
             streamIdOrPath,
             assignments,
@@ -121,7 +121,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         )
     }
 
-    async revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
+    async revokePermissions(streamIdOrPath: string, ...assignments: InternalPermissionAssignment[]): Promise<void> {
         return this.updatePermissions(
             streamIdOrPath,
             assignments,
@@ -133,7 +133,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
 
     async updatePermissions(
         streamIdOrPath: string,
-        assignments: PermissionAssignment[],
+        assignments: InternalPermissionAssignment[],
         modifyRegistryItem: (
             registryItem: StreamRegistryItem,
             target: UserID | PublicPermissionTarget,
@@ -148,7 +148,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
             for (const assignment of assignments) {
                 const target = isPublicPermissionAssignment(assignment)
                     ? PUBLIC_PERMISSION_TARGET
-                    : toUserId(assignment.user)
+                    : assignment.user
                 modifyRegistryItem(registryItem, target, assignment.permissions)
             }
         }
@@ -156,7 +156,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
 
     async setPermissions(...streams: {
         streamId: string
-        assignments: PermissionAssignment[]
+        assignments: InternalPermissionAssignment[]
     }[]): Promise<void> {
         await Promise.all(streams.map(async (stream) => {
             await this.revokePermissions(stream.streamId, ...await this.getPermissions(stream.streamId))
@@ -178,11 +178,11 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     async isStreamPublisher(streamIdOrPath: string, userId: UserID): Promise<boolean> {
-        return this.hasPermission({ streamId: streamIdOrPath, user: toUserIdRaw(userId), permission: StreamPermission.PUBLISH, allowPublic: true })
+        return this.hasPermission({ streamId: streamIdOrPath, user: userId, permission: StreamPermission.PUBLISH, allowPublic: true })
     }
 
     async isStreamSubscriber(streamIdOrPath: string, userId: UserID): Promise<boolean> {
-        return this.hasPermission({ streamId: streamIdOrPath, user: toUserIdRaw(userId), permission: StreamPermission.SUBSCRIBE, allowPublic: true })
+        return this.hasPermission({ streamId: streamIdOrPath, user: userId, permission: StreamPermission.SUBSCRIBE, allowPublic: true })
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -201,7 +201,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    searchStreams(_term: string | undefined, _permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncIterable<Stream> {
+    searchStreams(_term: string | undefined, _permissionFilter: InternalSearchStreamsPermissionFilter | undefined): AsyncIterable<Stream> {
         throw new Error('not implemented')
     }
 

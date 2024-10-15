@@ -2,7 +2,7 @@
  * Endpoints for RESTful data requests
  */
 import { Request, RequestHandler, Response } from 'express'
-import { Logger, MetricsContext, MetricsDefinition, RateMetric } from '@streamr/utils'
+import { isValidUserId, Logger, MetricsContext, MetricsDefinition, RateMetric, toUserId } from '@streamr/utils'
 import { Readable, Transform, pipeline } from 'stream'
 import { Storage } from './Storage'
 import { Format, getFormat } from './DataQueryFormat'
@@ -148,7 +148,6 @@ const handleFrom = (
     metrics.resendFromQueriesPerSecond.record(1)
     const fromTimestamp = parseIntIfExists(req.query.fromTimestamp)
     const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber) ?? MIN_SEQUENCE_NUMBER_VALUE
-    const { publisherId } = req.query
     if (fromTimestamp === undefined) {
         sendError('Query parameter "fromTimestamp" required.', res)
         return
@@ -156,13 +155,17 @@ const handleFrom = (
     if (Number.isNaN(fromTimestamp)) {
         sendError(`Query parameter "fromTimestamp" not a number: ${req.query.fromTimestamp}`, res)
         return
-    } 
+    }
+    if ((req.query.publisherId !== undefined) && (!isValidUserId(req.query.publisherId))) {
+        sendError(`Query parameter "publisherId" not valid: ${req.query.publisherId}`, res)
+        return
+    }
     const data = storage.requestFrom(
         streamId,
         partition,
         fromTimestamp,
         fromSequenceNumber,
-        publisherId
+        (req.query.publisherId !== undefined) ? toUserId(req.query.publisherId) : undefined
     )
     sendSuccess(data, format, streamId, res)
 }
@@ -181,7 +184,6 @@ const handleRange = (
     const toTimestamp = parseIntIfExists(req.query.toTimestamp)
     const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber) ?? MIN_SEQUENCE_NUMBER_VALUE
     const toSequenceNumber = parseIntIfExists(req.query.toSequenceNumber) ?? MAX_SEQUENCE_NUMBER_VALUE
-    const { publisherId, msgChainId } = req.query
     if (req.query.fromOffset !== undefined || req.query.toOffset !== undefined) {
         sendError('Query parameters "fromOffset" and "toOffset" are no longer supported. Please use "fromTimestamp" and "toTimestamp".', res)
         return
@@ -203,8 +205,12 @@ const handleRange = (
         sendError(`Query parameter "toTimestamp" not a number: ${req.query.toTimestamp}`, res)
         return
     }
-    if ((publisherId && !msgChainId) || (!publisherId && msgChainId)) {
+    if ((req.query.publisherId && !req.query.msgChainId) || (!req.query.publisherId && req.query.msgChainId)) {
         sendError('Invalid combination of "publisherId" and "msgChainId"', res)
+        return
+    }
+    if ((req.query.publisherId !== undefined) && (!isValidUserId(req.query.publisherId))) {
+        sendError(`Query parameter "publisherId" not valid: ${req.query.publisherId}`, res)
         return
     }
     const data = storage.requestRange(
@@ -214,8 +220,8 @@ const handleRange = (
         fromSequenceNumber,
         toTimestamp,
         toSequenceNumber,
-        publisherId,
-        msgChainId
+        (req.query.publisherId !== undefined) ? toUserId(req.query.publisherId) : undefined,
+        req.query.msgChainId
     )
     sendSuccess(data, format, streamId, res)
 }

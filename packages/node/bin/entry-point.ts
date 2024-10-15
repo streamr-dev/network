@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { DhtAddress, DhtNode, NodeType, getRawFromDhtAddress } from '@streamr/dht'
+import { DhtAddress, DhtNode, NodeType, toDhtAddressRaw } from '@streamr/dht'
 
 const main = async () => {
     const entryPoint = CHAIN_CONFIG.dev2.entryPoints[0]
     const peerDescriptor = {
         ...entryPoint,
-        nodeId: getRawFromDhtAddress(entryPoint.nodeId as DhtAddress),
+        nodeId: toDhtAddressRaw(entryPoint.nodeId as DhtAddress),
         type: NodeType.NODEJS  // TODO remove this when NET-1070 done
     }
     const dhtNode = new DhtNode({

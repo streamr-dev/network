@@ -5,12 +5,12 @@ import {
     PeerDescriptor,
     Simulator,
     SimulatorTransport,
-    createRandomDhtAddress,
+    randomDhtAddress,
     getRandomRegion,
-    getRawFromDhtAddress
+    toDhtAddressRaw
 } from '@streamr/dht'
 import { RpcCommunicator } from '@streamr/proto-rpc'
-import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, utf8ToBinary } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toUserIdRaw, utf8ToBinary } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
@@ -76,7 +76,7 @@ export const createStreamMessage = (
         streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
         sequenceNumber: sequenceNumber ?? 0,
         timestamp: timestamp ?? Date.now(),
-        publisherId: hexToBinary(publisherId),
+        publisherId: toUserIdRaw(publisherId),
         messageChainId: 'messageChain0',
     }
     const msg: StreamMessage = {
@@ -98,7 +98,7 @@ export const createStreamMessage = (
 export const createMockPeerDescriptor = (opts?: Omit<Partial<PeerDescriptor>, 'nodeId' | 'type'>): PeerDescriptor => {
     return {
         ...opts,
-        nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
+        nodeId: toDhtAddressRaw(randomDhtAddress()),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }

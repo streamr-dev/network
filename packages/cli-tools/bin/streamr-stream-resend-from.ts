@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import '../src/logLevel'
+
 import { StreamrClient } from '@streamr/sdk'
 import { createClientCommand, Options as BaseOptions } from '../src/command'
 import { resend } from '../src/resend'
-import { toUserId, toUserIdRaw } from '@streamr/utils'
 
 interface Options extends BaseOptions {
     publisherId?: string
@@ -17,7 +17,7 @@ createClientCommand(async (client: StreamrClient, from: string, streamId: string
             timestamp: Date.parse(from),
             sequenceNumber: 0
         },
-        publisherId: (options.publisherId !== undefined) ? toUserIdRaw(toUserId(options.publisherId)) : undefined
+        publisherId: options.publisherId
     }
     await resend(streamId, resendOptions, client, options.subscribe)
 }, {

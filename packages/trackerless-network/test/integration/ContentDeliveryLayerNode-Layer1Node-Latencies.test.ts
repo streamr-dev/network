@@ -1,4 +1,4 @@
-import { DhtNode, LatencyType, PeerDescriptor, Simulator, SimulatorTransport, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { DhtNode, LatencyType, PeerDescriptor, Simulator, SimulatorTransport, toNodeId } from '@streamr/dht'
 import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
@@ -98,7 +98,7 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
                 const neighbor = allNodes.find((node) => {
                     return node.getOwnNodeId() === ownNodeId
                 })
-                const neighborNodeIds = neighbor!.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
+                const neighborNodeIds = neighbor!.getNeighbors().map((n) => toNodeId(n))
                 expect(neighborNodeIds).toContain(nodeId)
             })
         })
@@ -122,10 +122,10 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
             otherContentDeliveryLayerNodes.forEach((node) => {
                 const nodeId = node.getOwnNodeId()
                 node.getNeighbors().forEach((neighbor) => {
-                    const neighborId = getNodeIdFromPeerDescriptor(neighbor)
+                    const neighborId = toNodeId(neighbor)
                     if (neighborId !== entryPointContentDeliveryLayerNode.getOwnNodeId()) {
                         const neighbor = otherContentDeliveryLayerNodes.find((n) => n.getOwnNodeId() === neighborId)
-                        const neighborNodeIds = neighbor!.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
+                        const neighborNodeIds = neighbor!.getNeighbors().map((n) => toNodeId(n))
                         if (!neighborNodeIds.includes(nodeId)) {
                             mismatchCounter += 1
                         }

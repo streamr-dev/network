@@ -32,7 +32,6 @@ export class PeerDescriptorStoreManager {
 
     private readonly abortController: AbortController
     private readonly options: PeerDescriptorStoreManagerOptions
-    // eslint-disable-next-line no-underscore-dangle
     private isLocalNodeStored_ = false
 
     constructor(options: PeerDescriptorStoreManagerOptions) {
