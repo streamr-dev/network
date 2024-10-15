@@ -2,7 +2,7 @@ import { DEFAULT_ENVIRONMENT_ID, ENVIRONMENT_IDS, EnvironmentId, StreamrClientCo
 import commander, { Command } from 'commander'
 import pkg from '../package.json'
 import { createClient } from './client'
-import { createFnParseEnum, formEnumArgValueDescription, wrapWithQuotes } from './common'
+import { createFnParseEnum, formEnumArgValueDescription } from './common'
 
 export interface Options {
     privateKey?: string
