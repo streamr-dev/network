@@ -15,7 +15,7 @@ Changes before Tatum release are not documented in this file.
 #### Changed
 
 - **BREAKING CHANGE:** Renamed `getAddress()` to `getUserId()` (https://github.com/streamr-dev/network/pull/2774)
-- **BREAKING CHANGE:** Renamed `user` to `UserID` in these interfaces:
+- **BREAKING CHANGE:** Renamed `user` to `userId` in these interfaces:
 - `UserPermissionAssignment`
   - used in `grantPermissions()`, `revokePermissions()`, `getPermissions()` and `setPermissions()`
 - `UserPermissionQuery`
