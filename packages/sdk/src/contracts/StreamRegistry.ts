@@ -419,26 +419,26 @@ export class StreamRegistry {
 
     async grantPermissions(streamIdOrPath: string, ...assignments: InternalPermissionAssignment[]): Promise<void> {
         const overrides = await getEthersOverrides(this.rpcProviderSource, this.config)
-        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: UserID | undefined, solidityType: bigint) => {
-            return (user === undefined)
+        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, userId: UserID | undefined, solidityType: bigint) => {
+            return (userId === undefined)
                 ? this.streamRegistryContract!.grantPublicPermission(streamId, solidityType, overrides)
-                : this.streamRegistryContract!.grantPermission(streamId, user, solidityType, overrides)
+                : this.streamRegistryContract!.grantPermission(streamId, userId, solidityType, overrides)
         }, ...assignments)
     }
 
     /* eslint-disable max-len */
     async revokePermissions(streamIdOrPath: string, ...assignments: InternalPermissionAssignment[]): Promise<void> {
         const overrides = await getEthersOverrides(this.rpcProviderSource, this.config)
-        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: UserID | undefined, solidityType: bigint) => {
-            return (user === undefined)
+        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, userId: UserID | undefined, solidityType: bigint) => {
+            return (userId === undefined)
                 ? this.streamRegistryContract!.revokePublicPermission(streamId, solidityType, overrides)
-                : this.streamRegistryContract!.revokePermission(streamId, user, solidityType, overrides)
+                : this.streamRegistryContract!.revokePermission(streamId, userId, solidityType, overrides)
         }, ...assignments)
     }
 
     private async updatePermissions(
         streamIdOrPath: string,
-        createTransaction: (streamId: StreamID, user: UserID | undefined, solidityType: bigint) => Promise<ContractTransactionResponse>,
+        createTransaction: (streamId: StreamID, userId: UserID | undefined, solidityType: bigint) => Promise<ContractTransactionResponse>,
         ...assignments: InternalPermissionAssignment[]
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
@@ -447,8 +447,8 @@ export class StreamRegistry {
         for (const assignment of assignments) {
             for (const permission of assignment.permissions) {
                 const solidityType = streamPermissionToSolidityType(permission)
-                const user = isPublicPermissionAssignment(assignment) ? undefined : assignment.user
-                const txToSubmit = createTransaction(streamId, user, solidityType)
+                const userId = isPublicPermissionAssignment(assignment) ? undefined : assignment.user
+                const txToSubmit = createTransaction(streamId, userId, solidityType)
                 await waitForTx(txToSubmit)
             }
         }
