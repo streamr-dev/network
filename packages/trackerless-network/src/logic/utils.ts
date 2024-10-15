@@ -1,5 +1,5 @@
 import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector' 
-import { MessageID, MessageRef } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { MessageID, MessageRef } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { binaryToHex } from '@streamr/utils'
 
 export const markAndCheckDuplicate = (
