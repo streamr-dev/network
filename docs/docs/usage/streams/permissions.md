@@ -46,7 +46,7 @@ You can query the existence of a user's permission with `hasPermission()`. Usual
 ```ts
 await stream.hasPermission({
     permission: StreamPermission.PUBLISH,
-    user: '0x12345...',
+    userId: '0x12345...',
     allowPublic: true
 }
 ```

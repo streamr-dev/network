@@ -81,8 +81,8 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         if (isPublicPermissionQuery(query) || query.allowPublic) {
             targets.push(PUBLIC_PERMISSION_TARGET)
         }
-        if ('user' in query) {
-            targets.push(query.user)
+        if ('userId' in query) {
+            targets.push(query.userId)
         }
         return targets.some((target) => registryItem.permissions.get(target).includes(query.permission))
     }
@@ -178,11 +178,11 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     async isStreamPublisher(streamIdOrPath: string, userId: UserID): Promise<boolean> {
-        return this.hasPermission({ streamId: streamIdOrPath, user: userId, permission: StreamPermission.PUBLISH, allowPublic: true })
+        return this.hasPermission({ streamId: streamIdOrPath, userId, permission: StreamPermission.PUBLISH, allowPublic: true })
     }
 
     async isStreamSubscriber(streamIdOrPath: string, userId: UserID): Promise<boolean> {
-        return this.hasPermission({ streamId: streamIdOrPath, user: userId, permission: StreamPermission.SUBSCRIBE, allowPublic: true })
+        return this.hasPermission({ streamId: streamIdOrPath, userId, permission: StreamPermission.SUBSCRIBE, allowPublic: true })
     }
 
     // eslint-disable-next-line class-methods-use-this

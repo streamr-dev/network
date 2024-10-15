@@ -45,12 +45,12 @@ describe('Stream permissions', () => {
             })
             expect(await stream.hasPermission({
                 permission: StreamPermission.PUBLISH,
-                user: otherUser.address,
+                userId: otherUser.address,
                 allowPublic: false
             })).toBe(true)
             expect(await stream.hasPermission({
                 permission: StreamPermission.EDIT,
-                user: otherUser.address,
+                userId: otherUser.address,
                 allowPublic: false
             })).toBe(true)
             await stream.revokePermissions({
@@ -59,12 +59,12 @@ describe('Stream permissions', () => {
             })
             expect(await stream.hasPermission({
                 permission: StreamPermission.PUBLISH,
-                user: otherUser.address,
+                userId: otherUser.address,
                 allowPublic: false
             })).toBe(false)
             expect(await stream.hasPermission({
                 permission: StreamPermission.EDIT,
-                user: otherUser.address,
+                userId: otherUser.address,
                 allowPublic: false
             })).toBe(false)
         }, TIMEOUT)
@@ -76,22 +76,22 @@ describe('Stream permissions', () => {
             })
             expect(await stream.hasPermission({
                 permission: StreamPermission.PUBLISH,
-                user: otherUser.address,
+                userId: otherUser.address,
                 allowPublic: true
             })).toBe(true)
             expect(await stream.hasPermission({
                 permission: StreamPermission.SUBSCRIBE,
-                user: otherUser.address,
+                userId: otherUser.address,
                 allowPublic: true
             })).toBe(true)
             expect(await stream.hasPermission({
                 permission: StreamPermission.PUBLISH,
-                user: otherUser.address,
+                userId: otherUser.address,
                 allowPublic: false
             })).toBe(false)
             expect(await stream.hasPermission({
                 permission: StreamPermission.SUBSCRIBE,
-                user: otherUser.address,
+                userId: otherUser.address,
                 allowPublic: false
             })).toBe(false)
             await stream.revokePermissions({
@@ -100,12 +100,12 @@ describe('Stream permissions', () => {
             })
             expect(await stream.hasPermission({
                 permission: StreamPermission.PUBLISH,
-                user: otherUser.address,
+                userId: otherUser.address,
                 allowPublic: true
             })).toBe(false)
             expect(await stream.hasPermission({
                 permission: StreamPermission.SUBSCRIBE,
-                user: otherUser.address,
+                userId: otherUser.address,
                 allowPublic: true
             })).toBe(false)
         }, TIMEOUT)
@@ -132,7 +132,7 @@ describe('Stream permissions', () => {
 
     it('no permissions initially for other users', async () => {
         expect(await stream.hasPermission({
-            user: otherUser.address,
+            userId: otherUser.address,
             permission: StreamPermission.SUBSCRIBE,
             allowPublic: false
         })).toBe(false)
@@ -187,12 +187,12 @@ describe('Stream permissions', () => {
                 }
             ]
         })
-        expect(await stream.hasPermission({ permission: StreamPermission.SUBSCRIBE, allowPublic: false, user: user1 })).toBe(true)
-        expect(await stream.hasPermission({ permission: StreamPermission.GRANT, allowPublic: false, user: user1 })).toBe(false)
-        expect(await stream.hasPermission({ permission: StreamPermission.SUBSCRIBE, allowPublic: false, user: user2 })).toBe(false)
-        expect(await stream.hasPermission({ permission: StreamPermission.EDIT, allowPublic: false, user: user2 })).toBe(false)
+        expect(await stream.hasPermission({ permission: StreamPermission.SUBSCRIBE, allowPublic: false, userId: user1 })).toBe(true)
+        expect(await stream.hasPermission({ permission: StreamPermission.GRANT, allowPublic: false, userId: user1 })).toBe(false)
+        expect(await stream.hasPermission({ permission: StreamPermission.SUBSCRIBE, allowPublic: false, userId: user2 })).toBe(false)
+        expect(await stream.hasPermission({ permission: StreamPermission.EDIT, allowPublic: false, userId: user2 })).toBe(false)
         expect(await otherStream.hasPermission(
-            { permission: StreamPermission.PUBLISH, allowPublic: true, user: randomUserId() }
+            { permission: StreamPermission.PUBLISH, allowPublic: true, userId: randomUserId() }
         )).toBe(true)
     }, TIMEOUT)
 
