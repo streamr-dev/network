@@ -14,13 +14,13 @@
         let resendMsgCounter = 0
 
         const publisherClient = new StreamrClient({
-            ...StreamrClient.CONFIG_TEST,
+            environment: 'dev2',
             auth: {
                 privateKey: PUBLISHER_KEY
             }
         })
         const subscriberClient = new StreamrClient({
-            ...StreamrClient.CONFIG_TEST,
+            environment: 'dev2',
             auth: {
                 privateKey: SUBSCRIBER_KEY
             }

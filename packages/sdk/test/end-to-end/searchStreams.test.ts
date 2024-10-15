@@ -1,6 +1,5 @@
 import { fetchPrivateKeyWithGas, randomUserId } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
-import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { SearchStreamsPermissionFilter } from '../../src/contracts/searchStreams'
@@ -41,7 +40,7 @@ describe('searchStreams', () => {
 
     beforeAll(async () => {
         client = new StreamrClient({
-            ...CONFIG_TEST,
+            environment: 'dev2',
             auth: {
                 privateKey: await fetchPrivateKeyWithGas(),
             }

@@ -1,11 +1,10 @@
-import { CONFIG_TEST } from '../../src/ConfigTest'
 import { StreamrClient } from '../../src/StreamrClient'
 
 describe('start node', () => {
 
     it('start without websocket', async () => {
         const client = new StreamrClient({
-            ...CONFIG_TEST,
+            environment: 'dev2',
             network: {
                 controlLayer: {
                     websocketPortRange: null

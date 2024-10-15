@@ -35,7 +35,7 @@ describe('StreamRegistry', () => {
         wallet = new Wallet(await fetchPrivateKeyWithGas())
         publicAddress = toEthereumAddress(wallet.address)
         client = new StreamrClient({
-            ...CONFIG_TEST,
+            environment: 'dev2',
             auth: {
                 privateKey: wallet.privateKey,
             },
@@ -117,7 +117,7 @@ describe('StreamRegistry', () => {
             it('domain owned by user', async () => {
                 const streamId = `testdomain1.eth/foobar/${Date.now()}`
                 const ensOwnerClient = new StreamrClient({
-                    ...CONFIG_TEST,
+                    environment: 'dev2',
                     auth: {
                         // In dev environment the testdomain1.eth is owned by 0x4178baBE9E5148c6D5fd431cD72884B07Ad855a0.
                         // The ownership is preloaded by docker-dev-chain-init (https://github.com/streamr-dev/network-contracts)

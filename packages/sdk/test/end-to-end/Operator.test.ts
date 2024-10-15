@@ -3,7 +3,6 @@ import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { Logger, TheGraphClient, toEthereumAddress, waitForCondition } from '@streamr/utils'
 import { Contract, Wallet } from 'ethers'
 import fetch from 'node-fetch'
-import { CONFIG_TEST } from '../../src/ConfigTest'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Operator } from '../../src/contracts/Operator'
 import {
@@ -24,7 +23,7 @@ import { sample } from 'lodash'
 
 const createClient = (privateKey?: string): StreamrClient => {
     return new StreamrClient({
-        ...CONFIG_TEST,
+        environment: 'dev2',
         auth: (privateKey !== undefined) ? {
             privateKey
         } : undefined

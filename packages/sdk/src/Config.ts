@@ -8,6 +8,7 @@ import { generateClientId } from './utils/utils'
 import validate from './generated/validateConfig'
 import { GapFillStrategy } from './subscribe/ordering/GapFiller'
 import { config as CHAIN_CONFIG } from '@streamr/config'
+import { CONFIG_TEST } from './ConfigTest'
 
 export interface ProviderAuthConfig {
     ethereum: Eip1193Provider
@@ -445,7 +446,7 @@ export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStrea
 
 const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrClientConfig): StreamrClientConfig => {
     const defaults = CHAIN_CONFIG[environmentId]
-    const config = merge({
+    let config = merge({
         network: {
             controlLayer: {
                 entryPoints: defaults.entryPoints
@@ -467,6 +468,8 @@ const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrCli
             highGasPriceStrategy: true,
             ...config.contracts.ethereumNetwork
         }
+    } else if (environmentId === 'dev2') {
+        config = merge(CONFIG_TEST, config)
     }
     return config
 }
