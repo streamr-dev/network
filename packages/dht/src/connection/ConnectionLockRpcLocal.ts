@@ -7,7 +7,8 @@ import {
     LockRequest,
     LockResponse,
     PeerDescriptor,
-    UnlockRequest
+    UnlockRequest,
+    SetPrivateRequest
 } from '../proto/packages/dht/protos/DhtRpc'
 import { IConnectionLockRpc } from '../proto/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
@@ -20,6 +21,7 @@ interface ConnectionLockRpcLocalOptions {
     removeRemoteLocked: (id: DhtAddress, lockId: LockID) => void
     closeConnection: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean, reason?: string) => Promise<void>
     getLocalPeerDescriptor: () => PeerDescriptor
+    setPrivate: (id: DhtAddress, isPrivate: boolean) => void
 }
 
 const logger = new Logger(module)
@@ -64,6 +66,13 @@ export class ConnectionLockRpcLocal implements IConnectionLockRpc {
         } else {
             await this.options.closeConnection(senderPeerDescriptor, false, 'graceful disconnect notified')
         }
+        return {}
+    }
+
+    async setPrivate(request: SetPrivateRequest, context: ServerCallContext): Promise<Empty> {
+        const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
+        const senderId = toNodeId(senderPeerDescriptor)            
+        this.options.setPrivate(senderId, request.isPrivate)
         return {}
     }
 }
