@@ -445,27 +445,23 @@ export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStrea
 
 const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrClientConfig): StreamrClientConfig => {
     const defaults = CHAIN_CONFIG[environmentId]
-    const config = merge(data, {
+    const config = merge({
         network: {
-            ...data.network,
             controlLayer: {
-                entryPoints: defaults.entryPoints,
-                ...data.network?.controlLayer,
+                entryPoints: defaults.entryPoints
             }
         } as any,
         contracts: {
             ethereumNetwork: {
-                chainId: defaults.id,
-                ...data.contracts?.ethereumNetwork
+                chainId: defaults.id
             },
             streamRegistryChainAddress: defaults.contracts.StreamRegistry,
             streamStorageRegistryChainAddress: defaults.contracts.StreamStorageRegistry,
             storageNodeRegistryChainAddress: defaults.contracts.StorageNodeRegistry,
             rpcs: defaults.rpcEndpoints,
-            theGraphUrl: defaults.theGraphUrl,
-            ...data.contracts,
+            theGraphUrl: defaults.theGraphUrl
         } as any
-    }) as any
+    }, data) as any
     if (environmentId === 'polygon') {
         config.contracts.ethereumNetwork = { 
             highGasPriceStrategy: true,

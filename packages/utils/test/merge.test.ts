@@ -62,30 +62,44 @@ describe('merge', () => {
         })
     })
 
-    it('not deeply', () => {
+    it('deeply', () => {
         interface Bar {
             lorem: number | undefined
             ipsum: number | undefined
+            dolor: Record<string, number>
         }
         const o1 = {
             foo: 1,
             bar: {
                 lorem: undefined,
-                ipsum: 1
+                ipsum: 1,
+                dolor: {
+                    x: 1,
+                    y: 2
+                }
             } as Bar
         }
         const o2 = {
             foo: 2,
             bar: {
                 lorem: 2,
-                ipsum: undefined
+                ipsum: undefined,
+                dolor: {
+                    y: 3,
+                    z: 4
+                }
             } as Bar
         }
         expect(merge(o1, o2)).toEqual({
             foo: 2,
             bar: {
                 lorem: 2,
-                ipsum: undefined
+                ipsum: 1,
+                dolor: {
+                    x: 1,
+                    y: 3,
+                    z: 4
+                }
             }
         })
     })
@@ -99,6 +113,47 @@ describe('merge', () => {
         }
         expect(merge(undefined, o1, undefined, o2, undefined)).toEqual({
             foo: 2
+        })
+    })
+
+    it('class instances are handled as object references', () => {
+        // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+        class Foo {
+            values: Record<string, unknown> = {}
+        }
+        const foo1 = new Foo()
+        foo1.values = {
+            x: 5,
+            y: 6
+        }
+        const foo2 = new Foo()
+        foo2.values = {
+            y: 7,
+            z: 8
+        }
+        const o1 = {
+            foo: foo1
+        }
+        const o2 = {
+            foo: foo2
+        }
+        const result = merge(o1, o2)
+        expect(result.foo).toBe(foo2)
+        expect(result.foo.values).toEqual({
+            y: 7,
+            z: 8
+        })
+    })
+
+    it('arrays are overwritten', () => {
+        const o1 = {
+            foo: [1, 2, 3, { x: 1 }]
+        }
+        const o2 = {
+            foo: [4, 5, 6, { y: 2 }]
+        }
+        expect(merge<any>(o1, o2)).toEqual({
+            foo: [4, 5, 6, { y: 2 }]
         })
     })
 })
