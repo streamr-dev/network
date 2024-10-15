@@ -24,7 +24,7 @@ export async function* startCommand(commandLine: string, opts?: StartCommandOpti
         args.push('--private-key', opts.privateKey)
     }
     if (opts?.devEnvironment !== false) {
-        args.push('--env dev2')
+        args.push('--env', 'dev2')
     }
     const executable = spawn(`node`, args, {
         signal: opts?.abortSignal,
