@@ -23,3 +23,21 @@ export function createFnParseInt(name: string): (s: string) => number {
         return n
     }
 }
+
+export function createFnParseEnum(name: string, allowedValues: string[]): (s: string) => string {
+    return (value: string) => {
+        if (!allowedValues.includes(value as string)) {
+            console.error(`${name} must be one of: ${allowedValues.map((s) => wrapWithQuotes(s)).join(', ')}`)
+            process.exit(1)
+        }
+        return value
+    }
+}
+
+export const formEnumArgValueDescription = (allowedValues: string[], defaultValue: string) => {
+    return `one of: ${allowedValues.map(wrapWithQuotes).join(', ')}, default: ${wrapWithQuotes(defaultValue)}`
+}
+
+export const wrapWithQuotes = (str: string): string => {
+    return `"${str}"`
+}
