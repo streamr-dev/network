@@ -3,6 +3,7 @@ import { StreamPartIDUtils, hexToBinary, utf8ToBinary, waitForCondition } from '
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
+import { randomUserId } from '@streamr/test-utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
 
@@ -62,7 +63,7 @@ describe('NetworkNode', () => {
                 streamPartition: StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
                 timestamp: 666,
                 sequenceNumber: 0,
-                publisherId: hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+                publisherId: hexToBinary(randomUserId()),
                 messageChainId: 'msgChainId'
             },
             previousMessageRef: {
