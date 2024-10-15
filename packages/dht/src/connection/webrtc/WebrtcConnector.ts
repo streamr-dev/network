@@ -32,6 +32,8 @@ export const replaceInternalIpWithExternalIp = (candidate: string, ip: string): 
     return parsed.join(' ')
 }
 
+export const EARLY_TIMEOUT = 5000
+
 export interface WebrtcConnectorOptions {
     onNewConnection: (connection: PendingConnection) => boolean
     transport: ITransport
