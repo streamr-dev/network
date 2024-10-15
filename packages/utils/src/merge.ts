@@ -9,7 +9,7 @@ export const merge = <TTarget>(...sources: (Partial<TTarget> | undefined)[]): TT
     const result: Record<string, unknown> = {}
     mergeWith(result, ...sources, (_: any, srcValue: any) => {
         if (isArray(srcValue)) {
-            return srcValue
+            return [...srcValue]
         } else {
             return undefined  // no customization: does the default merging for this field
         }
