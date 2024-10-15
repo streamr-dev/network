@@ -1,4 +1,5 @@
 import {
+    HexString,
     StreamID,
     StreamPartID,
     collect,
@@ -231,7 +232,7 @@ export class Stream {
      * assignment within `timeout`, otherwise rejects. Notice that is possible for this promise to reject but for the
      * storage node assignment to go through eventually.
      */
-    async addToStorageNode(storageNodeAddress: string, waitOptions: { timeout?: number } = {}): Promise<void> {
+    async addToStorageNode(storageNodeAddress: HexString, waitOptions: { timeout?: number } = {}): Promise<void> {
         const normalizedNodeAddress = toEthereumAddress(storageNodeAddress)
         // check whether the stream is already stored: the assignment event listener logic requires that
         // there must not be an existing assignment (it timeouts if there is an existing assignment as the
@@ -270,7 +271,7 @@ export class Stream {
     /**
      * See {@link StreamrClient.removeStreamFromStorageNode | StreamrClient.removeStreamFromStorageNode}.
      */
-    async removeFromStorageNode(nodeAddress: string): Promise<void> {
+    async removeFromStorageNode(nodeAddress: HexString): Promise<void> {
         try {
             return this._streamStorageRegistry.removeStreamFromStorageNode(this.id, toEthereumAddress(nodeAddress))
         } finally {
@@ -281,7 +282,7 @@ export class Stream {
     /**
      * See {@link StreamrClient.getStorageNodes | StreamrClient.getStorageNodes}.
      */
-    async getStorageNodes(): Promise<string[]> {
+    async getStorageNodes(): Promise<HexString[]> {
         return this._streamStorageRegistry.getStorageNodes(this.id)
     }
 

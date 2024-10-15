@@ -68,7 +68,7 @@ export interface ExtraSubscribeOptions {
      * Subscribe on behalf of a contract implementing the [ERC-1271](https://eips.ethereum.org/EIPS/eip-1271) standard.
      * The streamr client wallet address must be an authorized signer for the contract.
      */
-    erc1271Contract?: string
+    erc1271Contract?: HexString
 }
 
 /**
@@ -515,21 +515,21 @@ export class StreamrClient {
     /**
      * Assigns a stream to a storage node.
      */
-    async addStreamToStorageNode(streamIdOrPath: string, storageNodeAddress: string): Promise<void> {
+    async addStreamToStorageNode(streamIdOrPath: string, storageNodeAddress: HexString): Promise<void> {
         return this.streamStorageRegistry.addStreamToStorageNode(streamIdOrPath, toEthereumAddress(storageNodeAddress))
     }
 
     /**
      * Unassigns a stream from a storage node.
      */
-    async removeStreamFromStorageNode(streamIdOrPath: string, storageNodeAddress: string): Promise<void> {
+    async removeStreamFromStorageNode(streamIdOrPath: string, storageNodeAddress: HexString): Promise<void> {
         return this.streamStorageRegistry.removeStreamFromStorageNode(streamIdOrPath, toEthereumAddress(storageNodeAddress))
     }
 
     /**
      * Checks whether a stream is assigned to a storage node.
      */
-    async isStoredStream(streamIdOrPath: string, storageNodeAddress: string): Promise<boolean> {
+    async isStoredStream(streamIdOrPath: string, storageNodeAddress: HexString): Promise<boolean> {
         return this.streamStorageRegistry.isStoredStream(streamIdOrPath, toEthereumAddress(storageNodeAddress))
     }
 
@@ -538,7 +538,7 @@ export class StreamrClient {
      *
      * @returns a list of {@link Stream} as well as `blockNumber` of result (i.e. blockchain state)
      */
-    async getStoredStreams(storageNodeAddress: string): Promise<{ streams: Stream[], blockNumber: number }> {
+    async getStoredStreams(storageNodeAddress: HexString): Promise<{ streams: Stream[], blockNumber: number }> {
         return this.streamStorageRegistry.getStoredStreams(toEthereumAddress(storageNodeAddress))
     }
 
@@ -548,7 +548,7 @@ export class StreamrClient {
      * @param streamIdOrPath - if a stream is given, returns the list of storage nodes the stream has been assigned to;
      * leave as `undefined` to return all storage nodes
      */
-    async getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
+    async getStorageNodes(streamIdOrPath?: string): Promise<HexString[]> {
         return this.streamStorageRegistry.getStorageNodes(streamIdOrPath)
     }
 
@@ -568,7 +568,7 @@ export class StreamrClient {
      *
      * @returns rejects if the storage node is not found
      */
-    async getStorageNodeMetadata(nodeAddress: string): Promise<StorageNodeMetadata> {
+    async getStorageNodeMetadata(nodeAddress: HexString): Promise<StorageNodeMetadata> {
         return this.storageNodeRegistry.getStorageNodeMetadata(toEthereumAddress(nodeAddress))
     }
 
