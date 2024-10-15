@@ -49,17 +49,17 @@ describe('searchStreams', () => {
         const streams = await createTestStreams([
             { streamId: `/${SEARCH_TERM}/1-no-permissions`, assignments: [] },
             { streamId: `/${SEARCH_TERM}/2-user-permission`, assignments: [
-                { user: searcher, permissions: [StreamPermission.SUBSCRIBE] }
+                { userId: searcher, permissions: [StreamPermission.SUBSCRIBE] }
             ] },
             { streamId: `/${SEARCH_TERM}/3-public-permissions`, assignments: [
                 { public: true, permissions: [StreamPermission.SUBSCRIBE] }
             ] },
             { streamId: `/${SEARCH_TERM}/4-user-and-public-permissions`, assignments: [
-                { user: searcher, permissions: [StreamPermission.SUBSCRIBE] },
+                { userId: searcher, permissions: [StreamPermission.SUBSCRIBE] },
                 { public: true, permissions: [StreamPermission.SUBSCRIBE] }
             ] },
             { streamId: `/${SEARCH_TERM}/5-granted-and-revoked-permissions`, assignments: [
-                { user: searcher, permissions: [StreamPermission.SUBSCRIBE] },
+                { userId: searcher, permissions: [StreamPermission.SUBSCRIBE] },
                 { public: true, permissions: [StreamPermission.SUBSCRIBE] }
             ] },
             { streamId: `/${Date.now()}`, assignments: [] }
@@ -70,7 +70,7 @@ describe('searchStreams', () => {
         streamWithUserAndPublicPermission = streams[3]
         streamWithGrantedAndRevokedPermission = streams[4]
         await streamWithGrantedAndRevokedPermission.revokePermissions(
-            { user: searcher, permissions: [StreamPermission.SUBSCRIBE] },
+            { userId: searcher, permissions: [StreamPermission.SUBSCRIBE] },
             { public: true, permissions: [StreamPermission.SUBSCRIBE] }
         )
     }, TIMEOUT)
@@ -105,7 +105,7 @@ describe('searchStreams', () => {
 
         it('user permissions', async () => {
             const streamIds = await searchStreamIds(SEARCH_TERM, {
-                user: searcher,
+                userId: searcher,
                 allowPublic: false
             })
             expect(streamIds).toEqual([
@@ -116,7 +116,7 @@ describe('searchStreams', () => {
 
         it('user permissions and public permissions', async () => {
             const streamIds = await searchStreamIds(SEARCH_TERM, {
-                user: searcher,
+                userId: searcher,
                 allowPublic: true
             })
             expect(streamIds).toEqual([
@@ -128,7 +128,7 @@ describe('searchStreams', () => {
 
         it('public permissions', async () => {
             const streamIds = await searchStreamIds(SEARCH_TERM, {
-                user: randomUserId(),
+                userId: randomUserId(),
                 allowPublic: true
             })
             expect(streamIds).toEqual([
@@ -140,7 +140,7 @@ describe('searchStreams', () => {
         describe('all of', () => {
             it('match', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
-                    user: searcher,
+                    userId: searcher,
                     allOf: [StreamPermission.SUBSCRIBE],
                     allowPublic: false
                 })
@@ -152,7 +152,7 @@ describe('searchStreams', () => {
 
             it('no match', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
-                    user: searcher,
+                    userId: searcher,
                     allOf: [StreamPermission.SUBSCRIBE, StreamPermission.PUBLISH],
                     allowPublic: false
                 })
@@ -161,7 +161,7 @@ describe('searchStreams', () => {
 
             it('all permission types match', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
-                    user: searcher,
+                    userId: searcher,
                     allOf: [],
                     allowPublic: false
                 })
@@ -175,7 +175,7 @@ describe('searchStreams', () => {
         describe('any of', () => {
             it('match', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
-                    user: searcher,
+                    userId: searcher,
                     anyOf: [StreamPermission.SUBSCRIBE, StreamPermission.PUBLISH],
                     allowPublic: false
                 })
@@ -187,7 +187,7 @@ describe('searchStreams', () => {
 
             it('no match', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
-                    user: searcher,
+                    userId: searcher,
                     anyOf: [StreamPermission.GRANT],
                     allowPublic: false
                 })
@@ -196,7 +196,7 @@ describe('searchStreams', () => {
 
             it('no possible results', async () => {
                 const streamIds = await searchStreamIds(SEARCH_TERM, {
-                    user: searcher,
+                    userId: searcher,
                     anyOf: [],
                     allowPublic: false
                 })

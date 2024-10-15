@@ -86,7 +86,7 @@ describe('resend with existing key', () => {
             id: streamId
         })
         await stream.grantPermissions({
-            user: publisherWallet.address,
+            userId: publisherWallet.address,
             permissions: [StreamPermission.PUBLISH]
         })
         const storageNode = await environment.startStorageNode()

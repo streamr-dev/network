@@ -23,7 +23,7 @@ describe('PublisherKeyExchange', () => {
         const stream = await publisherClient.createStream(createRelativeTestStreamId(module))
         await publisherClient.grantPermissions(stream.id, {
             permissions: [StreamPermission.SUBSCRIBE],
-            user: subscriberWallet.address
+            userId: subscriberWallet.address
         })
         return stream
     }
@@ -108,7 +108,7 @@ describe('PublisherKeyExchange', () => {
         const erc1271ContractAddress = randomEthereumAddress()
         await publisherClient.grantPermissions(StreamPartIDUtils.getStreamID(streamPartId), {
             permissions: [StreamPermission.PUBLISH],
-            user: erc1271ContractAddress
+            userId: erc1271ContractAddress
         })
         environment.getChain().addErc1271AllowedAddress(erc1271ContractAddress, toUserId(publisherWallet.address))
 

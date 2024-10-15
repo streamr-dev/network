@@ -11,7 +11,7 @@ describe('permission', () => {
         const stream = await client.createStream(`/${Date.now()}`)
         const otherUser = randomUserId()
         const hasPermission = () => client.hasPermission({
-            user: otherUser,
+            userId: otherUser,
             permission: StreamPermission.PUBLISH,
             streamId: stream.id,
             allowPublic: false
