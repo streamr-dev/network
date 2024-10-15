@@ -14,7 +14,7 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
-- **BREAKING CHANGE:** Renamed `getAddress()` to `getUserId()` (https://github.com/streamr-dev/network/pull/2774)
+- **BREAKING CHANGE:** Rename `getAddress()` to `getUserId()` (https://github.com/streamr-dev/network/pull/2774)
 
 #### Deprecated
 
