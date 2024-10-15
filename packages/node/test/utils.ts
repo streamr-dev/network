@@ -1,7 +1,6 @@
 import { EthereumAddress, merge, toEthereumAddress } from '@streamr/utils'
 import padEnd from 'lodash/padEnd'
 import { StreamrClient,
-    CONFIG_TEST,
     NetworkPeerDescriptor,
     Stream,
     StreamMetadata,
@@ -51,7 +50,7 @@ export const formConfig = ({
 
     return {
         client: {
-            ...CONFIG_TEST,
+            environment: 'dev2',
             auth: {
                 privateKey
             }
@@ -78,19 +77,11 @@ export const createClient = (
     privateKey: string,
     clientOptions?: StreamrClientConfig
 ): StreamrClient => {
-    const opts = merge(
-        CONFIG_TEST,
+    const opts = merge<StreamrClientConfig>(
         {
+            environment: 'dev2',
             auth: {
                 privateKey
-            },
-            network: {
-                controlLayer: CONFIG_TEST.network!.controlLayer,
-                node:
-                    merge(
-                        CONFIG_TEST.network!.node,
-                        clientOptions?.network?.node
-                    )
             }
         },
         clientOptions
@@ -124,7 +115,7 @@ export async function startStorageNode(
     extraPlugins = {}
 ): Promise<Broker> {
     const client = new StreamrClient({
-        ...CONFIG_TEST,
+        environment: 'dev2',
         auth: {
             privateKey: storageNodePrivateKey
         }
