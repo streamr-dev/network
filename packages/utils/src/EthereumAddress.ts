@@ -6,7 +6,7 @@ export const PREFIXED_STRING_LENGTH = 42
 export type EthereumAddress = BrandedString<'EthereumAddress'>
 
 export function toEthereumAddress(str: string): EthereumAddress | never {
-    if (str.match(REGEX)) {
+    if (REGEX.test(str)) {
         return str.toLowerCase() as EthereumAddress
     }
     throw new Error(`not a valid Ethereum address: "${str}"`)
