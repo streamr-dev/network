@@ -231,12 +231,12 @@ describe('Stream permissions', () => {
         await otherUserClient.destroy()
     }, TIMEOUT)
 
-    it('unsupported permission type', async () => {
+    it('unsupported type for non-Ethereum user', async () => {
         await expect(() => client.grantPermissions(stream.id, {
             user: toUserId(randomBytes(50)),
-            permissions: [StreamPermission.EDIT]
+            permissions: [StreamPermission.EDIT, StreamPermission.GRANT]
         })).rejects.toThrowStreamrError({
-            message: 'Non-Ethereum address is not supported for permission types: edit',
+            message: 'Non-Ethereum user id is not supported for permission types: EDIT, GRANT',
             code: 'UNSUPPORTED_OPERATION'
         })
     })

@@ -80,7 +80,7 @@ const validatePermissionAssignments = (assignments: InternalPermissionAssignment
                 const invalidPermissions = intersection(assignment.permissions, ETHEREUM_ONLY_PERMISSION_TYPES)
                 if (invalidPermissions.length > 0) {
                     throw new StreamrClientError(
-                        `Non-Ethereum address is not supported for permission types: ${invalidPermissions.join()}`,
+                        `Non-Ethereum user id is not supported for permission types: ${invalidPermissions.map((p) => p.toUpperCase()).join(', ')}`,
                         'UNSUPPORTED_OPERATION'
                     )
                 }
