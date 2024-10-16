@@ -165,6 +165,7 @@ message StreamPartitionInfo {
   repeated dht.PeerDescriptor controlLayerNeighbors = 2;
   repeated dht.PeerDescriptor deprecatedContentDeliveryLayerNeighbors = 3;
   repeated ContentDeliveryLayerNeighborInfo contentDeliveryLayerNeighbors = 4;
+  repeated dht.PeerDescriptor proxiedNodes = 5;
 }
 
 message ContentDeliveryLayerNeighborInfo {
