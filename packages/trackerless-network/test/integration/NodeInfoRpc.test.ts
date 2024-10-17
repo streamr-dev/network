@@ -4,6 +4,8 @@ import { NetworkStack } from '../../src/NetworkStack'
 import { NodeInfoClient } from '../../src/logic/node-info/NodeInfoClient'
 import { NODE_INFO_RPC_SERVICE_ID } from '../../src/logic/node-info/NodeInfoRpcLocal'
 import { createMockPeerDescriptor } from '../utils/utils'
+import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { randomUserId } from '@streamr/test-utils'
 
 // TODO add Jest utility so that the normalization is not needed (NET-1254)
 const normalizePeerDescriptor = (peerDescriptor: PeerDescriptor) => {
@@ -17,31 +19,39 @@ describe('NetworkStack NodeInfoRpc', () => {
 
     let requesteStack: NetworkStack
     let otherStack: NetworkStack
+    let proxyNode: NetworkStack
     let nodeInfoClient: NodeInfoClient
     let requesteeTransport1: SimulatorTransport
     let otherTransport: SimulatorTransport
     let requestorTransport: SimulatorTransport
+    let proxyTransport: SimulatorTransport
 
     let simulator: Simulator
 
     const requesteePeerDescriptor = createMockPeerDescriptor()
     const otherPeerDescriptor = createMockPeerDescriptor()
     const requestorPeerDescriptor = createMockPeerDescriptor()
+    const proxyPeerDescriptor = createMockPeerDescriptor()
 
     beforeEach(async () => {
         simulator = new Simulator()
-        requesteeTransport1 = new SimulatorTransport(requesteePeerDescriptor, simulator)
+        requesteeTransport1 = new SimulatorTransport(requesteePeerDescriptor, simulator, true)
         otherTransport = new SimulatorTransport(otherPeerDescriptor, simulator)
         requestorTransport = new SimulatorTransport(requestorPeerDescriptor, simulator)
+        proxyTransport = new SimulatorTransport(proxyPeerDescriptor, simulator)
         await requesteeTransport1.start()
         await otherTransport.start()
         await requestorTransport.start()
+        await proxyTransport.start()
         requesteStack = new NetworkStack({
             layer0: {
                 transport: requesteeTransport1,
                 connectionsView: requesteeTransport1,
                 peerDescriptor: requesteePeerDescriptor,
                 entryPoints: [requesteePeerDescriptor]
+            },
+            networkNode: {
+                acceptProxyConnections: true
             }
         })
         otherStack = new NetworkStack({
@@ -52,8 +62,17 @@ describe('NetworkStack NodeInfoRpc', () => {
                 entryPoints: [requesteePeerDescriptor]
             }
         })
+        proxyNode = new NetworkStack({
+            layer0: {
+                transport: proxyTransport,
+                connectionsView: proxyTransport,
+                peerDescriptor: proxyPeerDescriptor,
+                entryPoints: [requesteePeerDescriptor]
+            }
+        })
         await requesteStack.start()
         await otherStack.start()
+        await proxyNode.start(false)
         nodeInfoClient = new NodeInfoClient(requestorPeerDescriptor, new ListeningRpcCommunicator(NODE_INFO_RPC_SERVICE_ID, requestorTransport))
     })
 
@@ -63,6 +82,8 @@ describe('NetworkStack NodeInfoRpc', () => {
         await requesteeTransport1.stop()
         await otherTransport.stop()
         await requestorTransport.stop()
+        await proxyTransport.stop()
+        await proxyNode.stop()
     })
 
     it('happy path', async () => {
@@ -72,6 +93,7 @@ describe('NetworkStack NodeInfoRpc', () => {
         otherStack.getContentDeliveryManager().joinStreamPart(streamPartId1)
         requesteStack.getContentDeliveryManager().joinStreamPart(streamPartId2)
         otherStack.getContentDeliveryManager().joinStreamPart(streamPartId2)
+        await proxyNode.getContentDeliveryManager().setProxies(streamPartId1, [requesteePeerDescriptor], ProxyDirection.SUBSCRIBE, randomUserId())
         await waitForCondition(() => 
             requesteStack.getContentDeliveryManager().getNeighbors(streamPartId1).length === 1 
             && otherStack.getContentDeliveryManager().getNeighbors(streamPartId1).length === 1
@@ -91,14 +113,16 @@ describe('NetworkStack NodeInfoRpc', () => {
                     controlLayerNeighbors: [normalizePeerDescriptor(otherPeerDescriptor)],
                     contentDeliveryLayerNeighbors: [{
                         peerDescriptor: normalizePeerDescriptor(otherPeerDescriptor)
-                    }]
+                    }],
+                    proxiedNodes: [normalizePeerDescriptor(proxyPeerDescriptor)]
                 },
                 {
                     id: streamPartId2,
                     controlLayerNeighbors: [normalizePeerDescriptor(otherPeerDescriptor)],
                     contentDeliveryLayerNeighbors: [{
                         peerDescriptor: normalizePeerDescriptor(otherPeerDescriptor)
-                    }]
+                    }],
+                    proxiedNodes: []
                 }
             ],
             version: expect.any(String)

@@ -7,6 +7,7 @@ import type { ExternalStoreDataRequest } from "./DhtRpc";
 import type { ExternalFetchDataResponse } from "./DhtRpc";
 import type { ExternalFetchDataRequest } from "./DhtRpc";
 import { ConnectionLockRpc } from "./DhtRpc";
+import type { SetPrivateRequest } from "./DhtRpc";
 import type { DisconnectNotice } from "./DhtRpc";
 import type { UnlockRequest } from "./DhtRpc";
 import type { LockResponse } from "./DhtRpc";
@@ -336,6 +337,10 @@ export interface IConnectionLockRpcClient {
      * @generated from protobuf rpc: gracefulDisconnect(dht.DisconnectNotice) returns (google.protobuf.Empty);
      */
     gracefulDisconnect(input: DisconnectNotice, options?: RpcOptions): UnaryCall<DisconnectNotice, Empty>;
+    /**
+     * @generated from protobuf rpc: setPrivate(dht.SetPrivateRequest) returns (google.protobuf.Empty);
+     */
+    setPrivate(input: SetPrivateRequest, options?: RpcOptions): UnaryCall<SetPrivateRequest, Empty>;
 }
 /**
  * @generated from protobuf service dht.ConnectionLockRpc
@@ -366,6 +371,13 @@ export class ConnectionLockRpcClient implements IConnectionLockRpcClient, Servic
     gracefulDisconnect(input: DisconnectNotice, options?: RpcOptions): UnaryCall<DisconnectNotice, Empty> {
         const method = this.methods[2], opt = this._transport.mergeOptions(options);
         return stackIntercept<DisconnectNotice, Empty>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: setPrivate(dht.SetPrivateRequest) returns (google.protobuf.Empty);
+     */
+    setPrivate(input: SetPrivateRequest, options?: RpcOptions): UnaryCall<SetPrivateRequest, Empty> {
+        const method = this.methods[3], opt = this._transport.mergeOptions(options);
+        return stackIntercept<SetPrivateRequest, Empty>("unary", this._transport, method, opt, input);
     }
 }
 /**

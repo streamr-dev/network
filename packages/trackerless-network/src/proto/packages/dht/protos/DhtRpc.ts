@@ -583,6 +583,15 @@ export interface DisconnectNotice {
     disconnectMode: DisconnectMode;
 }
 /**
+ * @generated from protobuf message dht.SetPrivateRequest
+ */
+export interface SetPrivateRequest {
+    /**
+     * @generated from protobuf field: bool isPrivate = 1;
+     */
+    isPrivate: boolean;
+}
+/**
  * @generated from protobuf message dht.ExternalFetchDataRequest
  */
 export interface ExternalFetchDataRequest {
@@ -1154,6 +1163,18 @@ class DisconnectNotice$Type extends MessageType<DisconnectNotice> {
  */
 export const DisconnectNotice = new DisconnectNotice$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class SetPrivateRequest$Type extends MessageType<SetPrivateRequest> {
+    constructor() {
+        super("dht.SetPrivateRequest", [
+            { no: 1, name: "isPrivate", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message dht.SetPrivateRequest
+ */
+export const SetPrivateRequest = new SetPrivateRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class ExternalFetchDataRequest$Type extends MessageType<ExternalFetchDataRequest> {
     constructor() {
         super("dht.ExternalFetchDataRequest", [
@@ -1233,7 +1254,8 @@ export const WebrtcConnectorRpc = new ServiceType("dht.WebrtcConnectorRpc", [
 export const ConnectionLockRpc = new ServiceType("dht.ConnectionLockRpc", [
     { name: "lockRequest", options: {}, I: LockRequest, O: LockResponse },
     { name: "unlockRequest", options: {}, I: UnlockRequest, O: Empty },
-    { name: "gracefulDisconnect", options: {}, I: DisconnectNotice, O: Empty }
+    { name: "gracefulDisconnect", options: {}, I: DisconnectNotice, O: Empty },
+    { name: "setPrivate", options: {}, I: SetPrivateRequest, O: Empty }
 ]);
 /**
  * @generated ServiceType for protobuf service dht.ExternalApiRpc
