@@ -2,7 +2,7 @@ import { RpcCommunicator } from '../../src/RpcCommunicator'
 import {
     RpcMessage,
     RpcErrorType
-} from '../../src/proto/ProtoRpc'
+} from '../../generated/ProtoRpc'
 import { PingRequest, PingResponse } from '../proto/TestProtos' 
 import { ResultParts } from '../../src/ClientTransport'
 import { Deferred, RpcMetadata, RpcStatus } from '@protobuf-ts/runtime-rpc'
@@ -10,7 +10,7 @@ import * as Err from '../../src/errors'
 import { MockDhtRpc, clearMockTimeouts } from '../utils'
 import { ProtoCallContext } from '../../src/ProtoCallContext'
 import { waitForCondition } from '@streamr/utils'
-import { Any } from '../../src/proto/google/protobuf/any'
+import { Any } from '../../generated/google/protobuf/any'
 
 describe('RpcCommunicator', () => {
     let rpcCommunicator: RpcCommunicator<ProtoCallContext>
