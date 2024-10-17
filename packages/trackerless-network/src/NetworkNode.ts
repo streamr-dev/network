@@ -5,7 +5,7 @@ import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { MetricsContext, StreamPartID, UserID } from '@streamr/utils'
 import { ExternalNetworkRpc, ExternalRpcClient, ExternalRpcClientClass } from './logic/ExternalNetworkRpc'
 import { NetworkOptions, NetworkStack, NodeInfo } from './NetworkStack'
-import { ProxyDirection, StreamMessage } from './proto/packages/trackerless-network/protos/NetworkRpc'
+import { ProxyDirection, StreamMessage } from '../generated/packages/trackerless-network/protos/NetworkRpc'
 
 export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
     return new NetworkNode(new NetworkStack(opts))

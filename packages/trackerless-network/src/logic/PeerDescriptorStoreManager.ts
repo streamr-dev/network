@@ -5,7 +5,7 @@ import {
     areEqualPeerDescriptors
 } from '@streamr/dht'
 import { Logger, scheduleAtInterval } from '@streamr/utils'
-import { Any } from '../proto/google/protobuf/any'
+import { Any } from '../../generated/google/protobuf/any'
 
 const parsePeerDescriptor = (dataEntries: DataEntry[]): PeerDescriptor[] => {
     return dataEntries.filter((entry) => !entry.deleted).map((entry) => Any.unpack(entry.data!, PeerDescriptor))

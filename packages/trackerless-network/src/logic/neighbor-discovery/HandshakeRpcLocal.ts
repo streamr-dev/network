@@ -13,8 +13,8 @@ import {
     InterleaveResponse,
     StreamPartHandshakeRequest,
     StreamPartHandshakeResponse
-} from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { IHandshakeRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
+} from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { IHandshakeRpc } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.server'
 import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 import { NodeList } from '../NodeList'
 import { HandshakeRpcRemote } from './HandshakeRpcRemote'
