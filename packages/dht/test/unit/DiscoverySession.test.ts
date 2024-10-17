@@ -4,7 +4,7 @@ import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { PeerManager, getDistance } from '../../src/dht/PeerManager'
 import { DiscoverySession } from '../../src/dht/discovery/DiscoverySession'
 import { DhtAddress, toNodeId, toDhtAddressRaw } from '../../src/identifiers'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { NodeType, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { createTestTopology } from '../utils/topology'
 import { getClosestNodes } from '../../src/dht/contact/getClosestNodes'
 

@@ -1,4 +1,4 @@
-import { DataEntry } from '../../proto/packages/dht/protos/DhtRpc'
+import { DataEntry } from '../../../generated/packages/dht/protos/DhtRpc'
 import { DhtAddress, toDhtAddress } from '../../identifiers'
 import { MapWithTtl } from '@streamr/utils'
 

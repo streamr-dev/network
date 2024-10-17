@@ -1,14 +1,14 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger, executeSafePromise } from '@streamr/utils'
-import { Empty } from '../../proto/google/protobuf/empty'
-import { Timestamp } from '../../proto/google/protobuf/timestamp'
+import { Empty } from '../../../generated/google/protobuf/empty'
+import { Timestamp } from '../../../generated/google/protobuf/timestamp'
 import {
     DataEntry,
     PeerDescriptor,
     ReplicateDataRequest,
     StoreDataRequest, StoreDataResponse
-} from '../../proto/packages/dht/protos/DhtRpc'
-import { IStoreRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
+} from '../../../generated/packages/dht/protos/DhtRpc'
+import { IStoreRpc } from '../../../generated/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { LocalDataStore } from './LocalDataStore'
 import { areEqualPeerDescriptors, DhtAddress, toDhtAddress } from '../../identifiers'
