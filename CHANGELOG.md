@@ -12,6 +12,8 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- Add validation for public permissions (https://github.com/streamr-dev/network/pull/2819)
+
 #### Changed
 
 - **BREAKING CHANGE:** Rename `getAddress()` to `getUserId()` (https://github.com/streamr-dev/network/pull/2774)
