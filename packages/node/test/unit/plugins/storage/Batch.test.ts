@@ -1,3 +1,4 @@
+import { randomUserId } from '@streamr/test-utils'
 import { Batch, InsertRecord, State } from '../../../../src/plugins/storage/Batch'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 
@@ -6,7 +7,7 @@ const record: InsertRecord = {
     partition: 0,
     timestamp: 123,
     sequenceNo: 123,
-    publisherId: 'publisherId',
+    publisherId: randomUserId(),
     msgChainId: 'msgChainId',
     payload: Buffer.from(new Uint8Array([1, 2, 3])) // len = 3
 }

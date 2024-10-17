@@ -171,6 +171,16 @@ describe('dataQueryEndpoint', () => {
             storage.requestFrom = () => createOutputStream(streamMessages)
         })
 
+        describe('user errors', () => {
+            it('responds 400 and error message if optional param "publisherId" not a UserID', (done) => {
+                testGetRequest('/streams/streamId/data/partitions/0/from?fromTimestamp=1496408255672&publisherId=foobar')
+                    .expect('Content-Type', /json/)
+                    .expect(400, {
+                        error: 'Query parameter "publisherId" not valid: foobar',
+                    }, done)
+            })
+        })
+
         describe('?fromTimestamp=1496408255672', () => {
             it('responds 200 and Content-Type JSON', (done) => {
                 testGetRequest('/streams/streamId/data/partitions/0/from?fromTimestamp=1496408255672')
@@ -287,6 +297,13 @@ describe('dataQueryEndpoint', () => {
                     .expect('Content-Type', /json/)
                     .expect(400, {
                         error: 'Query parameter "toTimestamp" not a number: notANumber',
+                    }, done)
+            })
+            it('responds 400 and error message if optional param "publisherId" not a UserID', (done) => {
+                testGetRequest('/streams/streamId/data/partitions/0/range?fromTimestamp=1&toTimestamp=2&publisherId=foobar&msgChainId=x')
+                    .expect('Content-Type', /json/)
+                    .expect(400, {
+                        error: 'Query parameter "publisherId" not valid: foobar',
                     }, done)
             })
         })
