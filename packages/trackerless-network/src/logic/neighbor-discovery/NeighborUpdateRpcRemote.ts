@@ -1,7 +1,7 @@
 import { PeerDescriptor, RpcRemote, toNodeId } from '@streamr/dht'
 import { Logger, StreamPartID } from '@streamr/utils'
-import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { NeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { NeighborUpdate } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { NeighborUpdateRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
 const logger = new Logger(module)
 
