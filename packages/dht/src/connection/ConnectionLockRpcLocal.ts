@@ -6,10 +6,10 @@ import {
     DisconnectNotice,
     LockRequest,
     LockResponse,
-    PeerDescriptor,
     UnlockRequest,
     SetPrivateRequest
 } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { IConnectionLockRpc } from '../../generated/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'

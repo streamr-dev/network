@@ -4,7 +4,7 @@ option optimize_for = CODE_SIZE;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
-import "packages/dht/protos/DhtRpc.proto";
+import "packages/dht/protos/PeerDescriptor.proto";
 
 service ContentDeliveryRpc {
   rpc sendStreamMessage (StreamMessage) returns (google.protobuf.Empty);
@@ -113,12 +113,12 @@ message StreamPartHandshakeRequest {
 message StreamPartHandshakeResponse {
   bool accepted = 1;
   string requestId = 2;
-  optional dht.PeerDescriptor interleaveTargetDescriptor = 3;
+  optional peerDescriptor.PeerDescriptor interleaveTargetDescriptor = 3;
 }
 
 message InterleaveRequest {
   // this is a required field but in generated NetworkRpc.ts it is incorrectly annotated as optional (NET-1082)
-  dht.PeerDescriptor interleaveTargetDescriptor = 1;
+  peerDescriptor.PeerDescriptor interleaveTargetDescriptor = 1;
 }
 
 message InterleaveResponse {
@@ -133,7 +133,7 @@ message LeaveStreamPartNotice {
 message NeighborUpdate {
   string streamPartId = 1;
   bool removeMe = 2;
-  repeated dht.PeerDescriptor neighborDescriptors = 3;
+  repeated peerDescriptor.PeerDescriptor neighborDescriptors = 3;
 }
 
 message ProxyConnectionRequest {
@@ -162,25 +162,25 @@ enum ProxyDirection {
 
 message StreamPartitionInfo {
   string id = 1;
-  repeated dht.PeerDescriptor controlLayerNeighbors = 2;
-  repeated dht.PeerDescriptor deprecatedContentDeliveryLayerNeighbors = 3;
+  repeated peerDescriptor.PeerDescriptor controlLayerNeighbors = 2;
+  repeated peerDescriptor.PeerDescriptor deprecatedContentDeliveryLayerNeighbors = 3;
   repeated ContentDeliveryLayerNeighborInfo contentDeliveryLayerNeighbors = 4;
 }
 
 message ContentDeliveryLayerNeighborInfo {
-  dht.PeerDescriptor peerDescriptor = 1;
+  peerDescriptor.PeerDescriptor peerDescriptor = 1;
   optional int32 rtt = 2;
 }
 
 message ControlLayerInfo {
-  repeated dht.PeerDescriptor neighbors = 1;
-  repeated dht.PeerDescriptor connections = 2;
+  repeated peerDescriptor.PeerDescriptor neighbors = 1;
+  repeated peerDescriptor.PeerDescriptor connections = 2;
 }
 
 message NodeInfoRequest {}
 
 message NodeInfoResponse {
-  dht.PeerDescriptor peerDescriptor = 1;
+  peerDescriptor.PeerDescriptor peerDescriptor = 1;
   repeated StreamPartitionInfo streamPartitions = 2;
   optional ControlLayerInfo controlLayer = 3;
   string version = 4;

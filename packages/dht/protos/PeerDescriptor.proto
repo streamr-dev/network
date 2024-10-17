@@ -1,0 +1,28 @@
+syntax = "proto3";
+option optimize_for = CODE_SIZE;
+
+package peerDescriptor;
+
+message PeerDescriptor {
+  bytes nodeId = 1;
+  NodeType type = 2;
+  ConnectivityMethod udp = 3;
+  ConnectivityMethod tcp = 4;
+  ConnectivityMethod websocket = 5;
+  optional uint32 region = 6;
+  optional uint32 ipAddress = 7;
+  optional bytes publicKey = 8;
+  // signature of fields 2-8
+  optional bytes signature = 9; 
+}
+
+message ConnectivityMethod {
+  uint32 port = 1;
+  string host = 2;
+  bool tls = 3;
+}
+
+enum NodeType {
+  NODEJS = 0;
+  BROWSER = 1;
+}

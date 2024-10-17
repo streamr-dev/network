@@ -30,11 +30,11 @@ import {
     ExternalStoreDataResponse,
     LeaveNotice,
     Message,
-    PeerDescriptor,
     PingRequest,
     PingResponse,
     RecursiveOperation
 } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor' 
 import { ExternalApiRpcClient, StoreRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { ITransport, TransportEvents } from '../transport/ITransport'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'

@@ -1,4 +1,5 @@
-import { Message, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
+import { Message } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { v4 } from 'uuid'
 import { RpcCommunicator, RpcCommunicatorOptions } from '@streamr/proto-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
