@@ -5,7 +5,7 @@ import { Server as HttpServer, createServer as createHttpServer } from 'http'
 import { server as WsServer } from 'websocket'
 import { CONNECTIVITY_CHECKER_SERVICE_ID } from '../../src/connection/connectivityChecker'
 import { attachConnectivityRequestHandler } from '../../src/connection/connectivityRequestHandler'
-import { Message } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message } from '../../generated/packages/dht/protos/DhtRpc'
 import { LOCAL_PROTOCOL_VERSION } from '../../src/helpers/version'
 
 const HOST = '127.0.0.1'

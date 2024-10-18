@@ -15,8 +15,8 @@ import {
     MessageRef,
     ProxyDirection,
     StreamMessage
-} from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryRpcClient, ProxyConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+} from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryRpcClient, ProxyConnectionRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { ContentDeliveryRpcLocal } from '../ContentDeliveryRpcLocal'
 import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 import { DuplicateMessageDetector } from '../DuplicateMessageDetector'

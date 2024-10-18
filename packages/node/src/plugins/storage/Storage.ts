@@ -1,5 +1,5 @@
 import { StreamMessage, convertStreamMessageToBytes } from '@streamr/sdk'
-import { Logger, MetricsContext, RateMetric } from '@streamr/utils'
+import { Logger, MetricsContext, RateMetric, UserID } from '@streamr/utils'
 import { Client, auth, tracker, types } from 'cassandra-driver'
 import { EventEmitter } from 'events'
 import merge2 from 'merge2'
@@ -197,7 +197,7 @@ export class Storage extends EventEmitter {
         return resultStream
     }
 
-    requestFrom(streamId: string, partition: number, fromTimestamp: number, fromSequenceNo: number, publisherId?: string): Readable {
+    requestFrom(streamId: string, partition: number, fromTimestamp: number, fromSequenceNo: number, publisherId?: UserID): Readable {
         return this.fetchRange(
             streamId,
             partition,
@@ -216,7 +216,7 @@ export class Storage extends EventEmitter {
         fromSequenceNo: number,
         toTimestamp: number,
         toSequenceNo: number,
-        publisherId: string | undefined,
+        publisherId: UserID | undefined,
         msgChainId: string | undefined
     ): Readable {
         // TODO is there any reason why we shouldn't allow range queries which contain publisherId, but not msgChainId?

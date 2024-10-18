@@ -6,8 +6,8 @@ import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTran
 import { DhtRpcOptions } from '../../src/rpc-protocol/DhtRpcOptions'
 import { ListeningRpcCommunicator } from '../../src/transport/ListeningRpcCommunicator'
 import { ProtoRpcClient, toProtoRpcClient } from '@streamr/proto-rpc'
-import { DhtNodeRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
-import { PeerDescriptor, PingRequest, PingResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { DhtNodeRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
+import { PeerDescriptor, PingRequest, PingResponse } from '../../generated/packages/dht/protos/DhtRpc'
 import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
 import { MetricsContext } from '@streamr/utils'
 import { createMockPeerDescriptor } from '../utils/utils'
@@ -20,7 +20,8 @@ const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport:
             transport,
             createLocalPeerDescriptor: async () => localPeerDescriptor
         }),
-        metricsContext: new MetricsContext()
+        metricsContext: new MetricsContext(),
+        allowIncomingPrivateConnections: false
     })
 }
 

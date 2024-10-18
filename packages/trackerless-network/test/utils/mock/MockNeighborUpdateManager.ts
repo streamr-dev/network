@@ -1,6 +1,6 @@
 import { Methods } from '@streamr/test-utils'
 import { NeighborUpdateManager } from '../../../src/logic/neighbor-discovery/NeighborUpdateManager'
-import { NeighborUpdate } from '../../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { NeighborUpdate } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 
 export class MockNeighborUpdateManager implements Methods<NeighborUpdateManager> {
 

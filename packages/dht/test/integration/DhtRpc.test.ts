@@ -1,9 +1,9 @@
 import { createMockDhtRpc, createMockPeerDescriptor, createMockPeers } from '../utils/utils'
 import { ProtoRpcClient, RpcCommunicator, RpcError, toProtoRpcClient } from '@streamr/proto-rpc'
-import { DhtNodeRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
-import { ClosestPeersRequest, ClosestPeersResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { DhtNodeRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
+import { ClosestPeersRequest, ClosestPeersResponse } from '../../generated/packages/dht/protos/DhtRpc'
 import { wait } from '@streamr/utils'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { toNodeId } from '../../src/identifiers'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 

@@ -2,7 +2,7 @@ import { waitForCondition } from '@streamr/utils'
 import { range, without } from 'lodash'
 import { DhtNodeRpcLocal } from '../../src/dht/DhtNodeRpcLocal'
 import { DhtNode, ListeningRpcCommunicator, toNodeId } from '../../src/exports'
-import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor, PingRequest, PingResponse } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor, PingRequest, PingResponse } from '../../generated/packages/dht/protos/DhtRpc'
 import { FakeEnvironment } from '../utils/FakeTransport'
 import { createMockPeerDescriptor } from '../utils/utils'
 
