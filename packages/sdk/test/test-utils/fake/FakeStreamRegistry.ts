@@ -206,12 +206,12 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamPublishers(): AsyncGenerator<UserID> {
+    getStreamPublishers(): AsyncIterable<UserID> {
         throw new Error('not implemented')
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamSubscribers(): AsyncGenerator<UserID> {
+    getStreamSubscribers(): AsyncIterable<UserID> {
         throw new Error('not implemented')
     }
 }

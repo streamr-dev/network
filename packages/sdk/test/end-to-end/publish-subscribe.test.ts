@@ -4,7 +4,6 @@ import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { createNetworkNode } from '@streamr/trackerless-network'
 import { StreamID, toStreamPartID, waitForCondition } from '@streamr/utils'
 import { Wallet } from 'ethers'
-import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
@@ -45,7 +44,7 @@ async function createStreamWithPermissions(
     ...assignments: PermissionAssignment[]
 ): Promise<Stream> {
     const creatorClient = new StreamrClient({
-        ...CONFIG_TEST,
+        environment: 'dev2',
         auth: {
             privateKey
         }

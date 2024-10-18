@@ -7,7 +7,7 @@ import {
     ProxyDirection,
     SignatureType,
     StreamMessage
-} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const PROXIED_NODE_USER_ID = randomUserId()

@@ -89,6 +89,20 @@ function getFieldType(value: any): (Field['type'] | undefined) {
     }
 }
 
+export const flatMerge = <TTarget>(...sources: (Partial<TTarget> | undefined)[]): TTarget => {
+    const result: Record<string, unknown> = {}
+    for (const source of sources) {
+        if (source !== undefined) {
+            for (const [key, value] of Object.entries(source)) {
+                if (value !== undefined) {
+                    result[key] = value
+                }
+            }
+        }
+    }
+    return result as TTarget
+}
+
 /**
  * A convenience API for managing and accessing an individual stream.
  *
@@ -145,7 +159,10 @@ export class Stream {
      * Updates the metadata of the stream by merging with the existing metadata.
      */
     async update(metadata: Partial<StreamMetadata>): Promise<void> {
-        const merged = merge(this.getMetadata(), metadata)
+        // TODO maybe should use deep merge, i.e. merge() from @streamr/utils as that corresponds
+        // the implicit intention of the method description. But we'll harmonize this method soon in NET-1364,
+        // so we don't change the behavior now.
+        const merged = flatMerge(this.getMetadata(), metadata)
         try {
             await this._streamRegistry.updateStream(this.id, merged)
         } finally {
@@ -354,7 +371,7 @@ export class Stream {
      * @category Important
      */
     async grantPermissions(...assignments: PermissionAssignment[]): Promise<void> {
-        return this._streamRegistry.grantPermissions(this.id, ...assignments.map((a) => toInternalPermissionAssignment(a)))
+        return this._streamRegistry.grantPermissions(this.id, ...assignments.map(toInternalPermissionAssignment))
     }
 
     /**
@@ -363,7 +380,7 @@ export class Stream {
      * @category Important
      */
     async revokePermissions(...assignments: PermissionAssignment[]): Promise<void> {
-        return this._streamRegistry.revokePermissions(this.id, ...assignments.map((a) => toInternalPermissionAssignment(a)))
+        return this._streamRegistry.revokePermissions(this.id, ...assignments.map(toInternalPermissionAssignment))
     }
 
 }

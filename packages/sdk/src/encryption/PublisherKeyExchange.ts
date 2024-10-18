@@ -1,11 +1,8 @@
 import {
-    EthereumAddress,
     Logger,
     StreamPartID,
     StreamPartIDUtils,
-    UserID,
-    isEthereumAddressUserId,
-    toEthereumAddress
+    UserID
 } from '@streamr/utils'
 import without from 'lodash/without'
 import { Lifecycle, inject, scoped } from 'tsyringe'
@@ -50,7 +47,7 @@ export class PublisherKeyExchange {
     private readonly store: LocalGroupKeyStore
     private readonly authentication: Authentication
     private readonly logger: Logger
-    private readonly erc1271ContractAddresses = new Set<EthereumAddress>()
+    private readonly erc1271Publishers = new Set<UserID>()
 
     constructor(
         networkNodeFacade: NetworkNodeFacade,
@@ -76,12 +73,9 @@ export class PublisherKeyExchange {
         eventEmitter.on('messagePublished', (msg) => {
             if (msg.signatureType === SignatureType.ERC_1271) {
                 const publisherId = msg.getPublisherId()
-                if (isEthereumAddressUserId(publisherId)) {
-                    const address = toEthereumAddress(publisherId)
-                    if (!this.erc1271ContractAddresses.has(address)) {
-                        logger.debug('Add ERC-1271 publisher', { address })
-                        this.erc1271ContractAddresses.add(address)
-                    }
+                if (!this.erc1271Publishers.has(publisherId)) {
+                    logger.debug('Add ERC-1271 publisher', { publisherId })
+                    this.erc1271Publishers.add(publisherId)
                 }
             }
         })
@@ -127,11 +121,11 @@ export class PublisherKeyExchange {
         }
     }
 
-    private async getResponseType(publisher: UserID): Promise<ResponseType> {
+    private async getResponseType(publisherId: UserID): Promise<ResponseType> {
         const authenticatedUser = await this.authentication.getUserId()
-        if (publisher === authenticatedUser) {
+        if (publisherId === authenticatedUser) {
             return ResponseType.NORMAL
-        } else if (isEthereumAddressUserId(publisher) && this.erc1271ContractAddresses.has(toEthereumAddress(publisher))) {
+        } else if (this.erc1271Publishers.has(publisherId)) {
             return ResponseType.ERC_1271
         } else {
             return ResponseType.NONE
@@ -141,10 +135,10 @@ export class PublisherKeyExchange {
     private async createResponse(
         keys: GroupKey[],
         responseType: ResponseType,
-        publisher: UserID,
+        publisherId: UserID,
         streamPartId: StreamPartID,
         rsaPublicKey: string,
-        recipient: UserID,
+        recipientId: UserID,
         requestId: string
     ): Promise<StreamMessage> {
         const encryptedGroupKeys = await Promise.all(keys.map((key) => {
@@ -152,7 +146,7 @@ export class PublisherKeyExchange {
             return new EncryptedGroupKey(key.id, encryptedGroupKey)
         }))
         const responseContent = new OldGroupKeyResponse({
-            recipient,
+            recipient: recipientId,
             requestId,
             encryptedGroupKeys
         })
@@ -162,7 +156,7 @@ export class PublisherKeyExchange {
                 StreamPartIDUtils.getStreamPartition(streamPartId),
                 Date.now(),
                 0,
-                publisher,
+                publisherId,
                 createRandomMsgChainId()
             ),
             content: convertGroupKeyResponseToBytes(responseContent),

@@ -1,5 +1,5 @@
 import { ConnectionType } from '../connection/IConnection'
-import { ConnectivityMethod, NodeType, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { ConnectivityMethod, NodeType, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { isPrivateIPv4 } from './AddressTools'
 
 export const canOpenConnectionFromBrowser = (websocketServer: ConnectivityMethod): boolean => {

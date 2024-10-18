@@ -6,8 +6,8 @@ import {
     ClosestPeersResponse,
     PingRequest,
     PingResponse
-} from '../../src/proto/packages/dht/protos/DhtRpc'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+} from '../../generated/packages/dht/protos/DhtRpc'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 import { toNodeId } from '../../src/identifiers'
 
