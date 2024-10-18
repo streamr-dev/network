@@ -1,7 +1,7 @@
 import { areEqualBinaries } from '@streamr/utils'
 import { printExpected, printReceived } from 'jest-matcher-utils'
 import { isEqual } from 'lodash'
-import { ConnectivityMethod, NodeType, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
+import { ConnectivityMethod, NodeType, PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { toDhtAddress } from '../../src/identifiers'
 
 // we could ES2015 module syntax (https://jestjs.io/docs/expect#expectextendmatchers),

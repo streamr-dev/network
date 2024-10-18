@@ -1,6 +1,6 @@
 import { PendingConnection } from '../../src/connection/PendingConnection'
 import { DhtAddress } from '../../src/identifiers'
-import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { ITransport } from '../../src/transport/ITransport'
 
 export class FakeConnectorFacade {

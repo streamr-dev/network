@@ -2,8 +2,6 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
-    NodeType,
-    PeerDescriptor,
     PingRequest,
     PingResponse,
     RouteMessageAck,
@@ -12,6 +10,7 @@ import {
     StoreDataResponse,
     ClosestRingPeersResponse
 } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor, NodeType } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import {
     IDhtNodeRpc,

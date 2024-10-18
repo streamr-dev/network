@@ -1,7 +1,7 @@
 import { Gate, Logger, withTimeout } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { DhtAddress, toNodeId, toDhtAddressRaw } from '../../identifiers'
-import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { PeerManager, getDistance } from '../PeerManager'
 import { getClosestNodes } from '../contact/getClosestNodes'

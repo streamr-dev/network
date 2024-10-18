@@ -1,6 +1,7 @@
 import { ConnectionType, IConnection } from '../IConnection'
 import { Simulator } from './Simulator'
-import { Message, PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
+import { Message } from '../../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { Connection } from '../Connection'
 import { Logger } from '@streamr/utils'
 import { protoToString } from '../../helpers/protoToString'

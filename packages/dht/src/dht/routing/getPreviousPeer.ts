@@ -1,5 +1,6 @@
 import { last } from 'lodash'
-import { PeerDescriptor, RouteMessageWrapper } from '../../../generated/packages/dht/protos/DhtRpc'
+import { RouteMessageWrapper } from '../../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 
 export const getPreviousPeer = (routeMessage: RouteMessageWrapper): PeerDescriptor | undefined => {
     return last(routeMessage.routingPath)

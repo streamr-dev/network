@@ -5,6 +5,8 @@ import { Empty } from "../../../google/protobuf/empty";
 import { ServiceType } from "@protobuf-ts/runtime-rpc";
 import { MessageType } from "@protobuf-ts/runtime";
 import { RpcMessage } from "../../proto-rpc/protos/ProtoRpc";
+import { ConnectivityMethod } from "./PeerDescriptor";
+import { PeerDescriptor } from "./PeerDescriptor";
 import { Timestamp } from "../../../google/protobuf/timestamp";
 import { Any } from "../../../google/protobuf/any";
 // Used inside RpcMessage
@@ -57,7 +59,7 @@ export interface ExternalStoreDataRequest {
  */
 export interface ExternalStoreDataResponse {
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor storers = 1;
+     * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor storers = 1;
      */
     storers: PeerDescriptor[];
 }
@@ -129,7 +131,7 @@ export interface ClosestPeersRequest {
  */
 export interface ClosestPeersResponse {
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor peers = 1;
+     * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor peers = 1;
      */
     peers: PeerDescriptor[];
     /**
@@ -159,11 +161,11 @@ export interface ClosestRingPeersRequest {
  */
 export interface ClosestRingPeersResponse {
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor leftPeers = 1;
+     * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor leftPeers = 1;
      */
     leftPeers: PeerDescriptor[];
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor rightPeers = 2;
+     * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor rightPeers = 2;
      */
     rightPeers: PeerDescriptor[];
     /**
@@ -189,7 +191,7 @@ export interface RecursiveOperationRequest {
  */
 export interface RecursiveOperationResponse {
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor closestConnectedNodes = 1;
+     * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor closestConnectedNodes = 1;
      */
     closestConnectedNodes: PeerDescriptor[];
     /**
@@ -201,7 +203,7 @@ export interface RecursiveOperationResponse {
      */
     noCloserNodesFound: boolean;
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor routingPath = 4;
+     * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor routingPath = 4;
      */
     routingPath: PeerDescriptor[];
 }
@@ -229,66 +231,6 @@ export interface PingResponse {
 export interface LeaveNotice {
 }
 /**
- * @generated from protobuf message dht.PeerDescriptor
- */
-export interface PeerDescriptor {
-    /**
-     * @generated from protobuf field: bytes nodeId = 1;
-     */
-    nodeId: Uint8Array;
-    /**
-     * @generated from protobuf field: dht.NodeType type = 2;
-     */
-    type: NodeType;
-    /**
-     * @generated from protobuf field: dht.ConnectivityMethod udp = 3;
-     */
-    udp?: ConnectivityMethod;
-    /**
-     * @generated from protobuf field: dht.ConnectivityMethod tcp = 4;
-     */
-    tcp?: ConnectivityMethod;
-    /**
-     * @generated from protobuf field: dht.ConnectivityMethod websocket = 5;
-     */
-    websocket?: ConnectivityMethod;
-    /**
-     * @generated from protobuf field: optional uint32 region = 6;
-     */
-    region?: number;
-    /**
-     * @generated from protobuf field: optional uint32 ipAddress = 7;
-     */
-    ipAddress?: number;
-    /**
-     * @generated from protobuf field: optional bytes publicKey = 8;
-     */
-    publicKey?: Uint8Array;
-    /**
-     * signature of fields 2-8
-     *
-     * @generated from protobuf field: optional bytes signature = 9;
-     */
-    signature?: Uint8Array;
-}
-/**
- * @generated from protobuf message dht.ConnectivityMethod
- */
-export interface ConnectivityMethod {
-    /**
-     * @generated from protobuf field: uint32 port = 1;
-     */
-    port: number;
-    /**
-     * @generated from protobuf field: string host = 2;
-     */
-    host: string;
-    /**
-     * @generated from protobuf field: bool tls = 3;
-     */
-    tls: boolean;
-}
-/**
  * @generated from protobuf message dht.RouteMessageWrapper
  */
 export interface RouteMessageWrapper {
@@ -297,7 +239,7 @@ export interface RouteMessageWrapper {
      */
     requestId: string;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor sourcePeer = 2;
+     * @generated from protobuf field: peerDescriptor.PeerDescriptor sourcePeer = 2;
      */
     sourcePeer?: PeerDescriptor;
     /**
@@ -309,11 +251,11 @@ export interface RouteMessageWrapper {
      */
     message?: Message;
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor reachableThrough = 5;
+     * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor reachableThrough = 5;
      */
     reachableThrough: PeerDescriptor[];
     /**
-     * @generated from protobuf field: repeated dht.PeerDescriptor routingPath = 6;
+     * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor routingPath = 6;
      */
     routingPath: PeerDescriptor[];
     /**
@@ -368,7 +310,7 @@ export interface ConnectivityResponse {
      */
     natType: string;
     /**
-     * @generated from protobuf field: dht.ConnectivityMethod websocket = 3;
+     * @generated from protobuf field: peerDescriptor.ConnectivityMethod websocket = 3;
      */
     websocket?: ConnectivityMethod;
     /**
@@ -393,11 +335,11 @@ export interface ConnectivityResponse {
  */
 export interface HandshakeRequest {
     /**
-     * @generated from protobuf field: dht.PeerDescriptor sourcePeerDescriptor = 1;
+     * @generated from protobuf field: peerDescriptor.PeerDescriptor sourcePeerDescriptor = 1;
      */
     sourcePeerDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: optional dht.PeerDescriptor targetPeerDescriptor = 2;
+     * @generated from protobuf field: optional peerDescriptor.PeerDescriptor targetPeerDescriptor = 2;
      */
     targetPeerDescriptor?: PeerDescriptor;
     /**
@@ -410,7 +352,7 @@ export interface HandshakeRequest {
  */
 export interface HandshakeResponse {
     /**
-     * @generated from protobuf field: dht.PeerDescriptor sourcePeerDescriptor = 1;
+     * @generated from protobuf field: peerDescriptor.PeerDescriptor sourcePeerDescriptor = 1;
      */
     sourcePeerDescriptor?: PeerDescriptor;
     /**
@@ -433,11 +375,11 @@ export interface Message {
      */
     messageId: string;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor sourceDescriptor = 2;
+     * @generated from protobuf field: peerDescriptor.PeerDescriptor sourceDescriptor = 2;
      */
     sourceDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: dht.PeerDescriptor targetDescriptor = 3;
+     * @generated from protobuf field: peerDescriptor.PeerDescriptor targetDescriptor = 3;
      */
     targetDescriptor?: PeerDescriptor;
     /**
@@ -625,19 +567,6 @@ export enum RecursiveOperation {
      * @generated from protobuf enum value: DELETE_DATA = 2;
      */
     DELETE_DATA = 2
-}
-/**
- * @generated from protobuf enum dht.NodeType
- */
-export enum NodeType {
-    /**
-     * @generated from protobuf enum value: NODEJS = 0;
-     */
-    NODEJS = 0,
-    /**
-     * @generated from protobuf enum value: BROWSER = 1;
-     */
-    BROWSER = 1
 }
 /**
  * @generated from protobuf enum dht.RpcResponseError
@@ -907,40 +836,6 @@ class LeaveNotice$Type extends MessageType<LeaveNotice> {
  * @generated MessageType for protobuf message dht.LeaveNotice
  */
 export const LeaveNotice = new LeaveNotice$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class PeerDescriptor$Type extends MessageType<PeerDescriptor> {
-    constructor() {
-        super("dht.PeerDescriptor", [
-            { no: 1, name: "nodeId", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
-            { no: 2, name: "type", kind: "enum", T: () => ["dht.NodeType", NodeType] },
-            { no: 3, name: "udp", kind: "message", T: () => ConnectivityMethod },
-            { no: 4, name: "tcp", kind: "message", T: () => ConnectivityMethod },
-            { no: 5, name: "websocket", kind: "message", T: () => ConnectivityMethod },
-            { no: 6, name: "region", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ },
-            { no: 7, name: "ipAddress", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ },
-            { no: 8, name: "publicKey", kind: "scalar", opt: true, T: 12 /*ScalarType.BYTES*/ },
-            { no: 9, name: "signature", kind: "scalar", opt: true, T: 12 /*ScalarType.BYTES*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message dht.PeerDescriptor
- */
-export const PeerDescriptor = new PeerDescriptor$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class ConnectivityMethod$Type extends MessageType<ConnectivityMethod> {
-    constructor() {
-        super("dht.ConnectivityMethod", [
-            { no: 1, name: "port", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
-            { no: 2, name: "host", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "tls", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message dht.ConnectivityMethod
- */
-export const ConnectivityMethod = new ConnectivityMethod$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class RouteMessageWrapper$Type extends MessageType<RouteMessageWrapper> {
     constructor() {
