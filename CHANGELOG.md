@@ -51,6 +51,9 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
+- The `environment` config option now applies additional settings if `dev2` value is used (https://github.com/streamr-dev/network/pull/2813)
+  - e.g. disables `entryPointDiscovery` and `metrics`
+
 #### Deprecated
 
 #### Removed
@@ -66,6 +69,10 @@ Changes before Tatum release are not documented in this file.
 #### Added
 
 #### Changed
+
+- **BREAKING CHANGE:** Replace `--dev` flag with `--env` flag (https://github.com/streamr-dev/network/pull/2817)
+  - the `--env` flag supports multiple environments
+  - use `--env dev2` for the development environment
 
 #### Deprecated
 

@@ -182,6 +182,6 @@ message NodeInfoRequest {}
 message NodeInfoResponse {
   dht.PeerDescriptor peerDescriptor = 1;
   repeated StreamPartitionInfo streamPartitions = 2;
-  optional ControlLayerInfo controlLayer = 3;
+  ControlLayerInfo controlLayer = 3;
   string version = 4;
 }

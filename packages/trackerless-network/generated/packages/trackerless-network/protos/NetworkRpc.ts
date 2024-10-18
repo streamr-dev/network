@@ -368,7 +368,7 @@ export interface NodeInfoResponse {
      */
     streamPartitions: StreamPartitionInfo[];
     /**
-     * @generated from protobuf field: optional ControlLayerInfo controlLayer = 3;
+     * @generated from protobuf field: ControlLayerInfo controlLayer = 3;
      */
     controlLayer?: ControlLayerInfo;
     /**
