@@ -1,14 +1,14 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '@streamr/utils'
 import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../helpers/AddressTools'
-import { Empty } from '../../proto/google/protobuf/empty'
+import { Empty } from '../../../generated/google/protobuf/empty'
 import {
     IceCandidate,
     PeerDescriptor,
     RtcAnswer,
     RtcOffer
-} from '../../proto/packages/dht/protos/DhtRpc'
-import { IWebrtcConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
+} from '../../../generated/packages/dht/protos/DhtRpc'
+import { IWebrtcConnectorRpc } from '../../../generated/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'

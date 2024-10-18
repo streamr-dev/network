@@ -5,7 +5,7 @@ import { NeighborUpdateManager } from './neighbor-discovery/NeighborUpdateManage
 import { StrictContentDeliveryLayerNodeOptions, ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
 import { NodeList } from './NodeList'
 import { Propagation } from './propagation/Propagation'
-import { StreamMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
+import { StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import type { MarkOptional } from 'ts-essentials'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { Inspector } from './inspect/Inspector'

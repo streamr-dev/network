@@ -7,9 +7,9 @@ import {
     ProxyConnectionResponse,
     ProxyDirection,
     StreamMessage
-} from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { IProxyConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
+} from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
+import { IProxyConnectionRpc } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.server'
 import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 
 const logger = new Logger(module)

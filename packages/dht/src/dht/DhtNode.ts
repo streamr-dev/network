@@ -16,7 +16,7 @@ import { IceServer } from '../connection/webrtc/WebrtcConnector'
 import { isBrowserEnvironment } from '../helpers/browser/isBrowserEnvironment'
 import { createPeerDescriptor } from '../helpers/createPeerDescriptor'
 import { DhtAddress, KADEMLIA_ID_LENGTH_IN_BYTES, toNodeId } from '../identifiers'
-import { Any } from '../proto/google/protobuf/any'
+import { Any } from '../../generated/google/protobuf/any'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
@@ -34,8 +34,8 @@ import {
     PingRequest,
     PingResponse,
     RecursiveOperation
-} from '../proto/packages/dht/protos/DhtRpc'
-import { ExternalApiRpcClient, StoreRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
+} from '../../generated/packages/dht/protos/DhtRpc'
+import { ExternalApiRpcClient, StoreRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { ITransport, TransportEvents } from '../transport/ITransport'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { ServiceID } from '../types/ServiceID'

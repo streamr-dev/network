@@ -1,16 +1,16 @@
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
-import { WebrtcConnectorRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
+import { WebrtcConnectorRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import {
     IceCandidate,
     RtcAnswer,
     RtcOffer,
     WebrtcConnectionRequest
-} from '../../src/proto/packages/dht/protos/DhtRpc'
-import { Empty } from '../../src/proto/google/protobuf/empty'
+} from '../../generated/packages/dht/protos/DhtRpc'
+import { Empty } from '../../generated/google/protobuf/empty'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { IWebrtcConnectorRpc } from '../../src/proto/packages/dht/protos/DhtRpc.server'
+import { IWebrtcConnectorRpc } from '../../generated/packages/dht/protos/DhtRpc.server'
 import { waitForCondition } from '@streamr/utils'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('WebRTC rpc messages', () => {

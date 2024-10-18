@@ -10,7 +10,7 @@ import {
 } from '../../src/connection/Handshaker'
 import { ConnectionEvents, IConnection } from '../../src/connection/IConnection'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { HandshakeError, Message } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { HandshakeError, Message } from '../../generated/packages/dht/protos/DhtRpc'
 import { PendingConnection } from '../../src/connection/PendingConnection'
 
 describe('Handshaker', () => {

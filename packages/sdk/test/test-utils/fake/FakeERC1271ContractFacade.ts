@@ -1,5 +1,5 @@
 import { Methods } from '@streamr/test-utils'
-import { EthereumAddress, isEthereumAddressUserId, recoverSignerUserId, toUserId } from '@streamr/utils'
+import { EthereumAddress, recoverSignerUserId, toUserId } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { ERC1271ContractFacade } from '../../../src/contracts/ERC1271ContractFacade'
 // TODO: Why is eslint import rule complaining about this import?
@@ -17,11 +17,7 @@ export class FakeERC1271ContractFacade implements Methods<ERC1271ContractFacade>
 
     async isValidSignature(contractAddress: EthereumAddress, payload: Uint8Array, signature: Uint8Array): Promise<boolean> {
         const recoveredSignerUserId = toUserId(recoverSignerUserId(signature, payload))
-        if (isEthereumAddressUserId(recoveredSignerUserId)) {
-            return this.chain.hasErc1271AllowedAddress(contractAddress, recoveredSignerUserId)
-        } else {
-            return false
-        }
+        return this.chain.hasErc1271AllowedAddress(contractAddress, recoveredSignerUserId)
     }
 
     // eslint-disable-next-line class-methods-use-this
