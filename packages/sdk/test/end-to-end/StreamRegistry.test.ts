@@ -251,8 +251,9 @@ describe('StreamRegistry', () => {
 
     describe('update', () => {
         it('happy path', async () => {
+            const description = `description-${Date.now()}`
             await createdStream.update({
-                description: `description-${Date.now()}`
+                description
             })
             await until(async () => {
                 try {
@@ -263,7 +264,14 @@ describe('StreamRegistry', () => {
             }, 100000, 1000)
             // check that other fields not overwritten
             const updatedStream = await client.getStream(createdStream.id)
-            expect(updatedStream.getMetadata().partitions).toBe(PARTITION_COUNT)
+            expect(updatedStream.getMetadata()).toEqual({
+                description,
+                // these are injected in the Stream constructor (maybe we'll change this functionality in the future)
+                partitions: 1,
+                config: {
+                    fields: []
+                }
+            })
         }, TIMEOUT)
     })
 
