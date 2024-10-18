@@ -1,5 +1,5 @@
 import { DhtAddress } from '@streamr/dht'
-import { StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { StreamMessage } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { PropagationTask, PropagationTaskStore } from './PropagationTaskStore'
 
 type SendToNeighborFn = (neighborId: DhtAddress, msg: StreamMessage) => Promise<void>

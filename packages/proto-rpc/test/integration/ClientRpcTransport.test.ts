@@ -1,11 +1,11 @@
 import { ClosestPeersResponse, NodeType, PeerDescriptor } from '../proto/TestProtos'
-import { RpcMessage } from '../../src/proto/ProtoRpc'
+import { RpcMessage } from '../../generated/ProtoRpc'
 import { RpcCommunicator } from '../../src/RpcCommunicator'
 import { DhtRpcServiceClient } from '../proto/TestProtos.client'
 import { getMockPeers } from '../utils'
 import { ProtoCallContext } from '../../src/ProtoCallContext'
 import { toProtoRpcClient } from '../../src/toProtoRpcClient'
-import { Any } from '../../src/proto/google/protobuf/any'
+import { Any } from '../../generated/google/protobuf/any'
 
 describe('DhtClientRpcTransport', () => {
     it('Happy Path getClosestNeighbors', async () => {

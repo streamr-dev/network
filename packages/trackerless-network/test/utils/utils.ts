@@ -23,8 +23,8 @@ import {
     MessageID,
     SignatureType,
     StreamMessage
-} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryRpcClient, HandshakeRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryRpcClient, HandshakeRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
 export const mockConnectionLocker: ConnectionLocker = {
     lockConnection: () => {},

@@ -4,7 +4,7 @@ import { StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, waitForCondi
 import { range } from 'lodash'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
-import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')

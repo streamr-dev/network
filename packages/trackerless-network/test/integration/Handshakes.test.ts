@@ -10,10 +10,10 @@ import { StreamPartIDUtils } from '@streamr/utils'
 import { NodeList } from '../../src/logic/NodeList'
 import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
 import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
-import { StreamPartHandshakeRequest, StreamPartHandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { StreamPartHandshakeRequest, StreamPartHandshakeResponse } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import {
     HandshakeRpcClient
-} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
 describe('Handshakes', () => {
 

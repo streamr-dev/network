@@ -1,7 +1,7 @@
 import { ConnectionLocker, DhtAddress, ListeningRpcCommunicator, LockID, PeerDescriptor, toNodeId } from '@streamr/dht'
 import { Logger, StreamPartID, waitForEvent3 } from '@streamr/utils'
-import { MessageID } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { TemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { MessageID } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { TemporaryConnectionRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { TemporaryConnectionRpcRemote } from '../temporary-connection/TemporaryConnectionRpcRemote'
 import { InspectSession, Events as InspectSessionEvents } from './InspectSession'
 

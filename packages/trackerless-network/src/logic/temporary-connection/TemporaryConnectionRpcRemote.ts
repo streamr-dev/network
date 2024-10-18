@@ -1,6 +1,6 @@
 import { RpcRemote, toNodeId } from '@streamr/dht'
 import { Logger } from '@streamr/utils'
-import { TemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { TemporaryConnectionRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
 const logger = new Logger(module)
 

@@ -4,7 +4,7 @@ import * as Err from '../helpers/errors'
 import {
     ConnectivityRequest, ConnectivityResponse,
     Message, PeerDescriptor
-} from '../proto/packages/dht/protos/DhtRpc'
+} from '../../generated/packages/dht/protos/DhtRpc'
 import { ConnectionEvents, IConnection } from './IConnection'
 import { WebsocketClientConnection } from './websocket/NodeWebsocketClientConnection'
 import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketClientConnector'

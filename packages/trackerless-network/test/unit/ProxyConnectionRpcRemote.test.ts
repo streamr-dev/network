@@ -2,8 +2,8 @@ import { RpcCommunicator } from '@streamr/proto-rpc'
 import { randomUserId } from '@streamr/test-utils'
 import { hexToBinary } from '@streamr/utils'
 import { ProxyConnectionRpcRemote } from '../../src/logic/proxy/ProxyConnectionRpcRemote'
-import { ProxyConnectionRequest, ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { ProxyConnectionRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { ProxyConnectionRequest, ProxyDirection } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ProxyConnectionRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('ProxyConnectionRpcRemote', () => {
