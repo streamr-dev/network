@@ -10,7 +10,6 @@ import { Logger, StreamPartID, addManagedEventListener } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import {
     CloseTemporaryConnection,
-    ContentDeliveryLayerNeighborInfo,
     LeaveStreamPartNotice,
     MessageID,
     MessageRef,
@@ -32,6 +31,7 @@ import { Propagation } from './propagation/Propagation'
 import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { markAndCheckDuplicate } from './utils'
+import { ContentDeliveryLayerNeighborInfo } from '../types'
 
 export interface Events {
     message: (message: StreamMessage) => void

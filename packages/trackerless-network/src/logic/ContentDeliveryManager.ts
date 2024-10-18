@@ -20,7 +20,7 @@ import {
 import { createHash } from 'crypto'
 import { EventEmitter } from 'eventemitter3'
 import { sampleSize } from 'lodash'
-import { ProxyDirection, StreamMessage, StreamPartitionInfo } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ProxyDirection, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { ContentDeliveryLayerNode } from './ContentDeliveryLayerNode'
 import { ControlLayerNode } from './ControlLayerNode'
 import { DiscoveryLayerNode } from './DiscoveryLayerNode'
@@ -30,6 +30,7 @@ import { StreamPartReconnect } from './StreamPartReconnect'
 import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode'
 import { ProxyClient } from './proxy/ProxyClient'
 import { ConnectionManager } from '@streamr/dht/src/exports'
+import { StreamPartitionInfo } from '../types'
 
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void
