@@ -314,7 +314,7 @@ export class Stream {
         // object can't contain extra fields
         if (metadata === '') {
             return {
-                partitions: 1
+                partitions: DEFAULT_PARTITION_COUNT
             }
         }
         const err = new StreamrClientError(`Invalid stream metadata: ${metadata}`, 'INVALID_STREAM_METADATA')
@@ -334,7 +334,7 @@ export class Stream {
         } else {
             return {
                 ...json,
-                partitions: 1
+                partitions: DEFAULT_PARTITION_COUNT
             }
         }
     }
