@@ -100,7 +100,7 @@ Take care to not confuse `stream` with `streamr` ;)
 
 ```ts
 await stream.grantPermissions({
-    user: BrokerNodeAddress,
+    userId: BrokerNodeAddress,
     permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE],
 })
 ```

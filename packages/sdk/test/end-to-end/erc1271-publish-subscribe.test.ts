@@ -26,14 +26,14 @@ describe('ERC-1271: publish', () => {
         const stream = await createTestStream(creator, module)
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
-            user: erc1271ContractAddress
+            userId: erc1271ContractAddress
         })
         await creator.setPermissions({
             streamId: stream.id,
             assignments: publicSubscribePermission ? [
                 { permissions: [StreamPermission.SUBSCRIBE], public: true }
             ] : [
-                { permissions: [StreamPermission.SUBSCRIBE], user: subscriberWallet.address }
+                { permissions: [StreamPermission.SUBSCRIBE], userId: subscriberWallet.address }
             ]
         })
         await creator.destroy()
@@ -92,11 +92,11 @@ describe('ERC-1271: subscribe', () => {
         const stream = await createTestStream(creator, module)
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
-            user: publisherWallet.address
+            userId: publisherWallet.address
         })
         await stream.grantPermissions({
             permissions: [StreamPermission.SUBSCRIBE],
-            user: erc1271ContractAddress
+            userId: erc1271ContractAddress
 
         })
         await creator.destroy()
@@ -154,11 +154,11 @@ describe('ERC-1271: publish and subscribe', () => {
         const stream = await createTestStream(creator, module)
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
-            user: erc1271PublisherContractAddress
+            userId: erc1271PublisherContractAddress
         })
         await stream.grantPermissions({
             permissions: [StreamPermission.SUBSCRIBE],
-            user: erc1271SubscriberContractAddress
+            userId: erc1271SubscriberContractAddress
         })
         await creator.destroy()
         return stream.id

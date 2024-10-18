@@ -63,7 +63,7 @@ describe('PubSub with multiple clients', () => {
 
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE],
-            user: publisherId
+            userId: publisherId
         })
         return pubClient
     }
@@ -72,8 +72,8 @@ describe('PubSub with multiple clients', () => {
         const client = environment.createClient({
             id: 'subscriber-other'
         })
-        const user = await client.getUserId()
-        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user })
+        const userId = await client.getUserId()
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], userId })
         return client
     }
 
@@ -327,7 +327,7 @@ describe('PubSub with multiple clients', () => {
         otherClient = environment.createClient()
         const otherUser = await otherClient.getUserId()
 
-        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: otherUser })
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], userId: otherUser })
 
         const receivedMessagesOther: Record<UserID, MessageMetadata[]> = {}
         const receivedMessagesMain: Record<UserID, MessageMetadata[]> = {}

@@ -356,9 +356,9 @@ export class StreamRegistry {
         if (isPublicPermissionQuery(query)) {
             return this.streamRegistryContractReadonly.hasPublicPermission(streamId, permissionType)
         } else if (query.allowPublic) {
-            return this.streamRegistryContractReadonly.hasPermission(streamId, query.user, permissionType)
+            return this.streamRegistryContractReadonly.hasPermission(streamId, query.userId, permissionType)
         } else {
-            return this.streamRegistryContractReadonly.hasDirectPermission(streamId, query.user, permissionType)
+            return this.streamRegistryContractReadonly.hasDirectPermission(streamId, query.userId, permissionType)
         }
     }
 
@@ -408,7 +408,7 @@ export class StreamRegistry {
                     })
                 } else {
                     assignments.push({
-                        user: toUserId(permissionResult.userAddress),
+                        userId: toUserId(permissionResult.userAddress),
                         permissions
                     })
                 }
@@ -447,7 +447,7 @@ export class StreamRegistry {
         for (const assignment of assignments) {
             for (const permission of assignment.permissions) {
                 const solidityType = streamPermissionToSolidityType(permission)
-                const userId = isPublicPermissionAssignment(assignment) ? undefined : assignment.user
+                const userId = isPublicPermissionAssignment(assignment) ? undefined : assignment.userId
                 const txToSubmit = createTransaction(streamId, userId, solidityType)
                 await waitForTx(txToSubmit)
             }
@@ -466,7 +466,7 @@ export class StreamRegistry {
             this.clearStreamCache(streamId)
             streamIds.push(streamId)
             targets.push(item.assignments.map((assignment) => {
-                return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_ADDRESS : assignment.user
+                return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_ADDRESS : assignment.userId
             }))
             chainPermissions.push(item.assignments.map((assignment) => {
                 return convertStreamPermissionsToChainPermission(assignment.permissions)
