@@ -1,5 +1,5 @@
-import { NodeInfoRequest, NodeInfoResponse } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { INodeInfoRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
+import { NodeInfoRequest, NodeInfoResponse } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { INodeInfoRpc } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.server'
 import { NetworkStack } from '../../NetworkStack'
 import { ListeningRpcCommunicator } from '@streamr/dht'
 

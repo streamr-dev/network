@@ -1,15 +1,15 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ConnectionLocker, DhtAddress, DhtCallContext, ListeningRpcCommunicator, toNodeId } from '@streamr/dht'
 import { StreamPartID } from '@streamr/utils'
-import { Empty } from '../../proto/google/protobuf/empty'
-import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { Empty } from '../../../generated/google/protobuf/empty'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
 import {
     CloseTemporaryConnection,
     TemporaryConnectionRequest,
     TemporaryConnectionResponse
-} from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { ITemporaryConnectionRpc } from '../../proto/packages/trackerless-network/protos/NetworkRpc.server'
+} from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
+import { ITemporaryConnectionRpc } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.server'
 import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 import { NodeList } from '../NodeList'
 

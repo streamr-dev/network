@@ -1,9 +1,9 @@
 import {
     WebsocketConnectionRequest
-} from '../../proto/packages/dht/protos/DhtRpc'
+} from '../../../generated/packages/dht/protos/DhtRpc'
 import { Logger } from '@streamr/utils'
 import { RpcRemote } from '../../dht/contact/RpcRemote'
-import { WebsocketClientConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { WebsocketClientConnectorRpcClient } from '../../../generated/packages/dht/protos/DhtRpc.client'
 import { toNodeId } from '../../identifiers'
 
 const logger = new Logger(module)

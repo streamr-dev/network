@@ -1,5 +1,5 @@
 import { DhtAddress } from '@streamr/dht'
-import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
+import { randomUserId } from '@streamr/test-utils'
 import { StreamPartIDUtils, hexToBinary, utf8ToBinary, wait, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
@@ -10,7 +10,7 @@ import {
     ProxyDirection,
     SignatureType,
     StreamMessage
-} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const PROXIED_NODE_USER_ID = randomUserId()
@@ -21,7 +21,7 @@ const MESSAGE: StreamMessage = {
         streamPartition: StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
         timestamp: 666,
         sequenceNumber: 0,
-        publisherId: hexToBinary(randomEthereumAddress()),
+        publisherId: hexToBinary(randomUserId()),
         messageChainId: 'msgChainId'
     },
     previousMessageRef: {

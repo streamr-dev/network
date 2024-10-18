@@ -21,4 +21,10 @@ export class MockTransport extends EventEmitter<TransportEvents> implements ITra
     getDiagnosticInfo(): Record<string, unknown> {
         return {}
     }
+
+    // eslint-disable-next-line class-methods-use-this
+    enablePrivateClientMode(): void {
+
+    }
+
 }

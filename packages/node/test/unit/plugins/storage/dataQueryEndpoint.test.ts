@@ -1,6 +1,6 @@
 import { ContentType, EncryptionType, MessageID, SignatureType, StreamMessage, convertStreamMessageToBytes } from '@streamr/sdk'
-import { toReadableStream } from '@streamr/test-utils'
-import { MetricsContext, hexToBinary, toEthereumAddress, toLengthPrefixedFrame, toStreamID, utf8ToBinary } from '@streamr/utils'
+import { randomUserId, toReadableStream } from '@streamr/test-utils'
+import { MetricsContext, hexToBinary, toLengthPrefixedFrame, toStreamID, utf8ToBinary } from '@streamr/utils'
 import express from 'express'
 import { Readable } from 'stream'
 import request from 'supertest'
@@ -11,6 +11,8 @@ import {
     MIN_SEQUENCE_NUMBER_VALUE,
     createDataQueryEndpoint
 } from '../../../../src/plugins/storage/dataQueryEndpoint'
+
+const PUBLISHER_ID = randomUserId()
 
 const createOutputStream = (msg: StreamMessage[]): Readable => {
     return toReadableStream(...msg.map(convertStreamMessageToBytes))
@@ -33,7 +35,7 @@ describe('dataQueryEndpoint', () => {
                 0,
                 new Date(2017, 3, 1, 12, 0, 0).getTime(),
                 0,
-                toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+                PUBLISHER_ID,
                 'msgChainId'
             ),
             content: utf8ToBinary(JSON.stringify(content)),
@@ -93,7 +95,7 @@ describe('dataQueryEndpoint', () => {
 
             it('responds 400 and error message if publisherId+msgChainId combination is invalid in range request', async () => {
                 const base = '/streams/streamId/data/partitions/0/range?fromTimestamp=1000&toTimestamp=2000&fromSequenceNumber=1&toSequenceNumber=2'
-                const suffixes = ['publisherId=foo', 'msgChainId=bar']
+                const suffixes = [`publisherId=${PUBLISHER_ID}`, 'msgChainId=bar']
                 for (const suffix of suffixes) {
                     await testGetRequest(`${base}&${suffix}`)
                         .expect('Content-Type', /json/)
@@ -169,6 +171,16 @@ describe('dataQueryEndpoint', () => {
             storage.requestFrom = () => createOutputStream(streamMessages)
         })
 
+        describe('user errors', () => {
+            it('responds 400 and error message if optional param "publisherId" not a UserID', (done) => {
+                testGetRequest('/streams/streamId/data/partitions/0/from?fromTimestamp=1496408255672&publisherId=foobar')
+                    .expect('Content-Type', /json/)
+                    .expect(400, {
+                        error: 'Query parameter "publisherId" not valid: foobar',
+                    }, done)
+            })
+        })
+
         describe('?fromTimestamp=1496408255672', () => {
             it('responds 200 and Content-Type JSON', (done) => {
                 testGetRequest('/streams/streamId/data/partitions/0/from?fromTimestamp=1496408255672')
@@ -207,8 +219,8 @@ describe('dataQueryEndpoint', () => {
             })
         })
 
-        describe('?fromTimestamp=1496408255672&fromSequenceNumber=1&publisherId=publisherId', () => {
-            const query = 'fromTimestamp=1496408255672&fromSequenceNumber=1&publisherId=publisherId'
+        describe(`?fromTimestamp=1496408255672&fromSequenceNumber=1&publisherId=${PUBLISHER_ID}`, () => {
+            const query = `fromTimestamp=1496408255672&fromSequenceNumber=1&publisherId=${PUBLISHER_ID}`
 
             it('responds 200 and Content-Type JSON', (done) => {
                 testGetRequest(`/streams/streamId/data/partitions/0/from?${query}`)
@@ -232,7 +244,7 @@ describe('dataQueryEndpoint', () => {
                     0,
                     1496408255672,
                     1,
-                    'publisherId'
+                    PUBLISHER_ID
                 )
             })
 
@@ -285,6 +297,13 @@ describe('dataQueryEndpoint', () => {
                     .expect('Content-Type', /json/)
                     .expect(400, {
                         error: 'Query parameter "toTimestamp" not a number: notANumber',
+                    }, done)
+            })
+            it('responds 400 and error message if optional param "publisherId" not a UserID', (done) => {
+                testGetRequest('/streams/streamId/data/partitions/0/range?fromTimestamp=1&toTimestamp=2&publisherId=foobar&msgChainId=x')
+                    .expect('Content-Type', /json/)
+                    .expect(400, {
+                        error: 'Query parameter "publisherId" not valid: foobar',
                     }, done)
             })
         })
@@ -364,9 +383,9 @@ describe('dataQueryEndpoint', () => {
         })
 
         // eslint-disable-next-line max-len
-        describe('?fromTimestamp=1496408255672&toTimestamp=1496415670909&fromSequenceNumber=1&toSequenceNumber=2&publisherId=publisherId&msgChainId=msgChainId', () => {
+        describe(`?fromTimestamp=1496408255672&toTimestamp=1496415670909&fromSequenceNumber=1&toSequenceNumber=2&publisherId=${PUBLISHER_ID}&msgChainId=msgChainId`, () => {
             // eslint-disable-next-line max-len
-            const query = 'fromTimestamp=1496408255672&toTimestamp=1496415670909&fromSequenceNumber=1&toSequenceNumber=2&publisherId=publisherId&msgChainId=msgChainId'
+            const query = `fromTimestamp=1496408255672&toTimestamp=1496415670909&fromSequenceNumber=1&toSequenceNumber=2&publisherId=${PUBLISHER_ID}&&msgChainId=msgChainId`
 
             let streamMessages: StreamMessage[]
             beforeEach(() => {
@@ -402,7 +421,7 @@ describe('dataQueryEndpoint', () => {
                     1,
                     1496415670909,
                     2,
-                    'publisherId',
+                    PUBLISHER_ID,
                     'msgChainId',
                 )
             })

@@ -3,7 +3,7 @@ import { EventEmitter } from 'eventemitter3'
 import { NetworkNode } from '../../src/NetworkNode'
 import { NetworkStack } from '../../src/NetworkStack'
 import { Events } from '../../src/logic/ContentDeliveryManager'
-import { StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createStreamMessage } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
 

@@ -1,7 +1,7 @@
 import { ITransport } from './ITransport' 
 import { RoutingRpcCommunicator } from './RoutingRpcCommunicator'
 import { RpcCommunicatorOptions, RpcError } from '@streamr/proto-rpc'
-import { Message, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { Message, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { ServiceID } from '../types/ServiceID'
 import { areEqualPeerDescriptors } from '../identifiers'
 

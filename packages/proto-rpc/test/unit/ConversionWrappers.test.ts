@@ -1,5 +1,5 @@
 import { parseWrapper, serializeWrapper } from '../../src/ServerRegistry'
-import { RpcMessage } from '../../src/proto/ProtoRpc'
+import { RpcMessage } from '../../generated/ProtoRpc'
 
 describe('ConversionWrappers', () => {
     const msg: RpcMessage = {

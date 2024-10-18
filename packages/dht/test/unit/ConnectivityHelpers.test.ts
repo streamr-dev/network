@@ -1,4 +1,4 @@
-import { NodeType } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { NodeType } from '../../generated/packages/dht/protos/DhtRpc'
 import { expectedConnectionType } from '../../src/helpers/Connectivity'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { createMockPeerDescriptor } from '../utils/utils'

@@ -5,8 +5,8 @@ import {
     RtcAnswer,
     RtcOffer,
     WebrtcConnectionRequest
-} from '../../proto/packages/dht/protos/DhtRpc'
-import { WebrtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+} from '../../../generated/packages/dht/protos/DhtRpc'
+import { WebrtcConnectorRpcClient } from '../../../generated/packages/dht/protos/DhtRpc.client'
 
 const logger = new Logger(module)
 

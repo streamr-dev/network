@@ -1,5 +1,5 @@
 import EventEmitter from 'eventemitter3'
-import { PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { ConnectionID, ConnectionType, ConnectionEvents } from './IConnection'
 import { v4 as uuid } from 'uuid'
 
