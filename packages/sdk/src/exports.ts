@@ -38,6 +38,8 @@ export {
     NetworkNodeType,
     StrictStreamrClientConfig,
     EnvironmentId,
+    ENVIRONMENT_IDS,
+    DEFAULT_ENVIRONMENT_ID,
     EntryPointDiscovery
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'

@@ -1,9 +1,9 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { NetworkNodeType, NetworkPeerDescriptor, createStrictConfig, redactConfig, DEFAULT_ENVIRONMENT } from '../../src/Config'
+import { cloneDeep } from 'lodash'
+import { DEFAULT_ENVIRONMENT_ID, NetworkNodeType, NetworkPeerDescriptor, createStrictConfig, redactConfig } from '../../src/Config'
+import { CONFIG_TEST } from '../../src/ConfigTest'
 import { generateEthereumAccount } from '../../src/ethereumUtils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { CONFIG_TEST } from '../../src/ConfigTest'
-import { cloneDeep } from 'lodash'
 
 describe('Config', () => {
 
@@ -103,7 +103,7 @@ describe('Config', () => {
                 network: {}
             })
             expect(clientOverrides.network).toEqual(clientDefaults.network)
-            expect(clientOverrides.network.controlLayer.entryPoints![0].nodeId).toEqual(CHAIN_CONFIG[DEFAULT_ENVIRONMENT].entryPoints[0].nodeId)
+            expect(clientOverrides.network.controlLayer.entryPoints![0].nodeId).toEqual(CHAIN_CONFIG[DEFAULT_ENVIRONMENT_ID].entryPoints[0].nodeId)
         })
 
         it('can override entryPoints', () => {
