@@ -9,7 +9,7 @@ import {
     StreamPartIDUtils,
     UserID,
     hexToBinary,
-    toEthereumAddress,
+    toUserIdRaw,
     utf8ToBinary
 } from '@streamr/utils'
 import { MessageID as OldMessageID } from '../../src/protocol/MessageID'
@@ -21,6 +21,7 @@ import {
     StreamMessageType as OldStreamMessageType
 } from '../../src/protocol/StreamMessage'
 import { StreamMessageTranslator } from '../../src/protocol/StreamMessageTranslator'
+import { randomUserId } from '@streamr/test-utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('TEST#0')
 
@@ -57,7 +58,7 @@ export const createStreamMessage = (
 
 describe('StreamMessageTranslator', () => {
 
-    const publisherId = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+    const publisherId = randomUserId()
     const signature = hexToBinary('0x1234')
     const protobufMsg = createStreamMessage(
         JSON.stringify({ hello: 'WORLD' }),
@@ -88,7 +89,7 @@ describe('StreamMessageTranslator', () => {
         expect(translated.messageId!.streamPartition).toEqual(StreamPartIDUtils.getStreamPartition(STREAM_PART_ID))
         expect(translated.messageId!.timestamp).toBeGreaterThanOrEqual(0)
         expect(translated.messageId!.sequenceNumber).toEqual(0)
-        expect(translated.messageId!.publisherId).toEqualBinary(hexToBinary('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'))
+        expect(translated.messageId!.publisherId).toEqualBinary(toUserIdRaw(publisherId))
         expect(translated.previousMessageRef).toEqual(undefined)
         expect(translated.body.oneofKind).toEqual('contentMessage')
         expect((translated.body as any).contentMessage.groupKeyId).toEqual(undefined)
@@ -102,7 +103,7 @@ describe('StreamMessageTranslator', () => {
         expect(translated.messageId.streamPartition).toEqual(StreamPartIDUtils.getStreamPartition(STREAM_PART_ID))
         expect(translated.messageId.timestamp).toBeGreaterThanOrEqual(0)
         expect(translated.messageId.sequenceNumber).toEqual(0)
-        expect(translated.getPublisherId()).toEqual('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        expect(translated.getPublisherId()).toEqual(publisherId)
         expect(translated.prevMsgRef).toEqual(undefined)
         expect(translated.messageType).toEqual(OldStreamMessageType.MESSAGE)
         expect(translated.contentType).toEqual(0)

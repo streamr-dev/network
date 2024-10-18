@@ -1,4 +1,4 @@
-import { StreamID, UserID, keyToArrayIndex, toEthereumAddress, utf8ToBinary } from '@streamr/utils'
+import { StreamID, keyToArrayIndex, utf8ToBinary, toUserId, UserID, toEthereumAddress } from '@streamr/utils'
 import random from 'lodash/random'
 import { Authentication } from '../Authentication'
 import { StreamrClientError } from '../StreamrClientError'
@@ -137,9 +137,10 @@ export class MessageFactory {
 
     private async getPublisherId(metadata: PublishMetadata): Promise<UserID> {
         if (metadata.erc1271Contract !== undefined) {
-            return toEthereumAddress(metadata.erc1271Contract)
+            // calling also toEthereumAddress() as it has stricter input validation than toUserId()
+            return toUserId(toEthereumAddress(metadata.erc1271Contract))
         } else {
-            return this.authentication.getAddress()
+            return this.authentication.getUserId()
         }
     }
 

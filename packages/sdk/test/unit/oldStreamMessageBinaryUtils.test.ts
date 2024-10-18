@@ -1,4 +1,5 @@
-import { toEthereumAddress, toStreamID } from '@streamr/utils'
+import { randomUserId } from '@streamr/test-utils'
+import { toStreamID } from '@streamr/utils'
 import { convertBytesToStreamMessage, convertStreamMessageToBytes } from '../../src/protocol/oldStreamMessageBinaryUtils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
@@ -12,7 +13,7 @@ describe('oldStreamMessageBinaryUtils', () => {
                 0,
                 10001,
                 0,
-                toEthereumAddress('0x1234567890123456789012345678901234567890'),
+                randomUserId(),
                 'msgChainId'
             ),
             prevMsgRef: new MessageRef(10000, 1),
