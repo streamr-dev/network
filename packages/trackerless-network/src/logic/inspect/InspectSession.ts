@@ -1,7 +1,7 @@
 import { DhtAddress } from '@streamr/dht'
 import { toUserId } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
-import { MessageID } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { MessageID } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 
 export interface Events {
     done: () => void

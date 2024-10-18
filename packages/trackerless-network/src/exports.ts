@@ -12,5 +12,5 @@ export {
     ProxyDirection,
     SignatureType,
     StreamMessage
-} from './proto/packages/trackerless-network/protos/NetworkRpc'
+} from '../generated/packages/trackerless-network/protos/NetworkRpc'
 export { ExternalRpcClient, ExternalRpcClientClass } from './logic/ExternalNetworkRpc'

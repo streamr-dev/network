@@ -2,7 +2,7 @@ import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@str
 import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { NetworkStack } from '../../src/NetworkStack'
 import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
-import { Any } from '../../src/proto/google/protobuf/any'
+import { Any } from '../../generated/google/protobuf/any'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
 

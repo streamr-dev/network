@@ -12,11 +12,18 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- Add support for arbitrary length user IDs (https://github.com/streamr-dev/network/pull/2774, https://github.com/streamr-dev/network/pull/2780)
+  - it is supported for `PUBLISH` and `SUBSCRIBE` permissions
 - Add validation for public permissions (https://github.com/streamr-dev/network/pull/2819)
+- Method `StreamrClient#getDiagnosticInfo()` provides diagnostic info about network (https://github.com/streamr-dev/network/pull/2740, https://github.com/streamr-dev/network/pull/2741)
 
 #### Changed
 
 - **BREAKING CHANGE:** Rename `getAddress()` to `getUserId()` (https://github.com/streamr-dev/network/pull/2774)
+- Upgrade `StreamRegistry` from v4 to v5 (https://github.com/streamr-dev/network/pull/2780)
+- Network-level changes
+  - Avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801) 
+  - Internal record `StreamPartitionInfo` format changed (https://github.com/streamr-dev/network/pull/2738, https://github.com/streamr-dev/network/pull/2790)
 
 #### Deprecated
 
@@ -29,13 +36,22 @@ Changes before Tatum release are not documented in this file.
 
 #### Fixed
 
-- Fix flag expiration time in `Operator#getExpiredFlags` (https://github.com/streamr-dev/network/pull/2739)
+- Fix WebRTC connections in Firefox (https://github.com/streamr-dev/network/pull/2746)
+- Fix flag expiration time in `Operator#getExpiredFlags()` (https://github.com/streamr-dev/network/pull/2739)
+- Network-level fixes
+  - Fix node discover in small topologies (e.g. ~2 nodes) (https://github.com/streamr-dev/network/pull/2786)
+  - Fix to time-to-data spike scenarios (https://github.com/streamr-dev/network/pull/2802)
+  - Make network node stop faster (https://github.com/streamr-dev/network/pull/2736)
+  - Reject requests after disconnection events (https://github.com/streamr-dev/network/pull/2760)
+  - Fix geoip database file validation (https://github.com/streamr-dev/network/pull/2783)  
 
 #### Security
 
 ### @streamr/node
 
 #### Added
+
+- Add new operator plugin config options (for testing purposes) (https://github.com/streamr-dev/network/pull/2742)
 
 #### Changed
 
@@ -44,6 +60,8 @@ Changes before Tatum release are not documented in this file.
 #### Removed
 
 #### Fixed
+
+- Fix operator flag voting behavior when using custom gas estimation (https://github.com/streamr-dev/network/pull/2784)
 
 #### Security
 

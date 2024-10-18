@@ -1,12 +1,12 @@
-import { RpcMessage } from './proto/ProtoRpc'
+import { RpcMessage } from '../generated/ProtoRpc'
 import { BinaryReadOptions, BinaryWriteOptions, IMessageType } from '@protobuf-ts/runtime'
 import { promiseTimeout } from './common'
 import * as Err from './errors'
 import UnknownRpcMethod = Err.UnknownRpcMethod
-import { Empty } from './proto/google/protobuf/empty'
+import { Empty } from '../generated/google/protobuf/empty'
 import { Logger } from '@streamr/utils'
 import { ProtoCallContext } from './ProtoCallContext'
-import { Any } from './proto/google/protobuf/any'
+import { Any } from '../generated/google/protobuf/any'
 
 export interface Parser<Target> { fromBinary: (data: Uint8Array, options?: Partial<BinaryReadOptions>) => Target }
 export interface Serializer<Target> { toBinary: (message: Target, options?: Partial<BinaryWriteOptions>) => Uint8Array }

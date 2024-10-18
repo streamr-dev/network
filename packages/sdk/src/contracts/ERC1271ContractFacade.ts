@@ -48,6 +48,5 @@ export class ERC1271ContractFacade {
             this.publisherCache.set(cacheKey, isValid)
             return isValid
         }
-
     }
 }

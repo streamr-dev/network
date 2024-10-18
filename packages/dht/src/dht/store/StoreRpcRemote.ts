@@ -2,8 +2,8 @@ import { toNodeId } from '../../identifiers'
 import {
     ReplicateDataRequest,
     StoreDataRequest
-} from '../../proto/packages/dht/protos/DhtRpc'
-import { StoreRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+} from '../../../generated/packages/dht/protos/DhtRpc'
+import { StoreRpcClient } from '../../../generated/packages/dht/protos/DhtRpc.client'
 import { EXISTING_CONNECTION_TIMEOUT, RpcRemote } from '../contact/RpcRemote'
 
 export class StoreRpcRemote extends RpcRemote<StoreRpcClient> {

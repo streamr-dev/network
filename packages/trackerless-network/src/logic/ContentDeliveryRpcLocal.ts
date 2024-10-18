@@ -1,14 +1,14 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtAddress, DhtCallContext, ListeningRpcCommunicator, PeerDescriptor, toNodeId } from '@streamr/dht'
 import { StreamPartID } from '@streamr/utils'
-import { Empty } from '../proto/google/protobuf/empty'
+import { Empty } from '../../generated/google/protobuf/empty'
 import {
     LeaveStreamPartNotice,
     MessageID,
     MessageRef,
     StreamMessage
-} from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { IContentDeliveryRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { IContentDeliveryRpc } from '../../generated/packages/trackerless-network/protos/NetworkRpc.server'
 
 export interface ContentDeliveryRpcLocalOptions {
     localPeerDescriptor: PeerDescriptor
