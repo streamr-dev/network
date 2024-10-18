@@ -1,4 +1,4 @@
-import { Logger, MetricsContext, waitForEvent3 } from '@streamr/utils'
+import { Logger, MetricsContext, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { MarkOptional } from 'ts-essentials'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../../src/connection/ConnectorFacade'
@@ -6,8 +6,8 @@ import { Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { createPeerDescriptor } from '../../src/helpers/createPeerDescriptor'
 import { randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
-import { ConnectivityResponse, Message, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { ConnectivityResponse, Message, NodeType, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { TransportEvents } from '../../src/transport/ITransport'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
@@ -37,7 +37,8 @@ describe('ConnectionManager', () => {
                 websocketServerEnableTls: false,
                 ...opts
             }),
-            metricsContext: new MetricsContext()
+            metricsContext: new MetricsContext(),
+            allowIncomingPrivateConnections: true
         })
     }
 
@@ -467,6 +468,61 @@ describe('ConnectionManager', () => {
         expect(connectionManager2.getConnections().length).toEqual(0)
 
         await connectionManager2.stop()
+    })
+
+    it('private connections', async () => {
+        const connectionManager1 = createConnectionManager({
+            transport: mockTransport,
+            websocketHost: '127.0.0.1',
+            websocketServerEnableTls: false,
+            websocketPortRange: { min: 10009, max: 10009 }
+        })
+
+        await connectionManager1.start()
+
+        const connectionManager2 = createConnectionManager({
+            transport: mockTransport,
+            websocketHost: '127.0.0.1',
+            websocketServerEnableTls: false,
+            websocketPortRange: { min: 10010, max: 100010 }
+        })
+
+        await connectionManager2.start()
+
+        const msg: Message = {
+            serviceId: SERVICE_ID,
+            messageId: '1',
+            body: {
+                oneofKind: 'rpcMessage',
+                rpcMessage: RpcMessage.create()
+            },
+            targetDescriptor: connectionManager1.getLocalPeerDescriptor()
+        }
+
+        const connectedPromise1 = new Promise<void>((resolve, _reject) => {
+            connectionManager1.on('connected', () => {
+                resolve()
+            })
+        })
+
+        const connectedPromise2 = new Promise<void>((resolve, _reject) => {
+            connectionManager2.on('connected', () => {
+                resolve()
+            })
+        })
+        await Promise.all([connectedPromise1, connectedPromise2, connectionManager2.send(msg)])
+
+        await connectionManager1.enablePrivateClientMode()
+        await waitForCondition(() => connectionManager2.getConnections().length === 0)
+        expect(connectionManager1.getConnections().length).toEqual(1)
+
+        await connectionManager1.disablePrivateClientMode()
+        await waitForCondition(() => connectionManager2.getConnections().length === 1)
+        expect(connectionManager1.getConnections().length).toEqual(1)
+
+        await connectionManager1.stop()
+        await connectionManager2.stop()
+ 
     })
 
 })

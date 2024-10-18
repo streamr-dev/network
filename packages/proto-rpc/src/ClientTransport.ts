@@ -12,11 +12,11 @@ import {
     mergeRpcOptions
 } from '@protobuf-ts/runtime-rpc'
 import { v4 } from 'uuid'
-import { RpcMessage } from './proto/ProtoRpc'
+import { RpcMessage } from '../generated/ProtoRpc'
 import EventEmitter from 'eventemitter3'
 import { Logger } from '@streamr/utils'
 import { ProtoRpcOptions } from './ProtoCallContext'
-import { Any } from './proto/google/protobuf/any'
+import { Any } from '../generated/google/protobuf/any'
 
 interface ClientTransportEvents {
     rpcRequest: (rpcMessage: RpcMessage, options: ProtoRpcOptions, results?: ResultParts) => void

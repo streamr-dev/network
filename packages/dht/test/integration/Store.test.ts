@@ -1,7 +1,7 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { toDhtAddress, toNodeId } from '../../src/identifiers'
-import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
 import { createMockConnectionDhtNode, createMockPeerDescriptor, waitForStableTopology } from '../utils/utils'
 

@@ -1,4 +1,4 @@
-import { IExternalApiRpc } from '../proto/packages/dht/protos/DhtRpc.server'
+import { IExternalApiRpc } from '../../generated/packages/dht/protos/DhtRpc.server'
 import {
     ExternalFetchDataRequest,
     ExternalFetchDataResponse,
@@ -6,11 +6,11 @@ import {
     ExternalStoreDataResponse,
     RecursiveOperation,
     PeerDescriptor
-} from '../proto/packages/dht/protos/DhtRpc'
+} from '../../generated/packages/dht/protos/DhtRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'
-import { Any } from '../proto/google/protobuf/any'
+import { Any } from '../../generated/google/protobuf/any'
 import { DhtAddress, toNodeId, toDhtAddress } from '../identifiers'
 
 interface ExternalApiRpcLocalOptions {

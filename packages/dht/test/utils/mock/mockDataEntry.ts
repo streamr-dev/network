@@ -1,8 +1,8 @@
 import { MessageType as MessageType$, ScalarType } from '@protobuf-ts/runtime'
 import { randomString } from '@streamr/utils'
-import { Timestamp } from '../../../src/proto/google/protobuf/timestamp'
-import { Any } from '../../../src/proto/google/protobuf/any'
-import { DataEntry } from '../../../src/proto/packages/dht/protos/DhtRpc'
+import { Timestamp } from '../../../generated/google/protobuf/timestamp'
+import { Any } from '../../../generated/google/protobuf/any'
+import { DataEntry } from '../../../generated/packages/dht/protos/DhtRpc'
 import { DhtAddress, randomDhtAddress, toDhtAddressRaw } from '../../../src/identifiers'
 import { omit } from 'lodash'
 

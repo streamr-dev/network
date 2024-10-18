@@ -89,9 +89,9 @@ export const getCreateClient = (
         } else {
             key = await fetchPrivateKeyWithGas()
         }
-        const client = new StreamrClient(merge(
-            CONFIG_TEST,
+        const client = new StreamrClient(merge<StreamrClientConfig>(
             {
+                environment: 'dev2',
                 auth: {
                     privateKey: key,
                 }
@@ -217,7 +217,6 @@ export const createGroupKeyManager = (
                 litProtocolLogging: false,
                 maxKeyRequestsPerSecond: 10,
                 keyRequestTimeout: 50,
-                // eslint-disable-next-line no-underscore-dangle
                 rsaKeyLength: CONFIG_TEST.encryption!.rsaKeyLength!
             }
         },
@@ -250,13 +249,12 @@ export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Pro
 
 export const createTestClient = (privateKey: string, wsPort?: number, acceptProxyConnections = false): StreamrClient => {
     return new StreamrClient({
-        ...CONFIG_TEST,
+        environment: 'dev2',
         auth: {
             privateKey
         },
         network: {
             controlLayer: {
-                ...CONFIG_TEST.network!.controlLayer,
                 websocketPortRange: wsPort !== undefined ? { min: wsPort, max: wsPort } : undefined
             },
             node: {

@@ -1,8 +1,8 @@
 import LeakDetector from 'jest-leak-detector'
 import { waitForCondition } from '@streamr/utils'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { Message } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { Message } from '../../generated/packages/dht/protos/DhtRpc'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { toNodeId } from '../../src/identifiers'
 

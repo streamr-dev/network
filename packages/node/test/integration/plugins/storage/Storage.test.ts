@@ -7,23 +7,24 @@ import {
     convertBytesToStreamMessage,
     convertStreamMessageToBytes
 } from '@streamr/sdk'
-import { EthereumAddress, UserID, hexToBinary, toEthereumAddress, toStreamID, utf8ToBinary } from '@streamr/utils'
+import { hexToBinary, toStreamID, UserID, utf8ToBinary } from '@streamr/utils'
 import { Client } from 'cassandra-driver'
 import { randomFillSync } from 'crypto'
 import { Readable } from 'stream'
 import toArray from 'stream-to-array'
 import { Storage, startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
+import { randomUserId } from '@streamr/test-utils'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 const MAX_BUCKET_MESSAGE_COUNT = 20
 
-const publisherZero = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
-const publisherOne = toEthereumAddress('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
-const publisherTwo = toEthereumAddress('0xcccccccccccccccccccccccccccccccccccccccc')
-const publisherThree = toEthereumAddress('0xdddddddddddddddddddddddddddddddddddddddd')
+const publisherZero = randomUserId()
+const publisherOne = randomUserId()
+const publisherTwo = randomUserId()
+const publisherThree = randomUserId()
 
 export function buildMsg({
     streamId,
@@ -64,7 +65,7 @@ function buildEncryptedMsg({
     streamPartition: number
     timestamp: number
     sequenceNumber: number
-    publisherId?: EthereumAddress
+    publisherId?: UserID
     msgChainId?: string
 }) {
     return new StreamMessage({
@@ -171,7 +172,6 @@ describe('Storage', () => {
         ])
 
         const {
-            // eslint-disable-next-line camelcase
             stream_id, partition, ts, sequence_no, publisher_id, msg_chain_id, payload
         } = result.first()
 

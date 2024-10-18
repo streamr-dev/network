@@ -38,11 +38,12 @@ export {
     NetworkNodeType,
     StrictStreamrClientConfig,
     EnvironmentId,
+    ENVIRONMENT_IDS,
+    DEFAULT_ENVIRONMENT_ID,
     EntryPointDiscovery
 } from './Config'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
-export { CONFIG_TEST } from './ConfigTest'
 export { StreamDefinition } from './types'
 export { formStorageNodeAssignmentStreamId, peerDescriptorTranslator } from './utils/utils'
 export { SignerWithProvider } from './Authentication'
@@ -127,7 +128,6 @@ const _operatorContractUtils = {
     getTestAdminWallet,
     getOperatorContract
 }
-// eslint-disable-next-line no-underscore-dangle
 export { _operatorContractUtils }
 export type { SetupOperatorContractOpts, SetupOperatorContractReturnType, DeployOperatorContractOpts, DeploySponsorshipContractOpts }
 

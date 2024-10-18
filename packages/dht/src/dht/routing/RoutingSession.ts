@@ -2,10 +2,10 @@ import { SortedContactList } from '../contact/SortedContactList'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { v4 } from 'uuid'
-import { PeerDescriptor, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor, RouteMessageWrapper } from '../../../generated/packages/dht/protos/DhtRpc'
 import { RouterRpcRemote, ROUTING_TIMEOUT } from './RouterRpcRemote'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { RecursiveOperationRpcClient, RouterRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { RecursiveOperationRpcClient, RouterRpcClient } from '../../../generated/packages/dht/protos/DhtRpc.client'
 import { Contact } from '../contact/Contact'
 import { RecursiveOperationRpcRemote } from '../recursive-operation/RecursiveOperationRpcRemote'
 import { getPreviousPeer } from './getPreviousPeer'
@@ -196,7 +196,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
         while ((this.ongoingRequests.size < this.options.parallelism) && (uncontacted.length > 0) && !this.stopped) {
             const nextPeer = uncontacted.shift()
-            // eslint-disable-next-line max-len
             logger.trace(`Sending routeMessage request to contact: ${toNodeId(nextPeer!.getPeerDescriptor())} (sessionId=${this.sessionId})`)
             this.contactedPeers.add(nextPeer!.getNodeId())
             this.ongoingRequests.add(nextPeer!.getNodeId())

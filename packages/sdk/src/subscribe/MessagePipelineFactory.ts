@@ -56,7 +56,6 @@ export class MessagePipelineFactory {
         this.loggerFactory = loggerFactory
     }
 
-    // eslint-disable-next-line max-len
     createMessagePipeline(opts: MessagePipelineFactoryOptions): PushPipeline<StreamMessage, StreamMessage> {
         return _createMessagePipeline({
             ...opts,

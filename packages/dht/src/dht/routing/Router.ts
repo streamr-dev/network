@@ -1,4 +1,4 @@
-import { Message, PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { Message, PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../../generated/packages/dht/protos/DhtRpc'
 import { RoutingMode, RoutingRemoteContact, RoutingSession, RoutingSessionEvents } from './RoutingSession'
 import { Logger, executeSafePromise, raceEvents3, withTimeout } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
@@ -122,10 +122,8 @@ export class Router {
         const contacts = session.updateAndGetRoutablePeers()
         if (contacts.length > 0) {
             this.addRoutingSession(session)
-            // eslint-disable-next-line promise/catch-or-return
             logger.trace('starting to raceEvents from routingSession: ' + session.sessionId)
             let eventReceived: Promise<unknown>
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             executeSafePromise(async () => {
                 eventReceived = raceEvents3<RoutingSessionEvents>(
                     session,

@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode, waitForStableTopology } from '../utils/utils'
@@ -6,7 +5,7 @@ import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
 import { DhtAddress, randomDhtAddress, toDhtAddress, toNodeId } from '../../src/identifiers'
 import { sample } from 'lodash'
-import { DataEntry, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { DataEntry, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 
 const DATA = createMockDataEntry()
 const NUM_NODES = 100

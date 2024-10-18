@@ -11,7 +11,7 @@ import { expect } from 'expect'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
 import { NodeList } from '../../src/logic/NodeList'
 import { formStreamPartContentDeliveryServiceId } from '../../src/logic/formStreamPartDeliveryServiceId'
-import { ContentDeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockContentDeliveryRpcRemote, createMockPeerDescriptor } from '../utils/utils'
 

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/parameter-properties, quotes */
+/* eslint-disable quotes */
 
 import sqlite3 from 'sqlite3'
 import { open, Statement, Database as SqliteDatabase } from 'sqlite'

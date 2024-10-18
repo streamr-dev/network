@@ -68,7 +68,6 @@ function validateSequence(messageId: MessageID, prevMsgRef: MessageRef | undefin
     }
     if (comparison < 0) {
         throw new ValidationError(
-            // eslint-disable-next-line max-len
             `prevMessageRef must come before current. Current: ${JSON.stringify(messageId.toMessageRef())} Previous: ${JSON.stringify(prevMsgRef)}`
         )
     }

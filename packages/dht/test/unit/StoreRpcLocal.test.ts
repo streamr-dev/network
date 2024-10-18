@@ -1,7 +1,7 @@
 import { range } from 'lodash'
 import { StoreRpcLocal } from '../../src/dht/store/StoreRpcLocal'
 import { areEqualPeerDescriptors, randomDhtAddress, DhtAddress, toDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
-import { DataEntry, PeerDescriptor, StoreDataRequest } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { DataEntry, PeerDescriptor, StoreDataRequest } from '../../generated/packages/dht/protos/DhtRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { getClosestNodes } from '../../src/dht/contact/getClosestNodes'
 import { wait } from '@streamr/utils'

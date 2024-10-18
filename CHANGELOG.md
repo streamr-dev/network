@@ -12,7 +12,13 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- Method `StreamrClient#getDiagnosticInfo()` provides diagnostic info about network (https://github.com/streamr-dev/network/pull/2740, https://github.com/streamr-dev/network/pull/2741)
+
 #### Changed
+
+- Network-level changes
+  - Avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801) 
+  - Internal record `StreamPartitionInfo` format changed (https://github.com/streamr-dev/network/pull/2738, https://github.com/streamr-dev/network/pull/2790)
 
 #### Deprecated
 
@@ -25,7 +31,14 @@ Changes before Tatum release are not documented in this file.
 
 #### Fixed
 
-- Fix flag expiration time in `Operator#getExpiredFlags` (https://github.com/streamr-dev/network/pull/2739)
+- Fix WebRTC connections in Firefox (https://github.com/streamr-dev/network/pull/2746)
+- Fix flag expiration time in `Operator#getExpiredFlags()` (https://github.com/streamr-dev/network/pull/2739)
+- Network-level fixes
+  - Fix node discover in small topologies (e.g. ~2 nodes) (https://github.com/streamr-dev/network/pull/2786)
+  - Fix to time-to-data spike scenarios (https://github.com/streamr-dev/network/pull/2802)
+  - Make network node stop faster (https://github.com/streamr-dev/network/pull/2736)
+  - Reject requests after disconnection events (https://github.com/streamr-dev/network/pull/2760)
+  - Fix geoip database file validation (https://github.com/streamr-dev/network/pull/2783)  
 
 #### Security
 
@@ -33,13 +46,20 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- Add new operator plugin config options (for testing purposes) (https://github.com/streamr-dev/network/pull/2742)
+
 #### Changed
+
+- The `environment` config option now applies additional settings if `dev2` value is used (https://github.com/streamr-dev/network/pull/2813)
+  - e.g. disables `entryPointDiscovery` and `metrics`
 
 #### Deprecated
 
 #### Removed
 
 #### Fixed
+
+- Fix operator flag voting behavior when using custom gas estimation (https://github.com/streamr-dev/network/pull/2784)
 
 #### Security
 
@@ -48,6 +68,10 @@ Changes before Tatum release are not documented in this file.
 #### Added
 
 #### Changed
+
+- **BREAKING CHANGE:** Replace `--dev` flag with `--env` flag (https://github.com/streamr-dev/network/pull/2817)
+  - the `--env` flag supports multiple environments
+  - use `--env dev2` for the development environment
 
 #### Deprecated
 
