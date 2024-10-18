@@ -7,8 +7,8 @@ import {
     ClosestRingPeersRequest,
     PeerDescriptor,
     PingRequest
-} from '../proto/packages/dht/protos/DhtRpc'
-import { DhtNodeRpcClient } from '../proto/packages/dht/protos/DhtRpc.client'
+} from '../../generated/packages/dht/protos/DhtRpc'
+import { DhtNodeRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { ServiceID } from '../types/ServiceID'
 import { RpcRemote } from './contact/RpcRemote'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'

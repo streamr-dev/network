@@ -5,7 +5,7 @@ import {
     RouteMessageError,
     RouteMessageWrapper,
     RecursiveOperationRequest
-} from '../../src/proto/packages/dht/protos/DhtRpc'
+} from '../../generated/packages/dht/protos/DhtRpc'
 import {
     createWrappedClosestPeersRequest,
     createMockPeerDescriptor

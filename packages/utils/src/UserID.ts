@@ -11,7 +11,7 @@ export const toUserId = (input: string | UserIDRaw): UserID | never => {
     if (input instanceof Uint8Array) {
         return binaryToHex(input, true) as UserID
     } else {
-        if (input.match(REGEX)) {
+        if (isValidUserId(input)) {
             return input.toLowerCase() as UserID
         }
         throw new Error(`not a valid UserID: "${input}"`)
@@ -20,6 +20,10 @@ export const toUserId = (input: string | UserIDRaw): UserID | never => {
 
 export const toUserIdRaw = (userId: UserID): UserIDRaw => {
     return hexToBinary(userId)
+}
+
+export const isValidUserId = (input: string): boolean => {
+    return REGEX.test(input)
 }
 
 export const isEthereumAddressUserId = (userId: UserID): boolean => {

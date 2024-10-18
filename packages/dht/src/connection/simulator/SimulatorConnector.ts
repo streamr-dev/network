@@ -3,7 +3,7 @@ import { ConnectionType } from '../IConnection'
 import {
     HandshakeError,
     PeerDescriptor,
-} from '../../proto/packages/dht/protos/DhtRpc'
+} from '../../../generated/packages/dht/protos/DhtRpc'
 import { Logger } from '@streamr/utils'
 import { Simulator } from './Simulator'
 import { SimulatorConnection } from './SimulatorConnection'

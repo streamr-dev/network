@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { Logger } from '@streamr/utils'
+import { Logger, UserID } from '@streamr/utils'
 import { v4 as uuidv4 } from 'uuid'
 import { BucketId } from './Bucket'
 
@@ -12,7 +12,7 @@ export interface InsertRecord {
     partition: number
     timestamp: number
     sequenceNo: number
-    publisherId: string
+    publisherId: UserID
     msgChainId: string
     payload: Buffer // cassandra-driver expects Buffer
 }

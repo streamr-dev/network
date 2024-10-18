@@ -4,12 +4,12 @@ import {
     PeerDescriptor,
     RtcAnswer,
     RtcOffer, WebrtcConnectionRequest
-} from '../../proto/packages/dht/protos/DhtRpc'
+} from '../../../generated/packages/dht/protos/DhtRpc'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'
 import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
-import { WebrtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { WebrtcConnectorRpcClient } from '../../../generated/packages/dht/protos/DhtRpc.client'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
 import { PortRange } from '../ConnectionManager'
@@ -31,6 +31,8 @@ export const replaceInternalIpWithExternalIp = (candidate: string, ip: string): 
     }
     return parsed.join(' ')
 }
+
+export const EARLY_TIMEOUT = 5000
 
 export interface WebrtcConnectorOptions {
     onNewConnection: (connection: PendingConnection) => boolean

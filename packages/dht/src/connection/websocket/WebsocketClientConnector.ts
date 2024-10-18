@@ -6,12 +6,12 @@ import {
     ConnectivityMethod,
     PeerDescriptor,
     WebsocketConnectionRequest
-} from '../../proto/packages/dht/protos/DhtRpc'
+} from '../../../generated/packages/dht/protos/DhtRpc'
 import { WebsocketServer } from './WebsocketServer'
 import { createOutgoingHandshaker } from '../Handshaker'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { expectedConnectionType } from '../../helpers/Connectivity'
-import { Empty } from '../../proto/google/protobuf/empty'
+import { Empty } from '../../../generated/google/protobuf/empty'
 import { DhtAddress, toNodeId } from '../../identifiers'
 import { GeoIpLocator } from '@streamr/geoip-location'
 import { PendingConnection } from '../PendingConnection'

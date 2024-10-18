@@ -1,11 +1,11 @@
 import 'reflect-metadata'
 
-import { randomUserId } from '@streamr/test-utils'
 import { wait, waitForCondition } from '@streamr/utils'
 import { range, sortBy } from 'lodash'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamCreationEvent } from '../../src/contracts/StreamRegistry'
 import { CHAIN_ID, ErrorState, FakeJsonRpcServer, JsonRpcRequest } from '../test-utils/FakeJsonRpcServer'
+import { randomUserId } from '@streamr/test-utils'
 
 const SERVER_COUNT = 3
 const POLL_INTERVAL = 500

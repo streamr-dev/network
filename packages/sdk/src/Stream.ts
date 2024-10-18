@@ -355,7 +355,7 @@ export class Stream {
      * @category Important
      */
     async grantPermissions(...assignments: PermissionAssignment[]): Promise<void> {
-        return this._streamRegistry.grantPermissions(this.id, ...assignments.map((a) => toInternalPermissionAssignment(a)))
+        return this._streamRegistry.grantPermissions(this.id, ...assignments.map(toInternalPermissionAssignment))
     }
 
     /**
@@ -364,7 +364,7 @@ export class Stream {
      * @category Important
      */
     async revokePermissions(...assignments: PermissionAssignment[]): Promise<void> {
-        return this._streamRegistry.revokePermissions(this.id, ...assignments.map((a) => toInternalPermissionAssignment(a)))
+        return this._streamRegistry.revokePermissions(this.id, ...assignments.map(toInternalPermissionAssignment))
     }
 
 }

@@ -466,14 +466,14 @@ export class StreamrClient {
      * Grants permissions on a given stream.
      */
     grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
-        return this.streamRegistry.grantPermissions(streamIdOrPath, ...assignments.map((a) => toInternalPermissionAssignment(a)))
+        return this.streamRegistry.grantPermissions(streamIdOrPath, ...assignments.map(toInternalPermissionAssignment))
     }
 
     /**
      * Revokes permissions on a given stream.
      */
     revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
-        return this.streamRegistry.revokePermissions(streamIdOrPath, ...assignments.map((a) => toInternalPermissionAssignment(a)))
+        return this.streamRegistry.revokePermissions(streamIdOrPath, ...assignments.map(toInternalPermissionAssignment))
     }
 
     /**
@@ -488,7 +488,7 @@ export class StreamrClient {
         assignments: PermissionAssignment[]
     }[]): Promise<void> {
         return this.streamRegistry.setPermissions(...items.map((item) => (
-            { ...item, assignments: item.assignments.map((a) => toInternalPermissionAssignment(a)) }
+            { ...item, assignments: item.assignments.map(toInternalPermissionAssignment) }
         )))
     }
 

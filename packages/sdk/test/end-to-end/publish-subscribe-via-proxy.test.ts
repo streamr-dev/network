@@ -1,7 +1,7 @@
+import { Wallet } from 'ethers'
 import { describeOnlyInNodeJs, fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { ProxyDirection } from '@streamr/trackerless-network'
 import { collect, wait, withTimeout } from '@streamr/utils'
-import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
