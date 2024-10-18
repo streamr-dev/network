@@ -73,17 +73,22 @@ export interface StreamCreationEvent {
 
 const validatePermissionAssignments = (assignments: InternalPermissionAssignment[]): void | never => {
     for (const assignment of assignments) {
-        if (!isPublicPermissionAssignment(assignment)) {
-            if (!isEthereumAddressUserId(assignment.user)) {
-                // not supported by StreamRegistry v5 contract
-                const ETHEREUM_ONLY_PERMISSION_TYPES = [StreamPermission.EDIT, StreamPermission.DELETE, StreamPermission.GRANT] 
-                const invalidPermissions = intersection(assignment.permissions, ETHEREUM_ONLY_PERMISSION_TYPES)
-                if (invalidPermissions.length > 0) {
-                    throw new StreamrClientError(
-                        `Non-Ethereum user id is not supported for permission types: ${invalidPermissions.map((p) => p.toUpperCase()).join(', ')}`,
-                        'UNSUPPORTED_OPERATION'
-                    )
-                }
+        // In the StreamRegistry v5 contract, these permissions can only be assigned to users
+        // who have EthereumAddress as their userId. Also public permission is not allowed
+        // for these users.
+        const ADMIN_PERMISSION_TYPES = [StreamPermission.EDIT, StreamPermission.DELETE, StreamPermission.GRANT] 
+        const adminPermissions = intersection(assignment.permissions, ADMIN_PERMISSION_TYPES)
+        if (adminPermissions.length > 0) {
+            const createError = (prefix: string) => {
+                return new StreamrClientError(
+                    `${prefix} is not supported for permission types: ${adminPermissions.map((p) => p.toUpperCase()).join(', ')}`,
+                    'UNSUPPORTED_OPERATION'
+                )
+            }
+            if (isPublicPermissionAssignment(assignment)) {
+                throw createError('Public permission')
+            } else if (!isEthereumAddressUserId(assignment.user)) {
+                throw createError('Non-Ethereum user id')
             }
         }
     }
