@@ -174,7 +174,11 @@ export class Stream {
     }
 
     getPartitionCount(): number {
-        return this.getMetadata().partitions ?? DEFAULT_PARTITION_COUNT
+        const metadataValue = this.getMetadata().partitions
+        if (metadataValue !== undefined) {
+            ensureValidStreamPartitionCount(metadataValue)
+        }
+        return metadataValue ?? DEFAULT_PARTITION_COUNT
     }
 
     /**
