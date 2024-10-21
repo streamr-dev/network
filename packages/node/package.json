@@ -9,7 +9,6 @@
   },
   "bin": {
     "streamr-broker": "dist/bin/broker.js",
-    "streamr-broker-init": "dist/bin/config-wizard.js",
     "streamr-node": "dist/bin/streamr-node.js",
     "streamr-node-init": "dist/bin/streamr-node-init.js",
     "delete-expired-data": "dist/bin/delete-expired-data.js",
