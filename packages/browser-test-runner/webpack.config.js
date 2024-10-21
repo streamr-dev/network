@@ -25,7 +25,7 @@ module.exports = function({ entry, libraryName, alias = {} }) {
             },
             plugins: [
                 new NodePolyfillPlugin({
-                    includeAliases: [
+                    additionalAliases: [
                         'constants',
                         'crypto',
                         'path',
