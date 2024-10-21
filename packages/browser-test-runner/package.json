@@ -8,8 +8,9 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/browser-test-runner"
   },
-  "main": "./index.js",
+  "main": "./dist/src/exports.js",
   "scripts": {
+    "build": "tsc -b tsconfig.node.json",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '**/*.{js,ts}'"
   },
   "author": "Streamr Network AG <contact@streamr.network>",
