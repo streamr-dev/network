@@ -132,7 +132,7 @@ export class Stream {
         this.id = id
         this.metadata = merge(
             {
-                partitions: 1,
+                partitions: DEFAULT_PARTITION_COUNT,
                 // TODO should we remove this default or make config as a required StreamMetadata field?
                 config: {
                     fields: []
