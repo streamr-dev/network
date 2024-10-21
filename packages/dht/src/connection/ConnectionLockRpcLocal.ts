@@ -1,6 +1,6 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '@streamr/utils'
-import { Empty } from '../proto/google/protobuf/empty'
+import { Empty } from '../../generated/google/protobuf/empty'
 import {
     DisconnectMode,
     DisconnectNotice,
@@ -9,8 +9,8 @@ import {
     PeerDescriptor,
     UnlockRequest,
     SetPrivateRequest
-} from '../proto/packages/dht/protos/DhtRpc'
-import { IConnectionLockRpc } from '../proto/packages/dht/protos/DhtRpc.server'
+} from '../../generated/packages/dht/protos/DhtRpc'
+import { IConnectionLockRpc } from '../../generated/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
 import { LockID } from './ConnectionLockStates'

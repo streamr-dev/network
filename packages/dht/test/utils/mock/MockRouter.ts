@@ -1,6 +1,6 @@
 import { Methods } from '@streamr/test-utils'
 import { Router } from '../../../src/dht/routing/Router'
-import { RouteMessageAck } from '../../../src/proto/packages/dht/protos/DhtRpc'
+import { RouteMessageAck } from '../../../generated/packages/dht/protos/DhtRpc'
 
 export class MockRouter implements Methods<Router> {
 

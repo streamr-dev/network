@@ -14,7 +14,7 @@ import { ContentDeliveryManager, ContentDeliveryManagerOptions } from './logic/C
 import { ControlLayerNode } from './logic/ControlLayerNode'
 import { NodeInfoClient } from './logic/node-info/NodeInfoClient'
 import { NODE_INFO_RPC_SERVICE_ID, NodeInfoRpcLocal } from './logic/node-info/NodeInfoRpcLocal'
-import { NodeInfoResponse, ProxyDirection, StreamMessage } from './proto/packages/trackerless-network/protos/NetworkRpc'
+import { NodeInfoResponse, ProxyDirection, StreamMessage } from '../generated/packages/trackerless-network/protos/NetworkRpc'
 
 export interface NetworkOptions {
     layer0?: DhtNodeOptions

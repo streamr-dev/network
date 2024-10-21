@@ -1,6 +1,6 @@
 import { Logger } from '@streamr/utils'
-import { PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
-import { IRecursiveOperationRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
+import { PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../../generated/packages/dht/protos/DhtRpc'
+import { IRecursiveOperationRpc } from '../../../generated/packages/dht/protos/DhtRpc.server'
 import { createRouteMessageAck } from '../routing/RouterRpcLocal'
 import { getPreviousPeer } from '../routing/getPreviousPeer'
 import { toNodeId } from '../../identifiers'

@@ -3,7 +3,7 @@ import { StreamPartIDUtils, hexToBinary, utf8ToBinary, waitForCondition } from '
 import { range } from 'lodash'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
-import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { randomUserId } from '@streamr/test-utils'
 

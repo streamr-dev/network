@@ -4,7 +4,7 @@ import { NetworkStack } from '../../src/NetworkStack'
 import { NodeInfoClient } from '../../src/logic/node-info/NodeInfoClient'
 import { NODE_INFO_RPC_SERVICE_ID } from '../../src/logic/node-info/NodeInfoRpcLocal'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { ProxyDirection } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { randomUserId } from '@streamr/test-utils'
 
 // TODO add Jest utility so that the normalization is not needed (NET-1254)
