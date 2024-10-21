@@ -72,9 +72,7 @@ describe('Validator2', () => {
         // Default stubs
         getStream = async () => {
             return {
-                getMetadata: () => ({
-                    partitions: 10
-                })
+                getPartitionCount: () => 10
             } as any
         }
         isPublisher = async (userId: UserID, streamId: string) => {

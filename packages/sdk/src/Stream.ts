@@ -170,7 +170,11 @@ export class Stream {
      * Returns the partitions of the stream.
      */
     getStreamParts(): StreamPartID[] {
-        return range(0, this.getMetadata().partitions).map((p) => toStreamPartID(this.id, p))
+        return range(0, this.getPartitionCount()).map((p) => toStreamPartID(this.id, p))
+    }
+
+    getPartitionCount(): number {
+        return this.getMetadata().partitions ?? DEFAULT_PARTITION_COUNT
     }
 
     /**
