@@ -1,4 +1,4 @@
-import { DEFAULT_PARTITION_COUNT, UserID } from '@streamr/utils'
+import { UserID } from '@streamr/utils'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
 import { StreamMessageError } from '../protocol/StreamMessageError'
@@ -65,7 +65,7 @@ const validateMessage = async (
 ): Promise<void> => {
     const streamId = streamMessage.getStreamId()
     const stream = await streamRegistry.getStream(streamId)
-    const partitionCount = stream.getMetadata().partitions ?? DEFAULT_PARTITION_COUNT
+    const partitionCount = stream.getPartitionCount()
     if (streamMessage.getStreamPartition() < 0 || streamMessage.getStreamPartition() >= partitionCount) {
         throw new StreamMessageError(`Partition ${streamMessage.getStreamPartition()} is out of range (0..${partitionCount - 1})`, streamMessage)
     }
