@@ -137,7 +137,7 @@ export class Stream {
     }
 
     /**
-     * Updates the metadata of a stream.
+     * Updates the metadata of the stream.
      */
     async update(metadata: Partial<StreamMetadata>): Promise<void> {
         try {
