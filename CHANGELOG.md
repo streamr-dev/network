@@ -13,11 +13,11 @@ Changes before Tatum release are not documented in this file.
 #### Added
 
 - Method `StreamrClient#getDiagnosticInfo()` provides diagnostic info about network (https://github.com/streamr-dev/network/pull/2740, https://github.com/streamr-dev/network/pull/2741)
-- Add `Stream#getPartitionCount()` method
+- Add `Stream#getPartitionCount()` method (https://github.com/streamr-dev/network/pull/2825)
 
 #### Changed
 
-- **BREAKING CHANGE:** Field `StreamMetadata#partitions` is nullable
+- **BREAKING CHANGE:** Field `StreamMetadata#partitions` is nullable (https://github.com/streamr-dev/network/pull/2825)
 - Network-level changes
   - Avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801) 
   - Internal record `StreamPartitionInfo` format changed (https://github.com/streamr-dev/network/pull/2738, https://github.com/streamr-dev/network/pull/2790)
