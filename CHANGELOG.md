@@ -69,8 +69,9 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
-- **BREAKING CHANGE:** Replace `--dev` flag with `--env` flag (https://github.com/streamr-dev/network/pull/2817)
+- **BREAKING CHANGE:** Replace `--dev` flag with `--env` flag (https://github.com/streamr-dev/network/pull/2817, https://github.com/streamr-dev/network/pull/2834)
   - the `--env` flag supports multiple environments
+  - it takes precedence over the options defined in a config file
   - use `--env dev2` for the development environment
 
 #### Deprecated
