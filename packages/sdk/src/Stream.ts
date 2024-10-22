@@ -84,6 +84,20 @@ function getFieldType(value: any): (Field['type'] | undefined) {
     }
 }
 
+export const flatMerge = <TTarget>(...sources: (Partial<TTarget> | undefined)[]): TTarget => {
+    const result: Record<string, unknown> = {}
+    for (const source of sources) {
+        if (source !== undefined) {
+            for (const [key, value] of Object.entries(source)) {
+                if (value !== undefined) {
+                    result[key] = value
+                }
+            }
+        }
+    }
+    return result as TTarget
+}
+
 /**
  * A convenience API for managing and accessing an individual stream.
  *
@@ -208,11 +222,12 @@ export class Stream {
         }).filter(Boolean) as Field[] // see https://github.com/microsoft/TypeScript/issues/30621
 
         // Save field config back to the stream
-        await this.update({
+        const merged = flatMerge(this.getMetadata(), this.getMetadata(), {
             config: {
                 fields
             }
         })
+        await this.update(merged)
     }
 
     /**
