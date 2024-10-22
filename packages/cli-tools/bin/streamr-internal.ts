@@ -7,4 +7,5 @@ program
     .usage('<command> [<args>]')
     .description('subcommands for internal use, the API of the commands may change')
     .command('visualize-topology', 'visualize network topology')
+    .command('show-sdk-config', 'show config used by internal StreamrClient')
     .parse()
