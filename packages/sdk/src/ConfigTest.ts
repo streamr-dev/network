@@ -6,7 +6,6 @@ import { MIN_KEY_LENGTH } from './encryption/RSAKeyPair'
  * Streamr client constructor options that work in the test environment
  */
 export const CONFIG_TEST: StreamrClientConfig = {
-    environment: 'dev2',
     network: {
         controlLayer: {
             entryPointDiscovery: {

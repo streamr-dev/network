@@ -29,7 +29,6 @@ describe('Full node network with WebSocket connections only', () => {
             }
         })
         await entryPoint.start()
-        entryPoint.getContentDeliveryManager().setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
         entryPoint.getContentDeliveryManager().joinStreamPart(streamPartId)
 
         await Promise.all(range(NUM_OF_NODES).map(async (i) => {
@@ -43,7 +42,6 @@ describe('Full node network with WebSocket connections only', () => {
             })
             nodes.push(node)
             await node.start()
-            node.getContentDeliveryManager().setStreamPartEntryPoints(streamPartId, [epPeerDescriptor])
             node.getContentDeliveryManager().joinStreamPart(streamPartId)
         }))
 

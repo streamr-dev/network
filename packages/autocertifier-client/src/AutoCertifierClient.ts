@@ -1,6 +1,6 @@
 import { EventEmitter } from 'eventemitter3'
-import { IAutoCertifierRpc } from './proto/packages/autocertifier-client/protos/AutoCertifier.server'
-import { HasSessionRequest, HasSessionResponse } from './proto/packages/autocertifier-client/protos/AutoCertifier'
+import { IAutoCertifierRpc } from '../generated/packages/autocertifier-client/protos/AutoCertifier.server'
+import { HasSessionRequest, HasSessionResponse } from '../generated/packages/autocertifier-client/protos/AutoCertifier'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { filePathToNodeFormat, Logger } from '@streamr/utils'
 import { RestClient } from './RestClient'
