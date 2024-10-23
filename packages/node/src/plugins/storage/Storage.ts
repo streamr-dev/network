@@ -538,7 +538,7 @@ export const startCassandraStorage = async ({
     password,
     opts
 }: StartCassandraOptions): Promise<Storage> => {
-    const authProvider = new auth.PlainTextAuthProvider(username || '', password || '')
+    const authProvider = new auth.PlainTextAuthProvider(username ?? '', password ?? '')
     const requestLogger = new tracker.RequestLogger({
         slowThreshold: 10 * 1000, // 10 secs
     })
@@ -562,7 +562,7 @@ export const startCassandraStorage = async ({
     while (retryCount > 0) {
         try {
             await cassandraClient.connect().catch((err) => { throw err })
-            return new Storage(cassandraClient, opts || {})
+            return new Storage(cassandraClient, opts ?? {})
         } catch (err) {
             // eslint-disable-next-line no-console
             console.log('Cassandra not responding yet...')

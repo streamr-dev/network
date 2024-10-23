@@ -40,8 +40,8 @@ const sendResponse = (res: express.Response, data?: object) => {
 
 const parseIpAndPort = (req: express.Request): { ip: string, port: string } | undefined => {
     // take x-forwarded for into account
-    const remoteIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-    const remotePort = req.headers['x-forwarded-port'] || req.socket.remotePort
+    const remoteIp = req.headers['x-forwarded-for'] ?? req.socket.remoteAddress
+    const remotePort = req.headers['x-forwarded-port'] ?? req.socket.remotePort
     let ip = remoteIp
     let port = remotePort
     if (typeof remoteIp !== 'string' && typeof remoteIp !== 'number') {

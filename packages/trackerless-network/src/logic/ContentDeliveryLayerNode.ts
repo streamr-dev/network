@@ -93,9 +93,9 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                     return
                 }
                 const contact = this.options.nearbyNodeView.get(remoteNodeId)
-                || this.options.randomNodeView.get(remoteNodeId)
-                || this.options.neighbors.get(remoteNodeId)
-                || this.options.proxyConnectionRpcLocal?.getConnection(remoteNodeId)?.remote
+                ?? this.options.randomNodeView.get(remoteNodeId)
+                ?? this.options.neighbors.get(remoteNodeId)
+                ?? this.options.proxyConnectionRpcLocal?.getConnection(remoteNodeId)?.remote
                 // TODO: check integrity of notifier?
                 if (contact) {
                     this.options.discoveryLayerNode.removeContact(remoteNodeId)
