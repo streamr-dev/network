@@ -3,7 +3,7 @@ import '../src/logLevel'
 
 import { DhtNode, PeerDescriptor, toDhtAddress, toNodeId } from '@streamr/dht'
 import StreamrClient, { DhtAddress } from '@streamr/sdk'
-import { ContentDeliveryLayerNeighborInfo, NetworkNode, NodeInfo, StreamPartitionInfo } from '@streamr/trackerless-network'
+import { NetworkNode, NodeInfo, StreamPartitionInfo } from '@streamr/trackerless-network'
 import { binaryToHex, ChangeFieldType, Logger } from '@streamr/utils'
 import { createClientCommand } from '../src/command'
 import semver from 'semver'
