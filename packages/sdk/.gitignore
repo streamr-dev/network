@@ -42,3 +42,6 @@ test/exports/dist
 test/exports/package-lock.json
 vendor
 docs
+
+src/generated/packages
+src/generated/google
