@@ -142,7 +142,7 @@ export default class ServerPersistence implements PersistenceContext {
             `SELECT value_ FROM ${namespace} WHERE key_ = ?`,
             key
         )
-        return row?.['value_']
+        return row?.value_
     }
 
     async set(key: string, value: string, namespace: string): Promise<void> {
