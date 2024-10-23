@@ -49,7 +49,7 @@ function intoChunks<T>(arr: readonly T[], chunkSize: number): T[][] {
     return chunks
 }
 
-function formChainOfMessages(publisherId: UserID): Array<MessageInfo> {
+function formChainOfMessages(publisherId: UserID): MessageInfo[] {
     const chainOfMessages: MessageInfo[] = [{
         publisherId,
         timestamp: 1,

@@ -75,7 +75,7 @@ export class NetworkNode {
         await this.stack.getContentDeliveryManager().leaveStreamPart(streamPartId)
     }
 
-    getNeighbors(streamPartId: StreamPartID): ReadonlyArray<DhtAddress> {
+    getNeighbors(streamPartId: StreamPartID): readonly DhtAddress[] {
         return this.stack.getContentDeliveryManager().getNeighbors(streamPartId)
     }
 
