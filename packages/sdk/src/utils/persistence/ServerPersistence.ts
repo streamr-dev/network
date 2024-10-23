@@ -142,6 +142,7 @@ export default class ServerPersistence implements PersistenceContext {
             `SELECT value_ FROM ${namespace} WHERE key_ = ?`,
             key
         )
+        // eslint-disable-next-line no-underscore-dangle
         return row?.value_
     }
 
