@@ -25,7 +25,7 @@ export const regionPingMatrix = [
     [205.555, 178.082, 186.533, 195.774, 216.701, 117.089, 128.001, 175.761, 176.018, 125.551, 303.904, 285.782, 323.15, 309.618, 255.904, 0.262]
 ]
 
-export function getRegionDelayMatrix(): Array<Array<number>> {
+export function getRegionDelayMatrix(): number[][] {
     const ret = []
     for (let i = 0; i < regionPingMatrix.length; i++) {
         const row = []

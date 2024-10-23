@@ -90,7 +90,7 @@ class CloseOperation extends SimulatorOperation {
 export class Simulator {
     private stopped = false
     private connectors: Map<DhtAddress, SimulatorConnector> = new Map()
-    private latencyTable?: Array<Array<number>>
+    private latencyTable?: number[][]
     private associations: Map<ConnectionID, Association> = new Map()
 
     private latencyType: LatencyType

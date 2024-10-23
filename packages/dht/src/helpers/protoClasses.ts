@@ -28,7 +28,7 @@ import {
 
 } from '../../generated/packages/dht/protos/DhtRpc'
 
-export const protoClasses: Array<IMessageType<any>> = [
+export const protoClasses: IMessageType<any>[] = [
     ClosestPeersRequest,
     ClosestPeersResponse,
     RecursiveOperationRequest,

@@ -21,7 +21,7 @@ describe('Find correctness', () => {
         execSync('npm run prepare-kademlia-simulation')
     }
 
-    const dhtIds: Array<{ type: string, data: Array<number> }> = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
+    const dhtIds: { type: string, data: number[] }[] = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
 
     beforeEach(async () => {
 

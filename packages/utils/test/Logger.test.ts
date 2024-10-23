@@ -8,7 +8,7 @@ declare let _streamr_electron_test: any
 
 describe('Logger', () => {
     let logger: Logger
-    let logs: Array<{ level: unknown, msg: unknown }>
+    let logs: { level: unknown, msg: unknown }[]
 
     beforeEach(() => {
         logs = []
