@@ -34,7 +34,7 @@ export const formConfig = ({
     const plugins: Record<string, any> = { ...extraPlugins }
     if (httpPort) {
         if (enableCassandra) {
-            plugins['storage'] = {
+            plugins.storage = {
                 cassandra: {
                     hosts: [STREAMR_DOCKER_DEV_HOST],
                     datacenter: 'datacenter1',

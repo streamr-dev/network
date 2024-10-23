@@ -293,7 +293,7 @@ export class Simulator {
             logger.error('connect() called on a stopped simulator ' + (new Error().stack))
             return
         }
-        debugVars['simulatorHeapSize'] = this.operationQueue.size()
+        debugVars.simulatorHeapSize = this.operationQueue.size()
 
         const association = new Association(sourceConnection, undefined, connectedCallback)
         this.associations.set(sourceConnection.connectionId, association)
