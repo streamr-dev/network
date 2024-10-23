@@ -21,7 +21,7 @@ describe('Find correctness', () => {
         execSync('npm run prepare-kademlia-simulation')
     }
 
-    const dhtIds: Array<{ type: string, data: Array<number> }> = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
+    const dhtIds: { type: string, data: number[] }[] = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
 
     beforeEach(async () => {
 
@@ -49,10 +49,10 @@ describe('Find correctness', () => {
         )
 
         logger.info('waiting 120s')
-        debugVars['waiting'] = true
+        debugVars.waiting = true
 
         await wait(120000)
-        debugVars['waiting'] = false
+        debugVars.waiting = false
         logger.info('waiting over')
 
         nodes.forEach((node) => logger.info(toNodeId(node.getLocalPeerDescriptor()) + ': connections:' +

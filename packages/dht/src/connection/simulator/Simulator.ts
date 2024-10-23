@@ -90,7 +90,7 @@ class CloseOperation extends SimulatorOperation {
 export class Simulator {
     private stopped = false
     private connectors: Map<DhtAddress, SimulatorConnector> = new Map()
-    private latencyTable?: Array<Array<number>>
+    private latencyTable?: number[][]
     private associations: Map<ConnectionID, Association> = new Map()
 
     private latencyType: LatencyType
@@ -293,7 +293,7 @@ export class Simulator {
             logger.error('connect() called on a stopped simulator ' + (new Error().stack))
             return
         }
-        debugVars['simulatorHeapSize'] = this.operationQueue.size()
+        debugVars.simulatorHeapSize = this.operationQueue.size()
 
         const association = new Association(sourceConnection, undefined, connectedCallback)
         this.associations.set(sourceConnection.connectionId, association)

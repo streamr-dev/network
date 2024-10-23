@@ -32,7 +32,7 @@ interface StoreManagerOptions {
     serviceId: ServiceID
     highestTtl: number
     redundancyFactor: number
-    getNeighbors: () => ReadonlyArray<PeerDescriptor>
+    getNeighbors: () => readonly PeerDescriptor[]
     createRpcRemote: (contact: PeerDescriptor) => StoreRpcRemote
 }
 
