@@ -4,10 +4,31 @@ import '../src/logLevel'
 import { DhtNode, PeerDescriptor, toDhtAddress, toNodeId } from '@streamr/dht'
 import StreamrClient, { DhtAddress } from '@streamr/sdk'
 import { ContentDeliveryLayerNeighborInfo, NetworkNode, NodeInfo, StreamPartitionInfo } from '@streamr/trackerless-network'
-import { binaryToHex, Logger } from '@streamr/utils'
+import { binaryToHex, ChangeFieldType, Logger } from '@streamr/utils'
 import { createClientCommand } from '../src/command'
+import semver from 'semver'
 
 const logger = new Logger(module)
+
+export type NormalizedNodeInfo = ChangeFieldType<
+    NodeInfo,
+    'streamPartitions',
+    Omit<StreamPartitionInfo, 'deprecatedContentDeliveryLayerNeighbors'>[]>
+
+const toNormalizeNodeInfo = (info: NodeInfo): NormalizedNodeInfo => {
+    const isLegacyFormat = semver.satisfies(semver.coerce(info.version)!, '< 102.0.0')
+    return {
+        ...info,
+        streamPartitions: info.streamPartitions.map((sp: StreamPartitionInfo) => ({
+            ...sp,
+            contentDeliveryLayerNeighbors: !isLegacyFormat
+                ? sp.contentDeliveryLayerNeighbors
+                : sp.deprecatedContentDeliveryLayerNeighbors.map((n) => ({
+                    peerDescriptor: n
+                }))
+        }))
+    }
+}
 
 const createPeerDescriptorOutput = (peerDescriptor: PeerDescriptor) => {
     return {
@@ -23,19 +44,18 @@ const createPeerDescriptorOutput = (peerDescriptor: PeerDescriptor) => {
     }
 }
 
-const createNodeInfoOutput = (nodeInfo: NodeInfo) => {
+const createNodeInfoOutput = (nodeInfo: NormalizedNodeInfo) => {
     return {
         peerDescriptor: createPeerDescriptorOutput(nodeInfo.peerDescriptor),
         controlLayer: {
-            neighbors: nodeInfo.controlLayer.neighbors.map((n: PeerDescriptor) => toNodeId(n)),
-            connections: nodeInfo.controlLayer.connections.map((n: PeerDescriptor) => toNodeId(n))
+            neighbors: nodeInfo.controlLayer.neighbors.map((n) => toNodeId(n)),
+            connections: nodeInfo.controlLayer.connections.map((n) => toNodeId(n))
         },
-        streamPartitions: nodeInfo.streamPartitions.map((sp: StreamPartitionInfo) => ({
+        streamPartitions: nodeInfo.streamPartitions.map((sp) => ({
             id: sp.id,
-            controlLayerNeighbors: sp.controlLayerNeighbors.map((n: PeerDescriptor) => toNodeId(n)),
-            deprecatedContentDeliveryLayerNeighbors: sp.deprecatedContentDeliveryLayerNeighbors.map((n: PeerDescriptor) => toNodeId(n)),
-            contentDeliveryLayerNeighbors: sp.contentDeliveryLayerNeighbors.map((n: ContentDeliveryLayerNeighborInfo) => ({
-                nodeId: toNodeId(n.peerDescriptor!),
+            controlLayerNeighbors: sp.controlLayerNeighbors.map((n) => toNodeId(n)),
+            contentDeliveryLayerNeighbors: sp.contentDeliveryLayerNeighbors.map((n) => ({
+                nodeId: toNodeId(n.peerDescriptor),
                 rtt: n.rtt
             }))
         })),
@@ -50,7 +70,8 @@ createClientCommand(async (client: StreamrClient, nodeId: string) => {
     const peerDescriptor = peerDescriptors.find((pd) => toDhtAddress(pd.nodeId) === nodeId)
     if (peerDescriptor !== undefined) {
         const info = await networkNode.stack.fetchNodeInfo(peerDescriptor)
-        console.log(JSON.stringify(createNodeInfoOutput(info), undefined, 4))
+        const normalizedInfo = toNormalizeNodeInfo(info)
+        console.log(JSON.stringify(createNodeInfoOutput(normalizedInfo), undefined, 4))
     } else {
         logger.error('No peer descriptor found')
     }
