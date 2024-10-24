@@ -36,10 +36,10 @@ describe(weightedSample, () => {
             return weightedSample(['a', 'b', 'c', 'd'], (item) => weights[item], () => counter++)
         })
         expect(results).toEqual([
-            ...repeat('a', weights['a']),
-            ...repeat('b', weights['b']),
-            ...repeat('c', weights['c']),
-            ...repeat('d', weights['d'])
+            ...repeat('a', weights.a),
+            ...repeat('b', weights.b),
+            ...repeat('c', weights.c),
+            ...repeat('d', weights.d)
         ])
     })
 

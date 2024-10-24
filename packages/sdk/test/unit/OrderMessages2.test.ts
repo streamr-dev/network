@@ -8,7 +8,6 @@ import { MOCK_CONTENT } from '../test-utils/utils'
 import { MessageID } from './../../src/protocol/MessageID'
 import { MessageRef } from './../../src/protocol/MessageRef'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from './../../src/protocol/StreamMessage'
-import { ChangeFieldType } from './../../src/types'
 
 const MESSAGES_PER_PUBLISHER = 1000
 const NUM_OF_DUPLICATE_MESSAGES = 500
@@ -50,7 +49,7 @@ function intoChunks<T>(arr: readonly T[], chunkSize: number): T[][] {
     return chunks
 }
 
-function formChainOfMessages(publisherId: UserID): Array<MessageInfo> {
+function formChainOfMessages(publisherId: UserID): MessageInfo[] {
     const chainOfMessages: MessageInfo[] = [{
         publisherId,
         timestamp: 1,

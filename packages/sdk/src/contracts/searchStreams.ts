@@ -1,5 +1,4 @@
-import { ChangeFieldType } from './../types'
-import { GraphQLQuery, HexString, Logger, StreamID, TheGraphClient, toStreamID, toUserId, UserID } from '@streamr/utils'
+import { ChangeFieldType, GraphQLQuery, HexString, Logger, StreamID, TheGraphClient, toStreamID, toUserId, UserID } from '@streamr/utils'
 import { Stream } from '../Stream'
 import { ChainPermissions, PUBLIC_PERMISSION_USER_ID, StreamPermission, convertChainPermissionsToStreamPermissions } from '../permission'
 import { filter, map, unique } from '../utils/GeneratorUtils'

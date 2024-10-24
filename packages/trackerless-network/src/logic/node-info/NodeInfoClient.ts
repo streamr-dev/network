@@ -1,6 +1,6 @@
 import { DhtCallContext, PeerDescriptor } from '@streamr/dht'
 import { RpcCommunicator } from '@streamr/proto-rpc'
-import { NodeInfo } from '../../NetworkStack'
+import { NodeInfo } from '../../types'
 import { NodeInfoRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { NodeInfoRpcRemote } from './NodeInfoRpcRemote'
 

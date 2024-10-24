@@ -66,7 +66,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         return [...this.subscriptions]
     }
 
-    getNeighbors(streamPartId: StreamPartID): ReadonlyArray<DhtAddress> {
+    getNeighbors(streamPartId: StreamPartID): readonly DhtAddress[] {
         const allNodes = this.network.getNodes()
         return allNodes
             .filter((node) => (node.id !== this.id))

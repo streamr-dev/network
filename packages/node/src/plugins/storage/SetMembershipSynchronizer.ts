@@ -86,7 +86,7 @@ export class SetMembershipSynchronizer<E extends string> {
         }
 
         const nonStaleElements = [...elements].filter((element) => (
-            sequenceNo > (this.lastSequenceNoByElement.get(element) || 0)
+            sequenceNo > (this.lastSequenceNoByElement.get(element) ?? 0)
         ))
 
         nonStaleElements.forEach((element) => {

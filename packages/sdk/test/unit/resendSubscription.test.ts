@@ -76,7 +76,7 @@ describe('resend subscription', () => {
 
     const publish = async (type: string, msgChainId?: string) => {
         const messages = await createMessages(type, msgChainId)
-        for await (const msg of messages) {
+        for (const msg of messages) {
             await sub.push(msg)
         }
         return messages

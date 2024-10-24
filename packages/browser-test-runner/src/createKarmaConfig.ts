@@ -1,17 +1,19 @@
-const fs = require('fs')
+import fs from 'fs'
 
 const DEBUG_MODE = process.env.BROWSER_TEST_DEBUG_MODE ?? false
 
-module.exports = function(testPaths, webpackConfig, localDirectory) {
+export const createKarmaConfig = (
+    testPaths: string[], webpackConfig: () => Record<string, any>, localDirectory: string
+): (config: any) => any => {
     const setupFiles = [__dirname + '/karma-setup.js']
     const localSetupFile = localDirectory + '/karma-setup.js'
     if (fs.existsSync(localSetupFile)) {
         setupFiles.push(localSetupFile)
     }
-    const preprocessors = {}
+    const preprocessors: Record<string, string[]> = {}
     setupFiles.forEach((f) => preprocessors[f] = ['webpack'])
     testPaths.forEach((f) => preprocessors[f] = ['webpack', 'sourcemap'])
-    return (config) => {
+    return (config: any) => {
         config.set({
             plugins: [
                 'karma-electron',
@@ -38,7 +40,7 @@ module.exports = function(testPaths, webpackConfig, localDirectory) {
                             webSecurity: false,
                             sandbox: false
                         },
-                        show: DEBUG_MODE // set to true to show the electron window
+                        show: DEBUG_MODE  // set to true to show the electron window
                     }
                 }
             },
@@ -46,10 +48,10 @@ module.exports = function(testPaths, webpackConfig, localDirectory) {
             browserNoActivityTimeout: 400000,
             browsers: ['CustomElectron'],
             client: {
-                clearContext: false, // leave Jasmine Spec Runner output visible in browser
+                clearContext: false,  // leave Jasmine Spec Runner output visible in browser
                 useIframe: false,
             },
-            singleRun: !DEBUG_MODE,   //set to false to leave electron window open
+            singleRun: !DEBUG_MODE,  //set to false to leave electron window open
             webpack: {
                 ...webpackConfig(),
                 entry: {}
