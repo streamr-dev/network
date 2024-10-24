@@ -1,4 +1,5 @@
 import {
+    DEFAULT_PARTITION_COUNT,
     StreamID,
     StreamPartID,
     collect,
@@ -29,7 +30,7 @@ export interface StreamMetadata {
     /**
      * Determines how many partitions this stream consist of.
      */
-    partitions: number
+    partitions?: number
 
     /**
      * Human-readable description of this stream.
@@ -131,7 +132,7 @@ export class Stream {
         this.id = id
         this.metadata = merge(
             {
-                partitions: 1,
+                partitions: DEFAULT_PARTITION_COUNT,
                 // TODO should we remove this default or make config as a required StreamMetadata field?
                 config: {
                     fields: []
@@ -169,7 +170,15 @@ export class Stream {
      * Returns the partitions of the stream.
      */
     getStreamParts(): StreamPartID[] {
-        return range(0, this.getMetadata().partitions).map((p) => toStreamPartID(this.id, p))
+        return range(0, this.getPartitionCount()).map((p) => toStreamPartID(this.id, p))
+    }
+
+    getPartitionCount(): number {
+        const metadataValue = this.getMetadata().partitions
+        if (metadataValue !== undefined) {
+            ensureValidStreamPartitionCount(metadataValue)
+        }
+        return metadataValue ?? DEFAULT_PARTITION_COUNT
     }
 
     /**
@@ -264,7 +273,7 @@ export class Stream {
             await this._subscriber.add(assignmentSubscription)
             const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, {
                 id: this.id,
-                partitions: this.getMetadata().partitions
+                partitions: this.getMetadata().partitions ?? DEFAULT_PARTITION_COUNT
             }, this._loggerFactory)
             await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
             await withTimeout(
@@ -313,7 +322,7 @@ export class Stream {
         // object can't contain extra fields
         if (metadata === '') {
             return {
-                partitions: 1
+                partitions: DEFAULT_PARTITION_COUNT
             }
         }
         const err = new StreamrClientError(`Invalid stream metadata: ${metadata}`, 'INVALID_STREAM_METADATA')
@@ -333,7 +342,7 @@ export class Stream {
         } else {
             return {
                 ...json,
-                partitions: 1
+                partitions: DEFAULT_PARTITION_COUNT
             }
         }
     }
