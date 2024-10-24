@@ -151,19 +151,15 @@ export class Stream {
     }
 
     /**
-     * Updates the metadata of the stream by merging with the existing metadata.
+     * Updates the metadata of the stream.
      */
     async update(metadata: Partial<StreamMetadata>): Promise<void> {
-        // TODO maybe should use deep merge, i.e. merge() from @streamr/utils as that corresponds
-        // the implicit intention of the method description. But we'll harmonize this method soon in NET-1364,
-        // so we don't change the behavior now.
-        const merged = flatMerge(this.getMetadata(), metadata)
         try {
-            await this._streamRegistry.updateStream(this.id, merged)
+            await this._streamRegistry.updateStream(this.id, metadata)
         } finally {
             this._streamRegistry.clearStreamCache(this.id)
         }
-        this.metadata = merged
+        this.metadata = metadata
     }
 
     /**
@@ -234,11 +230,12 @@ export class Stream {
         }).filter(Boolean) as Field[] // see https://github.com/microsoft/TypeScript/issues/30621
 
         // Save field config back to the stream
-        await this.update({
+        const merged = flatMerge(this.getMetadata(), {
             config: {
                 fields
             }
         })
+        await this.update(merged)
     }
 
     /**
