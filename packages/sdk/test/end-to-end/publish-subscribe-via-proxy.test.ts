@@ -23,7 +23,7 @@ describeOnlyInNodeJs('publish/subscribe via proxy', () => { // Cannot run proxy 
         proxyUser = fastWallet()
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE],
-            user: proxyUser.address
+            userId: proxyUser.address
         })
     }, TIMEOUT)
 

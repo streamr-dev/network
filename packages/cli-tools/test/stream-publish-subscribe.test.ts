@@ -18,7 +18,7 @@ describe('publish and subscribe', () => {
         const client = createTestClient(publisherPrivateKey)
         const stream = await client.createStream(`/${Date.now()}`)
         await stream.grantPermissions({
-            user: new Wallet(subscriberPrivateKey).address,
+            userId: new Wallet(subscriberPrivateKey).address,
             permissions: [StreamPermission.SUBSCRIBE]
         })
         streamId = stream.id

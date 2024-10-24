@@ -34,7 +34,7 @@ describe('resend and subscribe', () => {
         })
         stream = await subscriber.createStream('/path')
         await stream.grantPermissions({
-            user: publisherWallet.address,
+            userId: publisherWallet.address,
             permissions: [StreamPermission.PUBLISH]
         })
         storageNode = await environment.startStorageNode()

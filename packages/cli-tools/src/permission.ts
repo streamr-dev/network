@@ -40,7 +40,7 @@ export const runModifyPermissionsCommand = (
         } else {
             assignment = {
                 permissions,
-                user
+                userId: user
             }
         }
         await modify(stream, assignment) 

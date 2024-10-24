@@ -38,7 +38,7 @@ describe('StreamrClient', () => {
         streamDefinition = stream.getStreamParts()[0]
         const publisherWallet = fastWallet()
         await stream.grantPermissions({
-            user: publisherWallet.address,
+            userId: publisherWallet.address,
             permissions: [StreamPermission.PUBLISH]
         })
         publishTestMessages = getPublishTestStreamMessages(environment.createClient({

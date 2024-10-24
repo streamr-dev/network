@@ -33,7 +33,7 @@ describe('binary publish', () => {
             await publisher.setPermissions({
                 streamId: stream.id,
                 assignments: [
-                    { permissions: [StreamPermission.SUBSCRIBE], user: subscriberWallet.address }
+                    { permissions: [StreamPermission.SUBSCRIBE], userId: subscriberWallet.address }
                 ]
             })
         }, TIMEOUT)

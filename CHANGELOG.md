@@ -17,6 +17,13 @@ Changes before Tatum release are not documented in this file.
 #### Changed
 
 - **BREAKING CHANGE:** Rename `getAddress()` to `getUserId()` (https://github.com/streamr-dev/network/pull/2774)
+- **BREAKING CHANGE:** Rename `user` to `userId` in these interfaces: (https://github.com/streamr-dev/network/pull/2811)
+  - `UserPermissionAssignment`
+    - used in `grantPermissions()`, `revokePermissions()`, `getPermissions()` and `setPermissions()`
+  - `UserPermissionQuery`
+    - used in `hasPermission()`
+  - `SearchStreamsPermissionFilter`
+    - used in `searchStreams()`
 - Network-level changes
   - Avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801) 
   - Internal record `StreamPartitionInfo` format changed (https://github.com/streamr-dev/network/pull/2738, https://github.com/streamr-dev/network/pull/2790)
