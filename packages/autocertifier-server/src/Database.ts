@@ -46,8 +46,8 @@ export class Database {
         return ret
     }
 
-    public async getAllSubdomains(): Promise<Array<Subdomain> | undefined> {
-        let ret: Array<Subdomain> | undefined
+    public async getAllSubdomains(): Promise<Subdomain[] | undefined> {
+        let ret: Subdomain[] | undefined
         try {
             ret = await this.getAllSubdomainsStatement!.all()
         } catch (e) {

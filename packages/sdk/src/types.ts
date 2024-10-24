@@ -11,4 +11,3 @@ export type StreamDefinition = string
     | { stream: string, partition?: number }
     | { streamId: string, partition?: number }
 
-export type ChangeFieldType<T, K extends keyof T, V> = Omit<T, K> & { [P in K]: V }

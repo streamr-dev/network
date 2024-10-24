@@ -19,7 +19,7 @@ const createHandler = (msgChainId: string, streamrClient: StreamrClient): Reques
             content = PAYLOAD_FORMAT.createMessage(req.body.toString()).content
             timestamp = parseQueryParameter<number>('timestamp', req.query, parseTimestamp)
             partition = parseQueryParameter<number>('partition', req.query, parsePositiveInteger)
-            partitionKey = req.query['partitionKey'] as string
+            partitionKey = req.query.partitionKey as string
         } catch (e) {
             res.status(400).send({
                 error: e.message

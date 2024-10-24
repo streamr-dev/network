@@ -17,7 +17,7 @@ const TIMEOUT = 60 * 1000
 describe('resend', () => {
     let publisherClient: StreamrClient
     let resendClient: StreamrClient
-    let payloads: Array<Uint8Array | { idx: number }>
+    let payloads: (Uint8Array | { idx: number })[]
 
     beforeEach(async () => {
         publisherClient = createTestClient(await fetchPrivateKeyWithGas(), 43232)

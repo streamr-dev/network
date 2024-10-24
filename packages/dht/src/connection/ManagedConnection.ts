@@ -1,6 +1,6 @@
 import { ConnectionID, IConnection } from './IConnection'
 import * as Err from '../helpers/errors'
-import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { Logger } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { getNodeIdOrUnknownFromPeerDescriptor } from './ConnectionManager'
