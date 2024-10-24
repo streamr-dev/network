@@ -48,7 +48,7 @@ Start the Config Wizard with the below command. Docker will download the node im
 #### Run the config wizard (Linux / macOS instructions)
 
 ```
-sudo docker run -it -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/node bin/config-wizard
+sudo docker run -it -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/node bin/streamr-node-init
 ```
 
 #### **Windows PowerShell instructions**
@@ -62,7 +62,7 @@ cd ~/.streamrDocker
 Then run the Config Wizard:
 
 ```
-docker run -it -v ${pwd}:/home/streamr/.streamr streamr/node bin/config-wizard
+docker run -it -v ${pwd}:/home/streamr/.streamr streamr/node bin/streamr-node-init
 ```
 
 #### Using the Config Wizard
