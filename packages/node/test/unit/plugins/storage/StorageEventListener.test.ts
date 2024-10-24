@@ -3,10 +3,7 @@ import { EthereumAddress, toEthereumAddress, toStreamID, wait } from '@streamr/u
 import { StorageEventListener } from '../../../../src/plugins/storage/StorageEventListener'
 
 const MOCK_STREAM = {
-    id: 'streamId',
-    getMetadata: () => ({
-        partitions: 3
-    })
+    id: 'streamId'
 } as Stream
 const clusterId = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 const otherClusterId = toEthereumAddress('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')

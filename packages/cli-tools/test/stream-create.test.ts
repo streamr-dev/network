@@ -19,7 +19,7 @@ describe('create stream', () => {
         })
         const client = createTestClient()
         const stream = await client.getStream(streamId)
-        expect(stream.getMetadata().partitions).toBe(1)
+        expect(stream.getPartitionCount()).toBe(1)
         await client.destroy()
     }, 20 * 1000)
 
