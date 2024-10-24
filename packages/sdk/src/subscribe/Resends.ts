@@ -1,4 +1,15 @@
-import { ChangeFieldType, EthereumAddress, HexString, Logger, StreamID, StreamPartID, StreamPartIDUtils, UserID, randomString, toUserId } from '@streamr/utils'
+import {
+    ChangeFieldType,
+    EthereumAddress,
+    HexString,
+    Logger,
+    StreamID,
+    StreamPartID,
+    StreamPartIDUtils,
+    UserID,
+    randomString,
+    toUserId
+} from '@streamr/utils'
 import random from 'lodash/random'
 import sample from 'lodash/sample'
 import without from 'lodash/without'
