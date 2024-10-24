@@ -7,7 +7,8 @@ import { DhtRpcOptions } from '../../src/rpc-protocol/DhtRpcOptions'
 import { ListeningRpcCommunicator } from '../../src/transport/ListeningRpcCommunicator'
 import { ProtoRpcClient, toProtoRpcClient } from '@streamr/proto-rpc'
 import { DhtNodeRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
-import { PeerDescriptor, PingRequest, PingResponse } from '../../generated/packages/dht/protos/DhtRpc'
+import { PingRequest, PingResponse } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
 import { MetricsContext } from '@streamr/utils'
 import { createMockPeerDescriptor } from '../utils/utils'
@@ -51,7 +52,6 @@ describe('RPC connections over WebRTC', () => {
         await connectorTransport2.start()
         manager2 = createConnectionManager(peerDescriptor2, connectorTransport2)
         rpcCommunicator2 = new ListeningRpcCommunicator(SERVICE_ID, manager2)
-        //client2 = toProtoRpcClient(new DhtNodeRpcClient(rpcCommunicator2.getRpcClientTransport()))
 
         await manager1.start()
         await manager2.start()
@@ -88,7 +88,7 @@ describe('RPC connections over WebRTC', () => {
         const response = await client1.ping(request, options)
 
         expect(response.requestId).toEqual(request.requestId)
-    }, 60000)
+    })
 
     it('Throws an exception if RPC method is not defined', async () => {
 
@@ -102,57 +102,23 @@ describe('RPC connections over WebRTC', () => {
 
         await expect(client1.ping(request, options))
             .rejects.toThrow('Server does not implement method ping')
-    }, 60000)
+    })
 
-    /*
-    
-    TODO enable these tests (NET-1177)
-
-    it.only('Throws a client-side exception if WebRTC connection fails', async () => {
+    it('Throws a client-side exception if WebRTC connection fails', async () => {
 
         const request: PingRequest = {
             requestId: v4()
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: peerDescriptor1,
-            targetDescriptor: peerDescriptor2
+            targetDescriptor: peerDescriptor2,
+            timeout: 10000
         }
-        await connectorTransport1.stop()
         await manager2.stop()
         
-        const result = await client1.ping(request, options)
-        
-    }, 60000)
+        await expect(client1.ping(request, options))
+            .rejects.toThrow('Peer disconnected')
 
-    it('Disconnects WebrtcConnection while being connected', async () => {
-        
-        const rpcMessage: RpcMessage = {
-            header: {},
-            body: new Uint8Array(10),
-            requestId: v4()
-        }
+    }, 10000)
 
-        const msg: Message = {
-            serviceId,
-            messageId: '1',
-            body: RpcMessage.toBinary(rpcMessage)
-        }
-
-        const disconnectedPromise1 = new Promise<void>((resolve, _reject) => {
-            manager1.on('disconnected', () => {
-                //expect(message.body.oneofKind).toBe('rpcMessage')
-                resolve()
-            })
-        })
-
-        msg.targetDescriptor = peerDescriptor2
-        manager1.send(msg).catch((e) => {
-            expect(e.code).toEqual('CONNECTION_FAILED')
-        })
-        
-        manager1.disconnect(peerDescriptor2!, undefined, 100)
-        await disconnectedPromise1
-
-    }, 20000)
-    */
 })

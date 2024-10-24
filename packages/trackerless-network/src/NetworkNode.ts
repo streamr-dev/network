@@ -4,8 +4,9 @@ import { DhtAddress, PeerDescriptor } from '@streamr/dht'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { MetricsContext, StreamPartID, UserID } from '@streamr/utils'
 import { ExternalNetworkRpc, ExternalRpcClient, ExternalRpcClientClass } from './logic/ExternalNetworkRpc'
-import { NetworkOptions, NetworkStack, NodeInfo } from './NetworkStack'
+import { NetworkOptions, NetworkStack } from './NetworkStack'
 import { ProxyDirection, StreamMessage } from '../generated/packages/trackerless-network/protos/NetworkRpc'
+import { NodeInfo } from './types'
 
 export const createNetworkNode = (opts: NetworkOptions): NetworkNode => {
     return new NetworkNode(new NetworkStack(opts))
@@ -75,7 +76,7 @@ export class NetworkNode {
         await this.stack.getContentDeliveryManager().leaveStreamPart(streamPartId)
     }
 
-    getNeighbors(streamPartId: StreamPartID): ReadonlyArray<DhtAddress> {
+    getNeighbors(streamPartId: StreamPartID): readonly DhtAddress[] {
         return this.stack.getContentDeliveryManager().getNeighbors(streamPartId)
     }
 

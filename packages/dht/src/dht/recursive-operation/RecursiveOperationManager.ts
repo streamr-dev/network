@@ -1,12 +1,12 @@
 import {
     DataEntry,
-    PeerDescriptor,
     RecursiveOperation,
     RecursiveOperationRequest,
     RouteMessageAck,
     RouteMessageError,
     RouteMessageWrapper
 } from '../../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { Router } from '../routing/Router'
 import { RoutingMode } from '../routing/RoutingSession'
 import { Logger, areEqualBinaries, runAndWaitForEvents3, wait } from '@streamr/utils'
@@ -39,7 +39,7 @@ interface RecursiveOperationManagerOptions {
     createDhtNodeRpcRemote: (peerDescriptor: PeerDescriptor) => DhtNodeRpcRemote
 }
 
-export interface RecursiveOperationResult { closestNodes: Array<PeerDescriptor>, dataEntries?: Array<DataEntry> }
+export interface RecursiveOperationResult { closestNodes: PeerDescriptor[], dataEntries?: DataEntry[] }
 
 const logger = new Logger(module)
 

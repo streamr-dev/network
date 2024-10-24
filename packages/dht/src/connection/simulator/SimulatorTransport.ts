@@ -1,5 +1,5 @@
 import { MetricsContext } from '@streamr/utils'
-import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { ConnectionManager } from '../ConnectionManager'
 import { Simulator } from './Simulator'
 import { SimulatorConnectorFacade } from '../ConnectorFacade'

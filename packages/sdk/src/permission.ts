@@ -1,6 +1,5 @@
-import { HexString, toUserId, UserID } from '@streamr/utils'
+import { ChangeFieldType, HexString, toUserId, UserID } from '@streamr/utils'
 import { MaxUint256 } from 'ethers'
-import { ChangeFieldType } from './types'
 
 export enum StreamPermission {
     EDIT = 'edit',
