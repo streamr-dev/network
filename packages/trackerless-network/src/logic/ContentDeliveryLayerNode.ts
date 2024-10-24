@@ -402,6 +402,10 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         })
     }
 
+    getProxiedNodes(): PeerDescriptor[] {
+        return this.options.proxyConnectionRpcLocal?.getNodes() || []
+    }
+
     getNearbyNodeView(): NodeList {
         return this.options.nearbyNodeView
     }
