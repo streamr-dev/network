@@ -1,5 +1,5 @@
 import { DhtAddress } from '../identifiers'
-import { PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 
 export interface ConnectionsView {
     getConnections: () => PeerDescriptor[]

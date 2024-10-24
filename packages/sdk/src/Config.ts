@@ -8,6 +8,7 @@ import { generateClientId } from './utils/utils'
 import validate from './generated/validateConfig'
 import { GapFillStrategy } from './subscribe/ordering/GapFiller'
 import { config as CHAIN_CONFIG } from '@streamr/config'
+import { CONFIG_TEST } from './ConfigTest'
 
 export interface ProviderAuthConfig {
     ethereum: Eip1193Provider
@@ -227,7 +228,9 @@ export interface EthereumNetworkConfig {
 //   in Ethereum network
 export type EnvironmentId = 'polygon' | 'polygonAmoy' | 'dev2'
 
-export const DEFAULT_ENVIRONMENT: EnvironmentId = 'polygon'
+export const ENVIRONMENT_IDS: EnvironmentId[] = ['polygon', 'polygonAmoy', 'dev2']
+
+export const DEFAULT_ENVIRONMENT_ID: EnvironmentId = 'polygon'
 
 /**
  * @category Important
@@ -436,7 +439,7 @@ export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc3
 export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStreamrClientConfig => {
     // TODO is it good to cloneDeep the input object as it may have object references (e.g. auth.ethereum)?
     let config = cloneDeep(input)
-    const environment = config.environment ?? DEFAULT_ENVIRONMENT
+    const environment = config.environment ?? DEFAULT_ENVIRONMENT_ID
     config = applyEnvironmentDefaults(environment, config)
     const strictConfig = validateConfig(config)
     strictConfig.id ??= generateClientId()
@@ -445,32 +448,30 @@ export const createStrictConfig = (input: StreamrClientConfig = {}): StrictStrea
 
 const applyEnvironmentDefaults = (environmentId: EnvironmentId, data: StreamrClientConfig): StreamrClientConfig => {
     const defaults = CHAIN_CONFIG[environmentId]
-    const config = merge(data, {
+    let config = merge({
         network: {
-            ...data.network,
             controlLayer: {
-                entryPoints: defaults.entryPoints,
-                ...data.network?.controlLayer,
+                entryPoints: defaults.entryPoints
             }
         } as any,
         contracts: {
             ethereumNetwork: {
-                chainId: defaults.id,
-                ...data.contracts?.ethereumNetwork
+                chainId: defaults.id
             },
             streamRegistryChainAddress: defaults.contracts.StreamRegistry,
             streamStorageRegistryChainAddress: defaults.contracts.StreamStorageRegistry,
             storageNodeRegistryChainAddress: defaults.contracts.StorageNodeRegistry,
             rpcs: defaults.rpcEndpoints,
-            theGraphUrl: defaults.theGraphUrl,
-            ...data.contracts,
+            theGraphUrl: defaults.theGraphUrl
         } as any
-    }) as any
+    }, data) as any
     if (environmentId === 'polygon') {
         config.contracts.ethereumNetwork = { 
             highGasPriceStrategy: true,
             ...config.contracts.ethereumNetwork
         }
+    } else if (environmentId === 'dev2') {
+        config = merge(CONFIG_TEST, config)
     }
     return config
 }

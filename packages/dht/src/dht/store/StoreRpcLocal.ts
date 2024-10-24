@@ -4,10 +4,10 @@ import { Empty } from '../../../generated/google/protobuf/empty'
 import { Timestamp } from '../../../generated/google/protobuf/timestamp'
 import {
     DataEntry,
-    PeerDescriptor,
     ReplicateDataRequest,
     StoreDataRequest, StoreDataResponse
 } from '../../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { IStoreRpc } from '../../../generated/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
 import { LocalDataStore } from './LocalDataStore'
@@ -17,7 +17,7 @@ interface StoreRpcLocalOptions {
     localDataStore: LocalDataStore
     localPeerDescriptor: PeerDescriptor
     replicateDataToContact: (dataEntry: DataEntry, contact: PeerDescriptor) => Promise<void>
-    getStorers: (key: DhtAddress) => ReadonlyArray<PeerDescriptor>
+    getStorers: (key: DhtAddress) => readonly PeerDescriptor[]
 }
 
 const logger = new Logger(module)

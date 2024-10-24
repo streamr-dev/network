@@ -77,7 +77,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         if (registryItem === undefined) {
             return false
         }
-        const targets: Array<UserID | PublicPermissionTarget> = []
+        const targets: (UserID | PublicPermissionTarget)[] = []
         if (isPublicPermissionQuery(query) || query.allowPublic) {
             targets.push(PUBLIC_PERMISSION_TARGET)
         }

@@ -80,7 +80,7 @@ function getFieldType(value: any): (Field['type'] | undefined) {
         case type === 'object': {
             return 'map'
         }
-        case (VALID_FIELD_TYPES as ReadonlyArray<string>).includes(type): {
+        case (VALID_FIELD_TYPES as readonly string[]).includes(type): {
             // see https://github.com/microsoft/TypeScript/issues/36275
             return type as Field['type']
         }
@@ -88,6 +88,20 @@ function getFieldType(value: any): (Field['type'] | undefined) {
             return undefined
         }
     }
+}
+
+export const flatMerge = <TTarget>(...sources: (Partial<TTarget> | undefined)[]): TTarget => {
+    const result: Record<string, unknown> = {}
+    for (const source of sources) {
+        if (source !== undefined) {
+            for (const [key, value] of Object.entries(source)) {
+                if (value !== undefined) {
+                    result[key] = value
+                }
+            }
+        }
+    }
+    return result as TTarget
 }
 
 /**
@@ -146,7 +160,10 @@ export class Stream {
      * Updates the metadata of the stream by merging with the existing metadata.
      */
     async update(metadata: Partial<StreamMetadata>): Promise<void> {
-        const merged = merge(this.getMetadata(), metadata)
+        // TODO maybe should use deep merge, i.e. merge() from @streamr/utils as that corresponds
+        // the implicit intention of the method description. But we'll harmonize this method soon in NET-1364,
+        // so we don't change the behavior now.
+        const merged = flatMerge(this.getMetadata(), metadata)
         try {
             await this._streamRegistry.updateStream(this.id, merged)
         } finally {
