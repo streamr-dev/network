@@ -26,41 +26,11 @@ import { LoggerFactory } from './utils/LoggerFactory'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
 
-export interface StreamMetadata {
-    /**
-     * Determines how many partitions this stream consist of.
-     */
-    partitions?: number
+export type StreamMetadata = Record<string, any>
 
-    /**
-     * Human-readable description of this stream.
-     */
-    description?: string
+const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
 
-    /**
-     * Defines the structure of the content (payloads) of messages in this stream.
-     *
-     * @remarks Not validated, purely for informational value.
-     */
-    config?: {
-        fields: Field[]
-    }
-
-    /**
-     * If this stream is assigned to storage nodes, how many days (at minimum) should the data be retained for.
-     */
-    storageDays?: number
-
-    /**
-     * After how many hours of inactivity (i.e. no messages) should a stream be considered inactive. Purely for
-     * informational purposes.
-     */
-    inactivityThresholdHours?: number
-}
-
-export const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
-
-export interface Field {
+interface Field {
     name: string
     type: typeof VALID_FIELD_TYPES[number]
 }
