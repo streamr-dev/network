@@ -1,7 +1,7 @@
+import { Stream, StreamrClient } from '@streamr/sdk'
 import { collect, waitForCondition } from '@streamr/utils'
 import { spawn } from 'child_process'
 import merge2 from 'merge2'
-import { CONFIG_TEST, Stream, StreamrClient } from '@streamr/sdk'
 
 export const DOCKER_DEV_STORAGE_NODE = '0xde1112f631486CfC759A50196853011528bC5FA0'
 
@@ -24,7 +24,7 @@ export async function* startCommand(commandLine: string, opts?: StartCommandOpti
         args.push('--private-key', opts.privateKey)
     }
     if (opts?.devEnvironment !== false) {
-        args.push('--dev')
+        args.push('--env', 'dev2')
     }
     const executable = spawn(`node`, args, {
         signal: opts?.abortSignal,
@@ -69,7 +69,7 @@ async function* lines(src: AsyncIterable<Buffer>): AsyncGenerator<string, any, a
 
 export const createTestClient = (privateKey?: string): StreamrClient => {
     return new StreamrClient({
-        ...CONFIG_TEST,
+        environment: 'dev2',
         auth: (privateKey !== undefined) ? { privateKey } : undefined
     })
 }

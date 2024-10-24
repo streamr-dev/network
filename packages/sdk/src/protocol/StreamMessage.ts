@@ -148,7 +148,7 @@ export class StreamMessage implements StreamMessageOptions {
     }
 
     // TODO: consider replacing later half of type with a "JSON type" from a ts-toolbelt or type-fest or ts-essentials
-    getParsedContent(): Uint8Array | Record<string, unknown> | Array<unknown> {
+    getParsedContent(): Uint8Array | Record<string, unknown> | unknown[] {
         if (this.encryptionType !== EncryptionType.NONE || this.contentType === ContentType.BINARY) {
             return this.content
         } else if (this.contentType === ContentType.JSON) {

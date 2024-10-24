@@ -8,7 +8,7 @@ const WAIT = 20
 
 async function* generate(items = expected, waitTime = WAIT) {
     await wait(waitTime * 0.1)
-    for await (const item of items) {
+    for (const item of items) {
         await wait(waitTime * 0.1)
         yield item
         await wait(waitTime * 0.1)
@@ -20,7 +20,7 @@ async function* generate(items = expected, waitTime = WAIT) {
 async function* generateThrow(items = expected, { max = MAX_ITEMS, err = new Error('expected') }) {
     let index = 0
     await wait(WAIT * 0.1)
-    for await (const item of items) {
+    for (const item of items) {
         index += 1
         await wait(WAIT * 0.1)
         if (index > max) {
@@ -696,7 +696,7 @@ describe('Iterator Utils', () => {
                 const triggeredForever = jest.fn()
                 const itr = CancelableGenerator((async function* Gen() {
                     let i = 0
-                    for await (const v of expected) {
+                    for (const v of expected) {
                         i += 1
                         await wait((expected.length - i - 1) * 2 * WAIT)
                         yield v

@@ -8,8 +8,7 @@ import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { writeHeapSnapshot } from 'v8'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { counterId, instanceId, createTheGraphClient } from '../../src/utils/utils'
-import { CONFIG_TEST } from '../../src/ConfigTest'
-import { createStrictConfig, ConfigInjectionToken, StrictStreamrClientConfig } from '../../src/Config'
+import { createStrictConfig, ConfigInjectionToken, StrictStreamrClientConfig, StreamrClientConfig } from '../../src/Config'
 import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
 import { StorageNodeRegistry } from '../../src/contracts/StorageNodeRegistry'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
@@ -74,9 +73,9 @@ describeOnlyInNodeJs('MemoryLeaks', () => { // LeaksDetector is not supported in
                 childContainer: DependencyContainer
             }> => {
                 const config = createStrictConfig(
-                    merge(
-                        CONFIG_TEST,
+                    merge<StreamrClientConfig>(
                         {
+                            environment: 'dev2',
                             auth: {
                                 privateKey: await fetchPrivateKeyWithGas(),
                             }
@@ -122,9 +121,9 @@ describeOnlyInNodeJs('MemoryLeaks', () => { // LeaksDetector is not supported in
         beforeAll(() => {
             createClient = async (opts: any = {}) => {
                 const c = new StreamrClient(
-                    merge(
-                        CONFIG_TEST,
+                    merge<StreamrClientConfig>(
                         {
+                            environment: 'dev2',
                             auth: {
                                 privateKey: await fetchPrivateKeyWithGas(),
                             }

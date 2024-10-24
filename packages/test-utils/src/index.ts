@@ -34,15 +34,15 @@ export const waitForStreamToEnd = (stream: Readable): Promise<unknown[]> => {
 // internal
 const runAndWait = async (
     operations: (() => void) | ((() => void)[]),
-    waitedEvents: [emitter: EventEmitter, event: Event] | Array<[emitter: EventEmitter, event: Event]>,
+    waitedEvents: [emitter: EventEmitter, event: Event] | [emitter: EventEmitter, event: Event][],
     timeout: number,
-    promiseFn: (args: Array<Promise<unknown>>) => Promise<unknown[]>
+    promiseFn: (args: Promise<unknown>[]) => Promise<unknown[]>
 ): Promise<unknown[]> => {
     const ops = Array.isArray(operations) ? operations : [operations]
 
-    let evs: Array<[emitter: EventEmitter, event: Event]>
+    let evs: [emitter: EventEmitter, event: Event][]
     if (Array.isArray(waitedEvents) && Array.isArray(waitedEvents[0])) {
-        evs = waitedEvents as Array<[emitter: EventEmitter, event: Event]>
+        evs = waitedEvents as [emitter: EventEmitter, event: Event][]
     } else {
         evs = [waitedEvents as [emitter: EventEmitter, event: Event]]
     }
@@ -64,7 +64,7 @@ const runAndWait = async (
  */
 export const runAndWaitForEvents = async (
     operations: (() => void) | ((() => void)[]), 
-    waitedEvents: [emitter: EventEmitter, event: Event] | Array<[emitter: EventEmitter, event: Event]>,
+    waitedEvents: [emitter: EventEmitter, event: Event] | [emitter: EventEmitter, event: Event][],
     timeout = 5000
 ): Promise<unknown[]> => {
     return runAndWait(operations, waitedEvents, timeout, Promise.all.bind(Promise))
@@ -82,7 +82,7 @@ export const runAndWaitForEvents = async (
  */
 export const runAndRaceEvents = async (
     operations: (() => void) | ((() => void)[]), 
-    waitedEvents: [emitter: EventEmitter, event: Event] | Array<[emitter: EventEmitter, event: Event]>, 
+    waitedEvents: [emitter: EventEmitter, event: Event] | [emitter: EventEmitter, event: Event][], 
     timeout = 5000
 ): Promise<unknown[]> => {
     return runAndWait(operations, waitedEvents, timeout, Promise.race.bind(Promise))
@@ -130,8 +130,8 @@ export const runAndWaitForConditions = async (
  * @returns {Array<Event>} array that is pushed to every time emitter emits an event that
  * is defined in `events`
  */
-export const eventsToArray = (emitter: EventEmitter, events: ReadonlyArray<Event>): Event[] => {
-    const array: Array<Event> = []
+export const eventsToArray = (emitter: EventEmitter, events: readonly Event[]): Event[] => {
+    const array: Event[] = []
     events.forEach((e) => {
         emitter.on(e, () => array.push(e))
     })
@@ -146,8 +146,8 @@ export const eventsToArray = (emitter: EventEmitter, events: ReadonlyArray<Event
  * @returns {Array<[Event, ...any]>} array that is pushed to every time emitter emits an event that
  * is defined in `events`, includes event arguments
  */
-export const eventsWithArgsToArray = (emitter: EventEmitter, events: ReadonlyArray<Event>): Array<[Event, ...any]> => {
-    const array: Array<[Event, ...any]> = []
+export const eventsWithArgsToArray = (emitter: EventEmitter, events: readonly Event[]): [Event, ...any][] => {
+    const array: [Event, ...any][] = []
     events.forEach((e) => {
         emitter.on(e, (...args) => array.push([e, ...args]))
     })

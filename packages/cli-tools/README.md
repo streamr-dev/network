@@ -169,7 +169,7 @@ You must pass either the `--private-key` or `--config` option.
 User can specify environment and authentication details with the following command line arguments:
 - `--private-key <key>`, e.g. `--private-key 0x1234567890123456789012345678901234567890123456789012345678901234`
 - `--config <file>`, e.g. `--config foobar.json`
-- `--dev` use the pre-defined [development environment](https://github.com/streamr-dev/streamr-docker-dev)
+- `--env` use a pre-defined environment, e.g. `--env dev2` to use the [development environment](https://github.com/streamr-dev/streamr-docker-dev)
 
 The `--config` argument tries to read a configuration file from the current working directory (either without a file extension, or with `.json` extension added). It also tries to read it from `~/.streamr/config/${id}.json` dotfile.
 

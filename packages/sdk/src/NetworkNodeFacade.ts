@@ -38,7 +38,7 @@ export interface NetworkNodeStub {
     leave: (streamPartId: StreamPartID) => Promise<void>
     broadcast: (streamMessage: NewStreamMessage) => Promise<void>
     getStreamParts: () => StreamPartID[]
-    getNeighbors: (streamPartId: StreamPartID) => ReadonlyArray<DhtAddress>
+    getNeighbors: (streamPartId: StreamPartID) => readonly DhtAddress[]
     getPeerDescriptor: () => PeerDescriptor
     getOptions: () => NetworkOptions
     getMetricsContext: () => MetricsContext
@@ -263,12 +263,12 @@ export class NetworkNodeFacade {
         return node.getDiagnosticInfo()
     }
 
-    async getStreamParts(): Promise<ReadonlyArray<StreamPartID>> {
+    async getStreamParts(): Promise<readonly StreamPartID[]> {
         const node = await this.getNode()
         return node.getStreamParts()
     }
 
-    async getNeighbors(streamPartId: StreamPartID): Promise<ReadonlyArray<DhtAddress>> {
+    async getNeighbors(streamPartId: StreamPartID): Promise<readonly DhtAddress[]> {
         const node = await this.getNode()
         return node.getNeighbors(streamPartId)
     }

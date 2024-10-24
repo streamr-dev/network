@@ -347,11 +347,11 @@ async function getPubsubPlugins(): Promise<Partial<Record<PubsubPluginKey, Pubsu
                                     Object.entries(pubsubPlugins).find(
                                         ([pluginKey, plugin]) =>
                                             value ===
-                                            (plugin.port ||
+                                            (plugin.port ??
                                                 DEFAULT_PORTS[
                                                     pluginKey as PubsubPluginKey
                                                 ])
-                                    ) || []
+                                    ) ?? []
 
                                 if (pluginKey) {
                                     ctx.addIssue({
