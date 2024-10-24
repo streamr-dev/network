@@ -230,7 +230,7 @@ export class Stream {
         }).filter(Boolean) as Field[] // see https://github.com/microsoft/TypeScript/issues/30621
 
         // Save field config back to the stream
-        const merged = flatMerge(this.getMetadata(), this.getMetadata(), {
+        const merged = flatMerge(this.getMetadata(), {
             config: {
                 fields
             }
