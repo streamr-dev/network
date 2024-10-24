@@ -17,7 +17,7 @@ interface StoreRpcLocalOptions {
     localDataStore: LocalDataStore
     localPeerDescriptor: PeerDescriptor
     replicateDataToContact: (dataEntry: DataEntry, contact: PeerDescriptor) => Promise<void>
-    getStorers: (key: DhtAddress) => ReadonlyArray<PeerDescriptor>
+    getStorers: (key: DhtAddress) => readonly PeerDescriptor[]
 }
 
 const logger = new Logger(module)

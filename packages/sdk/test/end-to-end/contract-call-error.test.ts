@@ -1,5 +1,4 @@
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { CONFIG_TEST } from '../../src/ConfigTest'
 import { StreamrClient } from '../../src/StreamrClient'
 
 describe('contract call error', () => {
@@ -7,7 +6,7 @@ describe('contract call error', () => {
     // TODO: see NET-1007, could improve error messages in fast-chain
     it('insufficient funds', async () => {
         const client = new StreamrClient({
-            ...CONFIG_TEST,
+            environment: 'dev2',
             auth: {
                 privateKey: fastWallet().privateKey
             }
@@ -19,7 +18,7 @@ describe('contract call error', () => {
 
     it('invalid chain RPC url', async () => {
         const client = new StreamrClient({
-            ...CONFIG_TEST,
+            environment: 'dev2',
             contracts: {
                 rpcs: [{
                     url: 'http://mock.test'
@@ -34,7 +33,7 @@ describe('contract call error', () => {
     it('concurrent transactions', async () => {
         const privateKey = await fetchPrivateKeyWithGas()
         const client = new StreamrClient({
-            ...CONFIG_TEST,
+            environment: 'dev2',
             auth: {
                 privateKey
             }

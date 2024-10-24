@@ -19,7 +19,7 @@ import { RingIdRaw } from './contact/ringIdentifiers'
 
 interface DhtNodeRpcLocalOptions {
     peerDiscoveryQueryBatchSize: number
-    getNeighbors: () => ReadonlyArray<PeerDescriptor>
+    getNeighbors: () => readonly PeerDescriptor[]
     getClosestRingContactsTo: (id: RingIdRaw, limit: number) => RingContacts
     addContact: (contact: PeerDescriptor) => void
     removeContact: (nodeId: DhtAddress) => void

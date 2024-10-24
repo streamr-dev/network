@@ -23,12 +23,10 @@ import {
     LockRequest,
     UnlockRequest,
     LockResponse
-
 } from '../../generated/packages/dht/protos/DhtRpc'
-
 import { PeerDescriptor, ConnectivityMethod } from '../../generated/packages/dht/protos/PeerDescriptor'
 
-export const protoClasses: Array<IMessageType<any>> = [
+export const protoClasses: IMessageType<any>[] = [
     ClosestPeersRequest,
     ClosestPeersResponse,
     RecursiveOperationRequest,

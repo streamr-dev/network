@@ -40,7 +40,7 @@ class MockNode {
 }
 
 // populate with mock ip addresses
-const mockData: Array< [number, string] > = [
+const mockData: [number, string][] = [
     [0, '5.2.4.2'],
     [0, '6.23.2.4'],
     [0, '7.2.4.2'],

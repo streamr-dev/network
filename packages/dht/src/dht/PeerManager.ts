@@ -264,7 +264,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         return this.neighbors.count()
     }
 
-    getNeighbors(): ReadonlyArray<DhtNodeRpcRemote> {
+    getNeighbors(): readonly DhtNodeRpcRemote[] {
         return this.neighbors.toArray()
     }
 
