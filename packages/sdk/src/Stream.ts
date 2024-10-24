@@ -74,7 +74,7 @@ function getFieldType(value: any): (Field['type'] | undefined) {
         case type === 'object': {
             return 'map'
         }
-        case (VALID_FIELD_TYPES as ReadonlyArray<string>).includes(type): {
+        case (VALID_FIELD_TYPES as readonly string[]).includes(type): {
             // see https://github.com/microsoft/TypeScript/issues/36275
             return type as Field['type']
         }

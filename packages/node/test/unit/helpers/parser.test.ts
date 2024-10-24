@@ -24,7 +24,7 @@ describe('parse', () => {
         it('with parameters', () => {
             const { base, query } = parseQueryAndBase('foobar?lorem=ipsum')
             expect(base).toBe('foobar')
-            expect(query['lorem']).toBe('ipsum')
+            expect(query.lorem).toBe('ipsum')
         })
         it('without parameters', () => {
             const { base, query } = parseQueryAndBase('foobar')

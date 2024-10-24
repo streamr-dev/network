@@ -1,8 +1,10 @@
-const path = require('path')
-const webpack = require('webpack')
-const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
+import path from 'path'
+import webpack from 'webpack'
+import NodePolyfillPlugin from 'node-polyfill-webpack-plugin'
 
-module.exports = function({ entry, libraryName, alias = {} }) {
+export const createWebpackConfig = (
+    { entry, libraryName, alias = {} }: { entry: string, libraryName: string, alias: Record<string, string> }
+): Record<string, any> => {
     return () => {
         return {
             cache: {
@@ -24,15 +26,7 @@ module.exports = function({ entry, libraryName, alias = {} }) {
                 ],
             },
             plugins: [
-                new NodePolyfillPlugin({
-                    includeAliases: [
-                        'constants',
-                        'crypto',
-                        'path',
-                        'process',
-                        'stream'
-                    ]
-                }),
+                new NodePolyfillPlugin(),
                 new webpack.ProvidePlugin({
                     process: 'process/browser'
                 }),

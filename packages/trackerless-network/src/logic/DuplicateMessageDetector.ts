@@ -83,7 +83,7 @@ export class GapMisMatchError extends Error {
  */
 export class DuplicateMessageDetector {
     private readonly maxGapCount: number
-    private readonly gaps: Array<[NumberPair, NumberPair]>
+    private readonly gaps: [NumberPair, NumberPair][]
 
     constructor(maxGapCount = 10000) {
         this.maxGapCount = maxGapCount
