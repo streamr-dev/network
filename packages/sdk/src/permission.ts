@@ -40,11 +40,11 @@ export type PermissionAssignment = UserPermissionAssignment | PublicPermissionAs
 
 export type InternalPermissionAssignment = ChangeFieldType<UserPermissionAssignment, 'user', UserID> | PublicPermissionAssignment
 
-export const PUBLIC_PERMISSION_ADDRESS = '0x0000000000000000000000000000000000000000'
+export const PUBLIC_PERMISSION_USER_ID = '0x0000000000000000000000000000000000000000'
 
 export type PermissionQueryResult = {
     id: string
-    userAddress: string
+    userId: string
 } & ChainPermissions
 
 export interface ChainPermissions {

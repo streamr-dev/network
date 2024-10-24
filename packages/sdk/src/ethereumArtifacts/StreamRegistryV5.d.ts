@@ -2,7 +2,7 @@
 /* eslint-disable */
 import type { BaseContract, BigNumberish, BytesLike, FunctionFragment, Result, Interface, EventFragment, AddressLike, ContractRunner, ContractMethod, Listener } from "ethers";
 import type { TypedContractEvent, TypedDeferredTopicFilter, TypedEventLog, TypedLogDescription, TypedListener, TypedContractMethod } from "../../common";
-export declare namespace StreamRegistryV4 {
+export declare namespace StreamRegistryV5 {
     type PermissionStruct = {
         canEdit: boolean;
         canDelete: boolean;
@@ -24,9 +24,9 @@ export declare namespace StreamRegistryV4 {
         canGrant: boolean;
     };
 }
-export interface StreamRegistryV4Interface extends Interface {
-    getFunction(nameOrSignature: "DEFAULT_ADMIN_ROLE" | "ENScreateStreamCallback" | "MAX_INT" | "TRUSTED_ROLE" | "addressToString" | "createMultipleStreamsWithPermissions" | "createStream" | "createStreamWithENS" | "createStreamWithPermissions" | "deleteStream" | "exists" | "getAddressKey" | "getDirectPermissionsForUser" | "getPermissionsForUser" | "getRoleAdmin" | "getStreamMetadata" | "getTrustedRole" | "grantPermission" | "grantPublicPermission" | "grantRole" | "hasDirectPermission" | "hasPermission" | "hasPublicPermission" | "hasRole" | "initialize" | "proxiableUUID" | "renounceRole" | "revokeAllPermissionsForUser" | "revokePermission" | "revokePublicPermission" | "revokeRole" | "setEnsCache" | "setExpirationTime" | "setPermissions" | "setPermissionsForUser" | "setPermissionsMultipleStreams" | "setPermissionsMultipleStreans" | "setPublicPermission" | "streamIdToMetadata" | "streamIdToPermissions" | "supportsInterface" | "transferAllPermissionsToUser" | "transferPermissionToUser" | "trustedCreateStreams" | "trustedSetPermissions" | "trustedSetPermissionsForUser" | "trustedSetStreamMetadata" | "trustedSetStreamWithPermission" | "trustedSetStreams" | "updateStreamMetadata" | "upgradeTo" | "upgradeToAndCall"): FunctionFragment;
-    getEvent(nameOrSignatureOrTopic: "AdminChanged" | "BeaconUpgraded" | "Initialized" | "PermissionUpdated" | "RoleAdminChanged" | "RoleGranted" | "RoleRevoked" | "StreamCreated" | "StreamDeleted" | "StreamUpdated" | "Upgraded"): EventFragment;
+export interface StreamRegistryV5Interface extends Interface {
+    getFunction(nameOrSignature: "DEFAULT_ADMIN_ROLE" | "ENScreateStreamCallback" | "MAX_INT" | "TRUSTED_ROLE" | "addressToString" | "createMultipleStreamsWithPermissions" | "createStream" | "createStreamWithENS" | "createStreamWithPermissions" | "deleteStream" | "ensCache" | "exists" | "getAddressKey" | "getDirectPermissionsForUser" | "getDirectPermissionsForUserId" | "getPermissionsForUser" | "getPermissionsForUserId" | "getRoleAdmin" | "getStreamMetadata" | "getTrustedRole" | "getUserKeyForUserId" | "grantPermission" | "grantPermissionForUserId" | "grantPublicPermission" | "grantRole" | "hasDirectPermission" | "hasPermission" | "hasPublicPermission" | "hasRole" | "initialize" | "isTrustedForwarder" | "renounceRole" | "revokeAllPermissionsForUser" | "revokeAllPermissionsForUserId" | "revokePermission" | "revokePermissionForUserId" | "revokePublicPermission" | "revokeRole" | "setEnsCache" | "setExpirationTime" | "setExpirationTimeForUserId" | "setMultipleStreamPermissionsForUserIds" | "setPermissions" | "setPermissionsForUser" | "setPermissionsForUserIds" | "setPermissionsMultipleStreams" | "setPublicPermission" | "setTrustedForwarder" | "streamIdToMetadata" | "streamIdToPermissions" | "streamIdToVersion" | "supportsInterface" | "trustedSetPermissionsForUser" | "updateStreamMetadata" | "upgradeTo" | "upgradeToAndCall"): FunctionFragment;
+    getEvent(nameOrSignatureOrTopic: "AdminChanged" | "BeaconUpgraded" | "PermissionUpdated" | "PermissionUpdatedForUserId" | "RoleAdminChanged" | "RoleGranted" | "RoleRevoked" | "StreamCreated" | "StreamDeleted" | "StreamUpdated" | "Upgraded"): EventFragment;
     encodeFunctionData(functionFragment: "DEFAULT_ADMIN_ROLE", values?: undefined): string;
     encodeFunctionData(functionFragment: "ENScreateStreamCallback", values: [AddressLike, string, string, string]): string;
     encodeFunctionData(functionFragment: "MAX_INT", values?: undefined): string;
@@ -36,20 +36,25 @@ export interface StreamRegistryV4Interface extends Interface {
         string[],
         string[],
         AddressLike[][],
-        StreamRegistryV4.PermissionStruct[][]
+        StreamRegistryV5.PermissionStruct[][]
     ]): string;
     encodeFunctionData(functionFragment: "createStream", values: [string, string]): string;
     encodeFunctionData(functionFragment: "createStreamWithENS", values: [string, string, string]): string;
-    encodeFunctionData(functionFragment: "createStreamWithPermissions", values: [string, string, AddressLike[], StreamRegistryV4.PermissionStruct[]]): string;
+    encodeFunctionData(functionFragment: "createStreamWithPermissions", values: [string, string, AddressLike[], StreamRegistryV5.PermissionStruct[]]): string;
     encodeFunctionData(functionFragment: "deleteStream", values: [string]): string;
+    encodeFunctionData(functionFragment: "ensCache", values?: undefined): string;
     encodeFunctionData(functionFragment: "exists", values: [string]): string;
     encodeFunctionData(functionFragment: "getAddressKey", values: [string, AddressLike]): string;
     encodeFunctionData(functionFragment: "getDirectPermissionsForUser", values: [string, AddressLike]): string;
+    encodeFunctionData(functionFragment: "getDirectPermissionsForUserId", values: [string, BytesLike]): string;
     encodeFunctionData(functionFragment: "getPermissionsForUser", values: [string, AddressLike]): string;
+    encodeFunctionData(functionFragment: "getPermissionsForUserId", values: [string, BytesLike]): string;
     encodeFunctionData(functionFragment: "getRoleAdmin", values: [BytesLike]): string;
     encodeFunctionData(functionFragment: "getStreamMetadata", values: [string]): string;
     encodeFunctionData(functionFragment: "getTrustedRole", values?: undefined): string;
+    encodeFunctionData(functionFragment: "getUserKeyForUserId", values: [string, BytesLike]): string;
     encodeFunctionData(functionFragment: "grantPermission", values: [string, AddressLike, BigNumberish]): string;
+    encodeFunctionData(functionFragment: "grantPermissionForUserId", values: [string, BytesLike, BigNumberish]): string;
     encodeFunctionData(functionFragment: "grantPublicPermission", values: [string, BigNumberish]): string;
     encodeFunctionData(functionFragment: "grantRole", values: [BytesLike, AddressLike]): string;
     encodeFunctionData(functionFragment: "hasDirectPermission", values: [string, AddressLike, BigNumberish]): string;
@@ -57,15 +62,19 @@ export interface StreamRegistryV4Interface extends Interface {
     encodeFunctionData(functionFragment: "hasPublicPermission", values: [string, BigNumberish]): string;
     encodeFunctionData(functionFragment: "hasRole", values: [BytesLike, AddressLike]): string;
     encodeFunctionData(functionFragment: "initialize", values: [AddressLike, AddressLike]): string;
-    encodeFunctionData(functionFragment: "proxiableUUID", values?: undefined): string;
+    encodeFunctionData(functionFragment: "isTrustedForwarder", values: [AddressLike]): string;
     encodeFunctionData(functionFragment: "renounceRole", values: [BytesLike, AddressLike]): string;
     encodeFunctionData(functionFragment: "revokeAllPermissionsForUser", values: [string, AddressLike]): string;
+    encodeFunctionData(functionFragment: "revokeAllPermissionsForUserId", values: [string, BytesLike]): string;
     encodeFunctionData(functionFragment: "revokePermission", values: [string, AddressLike, BigNumberish]): string;
+    encodeFunctionData(functionFragment: "revokePermissionForUserId", values: [string, BytesLike, BigNumberish]): string;
     encodeFunctionData(functionFragment: "revokePublicPermission", values: [string, BigNumberish]): string;
     encodeFunctionData(functionFragment: "revokeRole", values: [BytesLike, AddressLike]): string;
     encodeFunctionData(functionFragment: "setEnsCache", values: [AddressLike]): string;
     encodeFunctionData(functionFragment: "setExpirationTime", values: [string, AddressLike, BigNumberish, BigNumberish]): string;
-    encodeFunctionData(functionFragment: "setPermissions", values: [string, AddressLike[], StreamRegistryV4.PermissionStruct[]]): string;
+    encodeFunctionData(functionFragment: "setExpirationTimeForUserId", values: [string, BytesLike, BigNumberish, BigNumberish]): string;
+    encodeFunctionData(functionFragment: "setMultipleStreamPermissionsForUserIds", values: [string[], BytesLike[][], StreamRegistryV5.PermissionStruct[][]]): string;
+    encodeFunctionData(functionFragment: "setPermissions", values: [string, AddressLike[], StreamRegistryV5.PermissionStruct[]]): string;
     encodeFunctionData(functionFragment: "setPermissionsForUser", values: [
         string,
         AddressLike,
@@ -75,16 +84,14 @@ export interface StreamRegistryV4Interface extends Interface {
         BigNumberish,
         boolean
     ]): string;
-    encodeFunctionData(functionFragment: "setPermissionsMultipleStreams", values: [string[], AddressLike[][], StreamRegistryV4.PermissionStruct[][]]): string;
-    encodeFunctionData(functionFragment: "setPermissionsMultipleStreans", values: [string[], AddressLike[][], StreamRegistryV4.PermissionStruct[][]]): string;
+    encodeFunctionData(functionFragment: "setPermissionsForUserIds", values: [string, BytesLike[], StreamRegistryV5.PermissionStruct[]]): string;
+    encodeFunctionData(functionFragment: "setPermissionsMultipleStreams", values: [string[], AddressLike[][], StreamRegistryV5.PermissionStruct[][]]): string;
     encodeFunctionData(functionFragment: "setPublicPermission", values: [string, BigNumberish, BigNumberish]): string;
+    encodeFunctionData(functionFragment: "setTrustedForwarder", values: [AddressLike]): string;
     encodeFunctionData(functionFragment: "streamIdToMetadata", values: [string]): string;
     encodeFunctionData(functionFragment: "streamIdToPermissions", values: [string, BytesLike]): string;
+    encodeFunctionData(functionFragment: "streamIdToVersion", values: [string]): string;
     encodeFunctionData(functionFragment: "supportsInterface", values: [BytesLike]): string;
-    encodeFunctionData(functionFragment: "transferAllPermissionsToUser", values: [string, AddressLike]): string;
-    encodeFunctionData(functionFragment: "transferPermissionToUser", values: [string, AddressLike, BigNumberish]): string;
-    encodeFunctionData(functionFragment: "trustedCreateStreams", values: [string[], string[]]): string;
-    encodeFunctionData(functionFragment: "trustedSetPermissions", values: [string[], AddressLike[], StreamRegistryV4.PermissionStruct[]]): string;
     encodeFunctionData(functionFragment: "trustedSetPermissionsForUser", values: [
         string,
         AddressLike,
@@ -93,23 +100,6 @@ export interface StreamRegistryV4Interface extends Interface {
         BigNumberish,
         BigNumberish,
         boolean
-    ]): string;
-    encodeFunctionData(functionFragment: "trustedSetStreamMetadata", values: [string, string]): string;
-    encodeFunctionData(functionFragment: "trustedSetStreamWithPermission", values: [
-        string,
-        string,
-        AddressLike,
-        boolean,
-        boolean,
-        BigNumberish,
-        BigNumberish,
-        boolean
-    ]): string;
-    encodeFunctionData(functionFragment: "trustedSetStreams", values: [
-        string[],
-        AddressLike[],
-        string[],
-        StreamRegistryV4.PermissionStruct[]
     ]): string;
     encodeFunctionData(functionFragment: "updateStreamMetadata", values: [string, string]): string;
     encodeFunctionData(functionFragment: "upgradeTo", values: [AddressLike]): string;
@@ -124,14 +114,19 @@ export interface StreamRegistryV4Interface extends Interface {
     decodeFunctionResult(functionFragment: "createStreamWithENS", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "createStreamWithPermissions", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "deleteStream", data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: "ensCache", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "exists", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "getAddressKey", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "getDirectPermissionsForUser", data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: "getDirectPermissionsForUserId", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "getPermissionsForUser", data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: "getPermissionsForUserId", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "getRoleAdmin", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "getStreamMetadata", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "getTrustedRole", data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: "getUserKeyForUserId", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "grantPermission", data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: "grantPermissionForUserId", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "grantPublicPermission", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "grantRole", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "hasDirectPermission", data: BytesLike): Result;
@@ -139,30 +134,29 @@ export interface StreamRegistryV4Interface extends Interface {
     decodeFunctionResult(functionFragment: "hasPublicPermission", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "hasRole", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
-    decodeFunctionResult(functionFragment: "proxiableUUID", data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: "isTrustedForwarder", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "renounceRole", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "revokeAllPermissionsForUser", data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: "revokeAllPermissionsForUserId", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "revokePermission", data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: "revokePermissionForUserId", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "revokePublicPermission", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "revokeRole", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "setEnsCache", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "setExpirationTime", data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: "setExpirationTimeForUserId", data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: "setMultipleStreamPermissionsForUserIds", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "setPermissions", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "setPermissionsForUser", data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: "setPermissionsForUserIds", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "setPermissionsMultipleStreams", data: BytesLike): Result;
-    decodeFunctionResult(functionFragment: "setPermissionsMultipleStreans", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "setPublicPermission", data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: "setTrustedForwarder", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "streamIdToMetadata", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "streamIdToPermissions", data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: "streamIdToVersion", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "supportsInterface", data: BytesLike): Result;
-    decodeFunctionResult(functionFragment: "transferAllPermissionsToUser", data: BytesLike): Result;
-    decodeFunctionResult(functionFragment: "transferPermissionToUser", data: BytesLike): Result;
-    decodeFunctionResult(functionFragment: "trustedCreateStreams", data: BytesLike): Result;
-    decodeFunctionResult(functionFragment: "trustedSetPermissions", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "trustedSetPermissionsForUser", data: BytesLike): Result;
-    decodeFunctionResult(functionFragment: "trustedSetStreamMetadata", data: BytesLike): Result;
-    decodeFunctionResult(functionFragment: "trustedSetStreamWithPermission", data: BytesLike): Result;
-    decodeFunctionResult(functionFragment: "trustedSetStreams", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "updateStreamMetadata", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "upgradeTo", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "upgradeToAndCall", data: BytesLike): Result;
@@ -190,21 +184,43 @@ export declare namespace BeaconUpgradedEvent {
     type Log = TypedEventLog<Event>;
     type LogDescription = TypedLogDescription<Event>;
 }
-export declare namespace InitializedEvent {
-    type InputTuple = [version: BigNumberish];
-    type OutputTuple = [version: bigint];
+export declare namespace PermissionUpdatedEvent {
+    type InputTuple = [
+        streamId: string,
+        user: AddressLike,
+        canEdit: boolean,
+        canDelete: boolean,
+        publishExpiration: BigNumberish,
+        subscribeExpiration: BigNumberish,
+        canGrant: boolean
+    ];
+    type OutputTuple = [
+        streamId: string,
+        user: string,
+        canEdit: boolean,
+        canDelete: boolean,
+        publishExpiration: bigint,
+        subscribeExpiration: bigint,
+        canGrant: boolean
+    ];
     interface OutputObject {
-        version: bigint;
+        streamId: string;
+        user: string;
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: bigint;
+        subscribeExpiration: bigint;
+        canGrant: boolean;
     }
     type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
     type Filter = TypedDeferredTopicFilter<Event>;
     type Log = TypedEventLog<Event>;
     type LogDescription = TypedLogDescription<Event>;
 }
-export declare namespace PermissionUpdatedEvent {
+export declare namespace PermissionUpdatedForUserIdEvent {
     type InputTuple = [
         streamId: string,
-        user: AddressLike,
+        user: BytesLike,
         canEdit: boolean,
         canDelete: boolean,
         publishExpiration: BigNumberish,
@@ -335,10 +351,10 @@ export declare namespace UpgradedEvent {
     type Log = TypedEventLog<Event>;
     type LogDescription = TypedLogDescription<Event>;
 }
-export interface StreamRegistryV4 extends BaseContract {
-    connect(runner?: ContractRunner | null): StreamRegistryV4;
+export interface StreamRegistryV5 extends BaseContract {
+    connect(runner?: ContractRunner | null): StreamRegistryV5;
     waitForDeployment(): Promise<this>;
-    interface: StreamRegistryV4Interface;
+    interface: StreamRegistryV5Interface;
     queryFilter<TCEvent extends TypedContractEvent>(event: TCEvent, fromBlockOrBlockhash?: string | number | undefined, toBlock?: string | number | undefined): Promise<Array<TypedEventLog<TCEvent>>>;
     queryFilter<TCEvent extends TypedContractEvent>(filter: TypedDeferredTopicFilter<TCEvent>, fromBlockOrBlockhash?: string | number | undefined, toBlock?: string | number | undefined): Promise<Array<TypedEventLog<TCEvent>>>;
     on<TCEvent extends TypedContractEvent>(event: TCEvent, listener: TypedListener<TCEvent>): Promise<this>;
@@ -368,7 +384,7 @@ export interface StreamRegistryV4 extends BaseContract {
         streamIdPaths: string[],
         metadataJsonStrings: string[],
         users: AddressLike[][],
-        permissions: StreamRegistryV4.PermissionStruct[][]
+        permissions: StreamRegistryV5.PermissionStruct[][]
     ], [
         void
     ], "nonpayable">;
@@ -389,11 +405,12 @@ export interface StreamRegistryV4 extends BaseContract {
         streamIdPath: string,
         metadataJsonString: string,
         users: AddressLike[],
-        permissions: StreamRegistryV4.PermissionStruct[]
+        permissions: StreamRegistryV5.PermissionStruct[]
     ], [
         void
     ], "nonpayable">;
     deleteStream: TypedContractMethod<[streamId: string], [void], "nonpayable">;
+    ensCache: TypedContractMethod<[], [string], "view">;
     exists: TypedContractMethod<[streamId: string], [boolean], "view">;
     getAddressKey: TypedContractMethod<[
         streamId: string,
@@ -405,20 +422,45 @@ export interface StreamRegistryV4 extends BaseContract {
         streamId: string,
         user: AddressLike
     ], [
-        StreamRegistryV4.PermissionStructOutput
+        StreamRegistryV5.PermissionStructOutput
+    ], "view">;
+    getDirectPermissionsForUserId: TypedContractMethod<[
+        streamId: string,
+        user: BytesLike
+    ], [
+        StreamRegistryV5.PermissionStructOutput
     ], "view">;
     getPermissionsForUser: TypedContractMethod<[
         streamId: string,
         user: AddressLike
     ], [
-        StreamRegistryV4.PermissionStructOutput
+        StreamRegistryV5.PermissionStructOutput
+    ], "view">;
+    getPermissionsForUserId: TypedContractMethod<[
+        streamId: string,
+        user: BytesLike
+    ], [
+        StreamRegistryV5.PermissionStructOutput
     ], "view">;
     getRoleAdmin: TypedContractMethod<[role: BytesLike], [string], "view">;
     getStreamMetadata: TypedContractMethod<[streamId: string], [string], "view">;
     getTrustedRole: TypedContractMethod<[], [string], "view">;
+    getUserKeyForUserId: TypedContractMethod<[
+        streamId: string,
+        user: BytesLike
+    ], [
+        string
+    ], "view">;
     grantPermission: TypedContractMethod<[
         streamId: string,
         user: AddressLike,
+        permissionType: BigNumberish
+    ], [
+        void
+    ], "nonpayable">;
+    grantPermissionForUserId: TypedContractMethod<[
+        streamId: string,
+        user: BytesLike,
         permissionType: BigNumberish
     ], [
         void
@@ -463,11 +505,15 @@ export interface StreamRegistryV4 extends BaseContract {
     ], "view">;
     initialize: TypedContractMethod<[
         ensCacheAddr: AddressLike,
-        arg1: AddressLike
+        trustedForwarderAddress: AddressLike
     ], [
         void
     ], "nonpayable">;
-    proxiableUUID: TypedContractMethod<[], [string], "view">;
+    isTrustedForwarder: TypedContractMethod<[
+        forwarder: AddressLike
+    ], [
+        boolean
+    ], "view">;
     renounceRole: TypedContractMethod<[
         role: BytesLike,
         account: AddressLike
@@ -480,9 +526,22 @@ export interface StreamRegistryV4 extends BaseContract {
     ], [
         void
     ], "nonpayable">;
+    revokeAllPermissionsForUserId: TypedContractMethod<[
+        streamId: string,
+        user: BytesLike
+    ], [
+        void
+    ], "nonpayable">;
     revokePermission: TypedContractMethod<[
         streamId: string,
         user: AddressLike,
+        permissionType: BigNumberish
+    ], [
+        void
+    ], "nonpayable">;
+    revokePermissionForUserId: TypedContractMethod<[
+        streamId: string,
+        user: BytesLike,
         permissionType: BigNumberish
     ], [
         void
@@ -512,10 +571,25 @@ export interface StreamRegistryV4 extends BaseContract {
     ], [
         void
     ], "nonpayable">;
+    setExpirationTimeForUserId: TypedContractMethod<[
+        streamId: string,
+        user: BytesLike,
+        permissionType: BigNumberish,
+        expirationTime: BigNumberish
+    ], [
+        void
+    ], "nonpayable">;
+    setMultipleStreamPermissionsForUserIds: TypedContractMethod<[
+        streamIds: string[],
+        users: BytesLike[][],
+        permissions: StreamRegistryV5.PermissionStruct[][]
+    ], [
+        void
+    ], "nonpayable">;
     setPermissions: TypedContractMethod<[
         streamId: string,
         users: AddressLike[],
-        permissions: StreamRegistryV4.PermissionStruct[]
+        permissions: StreamRegistryV5.PermissionStruct[]
     ], [
         void
     ], "nonpayable">;
@@ -523,24 +597,24 @@ export interface StreamRegistryV4 extends BaseContract {
         streamId: string,
         user: AddressLike,
         canEdit: boolean,
-        deletePerm: boolean,
+        canDelete: boolean,
         publishExpiration: BigNumberish,
         subscribeExpiration: BigNumberish,
         canGrant: boolean
     ], [
         void
     ], "nonpayable">;
-    setPermissionsMultipleStreams: TypedContractMethod<[
-        streamIds: string[],
-        users: AddressLike[][],
-        permissions: StreamRegistryV4.PermissionStruct[][]
+    setPermissionsForUserIds: TypedContractMethod<[
+        streamId: string,
+        users: BytesLike[],
+        permissions: StreamRegistryV5.PermissionStruct[]
     ], [
         void
     ], "nonpayable">;
-    setPermissionsMultipleStreans: TypedContractMethod<[
+    setPermissionsMultipleStreams: TypedContractMethod<[
         streamIds: string[],
         users: AddressLike[][],
-        permissions: StreamRegistryV4.PermissionStruct[][]
+        permissions: StreamRegistryV5.PermissionStruct[][]
     ], [
         void
     ], "nonpayable">;
@@ -548,6 +622,11 @@ export interface StreamRegistryV4 extends BaseContract {
         streamId: string,
         publishExpiration: BigNumberish,
         subscribeExpiration: BigNumberish
+    ], [
+        void
+    ], "nonpayable">;
+    setTrustedForwarder: TypedContractMethod<[
+        forwarder: AddressLike
     ], [
         void
     ], "nonpayable">;
@@ -570,37 +649,12 @@ export interface StreamRegistryV4 extends BaseContract {
             canGrant: boolean;
         }
     ], "view">;
+    streamIdToVersion: TypedContractMethod<[arg0: string], [bigint], "view">;
     supportsInterface: TypedContractMethod<[
         interfaceId: BytesLike
     ], [
         boolean
     ], "view">;
-    transferAllPermissionsToUser: TypedContractMethod<[
-        streamId: string,
-        recipient: AddressLike
-    ], [
-        void
-    ], "nonpayable">;
-    transferPermissionToUser: TypedContractMethod<[
-        streamId: string,
-        recipient: AddressLike,
-        permissionType: BigNumberish
-    ], [
-        void
-    ], "nonpayable">;
-    trustedCreateStreams: TypedContractMethod<[
-        streamIds: string[],
-        metadatas: string[]
-    ], [
-        void
-    ], "nonpayable">;
-    trustedSetPermissions: TypedContractMethod<[
-        streamids: string[],
-        users: AddressLike[],
-        permissions: StreamRegistryV4.PermissionStruct[]
-    ], [
-        void
-    ], "nonpayable">;
     trustedSetPermissionsForUser: TypedContractMethod<[
         streamId: string,
         user: AddressLike,
@@ -609,32 +663,6 @@ export interface StreamRegistryV4 extends BaseContract {
         publishExpiration: BigNumberish,
         subscribeExpiration: BigNumberish,
         canGrant: boolean
-    ], [
-        void
-    ], "nonpayable">;
-    trustedSetStreamMetadata: TypedContractMethod<[
-        streamId: string,
-        metadata: string
-    ], [
-        void
-    ], "nonpayable">;
-    trustedSetStreamWithPermission: TypedContractMethod<[
-        streamId: string,
-        metadata: string,
-        user: AddressLike,
-        canEdit: boolean,
-        deletePerm: boolean,
-        publishExpiration: BigNumberish,
-        subscribeExpiration: BigNumberish,
-        canGrant: boolean
-    ], [
-        void
-    ], "nonpayable">;
-    trustedSetStreams: TypedContractMethod<[
-        streamids: string[],
-        users: AddressLike[],
-        metadatas: string[],
-        permissions: StreamRegistryV4.PermissionStruct[]
     ], [
         void
     ], "nonpayable">;
@@ -672,7 +700,7 @@ export interface StreamRegistryV4 extends BaseContract {
         streamIdPaths: string[],
         metadataJsonStrings: string[],
         users: AddressLike[][],
-        permissions: StreamRegistryV4.PermissionStruct[][]
+        permissions: StreamRegistryV5.PermissionStruct[][]
     ], [
         void
     ], "nonpayable">;
@@ -693,11 +721,12 @@ export interface StreamRegistryV4 extends BaseContract {
         streamIdPath: string,
         metadataJsonString: string,
         users: AddressLike[],
-        permissions: StreamRegistryV4.PermissionStruct[]
+        permissions: StreamRegistryV5.PermissionStruct[]
     ], [
         void
     ], "nonpayable">;
     getFunction(nameOrSignature: "deleteStream"): TypedContractMethod<[streamId: string], [void], "nonpayable">;
+    getFunction(nameOrSignature: "ensCache"): TypedContractMethod<[], [string], "view">;
     getFunction(nameOrSignature: "exists"): TypedContractMethod<[streamId: string], [boolean], "view">;
     getFunction(nameOrSignature: "getAddressKey"): TypedContractMethod<[
         streamId: string,
@@ -709,20 +738,40 @@ export interface StreamRegistryV4 extends BaseContract {
         streamId: string,
         user: AddressLike
     ], [
-        StreamRegistryV4.PermissionStructOutput
+        StreamRegistryV5.PermissionStructOutput
+    ], "view">;
+    getFunction(nameOrSignature: "getDirectPermissionsForUserId"): TypedContractMethod<[
+        streamId: string,
+        user: BytesLike
+    ], [
+        StreamRegistryV5.PermissionStructOutput
     ], "view">;
     getFunction(nameOrSignature: "getPermissionsForUser"): TypedContractMethod<[
         streamId: string,
         user: AddressLike
     ], [
-        StreamRegistryV4.PermissionStructOutput
+        StreamRegistryV5.PermissionStructOutput
+    ], "view">;
+    getFunction(nameOrSignature: "getPermissionsForUserId"): TypedContractMethod<[
+        streamId: string,
+        user: BytesLike
+    ], [
+        StreamRegistryV5.PermissionStructOutput
     ], "view">;
     getFunction(nameOrSignature: "getRoleAdmin"): TypedContractMethod<[role: BytesLike], [string], "view">;
     getFunction(nameOrSignature: "getStreamMetadata"): TypedContractMethod<[streamId: string], [string], "view">;
     getFunction(nameOrSignature: "getTrustedRole"): TypedContractMethod<[], [string], "view">;
+    getFunction(nameOrSignature: "getUserKeyForUserId"): TypedContractMethod<[streamId: string, user: BytesLike], [string], "view">;
     getFunction(nameOrSignature: "grantPermission"): TypedContractMethod<[
         streamId: string,
         user: AddressLike,
+        permissionType: BigNumberish
+    ], [
+        void
+    ], "nonpayable">;
+    getFunction(nameOrSignature: "grantPermissionForUserId"): TypedContractMethod<[
+        streamId: string,
+        user: BytesLike,
         permissionType: BigNumberish
     ], [
         void
@@ -767,11 +816,11 @@ export interface StreamRegistryV4 extends BaseContract {
     ], "view">;
     getFunction(nameOrSignature: "initialize"): TypedContractMethod<[
         ensCacheAddr: AddressLike,
-        arg1: AddressLike
+        trustedForwarderAddress: AddressLike
     ], [
         void
     ], "nonpayable">;
-    getFunction(nameOrSignature: "proxiableUUID"): TypedContractMethod<[], [string], "view">;
+    getFunction(nameOrSignature: "isTrustedForwarder"): TypedContractMethod<[forwarder: AddressLike], [boolean], "view">;
     getFunction(nameOrSignature: "renounceRole"): TypedContractMethod<[
         role: BytesLike,
         account: AddressLike
@@ -784,9 +833,22 @@ export interface StreamRegistryV4 extends BaseContract {
     ], [
         void
     ], "nonpayable">;
+    getFunction(nameOrSignature: "revokeAllPermissionsForUserId"): TypedContractMethod<[
+        streamId: string,
+        user: BytesLike
+    ], [
+        void
+    ], "nonpayable">;
     getFunction(nameOrSignature: "revokePermission"): TypedContractMethod<[
         streamId: string,
         user: AddressLike,
+        permissionType: BigNumberish
+    ], [
+        void
+    ], "nonpayable">;
+    getFunction(nameOrSignature: "revokePermissionForUserId"): TypedContractMethod<[
+        streamId: string,
+        user: BytesLike,
         permissionType: BigNumberish
     ], [
         void
@@ -812,10 +874,25 @@ export interface StreamRegistryV4 extends BaseContract {
     ], [
         void
     ], "nonpayable">;
+    getFunction(nameOrSignature: "setExpirationTimeForUserId"): TypedContractMethod<[
+        streamId: string,
+        user: BytesLike,
+        permissionType: BigNumberish,
+        expirationTime: BigNumberish
+    ], [
+        void
+    ], "nonpayable">;
+    getFunction(nameOrSignature: "setMultipleStreamPermissionsForUserIds"): TypedContractMethod<[
+        streamIds: string[],
+        users: BytesLike[][],
+        permissions: StreamRegistryV5.PermissionStruct[][]
+    ], [
+        void
+    ], "nonpayable">;
     getFunction(nameOrSignature: "setPermissions"): TypedContractMethod<[
         streamId: string,
         users: AddressLike[],
-        permissions: StreamRegistryV4.PermissionStruct[]
+        permissions: StreamRegistryV5.PermissionStruct[]
     ], [
         void
     ], "nonpayable">;
@@ -823,24 +900,24 @@ export interface StreamRegistryV4 extends BaseContract {
         streamId: string,
         user: AddressLike,
         canEdit: boolean,
-        deletePerm: boolean,
+        canDelete: boolean,
         publishExpiration: BigNumberish,
         subscribeExpiration: BigNumberish,
         canGrant: boolean
     ], [
         void
     ], "nonpayable">;
-    getFunction(nameOrSignature: "setPermissionsMultipleStreams"): TypedContractMethod<[
-        streamIds: string[],
-        users: AddressLike[][],
-        permissions: StreamRegistryV4.PermissionStruct[][]
+    getFunction(nameOrSignature: "setPermissionsForUserIds"): TypedContractMethod<[
+        streamId: string,
+        users: BytesLike[],
+        permissions: StreamRegistryV5.PermissionStruct[]
     ], [
         void
     ], "nonpayable">;
-    getFunction(nameOrSignature: "setPermissionsMultipleStreans"): TypedContractMethod<[
+    getFunction(nameOrSignature: "setPermissionsMultipleStreams"): TypedContractMethod<[
         streamIds: string[],
         users: AddressLike[][],
-        permissions: StreamRegistryV4.PermissionStruct[][]
+        permissions: StreamRegistryV5.PermissionStruct[][]
     ], [
         void
     ], "nonpayable">;
@@ -851,6 +928,7 @@ export interface StreamRegistryV4 extends BaseContract {
     ], [
         void
     ], "nonpayable">;
+    getFunction(nameOrSignature: "setTrustedForwarder"): TypedContractMethod<[forwarder: AddressLike], [void], "nonpayable">;
     getFunction(nameOrSignature: "streamIdToMetadata"): TypedContractMethod<[arg0: string], [string], "view">;
     getFunction(nameOrSignature: "streamIdToPermissions"): TypedContractMethod<[
         arg0: string,
@@ -870,33 +948,8 @@ export interface StreamRegistryV4 extends BaseContract {
             canGrant: boolean;
         }
     ], "view">;
+    getFunction(nameOrSignature: "streamIdToVersion"): TypedContractMethod<[arg0: string], [bigint], "view">;
     getFunction(nameOrSignature: "supportsInterface"): TypedContractMethod<[interfaceId: BytesLike], [boolean], "view">;
-    getFunction(nameOrSignature: "transferAllPermissionsToUser"): TypedContractMethod<[
-        streamId: string,
-        recipient: AddressLike
-    ], [
-        void
-    ], "nonpayable">;
-    getFunction(nameOrSignature: "transferPermissionToUser"): TypedContractMethod<[
-        streamId: string,
-        recipient: AddressLike,
-        permissionType: BigNumberish
-    ], [
-        void
-    ], "nonpayable">;
-    getFunction(nameOrSignature: "trustedCreateStreams"): TypedContractMethod<[
-        streamIds: string[],
-        metadatas: string[]
-    ], [
-        void
-    ], "nonpayable">;
-    getFunction(nameOrSignature: "trustedSetPermissions"): TypedContractMethod<[
-        streamids: string[],
-        users: AddressLike[],
-        permissions: StreamRegistryV4.PermissionStruct[]
-    ], [
-        void
-    ], "nonpayable">;
     getFunction(nameOrSignature: "trustedSetPermissionsForUser"): TypedContractMethod<[
         streamId: string,
         user: AddressLike,
@@ -905,32 +958,6 @@ export interface StreamRegistryV4 extends BaseContract {
         publishExpiration: BigNumberish,
         subscribeExpiration: BigNumberish,
         canGrant: boolean
-    ], [
-        void
-    ], "nonpayable">;
-    getFunction(nameOrSignature: "trustedSetStreamMetadata"): TypedContractMethod<[
-        streamId: string,
-        metadata: string
-    ], [
-        void
-    ], "nonpayable">;
-    getFunction(nameOrSignature: "trustedSetStreamWithPermission"): TypedContractMethod<[
-        streamId: string,
-        metadata: string,
-        user: AddressLike,
-        canEdit: boolean,
-        deletePerm: boolean,
-        publishExpiration: BigNumberish,
-        subscribeExpiration: BigNumberish,
-        canGrant: boolean
-    ], [
-        void
-    ], "nonpayable">;
-    getFunction(nameOrSignature: "trustedSetStreams"): TypedContractMethod<[
-        streamids: string[],
-        users: AddressLike[],
-        metadatas: string[],
-        permissions: StreamRegistryV4.PermissionStruct[]
     ], [
         void
     ], "nonpayable">;
@@ -953,8 +980,8 @@ export interface StreamRegistryV4 extends BaseContract {
     ], "payable">;
     getEvent(key: "AdminChanged"): TypedContractEvent<AdminChangedEvent.InputTuple, AdminChangedEvent.OutputTuple, AdminChangedEvent.OutputObject>;
     getEvent(key: "BeaconUpgraded"): TypedContractEvent<BeaconUpgradedEvent.InputTuple, BeaconUpgradedEvent.OutputTuple, BeaconUpgradedEvent.OutputObject>;
-    getEvent(key: "Initialized"): TypedContractEvent<InitializedEvent.InputTuple, InitializedEvent.OutputTuple, InitializedEvent.OutputObject>;
     getEvent(key: "PermissionUpdated"): TypedContractEvent<PermissionUpdatedEvent.InputTuple, PermissionUpdatedEvent.OutputTuple, PermissionUpdatedEvent.OutputObject>;
+    getEvent(key: "PermissionUpdatedForUserId"): TypedContractEvent<PermissionUpdatedForUserIdEvent.InputTuple, PermissionUpdatedForUserIdEvent.OutputTuple, PermissionUpdatedForUserIdEvent.OutputObject>;
     getEvent(key: "RoleAdminChanged"): TypedContractEvent<RoleAdminChangedEvent.InputTuple, RoleAdminChangedEvent.OutputTuple, RoleAdminChangedEvent.OutputObject>;
     getEvent(key: "RoleGranted"): TypedContractEvent<RoleGrantedEvent.InputTuple, RoleGrantedEvent.OutputTuple, RoleGrantedEvent.OutputObject>;
     getEvent(key: "RoleRevoked"): TypedContractEvent<RoleRevokedEvent.InputTuple, RoleRevokedEvent.OutputTuple, RoleRevokedEvent.OutputObject>;
@@ -967,10 +994,10 @@ export interface StreamRegistryV4 extends BaseContract {
         AdminChanged: TypedContractEvent<AdminChangedEvent.InputTuple, AdminChangedEvent.OutputTuple, AdminChangedEvent.OutputObject>;
         "BeaconUpgraded(address)": TypedContractEvent<BeaconUpgradedEvent.InputTuple, BeaconUpgradedEvent.OutputTuple, BeaconUpgradedEvent.OutputObject>;
         BeaconUpgraded: TypedContractEvent<BeaconUpgradedEvent.InputTuple, BeaconUpgradedEvent.OutputTuple, BeaconUpgradedEvent.OutputObject>;
-        "Initialized(uint8)": TypedContractEvent<InitializedEvent.InputTuple, InitializedEvent.OutputTuple, InitializedEvent.OutputObject>;
-        Initialized: TypedContractEvent<InitializedEvent.InputTuple, InitializedEvent.OutputTuple, InitializedEvent.OutputObject>;
         "PermissionUpdated(string,address,bool,bool,uint256,uint256,bool)": TypedContractEvent<PermissionUpdatedEvent.InputTuple, PermissionUpdatedEvent.OutputTuple, PermissionUpdatedEvent.OutputObject>;
         PermissionUpdated: TypedContractEvent<PermissionUpdatedEvent.InputTuple, PermissionUpdatedEvent.OutputTuple, PermissionUpdatedEvent.OutputObject>;
+        "PermissionUpdatedForUserId(string,bytes,bool,bool,uint256,uint256,bool)": TypedContractEvent<PermissionUpdatedForUserIdEvent.InputTuple, PermissionUpdatedForUserIdEvent.OutputTuple, PermissionUpdatedForUserIdEvent.OutputObject>;
+        PermissionUpdatedForUserId: TypedContractEvent<PermissionUpdatedForUserIdEvent.InputTuple, PermissionUpdatedForUserIdEvent.OutputTuple, PermissionUpdatedForUserIdEvent.OutputObject>;
         "RoleAdminChanged(bytes32,bytes32,bytes32)": TypedContractEvent<RoleAdminChangedEvent.InputTuple, RoleAdminChangedEvent.OutputTuple, RoleAdminChangedEvent.OutputObject>;
         RoleAdminChanged: TypedContractEvent<RoleAdminChangedEvent.InputTuple, RoleAdminChangedEvent.OutputTuple, RoleAdminChangedEvent.OutputObject>;
         "RoleGranted(bytes32,address,address)": TypedContractEvent<RoleGrantedEvent.InputTuple, RoleGrantedEvent.OutputTuple, RoleGrantedEvent.OutputObject>;
