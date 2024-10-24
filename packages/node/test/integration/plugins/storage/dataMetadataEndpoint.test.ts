@@ -70,7 +70,7 @@ describe('dataMetadataEndpoints', () => {
 
     async function setUpStream(): Promise<Stream> {	
         const freshStream = await createTestStream(client1, module)	
-        await freshStream.addToStorageNode(toEthereumAddress(storageNodeAccount.address))	
+        await freshStream.addToStorageNode(toEthereumAddress(storageNodeAccount.address), { wait: true })
         return freshStream	
     }
 
