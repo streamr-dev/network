@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/parameter-properties */
-import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { SimulatorConnector } from './SimulatorConnector'
 import { SimulatorConnection } from './SimulatorConnection'
 import { ConnectionID } from '../IConnection'

@@ -2,7 +2,6 @@ import { IMessageType } from '@protobuf-ts/runtime'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse, 
-    ConnectivityMethod,  
     ConnectivityRequest, 
     ConnectivityResponse, 
     DisconnectNotice,
@@ -10,7 +9,6 @@ import {
     HandshakeResponse, 
     LeaveNotice, 
     Message, 
-    PeerDescriptor, 
     PingRequest, 
     PingResponse, 
     RecursiveOperationResponse, 
@@ -25,8 +23,8 @@ import {
     LockRequest,
     UnlockRequest,
     LockResponse
-
 } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor, ConnectivityMethod } from '../../generated/packages/dht/protos/PeerDescriptor'
 
 export const protoClasses: IMessageType<any>[] = [
     ClosestPeersRequest,

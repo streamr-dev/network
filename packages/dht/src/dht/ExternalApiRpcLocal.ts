@@ -4,9 +4,9 @@ import {
     ExternalFetchDataResponse,
     ExternalStoreDataRequest,
     ExternalStoreDataResponse,
-    RecursiveOperation,
-    PeerDescriptor
+    RecursiveOperation
 } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { RecursiveOperationResult } from './recursive-operation/RecursiveOperationManager'

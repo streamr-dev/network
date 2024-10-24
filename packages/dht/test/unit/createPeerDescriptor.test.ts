@@ -1,7 +1,7 @@
 import { ipv4ToNumber } from '@streamr/utils'
 import { createPeerDescriptor } from '../../src/helpers/createPeerDescriptor'
 import { isBrowserEnvironment } from '../../src/helpers/browser/isBrowserEnvironment'
-import { NodeType } from '../../generated/packages/dht/protos/DhtRpc'
+import { NodeType } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
 import { getRandomRegion } from '../../dist/src/connection/simulator/pings'
 
