@@ -70,9 +70,7 @@ describe('searchStreams', () => {
             const props = Stream.parseMetadata(metadata)
             return {
                 id,
-                getMetadata: () => ({
-                    partitions: props.partitions
-                })
+                getPartitionCount: () => props.partitions
             } as any
         }
 
