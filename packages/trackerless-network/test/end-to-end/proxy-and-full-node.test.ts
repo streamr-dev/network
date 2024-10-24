@@ -1,5 +1,5 @@
 import { randomUserId } from '@streamr/test-utils'
-import { StreamPartID, StreamPartIDUtils, hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import {
     ContentType,
@@ -19,7 +19,7 @@ const createMessage = (streamPartId: StreamPartID): StreamMessage => {
             streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
             timestamp: 666,
             sequenceNumber: 0,
-            publisherId: hexToBinary(randomUserId()),
+            publisherId: toUserIdRaw(randomUserId()),
             messageChainId: 'msgChainId'
         },
         previousMessageRef: {

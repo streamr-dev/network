@@ -38,7 +38,7 @@ export interface UpdateEncryptionKeyOptions {
     key?: GroupKey
 }
 
-function formLookupKey1(keyId: string, publisherId: string): string {
+function formLookupKey1(keyId: string, publisherId: UserID): string {
     return `${publisherId}::${keyId}`
 }
 

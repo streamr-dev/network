@@ -12,10 +12,10 @@ The static function `StreamrClient.generateEthereumAccount()` generates a new Et
 const { address, privateKey } = StreamrClient.generateEthereumAccount()
 ```
 
-Retrieve the address with the async call,
+Retrieve the user id (e.g. Ethereum address) with the async call,
 
 ```ts
-const address = await streamr.getAddress()
+const address = await streamr.getUserId()
 ```
 
 ## Search for streams

@@ -1,5 +1,5 @@
 import { DhtAddress } from '@streamr/dht'
-import { hexToBinary, wait } from '@streamr/utils'
+import { hexToBinary, toUserIdRaw, wait } from '@streamr/utils'
 import { Propagation } from '../../src/logic/propagation/Propagation'
 import {
     ContentType,
@@ -19,7 +19,7 @@ function makeMsg(streamId: string, partition: number, ts: number, msgNo: number)
         timestamp: ts,
         sequenceNumber: msgNo,
         messageChainId: 'msgChain',
-        publisherId: hexToBinary(PUBLISHER_ID)
+        publisherId: toUserIdRaw(PUBLISHER_ID)
     }
     return {
         messageId,

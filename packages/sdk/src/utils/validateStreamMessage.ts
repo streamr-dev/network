@@ -78,17 +78,17 @@ const validateMessage = async (
 
 const validateGroupKeyMessage = async (
     streamMessage: StreamMessage,
-    expectedPublisher: UserID,
-    expectedSubscriber: UserID,
+    expectedPublisherId: UserID,
+    expectedSubscriberId: UserID,
     streamRegistry: StreamRegistry
 ): Promise<void> => {
     const streamId = streamMessage.getStreamId()
-    const isPublisher = await streamRegistry.isStreamPublisher(streamId, expectedPublisher)
+    const isPublisher = await streamRegistry.isStreamPublisher(streamId, expectedPublisherId)
     if (!isPublisher) {
-        throw new StreamMessageError(`${expectedPublisher} is not a publisher on stream ${streamId}`, streamMessage)
+        throw new StreamMessageError(`${expectedPublisherId} is not a publisher on stream ${streamId}`, streamMessage)
     }
-    const isSubscriber = await streamRegistry.isStreamSubscriber(streamId, expectedSubscriber)
+    const isSubscriber = await streamRegistry.isStreamSubscriber(streamId, expectedSubscriberId)
     if (!isSubscriber) {
-        throw new StreamMessageError(`${expectedSubscriber} is not a subscriber on stream ${streamId}`, streamMessage)
+        throw new StreamMessageError(`${expectedSubscriberId} is not a subscriber on stream ${streamId}`, streamMessage)
     }
 }

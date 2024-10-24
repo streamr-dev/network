@@ -1,5 +1,5 @@
 import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
-import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toStreamID, wait, waitForCondition, toUserId } from '@streamr/utils'
+import { ChangeFieldType, StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toStreamID, wait, waitForCondition } from '@streamr/utils'
 import { range, shuffle } from 'lodash'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
@@ -146,8 +146,11 @@ describe.skip('OrderMessages2', () => {
             async () => [randomEthereumAddress()],
             onUnfillableGap,
             {
-                resend: (_streamPartId: StreamPartID, options: ResendRangeOptions ): Promise<PushPipeline<StreamMessage>> => {
-                    return gapHandler(options.from.timestamp as number, options.to.timestamp as number, toUserId(options.publisherId!))
+                resend: (
+                    _: StreamPartID,
+                    options: ChangeFieldType<ResendRangeOptions, 'publisherId', UserID>
+                ): Promise<PushPipeline<StreamMessage>> => {
+                    return gapHandler(options.from.timestamp as number, options.to.timestamp as number, options.publisherId)
                 }
             } as any,
             {

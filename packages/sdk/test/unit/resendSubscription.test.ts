@@ -104,7 +104,7 @@ describe('resend subscription', () => {
         sub = new Subscription(STREAM_PART_ID, false, undefined, eventEmitter, mockLoggerFactory())
         initResendSubscription(
             sub,
-            undefined as any,
+            {} as any,
             {
                 resend
             } as any,

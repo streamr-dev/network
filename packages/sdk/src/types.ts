@@ -10,3 +10,4 @@ export type StreamDefinition = string
     | { id: string, partition?: number }
     | { stream: string, partition?: number }
     | { streamId: string, partition?: number }
+

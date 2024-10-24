@@ -1,4 +1,4 @@
-import { StreamID, UserID } from '@streamr/utils'
+import { HexString, StreamID } from '@streamr/utils'
 import { SignatureType, StreamMessage } from './protocol/StreamMessage'
 
 /**
@@ -45,7 +45,7 @@ export interface Message {
     /**
      * Publisher of message.
      */
-    publisherId: UserID
+    publisherId: HexString
 
     /**
      * Identifies the message chain the message was published to.
