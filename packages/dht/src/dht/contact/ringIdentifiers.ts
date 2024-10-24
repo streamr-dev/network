@@ -1,4 +1,4 @@
-import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 
 // Notice: you cannot convert RingId to RingIdRaw, because 
 // RingId is only an approximation of the actual value.

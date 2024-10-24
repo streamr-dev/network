@@ -26,7 +26,7 @@ describe(findTarget, () => {
     let operator: MockProxy<Operator>
     let assignments: MockProxy<StreamPartAssignments>
 
-    function setupEnv(sponsorships: Array<{ address: EthereumAddress, operators: EthereumAddress[], streamId: StreamID }>) {
+    function setupEnv(sponsorships: { address: EthereumAddress, operators: EthereumAddress[], streamId: StreamID }[]) {
         operator.getSponsorships.mockImplementation(async () => {
             return sponsorships
                 .filter(({ operators }) => operators.includes(MY_OPERATOR_ADDRESS))

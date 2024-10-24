@@ -9,8 +9,8 @@ export class PublishPartitionDefinition {
 
 export const parsePublishPartitionDefinition = (queryParams: ParsedQs): PublishPartitionDefinition => {
     const partition = parseQueryParameter<number>('partition', queryParams, parsePositiveInteger)
-    const partitionKey = queryParams['partitionKey'] as string | undefined
-    const partitionKeyField = queryParams['partitionKeyField'] as string | undefined
+    const partitionKey = queryParams.partitionKey as string | undefined
+    const partitionKeyField = queryParams.partitionKeyField as string | undefined
     const partitionDefinitions = [partition, partitionKey, partitionKeyField].filter((d) => d !== undefined)
     if (partitionDefinitions.length > 1) {
         throw new Error('Invalid combination of "partition", "partitionKey" and "partitionKeyField"')

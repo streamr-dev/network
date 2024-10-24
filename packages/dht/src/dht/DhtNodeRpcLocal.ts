@@ -7,10 +7,10 @@ import {
     ClosestPeersResponse,
     ClosestRingPeersRequest,
     ClosestRingPeersResponse,
-    PeerDescriptor,
     PingRequest,
     PingResponse
 } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { IDhtNodeRpc } from '../../generated/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { RingContacts } from './contact/RingContactList'
@@ -19,7 +19,7 @@ import { RingIdRaw } from './contact/ringIdentifiers'
 
 interface DhtNodeRpcLocalOptions {
     peerDiscoveryQueryBatchSize: number
-    getNeighbors: () => ReadonlyArray<PeerDescriptor>
+    getNeighbors: () => readonly PeerDescriptor[]
     getClosestRingContactsTo: (id: RingIdRaw, limit: number) => RingContacts
     addContact: (contact: PeerDescriptor) => void
     removeContact: (nodeId: DhtAddress) => void

@@ -4,12 +4,12 @@ import { Options } from './command'
 import { getConfig } from './config'
 
 export const getClientConfig = (commandOptions: Options, overridenOptions: StreamrClientConfig = {}): StreamrClientConfig => {
-    const environmentOptions = { environment: commandOptions.env }
     const configFileJson = getConfig(commandOptions.config)?.client
+    const environmentOptions = { environment: commandOptions.env }
     const authenticationOptions = (commandOptions.privateKey !== undefined) ? { auth: { privateKey: commandOptions.privateKey } } : undefined
     return merge(
-        environmentOptions,
         configFileJson,
+        environmentOptions,
         authenticationOptions,
         overridenOptions
     )

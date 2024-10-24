@@ -59,7 +59,7 @@ export class DeleteExpiredCmd {
     }: Options) {
         this.streamrBaseUrl = streamrBaseUrl
         this.dryRun = dryRun
-        this.bucketLimit = bucketLimit || 10000000
+        this.bucketLimit = bucketLimit ?? 10000000
 
         const authProvider = new cassandra.auth.PlainTextAuthProvider(cassandraUsername, cassandraPassword)
         this.cassandraClient = new cassandra.Client({

@@ -73,7 +73,7 @@ export class MaintainTopologyHelper extends EventEmitter<MaintainTopologyHelperE
         for await (const stake of queryResult) {
             if (this.streamIdOfSponsorship.get(stake.sponsorship) !== stake.streamId) {
                 this.streamIdOfSponsorship.set(stake.sponsorship, stake.streamId)
-                const sponsorshipCount = (this.sponsorshipCountOfStream.get(stake.streamId) || 0) + 1
+                const sponsorshipCount = (this.sponsorshipCountOfStream.get(stake.streamId) ?? 0) + 1
                 this.sponsorshipCountOfStream.set(stake.streamId, sponsorshipCount)
             }
         }

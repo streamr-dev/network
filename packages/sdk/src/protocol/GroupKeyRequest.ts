@@ -12,7 +12,7 @@ export class GroupKeyRequest {
     readonly requestId: string
     readonly recipient: UserID
     readonly rsaPublicKey: string
-    readonly groupKeyIds: ReadonlyArray<string>
+    readonly groupKeyIds: readonly string[]
 
     constructor({ requestId, recipient, rsaPublicKey, groupKeyIds }: Options) {
         this.requestId = requestId

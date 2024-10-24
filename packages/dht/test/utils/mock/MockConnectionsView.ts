@@ -1,4 +1,4 @@
-import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 
 export class MockConnectionsView {
     // eslint-disable-next-line class-methods-use-this
