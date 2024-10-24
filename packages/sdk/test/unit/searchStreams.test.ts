@@ -87,8 +87,8 @@ describe('searchStreams', () => {
 
         expect(streams).toHaveLength(2)
         expect(streams[0].id).toBe(stream1)
-        expect(streams[0].getMetadata().partitions).toBe(11)
+        expect(streams[0].getPartitionCount()).toBe(11)
         expect(streams[1].id).toBe(stream4)
-        expect(streams[1].getMetadata().partitions).toBe(44)
+        expect(streams[1].getPartitionCount()).toBe(44)
     })
 })
