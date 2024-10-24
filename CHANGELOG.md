@@ -14,6 +14,7 @@ Changes before Tatum release are not documented in this file.
 
 - Add support for arbitrary length user IDs (https://github.com/streamr-dev/network/pull/2774, https://github.com/streamr-dev/network/pull/2780)
   - it is supported for `PUBLISH` and `SUBSCRIBE` permissions
+- Add validation for public permissions (https://github.com/streamr-dev/network/pull/2819)
 - Method `StreamrClient#getDiagnosticInfo()` provides diagnostic info about network (https://github.com/streamr-dev/network/pull/2740, https://github.com/streamr-dev/network/pull/2741)
 
 #### Changed
