@@ -69,7 +69,7 @@ export const createRelativeTestStreamId = (module: NodeModule, suffix?: string):
     return counterId(`/test/${randomTestRunId}/${getTestName(module)}${(suffix !== undefined) ? '-' + suffix : ''}`, '-')
 }
 
-export const createTestStream = async (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamMetadata>): Promise<Stream> => {
+export const createTestStream = async (streamrClient: StreamrClient, module: NodeModule, props?: StreamMetadata): Promise<Stream> => {
     const stream = await streamrClient.createStream({
         id: createRelativeTestStreamId(module),
         ...props

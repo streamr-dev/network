@@ -90,7 +90,7 @@ export class Stream {
     /** @internal */
     constructor(
         id: StreamID,
-        metadata: Partial<StreamMetadata>,
+        metadata: StreamMetadata,
         publisher: Publisher,
         subscriber: Subscriber,
         resends: Resends,
@@ -124,7 +124,7 @@ export class Stream {
     /**
      * Updates the metadata of the stream.
      */
-    async update(metadata: Partial<StreamMetadata>): Promise<void> {
+    async update(metadata: StreamMetadata): Promise<void> {
         try {
             await this._streamRegistry.updateStream(this.id, metadata)
         } finally {
