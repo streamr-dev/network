@@ -116,7 +116,7 @@ export class DeleteExpiredCmd {
                     return {
                         streamId: stream.streamId,
                         partition: stream.partition,
-                        storageDays: (streamFromChain.getMetadata() as any).storageDays ?? 365
+                        storageDays: streamFromChain.getStorageDayCount() ?? 365
                     }
                 } catch (err) { logger.error('Failed to fetch stream info', { err }) }
             })

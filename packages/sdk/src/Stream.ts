@@ -25,6 +25,7 @@ import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
+import { isNumber, isString } from 'lodash'
 
 export type StreamMetadata = Record<string, unknown>
 
@@ -145,6 +146,38 @@ export class Stream {
             ensureValidStreamPartitionCount(metadataValue)
         }
         return metadataValue ?? DEFAULT_PARTITION_COUNT
+    }
+
+    getDescription(): string | undefined {
+        const value = this.getMetadata().description
+        if (isString(value)) {
+            return value
+        } else {
+            return undefined
+        }
+    }
+
+    async setDescription(description: string): Promise<void> {
+        await this.update({
+            ...this.getMetadata(),
+            description
+        })
+    }
+
+    getStorageDayCount(): number | undefined {
+        const value = this.getMetadata().storageDays
+        if (isNumber(value)) {
+            return value
+        } else {
+            return undefined
+        }
+    }
+
+    async setStorageDayCount(count: number): Promise<void> {
+        await this.update({
+            ...this.getMetadata(),
+            storageDays: count
+        })
     }
 
     /**
