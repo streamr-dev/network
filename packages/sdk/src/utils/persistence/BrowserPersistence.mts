@@ -2,7 +2,6 @@ import { openDB, IDBPDatabase } from 'idb'
 // eslint-disable-next-line import/no-unresolved
 import { PersistenceContext, PersistenceContextOptions } from './PersistenceContext.js'
 
-
 /**
  * This file is a ES module (.mts) instead of CommonJS. It was converted to ESM to resolve
  * an import issue with the `idb` package.
