@@ -2,6 +2,22 @@ import { openDB, IDBPDatabase } from 'idb'
 // eslint-disable-next-line import/no-unresolved
 import { PersistenceContext, PersistenceContextOptions } from './PersistenceContext.js'
 
+
+/**
+ * This file is a ES module (.mts) instead of CommonJS. It was converted to ESM to resolve
+ * an import issue with the `idb` package.
+ * 
+ * When it was CommonJS the `npm run check` failed with error:
+ * "The current file is a CommonJS module whose imports will produce 'require' calls;
+ * however, the referenced file is an ECMAScript module and cannot be imported with 'require'.
+ * Consider writing a dynamic 'import("idb")' call instead."
+ * 
+ * Although `idb` has a default export of "index.cjs", switching to ESM fixed the issue.
+ * If we find another solution, we may revert this file to CommonJS.
+ * 
+ * See https://github.com/streamr-dev/network/pull/2848
+ */
+
 export default class BrowserPersistence implements PersistenceContext {
     
     private readonly db: IDBPDatabase
