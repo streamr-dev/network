@@ -125,10 +125,12 @@ export default [
             '@typescript-eslint/no-base-to-string': 'off',
             '@typescript-eslint/no-unsafe-enum-comparison': 'off',
             '@typescript-eslint/no-redundant-type-constituents': 'off',
+            // TODO configure this (may need eslint-import-resolver-typescript dependency)
+            'import/no-unresolved': ['off'],
             'import/no-extraneous-dependencies': ['error', {
                 devDependencies: [ 'test/**/*.ts', 'test/**/*.js'],
                 packageDir: ['.', '../..']
-            }]
+            }],
         }
     },
     {
