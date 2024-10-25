@@ -1,5 +1,5 @@
 import { openDB, IDBPDatabase } from 'idb'
-import { PersistenceContext, PersistenceContextOptions } from './PersistenceContext'
+import { PersistenceContext, PersistenceContextOptions } from './PersistenceContext.js'
 
 export default class BrowserPersistence implements PersistenceContext {
     
