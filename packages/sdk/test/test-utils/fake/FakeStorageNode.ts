@@ -135,7 +135,7 @@ export class FakeStorageNode {
     }
 
     private async addStream(streamId: StreamID): Promise<void> {
-        const partitionCount = this.chain.getStream(streamId)!.metadata.partitions
+        const partitionCount = this.chain.getStream(streamId)!.metadata.partitions as number
         const streamParts = range(0, partitionCount).map((p) => toStreamPartID(streamId, p))
         streamParts.forEach(async (streamPartId) => {
             if (!(await this.node.getStreamParts()).includes(streamPartId)) {

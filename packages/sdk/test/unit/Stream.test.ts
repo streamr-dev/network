@@ -23,7 +23,7 @@ describe('Stream', () => {
     it('initial fields', () => {
         const factory = createStreamFactory()
         const stream = factory.createStream(toStreamID('mock-id'), {})
-        expect(stream.getMetadata().config?.fields).toEqual([])
+        expect((stream.getMetadata() as any).config.fields).toEqual([])
     })
 
     it('getMetadata', () => {

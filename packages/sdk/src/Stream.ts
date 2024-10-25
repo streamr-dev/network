@@ -26,7 +26,7 @@ import { LoggerFactory } from './utils/LoggerFactory'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
 
-export type StreamMetadata = Record<string, any>
+export type StreamMetadata = Record<string, unknown>
 
 const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
 
@@ -140,7 +140,7 @@ export class Stream {
     }
 
     getPartitionCount(): number {
-        const metadataValue = this.getMetadata().partitions
+        const metadataValue = this.getMetadata().partitions as number | undefined
         if (metadataValue !== undefined) {
             ensureValidStreamPartitionCount(metadataValue)
         }
@@ -240,7 +240,7 @@ export class Stream {
             await this._subscriber.add(assignmentSubscription)
             const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, {
                 id: this.id,
-                partitions: this.getMetadata().partitions ?? DEFAULT_PARTITION_COUNT
+                partitions: this.getPartitionCount()
             }, this._loggerFactory)
             await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
             await withTimeout(
