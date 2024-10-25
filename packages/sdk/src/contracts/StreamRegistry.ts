@@ -236,7 +236,6 @@ export class StreamRegistry {
         }
     }
 
-    // Most likely the contract doesn't make any merging (like we do in Stream#update)?
     async updateStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
         await this.connectToContract()
         const ethersOverrides = await getEthersOverrides(this.rpcProviderSource, this.config)
