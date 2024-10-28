@@ -65,6 +65,7 @@ export interface ContentDeliveryManagerOptions {
     acceptProxyConnections?: boolean
     rpcRequestTimeout?: number
     neighborUpdateInterval?: number
+    experimentId?: string
 }
 
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): DhtAddress => {
@@ -271,7 +272,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             acceptProxyConnections: this.options.acceptProxyConnections,
             rpcRequestTimeout: this.options.rpcRequestTimeout,
             neighborUpdateInterval: this.options.neighborUpdateInterval,
-            isLocalNodeEntryPoint
+            isLocalNodeEntryPoint,
+            experimentId: this.options.experimentId
         })
     }
 

@@ -6,7 +6,7 @@ import {
     PeerDescriptor,
     toNodeId,
 } from '@streamr/dht'
-import { Logger, StreamPartID, addManagedEventListener } from '@streamr/utils'
+import { Logger, StreamPartID, addManagedEventListener, binaryToUtf8, utf8ToBinary } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import {
     CloseTemporaryConnection,
@@ -63,6 +63,8 @@ export interface StrictContentDeliveryLayerNodeOptions {
 
     proxyConnectionRpcLocal?: ProxyConnectionRpcLocal
     rpcRequestTimeout?: number
+
+    experimentId?: string
 }
 
 const RANDOM_NODE_VIEW_SIZE = 20
@@ -358,11 +360,20 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
     broadcast(msg: StreamMessage, previousNode?: DhtAddress): void {
         if (!previousNode) {
             markAndCheckDuplicate(this.duplicateDetectors, msg.messageId!, msg.previousMessageRef)
+        } else {
+            if (msg.body.oneofKind === 'contentMessage') {
+                console.log(JSON.parse(binaryToUtf8(msg.body.contentMessage.content)))
+                const parsedMessage = JSON.parse(binaryToUtf8(msg.body.contentMessage.content))
+                parsedMessage.route.push({
+                    id: this.options.experimentId,
+                    time: Date.now(),
+                    region: this.options.localPeerDescriptor.region
+                })
+                msg.body.contentMessage.content = utf8ToBinary(JSON.stringify(parsedMessage))
+                console.log(JSON.parse(binaryToUtf8(msg.body.contentMessage.content)))
+            }
         }
         this.emit('message', msg)
-        if (msg.body.oneofKind === 'contentMessage') {
-            console.log(msg.body.contentMessage)
-        }
         const skipBackPropagation = previousNode !== undefined && !this.options.temporaryConnectionRpcLocal.hasNode(previousNode)
         this.options.propagation.feedUnseenMessage(msg, this.getPropagationTargets(msg), skipBackPropagation ? previousNode : null)
         this.messagesPropagated += 1
