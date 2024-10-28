@@ -60,6 +60,9 @@ Changes before Tatum release are not documented in this file.
 
 #### Removed
 
+- **BREAKING CHANGE:** Remove deprecated `bin/config-wizard` script (i.e. the `streamr-broker-init` command)
+  - use `streamr-node-init` command instead
+
 #### Fixed
 
 - Fix operator flag voting behavior when using custom gas estimation (https://github.com/streamr-dev/network/pull/2784)
