@@ -12,6 +12,7 @@
         "package.json",
         "src/**/*",
         "src/**/*.json",
+        "bin/generate-config-validator.js",
         "vendor/**/*",
         "src/config.schema.json",
         "test/**/*",
