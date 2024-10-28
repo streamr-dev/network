@@ -11,6 +11,7 @@ message ExperimentServerMessage {
         Start start = 1;
         JoinExperiment joinExperiment = 2;
         JoinStreamPart joinStreamPart = 3;
+        PublishMessage publishMessage = 4;
     }
 }
 
@@ -52,6 +53,10 @@ message JoinStreamPart {
     int32 neighborCount = 2;
 }
 
+message PublishMessage {
+    string streamPartId = 1;
+}
+
 message InstructionCompleted {
-    
+
 }

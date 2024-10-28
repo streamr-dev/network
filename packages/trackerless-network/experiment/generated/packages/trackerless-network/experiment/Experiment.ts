@@ -29,6 +29,12 @@ export interface ExperimentServerMessage {
          */
         joinStreamPart: JoinStreamPart;
     } | {
+        oneofKind: "publishMessage";
+        /**
+         * @generated from protobuf field: PublishMessage publishMessage = 4;
+         */
+        publishMessage: PublishMessage;
+    } | {
         oneofKind: undefined;
     };
 }
@@ -142,6 +148,15 @@ export interface JoinStreamPart {
     neighborCount: number;
 }
 /**
+ * @generated from protobuf message PublishMessage
+ */
+export interface PublishMessage {
+    /**
+     * @generated from protobuf field: string streamPartId = 1;
+     */
+    streamPartId: string;
+}
+/**
  * @generated from protobuf message InstructionCompleted
  */
 export interface InstructionCompleted {
@@ -152,7 +167,8 @@ class ExperimentServerMessage$Type extends MessageType<ExperimentServerMessage> 
         super("ExperimentServerMessage", [
             { no: 1, name: "start", kind: "message", oneof: "instruction", T: () => Start },
             { no: 2, name: "joinExperiment", kind: "message", oneof: "instruction", T: () => JoinExperiment },
-            { no: 3, name: "joinStreamPart", kind: "message", oneof: "instruction", T: () => JoinStreamPart }
+            { no: 3, name: "joinStreamPart", kind: "message", oneof: "instruction", T: () => JoinStreamPart },
+            { no: 4, name: "publishMessage", kind: "message", oneof: "instruction", T: () => PublishMessage }
         ]);
     }
 }
@@ -251,6 +267,18 @@ class JoinStreamPart$Type extends MessageType<JoinStreamPart> {
  * @generated MessageType for protobuf message JoinStreamPart
  */
 export const JoinStreamPart = new JoinStreamPart$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class PublishMessage$Type extends MessageType<PublishMessage> {
+    constructor() {
+        super("PublishMessage", [
+            { no: 1, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message PublishMessage
+ */
+export const PublishMessage = new PublishMessage$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class InstructionCompleted$Type extends MessageType<InstructionCompleted> {
     constructor() {

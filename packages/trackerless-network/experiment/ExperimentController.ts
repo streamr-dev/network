@@ -143,6 +143,23 @@ export class ExperimentController {
         await waitForCondition(() => this.instructionsCompleted === this.nodeCount, 30000, 1000)
     }
 
+    async publishMessage(streamPartId: StreamPartID): Promise<void> {
+        this.instructionsCompleted = 0
+        const message = ExperimentServerMessage.create({
+            instruction: {
+                oneofKind: 'publishMessage',
+                publishMessage: {
+                    streamPartId: streamPartId.toString()
+                }
+            }
+        })
+        const nodes = Array.from(this.clients.values())
+        await Promise.all(nodes.map((node) => {
+            node.socket.send(ExperimentServerMessage.toBinary(message))
+        }))
+        await waitForCondition(() => this.instructionsCompleted === this.nodeCount, 30000, 1000)
+    }
+
     getResults(): Map<string, any> {
         return this.results
     }

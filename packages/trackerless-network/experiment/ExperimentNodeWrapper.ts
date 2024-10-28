@@ -4,7 +4,34 @@ import { NetworkNode } from '../src/NetworkNode'
 import { NetworkStack } from '../src/NetworkStack'
 import { ExperimentClientMessage, ExperimentServerMessage, Hello } from './generated/packages/trackerless-network/experiment/Experiment'
 import { NodeType, PeerDescriptor } from '@streamr/dht'
-import { hexToBinary } from '@streamr/utils'
+import { binaryToHex, hexToBinary, StreamIDUtils, StreamPartID, StreamPartIDUtils, utf8ToBinary } from '@streamr/utils'
+import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../generated/packages/trackerless-network/protos/NetworkRpc'
+
+const createStreamMessage = (streamPartId: StreamPartID, id: string, region: number) => {
+    const message: StreamMessage = {
+        messageId: {
+            streamId: StreamPartIDUtils.getStreamID(streamPartId),
+            streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
+            timestamp: Date.now(),
+            sequenceNumber: 0,
+            publisherId: hexToBinary(binaryToHex(utf8ToBinary(id))),
+            messageChainId: 'msgChainId'
+        },
+        body: {
+            oneofKind: 'contentMessage',
+            contentMessage: {
+                content: utf8ToBinary(JSON.stringify({ id, route: [
+                    { id, time: Date.now(), region }
+                ]})),
+                contentType: ContentType.JSON,
+                encryptionType: EncryptionType.NONE,
+            }
+        },
+        signatureType: SignatureType.SECP256K1,
+        signature: hexToBinary('0x1234')
+    }
+    return message
+}
 
 export class ExperimentNodeWrapper {
     private readonly id = v4()
@@ -40,7 +67,10 @@ export class ExperimentNodeWrapper {
             webrtcAllowPrivateAddresses: true
         }
         const stack = new NetworkStack({
-            layer0: layer0config
+            layer0: layer0config,
+            networkNode: {
+                experimentId: this.id
+            }
         })
         this.node = new NetworkNode(stack)
         await this.node.start(join)
@@ -81,6 +111,12 @@ export class ExperimentNodeWrapper {
             } else if (message.instruction.oneofKind === 'joinExperiment') {
                 const instruction = message.instruction.joinExperiment
                 setImmediate(() => this.joinExperiment(instruction.entryPoints))
+            } else if (message.instruction.oneofKind === 'joinStreamPart') {
+                const instruction = message.instruction.joinStreamPart
+                setImmediate(() => this.joinStreamPart(instruction.streamPartId, instruction.neighborCount))
+            } else if (message.instruction.oneofKind === 'publishMessage') {
+                const instruction = message.instruction.publishMessage
+                setImmediate(() => this.publishMessage(instruction.streamPartId))
             }
         })
     }
@@ -106,7 +142,32 @@ export class ExperimentNodeWrapper {
         this.send(results)
     }
 
-    async joinStreamPart()
+    async joinStreamPart(streamPartId: string, neighborCount: number): Promise<void> {
+        const streamPart = StreamPartIDUtils.parse(streamPartId)
+        await this.node!.join(streamPart, { minCount: neighborCount, timeout: 20000 })
+        const results = ExperimentClientMessage.create({
+            id: this.id,
+            payload: {
+                oneofKind: 'instructionCompleted',
+                instructionCompleted: {}
+            }
+        })
+        this.send(results)
+    }
+
+    async publishMessage(streamPartId: string): Promise<void> {
+        const streamPart = StreamPartIDUtils.parse(streamPartId)
+        const message = createStreamMessage(streamPart, this.id, this.node!.getPeerDescriptor().region!)
+        await this.node!.broadcast(message)
+        const results = ExperimentClientMessage.create({
+            id: this.id,
+            payload: {
+                oneofKind: 'instructionCompleted',
+                instructionCompleted: {}
+            }
+        })
+        this.send(results)
+    }
 
     async stop() {
         this.node!.stop()

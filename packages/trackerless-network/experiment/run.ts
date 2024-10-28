@@ -1,3 +1,4 @@
+import { StreamPartIDUtils } from "@streamr/utils"
 import { ExperimentController } from "./ExperimentController"
 import { ExperimentNodeWrapper } from "./ExperimentNodeWrapper"
 
@@ -25,6 +26,15 @@ const run = async () => {
         await controller.runJoinExperiment(entryPointId)
         console.log('experiment done')
         console.log(controller.getResults())
+    } else if (experiment === 'propagation') { 
+        await controller.startNodes(entryPointId)
+        console.log('all nodes started')
+        const streamPartId = StreamPartIDUtils.parse('experiment#0')
+        await controller.joinStreamPart(streamPartId)
+        console.log('all nodes joined stream part')
+        await controller.publishMessage(streamPartId)
+        console.log('all nodes published message')
+        // IMPLEMENT RESULT COLLECTION HERE
     } else {
         await controller.startNodes(entryPointId)
         console.log('all nodes started')
