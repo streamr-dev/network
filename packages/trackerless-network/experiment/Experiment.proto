@@ -10,6 +10,7 @@ message ExperimentServerMessage {
     oneof instruction {
         Start start = 1;
         JoinExperiment joinExperiment = 2;
+        JoinStreamPart joinStreamPart = 3;
     }
 }
 
@@ -19,6 +20,7 @@ message ExperimentClientMessage {
         Hello hello = 2;
         Started started = 3;
         ExperimentResults experimentResults = 4;
+        InstructionCompleted instructionCompleted = 5;
     }
 }
 
@@ -43,4 +45,13 @@ message JoinExperiment {
 
 message ExperimentResults {
     string results = 1;
+}
+
+message JoinStreamPart {
+    string streamPartId = 1;
+    int32 neighborCount = 2;
+}
+
+message InstructionCompleted {
+    
 }

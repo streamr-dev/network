@@ -23,6 +23,12 @@ export interface ExperimentServerMessage {
          */
         joinExperiment: JoinExperiment;
     } | {
+        oneofKind: "joinStreamPart";
+        /**
+         * @generated from protobuf field: JoinStreamPart joinStreamPart = 3;
+         */
+        joinStreamPart: JoinStreamPart;
+    } | {
         oneofKind: undefined;
     };
 }
@@ -55,6 +61,12 @@ export interface ExperimentClientMessage {
          * @generated from protobuf field: ExperimentResults experimentResults = 4;
          */
         experimentResults: ExperimentResults;
+    } | {
+        oneofKind: "instructionCompleted";
+        /**
+         * @generated from protobuf field: InstructionCompleted instructionCompleted = 5;
+         */
+        instructionCompleted: InstructionCompleted;
     } | {
         oneofKind: undefined;
     };
@@ -116,12 +128,31 @@ export interface ExperimentResults {
      */
     results: string;
 }
+/**
+ * @generated from protobuf message JoinStreamPart
+ */
+export interface JoinStreamPart {
+    /**
+     * @generated from protobuf field: string streamPartId = 1;
+     */
+    streamPartId: string;
+    /**
+     * @generated from protobuf field: int32 neighborCount = 2;
+     */
+    neighborCount: number;
+}
+/**
+ * @generated from protobuf message InstructionCompleted
+ */
+export interface InstructionCompleted {
+}
 // @generated message type with reflection information, may provide speed optimized methods
 class ExperimentServerMessage$Type extends MessageType<ExperimentServerMessage> {
     constructor() {
         super("ExperimentServerMessage", [
             { no: 1, name: "start", kind: "message", oneof: "instruction", T: () => Start },
-            { no: 2, name: "joinExperiment", kind: "message", oneof: "instruction", T: () => JoinExperiment }
+            { no: 2, name: "joinExperiment", kind: "message", oneof: "instruction", T: () => JoinExperiment },
+            { no: 3, name: "joinStreamPart", kind: "message", oneof: "instruction", T: () => JoinStreamPart }
         ]);
     }
 }
@@ -136,7 +167,8 @@ class ExperimentClientMessage$Type extends MessageType<ExperimentClientMessage> 
             { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "hello", kind: "message", oneof: "payload", T: () => Hello },
             { no: 3, name: "started", kind: "message", oneof: "payload", T: () => Started },
-            { no: 4, name: "experimentResults", kind: "message", oneof: "payload", T: () => ExperimentResults }
+            { no: 4, name: "experimentResults", kind: "message", oneof: "payload", T: () => ExperimentResults },
+            { no: 5, name: "instructionCompleted", kind: "message", oneof: "payload", T: () => InstructionCompleted }
         ]);
     }
 }
@@ -206,3 +238,26 @@ class ExperimentResults$Type extends MessageType<ExperimentResults> {
  * @generated MessageType for protobuf message ExperimentResults
  */
 export const ExperimentResults = new ExperimentResults$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class JoinStreamPart$Type extends MessageType<JoinStreamPart> {
+    constructor() {
+        super("JoinStreamPart", [
+            { no: 1, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "neighborCount", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message JoinStreamPart
+ */
+export const JoinStreamPart = new JoinStreamPart$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class InstructionCompleted$Type extends MessageType<InstructionCompleted> {
+    constructor() {
+        super("InstructionCompleted", []);
+    }
+}
+/**
+ * @generated MessageType for protobuf message InstructionCompleted
+ */
+export const InstructionCompleted = new InstructionCompleted$Type();

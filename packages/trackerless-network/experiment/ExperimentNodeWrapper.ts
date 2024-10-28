@@ -106,8 +106,11 @@ export class ExperimentNodeWrapper {
         this.send(results)
     }
 
+    async joinStreamPart()
+
     async stop() {
         this.node!.stop()
         this.socket!.close()
     }
+
 }

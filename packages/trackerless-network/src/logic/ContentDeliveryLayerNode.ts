@@ -360,6 +360,9 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             markAndCheckDuplicate(this.duplicateDetectors, msg.messageId!, msg.previousMessageRef)
         }
         this.emit('message', msg)
+        if (msg.body.oneofKind === 'contentMessage') {
+            console.log(msg.body.contentMessage)
+        }
         const skipBackPropagation = previousNode !== undefined && !this.options.temporaryConnectionRpcLocal.hasNode(previousNode)
         this.options.propagation.feedUnseenMessage(msg, this.getPropagationTargets(msg), skipBackPropagation ? previousNode : null)
         this.messagesPropagated += 1

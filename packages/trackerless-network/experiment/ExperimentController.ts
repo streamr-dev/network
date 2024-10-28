@@ -1,9 +1,9 @@
 import http from 'http'
 import { Socket } from 'net'
 import WebSocket from 'ws'
-import { ExperimentClientMessage, ExperimentServerMessage, Hello, JoinExperiment } from './generated/packages/trackerless-network/experiment/Experiment'
+import { ExperimentClientMessage, ExperimentServerMessage, Hello, InstructionCompleted, JoinExperiment } from './generated/packages/trackerless-network/experiment/Experiment'
 import { Any } from '../generated/google/protobuf/any'
-import { waitForCondition } from '@streamr/utils'
+import { StreamPartID, waitForCondition } from '@streamr/utils'
 import { PeerDescriptor } from '@streamr/dht'
 import { sample } from 'lodash'
 
@@ -19,6 +19,7 @@ export class ExperimentController {
     private clients: Map<string, ExperimentNode> = new Map()
     private readonly nodeCount: number 
     private readonly results: Map<string, any> = new Map()
+    private instructionsCompleted = 0
 
     constructor(nodeCount: number) {
         this.nodeCount = nodeCount
@@ -57,6 +58,8 @@ export class ExperimentController {
                         this.clients.set(message.id, { socket: ws, peerDescriptor: started.peerDescriptor! })
                     } else if (message.payload.oneofKind === 'experimentResults') {
                         this.results.set(message.id, message.payload.experimentResults)
+                    } else if (message.payload.oneofKind === 'instructionCompleted') {
+                        this.instructionsCompleted += 1
                     }
                 })
             })
@@ -120,6 +123,24 @@ export class ExperimentController {
             node.socket.send(ExperimentServerMessage.toBinary(message))
         }))
         await waitForCondition(() => this.results.size === this.nodeCount - 1, 30000, 1000)
+    }
+
+    async joinStreamPart(streamPartId: StreamPartID): Promise<void> {
+        this.instructionsCompleted = 0
+        const nodes = Array.from(this.clients.values())
+        await Promise.all(nodes.map((node) => {
+            const message = ExperimentServerMessage.create({
+                instruction: {
+                    oneofKind: 'joinStreamPart',
+                    joinStreamPart: {
+                        streamPartId: streamPartId.toString(),
+                        neighborCount: 4
+                    }
+                }
+            })
+            node.socket.send(ExperimentServerMessage.toBinary(message))
+        }))
+        await waitForCondition(() => this.instructionsCompleted === this.nodeCount, 30000, 1000)
     }
 
     getResults(): Map<string, any> {

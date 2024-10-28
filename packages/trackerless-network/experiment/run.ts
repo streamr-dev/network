@@ -1,8 +1,9 @@
 import { ExperimentController } from "./ExperimentController"
 import { ExperimentNodeWrapper } from "./ExperimentNodeWrapper"
 
+const modes = [ 'propagation', 'join', 'routing' ]
 const experiment = process.argv[2]
-if (experiment !== 'join') {
+if (!modes.includes(experiment)) {
     throw new Error('only join mode is supported')
 }
 const run = async () => {
