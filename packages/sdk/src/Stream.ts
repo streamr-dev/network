@@ -164,6 +164,9 @@ export class Stream {
         })
     }
 
+    /**
+     * Gets the value of `storageDays` field
+     */
     getStorageDayCount(): number | undefined {
         const value = this.getMetadata().storageDays
         if (isNumber(value)) {
@@ -173,6 +176,9 @@ export class Stream {
         }
     }
 
+    /**
+     * Sets the value of `storageDays` field
+     */
     async setStorageDayCount(count: number): Promise<void> {
         await this.update({
             ...this.getMetadata(),
