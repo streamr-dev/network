@@ -85,7 +85,7 @@ export const getCreateClient = (
 
     return async function createClient(opts: any = {}, parentContainer?: DependencyContainer) {
         let key
-        if (opts.auth && opts.auth.privateKey) {
+        if (opts.auth?.privateKey) {
             key = opts.auth.privateKey
         } else {
             key = await fetchPrivateKeyWithGas()

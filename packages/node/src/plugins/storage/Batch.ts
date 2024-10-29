@@ -44,7 +44,7 @@ export class Batch extends EventEmitter {
     private doneCbs: DoneCallback[]
 
     constructor(bucketId: BucketId, maxSize: number, maxRecordCount: number, closeTimeout: number, maxRetries: number) {
-        if (!bucketId || !bucketId.length) {
+        if (!bucketId?.length) {
             throw new TypeError('bucketId must be not empty string')
         }
 

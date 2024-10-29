@@ -94,7 +94,7 @@ export class DuplicateMessageDetector {
      * returns true if number has not yet been seen (i.e. is not a duplicate)
      */
     markAndCheck(previousNumber: NumberPair | null, number: NumberPair): boolean | never {
-        if (previousNumber && previousNumber.greaterThanOrEqual(number)) {
+        if (previousNumber?.greaterThanOrEqual(number)) {
             throw new InvalidNumberingError()
         }
 
