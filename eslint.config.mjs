@@ -127,6 +127,8 @@ export default [
             '@typescript-eslint/no-redundant-type-constituents': 'off',
             // TODO configure this (may need eslint-import-resolver-typescript dependency)
             'import/no-unresolved': ['off'],
+            // TODO enable this?
+            'import/named': 'off',
             'import/no-extraneous-dependencies': ['error', {
                 devDependencies: [ 'test/**/*.ts', 'test/**/*.js'],
                 packageDir: ['.', '../..']
