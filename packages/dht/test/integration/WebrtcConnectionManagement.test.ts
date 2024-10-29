@@ -1,7 +1,8 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
-import { Message, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { Message } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor, NodeType } from '../../generated/packages/dht/protos/PeerDescriptor'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { ITransport } from '../../src/transport/ITransport'
 import * as Err from '../../src/helpers/errors'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
@@ -15,7 +16,8 @@ const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport:
             transport,
             createLocalPeerDescriptor: async () => localPeerDescriptor
         }),
-        metricsContext: new MetricsContext()
+        metricsContext: new MetricsContext(),
+        allowIncomingPrivateConnections: false
     })
 }
 

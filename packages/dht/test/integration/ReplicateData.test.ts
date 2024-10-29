@@ -5,7 +5,8 @@ import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { createMockDataEntry, expectEqualData } from '../utils/mock/mockDataEntry'
 import { DhtAddress, randomDhtAddress, toDhtAddress, toNodeId } from '../../src/identifiers'
 import { sample } from 'lodash'
-import { DataEntry, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { DataEntry } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 
 const DATA = createMockDataEntry()
 const NUM_NODES = 100

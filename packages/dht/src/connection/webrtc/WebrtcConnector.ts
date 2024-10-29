@@ -1,15 +1,15 @@
 import {
     HandshakeError,
     IceCandidate,
-    PeerDescriptor,
     RtcAnswer,
     RtcOffer, WebrtcConnectionRequest
-} from '../../proto/packages/dht/protos/DhtRpc'
+} from '../../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { NodeWebrtcConnection } from './NodeWebrtcConnection'
 import { WebrtcConnectorRpcRemote } from './WebrtcConnectorRpcRemote'
-import { WebrtcConnectorRpcClient } from '../../proto/packages/dht/protos/DhtRpc.client'
+import { WebrtcConnectorRpcClient } from '../../../generated/packages/dht/protos/DhtRpc.client'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
 import { PortRange } from '../ConnectionManager'

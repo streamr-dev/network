@@ -35,7 +35,7 @@ describe('StreamRegistry', () => {
         wallet = new Wallet(await fetchPrivateKeyWithGas())
         publicAddress = toEthereumAddress(wallet.address)
         client = new StreamrClient({
-            ...CONFIG_TEST,
+            environment: 'dev2',
             auth: {
                 privateKey: wallet.privateKey,
             },
@@ -117,7 +117,7 @@ describe('StreamRegistry', () => {
             it('domain owned by user', async () => {
                 const streamId = `testdomain1.eth/foobar/${Date.now()}`
                 const ensOwnerClient = new StreamrClient({
-                    ...CONFIG_TEST,
+                    environment: 'dev2',
                     auth: {
                         // In dev environment the testdomain1.eth is owned by 0x4178baBE9E5148c6D5fd431cD72884B07Ad855a0.
                         // The ownership is preloaded by docker-dev-chain-init (https://github.com/streamr-dev/network-contracts)
@@ -251,8 +251,9 @@ describe('StreamRegistry', () => {
 
     describe('update', () => {
         it('happy path', async () => {
+            const description = `description-${Date.now()}`
             await createdStream.update({
-                description: `description-${Date.now()}`
+                description
             })
             await until(async () => {
                 try {
@@ -263,7 +264,14 @@ describe('StreamRegistry', () => {
             }, 100000, 1000)
             // check that other fields not overwritten
             const updatedStream = await client.getStream(createdStream.id)
-            expect(updatedStream.getMetadata().partitions).toBe(PARTITION_COUNT)
+            expect(updatedStream.getMetadata()).toEqual({
+                description,
+                // these are injected in the Stream constructor (maybe we'll change this functionality in the future)
+                partitions: 1,
+                config: {
+                    fields: []
+                }
+            })
         }, TIMEOUT)
     })
 

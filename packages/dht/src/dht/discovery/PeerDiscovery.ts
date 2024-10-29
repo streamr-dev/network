@@ -8,7 +8,7 @@ import {
     toNodeId,
     toDhtAddressRaw
 } from '../../identifiers'
-import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { ServiceID } from '../../types/ServiceID'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { PeerManager } from '../PeerManager'

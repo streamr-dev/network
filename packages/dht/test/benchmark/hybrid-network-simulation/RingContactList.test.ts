@@ -1,4 +1,5 @@
-import { ConnectivityResponse, PeerDescriptor } from '../../../src/proto/packages/dht/protos/DhtRpc'
+import { ConnectivityResponse } from '../../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { createPeerDescriptor } from '../../../src/helpers/createPeerDescriptor'
 import { NatType } from '../../../src/connection/ConnectionManager'
 import { ipv4ToNumber, Logger } from '@streamr/utils'
@@ -39,7 +40,7 @@ class MockNode {
 }
 
 // populate with mock ip addresses
-const mockData: Array< [number, string] > = [
+const mockData: [number, string][] = [
     [0, '5.2.4.2'],
     [0, '6.23.2.4'],
     [0, '7.2.4.2'],

@@ -8,7 +8,8 @@ import {
     toDhtAddress,
     toDhtAddressRaw
 } from '../../src/identifiers'
-import { PeerDescriptor, ReplicateDataRequest } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { ReplicateDataRequest } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const NODE_COUNT = 10

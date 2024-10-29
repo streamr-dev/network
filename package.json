@@ -29,12 +29,12 @@
         "packages/cli-tools"
     ],
     "dependencies": {
-        "@manypkg/cli": "^0.21.2",
+        "@manypkg/cli": "^0.22.0",
         "@protobuf-ts/plugin": "^2.9.3",
         "@stylistic/eslint-plugin": "^2.9.0",
         "@tsconfig/node18": "^18.2.4",
         "@types/jest": "^29.5.13",
-        "@types/node": "^18.19.54",
+        "@types/node": "^18.19.57",
         "@typescript-eslint/eslint-plugin": "8.7.0",
         "@typescript-eslint/parser": "^8.7.0",
         "cli-table": "^0.3.6",

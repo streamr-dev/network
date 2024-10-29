@@ -4,7 +4,7 @@ import {
     ConnectivityRequest,
     ConnectivityResponse,
     Message
-} from '../proto/packages/dht/protos/DhtRpc'
+} from '../../generated/packages/dht/protos/DhtRpc'
 import { NatType } from './ConnectionManager'
 import { CONNECTIVITY_CHECKER_SERVICE_ID, connectAsync } from './connectivityChecker'
 import { IConnection } from './IConnection'

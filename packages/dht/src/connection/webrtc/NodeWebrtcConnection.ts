@@ -1,6 +1,6 @@
 import { IWebrtcConnection, WebrtcConnectionEvents } from './IWebrtcConnection'
 import { ConnectionType, IConnection, ConnectionID, ConnectionEvents } from '../IConnection'
-import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import EventEmitter from 'eventemitter3'
 // TODO: why does eslint import rule plugin not work?
 // eslint-disable-next-line import/no-unresolved

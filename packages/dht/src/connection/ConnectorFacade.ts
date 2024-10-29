@@ -1,8 +1,6 @@
 import { Logger } from '@streamr/utils'
-import {
-    ConnectivityResponse,
-    PeerDescriptor
-} from '../proto/packages/dht/protos/DhtRpc'
+import { ConnectivityResponse } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { ITransport } from '../transport/ITransport'
 import { PortRange, TlsCertificate } from './ConnectionManager'
 import { Simulator } from './simulator/Simulator'

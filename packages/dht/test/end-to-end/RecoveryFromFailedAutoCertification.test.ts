@@ -1,5 +1,5 @@
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import os from 'os'
 
 describe('Failed autocertification', () => {

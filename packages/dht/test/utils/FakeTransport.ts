@@ -1,6 +1,7 @@
 import { EventEmitter } from 'eventemitter3'
 import { DhtAddress, toDhtAddress, toNodeId } from '../../src/identifiers'
-import { Message, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { DEFAULT_SEND_OPTIONS, ITransport, SendOptions, TransportEvents } from '../../src/transport/ITransport'
 import { ConnectionsView } from '../../src/exports'
 

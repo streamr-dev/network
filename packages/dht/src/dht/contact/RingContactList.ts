@@ -1,4 +1,4 @@
-import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { OrderedMap } from '@js-sdsl/ordered-map'
 import { RingDistance, RingId, RingIdRaw, getLeftDistance, getRightDistance, getRingIdFromPeerDescriptor, getRingIdFromRaw } from './ringIdentifiers'
 import { DhtAddress, toNodeId } from '../../identifiers'

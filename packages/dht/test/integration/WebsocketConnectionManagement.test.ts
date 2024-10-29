@@ -4,8 +4,9 @@ import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../../src
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import * as Err from '../../src/helpers/errors'
-import { Message, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { Message } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor, NodeType } from '../../generated/packages/dht/protos/PeerDescriptor'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { TransportEvents } from '../../src/transport/ITransport'
 import { toNodeId } from '../../src/identifiers'
 
@@ -17,7 +18,8 @@ const createOptions = (localPeerDescriptor: PeerDescriptor, opts: Omit<DefaultCo
             createLocalPeerDescriptor: async () => localPeerDescriptor,
             ...opts
         }),
-        metricsContext: new MetricsContext()
+        metricsContext: new MetricsContext(),
+        allowIncomingPrivateConnections: false
     }
 }
 

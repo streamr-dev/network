@@ -68,7 +68,7 @@ export class MessageFactory {
             throw new StreamrClientError(`You don't have permission to publish to this stream. Using address: ${publisherId}`, 'MISSING_PERMISSION')
         }
 
-        const partitionCount = (await this.streamRegistry.getStream(this.streamId)).getMetadata().partitions
+        const partitionCount = (await this.streamRegistry.getStream(this.streamId)).getPartitionCount()
         let partition
         if (explicitPartition !== undefined) {
             if ((explicitPartition < 0 || explicitPartition >= partitionCount)) {

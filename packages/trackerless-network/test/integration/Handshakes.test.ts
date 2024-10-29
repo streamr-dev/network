@@ -8,12 +8,10 @@ import {
 } from '@streamr/dht'
 import { StreamPartIDUtils } from '@streamr/utils'
 import { NodeList } from '../../src/logic/NodeList'
-import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/HandshakeRpcRemote'
 import { Handshaker } from '../../src/logic/neighbor-discovery/Handshaker'
-import { StreamPartHandshakeRequest, StreamPartHandshakeResponse } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import {
-    HandshakeRpcClient
-} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { StreamPartHandshakeRequest, StreamPartHandshakeResponse } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
+import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
 
 describe('Handshakes', () => {
 
@@ -86,6 +84,12 @@ describe('Handshakes', () => {
         leftNodeView = new NodeList(handshakerNodeId, 10)
         rightNodeView = new NodeList(handshakerNodeId, 10)
         nodeView = new NodeList(handshakerNodeId, 10)
+        nodeView.add(new ContentDeliveryRpcRemote(
+            peerDescriptor2,
+            peerDescriptor1,
+            rpcCommunicator2,
+            ContentDeliveryRpcClient
+        ))
         neighbors = new NodeList(handshakerNodeId, 4)
         handshaker = new Handshaker({
             localPeerDescriptor: peerDescriptor2,
@@ -112,64 +116,25 @@ describe('Handshakes', () => {
         simulator.stop()
     })
 
-    it('Two nodes can handshake', async () => {
-        rpcCommunicator1.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', acceptHandshake)
-        // @ts-expect-error private
-        const res = await handshaker.handshakeWithTarget(
-            new HandshakeRpcRemote(
-                peerDescriptor2,
-                peerDescriptor1,
-                rpcCommunicator2,
-                HandshakeRpcClient
-            )
-        )
-        expect(res).toEqual(true)
-        expect(neighbors.has(toNodeId(peerDescriptor1))).toEqual(true)
-    })
-
     it('Handshake accepted', async () => {
         rpcCommunicator1.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', acceptHandshake)
-        // @ts-expect-error private
-        const res = await handshaker.handshakeWithTarget(
-            new HandshakeRpcRemote(
-                peerDescriptor2,
-                peerDescriptor1,
-                rpcCommunicator2,
-                HandshakeRpcClient
-            )
-        )
-        expect(res).toEqual(true)
+        const res = await handshaker.attemptHandshakesOnContacts([])
+        expect(res).toHaveLength(0)
         expect(neighbors.has(toNodeId(peerDescriptor1))).toEqual(true)
     })
 
     it('Handshake rejected', async () => {
         rpcCommunicator1.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', rejectHandshake)
-        // @ts-expect-error private
-        const res = await handshaker.handshakeWithTarget(
-            new HandshakeRpcRemote(
-                peerDescriptor2,
-                peerDescriptor1,
-                rpcCommunicator2,
-                HandshakeRpcClient
-            )
-        )
-        expect(res).toEqual(false)
+        const res = await handshaker.attemptHandshakesOnContacts([])
+        expect(res[0]).toEqual(toNodeId(peerDescriptor1))
         expect(neighbors.has(toNodeId(peerDescriptor1))).toEqual(false)
     })
 
     it('Handshake with Interleaving', async () => {
         rpcCommunicator1.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', interleavingHandshake)
         rpcCommunicator3.registerRpcMethod(StreamPartHandshakeRequest, StreamPartHandshakeResponse, 'handshake', acceptHandshake)
-        // @ts-expect-error private
-        const res = await handshaker.handshakeWithTarget(
-            new HandshakeRpcRemote(
-                peerDescriptor2,
-                peerDescriptor1,
-                rpcCommunicator2,
-                HandshakeRpcClient
-            )
-        )
-        expect(res).toEqual(true)
+        const res = await handshaker.attemptHandshakesOnContacts([])
+        expect(res).toHaveLength(0)
         expect(neighbors.has(toNodeId(peerDescriptor1))).toEqual(true)
         expect(neighbors.has(toNodeId(peerDescriptor3))).toEqual(true)
     })

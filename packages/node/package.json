@@ -1,6 +1,6 @@
 {
   "name": "@streamr/node",
-  "version": "101.1.2",
+  "version": "102.0.0-beta.0",
   "description": "A full-featured node implementation for the Streamr Network",
   "repository": {
     "type": "git",
@@ -9,7 +9,6 @@
   },
   "bin": {
     "streamr-broker": "dist/bin/broker.js",
-    "streamr-broker-init": "dist/bin/config-wizard.js",
     "streamr-node": "dist/bin/streamr-node.js",
     "streamr-node-init": "dist/bin/streamr-node-init.js",
     "delete-expired-data": "dist/bin/delete-expired-data.js",
@@ -32,9 +31,9 @@
   "dependencies": {
     "@inquirer/prompts": "^7.0.0",
     "@streamr/config": "^5.4.0",
-    "@streamr/dht": "101.1.2",
-    "@streamr/sdk": "101.1.2",
-    "@streamr/utils": "101.1.2",
+    "@streamr/dht": "102.0.0-beta.0",
+    "@streamr/sdk": "102.0.0-beta.0",
+    "@streamr/utils": "102.0.0-beta.0",
     "aedes": "^0.51.3",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
@@ -45,7 +44,7 @@
     "cors": "^2.8.5",
     "ethers": "^6.13.0",
     "eventemitter3": "^5.0.0",
-    "express": "^4.21.0",
+    "express": "^4.21.1",
     "heap": "^0.2.6",
     "lodash": "^4.17.21",
     "merge2": "^1.4.1",
@@ -59,11 +58,11 @@
   "devDependencies": {
     "@inquirer/testing": "^2.1.35",
     "@streamr/network-contracts": "^8.2.0",
-    "@streamr/test-utils": "101.1.2",
+    "@streamr/test-utils": "102.0.0-beta.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/heap": "^0.2.34",
-    "@types/lodash": "^4.17.10",
+    "@types/lodash": "^4.17.12",
     "@types/merge2": "^1.4.4",
     "@types/node-fetch": "^2.6.4",
     "@types/qs": "^6.9.16",

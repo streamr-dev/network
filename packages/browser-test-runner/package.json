@@ -8,15 +8,16 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/browser-test-runner"
   },
-  "main": "./index.js",
+  "main": "./dist/src/exports.js",
   "scripts": {
+    "build": "tsc -b tsconfig.node.json",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '**/*.{js,ts}'"
   },
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "Apache-2.0",
   "dependencies": {},
   "devDependencies": {
-    "@electron/rebuild": "^3.6.2",
+    "@electron/rebuild": "^3.7.0",
     "@jest/fake-timers": "^29.6.2",
     "buffer": "^6.0.3",
     "electron": "^31.2.0",

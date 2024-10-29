@@ -1,8 +1,9 @@
-import { Message, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { Message } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { v4 } from 'uuid'
 import { RpcCommunicator, RpcCommunicatorOptions } from '@streamr/proto-rpc'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
-import { RpcMessage } from '../proto/packages/proto-rpc/protos/ProtoRpc'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { ServiceID } from '../types/ServiceID'
 import { DEFAULT_SEND_OPTIONS, SendOptions } from './ITransport'
 

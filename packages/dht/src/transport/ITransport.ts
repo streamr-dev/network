@@ -1,4 +1,5 @@
-import { Message, PeerDescriptor } from '../proto/packages/dht/protos/DhtRpc'
+import { Message } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 
 export interface TransportEvents {
     disconnected: (peerDescriptor: PeerDescriptor, gracefulLeave: boolean) => void

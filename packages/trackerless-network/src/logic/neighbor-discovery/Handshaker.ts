@@ -5,10 +5,10 @@ import {
     InterleaveResponse,
     StreamPartHandshakeRequest,
     StreamPartHandshakeResponse
-} from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+} from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 import {
     ContentDeliveryRpcClient, HandshakeRpcClient
-} from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
+} from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { ContentDeliveryRpcRemote } from '../ContentDeliveryRpcRemote'
 import { NodeList } from '../NodeList'
 import { HandshakeRpcLocal } from './HandshakeRpcLocal'

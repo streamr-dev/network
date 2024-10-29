@@ -1,17 +1,17 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '@streamr/utils'
 import { DhtAddress, toDhtAddress, toNodeId } from '../identifiers'
-import { Empty } from '../proto/google/protobuf/empty'
+import { Empty } from '../../generated/google/protobuf/empty'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
     ClosestRingPeersRequest,
     ClosestRingPeersResponse,
-    PeerDescriptor,
     PingRequest,
     PingResponse
-} from '../proto/packages/dht/protos/DhtRpc'
-import { IDhtNodeRpc } from '../proto/packages/dht/protos/DhtRpc.server'
+} from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
+import { IDhtNodeRpc } from '../../generated/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../rpc-protocol/DhtCallContext'
 import { RingContacts } from './contact/RingContactList'
 import { getClosestNodes } from './contact/getClosestNodes'
@@ -19,7 +19,7 @@ import { RingIdRaw } from './contact/ringIdentifiers'
 
 interface DhtNodeRpcLocalOptions {
     peerDiscoveryQueryBatchSize: number
-    getNeighbors: () => ReadonlyArray<PeerDescriptor>
+    getNeighbors: () => readonly PeerDescriptor[]
     getClosestRingContactsTo: (id: RingIdRaw, limit: number) => RingContacts
     addContact: (contact: PeerDescriptor) => void
     removeContact: (nodeId: DhtAddress) => void

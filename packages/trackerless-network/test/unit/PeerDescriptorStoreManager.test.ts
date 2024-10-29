@@ -1,8 +1,7 @@
-import { PeerDescriptor, areEqualPeerDescriptors, randomDhtAddress } from '@streamr/dht'
+import { PeerDescriptor, areEqualPeerDescriptors, randomDhtAddress, DataEntry } from '@streamr/dht'
 import { wait } from '@streamr/utils'
 import { PeerDescriptorStoreManager } from '../../src/logic/PeerDescriptorStoreManager'
-import { Any } from '../../src/proto/google/protobuf/any'
-import { DataEntry } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Any } from '../../generated/google/protobuf/any'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const KEY = randomDhtAddress()

@@ -4,7 +4,7 @@ import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { ITransport } from '../../src/transport/ITransport'
-import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { getRandomRegion } from '../../dist/src/connection/simulator/pings'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { toNodeId } from '../../src/identifiers'
@@ -15,7 +15,8 @@ const createConnectionManager = (localPeerDescriptor: PeerDescriptor, transport:
             transport,
             createLocalPeerDescriptor: async () => localPeerDescriptor
         }),
-        metricsContext: new MetricsContext()
+        metricsContext: new MetricsContext(),
+        allowIncomingPrivateConnections: true
     })
 }
 

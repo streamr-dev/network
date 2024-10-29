@@ -2,6 +2,7 @@ import 'reflect-metadata'
 
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import {
+    DEFAULT_PARTITION_COUNT,
     Logger,
     MAX_PARTITION_COUNT,
     StreamPartID,
@@ -89,9 +90,9 @@ export const getCreateClient = (
         } else {
             key = await fetchPrivateKeyWithGas()
         }
-        const client = new StreamrClient(merge(
-            CONFIG_TEST,
+        const client = new StreamrClient(merge<StreamrClientConfig>(
             {
+                environment: 'dev2',
                 auth: {
                     privateKey: key,
                 }
@@ -186,9 +187,7 @@ export const createStreamRegistry = (opts?: {
 }): StreamRegistry => {
     return {
         getStream: async () => ({
-            getMetadata: () => ({
-                partitions: opts?.partitionCount ?? 1
-            })
+            getPartitionCount: () => opts?.partitionCount ?? DEFAULT_PARTITION_COUNT
         }),
         hasPublicSubscribePermission: async () => {
             return opts?.isPublicStream ?? false
@@ -249,13 +248,12 @@ export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Pro
 
 export const createTestClient = (privateKey: string, wsPort?: number, acceptProxyConnections = false): StreamrClient => {
     return new StreamrClient({
-        ...CONFIG_TEST,
+        environment: 'dev2',
         auth: {
             privateKey
         },
         network: {
             controlLayer: {
-                ...CONFIG_TEST.network!.controlLayer,
                 websocketPortRange: wsPort !== undefined ? { min: wsPort, max: wsPort } : undefined
             },
             node: {

@@ -14,7 +14,8 @@ import { ContentDeliveryManager, ContentDeliveryManagerOptions } from './logic/C
 import { ControlLayerNode } from './logic/ControlLayerNode'
 import { NodeInfoClient } from './logic/node-info/NodeInfoClient'
 import { NODE_INFO_RPC_SERVICE_ID, NodeInfoRpcLocal } from './logic/node-info/NodeInfoRpcLocal'
-import { NodeInfoResponse, ProxyDirection, StreamMessage } from './proto/packages/trackerless-network/protos/NetworkRpc'
+import { ProxyDirection, StreamMessage } from '../generated/packages/trackerless-network/protos/NetworkRpc'
+import { NodeInfo } from './types'
 
 export interface NetworkOptions {
     layer0?: DhtNodeOptions
@@ -49,8 +50,6 @@ if (typeof window === 'object') {
     })
 }
 
-export type NodeInfo = Required<NodeInfoResponse>
-
 export class NetworkStack {
 
     private controlLayerNode?: ControlLayerNode
@@ -66,7 +65,8 @@ export class NetworkStack {
         this.metricsContext = options.metricsContext ?? new MetricsContext()
         this.controlLayerNode = new DhtNode({
             ...options.layer0,
-            metricsContext: this.metricsContext
+            metricsContext: this.metricsContext,
+            allowIncomingPrivateConnections: options.networkNode?.acceptProxyConnections
         })
         this.contentDeliveryManager = new ContentDeliveryManager({
             ...options.networkNode,

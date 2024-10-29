@@ -10,10 +10,10 @@ import { HandshakeRpcRemote } from '../../src/logic/neighbor-discovery/Handshake
 import {
     StreamPartHandshakeRequest,
     StreamPartHandshakeResponse
-} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import {
     HandshakeRpcClient,
-} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
 describe('HandshakeRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator

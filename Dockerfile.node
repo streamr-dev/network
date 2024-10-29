@@ -6,6 +6,7 @@ RUN --mount=type=cache,target=/root/.npm \
 	npm run bootstrap-pkg --package=@streamr/sdk && \
 	npm run bootstrap-pkg --package=@streamr/node && \
 	npm run prune-pkg -- @streamr/node
+RUN cd packages/node; for file in dist/bin/*.js; do ln -s "../$file" "bin/$(basename "$file")"; done
 
 FROM node:${NODE_VERSION}-bullseye-slim
 ARG NODE_ENV

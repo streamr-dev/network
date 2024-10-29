@@ -3,8 +3,8 @@ import { Logger, StreamPartID } from '@streamr/utils'
 import {
     LeaveStreamPartNotice,
     StreamMessage
-} from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { ContentDeliveryRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { ContentDeliveryRpcClient } from '../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 
 const logger = new Logger(module)
 

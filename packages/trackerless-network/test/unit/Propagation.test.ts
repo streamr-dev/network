@@ -7,7 +7,7 @@ import {
     MessageID,
     SignatureType,
     StreamMessage
-} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+} from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { randomUserId } from '@streamr/test-utils'
 
 const PUBLISHER_ID = randomUserId()
@@ -45,7 +45,7 @@ const N4 = 'n4' as DhtAddress
 const N5 = 'n5' as DhtAddress
 
 describe(Propagation, () => {
-    let getNeighbors: jest.Mock<ReadonlyArray<DhtAddress>, [string]>
+    let getNeighbors: jest.Mock<readonly DhtAddress[], [string]>
     let sendToNeighbor: jest.Mock<Promise<void>, [DhtAddress, StreamMessage]>
     let propagation: Propagation
 

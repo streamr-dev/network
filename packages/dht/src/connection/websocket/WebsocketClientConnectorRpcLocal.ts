@@ -1,11 +1,9 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import {
-    PeerDescriptor,
-    WebsocketConnectionRequest
-} from '../../proto/packages/dht/protos/DhtRpc'
-import { IWebsocketClientConnectorRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
+import { WebsocketConnectionRequest } from '../../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
+import { IWebsocketClientConnectorRpc } from '../../../generated/packages/dht/protos/DhtRpc.server'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
-import { Empty } from '../../proto/google/protobuf/empty'
+import { Empty } from '../../../generated/google/protobuf/empty'
 import { toNodeId, DhtAddress } from '../../identifiers'
 import { PendingConnection } from '../PendingConnection'
 

@@ -2,7 +2,7 @@ import type { ServiceInfo } from '@protobuf-ts/runtime-rpc'
 import { ClassType, ClientTransport, ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import { ConnectionType } from '../../connection/IConnection'
 import { expectedConnectionType } from '../../helpers/Connectivity'
-import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext' 
 
