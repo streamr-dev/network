@@ -175,15 +175,17 @@ export class ExperimentNodeWrapper {
         const results: any = []
         await Promise.all(nodes.map(async (node) => {
             try {
+                const started = Date.now()
                 const result = await client.getRoutingPath(GetRoutingPath.create(), {
                     sourceDescriptor: this.node!.getPeerDescriptor(),
                     targetDescriptor: node,
                     timeout: 10000,
                 })
-                results.push({ source: toNodeId(this.node!.getPeerDescriptor()), from: toNodeId(node), path: result.path.map((p) => toNodeId(p))})
+                const rtt = Date.now() - started
+                results.push({ source: toNodeId(this.node!.getPeerDescriptor()), from: toNodeId(node), path: result.path.map((p) => toNodeId(p)), rtt})
             } catch (e) {
                 console.log(e)
-                results.push({ source: toNodeId(this.node!.getPeerDescriptor()), from: toNodeId(node), path: [] })
+                results.push({ source: toNodeId(this.node!.getPeerDescriptor()), from: toNodeId(node), path: [], rtt: 10000 })
             } 
         }))
         this.send(ExperimentClientMessage.create({
