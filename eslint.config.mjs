@@ -126,7 +126,7 @@ export default [
             '@typescript-eslint/no-unsafe-enum-comparison': 'off',
             '@typescript-eslint/no-redundant-type-constituents': 'off',
             // TODO configure this (may need eslint-import-resolver-typescript dependency)
-            'import/no-unresolved': ['off'],
+            'import/no-unresolved': 'off',
             // TODO enable this?
             'import/named': 'off',
             'import/no-extraneous-dependencies': ['error', {
