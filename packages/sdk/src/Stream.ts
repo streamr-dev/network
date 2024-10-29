@@ -1,4 +1,5 @@
 import {
+    DEFAULT_PARTITION_COUNT,
     HexString,
     StreamID,
     StreamPartID,
@@ -18,12 +19,12 @@ import { StreamrClientError } from './StreamrClientError'
 import { StreamRegistry } from './contracts/StreamRegistry'
 import { StreamStorageRegistry } from './contracts/StreamStorageRegistry'
 import { StreamrClientEventEmitter } from './events'
-import { 
+import {
     PermissionAssignment,
     PublicPermissionQuery,
+    UserPermissionQuery,
     toInternalPermissionAssignment,
-    toInternalPermissionQuery,
-    UserPermissionQuery
+    toInternalPermissionQuery
 } from './permission'
 import { Resends } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
@@ -36,7 +37,7 @@ export interface StreamMetadata {
     /**
      * Determines how many partitions this stream consist of.
      */
-    partitions: number
+    partitions?: number
 
     /**
      * Human-readable description of this stream.
@@ -138,7 +139,7 @@ export class Stream {
         this.id = id
         this.metadata = merge(
             {
-                partitions: 1,
+                partitions: DEFAULT_PARTITION_COUNT,
                 // TODO should we remove this default or make config as a required StreamMetadata field?
                 config: {
                     fields: []
@@ -157,26 +158,30 @@ export class Stream {
     }
 
     /**
-     * Updates the metadata of the stream by merging with the existing metadata.
+     * Updates the metadata of the stream.
      */
     async update(metadata: Partial<StreamMetadata>): Promise<void> {
-        // TODO maybe should use deep merge, i.e. merge() from @streamr/utils as that corresponds
-        // the implicit intention of the method description. But we'll harmonize this method soon in NET-1364,
-        // so we don't change the behavior now.
-        const merged = flatMerge(this.getMetadata(), metadata)
         try {
-            await this._streamRegistry.updateStream(this.id, merged)
+            await this._streamRegistry.updateStream(this.id, metadata)
         } finally {
             this._streamRegistry.clearStreamCache(this.id)
         }
-        this.metadata = merged
+        this.metadata = metadata
     }
 
     /**
      * Returns the partitions of the stream.
      */
     getStreamParts(): StreamPartID[] {
-        return range(0, this.getMetadata().partitions).map((p) => toStreamPartID(this.id, p))
+        return range(0, this.getPartitionCount()).map((p) => toStreamPartID(this.id, p))
+    }
+
+    getPartitionCount(): number {
+        const metadataValue = this.getMetadata().partitions
+        if (metadataValue !== undefined) {
+            ensureValidStreamPartitionCount(metadataValue)
+        }
+        return metadataValue ?? DEFAULT_PARTITION_COUNT
     }
 
     /**
@@ -232,11 +237,12 @@ export class Stream {
         }).filter(Boolean) as Field[] // see https://github.com/microsoft/TypeScript/issues/30621
 
         // Save field config back to the stream
-        await this.update({
+        const merged = flatMerge(this.getMetadata(), {
             config: {
                 fields
             }
         })
+        await this.update(merged)
     }
 
     /**
@@ -271,7 +277,7 @@ export class Stream {
             await this._subscriber.add(assignmentSubscription)
             const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, {
                 id: this.id,
-                partitions: this.getMetadata().partitions
+                partitions: this.getMetadata().partitions ?? DEFAULT_PARTITION_COUNT
             }, this._loggerFactory)
             await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
             await withTimeout(
@@ -320,7 +326,7 @@ export class Stream {
         // object can't contain extra fields
         if (metadata === '') {
             return {
-                partitions: 1
+                partitions: DEFAULT_PARTITION_COUNT
             }
         }
         const err = new StreamrClientError(`Invalid stream metadata: ${metadata}`, 'INVALID_STREAM_METADATA')
@@ -340,7 +346,7 @@ export class Stream {
         } else {
             return {
                 ...json,
-                partitions: 1
+                partitions: DEFAULT_PARTITION_COUNT
             }
         }
     }

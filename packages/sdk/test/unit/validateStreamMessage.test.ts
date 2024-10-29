@@ -34,9 +34,7 @@ const validate = async (messageOptions: MessageOptions) => {
     }
     const streamRegistry: Pick<StreamRegistry, 'getStream' | 'isStreamPublisher'> = {
         getStream: async (): Promise<Stream> => ({
-            getMetadata: () => ({
-                partitions: PARTITION_COUNT
-            })
+            getPartitionCount: () => PARTITION_COUNT
         } as any),
         isStreamPublisher: async (_streamIdOrPath: string, userId: UserID) => {
             return userId === publisherWallet.address.toLowerCase()
