@@ -22,7 +22,7 @@ export type MaybeCancelable<T extends object> = T | Cancelable<T>
  */
 type OnFinallyFn = MaybeAsync<(err?: Error) => void>
 
-export function iteratorFinally<T>( // eslint-disable-line no-redeclare
+export function iteratorFinally<T>(
     iterable: MaybeCancelable<AsyncIterable<T> | AsyncGenerator<T>>,
     onFinally?: OnFinallyFn
 ): AsyncGenerator<T, any, unknown> {

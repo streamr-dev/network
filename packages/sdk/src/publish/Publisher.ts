@@ -123,7 +123,6 @@ export class Publisher {
         return this.groupKeyQueues.get(streamId)
     }
 
-    /* eslint-disable @typescript-eslint/no-shadow */
     private async createMessageFactory(streamId: StreamID): Promise<MessageFactory> {
         return new MessageFactory({
             streamId,
