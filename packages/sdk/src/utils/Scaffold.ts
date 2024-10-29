@@ -109,7 +109,7 @@ export function Scaffold(
                 isDone = false
                 didStart = true
                 let onDownStep
-                const stepFn = nextSteps.pop() as StepUp
+                const stepFn = nextSteps.pop()!
                 prevSteps.push(stepFn)
                 try {
                     onDownStep = await stepFn()
@@ -122,13 +122,13 @@ export function Scaffold(
         } else if (onDownSteps.length) {
             isDone = false
             didStart = true
-            const stepFn = onDownSteps.pop() as StepDown // exists because checked onDownSteps.length
+            const stepFn = onDownSteps.pop()! // exists because checked onDownSteps.length
             try {
                 await stepFn()
             } catch (err) {
                 collectErrors(err)
             }
-            nextSteps.push(prevSteps.pop() as StepUp)
+            nextSteps.push(prevSteps.pop()!)
             return await nextScaffoldStep() // return await gives us a better stack trace
         } else if (error) {
             const err = error
