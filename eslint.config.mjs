@@ -87,7 +87,6 @@ export default [
             'class-methods-use-this': 'error',
             'prefer-arrow-callback': 'error',
             'promise/no-promise-in-callback': 'error',
-            // '@typescript-eslint/no-empty-function': 'error',
             'no-multi-spaces': ['error', {
                 ignoreEOLComments: true
             }],
