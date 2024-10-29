@@ -42,6 +42,7 @@
         "cli-table": "^0.3.6",
         "eslint": "^9.13.0",
         "eslint-config-streamr-ts": "^6.0.0",
+        "eslint-import-resolver-typescript": "^3.6.3",
         "eslint-plugin-import": "^2.31.0",
         "eslint-plugin-promise": "^7.1.0",
         "globals": "^15.11.0",

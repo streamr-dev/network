@@ -18,6 +18,7 @@ export default [
     },
     ...streamr,
     importPlugin.flatConfigs.recommended,
+    importPlugin.flatConfigs.typescript,
     {
         name: 'streamr-network-typescript',
         languageOptions: {
@@ -26,6 +27,18 @@ export default [
             parserOptions: {
                 project: ['./tsconfig.jest.json'],
                 tsconfigRootDir: __dirname
+            }
+        },
+        settings: {
+            'import/resolver': {
+                typescript: {
+                    alwaysTryTypes: true,
+                    project: [
+                        'packages/*/tsconfig.jest.json',
+                        'packages/browser-test-runner/tsconfig.node.json'
+                    ]
+                },
+                node: true
             }
         },
         rules: {
@@ -117,11 +130,7 @@ export default [
             '@typescript-eslint/unbound-method': 'off',
             '@typescript-eslint/no-base-to-string': 'off',
             '@typescript-eslint/no-unsafe-enum-comparison': 'off',
-            '@typescript-eslint/no-redundant-type-constituents': 'off',
-
-            // TODO enable these later (may need eslint-import-resolver-typescript dependency)
-            'import/no-unresolved': 'off',
-            'import/named': 'off'
+            '@typescript-eslint/no-redundant-type-constituents': 'off'
         }
     },
     {
