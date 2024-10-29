@@ -116,7 +116,7 @@ export function Scaffold(
                 } catch (err) {
                     collectErrors(err)
                 }
-                onDownSteps.push(onDownStep || (() => {}))
+                onDownSteps.push(onDownStep ?? (() => {}))
                 return await nextScaffoldStep() // return await gives us a better stack trace
             }
         } else if (onDownSteps.length) {

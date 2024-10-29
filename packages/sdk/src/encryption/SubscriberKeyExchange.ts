@@ -111,7 +111,7 @@ export class SubscriberKeyExchange {
                 StreamPartIDUtils.getStreamPartition(streamPartId),
                 Date.now(),
                 0,
-                erc1271contract === undefined ? await this.authentication.getAddress() : erc1271contract,
+                erc1271contract ?? await this.authentication.getAddress(),
                 createRandomMsgChainId()
             ),
             content: convertGroupKeyRequestToBytes(requestContent),

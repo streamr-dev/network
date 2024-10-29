@@ -296,8 +296,8 @@ export function CancelableGenerator<T>(
         finalCalled = true
         try {
             // cancel inner if has cancel
-            await cancelIterable(err || error)
-            await onFinally(err || error)
+            await cancelIterable(err ?? error)
+            await onFinally(err ?? error)
         } finally {
             onDone.resolve(undefined)
         }
