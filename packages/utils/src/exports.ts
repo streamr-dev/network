@@ -123,7 +123,7 @@ export {
 }
 
 export { StreamID, toStreamID, StreamIDUtils } from './StreamID'
-export { MAX_PARTITION_COUNT, ensureValidStreamPartitionCount, ensureValidStreamPartitionIndex } from './partition'
+export { DEFAULT_PARTITION_COUNT, MAX_PARTITION_COUNT, ensureValidStreamPartitionCount, ensureValidStreamPartitionIndex } from './partition'
 export { StreamPartID, toStreamPartID, StreamPartIDUtils } from './StreamPartID'
 export { UserID, UserIDRaw, toUserId, toUserIdRaw, isValidUserId, isEthereumAddressUserId } from './UserID'
 export { HexString } from './HexString'

@@ -13,6 +13,7 @@ Changes before Tatum release are not documented in this file.
 #### Added
 
 - Method `StreamrClient#getDiagnosticInfo()` provides diagnostic info about network (https://github.com/streamr-dev/network/pull/2740, https://github.com/streamr-dev/network/pull/2741)
+- Add `Stream#getPartitionCount()` method (https://github.com/streamr-dev/network/pull/2825)
 
 #### Changed
 
@@ -24,6 +25,8 @@ Changes before Tatum release are not documented in this file.
     - used in `hasPermission()`
   - `SearchStreamsPermissionFilter`
     - used in `searchStreams()`
+- **BREAKING CHANGE:** Field `StreamMetadata#partitions` is nullable (https://github.com/streamr-dev/network/pull/2825)
+- **BREAKING CHANGE:** Method `Stream#update()` overwrites metadata instead of merging it (https://github.com/streamr-dev/network/pull/2826)
 - Network-level changes
   - Avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801) 
   - Internal record `StreamPartitionInfo` format changed (https://github.com/streamr-dev/network/pull/2738, https://github.com/streamr-dev/network/pull/2790)
@@ -79,7 +82,7 @@ Changes before Tatum release are not documented in this file.
 
 - **BREAKING CHANGE:** Replace `--dev` flag with `--env` flag (https://github.com/streamr-dev/network/pull/2817, https://github.com/streamr-dev/network/pull/2834)
   - the `--env` flag supports multiple environments
-  - it takes precedence over the options defined in a config file
+  - if there is a value for `environment` in a config file, this overrides it
   - use `--env dev2` for the development environment
 
 #### Deprecated
