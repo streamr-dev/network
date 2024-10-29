@@ -2,6 +2,7 @@ import 'reflect-metadata'
 
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import {
+    DEFAULT_PARTITION_COUNT,
     Logger,
     MAX_PARTITION_COUNT,
     StreamPartID,
@@ -188,9 +189,7 @@ export const createStreamRegistry = (opts?: {
 }): StreamRegistry => {
     return {
         getStream: async () => ({
-            getMetadata: () => ({
-                partitions: opts?.partitionCount ?? 1
-            })
+            getPartitionCount: () => opts?.partitionCount ?? DEFAULT_PARTITION_COUNT
         }),
         hasPublicSubscribePermission: async () => {
             return opts?.isPublicStream ?? false

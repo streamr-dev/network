@@ -15,10 +15,13 @@ Changes before Tatum release are not documented in this file.
 - Add support for arbitrary length user IDs (https://github.com/streamr-dev/network/pull/2774, https://github.com/streamr-dev/network/pull/2780)
   - it is supported for `PUBLISH` and `SUBSCRIBE` permissions
 - Method `StreamrClient#getDiagnosticInfo()` provides diagnostic info about network (https://github.com/streamr-dev/network/pull/2740, https://github.com/streamr-dev/network/pull/2741)
+- Add `Stream#getPartitionCount()` method (https://github.com/streamr-dev/network/pull/2825)
 
 #### Changed
 
 - **BREAKING CHANGE:** Rename `getAddress()` to `getUserId()` (https://github.com/streamr-dev/network/pull/2774)
+- **BREAKING CHANGE:** Field `StreamMetadata#partitions` is nullable (https://github.com/streamr-dev/network/pull/2825)
+- **BREAKING CHANGE:** Method `Stream#update()` overwrites metadata instead of merging it (https://github.com/streamr-dev/network/pull/2826)
 - Upgrade `StreamRegistry` from v4 to v5 (https://github.com/streamr-dev/network/pull/2780)
 - Network-level changes
   - Avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801) 
@@ -75,7 +78,7 @@ Changes before Tatum release are not documented in this file.
 
 - **BREAKING CHANGE:** Replace `--dev` flag with `--env` flag (https://github.com/streamr-dev/network/pull/2817, https://github.com/streamr-dev/network/pull/2834)
   - the `--env` flag supports multiple environments
-  - it takes precedence over the options defined in a config file
+  - if there is a value for `environment` in a config file, this overrides it
   - use `--env dev2` for the development environment
 
 #### Deprecated

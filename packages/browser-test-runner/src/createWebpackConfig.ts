@@ -26,15 +26,7 @@ export const createWebpackConfig = (
                 ],
             },
             plugins: [
-                new NodePolyfillPlugin({
-                    additionalAliases: [
-                        'constants',
-                        'crypto',
-                        'path',
-                        'process',
-                        'stream'
-                    ]
-                }),
+                new NodePolyfillPlugin(),
                 new webpack.ProvidePlugin({
                     process: 'process/browser'
                 }),
