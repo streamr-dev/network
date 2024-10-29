@@ -13,8 +13,8 @@ export class ExternalNetworkRpc {
 
     private readonly rpcCommunicator: ListeningRpcCommunicator
 
-    constructor(transport: ITransport) {
-        this.rpcCommunicator = new ListeningRpcCommunicator(SERVICE_ID, transport)
+    constructor(transport: ITransport, serviceId = SERVICE_ID) {
+        this.rpcCommunicator = new ListeningRpcCommunicator(serviceId, transport)
     }
 
     registerRpcMethod<

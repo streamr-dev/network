@@ -13,6 +13,7 @@ interface RouterRpcLocalOptions {
     handleMessage: (message: Message) => void
     duplicateRequestDetector: DuplicateDetector
     localPeerDescriptor: PeerDescriptor
+    addRoutingPath: (routedMessage: RouteMessageWrapper) => void
 }
 
 const logger = new Logger(module)
@@ -44,6 +45,7 @@ export class RouterRpcLocal implements IRouterRpc {
         if (areEqualBinaries(this.options.localPeerDescriptor.nodeId, routedMessage.target)) {
             logger.trace(`routing message targeted to self ${routedMessage.requestId}`)
             this.options.setForwardingEntries(routedMessage)
+            this.options.addRoutingPath(routedMessage)
             this.options.handleMessage(routedMessage.message!)
             return createRouteMessageAck(routedMessage)
         } else {
@@ -71,6 +73,7 @@ export class RouterRpcLocal implements IRouterRpc {
         const forwardedMessage = routedMessage.message!
         if (areEqualPeerDescriptors(this.options.localPeerDescriptor, forwardedMessage.targetDescriptor!)) {
             this.options.handleMessage(forwardedMessage)
+            this.options.addRoutingPath(routedMessage)
             return createRouteMessageAck(routedMessage)
         }
         return this.options.doRouteMessage({ ...routedMessage, requestId: v4(), target: forwardedMessage.targetDescriptor!.nodeId })

@@ -20,6 +20,7 @@ export class NetworkNode {
     readonly stack: NetworkStack
     private stopped = false
     private externalNetworkRpc?: ExternalNetworkRpc
+    private externalRoutingRpc?: ExternalNetworkRpc
 
     /** @internal */
     constructor(stack: NetworkStack) {
@@ -29,6 +30,7 @@ export class NetworkNode {
     async start(doJoin?: boolean): Promise<void> {
         await this.stack.start(doJoin)
         this.externalNetworkRpc = new ExternalNetworkRpc(this.stack.getControlLayerNode().getTransport())
+        this.externalRoutingRpc = new ExternalNetworkRpc(this.stack.getControlLayerNode(), 'routing-external-network-service')
     }
 
     async inspect(node: PeerDescriptor, streamPartId: StreamPartID): Promise<boolean> {
@@ -135,8 +137,26 @@ export class NetworkNode {
         this.externalNetworkRpc!.registerRpcMethod(request, response, name, fn)
     }
 
+    registerExternalRoutingRpcMethod<
+        RequestClass extends IMessageType<RequestType>,
+        ResponseClass extends IMessageType<ResponseType>,
+        RequestType extends object,
+        ResponseType extends object
+    >(
+        request: RequestClass,
+        response: ResponseClass,
+        name: string, 
+        fn: (req: RequestType, context: ServerCallContext) => Promise<ResponseType>
+    ): void {
+        this.externalRoutingRpc!.registerRpcMethod(request, response, name, fn)
+    }
+
     createExternalRpcClient<T extends ExternalRpcClient>(clientClass: ExternalRpcClientClass<T> ): ProtoRpcClient<T> {
         return this.externalNetworkRpc!.createRpcClient(clientClass)
+    }
+
+    createExternalRoutingRpcClient<T extends ExternalRpcClient>(clientClass: ExternalRpcClientClass<T> ): ProtoRpcClient<T> {
+        return this.externalRoutingRpc!.createRpcClient(clientClass)
     }
 
 }

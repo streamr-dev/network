@@ -6,12 +6,18 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
 import "packages/dht/protos/PeerDescriptor.proto";
 
+service RoutingExperimentRpc {
+    rpc getRoutingPath (GetRoutingPath) returns (RoutingPath);
+}
+
 message ExperimentServerMessage {
     oneof instruction {
         Start start = 1;
         JoinExperiment joinExperiment = 2;
         JoinStreamPart joinStreamPart = 3;
         PublishMessage publishMessage = 4;
+        GetPropagationResults getPropagationResults = 5;
+        RoutingExperiment routingExperiment = 6;
     }
 }
 
@@ -22,6 +28,7 @@ message ExperimentClientMessage {
         Started started = 3;
         ExperimentResults experimentResults = 4;
         InstructionCompleted instructionCompleted = 5;
+        PropagationResults propagationResults = 6;
     }
 }
 
@@ -33,6 +40,7 @@ message Start {
     bool asEntryPoint = 2;
     bool join = 3;
     optional string nodeId = 4;
+    bool storeRoutingPaths = 5;
 }
 
 message Started {
@@ -42,6 +50,10 @@ message Started {
 
 message JoinExperiment {
     repeated peerDescriptor.PeerDescriptor entryPoints = 1;
+}
+
+message RoutingExperiment {
+    repeated peerDescriptor.PeerDescriptor routingTargets = 1;
 }
 
 message ExperimentResults {
@@ -55,6 +67,22 @@ message JoinStreamPart {
 
 message PublishMessage {
     string streamPartId = 1;
+}
+
+message GetRoutingPath {
+    string id = 1;
+}
+
+message RoutingPath {
+    repeated peerDescriptor.PeerDescriptor path = 1;
+}
+
+message GetPropagationResults {
+    string streamPartId = 1;
+}
+
+message PropagationResults {
+    repeated string results = 1;
 }
 
 message InstructionCompleted {

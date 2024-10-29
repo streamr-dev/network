@@ -389,6 +389,12 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         return Array.from(this.streamParts.keys()).map((id) => StreamPartIDUtils.parse(id))
     }
 
+    getPropagationResults(streamPartId: StreamPartID): string[] {
+        // @ts-expect-error private
+        const node = this.getStreamPartDelivery(streamPartId).node
+        return node.getStoredMessages()
+    }
+
     getDiagnosticInfo(): Record<string, unknown> {
         return {
             streamParts: this.getStreamParts().map((id) => { 

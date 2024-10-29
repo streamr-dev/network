@@ -105,6 +105,8 @@ export interface DhtNodeOptions {
     autoCertifierConfigFile?: string
     geoIpDatabaseFolder?: string
     allowIncomingPrivateConnections?: boolean
+
+    storeRoutingPaths?: boolean
 }
 
 type StrictDhtNodeOptions = MarkRequired<DhtNodeOptions,
@@ -277,7 +279,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             rpcCommunicator: this.rpcCommunicator,
             localPeerDescriptor: this.localPeerDescriptor!,
             handleMessage: (message: Message) => this.handleMessageFromRouter(message),
-            getConnections: () => this.connectionsView!.getConnections()
+            getConnections: () => this.connectionsView!.getConnections(),
+            storeRoutingPaths: this.options.storeRoutingPaths ?? false
         })
         this.recursiveOperationManager = new RecursiveOperationManager({
             rpcCommunicator: this.rpcCommunicator,
@@ -674,5 +677,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
             this.rpcCommunicator!,
             this.options.rpcRequestTimeout
         )
+    }
+
+    public getPathForMessage(source: string): PeerDescriptor[] {
+        return this.router!.getPathForMessage(source)
     }
 }

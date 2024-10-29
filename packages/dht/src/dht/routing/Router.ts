@@ -14,6 +14,7 @@ export interface RouterOptions {
     localPeerDescriptor: PeerDescriptor
     handleMessage: (message: Message) => void
     getConnections: () => PeerDescriptor[]
+    storeRoutingPaths: boolean
 }
 
 interface ForwardingTableEntry {
@@ -34,6 +35,7 @@ export class Router {
     private readonly options: RouterOptions
     private messagesRouted = 0
     private messagesSent = 0
+    private readonly paths = new Map<string, PeerDescriptor[]>()
 
     constructor(options: RouterOptions) {
         this.options = options
@@ -46,7 +48,8 @@ export class Router {
             setForwardingEntries: (routedMessage: RouteMessageWrapper) => this.setForwardingEntries(routedMessage),
             duplicateRequestDetector: this.duplicateRequestDetector,
             localPeerDescriptor: this.options.localPeerDescriptor,
-            handleMessage: this.options.handleMessage
+            handleMessage: this.options.handleMessage,
+            addRoutingPath: (message: RouteMessageWrapper) => this.addRoutingPath(message)
         })
         this.options.rpcCommunicator.registerRpcMethod(
             RouteMessageWrapper,
@@ -121,6 +124,7 @@ export class Router {
             + `to ${toDhtAddress(routedMessage.target)}`)
         const session = this.createRoutingSession(routedMessage, mode, excludedPeer)
         const contacts = session.updateAndGetRoutablePeers()
+        // this.addRoutingPath(routedMessage)
         if (contacts.length > 0) {
             this.addRoutingSession(session)
             logger.trace('starting to raceEvents from routingSession: ' + session.sessionId)
@@ -200,6 +204,18 @@ export class Router {
 
     public resetCache(): void {
         this.routingTablesCache.reset()
+    }
+
+    public getPathForMessage(source: string): PeerDescriptor[] {
+        const result = this.paths.get(source) || []
+        this.paths.delete(source)
+        return result
+    }
+
+    private addRoutingPath(routedMessage: RouteMessageWrapper): void {
+        if (this.options.storeRoutingPaths && !areEqualPeerDescriptors(routedMessage.sourcePeer!, this.options.localPeerDescriptor)) {
+            this.paths.set(toNodeId(routedMessage.sourcePeer!), routedMessage.routingPath)
+        }    
     }
 
     public stop(): void {

@@ -1,4 +1,4 @@
-import { StreamPartIDUtils } from "@streamr/utils"
+import { StreamPartIDUtils, wait } from "@streamr/utils"
 import { ExperimentController } from "./ExperimentController"
 import { ExperimentNodeWrapper } from "./ExperimentNodeWrapper"
 
@@ -7,6 +7,7 @@ const experiment = process.argv[2]
 if (!modes.includes(experiment)) {
     throw new Error('only join mode is supported')
 }
+
 const run = async () => {
     const nodeCount = 10
     const controller = new ExperimentController(nodeCount) 
@@ -19,14 +20,16 @@ const run = async () => {
 
     await controller.waitForClients()
     console.log('all clients connected')
-    const entryPointId = await controller.startEntryPoint()
-    console.log('entry point started', entryPointId)
     if (experiment === 'join') {
+        const entryPointId = await controller.startEntryPoint()
+        console.log('entry point started', entryPointId)
         await controller.startNodes(entryPointId, false)
         await controller.runJoinExperiment(entryPointId)
         console.log('experiment done')
         console.log(controller.getResults())
     } else if (experiment === 'propagation') { 
+        const entryPointId = await controller.startEntryPoint()
+        console.log('entry point started', entryPointId)
         await controller.startNodes(entryPointId)
         console.log('all nodes started')
         const streamPartId = StreamPartIDUtils.parse('experiment#0')
@@ -35,7 +38,19 @@ const run = async () => {
         await controller.publishMessage(streamPartId)
         console.log('all nodes published message')
         // IMPLEMENT RESULT COLLECTION HERE
+        await controller.pullPropagationResults(streamPartId)        
+    } else if (experiment === 'routing') {
+        const entryPointId = await controller.startEntryPoint(true)
+        console.log('entry point started', entryPointId)
+        await controller.startNodes(entryPointId, true, true)
+        console.log('all nodes started')
+        await wait(10000)
+        await controller.runRoutingExperiment()
+        console.log('experiment done')
+        console.log(controller.getResults())
     } else {
+        const entryPointId = await controller.startEntryPoint(true)
+        console.log('entry point started', entryPointId)
         await controller.startNodes(entryPointId)
         console.log('all nodes started')
     }

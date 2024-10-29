@@ -1,17 +1,24 @@
 import http from 'http'
 import { Socket } from 'net'
 import WebSocket from 'ws'
-import { ExperimentClientMessage, ExperimentServerMessage, Hello, InstructionCompleted, JoinExperiment } from './generated/packages/trackerless-network/experiment/Experiment'
+import { ExperimentClientMessage, ExperimentServerMessage, Hello, InstructionCompleted, JoinExperiment, RoutingExperiment } from './generated/packages/trackerless-network/experiment/Experiment'
 import { Any } from '../generated/google/protobuf/any'
 import { StreamPartID, waitForCondition } from '@streamr/utils'
-import { PeerDescriptor } from '@streamr/dht'
+import { areEqualPeerDescriptors, PeerDescriptor } from '@streamr/dht'
 import { sample } from 'lodash'
-
+import fs from 'fs'
 
 interface ExperimentNode {
     socket: WebSocket
     peerDescriptor?: PeerDescriptor
 }
+
+const writeResultsRow = (file: string, line: string) => {
+    const dir = file.split('/').slice(0, -1).join('/')
+    fs.mkdirSync(dir, { recursive: true })
+    fs.appendFileSync(file, line + '\n')
+}
+
 export class ExperimentController {
 
     private httpServer?: http.Server
@@ -19,10 +26,13 @@ export class ExperimentController {
     private clients: Map<string, ExperimentNode> = new Map()
     private readonly nodeCount: number 
     private readonly results: Map<string, any> = new Map()
+    private readonly propagationResults: Map<string, string[]> = new Map()
     private instructionsCompleted = 0
+    private readonly experimentId: string
 
     constructor(nodeCount: number) {
         this.nodeCount = nodeCount
+        this.experimentId = new Date().toISOString().replace(/:/g, '-').replace(/\./g, '-')
     }
 
 
@@ -60,6 +70,9 @@ export class ExperimentController {
                         this.results.set(message.id, message.payload.experimentResults)
                     } else if (message.payload.oneofKind === 'instructionCompleted') {
                         this.instructionsCompleted += 1
+                    } else if (message.payload.oneofKind === 'propagationResults') {
+                        this.propagationResults.set(message.id, message.payload.propagationResults.results)
+                        writeResultsRow(`results/${this.experimentId}/propagationResult`, message.id + ',' + message.payload.propagationResults.results.join(','))
                     }
                 })
             })
@@ -71,7 +84,7 @@ export class ExperimentController {
         await waitForCondition(() => this.clients.size === this.nodeCount, 120000, 1000)
     }
 
-    async startEntryPoint(): Promise<string> {
+    async startEntryPoint(storeRoutingPaths = false): Promise<string> {
         const entryPoint = sample(Array.from(this.clients.keys()))!
         const instruction = ExperimentServerMessage.create({
             instruction: {
@@ -80,7 +93,8 @@ export class ExperimentController {
                     entryPoints: [],
                     asEntryPoint: true,
                     nodeId: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-                    join: true
+                    join: true,
+                    storeRoutingPaths
                 }
             }
         })
@@ -89,7 +103,7 @@ export class ExperimentController {
         return entryPoint
     }
 
-    async startNodes(entryPoint: string, join = true): Promise<void> {
+    async startNodes(entryPoint: string, join = true, storeRoutingPaths = false): Promise<void> {
         const entryPointPeerDescriptor = this.clients.get(entryPoint)!.peerDescriptor!
         const nodes = Array.from(this.clients.keys()).filter((id) => id !== entryPoint)
         await Promise.all(nodes.map((id) => {
@@ -99,7 +113,8 @@ export class ExperimentController {
                     start: {
                         entryPoints: [entryPointPeerDescriptor],
                         asEntryPoint: false,
-                        join
+                        join,
+                        storeRoutingPaths
                     }
                 }
             })
@@ -123,6 +138,22 @@ export class ExperimentController {
             node.socket.send(ExperimentServerMessage.toBinary(message))
         }))
         await waitForCondition(() => this.results.size === this.nodeCount - 1, 30000, 1000)
+    }
+
+    async runRoutingExperiment(): Promise<void> {
+        const nodes = Array.from(this.clients.values())
+        await Promise.all(nodes.map((node) => {
+            const message = ExperimentServerMessage.create({
+                instruction: {
+                    oneofKind: 'routingExperiment',
+                    routingExperiment: RoutingExperiment.create({
+                        routingTargets: nodes.map((target) => target.peerDescriptor!).filter((a) => !areEqualPeerDescriptors(a, node.peerDescriptor!))
+                    })
+                }
+            })
+            node.socket.send(ExperimentServerMessage.toBinary(message))
+        }))
+        await waitForCondition(() => this.results.size === this.nodeCount, 30000, 1000)
     }
 
     async joinStreamPart(streamPartId: StreamPartID): Promise<void> {
@@ -158,6 +189,26 @@ export class ExperimentController {
             node.socket.send(ExperimentServerMessage.toBinary(message))
         }))
         await waitForCondition(() => this.instructionsCompleted === this.nodeCount, 30000, 1000)
+    }
+
+    async pullPropagationResults(streamPartId: StreamPartID): Promise<void> {
+        const nodes = Array.from(this.clients.values())
+        await Promise.all(nodes.map((node) => {
+            const message = ExperimentServerMessage.create({
+                instruction: {
+                    oneofKind: 'getPropagationResults',
+                    getPropagationResults: {
+                        streamPartId: streamPartId.toString()
+                    }
+                }
+            })
+            node.socket.send(ExperimentServerMessage.toBinary(message))
+        }))
+        await waitForCondition(() => this.propagationResults.size === this.nodeCount, 30000, 1000)
+    }
+
+    getPropagationResults(): Map<string, string[]> {
+        return this.propagationResults
     }
 
     getResults(): Map<string, any> {
