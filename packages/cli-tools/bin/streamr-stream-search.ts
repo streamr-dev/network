@@ -50,7 +50,7 @@ createClientCommand(async (client: StreamrClient, term: string | undefined, opti
     )
     const streams = client.searchStreams(term, permissionFilter)
     for await (const stream of streams) {
-        console.log(stream.id)
+        console.info(stream.id)
     }
 })
     .arguments('[term]')
