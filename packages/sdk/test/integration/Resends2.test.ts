@@ -50,7 +50,7 @@ describe('Resends2', () => {
             permissions: [StreamPermission.SUBSCRIBE]
         })
         storageNode = await environment.startStorageNode()
-        await stream.addToStorageNode(storageNode.getAddress())
+        await stream.addToStorageNode(storageNode.getAddress(), { wait: true })
         client = environment.createClient()
     })
 
