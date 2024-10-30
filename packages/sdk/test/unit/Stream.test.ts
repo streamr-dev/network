@@ -72,12 +72,11 @@ describe('Stream', () => {
             })
         })
 
-        it('no value in valid JSON', () => {
+        it('no partition value in valid JSON', () => {
             const metadata = JSON.stringify({
                 foo: 'bar'
             })
             expect(Stream.parseMetadata(metadata)).toEqual({
-                partitions: 1,
                 foo: 'bar'
             })
         })
