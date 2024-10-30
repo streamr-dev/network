@@ -22,6 +22,7 @@ Changes before Tatum release are not documented in this file.
 
 - **BREAKING CHANGE:** Type `StreamMetadata` is `Record<string, unknown>` (https://github.com/streamr-dev/network/pull/2825, https://github.com/streamr-dev/network/pull/2845)
   - Some new accessors available, see above
+  - No default values are injected (https://github.com/streamr-dev/network/pull/2851)
 - **BREAKING CHANGE:** Method `Stream#update()` overwrites metadata instead of merging it (https://github.com/streamr-dev/network/pull/2826)
 - **BREAKING CHANGE:** Method `Stream#addToStorageNode()` doesn't wait for acknowledgment by default (https://github.com/streamr-dev/network/pull/2810)
 - Network-level changes
