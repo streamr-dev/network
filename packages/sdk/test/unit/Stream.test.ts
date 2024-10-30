@@ -84,9 +84,7 @@ describe('Stream', () => {
 
         it('empty metadata', () => {
             const metadata = ''
-            expect(Stream.parseMetadata(metadata)).toEqual({
-                partitions: 1
-            })
+            expect(Stream.parseMetadata(metadata)).toEqual({})
         })
 
         it('invalid value', () => {
