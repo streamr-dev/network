@@ -363,7 +363,6 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
             markAndCheckDuplicate(this.duplicateDetectors, msg.messageId!, msg.previousMessageRef)
         } else {
             if (msg.body.oneofKind === 'contentMessage') {
-                console.log(JSON.parse(binaryToUtf8(msg.body.contentMessage.content)))
                 const parsedMessage = JSON.parse(binaryToUtf8(msg.body.contentMessage.content))
                 parsedMessage.route.push({
                     id: this.options.experimentId,
@@ -372,7 +371,6 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                 })
                 this.storedMessages.push(JSON.stringify(parsedMessage))
                 msg.body.contentMessage.content = utf8ToBinary(JSON.stringify(parsedMessage))
-                console.log(JSON.parse(binaryToUtf8(msg.body.contentMessage.content)))
             }
         }
         this.emit('message', msg)

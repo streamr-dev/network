@@ -18,6 +18,8 @@ message ExperimentServerMessage {
         PublishMessage publishMessage = 4;
         GetPropagationResults getPropagationResults = 5;
         RoutingExperiment routingExperiment = 6;
+        PublishOnInterval publishOnInterval = 7;
+        MeasureTimeToData MeasureTimeToData = 8;
     }
 }
 
@@ -87,4 +89,13 @@ message PropagationResults {
 
 message InstructionCompleted {
 
+}
+
+message PublishOnInterval {
+    string streamPartId = 1;
+    int32 interval = 2;
+}
+
+message MeasureTimeToData {
+    string streamPartId = 1;
 }

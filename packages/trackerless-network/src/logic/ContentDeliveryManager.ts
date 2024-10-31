@@ -32,9 +32,17 @@ import { ProxyClient } from './proxy/ProxyClient'
 import { ConnectionManager } from '@streamr/dht/src/exports'
 import { StreamPartitionInfo } from '../types'
 
+type TimeToData = {
+    streamJoinTimestamp: number
+    messageReceivedTimestamp?: number
+    entryPointsFetch?: number
+    layer1JoinTime?: number
+}
+
 export type StreamPartDelivery = {
     broadcast: (msg: StreamMessage) => void
     stop: () => Promise<void>
+    timeToDataMeasurements: TimeToData
 } & ({ 
     proxied: false
     discoveryLayerNode: DiscoveryLayerNode
@@ -164,6 +172,9 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             () => peerDescriptorStoreManager.isLocalNodeStored()
         )
         const streamPartReconnect = new StreamPartReconnect(discoveryLayerNode, peerDescriptorStoreManager)
+        const timeToData: TimeToData = {
+            streamJoinTimestamp: Date.now()
+        }
         streamPart = {
             proxied: false,
             discoveryLayerNode,
@@ -177,11 +188,15 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
                 node.stop()
                 await discoveryLayerNode.stop()
             },
-            getDiagnosticInfo: () => node.getDiagnosticInfo()
+            getDiagnosticInfo: () => node.getDiagnosticInfo(),
+            timeToDataMeasurements: timeToData
         }
         this.streamParts.set(streamPartId, streamPart)
         node.on('message', (message: StreamMessage) => {
             this.emit('newMessage', message)
+        })
+        node.once('message', () => {
+            timeToData.messageReceivedTimestamp = Date.now()
         })
         const handleEntryPointLeave = async () => {
             if (this.destroyed || peerDescriptorStoreManager.isLocalNodeStored() || this.knownStreamPartEntryPoints.has(streamPartId)) {
@@ -227,11 +242,15 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
                 streamPart.discoveryLayerNode.joinRing()
             ])
         } else {
+            const fetchStartTime = Date.now()
             const entryPoints = await peerDescriptorStoreManager.fetchNodes()
+            streamPart.timeToDataMeasurements.entryPointsFetch = Date.now() - fetchStartTime
+            const joinStartTime = Date.now()
             await Promise.all([
                 streamPart.discoveryLayerNode.joinDht(sampleSize(entryPoints, NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT)),
                 streamPart.discoveryLayerNode.joinRing()
             ])
+            streamPart.timeToDataMeasurements.layer1JoinTime = Date.now() - joinStartTime
             if (entryPoints.length < MAX_NODE_COUNT) {
                 await peerDescriptorStoreManager.storeAndKeepLocalNode()
                 if (streamPart.discoveryLayerNode.getNeighborCount() < NETWORK_SPLIT_AVOIDANCE_MIN_NEIGHBOR_COUNT) {
@@ -301,7 +320,10 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
                     client,
                     broadcast: (msg: StreamMessage) => client.broadcast(msg),
                     stop: async () => client.stop(),
-                    getDiagnosticInfo: () => client.getDiagnosticInfo()
+                    getDiagnosticInfo: () => client.getDiagnosticInfo(),
+                    timeToDataMeasurements: {
+                        streamJoinTimestamp: Date.now()
+                    }
                 })
                 client.on('message', (message: StreamMessage) => {
                     this.emit('newMessage', message)
@@ -393,6 +415,10 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         // @ts-expect-error private
         const node = this.getStreamPartDelivery(streamPartId).node
         return node.getStoredMessages()
+    }
+
+    getTimeToDataMeasurements(streamPartId: StreamPartID): TimeToData {
+        return this.getStreamPartDelivery(streamPartId)!.timeToDataMeasurements
     }
 
     getDiagnosticInfo(): Record<string, unknown> {

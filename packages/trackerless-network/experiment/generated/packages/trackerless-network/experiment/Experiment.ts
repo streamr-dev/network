@@ -48,6 +48,18 @@ export interface ExperimentServerMessage {
          */
         routingExperiment: RoutingExperiment;
     } | {
+        oneofKind: "publishOnInterval";
+        /**
+         * @generated from protobuf field: PublishOnInterval publishOnInterval = 7;
+         */
+        publishOnInterval: PublishOnInterval;
+    } | {
+        oneofKind: "measureTimeToData";
+        /**
+         * @generated from protobuf field: MeasureTimeToData MeasureTimeToData = 8 [json_name = "MeasureTimeToData"];
+         */
+        measureTimeToData: MeasureTimeToData;
+    } | {
         oneofKind: undefined;
     };
 }
@@ -229,6 +241,28 @@ export interface PropagationResults {
  */
 export interface InstructionCompleted {
 }
+/**
+ * @generated from protobuf message PublishOnInterval
+ */
+export interface PublishOnInterval {
+    /**
+     * @generated from protobuf field: string streamPartId = 1;
+     */
+    streamPartId: string;
+    /**
+     * @generated from protobuf field: int32 interval = 2;
+     */
+    interval: number;
+}
+/**
+ * @generated from protobuf message MeasureTimeToData
+ */
+export interface MeasureTimeToData {
+    /**
+     * @generated from protobuf field: string streamPartId = 1;
+     */
+    streamPartId: string;
+}
 // @generated message type with reflection information, may provide speed optimized methods
 class ExperimentServerMessage$Type extends MessageType<ExperimentServerMessage> {
     constructor() {
@@ -238,7 +272,9 @@ class ExperimentServerMessage$Type extends MessageType<ExperimentServerMessage> 
             { no: 3, name: "joinStreamPart", kind: "message", oneof: "instruction", T: () => JoinStreamPart },
             { no: 4, name: "publishMessage", kind: "message", oneof: "instruction", T: () => PublishMessage },
             { no: 5, name: "getPropagationResults", kind: "message", oneof: "instruction", T: () => GetPropagationResults },
-            { no: 6, name: "routingExperiment", kind: "message", oneof: "instruction", T: () => RoutingExperiment }
+            { no: 6, name: "routingExperiment", kind: "message", oneof: "instruction", T: () => RoutingExperiment },
+            { no: 7, name: "publishOnInterval", kind: "message", oneof: "instruction", T: () => PublishOnInterval },
+            { no: 8, name: "MeasureTimeToData", kind: "message", jsonName: "MeasureTimeToData", oneof: "instruction", T: () => MeasureTimeToData }
         ]);
     }
 }
@@ -421,6 +457,31 @@ class InstructionCompleted$Type extends MessageType<InstructionCompleted> {
  * @generated MessageType for protobuf message InstructionCompleted
  */
 export const InstructionCompleted = new InstructionCompleted$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class PublishOnInterval$Type extends MessageType<PublishOnInterval> {
+    constructor() {
+        super("PublishOnInterval", [
+            { no: 1, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "interval", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message PublishOnInterval
+ */
+export const PublishOnInterval = new PublishOnInterval$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class MeasureTimeToData$Type extends MessageType<MeasureTimeToData> {
+    constructor() {
+        super("MeasureTimeToData", [
+            { no: 1, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message MeasureTimeToData
+ */
+export const MeasureTimeToData = new MeasureTimeToData$Type();
 /**
  * @generated ServiceType for protobuf service RoutingExperimentRpc
  */

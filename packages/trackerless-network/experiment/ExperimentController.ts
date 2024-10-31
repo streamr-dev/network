@@ -3,7 +3,7 @@ import { Socket } from 'net'
 import WebSocket from 'ws'
 import { ExperimentClientMessage, ExperimentServerMessage, Hello, InstructionCompleted, JoinExperiment, RoutingExperiment } from './generated/packages/trackerless-network/experiment/Experiment'
 import { Any } from '../generated/google/protobuf/any'
-import { StreamPartID, waitForCondition } from '@streamr/utils'
+import { StreamPartID, wait, waitForCondition } from '@streamr/utils'
 import { areEqualPeerDescriptors, PeerDescriptor } from '@streamr/dht'
 import { sample } from 'lodash'
 import fs from 'fs'
@@ -25,8 +25,7 @@ export class ExperimentController {
     private wss?: WebSocket.Server
     private clients: Map<string, ExperimentNode> = new Map()
     private readonly nodeCount: number 
-    private readonly results: Map<string, any> = new Map()
-    private readonly propagationResults: Map<string, string[]> = new Map()
+    private readonly resultsReceived: Set<string> = new Set()
     private instructionsCompleted = 0
     private readonly experimentId: string
 
@@ -67,12 +66,13 @@ export class ExperimentController {
                         const started = message.payload.started
                         this.clients.set(message.id, { socket: ws, peerDescriptor: started.peerDescriptor! })
                     } else if (message.payload.oneofKind === 'experimentResults') {
-                        this.results.set(message.id, message.payload.experimentResults)
+                        writeResultsRow(`results/${this.experimentId}/experimentResults`, JSON.stringify({ id: message.id, results: message.payload.experimentResults.results }))
+                        this.resultsReceived.add(message.id)
                     } else if (message.payload.oneofKind === 'instructionCompleted') {
                         this.instructionsCompleted += 1
                     } else if (message.payload.oneofKind === 'propagationResults') {
-                        this.propagationResults.set(message.id, message.payload.propagationResults.results)
-                        writeResultsRow(`results/${this.experimentId}/propagationResult`, message.id + ',' + message.payload.propagationResults.results.join(','))
+                        this.resultsReceived.add(message.id)
+                        writeResultsRow(`results/${this.experimentId}/propagationResult`, JSON.stringify({ id: message.id, results: message.payload.propagationResults.results }))
                     }
                 })
             })
@@ -137,7 +137,7 @@ export class ExperimentController {
             })
             node.socket.send(ExperimentServerMessage.toBinary(message))
         }))
-        await waitForCondition(() => this.results.size === this.nodeCount - 1, 30000, 1000)
+        await waitForCondition(() => this.resultsReceived.size === this.nodeCount - 1, 30000, 1000)
     }
 
     async runRoutingExperiment(): Promise<void> {
@@ -153,7 +153,7 @@ export class ExperimentController {
             })
             node.socket.send(ExperimentServerMessage.toBinary(message))
         }))
-        await waitForCondition(() => this.results.size === this.nodeCount, 30000, 1000)
+        await waitForCondition(() => this.resultsReceived.size === this.nodeCount, 30000, 1000)
     }
 
     async joinStreamPart(streamPartId: StreamPartID): Promise<void> {
@@ -191,6 +191,39 @@ export class ExperimentController {
         await waitForCondition(() => this.instructionsCompleted === this.nodeCount, 30000, 1000)
     }
 
+    async runTimeToDataExperiment(entryPoint: string): Promise<void> {
+        const streamPartId = 'experiment#0'
+        const publisher = sample(Array.from(this.clients.keys()).filter((id) => id !== entryPoint))!
+        await this.startPublisher(publisher, streamPartId)
+        const subsribers = Array.from(this.clients.keys()).filter((id) => id !== publisher)
+        for (const subscriber of subsribers) {
+            const message = ExperimentServerMessage.create({
+                instruction: {
+                    oneofKind: 'measureTimeToData',
+                    measureTimeToData: {
+                        streamPartId
+                    }
+                }
+            })
+            this.clients.get(subscriber)!.socket.send(ExperimentServerMessage.toBinary(message))
+            await wait(500)
+        }
+        await waitForCondition(() => this.resultsReceived.size === this.nodeCount - 1, 30000, 1000)
+    }
+
+    async startPublisher(publisher: string, streamPartId: string): Promise<void> {
+        const message = ExperimentServerMessage.create({
+            instruction: {
+                oneofKind: 'publishOnInterval',
+                publishOnInterval: {
+                    streamPartId,
+                    interval: 1000
+                }
+            }
+        })
+        this.clients.get(publisher)!.socket.send(ExperimentServerMessage.toBinary(message))
+    }
+
     async pullPropagationResults(streamPartId: StreamPartID): Promise<void> {
         const nodes = Array.from(this.clients.values())
         await Promise.all(nodes.map((node) => {
@@ -204,15 +237,7 @@ export class ExperimentController {
             })
             node.socket.send(ExperimentServerMessage.toBinary(message))
         }))
-        await waitForCondition(() => this.propagationResults.size === this.nodeCount, 30000, 1000)
-    }
-
-    getPropagationResults(): Map<string, string[]> {
-        return this.propagationResults
-    }
-
-    getResults(): Map<string, any> {
-        return this.results
+        await waitForCondition(() => this.resultsReceived.size === this.nodeCount, 30000, 1000)
     }
 
 }

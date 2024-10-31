@@ -4,7 +4,7 @@ import { NetworkNode } from '../src/NetworkNode'
 import { NetworkStack } from '../src/NetworkStack'
 import { ExperimentClientMessage, ExperimentServerMessage, GetRoutingPath, Hello, RoutingPath } from './generated/packages/trackerless-network/experiment/Experiment'
 import { DhtCallContext, DhtNode, NodeType, PeerDescriptor, toNodeId } from '@streamr/dht'
-import { binaryToHex, hexToBinary, StreamIDUtils, StreamPartID, StreamPartIDUtils, utf8ToBinary } from '@streamr/utils'
+import { binaryToHex, hexToBinary, StreamIDUtils, StreamPartID, StreamPartIDUtils, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../generated/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { RoutingExperimentRpcClient } from './generated/packages/trackerless-network/experiment/Experiment.client'
@@ -125,13 +125,19 @@ export class ExperimentNodeWrapper {
                 setImmediate(() => this.joinStreamPart(instruction.streamPartId, instruction.neighborCount))
             } else if (message.instruction.oneofKind === 'publishMessage') {
                 const instruction = message.instruction.publishMessage
-                setImmediate(() => this.publishMessage(instruction.streamPartId))
+                setImmediate(() => this.onPublishInstruction(instruction.streamPartId))
             } else if (message.instruction.oneofKind === 'getPropagationResults') {
                 const instruction = message.instruction.getPropagationResults
                 setImmediate(() => this.reportPropagationResults(instruction.streamPartId))
             } else if (message.instruction.oneofKind === 'routingExperiment') {
                 const instruction = message.instruction.routingExperiment
                 setImmediate(() => this.routingExperiment(instruction.routingTargets))
+            } else if (message.instruction.oneofKind === 'publishOnInterval') {
+                const instruction = message.instruction.publishOnInterval
+                setImmediate(() => this.publishOnInterval(instruction.streamPartId, instruction.interval))
+            } else if (message.instruction.oneofKind === 'measureTimeToData') {
+                const instruction = message.instruction.measureTimeToData
+                setImmediate(() => this.measureTimeToData(instruction.streamPartId))
             }
         })
     }
@@ -199,15 +205,49 @@ export class ExperimentNodeWrapper {
         }))
     }
 
-    async publishMessage(streamPartId: string): Promise<void> {
-        const streamPart = StreamPartIDUtils.parse(streamPartId)
-        const message = createStreamMessage(streamPart, this.id, this.node!.getPeerDescriptor().region!)
-        await this.node!.broadcast(message)
+    async onPublishInstruction(streamPartId: string): Promise<void> {
+        await this.publishMessage(streamPartId)
         const results = ExperimentClientMessage.create({
             id: this.id,
             payload: {
                 oneofKind: 'instructionCompleted',
                 instructionCompleted: {}
+            }
+        })
+        this.send(results)
+    }
+
+    async publishMessage(streamPartId: string): Promise<void> {
+        const streamPart = StreamPartIDUtils.parse(streamPartId)
+        const message = createStreamMessage(streamPart, this.id, this.node!.getPeerDescriptor().region!)
+        await this.node!.broadcast(message)
+    }
+
+    async publishOnInterval(streamPartId: string, interval: number) {
+        const streamPart = StreamPartIDUtils.parse(streamPartId)
+        setInterval(() => this.publishMessage(streamPart), interval)
+    }
+
+    async measureTimeToData(streamPartId: string): Promise<void> {
+        const streamPart = StreamPartIDUtils.parse(streamPartId)
+        const startTime = Date.now()
+        await this.node!.join(streamPart)
+        await waitForCondition(() => 
+            this.node!.stack.getContentDeliveryManager().getTimeToDataMeasurements(streamPart).messageReceivedTimestamp !== undefined
+            && this.node!.stack.getContentDeliveryManager().getTimeToDataMeasurements(streamPart).layer1JoinTime !== undefined
+        , 30000, 1000)
+        const measurements = this.node!.stack.getContentDeliveryManager().getTimeToDataMeasurements(streamPart)
+        const payload = {
+            ...measurements,
+            startTime
+        } 
+        const results = ExperimentClientMessage.create({
+            id: this.id,
+            payload: {
+                oneofKind: 'experimentResults',
+                experimentResults: {
+                    results: JSON.stringify(payload)
+                }
             }
         })
         this.send(results)

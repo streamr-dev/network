@@ -2,7 +2,7 @@ import { StreamPartIDUtils, wait } from "@streamr/utils"
 import { ExperimentController } from "./ExperimentController"
 import { ExperimentNodeWrapper } from "./ExperimentNodeWrapper"
 
-const modes = [ 'propagation', 'join', 'routing' ]
+const modes = [ 'propagation', 'join', 'routing', 'timetodata' ]
 const experiment = process.argv[2]
 if (!modes.includes(experiment)) {
     throw new Error('only join mode is supported')
@@ -26,7 +26,6 @@ const run = async () => {
         await controller.startNodes(entryPointId, false)
         await controller.runJoinExperiment(entryPointId)
         console.log('experiment done')
-        console.log(controller.getResults())
     } else if (experiment === 'propagation') { 
         const entryPointId = await controller.startEntryPoint()
         console.log('entry point started', entryPointId)
@@ -47,7 +46,13 @@ const run = async () => {
         await wait(10000)
         await controller.runRoutingExperiment()
         console.log('experiment done')
-        console.log(controller.getResults())
+    } else if (experiment === 'timetodata') {
+        const entryPointId = await controller.startEntryPoint()
+        console.log('entry point started', entryPointId)
+        await controller.startNodes(entryPointId, false)
+        console.log('all nodes started')
+        await controller.runTimeToDataExperiment(entryPointId)
+        console.log('experiment done')
     } else {
         const entryPointId = await controller.startEntryPoint(true)
         console.log('entry point started', entryPointId)
