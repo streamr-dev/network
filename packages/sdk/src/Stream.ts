@@ -1,4 +1,5 @@
 import {
+    DEFAULT_PARTITION_COUNT,
     StreamID,
     StreamPartID,
     collect,
@@ -35,7 +36,7 @@ export interface StreamMetadata {
     /**
      * Determines how many partitions this stream consist of.
      */
-    partitions: number
+    partitions?: number
 
     /**
      * Human-readable description of this stream.
@@ -137,7 +138,7 @@ export class Stream {
         this.id = id
         this.metadata = merge(
             {
-                partitions: 1,
+                partitions: DEFAULT_PARTITION_COUNT,
                 // TODO should we remove this default or make config as a required StreamMetadata field?
                 config: {
                     fields: []
@@ -156,26 +157,30 @@ export class Stream {
     }
 
     /**
-     * Updates the metadata of the stream by merging with the existing metadata.
+     * Updates the metadata of the stream.
      */
     async update(metadata: Partial<StreamMetadata>): Promise<void> {
-        // TODO maybe should use deep merge, i.e. merge() from @streamr/utils as that corresponds
-        // the implicit intention of the method description. But we'll harmonize this method soon in NET-1364,
-        // so we don't change the behavior now.
-        const merged = flatMerge(this.getMetadata(), metadata)
         try {
-            await this._streamRegistry.updateStream(this.id, merged)
+            await this._streamRegistry.updateStream(this.id, metadata)
         } finally {
             this._streamRegistry.clearStreamCache(this.id)
         }
-        this.metadata = merged
+        this.metadata = metadata
     }
 
     /**
      * Returns the partitions of the stream.
      */
     getStreamParts(): StreamPartID[] {
-        return range(0, this.getMetadata().partitions).map((p) => toStreamPartID(this.id, p))
+        return range(0, this.getPartitionCount()).map((p) => toStreamPartID(this.id, p))
+    }
+
+    getPartitionCount(): number {
+        const metadataValue = this.getMetadata().partitions
+        if (metadataValue !== undefined) {
+            ensureValidStreamPartitionCount(metadataValue)
+        }
+        return metadataValue ?? DEFAULT_PARTITION_COUNT
     }
 
     /**
@@ -231,11 +236,12 @@ export class Stream {
         }).filter(Boolean) as Field[] // see https://github.com/microsoft/TypeScript/issues/30621
 
         // Save field config back to the stream
-        await this.update({
+        const merged = flatMerge(this.getMetadata(), {
             config: {
                 fields
             }
         })
+        await this.update(merged)
     }
 
     /**
@@ -243,44 +249,48 @@ export class Stream {
      *
      * @category Important
      *
-     * @param waitOptions - control how long to wait for storage node to pick up on assignment
-     * @returns a resolved promise if (1) stream was assigned to storage node and (2) the storage node acknowledged the
-     * assignment within `timeout`, otherwise rejects. Notice that is possible for this promise to reject but for the
-     * storage node assignment to go through eventually.
+     * @param opts - control how long to wait for storage node to pick up on assignment
+     * @returns If opts.wait=true, the promise resolves when the storage node acknowledges the assignment and
+     * is therefore ready to store published messages. If we don't receive the acknowledgment within the `timeout`,
+     * the promise rejects, but the assignment may still succeed later.
      */
-    async addToStorageNode(storageNodeAddress: string, waitOptions: { timeout?: number } = {}): Promise<void> {
+    async addToStorageNode(storageNodeAddress: string, opts: { wait: boolean, timeout?: number } = { wait: false }): Promise<void> {
         const normalizedNodeAddress = toEthereumAddress(storageNodeAddress)
-        // check whether the stream is already stored: the assignment event listener logic requires that
-        // there must not be an existing assignment (it timeouts if there is an existing assignment as the
-        // storage node doesn't send an assignment event in that case)
-        const isAlreadyStored = await this._streamStorageRegistry.isStoredStream(this.id, normalizedNodeAddress)
-        if (isAlreadyStored) {
-            return
-        }
-        let assignmentSubscription
-        try {
-            const streamPartId = toStreamPartID(formStorageNodeAssignmentStreamId(normalizedNodeAddress), DEFAULT_PARTITION)
-            assignmentSubscription = new Subscription(
-                streamPartId,
-                false,
-                undefined,
-                new EventEmitter<SubscriptionEvents>(),
-                this._loggerFactory
-            )
-            await this._subscriber.add(assignmentSubscription)
-            const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, {
-                id: this.id,
-                partitions: this.getMetadata().partitions
-            }, this._loggerFactory)
+        if (opts.wait) {
+            // check whether the stream is already stored: the assignment event listener logic requires that
+            // there must not be an existing assignment (it timeouts if there is an existing assignment as the
+            // storage node doesn't send an assignment event in that case)
+            const isAlreadyStored = await this._streamStorageRegistry.isStoredStream(this.id, normalizedNodeAddress)
+            if (isAlreadyStored) {
+                return
+            }
+            let assignmentSubscription
+            try {
+                const streamPartId = toStreamPartID(formStorageNodeAssignmentStreamId(normalizedNodeAddress), DEFAULT_PARTITION)
+                assignmentSubscription = new Subscription(
+                    streamPartId,
+                    false,
+                    undefined,
+                    new EventEmitter<SubscriptionEvents>(),
+                    this._loggerFactory
+                )
+                await this._subscriber.add(assignmentSubscription)
+                const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, {
+                    id: this.id,
+                    partitions: this.getPartitionCount()
+                }, this._loggerFactory)
+                await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
+                await withTimeout(
+                    propagationPromise,
+                    opts.timeout ?? this._config._timeouts.storageNode.timeout,
+                    'storage node did not respond'
+                )
+            } finally {
+                this._streamRegistry.clearStreamCache(this.id)
+                await assignmentSubscription?.unsubscribe() // should never reject...
+            }
+        } else {
             await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
-            await withTimeout(
-                propagationPromise,
-                waitOptions.timeout ?? this._config._timeouts.storageNode.timeout,
-                'storage node did not respond'
-            )
-        } finally {
-            this._streamRegistry.clearStreamCache(this.id)
-            await assignmentSubscription?.unsubscribe() // should never reject...
         }
     }
 
@@ -319,7 +329,7 @@ export class Stream {
         // object can't contain extra fields
         if (metadata === '') {
             return {
-                partitions: 1
+                partitions: DEFAULT_PARTITION_COUNT
             }
         }
         const err = new StreamrClientError(`Invalid stream metadata: ${metadata}`, 'INVALID_STREAM_METADATA')
@@ -339,7 +349,7 @@ export class Stream {
         } else {
             return {
                 ...json,
-                partitions: 1
+                partitions: DEFAULT_PARTITION_COUNT
             }
         }
     }

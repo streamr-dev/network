@@ -14,12 +14,16 @@ Changes before Tatum release are not documented in this file.
 
 - Add support for arbitrary length user IDs (https://github.com/streamr-dev/network/pull/2774, https://github.com/streamr-dev/network/pull/2780)
   - it is supported for `PUBLISH` and `SUBSCRIBE` permissions
-- Add validation for public permissions (https://github.com/streamr-dev/network/pull/2819)
+  - new `StreamrClient#getUserId()` method
 - Method `StreamrClient#getDiagnosticInfo()` provides diagnostic info about network (https://github.com/streamr-dev/network/pull/2740, https://github.com/streamr-dev/network/pull/2741)
+- Add `Stream#getPartitionCount()` method (https://github.com/streamr-dev/network/pull/2825)
+- Add validation for public permissions (https://github.com/streamr-dev/network/pull/2819)
 
 #### Changed
 
-- **BREAKING CHANGE:** Rename `getAddress()` to `getUserId()` (https://github.com/streamr-dev/network/pull/2774)
+- **BREAKING CHANGE:** Field `StreamMetadata#partitions` is nullable (https://github.com/streamr-dev/network/pull/2825)
+- **BREAKING CHANGE:** Method `Stream#update()` overwrites metadata instead of merging it (https://github.com/streamr-dev/network/pull/2826)
+- **BREAKING CHANGE:** Method `Stream#addToStorageNode()` doesn't wait for acknowledgment by default (https://github.com/streamr-dev/network/pull/2810)
 - Upgrade `StreamRegistry` from v4 to v5 (https://github.com/streamr-dev/network/pull/2780)
 - Network-level changes
   - Avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801) 
@@ -62,6 +66,9 @@ Changes before Tatum release are not documented in this file.
 
 #### Removed
 
+- **BREAKING CHANGE:** Remove deprecated `bin/config-wizard` script (i.e. the `streamr-broker-init` command)
+  - use `streamr-node-init` command instead
+
 #### Fixed
 
 - Fix operator flag voting behavior when using custom gas estimation (https://github.com/streamr-dev/network/pull/2784)
@@ -76,7 +83,7 @@ Changes before Tatum release are not documented in this file.
 
 - **BREAKING CHANGE:** Replace `--dev` flag with `--env` flag (https://github.com/streamr-dev/network/pull/2817, https://github.com/streamr-dev/network/pull/2834)
   - the `--env` flag supports multiple environments
-  - it takes precedence over the options defined in a config file
+  - if there is a value for `environment` in a config file, this overrides it
   - use `--env dev2` for the development environment
 
 #### Deprecated

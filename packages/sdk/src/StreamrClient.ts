@@ -3,7 +3,7 @@ import './utils/PatchTsyringe'
 
 import { DhtAddress } from '@streamr/dht'
 import { ProxyDirection } from '@streamr/trackerless-network'
-import { EthereumAddress, HexString, StreamID, TheGraphClient, toEthereumAddress, toUserId } from '@streamr/utils'
+import { DEFAULT_PARTITION_COUNT, EthereumAddress, HexString, StreamID, TheGraphClient, toEthereumAddress, toUserId } from '@streamr/utils'
 import type { Overrides } from 'ethers'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
@@ -371,7 +371,7 @@ export class StreamrClient {
     async createStream(propsOrStreamIdOrPath: Partial<StreamMetadata> & { id: string } | string): Promise<Stream> {
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
-        return this.streamRegistry.createStream(streamId, merge({ partitions: 1 }, omit(props, 'id') ))
+        return this.streamRegistry.createStream(streamId, merge({ partitions: DEFAULT_PARTITION_COUNT }, omit(props, 'id') ))
     }
 
     /**
@@ -584,10 +584,17 @@ export class StreamrClient {
     }
 
     /**
-     * Gets the user id (e.g. Ethereum address) of the wallet associated with the current {@link StreamrClient} instance.
+     * Gets the user id (i.e. Ethereum address) of the wallet associated with the current {@link StreamrClient} instance.
      */
     async getUserId(): Promise<HexString> {
         return await this.authentication.getUserId()
+    }
+
+    /**
+     * Alias to {@link getUserId|getUserId()}
+     */
+    getAddress(): Promise<HexString> {
+        return this.getUserId()
     }
 
     // --------------------------------------------------------------------------------------------

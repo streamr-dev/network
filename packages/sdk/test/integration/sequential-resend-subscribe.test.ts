@@ -31,7 +31,7 @@ describe('sequential resend subscribe', () => {
         stream = await createTestStream(publisher, module)
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         const storageNode = await environment.startStorageNode()
-        await stream.addToStorageNode(storageNode.getAddress())
+        await stream.addToStorageNode(storageNode.getAddress(), { wait: true })
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
         await stream.grantPermissions({
             user: await subscriber.getUserId(),
