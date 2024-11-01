@@ -67,8 +67,8 @@ describe('Validator2', () => {
     }
 
     beforeEach(async () => {
-        const publisher = await publisherAuthentication.getAddress()
-        const subscriber = await subscriberAuthentication.getAddress()
+        const publisher = await publisherAuthentication.getUserId()
+        const subscriber = await subscriberAuthentication.getUserId()
         // Default stubs
         getStream = async () => {
             return {
@@ -246,7 +246,7 @@ describe('Validator2', () => {
 
         it('rejects messages to invalid publishers', async () => {
             isPublisher = jest.fn().mockResolvedValue(false)
-            const publisher = await publisherAuthentication.getAddress()
+            const publisher = await publisherAuthentication.getUserId()
 
             await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
@@ -257,7 +257,7 @@ describe('Validator2', () => {
 
         it('rejects messages from unpermitted subscribers', async () => {
             isSubscriber = jest.fn().mockResolvedValue(false)
-            const subscriber = await subscriberAuthentication.getAddress()
+            const subscriber = await subscriberAuthentication.getUserId()
 
             await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
@@ -313,7 +313,7 @@ describe('Validator2', () => {
 
         it('rejects messages from invalid publishers', async () => {
             isPublisher = jest.fn().mockResolvedValue(false)
-            const publisher = await publisherAuthentication.getAddress()
+            const publisher = await publisherAuthentication.getUserId()
 
             await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
@@ -324,7 +324,7 @@ describe('Validator2', () => {
 
         it('rejects messages to unpermitted subscribers', async () => {
             isSubscriber = jest.fn().mockResolvedValue(false)
-            const subscriber = await subscriberAuthentication.getAddress()
+            const subscriber = await subscriberAuthentication.getUserId()
 
             await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)

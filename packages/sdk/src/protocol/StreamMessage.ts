@@ -74,6 +74,7 @@ function validateSequence(messageId: MessageID, prevMsgRef: MessageRef | undefin
 }
 
 export class StreamMessage implements StreamMessageOptions {
+
     readonly messageId: MessageID
     readonly prevMsgRef?: MessageRef
     readonly messageType: StreamMessageType
