@@ -231,7 +231,7 @@ describe('Stream permissions', () => {
 
     it('unsupported type for non-Ethereum user', async () => {
         await expect(() => client.grantPermissions(stream.id, {
-            user: toUserId(randomBytes(50)),
+            userId: toUserId(randomBytes(50)),
             permissions: [StreamPermission.EDIT, StreamPermission.GRANT]
         })).rejects.toThrowStreamrError({
             message: 'Non-Ethereum user id is not supported for permission types: EDIT, GRANT',
