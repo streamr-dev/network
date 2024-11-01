@@ -1,12 +1,11 @@
-import { Wallet } from 'ethers'
-
 import { fastWallet, fetchPrivateKeyWithGas, randomUserId } from '@streamr/test-utils'
 import { toUserId } from '@streamr/utils'
+import { randomBytes } from 'crypto'
+import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
 import { createRelativeTestStreamId } from '../test-utils/utils'
-import { randomBytes } from 'crypto'
 
 const TIMEOUT = 40000
 
