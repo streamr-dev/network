@@ -1,11 +1,11 @@
-import { GraphQLQuery, Logger, StreamID, TheGraphClient, UserID, toEthereumAddress, toStreamID } from '@streamr/utils'
+import { ChangeFieldType, GraphQLQuery, HexString, Logger, StreamID, TheGraphClient, toStreamID, toUserId, UserID } from '@streamr/utils'
 import { Stream } from '../Stream'
-import { ChainPermissions, PUBLIC_PERMISSION_ADDRESS, StreamPermission, convertChainPermissionsToStreamPermissions } from '../permission'
+import { ChainPermissions, PUBLIC_PERMISSION_USER_ID, StreamPermission, convertChainPermissionsToStreamPermissions } from '../permission'
 import { filter, map, unique } from '../utils/GeneratorUtils'
 import { StreamQueryResult } from './StreamRegistry'
 
 export interface SearchStreamsPermissionFilter {
-    user: string
+    userId: HexString
     /*
      * If possible, prefer allOf to anyOf because the query performance is better
      */
@@ -14,6 +14,8 @@ export interface SearchStreamsPermissionFilter {
     allowPublic: boolean
 }
 
+export type InternalSearchStreamsPermissionFilter = ChangeFieldType<SearchStreamsPermissionFilter, 'userId', UserID>
+
 export interface SearchStreamsOrderBy {
     field: 'id' | 'createdAt' | 'updatedAt'
     direction: 'asc' | 'desc'
@@ -21,13 +23,19 @@ export interface SearchStreamsOrderBy {
 
 export type SearchStreamsResultItem = {
     id: string
-    userAddress: UserID
     stream: StreamQueryResult
 } & ChainPermissions
 
+export const toInternalSearchStreamsPermissionFilter = (filter: SearchStreamsPermissionFilter): InternalSearchStreamsPermissionFilter => {
+    return {
+        ...filter,
+        userId: toUserId(filter.userId)
+    }
+}
+
 export const searchStreams = (
     term: string | undefined,
-    permissionFilter: SearchStreamsPermissionFilter | undefined,
+    permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
     orderBy: SearchStreamsOrderBy,
     theGraphClient: TheGraphClient,
     parseStream: (id: StreamID, metadata: string) => Stream,
@@ -51,7 +59,7 @@ export const searchStreams = (
 
 async function* fetchSearchStreamsResultFromTheGraph(
     term: string | undefined,
-    permissionFilter: SearchStreamsPermissionFilter | undefined,
+    permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
     orderBy: SearchStreamsOrderBy,
     theGraphClient: TheGraphClient,
 ): AsyncGenerator<SearchStreamsResultItem> {
@@ -66,7 +74,7 @@ async function* fetchSearchStreamsResultFromTheGraph(
     const withoutOrphaned = filter(backendResults, (p) => p.stream !== null)
     /*
      * As we query via permissions entity, any stream can appear multiple times (once per
-     * permission user) if we don't do have exactly one userAddress in the GraphQL query.
+     * permission user) if we don't do have exactly one userId in the GraphQL query.
      * That is the case if no permission filter is defined at all, or if permission.allowPublic
      * is true (then it appears twice: once for the user, and once for the public address).
      */
@@ -101,7 +109,7 @@ async function* fetchSearchStreamsResultFromTheGraph(
  */
 const buildQuery = (
     term: string | undefined,
-    permissionFilter: SearchStreamsPermissionFilter | undefined,
+    permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
     orderBy: SearchStreamsOrderBy,
     lastId: string,
     pageSize: number
@@ -111,9 +119,9 @@ const buildQuery = (
         id_gt: lastId
     }
     if (permissionFilter !== undefined) {
-        variables.userAddress_in = [toEthereumAddress(permissionFilter.user)]
+        variables.userId_in = [permissionFilter.userId]
         if (permissionFilter.allowPublic) {
-            variables.userAddress_in.push(PUBLIC_PERMISSION_ADDRESS)
+            variables.userId_in.push(PUBLIC_PERMISSION_USER_ID)
         }
         if (permissionFilter.allOf !== undefined) {
             const now = String(Math.round(Date.now() / 1000))
@@ -127,7 +135,7 @@ const buildQuery = (
     const query = `
         query (
             $stream_contains: String,
-            $userAddress_in: [Bytes!]
+            $userId_in: [Bytes!]
             $canEdit: Boolean
             $canDelete: Boolean
             $publishExpiration_gt: BigInt
@@ -146,7 +154,6 @@ const buildQuery = (
                     id
                     metadata
                 }
-                userAddress
                 canEdit
                 canDelete
                 publishExpiration

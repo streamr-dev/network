@@ -11,7 +11,7 @@ createClientCommand((async (client: StreamrClient, storageNodeAddress: string) =
         console.info(EasyTable.print(streams.map((stream) => {
             return {
                 id: stream.id,
-                partitions: stream.getMetadata().partitions
+                partitions: stream.getPartitionCount()
             }
         })))
     }

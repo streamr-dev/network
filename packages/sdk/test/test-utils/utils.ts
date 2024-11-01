@@ -6,7 +6,9 @@ import {
     Logger,
     MAX_PARTITION_COUNT,
     StreamPartID,
-    StreamPartIDUtils, UserID, merge,
+    StreamPartIDUtils,
+    UserID,
+    merge,
     utf8ToBinary,
     wait,
     waitForCondition
@@ -154,7 +156,7 @@ export const MOCK_CONTENT = utf8ToBinary(JSON.stringify({}))
 
 export const getLocalGroupKeyStore = (ownerId: UserID): LocalGroupKeyStore => {
     const authentication = {
-        getAddress: () => ownerId
+        getUserId: () => ownerId
     } as any
     const loggerFactory = mockLoggerFactory()
     return new LocalGroupKeyStore(

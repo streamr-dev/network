@@ -11,7 +11,6 @@ const MOCK_USER = randomEthereumAddress()
 const createMockResultItem = (streamId: StreamID, metadata: string): SearchStreamsResultItem => {
     return {
         id: streamId,
-        userAddress: MOCK_USER,
         stream: {
             id: streamId,
             metadata
@@ -70,9 +69,7 @@ describe('searchStreams', () => {
             const props = Stream.parseMetadata(metadata)
             return {
                 id,
-                getMetadata: () => ({
-                    partitions: props.partitions
-                })
+                getPartitionCount: () => props.partitions
             } as any
         }
 
@@ -87,8 +84,8 @@ describe('searchStreams', () => {
 
         expect(streams).toHaveLength(2)
         expect(streams[0].id).toBe(stream1)
-        expect(streams[0].getMetadata().partitions).toBe(11)
+        expect(streams[0].getPartitionCount()).toBe(11)
         expect(streams[1].id).toBe(stream4)
-        expect(streams[1].getMetadata().partitions).toBe(44)
+        expect(streams[1].getPartitionCount()).toBe(44)
     })
 })

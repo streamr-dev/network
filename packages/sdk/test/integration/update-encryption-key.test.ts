@@ -32,7 +32,7 @@ describe('update encryption key', () => {
         })
         const stream = await publisher.createStream('/path')
         await stream.grantPermissions({
-            user: await subscriber.getAddress(),
+            userId: await subscriber.getUserId(),
             permissions: [StreamPermission.SUBSCRIBE]
         })
         streamPartId = stream.getStreamParts()[0]
@@ -119,7 +119,7 @@ describe('update encryption key', () => {
             })
 
             await publisher.revokePermissions(StreamPartIDUtils.getStreamID(streamPartId), {
-                user: await subscriber.getAddress(),
+                userId: await subscriber.getUserId(),
                 permissions: [StreamPermission.SUBSCRIBE]
             })
             const rotatedKey = GroupKey.generate()
@@ -148,7 +148,7 @@ describe('update encryption key', () => {
             })
 
             await publisher.revokePermissions(StreamPartIDUtils.getStreamID(streamPartId), {
-                user: await subscriber.getAddress(),
+                userId: await subscriber.getUserId(),
                 permissions: [StreamPermission.SUBSCRIBE]
             })
             await publisher.updateEncryptionKey({

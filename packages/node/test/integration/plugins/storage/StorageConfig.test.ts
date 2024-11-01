@@ -55,7 +55,7 @@ describe('StorageConfig', () => {
     })
 
     it('when client publishes a message, it is written to the store', async () => {
-        await stream.addToStorageNode(storageNodeAccount.address)
+        await stream.addToStorageNode(storageNodeAccount.address, { wait: true })
         const publishMessage = await client.publish(stream.id, {
             foo: 'bar'
         })

@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastWallet } from '@streamr/test-utils'
-import { collect, toEthereumAddress, toStreamID } from '@streamr/utils'
+import { collect, toEthereumAddress, toStreamID, toUserId } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { DecryptError } from '../../src/encryption/EncryptionUtil'
@@ -86,7 +86,7 @@ describe('resend with existing key', () => {
             id: streamId
         })
         await stream.grantPermissions({
-            user: publisherWallet.address,
+            userId: publisherWallet.address,
             permissions: [StreamPermission.PUBLISH]
         })
         const storageNode = await environment.startStorageNode()
@@ -119,7 +119,7 @@ describe('resend with existing key', () => {
 
     describe('initial key available', () => {
         beforeEach(async () => {
-            await getLocalGroupKeyStore(await subscriber.getAddress()).set(initialKey.id, toEthereumAddress(publisherWallet.address), initialKey.data)
+            await getLocalGroupKeyStore(toUserId(await subscriber.getUserId())).set(initialKey.id, toUserId(publisherWallet.address), initialKey.data)
         })
         it('can decrypt initial', async () => {
             await assertDecryptable(1000, 2000)
@@ -137,7 +137,7 @@ describe('resend with existing key', () => {
 
     describe('rotated key available', () => {
         beforeEach(async () => {
-            await getLocalGroupKeyStore(await subscriber.getAddress()).set(rotatedKey.id, toEthereumAddress(publisherWallet.address), rotatedKey.data)
+            await getLocalGroupKeyStore(toUserId(await subscriber.getUserId())).set(rotatedKey.id, toUserId(publisherWallet.address), rotatedKey.data)
         })
         it('can\'t decrypt initial', async () => {
             await assertNonDecryptable(1000, 2000)
@@ -152,7 +152,7 @@ describe('resend with existing key', () => {
 
     describe('rekeyed key available', () => {
         beforeEach(async () => {
-            await getLocalGroupKeyStore(await subscriber.getAddress()).set(rekeyedKey.id, toEthereumAddress(publisherWallet.address), rekeyedKey.data)
+            await getLocalGroupKeyStore(toUserId(await subscriber.getUserId())).set(rekeyedKey.id, toUserId(publisherWallet.address), rekeyedKey.data)
         })
         it('can\'t decrypt initial', async () => {
             await assertNonDecryptable(1000, 2000)

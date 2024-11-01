@@ -7,7 +7,6 @@ import { AddressInfo } from 'net'
 import { promisify } from 'util'
 
 export const CHAIN_ID = 5555
-const TRUE = '0x0000000000000000000000000000000000000000000000000000000000000001'
 const BLOCK_NUMBER = 123
 const EVENT_STREAM_ID = '0x0000000000000000000000000000000000000001/foo'
 
@@ -90,8 +89,9 @@ export class FakeJsonRpcServer {
         } else if (request.method === 'eth_call') {
             const data: string = request.params[0].data
             const contractMethodHash = data.substring(2, 10)
-            if (contractMethodHash === getContractMethodHash('hasPermission(string,address,uint8)')) {
-                return TRUE
+            if (contractMethodHash === getContractMethodHash('getPermissionsForUserId(string,bytes)')) {
+                // PermissionStructOutput: { canEdit: false, canDelete: false, publishExpiration: 0n, subscribeExpiration: 0n, canGrant: false }
+                return '0x' + '0'.repeat(320)
             } else {
                 throw new Error(`Unknown contract method: ${contractMethodHash}, request: ${JSON.stringify(request)}`)
             }
