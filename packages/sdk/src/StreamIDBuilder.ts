@@ -4,6 +4,7 @@ import {
     StreamIDUtils,
     StreamPartID,
     StreamPartIDUtils,
+    toEthereumAddress,
     toStreamID,
     toStreamPartID
 } from '@streamr/utils'
@@ -48,7 +49,7 @@ export class StreamIDBuilder {
     async toStreamID(streamIdOrPath: string): Promise<StreamID> {
         let address: EthereumAddress | undefined
         if (StreamIDUtils.isPathOnlyFormat(streamIdOrPath)) {
-            address = await this.authentication.getAddress()
+            address = toEthereumAddress(await this.authentication.getUserId())
         }
         return toStreamID(streamIdOrPath, address)
     }

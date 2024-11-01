@@ -1,11 +1,11 @@
 import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
-import { StreamPartIDUtils, hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
+import { randomUserId } from '@streamr/test-utils'
+import { StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { randomUserId } from '@streamr/test-utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
 
@@ -22,7 +22,7 @@ describe('stream without default entrypoints', () => {
             streamPartition: StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
             timestamp: 666,
             sequenceNumber: 0,
-            publisherId: hexToBinary(randomUserId()),
+            publisherId: toUserIdRaw(randomUserId()),
             messageChainId: 'msgChainId'
         },
         previousMessageRef: {
