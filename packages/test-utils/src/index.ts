@@ -1,14 +1,14 @@
-import { Wallet } from 'ethers'
 import { EthereumAddress, toEthereumAddress, toUserId, UserID, waitForCondition, waitForEvent } from '@streamr/utils'
 import cors from 'cors'
 import crypto, { randomBytes } from 'crypto'
+import { Wallet } from 'ethers'
 import { EventEmitter, once } from 'events'
 import express, { Request, Response } from 'express'
 import http from 'http'
+import random from 'lodash/random'
 import { AddressInfo } from 'net'
 import fetch from 'node-fetch'
 import { Readable } from 'stream'
-import random from 'lodash/random'
 
 export type Event = string
 
