@@ -4,7 +4,7 @@ import { NetworkNode } from '../src/NetworkNode'
 import { NetworkStack } from '../src/NetworkStack'
 import { ExperimentClientMessage, ExperimentServerMessage, GetRoutingPath, Hello, RoutingPath } from './generated/packages/trackerless-network/experiment/Experiment'
 import { DhtCallContext, DhtNode, NodeType, PeerDescriptor, toNodeId } from '@streamr/dht'
-import { binaryToHex, hexToBinary, StreamIDUtils, StreamPartID, StreamPartIDUtils, utf8ToBinary, waitForCondition } from '@streamr/utils'
+import { binaryToHex, hexToBinary, Logger, StreamIDUtils, StreamPartID, StreamPartIDUtils, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../generated/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { RoutingExperimentRpcClient } from './generated/packages/trackerless-network/experiment/Experiment.client'
@@ -35,12 +35,14 @@ const createStreamMessage = (streamPartId: StreamPartID, id: string, region: num
     return message
 }
 
+const logger = new Logger(module)
+
 export class ExperimentNodeWrapper {
     private readonly id = v4()
     private node?: NetworkNode
     private socket?: WebSocket
     constructor() {
-        console.log(this.id)
+        logger.info('Created node: ', { id: this.id })
     }
 
     async run() {
@@ -48,7 +50,7 @@ export class ExperimentNodeWrapper {
     }
 
     async startNode(entryPoints: PeerDescriptor[], asEntryPoint: boolean, join: boolean, storeRoutingPaths: boolean, nodeId?: string) {
-        console.log('starting node', storeRoutingPaths)
+        logger.info('starting node', { })
         let configPeerDescriptor: PeerDescriptor | undefined
         if (asEntryPoint) {
             configPeerDescriptor = {
@@ -101,6 +103,7 @@ export class ExperimentNodeWrapper {
         this.socket = new WebSocket('ws://localhost:7070')
         this.socket.binaryType = 'nodebuffer'
         this.socket.on('open', () => {
+            logger.info('connected to server')
             const helloMessage = ExperimentClientMessage.create({
                 id: this.id,
                 payload: { 
@@ -147,7 +150,7 @@ export class ExperimentNodeWrapper {
     }
 
     async joinExperiment(entryPoints: PeerDescriptor[]): Promise<void> {
-        console.log('joining experiment')
+        logger.info('running joining experiment')
         const startTime = Date.now()
         await this.node!.stack.getControlLayerNode().joinDht(entryPoints)
         const runTime = Date.now() - startTime
@@ -164,6 +167,7 @@ export class ExperimentNodeWrapper {
     }
 
     async joinStreamPart(streamPartId: string, neighborCount: number): Promise<void> {
+        logger.info('joining stream part ', { streamPartId, neighborCount })
         const streamPart = StreamPartIDUtils.parse(streamPartId)
         await this.node!.join(streamPart, { minCount: neighborCount, timeout: 20000 })
         const results = ExperimentClientMessage.create({
@@ -177,6 +181,7 @@ export class ExperimentNodeWrapper {
     }
 
     async routingExperiment(nodes: PeerDescriptor[]): Promise<void> {
+        logger.info('running routing experiment')
         const client = this.node!.createExternalRoutingRpcClient(RoutingExperimentRpcClient)
         const results: any = []
         await Promise.all(nodes.map(async (node) => {
@@ -190,7 +195,7 @@ export class ExperimentNodeWrapper {
                 const rtt = Date.now() - started
                 results.push({ source: toNodeId(this.node!.getPeerDescriptor()), from: toNodeId(node), path: result.path.map((p) => toNodeId(p)), rtt})
             } catch (e) {
-                console.log(e)
+                logger.error(e)
                 results.push({ source: toNodeId(this.node!.getPeerDescriptor()), from: toNodeId(node), path: [], rtt: 10000 })
             } 
         }))
@@ -229,6 +234,7 @@ export class ExperimentNodeWrapper {
     }
 
     async measureTimeToData(streamPartId: string): Promise<void> {
+        logger.info('running time to data experiment')
         const streamPart = StreamPartIDUtils.parse(streamPartId)
         const startTime = Date.now()
         await this.node!.join(streamPart)

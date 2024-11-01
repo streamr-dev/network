@@ -211,6 +211,26 @@ export class ExperimentController {
         await waitForCondition(() => this.resultsReceived.size === this.nodeCount - 1, 30000, 1000)
     }
 
+    async runScalingJoinExperiment(entryPoint: string): Promise<void> {
+        const joinedNodes: string[] = []
+        joinedNodes.push(entryPoint)
+        const nodes = Array.from(this.clients.keys()).filter((id) => id !== entryPoint)
+        for (const node of nodes) {
+            const randomEntryPoint = sample(joinedNodes)!
+            const message = ExperimentServerMessage.create({
+                instruction: {
+                    oneofKind: 'joinExperiment',
+                    joinExperiment: JoinExperiment.create({
+                        entryPoints: [this.clients.get(randomEntryPoint)!.peerDescriptor!]
+                    })
+                }
+            })
+            this.clients.get(node)!.socket.send(ExperimentServerMessage.toBinary(message))
+            await waitForCondition(() => this.resultsReceived.has(node), 30000, 50)
+            joinedNodes.push(node)
+        }
+    }
+
     async startPublisher(publisher: string, streamPartId: string): Promise<void> {
         const message = ExperimentServerMessage.create({
             instruction: {
