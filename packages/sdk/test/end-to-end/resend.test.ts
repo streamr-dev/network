@@ -43,7 +43,7 @@ describe('resend', () => {
                 permissions: [StreamPermission.SUBSCRIBE],
                 userId: await resendClient.getUserId()
             })
-            await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+            await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE, { wait: true })
             for (const payload of payloads) {
                 await publisherClient.publish({ id: stream.id, partition: 0 }, payload)
             }

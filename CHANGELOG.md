@@ -13,11 +13,11 @@ Changes before Tatum release are not documented in this file.
 #### Added
 
 - Method `StreamrClient#getDiagnosticInfo()` provides diagnostic info about network (https://github.com/streamr-dev/network/pull/2740, https://github.com/streamr-dev/network/pull/2741)
+- Add `StreamrClient#getUserId()` method (https://github.com/streamr-dev/network/pull/2774)
 - Add `Stream#getPartitionCount()` method (https://github.com/streamr-dev/network/pull/2825)
 
 #### Changed
 
-- **BREAKING CHANGE:** Rename `getAddress()` to `getUserId()` (https://github.com/streamr-dev/network/pull/2774)
 - **BREAKING CHANGE:** Rename `user` to `userId` in these interfaces: (https://github.com/streamr-dev/network/pull/2811)
   - `UserPermissionAssignment`
     - used in `grantPermissions()`, `revokePermissions()`, `getPermissions()` and `setPermissions()`
@@ -27,6 +27,7 @@ Changes before Tatum release are not documented in this file.
     - used in `searchStreams()`
 - **BREAKING CHANGE:** Field `StreamMetadata#partitions` is nullable (https://github.com/streamr-dev/network/pull/2825)
 - **BREAKING CHANGE:** Method `Stream#update()` overwrites metadata instead of merging it (https://github.com/streamr-dev/network/pull/2826)
+- **BREAKING CHANGE:** Method `Stream#addToStorageNode()` doesn't wait for acknowledgment by default (https://github.com/streamr-dev/network/pull/2810)
 - Network-level changes
   - Avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801) 
   - Internal record `StreamPartitionInfo` format changed (https://github.com/streamr-dev/network/pull/2738, https://github.com/streamr-dev/network/pull/2790)
@@ -67,6 +68,9 @@ Changes before Tatum release are not documented in this file.
 #### Deprecated
 
 #### Removed
+
+- **BREAKING CHANGE:** Remove deprecated `bin/config-wizard` script (i.e. the `streamr-broker-init` command)
+  - use `streamr-node-init` command instead
 
 #### Fixed
 
