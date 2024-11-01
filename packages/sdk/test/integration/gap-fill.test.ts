@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastWallet, testOnlyInNodeJs } from '@streamr/test-utils'
-import { collect, toEthereumAddress } from '@streamr/utils'
+import { collect } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -60,7 +60,7 @@ describe('gap fill', () => {
         const subscriber = environment.createClient({
             gapFillTimeout: 50
         })
-        subscriber.addEncryptionKey(GROUP_KEY, toEthereumAddress(publisherWallet.address))
+        subscriber.addEncryptionKey(GROUP_KEY, publisherWallet.address)
         const sub = await subscriber.subscribe(stream.id)
         const receivedMessages = collect(sub, 3)
         await publish(await createMessage(1000))
@@ -75,7 +75,7 @@ describe('gap fill', () => {
         const subscriber = environment.createClient({
             gapFillTimeout: 50
         })
-        subscriber.addEncryptionKey(GROUP_KEY, toEthereumAddress(publisherWallet.address))
+        subscriber.addEncryptionKey(GROUP_KEY, publisherWallet.address)
         const sub = await subscriber.subscribe(stream.id)
         const receivedMessages = collect(sub, 2)
         await publish(await createMessage(1000))

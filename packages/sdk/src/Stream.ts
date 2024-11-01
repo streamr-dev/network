@@ -1,5 +1,6 @@
 import {
     DEFAULT_PARTITION_COUNT,
+    HexString,
     StreamID,
     StreamPartID,
     collect,
@@ -18,7 +19,13 @@ import { StreamrClientError } from './StreamrClientError'
 import { StreamRegistry } from './contracts/StreamRegistry'
 import { StreamStorageRegistry } from './contracts/StreamStorageRegistry'
 import { StreamrClientEventEmitter } from './events'
-import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
+import {
+    PermissionAssignment,
+    PublicPermissionQuery,
+    UserPermissionQuery,
+    toInternalPermissionAssignment,
+    toInternalPermissionQuery
+} from './permission'
 import { Resends } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
 import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
@@ -248,7 +255,7 @@ export class Stream {
      * is therefore ready to store published messages. If we don't receive the acknowledgment within the `timeout`,
      * the promise rejects, but the assignment may still succeed later.
      */
-    async addToStorageNode(storageNodeAddress: string, opts: { wait: boolean, timeout?: number } = { wait: false }): Promise<void> {
+    async addToStorageNode(storageNodeAddress: HexString, opts: { wait: boolean, timeout?: number } = { wait: false }): Promise<void> {
         const normalizedNodeAddress = toEthereumAddress(storageNodeAddress)
         if (opts.wait) {
             // check whether the stream is already stored: the assignment event listener logic requires that
@@ -291,7 +298,7 @@ export class Stream {
     /**
      * See {@link StreamrClient.removeStreamFromStorageNode | StreamrClient.removeStreamFromStorageNode}.
      */
-    async removeFromStorageNode(nodeAddress: string): Promise<void> {
+    async removeFromStorageNode(nodeAddress: HexString): Promise<void> {
         try {
             return this._streamStorageRegistry.removeStreamFromStorageNode(this.id, toEthereumAddress(nodeAddress))
         } finally {
@@ -302,7 +309,7 @@ export class Stream {
     /**
      * See {@link StreamrClient.getStorageNodes | StreamrClient.getStorageNodes}.
      */
-    async getStorageNodes(): Promise<string[]> {
+    async getStorageNodes(): Promise<HexString[]> {
         return this._streamStorageRegistry.getStorageNodes(this.id)
     }
 
@@ -349,10 +356,10 @@ export class Stream {
      * @category Important
      */
     async hasPermission(query: Omit<UserPermissionQuery, 'streamId'> | Omit<PublicPermissionQuery, 'streamId'>): Promise<boolean> {
-        return this._streamRegistry.hasPermission({
+        return this._streamRegistry.hasPermission(toInternalPermissionQuery({
             streamId: this.id,
             ...query
-        })
+        }))
     }
 
     /**
@@ -370,7 +377,7 @@ export class Stream {
      * @category Important
      */
     async grantPermissions(...assignments: PermissionAssignment[]): Promise<void> {
-        return this._streamRegistry.grantPermissions(this.id, ...assignments)
+        return this._streamRegistry.grantPermissions(this.id, ...assignments.map(toInternalPermissionAssignment))
     }
 
     /**
@@ -379,7 +386,7 @@ export class Stream {
      * @category Important
      */
     async revokePermissions(...assignments: PermissionAssignment[]): Promise<void> {
-        return this._streamRegistry.revokePermissions(this.id, ...assignments)
+        return this._streamRegistry.revokePermissions(this.id, ...assignments.map(toInternalPermissionAssignment))
     }
 
 }

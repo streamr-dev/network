@@ -1,4 +1,4 @@
-import { BrandedString, EthereumAddress, MapWithTtl, UserID, binaryToHex, hash, recoverSignerUserId, toEthereumAddress } from '@streamr/utils'
+import { BrandedString, EthereumAddress, MapWithTtl, UserID, hash, recoverSignerUserId, toUserId } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { RpcProviderSource } from '../RpcProviderSource'
 import type { IERC1271 as ERC1271Contract } from '../ethereumArtifacts/IERC1271'
@@ -36,7 +36,7 @@ export class ERC1271ContractFacade {
     }
 
     async isValidSignature(contractAddress: EthereumAddress, payload: Uint8Array, signature: Uint8Array): Promise<boolean> {
-        const recoveredSignerUserId = toEthereumAddress(binaryToHex(recoverSignerUserId(signature, payload), true))
+        const recoveredSignerUserId = toUserId(recoverSignerUserId(signature, payload))
         const cacheKey = formCacheKey(contractAddress, recoveredSignerUserId)
         const cachedValue = this.publisherCache.get(cacheKey)
         if (cachedValue !== undefined) {
@@ -48,6 +48,5 @@ export class ERC1271ContractFacade {
             this.publisherCache.set(cacheKey, isValid)
             return isValid
         }
-
     }
 }

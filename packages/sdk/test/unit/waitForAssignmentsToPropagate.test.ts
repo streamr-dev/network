@@ -15,7 +15,7 @@ const messageSigner = new MessageSigner(authentication)
 
 async function makeMsg(ts: number, content: unknown): Promise<StreamMessage> {
     return messageSigner.createSignedMessage({
-        messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await authentication.getAddress(), 'msgChain'),
+        messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, await authentication.getUserId(), 'msgChain'),
         messageType: StreamMessageType.MESSAGE,
         content: utf8ToBinary(JSON.stringify(content)),
         contentType: ContentType.JSON,

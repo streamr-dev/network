@@ -12,22 +12,34 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- Add support for arbitrary length user IDs: (https://github.com/streamr-dev/network/pull/2774, https://github.com/streamr-dev/network/pull/2780)
+  - it is supported for `PUBLISH` and `SUBSCRIBE` permissions
+  - new `StreamrClient#getUserId()` method
 - Method `StreamrClient#getDiagnosticInfo()` provides diagnostic info about network (https://github.com/streamr-dev/network/pull/2740, https://github.com/streamr-dev/network/pull/2741)
 - Add accessors for stream metadata fields: (https://github.com/streamr-dev/network/pull/2825, https://github.com/streamr-dev/network/pull/2845)
   - `Stream#getPartitionCount()`
   - `Stream#getDescription()` and `Stream#setDescription()`
   - `Stream#getStorageDayCount()` and `Stream#setStorageDayCount()`
+- Add validation for public permissions (https://github.com/streamr-dev/network/pull/2819)
 
 #### Changed
 
+- **BREAKING CHANGE:** Rename `user` to `userId` in these interfaces: (https://github.com/streamr-dev/network/pull/2811)
+  - `UserPermissionAssignment`
+    - used in `grantPermissions()`, `revokePermissions()`, `getPermissions()` and `setPermissions()`
+  - `UserPermissionQuery`
+    - used in `hasPermission()`
+  - `SearchStreamsPermissionFilter`
+    - used in `searchStreams()`
 - **BREAKING CHANGE:** Type `StreamMetadata` is `Record<string, unknown>` (https://github.com/streamr-dev/network/pull/2825, https://github.com/streamr-dev/network/pull/2845)
   - Some new accessors available, see above
   - No default values are injected (https://github.com/streamr-dev/network/pull/2851)
 - **BREAKING CHANGE:** Method `Stream#update()` overwrites metadata instead of merging it (https://github.com/streamr-dev/network/pull/2826)
 - **BREAKING CHANGE:** Method `Stream#addToStorageNode()` doesn't wait for acknowledgment by default (https://github.com/streamr-dev/network/pull/2810)
-- Network-level changes
-  - Avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801) 
-  - Internal record `StreamPartitionInfo` format changed (https://github.com/streamr-dev/network/pull/2738, https://github.com/streamr-dev/network/pull/2790)
+- Upgrade `StreamRegistry` from v4 to v5 (https://github.com/streamr-dev/network/pull/2780)
+- Network-level changes:
+  - avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801) 
+  - internal record `StreamPartitionInfo` format changed (https://github.com/streamr-dev/network/pull/2738, https://github.com/streamr-dev/network/pull/2790)
 
 #### Deprecated
 
@@ -42,12 +54,12 @@ Changes before Tatum release are not documented in this file.
 
 - Fix WebRTC connections in Firefox (https://github.com/streamr-dev/network/pull/2746)
 - Fix flag expiration time in `Operator#getExpiredFlags()` (https://github.com/streamr-dev/network/pull/2739)
-- Network-level fixes
-  - Fix node discover in small topologies (e.g. ~2 nodes) (https://github.com/streamr-dev/network/pull/2786)
-  - Fix to time-to-data spike scenarios (https://github.com/streamr-dev/network/pull/2802)
-  - Make network node stop faster (https://github.com/streamr-dev/network/pull/2736)
-  - Reject requests after disconnection events (https://github.com/streamr-dev/network/pull/2760)
-  - Fix geoip database file validation (https://github.com/streamr-dev/network/pull/2783)  
+- Network-level fixes:
+  - fix node discover in small topologies (e.g. ~2 nodes) (https://github.com/streamr-dev/network/pull/2786)
+  - fix to time-to-data spike scenarios (https://github.com/streamr-dev/network/pull/2802)
+  - make network node stop faster (https://github.com/streamr-dev/network/pull/2736)
+  - reject requests after disconnection events (https://github.com/streamr-dev/network/pull/2760)
+  - fix geoip database file validation (https://github.com/streamr-dev/network/pull/2783)  
 
 #### Security
 
