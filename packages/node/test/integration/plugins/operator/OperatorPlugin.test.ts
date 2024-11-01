@@ -61,7 +61,7 @@ describe('OperatorPlugin', () => {
         const publisher = createClient(fastPrivateKey())
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
-            user: await publisher.getUserId()
+            userId: await publisher.getUserId()
         })
         const publishTimer = setInterval(async () => {
             await publisher.publish({ id: stream.id }, { foo: 'bar' })

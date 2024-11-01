@@ -60,7 +60,7 @@ describe('Subscriber', () => {
         it('with encryption', async () => {
             await stream.grantPermissions({
                 permissions: [StreamPermission.PUBLISH],
-                user: publisherWallet.address
+                userId: publisherWallet.address
             })
     
             const groupKey = GroupKey.generate()
@@ -112,7 +112,7 @@ describe('Subscriber', () => {
         it('with encryption', async () => {
             await stream.grantPermissions({
                 permissions: [StreamPermission.PUBLISH],
-                user: publisherWallet.address
+                userId: publisherWallet.address
             })
     
             const groupKey = GroupKey.generate()

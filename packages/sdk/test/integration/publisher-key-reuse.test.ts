@@ -33,7 +33,7 @@ describe('publisher key reuse', () => {
         stream = await publisher.createStream('/path')
         await stream.grantPermissions({
             permissions: [StreamPermission.SUBSCRIBE],
-            user: await subscriber.getUserId()
+            userId: await subscriber.getUserId()
         })
     })
 
@@ -60,7 +60,7 @@ describe('publisher key reuse', () => {
         const otherWallet = fastWallet()
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
-            user: otherWallet.address
+            userId: otherWallet.address
         })
 
         const sub = await subscriber.subscribe(stream.id)

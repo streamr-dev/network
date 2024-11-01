@@ -5,7 +5,7 @@ import { filter, map, unique } from '../utils/GeneratorUtils'
 import { StreamQueryResult } from './StreamRegistry'
 
 export interface SearchStreamsPermissionFilter {
-    user: HexString
+    userId: HexString
     /*
      * If possible, prefer allOf to anyOf because the query performance is better
      */
@@ -14,7 +14,7 @@ export interface SearchStreamsPermissionFilter {
     allowPublic: boolean
 }
 
-export type InternalSearchStreamsPermissionFilter = ChangeFieldType<SearchStreamsPermissionFilter, 'user', UserID>
+export type InternalSearchStreamsPermissionFilter = ChangeFieldType<SearchStreamsPermissionFilter, 'userId', UserID>
 
 export interface SearchStreamsOrderBy {
     field: 'id' | 'createdAt' | 'updatedAt'
@@ -29,7 +29,7 @@ export type SearchStreamsResultItem = {
 export const toInternalSearchStreamsPermissionFilter = (filter: SearchStreamsPermissionFilter): InternalSearchStreamsPermissionFilter => {
     return {
         ...filter,
-        user: toUserId(filter.user)
+        userId: toUserId(filter.userId)
     }
 }
 
@@ -119,7 +119,7 @@ const buildQuery = (
         id_gt: lastId
     }
     if (permissionFilter !== undefined) {
-        variables.userId_in = [permissionFilter.user]
+        variables.userId_in = [permissionFilter.userId]
         if (permissionFilter.allowPublic) {
             variables.userId_in.push(PUBLIC_PERMISSION_USER_ID)
         }

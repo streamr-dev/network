@@ -87,7 +87,7 @@ const validatePermissionAssignments = (assignments: InternalPermissionAssignment
             }
             if (isPublicPermissionAssignment(assignment)) {
                 throw createError('Public permission')
-            } else if (!isEthereumAddressUserId(assignment.user)) {
+            } else if (!isEthereumAddressUserId(assignment.userId)) {
                 throw createError('Non-Ethereum user id')
             }
         }
@@ -382,8 +382,8 @@ export class StreamRegistry {
             return this.streamRegistryContractReadonly.hasPublicPermission(streamId, permissionType)
         } else {
             const chainPermissions = query.allowPublic
-                ? await this.streamRegistryContractReadonly.getPermissionsForUserId(streamId, query.user)
-                : await this.streamRegistryContractReadonly.getDirectPermissionsForUserId(streamId, query.user)
+                ? await this.streamRegistryContractReadonly.getPermissionsForUserId(streamId, query.userId)
+                : await this.streamRegistryContractReadonly.getDirectPermissionsForUserId(streamId, query.userId)
             const permissions = convertChainPermissionsToStreamPermissions(chainPermissions)
             return permissions.includes(query.permission)
         }
@@ -435,7 +435,7 @@ export class StreamRegistry {
                     })
                 } else {
                     assignments.push({
-                        user: toUserId(permissionResult.userId),
+                        userId: toUserId(permissionResult.userId),
                         permissions
                     })
                 }
@@ -476,7 +476,7 @@ export class StreamRegistry {
         for (const assignment of assignments) {
             for (const permission of assignment.permissions) {
                 const solidityType = streamPermissionToSolidityType(permission)
-                const userId = isPublicPermissionAssignment(assignment) ? undefined : assignment.user
+                const userId = isPublicPermissionAssignment(assignment) ? undefined : assignment.userId
                 const txToSubmit = createTransaction(streamId, userId, solidityType)
                 await waitForTx(txToSubmit)
             }
@@ -496,7 +496,7 @@ export class StreamRegistry {
             this.clearStreamCache(streamId)
             streamIds.push(streamId)
             targets.push(item.assignments.map((assignment) => {
-                return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_USER_ID : assignment.user
+                return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_USER_ID : assignment.userId
             }))
             chainPermissions.push(item.assignments.map((assignment) => {
                 return convertStreamPermissionsToChainPermission(assignment.permissions)
@@ -515,7 +515,7 @@ export class StreamRegistry {
 
     private async isStreamPublisherOrSubscriber_nonCached(streamId: StreamID, userId: UserID, permission: StreamPermission): Promise<boolean> {
         try {
-            return await this.hasPermission({ streamId, user: userId, permission, allowPublic: true })
+            return await this.hasPermission({ streamId, userId, permission, allowPublic: true })
         } catch (err) {
             return streamContractErrorProcessor(err, streamId, 'StreamPermission')
         }

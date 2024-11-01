@@ -21,6 +21,13 @@ Changes before Tatum release are not documented in this file.
 
 #### Changed
 
+- **BREAKING CHANGE:** Rename `user` to `userId` in these interfaces: (https://github.com/streamr-dev/network/pull/2811)
+  - `UserPermissionAssignment`
+    - used in `grantPermissions()`, `revokePermissions()`, `getPermissions()` and `setPermissions()`
+  - `UserPermissionQuery`
+    - used in `hasPermission()`
+  - `SearchStreamsPermissionFilter`
+    - used in `searchStreams()`
 - **BREAKING CHANGE:** Field `StreamMetadata#partitions` is nullable (https://github.com/streamr-dev/network/pull/2825)
 - **BREAKING CHANGE:** Method `Stream#update()` overwrites metadata instead of merging it (https://github.com/streamr-dev/network/pull/2826)
 - **BREAKING CHANGE:** Method `Stream#addToStorageNode()` doesn't wait for acknowledgment by default (https://github.com/streamr-dev/network/pull/2810)

@@ -12,7 +12,7 @@ export enum StreamPermission {
 export interface UserPermissionQuery {
     streamId: string
     permission: StreamPermission
-    user: HexString
+    userId: HexString
     allowPublic: boolean
 }
 
@@ -24,11 +24,11 @@ export interface PublicPermissionQuery {
 
 export type PermissionQuery = UserPermissionQuery | PublicPermissionQuery
 
-export type InternalPermissionQuery = ChangeFieldType<UserPermissionQuery, 'user', UserID> | PublicPermissionQuery
+export type InternalPermissionQuery = ChangeFieldType<UserPermissionQuery, 'userId', UserID> | PublicPermissionQuery
 
 export interface UserPermissionAssignment {
     permissions: StreamPermission[]
-    user: HexString
+    userId: HexString
 }
 
 export interface PublicPermissionAssignment {
@@ -38,7 +38,7 @@ export interface PublicPermissionAssignment {
 
 export type PermissionAssignment = UserPermissionAssignment | PublicPermissionAssignment
 
-export type InternalPermissionAssignment = ChangeFieldType<UserPermissionAssignment, 'user', UserID> | PublicPermissionAssignment
+export type InternalPermissionAssignment = ChangeFieldType<UserPermissionAssignment, 'userId', UserID> | PublicPermissionAssignment
 
 export const PUBLIC_PERMISSION_USER_ID = '0x0000000000000000000000000000000000000000'
 
@@ -60,8 +60,8 @@ export const isPublicPermissionQuery = (query: InternalPermissionQuery): query i
 }
 
 export const toInternalPermissionQuery = (query: PermissionQuery): InternalPermissionQuery => {
-    return ('user' in query) 
-        ? { ...query, user: toUserId(query.user) }
+    return ('userId' in query) 
+        ? { ...query, userId: toUserId(query.userId) }
         : query
 }
 
@@ -70,8 +70,8 @@ export const isPublicPermissionAssignment = (assignment: InternalPermissionAssig
 }
 
 export const toInternalPermissionAssignment = (assignment: PermissionAssignment): InternalPermissionAssignment => {
-    return ('user' in assignment) 
-        ? { ...assignment, user: toUserId(assignment.user) }
+    return ('userId' in assignment) 
+        ? { ...assignment, userId: toUserId(assignment.userId) }
         : assignment
 }
 
