@@ -2,17 +2,17 @@ import 'reflect-metadata'
 
 import { fastWallet } from '@streamr/test-utils'
 import { collect } from '@streamr/utils'
+import { mock } from 'jest-mock-extended'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { MessageFactory } from '../../src/publish/MessageFactory'
+import { MessageSigner } from '../../src/signature/MessageSigner'
+import { SignatureValidator } from '../../src/signature/SignatureValidator'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createGroupKeyQueue, createStreamRegistry } from '../test-utils/utils'
-import { mock } from 'jest-mock-extended'
-import { SignatureValidator } from '../../src/signature/SignatureValidator'
-import { MessageSigner } from '../../src/signature/MessageSigner'
 
 describe('Resends', () => {
 
@@ -35,7 +35,7 @@ describe('Resends', () => {
             gapFillTimeout: 100
         })
         await stream.grantPermissions({
-            user: await subscriber.getAddress(),
+            user: await subscriber.getUserId(),
             permissions: [StreamPermission.SUBSCRIBE]
         })
         const groupKey = GroupKey.generate()

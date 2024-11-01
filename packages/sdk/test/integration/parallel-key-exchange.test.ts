@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastWallet } from '@streamr/test-utils'
-import { collect, toEthereumAddress, wait } from '@streamr/utils'
+import { collect, wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { mock } from 'jest-mock-extended'
 import range from 'lodash/range'
@@ -51,7 +51,7 @@ describe('parallel key exchange', () => {
                     privateKey: publisher.wallet.privateKey
                 }
             })
-            await publisher.client.addEncryptionKey(publisher.groupKey, toEthereumAddress(publisher.wallet.address))
+            await publisher.client.addEncryptionKey(publisher.groupKey, publisher.wallet.address)
         }))
     }, 20000)
 

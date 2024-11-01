@@ -13,6 +13,7 @@ Changes before Tatum release are not documented in this file.
 #### Added
 
 - Method `StreamrClient#getDiagnosticInfo()` provides diagnostic info about network (https://github.com/streamr-dev/network/pull/2740, https://github.com/streamr-dev/network/pull/2741)
+- Add `StreamrClient#getUserId()` method (https://github.com/streamr-dev/network/pull/2774)
 - Add `Stream#getPartitionCount()` method (https://github.com/streamr-dev/network/pull/2825)
 
 #### Changed

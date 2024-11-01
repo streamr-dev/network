@@ -1,11 +1,11 @@
 import { Wallet } from 'ethers'
 
-import { createRelativeTestStreamId } from '../test-utils/utils'
-import { StreamrClient } from '../../src/StreamrClient'
-import { Stream } from '../../src/Stream'
-import { StreamPermission } from '../../src/permission'
 import { fastWallet, fetchPrivateKeyWithGas, randomUserId } from '@streamr/test-utils'
-import { toEthereumAddress } from '@streamr/utils'
+import { toUserId } from '@streamr/utils'
+import { Stream } from '../../src/Stream'
+import { StreamrClient } from '../../src/StreamrClient'
+import { StreamPermission } from '../../src/permission'
+import { createRelativeTestStreamId } from '../test-utils/utils'
 
 const TIMEOUT = 40000
 
@@ -113,7 +113,7 @@ describe('Stream permissions', () => {
     it('get permissions', async () => {
         await stream.grantPermissions({ public: true, permissions: [StreamPermission.PUBLISH] })
         const permissions = await stream.getPermissions()
-        const owner = await client.getAddress()
+        const owner = await client.getUserId()
         return expect(permissions).toIncludeSameMembers([{
             user: owner,
             permissions: [
@@ -219,7 +219,7 @@ describe('Stream permissions', () => {
         const message = {
             foo: Date.now()
         }
-        const errorSnippet = `You don't have permission to publish to this stream. Using address: ${toEthereumAddress(otherUser.address)}`
+        const errorSnippet = `You don't have permission to publish to this stream. Using address: ${toUserId(otherUser.address)}`
         await expect(() => otherUserClient.publish(stream.id, message)).rejects.toThrow(errorSnippet)
         await client.grantPermissions(stream.id, {
             user: otherUser.address,

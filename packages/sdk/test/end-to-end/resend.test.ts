@@ -1,14 +1,14 @@
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { createTestStream, createTestClient } from '../test-utils/utils'
-import range from 'lodash/range'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { wait, waitForCondition } from '@streamr/utils'
-import { StreamrClient } from '../../src/StreamrClient'
+import { randomBytes } from 'crypto'
+import random from 'lodash/random'
+import range from 'lodash/range'
+import shuffle from 'lodash/shuffle'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
-import { randomBytes } from 'crypto'
-import shuffle from 'lodash/shuffle'
-import random from 'lodash/random'
+import { StreamrClient } from '../../src/StreamrClient'
+import { createTestClient, createTestStream } from '../test-utils/utils'
 
 const NUM_OF_MESSAGES = 20
 const MESSAGE_STORE_TIMEOUT = 10 * 1000
@@ -41,7 +41,7 @@ describe('resend', () => {
             stream = await createTestStream(publisherClient, module, { partitions: 3 })
             await stream.grantPermissions({
                 permissions: [StreamPermission.SUBSCRIBE],
-                user: await resendClient.getAddress()
+                user: await resendClient.getUserId()
             })
             await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE, { wait: true })
             for (const payload of payloads) {

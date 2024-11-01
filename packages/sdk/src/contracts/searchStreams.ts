@@ -1,11 +1,11 @@
-import { GraphQLQuery, Logger, StreamID, TheGraphClient, UserID, toEthereumAddress, toStreamID } from '@streamr/utils'
+import { ChangeFieldType, GraphQLQuery, HexString, Logger, StreamID, TheGraphClient, toStreamID, toUserId, UserID } from '@streamr/utils'
 import { Stream } from '../Stream'
 import { ChainPermissions, PUBLIC_PERMISSION_ADDRESS, StreamPermission, convertChainPermissionsToStreamPermissions } from '../permission'
 import { filter, map, unique } from '../utils/GeneratorUtils'
 import { StreamQueryResult } from './StreamRegistry'
 
 export interface SearchStreamsPermissionFilter {
-    user: string
+    user: HexString
     /*
      * If possible, prefer allOf to anyOf because the query performance is better
      */
@@ -14,6 +14,8 @@ export interface SearchStreamsPermissionFilter {
     allowPublic: boolean
 }
 
+export type InternalSearchStreamsPermissionFilter = ChangeFieldType<SearchStreamsPermissionFilter, 'user', UserID>
+
 export interface SearchStreamsOrderBy {
     field: 'id' | 'createdAt' | 'updatedAt'
     direction: 'asc' | 'desc'
@@ -21,13 +23,19 @@ export interface SearchStreamsOrderBy {
 
 export type SearchStreamsResultItem = {
     id: string
-    userAddress: UserID
     stream: StreamQueryResult
 } & ChainPermissions
 
+export const toInternalSearchStreamsPermissionFilter = (filter: SearchStreamsPermissionFilter): InternalSearchStreamsPermissionFilter => {
+    return {
+        ...filter,
+        user: toUserId(filter.user)
+    }
+}
+
 export const searchStreams = (
     term: string | undefined,
-    permissionFilter: SearchStreamsPermissionFilter | undefined,
+    permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
     orderBy: SearchStreamsOrderBy,
     theGraphClient: TheGraphClient,
     parseStream: (id: StreamID, metadata: string) => Stream,
@@ -51,7 +59,7 @@ export const searchStreams = (
 
 async function* fetchSearchStreamsResultFromTheGraph(
     term: string | undefined,
-    permissionFilter: SearchStreamsPermissionFilter | undefined,
+    permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
     orderBy: SearchStreamsOrderBy,
     theGraphClient: TheGraphClient,
 ): AsyncGenerator<SearchStreamsResultItem> {
@@ -101,7 +109,7 @@ async function* fetchSearchStreamsResultFromTheGraph(
  */
 const buildQuery = (
     term: string | undefined,
-    permissionFilter: SearchStreamsPermissionFilter | undefined,
+    permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
     orderBy: SearchStreamsOrderBy,
     lastId: string,
     pageSize: number
@@ -111,7 +119,7 @@ const buildQuery = (
         id_gt: lastId
     }
     if (permissionFilter !== undefined) {
-        variables.userAddress_in = [toEthereumAddress(permissionFilter.user)]
+        variables.userAddress_in = [permissionFilter.user]
         if (permissionFilter.allowPublic) {
             variables.userAddress_in.push(PUBLIC_PERMISSION_ADDRESS)
         }
@@ -146,7 +154,6 @@ const buildQuery = (
                     id
                     metadata
                 }
-                userAddress
                 canEdit
                 canDelete
                 publishExpiration

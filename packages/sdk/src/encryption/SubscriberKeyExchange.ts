@@ -1,4 +1,4 @@
-import { Logger, StreamPartID, StreamPartIDUtils, UserID } from '@streamr/utils'
+import { Logger, StreamPartID, StreamPartIDUtils, UserID, toUserId } from '@streamr/utils'
 import { Lifecycle, delay, inject, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -111,7 +111,7 @@ export class SubscriberKeyExchange {
                 StreamPartIDUtils.getStreamPartition(streamPartId),
                 Date.now(),
                 0,
-                erc1271contract === undefined ? await this.authentication.getAddress() : erc1271contract,
+                erc1271contract === undefined ? await this.authentication.getUserId() : toUserId(erc1271contract),
                 createRandomMsgChainId()
             ),
             content: convertGroupKeyRequestToBytes(requestContent),
@@ -140,11 +140,11 @@ export class SubscriberKeyExchange {
         }
     }
 
-    private async isAssignedToMe(streamPartId: StreamPartID, recipient: UserID, requestId: string): Promise<boolean> {
+    private async isAssignedToMe(streamPartId: StreamPartID, recipientId: UserID, requestId: string): Promise<boolean> {
         if (this.pendingRequests.has(requestId)) {
-            const authenticatedUser = await this.authentication.getAddress()
+            const authenticatedUser = await this.authentication.getUserId()
             const erc1271Contract = this.subscriber.getERC1271ContractAddress(streamPartId)
-            return (recipient === authenticatedUser) || (recipient === erc1271Contract)
+            return (recipientId === authenticatedUser) || ((erc1271Contract !== undefined) && (recipientId === toUserId(erc1271Contract)))
         }
         return false
     }

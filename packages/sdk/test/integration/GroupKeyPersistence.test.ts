@@ -66,7 +66,7 @@ describe('Group Key Persistence', () => {
                     privateKey: subscriberPrivateKey,
                 }
             })
-            const otherUser = await subscriber.getAddress()
+            const otherUser = await subscriber.getUserId()
             await stream.grantPermissions({
                 user: otherUser,
                 permissions: [StreamPermission.SUBSCRIBE]

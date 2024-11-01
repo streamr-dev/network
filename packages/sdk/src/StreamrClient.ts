@@ -3,7 +3,7 @@ import './utils/PatchTsyringe'
 
 import { DhtAddress } from '@streamr/dht'
 import { ProxyDirection } from '@streamr/trackerless-network'
-import { DEFAULT_PARTITION_COUNT, EthereumAddress, StreamID, TheGraphClient, toEthereumAddress, UserID } from '@streamr/utils'
+import { DEFAULT_PARTITION_COUNT, EthereumAddress, HexString, StreamID, TheGraphClient, toEthereumAddress, toUserId } from '@streamr/utils'
 import type { Overrides } from 'ethers'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
@@ -33,15 +33,15 @@ import { OperatorRegistry } from './contracts/OperatorRegistry'
 import { StorageNodeMetadata, StorageNodeRegistry } from './contracts/StorageNodeRegistry'
 import { StreamRegistry } from './contracts/StreamRegistry'
 import { StreamStorageRegistry } from './contracts/StreamStorageRegistry'
-import { SearchStreamsOrderBy, SearchStreamsPermissionFilter } from './contracts/searchStreams'
+import { SearchStreamsOrderBy, SearchStreamsPermissionFilter, toInternalSearchStreamsPermissionFilter } from './contracts/searchStreams'
 import { GroupKey } from './encryption/GroupKey'
 import { LocalGroupKeyStore, UpdateEncryptionKeyOptions } from './encryption/LocalGroupKeyStore'
 import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
 import { generateEthereumAccount as _generateEthereumAccount, getEthersOverrides as _getEthersOverrides } from './ethereumUtils'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
-import { PermissionAssignment, PermissionQuery } from './permission'
+import { PermissionAssignment, PermissionQuery, toInternalPermissionAssignment, toInternalPermissionQuery } from './permission'
 import { MessageListener, MessageStream } from './subscribe/MessageStream'
-import { ResendOptions, Resends } from './subscribe/Resends'
+import { ResendOptions, Resends, toInternalResendOptions } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
 import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
 import { initResendSubscription } from './subscribe/resendSubscription'
@@ -186,8 +186,8 @@ export class StreamrClient {
      * @remarks Keys will be added to the store automatically by the client as encountered. This method can be used to
      * manually add some known keys into the store.
      */
-    async addEncryptionKey(key: GroupKey, publisherId: string): Promise<void> {
-        await this.localGroupKeyStore.set(key.id, toEthereumAddress(publisherId), key.data)
+    async addEncryptionKey(key: GroupKey, publisherId: HexString): Promise<void> {
+        await this.localGroupKeyStore.set(key.id, toUserId(publisherId), key.data)
     }
 
     // --------------------------------------------------------------------------------------------
@@ -294,7 +294,7 @@ export class StreamrClient {
     ): Promise<MessageStream> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         const getStorageNodes = (streamId: StreamID) => this.streamStorageRegistry.getStorageNodes(streamId)
-        const pipeline = await this.resends.resend(streamPartId, options, getStorageNodes)
+        const pipeline = await this.resends.resend(streamPartId, toInternalResendOptions(options), getStorageNodes)
         const messageStream = new MessageStream(pipeline)
         if (onMessage !== undefined) {
             messageStream.useLegacyOnMessageHandler(onMessage)
@@ -423,7 +423,11 @@ export class StreamrClient {
         permissionFilter: SearchStreamsPermissionFilter | undefined,
         orderBy: SearchStreamsOrderBy = { field: 'id', direction: 'asc' }
     ): AsyncIterable<Stream> {
-        return this.streamRegistry.searchStreams(term, permissionFilter, orderBy)
+        return this.streamRegistry.searchStreams(
+            term,
+            (permissionFilter !== undefined) ? toInternalSearchStreamsPermissionFilter(permissionFilter) : undefined,
+            orderBy
+        )
     }
 
     // --------------------------------------------------------------------------------------------
@@ -431,16 +435,16 @@ export class StreamrClient {
     // --------------------------------------------------------------------------------------------
 
     /**
-     * Gets all ethereum addresses that have {@link StreamPermission.PUBLISH} permission to the stream.
+     * Gets all user ids that have {@link StreamPermission.PUBLISH} permission to the stream.
      */
-    getStreamPublishers(streamIdOrPath: string): AsyncIterable<EthereumAddress> {
+    getStreamPublishers(streamIdOrPath: string): AsyncIterable<HexString> {
         return this.streamRegistry.getStreamPublishers(streamIdOrPath)
     }
 
     /**
-     * Gets all ethereum addresses that have {@link StreamPermission.SUBSCRIBE} permission to the stream.
+     * Gets all user ids that have {@link StreamPermission.SUBSCRIBE} permission to the stream.
      */
-    getStreamSubscribers(streamIdOrPath: string): AsyncIterable<EthereumAddress> {
+    getStreamSubscribers(streamIdOrPath: string): AsyncIterable<HexString> {
         return this.streamRegistry.getStreamSubscribers(streamIdOrPath)
     }
 
@@ -448,7 +452,7 @@ export class StreamrClient {
      * Checks whether the given permission is in effect.
      */
     hasPermission(query: PermissionQuery): Promise<boolean> {
-        return this.streamRegistry.hasPermission(query)
+        return this.streamRegistry.hasPermission(toInternalPermissionQuery(query))
     }
 
     /**
@@ -462,14 +466,14 @@ export class StreamrClient {
      * Grants permissions on a given stream.
      */
     grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
-        return this.streamRegistry.grantPermissions(streamIdOrPath, ...assignments)
+        return this.streamRegistry.grantPermissions(streamIdOrPath, ...assignments.map(toInternalPermissionAssignment))
     }
 
     /**
      * Revokes permissions on a given stream.
      */
     revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
-        return this.streamRegistry.revokePermissions(streamIdOrPath, ...assignments)
+        return this.streamRegistry.revokePermissions(streamIdOrPath, ...assignments.map(toInternalPermissionAssignment))
     }
 
     /**
@@ -483,23 +487,25 @@ export class StreamrClient {
         streamId: string
         assignments: PermissionAssignment[]
     }[]): Promise<void> {
-        return this.streamRegistry.setPermissions(...items)
+        return this.streamRegistry.setPermissions(...items.map((item) => (
+            { ...item, assignments: item.assignments.map(toInternalPermissionAssignment) }
+        )))
     }
 
     /**
      * Checks whether a given ethereum address has {@link StreamPermission.PUBLISH} permission to a stream.
      */
-    async isStreamPublisher(streamIdOrPath: string, userAddress: string): Promise<boolean> {
+    async isStreamPublisher(streamIdOrPath: string, userId: HexString): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.streamRegistry.isStreamPublisher(streamId, toEthereumAddress(userAddress), false)
+        return this.streamRegistry.isStreamPublisher(streamId, toUserId(userId), false)
     }
 
     /**
      * Checks whether a given ethereum address has {@link StreamPermission.SUBSCRIBE} permission to a stream.
      */
-    async isStreamSubscriber(streamIdOrPath: string, userAddress: string): Promise<boolean> {
+    async isStreamSubscriber(streamIdOrPath: string, userId: HexString): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.streamRegistry.isStreamSubscriber(streamId, toEthereumAddress(userAddress), false)
+        return this.streamRegistry.isStreamSubscriber(streamId, toUserId(userId), false)
     }
 
     // --------------------------------------------------------------------------------------------
@@ -578,10 +584,17 @@ export class StreamrClient {
     }
 
     /**
-     * Gets the Ethereum address of the wallet associated with the current {@link StreamrClient} instance.
+     * Gets the user id (i.e. Ethereum address) of the wallet associated with the current {@link StreamrClient} instance.
      */
-    getAddress(): Promise<UserID> {
-        return this.authentication.getAddress()
+    async getUserId(): Promise<HexString> {
+        return await this.authentication.getUserId()
+    }
+
+    /**
+     * Alias to {@link getUserId|getUserId()}
+     */
+    getAddress(): Promise<HexString> {
+        return this.getUserId()
     }
 
     // --------------------------------------------------------------------------------------------
