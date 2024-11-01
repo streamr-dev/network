@@ -229,13 +229,26 @@ describe('Stream permissions', () => {
         await otherUserClient.destroy()
     }, TIMEOUT)
 
-    it('unsupported type for non-Ethereum user', async () => {
-        await expect(() => client.grantPermissions(stream.id, {
-            userId: toUserId(randomBytes(50)),
-            permissions: [StreamPermission.EDIT, StreamPermission.GRANT]
-        })).rejects.toThrowStreamrError({
-            message: 'Non-Ethereum user id is not supported for permission types: EDIT, GRANT',
-            code: 'UNSUPPORTED_OPERATION'
+    describe('validation', () => {
+
+        it('unsupported type for public permission', async () => {
+            await expect(() => client.grantPermissions(stream.id, {
+                public: true,
+                permissions: [StreamPermission.PUBLISH, StreamPermission.GRANT]
+            })).rejects.toThrowStreamrError({
+                message: 'Public permission is not supported for permission types: GRANT',
+                code: 'UNSUPPORTED_OPERATION'
+            })
+        })
+    
+        it('unsupported type for non-Ethereum user', async () => {
+            await expect(() => client.grantPermissions(stream.id, {
+                userId: toUserId(randomBytes(50)),
+                permissions: [StreamPermission.EDIT, StreamPermission.GRANT]
+            })).rejects.toThrowStreamrError({
+                message: 'Non-Ethereum user id is not supported for permission types: EDIT, GRANT',
+                code: 'UNSUPPORTED_OPERATION'
+            })
         })
     })
 })
