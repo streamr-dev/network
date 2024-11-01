@@ -584,10 +584,17 @@ export class StreamrClient {
     }
 
     /**
-     * Gets the user id (e.g. Ethereum address) of the wallet associated with the current {@link StreamrClient} instance.
+     * Gets the user id (i.e. Ethereum address) of the wallet associated with the current {@link StreamrClient} instance.
      */
     async getUserId(): Promise<HexString> {
         return await this.authentication.getUserId()
+    }
+
+    /**
+     * Alias to {@link getUserId|getUserId()}
+     */
+    getAddress(): Promise<HexString> {
+        return this.getUserId()
     }
 
     // --------------------------------------------------------------------------------------------
