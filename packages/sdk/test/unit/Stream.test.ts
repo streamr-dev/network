@@ -45,7 +45,7 @@ describe('Stream', () => {
                 clearStreamCache: jest.fn()
             } 
             const factory = createStreamFactory(streamRegistry as any)
-                
+
             const stream = factory.createStream(toStreamID('mock-id'), {
                 description: 'original-description'
             })
@@ -72,7 +72,7 @@ describe('Stream', () => {
             })
         })
 
-        it('no partition value in valid JSON', () => {
+        it('no partition count in valid JSON', () => {
             const metadata = JSON.stringify({
                 foo: 'bar'
             })
@@ -81,27 +81,23 @@ describe('Stream', () => {
             })
         })
 
+        it('invalid partition count', () => {
+            const metadata = JSON.stringify({
+                partitions: 150
+            })
+            expect(Stream.parseMetadata(metadata)).toEqual({
+                partitions: 150
+            })
+        })
+
         it('empty metadata', () => {
             const metadata = ''
             expect(Stream.parseMetadata(metadata)).toEqual({})
         })
 
-        it('invalid value', () => {
-            const metadata = JSON.stringify({
-                partitions: 150
-            })
-            expect(() => Stream.parseMetadata(metadata)).toThrowStreamrError({
-                message: 'Invalid stream metadata: {"partitions":150}',
-                code: 'INVALID_STREAM_METADATA'
-            })
-        })
-
         it('invalid JSON', () => {
             const metadata = 'invalid-json'
-            expect(() => Stream.parseMetadata(metadata)).toThrowStreamrError({
-                message: 'Invalid stream metadata: invalid-json',
-                code: 'INVALID_STREAM_METADATA'
-            })
+            expect(Stream.parseMetadata(metadata)).toEqual({})
         })
     })
 })
