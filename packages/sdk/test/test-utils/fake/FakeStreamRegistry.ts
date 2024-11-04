@@ -61,14 +61,13 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         }
     }
 
-    async updateStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
+    async updateStream(streamId: StreamID, metadata: StreamMetadata): Promise<void> {
         const registryItem = this.chain.getStream(streamId)
         if (registryItem === undefined) {
             throw new Error('Stream not found')
         } else {
             registryItem.metadata = metadata
         }
-        return this.streamFactory.createStream(streamId, metadata)
     }
 
     async hasPermission(query: InternalPermissionQuery): Promise<boolean> {
