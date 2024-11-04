@@ -38,6 +38,25 @@ describe('Stream', () => {
         })
     })
 
+    it('getPartitionCount', () => {
+        const stream = new Stream(
+            undefined as any,
+            { partitions: 150 },
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any
+        )
+        expect(() => stream.getPartitionCount()).toThrowStreamrError({
+            message: 'Invalid partition count: 150',
+            code: 'INVALID_STREAM_METADATA'
+        })
+    })
+
     describe('update', () => {
         it('fields not updated if transaction fails', async () => {
             const streamRegistry: Partial<StreamRegistry> = {

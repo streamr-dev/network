@@ -16,6 +16,7 @@ import { PublishMetadata, Publisher } from '../src/publish/Publisher'
 import { StrictStreamrClientConfig } from './Config'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { DEFAULT_PARTITION } from './StreamIDBuilder'
+import { StreamrClientError } from './StreamrClientError'
 import { StreamRegistry } from './contracts/StreamRegistry'
 import { StreamStorageRegistry } from './contracts/StreamStorageRegistry'
 import { StreamrClientEventEmitter } from './events'
@@ -140,7 +141,11 @@ export class Stream {
     getPartitionCount(): number {
         const metadataValue = this.getMetadata().partitions as number | undefined
         if (metadataValue !== undefined) {
-            ensureValidStreamPartitionCount(metadataValue)
+            try {
+                ensureValidStreamPartitionCount(metadataValue)
+            } catch {
+                throw new StreamrClientError(`Invalid partition count: ${metadataValue}`, 'INVALID_STREAM_METADATA')
+            }
         }
         return metadataValue ?? DEFAULT_PARTITION_COUNT
     }
