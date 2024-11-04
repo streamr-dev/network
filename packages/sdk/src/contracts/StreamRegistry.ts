@@ -260,7 +260,7 @@ export class StreamRegistry {
         }
     }
 
-    async updateStreamMetadata(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
+    async updateStreamMetadata(streamId: StreamID, metadata: StreamMetadata): Promise<void> {
         await this.connectToContract()
         const ethersOverrides = await getEthersOverrides(this.rpcProviderSource, this.config)
         await waitForTx(this.streamRegistryContract!.updateStreamMetadata(
@@ -269,7 +269,6 @@ export class StreamRegistry {
             ethersOverrides
         ))
         this.clearStreamCache(streamId)
-        return this.streamFactory.createStream(streamId, metadata)
     }
 
     async deleteStream(streamIdOrPath: string): Promise<void> {
