@@ -48,6 +48,7 @@ import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway, waitForTx } from './contract'
 import { InternalSearchStreamsPermissionFilter, SearchStreamsOrderBy, searchStreams as _searchStreams } from './searchStreams'
+import { parseMetadata } from '../StreamMetadata'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -160,7 +161,7 @@ export class StreamRegistry {
             targetEmitter: eventEmitter,
             transformation: (streamId: string, metadata: string, blockNumber: number) => ({
                 streamId: toStreamID(streamId),
-                metadata: Stream.parseMetadata(metadata),
+                metadata: parseMetadata(metadata),
                 blockNumber
             }),
             loggerFactory
@@ -293,7 +294,7 @@ export class StreamRegistry {
         } catch (err) {
             return streamContractErrorProcessor(err, streamId, 'StreamRegistry')
         }
-        return Stream.parseMetadata(metadata)
+        return parseMetadata(metadata)
     }
 
     searchStreams(

@@ -1,10 +1,10 @@
 import { UserID } from '@streamr/utils'
 import { StreamRegistry } from '../contracts/StreamRegistry'
+import { convertBytesToGroupKeyRequest, convertBytesToGroupKeyResponse } from '../protocol/oldStreamMessageBinaryUtils'
 import { StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
 import { StreamMessageError } from '../protocol/StreamMessageError'
-import { convertBytesToGroupKeyRequest, convertBytesToGroupKeyResponse } from '../protocol/oldStreamMessageBinaryUtils'
 import { SignatureValidator } from '../signature/SignatureValidator'
-import { getPartitionCount } from '../Stream'
+import { getPartitionCount } from '../StreamMetadata'
 
 export const validateStreamMessage = async (
     msg: StreamMessage,

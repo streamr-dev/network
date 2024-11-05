@@ -4,18 +4,18 @@ import {
     StreamID,
     StreamPartID,
     collect,
-    ensureValidStreamPartitionCount,
     merge, toEthereumAddress,
     toStreamPartID,
     withTimeout
 } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
+import { isNumber, isString } from 'lodash'
 import range from 'lodash/range'
 import { PublishMetadata, Publisher } from '../src/publish/Publisher'
 import { StrictStreamrClientConfig } from './Config'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { DEFAULT_PARTITION } from './StreamIDBuilder'
-import { StreamrClientError } from './StreamrClientError'
+import { getPartitionCount } from './StreamMetadata'
 import { StreamRegistry } from './contracts/StreamRegistry'
 import { StreamStorageRegistry } from './contracts/StreamStorageRegistry'
 import { StreamrClientEventEmitter } from './events'
@@ -32,7 +32,6 @@ import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
-import { isNumber, isString } from 'lodash'
 
 export type StreamMetadata = Record<string, unknown>
 
@@ -74,14 +73,6 @@ export const flatMerge = <TTarget>(...sources: (Partial<TTarget> | undefined)[])
         }
     }
     return result as TTarget
-}
-
-export const getPartitionCount = (metadata: StreamMetadata): number => {
-    const metadataValue = metadata.partitions as number | undefined
-    if (metadataValue !== undefined) {
-        ensureValidStreamPartitionCount(metadataValue)
-    }
-    return metadataValue ?? DEFAULT_PARTITION_COUNT
 }
 
 /**
@@ -335,37 +326,6 @@ export class Stream {
         const result = await this._publisher.publish(this.id, content, metadata)
         this._eventEmitter.emit('messagePublished', result)
         return convertStreamMessageToMessage(result)
-    }
-
-    /** @internal */
-    static parseMetadata(metadata: string): StreamMetadata {
-        // TODO we could pick the fields of StreamMetadata explicitly, so that this
-        // object can't contain extra fields
-        if (metadata === '') {
-            return {
-                partitions: DEFAULT_PARTITION_COUNT
-            }
-        }
-        const err = new StreamrClientError(`Invalid stream metadata: ${metadata}`, 'INVALID_STREAM_METADATA')
-        let json
-        try {
-            json = JSON.parse(metadata)
-        } catch (_ignored) {
-            throw err
-        }
-        if (json.partitions !== undefined) {
-            try {
-                ensureValidStreamPartitionCount(json.partitions)
-                return json
-            } catch (_ignored) {
-                throw err
-            }
-        } else {
-            return {
-                ...json,
-                partitions: DEFAULT_PARTITION_COUNT
-            }
-        }
     }
 
     /**

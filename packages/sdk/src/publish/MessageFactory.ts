@@ -1,6 +1,7 @@
-import { StreamID, keyToArrayIndex, utf8ToBinary, toUserId, UserID, toEthereumAddress } from '@streamr/utils'
+import { StreamID, UserID, keyToArrayIndex, toEthereumAddress, toUserId, utf8ToBinary } from '@streamr/utils'
 import random from 'lodash/random'
 import { Authentication } from '../Authentication'
+import { getPartitionCount } from '../StreamMetadata'
 import { StreamrClientError } from '../StreamrClientError'
 import { StreamRegistry } from '../contracts/StreamRegistry'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
@@ -21,7 +22,6 @@ import { formLookupKey } from '../utils/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { PublishMetadata } from './Publisher'
 import { createMessageRef, createRandomMsgChainId } from './messageChain'
-import { getPartitionCount } from '../Stream'
 
 export interface MessageFactoryOptions {
     streamId: StreamID
