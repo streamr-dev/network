@@ -73,7 +73,8 @@ describe('gap fill', () => {
         const storageNode = await startFailingStorageNode(new Error('expected'), environment)
         await stream.addToStorageNode(storageNode.getAddress())
         const subscriber = environment.createClient({
-            gapFillTimeout: 50
+            gapFillTimeout: 50,
+            retryResendAfter: 50
         })
         subscriber.addEncryptionKey(GROUP_KEY, publisherWallet.address)
         const sub = await subscriber.subscribe(stream.id)
