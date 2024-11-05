@@ -376,7 +376,9 @@ export class StreamrClient {
     async createStream(propsOrStreamIdOrPath: StreamMetadata & { id: string } | string): Promise<Stream> {
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
-        return this.streamRegistry.createStream(streamId, merge({ partitions: DEFAULT_PARTITION_COUNT }, omit(props, 'id') ))
+        const metadata = merge({ partitions: DEFAULT_PARTITION_COUNT }, omit(props, 'id') )
+        await this.streamRegistry.createStream(streamId, metadata)
+        return this.streamFactory.createStream(streamId, metadata)
     }
 
     /**
@@ -431,7 +433,8 @@ export class StreamrClient {
         return this.streamRegistry.searchStreams(
             term,
             (permissionFilter !== undefined) ? toInternalSearchStreamsPermissionFilter(permissionFilter) : undefined,
-            orderBy
+            orderBy,
+            this.streamFactory
         )
     }
 

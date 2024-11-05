@@ -38,7 +38,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         this.authentication = authentication
     }
 
-    async createStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
+    async createStream(streamId: StreamID, metadata: StreamMetadata): Promise<void> {
         if (this.chain.getStream(streamId) !== undefined) {
             throw new Error(`Stream already exists: ${streamId}`)
         }
@@ -50,7 +50,6 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
             permissions
         }
         this.chain.setStream(streamId, registryItem)
-        return this.streamFactory.createStream(streamId, metadata)
     }
 
     async getStreamMetadata(id: StreamID): Promise<StreamMetadata> {
