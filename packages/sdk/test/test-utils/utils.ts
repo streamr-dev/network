@@ -27,7 +27,8 @@ import { StreamrClientConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { DestroySignal } from '../../src/DestroySignal'
 import { PersistenceManager } from '../../src/PersistenceManager'
-import { Stream, StreamMetadata } from '../../src/Stream'
+import { Stream } from '../../src/Stream'
+import { StreamMetadata } from '../../src/StreamMetadata'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -188,8 +189,8 @@ export const createStreamRegistry = (opts?: {
     isStreamSubscriber?: boolean
 }): StreamRegistry => {
     return {
-        getStream: async () => ({
-            getPartitionCount: () => opts?.partitionCount ?? DEFAULT_PARTITION_COUNT
+        getStreamMetadata: async () => ({
+            partitions: opts?.partitionCount ?? DEFAULT_PARTITION_COUNT
         }),
         hasPublicSubscribePermission: async () => {
             return opts?.isPublicStream ?? false

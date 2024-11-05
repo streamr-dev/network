@@ -24,8 +24,10 @@ import { Message, convertStreamMessageToMessage } from './Message'
 import { MetricsPublisher } from './MetricsPublisher'
 import { NetworkNodeFacade } from './NetworkNodeFacade'
 import { RpcProviderSource } from './RpcProviderSource'
-import { Stream, StreamMetadata } from './Stream'
+import { Stream } from './Stream'
+import { StreamFactory } from './StreamFactory'
 import { StreamIDBuilder } from './StreamIDBuilder'
+import { StreamMetadata } from './StreamMetadata'
 import { StreamrClientError } from './StreamrClientError'
 import { ContractFactory } from './contracts/ContractFactory'
 import { Operator } from './contracts/Operator'
@@ -89,6 +91,7 @@ export class StreamrClient {
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
     private readonly operatorRegistry: OperatorRegistry
+    private readonly streamFactory: StreamFactory
     private readonly contractFactory: ContractFactory
     private readonly localGroupKeyStore: LocalGroupKeyStore
     private readonly theGraphClient: TheGraphClient
@@ -125,6 +128,7 @@ export class StreamrClient {
         this.streamStorageRegistry = container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
         this.storageNodeRegistry = container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
         this.operatorRegistry = container.resolve<OperatorRegistry>(OperatorRegistry)
+        this.streamFactory = container.resolve<StreamFactory>(StreamFactory)
         this.contractFactory = container.resolve<ContractFactory>(ContractFactory)
         this.localGroupKeyStore = container.resolve<LocalGroupKeyStore>(LocalGroupKeyStore)
         this.streamIdBuilder = container.resolve<StreamIDBuilder>(StreamIDBuilder)
@@ -355,7 +359,8 @@ export class StreamrClient {
      */
     async getStream(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.streamRegistry.getStream(streamId, false)
+        const metadata = await this.streamRegistry.getStreamMetadata(streamId, false)
+        return this.streamFactory.createStream(streamId, metadata)
     }
 
     /**
@@ -401,7 +406,7 @@ export class StreamrClient {
      */
     async updateStream(props: StreamMetadata & { id: string }): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
-        await this.streamRegistry.updateStream(streamId, omit(props, 'id'))
+        await this.streamRegistry.updateStreamMetadata(streamId, omit(props, 'id'))
     }
 
     /**

@@ -1,10 +1,8 @@
 import {
-    DEFAULT_PARTITION_COUNT,
     HexString,
     StreamID,
     StreamPartID,
     collect,
-    ensureValidStreamPartitionCount,
     toEthereumAddress,
     toStreamPartID,
     withTimeout
@@ -16,7 +14,7 @@ import { PublishMetadata, Publisher } from '../src/publish/Publisher'
 import { StrictStreamrClientConfig } from './Config'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { DEFAULT_PARTITION } from './StreamIDBuilder'
-import { StreamrClientError } from './StreamrClientError'
+import { StreamMetadata, getPartitionCount } from './StreamMetadata'
 import { StreamRegistry } from './contracts/StreamRegistry'
 import { StreamStorageRegistry } from './contracts/StreamStorageRegistry'
 import { StreamrClientEventEmitter } from './events'
@@ -33,8 +31,6 @@ import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
-
-export type StreamMetadata = Record<string, unknown>
 
 const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
 
@@ -123,11 +119,7 @@ export class Stream {
      * Updates the metadata of the stream.
      */
     async update(metadata: StreamMetadata): Promise<void> {
-        try {
-            await this._streamRegistry.updateStream(this.id, metadata)
-        } finally {
-            this._streamRegistry.clearStreamCache(this.id)
-        }
+        await this._streamRegistry.updateStreamMetadata(this.id, metadata)
         this.metadata = metadata
     }
 
@@ -139,15 +131,7 @@ export class Stream {
     }
 
     getPartitionCount(): number {
-        const metadataValue = this.getMetadata().partitions as number | undefined
-        if (metadataValue !== undefined) {
-            try {
-                ensureValidStreamPartitionCount(metadataValue)
-            } catch {
-                throw new StreamrClientError(`Invalid partition count: ${metadataValue}`, 'INVALID_STREAM_METADATA')
-            }
-        }
-        return metadataValue ?? DEFAULT_PARTITION_COUNT
+        return getPartitionCount(this.getMetadata())
     }
 
     getDescription(): string | undefined {
@@ -326,15 +310,6 @@ export class Stream {
         const result = await this._publisher.publish(this.id, content, metadata)
         this._eventEmitter.emit('messagePublished', result)
         return convertStreamMessageToMessage(result)
-    }
-
-    /** @internal */
-    static parseMetadata(metadata: string): StreamMetadata {
-        try {
-            return JSON.parse(metadata)
-        } catch (_ignored) {
-            return {}
-        }
     }
 
     /**

@@ -1,6 +1,6 @@
 import { EthereumAddress, Multimap, StreamID, UserID } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
-import { StreamMetadata } from '../../../src/Stream'
+import { StreamMetadata } from '../../../src/StreamMetadata'
 import { StorageNodeMetadata } from '../../../src/contracts/StorageNodeRegistry'
 import { StreamPermission } from '../../../src/permission'
 

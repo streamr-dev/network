@@ -2,9 +2,10 @@ import { Methods } from '@streamr/test-utils'
 import { Multimap, StreamID, UserID } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
-import { Stream, StreamMetadata } from '../../../src/Stream'
+import { Stream } from '../../../src/Stream'
 import { StreamFactory } from '../../../src/StreamFactory'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
+import { StreamMetadata } from '../../../src/StreamMetadata'
 import { StreamrClientError } from '../../../src/StreamrClientError'
 import { StreamRegistry } from '../../../src/contracts/StreamRegistry'
 import { InternalSearchStreamsPermissionFilter } from '../../../src/contracts/searchStreams'
@@ -52,16 +53,16 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         return this.streamFactory.createStream(streamId, metadata)
     }
 
-    async getStream(id: StreamID): Promise<Stream> {
+    async getStreamMetadata(id: StreamID): Promise<StreamMetadata> {
         const registryItem = this.chain.getStream(id)
         if (registryItem !== undefined) {
-            return this.streamFactory.createStream(id, registryItem.metadata)
+            return registryItem.metadata
         } else {
             throw new StreamrClientError('Stream not found: id=' + id, 'STREAM_NOT_FOUND')
         }
     }
 
-    async updateStream(streamId: StreamID, metadata: StreamMetadata): Promise<void> {
+    async updateStreamMetadata(streamId: StreamID, metadata: StreamMetadata): Promise<void> {
         const registryItem = this.chain.getStream(streamId)
         if (registryItem === undefined) {
             throw new Error('Stream not found')

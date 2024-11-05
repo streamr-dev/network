@@ -45,7 +45,7 @@ describe('searchStreams', () => {
             undefined,
             orderBy,
             theGraphClient as any,
-            () => ({} as any),
+            { createStream: () => {} } as any,
             mockLoggerFactory().createLogger(module),
         ))
 

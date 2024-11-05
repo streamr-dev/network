@@ -15,6 +15,7 @@ import { LoggerFactory } from '../utils/LoggerFactory'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { initContractEventGateway, waitForTx } from './contract'
+import { parseMetadata } from '../StreamMetadata'
 
 export interface StorageNodeAssignmentEvent {
     readonly streamId: StreamID
@@ -174,7 +175,7 @@ export class StreamStorageRegistry {
             }
         ))
         const streams = res.map((stream: any) => {
-            const props = Stream.parseMetadata(stream.metadata)
+            const props = parseMetadata(stream.metadata)
             return this.streamFactory.createStream(toStreamID(stream.id), props) // toStreamID() not strictly necessary
         })
         return {
