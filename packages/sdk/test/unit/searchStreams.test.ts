@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { StreamID, TheGraphClient, collect, toStreamID } from '@streamr/utils'
-import { StreamMetadata } from '../../src/Stream'
+import { StreamMetadata } from '../../src/StreamMetadata'
 import { SearchStreamsResultItem, searchStreams } from '../../src/contracts/searchStreams'
 import { mockLoggerFactory } from '../test-utils/utils'
 

@@ -19,8 +19,9 @@ import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { RpcProviderSource } from '../RpcProviderSource'
-import { Stream, StreamMetadata } from '../Stream'
+import { Stream } from '../Stream'
 import { StreamIDBuilder } from '../StreamIDBuilder'
+import { StreamMetadata, parseMetadata } from '../StreamMetadata'
 import { StreamrClientError } from '../StreamrClientError'
 import type { StreamRegistryV5 as StreamRegistryContract } from '../ethereumArtifacts/StreamRegistryV5'
 import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV5Abi.json'
@@ -48,7 +49,6 @@ import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway, waitForTx } from './contract'
 import { InternalSearchStreamsPermissionFilter, SearchStreamsOrderBy, searchStreams as _searchStreams } from './searchStreams'
-import { parseMetadata } from '../StreamMetadata'
 
 /*
  * On-chain registry of stream metadata and permissions.

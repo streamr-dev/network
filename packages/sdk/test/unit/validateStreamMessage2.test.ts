@@ -4,7 +4,7 @@ import { UserID, hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
 import { mock } from 'jest-mock-extended'
 import { Authentication } from '../../src/Authentication'
-import { StreamMetadata } from '../../src/Stream'
+import { StreamMetadata } from '../../src/StreamMetadata'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import {
     convertGroupKeyRequestToBytes,
