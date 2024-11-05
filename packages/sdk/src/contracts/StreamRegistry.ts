@@ -268,6 +268,7 @@ export class StreamRegistry {
             JSON.stringify(metadata),
             ethersOverrides
         ))
+        this.clearStreamCache(streamId)
         return this.streamFactory.createStream(streamId, metadata)
     }
 
