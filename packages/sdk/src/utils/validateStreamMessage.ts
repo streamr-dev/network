@@ -4,6 +4,7 @@ import { StreamMessage, StreamMessageType } from '../protocol/StreamMessage'
 import { StreamMessageError } from '../protocol/StreamMessageError'
 import { convertBytesToGroupKeyRequest, convertBytesToGroupKeyResponse } from '../protocol/oldStreamMessageBinaryUtils'
 import { SignatureValidator } from '../signature/SignatureValidator'
+import { getPartitionCount } from '../Stream'
 
 export const validateStreamMessage = async (
     msg: StreamMessage,
@@ -64,8 +65,8 @@ const validateMessage = async (
     streamRegistry: StreamRegistry
 ): Promise<void> => {
     const streamId = streamMessage.getStreamId()
-    const stream = await streamRegistry.getStream(streamId)
-    const partitionCount = stream.getPartitionCount()
+    const streamMetadata = await streamRegistry.getStreamMetadata(streamId)
+    const partitionCount = getPartitionCount(streamMetadata)
     if (streamMessage.getStreamPartition() < 0 || streamMessage.getStreamPartition() >= partitionCount) {
         throw new StreamMessageError(`Partition ${streamMessage.getStreamPartition()} is out of range (0..${partitionCount - 1})`, streamMessage)
     }

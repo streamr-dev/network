@@ -76,6 +76,14 @@ export const flatMerge = <TTarget>(...sources: (Partial<TTarget> | undefined)[])
     return result as TTarget
 }
 
+export const getPartitionCount = (metadata: StreamMetadata): number => {
+    const metadataValue = metadata.partitions as number | undefined
+    if (metadataValue !== undefined) {
+        ensureValidStreamPartitionCount(metadataValue)
+    }
+    return metadataValue ?? DEFAULT_PARTITION_COUNT
+}
+
 /**
  * A convenience API for managing and accessing an individual stream.
  *
@@ -148,11 +156,7 @@ export class Stream {
     }
 
     getPartitionCount(): number {
-        const metadataValue = this.getMetadata().partitions as number | undefined
-        if (metadataValue !== undefined) {
-            ensureValidStreamPartitionCount(metadataValue)
-        }
-        return metadataValue ?? DEFAULT_PARTITION_COUNT
+        return getPartitionCount(this.getMetadata())
     }
 
     getDescription(): string | undefined {

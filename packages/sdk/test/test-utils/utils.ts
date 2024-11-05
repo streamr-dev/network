@@ -188,8 +188,8 @@ export const createStreamRegistry = (opts?: {
     isStreamSubscriber?: boolean
 }): StreamRegistry => {
     return {
-        getStream: async () => ({
-            getPartitionCount: () => opts?.partitionCount ?? DEFAULT_PARTITION_COUNT
+        getStreamMetadata: async () => ({
+            partitions: opts?.partitionCount ?? DEFAULT_PARTITION_COUNT
         }),
         hasPublicSubscribePermission: async () => {
             return opts?.isPublicStream ?? false

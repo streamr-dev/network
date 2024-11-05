@@ -21,11 +21,12 @@ import { formLookupKey } from '../utils/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { PublishMetadata } from './Publisher'
 import { createMessageRef, createRandomMsgChainId } from './messageChain'
+import { getPartitionCount } from '../Stream'
 
 export interface MessageFactoryOptions {
     streamId: StreamID
     authentication: Authentication
-    streamRegistry: Pick<StreamRegistry, 'getStream' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'clearStreamCache'>
+    streamRegistry: Pick<StreamRegistry, 'getStreamMetadata' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'clearStreamCache'>
     groupKeyQueue: GroupKeyQueue
     signatureValidator: SignatureValidator
     messageSigner: MessageSigner
@@ -38,7 +39,8 @@ export class MessageFactory {
     private defaultPartition: number | undefined
     private readonly defaultMessageChainIds: Mapping<[partition: number], string>
     private readonly prevMsgRefs: Map<string, MessageRef> = new Map()
-    private readonly streamRegistry: Pick<StreamRegistry, 'getStream' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'clearStreamCache'>
+    // eslint-disable-next-line max-len
+    private readonly streamRegistry: Pick<StreamRegistry, 'getStreamMetadata' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'clearStreamCache'>
     private readonly groupKeyQueue: GroupKeyQueue
     private readonly signatureValidator: SignatureValidator
     private readonly messageSigner: MessageSigner
@@ -68,7 +70,8 @@ export class MessageFactory {
             throw new StreamrClientError(`You don't have permission to publish to this stream. Using address: ${publisherId}`, 'MISSING_PERMISSION')
         }
 
-        const partitionCount = (await this.streamRegistry.getStream(this.streamId)).getPartitionCount()
+        const streamMetadata = await this.streamRegistry.getStreamMetadata(this.streamId)
+        const partitionCount = getPartitionCount(streamMetadata)
         let partition
         if (explicitPartition !== undefined) {
             if ((explicitPartition < 0 || explicitPartition >= partitionCount)) {

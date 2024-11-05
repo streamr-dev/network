@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 import { randomEthereumAddress } from '@streamr/test-utils'
 import { StreamID, TheGraphClient, collect, toStreamID } from '@streamr/utils'
-import { Stream } from '../../src/Stream'
+import { StreamMetadata } from '../../src/Stream'
 import { SearchStreamsResultItem, searchStreams } from '../../src/contracts/searchStreams'
 import { mockLoggerFactory } from '../test-utils/utils'
 
@@ -46,7 +46,7 @@ describe('searchStreams', () => {
             undefined,
             orderBy,
             theGraphClient as any,
-            () => ({} as any),
+            undefined as any,
             mockLoggerFactory().createLogger(module),
         ))
 
@@ -65,20 +65,14 @@ describe('searchStreams', () => {
             createMockResultItem(stream3, JSON.stringify({ partitions: 150 })),
             createMockResultItem(stream4, JSON.stringify({ partitions: 44 }))
         ])
-        const parseStream = (id: StreamID, metadata: string): Stream => {
-            const props = Stream.parseMetadata(metadata)
-            return {
-                id,
-                getPartitionCount: () => props.partitions
-            } as any
-        }
+        const createStream = (id: StreamID, metadata: StreamMetadata) => ({ id, getPartitionCount: () => metadata.partitions })
 
         const streams = await collect(searchStreams(
             '/',
             undefined,
             { field: 'id', direction: 'asc' },
             theGraphClient as any,
-            parseStream,
+            { createStream } as any,
             mockLoggerFactory().createLogger(module),
         ))
 

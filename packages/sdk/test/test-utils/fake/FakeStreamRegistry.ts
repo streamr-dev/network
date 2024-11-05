@@ -52,10 +52,10 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
         return this.streamFactory.createStream(streamId, metadata)
     }
 
-    async getStream(id: StreamID): Promise<Stream> {
+    async getStreamMetadata(id: StreamID): Promise<StreamMetadata> {
         const registryItem = this.chain.getStream(id)
         if (registryItem !== undefined) {
-            return this.streamFactory.createStream(id, registryItem.metadata)
+            return registryItem.metadata
         } else {
             throw new StreamrClientError('Stream not found: id=' + id, 'STREAM_NOT_FOUND')
         }
