@@ -49,13 +49,7 @@ export const searchStreams = (
     logger.debug('Search for streams', { term, permissionFilter })
     return map(
         fetchSearchStreamsResultFromTheGraph(term, permissionFilter, orderBy, theGraphClient),
-        (item: SearchStreamsResultItem) => streamFactory.createStream(toStreamID(item.stream.id), parseMetadata(item.stream.metadata)),
-        (err: Error, item: SearchStreamsResultItem) => {
-            logger.debug('Omit stream from search result (invalid data)', {
-                streamId: item.stream.id,
-                reason: err?.message
-            })
-        }
+        (item: SearchStreamsResultItem) => streamFactory.createStream(toStreamID(item.stream.id), parseMetadata(item.stream.metadata))
     )
 }
 

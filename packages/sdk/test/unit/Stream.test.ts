@@ -1,8 +1,9 @@
 import 'reflect-metadata'
 
 import { toStreamID } from '@streamr/utils'
-import { StreamFactory } from '../../src/StreamFactory'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
+import { Stream } from '../../src/Stream'
+import { StreamFactory } from '../../src/StreamFactory'
 
 const createStreamFactory = (streamRegistry?: StreamRegistry) => {
     return new StreamFactory(
@@ -37,13 +38,32 @@ describe('Stream', () => {
         })
     })
 
+    it('getPartitionCount', () => {
+        const stream = new Stream(
+            undefined as any,
+            { partitions: 150 },
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any
+        )
+        expect(() => stream.getPartitionCount()).toThrowStreamrError({
+            message: 'Invalid partition count: 150',
+            code: 'INVALID_STREAM_METADATA'
+        })
+    })
+
     describe('update', () => {
         it('fields not updated if transaction fails', async () => {
             const streamRegistry: Partial<StreamRegistry> = {
                 updateStreamMetadata: jest.fn().mockRejectedValue(new Error('mock-error')),
             } 
             const factory = createStreamFactory(streamRegistry as any)
-                
+
             const stream = factory.createStream(toStreamID('mock-id'), {
                 description: 'original-description'
             })
