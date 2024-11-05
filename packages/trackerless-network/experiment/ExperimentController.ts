@@ -3,7 +3,7 @@ import { Socket } from 'net'
 import WebSocket from 'ws'
 import { ExperimentClientMessage, ExperimentServerMessage, Hello, InstructionCompleted, JoinExperiment, RoutingExperiment } from './generated/packages/trackerless-network/experiment/Experiment'
 import { Any } from '../generated/google/protobuf/any'
-import { StreamPartID, wait, waitForCondition } from '@streamr/utils'
+import { Logger, StreamPartID, StreamPartIDUtils, wait, waitForCondition } from '@streamr/utils'
 import { areEqualPeerDescriptors, PeerDescriptor } from '@streamr/dht'
 import { sample } from 'lodash'
 import fs from 'fs'
@@ -18,6 +18,8 @@ const writeResultsRow = (file: string, line: string) => {
     fs.mkdirSync(dir, { recursive: true })
     fs.appendFileSync(file, line + '\n')
 }
+
+const logger = new Logger(module)
 
 export class ExperimentController {
 
@@ -229,6 +231,15 @@ export class ExperimentController {
             await waitForCondition(() => this.resultsReceived.has(node), 30000, 50)
             joinedNodes.push(node)
         }
+    }
+
+    async runPropagationExperiment(streamPartId: string): Promise<void> {
+        const streamPart = StreamPartIDUtils.parse('experiment#0')
+        await this.joinStreamPart(streamPart)
+        logger.info('all nodes joined stream part')
+        await this.publishMessage(streamPart)
+        logger.info('all nodes published message')
+        await this.pullPropagationResults(streamPart)      
     }
 
     async startPublisher(publisher: string, streamPartId: string): Promise<void> {
