@@ -20,6 +20,10 @@ export const parseMetadata = (metadata: string): StreamMetadata => {
     }
     if (json.partitions !== undefined) {
         try {
+            // TODO either this validator or the validator is getPartitionCount() is redundant
+            // as all metadata JSONs procesed by getPartitionCount() are parsed via this
+            // this method
+            // see https://github.com/streamr-dev/network/pull/2854
             ensureValidStreamPartitionCount(json.partitions)
             return json
         } catch (_ignored) {
