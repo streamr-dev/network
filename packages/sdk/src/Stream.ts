@@ -131,7 +131,7 @@ export class Stream {
      * Updates the metadata of the stream.
      */
     async update(metadata: StreamMetadata): Promise<void> {
-        await this._streamRegistry.updateStream(this.id, metadata)
+        await this._streamRegistry.updateStreamMetadata(this.id, metadata)
         this.metadata = metadata
     }
 

@@ -45,7 +45,7 @@ describe('Stream', () => {
     describe('update', () => {
         it('fields not updated if transaction fails', async () => {
             const streamRegistry: Partial<StreamRegistry> = {
-                updateStream: jest.fn().mockRejectedValue(new Error('mock-error')),
+                updateStreamMetadata: jest.fn().mockRejectedValue(new Error('mock-error')),
                 clearStreamCache: jest.fn()
             } 
             const factory = createStreamFactory(streamRegistry as any)
