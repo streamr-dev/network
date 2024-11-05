@@ -44,11 +44,11 @@ import { filter, map } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { CacheAsyncFn, CacheAsyncFnType } from '../utils/caches'
 import { until } from '../utils/promises'
-import { StreamFactory } from './../StreamFactory'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway, waitForTx } from './contract'
 import { InternalSearchStreamsPermissionFilter, SearchStreamsOrderBy, searchStreams as _searchStreams } from './searchStreams'
+import { StreamFactory } from '../StreamFactory'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -111,7 +111,6 @@ export class StreamRegistry {
 
     private streamRegistryContract?: ObservableContract<StreamRegistryContract>
     private readonly streamRegistryContractReadonly: ObservableContract<StreamRegistryContract>
-    private readonly streamFactory: StreamFactory
     private readonly contractFactory: ContractFactory
     private readonly rpcProviderSource: RpcProviderSource
     private readonly theGraphClient: TheGraphClient
@@ -127,7 +126,6 @@ export class StreamRegistry {
 
     /** @internal */
     constructor(
-        streamFactory: StreamFactory,
         contractFactory: ContractFactory,
         rpcProviderSource: RpcProviderSource,
         theGraphClient: TheGraphClient,
@@ -137,7 +135,6 @@ export class StreamRegistry {
         eventEmitter: StreamrClientEventEmitter,
         loggerFactory: LoggerFactory
     ) {
-        this.streamFactory = streamFactory
         this.contractFactory = contractFactory
         this.rpcProviderSource = rpcProviderSource
         this.theGraphClient = theGraphClient
@@ -216,7 +213,7 @@ export class StreamRegistry {
         }
     }
 
-    async createStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
+    async createStream(streamId: StreamID, metadata: StreamMetadata): Promise<void> {
         const ethersOverrides = await getEthersOverrides(this.rpcProviderSource, this.config)
 
         const domainAndPath = StreamIDUtils.getDomainAndPath(streamId)
@@ -250,7 +247,6 @@ export class StreamRegistry {
             await this.ensureStreamIdInNamespaceOfAuthenticatedUser(domain, streamId)
             await waitForTx(this.streamRegistryContract!.createStream(path, JSON.stringify(metadata), ethersOverrides))
         }
-        return this.streamFactory.createStream(streamId, metadata)
     }
 
     private async ensureStreamIdInNamespaceOfAuthenticatedUser(address: EthereumAddress, streamId: StreamID): Promise<void> {
@@ -300,14 +296,15 @@ export class StreamRegistry {
     searchStreams(
         term: string | undefined,
         permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
-        orderBy: SearchStreamsOrderBy
+        orderBy: SearchStreamsOrderBy,
+        streamFactory: StreamFactory
     ): AsyncIterable<Stream> {
         return _searchStreams(
             term,
             permissionFilter,
             orderBy,
             this.theGraphClient,
-            this.streamFactory,
+            streamFactory,
             this.logger)
     }
 

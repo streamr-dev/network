@@ -130,7 +130,7 @@ export class Resends {
     /* eslint-disable indent */
     constructor(
         @inject(delay(() => StorageNodeRegistry)) storageNodeRegistry: StorageNodeRegistry,
-        messagePipelineFactory: MessagePipelineFactory,
+        @inject(delay(() => MessagePipelineFactory)) messagePipelineFactory: MessagePipelineFactory,
         @inject(ConfigInjectionToken) config: StrictStreamrClientConfig,
         loggerFactory: LoggerFactory
     ) {
