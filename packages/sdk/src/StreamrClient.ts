@@ -368,7 +368,7 @@ export class StreamrClient {
      *
      * @remarks when creating a stream with an ENS domain, the returned promise can take several minutes to settle
      */
-    async createStream(propsOrStreamIdOrPath: Partial<StreamMetadata> & { id: string } | string): Promise<Stream> {
+    async createStream(propsOrStreamIdOrPath: StreamMetadata & { id: string } | string): Promise<Stream> {
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
         return this.streamRegistry.createStream(streamId, merge({ partitions: DEFAULT_PARTITION_COUNT }, omit(props, 'id') ))
@@ -399,7 +399,7 @@ export class StreamrClient {
      *
      * @param props - the stream id and the metadata fields to be updated
      */
-    async updateStream(props: Partial<StreamMetadata> & { id: string }): Promise<void> {
+    async updateStream(props: StreamMetadata & { id: string }): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
         await this.streamRegistry.updateStream(streamId, omit(props, 'id'))
     }

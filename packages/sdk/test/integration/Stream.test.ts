@@ -100,9 +100,9 @@ describe('Stream', () => {
                     type: 'string',
                 },
             ]
-            expect(stream.getMetadata().config?.fields).toEqual(expectedFields)
+            expect((stream.getMetadata() as any).config?.fields).toEqual(expectedFields)
             const loadedStream = await client.getStream(stream.id)
-            expect(loadedStream.getMetadata().config?.fields).toEqual(expectedFields)
+            expect((loadedStream.getMetadata() as any).config?.fields).toEqual(expectedFields)
         })
 
         it('skips unsupported types', async () => {
@@ -128,9 +128,9 @@ describe('Stream', () => {
                     type: 'map',
                 },
             ]
-            expect(stream.getMetadata().config?.fields).toEqual(expectedFields)
+            expect((stream.getMetadata() as any).config.fields).toEqual(expectedFields)
             const loadedStream = await client.getStream(stream.id)
-            expect(loadedStream.getMetadata().config?.fields).toEqual(expectedFields)
+            expect((loadedStream.getMetadata() as any).config.fields).toEqual(expectedFields)
         })
     })
 })

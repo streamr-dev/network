@@ -23,7 +23,7 @@ describe('Stream', () => {
     it('initial fields', () => {
         const factory = createStreamFactory()
         const stream = factory.createStream(toStreamID('mock-id'), {})
-        expect(stream.getMetadata().config?.fields).toEqual([])
+        expect(stream.getMetadata()).toEqual({})
     })
 
     it('getMetadata', () => {
@@ -34,12 +34,7 @@ describe('Stream', () => {
         })
         expect(stream.getMetadata()).toEqual({
             partitions: 10,
-            storageDays: 20,
-            // currently we get also this field, which was not set by the user
-            // (maybe the test should pass also if this field is not present)
-            config: {
-                fields: []
-            }
+            storageDays: 20
         })
     })
 
@@ -77,21 +72,18 @@ describe('Stream', () => {
             })
         })
 
-        it('no value in valid JSON', () => {
+        it('no partition value in valid JSON', () => {
             const metadata = JSON.stringify({
                 foo: 'bar'
             })
             expect(Stream.parseMetadata(metadata)).toEqual({
-                partitions: 1,
                 foo: 'bar'
             })
         })
 
         it('empty metadata', () => {
             const metadata = ''
-            expect(Stream.parseMetadata(metadata)).toEqual({
-                partitions: 1
-            })
+            expect(Stream.parseMetadata(metadata)).toEqual({})
         })
 
         it('invalid value', () => {

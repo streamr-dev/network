@@ -45,7 +45,7 @@ export class StreamFactory {
         this.loggerFactory = loggerFactory
     }
 
-    createStream(id: StreamID, metadata: Partial<StreamMetadata>): Stream {
+    createStream(id: StreamID, metadata: StreamMetadata): Stream {
         return new Stream(
             id,
             metadata,
