@@ -10,6 +10,7 @@ import {
     withTimeout
 } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
+import { isNumber, isString } from 'lodash'
 import range from 'lodash/range'
 import { PublishMetadata, Publisher } from '../src/publish/Publisher'
 import { StrictStreamrClientConfig } from './Config'
@@ -32,7 +33,6 @@ import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
-import { isNumber, isString } from 'lodash'
 
 export type StreamMetadata = Record<string, unknown>
 
@@ -141,7 +141,11 @@ export class Stream {
     getPartitionCount(): number {
         const metadataValue = this.getMetadata().partitions as number | undefined
         if (metadataValue !== undefined) {
-            ensureValidStreamPartitionCount(metadataValue)
+            try {
+                ensureValidStreamPartitionCount(metadataValue)
+            } catch {
+                throw new StreamrClientError(`Invalid partition count: ${metadataValue}`, 'INVALID_STREAM_METADATA')
+            }
         }
         return metadataValue ?? DEFAULT_PARTITION_COUNT
     }
@@ -326,27 +330,10 @@ export class Stream {
 
     /** @internal */
     static parseMetadata(metadata: string): StreamMetadata {
-        // TODO we could pick the fields of StreamMetadata explicitly, so that this
-        // object can't contain extra fields
-        if (metadata === '') {
-            return {}
-        }
-        const err = new StreamrClientError(`Invalid stream metadata: ${metadata}`, 'INVALID_STREAM_METADATA')
-        let json
         try {
-            json = JSON.parse(metadata)
+            return JSON.parse(metadata)
         } catch (_ignored) {
-            throw err
-        }
-        if (json.partitions !== undefined) {
-            try {
-                ensureValidStreamPartitionCount(json.partitions)
-                return json
-            } catch (_ignored) {
-                throw err
-            }
-        } else {
-            return json
+            return {}
         }
     }
 
