@@ -1,10 +1,9 @@
 import {
-    DEFAULT_PARTITION_COUNT,
     HexString,
     StreamID,
     StreamPartID,
     collect,
-    merge, toEthereumAddress,
+    toEthereumAddress,
     toStreamPartID,
     withTimeout
 } from '@streamr/utils'
@@ -105,16 +104,7 @@ export class Stream {
         config: Pick<StrictStreamrClientConfig, '_timeouts'>
     ) {
         this.id = id
-        this.metadata = merge(
-            {
-                partitions: DEFAULT_PARTITION_COUNT,
-                // TODO should we remove this default or make config as a required StreamMetadata field?
-                config: {
-                    fields: []
-                }
-            },
-            metadata
-        )
+        this.metadata = metadata
         this._publisher = publisher
         this._subscriber = subscriber
         this._resends = resends

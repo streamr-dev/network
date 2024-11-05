@@ -1,8 +1,9 @@
 import 'reflect-metadata'
 
 import { toStreamID } from '@streamr/utils'
-import { StreamFactory } from '../../src/StreamFactory'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
+import { Stream } from '../../src/Stream'
+import { StreamFactory } from '../../src/StreamFactory'
 
 const createStreamFactory = (streamRegistry?: StreamRegistry) => {
     return new StreamFactory(
@@ -22,7 +23,7 @@ describe('Stream', () => {
     it('initial fields', () => {
         const factory = createStreamFactory()
         const stream = factory.createStream(toStreamID('mock-id'), {})
-        expect((stream.getMetadata() as any).config.fields).toEqual([])
+        expect(stream.getMetadata()).toEqual({})
     })
 
     it('getMetadata', () => {
@@ -33,12 +34,26 @@ describe('Stream', () => {
         })
         expect(stream.getMetadata()).toEqual({
             partitions: 10,
-            storageDays: 20,
-            // currently we get also this field, which was not set by the user
-            // (maybe the test should pass also if this field is not present)
-            config: {
-                fields: []
-            }
+            storageDays: 20
+        })
+    })
+
+    it('getPartitionCount', () => {
+        const stream = new Stream(
+            undefined as any,
+            { partitions: 150 },
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any,
+            undefined as any
+        )
+        expect(() => stream.getPartitionCount()).toThrowStreamrError({
+            message: 'Invalid partition count: 150',
+            code: 'INVALID_STREAM_METADATA'
         })
     })
 
@@ -48,7 +63,7 @@ describe('Stream', () => {
                 updateStreamMetadata: jest.fn().mockRejectedValue(new Error('mock-error')),
             } 
             const factory = createStreamFactory(streamRegistry as any)
-                
+
             const stream = factory.createStream(toStreamID('mock-id'), {
                 description: 'original-description'
             })

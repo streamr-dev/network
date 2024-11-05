@@ -20,34 +20,27 @@ describe('metadata', () => {
                 foo: 'bar'
             })
             expect(parseMetadata(metadata)).toEqual({
-                partitions: 1,
                 foo: 'bar'
             })
         })
     
         it('empty metadata', () => {
             const metadata = ''
-            expect(parseMetadata(metadata)).toEqual({
-                partitions: 1
-            })
+            expect(parseMetadata(metadata)).toEqual({})
         })
     
         it('invalid value', () => {
             const metadata = JSON.stringify({
                 partitions: 150
             })
-            expect(() => parseMetadata(metadata)).toThrowStreamrError({
-                message: 'Invalid stream metadata: {"partitions":150}',
-                code: 'INVALID_STREAM_METADATA'
+            expect(parseMetadata(metadata)).toEqual({
+                partitions: 150
             })
         })
     
         it('invalid JSON', () => {
             const metadata = 'invalid-json'
-            expect(() => parseMetadata(metadata)).toThrowStreamrError({
-                message: 'Invalid stream metadata: invalid-json',
-                code: 'INVALID_STREAM_METADATA'
-            })
+            expect(parseMetadata(metadata)).toEqual({})
         })
     })
 })
