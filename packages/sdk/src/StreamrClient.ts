@@ -404,9 +404,9 @@ export class StreamrClient {
      *
      * @param props - the stream id and the metadata fields to be updated
      */
-    async updateStream(props: StreamMetadata & { id: string }): Promise<Stream> {
+    async updateStream(props: StreamMetadata & { id: string }): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
-        return this.streamRegistry.updateStreamMetadata(streamId, omit(props, 'id'))
+        await this.streamRegistry.updateStreamMetadata(streamId, omit(props, 'id'))
     }
 
     /**
