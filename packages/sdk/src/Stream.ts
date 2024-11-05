@@ -32,42 +32,13 @@ import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
+import { isNumber, isString } from 'lodash'
 
-export interface StreamMetadata {
-    /**
-     * Determines how many partitions this stream consist of.
-     */
-    partitions?: number
+export type StreamMetadata = Record<string, unknown>
 
-    /**
-     * Human-readable description of this stream.
-     */
-    description?: string
+const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
 
-    /**
-     * Defines the structure of the content (payloads) of messages in this stream.
-     *
-     * @remarks Not validated, purely for informational value.
-     */
-    config?: {
-        fields: Field[]
-    }
-
-    /**
-     * If this stream is assigned to storage nodes, how many days (at minimum) should the data be retained for.
-     */
-    storageDays?: number
-
-    /**
-     * After how many hours of inactivity (i.e. no messages) should a stream be considered inactive. Purely for
-     * informational purposes.
-     */
-    inactivityThresholdHours?: number
-}
-
-export const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
-
-export interface Field {
+interface Field {
     name: string
     type: typeof VALID_FIELD_TYPES[number]
 }
@@ -126,7 +97,7 @@ export class Stream {
     /** @internal */
     constructor(
         id: StreamID,
-        metadata: Partial<StreamMetadata>,
+        metadata: StreamMetadata,
         publisher: Publisher,
         subscriber: Subscriber,
         resends: Resends,
@@ -160,7 +131,7 @@ export class Stream {
     /**
      * Updates the metadata of the stream.
      */
-    async update(metadata: Partial<StreamMetadata>): Promise<void> {
+    async update(metadata: StreamMetadata): Promise<void> {
         try {
             await this._streamRegistry.updateStream(this.id, metadata)
         } finally {
@@ -177,11 +148,49 @@ export class Stream {
     }
 
     getPartitionCount(): number {
-        const metadataValue = this.getMetadata().partitions
+        const metadataValue = this.getMetadata().partitions as number | undefined
         if (metadataValue !== undefined) {
             ensureValidStreamPartitionCount(metadataValue)
         }
         return metadataValue ?? DEFAULT_PARTITION_COUNT
+    }
+
+    getDescription(): string | undefined {
+        const value = this.getMetadata().description
+        if (isString(value)) {
+            return value
+        } else {
+            return undefined
+        }
+    }
+
+    async setDescription(description: string): Promise<void> {
+        await this.update({
+            ...this.getMetadata(),
+            description
+        })
+    }
+
+    /**
+     * Gets the value of `storageDays` field
+     */
+    getStorageDayCount(): number | undefined {
+        const value = this.getMetadata().storageDays
+        if (isNumber(value)) {
+            return value
+        } else {
+            return undefined
+        }
+    }
+
+    /**
+     * Sets the value of `storageDays` field
+     */
+    async setStorageDayCount(count: number): Promise<void> {
+        await this.update({
+            ...this.getMetadata(),
+            storageDays: count
+        })
     }
 
     /**

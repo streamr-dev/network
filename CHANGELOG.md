@@ -16,7 +16,10 @@ Changes before Tatum release are not documented in this file.
   - it is supported for `PUBLISH` and `SUBSCRIBE` permissions
   - new `StreamrClient#getUserId()` method
 - Method `StreamrClient#getDiagnosticInfo()` provides diagnostic info about network (https://github.com/streamr-dev/network/pull/2740, https://github.com/streamr-dev/network/pull/2741)
-- Add `Stream#getPartitionCount()` method (https://github.com/streamr-dev/network/pull/2825)
+- Add accessors for stream metadata fields: (https://github.com/streamr-dev/network/pull/2825, https://github.com/streamr-dev/network/pull/2845)
+  - `Stream#getPartitionCount()`
+  - `Stream#getDescription()` and `Stream#setDescription()`
+  - `Stream#getStorageDayCount()` and `Stream#setStorageDayCount()`
 - Add validation for public permissions (https://github.com/streamr-dev/network/pull/2819)
 
 #### Changed
@@ -28,7 +31,8 @@ Changes before Tatum release are not documented in this file.
     - used in `hasPermission()`
   - `SearchStreamsPermissionFilter`
     - used in `searchStreams()`
-- **BREAKING CHANGE:** Field `StreamMetadata#partitions` is nullable (https://github.com/streamr-dev/network/pull/2825)
+- **BREAKING CHANGE:** Type `StreamMetadata` is `Record<string, unknown>` (https://github.com/streamr-dev/network/pull/2825, https://github.com/streamr-dev/network/pull/2845)
+  - Some new accessors available, see above
 - **BREAKING CHANGE:** Method `Stream#update()` overwrites metadata instead of merging it (https://github.com/streamr-dev/network/pull/2826)
 - **BREAKING CHANGE:** Method `Stream#addToStorageNode()` doesn't wait for acknowledgment by default (https://github.com/streamr-dev/network/pull/2810)
 - Upgrade `StreamRegistry` from v4 to v5 (https://github.com/streamr-dev/network/pull/2780)
