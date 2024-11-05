@@ -7,9 +7,7 @@ export const parseMetadata = (metadata: string): StreamMetadata => {
     // TODO we could pick the fields of StreamMetadata explicitly, so that this
     // object can't contain extra fields
     if (metadata === '') {
-        return {
-            partitions: DEFAULT_PARTITION_COUNT
-        }
+        return {}
     }
     const err = new StreamrClientError(`Invalid stream metadata: ${metadata}`, 'INVALID_STREAM_METADATA')
     let json
@@ -30,10 +28,7 @@ export const parseMetadata = (metadata: string): StreamMetadata => {
             throw err
         }
     } else {
-        return {
-            ...json,
-            partitions: DEFAULT_PARTITION_COUNT
-        }
+        return json
     }
 }
 

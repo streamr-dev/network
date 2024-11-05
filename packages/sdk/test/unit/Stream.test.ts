@@ -22,7 +22,7 @@ describe('Stream', () => {
     it('initial fields', () => {
         const factory = createStreamFactory()
         const stream = factory.createStream(toStreamID('mock-id'), {})
-        expect((stream.getMetadata() as any).config.fields).toEqual([])
+        expect(stream.getMetadata()).toEqual({})
     })
 
     it('getMetadata', () => {
@@ -33,12 +33,7 @@ describe('Stream', () => {
         })
         expect(stream.getMetadata()).toEqual({
             partitions: 10,
-            storageDays: 20,
-            // currently we get also this field, which was not set by the user
-            // (maybe the test should pass also if this field is not present)
-            config: {
-                fields: []
-            }
+            storageDays: 20
         })
     })
 

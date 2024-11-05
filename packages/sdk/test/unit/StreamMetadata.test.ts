@@ -20,16 +20,13 @@ describe('metadata', () => {
                 foo: 'bar'
             })
             expect(parseMetadata(metadata)).toEqual({
-                partitions: 1,
                 foo: 'bar'
             })
         })
     
         it('empty metadata', () => {
             const metadata = ''
-            expect(parseMetadata(metadata)).toEqual({
-                partitions: 1
-            })
+            expect(parseMetadata(metadata)).toEqual({})
         })
     
         it('invalid value', () => {
