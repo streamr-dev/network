@@ -39,7 +39,9 @@
     "ts-essentials": "^10.0.2",
     "uuid": "^10.0.0",
     "yallist": "^5.0.0",
-    "ws": "^8.18.0"
+    "ws": "^8.18.0",
+    "@aws-sdk/client-auto-scaling": "3.684.0",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
@@ -47,6 +49,7 @@
     "@types/uuid": "^10.0.0",
     "@types/yallist": "^4.0.1",
     "expect": "^29.6.2",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "@aws-sdk/types": "3.679.0"
   }
 }
