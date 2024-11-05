@@ -547,7 +547,11 @@ export class StreamrClient {
      * @returns a list of {@link Stream} as well as `blockNumber` of result (i.e. blockchain state)
      */
     async getStoredStreams(storageNodeAddress: HexString): Promise<{ streams: Stream[], blockNumber: number }> {
-        return this.streamStorageRegistry.getStoredStreams(toEthereumAddress(storageNodeAddress))
+        const queryResult = await this.streamStorageRegistry.getStoredStreams(toEthereumAddress(storageNodeAddress))
+        return {
+            streams: queryResult.streams.map((item) => this.streamFactory.createStream(item.id, item.metadata)),
+            blockNumber: queryResult.blockNumber
+        }
     }
 
     /**
