@@ -5,7 +5,7 @@ import {
     StreamPartID,
     collect,
     ensureValidStreamPartitionCount,
-    merge, toEthereumAddress,
+    toEthereumAddress,
     toStreamPartID,
     withTimeout
 } from '@streamr/utils'
@@ -108,16 +108,7 @@ export class Stream {
         config: Pick<StrictStreamrClientConfig, '_timeouts'>
     ) {
         this.id = id
-        this.metadata = merge(
-            {
-                partitions: DEFAULT_PARTITION_COUNT,
-                // TODO should we remove this default or make config as a required StreamMetadata field?
-                config: {
-                    fields: []
-                }
-            },
-            metadata
-        )
+        this.metadata = metadata
         this._publisher = publisher
         this._subscriber = subscriber
         this._resends = resends
@@ -338,9 +329,7 @@ export class Stream {
         // TODO we could pick the fields of StreamMetadata explicitly, so that this
         // object can't contain extra fields
         if (metadata === '') {
-            return {
-                partitions: DEFAULT_PARTITION_COUNT
-            }
+            return {}
         }
         const err = new StreamrClientError(`Invalid stream metadata: ${metadata}`, 'INVALID_STREAM_METADATA')
         let json
@@ -357,10 +346,7 @@ export class Stream {
                 throw err
             }
         } else {
-            return {
-                ...json,
-                partitions: DEFAULT_PARTITION_COUNT
-            }
+            return json
         }
     }
 

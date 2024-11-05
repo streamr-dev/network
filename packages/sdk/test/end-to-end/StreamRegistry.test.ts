@@ -257,12 +257,7 @@ describe('StreamRegistry', () => {
             // check that other fields not overwritten
             const updatedStream = await client.getStream(createdStream.id)
             expect(updatedStream.getMetadata()).toEqual({
-                description,
-                // these are injected in the Stream constructor (maybe we'll change this functionality in the future)
-                partitions: 1,
-                config: {
-                    fields: []
-                }
+                description
             })
         }, TIMEOUT)
     })
