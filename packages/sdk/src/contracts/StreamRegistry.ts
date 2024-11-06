@@ -445,7 +445,6 @@ export class StreamRegistry {
         }, ...assignments)
     }
 
-    /* eslint-disable max-len */
     async revokePermissions(streamIdOrPath: string, ...assignments: InternalPermissionAssignment[]): Promise<void> {
         validatePermissionAssignments(assignments)
         const overrides = await getEthersOverrides(this.rpcProviderSource, this.config)

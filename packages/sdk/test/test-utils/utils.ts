@@ -66,7 +66,7 @@ const getTestName = (module: NodeModule): string => {
     return (groups !== null) ? groups[1] : moduleFilename
 }
 
-const randomTestRunId = process.pid != null ? process.pid : crypto.randomBytes(4).toString('hex')
+const randomTestRunId = process.pid ?? crypto.randomBytes(4).toString('hex')
 
 export const createRelativeTestStreamId = (module: NodeModule, suffix?: string): string => {
     return counterId(`/test/${randomTestRunId}/${getTestName(module)}${(suffix !== undefined) ? '-' + suffix : ''}`, '-')
@@ -88,7 +88,7 @@ export const getCreateClient = (
 
     return async function createClient(opts: any = {}, parentContainer?: DependencyContainer) {
         let key
-        if (opts.auth && opts.auth.privateKey) {
+        if (opts.auth?.privateKey) {
             key = opts.auth.privateKey
         } else {
             key = await fetchPrivateKeyWithGas()

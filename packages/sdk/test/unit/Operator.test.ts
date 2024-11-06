@@ -46,7 +46,7 @@ const EVENT_BLOCK_NUMBER = 222
 
 const createOperator = (eventName: string, args: any[]) => {
     const fakeContract = {
-        queryFilter: (eventNames: string[], fromBlock: number) => {
+        queryFilter: (eventNames: string[][], fromBlock: number) => {
             if ((eventNames[0][0] === eventName) && (fromBlock <= EVENT_BLOCK_NUMBER)) {
                 return [{
                     fragment: {

@@ -242,6 +242,7 @@ export class Operator {
                 }
             }`
         })
+        // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
         if (result.operator === null || result.operator.latestHeartbeatTimestamp === null) {
             return undefined
         } else {

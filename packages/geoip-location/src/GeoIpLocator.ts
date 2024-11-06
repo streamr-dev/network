@@ -97,7 +97,7 @@ export class GeoIpLocator {
         }
 
         const result = this.reader.get(ip)
-        if (!result || !result.location || !result.location.latitude || !result.location.longitude) {
+        if (!result?.location?.latitude || !result.location.longitude) {
             return undefined
         } else {
             return {

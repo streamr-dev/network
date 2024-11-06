@@ -2,8 +2,6 @@ import { IWebrtcConnection, WebrtcConnectionEvents } from './IWebrtcConnection'
 import { ConnectionType, IConnection, ConnectionID, ConnectionEvents } from '../IConnection'
 import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import EventEmitter from 'eventemitter3'
-// TODO: why does eslint import rule plugin not work?
-// eslint-disable-next-line import/no-unresolved
 import { DataChannel, DescriptionType, PeerConnection, initLogger } from 'node-datachannel'
 import { Logger } from '@streamr/utils'
 import { IllegalRtcPeerConnectionState } from '../../helpers/errors'

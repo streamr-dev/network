@@ -71,7 +71,7 @@ createClientCommand(async (client: StreamrClient, nodeId: string) => {
     if (peerDescriptor !== undefined) {
         const info = await networkNode.stack.fetchNodeInfo(peerDescriptor)
         const normalizedInfo = toNormalizeNodeInfo(info)
-        console.log(JSON.stringify(createNodeInfoOutput(normalizedInfo), undefined, 4))
+        console.info(JSON.stringify(createNodeInfoOutput(normalizedInfo), undefined, 4))
     } else {
         logger.error('No peer descriptor found')
     }

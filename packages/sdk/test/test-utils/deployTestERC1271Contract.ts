@@ -2,8 +2,6 @@ import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { createTestClient } from './utils'
 import { ContractFactory } from 'ethers'
 import TestERC1271Abi from '../ethereumArtifacts/TestERC1271Abi.json'
-// TODO: Why is eslint import rule complaining about this import?
-// eslint-disable-next-line import/no-unresolved
 import { TestERC1271 } from '../ethereumArtifacts/TestERC1271'
 import { EthereumAddress, Logger, toEthereumAddress } from '@streamr/utils'
 

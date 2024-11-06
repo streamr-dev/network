@@ -60,7 +60,7 @@ export class BatchManager extends EventEmitter {
     store(bucketId: BucketId, record: InsertRecord, doneCb?: DoneCallback): void {
         const batch = this.batches[bucketId]
 
-        if (batch && batch.isFull()) {
+        if (batch?.isFull()) {
             batch.lock()
         }
 
