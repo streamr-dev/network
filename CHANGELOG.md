@@ -21,6 +21,8 @@ Changes before Tatum release are not documented in this file.
   - `Stream#getDescription()` and `Stream#setDescription()`
   - `Stream#getStorageDayCount()` and `Stream#setStorageDayCount()`
 - Add validation for public permissions (https://github.com/streamr-dev/network/pull/2819)
+- Add `opts` parameter to `StreamrClient#addStreamToStorageNode` (https://github.com/streamr-dev/network/pull/2858)
+  - controls how long to wait for storage node to pick up on assignment
 
 #### Changed
 
