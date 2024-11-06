@@ -4,7 +4,7 @@ const controllerUrl = process.argv[2]
 const publicIp = process.argv[3]
 const id = process.argv[4]
 
-if (controllerUrl !== undefined) {
+if (controllerUrl === undefined) {
     throw new Error('controller url must be provided')
 }
 
