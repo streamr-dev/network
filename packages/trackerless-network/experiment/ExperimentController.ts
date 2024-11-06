@@ -63,6 +63,7 @@ export class ExperimentController {
                 ws.on('message', (msg) => {
                     const message = ExperimentClientMessage.fromBinary(new Uint8Array(msg as Buffer))
                     if (message.payload.oneofKind === 'hello') {
+                        logger.info('received hello message from ' + message.id)
                         this.clients.set(message.id, { socket: ws })
                     } else if (message.payload.oneofKind === 'started') {
                         const started = message.payload.started
