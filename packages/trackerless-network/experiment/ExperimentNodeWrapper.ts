@@ -39,10 +39,12 @@ const logger = new Logger(module)
 
 export class ExperimentNodeWrapper {
     private readonly id = v4()
+    private controllerUrl: string
     private node?: NetworkNode
     private socket?: WebSocket
-    constructor() {
+    constructor(controllerUrl: string) {
         logger.info('Created node: ', { id: this.id })
+        this.controllerUrl = controllerUrl
     }
 
     async run() {
@@ -100,7 +102,7 @@ export class ExperimentNodeWrapper {
     }
 
     async connect() {
-        this.socket = new WebSocket('ws://localhost:7070')
+        this.socket = new WebSocket(this.controllerUrl)
         this.socket.binaryType = 'nodebuffer'
         this.socket.on('open', () => {
             logger.info('connected to server')

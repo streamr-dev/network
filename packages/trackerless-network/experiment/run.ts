@@ -20,7 +20,7 @@ const logger = new Logger(module)
 
 const startLocalNodes = (nodeCount: number) => {
     for (let i = 0; i < nodeCount; i++) {
-        const node = new ExperimentNodeWrapper()
+        const node = new ExperimentNodeWrapper('ws://localhost:7070')
         node.connect() 
     }
 }
