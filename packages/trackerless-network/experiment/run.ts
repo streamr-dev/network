@@ -40,7 +40,7 @@ const startAwsNodes = async (nodeCount: number) => {
     const client = new AutoScalingClient(config)
     const params: SetDesiredCapacityCommandInput = {
         AutoScalingGroupName: "network-experiment",
-        DesiredCapacity: 1   
+        DesiredCapacity: nodeCount   
     }
     const command = new SetDesiredCapacityCommand(params)
     try {
