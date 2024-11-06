@@ -60,7 +60,6 @@ const run = async () => {
     } else if (env === 'aws') {
         await startAwsNodes(nodeCount)
         console.log('aws nodes started')
-        process.exit(0)
     }
 
     await controller.waitForClients()
