@@ -230,14 +230,9 @@ export class Stream {
     }
 
     /**
-     * Assigns the stream to a storage node.
-     *
+     * See {@link StreamrClient.addStreamToStorageNode | StreamrClient.addStreamToStorageNode}.
+     * 
      * @category Important
-     *
-     * @param opts - control how long to wait for storage node to pick up on assignment
-     * @returns If opts.wait=true, the promise resolves when the storage node acknowledges the assignment and
-     * is therefore ready to store published messages. If we don't receive the acknowledgment within the `timeout`,
-     * the promise rejects, but the assignment may still succeed later.
      */
     async addToStorageNode(storageNodeAddress: HexString, opts: { wait: boolean, timeout?: number } = { wait: false }): Promise<void> {
         await addStreamToStorageNode(
