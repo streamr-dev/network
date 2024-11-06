@@ -38,13 +38,16 @@ const createStreamMessage = (streamPartId: StreamPartID, id: string, region: num
 const logger = new Logger(module)
 
 export class ExperimentNodeWrapper {
-    private readonly id = v4()
-    private controllerUrl: string
+    private readonly id: string
+    private readonly controllerUrl: string
+    private readonly publicIp: string
     private node?: NetworkNode
     private socket?: WebSocket
-    constructor(controllerUrl: string) {
-        logger.info('Created node: ', { id: this.id })
+    constructor(controllerUrl: string, publicIp: string, id?: string) {
         this.controllerUrl = controllerUrl
+        this.publicIp = publicIp
+        this.id = id ?? v4()
+        logger.info('Created node: ', { id: this.id })
     }
 
     async run() {
@@ -58,7 +61,7 @@ export class ExperimentNodeWrapper {
             configPeerDescriptor = {
                 nodeId: hexToBinary(nodeId!),
                 websocket: {
-                    host: '127.0.0.1',
+                    host: this.publicIp,
                     port: 44444,
                     tls: false
                 },
