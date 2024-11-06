@@ -4,10 +4,8 @@ import {
     StreamPartID,
     collect,
     toEthereumAddress,
-    toStreamPartID,
-    withTimeout
+    toStreamPartID
 } from '@streamr/utils'
-import EventEmitter from 'eventemitter3'
 import { isNumber, isString } from 'lodash'
 import range from 'lodash/range'
 import { PublishMetadata, Publisher } from '../src/publish/Publisher'
@@ -27,10 +25,8 @@ import {
 } from './permission'
 import { Resends } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
-import { Subscription, SubscriptionEvents } from './subscribe/Subscription'
 import { LoggerFactory } from './utils/LoggerFactory'
-import { formStorageNodeAssignmentStreamId } from './utils/utils'
-import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
+import { addStreamToStorageNode } from './utils/addStreamToStorageNode'
 
 const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
 
@@ -244,43 +240,17 @@ export class Stream {
      * the promise rejects, but the assignment may still succeed later.
      */
     async addToStorageNode(storageNodeAddress: HexString, opts: { wait: boolean, timeout?: number } = { wait: false }): Promise<void> {
-        const normalizedNodeAddress = toEthereumAddress(storageNodeAddress)
-        if (opts.wait) {
-            // check whether the stream is already stored: the assignment event listener logic requires that
-            // there must not be an existing assignment (it timeouts if there is an existing assignment as the
-            // storage node doesn't send an assignment event in that case)
-            const isAlreadyStored = await this._streamStorageRegistry.isStoredStream(this.id, normalizedNodeAddress)
-            if (isAlreadyStored) {
-                return
-            }
-            let assignmentSubscription
-            try {
-                const streamPartId = toStreamPartID(formStorageNodeAssignmentStreamId(normalizedNodeAddress), DEFAULT_PARTITION)
-                assignmentSubscription = new Subscription(
-                    streamPartId,
-                    false,
-                    undefined,
-                    new EventEmitter<SubscriptionEvents>(),
-                    this._loggerFactory
-                )
-                await this._subscriber.add(assignmentSubscription)
-                const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, {
-                    id: this.id,
-                    partitions: this.getPartitionCount()
-                }, this._loggerFactory)
-                await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
-                await withTimeout(
-                    propagationPromise,
-                    opts.timeout ?? this._config._timeouts.storageNode.timeout,
-                    'storage node did not respond'
-                )
-            } finally {
-                this._streamRegistry.clearStreamCache(this.id)
-                await assignmentSubscription?.unsubscribe() // should never reject...
-            }
-        } else {
-            await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
-        }
+        await addStreamToStorageNode(
+            this.id,
+            toEthereumAddress(storageNodeAddress),
+            opts,
+            this.getPartitionCount(),
+            this._subscriber,
+            this._streamRegistry,
+            this._streamStorageRegistry,
+            this._loggerFactory,
+            this._config
+        )
     }
 
     /**
