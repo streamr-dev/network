@@ -382,7 +382,6 @@ async function getPubsubPlugins(): Promise<Partial<Record<PubsubPluginKey, Pubsu
  * Lets the user decide where to write the config file.
  */
 async function getStoragePath(): Promise<string> {
-    // eslint-disable-next-line no-constant-condition
     while (true) {
         const path = await input({
             message: 'Select a path to store the generated config in',

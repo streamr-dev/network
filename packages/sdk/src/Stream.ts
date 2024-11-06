@@ -1,21 +1,20 @@
 import {
-    DEFAULT_PARTITION_COUNT,
     HexString,
     StreamID,
     StreamPartID,
     collect,
-    ensureValidStreamPartitionCount,
-    merge, toEthereumAddress,
+    toEthereumAddress,
     toStreamPartID,
     withTimeout
 } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
+import { isNumber, isString } from 'lodash'
 import range from 'lodash/range'
 import { PublishMetadata, Publisher } from '../src/publish/Publisher'
 import { StrictStreamrClientConfig } from './Config'
 import { Message, convertStreamMessageToMessage } from './Message'
 import { DEFAULT_PARTITION } from './StreamIDBuilder'
-import { StreamrClientError } from './StreamrClientError'
+import { StreamMetadata, getPartitionCount } from './StreamMetadata'
 import { StreamRegistry } from './contracts/StreamRegistry'
 import { StreamStorageRegistry } from './contracts/StreamStorageRegistry'
 import { StreamrClientEventEmitter } from './events'
@@ -33,41 +32,9 @@ import { LoggerFactory } from './utils/LoggerFactory'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
 
-export interface StreamMetadata {
-    /**
-     * Determines how many partitions this stream consist of.
-     */
-    partitions?: number
+const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
 
-    /**
-     * Human-readable description of this stream.
-     */
-    description?: string
-
-    /**
-     * Defines the structure of the content (payloads) of messages in this stream.
-     *
-     * @remarks Not validated, purely for informational value.
-     */
-    config?: {
-        fields: Field[]
-    }
-
-    /**
-     * If this stream is assigned to storage nodes, how many days (at minimum) should the data be retained for.
-     */
-    storageDays?: number
-
-    /**
-     * After how many hours of inactivity (i.e. no messages) should a stream be considered inactive. Purely for
-     * informational purposes.
-     */
-    inactivityThresholdHours?: number
-}
-
-export const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
-
-export interface Field {
+interface Field {
     name: string
     type: typeof VALID_FIELD_TYPES[number]
 }
@@ -126,7 +93,7 @@ export class Stream {
     /** @internal */
     constructor(
         id: StreamID,
-        metadata: Partial<StreamMetadata>,
+        metadata: StreamMetadata,
         publisher: Publisher,
         subscriber: Subscriber,
         resends: Resends,
@@ -137,16 +104,7 @@ export class Stream {
         config: Pick<StrictStreamrClientConfig, '_timeouts'>
     ) {
         this.id = id
-        this.metadata = merge(
-            {
-                partitions: DEFAULT_PARTITION_COUNT,
-                // TODO should we remove this default or make config as a required StreamMetadata field?
-                config: {
-                    fields: []
-                }
-            },
-            metadata
-        )
+        this.metadata = metadata
         this._publisher = publisher
         this._subscriber = subscriber
         this._resends = resends
@@ -160,12 +118,8 @@ export class Stream {
     /**
      * Updates the metadata of the stream.
      */
-    async update(metadata: Partial<StreamMetadata>): Promise<void> {
-        try {
-            await this._streamRegistry.updateStream(this.id, metadata)
-        } finally {
-            this._streamRegistry.clearStreamCache(this.id)
-        }
+    async update(metadata: StreamMetadata): Promise<void> {
+        await this._streamRegistry.updateStreamMetadata(this.id, metadata)
         this.metadata = metadata
     }
 
@@ -177,11 +131,45 @@ export class Stream {
     }
 
     getPartitionCount(): number {
-        const metadataValue = this.getMetadata().partitions
-        if (metadataValue !== undefined) {
-            ensureValidStreamPartitionCount(metadataValue)
+        return getPartitionCount(this.getMetadata())
+    }
+
+    getDescription(): string | undefined {
+        const value = this.getMetadata().description
+        if (isString(value)) {
+            return value
+        } else {
+            return undefined
         }
-        return metadataValue ?? DEFAULT_PARTITION_COUNT
+    }
+
+    async setDescription(description: string): Promise<void> {
+        await this.update({
+            ...this.getMetadata(),
+            description
+        })
+    }
+
+    /**
+     * Gets the value of `storageDays` field
+     */
+    getStorageDayCount(): number | undefined {
+        const value = this.getMetadata().storageDays
+        if (isNumber(value)) {
+            return value
+        } else {
+            return undefined
+        }
+    }
+
+    /**
+     * Sets the value of `storageDays` field
+     */
+    async setStorageDayCount(count: number): Promise<void> {
+        await this.update({
+            ...this.getMetadata(),
+            storageDays: count
+        })
     }
 
     /**
@@ -322,37 +310,6 @@ export class Stream {
         const result = await this._publisher.publish(this.id, content, metadata)
         this._eventEmitter.emit('messagePublished', result)
         return convertStreamMessageToMessage(result)
-    }
-
-    /** @internal */
-    static parseMetadata(metadata: string): StreamMetadata {
-        // TODO we could pick the fields of StreamMetadata explicitly, so that this
-        // object can't contain extra fields
-        if (metadata === '') {
-            return {
-                partitions: DEFAULT_PARTITION_COUNT
-            }
-        }
-        const err = new StreamrClientError(`Invalid stream metadata: ${metadata}`, 'INVALID_STREAM_METADATA')
-        let json
-        try {
-            json = JSON.parse(metadata)
-        } catch (_ignored) {
-            throw err
-        }
-        if (json.partitions !== undefined) {
-            try {
-                ensureValidStreamPartitionCount(json.partitions)
-                return json
-            } catch (_ignored) {
-                throw err
-            }
-        } else {
-            return {
-                ...json,
-                partitions: DEFAULT_PARTITION_COUNT
-            }
-        }
     }
 
     /**

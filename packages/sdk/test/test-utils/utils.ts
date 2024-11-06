@@ -27,7 +27,8 @@ import { StreamrClientConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { DestroySignal } from '../../src/DestroySignal'
 import { PersistenceManager } from '../../src/PersistenceManager'
-import { Stream, StreamMetadata } from '../../src/Stream'
+import { Stream } from '../../src/Stream'
+import { StreamMetadata } from '../../src/StreamMetadata'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -65,13 +66,13 @@ const getTestName = (module: NodeModule): string => {
     return (groups !== null) ? groups[1] : moduleFilename
 }
 
-const randomTestRunId = process.pid != null ? process.pid : crypto.randomBytes(4).toString('hex')
+const randomTestRunId = process.pid ?? crypto.randomBytes(4).toString('hex')
 
 export const createRelativeTestStreamId = (module: NodeModule, suffix?: string): string => {
     return counterId(`/test/${randomTestRunId}/${getTestName(module)}${(suffix !== undefined) ? '-' + suffix : ''}`, '-')
 }
 
-export const createTestStream = async (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamMetadata>): Promise<Stream> => {
+export const createTestStream = async (streamrClient: StreamrClient, module: NodeModule, props?: StreamMetadata): Promise<Stream> => {
     const stream = await streamrClient.createStream({
         id: createRelativeTestStreamId(module),
         ...props
@@ -87,7 +88,7 @@ export const getCreateClient = (
 
     return async function createClient(opts: any = {}, parentContainer?: DependencyContainer) {
         let key
-        if (opts.auth && opts.auth.privateKey) {
+        if (opts.auth?.privateKey) {
             key = opts.auth.privateKey
         } else {
             key = await fetchPrivateKeyWithGas()
@@ -188,8 +189,8 @@ export const createStreamRegistry = (opts?: {
     isStreamSubscriber?: boolean
 }): StreamRegistry => {
     return {
-        getStream: async () => ({
-            getPartitionCount: () => opts?.partitionCount ?? DEFAULT_PARTITION_COUNT
+        getStreamMetadata: async () => ({
+            partitions: opts?.partitionCount ?? DEFAULT_PARTITION_COUNT
         }),
         hasPublicSubscribePermission: async () => {
             return opts?.isPublicStream ?? false

@@ -1,12 +1,11 @@
 import { EthereumAddress, Logger, StreamID, TheGraphClient, collect, toEthereumAddress, toStreamID } from '@streamr/utils'
 import min from 'lodash/min'
-import { Lifecycle, delay, inject, scoped } from 'tsyringe'
+import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { RpcProviderSource } from '../RpcProviderSource'
-import { Stream } from '../Stream'
-import { StreamFactory } from '../StreamFactory'
 import { StreamIDBuilder } from '../StreamIDBuilder'
+import { StreamMetadata, parseMetadata } from '../StreamMetadata'
 import type { StreamStorageRegistryV2 as StreamStorageRegistryContract } from '../ethereumArtifacts/StreamStorageRegistryV2'
 import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageRegistryV2Abi.json'
 import { getEthersOverrides } from '../ethereumUtils'
@@ -36,7 +35,6 @@ export class StreamStorageRegistry {
 
     private streamStorageRegistryContract?: StreamStorageRegistryContract
     private readonly streamStorageRegistryContractReadonly: StreamStorageRegistryContract
-    private readonly streamFactory: StreamFactory
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly contractFactory: ContractFactory
     private readonly rpcProviderSource: RpcProviderSource
@@ -47,7 +45,6 @@ export class StreamStorageRegistry {
 
     /* eslint-disable indent */
     constructor(
-        @inject(delay(() => StreamFactory)) streamFactory: StreamFactory,
         streamIdBuilder: StreamIDBuilder,
         contractFactory: ContractFactory,
         rpcProviderSource: RpcProviderSource,
@@ -57,7 +54,6 @@ export class StreamStorageRegistry {
         eventEmitter: StreamrClientEventEmitter,
         loggerFactory: LoggerFactory
     ) {
-        this.streamFactory = streamFactory
         this.streamIdBuilder = streamIdBuilder
         this.contractFactory = contractFactory
         this.rpcProviderSource = rpcProviderSource
@@ -144,7 +140,7 @@ export class StreamStorageRegistry {
         return await this.streamStorageRegistryContractReadonly.isStorageNodeOf(streamId, nodeAddress)
     }
 
-    async getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
+    async getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: { id: StreamID, metadata: StreamMetadata }[], blockNumber: number }> {
         this.logger.debug('Get stored streams of storage node', { nodeAddress })
         const blockNumbers: number[] = []
         const res = await collect(this.theGraphClient.queryEntities(
@@ -174,8 +170,7 @@ export class StreamStorageRegistry {
             }
         ))
         const streams = res.map((stream: any) => {
-            const props = Stream.parseMetadata(stream.metadata)
-            return this.streamFactory.createStream(toStreamID(stream.id), props) // toStreamID() not strictly necessary
+            return { id: toStreamID(stream.id), metadata: parseMetadata(stream.metadata) } // toStreamID() not strictly necessary
         })
         return {
             streams,

@@ -19,8 +19,9 @@ import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { RpcProviderSource } from '../RpcProviderSource'
-import { Stream, StreamMetadata } from '../Stream'
+import { Stream } from '../Stream'
 import { StreamIDBuilder } from '../StreamIDBuilder'
+import { StreamMetadata, parseMetadata } from '../StreamMetadata'
 import { StreamrClientError } from '../StreamrClientError'
 import type { StreamRegistryV5 as StreamRegistryContract } from '../ethereumArtifacts/StreamRegistryV5'
 import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV5Abi.json'
@@ -43,11 +44,11 @@ import { filter, map } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { CacheAsyncFn, CacheAsyncFnType } from '../utils/caches'
 import { until } from '../utils/promises'
-import { StreamFactory } from './../StreamFactory'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway, waitForTx } from './contract'
 import { InternalSearchStreamsPermissionFilter, SearchStreamsOrderBy, searchStreams as _searchStreams } from './searchStreams'
+import { StreamFactory } from '../StreamFactory'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -110,7 +111,6 @@ export class StreamRegistry {
 
     private streamRegistryContract?: ObservableContract<StreamRegistryContract>
     private readonly streamRegistryContractReadonly: ObservableContract<StreamRegistryContract>
-    private readonly streamFactory: StreamFactory
     private readonly contractFactory: ContractFactory
     private readonly rpcProviderSource: RpcProviderSource
     private readonly theGraphClient: TheGraphClient
@@ -119,14 +119,13 @@ export class StreamRegistry {
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>
     private readonly authentication: Authentication
     private readonly logger: Logger
-    private readonly getStream_cached: CacheAsyncFnType<[StreamID], Stream, string>
+    private readonly getStreamMetadata_cached: CacheAsyncFnType<[StreamID], StreamMetadata, string>
     private readonly isStreamPublisher_cached: CacheAsyncFnType<[StreamID, UserID], boolean, string>
     private readonly isStreamSubscriber_cached: CacheAsyncFnType<[StreamID, UserID], boolean, string>
     private readonly hasPublicSubscribePermission_cached: CacheAsyncFnType<[StreamID], boolean, string>
 
     /** @internal */
     constructor(
-        streamFactory: StreamFactory,
         contractFactory: ContractFactory,
         rpcProviderSource: RpcProviderSource,
         theGraphClient: TheGraphClient,
@@ -136,7 +135,6 @@ export class StreamRegistry {
         eventEmitter: StreamrClientEventEmitter,
         loggerFactory: LoggerFactory
     ) {
-        this.streamFactory = streamFactory
         this.contractFactory = contractFactory
         this.rpcProviderSource = rpcProviderSource
         this.theGraphClient = theGraphClient
@@ -160,13 +158,13 @@ export class StreamRegistry {
             targetEmitter: eventEmitter,
             transformation: (streamId: string, metadata: string, blockNumber: number) => ({
                 streamId: toStreamID(streamId),
-                metadata: Stream.parseMetadata(metadata),
+                metadata: parseMetadata(metadata),
                 blockNumber
             }),
             loggerFactory
         })
-        this.getStream_cached = CacheAsyncFn((streamId: StreamID) => {
-            return this.getStream_nonCached(streamId)
+        this.getStreamMetadata_cached = CacheAsyncFn((streamId: StreamID) => {
+            return this.getStreamMetadata_nonCached(streamId)
         }, {
             ...config.cache,
             cacheKey: ([streamId]): string => {
@@ -203,11 +201,6 @@ export class StreamRegistry {
         })
     }
 
-    private parseStream(id: StreamID, metadata: string): Stream {
-        const props = Stream.parseMetadata(metadata)
-        return this.streamFactory.createStream(id, props)
-    }
-
     private async connectToContract(): Promise<void> {
         if (this.streamRegistryContract === undefined) {
             const chainSigner = await this.authentication.getTransactionSigner(this.rpcProviderSource)
@@ -220,7 +213,7 @@ export class StreamRegistry {
         }
     }
 
-    async createStream(streamId: StreamID, metadata: StreamMetadata): Promise<Stream> {
+    async createStream(streamId: StreamID, metadata: StreamMetadata): Promise<void> {
         const ethersOverrides = await getEthersOverrides(this.rpcProviderSource, this.config)
 
         const domainAndPath = StreamIDUtils.getDomainAndPath(streamId)
@@ -254,7 +247,6 @@ export class StreamRegistry {
             await this.ensureStreamIdInNamespaceOfAuthenticatedUser(domain, streamId)
             await waitForTx(this.streamRegistryContract!.createStream(path, JSON.stringify(metadata), ethersOverrides))
         }
-        return this.streamFactory.createStream(streamId, metadata)
     }
 
     private async ensureStreamIdInNamespaceOfAuthenticatedUser(address: EthereumAddress, streamId: StreamID): Promise<void> {
@@ -264,9 +256,7 @@ export class StreamRegistry {
         }
     }
 
-    // TODO maybe we should require metadata to be StreamMetadata instead of Partial<StreamMetadata>
-    // Most likely the contract doesn't make any merging (like we do in Stream#update)?
-    async updateStream(streamId: StreamID, metadata: Partial<StreamMetadata>): Promise<Stream> {
+    async updateStreamMetadata(streamId: StreamID, metadata: StreamMetadata): Promise<void> {
         await this.connectToContract()
         const ethersOverrides = await getEthersOverrides(this.rpcProviderSource, this.config)
         await waitForTx(this.streamRegistryContract!.updateStreamMetadata(
@@ -274,7 +264,7 @@ export class StreamRegistry {
             JSON.stringify(metadata),
             ethersOverrides
         ))
-        return this.streamFactory.createStream(streamId, metadata)
+        this.clearStreamCache(streamId)
     }
 
     async deleteStream(streamIdOrPath: string): Promise<void> {
@@ -293,27 +283,28 @@ export class StreamRegistry {
         return this.streamRegistryContractReadonly.exists(streamId)
     }
 
-    private async getStream_nonCached(streamId: StreamID): Promise<Stream> {
+    private async getStreamMetadata_nonCached(streamId: StreamID): Promise<StreamMetadata> {
         let metadata: string
         try {
             metadata = await this.streamRegistryContractReadonly.getStreamMetadata(streamId)
         } catch (err) {
             return streamContractErrorProcessor(err, streamId, 'StreamRegistry')
         }
-        return this.parseStream(streamId, metadata)
+        return parseMetadata(metadata)
     }
 
     searchStreams(
         term: string | undefined,
         permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
-        orderBy: SearchStreamsOrderBy
+        orderBy: SearchStreamsOrderBy,
+        streamFactory: StreamFactory
     ): AsyncIterable<Stream> {
         return _searchStreams(
             term,
             permissionFilter,
             orderBy,
             this.theGraphClient,
-            (id: StreamID, metadata: string) => this.parseStream(id, metadata),
+            streamFactory,
             this.logger)
     }
 
@@ -454,7 +445,6 @@ export class StreamRegistry {
         }, ...assignments)
     }
 
-    /* eslint-disable max-len */
     async revokePermissions(streamIdOrPath: string, ...assignments: InternalPermissionAssignment[]): Promise<void> {
         validatePermissionAssignments(assignments)
         const overrides = await getEthersOverrides(this.rpcProviderSource, this.config)
@@ -525,11 +515,11 @@ export class StreamRegistry {
     // Caching
     // --------------------------------------------------------------------------------------------
 
-    getStream(streamId: StreamID, useCache = true): Promise<Stream> {
+    getStreamMetadata(streamId: StreamID, useCache = true): Promise<StreamMetadata> {
         if (useCache) {
-            return this.getStream_cached(streamId)
+            return this.getStreamMetadata_cached(streamId)
         } else {
-            return this.getStream_nonCached(streamId)
+            return this.getStreamMetadata_nonCached(streamId)
         }
     }
 
@@ -558,7 +548,7 @@ export class StreamRegistry {
         // include separator so startsWith(streamid) doesn't match streamid-something
         const target = `${streamId}${CACHE_KEY_SEPARATOR}`
         const matchTarget = (s: string) => s.startsWith(target)
-        this.getStream_cached.clearMatching(matchTarget)
+        this.getStreamMetadata_cached.clearMatching(matchTarget)
         this.isStreamPublisher_cached.clearMatching(matchTarget)
         this.isStreamSubscriber_cached.clearMatching(matchTarget)
         // TODO should also clear cache for hasPublicSubscribePermission?

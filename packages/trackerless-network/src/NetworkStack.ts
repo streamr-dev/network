@@ -108,7 +108,7 @@ export class NetworkStack {
         await this.controlLayerNode!.start()
         logger.info(`Node id is ${toNodeId(this.controlLayerNode!.getLocalPeerDescriptor())}`)
         const connectionManager = this.controlLayerNode!.getTransport() as ConnectionManager
-        if ((this.options.layer0?.entryPoints !== undefined) && (this.options.layer0.entryPoints.some((entryPoint) => 
+        if ((this.options.layer0?.entryPoints?.some((entryPoint) => 
             areEqualPeerDescriptors(entryPoint, this.controlLayerNode!.getLocalPeerDescriptor())
         ))) {
             await this.controlLayerNode?.joinDht(this.options.layer0.entryPoints)

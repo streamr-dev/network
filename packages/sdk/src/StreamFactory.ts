@@ -5,7 +5,8 @@ import { StreamRegistry } from './contracts/StreamRegistry'
 import { StreamStorageRegistry } from './contracts/StreamStorageRegistry'
 import { StreamrClientEventEmitter } from './events'
 import { Publisher } from './publish/Publisher'
-import { Stream, StreamMetadata } from './Stream'
+import { Stream } from './Stream'
+import { StreamMetadata } from './StreamMetadata'
 import { Resends } from './subscribe/Resends'
 import { Subscriber } from './subscribe/Subscriber'
 import { LoggerFactory } from './utils/LoggerFactory'
@@ -45,7 +46,7 @@ export class StreamFactory {
         this.loggerFactory = loggerFactory
     }
 
-    createStream(id: StreamID, metadata: Partial<StreamMetadata>): Stream {
+    createStream(id: StreamID, metadata: StreamMetadata): Stream {
         return new Stream(
             id,
             metadata,

@@ -28,7 +28,6 @@ import { ProxyConnectionRpcRemote } from './ProxyConnectionRpcRemote'
 
 // TODO use options option or named constant?
 export const retry = async <T>(task: () => Promise<T>, description: string, abortSignal: AbortSignal, delay = 10000): Promise<T> => {
-    // eslint-disable-next-line no-constant-condition
     while (true) {
         try {
             const result = await task()

@@ -38,7 +38,7 @@ export class GroupKeyQueue {
     async useGroupKey(): Promise<GroupKeySequence> {
         // Ensure we have a current key by picking a queued key or generating a new one
         if (!this.currentGroupKey) {
-            this.currentGroupKey = this.queuedGroupKey || await this.rekey()
+            this.currentGroupKey = this.queuedGroupKey ?? await this.rekey()
             this.queuedGroupKey = undefined
         }
         // Always return an array consisting of currentGroupKey and queuedGroupKey (latter may be undefined)

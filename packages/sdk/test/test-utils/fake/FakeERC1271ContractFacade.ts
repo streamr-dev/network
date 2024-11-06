@@ -2,8 +2,6 @@ import { Methods } from '@streamr/test-utils'
 import { EthereumAddress, recoverSignerUserId, toUserId } from '@streamr/utils'
 import { Lifecycle, scoped } from 'tsyringe'
 import { ERC1271ContractFacade } from '../../../src/contracts/ERC1271ContractFacade'
-// TODO: Why is eslint import rule complaining about this import?
-// eslint-disable-next-line import/no-unresolved
 import { IERC1271 } from '../../../src/ethereumArtifacts/IERC1271'
 import { FakeChain } from './FakeChain'
 

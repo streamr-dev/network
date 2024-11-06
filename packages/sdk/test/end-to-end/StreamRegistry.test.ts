@@ -85,12 +85,8 @@ describe('StreamRegistry', () => {
         it('listener', async () => {
             const onStreamCreated = jest.fn()
             client.on('streamCreated', onStreamCreated)
-            const invalidStream = await client.createStream({
-                id: createRelativeTestStreamId(module, 'invalid'),
-                partitions: 150
-            })
             const validStream = await client.createStream({
-                id: createRelativeTestStreamId(module, 'valid'),
+                id: createRelativeTestStreamId(module),
                 partitions: 3,
                 description: 'Foobar'
             })
@@ -108,7 +104,6 @@ describe('StreamRegistry', () => {
                 },
                 blockNumber: expect.any(Number)
             })
-            expect(hasBeenCalledFor(invalidStream)).toBeFalse()
         }, TIMEOUT)
 
         // TODO: re-enable test when ETH-568 has been implemented (ENS support in fast-chain)
@@ -257,12 +252,7 @@ describe('StreamRegistry', () => {
             // check that other fields not overwritten
             const updatedStream = await client.getStream(createdStream.id)
             expect(updatedStream.getMetadata()).toEqual({
-                description,
-                // these are injected in the Stream constructor (maybe we'll change this functionality in the future)
-                partitions: 1,
-                config: {
-                    fields: []
-                }
+                description
             })
         }, TIMEOUT)
     })

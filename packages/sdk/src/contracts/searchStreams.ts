@@ -1,8 +1,10 @@
-import { ChangeFieldType, GraphQLQuery, HexString, Logger, StreamID, TheGraphClient, toStreamID, toUserId, UserID } from '@streamr/utils'
+import { ChangeFieldType, GraphQLQuery, HexString, Logger, TheGraphClient, toStreamID, toUserId, UserID } from '@streamr/utils'
 import { Stream } from '../Stream'
-import { ChainPermissions, PUBLIC_PERMISSION_USER_ID, StreamPermission, convertChainPermissionsToStreamPermissions } from '../permission'
+import { StreamFactory } from '../StreamFactory'
+import { ChainPermissions, convertChainPermissionsToStreamPermissions, PUBLIC_PERMISSION_USER_ID, StreamPermission } from '../permission'
 import { filter, map, unique } from '../utils/GeneratorUtils'
 import { StreamQueryResult } from './StreamRegistry'
+import { parseMetadata } from '../StreamMetadata'
 
 export interface SearchStreamsPermissionFilter {
     userId: HexString
@@ -38,7 +40,7 @@ export const searchStreams = (
     permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
     orderBy: SearchStreamsOrderBy,
     theGraphClient: TheGraphClient,
-    parseStream: (id: StreamID, metadata: string) => Stream,
+    streamFactory: StreamFactory,
     logger: Logger,
 ): AsyncGenerator<Stream> => {
     if ((term === undefined) && (permissionFilter === undefined)) {
@@ -47,13 +49,7 @@ export const searchStreams = (
     logger.debug('Search for streams', { term, permissionFilter })
     return map(
         fetchSearchStreamsResultFromTheGraph(term, permissionFilter, orderBy, theGraphClient),
-        (item: SearchStreamsResultItem) => parseStream(toStreamID(item.stream.id), item.stream.metadata),
-        (err: Error, item: SearchStreamsResultItem) => {
-            logger.debug('Omit stream from search result (invalid data)', {
-                streamId: item.stream.id,
-                reason: err?.message
-            })
-        }
+        (item: SearchStreamsResultItem) => streamFactory.createStream(toStreamID(item.stream.id), parseMetadata(item.stream.metadata))
     )
 }
 

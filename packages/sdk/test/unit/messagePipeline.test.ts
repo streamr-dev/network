@@ -7,7 +7,6 @@ import { mock } from 'jest-mock-extended'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
 import { StrictStreamrClientConfig } from '../../src/Config'
 import { DestroySignal } from '../../src/DestroySignal'
-import { Stream } from '../../src/Stream'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { DecryptError, EncryptionUtil } from '../../src/encryption/EncryptionUtil'
@@ -63,20 +62,6 @@ describe('messagePipeline', () => {
     beforeEach(async () => {
         streamPartId = StreamPartIDUtils.parse(`${randomEthereumAddress()}/path#0`)
         publisher = fastWallet()
-        const stream = new Stream(
-            StreamPartIDUtils.getStreamID(streamPartId),
-            {
-                partitions: 1,
-            },
-            undefined as any,
-            undefined as any,
-            undefined as any,
-            undefined as any,
-            undefined as any,
-            undefined as any,
-            undefined as any,
-            undefined as any
-        )
         const groupKeyStore = {
             get: async () => undefined
         } as any
@@ -90,7 +75,7 @@ describe('messagePipeline', () => {
             } as any
         }
         streamRegistry = {
-            getStream: async () => stream,
+            getStreamMetadata: async () => ({ partitions: 1 }),
             isStreamPublisher: async () => true,
             clearStreamCache: jest.fn()
         }

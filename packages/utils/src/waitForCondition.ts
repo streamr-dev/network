@@ -40,7 +40,6 @@ export const waitForCondition = async (
     const timeoutAbortSignal: AbortSignal = (AbortSignal as any).timeout(timeout) // TODO: remove `as any` cast when @types/node has support...
     const composedSignal = composeAbortSignals(...compact([timeoutAbortSignal, abortSignal]))
     try {
-        // eslint-disable-next-line no-constant-condition
         while (true) {
             const result = await asAbortable(Promise.resolve(conditionFn()), composedSignal)
             if (result) {

@@ -25,7 +25,6 @@ async function write(stream: PassThrough, data: any, ac: AbortController) {
  */
 async function pull(fromBrowserStream: ReadableStream | WebStream.ReadableStream, toNodeStream: PassThrough) {
     const reader = fromBrowserStream.getReader()
-    /* eslint-disable no-constant-condition */
     const ac = new AbortController()
     const cleanup = () => {
         ac.abort()

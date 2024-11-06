@@ -2,7 +2,8 @@
  * This file captures named exports so we can manipulate them for cjs/browser builds.
  */
 export { StreamrClient, SubscribeOptions, ExtraSubscribeOptions } from './StreamrClient'
-export { Stream, StreamMetadata, Field, VALID_FIELD_TYPES } from './Stream'
+export { Stream } from './Stream'
+export { StreamMetadata } from './StreamMetadata'
 export { Message, MessageMetadata } from './Message'
 export { StreamrClientEvents } from './events'
 export { PublishMetadata } from './publish/Publisher'
