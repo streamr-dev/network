@@ -271,4 +271,10 @@ export class ExperimentController {
         await waitForCondition(() => this.resultsReceived.size === this.nodeCount, 30000, 1000)
     }
 
+    async stop(): Promise<void> {
+        Array.from(this.clients.values()).map((client) => client.socket.close())
+        this.httpServer!.close()
+        this.wss!.close()
+    }
+
 }

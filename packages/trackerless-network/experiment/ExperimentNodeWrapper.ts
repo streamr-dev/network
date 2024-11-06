@@ -279,6 +279,7 @@ export class ExperimentNodeWrapper {
     }
 
     async stop() {
+        logger.info('stopping node')
         this.node!.stop()
         this.socket!.close()
     }

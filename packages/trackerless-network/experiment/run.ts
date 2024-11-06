@@ -21,15 +21,16 @@ if (!envs.includes(env)) {
 const logger = new Logger(module)
 
 const startLocalNodes = (nodeCount: number) => {
+    const nodes: ExperimentNodeWrapper[] = []
     for (let i = 0; i < nodeCount; i++) {
         const node = new ExperimentNodeWrapper('ws://localhost:7070', '127.0.0.1')
         node.connect() 
+        nodes.push(node)
     }
+    return nodes
 }
 
 const startAwsNodes = async (nodeCount: number) => {
-    console.log(process.env.AWS_ACCESS_KEY!)
-    console.log(process.env.AWS_SECRET_KEY!)
     const config: AutoScalingClientConfig = {
         region: "eu-north-1",
         credentials: {
@@ -51,12 +52,35 @@ const startAwsNodes = async (nodeCount: number) => {
     }
 }
 
+const stopAwsNodes = async () => {
+    const config: AutoScalingClientConfig = {
+        region: "eu-north-1",
+        credentials: {
+            accessKeyId: process.env.AWS_ACCESS_KEY!,
+            secretAccessKey: process.env.AWS_SECRET_KEY!,
+        }
+    } 
+    const client = new AutoScalingClient(config)
+    const params: SetDesiredCapacityCommandInput = {
+        AutoScalingGroupName: "network-experiment",
+        DesiredCapacity: 0   
+    }
+    const command = new SetDesiredCapacityCommand(params)
+    try {
+        const res = await client.send(command)
+        console.log(res)
+    } catch (err) {
+        console.error(err)
+    }
+}
+
 const run = async () => {
     const controller = new ExperimentController(nodeCount) 
     controller.createServer()
 
+    let localNodes: ExperimentNodeWrapper[] = []
     if (env === 'local') {
-        startLocalNodes(nodeCount)
+        localNodes = startLocalNodes(nodeCount)
     } else if (env === 'aws') {
         await startAwsNodes(nodeCount)
         console.log('aws nodes started')
@@ -104,6 +128,13 @@ const run = async () => {
         logger.info('all nodes started')
     }
     logger.info(`experiment ${experiment} completed`)
+
+    if (env === 'aws') {
+        await stopAwsNodes()
+    } else if (env === 'local') {
+        await Promise.all(localNodes.map((node) => node.stop()))
+    }
+    await controller.stop()
 }
 
 run()
