@@ -43,7 +43,6 @@ export class StreamStorageRegistry {
     private readonly authentication: Authentication
     private readonly logger: Logger
 
-    /* eslint-disable indent */
     constructor(
         streamIdBuilder: StreamIDBuilder,
         contractFactory: ContractFactory,
