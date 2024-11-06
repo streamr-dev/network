@@ -55,6 +55,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IWebrt
         this.peerConnection = new RTCPeerConnection({ iceServers: urls })
 
         this.peerConnection.onicecandidate = (event) => {
+            // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
             if ((event.candidate !== null) && (event.candidate.sdpMid !== null)) {
                 this.emit('localCandidate', event.candidate.candidate, event.candidate.sdpMid)
             }
