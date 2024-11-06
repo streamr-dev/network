@@ -27,7 +27,7 @@ import { RpcProviderSource } from './RpcProviderSource'
 import { Stream } from './Stream'
 import { StreamFactory } from './StreamFactory'
 import { StreamIDBuilder } from './StreamIDBuilder'
-import { StreamMetadata } from './StreamMetadata'
+import { StreamMetadata, getPartitionCount } from './StreamMetadata'
 import { StreamrClientError } from './StreamrClientError'
 import { ContractFactory } from './contracts/ContractFactory'
 import { Operator } from './contracts/Operator'
@@ -52,6 +52,7 @@ import { StreamDefinition } from './types'
 import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
+import { addStreamToStorageNode } from './utils/addStreamToStorageNode'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -522,9 +523,29 @@ export class StreamrClient {
 
     /**
      * Assigns a stream to a storage node.
+     *
+     * @param opts - control how long to wait for storage node to pick up on assignment
+     * @returns If opts.wait=true, the promise resolves when the storage node acknowledges the assignment and
+     * is therefore ready to store published messages. If we don't receive the acknowledgment within the `timeout`,
+     * the promise rejects, but the assignment may still succeed later.
      */
-    async addStreamToStorageNode(streamIdOrPath: string, storageNodeAddress: HexString): Promise<void> {
-        return this.streamStorageRegistry.addStreamToStorageNode(streamIdOrPath, toEthereumAddress(storageNodeAddress))
+    async addStreamToStorageNode(
+        streamIdOrPath: string,
+        storageNodeAddress: HexString,
+        opts: { wait: boolean, timeout?: number } = { wait: false }
+    ): Promise<void> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        await addStreamToStorageNode(
+            streamId,
+            toEthereumAddress(storageNodeAddress),
+            opts,
+            getPartitionCount(await this.streamRegistry.getStreamMetadata(streamId)),
+            this.subscriber,
+            this.streamRegistry,
+            this.streamStorageRegistry,
+            this.loggerFactory,
+            this.config
+        )
     }
 
     /**
