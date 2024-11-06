@@ -8,6 +8,8 @@ const envs = [ 'local', 'aws' ]
 const modes = [ 'propagation', 'join', 'routing', 'timetodata', 'scalingjoin' ]
 const experiment = process.argv[2]
 const env = process.argv[3]
+const nodeCount = parseInt(process.argv[4])
+
 if (!modes.includes(experiment)) {
     throw new Error('unknown experiment ' + experiment)
 }
@@ -50,7 +52,6 @@ const startAwsNodes = async (nodeCount: number) => {
 }
 
 const run = async () => {
-    const nodeCount = 20
     const controller = new ExperimentController(nodeCount) 
     controller.createServer()
 
