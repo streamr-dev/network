@@ -83,7 +83,7 @@ export class ExperimentController {
     }
 
     async waitForClients(): Promise<void> {
-        await waitForCondition(() => this.clients.size === this.nodeCount, 30 * 1000, 1000)
+        await waitForCondition(() => this.clients.size === this.nodeCount, 5 * 60 * 1000, 1000)
     }
 
     async startEntryPoint(storeRoutingPaths = false): Promise<string> {
