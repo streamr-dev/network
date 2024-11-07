@@ -275,6 +275,7 @@ export class StreamRegistry {
             streamId,
             ethersOverrides
         ))
+        this.clearStreamCache(streamId)
     }
 
     private async streamExistsOnChain(streamIdOrPath: string): Promise<boolean> {

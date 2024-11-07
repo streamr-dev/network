@@ -136,11 +136,7 @@ export class Stream {
      * @remarks Stream instance should not be used afterwards.
      */
     async delete(): Promise<void> {
-        try {
-            await this._streamRegistry.deleteStream(this.id)
-        } finally {
-            this._streamRegistry.clearStreamCache(this.id)
-        }
+        await this._streamRegistry.deleteStream(this.id)
     }
 
     /**
