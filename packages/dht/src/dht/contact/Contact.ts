@@ -1,5 +1,5 @@
-import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
+import { DhtAddress, toNodeId } from '../../identifiers'
 
 export class Contact {
 
@@ -14,6 +14,6 @@ export class Contact {
     }
 
     public getNodeId(): DhtAddress {
-        return getNodeIdFromPeerDescriptor(this.peerDescriptor)
+        return toNodeId(this.peerDescriptor)
     }
 }

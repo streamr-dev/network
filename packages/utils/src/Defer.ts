@@ -60,6 +60,7 @@ export class Defer<T> extends Promise<T> {
                 this.resolve(value)
                 return value
             } catch (err) {
+                // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
                 this.reject(err)
                 throw err
             }

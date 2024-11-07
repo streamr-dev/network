@@ -1,7 +1,7 @@
 import { Gate, Logger, withTimeout } from '@streamr/utils'
 import { v4 } from 'uuid'
-import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
-import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { DhtAddress, toNodeId } from '../../identifiers'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { PeerManager } from '../PeerManager'
 import { RingContacts } from '../contact/RingContactList'
@@ -9,7 +9,7 @@ import { RingId, RingIdRaw, getLeftDistance, getRingIdFromPeerDescriptor, getRin
 
 const logger = new Logger(module)
 
-interface RingDiscoverySessionConfig {
+interface RingDiscoverySessionOptions {
     targetId: RingIdRaw
     parallelism: number
     noProgressLimit: number
@@ -25,33 +25,33 @@ export class RingDiscoverySession {
     private noProgressCounter = 0
     private ongoingRequests: Set<DhtAddress> = new Set()
     private doneGate = new Gate(false)
-    private readonly config: RingDiscoverySessionConfig
+    private readonly options: RingDiscoverySessionOptions
     private numContactedPeers = 0
     private targetIdAsRingId: RingId
 
-    constructor(config: RingDiscoverySessionConfig) {
-        this.config = config
-        this.targetIdAsRingId = getRingIdFromRaw(this.config.targetId)
+    constructor(options: RingDiscoverySessionOptions) {
+        this.options = options
+        this.targetIdAsRingId = getRingIdFromRaw(this.options.targetId)
     }
 
     private addContacts(contacts: PeerDescriptor[]): void {
-        if (this.config.abortSignal.aborted || this.doneGate.isOpen()) {
+        if (this.options.abortSignal.aborted || this.doneGate.isOpen()) {
             return
         }
         for (const contact of contacts) {
-            this.config.peerManager.addContact(contact)
+            this.options.peerManager.addContact(contact)
         }
     }
 
     private async fetchClosestContactsFromRemote(contact: DhtNodeRpcRemote): Promise<RingContacts> {
-        if (this.config.abortSignal.aborted || this.doneGate.isOpen()) {
+        if (this.options.abortSignal.aborted || this.doneGate.isOpen()) {
             return { left: [], right: [] }
         }
-        logger.trace(`Getting closest ring peers from contact: ${getNodeIdFromPeerDescriptor(contact.getPeerDescriptor())}`)
+        logger.trace(`Getting closest ring peers from contact: ${toNodeId(contact.getPeerDescriptor())}`)
         this.numContactedPeers++
-        this.config.contactedPeers.add(contact.getNodeId())
-        const returnedContacts = await contact.getClosestRingPeers(this.config.targetId)
-        this.config.peerManager.setContactActive(contact.getNodeId())
+        this.options.contactedPeers.add(contact.getNodeId())
+        const returnedContacts = await contact.getClosestRingPeers(this.options.targetId)
+        this.options.peerManager.setContactActive(contact.getNodeId())
         return returnedContacts
     }
 
@@ -60,7 +60,7 @@ export class RingDiscoverySession {
             return
         }
         this.ongoingRequests.delete(nodeId)
-        const oldClosestContacts = this.config.peerManager.getClosestRingContactsTo(this.config.targetId, 1)
+        const oldClosestContacts = this.options.peerManager.getClosestRingContactsTo(this.options.targetId, 1)
         const oldClosestLeftDistance = getLeftDistance(
             this.targetIdAsRingId,
             getRingIdFromPeerDescriptor(oldClosestContacts.left[0].getPeerDescriptor())
@@ -70,7 +70,7 @@ export class RingDiscoverySession {
             getRingIdFromPeerDescriptor(oldClosestContacts.right[0].getPeerDescriptor())
         )
         this.addContacts(contacts.left.concat(contacts.right))
-        const newClosestContacts = this.config.peerManager.getClosestRingContactsTo(this.config.targetId, 1)
+        const newClosestContacts = this.options.peerManager.getClosestRingContactsTo(this.options.targetId, 1)
         const newClosestLeftDistance = getLeftDistance(this.targetIdAsRingId,
             getRingIdFromPeerDescriptor(newClosestContacts.left[0].getPeerDescriptor()))
         const newClosestRightDistance = getLeftDistance(this.targetIdAsRingId,
@@ -85,20 +85,20 @@ export class RingDiscoverySession {
             return
         }
         this.ongoingRequests.delete(peer.getNodeId())
-        this.config.peerManager.removeContact(peer.getNodeId())
+        this.options.peerManager.removeContact(peer.getNodeId())
     }
 
     private findMoreContacts(): void {
-        if (this.config.abortSignal.aborted || this.doneGate.isOpen()) {
+        if (this.options.abortSignal.aborted || this.doneGate.isOpen()) {
             return
         }
-        const uncontacted = this.config.peerManager.getClosestRingContactsTo(
-            this.config.targetId,
-            this.config.parallelism,
-            this.config.contactedPeers
+        const uncontacted = this.options.peerManager.getClosestRingContactsTo(
+            this.options.targetId,
+            this.options.parallelism,
+            this.options.contactedPeers
         )
         if ((uncontacted.left.length === 0 && uncontacted.right.length === 0)
-            || this.noProgressCounter >= this.config.noProgressLimit) {
+            || this.noProgressCounter >= this.options.noProgressLimit) {
             this.doneGate.open()
             return
         }
@@ -122,7 +122,7 @@ export class RingDiscoverySession {
         }
 
         for (const nextPeer of merged) {
-            if (this.ongoingRequests.size >= this.config.parallelism) {
+            if (this.ongoingRequests.size >= this.options.parallelism) {
                 break
             }
             this.ongoingRequests.add(nextPeer.getNodeId())
@@ -137,12 +137,12 @@ export class RingDiscoverySession {
     }
 
     public async findClosestNodes(timeout: number): Promise<void> {
-        if (this.config.peerManager.getNearbyContactCount(this.config.contactedPeers) === 0) {
+        if (this.options.peerManager.getNearbyContactCount(this.options.contactedPeers) === 0) {
             return
         }
         setImmediate(() => {
             this.findMoreContacts()
         })
-        await withTimeout(this.doneGate.waitUntilOpen(), timeout, 'discovery session timed out', this.config.abortSignal)
+        await withTimeout(this.doneGate.waitUntilOpen(), timeout, 'discovery session timed out', this.options.abortSignal)
     }
 }

@@ -1,13 +1,10 @@
-import EventEmitter from 'eventemitter3'
-
-// TODO we may want to export all used types (Events, EventEmitter.*)
-
-type Events<T> = { [K in keyof T]: (...payloads: any[]) => void }
-
-export const addManagedEventListener = <E extends Events<E>, T extends EventEmitter.EventNames<E>>(
-    emitter: Pick<EventEmitter<E>, 'on' | 'off'>,
-    eventName: T,
-    listener: EventEmitter.EventListener<E, T>,
+export const addManagedEventListener = <TEventName extends string, TListener extends (...payloads: any[]) => void>(
+    emitter: {
+        on: (eventName: TEventName, listener: TListener) => unknown
+        off: (eventName: TEventName, listener: TListener) => unknown
+    },
+    eventName: TEventName,
+    listener: TListener,
     abortSignal: AbortSignal
 ): void => {
     if (!abortSignal.aborted) {

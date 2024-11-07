@@ -48,7 +48,7 @@ Start the Config Wizard with the below command. Docker will download the node im
 #### Run the config wizard (Linux / macOS instructions)
 
 ```
-sudo docker run -it -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/node bin/config-wizard
+sudo docker run -it -v $(cd ~/.streamrDocker && pwd):/home/streamr/.streamr streamr/node bin/streamr-node-init
 ```
 
 #### **Windows PowerShell instructions**
@@ -62,7 +62,7 @@ cd ~/.streamrDocker
 Then run the Config Wizard:
 
 ```
-docker run -it -v ${pwd}:/home/streamr/.streamr streamr/node bin/config-wizard
+docker run -it -v ${pwd}:/home/streamr/.streamr streamr/node bin/streamr-node-init
 ```
 
 #### Using the Config Wizard
@@ -157,7 +157,7 @@ There can be plenty of output from npm. If the installation fails with an error,
 ### Step 2: Configure your node
 To activate the **Config Wizard**, run,
 ```
-streamr-broker-init
+streamr-node-init
 ```
 
 #### Using the Config Wizard
@@ -179,7 +179,7 @@ If you're running a node to become an Operator, then you could now jump back to 
 ### Step 3: Start the Streamr node
 To start your Streamr node, run,
 ```
-streamr-broker PATH_TO_CONFIG_FILE
+streamr-node PATH_TO_CONFIG_FILE
 ```
 
 You should start to see logging similar to this:

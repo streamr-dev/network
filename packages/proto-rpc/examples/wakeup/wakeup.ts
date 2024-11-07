@@ -1,4 +1,5 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { RpcCommunicator, ProtoCallContext, toProtoRpcClient, ProtoRpcClient } from '@streamr/proto-rpc'
 import { IWakeUpRpcService } from './proto/WakeUpRpc.server'
 import { WakeUpRequest } from './proto/WakeUpRpc'

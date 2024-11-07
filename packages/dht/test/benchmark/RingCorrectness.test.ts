@@ -4,7 +4,7 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockRingNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
-import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { DhtAddress, toDhtAddress, toNodeId } from '../../src/identifiers'
 import { Logger } from '@streamr/utils'
 import { getRingIdRawFromPeerDescriptor } from '../../src/dht/contact/ringIdentifiers'
 
@@ -18,7 +18,7 @@ describe('Ring correctness', () => {
     const NUM_NODES = 900
     const nodeIndicesById: Record<DhtAddress, number> = {}
 
-    const regions: Array<number> = []
+    const regions: number[] = []
     for (let i = 0; i < (NUM_NODES + 1); i++) {
         regions.push(i)
     }
@@ -36,19 +36,19 @@ describe('Ring correctness', () => {
         execSync('npm run prepare-kademlia-simulation')
     }
 
-    const dhtIds: Array<{ type: string, data: Array<number> }> = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
-    const groundTruth: Record<string, Array<{ name: string, distance: number, id: { type: string, data: Array<number> } }>>
+    const dhtIds: { type: string, data: number[] }[] = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
+    const groundTruth: Record<string, { name: string, distance: number, id: { type: string, data: number[] } }[]>
         = JSON.parse(fs.readFileSync('test/data/orderedneighbors.json').toString())
 
     beforeEach(async () => {
         jest.setTimeout(60000)
         nodes = []
-        entryPoint = await createMockRingNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[0].data)), regions[0])
+        entryPoint = await createMockRingNode(simulator, toDhtAddress(Uint8Array.from(dhtIds[0].data)), regions[0])
         nodes.push(entryPoint)
         nodeIndicesById[entryPoint.getNodeId()] = 0
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockRingNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[i].data)), regions[i + 1])
+            const node = await createMockRingNode(simulator, toDhtAddress(Uint8Array.from(dhtIds[i].data)), regions[i + 1])
             nodeIndicesById[node.getNodeId()] = i
             nodes.push(node)
         }
@@ -111,7 +111,7 @@ describe('Ring correctness', () => {
                 groundTruthString += groundTruth[i + ''][j].name + ','
             }
 
-            const kademliaNeighbors = nodes[i].getClosestContacts(8).map((p) => getNodeIdFromPeerDescriptor(p))
+            const kademliaNeighbors = nodes[i].getClosestContacts(8).map((p) => toNodeId(p))
 
             let kadString = 'kademliaNeighbors: '
             kademliaNeighbors.forEach((neighbor) => {
@@ -126,8 +126,8 @@ describe('Ring correctness', () => {
                     }
                     correctNeighbors++
                 }
-            } catch (e) {
-                console.error('Node ' + getNodeIdFromPeerDescriptor(nodes[i].getLocalPeerDescriptor()) + ' had only '
+            } catch {
+                console.error('Node ' + toNodeId(nodes[i].getLocalPeerDescriptor()) + ' had only '
                     + kademliaNeighbors.length + ' kademlia neighbors')
             }
             if (correctNeighbors === 0) {

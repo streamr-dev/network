@@ -1,5 +1,5 @@
 import { DhtAddress } from '@streamr/dht'
-import { StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { StreamMessage } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { PropagationTask, PropagationTaskStore } from './PropagationTaskStore'
 
 type SendToNeighborFn = (neighborId: DhtAddress, msg: StreamMessage) => Promise<void>
@@ -12,7 +12,7 @@ interface ConstructorOptions {
 }
 
 const DEFAULT_MAX_MESSAGES = 150
-const DEFAULT_TTL = 30 * 1000
+const DEFAULT_TTL = 10 * 1000
 
 /**
  * Message propagation logic of a node. Given a message, this class will actively attempt to propagate it to
@@ -65,7 +65,6 @@ export class Propagation {
 
     private sendAndAwaitThenMark({ message, source, handledNeighbors }: PropagationTask, neighborId: DhtAddress): void {
         if (!handledNeighbors.has(neighborId) && neighborId !== source) {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             (async () => {
                 try {
                     await this.sendToNeighbor(neighborId, message)

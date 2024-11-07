@@ -1,18 +1,17 @@
-import { ConnectionManager, DhtNode, PeerDescriptor, Simulator, SimulatorTransport, getNodeIdFromPeerDescriptor, getRandomRegion } from '@streamr/dht'
-import { Logger, waitForCondition } from '@streamr/utils'
+import { ConnectionManager, DhtNode, PeerDescriptor, Simulator, SimulatorTransport, toNodeId, getRandomRegion } from '@streamr/dht'
+import { Logger, StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
+import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { Layer1Node } from '../../src/logic/Layer1Node'
 
 const logger = new Logger(module)
 
 describe('ContentDeliveryLayerNode-DhtNode', () => {
     const otherNodeCount = 64
-    let entryPointLayer1Node: Layer1Node
-    let otherLayer1Nodes: Layer1Node[]
+    let entryPointDiscoveryLayerNode: DiscoveryLayerNode
+    let otherDiscoveryLayerNodes: DiscoveryLayerNode[]
     let entryPointContentDeliveryLayerNode: ContentDeliveryLayerNode
     let otherContentDeliveryLayerNodes: ContentDeliveryLayerNode[]
 
@@ -42,14 +41,14 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
         )
         await Promise.all(cms.map((cm) => cm.start()))
 
-        entryPointLayer1Node = new DhtNode({
+        entryPointDiscoveryLayerNode = new DhtNode({
             transport: entrypointCm,
             connectionsView: entrypointCm,
             peerDescriptor: entrypointDescriptor,
             serviceId: streamPartId
         })
 
-        otherLayer1Nodes = range(otherNodeCount).map((i) => new DhtNode({
+        otherDiscoveryLayerNodes = range(otherNodeCount).map((i) => new DhtNode({
             transport: cms[i],
             connectionsView: cms[i],
             peerDescriptor: peerDescriptors[i],
@@ -58,7 +57,7 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
 
         otherContentDeliveryLayerNodes = range(otherNodeCount).map((i) => createContentDeliveryLayerNode({
             streamPartId,
-            layer1Node: otherLayer1Nodes[i],
+            discoveryLayerNode: otherDiscoveryLayerNodes[i],
             transport: cms[i],
             connectionLocker: cms[i],
             localPeerDescriptor: peerDescriptors[i],
@@ -68,7 +67,7 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
 
         entryPointContentDeliveryLayerNode = createContentDeliveryLayerNode({
             streamPartId,
-            layer1Node: entryPointLayer1Node,
+            discoveryLayerNode: entryPointDiscoveryLayerNode,
             transport: entrypointCm,
             connectionLocker: entrypointCm,
             localPeerDescriptor: entrypointDescriptor,
@@ -76,22 +75,22 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
             isLocalNodeEntryPoint: () => false
         })
 
-        await entryPointLayer1Node.start()
+        await entryPointDiscoveryLayerNode.start()
         await entryPointContentDeliveryLayerNode.start()
-        await entryPointLayer1Node.joinDht([entrypointDescriptor])
-        await Promise.all(otherLayer1Nodes.map((node) => node.start()))
+        await entryPointDiscoveryLayerNode.joinDht([entrypointDescriptor])
+        await Promise.all(otherDiscoveryLayerNodes.map((node) => node.start()))
     })
 
     afterEach(async () => {
-        await entryPointLayer1Node.stop()
+        await entryPointDiscoveryLayerNode.stop()
         entryPointContentDeliveryLayerNode.stop()
-        await Promise.all(otherLayer1Nodes.map((node) => node.stop()))
+        await Promise.all(otherDiscoveryLayerNodes.map((node) => node.stop()))
         await Promise.all(otherContentDeliveryLayerNodes.map((node) => node.stop()))
     })
 
     it('happy path single node ', async () => {
         await otherContentDeliveryLayerNodes[0].start()
-        await otherLayer1Nodes[0].joinDht([entrypointDescriptor])
+        await otherDiscoveryLayerNodes[0].joinDht([entrypointDescriptor])
 
         await waitForCondition(() => otherContentDeliveryLayerNodes[0].getNeighbors().length === 1)
         expect(otherContentDeliveryLayerNodes[0].getNearbyNodeView().getIds().length).toEqual(1)
@@ -101,7 +100,7 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
     it('happy path 4 nodes', async () => {
         range(4).forEach((i) => otherContentDeliveryLayerNodes[i].start())
         await Promise.all(range(4).map(async (i) => {
-            await otherLayer1Nodes[i].joinDht([entrypointDescriptor])
+            await otherDiscoveryLayerNodes[i].joinDht([entrypointDescriptor])
         }))
 
         await waitForCondition(() => range(4).every((i) => otherContentDeliveryLayerNodes[i].getNeighbors().length === 4))
@@ -118,8 +117,8 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
                 const neighbor = allNodes.find((node) => {
                     return node.getOwnNodeId() === nodeId
                 })
-                const neighborIds = neighbor!.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
-                expect(neighborIds.includes(allNodes[i].getOwnNodeId())).toEqual(true)
+                const neighborNodeIds = neighbor!.getNeighbors().map((n) => toNodeId(n))
+                expect(neighborNodeIds.includes(allNodes[i].getOwnNodeId())).toEqual(true)
             })
         })
     }, 10000)
@@ -127,7 +126,7 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
     it('happy path 64 nodes', async () => {
         await Promise.all(range(otherNodeCount).map((i) => otherContentDeliveryLayerNodes[i].start()))
         await Promise.all(range(otherNodeCount).map((i) => {
-            otherLayer1Nodes[i].joinDht([entrypointDescriptor])
+            otherDiscoveryLayerNodes[i].joinDht([entrypointDescriptor])
         }))
         await Promise.all(otherContentDeliveryLayerNodes.map((node) =>
             waitForCondition(() => node.getNeighbors().length >= 4, 10000)
@@ -146,11 +145,11 @@ describe('ContentDeliveryLayerNode-DhtNode', () => {
             otherContentDeliveryLayerNodes.forEach((node) => {
                 const nodeId = node.getOwnNodeId()
                 node.getNeighbors().forEach((neighbor) => {
-                    const neighborId = getNodeIdFromPeerDescriptor(neighbor)
+                    const neighborId = toNodeId(neighbor)
                     if (neighborId !== entryPointContentDeliveryLayerNode.getOwnNodeId()) {
                         const neighbor = otherContentDeliveryLayerNodes.find((n) => n.getOwnNodeId() === neighborId)
-                        const neighborIds = neighbor!.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
-                        if (!neighborIds.includes(nodeId)) {
+                        const neighborNodeIds = neighbor!.getNeighbors().map((n) => toNodeId(n))
+                        if (!neighborNodeIds.includes(nodeId)) {
                             mismatchCounter += 1
                         }
                     }

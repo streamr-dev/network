@@ -1,18 +1,10 @@
 import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
-import {
-    ContentType,
-    EncryptionType,
-    MessageID,
-    MessageRef,
-    SignatureType,
-    StreamMessage,
-    StreamMessageType,
-    StreamPartIDUtils
-} from '@streamr/protocol'
-import { EthereumAddress, hexToBinary, utf8ToBinary, waitForCondition } from '@streamr/utils'
+import { randomUserId } from '@streamr/test-utils'
+import { StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
-import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
+import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
+import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const STREAM_PART_ID = StreamPartIDUtils.parse('test#0')
@@ -24,25 +16,32 @@ describe('stream without default entrypoints', () => {
     let receivedMessageCount: number
     const entryPointPeerDescriptor: PeerDescriptor = createMockPeerDescriptor()
 
-    const streamMessage = new StreamMessage({
-        messageId: new MessageID(
-            StreamPartIDUtils.getStreamID(STREAM_PART_ID),
-            StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
-            666,
-            0,
-            '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as EthereumAddress,
-            'msgChainId'
-        ),
-        prevMsgRef: new MessageRef(665, 0),
-        content: utf8ToBinary(JSON.stringify({
-            hello: 'world'
-        })),
-        messageType: StreamMessageType.MESSAGE,
-        contentType: ContentType.JSON,
-        encryptionType: EncryptionType.NONE,
+    const streamMessage: StreamMessage = {
+        messageId: {
+            streamId: StreamPartIDUtils.getStreamID(STREAM_PART_ID),
+            streamPartition: StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
+            timestamp: 666,
+            sequenceNumber: 0,
+            publisherId: toUserIdRaw(randomUserId()),
+            messageChainId: 'msgChainId'
+        },
+        previousMessageRef: {
+            timestamp: 665,
+            sequenceNumber: 0
+        },
+        body: {
+            oneofKind: 'contentMessage',
+            contentMessage: {
+                content: utf8ToBinary(JSON.stringify({
+                    hello: 'world'
+                })),
+                contentType: ContentType.JSON,
+                encryptionType: EncryptionType.NONE
+            }
+        },
         signatureType: SignatureType.SECP256K1,
         signature: hexToBinary('0x1234'),
-    })
+    }
 
     beforeEach(async () => {
         const simulator = new Simulator(LatencyType.REAL)
@@ -121,7 +120,7 @@ describe('stream without default entrypoints', () => {
             await nodes[i].join(STREAM_PART_ID, { minCount: (i > 0) ? 1 : 0, timeout: 15000 })
         }
         await waitForCondition(async () => {
-            const entryPointData = await nodes[15].stack.getLayer0Node().fetchDataFromDht(streamPartIdToDataKey(STREAM_PART_ID))
+            const entryPointData = await nodes[15].stack.getControlLayerNode().fetchDataFromDht(streamPartIdToDataKey(STREAM_PART_ID))
             return entryPointData.length >= 7
         }, 15000)
         

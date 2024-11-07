@@ -1,3 +1,4 @@
+---
 name: release docker
 on:
   workflow_dispatch:
@@ -9,10 +10,10 @@ on:
         default: 'false'
         options: ['false', 'true']
 jobs:
-  broker-docker-image:
+  node-docker-image:
     uses: ./.github/workflows/docker-build.yml
     with:
-      docker_file: Dockerfile.broker
+      docker_file: Dockerfile.node
       image_name: streamr/node
       host_machine_platform: self-hosted
       build_platforms: linux/amd64,linux/arm64

@@ -189,7 +189,7 @@ WARN [2023-11-10T10:01:42.867] (NodeWebRtcConnection): Failed to set remote cand
 Connectivity issue. 
 
 **Solution:**
-Port 32200 or configured port for streamr-broker is not open. Check your firewall/docker/router configuration that the port 32200 is open and/or traffic is forwarded through this port.
+Port 32200 or configured port for streamr-node is not open. Check your firewall/docker/router configuration that the port 32200 is open and/or traffic is forwarded through this port.
 
 #### Issue: 
 I’m receiving the following warning message.
@@ -201,7 +201,7 @@ I’m receiving the following warning message.
       "message": "The Graph did not synchronize to block 42303755 (timed out after 60000 ms)",
       "stack":
           Error: The Graph did not synchronize to block 42303755 (timed out after 60000 ms)
-              at Timeout.<anonymous> (C:\Users\jarno\AppData\Roaming\nvm\v18.16.0\node_modules\streamr-broker\node_modules\@streamr\utils\dist\src\withTimeout.js:20:24)
+              at Timeout.<anonymous> (C:\Users\jarno\AppData\Roaming\nvm\v18.16.0\node_modules\@streamr\node\node_modules\@streamr\utils\dist\src\withTimeout.js:20:24)
               at listOnTimeout (node:internal/timers:569:17)
               at process.processTimers (node:internal/timers:512:7)
       "code": "TimeoutError"

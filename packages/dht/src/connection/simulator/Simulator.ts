@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/parameter-properties */
-import EventEmitter from 'eventemitter3'
-import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
-import { ConnectionSourceEvents } from '../IConnectionSource'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { SimulatorConnector } from './SimulatorConnector'
 import { SimulatorConnection } from './SimulatorConnection'
 import { ConnectionID } from '../IConnection'
@@ -9,7 +7,7 @@ import { Logger } from '@streamr/utils'
 import { getRegionDelayMatrix } from './pings'
 import Heap from 'heap'
 import { debugVars } from '../../helpers/debugHelpers'
-import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { DhtAddress, toNodeId } from '../../identifiers'
 
 const logger = new Logger(module)
 
@@ -89,10 +87,10 @@ class SendOperation extends SimulatorOperation {
 class CloseOperation extends SimulatorOperation {
 }
 
-export class Simulator extends EventEmitter<ConnectionSourceEvents> {
+export class Simulator {
     private stopped = false
     private connectors: Map<DhtAddress, SimulatorConnector> = new Map()
-    private latencyTable?: Array<Array<number>>
+    private latencyTable?: number[][]
     private associations: Map<ConnectionID, Association> = new Map()
 
     private latencyType: LatencyType
@@ -112,8 +110,6 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     private simulatorTimeout?: NodeJS.Timeout
 
     constructor(latencyType: LatencyType = LatencyType.NONE, fixedLatency?: number) {
-        super()
-
         this.latencyType = latencyType
         this.fixedLatency = fixedLatency
 
@@ -187,11 +183,11 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
     }
 
     public addConnector(connector: SimulatorConnector): void {
-        this.connectors.set(getNodeIdFromPeerDescriptor(connector.getPeerDescriptor()), connector)
+        this.connectors.set(toNodeId(connector.getPeerDescriptor()), connector)
     }
 
     private executeConnectOperation(operation: ConnectOperation): void {
-        const target = this.connectors.get(getNodeIdFromPeerDescriptor(operation.targetDescriptor))
+        const target = this.connectors.get(toNodeId(operation.targetDescriptor))
 
         if (!target) {
             logger.error('Target connector not found when executing connect operation')
@@ -297,7 +293,7 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
             logger.error('connect() called on a stopped simulator ' + (new Error().stack))
             return
         }
-        debugVars['simulatorHeapSize'] = this.operationQueue.size()
+        debugVars.simulatorHeapSize = this.operationQueue.size()
 
         const association = new Association(sourceConnection, undefined, connectedCallback)
         this.associations.set(sourceConnection.connectionId, association)

@@ -2,8 +2,6 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
-    NodeType,
-    PeerDescriptor,
     PingRequest,
     PingResponse,
     RouteMessageAck,
@@ -11,27 +9,28 @@ import {
     StoreDataRequest,
     StoreDataResponse,
     ClosestRingPeersResponse
-} from '../../src/proto/packages/dht/protos/DhtRpc'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+} from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor, NodeType } from '../../generated/packages/dht/protos/PeerDescriptor'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import {
     IDhtNodeRpc,
     IRouterRpc,
     IStoreRpc,
-    IWebsocketConnectorRpc
-} from '../../src/proto/packages/dht/protos/DhtRpc.server'
+    IWebsocketClientConnectorRpc
+} from '../../generated/packages/dht/protos/DhtRpc.server'
 import { Simulator } from '../../src/connection/simulator/Simulator'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { v4 } from 'uuid'
 import { getRandomRegion } from '../../src/connection/simulator/pings'
-import { Empty } from '../../src/proto/google/protobuf/empty'
-import { Any } from '../../src/proto/google/protobuf/any'
+import { Empty } from '../../generated/google/protobuf/empty'
+import { Any } from '../../generated/google/protobuf/any'
 import { wait, waitForCondition } from '@streamr/utils'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
-import { DhtAddress, createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
+import { DhtAddress, randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
 
 export const createMockPeerDescriptor = (opts?: Partial<Omit<PeerDescriptor, 'nodeId'>>): PeerDescriptor => {
     return {
-        nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
+        nodeId: toDhtAddressRaw(randomDhtAddress()),
         type: NodeType.NODEJS,
         ...opts
     }
@@ -46,7 +45,7 @@ export const createMockRingNode = async (
     const dhtJoinTimeout = 45000
 
     const peerDescriptor: PeerDescriptor = {
-        nodeId: getRawFromDhtAddress(nodeId ?? createRandomDhtAddress()),
+        nodeId: toDhtAddressRaw(nodeId ?? randomDhtAddress()),
         type: NodeType.NODEJS,
         region
         //ipAddress: ipv4ToNumber(ipAddress)
@@ -80,7 +79,7 @@ export const createMockConnectionDhtNode = async (
     dhtJoinTimeout = 45000
 ): Promise<DhtNode> => {
     const peerDescriptor: PeerDescriptor = {
-        nodeId: getRawFromDhtAddress(nodeId ?? createRandomDhtAddress()),
+        nodeId: toDhtAddressRaw(nodeId ?? randomDhtAddress()),
         type: NodeType.NODEJS,
         region: getRandomRegion()
     }
@@ -231,7 +230,7 @@ export const mockStoreRpc: IStoreRpcWithError = {
     }
 }
 
-export const mockWebsocketConnectorRpc: IWebsocketConnectorRpc = {
+export const mockWebsocketClientConnectorRpc: IWebsocketClientConnectorRpc = {
     async requestConnection(): Promise<Empty> {
         return {}
     }
@@ -252,14 +251,14 @@ export const createMockPeers = (): PeerDescriptor[] => {
  * unlocked connections have been garbage collected, i.e. we typically have connections only to the nodes which
  * are neighbors.
  */
-export const waitForStableTopology = async (nodes: DhtNode[], maxConnectionCount: number = 10000): Promise<void> => {
+export const waitForStableTopology = async (nodes: DhtNode[], maxConnectionCount: number = 10000, waitTime = 20000): Promise<void> => {
     const MAX_IDLE_TIME = 100
     const connectionManagers = nodes.map((n) => n.getTransport() as ConnectionManager)
     await Promise.all(connectionManagers.map(async (connectionManager) => {
         connectionManager.garbageCollectConnections(maxConnectionCount, MAX_IDLE_TIME)
         try {
-            await waitForCondition(() => connectionManager.getConnections().length <= maxConnectionCount, 20000)
-        } catch (err) {
+            await waitForCondition(() => connectionManager.getConnections().length <= maxConnectionCount, waitTime)
+        } catch {
             // the topology is very likely stable, but we can't be sure (maybe the node has more than maxConnectionCount
             // locked connections and therefore it is ok to that garbage collector was not able to remove any of those
             // connections

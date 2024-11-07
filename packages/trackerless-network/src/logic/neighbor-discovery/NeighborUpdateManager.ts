@@ -1,14 +1,13 @@
-import { NeighborUpdate } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { DhtAddress, ListeningRpcCommunicator, PeerDescriptor, getNodeIdFromPeerDescriptor } from '@streamr/dht'
-import { NeighborUpdateRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { Logger, scheduleAtInterval } from '@streamr/utils'
-import { NeighborFinder } from './NeighborFinder'
+import { DhtAddress, ListeningRpcCommunicator, PeerDescriptor, toNodeId } from '@streamr/dht'
+import { Logger, StreamPartID, scheduleAtInterval } from '@streamr/utils'
+import { NeighborUpdate } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
+import { NeighborUpdateRpcClient } from '../../../generated/packages/trackerless-network/protos/NetworkRpc.client'
 import { NodeList } from '../NodeList'
-import { NeighborUpdateRpcRemote } from './NeighborUpdateRpcRemote'
+import { NeighborFinder } from './NeighborFinder'
 import { NeighborUpdateRpcLocal } from './NeighborUpdateRpcLocal'
-import { StreamPartID } from '@streamr/protocol'
+import { NeighborUpdateRpcRemote } from './NeighborUpdateRpcRemote'
 
-interface NeighborUpdateManagerConfig {
+interface NeighborUpdateManagerOptions {
     localPeerDescriptor: PeerDescriptor
     neighbors: NodeList
     nearbyNodeView: NodeList
@@ -25,19 +24,19 @@ const logger = new Logger(module)
 export class NeighborUpdateManager {
 
     private readonly abortController: AbortController
-    private readonly config: NeighborUpdateManagerConfig
+    private readonly options: NeighborUpdateManagerOptions
     private readonly rpcLocal: NeighborUpdateRpcLocal
 
-    constructor(config: NeighborUpdateManagerConfig) {
+    constructor(options: NeighborUpdateManagerOptions) {
         this.abortController = new AbortController()
-        this.rpcLocal = new NeighborUpdateRpcLocal(config)
-        this.config = config
-        this.config.rpcCommunicator.registerRpcMethod(NeighborUpdate, NeighborUpdate, 'neighborUpdate',
+        this.rpcLocal = new NeighborUpdateRpcLocal(options)
+        this.options = options
+        this.options.rpcCommunicator.registerRpcMethod(NeighborUpdate, NeighborUpdate, 'neighborUpdate',
             (req: NeighborUpdate, context) => this.rpcLocal.neighborUpdate(req, context))
     }
 
     async start(): Promise<void> {
-        await scheduleAtInterval(() => this.updateNeighborInfo(), this.config.neighborUpdateInterval, false, this.abortController.signal)
+        await scheduleAtInterval(() => this.updateNeighborInfo(), this.options.neighborUpdateInterval, false, this.abortController.signal)
     }
 
     stop(): void {
@@ -46,22 +45,24 @@ export class NeighborUpdateManager {
 
     private async updateNeighborInfo(): Promise<void> {
         logger.trace(`Updating neighbor info to nodes`)
-        const neighborDescriptors = this.config.neighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor())
-        await Promise.allSettled(this.config.neighbors.getAll().map(async (neighbor) => {
-            const res = await this.createRemote(neighbor.getPeerDescriptor()).updateNeighbors(this.config.streamPartId, neighborDescriptors)
+        const neighborDescriptors = this.options.neighbors.getAll().map((neighbor) => neighbor.getPeerDescriptor())
+        const startTime = Date.now()
+        await Promise.allSettled(this.options.neighbors.getAll().map(async (neighbor) => {
+            const res = await this.createRemote(neighbor.getPeerDescriptor()).updateNeighbors(this.options.streamPartId, neighborDescriptors)
+            const nodeId = toNodeId(neighbor.getPeerDescriptor())
+            this.options.neighbors.get(nodeId)!.setRtt(Date.now() - startTime)
             if (res.removeMe) {
-                const nodeId = getNodeIdFromPeerDescriptor(neighbor.getPeerDescriptor())
-                this.config.neighbors.remove(nodeId)
-                this.config.neighborFinder.start([nodeId])
+                this.options.neighbors.remove(nodeId)
+                this.options.neighborFinder.start([nodeId])
             }
         }))
     }
 
     private createRemote(targetPeerDescriptor: PeerDescriptor): NeighborUpdateRpcRemote {
         return new NeighborUpdateRpcRemote(
-            this.config.localPeerDescriptor,
+            this.options.localPeerDescriptor,
             targetPeerDescriptor,
-            this.config.rpcCommunicator,
+            this.options.rpcCommunicator,
             NeighborUpdateRpcClient
         )
     }

@@ -4,12 +4,12 @@ import {
     ConnectivityRequest,
     ConnectivityResponse,
     Message
-} from '../proto/packages/dht/protos/DhtRpc'
+} from '../../generated/packages/dht/protos/DhtRpc'
 import { NatType } from './ConnectionManager'
 import { CONNECTIVITY_CHECKER_SERVICE_ID, connectAsync } from './connectivityChecker'
 import { IConnection } from './IConnection'
 import { WebsocketServerConnection } from './websocket/WebsocketServerConnection'
-import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
+import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketClientConnector'
 import { LOCAL_PROTOCOL_VERSION } from '../helpers/version'
 import { GeoIpLocator } from '@streamr/geoip-location'
 

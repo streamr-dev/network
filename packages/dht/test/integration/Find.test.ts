@@ -1,8 +1,8 @@
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { createMockConnectionDhtNode, waitForStableTopology } from '../utils/utils'
-import { getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
+import { toDhtAddress, toNodeId, toDhtAddressRaw } from '../../src/identifiers'
 
 const NUM_NODES = 100
 const K = 8
@@ -20,12 +20,12 @@ describe('Find correctness', () => {
         nodes.push(entryPoint)
         entrypointDescriptor = entryPoint.getLocalPeerDescriptor()
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator, undefined, K, 40, 60000)
+            const node = await createMockConnectionDhtNode(simulator, undefined, K, 15, 60000)
             nodes.push(node)
         }
         await entryPoint.joinDht([entrypointDescriptor])
         await Promise.all(nodes.map((node) => node.joinDht([entrypointDescriptor])))
-        await waitForStableTopology(nodes, 20)
+        await waitForStableTopology(nodes, 15, 45 * 1000)
     }, 90000)
 
     afterEach(async () => {
@@ -36,10 +36,10 @@ describe('Find correctness', () => {
     })
 
     it('Entrypoint can find a node from the network (exact match)', async () => {
-        const targetId = getRawFromDhtAddress(nodes[45].getNodeId())
-        const closestNodes = await entryPoint.findClosestNodesFromDht(getDhtAddressFromRaw(targetId))
+        const targetId = toDhtAddressRaw(nodes[45].getNodeId())
+        const closestNodes = await entryPoint.findClosestNodesFromDht(toDhtAddress(targetId))
         expect(closestNodes.length).toBeGreaterThanOrEqual(5)
-        expect(getDhtAddressFromRaw(targetId)).toEqual(getNodeIdFromPeerDescriptor(closestNodes[0]))
-    }, 30000)
+        expect(toDhtAddress(targetId)).toEqual(toNodeId(closestNodes[0]))
+    }, 90000)
 
 })

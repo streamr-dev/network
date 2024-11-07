@@ -1,18 +1,16 @@
 import { Logger, RunAndRaceEventsReturnType, runAndRaceEvents3 } from '@streamr/utils'
 import { v4 } from 'uuid'
 import * as Err from '../helpers/errors'
-import {
-    ConnectivityRequest, ConnectivityResponse,
-    Message, PeerDescriptor
-} from '../proto/packages/dht/protos/DhtRpc'
+import { ConnectivityRequest, ConnectivityResponse, Message } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { ConnectionEvents, IConnection } from './IConnection'
 import { WebsocketClientConnection } from './websocket/NodeWebsocketClientConnection'
-import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
+import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketClientConnector'
 import { isMaybeSupportedVersion } from '../helpers/version'
 
 const logger = new Logger(module)
 
-// TODO use config option or named constant?
+// TODO use options option or named constant?
 export const connectAsync = async ({ url, allowSelfSignedCertificate, timeoutMs = 1000 }:
     { url: string, allowSelfSignedCertificate: boolean, timeoutMs?: number }
 ): Promise<IConnection> => {
@@ -23,7 +21,7 @@ export const connectAsync = async ({ url, allowSelfSignedCertificate, timeoutMs 
             () => { socket.connect(url, allowSelfSignedCertificate) }],
         socket, ['connected', 'error'],
         timeoutMs)
-    } catch (e) {
+    } catch {
         throw new Err.ConnectionFailed('WebSocket connection timed out')
     }
     if (result.winnerName === 'error') {
@@ -85,6 +83,7 @@ export const sendConnectivityRequest = async (
                         if (isMaybeSupportedVersion(remoteVersion)) {
                             resolve(connectivityResponseMessage)
                         } else {
+                            // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
                             reject(`Unsupported version: ${remoteVersion}`)
                         }
                     }

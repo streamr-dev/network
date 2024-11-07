@@ -16,6 +16,8 @@
       <excludeFolder url="file://$MODULE_DIR$/packages/autocertifier-client/dist" />
       <excludeFolder url="file://$MODULE_DIR$/packages/autocertifier-server/dist" />
       <excludeFolder url="file://$MODULE_DIR$/packages/trackerless-network/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/node/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/sdk/dist" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -6,13 +6,12 @@
     },
     "include": [
         "src/**/*",
+        "generated/**/*",
         "test/benchmark/first-message.ts",
         "test/utils/utils.ts",
         "package.json"
     ],
     "references": [
-        { "path": "../protocol/tsconfig.node.json" },
-        { "path": "../proto-rpc/tsconfig.node.json" },
         { "path": "../dht/tsconfig.node.json" }
     ]
 }

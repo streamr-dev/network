@@ -5,21 +5,21 @@ import {
     ListeningRpcCommunicator,
     PeerDescriptor,
     areEqualPeerDescriptors,
-    getNodeIdFromPeerDescriptor
+    toNodeId
 } from '@streamr/dht'
-import { StreamID, StreamPartID, toStreamPartID } from '@streamr/protocol'
-import { Logger, MetricsContext, waitForCondition } from '@streamr/utils'
+import { Logger, MetricsContext, StreamID, StreamPartID, toStreamPartID, waitForCondition } from '@streamr/utils'
 import { pull } from 'lodash'
 import { version as applicationVersion } from '../package.json'
-import { ContentDeliveryManager, ContentDeliveryManagerConfig } from './logic/ContentDeliveryManager'
-import { Layer0Node } from './logic/Layer0Node'
+import { ContentDeliveryManager, ContentDeliveryManagerOptions } from './logic/ContentDeliveryManager'
+import { ControlLayerNode } from './logic/ControlLayerNode'
 import { NodeInfoClient } from './logic/node-info/NodeInfoClient'
 import { NODE_INFO_RPC_SERVICE_ID, NodeInfoRpcLocal } from './logic/node-info/NodeInfoRpcLocal'
-import { NodeInfoResponse, ProxyDirection, StreamMessage } from './proto/packages/trackerless-network/protos/NetworkRpc'
+import { ProxyDirection, StreamMessage } from '../generated/packages/trackerless-network/protos/NetworkRpc'
+import { NodeInfo } from './types'
 
 export interface NetworkOptions {
     layer0?: DhtNodeOptions
-    networkNode?: ContentDeliveryManagerConfig
+    networkNode?: ContentDeliveryManagerOptions
     metricsContext?: MetricsContext
 }
 
@@ -50,11 +50,9 @@ if (typeof window === 'object') {
     })
 }
 
-export type NodeInfo = Required<NodeInfoResponse>
-
 export class NetworkStack {
 
-    private layer0Node?: Layer0Node
+    private controlLayerNode?: ControlLayerNode
     private contentDeliveryManager?: ContentDeliveryManager
     private stopped = false
     private readonly metricsContext: MetricsContext
@@ -65,9 +63,10 @@ export class NetworkStack {
     constructor(options: NetworkOptions) {
         this.options = options
         this.metricsContext = options.metricsContext ?? new MetricsContext()
-        this.layer0Node = new DhtNode({
+        this.controlLayerNode = new DhtNode({
             ...options.layer0,
-            metricsContext: this.metricsContext
+            metricsContext: this.metricsContext,
+            allowIncomingPrivateConnections: options.networkNode?.acceptProxyConnections
         })
         this.contentDeliveryManager = new ContentDeliveryManager({
             ...options.networkNode,
@@ -106,24 +105,24 @@ export class NetworkStack {
 
     async start(doJoin = true): Promise<void> {
         logger.info('Starting a Streamr Network Node')
-        await this.layer0Node!.start()
-        logger.info(`Node id is ${getNodeIdFromPeerDescriptor(this.layer0Node!.getLocalPeerDescriptor())}`)
-        const connectionManager = this.layer0Node!.getTransport() as ConnectionManager
-        if ((this.options.layer0?.entryPoints !== undefined) && (this.options.layer0.entryPoints.some((entryPoint) => 
-            areEqualPeerDescriptors(entryPoint, this.layer0Node!.getLocalPeerDescriptor())
+        await this.controlLayerNode!.start()
+        logger.info(`Node id is ${toNodeId(this.controlLayerNode!.getLocalPeerDescriptor())}`)
+        const connectionManager = this.controlLayerNode!.getTransport() as ConnectionManager
+        if ((this.options.layer0?.entryPoints?.some((entryPoint) => 
+            areEqualPeerDescriptors(entryPoint, this.controlLayerNode!.getLocalPeerDescriptor())
         ))) {
-            await this.layer0Node?.joinDht(this.options.layer0.entryPoints)
+            await this.controlLayerNode?.joinDht(this.options.layer0.entryPoints)
         } else if (doJoin) {
             // in practice there aren't be existing connections and therefore this always connects
             await this.ensureConnectedToControlLayer()
         }
         // TODO: remove undefined checks here. Assume that start is approproately awaited before stop is called.
-        await this.contentDeliveryManager?.start(this.layer0Node!, connectionManager, connectionManager)
+        await this.contentDeliveryManager?.start(this.controlLayerNode!, connectionManager, connectionManager)
         if (this.contentDeliveryManager) {
             const infoRpcCommunicator = new ListeningRpcCommunicator(NODE_INFO_RPC_SERVICE_ID, this.getConnectionManager())
             this.nodeInfoRpcLocal = new NodeInfoRpcLocal(this, infoRpcCommunicator)
             this.nodeInfoClient = new NodeInfoClient(
-                this.layer0Node!.getLocalPeerDescriptor(),
+                this.controlLayerNode!.getLocalPeerDescriptor(),
                 infoRpcCommunicator
             )
         }
@@ -131,16 +130,16 @@ export class NetworkStack {
 
     private async ensureConnectedToControlLayer(): Promise<void> {
         // TODO we could wrap joinDht with pOnce and call it here (no else-if needed in that case)
-        if (!this.layer0Node!.hasJoined()) {
+        if (!this.controlLayerNode!.hasJoined()) {
             setImmediate(async () => {
                 if (this.options.layer0?.entryPoints !== undefined) {
                     // TODO should catch possible rejection?
                     // the question mark is there to avoid problems when stop() is called before start()
                     // -> TODO change to exlamation mark if we don't support that (and remove NetworkStackStoppedDuringStart.test)
-                    await this.layer0Node?.joinDht(this.options.layer0.entryPoints)
+                    await this.controlLayerNode?.joinDht(this.options.layer0.entryPoints)
                 }
             })
-            await this.layer0Node!.waitForNetworkConnectivity()
+            await this.controlLayerNode!.waitForNetworkConnectivity()
         }
     }
 
@@ -148,8 +147,8 @@ export class NetworkStack {
         return this.contentDeliveryManager!
     }
 
-    getLayer0Node(): Layer0Node {
-        return this.layer0Node!
+    getControlLayerNode(): ControlLayerNode {
+        return this.controlLayerNode!
     }
 
     getMetricsContext(): MetricsContext {
@@ -157,7 +156,7 @@ export class NetworkStack {
     }
 
     async fetchNodeInfo(node: PeerDescriptor): Promise<NodeInfo> {
-        if (!areEqualPeerDescriptors(node, this.getLayer0Node().getLocalPeerDescriptor())) {
+        if (!areEqualPeerDescriptors(node, this.getControlLayerNode().getLocalPeerDescriptor())) {
             return this.nodeInfoClient!.getInfo(node)
         } else {
             return this.createNodeInfo()
@@ -166,10 +165,10 @@ export class NetworkStack {
 
     createNodeInfo(): NodeInfo {
         return {
-            peerDescriptor: this.getLayer0Node().getLocalPeerDescriptor(),
+            peerDescriptor: this.getControlLayerNode().getLocalPeerDescriptor(),
             controlLayer: {
-                connections: this.getLayer0Node().getConnectionsView().getConnections(),
-                neighbors: this.getLayer0Node().getNeighbors()
+                connections: this.getControlLayerNode().getConnectionsView().getConnections(),
+                neighbors: this.getControlLayerNode().getNeighbors()
             },
             streamPartitions: this.getContentDeliveryManager().getNodeInfo(),
             version: applicationVersion
@@ -181,7 +180,7 @@ export class NetworkStack {
     }
 
     private getConnectionManager(): ConnectionManager {
-        return this.layer0Node!.getTransport() as ConnectionManager
+        return this.controlLayerNode!.getTransport() as ConnectionManager
     }
 
     async stop(): Promise<void> {
@@ -189,9 +188,9 @@ export class NetworkStack {
             this.stopped = true
             pull(instances, this)
             await this.contentDeliveryManager!.destroy()
-            await this.layer0Node!.stop()
+            await this.controlLayerNode!.stop()
             this.contentDeliveryManager = undefined
-            this.layer0Node = undefined
+            this.controlLayerNode = undefined
         }
     }
 

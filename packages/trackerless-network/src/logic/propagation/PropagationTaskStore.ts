@@ -1,5 +1,5 @@
 import { DhtAddress } from '@streamr/dht'
-import { MessageRef, StreamMessage } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
+import { MessageRef, StreamMessage } from '../../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { FifoMapWithTTL } from './FifoMapWithTTL'
 
 export interface PropagationTask {
@@ -27,7 +27,7 @@ export class PropagationTaskStore {
     }
 
     get(): PropagationTask[] {
-        return this.tasks.values().map((task) => task.value)
+        return this.tasks.values()
     }
 
     add(task: PropagationTask): void {

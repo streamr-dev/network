@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import { WebsocketServer } from '../../src/connection/websocket/WebsocketServer'
 import { IConnection } from '../../src/connection/IConnection'
 import { WebsocketClientConnection } from '../../src/connection/websocket/NodeWebsocketClientConnection'

@@ -12,11 +12,11 @@ import {
     mergeRpcOptions
 } from '@protobuf-ts/runtime-rpc'
 import { v4 } from 'uuid'
-import { RpcMessage } from './proto/ProtoRpc'
+import { RpcMessage } from '../generated/ProtoRpc'
 import EventEmitter from 'eventemitter3'
 import { Logger } from '@streamr/utils'
 import { ProtoRpcOptions } from './ProtoCallContext'
-import { Any } from './proto/google/protobuf/any'
+import { Any } from '../generated/google/protobuf/any'
 
 interface ClientTransportEvents {
     rpcRequest: (rpcMessage: RpcMessage, options: ProtoRpcOptions, results?: ResultParts) => void
@@ -63,7 +63,7 @@ export class ClientTransport extends EventEmitter<ClientTransportEvents> impleme
     }
 
     unary<I extends object, O extends object>(method: MethodInfo<I, O>, input: I, options: ProtoRpcOptions): UnaryCall<I, O> {
-        if (!options || !options.isProtoRpc) {
+        if (!options?.isProtoRpc) {
             // eslint-disable-next-line max-len
             throw new Error('ProtoRpc ClientTransport can only be used with ProtoRpcClients. Please convert your protobuf-ts generated client to a ProtoRpcClient by calling toProtoRpcclient(yourClient).')
         }

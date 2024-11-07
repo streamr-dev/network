@@ -1,14 +1,13 @@
 import { EventEmitter } from 'eventemitter3'
-import { IAutoCertifierRpc } from './proto/packages/autocertifier-client/protos/AutoCertifier.server'
-import { HasSessionRequest, HasSessionResponse } from './proto/packages/autocertifier-client/protos/AutoCertifier'
+import { IAutoCertifierRpc } from '../generated/packages/autocertifier-client/protos/AutoCertifier.server'
+import { HasSessionRequest, HasSessionResponse } from '../generated/packages/autocertifier-client/protos/AutoCertifier'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { filePathToNodeFormat } from '@streamr/utils'
+import { filePathToNodeFormat, Logger } from '@streamr/utils'
 import { RestClient } from './RestClient'
 import { CertifiedSubdomain } from './data/CertifiedSubdomain'
 import fs from 'fs'
 import path from 'path'
 import * as forge from 'node-forge'
-import { Logger } from '@streamr/utils'
 
 interface AutoCertifierClientEvents {
     updatedCertificate: (domain: CertifiedSubdomain) => void

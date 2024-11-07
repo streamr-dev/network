@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-import { DnsServer, NXDOMAIN } from '../../src/DnsServer'
+import { DnsServer, NXDOMAIN, FORMERR } from '../../src/DnsServer'
 import { Database } from '../../src/Database'
 import { MockProxy, mock } from 'jest-mock-extended'
-import { FORMERR } from '../../src/DnsServer'
 
 describe('DnsServer', () => {
     let dnsServer: DnsServer

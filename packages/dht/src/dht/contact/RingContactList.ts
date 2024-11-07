@@ -1,7 +1,7 @@
-import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { OrderedMap } from '@js-sdsl/ordered-map'
 import { RingDistance, RingId, RingIdRaw, getLeftDistance, getRightDistance, getRingIdFromPeerDescriptor, getRingIdFromRaw } from './ringIdentifiers'
-import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { DhtAddress, toNodeId } from '../../identifiers'
 import EventEmitter from 'eventemitter3'
 import { Events } from './ContactList'
 
@@ -28,7 +28,7 @@ export class RingContactList<C extends { getPeerDescriptor(): PeerDescriptor }> 
 
     addContact(contact: C): void {
         const id = getRingIdFromPeerDescriptor(contact.getPeerDescriptor())
-        if (id === this.referenceId || this.excludedIds.has(getNodeIdFromPeerDescriptor(contact.getPeerDescriptor()))) {
+        if (id === this.referenceId || this.excludedIds.has(toNodeId(contact.getPeerDescriptor()))) {
             return
         }
         let elementAdded = false

@@ -1,16 +1,17 @@
-import { IRecursiveOperationSessionRpc } from '../../proto/packages/dht/protos/DhtRpc.server'
-import { Empty } from '../../proto/google/protobuf/empty'
-import { DataEntry, RecursiveOperationResponse, PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { IRecursiveOperationSessionRpc } from '../../../generated/packages/dht/protos/DhtRpc.server'
+import { Empty } from '../../../generated/google/protobuf/empty'
+import { DataEntry, RecursiveOperationResponse } from '../../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { Logger } from '@streamr/utils'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext'
-import { DhtAddress, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { DhtAddress, toNodeId } from '../../identifiers'
 
 const logger = new Logger(module)
 
-interface RecursiveOperationSessionRpcLocalConfig {
+interface RecursiveOperationSessionRpcLocalOptions {
     onResponseReceived: (
-        sourceId: DhtAddress,
+        remoteNodeId: DhtAddress,
         routingPath: PeerDescriptor[],
         nodes: PeerDescriptor[],
         dataEntries: DataEntry[],
@@ -20,16 +21,16 @@ interface RecursiveOperationSessionRpcLocalConfig {
 
 export class RecursiveOperationSessionRpcLocal implements IRecursiveOperationSessionRpc {
 
-    private readonly config: RecursiveOperationSessionRpcLocalConfig
+    private readonly options: RecursiveOperationSessionRpcLocalOptions
 
-    constructor(config: RecursiveOperationSessionRpcLocalConfig) {
-        this.config = config
+    constructor(options: RecursiveOperationSessionRpcLocalOptions) {
+        this.options = options
     }
     
     async sendResponse(report: RecursiveOperationResponse, context: ServerCallContext): Promise<Empty> {
-        const sourceId = getNodeIdFromPeerDescriptor((context as DhtCallContext).incomingSourceDescriptor!)
+        const remoteNodeId = toNodeId((context as DhtCallContext).incomingSourceDescriptor!)
         logger.trace('RecursiveOperationResponse arrived: ' + JSON.stringify(report))
-        this.config.onResponseReceived(sourceId, report.routingPath, report.closestConnectedNodes, report.dataEntries, report.noCloserNodesFound)
+        this.options.onResponseReceived(remoteNodeId, report.routingPath, report.closestConnectedNodes, report.dataEntries, report.noCloserNodesFound)
         return {}
     }
 }

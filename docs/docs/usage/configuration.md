@@ -19,7 +19,7 @@ const streamr = new Streamr({
 ```
 
 ## The Streamr Node config file
-The config file, typically located at `.streamr/config/default.json` or `~/.streamrDocker/config/default.json`, as the name indicates, contains the configuration of the Streamr node. The main part of this config is the [`client`](https://github.com/streamr-dev/network/blob/main/packages/client/src/Config.ts) section. The reamining configuration options of the Streamr node (Broker) config can be discovered from the [broker config schema](https://github.com/streamr-dev/network/blob/main/packages/broker/src/config/config.schema.json). For example, Node plugins are configured here.
+The config file, typically located at `.streamr/config/default.json` or `~/.streamrDocker/config/default.json`, as the name indicates, contains the configuration of the Streamr node. The main part of this config is the [`client`](https://github.com/streamr-dev/network/blob/main/packages/client/src/Config.ts) section. The remaining configuration options of the Streamr node (Broker) config can be discovered from the [broker config schema](https://github.com/streamr-dev/network/blob/main/packages/broker/src/config/config.schema.json). For example, Node plugins are configured here.
 
 ## The Streamr config package
 Not to be confused with the internal Streamr package configurations such as the client and broker, the Network configuration contains mainly "Network level" parameters that are sometimes useful to read from, depending on your use case. The Streamr Network and Streamr apps reference an NPM package containing the [Streamr config package](https://www.npmjs.com/package/@streamr/config). The config package helps resolve the network level configuration that contains contract addresses, entry point addresses, etc: 
@@ -74,3 +74,53 @@ const streamr = new StreamrClient({
     }
 }
 ```
+
+## Blockchain RPC configuration
+The Streamr Network continuously communicates with a blockchain selected by the user, with the Polygon POS blockchain being the default choice. To facilitate this communication, the Streamr Node and Streamr SDK are configured with public RPC endpoints. Although Streamr ensures robust redundancy, these third-party dependencies may experience downtime. Therefore, you might prefer to use your own RPC provider. 
+
+Here’s how to set it up:
+
+In the case of updating your Streamr node, add this section to your Streamr node config file,
+```json
+{
+    "client": {
+        ...
+        "contracts": {
+            "ethereumNetwork": {
+                "chainId": 137
+                ...
+            },
+            "rpcs": [ ... ]
+        }
+    ...
+```
+
+In the case of updating your Streamr app which uses the Streamr SDK, add this section to the Client constructor,
+
+```ts
+const streamr = new StreamrClient({
+...
+    contracts: {
+        ethereumNetwork: {
+            chainId: 137
+            ...
+        },
+        rpcs: [ ... ]
+    }
+...
+})
+```
+
+Where the `137` chainId refers to [Polygon POS](https://chainlist.org/).
+
+Example RPC section:
+```
+rpcs: [{
+    url: "https://polygon-rpc.com",
+  },
+  {
+    url: "https://polygon-bor.publicnode.com",
+  }],
+```
+
+Note, this RPC config schema applies to Streamr node and SDK versions `100.2.5` and above.

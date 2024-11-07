@@ -14,14 +14,14 @@ export const getLocalAirportCode: () => Promise<string | undefined> = async () =
     let airportCode: string
     try {
         airportCode = await fetchAirportCodeFromCdn()
-    } catch (error) {
+    } catch {
         return undefined
     }
     return airportCode
 }
 
 export const getLocalAirportCodeByCoordinates: (latitude: number, longitude: number) => string = (latitude, longitude) => {
-    const distances: Array<[airportCode: string, distance: number]> = []
+    const distances: [airportCode: string, distance: number][] = []
 
     Object.keys(airportCodeToRegion).forEach((key) => {
         const airport = airportCodeToRegion[key]
@@ -78,7 +78,7 @@ export const getLocalRegion: () => Promise<number> = async () => {
 }
 
 export const getLocalRegionByCoordinates: (latitude: number, longitude: number) => number = (latitude, longitude) => {
-    const distances: Array<[regionNumber: number, distance: number]> = []
+    const distances: [regionNumber: number, distance: number][] = []
 
     Object.keys(airportCodeToRegion).forEach((key) => {
         const airport = airportCodeToRegion[key]

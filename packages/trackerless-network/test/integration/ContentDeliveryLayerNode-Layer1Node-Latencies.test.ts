@@ -1,16 +1,15 @@
-import { DhtNode, LatencyType, PeerDescriptor, Simulator, SimulatorTransport, getNodeIdFromPeerDescriptor } from '@streamr/dht'
-import { waitForCondition } from '@streamr/utils'
+import { DhtNode, LatencyType, PeerDescriptor, Simulator, SimulatorTransport, toNodeId } from '@streamr/dht'
+import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
+import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
 import { createContentDeliveryLayerNode } from '../../src/logic/createContentDeliveryLayerNode'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { Layer1Node } from '../../src/logic/Layer1Node'
 
 describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
     const otherNodeCount = 64
-    let otherLayer1Nodes: Layer1Node[]
-    let entryPointLayer1Node: Layer1Node
+    let otherDiscoveryLayerNodes: DiscoveryLayerNode[]
+    let entryPointDiscoveryLayerNode: DiscoveryLayerNode
     let entryPointContentDeliveryLayerNode: ContentDeliveryLayerNode
     let otherContentDeliveryLayerNodes: ContentDeliveryLayerNode[]
 
@@ -27,13 +26,13 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
         await entrypointCm.start()
         await Promise.all(cms.map((cm) => cm.start()))
 
-        entryPointLayer1Node = new DhtNode({
+        entryPointDiscoveryLayerNode = new DhtNode({
             transport: entrypointCm,
             connectionsView: entrypointCm,
             peerDescriptor: entrypointDescriptor,
             serviceId: streamPartId
         })
-        otherLayer1Nodes = range(otherNodeCount).map((i) => new DhtNode({
+        otherDiscoveryLayerNodes = range(otherNodeCount).map((i) => new DhtNode({
             transport: cms[i],
             connectionsView: cms[i],
             peerDescriptor: peerDescriptors[i],
@@ -41,7 +40,7 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
         }))
         otherContentDeliveryLayerNodes = range(otherNodeCount).map((i) => createContentDeliveryLayerNode({
             streamPartId,
-            layer1Node: otherLayer1Nodes[i],
+            discoveryLayerNode: otherDiscoveryLayerNodes[i],
             transport: cms[i],
             connectionLocker: cms[i],
             localPeerDescriptor: peerDescriptors[i],
@@ -49,29 +48,29 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
         }))
         entryPointContentDeliveryLayerNode = createContentDeliveryLayerNode({
             streamPartId,
-            layer1Node: entryPointLayer1Node,
+            discoveryLayerNode: entryPointDiscoveryLayerNode,
             transport: entrypointCm,
             connectionLocker: entrypointCm,
             localPeerDescriptor: entrypointDescriptor,
             isLocalNodeEntryPoint: () => false
         })
 
-        await entryPointLayer1Node.start()
+        await entryPointDiscoveryLayerNode.start()
         entryPointContentDeliveryLayerNode.start()
-        await entryPointLayer1Node.joinDht([entrypointDescriptor])
-        await Promise.all(otherLayer1Nodes.map((node) => node.start()))
+        await entryPointDiscoveryLayerNode.joinDht([entrypointDescriptor])
+        await Promise.all(otherDiscoveryLayerNodes.map((node) => node.start()))
     })
 
     afterEach(async () => {
-        entryPointLayer1Node.stop()
+        entryPointDiscoveryLayerNode.stop()
         entryPointContentDeliveryLayerNode.stop()
-        await Promise.all(otherLayer1Nodes.map((node) => node.stop()))
+        await Promise.all(otherDiscoveryLayerNodes.map((node) => node.stop()))
         await Promise.all(otherContentDeliveryLayerNodes.map((node) => node.stop()))
     })
 
     it('happy path single node', async () => {
         await otherContentDeliveryLayerNodes[0].start()
-        await otherLayer1Nodes[0].joinDht([entrypointDescriptor])
+        await otherDiscoveryLayerNodes[0].joinDht([entrypointDescriptor])
         await Promise.all([
             waitForCondition(() => otherContentDeliveryLayerNodes[0].getNearbyNodeView().getIds().length === 1),
             waitForCondition(() => otherContentDeliveryLayerNodes[0].getNeighbors().length === 1)
@@ -83,7 +82,7 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
     it('happy path 5 nodes', async () => {
         range(4).forEach((i) => otherContentDeliveryLayerNodes[i].start())
         await Promise.all(range(4).map(async (i) => {
-            await otherLayer1Nodes[i].joinDht([entrypointDescriptor])
+            await otherDiscoveryLayerNodes[i].joinDht([entrypointDescriptor])
         }))
         await waitForCondition(() => range(4).every((i) => otherContentDeliveryLayerNodes[i].getNeighbors().length >= 4), 15000, 1000)
         range(4).forEach((i) => {
@@ -99,8 +98,8 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
                 const neighbor = allNodes.find((node) => {
                     return node.getOwnNodeId() === ownNodeId
                 })
-                const neighborIds = neighbor!.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
-                expect(neighborIds).toContain(nodeId)
+                const neighborNodeIds = neighbor!.getNeighbors().map((n) => toNodeId(n))
+                expect(neighborNodeIds).toContain(nodeId)
             })
         })
     }, 60000)
@@ -108,7 +107,7 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
     it('happy path 64 nodes', async () => {
         await Promise.all(range(otherNodeCount).map((i) => otherContentDeliveryLayerNodes[i].start()))
         await Promise.all(range(otherNodeCount).map((i) => {
-            otherLayer1Nodes[i].joinDht([entrypointDescriptor])
+            otherDiscoveryLayerNodes[i].joinDht([entrypointDescriptor])
         }))
         await Promise.all(otherContentDeliveryLayerNodes.map((node) =>
             waitForCondition(() => node.getNeighbors().length >= 4, 10000)
@@ -123,11 +122,11 @@ describe('ContentDeliveryLayerNode-DhtNode-Latencies', () => {
             otherContentDeliveryLayerNodes.forEach((node) => {
                 const nodeId = node.getOwnNodeId()
                 node.getNeighbors().forEach((neighbor) => {
-                    const neighborId = getNodeIdFromPeerDescriptor(neighbor)
+                    const neighborId = toNodeId(neighbor)
                     if (neighborId !== entryPointContentDeliveryLayerNode.getOwnNodeId()) {
                         const neighbor = otherContentDeliveryLayerNodes.find((n) => n.getOwnNodeId() === neighborId)
-                        const neighborIds = neighbor!.getNeighbors().map((n) => getNodeIdFromPeerDescriptor(n))
-                        if (!neighborIds.includes(nodeId)) {
+                        const neighborNodeIds = neighbor!.getNeighbors().map((n) => toNodeId(n))
+                        if (!neighborNodeIds.includes(nodeId)) {
                             mismatchCounter += 1
                         }
                     }

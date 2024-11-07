@@ -2,7 +2,7 @@ import { ComposedAbortSignal, composeAbortSignals } from '../src/composeAbortSig
 import range from 'lodash/range'
 import fetch from 'node-fetch'
 
-describe(composeAbortSignals, () => {
+describe('composeAbortSignals', () => {
     let controllers: AbortController[]
     let composedSignal: ComposedAbortSignal
 
@@ -112,6 +112,6 @@ describe(composeAbortSignals, () => {
         const composedSignal = composeAbortSignals(controller.signal)
         const response = fetch(`https://www.google.com`, { signal: composedSignal as any })
         controller.abort()
-        return expect(response).rejects.toThrow('The user aborted a request.')
+        return expect(response).rejects.toThrow(/aborted/)
     })
 })

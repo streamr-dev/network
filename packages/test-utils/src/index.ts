@@ -1,10 +1,11 @@
-import { Wallet } from 'ethers'
-import { EthereumAddress, toEthereumAddress, waitForCondition, waitForEvent } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, toUserId, UserID, waitForCondition, waitForEvent } from '@streamr/utils'
 import cors from 'cors'
-import crypto from 'crypto'
+import crypto, { randomBytes } from 'crypto'
+import { Wallet } from 'ethers'
 import { EventEmitter, once } from 'events'
 import express, { Request, Response } from 'express'
 import http from 'http'
+import random from 'lodash/random'
 import { AddressInfo } from 'net'
 import fetch from 'node-fetch'
 import { Readable } from 'stream'
@@ -33,15 +34,15 @@ export const waitForStreamToEnd = (stream: Readable): Promise<unknown[]> => {
 // internal
 const runAndWait = async (
     operations: (() => void) | ((() => void)[]),
-    waitedEvents: [emitter: EventEmitter, event: Event] | Array<[emitter: EventEmitter, event: Event]>,
+    waitedEvents: [emitter: EventEmitter, event: Event] | [emitter: EventEmitter, event: Event][],
     timeout: number,
-    promiseFn: (args: Array<Promise<unknown>>) => Promise<unknown[]>
+    promiseFn: (args: Promise<unknown>[]) => Promise<unknown[]>
 ): Promise<unknown[]> => {
     const ops = Array.isArray(operations) ? operations : [operations]
 
-    let evs: Array<[emitter: EventEmitter, event: Event]>
+    let evs: [emitter: EventEmitter, event: Event][]
     if (Array.isArray(waitedEvents) && Array.isArray(waitedEvents[0])) {
-        evs = waitedEvents as Array<[emitter: EventEmitter, event: Event]>
+        evs = waitedEvents as [emitter: EventEmitter, event: Event][]
     } else {
         evs = [waitedEvents as [emitter: EventEmitter, event: Event]]
     }
@@ -63,7 +64,7 @@ const runAndWait = async (
  */
 export const runAndWaitForEvents = async (
     operations: (() => void) | ((() => void)[]), 
-    waitedEvents: [emitter: EventEmitter, event: Event] | Array<[emitter: EventEmitter, event: Event]>,
+    waitedEvents: [emitter: EventEmitter, event: Event] | [emitter: EventEmitter, event: Event][],
     timeout = 5000
 ): Promise<unknown[]> => {
     return runAndWait(operations, waitedEvents, timeout, Promise.all.bind(Promise))
@@ -81,7 +82,7 @@ export const runAndWaitForEvents = async (
  */
 export const runAndRaceEvents = async (
     operations: (() => void) | ((() => void)[]), 
-    waitedEvents: [emitter: EventEmitter, event: Event] | Array<[emitter: EventEmitter, event: Event]>, 
+    waitedEvents: [emitter: EventEmitter, event: Event] | [emitter: EventEmitter, event: Event][], 
     timeout = 5000
 ): Promise<unknown[]> => {
     return runAndWait(operations, waitedEvents, timeout, Promise.race.bind(Promise))
@@ -129,8 +130,8 @@ export const runAndWaitForConditions = async (
  * @returns {Array<Event>} array that is pushed to every time emitter emits an event that
  * is defined in `events`
  */
-export const eventsToArray = (emitter: EventEmitter, events: ReadonlyArray<Event>): Event[] => {
-    const array: Array<Event> = []
+export const eventsToArray = (emitter: EventEmitter, events: readonly Event[]): Event[] => {
+    const array: Event[] = []
     events.forEach((e) => {
         emitter.on(e, () => array.push(e))
     })
@@ -145,8 +146,8 @@ export const eventsToArray = (emitter: EventEmitter, events: ReadonlyArray<Event
  * @returns {Array<[Event, ...any]>} array that is pushed to every time emitter emits an event that
  * is defined in `events`, includes event arguments
  */
-export const eventsWithArgsToArray = (emitter: EventEmitter, events: ReadonlyArray<Event>): Array<[Event, ...any]> => {
-    const array: Array<[Event, ...any]> = []
+export const eventsWithArgsToArray = (emitter: EventEmitter, events: readonly Event[]): [Event, ...any][] => {
+    const array: [Event, ...any][] = []
     events.forEach((e) => {
         emitter.on(e, (...args) => array.push([e, ...args]))
     })
@@ -189,10 +190,13 @@ export function randomEthereumAddress(): EthereumAddress {
     return toEthereumAddress('0x' + crypto.randomBytes(20).toString('hex'))
 }
 
+export const randomUserId = (): UserID => {
+    return toUserId(randomBytes(random(10, 40)))
+}
+
 // eslint-disable-next-line no-underscore-dangle
 declare let _streamr_electron_test: any
 export function isRunningInElectron(): boolean {
-    // eslint-disable-next-line no-underscore-dangle
     return typeof _streamr_electron_test !== 'undefined'
 }
 
@@ -208,7 +212,6 @@ export function describeOnlyInNodeJs(...args: Parameters<typeof describe>): void
  * Used to spin up an HTTP server used by integration tests to fetch private keys having non-zero ERC-20 token
  * balances in streamr-docker-dev environment.
  */
-/* eslint-disable no-console */
 export class KeyServer {
     public static readonly KEY_SERVER_PORT = 45454
     private static singleton: KeyServer | undefined
@@ -362,3 +365,6 @@ type MethodNames<T> = {
 
 // Pick only methods of T
 export type Methods<T> = Pick<T, MethodNames<T>>
+
+import * as customMatchers from './customMatchers'
+export { customMatchers }

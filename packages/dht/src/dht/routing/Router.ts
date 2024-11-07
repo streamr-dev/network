@@ -1,14 +1,15 @@
-import { Message, PeerDescriptor, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../proto/packages/dht/protos/DhtRpc'
+import { Message, RouteMessageAck, RouteMessageError, RouteMessageWrapper } from '../../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/PeerDescriptor'
 import { RoutingMode, RoutingRemoteContact, RoutingSession, RoutingSessionEvents } from './RoutingSession'
 import { Logger, executeSafePromise, raceEvents3, withTimeout } from '@streamr/utils'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { DuplicateDetector } from './DuplicateDetector'
 import { v4 } from 'uuid'
 import { RouterRpcLocal, createRouteMessageAck } from './RouterRpcLocal'
-import { DhtAddress, areEqualPeerDescriptors, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { DhtAddress, areEqualPeerDescriptors, toDhtAddress, toNodeId } from '../../identifiers'
 import { RoutingTablesCache } from './RoutingTablesCache'
 
-export interface RouterConfig {
+export interface RouterOptions {
     rpcCommunicator: RoutingRpcCommunicator
     localPeerDescriptor: PeerDescriptor
     handleMessage: (message: Message) => void
@@ -27,13 +28,15 @@ export class Router {
     private readonly forwardingTable: Map<DhtAddress, ForwardingTableEntry> = new Map()
     private readonly routingTablesCache = new RoutingTablesCache()
     private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
-    // TODO use config option or named constant?
+    // TODO use options option or named constant?
     private readonly duplicateRequestDetector: DuplicateDetector = new DuplicateDetector(10000)
     private stopped = false
-    private readonly config: RouterConfig
+    private readonly options: RouterOptions
+    private messagesRouted = 0
+    private messagesSent = 0
 
-    constructor(config: RouterConfig) {
-        this.config = config
+    constructor(options: RouterOptions) {
+        this.options = options
         this.registerLocalRpcMethods()
     }
 
@@ -42,10 +45,10 @@ export class Router {
             doRouteMessage: (routedMessage: RouteMessageWrapper, mode?: RoutingMode) => this.doRouteMessage(routedMessage, mode),
             setForwardingEntries: (routedMessage: RouteMessageWrapper) => this.setForwardingEntries(routedMessage),
             duplicateRequestDetector: this.duplicateRequestDetector,
-            localPeerDescriptor: this.config.localPeerDescriptor,
-            handleMessage: this.config.handleMessage
+            localPeerDescriptor: this.options.localPeerDescriptor,
+            handleMessage: this.options.handleMessage
         })
-        this.config.rpcCommunicator.registerRpcMethod(
+        this.options.rpcCommunicator.registerRpcMethod(
             RouteMessageWrapper,
             RouteMessageAck,
             'routeMessage',
@@ -56,7 +59,7 @@ export class Router {
                 return rpcLocal.routeMessage(routedMessage)
             }
         )
-        this.config.rpcCommunicator.registerRpcMethod(
+        this.options.rpcCommunicator.registerRpcMethod(
             RouteMessageWrapper,
             RouteMessageAck,
             'forwardMessage',
@@ -71,15 +74,15 @@ export class Router {
     }
 
     public send(msg: Message, reachableThrough: PeerDescriptor[]): void {
-        msg.sourceDescriptor = this.config.localPeerDescriptor
+        msg.sourceDescriptor = this.options.localPeerDescriptor
         const targetPeerDescriptor = msg.targetDescriptor!
-        const forwardingEntry = this.forwardingTable.get(getNodeIdFromPeerDescriptor(targetPeerDescriptor))
+        const forwardingEntry = this.forwardingTable.get(toNodeId(targetPeerDescriptor))
         if (forwardingEntry && forwardingEntry.peerDescriptors.length > 0) {
             const forwardedMessage: RouteMessageWrapper = {
                 message: msg,
                 requestId: v4(),
                 target: forwardingEntry.peerDescriptors[0].nodeId,
-                sourcePeer: this.config.localPeerDescriptor,
+                sourcePeer: this.options.localPeerDescriptor,
                 reachableThrough,
                 routingPath: [],
                 parallelRootNodeIds: []
@@ -95,7 +98,7 @@ export class Router {
                 message: msg,
                 requestId: v4(),
                 target: targetPeerDescriptor.nodeId,
-                sourcePeer: this.config.localPeerDescriptor,
+                sourcePeer: this.options.localPeerDescriptor,
                 reachableThrough,
                 routingPath: [],
                 parallelRootNodeIds: []
@@ -107,22 +110,21 @@ export class Router {
                 throw new Error(error)
             }
         }
+        this.messagesSent += 1
     }
 
     public doRouteMessage(routedMessage: RouteMessageWrapper, mode = RoutingMode.ROUTE, excludedPeer?: DhtAddress): RouteMessageAck {
         if (this.stopped) {
             return createRouteMessageAck(routedMessage, RouteMessageError.STOPPED)
         }
-        logger.trace(`Routing message ${routedMessage.requestId} from ${getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!)} `
-            + `to ${getDhtAddressFromRaw(routedMessage.target)}`)
+        logger.trace(`Routing message ${routedMessage.requestId} from ${toNodeId(routedMessage.sourcePeer!)} `
+            + `to ${toDhtAddress(routedMessage.target)}`)
         const session = this.createRoutingSession(routedMessage, mode, excludedPeer)
         const contacts = session.updateAndGetRoutablePeers()
         if (contacts.length > 0) {
             this.addRoutingSession(session)
-            // eslint-disable-next-line promise/catch-or-return
             logger.trace('starting to raceEvents from routingSession: ' + session.sessionId)
             let eventReceived: Promise<unknown>
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             executeSafePromise(async () => {
                 eventReceived = raceEvents3<RoutingSessionEvents>(
                     session,
@@ -132,16 +134,17 @@ export class Router {
             })
             setImmediate(async () => {
                 try {
-                    // TODO use config option or named constant?
+                    // TODO use options option or named constant?
                     await withTimeout(eventReceived, 10000)
                     logger.trace('raceEvents ended from routingSession: ' + session.sessionId)
-                } catch (e) {
+                } catch {
                     logger.trace('raceEvents timed out for routingSession ' + session.sessionId) 
                 }
                 session.stop()
                 this.removeRoutingSession(session.sessionId) 
             })
             session.sendMoreRequests(contacts)
+            this.messagesRouted += 1
             return createRouteMessageAck(routedMessage)
         } else {
             logger.trace('no targets', { sessionId: session.sessionId })
@@ -150,7 +153,7 @@ export class Router {
     }
 
     private createRoutingSession(routedMessage: RouteMessageWrapper, mode: RoutingMode, excludedNode?: DhtAddress): RoutingSession {
-        const excludedNodeIds = new Set<DhtAddress>(routedMessage.routingPath.map((descriptor) => getNodeIdFromPeerDescriptor(descriptor)))
+        const excludedNodeIds = new Set<DhtAddress>(routedMessage.routingPath.map((descriptor) => toNodeId(descriptor)))
         if (excludedNode) {
             excludedNodeIds.add(excludedNode)
         }
@@ -158,15 +161,15 @@ export class Router {
             excludedNodeIds.add(nodeId as DhtAddress)
         })
         return new RoutingSession({
-            rpcCommunicator: this.config.rpcCommunicator,
-            localPeerDescriptor: this.config.localPeerDescriptor,
+            rpcCommunicator: this.options.rpcCommunicator,
+            localPeerDescriptor: this.options.localPeerDescriptor,
             routedMessage,
-            // TODO use config option or named constant?
-            parallelism: areEqualPeerDescriptors(this.config.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
+            // TODO use options option or named constant?
+            parallelism: areEqualPeerDescriptors(this.options.localPeerDescriptor, routedMessage.sourcePeer!) ? 2 : 1,
             mode,
             excludedNodeIds,
             routingTablesCache: this.routingTablesCache,
-            getConnections: this.config.getConnections
+            getConnections: this.options.getConnections
         })
     }
 
@@ -187,12 +190,12 @@ export class Router {
     }
 
     onNodeConnected(peerDescriptor: PeerDescriptor): void {
-        const remote = new RoutingRemoteContact(peerDescriptor, this.config.localPeerDescriptor, this.config.rpcCommunicator)
+        const remote = new RoutingRemoteContact(peerDescriptor, this.options.localPeerDescriptor, this.options.rpcCommunicator)
         this.routingTablesCache.onNodeConnected(remote)
     }
 
     onNodeDisconnected(peerDescriptor: PeerDescriptor): void {
-        this.routingTablesCache.onNodeDisconnected(getNodeIdFromPeerDescriptor(peerDescriptor))
+        this.routingTablesCache.onNodeDisconnected(toNodeId(peerDescriptor))
     }
 
     public resetCache(): void {
@@ -213,13 +216,20 @@ export class Router {
         this.routingTablesCache.reset()
     }
 
+    getDiagnosticInfo(): Record<string, unknown> {
+        return {
+            messagesRouted: this.messagesRouted,
+            messagesSent: this.messagesSent
+        }
+    }
+
     private setForwardingEntries(routedMessage: RouteMessageWrapper): void {
         const reachableThroughWithoutSelf = routedMessage.reachableThrough.filter((peer) => {
-            return !areEqualPeerDescriptors(peer, this.config.localPeerDescriptor)
+            return !areEqualPeerDescriptors(peer, this.options.localPeerDescriptor)
         })
         
         if (reachableThroughWithoutSelf.length > 0) {
-            const sourceNodeId = getNodeIdFromPeerDescriptor(routedMessage.sourcePeer!)
+            const sourceNodeId = toNodeId(routedMessage.sourcePeer!)
             if (this.forwardingTable.has(sourceNodeId)) {
                 const oldEntry = this.forwardingTable.get(sourceNodeId)
                 clearTimeout(oldEntry!.timeout)
@@ -229,7 +239,7 @@ export class Router {
                 peerDescriptors: reachableThroughWithoutSelf,
                 timeout: setTimeout(() => {
                     this.forwardingTable.delete(sourceNodeId)
-                }, 10000)  // TODO use config option or named constant?
+                }, 10000)  // TODO use options option or named constant?
             }
             this.forwardingTable.set(sourceNodeId, forwardingEntry)
         }

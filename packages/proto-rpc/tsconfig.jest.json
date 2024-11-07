@@ -1,11 +1,12 @@
 {
     "extends": "../../tsconfig.jest.json",
     "compilerOptions": {
-        "outDir": "dist",
+        "noEmit": true,
         "noImplicitOverride": false
     },
     "include": [
         "src/**/*",
+        "generated/**/*",
         "test/**/*",
     ],
     "references": [
