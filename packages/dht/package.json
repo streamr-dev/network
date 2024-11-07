@@ -42,7 +42,7 @@
     "lru-cache": "11.0.1",
     "node-datachannel": "^0.10.1",
     "querystring": "0.2.1",
-    "uuid": "^10.0.0",
+    "uuid": "^11.0.2",
     "websocket": "^1.0.34",
     "ws": "^8.18.0"
   },
@@ -52,7 +52,6 @@
     "@types/heap": "^0.2.34",
     "@types/k-bucket": "^5.0.1",
     "@types/lodash": "^4.17.12",
-    "@types/uuid": "^10.0.0",
     "@types/websocket": "^1.0.10",
     "@types/ws": "^8.5.12",
     "jest-leak-detector": "^27.3.1",
