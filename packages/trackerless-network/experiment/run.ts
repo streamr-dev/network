@@ -2,6 +2,7 @@ import { Logger, StreamPartIDUtils, wait } from "@streamr/utils"
 import { ExperimentController } from "./ExperimentController"
 import { ExperimentNodeWrapper } from "./ExperimentNodeWrapper"
 import { AutoScalingClient, AutoScalingClientConfig, DescribePoliciesCommand, DescribePoliciesCommandInput, SetDesiredCapacityCommand, SetDesiredCapacityCommandInput } from "@aws-sdk/client-auto-scaling"
+import { EC2Client, DescribeInstancesCommand } from "@aws-sdk/client-ec2"
 import 'dotenv/config'
 
 const envs = [ 'local', 'aws' ]
@@ -52,6 +53,45 @@ const startAwsNodes = async (nodeCount: number) => {
     }
 }
 
+async function waitForInstances(): Promise<void> {
+    const config = {
+        region: "eu-north-1",
+        credentials: {
+            accessKeyId: process.env.AWS_ACCESS_KEY!,
+            secretAccessKey: process.env.AWS_SECRET_KEY!,
+        }
+    } 
+    const client = new EC2Client(config)
+    const params = {
+        Filters: [
+            {
+                Name: 'instance-state-name',
+                Values: ['running'],
+                Tags: [ 'network-experiment' ] 
+            }
+        ]
+    }
+    while (true) {
+        const seen = new Set<string>()
+        try {
+            const res = await client.send(new DescribeInstancesCommand(params))
+            if (res.Reservations!.length && res.Reservations![0].Instances!.length === nodeCount) {
+                seen.add(res.Reservations![0].Instances![0].InstanceId!)
+                res.Reservations![0].Instances!.forEach((instance) => {
+                    console.log('PublicDnsName:', res.Reservations![0].Instances![0].PublicDnsName, "InstanceId:", instance.InstanceId)
+                })
+                break
+            } else {
+                console.log('waiting for instances to start in region eu-north-1 current count', res.Reservations![0]?.Instances?.length ?? 0)
+            }
+        } catch (err) {
+            console.error(err)
+        } 
+        await wait(10000)
+    }
+    
+}
+
 const stopAwsNodes = async () => {
     const config: AutoScalingClientConfig = {
         region: "eu-north-1",
@@ -83,6 +123,7 @@ const run = async () => {
         localNodes = startLocalNodes(nodeCount)
     } else if (env === 'aws') {
         await startAwsNodes(nodeCount)
+        await waitForInstances()
         console.log('aws nodes started')
     }
 
