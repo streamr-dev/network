@@ -112,11 +112,152 @@ export class Stream {
     }
 
     /**
+     * See {@link StreamrClient.publish | StreamrClient.publish}.
+     *
+     * @category Important
+     */
+    async publish(content: unknown, metadata?: PublishMetadata): Promise<Message> {
+        const result = await this._publisher.publish(this.id, content, metadata)
+        this._eventEmitter.emit('messagePublished', result)
+        return convertStreamMessageToMessage(result)
+    }
+
+    /**
      * Updates the metadata of the stream.
      */
     async update(metadata: StreamMetadata): Promise<void> {
         await this._streamRegistry.updateStreamMetadata(this.id, metadata)
         this.metadata = metadata
+    }
+
+    /**
+     * Deletes the stream.
+     *
+     * @remarks Stream instance should not be used afterwards.
+     */
+    async delete(): Promise<void> {
+        try {
+            await this._streamRegistry.deleteStream(this.id)
+        } finally {
+            this._streamRegistry.clearStreamCache(this.id)
+        }
+    }
+
+    /**
+     * See {@link StreamrClient.hasPermission | StreamrClient.hasPermission}.
+     *
+     * @category Important
+     */
+    async hasPermission(query: Omit<UserPermissionQuery, 'streamId'> | Omit<PublicPermissionQuery, 'streamId'>): Promise<boolean> {
+        return this._streamRegistry.hasPermission(toInternalPermissionQuery({
+            streamId: this.id,
+            ...query
+        }))
+    }
+
+    /**
+     * See {@link StreamrClient.getPermissions | StreamrClient.getPermissions}.
+     *
+     * @category Important
+     */
+    async getPermissions(): Promise<PermissionAssignment[]> {
+        return this._streamRegistry.getPermissions(this.id)
+    }
+
+    /**
+     * See {@link StreamrClient.grantPermissions | StreamrClient.grantPermissions}.
+     *
+     * @category Important
+     */
+    async grantPermissions(...assignments: PermissionAssignment[]): Promise<void> {
+        return this._streamRegistry.grantPermissions(this.id, ...assignments.map(toInternalPermissionAssignment))
+    }
+
+    /**
+     * See {@link StreamrClient.revokePermissions | StreamrClient.revokePermissions}.
+     *
+     * @category Important
+     */
+    async revokePermissions(...assignments: PermissionAssignment[]): Promise<void> {
+        return this._streamRegistry.revokePermissions(this.id, ...assignments.map(toInternalPermissionAssignment))
+    }
+
+    /**
+     * See {@link StreamrClient.addStreamToStorageNode | StreamrClient.addStreamToStorageNode}.
+     * 
+     * @category Important
+     */
+    async addToStorageNode(storageNodeAddress: HexString, opts: { wait: boolean, timeout?: number } = { wait: false }): Promise<void> {
+        await addStreamToStorageNode(
+            this.id,
+            toEthereumAddress(storageNodeAddress),
+            opts,
+            this.getPartitionCount(),
+            this._subscriber,
+            this._streamRegistry,
+            this._streamStorageRegistry,
+            this._loggerFactory,
+            this._config
+        )
+    }
+
+    /**
+     * See {@link StreamrClient.removeStreamFromStorageNode | StreamrClient.removeStreamFromStorageNode}.
+     */
+    async removeFromStorageNode(nodeAddress: HexString): Promise<void> {
+        try {
+            return this._streamStorageRegistry.removeStreamFromStorageNode(this.id, toEthereumAddress(nodeAddress))
+        } finally {
+            this._streamRegistry.clearStreamCache(this.id)
+        }
+    }
+
+    /**
+     * See {@link StreamrClient.getStorageNodes | StreamrClient.getStorageNodes}.
+     */
+    async getStorageNodes(): Promise<HexString[]> {
+        return this._streamStorageRegistry.getStorageNodes(this.id)
+    }
+
+    /**
+     * Attempts to detect and update the {@link StreamMetadata.config} metadata of the stream by performing a resend.
+     *
+     * @remarks Only works on stored streams.
+     *
+     * @returns be mindful that in the case of there being zero messages stored, the returned promise will resolve even
+     * though fields were not updated
+     */
+    async detectFields(): Promise<void> {
+        // Get last message of the stream to be used for field detecting
+        const sub = await this._resends.resend(
+            toStreamPartID(this.id, DEFAULT_PARTITION),
+            {
+                last: 1
+            },
+            (streamId: StreamID) => this._streamStorageRegistry.getStorageNodes(streamId)
+        )
+
+        const receivedMsgs = await collect(sub)
+
+        if (!receivedMsgs.length) { return }
+
+        const lastMessage = receivedMsgs[0].getParsedContent()
+
+        const fields = Object.entries(lastMessage as any).map(([name, value]) => {
+            const type = getFieldType(value)
+            return !!type && {
+                name,
+                type,
+            }
+        }).filter(Boolean) as Field[] // see https://github.com/microsoft/TypeScript/issues/30621
+
+        // Save field config back to the stream
+        const merged = flatMerge(this.getMetadata(), {
+            config: {
+                fields
+            }
+        })
+        await this.update(merged)
     }
 
     /**
@@ -174,146 +315,4 @@ export class Stream {
     getMetadata(): StreamMetadata {
         return this.metadata
     }
-
-    /**
-     * Deletes the stream.
-     *
-     * @remarks Stream instance should not be used afterwards.
-     */
-    async delete(): Promise<void> {
-        try {
-            await this._streamRegistry.deleteStream(this.id)
-        } finally {
-            this._streamRegistry.clearStreamCache(this.id)
-        }
-    }
-
-    /**
-     * Attempts to detect and update the {@link StreamMetadata.config} metadata of the stream by performing a resend.
-     *
-     * @remarks Only works on stored streams.
-     *
-     * @returns be mindful that in the case of there being zero messages stored, the returned promise will resolve even
-     * though fields were not updated
-     */
-    async detectFields(): Promise<void> {
-        // Get last message of the stream to be used for field detecting
-        const sub = await this._resends.resend(
-            toStreamPartID(this.id, DEFAULT_PARTITION),
-            {
-                last: 1
-            },
-            (streamId: StreamID) => this._streamStorageRegistry.getStorageNodes(streamId)
-        )
-
-        const receivedMsgs = await collect(sub)
-
-        if (!receivedMsgs.length) { return }
-
-        const lastMessage = receivedMsgs[0].getParsedContent()
-
-        const fields = Object.entries(lastMessage as any).map(([name, value]) => {
-            const type = getFieldType(value)
-            return !!type && {
-                name,
-                type,
-            }
-        }).filter(Boolean) as Field[] // see https://github.com/microsoft/TypeScript/issues/30621
-
-        // Save field config back to the stream
-        const merged = flatMerge(this.getMetadata(), {
-            config: {
-                fields
-            }
-        })
-        await this.update(merged)
-    }
-
-    /**
-     * See {@link StreamrClient.addStreamToStorageNode | StreamrClient.addStreamToStorageNode}.
-     * 
-     * @category Important
-     */
-    async addToStorageNode(storageNodeAddress: HexString, opts: { wait: boolean, timeout?: number } = { wait: false }): Promise<void> {
-        await addStreamToStorageNode(
-            this.id,
-            toEthereumAddress(storageNodeAddress),
-            opts,
-            this.getPartitionCount(),
-            this._subscriber,
-            this._streamRegistry,
-            this._streamStorageRegistry,
-            this._loggerFactory,
-            this._config
-        )
-    }
-
-    /**
-     * See {@link StreamrClient.removeStreamFromStorageNode | StreamrClient.removeStreamFromStorageNode}.
-     */
-    async removeFromStorageNode(nodeAddress: HexString): Promise<void> {
-        try {
-            return this._streamStorageRegistry.removeStreamFromStorageNode(this.id, toEthereumAddress(nodeAddress))
-        } finally {
-            this._streamRegistry.clearStreamCache(this.id)
-        }
-    }
-
-    /**
-     * See {@link StreamrClient.getStorageNodes | StreamrClient.getStorageNodes}.
-     */
-    async getStorageNodes(): Promise<HexString[]> {
-        return this._streamStorageRegistry.getStorageNodes(this.id)
-    }
-
-    /**
-     * See {@link StreamrClient.publish | StreamrClient.publish}.
-     *
-     * @category Important
-     */
-    async publish(content: unknown, metadata?: PublishMetadata): Promise<Message> {
-        const result = await this._publisher.publish(this.id, content, metadata)
-        this._eventEmitter.emit('messagePublished', result)
-        return convertStreamMessageToMessage(result)
-    }
-
-    /**
-     * See {@link StreamrClient.hasPermission | StreamrClient.hasPermission}.
-     *
-     * @category Important
-     */
-    async hasPermission(query: Omit<UserPermissionQuery, 'streamId'> | Omit<PublicPermissionQuery, 'streamId'>): Promise<boolean> {
-        return this._streamRegistry.hasPermission(toInternalPermissionQuery({
-            streamId: this.id,
-            ...query
-        }))
-    }
-
-    /**
-     * See {@link StreamrClient.getPermissions | StreamrClient.getPermissions}.
-     *
-     * @category Important
-     */
-    async getPermissions(): Promise<PermissionAssignment[]> {
-        return this._streamRegistry.getPermissions(this.id)
-    }
-
-    /**
-     * See {@link StreamrClient.grantPermissions | StreamrClient.grantPermissions}.
-     *
-     * @category Important
-     */
-    async grantPermissions(...assignments: PermissionAssignment[]): Promise<void> {
-        return this._streamRegistry.grantPermissions(this.id, ...assignments.map(toInternalPermissionAssignment))
-    }
-
-    /**
-     * See {@link StreamrClient.revokePermissions | StreamrClient.revokePermissions}.
-     *
-     * @category Important
-     */
-    async revokePermissions(...assignments: PermissionAssignment[]): Promise<void> {
-        return this._streamRegistry.revokePermissions(this.id, ...assignments.map(toInternalPermissionAssignment))
-    }
-
 }
