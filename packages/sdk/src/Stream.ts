@@ -159,8 +159,8 @@ export class Stream {
     /**
      * See {@link StreamrClient.removeStreamFromStorageNode | StreamrClient.removeStreamFromStorageNode}.
      */
-    async removeFromStorageNode(nodeAddress: HexString): Promise<void> {
-        return this.client.removeStreamFromStorageNode(this.id, toEthereumAddress(nodeAddress))
+    async removeFromStorageNode(storageNodeAddress: HexString): Promise<void> {
+        return this.client.removeStreamFromStorageNode(this.id, toEthereumAddress(storageNodeAddress))
     }
 
     /**
