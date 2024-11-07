@@ -75,14 +75,15 @@ async function waitForInstances(): Promise<void> {
         const seen = new Set<string>()
         try {
             const res = await client.send(new DescribeInstancesCommand(params))
-            if (res.Reservations!.length && res.Reservations![0].Instances!.length === nodeCount) {
+            const instanceCount = res.Reservations!.flatMap((a) => a.Instances!.length).reduce((a, c) => a + c, 0)
+            if (instanceCount === nodeCount) {
                 seen.add(res.Reservations![0].Instances![0].InstanceId!)
-                res.Reservations![0].Instances!.forEach((instance) => {
+                res.Reservations!.flatMap((reservation) => reservation.Instances!.forEach((instance) => {
                     logger.info('Instance running, PublicDnsName: ' + res.Reservations![0].Instances![0].PublicDnsName + " InstanceId: " + instance.InstanceId)
-                })
+                }))
                 break
             } else {
-                logger.info('waiting for instances to start in region eu-north-1 current count ' + (res.Reservations![0]?.Instances?.length ?? 0))
+                logger.info('waiting for instances to start in region eu-north-1 current count ' + instanceCount)
             }
         } catch (err) {
             console.error(err)
