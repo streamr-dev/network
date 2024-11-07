@@ -1,10 +1,10 @@
 import { ChangeFieldType, GraphQLQuery, HexString, Logger, TheGraphClient, toStreamID, toUserId, UserID } from '@streamr/utils'
 import { Stream } from '../Stream'
-import { StreamFactory } from '../StreamFactory'
 import { ChainPermissions, convertChainPermissionsToStreamPermissions, PUBLIC_PERMISSION_USER_ID, StreamPermission } from '../permission'
 import { filter, map, unique } from '../utils/GeneratorUtils'
 import { StreamQueryResult } from './StreamRegistry'
 import { parseMetadata } from '../StreamMetadata'
+import { StreamrClient } from '../StreamrClient'
 
 export interface SearchStreamsPermissionFilter {
     userId: HexString
@@ -40,8 +40,8 @@ export const searchStreams = (
     permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
     orderBy: SearchStreamsOrderBy,
     theGraphClient: TheGraphClient,
-    streamFactory: StreamFactory,
     logger: Logger,
+    client: StreamrClient
 ): AsyncGenerator<Stream> => {
     if ((term === undefined) && (permissionFilter === undefined)) {
         throw new Error('Requires a search term or a permission filter')
@@ -49,7 +49,7 @@ export const searchStreams = (
     logger.debug('Search for streams', { term, permissionFilter })
     return map(
         fetchSearchStreamsResultFromTheGraph(term, permissionFilter, orderBy, theGraphClient),
-        (item: SearchStreamsResultItem) => streamFactory.createStream(toStreamID(item.stream.id), parseMetadata(item.stream.metadata))
+        (item: SearchStreamsResultItem) => new Stream(toStreamID(item.stream.id), parseMetadata(item.stream.metadata), client)
     )
 }
 

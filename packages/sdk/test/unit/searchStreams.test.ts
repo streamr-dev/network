@@ -45,8 +45,8 @@ describe('searchStreams', () => {
             undefined,
             orderBy,
             theGraphClient as any,
-            { createStream: () => {} } as any,
             mockLoggerFactory().createLogger(module),
+            undefined as any,
         ))
 
         const graphQLquery = ((theGraphClient as any).queryEntities as jest.Mock).mock.calls[0][0]()

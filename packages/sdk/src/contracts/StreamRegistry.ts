@@ -48,7 +48,7 @@ import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway, waitForTx } from './contract'
 import { InternalSearchStreamsPermissionFilter, SearchStreamsOrderBy, searchStreams as _searchStreams } from './searchStreams'
-import { StreamFactory } from '../StreamFactory'
+import { StreamrClient } from '../StreamrClient'
 
 /*
  * On-chain registry of stream metadata and permissions.
@@ -298,15 +298,15 @@ export class StreamRegistry {
         term: string | undefined,
         permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
         orderBy: SearchStreamsOrderBy,
-        streamFactory: StreamFactory
+        client: StreamrClient
     ): AsyncIterable<Stream> {
         return _searchStreams(
             term,
             permissionFilter,
             orderBy,
             this.theGraphClient,
-            streamFactory,
-            this.logger)
+            this.logger,
+            client)
     }
 
     getStreamPublishers(streamIdOrPath: string): AsyncIterable<UserID> {
