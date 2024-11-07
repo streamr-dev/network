@@ -201,11 +201,7 @@ export class Stream {
      * See {@link StreamrClient.removeStreamFromStorageNode | StreamrClient.removeStreamFromStorageNode}.
      */
     async removeFromStorageNode(nodeAddress: HexString): Promise<void> {
-        try {
-            return this._streamStorageRegistry.removeStreamFromStorageNode(this.id, toEthereumAddress(nodeAddress))
-        } finally {
-            this._streamRegistry.clearStreamCache(this.id)
-        }
+        return this._streamStorageRegistry.removeStreamFromStorageNode(this.id, toEthereumAddress(nodeAddress))
     }
 
     /**
