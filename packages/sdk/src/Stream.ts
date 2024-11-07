@@ -94,7 +94,7 @@ export class Stream {
     /**
      * Updates the metadata of the stream.
      */
-    async update(metadata: StreamMetadata): Promise<void> {
+    async setMetadata(metadata: StreamMetadata): Promise<void> {
         await this.client.updateStream(this.id, metadata)
         this.metadata = metadata
     }
@@ -207,7 +207,7 @@ export class Stream {
                 fields
             }
         })
-        await this.update(merged)
+        await this.setMetadata(merged)
     }
 
     /**
@@ -231,7 +231,7 @@ export class Stream {
     }
 
     async setDescription(description: string): Promise<void> {
-        await this.update({
+        await this.setMetadata({
             ...this.getMetadata(),
             description
         })
@@ -253,7 +253,7 @@ export class Stream {
      * Sets the value of `storageDays` field
      */
     async setStorageDayCount(count: number): Promise<void> {
-        await this.update({
+        await this.setMetadata({
             ...this.getMetadata(),
             storageDays: count
         })

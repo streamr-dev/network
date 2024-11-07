@@ -34,7 +34,7 @@ describe('Stream', () => {
         })
     })
 
-    describe('update', () => {
+    describe('setMetadata', () => {
         it('fields not updated if transaction fails', async () => {
             const client: Partial<StreamrClient> = {
                 updateStream: jest.fn().mockRejectedValue(new Error('mock-error')),
@@ -45,7 +45,7 @@ describe('Stream', () => {
             }, client as any)
 
             await expect(() => {
-                return stream.update({
+                return stream.setMetadata({
                     description: 'updated-description'
                 })
             }).rejects.toThrow('mock-error')

@@ -236,10 +236,10 @@ describe('StreamRegistry', () => {
         }, TIMEOUT)
     })
 
-    describe('update', () => {
+    describe('setMetadata', () => {
         it('happy path', async () => {
             const description = `description-${Date.now()}`
-            await createdStream.update({
+            await createdStream.setMetadata({
                 description
             })
             await until(async () => {
