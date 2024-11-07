@@ -402,7 +402,7 @@ export class StreamrClient {
     /**
      * Updates the metadata of a stream.
      */
-    async updateStream(streamIdOrPath: string, metadata: StreamMetadata): Promise<void> {
+    async setStreamMetadata(streamIdOrPath: string, metadata: StreamMetadata): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         await this.streamRegistry.updateStreamMetadata(streamId, metadata)
     }

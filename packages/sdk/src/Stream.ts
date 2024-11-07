@@ -95,7 +95,7 @@ export class Stream {
      * Updates the metadata of the stream.
      */
     async setMetadata(metadata: StreamMetadata): Promise<void> {
-        await this.client.updateStream(this.id, metadata)
+        await this.client.setStreamMetadata(this.id, metadata)
         this.metadata = metadata
     }
 
