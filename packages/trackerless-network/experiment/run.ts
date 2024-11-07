@@ -78,11 +78,11 @@ async function waitForInstances(): Promise<void> {
             if (res.Reservations!.length && res.Reservations![0].Instances!.length === nodeCount) {
                 seen.add(res.Reservations![0].Instances![0].InstanceId!)
                 res.Reservations![0].Instances!.forEach((instance) => {
-                    console.log('PublicDnsName:', res.Reservations![0].Instances![0].PublicDnsName, "InstanceId:", instance.InstanceId)
+                    logger.info('Instance running, PublicDnsName: ' + res.Reservations![0].Instances![0].PublicDnsName + " InstanceId: " + instance.InstanceId)
                 })
                 break
             } else {
-                console.log('waiting for instances to start in region eu-north-1 current count', res.Reservations![0]?.Instances?.length ?? 0)
+                logger.info('waiting for instances to start in region eu-north-1 current count ' + (res.Reservations![0]?.Instances?.length ?? 0))
             }
         } catch (err) {
             console.error(err)
@@ -124,7 +124,7 @@ const run = async () => {
     } else if (env === 'aws') {
         await startAwsNodes(nodeCount)
         await waitForInstances()
-        console.log('aws nodes started')
+        logger.info('all aws instances started')
     }
 
     await controller.waitForClients()
