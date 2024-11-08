@@ -79,7 +79,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
     private readonly contentDeliveryRpcLocal: ContentDeliveryRpcLocal
     private abortController: AbortController = new AbortController()
     private messagesPropagated = 0
-    private readonly storedMessages: string[] = []
+    private readonly storedMessages: unknown[] = []
 
     constructor(options: StrictContentDeliveryLayerNodeOptions) {
         super()
@@ -369,7 +369,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                     time: Date.now(),
                     region: this.options.localPeerDescriptor.region
                 })
-                this.storedMessages.push(JSON.stringify(parsedMessage))
+                this.storedMessages.push(parsedMessage)
                 msg.body.contentMessage.content = utf8ToBinary(JSON.stringify(parsedMessage))
             }
         }
@@ -420,7 +420,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         return this.options.nearbyNodeView
     }
 
-    public getStoredMessages(): string[] {
+    public getStoredMessages(): unknown[] {
         return this.storedMessages
     }
 

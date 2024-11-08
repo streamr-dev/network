@@ -4,6 +4,7 @@ import { ExperimentNodeWrapper } from "./ExperimentNodeWrapper"
 import { AutoScalingClient, AutoScalingClientConfig, DescribePoliciesCommand, DescribePoliciesCommandInput, SetDesiredCapacityCommand, SetDesiredCapacityCommandInput } from "@aws-sdk/client-auto-scaling"
 import { EC2Client, DescribeInstancesCommand } from "@aws-sdk/client-ec2"
 import 'dotenv/config'
+import { joinResults, propagationResults, routingResults, timeToDataResults } from "./ResultCalculator"
 
 const envs = [ 'local', 'aws' ]
 const modes = [ 'propagation', 'join', 'routing', 'timetodata', 'scalingjoin' ]
@@ -93,6 +94,18 @@ async function waitForInstances(): Promise<void> {
     
 }
 
+const calculateResults = async (filePath: string): Promise<void> => {
+    if (experiment === 'join' || experiment === 'scalingjoin') {
+        await joinResults(filePath)
+    } else if (experiment === 'routing') {
+        await routingResults(filePath)
+    } else if (experiment === 'timetodata') {
+        await timeToDataResults(filePath)
+    } else if (experiment === 'propagation') {
+        await propagationResults(filePath)
+    }
+}
+
 const stopAwsNodes = async () => {
     const config: AutoScalingClientConfig = {
         region: "eu-north-1",
@@ -179,6 +192,8 @@ const run = async () => {
         await Promise.all(localNodes.map((node) => node.stop()))
     }
     await controller.stop()
+
+    await calculateResults(filePath)
 }
 
 run()
