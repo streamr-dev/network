@@ -26,14 +26,14 @@ export class ExperimentController {
     private httpServer?: http.Server
     private wss?: WebSocket.Server
     private clients: Map<string, ExperimentNode> = new Map()
-    private readonly nodeCount: number 
+    private readonly nodeCount: number
+    private readonly resultFilePath: string
     private readonly resultsReceived: Set<string> = new Set()
     private instructionsCompleted = 0
-    private readonly experimentId: string
 
-    constructor(nodeCount: number) {
+    constructor(nodeCount: number, resultFilePath: string) {
         this.nodeCount = nodeCount
-        this.experimentId = new Date().toISOString().replace(/:/g, '-').replace(/\./g, '-')
+        this.resultFilePath = resultFilePath
     }
 
 
@@ -69,13 +69,13 @@ export class ExperimentController {
                         const started = message.payload.started
                         this.clients.set(message.id, { socket: ws, peerDescriptor: started.peerDescriptor! })
                     } else if (message.payload.oneofKind === 'experimentResults') {
-                        writeResultsRow(`results/${this.experimentId}/experimentResults`, JSON.stringify({ id: message.id, results: message.payload.experimentResults.results }))
+                        writeResultsRow(this.resultFilePath, JSON.stringify({ id: message.id, results: message.payload.experimentResults.results }))
                         this.resultsReceived.add(message.id)
                     } else if (message.payload.oneofKind === 'instructionCompleted') {
                         this.instructionsCompleted += 1
                     } else if (message.payload.oneofKind === 'propagationResults') {
                         this.resultsReceived.add(message.id)
-                        writeResultsRow(`results/${this.experimentId}/propagationResult`, JSON.stringify({ id: message.id, results: message.payload.propagationResults.results }))
+                        writeResultsRow(this.resultFilePath, JSON.stringify({ id: message.id, results: message.payload.propagationResults.results }))
                     }
                 })
             })

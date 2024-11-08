@@ -116,7 +116,9 @@ const stopAwsNodes = async () => {
 }
 
 const run = async () => {
-    const controller = new ExperimentController(nodeCount) 
+    const datetime = new Date().toISOString().replace(/:/g, '-').replace(/\./g, '-')
+    const filePath = `results/${experiment}/${datetime}.json`
+    const controller = new ExperimentController(nodeCount, filePath) 
     controller.createServer()
 
     let localNodes: ExperimentNodeWrapper[] = []
