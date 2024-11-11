@@ -201,7 +201,7 @@ export const createStreamRegistry = (opts?: {
         isStreamSubscriber: async () => {
             return opts?.isStreamSubscriber ?? true
         },
-        clearStreamCache: () => {}
+        invalidateStreamCache: () => {}
     } as any
 }
 

@@ -4,14 +4,14 @@ import LRU from '../../vendor/quick-lru'
 
 /**
  * Caches into a LRU cache capped at options.maxSize. See documentation for mem/p-memoize.
- * Won't call asyncFn again until options.maxAge or options.maxSize exceeded, or cachedAsyncFn.clearMatching() is called.
+ * Won't call asyncFn again until options.maxAge or options.maxSize exceeded, or cachedAsyncFn.invalidate() is called.
  * Won't cache rejections.
  *
  * ```js
  * const cache = new CachingMap(asyncFn, opts)
  * await cache.get(key)
  * await cache.get(key)
- * cache.clearMatching(() => ...)
+ * cache.invalidate(() => ...)
  * ```
  */
 export class CachingMap<ArgsType extends any[], ReturnType, KeyType extends MapKey> {
