@@ -1,7 +1,5 @@
 import pLimit from 'p-limit'
 import pThrottle from 'p-throttle'
-import { wait } from '@streamr/utils'
-import { MaybeAsync } from '../types'
 
 /**
  * Returns a function that executes with limited concurrency.
@@ -101,63 +99,6 @@ export function pOnce<ArgsType extends unknown[], ReturnType>(
             currentCall = { status: 'init' }
         }
     })
-}
-
-export class TimeoutError extends Error {
-    public timeout: number
-
-    constructor(msg = '', timeout = 0) {
-        super(`The operation timed out. ${timeout}ms. ${msg}`)
-        this.timeout = timeout
-    }
-}
-
-// TODO use streamr-test-utils#until instead (when streamr-test-utils is no longer a test-only dependency)
-/**
- * Wait until a condition is true
- * @param condition - wait until this callback function returns true
- * @param timeOutMs - stop waiting after that many milliseconds, -1 for disable
- * @param pollingIntervalMs - check condition between so many milliseconds
- * @param failedMsgFn - append the string return value of this getter function to the error message, if given
- * @return the (last) truthy value returned by the condition function
- */
-export async function until(
-    condition: MaybeAsync<() => boolean>,
-    timeOutMs = 10000,
-    pollingIntervalMs = 100,
-    failedMsgFn?: () => string
-): Promise<boolean> {
-    // condition could as well return any instead of boolean, could be convenient
-    // sometimes if waiting until a value is returned. Maybe change if such use
-    // case emerges.
-    const err = new Error(`Timeout after ${timeOutMs} milliseconds`)
-    let isTimedOut = false
-    let t!: ReturnType<typeof setTimeout>
-    if (timeOutMs > 0) {
-        t = setTimeout(() => { isTimedOut = true }, timeOutMs)
-    }
-
-    try {
-        // Promise wrapped condition function works for normal functions just the same as Promises
-        let wasDone = false
-        while (!wasDone && !isTimedOut) {
-            wasDone = await Promise.resolve().then(condition)
-            if (!wasDone && !isTimedOut) {
-                await wait(pollingIntervalMs)
-            }
-        }
-
-        if (isTimedOut) {
-            if (failedMsgFn) {
-                err.message += ` ${failedMsgFn()}`
-            }
-            throw err
-        }
-
-        return wasDone
-    } finally {
-        clearTimeout(t)
-    }
 }
 
 // TODO better type annotations

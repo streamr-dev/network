@@ -6,7 +6,6 @@ import { Wallet } from 'ethers'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { until as until_ } from '../../src/utils/promises'
 import { createRelativeTestStreamId, createTestStream } from '../test-utils/utils'
 
 const TIMEOUT = 20000
@@ -242,7 +241,7 @@ describe('StreamRegistry', () => {
             await createdStream.setMetadata({
                 description
             })
-            await until_(async () => {
+            await until(async () => {
                 try {
                     return (await client.getStream(createdStream.id)).getMetadata().description === createdStream.getMetadata().description
                 } catch {
@@ -262,7 +261,7 @@ describe('StreamRegistry', () => {
             const props = { id: createRelativeTestStreamId(module) }
             const stream = await client.createStream(props)
             await client.deleteStream(stream.id)
-            await until_(async () => {
+            await until(async () => {
                 try {
                     await client.getStream(stream.id)
                     return false

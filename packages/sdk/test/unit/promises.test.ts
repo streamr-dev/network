@@ -1,59 +1,7 @@
 import { wait } from '@streamr/utils'
-import { pLimitFn, pOnce, pOne, until } from '../../src/utils/promises'
+import { pLimitFn, pOnce, pOne } from '../../src/utils/promises'
 
 const WAIT_TIME = 25
-
-describe('until', () => {
-    it('works with sync true', async () => {
-        const condition = jest.fn(() => true)
-        await until(condition)
-        expect(condition).toHaveBeenCalledTimes(1)
-    })
-
-    it('works with async true', async () => {
-        const condition = jest.fn(async () => true)
-        await until(condition)
-        expect(condition).toHaveBeenCalledTimes(1)
-    })
-
-    it('works with sync false -> true', async () => {
-        let calls = 0
-        const condition = jest.fn(() => {
-            calls += 1
-            return calls > 1
-        })
-        await until(condition)
-        expect(condition).toHaveBeenCalledTimes(2)
-    })
-
-    it('works with sync false -> true', async () => {
-        let calls = 0
-        const condition = jest.fn(async () => {
-            calls += 1
-            return calls > 1
-        })
-        await until(condition)
-        expect(condition).toHaveBeenCalledTimes(2)
-    })
-
-    it('can time out', async () => {
-        const condition = jest.fn(() => false)
-        await expect(async () => {
-            await until(condition, 100)
-        }).rejects.toThrow('Timeout')
-        expect(condition).toHaveBeenCalled()
-    })
-
-    it('can set interval', async () => {
-        const condition = jest.fn(() => false)
-        await expect(async () => {
-            await until(condition, 100, 20)
-        }).rejects.toThrow('Timeout')
-        expect(condition.mock.calls.length).toBeLessThan(7)
-        // ideally it should be 5.
-        expect(condition.mock.calls.length).toBeGreaterThan(4)
-    })
-})
 
 describe('pLimitFn', () => {
     it('adopts type of wrapped function', async () => {
