@@ -23,6 +23,7 @@ import { RpcProviderSource } from '../RpcProviderSource'
 import { Stream } from '../Stream'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamMetadata, parseMetadata } from '../StreamMetadata'
+import { StreamrClient } from '../StreamrClient'
 import { StreamrClientError } from '../StreamrClientError'
 import type { StreamRegistryV5 as StreamRegistryContract } from '../ethereumArtifacts/StreamRegistryV5'
 import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV5Abi.json'
@@ -41,16 +42,13 @@ import {
     isPublicPermissionQuery,
     streamPermissionToSolidityType
 } from '../permission'
+import { CachingMap } from '../utils/CachingMap'
 import { filter, map } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { CacheAsyncFn, CacheAsyncFnType } from '../utils/caches'
-import { CachingMap } from '../utils/CachingMap'
-import { until } from '../utils/promises'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway, waitForTx } from './contract'
 import { InternalSearchStreamsPermissionFilter, SearchStreamsOrderBy, searchStreams as _searchStreams } from './searchStreams'
-import { StreamrClient } from '../StreamrClient'
 
 /*
  * On-chain registry of stream metadata and permissions.
