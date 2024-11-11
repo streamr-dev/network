@@ -1,37 +1,21 @@
 import 'reflect-metadata'
 
 import { toStreamID } from '@streamr/utils'
-import { StreamRegistry } from '../../src/contracts/StreamRegistry'
+import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
-import { StreamFactory } from '../../src/StreamFactory'
-
-const createStreamFactory = (streamRegistry?: StreamRegistry) => {
-    return new StreamFactory(
-        undefined as any,
-        undefined as any,
-        undefined as any,
-        streamRegistry as any,
-        undefined as any,
-        undefined as any,
-        undefined as any,
-        undefined as any
-    )
-}
 
 describe('Stream', () => {
 
     it('initial fields', () => {
-        const factory = createStreamFactory()
-        const stream = factory.createStream(toStreamID('mock-id'), {})
+        const stream = new Stream(toStreamID('mock-id'), {}, undefined as any)
         expect(stream.getMetadata()).toEqual({})
     })
 
     it('getMetadata', () => {
-        const factory = createStreamFactory()
-        const stream = factory.createStream(toStreamID('mock-id'), {
+        const stream = new Stream(toStreamID('mock-id'), {
             partitions: 10,
             storageDays: 20
-        })
+        }, undefined as any)
         expect(stream.getMetadata()).toEqual({
             partitions: 10,
             storageDays: 20
@@ -43,13 +27,6 @@ describe('Stream', () => {
             undefined as any,
             { partitions: 150 },
             undefined as any,
-            undefined as any,
-            undefined as any,
-            undefined as any,
-            undefined as any,
-            undefined as any,
-            undefined as any,
-            undefined as any
         )
         expect(() => stream.getPartitionCount()).toThrowStreamrError({
             message: 'Invalid partition count: 150',
@@ -59,14 +36,13 @@ describe('Stream', () => {
 
     describe('update', () => {
         it('fields not updated if transaction fails', async () => {
-            const streamRegistry: Partial<StreamRegistry> = {
-                updateStreamMetadata: jest.fn().mockRejectedValue(new Error('mock-error')),
+            const client: Partial<StreamrClient> = {
+                updateStream: jest.fn().mockRejectedValue(new Error('mock-error')),
             } 
-            const factory = createStreamFactory(streamRegistry as any)
 
-            const stream = factory.createStream(toStreamID('mock-id'), {
+            const stream = new Stream(toStreamID('mock-id'), {
                 description: 'original-description'
-            })
+            }, client as any)
 
             await expect(() => {
                 return stream.update({

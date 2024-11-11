@@ -3,7 +3,6 @@ import { Multimap, StreamID, UserID } from '@streamr/utils'
 import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
 import { Stream } from '../../../src/Stream'
-import { StreamFactory } from '../../../src/StreamFactory'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { StreamMetadata } from '../../../src/StreamMetadata'
 import { StreamrClientError } from '../../../src/StreamrClientError'
@@ -22,18 +21,15 @@ import { FakeChain, PUBLIC_PERMISSION_TARGET, PublicPermissionTarget, StreamRegi
 export class FakeStreamRegistry implements Methods<StreamRegistry> {
 
     private readonly chain: FakeChain
-    private readonly streamFactory: StreamFactory
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
     
     constructor(
         chain: FakeChain,
-        streamFactory: StreamFactory,
         streamIdBuilder: StreamIDBuilder,
         @inject(AuthenticationInjectionToken) authentication: Authentication
     ) {
         this.chain = chain
-        this.streamFactory = streamFactory
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
     }
