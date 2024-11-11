@@ -1,6 +1,6 @@
 import pLimit from 'p-limit'
 import pThrottle from 'p-throttle'
-import { Defer, wait } from '@streamr/utils'
+import { wait } from '@streamr/utils'
 import { MaybeAsync } from '../types'
 
 /**
@@ -110,71 +110,6 @@ export class TimeoutError extends Error {
         super(`The operation timed out. ${timeout}ms. ${msg}`)
         this.timeout = timeout
     }
-}
-
-/**
- * Takes a promise and a timeout and an optional message for timeout errors.
- * Returns a promise that rejects when timeout expires, or when promise settles, whichever comes first.
- *
- * Invoke with positional arguments for timeout & message:
- * await pTimeout(promise, timeout, message)
- *
- * or using an options object for timeout, message & rejectOnTimeout:
- *
- * await pTimeout(promise, { timeout, message, rejectOnTimeout })
- *
- * message and rejectOnTimeout are optional.
- */
-
-interface pTimeoutOpts {
-    timeout?: number
-    message?: string
-    rejectOnTimeout?: boolean
-}
-
-type pTimeoutArgs = [timeout?: number, message?: string] | [pTimeoutOpts]
-
-export async function pTimeout<T>(promise: Promise<T>, ...args: pTimeoutArgs): Promise<T | undefined> {
-    let opts: pTimeoutOpts = {}
-    if (args[0] && typeof args[0] === 'object') {
-        [opts] = args
-    } else {
-        [opts.timeout, opts.message] = args
-    }
-
-    const { timeout = 0, message = '', rejectOnTimeout = true } = opts
-
-    if (typeof timeout !== 'number') {
-        throw new Error(`timeout must be a number, got ${timeout}`)
-    }
-
-    let timedOut = false
-    const p = new Defer<undefined>()
-    const t = setTimeout(() => {
-        timedOut = true
-        if (rejectOnTimeout) {
-            p.reject(new TimeoutError(message, timeout))
-        } else {
-            p.resolve(undefined)
-        }
-    }, timeout)
-    p.catch(() => {})
-
-    return Promise.race([
-        Promise.resolve(promise).catch((err) => {
-            clearTimeout(t)
-            if (timedOut) {
-                // ignore errors after timeout
-                return undefined
-            }
-
-            throw err
-        }),
-        p
-    ]).finally(() => {
-        clearTimeout(t)
-        p.resolve(undefined)
-    })
 }
 
 // TODO use streamr-test-utils#until instead (when streamr-test-utils is no longer a test-only dependency)
