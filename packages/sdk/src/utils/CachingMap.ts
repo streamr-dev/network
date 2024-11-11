@@ -14,20 +14,20 @@ import LRU from '../../vendor/quick-lru'
  * cache.invalidate(() => ...)
  * ```
  */
-export class CachingMap<ArgsType extends any[], ReturnType, KeyType extends MapKey> {
+export class CachingMap<P extends any[], V, K extends MapKey> {
 
-    private readonly cachedFn: (...args: ArgsType) => Promise<ReturnType>
-    private readonly cache: LRU<KeyType, { data: ReturnType, maxAge: number }>
+    private readonly cachedFn: (...args: P) => Promise<V>
+    private readonly cache: LRU<K, { data: V, maxAge: number }>
 
     constructor(
-        asyncFn: (...args: ArgsType) => Promise<ReturnType>,
+        asyncFn: (...args: P) => Promise<V>,
         opts: {
             maxSize: number
             maxAge: number
-            cacheKey: (args: ArgsType) => KeyType
+            cacheKey: (args: P) => K
         }
     ) {
-        this.cache = new LRU<KeyType, { data: ReturnType, maxAge: number }>({
+        this.cache = new LRU<K, { data: V, maxAge: number }>({
             maxSize: opts.maxSize,
             maxAge: opts.maxAge
         })
@@ -38,11 +38,11 @@ export class CachingMap<ArgsType extends any[], ReturnType, KeyType extends MapK
         })
     }
 
-    get(...args: ArgsType): Promise<ReturnType> {
+    get(...args: P): Promise<V> {
         return this.cachedFn(...args)
     }
 
-    invalidate(predicate: (key: KeyType) => boolean): void {
+    invalidate(predicate: (key: K) => boolean): void {
         for (const key of this.cache.keys()) {
             if (predicate(key)) {
                 this.cache.delete(key)
