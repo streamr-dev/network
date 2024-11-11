@@ -596,8 +596,8 @@ export class StreamrClient {
      *
      * @returns rejects if the storage node is not found
      */
-    async getStorageNodeMetadata(nodeAddress: HexString): Promise<StorageNodeMetadata> {
-        return this.storageNodeRegistry.getStorageNodeMetadata(toEthereumAddress(nodeAddress))
+    async getStorageNodeMetadata(storageNodeAddress: HexString): Promise<StorageNodeMetadata> {
+        return this.storageNodeRegistry.getStorageNodeMetadata(toEthereumAddress(storageNodeAddress))
     }
 
     // --------------------------------------------------------------------------------------------
