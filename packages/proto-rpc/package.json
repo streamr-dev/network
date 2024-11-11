@@ -29,15 +29,15 @@
     "@streamr/utils": "102.0.0-beta.0",
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
-    "uuid": "^11.0.2"
+    "uuid": "^11.0.3"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
     "@streamr/test-utils": "102.0.0-beta.0",
-    "@types/lodash": "^4.17.12"
+    "@types/lodash": "^4.17.13"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8",
-    "utf-8-validate": "^6.0.3"
+    "utf-8-validate": "^6.0.5"
   }
 }
