@@ -54,7 +54,6 @@
     "@types/heap": "^0.2.34",
     "@types/lodash": "^4.17.12",
     "@types/node-fetch": "^2.6.4",
-    "@types/uuid": "^10.0.0",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "babel-loader": "^9.2.1",
@@ -113,7 +112,7 @@
     "ts-essentials": "^10.0.2",
     "ts-toolbelt": "^9.6.0",
     "tsyringe": "^4.8.0",
-    "uuid": "^10.0.0",
+    "uuid": "^11.0.2",
     "zod": "^3.22.4"
   },
   "optionalDependencies": {

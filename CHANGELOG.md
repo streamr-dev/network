@@ -49,6 +49,7 @@ Changes before Tatum release are not documented in this file.
 
 #### Removed
 
+- **BREAKING CHANGE:** Remove `Stream#detectFields()` method (https://github.com/streamr-dev/network/pull/2864)
 - **BREAKING CHANGE:** Remove `Stream#delete()` method (https://github.com/streamr-dev/network/pull/2863)
   - use `StreamrClient#deleteStream()` instead
 - Remove support for legacy encryption keys (https://github.com/streamr-dev/network/pull/2757)

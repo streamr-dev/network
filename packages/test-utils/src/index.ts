@@ -89,40 +89,6 @@ export const runAndRaceEvents = async (
 }
 
 /**
- * Run functions and wait conditions to become true by re-evaluating every `retryInterval` milliseconds. Returns a promise created with Promise.all() 
- * and until() calls. Calls the functions after creating the promise.
- * 
- * @param operations function(s) to call
- * @param conditions condition(s) to be evaluated; condition functions should return boolean or Promise<boolean> and have
- * no side-effects.
- * @param timeout amount of time in milliseconds to wait for
- * @param retryInterval how often, in milliseconds, to re-evaluate condition
- * @param onTimeoutContext evaluated only on timeout. Used to associate human-friendly textual context to error.
- * @returns {Promise<unknown[]>} resolves immediately if
- * conditions evaluate to true on a retry attempt within timeout. If timeout
- * is reached with conditionFn never evaluating to true, rejects.
- */
-export const runAnduntils = async (
-    operations: (() => void) | ((() => void)[]), 
-    conditions: (() => (boolean | Promise<boolean>)) | (() => (boolean | Promise<boolean>)) [],
-    timeout = 5000,
-    retryInterval = 100,
-    onTimeoutContext?: () => string
-): Promise<unknown[]> => {
-    const ops = Array.isArray(operations) ? operations : [operations]
-    const conds = Array.isArray(conditions) ? conditions : [conditions]
-    const promise = Promise.all(conds.map((condition) => until(
-        condition,
-        timeout,
-        retryInterval,
-        undefined,
-        onTimeoutContext
-    )))
-    ops.forEach((op) => { op() })
-    return promise
-}
-
-/**
  * Collect events emitted by an emitter into an array.
  *
  * @param emitter emitter of event(s)

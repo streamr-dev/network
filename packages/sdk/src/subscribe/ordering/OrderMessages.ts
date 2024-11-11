@@ -3,10 +3,17 @@ import { StrictStreamrClientConfig } from '../../Config'
 import { StreamMessage } from '../../protocol/StreamMessage'
 import { Mapping } from '../../utils/Mapping'
 import { PushBuffer } from '../../utils/PushBuffer'
-import { CacheAsyncFn } from '../../utils/caches'
+import { CachingMap } from '../../utils/CachingMap'
 import { Resends } from '../Resends'
 import { GapFiller } from './GapFiller'
 import { Gap, OrderedMessageChain, OrderedMessageChainContext } from './OrderedMessageChain'
+
+const STORAGE_NODE_CACHE_KEY = Symbol('STORAGE_NODE_CACHE_KEY')
+const STORAGE_NODE_CACHE_OPTS = {
+    maxSize: 10000,
+    maxAge: 30 * 60 * 1000,
+    cacheKey: () => STORAGE_NODE_CACHE_KEY
+}
 
 const createMessageChain = (
     context: OrderedMessageChainContext,
@@ -31,13 +38,14 @@ const createMessageChain = (
     }
     const chain = new OrderedMessageChain(context, abortSignal)
     chain.on('unfillableGap', (gap: Gap) => onUnfillableGap(gap))
+    // TODO maybe caching should be configurable, i.e. use client's config.cache instead of the constant
+    // - maybe the caching should be done at application level, e.g. with a new CacheStreamStorageRegistry class?
+    // - also note that this is a cache which contains just one item (as streamPartId always the same)
+    const storageNodeCache = new CachingMap(() => getStorageNodes(StreamPartIDUtils.getStreamID(context.streamPartId)), STORAGE_NODE_CACHE_OPTS)
     const gapFiller = new GapFiller({
         chain,
         resend,
-        // TODO maybe caching should be configurable? (now uses 30 min maxAge, which is the default of CacheAsyncFn)
-        // - maybe the caching should be done at application level, e.g. with a new CacheStreamStorageRegistry class?
-        // - also not that this is a cache which contains just one item (as streamPartId always the same)
-        getStorageNodeAddresses: CacheAsyncFn(() => getStorageNodes(StreamPartIDUtils.getStreamID(context.streamPartId))),
+        getStorageNodeAddresses: () => storageNodeCache.get(),
         strategy: config.gapFillStrategy,
         initialWaitTime: config.gapFillTimeout,
         retryWaitTime: config.retryResendAfter,
