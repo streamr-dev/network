@@ -33,7 +33,7 @@ export type CacheAsyncFnType<ArgsType extends any[], ReturnType, KeyType extends
  */
 
 export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType extends MapKey>(
-    asyncFn: (...args: ArgsType) => PromiseLike<ReturnType>, 
+    asyncFn: (...args: ArgsType) => Promise<ReturnType>, 
     opts: {
         maxSize: number
         maxAge: number
