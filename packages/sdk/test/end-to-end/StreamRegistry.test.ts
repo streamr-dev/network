@@ -236,10 +236,10 @@ describe('StreamRegistry', () => {
         }, TIMEOUT)
     })
 
-    describe('update', () => {
+    describe('setMetadata', () => {
         it('happy path', async () => {
             const description = `description-${Date.now()}`
-            await createdStream.update({
+            await createdStream.setMetadata({
                 description
             })
             await until(async () => {
@@ -261,7 +261,7 @@ describe('StreamRegistry', () => {
         it('happy path', async () => {
             const props = { id: createRelativeTestStreamId(module) }
             const stream = await client.createStream(props)
-            await stream.delete()
+            await client.deleteStream(stream.id)
             await until(async () => {
                 try {
                     await client.getStream(stream.id)

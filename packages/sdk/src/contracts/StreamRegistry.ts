@@ -256,7 +256,7 @@ export class StreamRegistry {
         }
     }
 
-    async updateStreamMetadata(streamId: StreamID, metadata: StreamMetadata): Promise<void> {
+    async setStreamMetadata(streamId: StreamID, metadata: StreamMetadata): Promise<void> {
         await this.connectToContract()
         const ethersOverrides = await getEthersOverrides(this.rpcProviderSource, this.config)
         await waitForTx(this.streamRegistryContract!.updateStreamMetadata(
