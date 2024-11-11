@@ -1,4 +1,4 @@
-import { CacheAsyncFn } from '../../src/utils/caches'
+import { CacheAsyncFn } from '../../src/utils/CacheAsyncFn'
 import { wait } from '@streamr/utils'
 
 describe('CacheAsyncFn', () => {
@@ -13,6 +13,8 @@ describe('CacheAsyncFn', () => {
             return `${key1}${key2}`.toUpperCase()
         })
         cachedFn = CacheAsyncFn(plainFn as any, {
+            maxSize: 10000,
+            maxAge: 30 * 60 * 1000,
             cacheKey: ([key1, key2]) => `${key1};${key2}`
         })
     })

@@ -127,4 +127,4 @@ export { DEFAULT_PARTITION_COUNT, MAX_PARTITION_COUNT, ensureValidStreamPartitio
 export { StreamPartID, toStreamPartID, StreamPartIDUtils } from './StreamPartID'
 export { UserID, UserIDRaw, toUserId, toUserIdRaw, isValidUserId, isEthereumAddressUserId } from './UserID'
 export { HexString } from './HexString'
-export { ChangeFieldType } from './types'
+export { ChangeFieldType, MapKey } from './types'
