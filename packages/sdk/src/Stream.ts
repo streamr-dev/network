@@ -94,8 +94,8 @@ export class Stream {
     /**
      * Updates the metadata of the stream.
      */
-    async update(metadata: StreamMetadata): Promise<void> {
-        await this.client.updateStream(this.id, metadata)
+    async setMetadata(metadata: StreamMetadata): Promise<void> {
+        await this.client.setStreamMetadata(this.id, metadata)
         this.metadata = metadata
     }
 
@@ -159,8 +159,8 @@ export class Stream {
     /**
      * See {@link StreamrClient.removeStreamFromStorageNode | StreamrClient.removeStreamFromStorageNode}.
      */
-    async removeFromStorageNode(storageNodeAddress: HexString): Promise<void> {
-        return this.client.removeStreamFromStorageNode(this.id, toEthereumAddress(storageNodeAddress))
+    async removeFromStorageNode(nodeAddress: HexString): Promise<void> {
+        return this.client.removeStreamFromStorageNode(this.id, toEthereumAddress(nodeAddress))
     }
 
     /**
@@ -207,7 +207,7 @@ export class Stream {
                 fields
             }
         })
-        await this.update(merged)
+        await this.setMetadata(merged)
     }
 
     /**
@@ -231,7 +231,7 @@ export class Stream {
     }
 
     async setDescription(description: string): Promise<void> {
-        await this.update({
+        await this.setMetadata({
             ...this.getMetadata(),
             description
         })
@@ -253,7 +253,7 @@ export class Stream {
      * Sets the value of `storageDays` field
      */
     async setStorageDayCount(count: number): Promise<void> {
-        await this.update({
+        await this.setMetadata({
             ...this.getMetadata(),
             storageDays: count
         })
