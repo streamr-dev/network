@@ -1,11 +1,12 @@
 import 'reflect-metadata'
+
 import { Wallet } from 'ethers'
 import { fetchPrivateKeyWithGas, randomEthereumAddress } from '@streamr/test-utils'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { until } from '../../src/utils/promises'
 import { createTestStream, createTestClient } from '../test-utils/utils'
+import { until } from '@streamr/utils'
 
 const TEST_TIMEOUT = 30 * 1000
 

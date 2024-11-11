@@ -11,7 +11,8 @@ import {
     isEthereumAddressUserId,
     toEthereumAddress,
     toStreamID,
-    toUserId
+    toUserId,
+    until
 } from '@streamr/utils'
 import { ContractTransactionResponse } from 'ethers'
 import { intersection } from 'lodash'
@@ -43,7 +44,6 @@ import {
 import { filter, map } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
 import { CacheAsyncFn, CacheAsyncFnType } from '../utils/caches'
-import { until } from '../utils/promises'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway, waitForTx } from './contract'
