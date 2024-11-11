@@ -1,5 +1,5 @@
 import { isRunningInElectron, startTestServer, testOnlyInNodeJs } from '@streamr/test-utils'
-import { collect, toLengthPrefixedFrame, waitForCondition } from '@streamr/utils'
+import { collect, toLengthPrefixedFrame, until } from '@streamr/utils'
 import { Request, Response } from 'express'
 import range from 'lodash/range'
 import { FetchHttpStreamResponseError, createQueryString, fetchLengthPrefixedFrameHttpBinaryStream, getEndpointUrl } from '../../src/utils/utils'
@@ -54,7 +54,7 @@ describe('utils', () => {
             const line = await nextValue(iterator)
             expect(line?.toString()).toBe('foobar')
             abortController.abort()
-            await waitForCondition(() => serverResponseClosed === true)
+            await until(() => serverResponseClosed === true)
             await expect(() => nextValue(iterator)).rejects.toThrow(/aborted/)
             await server.stop()
         })

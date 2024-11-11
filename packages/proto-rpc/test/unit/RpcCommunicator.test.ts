@@ -9,7 +9,7 @@ import { Deferred, RpcMetadata, RpcStatus } from '@protobuf-ts/runtime-rpc'
 import * as Err from '../../src/errors'
 import { MockDhtRpc, clearMockTimeouts } from '../utils'
 import { ProtoCallContext } from '../../src/ProtoCallContext'
-import { waitForCondition } from '@streamr/utils'
+import { until } from '@streamr/utils'
 import { Any } from '../../generated/google/protobuf/any'
 
 describe('RpcCommunicator', () => {
@@ -152,7 +152,7 @@ describe('RpcCommunicator', () => {
         })
         
         rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
-        await waitForCondition(() => successCounter === 1)
+        await until(() => successCounter === 1)
     })
 
     it('Success responses to new registration method', async () => {
@@ -165,7 +165,7 @@ describe('RpcCommunicator', () => {
         })
         
         rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
-        await waitForCondition(() => successCounter === 1)
+        await until(() => successCounter === 1)
     })
 
     it('Error response on unknown method', async () => {
@@ -178,7 +178,7 @@ describe('RpcCommunicator', () => {
         })
        
         rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
-        await waitForCondition(() => errorCounter === 1)
+        await until(() => errorCounter === 1)
     })
 
     it('Error response on server timeout', async () => {
@@ -192,7 +192,7 @@ describe('RpcCommunicator', () => {
         })
        
         rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
-        await waitForCondition(() => errorCounter === 1)
+        await until(() => errorCounter === 1)
     })
 
     it('Error response on server timeout', async () => {
@@ -205,7 +205,7 @@ describe('RpcCommunicator', () => {
         })
        
         rpcCommunicator.handleIncomingMessage(request, new ProtoCallContext())
-        await waitForCondition(() => errorCounter === 1)
+        await until(() => errorCounter === 1)
     })
 
     it('getRequestIds', () => {

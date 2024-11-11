@@ -1,5 +1,5 @@
 import { toNodeId, getRandomRegion } from '@streamr/dht'
-import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
+import { StreamPartIDUtils, until } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
@@ -58,7 +58,7 @@ describe('Full node network with WebRTC connections', () => {
 
     it('happy path', async () => {
         await Promise.all(nodes.map((node) =>
-            waitForCondition(() => {
+            until(() => {
                 return node.getContentDeliveryManager().getNeighbors(streamPartId).length >= 3
             }
             , 30000)
@@ -77,7 +77,7 @@ describe('Full node network with WebRTC connections', () => {
             randomUserId()
         )
         entryPoint.getContentDeliveryManager().broadcast(msg)
-        await waitForCondition(() => receivedMessageCount === NUM_OF_NODES)
+        await until(() => receivedMessageCount === NUM_OF_NODES)
     }, 120000)
 
 })

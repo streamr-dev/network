@@ -2,7 +2,7 @@ import { config as CHAIN_CONFIG } from '@streamr/config'
 import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { Logger, StreamID, TheGraphClient, wait, waitForCondition } from '@streamr/utils'
+import { Logger, StreamID, TheGraphClient, wait, until } from '@streamr/utils'
 import { Contract, formatEther, JsonRpcProvider, parseEther, Wallet } from 'ethers'
 import fetch from 'node-fetch'
 import { Broker, createBroker } from '../../src/broker'
@@ -281,7 +281,7 @@ describe('inspect', () => {
     it('freerider is kicked', async () => {
 
         logger.info('Wait for kick flag')
-        await waitForCondition(async () => {
+        await until(async () => {
             const flags = await getFlags(theGraphClient, startTimestamp)
             return flags.some((flag) => flag.result === 'kicked')
         }, MAX_TEST_RUN_TIME, 5000)

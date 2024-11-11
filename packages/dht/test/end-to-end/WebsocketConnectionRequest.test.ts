@@ -1,7 +1,7 @@
 import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { waitForCondition } from '@streamr/utils'
+import { until } from '@streamr/utils'
 import { createMockPeerDescriptor } from '../utils/utils'
 import { areEqualPeerDescriptors } from '../../src/identifiers'
 
@@ -60,7 +60,7 @@ describe('Websocket IConnection Requests', () => {
         await node2.joinDht([epPeerDescriptor])
         await node1.joinDht([epPeerDescriptor])
 
-        await waitForCondition(() => { return (connected1 && connected2) })
+        await until(() => { return (connected1 && connected2) })
 
         expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getNodeId())).toEqual(true)
         expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getNodeId())).toEqual(true)

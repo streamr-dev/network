@@ -11,7 +11,7 @@ import {
     merge,
     utf8ToBinary,
     wait,
-    waitForCondition
+    until
 } from '@streamr/utils'
 import crypto from 'crypto'
 import { Wallet } from 'ethers'
@@ -244,7 +244,7 @@ export const createGroupKeyQueue = async (authentication: Authentication, curren
 }
 
 export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Promise<void> => {
-    await waitForCondition(() => mockFunction.mock.calls.length >= n, 1000, 10, undefined, () => {
+    await until(() => mockFunction.mock.calls.length >= n, 1000, 10, undefined, () => {
         return `Timeout while waiting for calls: got ${mockFunction.mock.calls.length} out of ${n}`
     })
 }

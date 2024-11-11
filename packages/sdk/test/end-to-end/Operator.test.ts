@@ -1,6 +1,6 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { Logger, TheGraphClient, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { Logger, TheGraphClient, toEthereumAddress, until } from '@streamr/utils'
 import { Contract, Wallet } from 'ethers'
 import fetch from 'node-fetch'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -111,7 +111,7 @@ describe('Operator', () => {
 
         const operator = await getOperator(undefined, deployedOperator)
 
-        await waitForCondition(async (): Promise<boolean> => {
+        await until(async (): Promise<boolean> => {
             const res = await operator.getSponsorships()
             return res.length === 2
         }, 10000, 500)
@@ -153,7 +153,7 @@ describe('Operator', () => {
         )
 
         const graphClient = createTheGraphClient()
-        await waitForCondition(async (): Promise<boolean> => {
+        await until(async (): Promise<boolean> => {
             const result = await graphClient.queryEntity<{ operator: { flagsOpened: any[] } }>({ query: `
                 {
                     operator(id: "${(await flagger.operatorContract.getAddress()).toLowerCase()}") {
@@ -168,7 +168,7 @@ describe('Operator', () => {
             return result.operator.flagsOpened.length === 1
         }, 10000, 1000)
 
-        await waitForCondition(async (): Promise<boolean> => {
+        await until(async (): Promise<boolean> => {
             const result = await graphClient.queryEntity<{ operator: { flagsTargeted: any[] } }>({ query: `
                 {
                     operator(id: "${(await target.operatorContract.getAddress()).toLowerCase()}") {

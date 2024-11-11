@@ -177,7 +177,7 @@ export async function pTimeout<T>(promise: Promise<T>, ...args: pTimeoutArgs): P
     })
 }
 
-// TODO use streamr-test-utils#waitForCondition instead (when streamr-test-utils is no longer a test-only dependency)
+// TODO use streamr-test-utils#until instead (when streamr-test-utils is no longer a test-only dependency)
 /**
  * Wait until a condition is true
  * @param condition - wait until this callback function returns true

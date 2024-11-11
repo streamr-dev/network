@@ -1,6 +1,6 @@
 import { PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import { randomUserId } from '@streamr/test-utils'
-import { StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, waitForCondition } from '@streamr/utils'
+import { StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, until } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
@@ -92,7 +92,7 @@ describe('NetworkNode', () => {
             msgCount += 1
         })
         await node2.broadcast(streamMessage)
-        await waitForCondition(() => msgCount === 1)
+        await until(() => msgCount === 1)
     })
 
     it('fetchNodeInfo', async () => {

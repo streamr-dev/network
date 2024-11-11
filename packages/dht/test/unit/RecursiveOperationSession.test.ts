@@ -1,4 +1,4 @@
-import { waitForCondition } from '@streamr/utils'
+import { until } from '@streamr/utils'
 import { range } from 'lodash'
 import { RecursiveOperationSession } from '../../src/dht/recursive-operation/RecursiveOperationSession'
 import { RecursiveOperationSessionRpcRemote } from '../../src/dht/recursive-operation/RecursiveOperationSessionRpcRemote'
@@ -60,7 +60,7 @@ describe('RecursiveOperationSession', () => {
 
         // TODO now waits for the 4s timeout, could setup test so that it completes by receiving
         // all data it wants
-        await waitForCondition(() => onCompleted.mock.calls.length > 0)
+        await until(() => onCompleted.mock.calls.length > 0)
         const result = session.getResults()
         // TODO assert peer descriptors
         expect(result.closestNodes).toHaveLength(6)
