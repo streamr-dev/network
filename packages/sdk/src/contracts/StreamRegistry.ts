@@ -549,9 +549,9 @@ export class StreamRegistry {
         // include separator so startsWith(streamid) doesn't match streamid-something
         const target = `${streamId}${CACHE_KEY_SEPARATOR}`
         const matchTarget = (s: string) => s.startsWith(target)
-        this.getStreamMetadata_cached.clearMatching(matchTarget)
-        this.isStreamPublisher_cached.clearMatching(matchTarget)
-        this.isStreamSubscriber_cached.clearMatching(matchTarget)
+        this.getStreamMetadata_cached.invalidate(matchTarget)
+        this.isStreamPublisher_cached.invalidate(matchTarget)
+        this.isStreamSubscriber_cached.invalidate(matchTarget)
         // TODO should also clear cache for hasPublicSubscribePermission?
     }
 }

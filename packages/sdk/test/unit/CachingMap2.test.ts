@@ -25,10 +25,10 @@ describe('CachingMap', () => {
         expect(fn).toHaveBeenCalledTimes(3)
         await cache.get(2)
         expect(fn).toHaveBeenCalledTimes(3)
-        cache.clearMatching((v) => v === 1)
+        cache.invalidate((v) => v === 1)
         await cache.get(1)
         expect(fn).toHaveBeenCalledTimes(4)
-        cache.clearMatching((v) => v === 1)
+        cache.invalidate((v) => v === 1)
         await cache.get(1)
         expect(fn).toHaveBeenCalledTimes(5)
     })
@@ -53,7 +53,7 @@ describe('CachingMap', () => {
         // @ts-expect-error wrong return type
         const c: string = await cache.get('abc')
         expect(c).toEqual(3)
-        cache.clearMatching((_d: string) => true)
+        cache.invalidate((_d: string) => true)
         const cache2 = new CachingMap(fn, {
             ...DEFAULT_OPTS,
             cacheKey: ([s]) => {
@@ -61,7 +61,7 @@ describe('CachingMap', () => {
             }
         })
 
-        cache2.clearMatching((_d: number) => true)
+        cache2.invalidate((_d: number) => true)
     })
 
     it('does memoize consecutive calls', async () => {

@@ -42,9 +42,9 @@ export class CachingMap<ArgsType extends any[], ReturnType, KeyType extends MapK
         return this.cachedFn(...args)
     }
 
-    clearMatching(matchFn: (key: KeyType) => boolean): void {
+    invalidate(predicate: (key: KeyType) => boolean): void {
         for (const key of this.cache.keys()) {
-            if (matchFn(key)) {
+            if (predicate(key)) {
                 this.cache.delete(key)
             }
         }
