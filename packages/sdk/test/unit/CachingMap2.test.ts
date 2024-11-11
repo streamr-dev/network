@@ -1,5 +1,5 @@
 import { wait } from '@streamr/utils'
-import { CacheAsyncFn } from '../../src/utils/CacheAsyncFn'
+import { CachingMap } from '../../src/utils/CachingMap'
 
 const DEFAULT_OPTS = {
     maxSize: 10000,
@@ -7,29 +7,29 @@ const DEFAULT_OPTS = {
     cacheKey: (args: any[]) => args[0]
 }
 
-describe('CacheAsyncFn', () => {
+describe('CachingMap', () => {
     it('caches & be cleared', async () => {
         const fn = jest.fn()
-        const cachedFn = CacheAsyncFn(fn, DEFAULT_OPTS)
-        await cachedFn()
+        const cache = new CachingMap(fn, DEFAULT_OPTS)
+        await cache.get()
         expect(fn).toHaveBeenCalledTimes(1)
-        await cachedFn()
+        await cache.get()
         expect(fn).toHaveBeenCalledTimes(1)
-        await cachedFn(1)
+        await cache.get(1)
         expect(fn).toHaveBeenCalledTimes(2)
-        await cachedFn(1)
+        await cache.get(1)
         expect(fn).toHaveBeenCalledTimes(2)
-        await cachedFn(2)
+        await cache.get(2)
         expect(fn).toHaveBeenCalledTimes(3)
-        await cachedFn(1)
+        await cache.get(1)
         expect(fn).toHaveBeenCalledTimes(3)
-        await cachedFn(2)
+        await cache.get(2)
         expect(fn).toHaveBeenCalledTimes(3)
-        cachedFn.clearMatching((v) => v === 1)
-        await cachedFn(1)
+        cache.clearMatching((v) => v === 1)
+        await cache.get(1)
         expect(fn).toHaveBeenCalledTimes(4)
-        cachedFn.clearMatching((v) => v === 1)
-        await cachedFn(1)
+        cache.clearMatching((v) => v === 1)
+        await cache.get(1)
         expect(fn).toHaveBeenCalledTimes(5)
     })
 
@@ -40,28 +40,28 @@ describe('CacheAsyncFn', () => {
             return 3
         }
 
-        const cachedFn = CacheAsyncFn(fn, DEFAULT_OPTS)
-        const a: number = await cachedFn('abc') // ok
+        const cache = new CachingMap(fn, DEFAULT_OPTS)
+        const a: number = await cache.get('abc') // ok
         expect(a).toEqual(3)
         // @ts-expect-error not enough args
-        await cachedFn()
+        await cache.get()
         // @ts-expect-error too many args
-        await cachedFn('abc', 3)
+        await cache.get('abc', 3)
         // @ts-expect-error wrong argument type
-        await cachedFn(3)
+        await cache.get(3)
 
         // @ts-expect-error wrong return type
-        const c: string = await cachedFn('abc')
+        const c: string = await cache.get('abc')
         expect(c).toEqual(3)
-        cachedFn.clearMatching((_d: string) => true)
-        const cachedFn2 = CacheAsyncFn(fn, {
+        cache.clearMatching((_d: string) => true)
+        const cache2 = new CachingMap(fn, {
             ...DEFAULT_OPTS,
             cacheKey: ([s]) => {
                 return s.length
             }
         })
 
-        cachedFn2.clearMatching((_d: number) => true)
+        cache2.clearMatching((_d: number) => true)
     })
 
     it('does memoize consecutive calls', async () => {
@@ -70,9 +70,9 @@ describe('CacheAsyncFn', () => {
             i += 1
             return i
         }
-        const memoized = CacheAsyncFn(fn, DEFAULT_OPTS)
-        const firstCall = memoized()
-        const secondCall = memoized()
+        const memoized = new CachingMap(fn, DEFAULT_OPTS)
+        const firstCall = memoized.get()
+        const secondCall = memoized.get()
 
         expect(await Promise.all([firstCall, secondCall])).toEqual([1, 1])
     })
@@ -87,7 +87,7 @@ describe('CacheAsyncFn', () => {
             return key
         })
 
-        const cachedFn = CacheAsyncFn(fn, {
+        const cache = new CachingMap(fn, {
             maxSize: 10000,
             maxAge: 1800000,
             cacheKey: ([v]) => {
@@ -95,40 +95,40 @@ describe('CacheAsyncFn', () => {
             }
         })
         const task = Promise.all([
-            cachedFn(taskId1),
-            cachedFn(taskId2),
-            cachedFn(taskId1),
-            cachedFn(taskId2),
+            cache.get(taskId1),
+            cache.get(taskId2),
+            cache.get(taskId1),
+            cache.get(taskId2),
         ])
         task.catch(() => {})
         setImmediate(() => {
-            cachedFn(taskId1)
-            cachedFn(taskId1)
-            cachedFn(taskId2)
-            cachedFn(taskId2)
+            cache.get(taskId1)
+            cache.get(taskId1)
+            cache.get(taskId2)
+            cache.get(taskId2)
         })
         process.nextTick(() => {
-            cachedFn(taskId1)
-            cachedFn(taskId2)
-            cachedFn(taskId1)
-            cachedFn(taskId2)
+            cache.get(taskId1)
+            cache.get(taskId2)
+            cache.get(taskId1)
+            cache.get(taskId2)
         })
         setTimeout(() => {
-            cachedFn(taskId1)
-            cachedFn(taskId1)
-            cachedFn(taskId2)
-            cachedFn(taskId2)
+            cache.get(taskId1)
+            cache.get(taskId1)
+            cache.get(taskId2)
+            cache.get(taskId2)
         })
         await wait(10)
-        cachedFn(taskId2)
-        cachedFn(taskId2)
-        cachedFn(taskId1)
-        cachedFn(taskId1)
+        cache.get(taskId2)
+        cache.get(taskId2)
+        cache.get(taskId1)
+        cache.get(taskId1)
         await Promise.all([
-            cachedFn(taskId1),
-            cachedFn(taskId2),
-            cachedFn(taskId1),
-            cachedFn(taskId2),
+            cache.get(taskId1),
+            cache.get(taskId2),
+            cache.get(taskId1),
+            cache.get(taskId2),
         ])
         await task
         expect(fn).toHaveBeenCalledTimes(2)

@@ -1,10 +1,10 @@
-import { CacheAsyncFn } from '../../src/utils/CacheAsyncFn'
+import { CachingMap } from '../../src/utils/CachingMap'
 import { wait } from '@streamr/utils'
 
-describe('CacheAsyncFn', () => {
+describe('CachingMap', () => {
 
     let plainFn: jest.Mock<Promise<string>, [key1: string, key2: string]>
-    let cachedFn: (key1: string, key2: string) => Promise<string>
+    let cache: CachingMap<[key1: string, key2: string], string, string>
 
     beforeEach(() => {
         plainFn = jest.fn()
@@ -12,7 +12,7 @@ describe('CacheAsyncFn', () => {
             await wait(100)
             return `${key1}${key2}`.toUpperCase()
         })
-        cachedFn = CacheAsyncFn(plainFn as any, {
+        cache = new CachingMap(plainFn as any, {
             maxSize: 10000,
             maxAge: 30 * 60 * 1000,
             cacheKey: ([key1, key2]) => `${key1};${key2}`
@@ -20,16 +20,16 @@ describe('CacheAsyncFn', () => {
     })
 
     it('happy path', async () => {
-        const result1 = await cachedFn('foo', 'bar')
-        const result2 = await cachedFn('foo', 'bar')
+        const result1 = await cache.get('foo', 'bar')
+        const result2 = await cache.get('foo', 'bar')
         expect(result1).toBe('FOOBAR')
         expect(result2).toBe('FOOBAR')
         expect(plainFn).toBeCalledTimes(1)
     })
 
     it('miss', async () => {
-        const result1 = await cachedFn('foo', 'x')
-        const result2 = await cachedFn('foo', 'y')
+        const result1 = await cache.get('foo', 'x')
+        const result2 = await cache.get('foo', 'y')
         expect(result1).toBe('FOOX')
         expect(result2).toBe('FOOY')
         expect(plainFn).toBeCalledTimes(2)
@@ -37,8 +37,8 @@ describe('CacheAsyncFn', () => {
 
     it('concurrency', async () => {
         const [result1, result2] = await Promise.all([
-            cachedFn('foo', 'bar'),
-            cachedFn('foo', 'bar')
+            cache.get('foo', 'bar'),
+            cache.get('foo', 'bar')
         ])
         expect(result1).toBe('FOOBAR')
         expect(result2).toBe('FOOBAR')
@@ -49,8 +49,8 @@ describe('CacheAsyncFn', () => {
         plainFn.mockImplementation(async (key1: string, key2: string) => {
             throw new Error(`error ${key1}-${key2}`)
         })
-        await expect(cachedFn('foo', 'x')).rejects.toEqual(new Error('error foo-x'))
-        await expect(cachedFn('foo', 'x')).rejects.toEqual(new Error('error foo-x'))
+        await expect(cache.get('foo', 'x')).rejects.toEqual(new Error('error foo-x'))
+        await expect(cache.get('foo', 'x')).rejects.toEqual(new Error('error foo-x'))
 
         expect(plainFn).toBeCalledTimes(2) // would be 1 if rejections were cached
     })
@@ -59,8 +59,8 @@ describe('CacheAsyncFn', () => {
         plainFn.mockImplementation((key1: string, key2: string) => {
             throw new Error(`error ${key1}-${key2}`)
         })
-        await expect(cachedFn('foo', 'x')).rejects.toEqual(new Error('error foo-x'))
-        await expect(cachedFn('foo', 'x')).rejects.toEqual(new Error('error foo-x'))
+        await expect(cache.get('foo', 'x')).rejects.toEqual(new Error('error foo-x'))
+        await expect(cache.get('foo', 'x')).rejects.toEqual(new Error('error foo-x'))
 
         expect(plainFn).toBeCalledTimes(2) // would be 1 if throws were cached
     })
