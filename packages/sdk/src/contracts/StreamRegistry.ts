@@ -42,7 +42,7 @@ import {
 } from '../permission'
 import { filter, map } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
-import { CacheAsyncFn, CacheAsyncFnType } from '../utils/caches'
+import { CacheAsyncFn, CacheAsyncFnType } from '../utils/CacheAsyncFn'
 import { until } from '../utils/promises'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'

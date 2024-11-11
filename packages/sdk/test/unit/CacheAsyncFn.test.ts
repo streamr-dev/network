@@ -1,4 +1,4 @@
-import { CacheAsyncFn } from '../../src/utils/caches'
+import { CacheAsyncFn } from '../../src/utils/CacheAsyncFn'
 import { wait } from '@streamr/utils'
 
 describe('CacheAsyncFn', () => {

@@ -1,5 +1,5 @@
 import { wait } from '@streamr/utils'
-import { CacheAsyncFn } from '../../src/utils/caches'
+import { CacheAsyncFn } from '../../src/utils/CacheAsyncFn'
 
 const DEFAULT_OPTS = {
     maxSize: 10000,
