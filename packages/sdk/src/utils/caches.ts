@@ -21,7 +21,7 @@ export type CacheAsyncFnType<ArgsType extends any[], ReturnType, KeyType = ArgsT
  * Returns a cached async fn, cached keyed on first argument passed. See documentation for mem/p-memoize.
  * Caches into a LRU cache capped at options.maxSize
  * Won't call asyncFn again until options.maxAge or options.maxSize exceeded, or cachedAsyncFn.clear() is called.
- * Won't cache rejections by default. Override with options.cachePromiseRejection = true.
+ * Won't cache rejections.
  *
  * ```js
  * const cachedAsyncFn = CacheAsyncFn(asyncFn, options)
@@ -33,12 +33,10 @@ export type CacheAsyncFnType<ArgsType extends any[], ReturnType, KeyType = ArgsT
 export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType = ArgsType[0]>(asyncFn: (...args: ArgsType) => PromiseLike<ReturnType>, {
     maxSize = 10000,
     maxAge = 30 * 60 * 1000, // 30 minutes
-    cachePromiseRejection = false,
     cacheKey = (args: ArgsType) => args[0], // type+provide default so we can infer KeyType
 }: {
     maxSize?: number
     maxAge?: number
-    cachePromiseRejection?: boolean
     cacheKey?: (args: ArgsType) => KeyType
 } = {}): CacheAsyncFnType<ArgsType, ReturnType, KeyType> {
     const cache = new LRU<KeyType, { data: ReturnType, maxAge: number }>({
@@ -47,7 +45,7 @@ export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType = ArgsT
     })
 
     const cachedFn = Object.assign(pMemoize(asyncFn, {
-        cachePromiseRejection,
+        cachePromiseRejection: false,
         cache,
         cacheKey
     }), {
