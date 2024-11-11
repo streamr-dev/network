@@ -1,3 +1,4 @@
+import { MapKey } from '@streamr/utils'
 import pMemoize from 'p-memoize'
 import LRU from '../../vendor/quick-lru'
 
@@ -14,7 +15,7 @@ function clearMatching<K>(cache: Collection<K, unknown>, matchFn: (key: K) => bo
     }
 }
 
-export type CacheAsyncFnType<ArgsType extends any[], ReturnType, KeyType = ArgsType[0]> = ((...args: ArgsType) => Promise<ReturnType>) 
+export type CacheAsyncFnType<ArgsType extends any[], ReturnType, KeyType extends MapKey> = ((...args: ArgsType) => Promise<ReturnType>) 
     & { clearMatching: (matchFn: (key: KeyType) => boolean) => void }
 
 /**
@@ -31,7 +32,7 @@ export type CacheAsyncFnType<ArgsType extends any[], ReturnType, KeyType = ArgsT
  * ```
  */
 
-export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType = ArgsType[0]>(
+export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType extends MapKey>(
     asyncFn: (...args: ArgsType) => PromiseLike<ReturnType>, 
     opts: {
         maxSize: number
