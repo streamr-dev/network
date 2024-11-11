@@ -100,15 +100,6 @@ export class Stream {
     }
 
     /**
-     * Deletes the stream.
-     *
-     * @remarks Stream instance should not be used afterwards.
-     */
-    async delete(): Promise<void> {
-        await this.client.deleteStream(this.id)
-    }
-
-    /**
      * See {@link StreamrClient.hasPermission | StreamrClient.hasPermission}.
      *
      * @category Important
