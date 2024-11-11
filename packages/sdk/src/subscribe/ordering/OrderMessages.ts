@@ -8,6 +8,13 @@ import { Resends } from '../Resends'
 import { GapFiller } from './GapFiller'
 import { Gap, OrderedMessageChain, OrderedMessageChainContext } from './OrderedMessageChain'
 
+const STORAGE_NODE_CACHE_KEY = Symbol('STORAGE_NODE_CACHE_KEY')
+const STORAGE_NODE_CACHE_OPTS = {
+    maxSize: 10000,
+    maxAge: 30 * 60 * 1000,
+    cacheKey: () => STORAGE_NODE_CACHE_KEY
+}
+
 const createMessageChain = (
     context: OrderedMessageChainContext,
     getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>,
@@ -34,10 +41,10 @@ const createMessageChain = (
     const gapFiller = new GapFiller({
         chain,
         resend,
-        // TODO maybe caching should be configurable? (now uses 30 min maxAge, which is the default of CacheAsyncFn)
+        // TODO maybe caching should be configurable, i.e. use client's config.cache instead of the constant
         // - maybe the caching should be done at application level, e.g. with a new CacheStreamStorageRegistry class?
-        // - also not that this is a cache which contains just one item (as streamPartId always the same)
-        getStorageNodeAddresses: CacheAsyncFn(() => getStorageNodes(StreamPartIDUtils.getStreamID(context.streamPartId))),
+        // - also note that this is a cache which contains just one item (as streamPartId always the same)
+        getStorageNodeAddresses: CacheAsyncFn(() => getStorageNodes(StreamPartIDUtils.getStreamID(context.streamPartId)), STORAGE_NODE_CACHE_OPTS),
         strategy: config.gapFillStrategy,
         initialWaitTime: config.gapFillTimeout,
         retryWaitTime: config.retryResendAfter,

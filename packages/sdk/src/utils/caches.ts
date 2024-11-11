@@ -30,24 +30,24 @@ export type CacheAsyncFnType<ArgsType extends any[], ReturnType, KeyType = ArgsT
  * cachedAsyncFn.clear()
  * ```
  */
-export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType = ArgsType[0]>(asyncFn: (...args: ArgsType) => PromiseLike<ReturnType>, {
-    maxSize = 10000,
-    maxAge = 30 * 60 * 1000, // 30 minutes
-    cacheKey = (args: ArgsType) => args[0], // type+provide default so we can infer KeyType
-}: {
-    maxSize?: number
-    maxAge?: number
-    cacheKey?: (args: ArgsType) => KeyType
-} = {}): CacheAsyncFnType<ArgsType, ReturnType, KeyType> {
+
+export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType = ArgsType[0]>(
+    asyncFn: (...args: ArgsType) => PromiseLike<ReturnType>, 
+    opts: {
+        maxSize: number
+        maxAge: number
+        cacheKey: (args: ArgsType) => KeyType
+    }
+): CacheAsyncFnType<ArgsType, ReturnType, KeyType> {
     const cache = new LRU<KeyType, { data: ReturnType, maxAge: number }>({
-        maxSize,
-        maxAge
+        maxSize: opts.maxSize,
+        maxAge: opts.maxAge
     })
 
     const cachedFn = Object.assign(pMemoize(asyncFn, {
         cachePromiseRejection: false,
         cache,
-        cacheKey
+        cacheKey: opts.cacheKey
     }), {
         clearMatching: (matchFn: ((key: KeyType) => boolean)) => clearMatching(cache, matchFn),
     })

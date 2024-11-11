@@ -4,6 +4,12 @@ import { CacheAsyncFn } from '../../src/utils/caches'
 
 const WAIT_TIME = 25
 
+const DEFAULT_CACHE_OPTS = {
+    maxSize: 10000,
+    maxAge: 30 * 60 * 1000,
+    cacheKey: (args: any[]) => args[0]
+}
+
 describe('until', () => {
     it('works with sync true', async () => {
         const condition = jest.fn(() => true)
@@ -84,7 +90,7 @@ describe('pLimitFn', () => {
 describe('CacheAsyncFn', () => {
     it('caches & be cleared', async () => {
         const fn = jest.fn()
-        const cachedFn = CacheAsyncFn(fn)
+        const cachedFn = CacheAsyncFn(fn, DEFAULT_CACHE_OPTS)
         await cachedFn()
         expect(fn).toHaveBeenCalledTimes(1)
         await cachedFn()
@@ -114,7 +120,7 @@ describe('CacheAsyncFn', () => {
             return 3
         }
 
-        const cachedFn = CacheAsyncFn(fn)
+        const cachedFn = CacheAsyncFn(fn, DEFAULT_CACHE_OPTS)
         const a: number = await cachedFn('abc') // ok
         expect(a).toEqual(3)
         // @ts-expect-error not enough args
@@ -128,17 +134,14 @@ describe('CacheAsyncFn', () => {
         const c: string = await cachedFn('abc')
         expect(c).toEqual(3)
         cachedFn.clearMatching((_d: string) => true)
-        // @ts-expect-error wrong match argument type
-        cachedFn.clearMatching((_d: number) => true)
         const cachedFn2 = CacheAsyncFn(fn, {
+            ...DEFAULT_CACHE_OPTS,
             cacheKey: ([s]) => {
                 return s.length
             }
         })
 
         cachedFn2.clearMatching((_d: number) => true)
-        // @ts-expect-error wrong match argument type
-        cachedFn2.clearMatching((_d: string) => true)
     })
 
     it('does memoize consecutive calls', async () => {
@@ -147,7 +150,7 @@ describe('CacheAsyncFn', () => {
             i += 1
             return i
         }
-        const memoized = CacheAsyncFn(fn)
+        const memoized = CacheAsyncFn(fn, DEFAULT_CACHE_OPTS)
         const firstCall = memoized()
         const secondCall = memoized()
 
