@@ -1,6 +1,5 @@
 import 'reflect-metadata'
 
-import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
@@ -51,86 +50,6 @@ describe('Stream', () => {
             await expect(stream.addToStorageNode(DUMMY_ADDRESS))
                 .rejects
                 .toThrow('No storage node')
-        })
-    })
-
-    describe('detectFields', () => {
-
-        let stream: Stream
-
-        beforeEach(async () => {
-            stream = await createTestStream(client, module)
-            await stream.addToStorageNode(storageNode.getAddress(), { wait: true })
-        })
-
-        it('primitive types', async () => {
-            const msg = await stream.publish({
-                number: 123,
-                boolean: true,
-                object: {
-                    k: 1,
-                    v: 2,
-                },
-                array: [1, 2, 3],
-                string: 'test'
-            })
-            await client.waitForStorage(msg)
-
-            await stream.detectFields()
-
-            const expectedFields = [
-                {
-                    name: 'number',
-                    type: 'number',
-                },
-                {
-                    name: 'boolean',
-                    type: 'boolean',
-                },
-                {
-                    name: 'object',
-                    type: 'map',
-                },
-                {
-                    name: 'array',
-                    type: 'list',
-                },
-                {
-                    name: 'string',
-                    type: 'string',
-                },
-            ]
-            expect((stream.getMetadata() as any).config?.fields).toEqual(expectedFields)
-            const loadedStream = await client.getStream(stream.id)
-            expect((loadedStream.getMetadata() as any).config?.fields).toEqual(expectedFields)
-        })
-
-        it('skips unsupported types', async () => {
-            const msg = await stream.publish({
-                null: null,
-                empty: {},
-                func: () => null,
-                nonexistent: undefined,
-                symbol: Symbol('test'),
-                // TODO: bigint: 10n,
-            })
-            await client.waitForStorage(msg)
-
-            await stream.detectFields()
-
-            const expectedFields = [
-                {
-                    name: 'null',
-                    type: 'map',
-                },
-                {
-                    name: 'empty',
-                    type: 'map',
-                },
-            ]
-            expect((stream.getMetadata() as any).config.fields).toEqual(expectedFields)
-            const loadedStream = await client.getStream(stream.id)
-            expect((loadedStream.getMetadata() as any).config.fields).toEqual(expectedFields)
         })
     })
 })
