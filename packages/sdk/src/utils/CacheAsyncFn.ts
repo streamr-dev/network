@@ -15,7 +15,7 @@ function clearMatching<K>(cache: Collection<K, unknown>, matchFn: (key: K) => bo
     }
 }
 
-export type CacheAsyncFnType<ArgsType extends any[], ReturnType, KeyType extends MapKey> = ((...args: ArgsType) => Promise<ReturnType>) 
+export type CacheAsyncFnType<ArgsType extends any[], ReturnType, KeyType extends MapKey> = ((...args: ArgsType) => Promise<ReturnType>)
     & { clearMatching: (matchFn: (key: KeyType) => boolean) => void }
 
 /**
@@ -31,9 +31,8 @@ export type CacheAsyncFnType<ArgsType extends any[], ReturnType, KeyType extends
  * cachedAsyncFn.clearMatching(() => ...)
  * ```
  */
-
 export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType extends MapKey>(
-    asyncFn: (...args: ArgsType) => Promise<ReturnType>, 
+    asyncFn: (...args: ArgsType) => Promise<ReturnType>,
     opts: {
         maxSize: number
         maxAge: number
@@ -44,7 +43,6 @@ export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType extends
         maxSize: opts.maxSize,
         maxAge: opts.maxAge
     })
-
     const cachedFn = Object.assign(pMemoize(asyncFn, {
         cachePromiseRejection: false,
         cache,
@@ -52,6 +50,5 @@ export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType extends
     }), {
         clearMatching: (matchFn: ((key: KeyType) => boolean)) => clearMatching(cache, matchFn),
     })
-
     return cachedFn
 }
