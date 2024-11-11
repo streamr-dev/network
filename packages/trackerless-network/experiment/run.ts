@@ -14,6 +14,7 @@ const env = process.argv[3]
 const nodeCount = parseInt(process.argv[4])
 
 const REGIONS = [ 'eu-north-1' ]
+const AUTO_SCALING_GROUP_NAME = 'network-experiment-tf-test'
 
 if (!modes.includes(experiment)) {
     throw new Error('unknown experiment ' + experiment)
@@ -45,7 +46,7 @@ const startAwsNodes = async (nodeCount: number, region: string) => {
     } 
     const client = new AutoScalingClient(config)
     const params: SetDesiredCapacityCommandInput = {
-        AutoScalingGroupName: "network-experiment-tf-test",
+        AutoScalingGroupName: AUTO_SCALING_GROUP_NAME,
         DesiredCapacity: nodeCount   
     }
     const command = new SetDesiredCapacityCommand(params)
@@ -57,7 +58,7 @@ const startAwsNodes = async (nodeCount: number, region: string) => {
     }
 }
 
-async function waitForInstances(region: string): Promise<void> {
+async function waitForInstances(region: string): Promise<Map<string, { domain: string, region: string }>> {
     const config = {
         region,
         credentials: {
@@ -75,8 +76,8 @@ async function waitForInstances(region: string): Promise<void> {
             }
         ]
     }
+    const seen = new Map<string, { domain: string, region: string }>()
     while (true) {
-        const seen = new Map<string, { domain: string, region: string }>()
         try {
             const res = await client.send(new DescribeInstancesCommand(params))
             const instanceCount = res.Reservations!.flatMap((a) => a.Instances!.length).reduce((a, c) => a + c, 0)
@@ -90,14 +91,14 @@ async function waitForInstances(region: string): Promise<void> {
                 }))
                 break
             } else {
-                logger.info('waiting for instances to start in region eu-north-1 current count ' + instanceCount)
+                logger.info('waiting for instances to start in region ' + region + ' current count ' + instanceCount)
             }
         } catch (err) {
             console.error(err)
         } 
         await wait(10000)
     }
-    
+    return seen
 }
 
 const calculateResults = async (filePath: string): Promise<void> => {
@@ -122,7 +123,7 @@ const stopAwsNodes = async (region: string) => {
     } 
     const client = new AutoScalingClient(config)
     const params: SetDesiredCapacityCommandInput = {
-        AutoScalingGroupName: "network-experiment",
+        AutoScalingGroupName: AUTO_SCALING_GROUP_NAME,
         DesiredCapacity: 0   
     }
     const command = new SetDesiredCapacityCommand(params)
