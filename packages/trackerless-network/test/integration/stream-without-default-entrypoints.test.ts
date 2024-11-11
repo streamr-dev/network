@@ -1,6 +1,6 @@
 import { LatencyType, PeerDescriptor, Simulator, SimulatorTransport } from '@streamr/dht'
 import { randomUserId } from '@streamr/test-utils'
-import { StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, waitForCondition } from '@streamr/utils'
+import { StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, until } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
@@ -86,7 +86,7 @@ describe('stream without default entrypoints', () => {
             receivedMessageCount += 1
         })
         await Promise.all([
-            waitForCondition(() => receivedMessageCount === 1, 10000),
+            until(() => receivedMessageCount === 1, 10000),
             nodes[1].broadcast(streamMessage)
         ])
     })
@@ -96,7 +96,7 @@ describe('stream without default entrypoints', () => {
             receivedMessageCount += 1
         })
         await Promise.all([
-            waitForCondition(() => receivedMessageCount === 1, 15000),
+            until(() => receivedMessageCount === 1, 15000),
             nodes[0].join(STREAM_PART_ID),
             nodes[1].broadcast(streamMessage),
         ])
@@ -112,14 +112,14 @@ describe('stream without default entrypoints', () => {
         }))
         const nonjoinedNode = nodes[subscriberCount]
         await nonjoinedNode.broadcast(streamMessage)
-        await waitForCondition(() => receivedMessageCount === subscriberCount, 15000)
+        await until(() => receivedMessageCount === subscriberCount, 15000)
     }, 45000)
 
     it('nodes store themselves as entrypoints on streamPart if number of entrypoints is low', async () => {
         for (let i = 0; i < 10; i++) {
             await nodes[i].join(STREAM_PART_ID, { minCount: (i > 0) ? 1 : 0, timeout: 15000 })
         }
-        await waitForCondition(async () => {
+        await until(async () => {
             const entryPointData = await nodes[15].stack.getControlLayerNode().fetchDataFromDht(streamPartIdToDataKey(STREAM_PART_ID))
             return entryPointData.length >= 7
         }, 15000)

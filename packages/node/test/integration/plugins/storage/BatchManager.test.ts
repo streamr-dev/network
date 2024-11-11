@@ -1,4 +1,4 @@
-import { waitForCondition } from '@streamr/utils'
+import { until } from '@streamr/utils'
 import { Client, types as cassandraTypes } from 'cassandra-driver'
 import { InsertRecord } from '../../../../src/plugins/storage/Batch'
 import { BatchManager } from '../../../../src/plugins/storage/BatchManager'
@@ -134,7 +134,7 @@ describe('BatchManager', () => {
         })
         batchManager.cassandraClient.batch = mockBatch
 
-        await waitForCondition(() => batch.retries === 1)
+        await until(() => batch.retries === 1)
 
         expect(mockBatch).toBeCalledTimes(1)
         expect(batch.retries).toEqual(1)
@@ -158,12 +158,12 @@ describe('BatchManager', () => {
         expect(Object.values(batchManager.pendingBatches)).toHaveLength(0)
         expect(batch.reachedMaxRetries()).toBeFalsy()
 
-        await waitForCondition(() => batch.retries === 1)
+        await until(() => batch.retries === 1)
 
         expect(Object.values(batchManager.pendingBatches)).toHaveLength(1)
         expect(batch.reachedMaxRetries()).toBeFalsy()
 
-        await waitForCondition(() => batch.retries === 2)
+        await until(() => batch.retries === 2)
 
         expect(Object.values(batchManager.pendingBatches)).toHaveLength(0)
         expect(batch.reachedMaxRetries()).toBeTruthy()

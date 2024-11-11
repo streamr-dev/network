@@ -1,5 +1,5 @@
 import { ConnectionManager, DhtNode, PeerDescriptor } from '@streamr/dht'
-import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
+import { StreamPartIDUtils, until } from '@streamr/utils'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { ControlLayerNode } from '../../src/logic/ControlLayerNode'
 import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
@@ -120,7 +120,7 @@ describe('content delivery layer node with real connections', () => {
     })
 
     it('can fully connected topologies ', async () => {
-        await waitForCondition(() => {
+        await until(() => {
             return contentDeliveryLayerNode1.getNeighbors().length >= 3
                 && contentDeliveryLayerNode2.getNeighbors().length >= 3
                 && contentDeliveryLayerNode3.getNeighbors().length >= 3
@@ -141,7 +141,7 @@ describe('content delivery layer node with real connections', () => {
         contentDeliveryLayerNode4.on('message', () => receivedMessageCount += 1)
         contentDeliveryLayerNode5.on('message', () => receivedMessageCount += 1)
 
-        await waitForCondition(() => {
+        await until(() => {
             return contentDeliveryLayerNode1.getNeighbors().length >= 3
                 && contentDeliveryLayerNode2.getNeighbors().length >= 3
                 && contentDeliveryLayerNode3.getNeighbors().length >= 3
@@ -155,6 +155,6 @@ describe('content delivery layer node with real connections', () => {
             randomUserId()
         )
         contentDeliveryLayerNode1.broadcast(msg)
-        await waitForCondition(() => receivedMessageCount >= 4)
+        await until(() => receivedMessageCount >= 4)
     })
 })

@@ -1,6 +1,6 @@
 import { NeighborFinder } from '../../src/logic/neighbor-discovery/NeighborFinder'
 import { NodeList } from '../../src/logic/NodeList'
-import { waitForCondition } from '@streamr/utils'
+import { until } from '@streamr/utils'
 import { range } from 'lodash'
 import { expect } from 'expect'
 import { createMockContentDeliveryRpcRemote } from '../utils/utils'
@@ -45,7 +45,7 @@ describe('NeighborFinder', () => {
 
     it('Finds target number of nodes', async () => {
         neighborFinder.start()
-        await waitForCondition(() => neighbors.size() >= minCount, 10000)
+        await until(() => neighbors.size() >= minCount, 10000)
         expect(neighborFinder.isRunning()).toEqual(false)
     })
 })

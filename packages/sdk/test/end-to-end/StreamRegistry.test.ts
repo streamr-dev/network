@@ -1,12 +1,12 @@
 import 'reflect-metadata'
 
 import { fetchPrivateKeyWithGas, randomEthereumAddress, randomUserId } from '@streamr/test-utils'
-import { EthereumAddress, collect, toEthereumAddress, toStreamID, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, collect, toEthereumAddress, toStreamID, until } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { until } from '../../src/utils/promises'
+import { until as until_ } from '../../src/utils/promises'
 import { createRelativeTestStreamId, createTestStream } from '../test-utils/utils'
 
 const TIMEOUT = 20000
@@ -94,7 +94,7 @@ describe('StreamRegistry', () => {
                 const streamIds = onStreamCreated.mock.calls.map((c) => c[0].streamId)
                 return streamIds.includes(stream.id)
             }
-            await waitForCondition(() => hasBeenCalledFor(validStream))
+            await until(() => hasBeenCalledFor(validStream))
             client.off('streamCreated', onStreamCreated)
             expect(onStreamCreated).toHaveBeenCalledWith({
                 streamId: validStream.id,
@@ -242,7 +242,7 @@ describe('StreamRegistry', () => {
             await createdStream.setMetadata({
                 description
             })
-            await until(async () => {
+            await until_(async () => {
                 try {
                     return (await client.getStream(createdStream.id)).getMetadata().description === createdStream.getMetadata().description
                 } catch {
@@ -262,7 +262,7 @@ describe('StreamRegistry', () => {
             const props = { id: createRelativeTestStreamId(module) }
             const stream = await client.createStream(props)
             await client.deleteStream(stream.id)
-            await until(async () => {
+            await until_(async () => {
                 try {
                     await client.getStream(stream.id)
                     return false

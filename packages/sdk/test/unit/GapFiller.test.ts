@@ -6,7 +6,7 @@ import {
     toEthereumAddress,
     utf8ToBinary,
     wait,
-    waitForCondition
+    until
 } from '@streamr/utils'
 import { GapFillStrategy, GapFiller } from '../../src/subscribe/ordering/GapFiller'
 import { Gap, OrderedMessageChain } from '../../src/subscribe/ordering/OrderedMessageChain'
@@ -97,7 +97,7 @@ describe('GapFiller', () => {
     }
     
     const expectOrderedMessages = async (expectedTimestamps: number[]) => {
-        await waitForCondition(() => onOrderedMessageAdded.mock.calls.length === expectedTimestamps.length)
+        await until(() => onOrderedMessageAdded.mock.calls.length === expectedTimestamps.length)
         const actualTimestamps = onOrderedMessageAdded.mock.calls.map((call) => call[0].getTimestamp())
         expect(actualTimestamps).toEqual(expectedTimestamps)
     }

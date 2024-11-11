@@ -1,5 +1,5 @@
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { wait, waitForCondition } from '@streamr/utils'
+import { wait, until } from '@streamr/utils'
 import { randomBytes } from 'crypto'
 import random from 'lodash/random'
 import range from 'lodash/range'
@@ -58,7 +58,7 @@ describe('resend', () => {
             }, { last: NUM_OF_MESSAGES }, (msg: any) => {
                 messages.push(msg)
             })
-            await waitForCondition(
+            await until(
                 () => messages.length >= NUM_OF_MESSAGES,
                 TIMEOUT - 1000,
                 250,

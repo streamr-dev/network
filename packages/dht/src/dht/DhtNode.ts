@@ -4,7 +4,7 @@ import {
     MetricsContext,
     merge,
     scheduleAtInterval,
-    waitForCondition
+    until
 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { sample } from 'lodash'
@@ -621,7 +621,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
  
     public async waitForNetworkConnectivity(): Promise<void> {
-        await waitForCondition(
+        await until(
             () => this.connectionsView!.getConnectionCount() > 0,
             this.options.networkConnectivityTimeout,
             100,

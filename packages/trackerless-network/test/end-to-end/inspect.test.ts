@@ -1,5 +1,5 @@
 import { randomUserId } from '@streamr/test-utils'
-import { StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, waitForCondition } from '@streamr/utils'
+import { StreamPartIDUtils, hexToBinary, toUserIdRaw, utf8ToBinary, until } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../../generated/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
@@ -98,7 +98,7 @@ describe('inspect', () => {
         inspectedNode.stack.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
         inspectorNode.stack.getContentDeliveryManager().joinStreamPart(STREAM_PART_ID)
 
-        await waitForCondition(() => 
+        await until(() => 
             publisherNode.stack.getContentDeliveryManager().getNeighbors(STREAM_PART_ID).length === 2 
             && inspectedNode.stack.getContentDeliveryManager().getNeighbors(STREAM_PART_ID).length === 2 
             && inspectorNode.stack.getContentDeliveryManager().getNeighbors(STREAM_PART_ID).length === 2

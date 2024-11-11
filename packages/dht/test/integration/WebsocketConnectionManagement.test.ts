@@ -1,4 +1,4 @@
-import { MetricsContext, waitForCondition, waitForEvent3 } from '@streamr/utils'
+import { MetricsContext, until, waitForEvent3 } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../../src/connection/ConnectorFacade'
 import { Simulator } from '../../src/connection/simulator/Simulator'
@@ -159,13 +159,13 @@ describe('Websocket Connection Management', () => {
             targetDescriptor: wsServerConnectorPeerDescriptor
         }
         await noWsServerManager.send(dummyMessage)
-        await waitForCondition(
+        await until(
             () => {
                 const nodeId = toNodeId(noWsServerConnectorPeerDescriptor)
                 return wsServerManager.hasConnection(nodeId)
             }
         )
-        await waitForCondition(
+        await until(
             () => noWsServerManager.hasConnection(toNodeId(wsServerConnectorPeerDescriptor))
         )
     })

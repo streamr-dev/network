@@ -5,7 +5,7 @@ import {
     _operatorContractUtils
 } from '@streamr/sdk'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { EthereumAddress, StreamPartIDUtils, collect, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, StreamPartIDUtils, collect, toEthereumAddress, until } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { cloneDeep, set } from 'lodash'
 import { Broker, createBroker } from '../../../../src/broker'
@@ -76,7 +76,7 @@ describe('OperatorPlugin', () => {
         })
         // wait for MaintainTopologyService to handle addStakedStreams
         // events emitted during Broker start
-        await waitForCondition(async () => (await broker.getStreamrClient().getSubscriptions(stream.id)).length > 0)
+        await until(async () => (await broker.getStreamrClient().getSubscriptions(stream.id)).length > 0)
         const brokerDescriptor = await broker.getStreamrClient().getPeerDescriptor()
         await subscriber.setProxies({ id: stream.id }, [brokerDescriptor], ProxyDirection.SUBSCRIBE)
         const subscription = await subscriber.subscribe(stream.id)
@@ -125,7 +125,7 @@ describe('OperatorPlugin', () => {
                 }
             }
         })
-        await waitForCondition(async () => (await broker.getStreamrClient().getSubscriptions(stream.id)).length > 0)
+        await until(async () => (await broker.getStreamrClient().getSubscriptions(stream.id)).length > 0)
         // Ensure that heartbeat has been sent (setting heartbeatUpdateIntervalInMs lower did not help)
         await waitForHeartbeatMessage(toEthereumAddress(operatorContractAddress))
         const brokerDescriptor = await broker.getStreamrClient().getPeerDescriptor()

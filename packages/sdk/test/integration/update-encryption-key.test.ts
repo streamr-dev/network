@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { StreamPartID, StreamPartIDUtils, waitForCondition } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, until } from '@streamr/utils'
 import { Message } from '../../src/Message'
 import { DecryptError } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -160,7 +160,7 @@ describe('update encryption key', () => {
             await publisher.publish(streamPartId, {
                 mockId: 2
             })
-            await waitForCondition(() => onError.mock.calls.length > 0, 10 * 1000)
+            await until(() => onError.mock.calls.length > 0, 10 * 1000)
             expect(onError.mock.calls[0][0]).toBeInstanceOf(DecryptError)
         }, 10 * 1000)
     })

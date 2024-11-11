@@ -1,4 +1,4 @@
-import { MetricsContext, waitForCondition } from '@streamr/utils'
+import { MetricsContext, until } from '@streamr/utils'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade } from '../../src/connection/ConnectorFacade'
 import { LatencyType, Simulator } from '../../src/connection/simulator/Simulator'
@@ -60,7 +60,7 @@ describe('Connection Locking', () => {
         const nodeId1 = toNodeId(mockPeerDescriptor1)
         const nodeId2 = toNodeId(mockPeerDescriptor2)
         await Promise.all([
-            waitForCondition(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
+            until(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock')
         ])
         expect(connectionManager1.hasConnection(nodeId2)).toEqual(true)
@@ -72,11 +72,11 @@ describe('Connection Locking', () => {
         const nodeId1 = toNodeId(mockPeerDescriptor1)
         const nodeId2 = toNodeId(mockPeerDescriptor2)
         await Promise.all([
-            waitForCondition(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
+            until(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock1')
         ])
         await Promise.all([
-            waitForCondition(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
+            until(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock2')
         ])
         expect(connectionManager1.hasConnection(nodeId2)).toEqual(true)
@@ -88,7 +88,7 @@ describe('Connection Locking', () => {
         const nodeId1 = toNodeId(mockPeerDescriptor1)
         const nodeId2 = toNodeId(mockPeerDescriptor2)
         await Promise.all([
-            waitForCondition(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
+            until(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock')
         ])
         expect(connectionManager1.hasConnection(nodeId2))
@@ -97,7 +97,7 @@ describe('Connection Locking', () => {
 
         connectionManager1.unlockConnection(mockPeerDescriptor2, 'testLock')
         expect(connectionManager1.hasLocalLockedConnection(nodeId2)).toEqual(false)
-        await waitForCondition(() => connectionManager2.hasRemoteLockedConnection(nodeId1) === false)
+        await until(() => connectionManager2.hasRemoteLockedConnection(nodeId1) === false)
         expect(connectionManager1.hasConnection(nodeId1)).toEqual(false)
     })
 
@@ -105,11 +105,11 @@ describe('Connection Locking', () => {
         const nodeId1 = toNodeId(mockPeerDescriptor1)
         const nodeId2 = toNodeId(mockPeerDescriptor2)
         await Promise.all([
-            waitForCondition(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
+            until(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock1')
         ])
         await Promise.all([
-            waitForCondition(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
+            until(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock2')
         ])
 
@@ -128,8 +128,8 @@ describe('Connection Locking', () => {
         const nodeId1 = toNodeId(mockPeerDescriptor1)
         const nodeId2 = toNodeId(mockPeerDescriptor2)
         await Promise.all([
-            waitForCondition(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
-            waitForCondition(() => connectionManager1.hasRemoteLockedConnection(nodeId2)),
+            until(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
+            until(() => connectionManager1.hasRemoteLockedConnection(nodeId2)),
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock1'),
             connectionManager2.lockConnection(mockPeerDescriptor1, 'testLock1')
         ])
@@ -138,7 +138,7 @@ describe('Connection Locking', () => {
         expect(connectionManager2.hasLocalLockedConnection(nodeId1))
 
         connectionManager1.unlockConnection(mockPeerDescriptor2, 'testLock1')
-        await waitForCondition(() =>
+        await until(() =>
             connectionManager1.hasRemoteLockedConnection(nodeId2)
             && !connectionManager1.hasLocalLockedConnection(nodeId2)
             && !connectionManager2.hasRemoteLockedConnection(nodeId1)
@@ -153,8 +153,8 @@ describe('Connection Locking', () => {
         const nodeId1 = toNodeId(mockPeerDescriptor1)
         const nodeId2 = toNodeId(mockPeerDescriptor2)
         await Promise.all([
-            waitForCondition(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
-            waitForCondition(() => connectionManager1.hasRemoteLockedConnection(nodeId2)),
+            until(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
+            until(() => connectionManager1.hasRemoteLockedConnection(nodeId2)),
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock1'),
             connectionManager2.lockConnection(mockPeerDescriptor1, 'testLock1')
         ])
@@ -165,16 +165,16 @@ describe('Connection Locking', () => {
         //@ts-expect-error private field
         await connectionManager1.gracefullyDisconnectAsync(mockPeerDescriptor2)
         
-        await waitForCondition(() =>
+        await until(() =>
             !connectionManager1.hasRemoteLockedConnection(nodeId2)
             && !connectionManager1.hasLocalLockedConnection(nodeId2)
         )
-        await waitForCondition(() =>
+        await until(() =>
             !connectionManager2.hasRemoteLockedConnection(nodeId1)
             && !connectionManager2.hasLocalLockedConnection(nodeId1)
         )
-        await waitForCondition(() => !connectionManager2.hasConnection(nodeId1))
-        await waitForCondition(() => !connectionManager1.hasConnection(nodeId2))
+        await until(() => !connectionManager2.hasConnection(nodeId1))
+        await until(() => !connectionManager1.hasConnection(nodeId2))
 
         expect(connectionManager1.hasConnection(nodeId2)).toEqual(false)
         expect(connectionManager2.hasConnection(nodeId1)).toEqual(false)

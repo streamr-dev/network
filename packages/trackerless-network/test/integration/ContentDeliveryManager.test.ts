@@ -3,7 +3,7 @@ import {
     Simulator,
     SimulatorTransport
 } from '@streamr/dht'
-import { StreamPartIDUtils, waitForCondition, waitForEvent3, wait } from '@streamr/utils'
+import { StreamPartIDUtils, until, waitForEvent3, wait } from '@streamr/utils'
 import { ContentDeliveryManager, Events } from '../../src/logic/ContentDeliveryManager'
 import { ControlLayerNode } from '../../src/logic/ControlLayerNode'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
@@ -84,8 +84,8 @@ describe('ContentDeliveryManager', () => {
     it('Joining stream', async () => {
         manager1.joinStreamPart(STREAM_PART_ID)
         manager2.joinStreamPart(STREAM_PART_ID)
-        await waitForCondition(() => manager1.getNeighbors(STREAM_PART_ID).length === 1)
-        await waitForCondition(() => manager2.getNeighbors(STREAM_PART_ID).length === 1)
+        await until(() => manager1.getNeighbors(STREAM_PART_ID).length === 1)
+        await until(() => manager2.getNeighbors(STREAM_PART_ID).length === 1)
         expect(manager1.getNeighbors(STREAM_PART_ID).length).toEqual(1)
         expect(manager2.getNeighbors(STREAM_PART_ID).length).toEqual(1)
     })
@@ -93,8 +93,8 @@ describe('ContentDeliveryManager', () => {
     it('Publishing after joining and waiting for neighbors', async () => {
         manager1.joinStreamPart(STREAM_PART_ID)
         manager2.joinStreamPart(STREAM_PART_ID)
-        await waitForCondition(() => manager1.getNeighbors(STREAM_PART_ID).length === 1)
-        await waitForCondition(() => manager2.getNeighbors(STREAM_PART_ID).length === 1)
+        await until(() => manager1.getNeighbors(STREAM_PART_ID).length === 1)
+        await until(() => manager2.getNeighbors(STREAM_PART_ID).length === 1)
         await Promise.all([
             waitForEvent3<Events>(manager1, 'newMessage'),
             manager2.broadcast(msg)
@@ -110,10 +110,10 @@ describe('ContentDeliveryManager', () => {
         manager2.joinStreamPart(STREAM_PART_ID)
         manager2.joinStreamPart(streamPartId2)
         await Promise.all([
-            waitForCondition(() => manager1.getNeighbors(STREAM_PART_ID).length === 1),
-            waitForCondition(() => manager2.getNeighbors(STREAM_PART_ID).length === 1),
-            waitForCondition(() => manager1.getNeighbors(streamPartId2).length === 1),
-            waitForCondition(() => manager2.getNeighbors(streamPartId2).length === 1)
+            until(() => manager1.getNeighbors(STREAM_PART_ID).length === 1),
+            until(() => manager2.getNeighbors(STREAM_PART_ID).length === 1),
+            until(() => manager1.getNeighbors(streamPartId2).length === 1),
+            until(() => manager2.getNeighbors(streamPartId2).length === 1)
         ])
         const msg2 = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
@@ -132,19 +132,19 @@ describe('ContentDeliveryManager', () => {
         manager1.joinStreamPart(STREAM_PART_ID)
         manager2.joinStreamPart(STREAM_PART_ID)
         await Promise.all([
-            waitForCondition(() => manager1.getNeighbors(STREAM_PART_ID).length === 1),
-            waitForCondition(() => manager2.getNeighbors(STREAM_PART_ID).length === 1)
+            until(() => manager1.getNeighbors(STREAM_PART_ID).length === 1),
+            until(() => manager2.getNeighbors(STREAM_PART_ID).length === 1)
         ])
         await manager2.leaveStreamPart(STREAM_PART_ID)
-        await waitForCondition(() => manager1.getNeighbors(STREAM_PART_ID).length === 0)
+        await until(() => manager1.getNeighbors(STREAM_PART_ID).length === 0)
     })
 
     it('RTTs are updated for node info', async () => {
         manager1.joinStreamPart(STREAM_PART_ID)
         manager2.joinStreamPart(STREAM_PART_ID)
         await Promise.all([
-            waitForCondition(() => manager1.getNeighbors(STREAM_PART_ID).length === 1),
-            waitForCondition(() => manager2.getNeighbors(STREAM_PART_ID).length === 1)
+            until(() => manager1.getNeighbors(STREAM_PART_ID).length === 1),
+            until(() => manager2.getNeighbors(STREAM_PART_ID).length === 1)
         ])
         // Wait for RTTs to be updated
         await wait(500)

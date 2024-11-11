@@ -12,7 +12,7 @@ import {
     toDhtAddressRaw
 } from '@streamr/dht'
 import path from 'path'
-import { MetricsContext, waitForCondition } from '@streamr/utils'
+import { MetricsContext, until } from '@streamr/utils'
 
 describe('StreamrChallenger', () => {
 
@@ -68,7 +68,7 @@ describe('StreamrChallenger', () => {
 
     it('Happy path', async () => {
         await runStreamrChallenge('127.0.0.1', '12323', sessionId)
-        await waitForCondition(() => challengedClientTransport.getConnections().length === 0)
+        await until(() => challengedClientTransport.getConnections().length === 0)
     })
 
 })

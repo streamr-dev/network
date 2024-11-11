@@ -2,7 +2,7 @@ import { config as CHAIN_CONFIG } from '@streamr/config'
 import { DhtAddress, NodeType, toDhtAddressRaw } from '@streamr/dht'
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { createNetworkNode } from '@streamr/trackerless-network'
-import { StreamID, toStreamPartID, waitForCondition } from '@streamr/utils'
+import { StreamID, toStreamPartID, until } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -32,7 +32,7 @@ async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID)
         networkNode.addMessageListener((msg) => {
             messages.push(StreamMessageTranslator.toClientProtocol(msg).getParsedContent())
         })
-        await waitForCondition(() => messages.length > 0, TIMEOUT)
+        await until(() => messages.length > 0, TIMEOUT)
         return messages
     } finally {
         await networkNode.stop()
@@ -104,7 +104,7 @@ describe('publish-subscribe', () => {
             await subscriberClient.subscribe(stream.id, (msg: any) => {
                 messages.push(msg)
             })
-            await waitForCondition(() => messages.length > 0, TIMEOUT)
+            await until(() => messages.length > 0, TIMEOUT)
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
     })
@@ -131,7 +131,7 @@ describe('publish-subscribe', () => {
                 messages.push(msg)
             })
             await publisherClient.publish(stream.id, PAYLOAD)
-            await waitForCondition(() => messages.length > 0, TIMEOUT)
+            await until(() => messages.length > 0, TIMEOUT)
             expect(messages).toEqual([PAYLOAD])
         }, TIMEOUT)
     })

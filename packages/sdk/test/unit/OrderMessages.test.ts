@@ -6,7 +6,7 @@ import {
     StreamPartIDUtils,
     collect, hexToBinary,
     toStreamID,
-    waitForCondition
+    until
 } from '@streamr/utils'
 import last from 'lodash/last'
 import range from 'lodash/range'
@@ -266,7 +266,7 @@ describe('OrderMessages', () => {
         const addMessages = async (orderMessages: OrderMessages) => {
             await orderMessages.addMessages(async function* () {
                 yield* allMessages.filter((m) => CHUNK1.includes(m.getTimestamp()))
-                await waitForCondition(() => {
+                await until(() => {
                     return outputMessages.some((m) => (m.getTimestamp() === last(CHUNK1)))
                 })
                 yield* allMessages.filter((m) => CHUNK2.includes(m.getTimestamp()))

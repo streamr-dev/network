@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastWallet } from '@streamr/test-utils'
-import { Defer, StreamID, collect, utf8ToBinary, waitForCondition, toUserId } from '@streamr/utils'
+import { Defer, StreamID, collect, utf8ToBinary, until, toUserId } from '@streamr/utils'
 import sample from 'lodash/sample'
 import shuffle from 'lodash/shuffle'
 import { createPrivateKeyAuthentication } from '../../src/Authentication'
@@ -293,7 +293,7 @@ describe('Subscriber', () => {
                 const published = await publishTestMessages(NUM_MESSAGES, {
                     timestamp: 111111,
                 })
-                await waitForCondition(() => onError1.mock.calls.length > 0)
+                await until(() => onError1.mock.calls.length > 0)
 
                 expect(received1.map((m) => m.signature)).toEqual(published.slice(0, MAX_ITEMS).map((m) => m.signature))
                 expect(onError1).toHaveBeenCalledTimes(1)

@@ -1,5 +1,5 @@
 import { fastWallet, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { EthereumAddress, StreamID, areEqualBinaries, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { EthereumAddress, StreamID, areEqualBinaries, toEthereumAddress, until } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { MessageMetadata } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -64,7 +64,7 @@ describe('ERC-1271: publish', () => {
                 metadatas.push(metadata)
             })
             await publisher.publish(streamId, PAYLOAD, { erc1271Contract: erc1271ContractAddress })
-            await waitForCondition(() => messages.length > 0, TIMEOUT)
+            await until(() => messages.length > 0, TIMEOUT)
             expect(metadatas[0].signatureType).toEqual('ERC_1271')
             if (publicOrPrivate === 'public') {
                 expect(metadatas[0].groupKeyId).toEqual(undefined)
@@ -129,7 +129,7 @@ describe('ERC-1271: subscribe', () => {
             metadatas.push(metadata)
         })
         await publisher.publish(streamId, PAYLOAD)
-        await waitForCondition(() => messages.length > 0, TIMEOUT)
+        await until(() => messages.length > 0, TIMEOUT)
         expect(metadatas[0].signatureType).toEqual('SECP256K1')
         expect(metadatas[0].groupKeyId).toBeString()
         expect(areEqualBinaries(messages[0] as Uint8Array, PAYLOAD)).toBe(true)
@@ -190,7 +190,7 @@ describe('ERC-1271: publish and subscribe', () => {
             metadatas.push(metadata)
         })
         await publisher.publish(streamId, PAYLOAD, { erc1271Contract: erc1271PublisherContractAddress })
-        await waitForCondition(() => messages.length > 0, TIMEOUT)
+        await until(() => messages.length > 0, TIMEOUT)
         expect(metadatas[0].signatureType).toEqual('ERC_1271')
         expect(metadatas[0].groupKeyId).toBeString()
         expect(areEqualBinaries(messages[0] as Uint8Array, PAYLOAD)).toBe(true)

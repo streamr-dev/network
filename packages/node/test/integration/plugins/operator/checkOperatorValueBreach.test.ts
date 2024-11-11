@@ -3,7 +3,7 @@ import {
     SetupOperatorContractOpts,
     _operatorContractUtils,
 } from '@streamr/sdk'
-import { Logger, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { Logger, toEthereumAddress, until } from '@streamr/utils'
 import { Contract } from 'ethers'
 import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
 import { createClient, createTestStream } from '../../../utils'
@@ -64,7 +64,7 @@ describe('checkOperatorValueBreach', () => {
         const operator = client.getOperator(toEthereumAddress(await watcherOperatorContract.getAddress()))
 
         logger.debug('Waiting until above', { allowedDifference })
-        await waitForCondition(async () => await getEarnings(operatorContract) > allowedDifference, 10000, 1000)
+        await until(async () => await getEarnings(operatorContract) > allowedDifference, 10000, 1000)
         await checkOperatorValueBreach(operator, client, async () => {
             return [toEthereumAddress(await operatorContract.getAddress())]
         }, 1, 20)

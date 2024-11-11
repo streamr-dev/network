@@ -2,7 +2,7 @@ import {
     Stream, StreamrClient, _operatorContractUtils
 } from '@streamr/sdk'
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { StreamPartID, toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { StreamPartID, toEthereumAddress, until } from '@streamr/utils'
 import { MaintainTopologyHelper } from '../../../../src/plugins/operator/MaintainTopologyHelper'
 import { MaintainTopologyService } from '../../../../src/plugins/operator/MaintainTopologyService'
 import { OperatorFleetState } from '../../../../src/plugins/operator/OperatorFleetState'
@@ -100,12 +100,12 @@ describe('MaintainTopologyService', () => {
         await operatorFleetState.start()
         await maintainTopologyHelper.start()
 
-        await waitForCondition(async () => {
+        await until(async () => {
             return containsAll(await getSubscribedStreamPartIds(client), stream1.getStreamParts())
         }, 10000, 1000)
 
         await stake(operatorContract, await sponsorship2.getAddress(), 10000)
-        await waitForCondition(async () => {
+        await until(async () => {
             return containsAll(await getSubscribedStreamPartIds(client), [
                 ...stream1.getStreamParts(),
                 ...stream2.getStreamParts()
@@ -113,7 +113,7 @@ describe('MaintainTopologyService', () => {
         }, 10000, 1000)
 
         await (await operatorContract.unstake(await sponsorship1.getAddress())).wait()
-        await waitForCondition(async () => {
+        await until(async () => {
             const state = await getSubscribedStreamPartIds(client)
             return containsAll(state, stream2.getStreamParts()) && doesNotContainAny(state, stream1.getStreamParts())
         }, 10000, 1000)
