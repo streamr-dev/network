@@ -82,6 +82,10 @@ export class ProxyConnectionRpcLocal extends EventEmitter<Events> implements IPr
         return Array.from(this.connections.keys()).filter((key) => this.connections.get(key)!.direction === ProxyDirection.SUBSCRIBE)
     }
 
+    public getNodes(): PeerDescriptor[] {
+        return Array.from(this.connections.values()).map((connection) => connection.remote.getPeerDescriptor())
+    }
+
     // IProxyConnectionRpc server method
     async requestConnection(request: ProxyConnectionRequest, context: ServerCallContext): Promise<ProxyConnectionResponse> {
         const senderPeerDescriptor = (context as DhtCallContext).incomingSourceDescriptor!
