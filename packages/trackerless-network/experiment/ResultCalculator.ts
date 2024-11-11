@@ -14,7 +14,6 @@ export const joinResults = async (filePath: string): Promise<void> => {
         const results = JSON.parse(line)
         sum += parseInt(results.results)
         numOfLines += 1
-        console.log(results)
     })
     await waitForEvent(file, 'close')
     console.log('avg:', sum / numOfLines)
