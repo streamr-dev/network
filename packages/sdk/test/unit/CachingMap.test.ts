@@ -4,7 +4,7 @@ import { wait } from '@streamr/utils'
 describe('CachingMap', () => {
 
     let plainFn: jest.Mock<Promise<string>, [key1: string, key2: string]>
-    let cache: CachingMap<[key1: string, key2: string], string, string>
+    let cache: CachingMap<string, string, [key1: string, key2: string]>
 
     beforeEach(() => {
         plainFn = jest.fn()

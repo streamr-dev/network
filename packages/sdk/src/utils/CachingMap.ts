@@ -14,7 +14,7 @@ import LRU from '../../vendor/quick-lru'
  * cache.invalidate(() => ...)
  * ```
  */
-export class CachingMap<P extends any[], V, K extends MapKey> {
+export class CachingMap<K extends MapKey, V, P extends any[]> {
 
     private readonly cachedFn: (...args: P) => Promise<V>
     private readonly cache: LRU<K, { data: V, maxAge: number }>

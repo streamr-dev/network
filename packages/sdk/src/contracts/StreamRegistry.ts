@@ -119,10 +119,10 @@ export class StreamRegistry {
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>
     private readonly authentication: Authentication
     private readonly logger: Logger
-    private readonly getStreamMetadata_cached: CachingMap<[StreamID], StreamMetadata, string>
-    private readonly isStreamPublisher_cached: CachingMap<[StreamID, UserID], boolean, string>
-    private readonly isStreamSubscriber_cached: CachingMap<[StreamID, UserID], boolean, string>
-    private readonly hasPublicSubscribePermission_cached: CachingMap<[StreamID], boolean, string>
+    private readonly getStreamMetadata_cached: CachingMap<string, StreamMetadata, [StreamID]>
+    private readonly isStreamPublisher_cached: CachingMap<string, boolean, [StreamID, UserID]>
+    private readonly isStreamSubscriber_cached: CachingMap<string, boolean, [StreamID, UserID]>
+    private readonly hasPublicSubscribePermission_cached: CachingMap<string, boolean, [StreamID]>
 
     /** @internal */
     constructor(
