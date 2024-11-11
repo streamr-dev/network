@@ -3,7 +3,7 @@ import { StrictStreamrClientConfig } from '../../Config'
 import { StreamMessage } from '../../protocol/StreamMessage'
 import { Mapping } from '../../utils/Mapping'
 import { PushBuffer } from '../../utils/PushBuffer'
-import { CacheAsyncFn } from '../../utils/CacheAsyncFn'
+import { CachingMap } from '../../utils/CachingMap'
 import { Resends } from '../Resends'
 import { GapFiller } from './GapFiller'
 import { Gap, OrderedMessageChain, OrderedMessageChainContext } from './OrderedMessageChain'
@@ -38,13 +38,14 @@ const createMessageChain = (
     }
     const chain = new OrderedMessageChain(context, abortSignal)
     chain.on('unfillableGap', (gap: Gap) => onUnfillableGap(gap))
+    // TODO maybe caching should be configurable, i.e. use client's config.cache instead of the constant
+    // - maybe the caching should be done at application level, e.g. with a new CacheStreamStorageRegistry class?
+    // - also note that this is a cache which contains just one item (as streamPartId always the same)
+    const storageNodeCache = new CachingMap(() => getStorageNodes(StreamPartIDUtils.getStreamID(context.streamPartId)), STORAGE_NODE_CACHE_OPTS)
     const gapFiller = new GapFiller({
         chain,
         resend,
-        // TODO maybe caching should be configurable, i.e. use client's config.cache instead of the constant
-        // - maybe the caching should be done at application level, e.g. with a new CacheStreamStorageRegistry class?
-        // - also note that this is a cache which contains just one item (as streamPartId always the same)
-        getStorageNodeAddresses: CacheAsyncFn(() => getStorageNodes(StreamPartIDUtils.getStreamID(context.streamPartId)), STORAGE_NODE_CACHE_OPTS),
+        getStorageNodeAddresses: () => storageNodeCache.get(),
         strategy: config.gapFillStrategy,
         initialWaitTime: config.gapFillTimeout,
         retryWaitTime: config.retryResendAfter,
