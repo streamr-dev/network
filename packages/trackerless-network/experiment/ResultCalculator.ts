@@ -1,7 +1,5 @@
 import { waitForEvent } from '@streamr/utils'
-import { log } from 'console'
 import fs from 'fs'
-import { parse } from 'path'
 const readline = require('readline')
 
 export const joinResults = async (filePath: string): Promise<void> => {

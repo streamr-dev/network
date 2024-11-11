@@ -5,12 +5,15 @@ import { AutoScalingClient, AutoScalingClientConfig, DescribePoliciesCommand, De
 import { EC2Client, DescribeInstancesCommand } from "@aws-sdk/client-ec2"
 import 'dotenv/config'
 import { joinResults, propagationResults, routingResults, timeToDataResults } from "./ResultCalculator"
+import { setEngine } from "crypto"
 
 const envs = [ 'local', 'aws' ]
 const modes = [ 'propagation', 'join', 'routing', 'timetodata', 'scalingjoin' ]
 const experiment = process.argv[2]
 const env = process.argv[3]
 const nodeCount = parseInt(process.argv[4])
+
+const REGIONS = [ 'eu-north-1' ]
 
 if (!modes.includes(experiment)) {
     throw new Error('unknown experiment ' + experiment)
@@ -32,9 +35,9 @@ const startLocalNodes = (nodeCount: number) => {
     return nodes
 }
 
-const startAwsNodes = async (nodeCount: number) => {
+const startAwsNodes = async (nodeCount: number, region: string) => {
     const config: AutoScalingClientConfig = {
-        region: "eu-north-1",
+        region,
         credentials: {
             accessKeyId: process.env.AWS_ACCESS_KEY!,
             secretAccessKey: process.env.AWS_SECRET_KEY!,
@@ -42,7 +45,7 @@ const startAwsNodes = async (nodeCount: number) => {
     } 
     const client = new AutoScalingClient(config)
     const params: SetDesiredCapacityCommandInput = {
-        AutoScalingGroupName: "network-experiment",
+        AutoScalingGroupName: "network-experiment-tf-test",
         DesiredCapacity: nodeCount   
     }
     const command = new SetDesiredCapacityCommand(params)
@@ -54,9 +57,9 @@ const startAwsNodes = async (nodeCount: number) => {
     }
 }
 
-async function waitForInstances(): Promise<void> {
+async function waitForInstances(region: string): Promise<void> {
     const config = {
-        region: "eu-north-1",
+        region,
         credentials: {
             accessKeyId: process.env.AWS_ACCESS_KEY!,
             secretAccessKey: process.env.AWS_SECRET_KEY!,
@@ -73,14 +76,17 @@ async function waitForInstances(): Promise<void> {
         ]
     }
     while (true) {
-        const seen = new Set<string>()
+        const seen = new Map<string, { domain: string, region: string }>()
         try {
             const res = await client.send(new DescribeInstancesCommand(params))
             const instanceCount = res.Reservations!.flatMap((a) => a.Instances!.length).reduce((a, c) => a + c, 0)
             if (instanceCount === nodeCount) {
-                seen.add(res.Reservations![0].Instances![0].InstanceId!)
                 res.Reservations!.flatMap((reservation) => reservation.Instances!.forEach((instance) => {
-                    logger.info('Instance running, PublicDnsName: ' + res.Reservations![0].Instances![0].PublicDnsName + " InstanceId: " + instance.InstanceId)
+                    console.log(instance.PublicIpAddress)
+                    const ip = instance.PublicIpAddress!
+                    const domain = instance.PublicDnsName!
+                    seen.set(ip, { domain, region })
+                    logger.info('Instance running, PublicDnsName: ' + domain + " InstanceId: " + instance.InstanceId)
                 }))
                 break
             } else {
@@ -106,9 +112,9 @@ const calculateResults = async (filePath: string): Promise<void> => {
     }
 }
 
-const stopAwsNodes = async () => {
+const stopAwsNodes = async (region: string) => {
     const config: AutoScalingClientConfig = {
-        region: "eu-north-1",
+        region,
         credentials: {
             accessKeyId: process.env.AWS_ACCESS_KEY!,
             secretAccessKey: process.env.AWS_SECRET_KEY!,
@@ -138,8 +144,10 @@ const run = async () => {
     if (env === 'local') {
         localNodes = startLocalNodes(nodeCount)
     } else if (env === 'aws') {
-        await startAwsNodes(nodeCount)
-        await waitForInstances()
+        await Promise.all(REGIONS.map( async (region) => {
+            await startAwsNodes(nodeCount, region)
+            await waitForInstances(region)
+        }))
         logger.info('all aws instances started')
     }
 
@@ -187,7 +195,7 @@ const run = async () => {
     logger.info(`experiment ${experiment} completed`)
 
     if (env === 'aws') {
-        await stopAwsNodes()
+        await Promise.all(REGIONS.map(async (region) => stopAwsNodes(region)))
     } else if (env === 'local') {
         await Promise.all(localNodes.map((node) => node.stop()))
     }
