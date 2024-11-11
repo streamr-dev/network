@@ -18,16 +18,16 @@ export type CacheAsyncFnType<ArgsType extends any[], ReturnType, KeyType = ArgsT
     & { clearMatching: (matchFn: (key: KeyType) => boolean) => void }
 
 /**
- * Returns a cached async fn, cached keyed on first argument passed. See documentation for mem/p-memoize.
+ * Returns a cached async fn. See documentation for mem/p-memoize.
  * Caches into a LRU cache capped at options.maxSize
- * Won't call asyncFn again until options.maxAge or options.maxSize exceeded, or cachedAsyncFn.clear() is called.
+ * Won't call asyncFn again until options.maxAge or options.maxSize exceeded, or cachedAsyncFn.clearMatching() is called.
  * Won't cache rejections.
  *
  * ```js
  * const cachedAsyncFn = CacheAsyncFn(asyncFn, options)
  * await cachedAsyncFn(key)
  * await cachedAsyncFn(key)
- * cachedAsyncFn.clear()
+ * cachedAsyncFn.clearMatching(() => ...)
  * ```
  */
 
