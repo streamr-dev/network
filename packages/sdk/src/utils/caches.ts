@@ -34,19 +34,16 @@ export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType = ArgsT
     maxSize = 10000,
     maxAge = 30 * 60 * 1000, // 30 minutes
     cachePromiseRejection = false,
-    onEviction = () => {},
     cacheKey = (args: ArgsType) => args[0], // type+provide default so we can infer KeyType
 }: {
     maxSize?: number
     maxAge?: number
     cachePromiseRejection?: boolean
-    onEviction?: (...args: any[]) => void
     cacheKey?: (args: ArgsType) => KeyType
 } = {}): CacheAsyncFnType<ArgsType, ReturnType, KeyType> {
     const cache = new LRU<KeyType, { data: ReturnType, maxAge: number }>({
         maxSize,
-        maxAge,
-        onEviction,
+        maxAge
     })
 
     const cachedFn = Object.assign(pMemoize(asyncFn, {
