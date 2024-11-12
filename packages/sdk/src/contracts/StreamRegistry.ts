@@ -540,11 +540,12 @@ export class StreamRegistry {
     }
 
     invalidateMetadataCache(streamId: StreamID): void {
+        this.logger.trace('Clear metadata cache for stream', { streamId })
         this.getStreamMetadata_cached.invalidate((s) => s.startsWith(formCacheKeyPrefix(streamId)))
     }
     
     invalidatePermissionCaches(streamId: StreamID): void {
-        this.logger.debug('Clear caches matching stream', { streamId })
+        this.logger.trace('Clear permission caches for stream', { streamId })
         const matchTarget = (s: string) => s.startsWith(formCacheKeyPrefix(streamId))
         this.isStreamPublisher_cached.invalidate(matchTarget)
         this.isStreamSubscriber_cached.invalidate(matchTarget)
