@@ -258,7 +258,7 @@ export class StreamRegistry {
             JSON.stringify(metadata),
             ethersOverrides
         ))
-        this.getStreamMetadata_cached.invalidate((s) => s.startsWith(formCacheKeyPrefix(streamId)))
+        this.invalidateMetadataCache(streamId)
     }
 
     async deleteStream(streamIdOrPath: string): Promise<void> {
@@ -269,7 +269,7 @@ export class StreamRegistry {
             streamId,
             ethersOverrides
         ))
-        this.getStreamMetadata_cached.invalidate((s) => s.startsWith(formCacheKeyPrefix(streamId)))
+        this.invalidateMetadataCache(streamId)
         this.invalidatePermissionCaches(streamId)
     }
 
@@ -537,6 +537,10 @@ export class StreamRegistry {
 
     hasPublicSubscribePermission(streamId: StreamID): Promise<boolean> {
         return this.hasPublicSubscribePermission_cached.get(streamId)
+    }
+
+    invalidateMetadataCache(streamId: StreamID): void {
+        this.getStreamMetadata_cached.invalidate((s) => s.startsWith(formCacheKeyPrefix(streamId)))
     }
     
     invalidatePermissionCaches(streamId: StreamID): void {
