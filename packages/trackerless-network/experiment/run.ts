@@ -142,17 +142,25 @@ const run = async () => {
     controller.createServer()
 
     let localNodes: ExperimentNodeWrapper[] = []
+    const instances = new Map<string, { domain: string, region: string }>()
     if (env === 'local') {
         localNodes = startLocalNodes(nodeCount)
+        await controller.waitForClients
     } else if (env === 'aws') {
         await Promise.all(REGIONS.map( async (region) => {
             await startAwsNodes(nodeCount, region)
-            await waitForInstances(region)
+            const seenInRegion = await waitForInstances(region)
+            seenInRegion.forEach((value, key) => instances.set(key, value))
         }))
         logger.info('all aws instances started')
-    }
+        const waitLogger = () => {
+            const startedIps = controller.getIps()
+            const startingInstances = Array.from(instances.entries()).filter(([ip, _]) => !startedIps.has(ip))
+            logger.info('waiting for instances to connect', { startingInstances })            
+        }
+        await controller.waitForClients(() => waitLogger())
 
-    await controller.waitForClients()
+    }
     logger.info('all clients connected')
     if (experiment === 'join') {
         const entryPointId = await controller.startEntryPoint()

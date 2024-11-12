@@ -7,10 +7,12 @@ import { Logger, StreamPartID, StreamPartIDUtils, wait, waitForCondition } from 
 import { areEqualPeerDescriptors, PeerDescriptor } from '@streamr/dht'
 import { chunk, sample } from 'lodash'
 import fs from 'fs'
+import { log } from 'console'
 
 interface ExperimentNode {
     socket: WebSocket
     peerDescriptor?: PeerDescriptor
+    ip?: string
 }
 
 const writeResultsRow = (file: string, line: string) => {
@@ -64,7 +66,8 @@ export class ExperimentController {
                     const message = ExperimentClientMessage.fromBinary(new Uint8Array(msg as Buffer))
                     if (message.payload.oneofKind === 'hello') {
                         logger.info('received hello message from ' + message.id)
-                        this.clients.set(message.id, { socket: ws })
+                        
+                        this.clients.set(message.id, { socket: ws, ip: socket.remoteAddress })
                     } else if (message.payload.oneofKind === 'started') {
                         const started = message.payload.started
                         this.clients.set(message.id, { socket: ws, peerDescriptor: started.peerDescriptor! })
@@ -83,8 +86,14 @@ export class ExperimentController {
         this.httpServer.listen(7070)
     }
 
-    async waitForClients(): Promise<void> {
-        await waitForCondition(() => this.clients.size === this.nodeCount, 10 * 60 * 1000, 1000)
+    async waitForClients(onConditionFn?: () => void): Promise<void> {
+        await waitForCondition(() => { 
+            if (onConditionFn !== undefined) {
+                onConditionFn()
+            }
+            return this.clients.size === this.nodeCount 
+        }, 10 * 60 * 1000, 1000)
+        
     }
 
     async startEntryPoint(storeRoutingPaths = false): Promise<string> {
@@ -286,6 +295,14 @@ export class ExperimentController {
             await waitForCondition(() => untilCondition(instructedNodeCount), 30000, 1000)
             logger.info(`batch ${i} completed, ${nodes.length - instructedNodeCount} nodes remaining`)
         }
+    }
+
+    getIps(): Set<string> {
+        return new Set(Array.from(this.clients.values()).map((node) => node.ip!))
+    }
+
+    hasIp(ip: string): boolean {
+        return Array.from(this.clients.values()).some((node) => node.ip === ip)
     }
 
 }
