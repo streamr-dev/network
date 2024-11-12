@@ -87,7 +87,6 @@ export class ExperimentNodeWrapper {
         this.node.registerExternalRoutingRpcMethod(GetRoutingPath, RoutingPath, 'getRoutingPath', async (request: GetRoutingPath, context: ServerCallContext): Promise<RoutingPath> => {
             const source = (context as DhtCallContext).incomingSourceDescriptor
             const { sendTime } = request 
-            console.log(Date.now() - sendTime)
             return {
                 path: (this.node!.stack.getControlLayerNode() as DhtNode).getPathForMessage(toNodeId(source!))
             }
