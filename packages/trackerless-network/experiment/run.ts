@@ -155,6 +155,7 @@ const run = async () => {
         logger.info('all aws instances started')
         const waitLogger = () => {
             const startedIps = controller.getIps()
+            console.log(startedIps)
             const startingInstances = Array.from(instances.entries()).filter(([ip, _]) => !startedIps.has(ip))
             logger.info('waiting for instances to connect', { startingInstances })            
         }
