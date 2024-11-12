@@ -208,6 +208,10 @@ export interface GetRoutingPath {
      * @generated from protobuf field: string id = 1;
      */
     id: string;
+    /**
+     * @generated from protobuf field: int64 sendTime = 2;
+     */
+    sendTime: number;
 }
 /**
  * @generated from protobuf message RoutingPath
@@ -403,7 +407,8 @@ export const PublishMessage = new PublishMessage$Type();
 class GetRoutingPath$Type extends MessageType<GetRoutingPath> {
     constructor() {
         super("GetRoutingPath", [
-            { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "sendTime", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 2 /*LongType.NUMBER*/ }
         ]);
     }
 }

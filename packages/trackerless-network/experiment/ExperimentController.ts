@@ -5,7 +5,7 @@ import { ExperimentClientMessage, ExperimentServerMessage, Hello, InstructionCom
 import { Any } from '../generated/google/protobuf/any'
 import { Logger, StreamPartID, StreamPartIDUtils, wait, waitForCondition } from '@streamr/utils'
 import { areEqualPeerDescriptors, PeerDescriptor } from '@streamr/dht'
-import { sample } from 'lodash'
+import { chunk, sample } from 'lodash'
 import fs from 'fs'
 
 interface ExperimentNode {
@@ -145,17 +145,25 @@ export class ExperimentController {
 
     async runRoutingExperiment(): Promise<void> {
         const nodes = Array.from(this.clients.values())
-        await Promise.all(nodes.map((node) => {
-            const message = ExperimentServerMessage.create({
-                instruction: {
-                    oneofKind: 'routingExperiment',
-                    routingExperiment: RoutingExperiment.create({
-                        routingTargets: nodes.map((target) => target.peerDescriptor!).filter((a) => !areEqualPeerDescriptors(a, node.peerDescriptor!))
-                    })
-                }
-            })
-            node.socket.send(ExperimentServerMessage.toBinary(message))
-        }))
+        const batchSize = 2
+        const batches = chunk(nodes, batchSize)
+        for (let i in batches) {
+            const batch = batches[i]
+            await Promise.all(batch.map((node) => {
+                const message = ExperimentServerMessage.create({
+                    instruction: {
+                        oneofKind: 'routingExperiment',
+                        routingExperiment: RoutingExperiment.create({
+                            routingTargets: batch.map((target) => target.peerDescriptor!).filter((a) => !areEqualPeerDescriptors(a, node.peerDescriptor!))
+                        })
+                    }
+                })
+                node.socket.send(ExperimentServerMessage.toBinary(message))
+            }))
+            const instructedNodeCount = batchSize * (parseInt(i) + 1)
+            await waitForCondition(() => this.resultsReceived.size === instructedNodeCount, 30000, 1000)
+            logger.info(`routing batch ${i} completed, ${nodes.length - instructedNodeCount} nodes remaining`)
+        }
         await waitForCondition(() => this.resultsReceived.size === this.nodeCount, 30000, 1000)
     }
 

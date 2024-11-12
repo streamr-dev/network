@@ -86,6 +86,8 @@ export class ExperimentNodeWrapper {
         await this.node.start(join)
         this.node.registerExternalRoutingRpcMethod(GetRoutingPath, RoutingPath, 'getRoutingPath', async (request: GetRoutingPath, context: ServerCallContext): Promise<RoutingPath> => {
             const source = (context as DhtCallContext).incomingSourceDescriptor
+            const { sendTime } = request 
+            console.log(Date.now() - sendTime)
             return {
                 path: (this.node!.stack.getControlLayerNode() as DhtNode).getPathForMessage(toNodeId(source!))
             }
@@ -192,13 +194,15 @@ export class ExperimentNodeWrapper {
         await Promise.all(nodes.map(async (node) => {
             try {
                 const started = Date.now()
-                const result = await client.getRoutingPath(GetRoutingPath.create(), {
+                const result = await client.getRoutingPath(GetRoutingPath.create({
+                    sendTime: started
+                }), {
                     sourceDescriptor: this.node!.getPeerDescriptor(),
                     targetDescriptor: node,
-                    timeout: 10000,
+                    timeout: 10000
                 })
                 const rtt = Date.now() - started
-                results.push({ source: toNodeId(this.node!.getPeerDescriptor()), from: toNodeId(node), path: result.path.map((p) => toNodeId(p)), rtt})
+                results.push({ source: toNodeId(this.node!.getPeerDescriptor()), from: toNodeId(node), path: result.path.map((p) => toNodeId(p)), rtt })
             } catch (e) {
                 logger.error(e)
                 results.push({ source: toNodeId(this.node!.getPeerDescriptor()), from: toNodeId(node), path: [], rtt: 10000 })

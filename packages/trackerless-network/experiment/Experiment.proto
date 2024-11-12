@@ -73,6 +73,7 @@ message PublishMessage {
 
 message GetRoutingPath {
     string id = 1;
+    int64 sendTime = 2;
 }
 
 message RoutingPath {
