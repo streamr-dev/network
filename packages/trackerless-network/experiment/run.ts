@@ -153,11 +153,15 @@ const run = async () => {
             seenInRegion.forEach((value, key) => instances.set(key, value))
         }))
         logger.info('all aws instances started')
+        let lastCount: number 
         const waitLogger = () => {
             const startedIps = controller.getIps()
-            console.log(startedIps)
-            const startingInstances = Array.from(instances.entries()).filter(([ip, _]) => !startedIps.has(ip))
-            logger.info('waiting for instances to connect', { startingInstances })            
+            if (lastCount !== startedIps.size) {
+                const startingInstances = Array.from(instances.entries()).filter(([ip, _]) => !startedIps.has(ip))
+                logger.info('waiting for instances to connect', { startingInstances })
+            }
+            lastCount = startedIps.size
+                       
         }
         await controller.waitForClients(() => waitLogger())
 
