@@ -258,7 +258,7 @@ export class StreamRegistry {
             JSON.stringify(metadata),
             ethersOverrides
         ))
-        this.invalidateStreamCache(streamId)
+        this.getStreamMetadata_cached.invalidate((s) => s.startsWith(formCacheKeyPrefix(streamId)))
     }
 
     async deleteStream(streamIdOrPath: string): Promise<void> {
@@ -269,6 +269,7 @@ export class StreamRegistry {
             streamId,
             ethersOverrides
         ))
+        this.getStreamMetadata_cached.invalidate((s) => s.startsWith(formCacheKeyPrefix(streamId)))
         this.invalidateStreamCache(streamId)
     }
 
@@ -541,7 +542,6 @@ export class StreamRegistry {
     invalidateStreamCache(streamId: StreamID): void {
         this.logger.debug('Clear caches matching stream', { streamId })
         const matchTarget = (s: string) => s.startsWith(formCacheKeyPrefix(streamId))
-        this.getStreamMetadata_cached.invalidate(matchTarget)
         this.isStreamPublisher_cached.invalidate(matchTarget)
         this.isStreamSubscriber_cached.invalidate(matchTarget)
         // TODO should also clear cache for hasPublicSubscribePermission?
