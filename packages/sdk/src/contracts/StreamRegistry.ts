@@ -270,7 +270,7 @@ export class StreamRegistry {
             ethersOverrides
         ))
         this.getStreamMetadata_cached.invalidate((s) => s.startsWith(formCacheKeyPrefix(streamId)))
-        this.invalidateStreamCache(streamId)
+        this.invalidatePermissionCaches(streamId)
     }
 
     private async streamExistsOnChain(streamIdOrPath: string): Promise<boolean> {
@@ -457,7 +457,7 @@ export class StreamRegistry {
         ...assignments: InternalPermissionAssignment[]
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.invalidateStreamCache(streamId)
+        this.invalidatePermissionCaches(streamId)
         await this.connectToContract()
         for (const assignment of assignments) {
             for (const permission of assignment.permissions) {
@@ -479,7 +479,7 @@ export class StreamRegistry {
         for (const item of items) {
             validatePermissionAssignments(item.assignments)
             const streamId = await this.streamIdBuilder.toStreamID(item.streamId)
-            this.invalidateStreamCache(streamId)
+            this.invalidatePermissionCaches(streamId)
             streamIds.push(streamId)
             targets.push(item.assignments.map((assignment) => {
                 return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_USER_ID : assignment.userId
@@ -539,7 +539,7 @@ export class StreamRegistry {
         return this.hasPublicSubscribePermission_cached.get(streamId)
     }
     
-    invalidateStreamCache(streamId: StreamID): void {
+    invalidatePermissionCaches(streamId: StreamID): void {
         this.logger.debug('Clear caches matching stream', { streamId })
         const matchTarget = (s: string) => s.startsWith(formCacheKeyPrefix(streamId))
         this.isStreamPublisher_cached.invalidate(matchTarget)

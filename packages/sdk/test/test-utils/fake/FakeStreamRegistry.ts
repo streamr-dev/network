@@ -168,7 +168,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
     
     // eslint-disable-next-line class-methods-use-this
-    invalidateStreamCache(): void {
+    invalidatePermissionCaches(): void {
         // no-op
     }
 
