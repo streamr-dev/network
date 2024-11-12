@@ -65,9 +65,9 @@ export class ExperimentController {
                 ws.on('message', (msg) => {
                     const message = ExperimentClientMessage.fromBinary(new Uint8Array(msg as Buffer))
                     if (message.payload.oneofKind === 'hello') {
+                        const ip = message.id.split('-')[3]
                         logger.info('received hello message from ' + message.id)
-                        
-                        this.clients.set(message.id, { socket: ws, ip: socket.remoteAddress })
+                        this.clients.set(message.id, { socket: ws, ip })
                     } else if (message.payload.oneofKind === 'started') {
                         const started = message.payload.started
                         this.clients.set(message.id, { socket: ws, peerDescriptor: started.peerDescriptor! })

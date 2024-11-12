@@ -145,7 +145,7 @@ const run = async () => {
     const instances = new Map<string, { domain: string, region: string }>()
     if (env === 'local') {
         localNodes = startLocalNodes(nodeCount)
-        await controller.waitForClients
+        await controller.waitForClients()
     } else if (env === 'aws') {
         await Promise.all(REGIONS.map( async (region) => {
             await startAwsNodes(nodeCount, region)
