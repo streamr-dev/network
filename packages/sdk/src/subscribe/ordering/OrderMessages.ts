@@ -33,8 +33,7 @@ const createMessageChain = (
     }
     const chain = new OrderedMessageChain(context, abortSignal)
     chain.on('unfillableGap', (gap: Gap) => onUnfillableGap(gap))
-    // TODO maybe caching should be configurable, i.e. use client's config.cache instead of the constant
-    // - maybe the caching should be done at application level, e.g. with a new CacheStreamStorageRegistry class?
+    // TODO maybe the caching should be done at application level, e.g. with a new CacheStreamStorageRegistry class?
     // - also note that this is a cache which contains just one item (as streamPartId always the same)
     const storageNodeCache = new CachingMap(() => getStorageNodes(StreamPartIDUtils.getStreamID(context.streamPartId)), {
         ...config.cache,
