@@ -1,4 +1,4 @@
-import { EthereumAddress, toEthereumAddress, toUserId, UserID, waitForCondition, waitForEvent } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, toUserId, UserID, until, waitForEvent } from '@streamr/utils'
 import cors from 'cors'
 import crypto, { randomBytes } from 'crypto'
 import { Wallet } from 'ethers'
@@ -86,40 +86,6 @@ export const runAndRaceEvents = async (
     timeout = 5000
 ): Promise<unknown[]> => {
     return runAndWait(operations, waitedEvents, timeout, Promise.race.bind(Promise))
-}
-
-/**
- * Run functions and wait conditions to become true by re-evaluating every `retryInterval` milliseconds. Returns a promise created with Promise.all() 
- * and waitForCondition() calls. Calls the functions after creating the promise.
- * 
- * @param operations function(s) to call
- * @param conditions condition(s) to be evaluated; condition functions should return boolean or Promise<boolean> and have
- * no side-effects.
- * @param timeout amount of time in milliseconds to wait for
- * @param retryInterval how often, in milliseconds, to re-evaluate condition
- * @param onTimeoutContext evaluated only on timeout. Used to associate human-friendly textual context to error.
- * @returns {Promise<unknown[]>} resolves immediately if
- * conditions evaluate to true on a retry attempt within timeout. If timeout
- * is reached with conditionFn never evaluating to true, rejects.
- */
-export const runAndWaitForConditions = async (
-    operations: (() => void) | ((() => void)[]), 
-    conditions: (() => (boolean | Promise<boolean>)) | (() => (boolean | Promise<boolean>)) [],
-    timeout = 5000,
-    retryInterval = 100,
-    onTimeoutContext?: () => string
-): Promise<unknown[]> => {
-    const ops = Array.isArray(operations) ? operations : [operations]
-    const conds = Array.isArray(conditions) ? conditions : [conditions]
-    const promise = Promise.all(conds.map((condition) => waitForCondition(
-        condition,
-        timeout,
-        retryInterval,
-        undefined,
-        onTimeoutContext
-    )))
-    ops.forEach((op) => { op() })
-    return promise
 }
 
 /**
@@ -318,7 +284,7 @@ export class Queue<T> {
     }
 
     async pop(timeout?: number): Promise<T> {
-        await waitForCondition(() => this.items.length > 0, timeout)
+        await until(() => this.items.length > 0, timeout)
         return this.items.shift()!
     }
 

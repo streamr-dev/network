@@ -1,4 +1,4 @@
-import { wait, waitForCondition } from '@streamr/utils'
+import { wait, until } from '@streamr/utils'
 import { range, without } from 'lodash'
 import { getClosestNodes } from '../../src/dht/contact/getClosestNodes'
 import { StoreManager } from '../../src/dht/store/StoreManager'
@@ -68,7 +68,7 @@ describe('StoreManager', () => {
                     setAllEntriesAsStale
                 )
                 manager.onContactAdded(getNodeCloseToData(2))
-                await waitForCondition(() => replicateData.mock.calls.length === 1)
+                await until(() => replicateData.mock.calls.length === 1)
                 expect(replicateData).toHaveBeenCalledWith({
                     entry: DATA_ENTRY
                 }, true)

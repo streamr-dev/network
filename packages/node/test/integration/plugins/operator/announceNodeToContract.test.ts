@@ -1,5 +1,5 @@
 import { Operator, _operatorContractUtils } from '@streamr/sdk'
-import { toEthereumAddress, waitForCondition } from '@streamr/utils'
+import { toEthereumAddress, until } from '@streamr/utils'
 import { announceNodeToContract } from '../../../../src/plugins/operator/announceNodeToContract'
 import { createClient } from '../../../utils'
 
@@ -24,7 +24,7 @@ describe('announceNodeToContract', () => {
         }
         await announceNodeToContract(0, operator, streamrClient as any)
         const approximateWriteTimestamp = Date.now()
-        await waitForCondition(async () => await operator.getTimestampOfLastHeartbeat() !== undefined, 10 * 1000, 1000)
+        await until(async () => await operator.getTimestampOfLastHeartbeat() !== undefined, 10 * 1000, 1000)
 
         // account for (1) the graph to pick up and (2) un-synced time between Docker box and this machine,
         // TODO: why is drift so large (ETH-577)?

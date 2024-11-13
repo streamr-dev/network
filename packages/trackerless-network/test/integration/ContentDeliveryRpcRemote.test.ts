@@ -5,7 +5,7 @@ import {
     Simulator,
     SimulatorTransport
 } from '@streamr/dht'
-import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
+import { StreamPartIDUtils, until } from '@streamr/utils'
 import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
 import { Empty } from '../../generated/google/protobuf/empty'
 import {
@@ -89,12 +89,12 @@ describe('ContentDeliveryRpcRemote', () => {
         )
 
         await rpcRemote.sendStreamMessage(msg)
-        await waitForCondition(() => recvCounter === 1)
+        await until(() => recvCounter === 1)
     })
 
     it('leaveNotice', async () => {
         rpcRemote.leaveStreamPartNotice(StreamPartIDUtils.parse('test#0'), false)
-        await waitForCondition(() => recvCounter === 1)
+        await until(() => recvCounter === 1)
     })
 
 })

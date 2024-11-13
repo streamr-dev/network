@@ -1,4 +1,4 @@
-import { waitForCondition } from '@streamr/utils'
+import { until } from '@streamr/utils'
 import { range, without } from 'lodash'
 import { DhtNodeRpcLocal } from '../../src/dht/DhtNodeRpcLocal'
 import { DhtNode, ListeningRpcCommunicator, toNodeId } from '../../src/exports'
@@ -59,7 +59,7 @@ describe('DhtNode', () => {
         await localNode.joinDht([entryPointPeerDescriptor])
         await localNode.waitForNetworkConnectivity()
 
-        await waitForCondition(() => localNode.getNeighborCount() === otherPeerDescriptors.length + 1)
+        await until(() => localNode.getNeighborCount() === otherPeerDescriptors.length + 1)
         const expectedNodeIds = without(getAllPeerDescriptors(), localPeerDescriptor).map((n) => toNodeId(n))
         const actualNodeIds = localNode.getClosestContacts().map((n) => toNodeId(n))
         expect(actualNodeIds).toIncludeSameMembers(expectedNodeIds)

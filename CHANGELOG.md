@@ -36,9 +36,10 @@ Changes before Tatum release are not documented in this file.
 - **BREAKING CHANGE:** Type `StreamMetadata` is `Record<string, unknown>` (https://github.com/streamr-dev/network/pull/2825, https://github.com/streamr-dev/network/pull/2845)
   - some new accessors available, see above
   - no default values are injected (https://github.com/streamr-dev/network/pull/2851)
-- **BREAKING CHANGE:** Method `Stream#update()` overwrites metadata instead of merging it (https://github.com/streamr-dev/network/pull/2826)
 - **BREAKING CHANGE:** Method `Stream#addToStorageNode()` doesn't wait for acknowledgment by default (https://github.com/streamr-dev/network/pull/2810)
-- **BREAKING CHANGE:** Parameters and return type of method `StreamrClient#updateStream()` (https://github.com/streamr-dev/network/pull/2859, https://github.com/streamr-dev/network/pull/2855)
+- **BREAKING CHANGE:** Replace methods `StreamrClient#updateStream()` and `Stream#update()`: (https://github.com/streamr-dev/network/pull/2826, https://github.com/streamr-dev/network/pull/2855, https://github.com/streamr-dev/network/pull/2859, https://github.com/streamr-dev/network/pull/2862)
+  - use `StreamrClient#setStreamMetadata()` and `Stream#setMetadata()` instead
+  - both methods overwrite metadata instead of merging it
 - Upgrade `StreamRegistry` from v4 to v5 (https://github.com/streamr-dev/network/pull/2780)
 - Network-level changes:
   - avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801) 
@@ -48,6 +49,9 @@ Changes before Tatum release are not documented in this file.
 
 #### Removed
 
+- **BREAKING CHANGE:** Remove `Stream#detectFields()` method (https://github.com/streamr-dev/network/pull/2864)
+- **BREAKING CHANGE:** Remove `Stream#delete()` method (https://github.com/streamr-dev/network/pull/2863)
+  - use `StreamrClient#deleteStream()` instead
 - Remove support for legacy encryption keys (https://github.com/streamr-dev/network/pull/2757)
 - Remove obsolete config options:
   - `network.node.id` (https://github.com/streamr-dev/network/pull/2777)

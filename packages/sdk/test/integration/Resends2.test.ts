@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 
 import { fastWallet } from '@streamr/test-utils'
-import { StreamID, collect, toStreamPartID, waitForCondition } from '@streamr/utils'
+import { StreamID, collect, toStreamPartID, until } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { Message, MessageMetadata } from '../../src/Message'
 import { Stream } from '../../src/Stream'
@@ -371,7 +371,7 @@ describe('Resends2', () => {
                 const onResent = jest.fn()
                 sub.once('resendCompleted', onResent)
                 const receivedMsgsPromise = collect(sub, MAX_MESSAGES + REALTIME_MESSAGES)
-                await waitForCondition(() => onResent.mock.calls.length > 0)
+                await until(() => onResent.mock.calls.length > 0)
 
                 published.push(...await publishTestMessages(REALTIME_MESSAGES))
 

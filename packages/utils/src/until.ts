@@ -5,7 +5,7 @@ import { composeAbortSignals } from './composeAbortSignals'
 
 function throwError(userAborted: boolean, conditionFn: () => any, onTimeoutContext?: () => string): never {
     const action = userAborted ? 'aborted' : 'timed out'
-    let msg = `waitForCondition: ${action} before "${conditionFn.toString()}" became true`
+    let msg = `until: ${action} before "${conditionFn.toString()}" became true`
     if (onTimeoutContext) {
         msg += `\n${onTimeoutContext()}`
     }
@@ -25,7 +25,7 @@ function throwError(userAborted: boolean, conditionFn: () => any, onTimeoutConte
  * conditionFn evaluates to true on a retry attempt within timeout. If timeout
  * is reached with conditionFn never evaluating to true, rejects.
  */
-export const waitForCondition = async (
+export const until = async (
     conditionFn: () => (boolean | Promise<boolean>),
     timeout = 5000,
     retryInterval = 100,

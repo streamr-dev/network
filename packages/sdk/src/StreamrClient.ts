@@ -25,7 +25,6 @@ import { MetricsPublisher } from './MetricsPublisher'
 import { NetworkNodeFacade } from './NetworkNodeFacade'
 import { RpcProviderSource } from './RpcProviderSource'
 import { Stream } from './Stream'
-import { StreamFactory } from './StreamFactory'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamMetadata, getPartitionCount } from './StreamMetadata'
 import { StreamrClientError } from './StreamrClientError'
@@ -92,7 +91,6 @@ export class StreamrClient {
     private readonly streamStorageRegistry: StreamStorageRegistry
     private readonly storageNodeRegistry: StorageNodeRegistry
     private readonly operatorRegistry: OperatorRegistry
-    private readonly streamFactory: StreamFactory
     private readonly contractFactory: ContractFactory
     private readonly localGroupKeyStore: LocalGroupKeyStore
     private readonly theGraphClient: TheGraphClient
@@ -129,7 +127,6 @@ export class StreamrClient {
         this.streamStorageRegistry = container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
         this.storageNodeRegistry = container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
         this.operatorRegistry = container.resolve<OperatorRegistry>(OperatorRegistry)
-        this.streamFactory = container.resolve<StreamFactory>(StreamFactory)
         this.contractFactory = container.resolve<ContractFactory>(ContractFactory)
         this.localGroupKeyStore = container.resolve<LocalGroupKeyStore>(LocalGroupKeyStore)
         this.streamIdBuilder = container.resolve<StreamIDBuilder>(StreamIDBuilder)
@@ -361,7 +358,7 @@ export class StreamrClient {
     async getStream(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         const metadata = await this.streamRegistry.getStreamMetadata(streamId, false)
-        return this.streamFactory.createStream(streamId, metadata)
+        return new Stream(streamId, metadata, this)
     }
 
     /**
@@ -379,7 +376,7 @@ export class StreamrClient {
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
         const metadata = merge({ partitions: DEFAULT_PARTITION_COUNT }, omit(props, 'id') )
         await this.streamRegistry.createStream(streamId, metadata)
-        return this.streamFactory.createStream(streamId, metadata)
+        return new Stream(streamId, metadata, this)
     }
 
     /**
@@ -405,9 +402,9 @@ export class StreamrClient {
     /**
      * Updates the metadata of a stream.
      */
-    async updateStream(streamIdOrPath: string, metadata: StreamMetadata): Promise<void> {
+    async setStreamMetadata(streamIdOrPath: string, metadata: StreamMetadata): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        await this.streamRegistry.updateStreamMetadata(streamId, metadata)
+        await this.streamRegistry.setStreamMetadata(streamId, metadata)
     }
 
     /**
@@ -433,7 +430,7 @@ export class StreamrClient {
             term,
             (permissionFilter !== undefined) ? toInternalSearchStreamsPermissionFilter(permissionFilter) : undefined,
             orderBy,
-            this.streamFactory
+            this
         )
     }
 
@@ -568,7 +565,7 @@ export class StreamrClient {
     async getStoredStreams(storageNodeAddress: HexString): Promise<{ streams: Stream[], blockNumber: number }> {
         const queryResult = await this.streamStorageRegistry.getStoredStreams(toEthereumAddress(storageNodeAddress))
         return {
-            streams: queryResult.streams.map((item) => this.streamFactory.createStream(item.id, item.metadata)),
+            streams: queryResult.streams.map((item) => new Stream(item.id, item.metadata, this)),
             blockNumber: queryResult.blockNumber
         }
     }
@@ -599,8 +596,8 @@ export class StreamrClient {
      *
      * @returns rejects if the storage node is not found
      */
-    async getStorageNodeMetadata(nodeAddress: HexString): Promise<StorageNodeMetadata> {
-        return this.storageNodeRegistry.getStorageNodeMetadata(toEthereumAddress(nodeAddress))
+    async getStorageNodeMetadata(storageNodeAddress: HexString): Promise<StorageNodeMetadata> {
+        return this.storageNodeRegistry.getStorageNodeMetadata(toEthereumAddress(storageNodeAddress))
     }
 
     // --------------------------------------------------------------------------------------------

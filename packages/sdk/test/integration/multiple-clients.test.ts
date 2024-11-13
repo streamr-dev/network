@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { toUserId, UserID, waitForCondition } from '@streamr/utils'
+import { toUserId, UserID, until } from '@streamr/utils'
 import { Message, MessageMetadata } from '../../src/Message'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
@@ -22,7 +22,7 @@ const waitMessagesReceived = async (
     received: Record<UserID, MessageMetadata[]>,
     published: Record<UserID, MessageMetadata[]>
 ) => {
-    await waitForCondition(() => {
+    await until(() => {
         const receivedCount = Object.values(received).flat().length
         const publishedCount = Object.values(published).flat().length
         return receivedCount === publishedCount
@@ -106,7 +106,7 @@ describe('PubSub with multiple clients', () => {
             }
             // publish message on main client
             await mainClient.publish(stream, message)
-            await waitForCondition(() => receivedMessagesMain.length === 1 && receivedMessagesOther.length === 1, 15 * 1000)
+            await until(() => receivedMessagesMain.length === 1 && receivedMessagesOther.length === 1, 15 * 1000)
             // messages should arrive on both clients?
             expect(receivedMessagesMain).toEqual([message])
             expect(receivedMessagesOther).toEqual([message])

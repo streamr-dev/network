@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { collect, merge, wait, waitForCondition } from '@streamr/utils'
+import { collect, merge, wait, until } from '@streamr/utils'
 import { Message } from '../../src/Message'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -72,7 +72,7 @@ describe('Sequencing', () => {
             [[1, 1], [1, 0]],
         ])
 
-        await waitForCondition(() => (
+        await until(() => (
             msgsReceieved.length === msgsPublished.length
         ), 8000).catch(() => {}) // ignore, tests will fail anyway
 
@@ -121,7 +121,7 @@ describe('Sequencing', () => {
             [[1, 1], [1, 0]],
         ])
 
-        await waitForCondition(() => (
+        await until(() => (
             msgsReceieved.length === msgsPublished.length
         ), 5000).catch(() => {}) // ignore, tests will fail anyway
 
@@ -157,7 +157,7 @@ describe('Sequencing', () => {
             client.publish(stream, nextMsg(), { timestamp: ts + 3 }),
         ])
 
-        await waitForCondition(() => (
+        await until(() => (
             msgsReceieved.length === msgsPublished.length
         ), 2000).catch(() => {}) // ignore, tests will fail anyway
 
@@ -224,7 +224,7 @@ describe('Sequencing', () => {
             client.publish(stream, nextMsg(), { timestamp: ts + 2 }),
         ])
 
-        await waitForCondition(() => (
+        await until(() => (
             msgsReceieved.length === msgsPublished.length
         ), 2000).catch(() => {}) // ignore, tests will fail anyway
 

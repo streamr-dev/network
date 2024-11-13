@@ -1,4 +1,4 @@
-import { waitForCondition, keyToArrayIndex, MetricsReport } from '@streamr/utils'
+import { until, keyToArrayIndex, MetricsReport } from '@streamr/utils'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
@@ -60,7 +60,7 @@ describe('NodeMetrics', () => {
         const dummyStream = await generatorClient.createStream(`/${Date.now()}`)
         await generatorClient.subscribe(dummyStream, () => {})
 
-        await waitForCondition(() => report !== undefined, 10000)
+        await until(() => report !== undefined, 10000)
         expect(report!).toMatchObject({
             node: {
                 id: await generatorClient.getNodeId(),

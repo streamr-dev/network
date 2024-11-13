@@ -23,13 +23,13 @@
     "eventemitter3": "^5.0.0",
     "lodash": "^4.17.21",
     "pino": "^9.5.0",
-    "pino-pretty": "^11.3.0",
+    "pino-pretty": "^13.0.0",
     "secp256k1": "^5.0.1",
     "sha3": "^2.1.4"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
-    "@types/lodash": "^4.17.12",
+    "@types/lodash": "^4.17.13",
     "@types/node-fetch": "^2.6.4",
     "@types/secp256k1": "^4.0.6",
     "node-fetch": "^2.7.0"

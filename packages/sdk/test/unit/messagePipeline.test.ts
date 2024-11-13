@@ -77,7 +77,7 @@ describe('messagePipeline', () => {
         streamRegistry = {
             getStreamMetadata: async () => ({ partitions: 1 }),
             isStreamPublisher: async () => true,
-            clearStreamCache: jest.fn()
+            invalidateStreamCache: jest.fn()
         }
         pipeline = createMessagePipeline({
             streamPartId,
@@ -171,8 +171,8 @@ describe('messagePipeline', () => {
         expect(error).toBeInstanceOf(DecryptError)
         expect(error.message).toMatch(/timed out/)
         expect(output).toEqual([])
-        expect(streamRegistry.clearStreamCache).toBeCalledTimes(1)
-        expect(streamRegistry.clearStreamCache).toBeCalledWith(StreamPartIDUtils.getStreamID(streamPartId))
+        expect(streamRegistry.invalidateStreamCache).toBeCalledTimes(1)
+        expect(streamRegistry.invalidateStreamCache).toBeCalledWith(StreamPartIDUtils.getStreamID(streamPartId))
     })
 
     it('error: exception', async () => {

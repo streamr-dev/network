@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import { wait, waitForCondition } from '@streamr/utils'
+import { wait, until } from '@streamr/utils'
 import { range, sortBy } from 'lodash'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamCreationEvent } from '../../src/contracts/StreamRegistry'
@@ -112,7 +112,7 @@ describe('use JsonRpcProvider', () => {
             client.on('streamCreated', (event: StreamCreationEvent) => {
                 receivedEvents.push(event)
             })
-            await waitForCondition(() => getRequests().some((r) => r.method === 'eth_getLogs'), 5000 + extraWait)
+            await until(() => getRequests().some((r) => r.method === 'eth_getLogs'), 5000 + extraWait)
             servers.forEach((s) => s.setError('eth_getLogs', undefined))
             await wait(1.5 * POLL_INTERVAL + extraWait)
             expect(receivedEvents).toEqual([{
