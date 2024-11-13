@@ -115,7 +115,11 @@ describe('resend subscription', () => {
                 gapFill,
                 maxGapRequests: MAX_GAP_REQUESTS,
                 gapFillTimeout: 200,
-                retryResendAfterTimeout: 0
+                retryResendAfterTimeout: 0,
+                cache: {
+                    maxAge: 999999,
+                    maxSize: 999999,
+                }
             } as any,
             eventEmitter,
             mockLoggerFactory()

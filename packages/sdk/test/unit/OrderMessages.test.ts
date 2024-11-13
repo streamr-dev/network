@@ -30,7 +30,11 @@ const CONFIG = {
     gapFillStrategy: 'light',
     maxGapRequests: 5,
     retryResendAfter: 50,
-    gapFillTimeout: 50
+    gapFillTimeout: 50,
+    cache: {
+        maxSize: 999999,
+        maxAge: 999999
+    }
 }
 
 const createOrderMessages = (
