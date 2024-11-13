@@ -117,8 +117,8 @@ describe('resend subscription', () => {
                 gapFillTimeout: 200,
                 retryResendAfterTimeout: 0,
                 cache: {
-                    maxAge: 999999,
                     maxSize: 999999,
+                    maxAge: 999999
                 }
             } as any,
             eventEmitter,
