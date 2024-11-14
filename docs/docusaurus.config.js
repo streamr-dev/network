@@ -45,11 +45,12 @@ const config = {
                 categorizeByGroup: true,
                 treatWarningsAsErrors: true,
                 watch: process.env.TYPEDOC_WATCH,
-                sidebar: {
-                    categoryLabel: "API reference",
-                    indexLabel: " ",
-                    position: 5,
-                },
+                // TODO sidebar should not have version number, but this doesn't seem to do that
+                // sidebar: {
+                //     categoryLabel: "API reference",
+                //     indexLabel: " ",
+                //     position: 5,
+                // },
                 out: "docs/usage/sdk/api",
                 tsconfig: "../packages/sdk/tsconfig.json",
                 readme: "none",
@@ -63,7 +64,7 @@ const config = {
             },
         ],
         // TODO re-enable this
-        // path.resolve("plugins", "refine-docs")
+        // path.resolve("plugins", "refine-docs"),
     ],
 
     presets: [
