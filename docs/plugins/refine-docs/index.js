@@ -103,6 +103,7 @@ module.exports = function(context, options) {
     }
     
     const refineAPIRef = async () => {
+        // TODO maybe something here is obsolete as TypeDoc no longer generates readme (as we have the readme: "none" definition in the config)
         const sourceFilePath = relativeAPIDocPath + "/modules.md"
         const destinationFilePath = relativeAPIDocPath + "/modules.mdx"
         // replaces index content with module content

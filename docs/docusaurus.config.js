@@ -52,6 +52,7 @@ const config = {
                 },
                 out: "docs/usage/sdk/api",
                 tsconfig: "../packages/sdk/tsconfig.json",
+                readme: "none",
                 exclude: [
                     // TODO what set of files we should exclude exactly? (by adding these, we got rid of all warnigs)
                     "../node_modules/**",
