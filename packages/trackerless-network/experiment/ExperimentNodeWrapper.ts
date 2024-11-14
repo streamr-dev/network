@@ -191,7 +191,7 @@ export class ExperimentNodeWrapper {
         logger.info('running routing experiment')
         const client = this.node!.createExternalRoutingRpcClient(RoutingExperimentRpcClient)
         const results: any = []
-        const batches = chunk(nodes, 2)
+        const batches = chunk(nodes, 1)
         for (const batch of batches) {
             await Promise.all(batch.map(async (node) => {
                 try {
