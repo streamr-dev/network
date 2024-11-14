@@ -112,6 +112,10 @@ export interface ExperimentClientMessage {
  * @generated from protobuf message Hello
  */
 export interface Hello {
+    /**
+     * @generated from protobuf field: string ip = 1;
+     */
+    ip: string;
 }
 /**
  * @generated from protobuf message Start
@@ -314,7 +318,9 @@ export const ExperimentClientMessage = new ExperimentClientMessage$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Hello$Type extends MessageType<Hello> {
     constructor() {
-        super("Hello", []);
+        super("Hello", [
+            { no: 1, name: "ip", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
     }
 }
 /**

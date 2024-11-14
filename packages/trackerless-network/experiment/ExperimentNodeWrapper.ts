@@ -118,7 +118,9 @@ export class ExperimentNodeWrapper {
                 id: this.id,
                 payload: { 
                     oneofKind: 'hello', 
-                    hello: Hello.create({})
+                    hello: Hello.create({
+                        ip: this.publicIp,
+                    })
                 }
             })
             this.socket!.send(ExperimentClientMessage.toBinary(helloMessage))

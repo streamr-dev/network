@@ -35,6 +35,7 @@ message ExperimentClientMessage {
 }
 
 message Hello {
+    string ip = 1;
 }
 
 message Start {
