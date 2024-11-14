@@ -50,7 +50,7 @@ const config = {
                     indexLabel: " ",
                     position: 5,
                 },
-                out: "usage/sdk/api",
+                out: "docs/usage/sdk/api",
                 tsconfig: "../packages/sdk/tsconfig.json",
             },
         ],
