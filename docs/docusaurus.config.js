@@ -61,7 +61,8 @@ const config = {
                 ]
             },
         ],
-        path.resolve("plugins", "refine-docs")
+        // TODO re-enable this
+        // path.resolve("plugins", "refine-docs")
     ],
 
     presets: [
