@@ -52,9 +52,16 @@ const config = {
                 },
                 out: "docs/usage/sdk/api",
                 tsconfig: "../packages/sdk/tsconfig.json",
+                exclude: [
+                    // TODO what set of files we should exclude exactly? (by adding these, we got rid of all warnigs)
+                    "../node_modules/**",
+                    "../packages/sdk/src/generated/**",
+                    "../packages/trackerless-network/dist/generated/**",
+                    "../packages/dht/dist/generated/**"
+                ]
             },
         ],
-        path.resolve("plugins", "refine-docs"),
+        path.resolve("plugins", "refine-docs")
     ],
 
     presets: [
