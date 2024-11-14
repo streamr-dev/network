@@ -8,7 +8,8 @@ import { binaryToHex, hexToBinary, Logger, StreamPartID, StreamPartIDUtils, utf8
 import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../generated/packages/trackerless-network/protos/NetworkRpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { RoutingExperimentRpcClient } from './generated/packages/trackerless-network/experiment/Experiment.client'
-import { chunk } from 'lodash'
+import { chunk, now } from 'lodash'
+import { time } from 'console'
 
 const createStreamMessage = (streamPartId: StreamPartID, id: string, region: number) => {
     const message: StreamMessage = {
@@ -89,7 +90,9 @@ export class ExperimentNodeWrapper {
             const source = (context as DhtCallContext).incomingSourceDescriptor
             const { sendTime } = request 
             return {
-                path: (this.node!.stack.getControlLayerNode() as DhtNode).getPathForMessage(toNodeId(source!))
+                path: (this.node!.stack.getControlLayerNode() as DhtNode).getPathForMessage(toNodeId(source!)),
+                sendTime: Date.now(),
+                timeToReceiver: Date.now() - sendTime
             }
         })
         const peerDescriptor = this.node.getPeerDescriptor()
@@ -191,7 +194,7 @@ export class ExperimentNodeWrapper {
         logger.info('running routing experiment')
         const client = this.node!.createExternalRoutingRpcClient(RoutingExperimentRpcClient)
         const results: any = []
-        const batches = chunk(nodes, 1)
+        const batches = chunk(nodes, 50)
         for (const batch of batches) {
             await Promise.all(batch.map(async (node) => {
                 try {
@@ -204,10 +207,11 @@ export class ExperimentNodeWrapper {
                         timeout: 10000
                     })
                     const rtt = Date.now() - started
-                    results.push({ source: toNodeId(this.node!.getPeerDescriptor()), from: toNodeId(node), path: result.path.map((p) => toNodeId(p)), rtt })
+                    const timeToRequestor = Date.now() - result.sendTime
+                    results.push({ source: toNodeId(this.node!.getPeerDescriptor()), from: toNodeId(node), path: result.path.map((p) => toNodeId(p)), rtt, timeToReceiver: result.timeToReceiver, timeToRequestor})
                 } catch (e) {
                     logger.error(e)
-                    results.push({ source: toNodeId(this.node!.getPeerDescriptor()), from: toNodeId(node), path: [], rtt: 10000 })
+                    results.push({ source: toNodeId(this.node!.getPeerDescriptor()), from: toNodeId(node), path: [], rtt: 10000, timeToReceiver: 10000, timeToRequestor: 10000})
                 } 
             }))   
         }

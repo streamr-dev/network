@@ -221,6 +221,14 @@ export interface RoutingPath {
      * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor path = 1;
      */
     path: PeerDescriptor[];
+    /**
+     * @generated from protobuf field: int64 sendTime = 2;
+     */
+    sendTime: number;
+    /**
+     * @generated from protobuf field: int64 timeToReceiver = 3;
+     */
+    timeToReceiver: number;
 }
 /**
  * @generated from protobuf message GetPropagationResults
@@ -420,7 +428,9 @@ export const GetRoutingPath = new GetRoutingPath$Type();
 class RoutingPath$Type extends MessageType<RoutingPath> {
     constructor() {
         super("RoutingPath", [
-            { no: 1, name: "path", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+            { no: 1, name: "path", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
+            { no: 2, name: "sendTime", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 2 /*LongType.NUMBER*/ },
+            { no: 3, name: "timeToReceiver", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 2 /*LongType.NUMBER*/ }
         ]);
     }
 }

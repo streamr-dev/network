@@ -78,6 +78,8 @@ message GetRoutingPath {
 
 message RoutingPath {
     repeated peerDescriptor.PeerDescriptor path = 1;
+    int64 sendTime = 2;
+    int64 timeToReceiver = 3;
 }
 
 message GetPropagationResults {

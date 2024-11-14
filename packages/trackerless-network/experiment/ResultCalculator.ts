@@ -27,6 +27,8 @@ export const routingResults = async (filePath: string): Promise<void> => {
     })   
     let rttSum = 0
     let hopSum = 0
+    let timeToReceiverSum = 0
+    let timeToRequestorSum = 0
     let numOfLines = 0
     file.on('line', (line: string) => {
         const parsedLine = JSON.parse(line)
@@ -34,12 +36,16 @@ export const routingResults = async (filePath: string): Promise<void> => {
         const results = JSON.parse(parsedLine.results)
         for (const result of results) {
             rttSum += result.rtt
+            timeToReceiverSum += result.timeToReceiver
+            timeToRequestorSum += result.timeToRequestor
             hopSum += result.path.length
             numOfLines += 1
         }
     })
     await waitForEvent(file, 'close')
     console.log('rtt avg:', rttSum / numOfLines)
+    console.log('time to receiver avg:', timeToReceiverSum / numOfLines)
+    console.log('time to requestor avg:', timeToRequestorSum / numOfLines)
     console.log('hop avg:', hopSum / numOfLines)
 }
 
