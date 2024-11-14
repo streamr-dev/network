@@ -87,6 +87,8 @@ Changes before Tatum release are not documented in this file.
 
 - **BREAKING CHANGE:** Remove deprecated `bin/config-wizard` script (i.e. the `streamr-broker-init` command)
   - use `streamr-node-init` command instead
+- **BREAKING CHANGE:** Remove deprecated command `streamr-broker` (https://github.com/streamr-dev/network/pull/2881)
+  - use `streamr-node` command instead
 
 #### Fixed
 
