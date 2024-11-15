@@ -3,19 +3,16 @@ import { StrictStreamrClientConfig } from '../../Config'
 import { StreamMessage } from '../../protocol/StreamMessage'
 import { Mapping } from '../../utils/Mapping'
 import { PushBuffer } from '../../utils/PushBuffer'
-import { CachingMap } from '../../utils/CachingMap'
 import { Resends } from '../Resends'
 import { GapFiller } from './GapFiller'
 import { Gap, OrderedMessageChain, OrderedMessageChainContext } from './OrderedMessageChain'
-
-const STORAGE_NODE_CACHE_KEY = Symbol('STORAGE_NODE_CACHE_KEY')
 
 const createMessageChain = (
     context: OrderedMessageChainContext,
     getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>,
     onUnfillableGap: ((gap: Gap) => void),
     resends: Resends,
-    config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy' | 'cache'>,
+    config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>,
     abortSignal: AbortSignal
 ) => {
     const resend = async function*(gap: Gap, storageNodeAddress: EthereumAddress, abortSignal: AbortSignal) {
@@ -33,16 +30,10 @@ const createMessageChain = (
     }
     const chain = new OrderedMessageChain(context, abortSignal)
     chain.on('unfillableGap', (gap: Gap) => onUnfillableGap(gap))
-    // TODO maybe the caching should be done at application level, e.g. with a new CacheStreamStorageRegistry class?
-    // - also note that this is a cache which contains just one item (as streamPartId always the same)
-    const storageNodeCache = new CachingMap(() => getStorageNodes(StreamPartIDUtils.getStreamID(context.streamPartId)), {
-        ...config.cache,
-        cacheKey: () => STORAGE_NODE_CACHE_KEY
-    })
     const gapFiller = new GapFiller({
         chain,
         resend,
-        getStorageNodeAddresses: () => storageNodeCache.get(),
+        getStorageNodeAddresses: () => getStorageNodes(StreamPartIDUtils.getStreamID(context.streamPartId)),
         strategy: config.gapFillStrategy,
         initialWaitTime: config.gapFillTimeout,
         retryWaitTime: config.retryResendAfter,
@@ -69,7 +60,7 @@ export class OrderMessages {
         getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>,
         onUnfillableGap: ((gap: Gap) => void),
         resends: Resends,
-        config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy' | 'cache'>
+        config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
     ) {
         this.chains = new Mapping(async (publisherId: UserID, msgChainId: string) => {
             const chain = createMessageChain(
