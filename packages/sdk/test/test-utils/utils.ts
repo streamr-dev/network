@@ -129,7 +129,7 @@ export const createMockMessage = async (
     opts: CreateMockMessageOptions
 ): Promise<StreamMessage> => {
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
-        opts.streamPartId ?? opts.stream.getStreamParts()[0]
+        opts.streamPartId ?? (await opts.stream.getStreamParts())[0]
     )
     const authentication = createPrivateKeyAuthentication(opts.publisher.privateKey)
     const factory = new MessageFactory({

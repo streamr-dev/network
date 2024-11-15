@@ -114,16 +114,16 @@ export class Stream {
     /**
      * Returns the partitions of the stream.
      */
-    getStreamParts(): StreamPartID[] {
-        return range(0, this.getPartitionCount()).map((p) => toStreamPartID(this.id, p))
+    async getStreamParts(): Promise<StreamPartID[]> {
+        return range(0, await this.getPartitionCount()).map((p) => toStreamPartID(this.id, p))
     }
 
-    getPartitionCount(): number {
-        return getPartitionCount(this.getMetadata())
+    async getPartitionCount(): Promise<number> {
+        return getPartitionCount(await this.getMetadata())
     }
 
-    getDescription(): string | undefined {
-        const value = this.getMetadata().description
+    async getDescription(): Promise<string | undefined> {
+        const value = (await this.getMetadata()).description
         if (isString(value)) {
             return value
         } else {
@@ -133,7 +133,7 @@ export class Stream {
 
     async setDescription(description: string): Promise<void> {
         await this.setMetadata({
-            ...this.getMetadata(),
+            ...await this.getMetadata(),
             description
         })
     }
@@ -141,8 +141,8 @@ export class Stream {
     /**
      * Gets the value of `storageDays` field
      */
-    getStorageDayCount(): number | undefined {
-        const value = this.getMetadata().storageDays
+    async getStorageDayCount(): Promise<number | undefined> {
+        const value = (await this.getMetadata()).storageDays
         if (isNumber(value)) {
             return value
         } else {
@@ -155,7 +155,7 @@ export class Stream {
      */
     async setStorageDayCount(count: number): Promise<void> {
         await this.setMetadata({
-            ...this.getMetadata(),
+            ...await this.getMetadata(),
             storageDays: count
         })
     }
@@ -163,7 +163,7 @@ export class Stream {
     /**
      * Returns the metadata of the stream.
      */
-    getMetadata(): StreamMetadata {
+    async getMetadata(): Promise<StreamMetadata> {
         return this.metadata
     }
 

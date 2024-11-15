@@ -19,7 +19,7 @@ function makeStubStream(streamId: string): Stream {
     const partitions = PARTITION_COUNT_LOOKUP[streamId]
     const stub: Partial<Stream> = {
         id: toStreamID(streamId),
-        getStreamParts(): StreamPartID[] { // TODO: duplicated code from client
+        async getStreamParts(): Promise<StreamPartID[]> { // TODO: duplicated code from client
             return range(0, partitions).map((p) => toStreamPartID(toStreamID(streamId), p))
         }
     }

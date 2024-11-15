@@ -6,17 +6,17 @@ import { Stream } from '../../src/Stream'
 
 describe('Stream', () => {
 
-    it('initial fields', () => {
+    it('initial fields', async () => {
         const stream = new Stream(toStreamID('mock-id'), {}, undefined as any)
-        expect(stream.getMetadata()).toEqual({})
+        expect(await stream.getMetadata()).toEqual({})
     })
 
-    it('getMetadata', () => {
+    it('getMetadata', async () => {
         const stream = new Stream(toStreamID('mock-id'), {
             partitions: 10,
             storageDays: 20
         }, undefined as any)
-        expect(stream.getMetadata()).toEqual({
+        expect(await stream.getMetadata()).toEqual({
             partitions: 10,
             storageDays: 20
         })
@@ -28,7 +28,7 @@ describe('Stream', () => {
             { partitions: 150 },
             undefined as any,
         )
-        expect(() => stream.getPartitionCount()).toThrowStreamrError({
+        expect(() => stream.getPartitionCount()).rejects.toThrowStreamrError({
             message: 'Invalid partition count: 150',
             code: 'INVALID_STREAM_METADATA'
         })
@@ -49,7 +49,7 @@ describe('Stream', () => {
                     description: 'updated-description'
                 })
             }).rejects.toThrow('mock-error')
-            expect(stream.getMetadata().description).toBe('original-description')
+            expect((await stream.getMetadata()).description).toBe('original-description')
         })
     })
 })

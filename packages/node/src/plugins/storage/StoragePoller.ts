@@ -16,7 +16,7 @@ export class StoragePoller {
         clusterId: string,
         pollInterval: number,
         streamrClient: StreamrClient,
-        onNewSnapshot: (streams: Stream[], block: number) => void
+        onNewSnapshot: (streams: Stream[], block: number) => unknown
     ) {
         this.clusterId = clusterId
         this.pollInterval = pollInterval

@@ -40,8 +40,8 @@ describe('resend with existing key', () => {
         storageNode.storeMessage(message)
     }
 
-    const resendRange = (fromTimestamp: number, toTimestamp: number) => {
-        return subscriber.resend(stream.getStreamParts()[0], {
+    const resendRange = async (fromTimestamp: number, toTimestamp: number) => {
+        return subscriber.resend((await stream.getStreamParts())[0], {
             from: {
                 timestamp: fromTimestamp
             },

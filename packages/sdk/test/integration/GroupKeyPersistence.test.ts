@@ -106,7 +106,7 @@ describe('Group Key Persistence', () => {
             })
 
             it('works', async () => {
-                await startPublisherKeyExchangeSubscription(publisher2, stream.getStreamParts()[0])
+                await startPublisherKeyExchangeSubscription(publisher2, (await stream.getStreamParts())[0])
 
                 const received: Message[] = []
                 const sub = await subscriber.resend(
