@@ -53,6 +53,7 @@ Changes before Tatum release are not documented in this file.
 - **BREAKING CHANGE:** Remove `Stream#detectFields()` method (https://github.com/streamr-dev/network/pull/2864)
 - **BREAKING CHANGE:** Remove `Stream#delete()` method (https://github.com/streamr-dev/network/pull/2863)
   - use `StreamrClient#deleteStream()` instead
+- **BREAKING CHANGE:** Remove `StreamrClient#findOperators()` method (https://github.com/streamr-dev/network/pull/2876)
 - Remove support for legacy encryption keys (https://github.com/streamr-dev/network/pull/2757)
 - Remove obsolete config options:
   - `network.node.id` (https://github.com/streamr-dev/network/pull/2777)
