@@ -26,17 +26,15 @@ import {
  */
 export class Stream {
     readonly id: StreamID
-    private metadata: StreamMetadata
     private readonly client: StreamrClient
 
     /** @internal */
     constructor(
         id: StreamID,
-        metadata: StreamMetadata,
+        _metadata: StreamMetadata,
         client: StreamrClient
     ) {
         this.id = id
-        this.metadata = metadata
         this.client = client
     }
 
@@ -164,7 +162,7 @@ export class Stream {
      * Returns the metadata of the stream.
      */
     async getMetadata(): Promise<StreamMetadata> {
-        return this.metadata
+        return this.client.getStreamMetadata(this.id)
     }
 
     /**
@@ -172,6 +170,5 @@ export class Stream {
      */
     async setMetadata(metadata: StreamMetadata): Promise<void> {
         await this.client.setStreamMetadata(this.id, metadata)
-        this.metadata = metadata
     }
 }

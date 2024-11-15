@@ -400,6 +400,14 @@ export class StreamrClient {
     }
 
     /**
+     * Returns the metadata of a stream.
+     */
+    async getStreamMetadata(streamIdOrPath: string): Promise<StreamMetadata> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        return this.streamRegistry.getStreamMetadata(streamId)
+    }
+
+    /**
      * Updates the metadata of a stream.
      */
     async setStreamMetadata(streamIdOrPath: string, metadata: StreamMetadata): Promise<void> {
