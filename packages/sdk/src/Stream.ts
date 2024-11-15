@@ -31,7 +31,6 @@ export class Stream {
     /** @internal */
     constructor(
         id: StreamID,
-        _metadata: StreamMetadata,
         client: StreamrClient
     ) {
         this.id = id

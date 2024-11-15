@@ -168,6 +168,11 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
+    populateMetadataCache(): void {
+        // no-op
+    }
+
+    // eslint-disable-next-line class-methods-use-this
     invalidateMetadataCache(): void {
         // no-op
     }
@@ -201,7 +206,7 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    searchStreams(_term: string | undefined, _permissionFilter: InternalSearchStreamsPermissionFilter | undefined): AsyncIterable<Stream> {
+    searchStreams(_term: string | undefined, _permissionFilter: InternalSearchStreamsPermissionFilter | undefined): AsyncGenerator<StreamID> {
         throw new Error('not implemented')
     }
 

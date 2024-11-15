@@ -7,7 +7,6 @@ describe('Stream', () => {
     it('getPartitionCount', () => {
         const stream = new Stream(
             undefined as any,
-            undefined as any,
             {
                 getStreamMetadata: async () => ({ partitions: 150 })
             } as any
