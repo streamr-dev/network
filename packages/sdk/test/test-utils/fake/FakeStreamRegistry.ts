@@ -166,9 +166,14 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
             permission: StreamPermission.SUBSCRIBE
         })
     }
+
+    // eslint-disable-next-line class-methods-use-this
+    invalidateMetadataCache(): void {
+        // no-op
+    }
     
     // eslint-disable-next-line class-methods-use-this
-    invalidateStreamCache(): void {
+    invalidatePermissionCaches(): void {
         // no-op
     }
 

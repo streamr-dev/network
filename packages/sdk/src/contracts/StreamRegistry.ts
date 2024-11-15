@@ -104,7 +104,9 @@ const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: st
     }
 }
 
-const CACHE_KEY_SEPARATOR = '|'
+const formCacheKeyPrefix = (streamId: StreamID): string => {
+    return `${streamId}|`
+}
 
 @scoped(Lifecycle.ContainerScoped)
 export class StreamRegistry {
@@ -167,25 +169,19 @@ export class StreamRegistry {
             return this.getStreamMetadata_nonCached(streamId)
         }, {
             ...config.cache,
-            cacheKey: ([streamId]): string => {
-                return `${streamId}${CACHE_KEY_SEPARATOR}`
-            }
+            cacheKey: ([streamId]) => formCacheKeyPrefix(streamId)
         })
         this.isStreamPublisher_cached = new CachingMap((streamId: StreamID, userId: UserID) => {
             return this.isStreamPublisher(streamId, userId, false)
         }, {
             ...config.cache,
-            cacheKey([streamId, userId]): string {
-                return [streamId, userId].join(CACHE_KEY_SEPARATOR)
-            }
+            cacheKey: ([streamId, userId]) =>`${formCacheKeyPrefix(streamId)}${userId}`
         })
         this.isStreamSubscriber_cached = new CachingMap((streamId: StreamID, userId: UserID) => {
             return this.isStreamSubscriber(streamId, userId, false)
         }, {
             ...config.cache,
-            cacheKey([streamId, userId]): string {
-                return [streamId, userId].join(CACHE_KEY_SEPARATOR)
-            }
+            cacheKey: ([streamId, userId]) =>`${formCacheKeyPrefix(streamId)}${userId}`
         })
         this.hasPublicSubscribePermission_cached = new CachingMap((streamId: StreamID) => {
             return this.hasPermission({
@@ -195,9 +191,7 @@ export class StreamRegistry {
             })
         }, {
             ...config.cache,
-            cacheKey([streamId]): string {
-                return ['PublicSubscribe', streamId].join(CACHE_KEY_SEPARATOR)
-            }
+            cacheKey: ([streamId]) => formCacheKeyPrefix(streamId)
         })
     }
 
@@ -264,7 +258,7 @@ export class StreamRegistry {
             JSON.stringify(metadata),
             ethersOverrides
         ))
-        this.invalidateStreamCache(streamId)
+        this.invalidateMetadataCache(streamId)
     }
 
     async deleteStream(streamIdOrPath: string): Promise<void> {
@@ -275,7 +269,8 @@ export class StreamRegistry {
             streamId,
             ethersOverrides
         ))
-        this.invalidateStreamCache(streamId)
+        this.invalidateMetadataCache(streamId)
+        this.invalidatePermissionCaches(streamId)
     }
 
     private async streamExistsOnChain(streamIdOrPath: string): Promise<boolean> {
@@ -462,7 +457,7 @@ export class StreamRegistry {
         ...assignments: InternalPermissionAssignment[]
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.invalidateStreamCache(streamId)
+        this.invalidatePermissionCaches(streamId)
         await this.connectToContract()
         for (const assignment of assignments) {
             for (const permission of assignment.permissions) {
@@ -484,7 +479,7 @@ export class StreamRegistry {
         for (const item of items) {
             validatePermissionAssignments(item.assignments)
             const streamId = await this.streamIdBuilder.toStreamID(item.streamId)
-            this.invalidateStreamCache(streamId)
+            this.invalidatePermissionCaches(streamId)
             streamIds.push(streamId)
             targets.push(item.assignments.map((assignment) => {
                 return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_USER_ID : assignment.userId
@@ -543,13 +538,15 @@ export class StreamRegistry {
     hasPublicSubscribePermission(streamId: StreamID): Promise<boolean> {
         return this.hasPublicSubscribePermission_cached.get(streamId)
     }
+
+    invalidateMetadataCache(streamId: StreamID): void {
+        this.logger.trace('Clear metadata cache for stream', { streamId })
+        this.getStreamMetadata_cached.invalidate((s) => s.startsWith(formCacheKeyPrefix(streamId)))
+    }
     
-    invalidateStreamCache(streamId: StreamID): void {
-        this.logger.debug('Clear caches matching stream', { streamId })
-        // include separator so startsWith(streamid) doesn't match streamid-something
-        const target = `${streamId}${CACHE_KEY_SEPARATOR}`
-        const matchTarget = (s: string) => s.startsWith(target)
-        this.getStreamMetadata_cached.invalidate(matchTarget)
+    invalidatePermissionCaches(streamId: StreamID): void {
+        this.logger.trace('Clear permission caches for stream', { streamId })
+        const matchTarget = (s: string) => s.startsWith(formCacheKeyPrefix(streamId))
         this.isStreamPublisher_cached.invalidate(matchTarget)
         this.isStreamSubscriber_cached.invalidate(matchTarget)
         // TODO should also clear cache for hasPublicSubscribePermission?

@@ -13,7 +13,7 @@ describe('Publisher', () => {
         const streamIdBuilder = new StreamIDBuilder(authentication)
         const streamRegistry = {
             isStreamPublisher: async () => false,
-            invalidateStreamCache: () => {}
+            invalidatePermissionCaches: () => {}
         }
         const publisher = new Publisher(
             undefined as any,
