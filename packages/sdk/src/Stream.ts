@@ -50,14 +50,6 @@ export class Stream {
     }
 
     /**
-     * Updates the metadata of the stream.
-     */
-    async setMetadata(metadata: StreamMetadata): Promise<void> {
-        await this.client.setStreamMetadata(this.id, metadata)
-        this.metadata = metadata
-    }
-
-    /**
      * See {@link StreamrClient.hasPermission | StreamrClient.hasPermission}.
      *
      * @category Important
@@ -173,5 +165,13 @@ export class Stream {
      */
     getMetadata(): StreamMetadata {
         return this.metadata
+    }
+
+    /**
+     * Updates the metadata of the stream.
+     */
+    async setMetadata(metadata: StreamMetadata): Promise<void> {
+        await this.client.setStreamMetadata(this.id, metadata)
+        this.metadata = metadata
     }
 }
