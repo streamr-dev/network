@@ -16,10 +16,11 @@ Changes before Tatum release are not documented in this file.
   - it is supported for `PUBLISH` and `SUBSCRIBE` permissions
   - new `StreamrClient#getUserId()` method
 - Method `StreamrClient#getDiagnosticInfo()` provides diagnostic info about network (https://github.com/streamr-dev/network/pull/2740, https://github.com/streamr-dev/network/pull/2741)
-- Add accessors for stream metadata fields: (https://github.com/streamr-dev/network/pull/2825, https://github.com/streamr-dev/network/pull/2845)
+- Add accessors for stream metadata fields: (https://github.com/streamr-dev/network/pull/2825, https://github.com/streamr-dev/network/pull/2845, https://github.com/streamr-dev/network/pull/2883)
   - `Stream#getPartitionCount()`
   - `Stream#getDescription()` and `Stream#setDescription()`
   - `Stream#getStorageDayCount()` and `Stream#setStorageDayCount()`
+- Add method `StreamrClient#getStreamMetadata()` (https://github.com/streamr-dev/network/pull/2883)
 - Add validation for public permissions (https://github.com/streamr-dev/network/pull/2819)
 - Add `opts` parameter to `StreamrClient#addStreamToStorageNode` (https://github.com/streamr-dev/network/pull/2858)
   - controls how long to wait for storage node to pick up on assignment
@@ -40,6 +41,7 @@ Changes before Tatum release are not documented in this file.
 - **BREAKING CHANGE:** Replace methods `StreamrClient#updateStream()` and `Stream#update()`: (https://github.com/streamr-dev/network/pull/2826, https://github.com/streamr-dev/network/pull/2855, https://github.com/streamr-dev/network/pull/2859, https://github.com/streamr-dev/network/pull/2862)
   - use `StreamrClient#setStreamMetadata()` and `Stream#setMetadata()` instead
   - both methods overwrite metadata instead of merging it
+- **BREAKING CHANGE:** Methods `Stream#getMetadata()` and `Stream#getStreamParts()` are async (https://github.com/streamr-dev/network/pull/2883)
 - Change storage node address caching (https://github.com/streamr-dev/network/pull/2877, https://github.com/streamr-dev/network/pull/2878)
 - Upgrade `StreamRegistry` from v4 to v5 (https://github.com/streamr-dev/network/pull/2780)
 - Network-level changes:
