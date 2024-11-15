@@ -6,6 +6,7 @@ import { Logger, StreamPartID, StreamPartIDUtils, wait, waitForCondition } from 
 import { areEqualPeerDescriptors, PeerDescriptor } from '@streamr/dht'
 import { chunk, sample } from 'lodash'
 import fs from 'fs'
+import { run } from 'jest'
 
 interface ExperimentNode {
     socket: WebSocket
@@ -168,7 +169,7 @@ export class ExperimentController {
     async joinStreamPart(streamPartId: StreamPartID): Promise<void> {
         this.instructionsCompleted = 0
         const nodes = Array.from(this.clients.values())
-        await Promise.all(nodes.map((node) => {
+        await this.runBatchedOperation(nodes, 8, async (node) => {
             const message = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'joinStreamPart',
@@ -179,7 +180,7 @@ export class ExperimentController {
                 }
             })
             node.socket.send(ExperimentServerMessage.toBinary(message))
-        }))
+        }, (current) => current === this.instructionsCompleted)
         await waitForCondition(() => this.instructionsCompleted === this.nodeCount, 60000, 1000)
     }
 
