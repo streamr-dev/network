@@ -25,7 +25,7 @@ export interface MessagePipelineOptions {
     signatureValidator: SignatureValidator
     groupKeyManager: GroupKeyManager
     // eslint-disable-next-line max-len
-    config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
+    config: Pick<StrictStreamrClientConfig, 'orderMessages' | 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy' | 'cache'>
     destroySignal: DestroySignal
     loggerFactory: LoggerFactory
 }

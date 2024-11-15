@@ -40,6 +40,7 @@ Changes before Tatum release are not documented in this file.
 - **BREAKING CHANGE:** Replace methods `StreamrClient#updateStream()` and `Stream#update()`: (https://github.com/streamr-dev/network/pull/2826, https://github.com/streamr-dev/network/pull/2855, https://github.com/streamr-dev/network/pull/2859, https://github.com/streamr-dev/network/pull/2862)
   - use `StreamrClient#setStreamMetadata()` and `Stream#setMetadata()` instead
   - both methods overwrite metadata instead of merging it
+- Change storage node address caching for gap filling (https://github.com/streamr-dev/network/pull/2877)
 - Upgrade `StreamRegistry` from v4 to v5 (https://github.com/streamr-dev/network/pull/2780)
 - Network-level changes:
   - avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801) 
@@ -85,8 +86,10 @@ Changes before Tatum release are not documented in this file.
 
 #### Removed
 
-- **BREAKING CHANGE:** Remove deprecated `bin/config-wizard` script (i.e. the `streamr-broker-init` command)
+- **BREAKING CHANGE:** Remove deprecated `bin/config-wizard` script (i.e. the `streamr-broker-init` command) (https://github.com/streamr-dev/network/pull/2830)
   - use `streamr-node-init` command instead
+- **BREAKING CHANGE:** Remove deprecated command `streamr-broker` (https://github.com/streamr-dev/network/pull/2881)
+  - use `streamr-node` command instead
 
 #### Fixed
 
