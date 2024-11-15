@@ -2,12 +2,10 @@ import http from 'http'
 import { Socket } from 'net'
 import WebSocket from 'ws'
 import { ExperimentClientMessage, ExperimentServerMessage, Hello, InstructionCompleted, JoinExperiment, RoutingExperiment } from './generated/packages/trackerless-network/experiment/Experiment'
-import { Any } from '../generated/google/protobuf/any'
 import { Logger, StreamPartID, StreamPartIDUtils, wait, waitForCondition } from '@streamr/utils'
 import { areEqualPeerDescriptors, PeerDescriptor } from '@streamr/dht'
 import { chunk, sample } from 'lodash'
 import fs from 'fs'
-import { log } from 'console'
 
 interface ExperimentNode {
     socket: WebSocket
@@ -182,7 +180,7 @@ export class ExperimentController {
             })
             node.socket.send(ExperimentServerMessage.toBinary(message))
         }))
-        await waitForCondition(() => this.instructionsCompleted === this.nodeCount, 30000, 1000)
+        await waitForCondition(() => this.instructionsCompleted === this.nodeCount, 60000, 1000)
     }
 
     async publishMessage(streamPartId: StreamPartID): Promise<void> {

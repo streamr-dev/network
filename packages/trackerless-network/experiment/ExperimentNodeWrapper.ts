@@ -9,7 +9,6 @@ import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../ge
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { RoutingExperimentRpcClient } from './generated/packages/trackerless-network/experiment/Experiment.client'
 import { chunk, now } from 'lodash'
-import { time } from 'console'
 
 const createStreamMessage = (streamPartId: StreamPartID, id: string, region: number) => {
     const message: StreamMessage = {

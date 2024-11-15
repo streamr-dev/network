@@ -1,11 +1,10 @@
-import { Logger, StreamPartIDUtils, wait } from "@streamr/utils"
+import { Logger, wait } from "@streamr/utils"
 import { ExperimentController } from "./ExperimentController"
 import { ExperimentNodeWrapper } from "./ExperimentNodeWrapper"
-import { AutoScalingClient, AutoScalingClientConfig, DescribePoliciesCommand, DescribePoliciesCommandInput, SetDesiredCapacityCommand, SetDesiredCapacityCommandInput } from "@aws-sdk/client-auto-scaling"
+import { AutoScalingClient, AutoScalingClientConfig, SetDesiredCapacityCommand, SetDesiredCapacityCommandInput } from "@aws-sdk/client-auto-scaling"
 import { EC2Client, DescribeInstancesCommand } from "@aws-sdk/client-ec2"
 import 'dotenv/config'
 import { joinResults, propagationResults, routingResults, timeToDataResults } from "./ResultCalculator"
-import { setEngine } from "crypto"
 
 const envs = [ 'local', 'aws' ]
 const modes = [ 'propagation', 'join', 'routing', 'timetodata', 'scalingjoin' ]
@@ -147,7 +146,7 @@ const run = async () => {
         localNodes = startLocalNodes(nodeCount)
         await controller.waitForClients()
     } else if (env === 'aws') {
-        await Promise.all(REGIONS.map( async (region) => {
+        await Promise.all(REGIONS.map(async (region) => {
             await startAwsNodes(nodeCount, region)
             const seenInRegion = await waitForInstances(region)
             seenInRegion.forEach((value, key) => instances.set(key, value))
