@@ -32,6 +32,7 @@ import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { markAndCheckDuplicate } from './utils'
 import { ContentDeliveryLayerNeighborInfo } from '../types'
+import { time } from 'console'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -369,7 +370,11 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                     time: Date.now(),
                     region: this.options.localPeerDescriptor.region
                 })
-                this.storedMessages.push(parsedMessage)
+                this.storedMessages.push({
+                    id: this.options.experimentId,
+                    hops: parsedMessage.route.length,
+                    time: Date.now() - parsedMessage.route[0].time,
+                })
                 msg.body.contentMessage.content = utf8ToBinary(JSON.stringify(parsedMessage))
             }
         }
