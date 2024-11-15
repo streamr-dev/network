@@ -86,17 +86,10 @@ export const propagationResults = async (filePath: string): Promise<void> => {
         const parsedLine = JSON.parse(line)
         for (const resultLine of parsedLine.results) {
             const results = JSON.parse(resultLine)
-            const timeToPropagate = results.route[results.route.length - 1].time - results.route[0].time
             numOfLines += 1
-            sumPropagationTime += timeToPropagate
-            sumHops += results.route.length - 1
+            sumPropagationTime += results.time
+            sumHops += results.hops
         }
-        // const parsedLine = JSON.parse(line)
-        // const parsedResult = JSON.parse(parsedLine.results)
-        // sumTimeToData += parsedResult.messageReceivedTimestamp - parsedResult.startTime
-        // sumLayer1Join += parsedResult.layer1JoinTime
-        // sumEntryPointFetch += parsedResult.entryPointsFetch
-        // numOfLines += 1
     })
     await waitForEvent(file, 'close')
     console.log('mean propagation time:', sumPropagationTime / numOfLines)
