@@ -108,7 +108,7 @@ const formCacheKeyPrefix = (streamId: StreamID): string => {
     return `${streamId}|`
 }
 
-const invalidateCache = (cache: CachingMap<string, any, any>, streamId: StreamID) => {
+const invalidateCache = (cache: CachingMap<string, any, any>, streamId: StreamID): void => {
     const matchTarget = (s: string) => s.startsWith(formCacheKeyPrefix(streamId))
     cache.invalidate(matchTarget)
 }
