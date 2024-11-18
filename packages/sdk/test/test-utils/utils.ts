@@ -5,16 +5,16 @@ import {
     DEFAULT_PARTITION_COUNT,
     Logger,
     MAX_PARTITION_COUNT,
+    merge,
     StreamPartID,
     StreamPartIDUtils,
+    until,
     UserID,
-    merge,
     utf8ToBinary,
-    wait,
-    until
+    wait
 } from '@streamr/utils'
 import crypto from 'crypto'
-import { Wallet } from 'ethers'
+import { id, Wallet } from 'ethers'
 import { once } from 'events'
 import express, { Request, Response } from 'express'
 import { mock } from 'jest-mock-extended'
@@ -317,4 +317,14 @@ export const readUtf8ExampleIndirectly = async (): Promise<string> => {
             })
         })
     })
+}
+
+const ETHEREUM_FUNCTION_SELECTOR_LENGTH = 10  // 0x + 4 bytes
+
+export const formEthereumFunctionSelector = (methodSignature: string): string => {
+    return id(methodSignature).substring(0, ETHEREUM_FUNCTION_SELECTOR_LENGTH)
+}
+
+export const parseEthereumFunctionSelectorFromCallData = (data: string): string => {
+    return data.substring(0, ETHEREUM_FUNCTION_SELECTOR_LENGTH)
 }
