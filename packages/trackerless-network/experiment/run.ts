@@ -71,7 +71,10 @@ async function waitForInstances(region: string, nodeCount: number): Promise<Map<
             {
                 Name: 'instance-state-name',
                 Values: ['running'],
-                Tags: [ 'network-experiment' ] 
+            }, 
+            {
+                Name: 'tag:Name',
+                Values: ['network-experiment-tf-test']
             }
         ]
     }
@@ -82,7 +85,6 @@ async function waitForInstances(region: string, nodeCount: number): Promise<Map<
             const instanceCount = res.Reservations!.flatMap((a) => a.Instances!.length).reduce((a, c) => a + c, 0)
             if (instanceCount === nodeCount) {
                 res.Reservations!.flatMap((reservation) => reservation.Instances!.forEach((instance) => {
-                    console.log(instance.PublicIpAddress)
                     const ip = instance.PublicIpAddress!
                     const domain = instance.PublicDnsName!
                     seen.set(ip, { domain, region })
