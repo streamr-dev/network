@@ -517,22 +517,22 @@ export class StreamRegistry {
     // Caching
     // --------------------------------------------------------------------------------------------
 
-    async getStreamMetadata(streamId: StreamID, useCache = true): Promise<StreamMetadata> {
-        if (!useCache) {
+    async getStreamMetadata(streamId: StreamID, allowCached = true): Promise<StreamMetadata> {
+        if (!allowCached) {
             invalidateCache(this.metadataCache, streamId)
         }
         return this.metadataCache.get(streamId)
     }
 
-    isStreamPublisher(streamId: StreamID, userId: UserID, useCache = true): Promise<boolean> {
-        if (useCache) {
+    isStreamPublisher(streamId: StreamID, userId: UserID, allowCached = true): Promise<boolean> {
+        if (allowCached) {
             invalidateCache(this.publisherCache, streamId)
         }
         return this.publisherCache.get(streamId, userId)
     }
 
-    isStreamSubscriber(streamId: StreamID, userId: UserID, useCache = true): Promise<boolean> {
-        if (useCache) {
+    isStreamSubscriber(streamId: StreamID, userId: UserID, allowCached = true): Promise<boolean> {
+        if (allowCached) {
             invalidateCache(this.subscriberCache, streamId)
         }
         return this.subscriberCache.get(streamId, userId)
