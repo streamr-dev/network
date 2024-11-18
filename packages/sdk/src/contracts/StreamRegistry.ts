@@ -257,7 +257,7 @@ export class StreamRegistry {
             JSON.stringify(metadata),
             ethersOverrides
         ))
-        this.invalidateMetadataCache(streamId)
+        this.populateMetadataCache(streamId, metadata)
     }
 
     async deleteStream(streamIdOrPath: string): Promise<void> {
