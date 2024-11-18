@@ -241,6 +241,7 @@ export class StreamRegistry {
             await this.ensureStreamIdInNamespaceOfAuthenticatedUser(domain, streamId)
             await waitForTx(this.streamRegistryContract!.createStream(path, JSON.stringify(metadata), ethersOverrides))
         }
+        this.populateMetadataCache(streamId, metadata)
     }
 
     private async ensureStreamIdInNamespaceOfAuthenticatedUser(address: EthereumAddress, streamId: StreamID): Promise<void> {
@@ -258,7 +259,7 @@ export class StreamRegistry {
             JSON.stringify(metadata),
             ethersOverrides
         ))
-        this.invalidateMetadataCache(streamId)
+        this.populateMetadataCache(streamId, metadata)
     }
 
     async deleteStream(streamIdOrPath: string): Promise<void> {
@@ -537,6 +538,10 @@ export class StreamRegistry {
 
     hasPublicSubscribePermission(streamId: StreamID): Promise<boolean> {
         return this.hasPublicSubscribePermission_cached.get(streamId)
+    }
+
+    populateMetadataCache(streamId: StreamID, metadata: StreamMetadata): void {
+        this.getStreamMetadata_cached.set([streamId], metadata)
     }
 
     invalidateMetadataCache(streamId: StreamID): void {
