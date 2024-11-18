@@ -168,16 +168,6 @@ export class FakeStreamRegistry implements Methods<StreamRegistry> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    populateMetadataCache(): void {
-        // no-op
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    invalidateMetadataCache(): void {
-        // no-op
-    }
-    
-    // eslint-disable-next-line class-methods-use-this
     invalidatePermissionCaches(): void {
         // no-op
     }
