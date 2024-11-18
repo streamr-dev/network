@@ -6,7 +6,6 @@ import { Logger, StreamPartID, StreamPartIDUtils, wait, waitForCondition } from 
 import { areEqualPeerDescriptors, PeerDescriptor } from '@streamr/dht'
 import { chunk, sample } from 'lodash'
 import fs from 'fs'
-import { run } from 'jest'
 
 interface ExperimentNode {
     socket: WebSocket

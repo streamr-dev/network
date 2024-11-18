@@ -10,9 +10,9 @@ const envs = [ 'local', 'aws' ]
 const modes = [ 'propagation', 'join', 'routing', 'timetodata', 'scalingjoin' ]
 const experiment = process.argv[2]
 const env = process.argv[3]
-const nodeCount = parseInt(process.argv[4])
+const nodeCountPerRegion = parseInt(process.argv[4])
 
-const REGIONS = [ 'eu-north-1' ]
+const REGIONS = [ 'eu-north-1', 'eu-central-1' ]
 const AUTO_SCALING_GROUP_NAME = 'network-experiment'
 
 if (!modes.includes(experiment)) {
@@ -35,7 +35,7 @@ const startLocalNodes = (nodeCount: number) => {
     return nodes
 }
 
-const startAwsNodes = async (nodeCount: number, region: string) => {
+const startAwsNodes = async (region: string, nodeCount: number) => {
     const config: AutoScalingClientConfig = {
         region,
         credentials: {
@@ -57,7 +57,7 @@ const startAwsNodes = async (nodeCount: number, region: string) => {
     }
 }
 
-async function waitForInstances(region: string): Promise<Map<string, { domain: string, region: string }>> {
+async function waitForInstances(region: string, nodeCount: number): Promise<Map<string, { domain: string, region: string }>> {
     const config = {
         region,
         credentials: {
@@ -137,9 +137,9 @@ const stopAwsNodes = async (region: string) => {
 const run = async () => {
     const datetime = new Date().toISOString().replace(/:/g, '-').replace(/\./g, '-')
     const filePath = `results/${experiment}/${datetime}.json`
+    const nodeCount = env === 'aws' ? nodeCountPerRegion * REGIONS.length : nodeCountPerRegion
     const controller = new ExperimentController(nodeCount, filePath) 
     controller.createServer()
-
     let localNodes: ExperimentNodeWrapper[] = []
     const instances = new Map<string, { domain: string, region: string }>()
     if (env === 'local') {
@@ -147,8 +147,8 @@ const run = async () => {
         await controller.waitForClients()
     } else if (env === 'aws') {
         await Promise.all(REGIONS.map(async (region) => {
-            await startAwsNodes(nodeCount, region)
-            const seenInRegion = await waitForInstances(region)
+            await startAwsNodes(region, nodeCountPerRegion)
+            const seenInRegion = await waitForInstances(region, nodeCountPerRegion)
             seenInRegion.forEach((value, key) => instances.set(key, value))
         }))
         logger.info('all aws instances started')
