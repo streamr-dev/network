@@ -525,14 +525,14 @@ export class StreamRegistry {
     }
 
     isStreamPublisher(streamId: StreamID, userId: UserID, allowCached = true): Promise<boolean> {
-        if (allowCached) {
+        if (!allowCached) {
             invalidateCache(this.publisherCache, streamId)
         }
         return this.publisherCache.get(streamId, userId)
     }
 
     isStreamSubscriber(streamId: StreamID, userId: UserID, allowCached = true): Promise<boolean> {
-        if (allowCached) {
+        if (!allowCached) {
             invalidateCache(this.subscriberCache, streamId)
         }
         return this.subscriberCache.get(streamId, userId)
