@@ -13,7 +13,7 @@ const env = process.argv[3]
 const nodeCountPerRegion = parseInt(process.argv[4])
 
 const REGIONS = [ 'eu-north-1', 'eu-central-1' ]
-const AUTO_SCALING_GROUP_NAME = 'network-experiment'
+const AUTO_SCALING_GROUP_NAME = 'network-experiment-tf-test'
 
 if (!modes.includes(experiment)) {
     throw new Error('unknown experiment ' + experiment)
