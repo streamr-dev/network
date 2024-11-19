@@ -90,7 +90,7 @@ export class ExperimentController {
                 onConditionFn()
             }
             return this.clients.size === this.nodeCount 
-        }, 10 * 60 * 1000, 10000)
+        }, 20 * 60 * 1000, 10000)
         
     }
 
