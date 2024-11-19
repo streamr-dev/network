@@ -172,13 +172,13 @@ export class StreamRegistry {
             cacheKey: ([streamId]) => formCacheKeyPrefix(streamId)
         })
         this.isStreamPublisher_cached = new CachingMap((streamId: StreamID, userId: UserID) => {
-            return this.isStreamPublisher(streamId, userId, false)
+            return this.isStreamPublisherOrSubscriber_nonCached(streamId, userId, StreamPermission.PUBLISH)
         }, {
             ...config.cache,
             cacheKey: ([streamId, userId]) =>`${formCacheKeyPrefix(streamId)}${userId}`
         })
         this.isStreamSubscriber_cached = new CachingMap((streamId: StreamID, userId: UserID) => {
-            return this.isStreamSubscriber(streamId, userId, false)
+            return this.isStreamPublisherOrSubscriber_nonCached(streamId, userId, StreamPermission.SUBSCRIBE)
         }, {
             ...config.cache,
             cacheKey: ([streamId, userId]) =>`${formCacheKeyPrefix(streamId)}${userId}`
@@ -511,28 +511,16 @@ export class StreamRegistry {
     // Caching
     // --------------------------------------------------------------------------------------------
 
-    getStreamMetadata(streamId: StreamID, useCache = true): Promise<StreamMetadata> {
-        if (useCache) {
-            return this.getStreamMetadata_cached.get(streamId)
-        } else {
-            return this.getStreamMetadata_nonCached(streamId)
-        }
+    getStreamMetadata(streamId: StreamID): Promise<StreamMetadata> {
+        return this.getStreamMetadata_cached.get(streamId)
     }
 
-    isStreamPublisher(streamId: StreamID, userId: UserID, useCache = true): Promise<boolean> {
-        if (useCache) {
-            return this.isStreamPublisher_cached.get(streamId, userId)
-        } else {
-            return this.isStreamPublisherOrSubscriber_nonCached(streamId, userId, StreamPermission.PUBLISH)
-        }
+    isStreamPublisher(streamId: StreamID, userId: UserID): Promise<boolean> {
+        return this.isStreamPublisher_cached.get(streamId, userId)
     }
 
-    isStreamSubscriber(streamId: StreamID, userId: UserID, useCache = true): Promise<boolean> {
-        if (useCache) {
-            return this.isStreamSubscriber_cached.get(streamId, userId)
-        } else {
-            return this.isStreamPublisherOrSubscriber_nonCached(streamId, userId, StreamPermission.SUBSCRIBE)
-        }
+    isStreamSubscriber(streamId: StreamID, userId: UserID): Promise<boolean> {
+        return this.isStreamSubscriber_cached.get(streamId, userId)
     }
 
     hasPublicSubscribePermission(streamId: StreamID): Promise<boolean> {
