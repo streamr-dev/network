@@ -275,7 +275,7 @@ export class ExperimentController {
             })
             node.socket.send(ExperimentServerMessage.toBinary(message))
         }))
-        await waitForCondition(() => this.resultsReceived.size === this.nodeCount, 30000, 1000)
+        await waitForCondition(() => this.resultsReceived.size === this.nodeCount, 3 * 60 * 1000, 1000)
     }
 
     async stop(): Promise<void> {
