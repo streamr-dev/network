@@ -1,4 +1,4 @@
-import { Logger, MetricsContext, waitForCondition, waitForEvent3 } from '@streamr/utils'
+import { Logger, MetricsContext, until, waitForEvent3 } from '@streamr/utils'
 import { MarkOptional } from 'ts-essentials'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { DefaultConnectorFacade, DefaultConnectorFacadeOptions } from '../../src/connection/ConnectorFacade'
@@ -6,7 +6,8 @@ import { Simulator } from '../../src/connection/simulator/Simulator'
 import { SimulatorTransport } from '../../src/connection/simulator/SimulatorTransport'
 import { createPeerDescriptor } from '../../src/helpers/createPeerDescriptor'
 import { randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
-import { ConnectivityResponse, Message, NodeType, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
+import { ConnectivityResponse, Message } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor, NodeType } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { TransportEvents } from '../../src/transport/ITransport'
 import { createMockPeerDescriptor } from '../utils/utils'
@@ -513,11 +514,11 @@ describe('ConnectionManager', () => {
         await Promise.all([connectedPromise1, connectedPromise2, connectionManager2.send(msg)])
 
         await connectionManager1.enablePrivateClientMode()
-        await waitForCondition(() => connectionManager2.getConnections().length === 0)
+        await until(() => connectionManager2.getConnections().length === 0)
         expect(connectionManager1.getConnections().length).toEqual(1)
 
         await connectionManager1.disablePrivateClientMode()
-        await waitForCondition(() => connectionManager2.getConnections().length === 1)
+        await until(() => connectionManager2.getConnections().length === 1)
         expect(connectionManager1.getConnections().length).toEqual(1)
 
         await connectionManager1.stop()

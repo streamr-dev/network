@@ -1,6 +1,6 @@
 import { pTransaction } from '../src/pTransaction'
 
-function promisify(...sequence: Array<string | Error>): Array<Promise<string>> {
+function promisify(...sequence: (string | Error)[]): Promise<string>[] {
     return sequence.map((v) => {
         if (typeof v === 'string') {
             return Promise.resolve(v)

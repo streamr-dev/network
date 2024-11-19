@@ -8,8 +8,9 @@
     "url": "git+https://github.com/streamr-dev/network.git",
     "directory": "packages/browser-test-runner"
   },
-  "main": "./index.js",
+  "main": "./dist/src/exports.js",
   "scripts": {
+    "build": "tsc -b tsconfig.node.json",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '**/*.{js,ts}'"
   },
   "author": "Streamr Network AG <contact@streamr.network>",
@@ -32,7 +33,7 @@
     "karma-webpack": "^5.0.1",
     "node-polyfill-webpack-plugin": "^4.0.0",
     "timers-browserify": "^2.0.12",
-    "webpack": "^5.95.0",
+    "webpack": "^5.96.1",
     "webpack-cli": "^5.1.4"
   }
 }

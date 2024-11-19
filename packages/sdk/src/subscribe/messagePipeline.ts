@@ -57,7 +57,7 @@ export const createMessagePipeline = (opts: MessagePipelineOptions): PushPipelin
                 // TODO log this in onError? if we want to log all errors?
                 logger.debug('Failed to decrypt', { messageId: msg.messageId, err })
                 // clear cached permissions if cannot decrypt, likely permissions need updating
-                opts.streamRegistry.clearStreamCache(msg.getStreamId())
+                opts.streamRegistry.invalidatePermissionCaches(msg.getStreamId())
                 throw err
             }
         } else {

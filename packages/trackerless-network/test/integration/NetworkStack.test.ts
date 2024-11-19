@@ -1,6 +1,6 @@
 import {
     StreamPartIDUtils,
-    waitForCondition
+    until
 } from '@streamr/utils'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
@@ -58,7 +58,7 @@ describe('NetworkStack', () => {
             randomUserId()
         )
         stack2.getContentDeliveryManager().broadcast(msg)
-        await waitForCondition(() => receivedMessages === 1)
+        await until(() => receivedMessages === 1)
     })
 
     it('join and wait for neighbors', async () => {

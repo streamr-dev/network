@@ -2,7 +2,7 @@ import { PeerDescriptorStoreManager } from '../../src/logic/PeerDescriptorStoreM
 import { StreamPartReconnect } from '../../src/logic/StreamPartReconnect'
 import { MockDiscoveryLayerNode } from '../utils/mock/MockDiscoveryLayerNode'
 import { createFakePeerDescriptorStoreManager } from '../utils/fake/FakePeerDescriptorStoreManager'
-import { waitForCondition } from '@streamr/utils'
+import { until } from '@streamr/utils'
 
 describe('StreamPartReconnect', () => {
 
@@ -24,7 +24,7 @@ describe('StreamPartReconnect', () => {
         await streamPartReconnect.reconnect(1000)
         expect(streamPartReconnect.isRunning()).toEqual(true)
         discoveryLayerNode.addNewRandomPeerToKBucket()
-        await waitForCondition(() => streamPartReconnect.isRunning() === false)
+        await until(() => streamPartReconnect.isRunning() === false)
     })
 
 })

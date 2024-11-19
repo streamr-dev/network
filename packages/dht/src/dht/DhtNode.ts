@@ -4,7 +4,7 @@ import {
     MetricsContext,
     merge,
     scheduleAtInterval,
-    waitForCondition
+    until
 } from '@streamr/utils'
 import { EventEmitter } from 'eventemitter3'
 import { sample } from 'lodash'
@@ -30,11 +30,11 @@ import {
     ExternalStoreDataResponse,
     LeaveNotice,
     Message,
-    PeerDescriptor,
     PingRequest,
     PingResponse,
     RecursiveOperation
 } from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor' 
 import { ExternalApiRpcClient, StoreRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
 import { ITransport, TransportEvents } from '../transport/ITransport'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
@@ -621,7 +621,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport {
     }
  
     public async waitForNetworkConnectivity(): Promise<void> {
-        await waitForCondition(
+        await until(
             () => this.connectionsView!.getConnectionCount() > 0,
             this.options.networkConnectivityTimeout,
             100,

@@ -42,7 +42,7 @@ export class SortedContactList<C extends { getNodeId: () => DhtAddress }> extend
 
     public addContact(contact: C): void {
         const contactId = contact.getNodeId()
-        if (this.options.excludedNodeIds !== undefined && this.options.excludedNodeIds.has(contactId)) {
+        if (this.options.excludedNodeIds?.has(contactId)) {
             return
         }
         if ((!this.options.allowToContainReferenceId && (this.options.referenceId === contactId)) ||

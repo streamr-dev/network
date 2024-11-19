@@ -9,8 +9,7 @@ function isError(err: any): err is Error {
     if (err instanceof Error) { return true }
 
     return !!(
-        err
-        && err.stack
+        err?.stack
         && err.message
         && typeof err.stack === 'string'
         && typeof err.message === 'string'

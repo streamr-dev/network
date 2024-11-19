@@ -1,7 +1,7 @@
 import WebSocket from 'ws'
 import qs from 'qs'
 import { StreamrClient, Subscription } from '@streamr/sdk'
-import { waitForEvent, waitForCondition, merge } from '@streamr/utils'
+import { waitForEvent, until, merge } from '@streamr/utils'
 import { WebsocketServer } from '../../../../src/plugins/websocket/WebsocketServer'
 import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'
 import { mock, MockProxy } from 'jest-mock-extended'
@@ -69,7 +69,7 @@ describe('WebsocketServer', () => {
             wsClient = createTestClient(PATH_PUBLISH_MOCK_STREAM, queryParams)
             await waitForEvent(wsClient, 'open')
             wsClient.send(JSON.stringify(MOCK_MESSAGE))
-            await waitForCondition(() => (streamrClient.publish.mock.calls.length === 1))
+            await until(() => (streamrClient.publish.mock.calls.length === 1))
         }
 
         it('without parameters', async () => {
@@ -194,7 +194,7 @@ describe('WebsocketServer', () => {
             wsClient = createTestClient(PATH_SUBSCRIBE_MOCK_STREAM, { partitions: '0,2,5' })
             await waitForEvent(wsClient, 'open')
             wsClient.close()
-            await waitForCondition(() => singletonSubscription.unsubscribe.mock.calls.length === 3)
+            await until(() => singletonSubscription.unsubscribe.mock.calls.length === 3)
         })
     })
 

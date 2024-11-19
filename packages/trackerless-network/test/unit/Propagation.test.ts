@@ -1,5 +1,5 @@
 import { DhtAddress } from '@streamr/dht'
-import { hexToBinary, wait } from '@streamr/utils'
+import { hexToBinary, toUserIdRaw, wait } from '@streamr/utils'
 import { Propagation } from '../../src/logic/propagation/Propagation'
 import {
     ContentType,
@@ -19,7 +19,7 @@ function makeMsg(streamId: string, partition: number, ts: number, msgNo: number)
         timestamp: ts,
         sequenceNumber: msgNo,
         messageChainId: 'msgChain',
-        publisherId: hexToBinary(PUBLISHER_ID)
+        publisherId: toUserIdRaw(PUBLISHER_ID)
     }
     return {
         messageId,
@@ -45,7 +45,7 @@ const N4 = 'n4' as DhtAddress
 const N5 = 'n5' as DhtAddress
 
 describe(Propagation, () => {
-    let getNeighbors: jest.Mock<ReadonlyArray<DhtAddress>, [string]>
+    let getNeighbors: jest.Mock<readonly DhtAddress[], [string]>
     let sendToNeighbor: jest.Mock<Promise<void>, [DhtAddress, StreamMessage]>
     let propagation: Propagation
 

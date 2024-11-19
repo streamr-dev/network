@@ -27,7 +27,7 @@ import { wait } from './wait'
 import { waitForEvent } from './waitForEvent'
 import { TimeoutError, withTimeout } from './withTimeout'
 import { composeAbortSignals, ComposedAbortSignal } from './composeAbortSignals'
-import { waitForCondition } from './waitForCondition'
+import { until } from './until'
 import { waitForEvent3, runAndWaitForEvents3, raceEvents3, runAndRaceEvents3, RunAndRaceEventsReturnType } from './waitForEvent3'
 import { withRateLimit } from './withRateLimit'
 import { ObservableEventEmitter } from './ObservableEventEmitter'
@@ -72,7 +72,7 @@ export {
     toEthereumAddress,
     toEthereumAddressOrENSName,
     wait,
-    waitForCondition,
+    until,
     waitForEvent,
     withRateLimit,
     withTimeout,
@@ -123,6 +123,8 @@ export {
 }
 
 export { StreamID, toStreamID, StreamIDUtils } from './StreamID'
-export { MAX_PARTITION_COUNT, ensureValidStreamPartitionCount, ensureValidStreamPartitionIndex } from './partition'
+export { DEFAULT_PARTITION_COUNT, MAX_PARTITION_COUNT, ensureValidStreamPartitionCount, ensureValidStreamPartitionIndex } from './partition'
 export { StreamPartID, toStreamPartID, StreamPartIDUtils } from './StreamPartID'
-export { UserID, toUserId, isValidUserId } from './UserID'
+export { UserID, UserIDRaw, toUserId, toUserIdRaw, isValidUserId, isEthereumAddressUserId } from './UserID'
+export { HexString } from './HexString'
+export { ChangeFieldType, MapKey } from './types'

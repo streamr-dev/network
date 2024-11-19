@@ -1,5 +1,5 @@
 import { Queue, randomEthereumAddress } from '@streamr/test-utils'
-import { StreamPartID, StreamPartIDUtils, waitForCondition } from '@streamr/utils'
+import { StreamPartID, StreamPartIDUtils, until } from '@streamr/utils'
 import EventEmitter from 'eventemitter3'
 import { mock } from 'jest-mock-extended'
 import { isEqual } from 'lodash'
@@ -34,7 +34,7 @@ const createResend = (historicalMessages: StreamMessage[], gapHandler: (opts: Re
 }
 
 const waitForMatchingItem = async (streamMessage: StreamMessage, queue: Queue<Message>) => {
-    await waitForCondition(() => {
+    await until(() => {
         return queue.values().some((msg) => isEqual(msg.content, streamMessage.getParsedContent()))
     })
 }
@@ -76,7 +76,7 @@ describe('resend subscription', () => {
 
     const publish = async (type: string, msgChainId?: string) => {
         const messages = await createMessages(type, msgChainId)
-        for await (const msg of messages) {
+        for (const msg of messages) {
             await sub.push(msg)
         }
         return messages
@@ -104,7 +104,7 @@ describe('resend subscription', () => {
         sub = new Subscription(STREAM_PART_ID, false, undefined, eventEmitter, mockLoggerFactory())
         initResendSubscription(
             sub,
-            undefined as any,
+            {} as any,
             {
                 resend
             } as any,

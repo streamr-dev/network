@@ -1,12 +1,11 @@
 import 'reflect-metadata'
 
-import { fetchPrivateKeyWithGas, randomUserId } from '@streamr/test-utils'
-import { EthereumAddress, collect, toEthereumAddress, toStreamID, waitForCondition } from '@streamr/utils'
+import { fetchPrivateKeyWithGas, randomEthereumAddress, randomUserId } from '@streamr/test-utils'
+import { EthereumAddress, collect, toEthereumAddress, toStreamID, until } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { until } from '../../src/utils/promises'
 import { createRelativeTestStreamId, createTestStream } from '../test-utils/utils'
 
 const TIMEOUT = 20000
@@ -55,7 +54,7 @@ describe('StreamRegistry', () => {
             const stream = await client.createStream({
                 id: path
             })
-            expect(stream.id).toBe(toStreamID(path, await client.getAddress()))
+            expect(stream.id).toBe(toStreamID(path, toEthereumAddress(await client.getUserId())))
         }, TIMEOUT)
 
         it('valid id', async () => {
@@ -85,12 +84,8 @@ describe('StreamRegistry', () => {
         it('listener', async () => {
             const onStreamCreated = jest.fn()
             client.on('streamCreated', onStreamCreated)
-            const invalidStream = await client.createStream({
-                id: createRelativeTestStreamId(module, 'invalid'),
-                partitions: 150
-            })
             const validStream = await client.createStream({
-                id: createRelativeTestStreamId(module, 'valid'),
+                id: createRelativeTestStreamId(module),
                 partitions: 3,
                 description: 'Foobar'
             })
@@ -98,7 +93,7 @@ describe('StreamRegistry', () => {
                 const streamIds = onStreamCreated.mock.calls.map((c) => c[0].streamId)
                 return streamIds.includes(stream.id)
             }
-            await waitForCondition(() => hasBeenCalledFor(validStream))
+            await until(() => hasBeenCalledFor(validStream))
             client.off('streamCreated', onStreamCreated)
             expect(onStreamCreated).toHaveBeenCalledWith({
                 streamId: validStream.id,
@@ -108,7 +103,6 @@ describe('StreamRegistry', () => {
                 },
                 blockNumber: expect.any(Number)
             })
-            expect(hasBeenCalledFor(invalidStream)).toBeFalse()
         }, TIMEOUT)
 
         // TODO: re-enable test when ETH-568 has been implemented (ENS support in fast-chain)
@@ -192,7 +186,7 @@ describe('StreamRegistry', () => {
 
         it('fails if stream prefixed with other users address', async () => {
             // can't create streams for other users
-            const otherAddress = randomUserId()
+            const otherAddress = randomEthereumAddress()
             const newPath = `/StreamRegistry-getOrCreate-newPath-${Date.now()}`
             // backend should error
             await expect(async () => {
@@ -206,19 +200,15 @@ describe('StreamRegistry', () => {
     describe('getStreamPublishers', () => {
         it('retrieves a list of publishers', async () => {
             const publishers = await collect(client.getStreamPublishers(createdStream.id))
-            const address = await client.getAddress()
-            return expect(publishers).toEqual([address])
+            expect(publishers).toEqual([await client.getUserId()])
         }, TIMEOUT)
     })
 
     describe('isStreamPublisher', () => {
         it('returns true for valid publishers', async () => {
-            const address = await client.getAddress()
-            const valid = await client.isStreamPublisher(createdStream.id, address)
+            const userId = await client.getUserId()
+            const valid = await client.isStreamPublisher(createdStream.id, userId)
             return expect(valid).toBe(true)
-        }, TIMEOUT)
-        it('throws error for invalid address', async () => {
-            return expect(() => client.isStreamPublisher(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         }, TIMEOUT)
         it('returns false for invalid publishers', async () => {
             const valid = await client.isStreamPublisher(createdStream.id, randomUserId())
@@ -229,19 +219,15 @@ describe('StreamRegistry', () => {
     describe('getStreamSubscribers', () => {
         it('retrieves a list of subscribers', async () => {
             const subscribers = await collect(client.getStreamSubscribers(createdStream.id))
-            const address = await client.getAddress()
-            return expect(subscribers).toEqual([address])
+            expect(subscribers).toEqual([await client.getUserId()])
         }, TIMEOUT)
     })
 
     describe('isStreamSubscriber', () => {
         it('returns true for valid subscribers', async () => {
-            const address = await client.getAddress()
-            const valid = await client.isStreamSubscriber(createdStream.id, address)
+            const userId = await client.getUserId()
+            const valid = await client.isStreamSubscriber(createdStream.id, userId)
             return expect(valid).toBe(true)
-        }, TIMEOUT)
-        it('throws error for invalid address', async () => {
-            return expect(() => client.isStreamSubscriber(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         }, TIMEOUT)
         it('returns false for invalid subscribers', async () => {
             const valid = await client.isStreamSubscriber(createdStream.id, randomUserId())
@@ -249,10 +235,11 @@ describe('StreamRegistry', () => {
         }, TIMEOUT)
     })
 
-    describe('update', () => {
+    describe('setMetadata', () => {
         it('happy path', async () => {
-            await createdStream.update({
-                description: `description-${Date.now()}`
+            const description = `description-${Date.now()}`
+            await createdStream.setMetadata({
+                description
             })
             await until(async () => {
                 try {
@@ -263,7 +250,9 @@ describe('StreamRegistry', () => {
             }, 100000, 1000)
             // check that other fields not overwritten
             const updatedStream = await client.getStream(createdStream.id)
-            expect(updatedStream.getMetadata().partitions).toBe(PARTITION_COUNT)
+            expect(updatedStream.getMetadata()).toEqual({
+                description
+            })
         }, TIMEOUT)
     })
 
@@ -271,7 +260,7 @@ describe('StreamRegistry', () => {
         it('happy path', async () => {
             const props = { id: createRelativeTestStreamId(module) }
             const stream = await client.createStream(props)
-            await stream.delete()
+            await client.deleteStream(stream.id)
             await until(async () => {
                 try {
                     await client.getStream(stream.id)

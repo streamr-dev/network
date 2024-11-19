@@ -1,3 +1,4 @@
+export const DEFAULT_PARTITION_COUNT = 1
 export const MAX_PARTITION_COUNT = 100
 
 export function ensureValidStreamPartitionIndex(streamPartition: number | undefined): void | never {

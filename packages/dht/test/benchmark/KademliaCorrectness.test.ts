@@ -22,8 +22,8 @@ describe('Kademlia correctness', () => {
         execSync('npm run prepare-kademlia-simulation')
     }
 
-    const dhtIds: Array<{ type: string, data: Array<number> }> = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
-    const groundTruth: Record<string, Array<{ name: string, distance: number, id: { type: string, data: Array<number> } }>>
+    const dhtIds: { type: string, data: number[] }[] = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
+    const groundTruth: Record<string, { name: string, distance: number, id: { type: string, data: number[] } }[]>
         = JSON.parse(fs.readFileSync('test/data/orderedneighbors.json').toString())
 
     beforeEach(async () => {

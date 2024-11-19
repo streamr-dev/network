@@ -4,7 +4,7 @@ import { UserID, hexToBinary, toStreamID, utf8ToBinary } from '@streamr/utils'
 import assert from 'assert'
 import { mock } from 'jest-mock-extended'
 import { Authentication } from '../../src/Authentication'
-import { Stream } from '../../src/Stream'
+import { StreamMetadata } from '../../src/StreamMetadata'
 import { ERC1271ContractFacade } from '../../src/contracts/ERC1271ContractFacade'
 import {
     convertGroupKeyRequestToBytes,
@@ -47,7 +47,7 @@ const publisherAuthentication = createRandomAuthentication()
 const subscriberAuthentication = createRandomAuthentication()
 
 describe('Validator2', () => {
-    let getStream: (streamId: string) => Promise<Stream>
+    let getStreamMetadata: (streamId: string) => Promise<StreamMetadata>
     let isPublisher: (userId: UserID, streamId: string) => Promise<boolean>
     let isSubscriber: (userId: UserID, streamId: string) => Promise<boolean>
     let msg: StreamMessage
@@ -59,7 +59,7 @@ describe('Validator2', () => {
     const getValidator = () => {
         return {
             validate: (msg: StreamMessage) => validateStreamMessage(msg, { 
-                getStream,
+                getStreamMetadata,
                 isStreamPublisher: (streamId: string, userId: UserID) => isPublisher(userId, streamId),
                 isStreamSubscriber: (streamId: string, userId: UserID) => isSubscriber(userId, streamId)
             } as any, new SignatureValidator(mock<ERC1271ContractFacade>()))
@@ -67,16 +67,12 @@ describe('Validator2', () => {
     }
 
     beforeEach(async () => {
-        const publisher = await publisherAuthentication.getAddress()
-        const subscriber = await subscriberAuthentication.getAddress()
+        const publisher = await publisherAuthentication.getUserId()
+        const subscriber = await subscriberAuthentication.getUserId()
         // Default stubs
-        getStream = async () => {
-            return {
-                getMetadata: () => ({
-                    partitions: 10
-                })
-            } as any
-        }
+        getStreamMetadata = async () => ({
+            partitions: 10
+        })
         isPublisher = async (userId: UserID, streamId: string) => {
             return userId === publisher && streamId === 'streamId'
         }
@@ -200,9 +196,9 @@ describe('Validator2', () => {
             })
         })
 
-        it('rejects if getStream rejects', async () => {
+        it('rejects if getStreamMetadata rejects', async () => {
             const testError = new Error('test error')
-            getStream = jest.fn().mockRejectedValue(testError)
+            getStreamMetadata = jest.fn().mockRejectedValue(testError)
 
             await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err === testError)
@@ -248,7 +244,7 @@ describe('Validator2', () => {
 
         it('rejects messages to invalid publishers', async () => {
             isPublisher = jest.fn().mockResolvedValue(false)
-            const publisher = await publisherAuthentication.getAddress()
+            const publisher = await publisherAuthentication.getUserId()
 
             await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
@@ -259,7 +255,7 @@ describe('Validator2', () => {
 
         it('rejects messages from unpermitted subscribers', async () => {
             isSubscriber = jest.fn().mockResolvedValue(false)
-            const subscriber = await subscriberAuthentication.getAddress()
+            const subscriber = await subscriberAuthentication.getUserId()
 
             await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
@@ -315,7 +311,7 @@ describe('Validator2', () => {
 
         it('rejects messages from invalid publishers', async () => {
             isPublisher = jest.fn().mockResolvedValue(false)
-            const publisher = await publisherAuthentication.getAddress()
+            const publisher = await publisherAuthentication.getUserId()
 
             await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
@@ -326,7 +322,7 @@ describe('Validator2', () => {
 
         it('rejects messages to unpermitted subscribers', async () => {
             isSubscriber = jest.fn().mockResolvedValue(false)
-            const subscriber = await subscriberAuthentication.getAddress()
+            const subscriber = await subscriberAuthentication.getUserId()
 
             await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)

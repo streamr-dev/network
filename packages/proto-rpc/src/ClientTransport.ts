@@ -63,7 +63,7 @@ export class ClientTransport extends EventEmitter<ClientTransportEvents> impleme
     }
 
     unary<I extends object, O extends object>(method: MethodInfo<I, O>, input: I, options: ProtoRpcOptions): UnaryCall<I, O> {
-        if (!options || !options.isProtoRpc) {
+        if (!options?.isProtoRpc) {
             // eslint-disable-next-line max-len
             throw new Error('ProtoRpc ClientTransport can only be used with ProtoRpcClients. Please convert your protobuf-ts generated client to a ProtoRpcClient by calling toProtoRpcclient(yourClient).')
         }

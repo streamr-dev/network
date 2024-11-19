@@ -1,10 +1,11 @@
-import { Wallet } from 'ethers'
-import { EthereumAddress, toEthereumAddress, UserID, waitForCondition, waitForEvent } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, toUserId, UserID, until, waitForEvent } from '@streamr/utils'
 import cors from 'cors'
-import crypto from 'crypto'
+import crypto, { randomBytes } from 'crypto'
+import { Wallet } from 'ethers'
 import { EventEmitter, once } from 'events'
 import express, { Request, Response } from 'express'
 import http from 'http'
+import random from 'lodash/random'
 import { AddressInfo } from 'net'
 import fetch from 'node-fetch'
 import { Readable } from 'stream'
@@ -33,15 +34,15 @@ export const waitForStreamToEnd = (stream: Readable): Promise<unknown[]> => {
 // internal
 const runAndWait = async (
     operations: (() => void) | ((() => void)[]),
-    waitedEvents: [emitter: EventEmitter, event: Event] | Array<[emitter: EventEmitter, event: Event]>,
+    waitedEvents: [emitter: EventEmitter, event: Event] | [emitter: EventEmitter, event: Event][],
     timeout: number,
-    promiseFn: (args: Array<Promise<unknown>>) => Promise<unknown[]>
+    promiseFn: (args: Promise<unknown>[]) => Promise<unknown[]>
 ): Promise<unknown[]> => {
     const ops = Array.isArray(operations) ? operations : [operations]
 
-    let evs: Array<[emitter: EventEmitter, event: Event]>
+    let evs: [emitter: EventEmitter, event: Event][]
     if (Array.isArray(waitedEvents) && Array.isArray(waitedEvents[0])) {
-        evs = waitedEvents as Array<[emitter: EventEmitter, event: Event]>
+        evs = waitedEvents as [emitter: EventEmitter, event: Event][]
     } else {
         evs = [waitedEvents as [emitter: EventEmitter, event: Event]]
     }
@@ -63,7 +64,7 @@ const runAndWait = async (
  */
 export const runAndWaitForEvents = async (
     operations: (() => void) | ((() => void)[]), 
-    waitedEvents: [emitter: EventEmitter, event: Event] | Array<[emitter: EventEmitter, event: Event]>,
+    waitedEvents: [emitter: EventEmitter, event: Event] | [emitter: EventEmitter, event: Event][],
     timeout = 5000
 ): Promise<unknown[]> => {
     return runAndWait(operations, waitedEvents, timeout, Promise.all.bind(Promise))
@@ -81,44 +82,10 @@ export const runAndWaitForEvents = async (
  */
 export const runAndRaceEvents = async (
     operations: (() => void) | ((() => void)[]), 
-    waitedEvents: [emitter: EventEmitter, event: Event] | Array<[emitter: EventEmitter, event: Event]>, 
+    waitedEvents: [emitter: EventEmitter, event: Event] | [emitter: EventEmitter, event: Event][], 
     timeout = 5000
 ): Promise<unknown[]> => {
     return runAndWait(operations, waitedEvents, timeout, Promise.race.bind(Promise))
-}
-
-/**
- * Run functions and wait conditions to become true by re-evaluating every `retryInterval` milliseconds. Returns a promise created with Promise.all() 
- * and waitForCondition() calls. Calls the functions after creating the promise.
- * 
- * @param operations function(s) to call
- * @param conditions condition(s) to be evaluated; condition functions should return boolean or Promise<boolean> and have
- * no side-effects.
- * @param timeout amount of time in milliseconds to wait for
- * @param retryInterval how often, in milliseconds, to re-evaluate condition
- * @param onTimeoutContext evaluated only on timeout. Used to associate human-friendly textual context to error.
- * @returns {Promise<unknown[]>} resolves immediately if
- * conditions evaluate to true on a retry attempt within timeout. If timeout
- * is reached with conditionFn never evaluating to true, rejects.
- */
-export const runAndWaitForConditions = async (
-    operations: (() => void) | ((() => void)[]), 
-    conditions: (() => (boolean | Promise<boolean>)) | (() => (boolean | Promise<boolean>)) [],
-    timeout = 5000,
-    retryInterval = 100,
-    onTimeoutContext?: () => string
-): Promise<unknown[]> => {
-    const ops = Array.isArray(operations) ? operations : [operations]
-    const conds = Array.isArray(conditions) ? conditions : [conditions]
-    const promise = Promise.all(conds.map((condition) => waitForCondition(
-        condition,
-        timeout,
-        retryInterval,
-        undefined,
-        onTimeoutContext
-    )))
-    ops.forEach((op) => { op() })
-    return promise
 }
 
 /**
@@ -129,8 +96,8 @@ export const runAndWaitForConditions = async (
  * @returns {Array<Event>} array that is pushed to every time emitter emits an event that
  * is defined in `events`
  */
-export const eventsToArray = (emitter: EventEmitter, events: ReadonlyArray<Event>): Event[] => {
-    const array: Array<Event> = []
+export const eventsToArray = (emitter: EventEmitter, events: readonly Event[]): Event[] => {
+    const array: Event[] = []
     events.forEach((e) => {
         emitter.on(e, () => array.push(e))
     })
@@ -145,8 +112,8 @@ export const eventsToArray = (emitter: EventEmitter, events: ReadonlyArray<Event
  * @returns {Array<[Event, ...any]>} array that is pushed to every time emitter emits an event that
  * is defined in `events`, includes event arguments
  */
-export const eventsWithArgsToArray = (emitter: EventEmitter, events: ReadonlyArray<Event>): Array<[Event, ...any]> => {
-    const array: Array<[Event, ...any]> = []
+export const eventsWithArgsToArray = (emitter: EventEmitter, events: readonly Event[]): [Event, ...any][] => {
+    const array: [Event, ...any][] = []
     events.forEach((e) => {
         emitter.on(e, (...args) => array.push([e, ...args]))
     })
@@ -190,7 +157,7 @@ export function randomEthereumAddress(): EthereumAddress {
 }
 
 export const randomUserId = (): UserID => {
-    return randomEthereumAddress()
+    return toUserId(randomBytes(random(10, 40)))
 }
 
 // eslint-disable-next-line no-underscore-dangle
@@ -317,7 +284,7 @@ export class Queue<T> {
     }
 
     async pop(timeout?: number): Promise<T> {
-        await waitForCondition(() => this.items.length > 0, timeout)
+        await until(() => this.items.length > 0, timeout)
         return this.items.shift()!
     }
 

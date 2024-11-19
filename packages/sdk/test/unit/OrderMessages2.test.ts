@@ -1,5 +1,5 @@
 import { randomEthereumAddress, randomUserId } from '@streamr/test-utils'
-import { StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toStreamID, wait, waitForCondition, toUserId } from '@streamr/utils'
+import { ChangeFieldType, StreamPartID, StreamPartIDUtils, UserID, hexToBinary, toStreamID, wait, until } from '@streamr/utils'
 import { range, shuffle } from 'lodash'
 import { ResendRangeOptions } from '../../src/subscribe/Resends'
 import { OrderMessages } from '../../src/subscribe/ordering/OrderMessages'
@@ -49,7 +49,7 @@ function intoChunks<T>(arr: readonly T[], chunkSize: number): T[][] {
     return chunks
 }
 
-function formChainOfMessages(publisherId: UserID): Array<MessageInfo> {
+function formChainOfMessages(publisherId: UserID): MessageInfo[] {
     const chainOfMessages: MessageInfo[] = [{
         publisherId,
         timestamp: 1,
@@ -146,8 +146,11 @@ describe.skip('OrderMessages2', () => {
             async () => [randomEthereumAddress()],
             onUnfillableGap,
             {
-                resend: (_streamPartId: StreamPartID, options: ResendRangeOptions ): Promise<PushPipeline<StreamMessage>> => {
-                    return gapHandler(options.from.timestamp as number, options.to.timestamp as number, toUserId(options.publisherId!))
+                resend: (
+                    _: StreamPartID,
+                    options: ChangeFieldType<ResendRangeOptions, 'publisherId', UserID>
+                ): Promise<PushPipeline<StreamMessage>> => {
+                    return gapHandler(options.from.timestamp as number, options.to.timestamp as number, options.publisherId)
                 }
             } as any,
             {
@@ -193,7 +196,7 @@ describe.skip('OrderMessages2', () => {
         }()
         await orderMessages.addMessages(producer)
 
-        await waitForCondition(() => PUBLISHER_IDS.every((publisherId) => {
+        await until(() => PUBLISHER_IDS.every((publisherId) => {
             return expected[publisherId].length === actual[publisherId].length
         }), 60 * 1000)
         expect(onUnfillableGap).toHaveBeenCalledTimes(totalUnfillableGaps)

@@ -3,7 +3,7 @@ import type { Operator, Sponsorship } from '@streamr/network-contracts'
 import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { waitForCondition } from '@streamr/utils'
+import { until } from '@streamr/utils'
 import { Contract, Wallet, formatEther, parseEther } from 'ethers'
 import { createClient, createTestStream, startBroker } from '../utils'
 
@@ -145,8 +145,8 @@ describe('profit', () => {
                 }
             }
         })
-        await waitForCondition(async () => !(await sponsorshipContract.isFunded()), 60 * 1000)
-        await waitForCondition(async () => {
+        await until(async () => !(await sponsorshipContract.isFunded()), 60 * 1000)
+        await until(async () => {
             const operatorValue = (await getBalances()).operatorContract
             return (operatorValue === TOTAL_PROFIT)
         })

@@ -6,9 +6,7 @@ import KBucket from 'k-bucket'
 import { LockID } from '../connection/ConnectionLockStates'
 import { ConnectionLocker } from '../connection/ConnectionManager'
 import { DhtAddress, DhtAddressRaw, toNodeId, toDhtAddressRaw } from '../identifiers'
-import {
-    PeerDescriptor
-} from '../../generated/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../generated/packages/dht/protos/PeerDescriptor'
 import { DhtNodeRpcRemote } from './DhtNodeRpcRemote'
 import { RandomContactList } from './contact/RandomContactList'
 import { RingContactList } from './contact/RingContactList'
@@ -266,7 +264,7 @@ export class PeerManager extends EventEmitter<PeerManagerEvents> {
         return this.neighbors.count()
     }
 
-    getNeighbors(): ReadonlyArray<DhtNodeRpcRemote> {
+    getNeighbors(): readonly DhtNodeRpcRemote[] {
         return this.neighbors.toArray()
     }
 

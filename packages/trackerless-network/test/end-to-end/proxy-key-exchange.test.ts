@@ -2,6 +2,7 @@ import { randomUserId } from '@streamr/test-utils'
 import {
     StreamPartIDUtils,
     hexToBinary,
+    toUserIdRaw,
     waitForEvent3
 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
@@ -70,14 +71,14 @@ describe('proxy group key exchange', () => {
                 streamPartition: StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
                 timestamp: Date.now(),
                 sequenceNumber: 0,
-                publisherId: hexToBinary(subscriberUserId),
+                publisherId: toUserIdRaw(subscriberUserId),
                 messageChainId: '0'
             },
             body: {
                 oneofKind: 'groupKeyRequest' as const,
                 groupKeyRequest: {
                     requestId: 'requestId',
-                    recipientId: hexToBinary(publisherUserId),
+                    recipientId: toUserIdRaw(publisherUserId),
                     rsaPublicKey: new Uint8Array(),
                     groupKeyIds: ['mock']
                 }
@@ -102,14 +103,14 @@ describe('proxy group key exchange', () => {
                 streamPartition: StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
                 timestamp: Date.now(),
                 sequenceNumber: 0,
-                publisherId: hexToBinary(publisherUserId),
+                publisherId: toUserIdRaw(publisherUserId),
                 messageChainId: '0'
             },
             body: {
                 oneofKind: 'groupKeyResponse' as const,
                 groupKeyResponse: {
                     requestId: 'requestId',
-                    recipientId: hexToBinary(publisherUserId),
+                    recipientId: toUserIdRaw(publisherUserId),
                     groupKeys: []
                 }
             },

@@ -54,7 +54,7 @@ export const createBroker = async (configWithoutDefaults: Config): Promise<Broke
                 httpServer = await startHttpServer(httpServerEndpoints, config.httpServer)
             }
             const nodeId = await streamrClient.getNodeId()
-            const brokerAddress = await streamrClient.getAddress()
+            const brokerAddress = toEthereumAddress(await streamrClient.getUserId())
             const mnemonic = generateMnemonicFromAddress(toEthereumAddress(brokerAddress))
 
             logger.info(`Welcome to the Streamr Network. Your node's generated name is ${mnemonic}.`)

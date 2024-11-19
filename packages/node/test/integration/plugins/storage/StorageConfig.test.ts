@@ -9,7 +9,7 @@ import {
     startStorageNode
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
-import { waitForCondition } from '@streamr/utils'
+import { until } from '@streamr/utils'
 
 jest.setTimeout(30000)
 
@@ -55,11 +55,11 @@ describe('StorageConfig', () => {
     })
 
     it('when client publishes a message, it is written to the store', async () => {
-        await stream.addToStorageNode(storageNodeAccount.address)
+        await stream.addToStorageNode(storageNodeAccount.address, { wait: true })
         const publishMessage = await client.publish(stream.id, {
             foo: 'bar'
         })
-        await waitForCondition(async () => {
+        await until(async () => {
             const result = await cassandraClient.execute('SELECT COUNT(*) FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
             return (result.first().count > 0)
         })

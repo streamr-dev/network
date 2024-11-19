@@ -25,11 +25,11 @@ export class Bucket {
         maxRecordCount: number,
         keepAliveSeconds: number
     ) {
-        if (!id || !id.length) {
+        if (!id?.length) {
             throw new TypeError('id must be not empty string')
         }
 
-        if (!streamId || !streamId.length) {
+        if (!streamId?.length) {
             throw new TypeError('streamId must be not empty string')
         }
 

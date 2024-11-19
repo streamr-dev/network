@@ -2,16 +2,19 @@ import 'reflect-metadata'
 
 import { fastPrivateKey, fetchPrivateKeyWithGas } from '@streamr/test-utils'
 import {
+    DEFAULT_PARTITION_COUNT,
     Logger,
     MAX_PARTITION_COUNT,
+    merge,
     StreamPartID,
-    StreamPartIDUtils, UserID, merge,
+    StreamPartIDUtils,
+    until,
+    UserID,
     utf8ToBinary,
-    wait,
-    waitForCondition
+    wait
 } from '@streamr/utils'
 import crypto from 'crypto'
-import { Wallet } from 'ethers'
+import { id, Wallet } from 'ethers'
 import { once } from 'events'
 import express, { Request, Response } from 'express'
 import { mock } from 'jest-mock-extended'
@@ -24,7 +27,8 @@ import { StreamrClientConfig } from '../../src/Config'
 import { CONFIG_TEST } from '../../src/ConfigTest'
 import { DestroySignal } from '../../src/DestroySignal'
 import { PersistenceManager } from '../../src/PersistenceManager'
-import { Stream, StreamMetadata } from '../../src/Stream'
+import { Stream } from '../../src/Stream'
+import { StreamMetadata } from '../../src/StreamMetadata'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamRegistry } from '../../src/contracts/StreamRegistry'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -62,13 +66,13 @@ const getTestName = (module: NodeModule): string => {
     return (groups !== null) ? groups[1] : moduleFilename
 }
 
-const randomTestRunId = process.pid != null ? process.pid : crypto.randomBytes(4).toString('hex')
+const randomTestRunId = process.pid ?? crypto.randomBytes(4).toString('hex')
 
 export const createRelativeTestStreamId = (module: NodeModule, suffix?: string): string => {
     return counterId(`/test/${randomTestRunId}/${getTestName(module)}${(suffix !== undefined) ? '-' + suffix : ''}`, '-')
 }
 
-export const createTestStream = async (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamMetadata>): Promise<Stream> => {
+export const createTestStream = async (streamrClient: StreamrClient, module: NodeModule, props?: StreamMetadata): Promise<Stream> => {
     const stream = await streamrClient.createStream({
         id: createRelativeTestStreamId(module),
         ...props
@@ -84,7 +88,7 @@ export const getCreateClient = (
 
     return async function createClient(opts: any = {}, parentContainer?: DependencyContainer) {
         let key
-        if (opts.auth && opts.auth.privateKey) {
+        if (opts.auth?.privateKey) {
             key = opts.auth.privateKey
         } else {
             key = await fetchPrivateKeyWithGas()
@@ -153,7 +157,7 @@ export const MOCK_CONTENT = utf8ToBinary(JSON.stringify({}))
 
 export const getLocalGroupKeyStore = (ownerId: UserID): LocalGroupKeyStore => {
     const authentication = {
-        getAddress: () => ownerId
+        getUserId: () => ownerId
     } as any
     const loggerFactory = mockLoggerFactory()
     return new LocalGroupKeyStore(
@@ -185,10 +189,8 @@ export const createStreamRegistry = (opts?: {
     isStreamSubscriber?: boolean
 }): StreamRegistry => {
     return {
-        getStream: async () => ({
-            getMetadata: () => ({
-                partitions: opts?.partitionCount ?? 1
-            })
+        getStreamMetadata: async () => ({
+            partitions: opts?.partitionCount ?? DEFAULT_PARTITION_COUNT
         }),
         hasPublicSubscribePermission: async () => {
             return opts?.isPublicStream ?? false
@@ -199,7 +201,7 @@ export const createStreamRegistry = (opts?: {
         isStreamSubscriber: async () => {
             return opts?.isStreamSubscriber ?? true
         },
-        clearStreamCache: () => {}
+        invalidatePermissionCaches: () => {}
     } as any
 }
 
@@ -242,7 +244,7 @@ export const createGroupKeyQueue = async (authentication: Authentication, curren
 }
 
 export const waitForCalls = async (mockFunction: jest.Mock<any>, n: number): Promise<void> => {
-    await waitForCondition(() => mockFunction.mock.calls.length >= n, 1000, 10, undefined, () => {
+    await until(() => mockFunction.mock.calls.length >= n, 1000, 10, undefined, () => {
         return `Timeout while waiting for calls: got ${mockFunction.mock.calls.length} out of ${n}`
     })
 }
@@ -315,4 +317,14 @@ export const readUtf8ExampleIndirectly = async (): Promise<string> => {
             })
         })
     })
+}
+
+const ETHEREUM_FUNCTION_SELECTOR_LENGTH = 10  // 0x + 4 bytes
+
+export const formEthereumFunctionSelector = (methodSignature: string): string => {
+    return id(methodSignature).substring(0, ETHEREUM_FUNCTION_SELECTOR_LENGTH)
+}
+
+export const parseEthereumFunctionSelectorFromCallData = (data: string): string => {
+    return data.substring(0, ETHEREUM_FUNCTION_SELECTOR_LENGTH)
 }

@@ -12,7 +12,7 @@ interface Options {
 export class GroupKeyResponse {
     readonly requestId: string
     readonly recipient: UserID
-    readonly encryptedGroupKeys: ReadonlyArray<EncryptedGroupKey>
+    readonly encryptedGroupKeys: readonly EncryptedGroupKey[]
 
     constructor({ requestId, recipient, encryptedGroupKeys }: Options) {
         this.requestId = requestId

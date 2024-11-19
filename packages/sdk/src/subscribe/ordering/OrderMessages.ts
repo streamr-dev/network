@@ -3,7 +3,6 @@ import { StrictStreamrClientConfig } from '../../Config'
 import { StreamMessage } from '../../protocol/StreamMessage'
 import { Mapping } from '../../utils/Mapping'
 import { PushBuffer } from '../../utils/PushBuffer'
-import { CacheAsyncFn } from '../../utils/caches'
 import { Resends } from '../Resends'
 import { GapFiller } from './GapFiller'
 import { Gap, OrderedMessageChain, OrderedMessageChainContext } from './OrderedMessageChain'
@@ -34,10 +33,7 @@ const createMessageChain = (
     const gapFiller = new GapFiller({
         chain,
         resend,
-        // TODO maybe caching should be configurable? (now uses 30 min maxAge, which is the default of CacheAsyncFn)
-        // - maybe the caching should be done at application level, e.g. with a new CacheStreamStorageRegistry class?
-        // - also not that this is a cache which contains just one item (as streamPartId always the same)
-        getStorageNodeAddresses: CacheAsyncFn(() => getStorageNodes(StreamPartIDUtils.getStreamID(context.streamPartId))),
+        getStorageNodeAddresses: () => getStorageNodes(StreamPartIDUtils.getStreamID(context.streamPartId)),
         strategy: config.gapFillStrategy,
         initialWaitTime: config.gapFillTimeout,
         retryWaitTime: config.retryResendAfter,
