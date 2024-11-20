@@ -42,7 +42,9 @@ Changes before Tatum release are not documented in this file.
   - use `StreamrClient#setStreamMetadata()` and `Stream#setMetadata()` instead
   - both methods overwrite metadata instead of merging it
 - **BREAKING CHANGE:** Methods `Stream#getMetadata()` and `Stream#getStreamParts()` are async (https://github.com/streamr-dev/network/pull/2883)
-- Change storage node address caching (https://github.com/streamr-dev/network/pull/2877, https://github.com/streamr-dev/network/pull/2878)
+- Caching changes:
+  - storage node addresses (https://github.com/streamr-dev/network/pull/2877, https://github.com/streamr-dev/network/pull/2878)
+  - stream metadata and permissions (https://github.com/streamr-dev/network/pull/2889)
 - Upgrade `StreamRegistry` from v4 to v5 (https://github.com/streamr-dev/network/pull/2780)
 - Network-level changes:
   - avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801) 

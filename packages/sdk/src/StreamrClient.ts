@@ -363,7 +363,7 @@ export class StreamrClient {
         // Check if the stream exists by querying its metadata. Throws an error if no metadata is found,
         // indicating the stream doesn't exist. As a side-effect this populates StreamRegistry's metadata
         // cache for future use, such as stream.getPartitionCount() calls.
-        await this.streamRegistry.getStreamMetadata(streamId, false)
+        await this.streamRegistry.getStreamMetadata(streamId)
         return new Stream(streamId, this)
     }
 
@@ -519,7 +519,7 @@ export class StreamrClient {
      */
     async isStreamPublisher(streamIdOrPath: string, userId: HexString): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.streamRegistry.isStreamPublisher(streamId, toUserId(userId), false)
+        return this.streamRegistry.isStreamPublisher(streamId, toUserId(userId))
     }
 
     /**
@@ -527,7 +527,7 @@ export class StreamrClient {
      */
     async isStreamSubscriber(streamIdOrPath: string, userId: HexString): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.streamRegistry.isStreamSubscriber(streamId, toUserId(userId), false)
+        return this.streamRegistry.isStreamSubscriber(streamId, toUserId(userId))
     }
 
     // --------------------------------------------------------------------------------------------
