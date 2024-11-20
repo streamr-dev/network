@@ -14,7 +14,7 @@ const POLL_RESULT = Object.freeze({
 
 describe(StoragePoller, () => {
     let getStoredStreams: jest.Mock<Promise<{ streams: Stream[], blockNumber: number }>, [nodeAddress: EthereumAddress]>
-    let onNewSnapshot: jest.Mock<void, [streams: Stream[], block: number]>
+    let onNewSnapshot: jest.Mock<Promise<void>, [streams: Stream[], block: number]>
     let stubClient: Pick<StreamrClient, 'getStoredStreams'>
     let poller: StoragePoller
     let abortController: AbortController

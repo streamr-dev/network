@@ -10,13 +10,13 @@ export class StoragePoller {
     private readonly clusterId: string
     private readonly pollInterval: number
     private readonly streamrClient: StreamrClient
-    private readonly onNewSnapshot: (streams: Stream[], block: number) => void
+    private readonly onNewSnapshot: (streams: Stream[], block: number) => Promise<void>
 
     constructor(
         clusterId: string,
         pollInterval: number,
         streamrClient: StreamrClient,
-        onNewSnapshot: (streams: Stream[], block: number) => unknown
+        onNewSnapshot: (streams: Stream[], block: number) => Promise<void>
     ) {
         this.clusterId = clusterId
         this.pollInterval = pollInterval
@@ -39,7 +39,7 @@ export class StoragePoller {
             foundStreams: streams.length,
             blockNumber
         })
-        this.onNewSnapshot(streams, blockNumber)
+        await this.onNewSnapshot(streams, blockNumber)
     }
 
     private async tryPoll(): Promise<void> {
