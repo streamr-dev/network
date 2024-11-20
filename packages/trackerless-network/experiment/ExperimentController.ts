@@ -226,7 +226,7 @@ export class ExperimentController {
         joinedNodes.push(entryPoint)
         const nodes = Array.from(this.clients.keys()).filter((id) => id !== entryPoint)
         for (const node of nodes) {
-            logger.info('node joining', { node })
+            logger.info('node joining', { node, joinedNodes: joinedNodes.length })
             const randomEntryPoint = sample(joinedNodes)!
             const message = ExperimentServerMessage.create({
                 instruction: {
