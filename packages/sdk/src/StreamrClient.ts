@@ -357,7 +357,7 @@ export class StreamrClient {
      */
     async getStream(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        const metadata = await this.streamRegistry.getStreamMetadata(streamId, false)
+        const metadata = await this.streamRegistry.getStreamMetadata(streamId)
         return new Stream(streamId, metadata, this)
     }
 
@@ -501,7 +501,7 @@ export class StreamrClient {
      */
     async isStreamPublisher(streamIdOrPath: string, userId: HexString): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.streamRegistry.isStreamPublisher(streamId, toUserId(userId), false)
+        return this.streamRegistry.isStreamPublisher(streamId, toUserId(userId))
     }
 
     /**
@@ -509,7 +509,7 @@ export class StreamrClient {
      */
     async isStreamSubscriber(streamIdOrPath: string, userId: HexString): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.streamRegistry.isStreamSubscriber(streamId, toUserId(userId), false)
+        return this.streamRegistry.isStreamSubscriber(streamId, toUserId(userId))
     }
 
     // --------------------------------------------------------------------------------------------
