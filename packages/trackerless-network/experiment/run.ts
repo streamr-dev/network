@@ -190,6 +190,7 @@ const run = async () => {
         const entryPointId = await controller.startEntryPoint()
         logger.info('entry point started', { entryPointId })
         await controller.startNodes(entryPointId, false)
+        logger.info('all nodes started')
         await controller.runJoinExperiment(entryPointId)
         logger.info('experiment done')
     } else if (experiment === 'propagation') { 

@@ -114,10 +114,11 @@ export class ExperimentController {
     }
 
     async startNodes(entryPoint: string, join = true, storeRoutingPaths = false): Promise<void> {
+        logger.info('starting nodes')
         const entryPointPeerDescriptor = this.clients.get(entryPoint)!.peerDescriptor!
         const nodes = Array.from(this.clients.entries()).filter(([id]) => id !== entryPoint).map(([_, value]) => value)
 
-        await this.runBatchedOperation(nodes, 10, async (node) => {
+        await this.runBatchedOperation(nodes, 8, async (node) => {
             const instruction = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'start',
@@ -130,7 +131,7 @@ export class ExperimentController {
                 }
             })
             node!.socket.send(ExperimentServerMessage.toBinary(instruction))
-        }, (current) => current === Array.from(this.clients.values()).filter((node) => node.peerDescriptor !== undefined).length)
+        }, (current) => current + 1 === Array.from(this.clients.values()).filter((node) => node.peerDescriptor !== undefined).length)
     }
 
     async runJoinExperiment(entryPointId: string): Promise<void> {
