@@ -526,7 +526,7 @@ export class StreamRegistry {
     }
 
     isStreamSubscriber(streamId: StreamID, userId: UserID): Promise<boolean> {
-        return this.publisherCache.get(streamId, userId)
+        return this.subscriberCache.get(streamId, userId)
     }
 
     hasPublicSubscribePermission(streamId: StreamID): Promise<boolean> {
