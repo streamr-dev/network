@@ -56,7 +56,7 @@ export class ExperimentNodeWrapper {
     }
 
     async startNode(entryPoints: PeerDescriptor[], asEntryPoint: boolean, join: boolean, storeRoutingPaths: boolean, nodeId?: string) {
-        logger.info('starting node', { })
+        logger.info('starting node', { storeRoutingPaths: storeRoutingPaths })
         let configPeerDescriptor: PeerDescriptor | undefined
         if (asEntryPoint) {
             configPeerDescriptor = {

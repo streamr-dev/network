@@ -118,7 +118,7 @@ export class ExperimentController {
         const entryPointPeerDescriptor = this.clients.get(entryPoint)!.peerDescriptor!
         const nodes = Array.from(this.clients.entries()).filter(([id]) => id !== entryPoint).map(([_, value]) => value)
 
-        await this.runBatchedOperation(nodes, 8, async (node) => {
+        await this.runBatchedOperation(nodes, 24, async (node) => {
             const instruction = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'start',
@@ -169,7 +169,7 @@ export class ExperimentController {
     async joinStreamPart(streamPartId: StreamPartID): Promise<void> {
         this.instructionsCompleted = 0
         const nodes = Array.from(this.clients.values())
-        await this.runBatchedOperation(nodes, 8, async (node) => {
+        await this.runBatchedOperation(nodes, 16, async (node) => {
             const message = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'joinStreamPart',
