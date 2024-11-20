@@ -11,8 +11,8 @@ export class StorageEventListener {
     private readonly clusterId: EthereumAddress
     private readonly streamrClient: StreamrClient
     private readonly onEvent: (stream: Stream, type: 'added' | 'removed', block: number) => Promise<void>
-    private readonly onAddToStorageNode: (event: StorageNodeAssignmentEvent) => unknown
-    private readonly onRemoveFromStorageNode: (event: StorageNodeAssignmentEvent) => unknown
+    private readonly onAddToStorageNode: (event: StorageNodeAssignmentEvent) => void
+    private readonly onRemoveFromStorageNode: (event: StorageNodeAssignmentEvent) => void
 
     constructor(
         clusterId: EthereumAddress,
@@ -26,7 +26,7 @@ export class StorageEventListener {
         this.onRemoveFromStorageNode = (event: StorageNodeAssignmentEvent) => this.handleEvent(event, 'removed')
     }
 
-    private async handleEvent(event: StorageNodeAssignmentEvent, type: 'added' | 'removed') {
+    private async handleEvent(event: StorageNodeAssignmentEvent, type: 'added' | 'removed'): Promise<void> {
         if (event.nodeAddress !== this.clusterId) {
             return
         }
