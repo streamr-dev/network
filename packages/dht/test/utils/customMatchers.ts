@@ -15,8 +15,8 @@ declare global {
     }
 }
 
-const formErrorMessage = (description: string, expected: string | number | undefined, actual: string | number | undefined): string => {
-    return `PeerDescriptor ${description} values don't match:\nExpected: ${printExpected(expected)}\nReceived: ${printReceived(actual)}`
+const formErrorMessage = (field: keyof PeerDescriptor, expected: string | number | undefined, actual: string | number | undefined): string => {
+    return `PeerDescriptor ${field} values don't match:\nExpected: ${printExpected(expected)}\nReceived: ${printReceived(actual)}`
 }
 
 const toEqualPeerDescriptor = (
@@ -51,7 +51,7 @@ const toEqualPeerDescriptor = (
 }
 
 const expectEqualConnectivityMethod = (
-    description: string,
+    field: keyof PeerDescriptor,
     method1: ConnectivityMethod | undefined,
     method2: ConnectivityMethod | undefined,
     messages: string[]
@@ -62,7 +62,7 @@ const expectEqualConnectivityMethod = (
             : undefined
     }
     if (!isEqual(method1, method2)) {
-        messages.push(formErrorMessage(description, toOutput(method1), toOutput(method2)))
+        messages.push(formErrorMessage(field, toOutput(method1), toOutput(method2)))
     }
 }
 
