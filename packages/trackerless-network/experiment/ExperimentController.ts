@@ -90,7 +90,7 @@ export class ExperimentController {
                 onConditionFn()
             }
             return this.clients.size === this.nodeCount 
-        }, 30 * 60 * 1000, 10000)
+        }, 20 * 60 * 1000, 10000)
         
     }
 
@@ -115,8 +115,9 @@ export class ExperimentController {
 
     async startNodes(entryPoint: string, join = true, storeRoutingPaths = false): Promise<void> {
         const entryPointPeerDescriptor = this.clients.get(entryPoint)!.peerDescriptor!
-        const nodes = Array.from(this.clients.keys()).filter((id) => id !== entryPoint)
-        await Promise.all(nodes.map((id) => {
+        const nodes = Array.from(this.clients.entries()).filter(([id]) => id !== entryPoint).map(([_, value]) => value)
+
+        await this.runBatchedOperation(nodes, 10, async (node) => {
             const instruction = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'start',
@@ -128,9 +129,8 @@ export class ExperimentController {
                     }
                 }
             })
-            this.clients.get(id)!.socket.send(ExperimentServerMessage.toBinary(instruction))
-        }))
-        await waitForCondition(() => Array.from(this.clients.values()).every((node) => node.peerDescriptor !== undefined), 30000, 1000)
+            node!.socket.send(ExperimentServerMessage.toBinary(instruction))
+        }, (current) => current === Array.from(this.clients.values()).filter((node) => node.peerDescriptor !== undefined).length)
     }
 
     async runJoinExperiment(entryPointId: string): Promise<void> {
@@ -275,7 +275,7 @@ export class ExperimentController {
             })
             node.socket.send(ExperimentServerMessage.toBinary(message))
         }))
-        await waitForCondition(() => this.resultsReceived.size === this.nodeCount, 3 * 60 * 1000, 1000)
+        await waitForCondition(() => this.resultsReceived.size === this.nodeCount, 10 * 60 * 1000, 1000)
     }
 
     async stop(): Promise<void> {
