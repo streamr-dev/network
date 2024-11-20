@@ -16,7 +16,7 @@ declare global {
 }
 
 const formErrorMessage = (description: string, expected: string | number | undefined, actual: string | number | undefined): string => {
-    return `${description}\nExpected: ${printExpected(expected)}\nReceived: ${printReceived(actual)}`
+    return `PeerDescriptor ${description} values don't match:\nExpected: ${printExpected(expected)}\nReceived: ${printReceived(actual)}`
 }
 
 const toEqualPeerDescriptor = (
