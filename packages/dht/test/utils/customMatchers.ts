@@ -32,7 +32,7 @@ const toEqualPeerDescriptor = (
         messages.push(formErrorMessage('type', typeNames[expected.type], typeNames[actual.type]))
     }
     expectEqualConnectivityMethod('udp', expected.udp, actual.udp, messages)
-    expectEqualConnectivityMethod('tpc', expected.tcp, actual.tcp, messages)
+    expectEqualConnectivityMethod('tcp', expected.tcp, actual.tcp, messages)
     expectEqualConnectivityMethod('websocket', expected.websocket, actual.websocket, messages)
     if (expected.region !== actual.region) {
         messages.push(formErrorMessage('region', expected?.region, actual?.region))
