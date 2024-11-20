@@ -45,7 +45,7 @@ const toEqualPeerDescriptor = (
     } else {
         return {
             pass: true,
-            message: () => `Expected not to throw ${printReceived('StreamrClientError')}`
+            message: () => 'PeerDescriptors are equal'
         }
     }
 }
