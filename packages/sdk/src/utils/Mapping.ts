@@ -14,6 +14,7 @@ interface ValueWrapper<V> {
 export class Mapping<K extends (string | number)[], V> {
 
     private readonly delegate: Map<string, ValueWrapper<V>> = new Map()
+    private readonly pendingPromises: Map<string, Promise<V>> = new Map()
     private readonly valueFactory: (...args: K) => Promise<V>
 
     constructor(valueFactory: (...args: K) => Promise<V>) {
@@ -22,13 +23,25 @@ export class Mapping<K extends (string | number)[], V> {
 
     async get(...args: K): Promise<V> {
         const key = formLookupKey(...args)
-        let valueWrapper = this.delegate.get(key)
-        if (valueWrapper === undefined) {
-            const value = await this.valueFactory(...args)
-            valueWrapper = { value }
-            this.delegate.set(key, valueWrapper)
+        const pendingPromises = this.pendingPromises.get(key)
+        if (pendingPromises !== undefined) {
+            return await pendingPromises
+        } else {
+            let valueWrapper = this.delegate.get(key)
+            if (valueWrapper === undefined) {
+                const promise = this.valueFactory(...args)
+                this.pendingPromises.set(key, promise)
+                let value
+                try {
+                    value = await promise
+                } finally {
+                    this.pendingPromises.delete(key)
+                }
+                valueWrapper = { value }
+                this.delegate.set(key, valueWrapper)
+            }
+            return valueWrapper.value
         }
-        return valueWrapper.value
     }
 
     values(): V[] {
