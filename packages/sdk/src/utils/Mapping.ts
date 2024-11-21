@@ -13,8 +13,8 @@ interface ValueWrapper<V> {
  */
 export class Mapping<K extends (string | number)[], V> {
 
-    private delegate: Map<string, ValueWrapper<V>> = new Map()
-    private valueFactory: (...args: K) => Promise<V>
+    private readonly delegate: Map<string, ValueWrapper<V>> = new Map()
+    private readonly valueFactory: (...args: K) => Promise<V>
 
     constructor(valueFactory: (...args: K) => Promise<V>) {
         this.valueFactory = valueFactory
