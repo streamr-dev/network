@@ -44,6 +44,7 @@ message Start {
     bool join = 3;
     optional string nodeId = 4;
     bool storeRoutingPaths = 5;
+    bool storeMessagePaths = 6;
 }
 
 message Started {

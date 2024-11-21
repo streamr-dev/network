@@ -74,6 +74,7 @@ export interface ContentDeliveryManagerOptions {
     rpcRequestTimeout?: number
     neighborUpdateInterval?: number
     experimentId?: string
+    includeRouteToMessages?: boolean
 }
 
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): DhtAddress => {
@@ -169,7 +170,7 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         const node = this.createContentDeliveryLayerNode(
             streamPartId,
             discoveryLayerNode, 
-            () => peerDescriptorStoreManager.isLocalNodeStored()
+            () => peerDescriptorStoreManager.isLocalNodeStored(),
         )
         const streamPartReconnect = new StreamPartReconnect(discoveryLayerNode, peerDescriptorStoreManager)
         const timeToData: TimeToData = {
@@ -292,7 +293,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             rpcRequestTimeout: this.options.rpcRequestTimeout,
             neighborUpdateInterval: this.options.neighborUpdateInterval,
             isLocalNodeEntryPoint,
-            experimentId: this.options.experimentId
+            experimentId: this.options.experimentId,
+            includeRouteToMessages: this.options.includeRouteToMessages
         })
     }
 

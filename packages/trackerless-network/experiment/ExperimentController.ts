@@ -94,7 +94,7 @@ export class ExperimentController {
         
     }
 
-    async startEntryPoint(storeRoutingPaths = false): Promise<string> {
+    async startEntryPoint(storeRoutingPaths = false, storeMessagePaths = false): Promise<string> {
         const entryPoint = sample(Array.from(this.clients.keys()))!
         const instruction = ExperimentServerMessage.create({
             instruction: {
@@ -104,7 +104,8 @@ export class ExperimentController {
                     asEntryPoint: true,
                     nodeId: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
                     join: true,
-                    storeRoutingPaths
+                    storeRoutingPaths,
+                    storeMessagePaths
                 }
             }
         })
@@ -113,7 +114,7 @@ export class ExperimentController {
         return entryPoint
     }
 
-    async startNodes(entryPoint: string, join = true, storeRoutingPaths = false): Promise<void> {
+    async startNodes(entryPoint: string, join = true, storeRoutingPaths = false, storeMessagePaths = false): Promise<void> {
         logger.info('starting nodes')
         const entryPointPeerDescriptor = this.clients.get(entryPoint)!.peerDescriptor!
         const nodes = Array.from(this.clients.entries()).filter(([id]) => id !== entryPoint).map(([_, value]) => value)
@@ -126,7 +127,8 @@ export class ExperimentController {
                         entryPoints: [entryPointPeerDescriptor],
                         asEntryPoint: false,
                         join,
-                        storeRoutingPaths
+                        storeRoutingPaths,
+                        storeMessagePaths
                     }
                 }
             })

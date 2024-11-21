@@ -66,6 +66,7 @@ export interface StrictContentDeliveryLayerNodeOptions {
     rpcRequestTimeout?: number
 
     experimentId?: string
+    includeRouteToMessages?: boolean
 }
 
 const RANDOM_NODE_VIEW_SIZE = 20
@@ -363,7 +364,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
         if (!previousNode) {
             markAndCheckDuplicate(this.duplicateDetectors, msg.messageId!, msg.previousMessageRef)
         } else {
-            if (msg.body.oneofKind === 'contentMessage') {
+            if (this.options.includeRouteToMessages && msg.body.oneofKind === 'contentMessage') {
                 const parsedMessage = JSON.parse(binaryToUtf8(msg.body.contentMessage.content))
                 parsedMessage.route.push({
                     id: this.options.experimentId,

@@ -197,9 +197,9 @@ const run = async () => {
         await controller.runJoinExperiment(entryPointId)
         logger.info('experiment done')
     } else if (experiment === 'propagation') { 
-        const entryPointId = await controller.startEntryPoint()
+        const entryPointId = await controller.startEntryPoint(false, true)
         logger.info('entry point started', { entryPointId })
-        await controller.startNodes(entryPointId)
+        await controller.startNodes(entryPointId, true, false, true)
         logger.info('all nodes started')
         await controller.runPropagationExperiment(entryPointId)
     } else if (experiment === 'routing') {

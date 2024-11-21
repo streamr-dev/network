@@ -141,6 +141,10 @@ export interface Start {
      * @generated from protobuf field: bool storeRoutingPaths = 5;
      */
     storeRoutingPaths: boolean;
+    /**
+     * @generated from protobuf field: bool storeMessagePaths = 6;
+     */
+    storeMessagePaths: boolean;
 }
 /**
  * @generated from protobuf message Started
@@ -335,7 +339,8 @@ class Start$Type extends MessageType<Start> {
             { no: 2, name: "asEntryPoint", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 3, name: "join", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 4, name: "nodeId", kind: "scalar", opt: true, T: 9 /*ScalarType.STRING*/ },
-            { no: 5, name: "storeRoutingPaths", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 5, name: "storeRoutingPaths", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 6, name: "storeMessagePaths", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
 }

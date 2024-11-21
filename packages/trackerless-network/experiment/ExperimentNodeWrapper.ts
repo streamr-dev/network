@@ -55,7 +55,7 @@ export class ExperimentNodeWrapper {
         await this.connect()
     }
 
-    async startNode(entryPoints: PeerDescriptor[], asEntryPoint: boolean, join: boolean, storeRoutingPaths: boolean, nodeId?: string) {
+    async startNode(entryPoints: PeerDescriptor[], asEntryPoint: boolean, join: boolean, storeRoutingPaths: boolean, storeMessagePaths: boolean, nodeId?: string) {
         logger.info('starting node', { storeRoutingPaths: storeRoutingPaths })
         let configPeerDescriptor: PeerDescriptor | undefined
         if (asEntryPoint) {
@@ -80,7 +80,8 @@ export class ExperimentNodeWrapper {
         const stack = new NetworkStack({
             layer0: layer0config,
             networkNode: {
-                experimentId: this.id
+                experimentId: this.id,
+                includeRouteToMessages: storeMessagePaths
             }
         })
         this.node = new NetworkNode(stack)
@@ -130,7 +131,7 @@ export class ExperimentNodeWrapper {
             const message = ExperimentServerMessage.fromBinary(new Uint8Array(data as ArrayBuffer))
             if (message.instruction.oneofKind === 'start') {
                 const instruction = message.instruction.start
-                setImmediate(() => this.startNode(instruction.entryPoints, instruction.asEntryPoint, instruction.join, instruction.storeRoutingPaths, instruction.nodeId))
+                setImmediate(() => this.startNode(instruction.entryPoints, instruction.asEntryPoint, instruction.join, instruction.storeRoutingPaths, instruction.storeMessagePaths, instruction.nodeId))
             } else if (message.instruction.oneofKind === 'joinExperiment') {
                 const instruction = message.instruction.joinExperiment
                 setImmediate(() => this.joinExperiment(instruction.entryPoints))
