@@ -114,8 +114,8 @@ describe('GapFiller', () => {
             )
             addMessages([1, 4])
             await expectOrderedMessages([1, 2, 3, 4])
-            expect(getStorageNodeAddresses).toBeCalledTimes(1)
-            expect(resend).toBeCalledTimes(1)
+            expect(getStorageNodeAddresses).toHaveBeenCalledTimes(1)
+            expect(resend).toHaveBeenCalledTimes(1)
             expect(resend).toHaveBeenCalledWith(
                 {
                     from: createMessage(1),
@@ -143,8 +143,8 @@ describe('GapFiller', () => {
             )
             addMessages([1, 3, 5])
             await expectOrderedMessages([1, 2, 3, 4, 5])
-            expect(getStorageNodeAddresses).toBeCalledTimes(2)
-            expect(resend).toBeCalledTimes(2)
+            expect(getStorageNodeAddresses).toHaveBeenCalledTimes(2)
+            expect(resend).toHaveBeenCalledTimes(2)
         })
 
         it('partial fill', async () => {
@@ -157,7 +157,7 @@ describe('GapFiller', () => {
             )
             addMessages([1, 5])
             await expectOrderedMessages([1, 3, 5])
-            expect(resend).toBeCalledTimes(MAX_REQUESTS_PER_GAP)
+            expect(resend).toHaveBeenCalledTimes(MAX_REQUESTS_PER_GAP)
         })
 
         it('realtime data resolves gap', async () => {
@@ -169,8 +169,8 @@ describe('GapFiller', () => {
             )
             addMessages([1, 3, 2])
             await expectOrderedMessages([1, 2, 3])
-            expect(getStorageNodeAddresses).not.toBeCalled()
-            expect(resend).not.toBeCalled()
+            expect(getStorageNodeAddresses).not.toHaveBeenCalled()
+            expect(resend).not.toHaveBeenCalled()
         })
 
         it('no storage nodes', async () => {
@@ -183,8 +183,8 @@ describe('GapFiller', () => {
             )
             addMessages([1, 3, 5])
             await expectOrderedMessages([1, 3, 5])
-            expect(getStorageNodeAddresses).toBeCalledTimes(2)
-            expect(resend).not.toBeCalled()
+            expect(getStorageNodeAddresses).toHaveBeenCalledTimes(2)
+            expect(resend).not.toHaveBeenCalled()
         })
 
         it('destroy while waiting', async () => {
@@ -197,8 +197,8 @@ describe('GapFiller', () => {
             addMessages([1, 3])
             abortController.abort()
             await expectOrderedMessages([1])
-            expect(getStorageNodeAddresses).not.toBeCalled()
-            expect(resend).not.toBeCalled()
+            expect(getStorageNodeAddresses).not.toHaveBeenCalled()
+            expect(resend).not.toHaveBeenCalled()
         })
 
         it('destroy while ongoing gap fill', async () => {

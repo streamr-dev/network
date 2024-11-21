@@ -80,8 +80,8 @@ describe(StorageConfig, () => {
         })
 
         it('stream part listeners invoked', () => {
-            expect(onStreamPartAdded).toBeCalledTimes(6)
-            expect(onStreamPartRemoved).toBeCalledTimes(0)
+            expect(onStreamPartAdded).toHaveBeenCalledTimes(6)
+            expect(onStreamPartRemoved).toHaveBeenCalledTimes(0)
             expect(onStreamPartAdded.mock.calls).toEqual([
                 [parse('stream-1#0')],
                 [parse('stream-1#1')],
@@ -123,8 +123,8 @@ describe(StorageConfig, () => {
         })
 
         it('stream part listeners invoked', () => {
-            expect(onStreamPartAdded).toBeCalledTimes(2 + 1)
-            expect(onStreamPartRemoved).toBeCalledTimes(2)
+            expect(onStreamPartAdded).toHaveBeenCalledTimes(2 + 1)
+            expect(onStreamPartRemoved).toHaveBeenCalledTimes(2)
             expect(onStreamPartAdded.mock.calls).toEqual([
                 [parse('stream-1#0')],
                 [parse('stream-1#1')],

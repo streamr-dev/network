@@ -27,7 +27,7 @@ describe('Mapping', () => {
         const mapping = new Mapping(valueFactory)
         expect(await mapping.get('foo')).toBe(undefined)
         expect(await mapping.get('foo')).toBe(undefined)
-        expect(valueFactory).toBeCalledTimes(1)
+        expect(valueFactory).toHaveBeenCalledTimes(1)
     })
 
 })
