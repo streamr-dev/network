@@ -2,7 +2,7 @@
     "extends": "../../tsconfig.jest.json",
     "compilerOptions": {
         "noEmit": true,
-        "lib": ["es2021", "dom"],
+        "lib": ["es2022", "dom"],
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "resolveJsonModule": true,

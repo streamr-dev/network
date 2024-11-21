@@ -3,7 +3,7 @@
     "compilerOptions": {
         "outDir": "dist",
         "declarationDir": "dist/types",
-        "lib": ["es2021", "dom"],
+        "lib": ["es2022", "dom"],
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "resolveJsonModule": true,
