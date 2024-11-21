@@ -27,8 +27,10 @@ describe('custom matchers', () => {
             })
 
             it('unexpected class', () => {
+                // eslint-disable-next-line @typescript-eslint/no-extraneous-class
                 class TestClass {}
                 expect(() => {
+                    // eslint-disable-next-line @typescript-eslint/only-throw-error
                     expect(() => { throw new TestClass() }).toThrowStreamrError({
                         message: 'Foobar',
                         code: 'UNSUPPORTED_OPERATION'
@@ -38,6 +40,7 @@ describe('custom matchers', () => {
 
             it('unexpected privitive', () => {
                 expect(() => {
+                    // eslint-disable-next-line @typescript-eslint/only-throw-error
                     expect(() => { throw 'mock-error' }).toThrowStreamrError({
                         message: 'Foobar',
                         code: 'UNSUPPORTED_OPERATION'
