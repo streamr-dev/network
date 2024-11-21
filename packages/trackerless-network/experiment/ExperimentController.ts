@@ -209,6 +209,7 @@ export class ExperimentController {
         await this.startPublisher(publisher, streamPartId)
         const subsribers = Array.from(this.clients.keys()).filter((id) => id !== publisher)
         for (const subscriber of subsribers) {
+            logger.info('Starting node for time to data measurement', { subscriber })
             const message = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'measureTimeToData',
