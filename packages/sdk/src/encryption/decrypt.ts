@@ -1,5 +1,5 @@
 import { DestroySignal } from '../DestroySignal'
-import { DecryptError, EncryptionUtil } from '../encryption/EncryptionUtil'
+import { createDecryptError, EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKey } from '../encryption/GroupKey'
 import { GroupKeyManager } from '../encryption/GroupKeyManager'
 import { EncryptionType, StreamMessage, StreamMessageAESEncrypted } from '../protocol/StreamMessage'
@@ -26,8 +26,7 @@ export const decrypt = async (
         if (destroySignal.isDestroyed()) {
             return streamMessage
         }
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        throw new DecryptError(streamMessage, `Could not get GroupKey ${streamMessage.groupKeyId}: ${e.message}`)
+        throw createDecryptError(`Could not get encryption key ${streamMessage.groupKeyId}`, streamMessage, e)
     }
     if (destroySignal.isDestroyed()) {
         return streamMessage

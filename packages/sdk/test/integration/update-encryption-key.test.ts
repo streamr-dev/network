@@ -2,12 +2,12 @@ import 'reflect-metadata'
 
 import { StreamPartID, StreamPartIDUtils, until } from '@streamr/utils'
 import { Message } from '../../src/Message'
-import { DecryptError } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { nextValue } from '../../src/utils/iterators'
 import { StreamrClient } from './../../src/StreamrClient'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
+import { StreamrClientError } from '../../src/StreamrClientError'
 
 /*
  * Subscriber has subscribed to a stream, and the publisher updates the encryption key for that stream.
@@ -161,7 +161,8 @@ describe('update encryption key', () => {
                 mockId: 2
             })
             await until(() => onError.mock.calls.length > 0, 10 * 1000)
-            expect(onError.mock.calls[0][0]).toBeInstanceOf(DecryptError)
+            expect(onError.mock.calls[0][0]).toBeInstanceOf(StreamrClientError)
+            expect(onError.mock.calls[0][0].code).toBe('DECRYPT_ERROR')
         }, 10 * 1000)
     })
 })

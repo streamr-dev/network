@@ -4,12 +4,12 @@ import { fastWallet } from '@streamr/test-utils'
 import { collect, toEthereumAddress, toStreamID, toUserId } from '@streamr/utils'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { DecryptError } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { createMockMessage, createRelativeTestStreamId, getLocalGroupKeyStore } from '../test-utils/utils'
+import { StreamrClientError } from '../../src/StreamrClientError'
 
 /*
  * A subscriber has some GroupKeys in the local store and reads historical data
@@ -68,7 +68,8 @@ describe('resend with existing key', () => {
         await collect(messageStream)
         expect(onError).toBeCalled()
         const error = onError.mock.calls[0][0]
-        expect(error).toBeInstanceOf(DecryptError)
+        expect(error).toBeInstanceOf(StreamrClientError)
+        expect(error.code).toBe('DECRYPT_ERROR')
     }
 
     beforeEach(async () => {

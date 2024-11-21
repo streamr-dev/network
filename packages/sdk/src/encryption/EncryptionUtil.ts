@@ -1,12 +1,10 @@
 import crypto, { CipherKey } from 'crypto'
 import { StreamMessage, StreamMessageAESEncrypted } from '../protocol/StreamMessage'
-import { StreamMessageError } from '../protocol/StreamMessageError'
 import { GroupKey } from './GroupKey'
+import { formMessageIdDescription, StreamrClientError } from '../StreamrClientError'
 
-export class DecryptError extends StreamMessageError {
-    constructor(streamMessage: StreamMessage, message = '') {
-        super(`Decrypt error: ${message}`, streamMessage)
-    }
+export const createDecryptError = (message: string, streamMessage: StreamMessage, cause?: Error): StreamrClientError => {
+    return new StreamrClientError(`${message} (messageId=${formMessageIdDescription(streamMessage.messageId)})`, 'DECRYPT_ERROR', cause)
 }
 
 export const INITIALIZATION_VECTOR_LENGTH = 16
@@ -54,7 +52,7 @@ export class EncryptionUtil {
         try {
             content = this.decryptWithAES(streamMessage.content, groupKey.data)
         } catch (err) {
-            throw new DecryptError(streamMessage, err.stack)
+            throw createDecryptError('AES decryption failed', streamMessage, err)
         }
 
         let newGroupKey: GroupKey | undefined = undefined
@@ -62,8 +60,7 @@ export class EncryptionUtil {
             try {
                 newGroupKey = groupKey.decryptNextGroupKey(streamMessage.newGroupKey)
             } catch (err) {
-                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                throw new DecryptError(streamMessage, `Could not decrypt new group key: ${err.stack}`)
+                throw createDecryptError('Could not decrypt new encryption key', streamMessage, err)
             }
         }
 
