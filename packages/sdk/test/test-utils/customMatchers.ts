@@ -1,5 +1,5 @@
 import { printExpected, printReceived } from 'jest-matcher-utils'
-import isFunction from 'lodash/isFunction'
+import { isFunction, isObject } from 'lodash'
 import { StreamrClientError, StreamrClientErrorCode } from './../../src/StreamrClientError'
 
 interface PartialStreamrClientError {
@@ -18,8 +18,8 @@ declare global {
     }
 }
 
-const formErrorMessage = (description: string, expected: string, actual: string): string => {
-    return `${description}\nExpected: ${printExpected(expected)}\nReceived: ${printReceived(actual)}`
+const formErrorMessage = (field: keyof StreamrClientError, expected: string, actual: string): string => {
+    return `StreamrClientError ${field} values don't match:\nExpected: ${printExpected(expected)}\nReceived: ${printReceived(actual)}`
 }
 
 const toThrowStreamrError = (
@@ -43,13 +43,14 @@ const toThrowStreamrError = (
 
     const messages: string[] = []
     if (!(actualError instanceof StreamrClientError)) {
-        messages.push(formErrorMessage('Class name', 'StreamrClientError', actualError.constructor.name))
+        const received = isObject(actualError) ? actualError.constructor.name : actualError
+        messages.push(`Not an instance of StreamrClientError:\nReceived: ${printReceived(received)}`)
     } else {
         if (actualError.code !== expectedError.code) {
-            messages.push(formErrorMessage('StreamrClientError.code', expectedError.code, actualError.code))
+            messages.push(formErrorMessage('code', expectedError.code, actualError.code))
         }
         if ((expectedError.message !== undefined) && (actualError.message !== expectedError.message)) {
-            messages.push(formErrorMessage('StreamrClientError.message', expectedError.message, actualError.message))
+            messages.push(formErrorMessage('message', expectedError.message, actualError.message))
         }
     }
     if (messages.length > 0) {
@@ -60,7 +61,7 @@ const toThrowStreamrError = (
     } else {
         return {
             pass: true,
-            message: () => `Expected not to throw ${printReceived('StreamrClientError')}`
+            message: () => `Expected not to throw StreamrClientError}`
         }
     }
 }
