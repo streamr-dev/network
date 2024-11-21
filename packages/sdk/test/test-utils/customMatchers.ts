@@ -14,6 +14,7 @@ declare global {
     namespace jest {
         interface Matchers<R> {
             toThrowStreamrClientError(expectedError: PartialStreamrClientError): R
+            toEqualStreamrClientError(expectedError: PartialStreamrClientError): R
         }
     }
 }
@@ -40,32 +41,52 @@ const toThrowStreamrClientError = (
     } else {
         actualError = actual
     }
+    const assertionErrors = createAssertionErrors(actualError, expectedError)
+    return toCustomMatcherResult(assertionErrors, 'Expected not to throw StreamrClientError')
+}
 
-    const messages: string[] = []
+const toEqualStreamrClientError = (
+    actual: unknown, // should be StreamrClientError
+    expectedError: PartialStreamrClientError
+): jest.CustomMatcherResult => {
+    const assertionErrors = createAssertionErrors(actual, expectedError)
+    return toCustomMatcherResult(assertionErrors, 'StreamrClientErrors are equal')
+}
+
+const createAssertionErrors = (
+    actualError: unknown,
+    expectedError: PartialStreamrClientError
+): string[] => {
+    const assertionErrors: string[] = []
     if (!(actualError instanceof StreamrClientError)) {
         const received = isObject(actualError) ? actualError.constructor.name : actualError
-        messages.push(`Not an instance of StreamrClientError:\nReceived: ${printReceived(received)}`)
+        assertionErrors.push(`Not an instance of StreamrClientError:\nReceived: ${printReceived(received)}`)
     } else {
         if (actualError.code !== expectedError.code) {
-            messages.push(formErrorMessage('code', expectedError.code, actualError.code))
+            assertionErrors.push(formErrorMessage('code', expectedError.code, actualError.code))
         }
         if ((expectedError.message !== undefined) && (actualError.message !== expectedError.message)) {
-            messages.push(formErrorMessage('message', expectedError.message, actualError.message))
+            assertionErrors.push(formErrorMessage('message', expectedError.message, actualError.message))
         }
     }
-    if (messages.length > 0) {
+    return assertionErrors
+}
+
+const toCustomMatcherResult = (assertionErrors: string[], inversionErrorMessage: string) => {
+    if (assertionErrors.length > 0) {
         return {
             pass: false,
-            message: () => messages.join('\n\n')
+            message: () => assertionErrors.join('\n\n')
         }
     } else {
         return {
             pass: true,
-            message: () => `Expected not to throw StreamrClientError}`
+            message: () => inversionErrorMessage
         }
     }
 }
 
 expect.extend({
-    toThrowStreamrClientError
+    toThrowStreamrClientError,
+    toEqualStreamrClientError
 })

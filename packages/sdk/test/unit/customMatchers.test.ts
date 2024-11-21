@@ -56,4 +56,25 @@ describe('custom matchers', () => {
             })
         })
     })
+
+    describe('toEqualStreamrClientError', () => {
+
+        it('happy path', () => {
+            const error = new StreamrClientError('Foobar', 'UNKNOWN_ERROR')
+            expect(error).toEqualStreamrClientError({
+                code: error.code,
+                message: error.message
+            })
+        })
+
+        describe('error message', () => {
+
+            it('inverse', () => {
+                const actual = new StreamrClientError('Foobar', 'UNKNOWN_ERROR')
+                expect(() => {
+                    expect(actual).not.toEqualStreamrClientError(actual)
+                }).toThrow('treamrClientErrors are equal')
+            })
+        })
+    })
 })
