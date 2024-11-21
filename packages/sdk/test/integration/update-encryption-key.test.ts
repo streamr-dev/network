@@ -35,7 +35,7 @@ describe('update encryption key', () => {
             userId: await subscriber.getUserId(),
             permissions: [StreamPermission.SUBSCRIBE]
         })
-        streamPartId = stream.getStreamParts()[0]
+        streamPartId = (await stream.getStreamParts())[0]
         const sub = await subscriber.subscribe(streamPartId)
         messageIterator = sub[Symbol.asyncIterator]()
         onError = jest.fn()

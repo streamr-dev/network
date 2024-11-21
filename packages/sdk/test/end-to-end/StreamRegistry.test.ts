@@ -241,16 +241,18 @@ describe('StreamRegistry', () => {
             await createdStream.setMetadata({
                 description
             })
+            const createdMetadata = await createdStream.getMetadata()
             await until(async () => {
                 try {
-                    return (await client.getStream(createdStream.id)).getMetadata().description === createdStream.getMetadata().description
+                    const queriedMetadata = await (await client.getStream(createdStream.id)).getMetadata()
+                    return queriedMetadata.description === createdMetadata.description
                 } catch {
                     return false
                 }
             }, 100000, 1000)
             // check that other fields not overwritten
             const updatedStream = await client.getStream(createdStream.id)
-            expect(updatedStream.getMetadata()).toEqual({
+            expect(await updatedStream.getMetadata()).toEqual({
                 description
             })
         }, TIMEOUT)

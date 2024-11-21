@@ -73,7 +73,7 @@ describe('PublisherKeyExchange', () => {
             }
         })
         const stream = await createStream()
-        streamPartId = stream.getStreamParts()[0]
+        streamPartId = (await stream.getStreamParts())[0]
         await startPublisherKeyExchangeSubscription(publisherClient, streamPartId)
     })
 
