@@ -30,6 +30,9 @@ const REGIONS = [
     'ap-south-1',
     'sa-east-1',
     'ca-central-1',
+    'af-south-1',
+    'me-south-1',
+    'me-central-1'
 ]
 const AUTO_SCALING_GROUP_NAME = 'network-experiment-tf-test'
 
