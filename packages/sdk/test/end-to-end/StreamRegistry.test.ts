@@ -148,7 +148,7 @@ describe('StreamRegistry', () => {
 
         it('get a non-existing Stream', async () => {
             const streamId = `${publicAddress}/StreamRegistry-nonexisting-${Date.now()}`
-            return expect(() => client.getStream(streamId)).rejects.toThrowStreamrError({
+            return expect(() => client.getStream(streamId)).rejects.toThrowStreamrClientError({
                 code: 'STREAM_NOT_FOUND'
             })
         }, TIMEOUT)

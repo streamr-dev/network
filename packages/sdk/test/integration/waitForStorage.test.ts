@@ -96,6 +96,6 @@ describe('waitForStorage', () => {
             messageMatchFn: () => {
                 return true
             }
-        })).rejects.toThrowStreamrError(new StreamrClientError(`no storage assigned: ${stream.id}`, 'NO_STORAGE_NODES'))
+        })).rejects.toThrowStreamrClientError(new StreamrClientError(`no storage assigned: ${stream.id}`, 'NO_STORAGE_NODES'))
     })
 })

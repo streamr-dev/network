@@ -2,13 +2,13 @@ import { StreamrClientError } from '../../src/StreamrClientError'
 
 describe('custom matchers', () => {
 
-    describe('toThrowStreamrError', () => {
+    describe('toThrowStreamrClientError', () => {
 
         it('happy path', () => {
             const error = new StreamrClientError('Foobar', 'UNKNOWN_ERROR')
             expect(() => {
                 throw error
-            }).toThrowStreamrError({
+            }).toThrowStreamrClientError({
                 code: error.code,
                 message: error.message
             })
@@ -19,7 +19,7 @@ describe('custom matchers', () => {
             it('field', () => {
                 const actual = new StreamrClientError('Foobar', 'UNKNOWN_ERROR')
                 expect(() => {
-                    expect(() => { throw actual }).toThrowStreamrError({
+                    expect(() => { throw actual }).toThrowStreamrClientError({
                         message: 'Foobar',
                         code: 'UNSUPPORTED_OPERATION'
                     })
@@ -31,7 +31,7 @@ describe('custom matchers', () => {
                 class TestClass {}
                 expect(() => {
                     // eslint-disable-next-line @typescript-eslint/only-throw-error
-                    expect(() => { throw new TestClass() }).toThrowStreamrError({
+                    expect(() => { throw new TestClass() }).toThrowStreamrClientError({
                         message: 'Foobar',
                         code: 'UNSUPPORTED_OPERATION'
                     })
@@ -41,7 +41,7 @@ describe('custom matchers', () => {
             it('unexpected privitive', () => {
                 expect(() => {
                     // eslint-disable-next-line @typescript-eslint/only-throw-error
-                    expect(() => { throw 'mock-error' }).toThrowStreamrError({
+                    expect(() => { throw 'mock-error' }).toThrowStreamrClientError({
                         message: 'Foobar',
                         code: 'UNSUPPORTED_OPERATION'
                     })
@@ -51,7 +51,7 @@ describe('custom matchers', () => {
             it('inverse', () => {
                 const actual = new StreamrClientError('Foobar', 'UNKNOWN_ERROR')
                 expect(() => {
-                    expect(() => { throw actual }).not.toThrowStreamrError(actual)
+                    expect(() => { throw actual }).not.toThrowStreamrClientError(actual)
                 }).toThrow('Expected not to throw StreamrClientError')
             })
         })

@@ -13,7 +13,7 @@ declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace jest {
         interface Matchers<R> {
-            toThrowStreamrError(expectedError: PartialStreamrClientError): R
+            toThrowStreamrClientError(expectedError: PartialStreamrClientError): R
         }
     }
 }
@@ -22,7 +22,7 @@ const formErrorMessage = (field: keyof StreamrClientError, expected: string, act
     return `StreamrClientError ${field} values don't match:\nExpected: ${printExpected(expected)}\nReceived: ${printReceived(actual)}`
 }
 
-const toThrowStreamrError = (
+const toThrowStreamrClientError = (
     actual: unknown, // should be (() => StreamrClientError) | StreamrClientError
     expectedError: PartialStreamrClientError
 ): jest.CustomMatcherResult => {
@@ -67,5 +67,5 @@ const toThrowStreamrError = (
 }
 
 expect.extend({
-    toThrowStreamrError
+    toThrowStreamrClientError
 })

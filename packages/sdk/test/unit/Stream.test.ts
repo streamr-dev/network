@@ -28,7 +28,7 @@ describe('Stream', () => {
             { partitions: 150 },
             undefined as any,
         )
-        expect(() => stream.getPartitionCount()).toThrowStreamrError({
+        expect(() => stream.getPartitionCount()).toThrowStreamrClientError({
             message: 'Invalid partition count: 150',
             code: 'INVALID_STREAM_METADATA'
         })
