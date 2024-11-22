@@ -298,10 +298,10 @@ export class ExperimentNodeWrapper {
     async pingExperiment(ips: string[]): Promise<void> {
         logger.info('running ping experiment')
         const results: any = []
-            const started = now()
         await Promise.all(ips.map(async (ip) => {
             try {
                 console.log('pinging', ip)
+                const started = now()
                 const result = await ping.promise.probe(ip)
                 console.log(result)
                 results.push({ ip, time: Date.now() - started })
