@@ -1,4 +1,13 @@
 import { formLookupKey } from './utils'
+import LRU from '../../vendor/quick-lru'
+
+type KeyType = (string | number)[]
+
+interface Options<K extends KeyType, V> {
+    valueFactory: (...args: K) => Promise<V>
+    maxSize: number
+    maxAge?: number
+}
 
 // an wrapper object is used so that we can store undefined values
 interface ValueWrapper<V> {
@@ -6,30 +15,33 @@ interface ValueWrapper<V> {
 }
 
 /*
- * A map data structure which lazily evaluates values. A factory function
- * is called to create a value when when an item is queried for the first time.
- * The map stores the value and any subsequent call to get() returns
- * the same value.
+ * A map that lazily creates values. The factory function is called only when a key
+ * is accessed for the first time. Subsequent calls to `get()` return the cached value
+ * unless it has been evicted due to `maxSize` or `maxAge` limits.
  */
-export class Mapping<K extends (string | number)[], V> {
+export class Mapping<K extends KeyType, V> {
 
-    private readonly delegate: Map<string, ValueWrapper<V>> = new Map()
+    private readonly cache: LRU<string, ValueWrapper<V>>
     private readonly pendingPromises: Map<string, Promise<V>> = new Map()
-    private readonly valueFactory: (...args: K) => Promise<V>
+    private readonly opts: Options<K, V>
 
-    constructor(valueFactory: (...args: K) => Promise<V>) {
-        this.valueFactory = valueFactory
+    constructor(opts: Options<K, V>) {
+        this.cache = new LRU<string, ValueWrapper<V>>({
+            maxSize: opts.maxSize,
+            maxAge: opts.maxAge
+        })
+        this.opts = opts
     }
 
     async get(...args: K): Promise<V> {
         const key = formLookupKey(...args)
-        const pendingPromise = this.pendingPromises.get(key)
-        if (pendingPromise !== undefined) {
-            return await pendingPromise
+        const pendingPromises = this.pendingPromises.get(key)
+        if (pendingPromises !== undefined) {
+            return await pendingPromises
         } else {
-            let valueWrapper = this.delegate.get(key)
+            let valueWrapper = this.cache.get(key)
             if (valueWrapper === undefined) {
-                const promise = this.valueFactory(...args)
+                const promise = this.opts.valueFactory(...args)
                 this.pendingPromises.set(key, promise)
                 let value
                 try {
@@ -38,7 +50,7 @@ export class Mapping<K extends (string | number)[], V> {
                     this.pendingPromises.delete(key)
                 }
                 valueWrapper = { value }
-                this.delegate.set(key, valueWrapper)
+                this.cache.set(key, valueWrapper)
             }
             return valueWrapper.value
         }
@@ -46,7 +58,7 @@ export class Mapping<K extends (string | number)[], V> {
 
     values(): V[] {
         const result: V[] = []
-        for (const wrapper of this.delegate.values()) {
+        for (const wrapper of this.cache.values()) {
             result.push(wrapper.value)
         }
         return result
