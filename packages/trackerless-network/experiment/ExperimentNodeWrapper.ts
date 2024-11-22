@@ -298,7 +298,7 @@ export class ExperimentNodeWrapper {
     async pingExperiment(ips: string[]): Promise<void> {
         logger.info('running ping experiment')
         const results: any = []
-        await Promise.all(ips.map(async (ip) => {
+        for (const ip of ips) {
             try {
                 logger.info('pinging', { ip })
                 const started = now()
@@ -307,7 +307,7 @@ export class ExperimentNodeWrapper {
             } catch (e) {
                 results.push({ ip, time: 10000 })
             }
-        }))
+        }
         this.send(ExperimentClientMessage.create({
             id: this.id,
             payload: {
