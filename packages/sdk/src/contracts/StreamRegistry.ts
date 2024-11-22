@@ -102,12 +102,8 @@ const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: st
     }
 }
 
-const formCacheKeyPrefix = (streamId: StreamID): string => {
-    return `${streamId}|`
-}
-
 const invalidateCache = (cache: Mapping<[StreamID, ...args: any[]], any>, streamId: StreamID): void => {
-    const matchTarget = (s: string) => s.startsWith(formCacheKeyPrefix(streamId))
+    const matchTarget = (s: string) => s.startsWith(streamId)
     cache.invalidate(matchTarget)
 }
 
