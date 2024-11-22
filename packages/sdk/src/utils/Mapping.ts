@@ -1,7 +1,7 @@
 import { formLookupKey } from './utils'
 import LRU from '../../vendor/quick-lru'
 
-type KeyType = (string | number)[]
+type KeyType = (string | number | symbol)[]
 
 interface Options<K extends KeyType, V> {
     valueFactory: (...args: K) => Promise<V>
@@ -53,6 +53,18 @@ export class Mapping<K extends KeyType, V> {
                 this.cache.set(key, valueWrapper)
             }
             return valueWrapper.value
+        }
+    }
+
+    set(args: K, value: V): void {
+        this.cache.set(formLookupKey(...args), { value })
+    }
+
+    invalidate(predicate: (lookupKey: string) => boolean): void {
+        for (const key of this.cache.keys()) {
+            if (predicate(key)) {
+                this.cache.delete(key)
+            }
         }
     }
 

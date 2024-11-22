@@ -40,9 +40,9 @@ import {
     isPublicPermissionQuery,
     streamPermissionToSolidityType
 } from '../permission'
-import { CachingMap } from '../utils/CachingMap'
 import { filter, map } from '../utils/GeneratorUtils'
 import { LoggerFactory } from '../utils/LoggerFactory'
+import { Mapping } from '../utils/Mapping'
 import { ChainEventPoller } from './ChainEventPoller'
 import { ContractFactory } from './ContractFactory'
 import { ObservableContract, initContractEventGateway, waitForTx } from './contract'
@@ -106,7 +106,7 @@ const formCacheKeyPrefix = (streamId: StreamID): string => {
     return `${streamId}|`
 }
 
-const invalidateCache = (cache: CachingMap<string, any, any>, streamId: StreamID): void => {
+const invalidateCache = (cache: Mapping<[StreamID, ...args: any[]], any>, streamId: StreamID): void => {
     const matchTarget = (s: string) => s.startsWith(formCacheKeyPrefix(streamId))
     cache.invalidate(matchTarget)
 }
@@ -124,10 +124,10 @@ export class StreamRegistry {
     private readonly config: Pick<StrictStreamrClientConfig, 'contracts' | 'cache' | '_timeouts'>
     private readonly authentication: Authentication
     private readonly logger: Logger
-    private readonly metadataCache: CachingMap<string, StreamMetadata, [StreamID]>
-    private readonly publisherCache: CachingMap<string, boolean, [StreamID, UserID]>
-    private readonly subscriberCache: CachingMap<string, boolean, [StreamID, UserID]>
-    private readonly publicSubscribePermissionCache: CachingMap<string, boolean, [StreamID]>
+    private readonly metadataCache: Mapping<[StreamID], StreamMetadata>
+    private readonly publisherCache: Mapping<[StreamID, UserID], boolean>
+    private readonly subscriberCache: Mapping<[StreamID, UserID], boolean>
+    private readonly publicSubscribePermissionCache: Mapping<[StreamID], boolean>
 
     /** @internal */
     constructor(
@@ -168,33 +168,33 @@ export class StreamRegistry {
             }),
             loggerFactory
         })
-        this.metadataCache = new CachingMap((streamId: StreamID) => {
-            return this.getStreamMetadata_nonCached(streamId)
-        }, {
-            ...config.cache,
-            cacheKey: ([streamId]) => formCacheKeyPrefix(streamId)
+        this.metadataCache = new Mapping({
+            valueFactory: (streamId: StreamID) => {
+                return this.getStreamMetadata_nonCached(streamId)
+            },
+            ...config.cache
         })
-        this.publisherCache = new CachingMap((streamId: StreamID, userId: UserID) => {
-            return this.isStreamPublisherOrSubscriber_nonCached(streamId, userId, StreamPermission.PUBLISH)
-        }, {
-            ...config.cache,
-            cacheKey: ([streamId, userId]) =>`${formCacheKeyPrefix(streamId)}${userId}`
+        this.publisherCache = new Mapping({
+            valueFactory: (streamId: StreamID, userId: UserID) => {
+                return this.isStreamPublisherOrSubscriber_nonCached(streamId, userId, StreamPermission.PUBLISH)
+            },
+            ...config.cache
         })
-        this.subscriberCache = new CachingMap((streamId: StreamID, userId: UserID) => {
-            return this.isStreamPublisherOrSubscriber_nonCached(streamId, userId, StreamPermission.SUBSCRIBE)
-        }, {
-            ...config.cache,
-            cacheKey: ([streamId, userId]) =>`${formCacheKeyPrefix(streamId)}${userId}`
+        this.subscriberCache = new Mapping({
+            valueFactory: (streamId: StreamID, userId: UserID) => {
+                return this.isStreamPublisherOrSubscriber_nonCached(streamId, userId, StreamPermission.SUBSCRIBE)
+            }, 
+            ...config.cache
         })
-        this.publicSubscribePermissionCache = new CachingMap((streamId: StreamID) => {
-            return this.hasPermission({
-                streamId,
-                public: true,
-                permission: StreamPermission.SUBSCRIBE
-            })
-        }, {
-            ...config.cache,
-            cacheKey: ([streamId]) => formCacheKeyPrefix(streamId)
+        this.publicSubscribePermissionCache = new Mapping({
+            valueFactory: (streamId: StreamID) => {
+                return this.hasPermission({
+                    streamId,
+                    public: true,
+                    permission: StreamPermission.SUBSCRIBE
+                })
+            },
+            ...config.cache
         })
     }
 

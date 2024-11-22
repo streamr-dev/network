@@ -55,7 +55,7 @@ export class MessageFactory {
         this.signatureValidator = opts.signatureValidator
         this.messageSigner = opts.messageSigner
         this.defaultMessageChainIds = new Mapping({
-            valueFactory: async () => {
+            valueFactory: async (_partition: number) => {
                 return createRandomMsgChainId()
             },
             maxSize: opts.cacheMaxSize
