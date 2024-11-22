@@ -43,7 +43,7 @@ describe('client destroy', () => {
         await client.destroy()
         await expect(async () => {
             await client.subscribe(stream.id)
-        }).rejects.toThrowStreamrError({ code: 'CLIENT_DESTROYED' })
+        }).rejects.toThrowStreamrClientError({ code: 'CLIENT_DESTROYED' })
     })
 
     it('unable to publish after destroy called', async () => {

@@ -174,19 +174,19 @@ describe.skip('PushBuffer', () => {
         it('errors on bad buffer size', async () => {
             expect(() => {
                 new PushBuffer(0)
-            }).toThrowStreamrError({ code: 'INVALID_ARGUMENT' })
+            }).toThrowStreamrClientError({ code: 'INVALID_ARGUMENT' })
             expect(() => {
                 new PushBuffer(-1)
-            }).toThrowStreamrError({ code: 'INVALID_ARGUMENT' })
+            }).toThrowStreamrClientError({ code: 'INVALID_ARGUMENT' })
             expect(() => {
                 new PushBuffer(Number.MAX_SAFE_INTEGER + 10)
-            }).toThrowStreamrError({ code: 'INVALID_ARGUMENT' })
+            }).toThrowStreamrClientError({ code: 'INVALID_ARGUMENT' })
             expect(() => {
                 new PushBuffer(1.5)
-            }).toThrowStreamrError({ code: 'INVALID_ARGUMENT' })
+            }).toThrowStreamrClientError({ code: 'INVALID_ARGUMENT' })
             expect(() => {
                 new PushBuffer(0.5)
-            }).toThrowStreamrError({ code: 'INVALID_ARGUMENT' })
+            }).toThrowStreamrClientError({ code: 'INVALID_ARGUMENT' })
         })
 
         it('can push inside pull', async () => {
