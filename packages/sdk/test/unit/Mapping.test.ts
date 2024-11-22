@@ -62,6 +62,23 @@ describe('Mapping', () => {
         expect(valueFactory).toHaveBeenCalledTimes(2)
     })
 
+    it('isCacheableValue', async () => {
+        const valueFactory = jest.fn().mockImplementation(async (p1: string, p2: number) => {
+            return `${p1}${p2}`
+        })
+        const mapping = new Mapping({ valueFactory, isCacheableValue: (value: string) => value === 'foo1', ...BASE_OPTS })
+        const result1 = await mapping.get('foo', 1)
+        const result2 = await mapping.get('foo', 1)
+        expect(result1).toBe('foo1')
+        expect(result2).toBe('foo1')
+        expect(valueFactory).toHaveBeenCalledTimes(1)
+        const result3 = await mapping.get('foo', 2)
+        const result4 = await mapping.get('foo', 2)
+        expect(result3).toBe('foo2')
+        expect(result4).toBe('foo2')
+        expect(valueFactory).toHaveBeenCalledTimes(1 + 2)  // two additional calls as neither of the new calls were cached
+    })
+    
     it('concurrency', async () => {
         const valueFactory = jest.fn().mockImplementation(async (p1: string, p2: number) => {
             await wait(50)
