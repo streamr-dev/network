@@ -55,7 +55,7 @@ describe('unsubscribe', () => {
         await client.unsubscribe(sub)
 
         expect(await client.getSubscriptions()).toHaveLength(0)
-        expect(sub.unsubscribe).toBeCalled()
+        expect(sub.unsubscribe).toHaveBeenCalled()
     })
 
     it('twice', async () => {
