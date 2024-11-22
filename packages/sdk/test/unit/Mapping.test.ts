@@ -119,4 +119,18 @@ describe('Mapping', () => {
         await mapping.get('foo', 1)
         expect(valueFactory).toHaveBeenCalledTimes(2)
     })
+
+    it('invalidate', async () => {
+        const mapping = new Mapping({
+            valueFactory: async (p1: string, p2: number) => `${p1}${p2}`,
+            ...BASE_OPTS
+        })
+        mapping.set(['foo', 1], 'foo1')
+        mapping.set(['bar', 1], 'bar1')
+        await mapping.get('foo', 2)
+        await mapping.get('bar', 2)
+        expect([...mapping.values()]).toIncludeSameMembers(['foo1', 'bar1', 'foo2', 'bar2'])
+        mapping.invalidate(([p1]) => (p1 === 'bar'))
+        expect([...mapping.values()]).toIncludeSameMembers(['foo1', 'foo2'])
+    })
 })
