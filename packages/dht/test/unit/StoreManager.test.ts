@@ -4,23 +4,23 @@ import { getClosestNodes } from '../../src/dht/contact/getClosestNodes'
 import { StoreManager } from '../../src/dht/store/StoreManager'
 import {
     DhtAddress,
-    createRandomDhtAddress,
-    getDhtAddressFromRaw,
-    getRawFromDhtAddress
+    randomDhtAddress,
+    toDhtAddress,
+    toDhtAddressRaw
 } from '../../src/identifiers'
-import { PeerDescriptor, ReplicateDataRequest } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor, ReplicateDataRequest } from '../../generated/packages/dht/protos/DhtRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
 
 const NODE_COUNT = 10
 
 const DATA_ENTRY = {
-    key: getRawFromDhtAddress(createRandomDhtAddress()),
-    creator: getRawFromDhtAddress(createRandomDhtAddress())
+    key: toDhtAddressRaw(randomDhtAddress()),
+    creator: toDhtAddressRaw(randomDhtAddress())
 }
 const ALL_NODES = range(NODE_COUNT).map(() => createMockPeerDescriptor())
 
 const getNodeCloseToData = (distanceIndex: number) => {
-    const dataKey = getDhtAddressFromRaw(DATA_ENTRY.key)
+    const dataKey = toDhtAddress(DATA_ENTRY.key)
     return getClosestNodes(dataKey, ALL_NODES)[distanceIndex]
 }
 
@@ -42,7 +42,7 @@ describe('StoreManager', () => {
                 recursiveOperationManager: undefined as any,
                 localPeerDescriptor,
                 localDataStore: { 
-                    keys: () => [getDhtAddressFromRaw(DATA_ENTRY.key)],
+                    keys: () => [toDhtAddress(DATA_ENTRY.key)],
                     values: () => [DATA_ENTRY],
                     setAllEntriesAsStale 
                 } as any,
@@ -70,7 +70,7 @@ describe('StoreManager', () => {
                 await waitForCondition(() => replicateData.mock.calls.length === 1)
                 expect(replicateData).toHaveBeenCalledWith({
                     entry: DATA_ENTRY
-                })
+                }, true)
                 expect(setAllEntriesAsStale).not.toHaveBeenCalled()
             })
     
@@ -123,7 +123,7 @@ describe('StoreManager', () => {
                 await wait(50)
                 expect(replicateData).not.toHaveBeenCalled()
                 expect(setAllEntriesAsStale).toHaveBeenCalledTimes(1)
-                expect(setAllEntriesAsStale).toHaveBeenCalledWith(getDhtAddressFromRaw(DATA_ENTRY.key))
+                expect(setAllEntriesAsStale).toHaveBeenCalledWith(toDhtAddress(DATA_ENTRY.key))
             })
 
             it('this node is within redundancy factor, the node has less than redundancyFactor neighbors', async () => {

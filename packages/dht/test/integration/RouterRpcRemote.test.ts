@@ -1,8 +1,8 @@
 import { RpcCommunicator } from '@streamr/proto-rpc'
 import { RouterRpcRemote } from '../../src/dht/routing/RouterRpcRemote'
-import { Message, RouteMessageAck, RouteMessageWrapper } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { RouterRpcClient } from '../../src/proto/packages/dht/protos/DhtRpc.client'
-import { RpcMessage } from '../../src/proto/packages/proto-rpc/protos/ProtoRpc'
+import { Message, RouteMessageAck, RouteMessageWrapper } from '../../generated/packages/dht/protos/DhtRpc'
+import { RouterRpcClient } from '../../generated/packages/dht/protos/DhtRpc.client'
+import { RpcMessage } from '../../generated/packages/proto-rpc/protos/ProtoRpc'
 import { createMockPeerDescriptor, createWrappedClosestPeersRequest, mockRouterRpc } from '../utils/utils'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
@@ -20,11 +20,11 @@ describe('RemoteRouter', () => {
         clientRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', mockRouterRpc.routeMessage)
-        clientRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
-            serverRpcCommunicator.handleIncomingMessage(message)
+        clientRpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage) => {
+            serverRpcCommunicator.handleIncomingMessage(message, new DhtCallContext())
         })
-        serverRpcCommunicator.on('outgoingMessage', (message: RpcMessage) => {
-            clientRpcCommunicator.handleIncomingMessage(message)
+        serverRpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage) => {
+            clientRpcCommunicator.handleIncomingMessage(message, new DhtCallContext())
         })
         remoteRouter = new RouterRpcRemote(clientPeerDescriptor, serverPeerDescriptor, clientRpcCommunicator, RouterRpcClient)
     })

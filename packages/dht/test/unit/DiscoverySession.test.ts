@@ -3,8 +3,8 @@ import { sampleSize } from 'lodash'
 import { DhtNodeRpcRemote } from '../../src/dht/DhtNodeRpcRemote'
 import { PeerManager, getDistance } from '../../src/dht/PeerManager'
 import { DiscoverySession } from '../../src/dht/discovery/DiscoverySession'
-import { DhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../src/identifiers'
-import { NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { DhtAddress, toNodeId, toDhtAddressRaw } from '../../src/identifiers'
+import { NodeType, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
 import { createTestTopology } from '../utils/topology'
 import { getClosestNodes } from '../../src/dht/contact/getClosestNodes'
 
@@ -12,11 +12,11 @@ const NODE_COUNT = 40
 const MIN_NEIGHBOR_COUNT = 2  // nodes can get more neighbors when we merge network partitions
 const PARALLELISM = 1
 const NO_PROGRESS_LIMIT = 1
-const QUERY_BATCH_SIZE = 5  // the default value in DhtNode's config, not relevant in this test
+const QUERY_BATCH_SIZE = 5  // the default value in DhtNode's options, not relevant in this test
 
 const createPeerDescriptor = (nodeId: DhtAddress): PeerDescriptor => {
     return {
-        nodeId: getRawFromDhtAddress(nodeId),
+        nodeId: toDhtAddressRaw(nodeId),
         type: NodeType.NODEJS
     }
 }
@@ -45,9 +45,9 @@ describe('DiscoverySession', () => {
     }
 
     const createMockRpcRemote = (peerDescriptor: PeerDescriptor): Partial<DhtNodeRpcRemote> => {
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        const nodeId = toNodeId(peerDescriptor)
         return {
-            id: getRawFromDhtAddress(nodeId),
+            id: toDhtAddressRaw(nodeId),
             getPeerDescriptor: () => peerDescriptor,
             getNodeId: () => nodeId,
             getClosestPeers: async (referenceId: DhtAddress) => {
@@ -79,7 +79,7 @@ describe('DiscoverySession', () => {
         // Each queried node should closer to the target than the previous queried node, because we
         // use parallelism=1 and noProgressLimit=1
         const distancesToTarget = queriedNodes
-            .map((nodeId) => getDistance(getRawFromDhtAddress(nodeId), getRawFromDhtAddress(targetId)))
+            .map((nodeId) => getDistance(toDhtAddressRaw(nodeId), toDhtAddressRaw(targetId)))
         for (let i = 1; i < distancesToTarget.length ; i++) {
             expect(distancesToTarget[i]).toBeLessThan(distancesToTarget[i - 1])
         }

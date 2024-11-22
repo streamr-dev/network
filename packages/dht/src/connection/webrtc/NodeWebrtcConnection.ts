@@ -1,30 +1,24 @@
 import { IWebrtcConnection, WebrtcConnectionEvents } from './IWebrtcConnection'
 import { ConnectionType, IConnection, ConnectionID, ConnectionEvents } from '../IConnection'
-import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
 import EventEmitter from 'eventemitter3'
-import { DataChannel, DescriptionType, PeerConnection, cleanup, initLogger } from 'node-datachannel'
+// TODO: why does eslint import rule plugin not work?
+// eslint-disable-next-line import/no-unresolved
+import { DataChannel, DescriptionType, PeerConnection, initLogger } from 'node-datachannel'
 import { Logger } from '@streamr/utils'
 import { IllegalRtcPeerConnectionState } from '../../helpers/errors'
 import { iceServerAsString } from './iceServerAsString'
-import { IceServer } from './WebrtcConnector'
+import { IceServer, EARLY_TIMEOUT } from './WebrtcConnector'
 import { PortRange } from '../ConnectionManager'
-import { getNodeIdFromPeerDescriptor } from '../../identifiers'
+import { toNodeId } from '../../identifiers'
 import { createRandomConnectionId } from '../Connection'
 
 const logger = new Logger(module)
-
-export const WEBRTC_CLEANUP = new class {
-    // eslint-disable-next-line class-methods-use-this
-    cleanUp(): void {
-        cleanup()
-    }
-}
 
 export interface Params {
     remotePeerDescriptor: PeerDescriptor
     bufferThresholdHigh?: number
     bufferThresholdLow?: number
-    connectingTimeout?: number
     maxMessageSize?: number
     iceServers?: IceServer[]  // TODO make this parameter required (empty array is a good fallback which can be set by the caller if needed)
     portRange?: PortRange
@@ -55,16 +49,16 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
     private dataChannel?: DataChannel
     private lastState: RtcPeerConnectionState = 'connecting'
     private remoteDescriptionSet = false
-    private connectingTimeoutRef?: NodeJS.Timeout
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
     private readonly iceServers: IceServer[]
     private readonly _bufferThresholdHigh: number // TODO: buffer handling must be implemented before production use (NET-938)
     private readonly bufferThresholdLow: number
-    private readonly connectingTimeout: number
     private readonly remotePeerDescriptor: PeerDescriptor
     private readonly portRange?: PortRange
     private readonly maxMessageSize?: number
     private closed = false
+    private offering?: boolean
+    private readonly earlyTimeout: NodeJS.Timeout
 
     constructor(params: Params) {
         super()
@@ -73,14 +67,17 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
         // eslint-disable-next-line no-underscore-dangle
         this._bufferThresholdHigh = params.bufferThresholdHigh ?? 2 ** 17
         this.bufferThresholdLow = params.bufferThresholdLow ?? 2 ** 15
-        this.connectingTimeout = params.connectingTimeout ?? 20000
         this.remotePeerDescriptor = params.remotePeerDescriptor
         this.maxMessageSize = params.maxMessageSize ?? 1048576
         this.portRange = params.portRange
+        this.earlyTimeout = setTimeout(() => {
+            this.doClose(false, 'timed out due to remote descriptor not being set')
+        }, EARLY_TIMEOUT)
     }
 
     public start(isOffering: boolean): void {
-        const nodeId = getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)
+        const nodeId = toNodeId(this.remotePeerDescriptor)
+        this.offering = isOffering
         logger.trace(`Starting new connection for peer ${nodeId}`, { isOffering })
         this.connection = new PeerConnection(nodeId, {
             iceServers: this.iceServers.map(iceServerAsString),
@@ -88,11 +85,6 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
             portRangeBegin: this.portRange?.min,
             portRangeEnd: this.portRange?.max,
         })
-
-        this.connectingTimeoutRef = setTimeout(() => {
-            logger.trace('connectingTimeout, this.closed === ' + this.closed)
-            this.doClose(false)
-        }, this.connectingTimeout)
 
         this.connection.onStateChange((state: string) => this.onStateChange(state))
         this.connection.onGatheringStateChange(() => {})
@@ -113,12 +105,13 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
 
     public async setRemoteDescription(description: string, type: string): Promise<void> {
         if (this.connection) {
-            const remoteNodeId = getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)
+            clearTimeout(this.earlyTimeout)
+            const remoteNodeId = toNodeId(this.remotePeerDescriptor)
             try {
                 logger.trace(`Setting remote descriptor for peer: ${remoteNodeId}`)
                 this.connection.setRemoteDescription(description, type as DescriptionType)
                 this.remoteDescriptionSet = true
-            } catch (err) {
+            } catch {
                 logger.debug(`Failed to set remote descriptor for peer ${remoteNodeId}`)
             }
         } else {
@@ -129,11 +122,11 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
     public addRemoteCandidate(candidate: string, mid: string): void {
         if (this.connection) {
             if (this.remoteDescriptionSet) {
-                const remoteNodeId = getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)
+                const remoteNodeId = toNodeId(this.remotePeerDescriptor)
                 try {
                     logger.trace(`Setting remote candidate for peer: ${remoteNodeId}`)
                     this.connection.addRemoteCandidate(candidate, mid)
-                } catch (err) {
+                } catch {
                     logger.debug(`Failed to set remote candidate for peer ${remoteNodeId}`)
                 }
             } else {
@@ -150,7 +143,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
             try {
                 this.dataChannel!.sendMessageBinary(data as Buffer)
             } catch (err) {
-                const remoteNodeId = getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)
+                const remoteNodeId = toNodeId(this.remotePeerDescriptor)
                 logger.debug('Failed to send binary message to ' + remoteNodeId + err)
             }
         }
@@ -162,17 +155,14 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
 
     private doClose(gracefulLeave: boolean, reason?: string): void {
         if (!this.closed) {
-            const remoteNodeId = getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)
+            clearTimeout(this.earlyTimeout)
+            const remoteNodeId = toNodeId(this.remotePeerDescriptor)
             logger.trace(`Closing Node WebRTC Connection to ${remoteNodeId}` + `${(reason !== undefined) ? `, reason: ${reason}` : ''}`)
 
             this.closed = true
             
             this.emit('disconnected', gracefulLeave, undefined, reason)
             this.removeAllListeners()
-            
-            if (this.connectingTimeoutRef) {
-                clearTimeout(this.connectingTimeoutRef)
-            }
 
             if (this.dataChannel) {
                 try {
@@ -226,10 +216,7 @@ export class NodeWebrtcConnection extends EventEmitter<Events> implements IConne
     }
 
     private onDataChannelOpen(): void {
-        if (this.connectingTimeoutRef) {
-            clearTimeout(this.connectingTimeoutRef)
-        }
-        logger.trace(`DataChannel opened for peer ${getNodeIdFromPeerDescriptor(this.remotePeerDescriptor)}`)
+        logger.trace(`DataChannel opened for peer ${toNodeId(this.remotePeerDescriptor)}`)
         this.emit('connected')
     }
 

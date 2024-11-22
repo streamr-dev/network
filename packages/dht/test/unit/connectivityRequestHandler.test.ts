@@ -5,7 +5,7 @@ import { Server as HttpServer, createServer as createHttpServer } from 'http'
 import { server as WsServer } from 'websocket'
 import { CONNECTIVITY_CHECKER_SERVICE_ID } from '../../src/connection/connectivityChecker'
 import { attachConnectivityRequestHandler } from '../../src/connection/connectivityRequestHandler'
-import { Message } from '../../src/proto/packages/dht/protos/DhtRpc'
+import { Message } from '../../generated/packages/dht/protos/DhtRpc'
 import { LOCAL_PROTOCOL_VERSION } from '../../src/helpers/version'
 
 const HOST = '127.0.0.1'
@@ -43,7 +43,7 @@ describe('connectivityRequestHandler', () => {
             messageId: 'mock-message-id',
             body: {
                 oneofKind: 'connectivityRequest',
-                connectivityRequest: { port: PORT, host: HOST, tls: false, selfSigned: false }
+                connectivityRequest: { port: PORT, host: HOST, tls: false, allowSelfSignedCertificate: false }
             }
         }
         connection.emit('data', Message.toBinary(request))
@@ -78,7 +78,7 @@ describe('connectivityRequestHandler', () => {
             messageId: 'mock-message-id',
             body: {
                 oneofKind: 'connectivityRequest',
-                connectivityRequest: { port: 0, host: HOST, tls: false, selfSigned: false }
+                connectivityRequest: { port: 0, host: HOST, tls: false, allowSelfSignedCertificate: false }
             }
         }
         connection.emit('data', Message.toBinary(request))

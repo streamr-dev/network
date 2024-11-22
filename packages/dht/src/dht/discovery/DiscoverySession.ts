@@ -1,14 +1,14 @@
 import { Gate, Logger, withTimeout } from '@streamr/utils'
 import { v4 } from 'uuid'
-import { DhtAddress, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
-import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { DhtAddress, toNodeId, toDhtAddressRaw } from '../../identifiers'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
 import { DhtNodeRpcRemote } from '../DhtNodeRpcRemote'
 import { PeerManager, getDistance } from '../PeerManager'
 import { getClosestNodes } from '../contact/getClosestNodes'
 
 const logger = new Logger(module)
 
-interface DiscoverySessionConfig {
+interface DiscoverySessionOptions {
     targetId: DhtAddress
     parallelism: number
     noProgressLimit: number
@@ -25,31 +25,31 @@ export class DiscoverySession {
     private noProgressCounter = 0
     private ongoingRequests: Set<DhtAddress> = new Set()
     private doneGate = new Gate(false)
-    private readonly config: DiscoverySessionConfig
+    private readonly options: DiscoverySessionOptions
 
-    constructor(config: DiscoverySessionConfig) {
-        this.config = config
+    constructor(options: DiscoverySessionOptions) {
+        this.options = options
     }
 
     private addContacts(contacts: PeerDescriptor[]): void {
-        if (this.config.abortSignal.aborted || this.doneGate.isOpen()) {
+        if (this.options.abortSignal.aborted || this.doneGate.isOpen()) {
             return
         }
         for (const contact of contacts) {
-            this.config.peerManager.addContact(contact)
+            this.options.peerManager.addContact(contact)
         }
     }
 
     private async fetchClosestNeighborsFromRemote(peerDescriptor: PeerDescriptor): Promise<PeerDescriptor[]> {
-        if (this.config.abortSignal.aborted || this.doneGate.isOpen()) {
+        if (this.options.abortSignal.aborted || this.doneGate.isOpen()) {
             return []
         }
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        const nodeId = toNodeId(peerDescriptor)
         logger.trace(`Getting closest neighbors from remote: ${nodeId}`)
-        this.config.contactedPeers.add(nodeId)
-        const remote = this.config.createDhtNodeRpcRemote(peerDescriptor)
-        const returnedContacts = await remote.getClosestPeers(this.config.targetId)
-        this.config.peerManager.setContactActive(nodeId)
+        this.options.contactedPeers.add(nodeId)
+        const remote = this.options.createDhtNodeRpcRemote(peerDescriptor)
+        const returnedContacts = await remote.getClosestPeers(this.options.targetId)
+        this.options.peerManager.setContactActive(nodeId)
         return returnedContacts
     }
 
@@ -58,7 +58,7 @@ export class DiscoverySession {
             return
         }
         this.ongoingRequests.delete(nodeId)
-        const targetId = getRawFromDhtAddress(this.config.targetId)
+        const targetId = toDhtAddressRaw(this.options.targetId)
         const oldClosestNeighbor = this.getClosestNeighbor()
         const oldClosestDistance = getDistance(targetId, oldClosestNeighbor.nodeId)
         this.addContacts(contacts)
@@ -71,8 +71,8 @@ export class DiscoverySession {
 
     private getClosestNeighbor(): PeerDescriptor {
         return getClosestNodes(
-            this.config.targetId,
-            this.config.peerManager.getNeighbors().map((n) => n.getPeerDescriptor()),
+            this.options.targetId,
+            this.options.peerManager.getNeighbors().map((n) => n.getPeerDescriptor()),
             { maxCount: 1 }
         )[0]
     }
@@ -82,30 +82,30 @@ export class DiscoverySession {
             return
         }
         this.ongoingRequests.delete(nodeId)
-        this.config.peerManager.removeContact(nodeId)
+        this.options.peerManager.removeContact(nodeId)
     }
 
     private findMoreContacts(): void {
-        if (this.config.abortSignal.aborted || this.doneGate.isOpen()) {
+        if (this.options.abortSignal.aborted || this.doneGate.isOpen()) {
             return
         }
         const uncontacted = getClosestNodes(
-            this.config.targetId,
-            Array.from(this.config.peerManager.getNearbyContacts().getAllContactsInUndefinedOrder(), (c) => c.getPeerDescriptor()), 
+            this.options.targetId,
+            Array.from(this.options.peerManager.getNearbyContacts().getAllContactsInUndefinedOrder(), (c) => c.getPeerDescriptor()), 
             {
-                maxCount: this.config.parallelism,
-                excludedNodeIds: this.config.contactedPeers
+                maxCount: this.options.parallelism,
+                excludedNodeIds: this.options.contactedPeers
             }
         )
-        if ((uncontacted.length === 0 && this.ongoingRequests.size === 0) || (this.noProgressCounter >= this.config.noProgressLimit)) {
+        if ((uncontacted.length === 0 && this.ongoingRequests.size === 0) || (this.noProgressCounter >= this.options.noProgressLimit)) {
             this.doneGate.open()
             return
         }
         for (const node of uncontacted) {
-            if (this.ongoingRequests.size >= this.config.parallelism) {
+            if (this.ongoingRequests.size >= this.options.parallelism) {
                 break
             }
-            const nodeId = getNodeIdFromPeerDescriptor(node)
+            const nodeId = toNodeId(node)
             this.ongoingRequests.add(nodeId)
             // eslint-disable-next-line promise/catch-or-return
             this.fetchClosestNeighborsFromRemote(node)
@@ -118,12 +118,12 @@ export class DiscoverySession {
     }
 
     public async findClosestNodes(timeout: number): Promise<void> {
-        if (this.config.peerManager.getNearbyContactCount(this.config.contactedPeers) === 0) {
+        if (this.options.peerManager.getNearbyContactCount(this.options.contactedPeers) === 0) {
             return
         }
         setImmediate(() => {
             this.findMoreContacts()
         })
-        await withTimeout(this.doneGate.waitUntilOpen(), timeout, 'discovery session timed out', this.config.abortSignal)
+        await withTimeout(this.doneGate.waitUntilOpen(), timeout, 'discovery session timed out', this.options.abortSignal)
     }
 }

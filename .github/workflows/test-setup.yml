@@ -1,3 +1,4 @@
+---
 name: test setup
 
 on:
@@ -13,7 +14,7 @@ on:
       docker-services:
         required: false
         type: string
-      run-brokers:
+      run-nodes:
         required: false
         type: boolean
         default: false
@@ -45,9 +46,9 @@ jobs:
       - name: run entry point
         if: ${{ inputs.run-entry-point }}
         uses: ./.github/workflows/reusable/run-entry-point
-      - name: run brokers
-        if: ${{ inputs.run-brokers }}
-        uses: ./.github/workflows/reusable/run-brokers
+      - name: run nodes
+        if: ${{ inputs.run-nodes }}
+        uses: ./.github/workflows/reusable/run-nodes
       - name: test
         working-directory: 'packages/${{ inputs.package }}'
         run: ${{ inputs.command }}

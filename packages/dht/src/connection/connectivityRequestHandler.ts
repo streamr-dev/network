@@ -4,12 +4,12 @@ import {
     ConnectivityRequest,
     ConnectivityResponse,
     Message
-} from '../proto/packages/dht/protos/DhtRpc'
+} from '../../generated/packages/dht/protos/DhtRpc'
 import { NatType } from './ConnectionManager'
 import { CONNECTIVITY_CHECKER_SERVICE_ID, connectAsync } from './connectivityChecker'
 import { IConnection } from './IConnection'
 import { WebsocketServerConnection } from './websocket/WebsocketServerConnection'
-import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketConnector'
+import { connectivityMethodToWebsocketUrl } from './websocket/WebsocketClientConnector'
 import { LOCAL_PROTOCOL_VERSION } from '../helpers/version'
 import { GeoIpLocator } from '@streamr/geoip-location'
 
@@ -89,7 +89,7 @@ const connectivityProbe = async (connectivityRequest: ConnectivityRequest, ipAdd
         logger.trace(`Attempting Connectivity Check to ${url}`)
         outgoingConnection = await connectAsync({
             url,
-            selfSigned: connectivityRequest.selfSigned
+            allowSelfSignedCertificate: connectivityRequest.allowSelfSignedCertificate
         })
         logger.trace('Connectivity test produced positive result, communicating reply to the requester ' + host + ':' + connectivityRequest.port)
         connectivityResponseMessage = {

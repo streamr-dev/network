@@ -3,7 +3,6 @@ import { createServer as createHttpsServer, Server as HttpsServer } from 'https'
 import EventEmitter from 'eventemitter3'
 import WebSocket from 'ws'
 import { WebsocketServerConnection } from './WebsocketServerConnection'
-import { ConnectionSourceEvents } from '../IConnectionSource'
 import { Logger, asAbortable } from '@streamr/utils'
 import { createSelfSignedCertificate } from '@streamr/autocertifier-client' 
 import { WebsocketServerStartError } from '../../helpers/errors'
@@ -12,33 +11,38 @@ import { range } from 'lodash'
 import fs from 'fs'
 import { v4 as uuid } from 'uuid'
 import { parse } from 'url'
+import { IConnection } from '../IConnection'
 
 const logger = new Logger(module)
 
-interface WebsocketServerConfig {
+interface WebsocketServerOptions {
     portRange: PortRange
     enableTls: boolean
     tlsCertificate?: TlsCertificate
     maxMessageSize?: number
 }
 
-export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
+interface Events {
+    connected: ((connection: IConnection) => void) 
+}
+
+export class WebsocketServer extends EventEmitter<Events> {
 
     private httpServer?: HttpServer | HttpsServer
     private wsServer?: WebSocket.Server
     private readonly abortController = new AbortController()
-    private readonly config: WebsocketServerConfig
+    private readonly options: WebsocketServerOptions
 
-    constructor(config: WebsocketServerConfig) {
+    constructor(options: WebsocketServerOptions) {
         super()
-        this.config = config
+        this.options = options
     }
 
     public async start(): Promise<number> {
-        const ports = range(this.config.portRange.min, this.config.portRange.max + 1)
+        const ports = range(this.options.portRange.min, this.options.portRange.max + 1)
         for (const port of ports) {
             try {
-                await asAbortable(this.startServer(port, this.config.enableTls), this.abortController.signal)
+                await asAbortable(this.startServer(port, this.options.enableTls), this.abortController.signal)
                 return port
             } catch (err) {
                 if (err.originalError?.code === 'EADDRINUSE') {
@@ -49,7 +53,7 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
             }
         }
         throw new WebsocketServerStartError(
-            `Failed to start WebSocket server on any port in range: ${this.config.portRange.min}-${this.config.portRange.min}`
+            `Failed to start WebSocket server on any port in range: ${this.options.portRange.min}-${this.options.portRange.min}`
         )
     }
 
@@ -62,15 +66,15 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
             response.end()
         }
         return new Promise((resolve, reject) => {
-            if (this.config.tlsCertificate) {
+            if (this.options.tlsCertificate) {
                 this.httpServer = createHttpsServer({
-                    key: fs.readFileSync(this.config.tlsCertificate.privateKeyFileName),
-                    cert: fs.readFileSync(this.config.tlsCertificate.certFileName)
+                    key: fs.readFileSync(this.options.tlsCertificate.privateKeyFileName),
+                    cert: fs.readFileSync(this.options.tlsCertificate.certFileName)
                 }, requestListener)
             } else if (!tls) {
                 this.httpServer = createHttpServer(requestListener)
             } else {
-                // TODO use config option or named constant?
+                // TODO use options option or named constant?
                 const certificate = createSelfSignedCertificate('streamr-self-signed-' + uuid(), 1000)
                 this.httpServer = createHttpsServer({
                     key: certificate.serverKey,
@@ -151,7 +155,7 @@ export class WebsocketServer extends EventEmitter<ConnectionSourceEvents> {
     }
 
     private createWsServer(): WebSocket.Server {
-        const maxPayload = this.config.maxMessageSize ?? 1048576
+        const maxPayload = this.options.maxMessageSize ?? 1048576
         return this.wsServer = new WebSocket.Server({
             noServer: true,
             maxPayload

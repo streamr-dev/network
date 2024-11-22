@@ -19,4 +19,4 @@ module.exports = createKarmaConfig(TEST_PATHS, createWebpackConfig({
         '@streamr/dht': path.resolve('../dht/src/exports.ts'),
         '@streamr/proto-rpc': path.resolve('../proto-rpc/src/exports.ts'),
     }
-}))
+}), __dirname)

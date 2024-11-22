@@ -1,5 +1,5 @@
-import { DataEntry } from '../../proto/packages/dht/protos/DhtRpc'
-import { DhtAddress, getDhtAddressFromRaw } from '../../identifiers'
+import { DataEntry } from '../../../generated/packages/dht/protos/DhtRpc'
+import { DhtAddress, toDhtAddress } from '../../identifiers'
 import { MapWithTtl } from '@streamr/utils'
 
 export class LocalDataStore {
@@ -16,8 +16,8 @@ export class LocalDataStore {
     private store: Map<DhtAddress, MapWithTtl<DhtAddress, DataEntry>> = new Map()
 
     public storeEntry(dataEntry: DataEntry): boolean {
-        const key = getDhtAddressFromRaw(dataEntry.key)
-        const creatorNodeId = getDhtAddressFromRaw(dataEntry.creator)
+        const key = toDhtAddress(dataEntry.key)
+        const creatorNodeId = toDhtAddress(dataEntry.creator)
         if (!this.store.has(key)) {
             this.store.set(key, new MapWithTtl((e) => Math.min(e.ttl, this.maxTtl)))
         }

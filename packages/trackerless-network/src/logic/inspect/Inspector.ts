@@ -1,12 +1,11 @@
-import { PeerDescriptor, ConnectionLocker, LockID, DhtAddress, getNodeIdFromPeerDescriptor, ListeningRpcCommunicator } from '@streamr/dht'
+import { ConnectionLocker, DhtAddress, ListeningRpcCommunicator, LockID, PeerDescriptor, toNodeId } from '@streamr/dht'
+import { Logger, StreamPartID, waitForEvent3 } from '@streamr/utils'
 import { MessageID } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
-import { InspectSession, Events as InspectSessionEvents } from './InspectSession'
 import { TemporaryConnectionRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { Logger, waitForEvent3 } from '@streamr/utils'
 import { TemporaryConnectionRpcRemote } from '../temporary-connection/TemporaryConnectionRpcRemote'
-import { StreamPartID } from '@streamr/protocol'
+import { InspectSession, Events as InspectSessionEvents } from './InspectSession'
 
-interface InspectorConfig {
+interface InspectorOptions {
     localPeerDescriptor: PeerDescriptor
     streamPartId: StreamPartID
     rpcCommunicator: ListeningRpcCommunicator
@@ -30,14 +29,14 @@ export class Inspector {
     private readonly openInspectConnection: (peerDescriptor: PeerDescriptor, lockId: LockID) => Promise<void>
     private readonly closeInspectConnection: (peerDescriptor: PeerDescriptor, lockId: LockID) => Promise<void>
 
-    constructor(config: InspectorConfig) {
-        this.streamPartId = config.streamPartId
-        this.localPeerDescriptor = config.localPeerDescriptor
-        this.rpcCommunicator = config.rpcCommunicator
-        this.connectionLocker = config.connectionLocker
-        this.inspectionTimeout = config.inspectionTimeout ?? DEFAULT_TIMEOUT
-        this.openInspectConnection = config.openInspectConnection ?? this.defaultOpenInspectConnection
-        this.closeInspectConnection = config.closeInspectConnection ?? this.defaultCloseInspectConnection
+    constructor(options: InspectorOptions) {
+        this.streamPartId = options.streamPartId
+        this.localPeerDescriptor = options.localPeerDescriptor
+        this.rpcCommunicator = options.rpcCommunicator
+        this.connectionLocker = options.connectionLocker
+        this.inspectionTimeout = options.inspectionTimeout ?? DEFAULT_TIMEOUT
+        this.openInspectConnection = options.openInspectConnection ?? this.defaultOpenInspectConnection
+        this.closeInspectConnection = options.closeInspectConnection ?? this.defaultCloseInspectConnection
     }
 
     async defaultOpenInspectConnection(peerDescriptor: PeerDescriptor, lockId: LockID): Promise<void> {
@@ -48,7 +47,7 @@ export class Inspector {
             TemporaryConnectionRpcClient
         )
         await rpcRemote.openConnection()
-        this.connectionLocker.weakLockConnection(getNodeIdFromPeerDescriptor(peerDescriptor), lockId)
+        this.connectionLocker.weakLockConnection(toNodeId(peerDescriptor), lockId)
     }
 
     async defaultCloseInspectConnection(peerDescriptor: PeerDescriptor, lockId: LockID): Promise<void> {
@@ -59,11 +58,11 @@ export class Inspector {
             TemporaryConnectionRpcClient
         )
         await rpcRemote.closeConnection()
-        this.connectionLocker.weakUnlockConnection(getNodeIdFromPeerDescriptor(peerDescriptor), lockId)
+        this.connectionLocker.weakUnlockConnection(toNodeId(peerDescriptor), lockId)
     }
 
     async inspect(peerDescriptor: PeerDescriptor): Promise<boolean> {
-        const nodeId = getNodeIdFromPeerDescriptor(peerDescriptor)
+        const nodeId = toNodeId(peerDescriptor)
         const session = new InspectSession({
             inspectedNode: nodeId
         })
@@ -74,7 +73,7 @@ export class Inspector {
         try {
             await waitForEvent3<InspectSessionEvents>(session, 'done', this.inspectionTimeout)
             success = true
-        } catch (err) {
+        } catch {
             logger.trace('Inspect session timed out, removing')
         } finally {
             await this.closeInspectConnection(peerDescriptor, lockId)

@@ -2,7 +2,7 @@ import type { ServiceInfo } from '@protobuf-ts/runtime-rpc'
 import { ClassType, ClientTransport, ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import { ConnectionType } from '../../connection/IConnection'
 import { expectedConnectionType } from '../../helpers/Connectivity'
-import { PeerDescriptor } from '../../proto/packages/dht/protos/DhtRpc'
+import { PeerDescriptor } from '../../../generated/packages/dht/protos/DhtRpc'
 import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import { DhtCallContext } from '../../rpc-protocol/DhtCallContext' 
 
@@ -12,7 +12,7 @@ const WEBSOCKET_CLIENT_TIMEOUT = 5000
 // takes a little bit longer than WEBSOCKET_CLIENT
 const WEBSOCKET_SERVER_TIMEOUT = 7500
 // WebRTC connections require lots of signalling to open and might take a longer time.
-const WEBRTC_TIMEOUT = 15000
+const WEBRTC_TIMEOUT = 10000
 // default timeout for existing connections
 export const EXISTING_CONNECTION_TIMEOUT = 5000
 

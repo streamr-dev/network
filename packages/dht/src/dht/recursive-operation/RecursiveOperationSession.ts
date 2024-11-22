@@ -9,7 +9,7 @@ import {
     RouteMessageAck,
     RecursiveOperationRequest,
     Message
-} from '../../proto/packages/dht/protos/DhtRpc'
+} from '../../../generated/packages/dht/protos/DhtRpc'
 import { ITransport } from '../../transport/ITransport'
 import { ListeningRpcCommunicator } from '../../transport/ListeningRpcCommunicator'
 import { Contact } from '../contact/Contact'
@@ -17,14 +17,16 @@ import { SortedContactList } from '../contact/SortedContactList'
 import { RecursiveOperationResult } from './RecursiveOperationManager'
 import { ServiceID } from '../../types/ServiceID'
 import { RecursiveOperationSessionRpcLocal } from './RecursiveOperationSessionRpcLocal'
-import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '../../identifiers'
+import { DhtAddress, toDhtAddress, toNodeId, toDhtAddressRaw } from '../../identifiers'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 export interface RecursiveOperationSessionEvents {
     completed: () => void
 }
 
-export interface RecursiveOperationSessionConfig {
+export const RECURSIVE_OPERATION_TIMEOUT = 10 * 1000
+
+export interface RecursiveOperationSessionOptions {
     transport: ITransport
     targetId: DhtAddress
     localPeerDescriptor: PeerDescriptor
@@ -45,18 +47,18 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     private completionEventEmitted = false
     private noCloserNodesReceivedCounter = 0
     private readonly noCloserNodesReceivedFrom: Set<DhtAddress> = new Set()
-    private readonly config: RecursiveOperationSessionConfig
+    private readonly options: RecursiveOperationSessionOptions
 
-    constructor(config: RecursiveOperationSessionConfig) {
+    constructor(options: RecursiveOperationSessionOptions) {
         super()
-        this.config = config
+        this.options = options
         this.results = new SortedContactList({
-            referenceId: config.targetId, 
-            maxSize: 10,  // TODO use config option or named constant?
+            referenceId: options.targetId, 
+            maxSize: 10,  // TODO use options option or named constant?
             allowToContainReferenceId: true
         })
-        this.rpcCommunicator = new ListeningRpcCommunicator(this.id, config.transport, {
-            rpcRequestTimeout: 15000  // TODO use config option or named constant?
+        this.rpcCommunicator = new ListeningRpcCommunicator(this.id, options.transport, {
+            rpcRequestTimeout: RECURSIVE_OPERATION_TIMEOUT
         })
         this.registerLocalRpcMethods()
     }
@@ -64,13 +66,13 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     private registerLocalRpcMethods() {
         const rpcLocal = new RecursiveOperationSessionRpcLocal({
             onResponseReceived: (
-                sourceId: DhtAddress,
+                remoteNodeId: DhtAddress,
                 routingPath: PeerDescriptor[],
                 closestConnectedNodes: PeerDescriptor[],
                 dataEntries: DataEntry[],
                 noCloserNodesFound: boolean
             ) => {
-                this.onResponseReceived(sourceId, routingPath, closestConnectedNodes, dataEntries, noCloserNodesFound)
+                this.onResponseReceived(remoteNodeId, routingPath, closestConnectedNodes, dataEntries, noCloserNodesFound)
             }
         })
         this.rpcCommunicator.registerRpcNotification(RecursiveOperationResponse, 'sendResponse',
@@ -79,13 +81,13 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
 
     public start(serviceId: ServiceID): void {
         const routeMessage = this.wrapRequest(serviceId)
-        this.config.doRouteRequest(routeMessage)
+        this.options.doRouteRequest(routeMessage)
     }
 
     private wrapRequest(serviceId: ServiceID): RouteMessageWrapper {
         const request: RecursiveOperationRequest = {
             sessionId: this.getId(),
-            operation: this.config.operation
+            operation: this.options.operation
         }
         const msg: Message = {
             messageId: v4(),
@@ -98,8 +100,8 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         const routeMessage: RouteMessageWrapper = {
             message: msg,
             requestId: v4(),
-            target: getRawFromDhtAddress(this.config.targetId),
-            sourcePeer: this.config.localPeerDescriptor,
+            target: toDhtAddressRaw(this.options.targetId),
+            sourcePeer: this.options.localPeerDescriptor,
             reachableThrough: [],
             routingPath: [],
             parallelRootNodeIds: []
@@ -113,10 +115,10 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             unreportedHops.delete(id)
         })
         if (this.noCloserNodesReceivedCounter >= 1 && unreportedHops.size === 0) {
-            if (this.config.operation === RecursiveOperation.FETCH_DATA
-                && (this.hasNonStaleData() || this.noCloserNodesReceivedCounter >= this.config.waitedRoutingPathCompletions)) {
+            if (this.options.operation === RecursiveOperation.FETCH_DATA
+                && (this.hasNonStaleData() || this.noCloserNodesReceivedCounter >= this.options.waitedRoutingPathCompletions)) {
                 return true
-            } else if (this.config.operation === RecursiveOperation.FETCH_DATA) {
+            } else if (this.options.operation === RecursiveOperation.FETCH_DATA) {
                 return false
             }
             return true
@@ -129,7 +131,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     }
 
     public onResponseReceived(
-        sourceId: DhtAddress,
+        remoteNodeId: DhtAddress,
         routingPath: PeerDescriptor[],
         closestConnectedNodes: PeerDescriptor[],
         dataEntries: DataEntry[],
@@ -143,15 +145,15 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
             this.results.addContact(new Contact(descriptor))
         })
         this.processFoundData(dataEntries)
-        if (noCloserNodesFound || this.noCloserNodesReceivedFrom.has(sourceId)) {
-            this.onNoCloserPeersFound(sourceId)
+        if (noCloserNodesFound || this.noCloserNodesReceivedFrom.has(remoteNodeId)) {
+            this.onNoCloserPeersFound(remoteNodeId)
         }
     }
 
     private addKnownHops(routingPath: PeerDescriptor[]) {
-        const localNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
+        const localNodeId = toNodeId(this.options.localPeerDescriptor)
         routingPath.forEach((desc) => {
-            const newNodeId = getNodeIdFromPeerDescriptor(desc)
+            const newNodeId = toNodeId(desc)
             if (localNodeId !== newNodeId) {
                 this.allKnownHops.add(newNodeId)
             }
@@ -159,8 +161,8 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
     }
 
     private setHopAsReported(desc: PeerDescriptor) {
-        const localNodeId = getNodeIdFromPeerDescriptor(this.config.localPeerDescriptor)
-        const newNodeId = getNodeIdFromPeerDescriptor(desc)
+        const localNodeId = toNodeId(this.options.localPeerDescriptor)
+        const newNodeId = toNodeId(desc)
         if (localNodeId !== newNodeId) {
             this.reportedHops.add(newNodeId)
         }
@@ -178,7 +180,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
 
     private processFoundData(dataEntries: DataEntry[]): void {
         dataEntries.forEach((entry) => {
-            const creatorNodeId = getDhtAddressFromRaw(entry.creator)
+            const creatorNodeId = toDhtAddress(entry.creator)
             const existingEntry = this.foundData.get(creatorNodeId)
             if (!existingEntry || existingEntry.createdAt! < entry.createdAt! 
                 || (existingEntry.createdAt! <= entry.createdAt! && entry.deleted)) {
@@ -187,9 +189,9 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
         })
     }
 
-    private onNoCloserPeersFound(sourceId: DhtAddress): void {
+    private onNoCloserPeersFound(remoteNodeId: DhtAddress): void {
         this.noCloserNodesReceivedCounter += 1
-        this.noCloserNodesReceivedFrom.add(sourceId)
+        this.noCloserNodesReceivedFrom.add(remoteNodeId)
         if (this.isCompleted()) {
             this.emit('completed')
             this.completionEventEmitted = true
@@ -203,7 +205,7 @@ export class RecursiveOperationSession extends EventEmitter<RecursiveOperationSe
                     this.emit('completed')
                     this.completionEventEmitted = true
                 }
-            }, 4000)  // TODO use config option or named constant?
+            }, 4000)  // TODO use options option or named constant?
         }
     }
 

@@ -1,10 +1,9 @@
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
-import { waitForCondition } from '@streamr/utils'
+import { toNodeId } from '@streamr/dht'
+import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { range } from 'lodash'
 import { NetworkStack } from '../../src/NetworkStack'
 import { createMockPeerDescriptor, createStreamMessage } from '../utils/utils'
-import { getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { randomUserId } from '@streamr/test-utils'
 
 describe('Full node network with WebSocket connections only', () => {
 
@@ -68,7 +67,7 @@ describe('Full node network with WebSocket connections only', () => {
         const successIds: string[] = []
         nodes.forEach((node) => {
             node.getContentDeliveryManager().on('newMessage', () => {
-                successIds.push(getNodeIdFromPeerDescriptor(node.getContentDeliveryManager().getPeerDescriptor()))
+                successIds.push(toNodeId(node.getContentDeliveryManager().getPeerDescriptor()))
                 receivedMessageCount += 1
             })
         })
@@ -76,7 +75,7 @@ describe('Full node network with WebSocket connections only', () => {
         const msg = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             streamPartId,
-            randomEthereumAddress()
+            randomUserId()
         )
         entryPoint.getContentDeliveryManager().broadcast(msg)
         await waitForCondition(() => receivedMessageCount === NUM_OF_NODES)

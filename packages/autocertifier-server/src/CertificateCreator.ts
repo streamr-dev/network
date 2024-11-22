@@ -1,9 +1,9 @@
-import { Logger } from '@streamr/utils'
+import { Logger, filePathToNodeFormat } from '@streamr/utils'
 import * as acme from 'acme-client'
 import fs from 'fs'
 import path from 'path'
 import { ChallengeManager } from './ChallengeManager'
-import { filePathToNodeFormat } from '@streamr/utils'
+// eslint-disable-next-line import/no-unresolved
 import { Challenge } from 'acme-client/types/rfc8555'
 
 const logger = new Logger(module)

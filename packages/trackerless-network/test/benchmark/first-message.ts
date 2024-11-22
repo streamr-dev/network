@@ -2,31 +2,27 @@
 
 import {
     DhtNode,
-    getNodeIdFromPeerDescriptor,
+    toNodeId,
     getRandomRegion,
     LatencyType,
     PeerDescriptor,
     Simulator
 } from '@streamr/dht'
 import {
-    ContentType,
-    EncryptionType,
-    MessageID,
-    SignatureType,
-    StreamMessage,
-    StreamMessageType,
+    hexToBinary,
     StreamPartID,
     StreamPartIDUtils,
     toStreamID,
-    toStreamPartID
-} from '@streamr/protocol'
-import { hexToBinary, utf8ToBinary, waitForEvent3 } from '@streamr/utils'
+    toStreamPartID,
+    utf8ToBinary, waitForEvent3
+} from '@streamr/utils'
 import fs from 'fs'
-import { NetworkNode } from '../../src/NetworkNode'
-import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
-import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
-import { Layer1Node } from '../../src/logic/Layer1Node'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
+import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
+import { DiscoveryLayerNode } from '../../src/logic/DiscoveryLayerNode'
+import { NetworkNode } from '../../src/NetworkNode'
+import { ContentType, EncryptionType, SignatureType } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { createMockPeerDescriptor, createNetworkNodeWithSimulator } from '../utils/utils'
 
 const numNodes = 10000
 
@@ -79,32 +75,35 @@ const measureJoiningTime = async () => {
     const peerDescriptor = createMockPeerDescriptor({
         region: getRandomRegion()
     })
-    console.log('starting node with id ', getNodeIdFromPeerDescriptor(peerDescriptor))
+    console.log('starting node with id ', toNodeId(peerDescriptor))
 
     // start publishing ons stream
     const stream = Array.from(streamParts.keys())[Math.floor(Math.random() * streamParts.size)]
     console.log(stream)
     publishInterval = setInterval(() => {
         i += 1
-        const streamMessage = new StreamMessage({
-            messageId: new MessageID(
-                StreamPartIDUtils.getStreamID(stream),
-                0,
-                i,
-                Math.floor(Math.random() * 20000),
-                '2222' as any,
-                'msgChainId'
-            ),
-            content: utf8ToBinary(JSON.stringify({
-                hello: 'world'
-            })),
-            messageType: StreamMessageType.MESSAGE,
-            contentType: ContentType.JSON,
-            encryptionType: EncryptionType.NONE,
+        const streamMessage = {
+            messageId: {
+                streamId: StreamPartIDUtils.getStreamID(stream),
+                streamPartition: 0,
+                timestamp: i,
+                sequenceNumber: Math.floor(Math.random() * 20000),
+                publisherId: hexToBinary('0x2222'),
+                messageChainId: 'msgChainId'
+            },
+            body: {
+                oneofKind: 'contentMessage' as const,
+                contentMessage: {
+                    content: utf8ToBinary(JSON.stringify({
+                        hello: 'world'
+                    })),
+                    contentType: ContentType.JSON,
+                    encryptionType: EncryptionType.NONE,
+                }
+            },
             signature: hexToBinary('0x1234'),
             signatureType: SignatureType.SECP256K1,
-
-        })
+        }
         streamParts.get(stream)!.broadcast(streamMessage)
     }, 1000)
     // get random node from network to use as entrypoint
@@ -112,7 +111,7 @@ const measureJoiningTime = async () => {
     const streamSubscriber = await createNetworkNodeWithSimulator(
         peerDescriptor,
         simulator,
-        [randomNode.stack.getLayer0Node().getLocalPeerDescriptor()]
+        [randomNode.stack.getControlLayerNode().getLocalPeerDescriptor()]
     )
     currentNode = streamSubscriber
     const start = performance.now()
@@ -148,21 +147,20 @@ const run = async () => {
     await shutdownNetwork()
 } 
 
-// eslint-disable-next-line promise/catch-or-return
 run().then(() => {
     console.log('done')
 }).catch((err) => {
     console.error(err)
     const contentDeliveryManager = currentNode.stack.getContentDeliveryManager()
     const streamParts = contentDeliveryManager.getStreamParts()
-    const foundData = nodes[0].stack.getLayer0Node().fetchDataFromDht(streamPartIdToDataKey(streamParts[0]))
+    const foundData = nodes[0].stack.getControlLayerNode().fetchDataFromDht(streamPartIdToDataKey(streamParts[0]))
     console.log(foundData)
-    const layer0Node = currentNode.stack.getLayer0Node() as DhtNode
-    console.log(layer0Node.getNeighbors().length)
-    console.log(layer0Node.getConnectionsView().getConnectionCount())
+    const controlLayerNode = currentNode.stack.getControlLayerNode() as DhtNode
+    console.log(controlLayerNode.getNeighbors().length)
+    console.log(controlLayerNode.getConnectionsView().getConnectionCount())
     const streamPartDelivery = contentDeliveryManager
-        .getStreamPartDelivery(streamParts[0])! as { layer1Node: Layer1Node, node: ContentDeliveryLayerNode }
-    console.log(streamPartDelivery.layer1Node.getNeighbors())
+        .getStreamPartDelivery(streamParts[0])! as { discoveryLayerNode: DiscoveryLayerNode, node: ContentDeliveryLayerNode }
+    console.log(streamPartDelivery.discoveryLayerNode.getNeighbors())
     console.log(streamPartDelivery.node.getNeighbors())
     console.log(nodes[nodes.length - 1])
     if (publishInterval) {

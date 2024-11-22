@@ -4,7 +4,7 @@ CDN-location is a small package that provides a way to detect the very rough loc
 
 The location is detected using IATA code returned in HTTP response headers of:
 
-1. https://aws.amazon.com
+1. https://d47ahk2wrqweh.cloudfront.net/cdn-location (a custom Amazon CloudFront distribution)
 2. https://www.fastly.com
 3. https://www.cloudflare.com
 

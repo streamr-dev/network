@@ -4,7 +4,7 @@ sidebar_position: 6
 
 # Permissions
 
-Stream permissioning relates to who gets to read, write and edit streams on the Network. This access control is enforced by the [on-chain stream registry](../../help/project-contracts.md). Since every permission update is a modification to the on-chain registry, it requires a small amount of `MATIC` tokens to fund the transaction.
+Stream permissioning relates to who gets to read, write and edit streams on the Network. This access control is enforced by the [on-chain stream registry](../../streamr-network/smart-contracts.md). Since every permission update is a modification to the on-chain registry, it requires a small amount of `MATIC` tokens to fund the transaction.
 
 User's are identified by their Ethereum public key address. It is these addresses that are given permission to read/write/edit streams.
 

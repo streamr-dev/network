@@ -4,7 +4,7 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { createMockConnectionDhtNode } from '../utils/utils'
 import { execSync } from 'child_process'
 import fs from 'fs'
-import { DhtAddress, getDhtAddressFromRaw, getNodeIdFromPeerDescriptor } from '../../src/identifiers'
+import { DhtAddress, toDhtAddress, toNodeId } from '../../src/identifiers'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
@@ -28,12 +28,12 @@ describe('Kademlia correctness', () => {
 
     beforeEach(async () => {
         nodes = []
-        entryPoint = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[0].data)), 8)
+        entryPoint = await createMockConnectionDhtNode(simulator, toDhtAddress(Uint8Array.from(dhtIds[0].data)), 8)
         nodes.push(entryPoint)
         nodeIndicesById[entryPoint.getNodeId()] = 0
 
         for (let i = 1; i < NUM_NODES; i++) {
-            const node = await createMockConnectionDhtNode(simulator, getDhtAddressFromRaw(Uint8Array.from(dhtIds[i].data)))
+            const node = await createMockConnectionDhtNode(simulator, toDhtAddress(Uint8Array.from(dhtIds[i].data)))
             nodeIndicesById[node.getNodeId()] = i
             nodes.push(node)
         }
@@ -68,7 +68,7 @@ describe('Kademlia correctness', () => {
                 groundTruthString += groundTruth[i + ''][j].name + ','
             }
 
-            const kademliaNeighbors = nodes[i].getClosestContacts(8).map((p) => getNodeIdFromPeerDescriptor(p))
+            const kademliaNeighbors = nodes[i].getClosestContacts(8).map((p) => toNodeId(p))
 
             let kadString = 'kademliaNeighbors: '
             kademliaNeighbors.forEach((neighbor) => {
@@ -83,8 +83,8 @@ describe('Kademlia correctness', () => {
                     }
                     correctNeighbors++
                 }
-            } catch (e) {
-                console.error('Node ' + getNodeIdFromPeerDescriptor(nodes[i].getLocalPeerDescriptor()) + ' had only ' 
+            } catch {
+                console.error('Node ' + toNodeId(nodes[i].getLocalPeerDescriptor()) + ' had only ' 
                     + kademliaNeighbors.length + ' kademlia neighbors')
             }
             if (correctNeighbors === 0) {

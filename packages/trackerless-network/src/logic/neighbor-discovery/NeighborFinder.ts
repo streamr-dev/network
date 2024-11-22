@@ -1,8 +1,8 @@
-import { setAbortableTimeout } from '@streamr/utils'
+import { Logger, setAbortableTimeout } from '@streamr/utils'
 import { NodeList } from '../NodeList'
 import { DhtAddress } from '@streamr/dht'
 
-interface FindNeighborsSessionConfig {
+interface FindNeighborsSessionOptions {
     neighbors: NodeList
     nearbyNodeView: NodeList
     leftNodeView: NodeList
@@ -15,13 +15,15 @@ interface FindNeighborsSessionConfig {
 const INITIAL_WAIT = 100
 const INTERVAL = 250
 
+const logger = new Logger(module)
+
 export class NeighborFinder {
     private readonly abortController: AbortController
-    private readonly config: FindNeighborsSessionConfig
+    private readonly options: FindNeighborsSessionOptions
     private running = false
 
-    constructor(config: FindNeighborsSessionConfig) {
-        this.config = config
+    constructor(options: FindNeighborsSessionOptions) {
+        this.options = options
         this.abortController = new AbortController()
     }
 
@@ -29,16 +31,19 @@ export class NeighborFinder {
         if (!this.running) {
             return
         }
-        const newExcludes = await this.config.doFindNeighbors(excluded)
+        const newExcludes = await this.options.doFindNeighbors(excluded)
         const uniqueContactCount = new Set([
-            ...this.config.nearbyNodeView.getIds(),
-            ...this.config.leftNodeView.getIds(),
-            ...this.config.rightNodeView.getIds(),
-            ...this.config.randomNodeView.getIds()
+            ...this.options.nearbyNodeView.getIds(),
+            ...this.options.leftNodeView.getIds(),
+            ...this.options.rightNodeView.getIds(),
+            ...this.options.randomNodeView.getIds()
         ]).size
-        if (this.config.neighbors.size() < this.config.minCount && newExcludes.length < uniqueContactCount) {
+        if (this.options.neighbors.size() < this.options.minCount && newExcludes.length < uniqueContactCount) {
             // TODO should we catch possible promise rejection?
             setAbortableTimeout(() => this.findNeighbors(newExcludes), INTERVAL, this.abortController.signal)
+        } else if (this.options.neighbors.size() === 0 && uniqueContactCount > 0) {
+            logger.debug('No neighbors found yet contacts are available, restarting handshaking process')
+            setAbortableTimeout(() => this.findNeighbors([]), INTERVAL, this.abortController.signal)
         } else {
             this.running = false
         }
@@ -54,7 +59,12 @@ export class NeighborFinder {
         }
         this.running = true
         // TODO should we catch possible promise rejection?
-        setAbortableTimeout(() => this.findNeighbors(excluded), INITIAL_WAIT, this.abortController.signal)
+        setAbortableTimeout(async () => { 
+            await Promise.all([
+                this.findNeighbors(excluded),
+                this.findNeighbors(excluded)
+            ])
+        }, INITIAL_WAIT, this.abortController.signal)
     }
 
     stop(): void {

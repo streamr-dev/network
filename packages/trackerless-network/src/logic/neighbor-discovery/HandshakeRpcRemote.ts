@@ -1,9 +1,8 @@
-import { DhtAddress, PeerDescriptor, RpcRemote, getNodeIdFromPeerDescriptor, getRawFromDhtAddress } from '@streamr/dht'
-import { Logger } from '@streamr/utils'
+import { DhtAddress, PeerDescriptor, RpcRemote, toNodeId, toDhtAddressRaw } from '@streamr/dht'
+import { Logger, StreamPartID } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { InterleaveRequest, InterleaveResponse, StreamPartHandshakeRequest } from '../../proto/packages/trackerless-network/protos/NetworkRpc'
 import { HandshakeRpcClient } from '../../proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { StreamPartID } from '@streamr/protocol'
 
 const logger = new Logger(module)
 
@@ -12,22 +11,22 @@ interface HandshakeResponse {
     interleaveTargetDescriptor?: PeerDescriptor
 }
 
-export const INTERLEAVE_REQUEST_TIMEOUT = 15000
+export const INTERLEAVE_REQUEST_TIMEOUT = 10000
 
 export class HandshakeRpcRemote extends RpcRemote<HandshakeRpcClient> {
 
     async handshake(
         streamPartId: StreamPartID,
-        neighborIds: DhtAddress[],
-        concurrentHandshakeTargetId?: DhtAddress,
-        interleaveSourceId?: DhtAddress
+        neighborNodeIds: DhtAddress[],
+        concurrentHandshakeNodeId?: DhtAddress,
+        interleaveNodeId?: DhtAddress
     ): Promise<HandshakeResponse> {
         const request: StreamPartHandshakeRequest = {
             streamPartId,
             requestId: v4(),
-            neighborIds: neighborIds.map((id) => getRawFromDhtAddress(id)),
-            concurrentHandshakeTargetId: (concurrentHandshakeTargetId !== undefined) ? getRawFromDhtAddress(concurrentHandshakeTargetId) : undefined,
-            interleaveSourceId: (interleaveSourceId !== undefined) ? getRawFromDhtAddress(interleaveSourceId) : undefined
+            neighborNodeIds: neighborNodeIds.map((id) => toDhtAddressRaw(id)),
+            concurrentHandshakeNodeId: (concurrentHandshakeNodeId !== undefined) ? toDhtAddressRaw(concurrentHandshakeNodeId) : undefined,
+            interleaveNodeId: (interleaveNodeId !== undefined) ? toDhtAddressRaw(interleaveNodeId) : undefined
         }
         try {
             const response = await this.getClient().handshake(request, this.formDhtRpcOptions())
@@ -36,7 +35,7 @@ export class HandshakeRpcRemote extends RpcRemote<HandshakeRpcClient> {
                 interleaveTargetDescriptor: response.interleaveTargetDescriptor
             }
         } catch (err: any) {
-            logger.debug(`handshake to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed`, { err })
+            logger.debug(`handshake to ${toNodeId(this.getPeerDescriptor())} failed`, { err })
             return {
                 accepted: false
             }
@@ -57,7 +56,7 @@ export class HandshakeRpcRemote extends RpcRemote<HandshakeRpcClient> {
                 accepted: res.accepted
             }
         } catch (err) {
-            logger.debug(`interleaveRequest to ${getNodeIdFromPeerDescriptor(this.getPeerDescriptor())} failed`, { err })
+            logger.debug(`interleaveRequest to ${toNodeId(this.getPeerDescriptor())} failed`, { err })
             return {
                 accepted: false
             }

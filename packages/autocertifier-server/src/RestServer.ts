@@ -1,12 +1,18 @@
 import express from 'express'
 import { RestInterface } from './RestInterface'
-import { Logger } from '@streamr/utils'
-import { Err, FailedToExtractIpAddress, SteamrWebSocketPortMissing, TokenMissing, UnspecifiedError } from '@streamr/autocertifier-client'
+import { Logger, filePathToNodeFormat } from '@streamr/utils'
+import {
+    Err,
+    FailedToExtractIpAddress,
+    SteamrWebSocketPortMissing,
+    TokenMissing,
+    UnspecifiedError,
+    CreateCertifiedSubdomainRequest,
+    UpdateIpAndPortRequest
+} from '@streamr/autocertifier-client'
 import bodyParser from 'body-parser'
 import * as https from 'https'
 import * as fs from 'fs'
-import { filePathToNodeFormat } from '@streamr/utils'
-import { CreateCertifiedSubdomainRequest, UpdateIpAndPortRequest } from '@streamr/autocertifier-client'
 
 const logger = new Logger(module)
 

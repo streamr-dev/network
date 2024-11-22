@@ -47,12 +47,6 @@ message MessageRef {
   int32 sequenceNumber = 2;
 }
 
-enum StreamMessageType {
-  MESSAGE = 0;
-  GROUP_KEY_REQUEST = 1;
-  GROUP_KEY_RESPONSE = 2;
-}
-
 enum ContentType {
   JSON = 0;
   BINARY = 1;
@@ -111,9 +105,9 @@ message GroupKey {
 message StreamPartHandshakeRequest {
   string streamPartId = 1;
   string requestId = 2;
-  optional bytes concurrentHandshakeTargetId = 3;
-  repeated bytes neighborIds = 4;
-  optional bytes interleaveSourceId = 5;
+  optional bytes concurrentHandshakeNodeId = 3;
+  repeated bytes neighborNodeIds = 4;
+  optional bytes interleaveNodeId = 5;
 }
 
 message StreamPartHandshakeResponse {
@@ -169,7 +163,13 @@ enum ProxyDirection {
 message StreamPartitionInfo {
   string id = 1;
   repeated dht.PeerDescriptor controlLayerNeighbors = 2;
-  repeated dht.PeerDescriptor contentDeliveryLayerNeighbors = 3;
+  repeated dht.PeerDescriptor deprecatedContentDeliveryLayerNeighbors = 3;
+  repeated ContentDeliveryLayerNeighborInfo contentDeliveryLayerNeighbors = 4;
+}
+
+message ContentDeliveryLayerNeighborInfo {
+  dht.PeerDescriptor peerDescriptor = 1;
+  optional int32 rtt = 2;
 }
 
 message ControlLayerInfo {

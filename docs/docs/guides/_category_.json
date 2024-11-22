@@ -1,6 +1,7 @@
 {
-  "label": "Quickstart guides",
+  "label": "Quickstart Guides",
   "position": 0,
+  "collapsed": false,
   "link": {
     "slug": "/guides",
     "type": "generated-index"

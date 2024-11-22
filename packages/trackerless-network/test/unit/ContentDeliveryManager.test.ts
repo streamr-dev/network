@@ -1,12 +1,11 @@
 import { areEqualPeerDescriptors } from '@streamr/dht'
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
-import { waitForCondition } from '@streamr/utils'
+import { StreamPartIDUtils, waitForCondition } from '@streamr/utils'
 import { ContentDeliveryManager } from '../../src/logic/ContentDeliveryManager'
-import { MockLayer0Node } from '../utils/mock/MockLayer0Node'
+import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { MockControlLayerNode } from '../utils/mock/MockControlLayerNode'
 import { MockTransport } from '../utils/mock/MockTransport'
 import { createMockPeerDescriptor, createStreamMessage, mockConnectionLocker } from '../utils/utils'
-import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import { randomUserId } from '@streamr/test-utils'
 
 describe('ContentDeliveryManager', () => {
 
@@ -15,7 +14,7 @@ describe('ContentDeliveryManager', () => {
 
     beforeEach(async () => {
         manager = new ContentDeliveryManager({})
-        const mockLayer0 = new MockLayer0Node(peerDescriptor)
+        const mockLayer0 = new MockControlLayerNode(peerDescriptor)
         await manager.start(mockLayer0, new MockTransport(), mockConnectionLocker)
     })
 
@@ -33,7 +32,7 @@ describe('ContentDeliveryManager', () => {
         const message = createStreamMessage(
             JSON.stringify({ hello: 'WORLD' }),
             streamPartId,
-            randomEthereumAddress()
+            randomUserId()
         )
 
         beforeEach(async () => {
@@ -62,7 +61,7 @@ describe('ContentDeliveryManager', () => {
         it('happy path', async () => {
             const streamPartId = StreamPartIDUtils.parse('stream#0')
             const proxy = createMockPeerDescriptor()
-            const userId = randomEthereumAddress()
+            const userId = randomUserId()
             await manager.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
             expect(manager.isProxiedStreamPart(streamPartId)).toBe(true)
             await manager.setProxies(streamPartId, [], ProxyDirection.PUBLISH, userId)
@@ -72,7 +71,7 @@ describe('ContentDeliveryManager', () => {
         it('empty node list', async () => {
             const streamPartId = StreamPartIDUtils.parse('stream#0')
             const proxy = createMockPeerDescriptor()
-            const userId = randomEthereumAddress()
+            const userId = randomUserId()
             await manager.setProxies(streamPartId, [], ProxyDirection.PUBLISH, userId)
             expect(manager.isProxiedStreamPart(streamPartId)).toBe(false)
             await manager.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)
@@ -84,7 +83,7 @@ describe('ContentDeliveryManager', () => {
         it('connection count to 0', async () => {
             const streamPartId = StreamPartIDUtils.parse('stream#0')
             const proxy = createMockPeerDescriptor()
-            const userId = randomEthereumAddress()
+            const userId = randomUserId()
             await manager.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId, 0)
             expect(manager.isProxiedStreamPart(streamPartId)).toBe(false)
             await manager.setProxies(streamPartId, [proxy], ProxyDirection.PUBLISH, userId)

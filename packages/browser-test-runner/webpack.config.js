@@ -15,7 +15,7 @@ module.exports = function({ entry, libraryName, alias = {} }) {
                 rules: [
                     {
                         test: /\.ts?$/,
-                        exclude: /(node_modules|simulation)/,
+                        exclude: [/(node_modules|simulation)/, /\.d\.ts$/],
                         use: [{
                             loader: 'ts-loader',
                             options: { configFile: 'tsconfig.browser.json' },
@@ -58,6 +58,7 @@ module.exports = function({ entry, libraryName, alias = {} }) {
                 }
             },
             output: {
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 filename: `${libraryName}.js`,
                 sourceMapFilename: `[name].[contenthash].js.map`,
                 chunkFilename: '[id].[contenthash].js',

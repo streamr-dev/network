@@ -17,7 +17,6 @@ export class Multimap<K, V> {
         const items = this.delegatee.get(key)
         if (items !== undefined) {
             return items.includes(value)
-            // eslint-disable-next-line no-else-return
         } else {
             return false
         }
@@ -55,5 +54,13 @@ export class Multimap<K, V> {
         for (const k of this.keys()) {
             yield* this.get(k)
         }
+    }
+
+    getKeyCount(): number {
+        return this.delegatee.size
+    }
+
+    isEmpty(): boolean {
+        return this.getKeyCount() === 0
     }
 }

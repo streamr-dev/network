@@ -1,43 +1,46 @@
-import {
-    ContentType,
-    EncryptionType,
-    MessageID,
-    MessageRef,
-    SignatureType,
-    StreamMessage,
-    StreamMessageType,
-    StreamPartIDUtils
-} from '@streamr/protocol'
-import { randomEthereumAddress } from '@streamr/test-utils'
-import { hexToBinary, utf8ToBinary, wait, waitForCondition, waitForEvent3 } from '@streamr/utils'
+import { DhtAddress } from '@streamr/dht'
+import { randomUserId } from '@streamr/test-utils'
+import { StreamPartIDUtils, hexToBinary, utf8ToBinary, wait, waitForCondition, waitForEvent3 } from '@streamr/utils'
 import { NetworkNode, createNetworkNode } from '../../src/NetworkNode'
 import { ContentDeliveryLayerNode } from '../../src/logic/ContentDeliveryLayerNode'
 import { ProxyClient } from '../../src/logic/proxy/ProxyClient'
-import { ProxyDirection } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
+import {
+    ContentType,
+    EncryptionType,
+    ProxyDirection,
+    SignatureType,
+    StreamMessage
+} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { createMockPeerDescriptor } from '../utils/utils'
-import { DhtAddress } from '@streamr/dht'
 
-const PROXIED_NODE_USER_ID = randomEthereumAddress()
+const PROXIED_NODE_USER_ID = randomUserId()
 const STREAM_PART_ID = StreamPartIDUtils.parse('proxy-test#0')
-const MESSAGE = new StreamMessage({
-    messageId: new MessageID(
-        StreamPartIDUtils.getStreamID(STREAM_PART_ID),
-        StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
-        666,
-        0,
-        randomEthereumAddress(),
-        'msgChainId'
-    ),
-    prevMsgRef: new MessageRef(665, 0),
-    content: utf8ToBinary(JSON.stringify({
-        hello: 'world'
-    })),
-    messageType: StreamMessageType.MESSAGE,
-    encryptionType: EncryptionType.NONE,
+const MESSAGE: StreamMessage = {
+    messageId: {
+        streamId: StreamPartIDUtils.getStreamID(STREAM_PART_ID),
+        streamPartition: StreamPartIDUtils.getStreamPartition(STREAM_PART_ID),
+        timestamp: 666,
+        sequenceNumber: 0,
+        publisherId: hexToBinary(randomUserId()),
+        messageChainId: 'msgChainId'
+    },
+    previousMessageRef: {
+        timestamp: 665,
+        sequenceNumber: 0
+    },
+    body: {
+        oneofKind: 'contentMessage',
+        contentMessage: {
+            content: utf8ToBinary(JSON.stringify({
+                hello: 'world'
+            })),
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE,
+        }
+    },
     signatureType: SignatureType.SECP256K1,
-    signature: hexToBinary('0x1234'),
-    contentType: ContentType.JSON
-})
+    signature: hexToBinary('0x1234')
+}
 
 describe('Proxy connections', () => {
 

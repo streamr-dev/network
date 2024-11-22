@@ -12,21 +12,42 @@ Changes before Tatum release are not documented in this file.
 
 #### Added
 
+- Method `StreamrClient#getDiagnosticInfo()` provides diagnostic info about network (https://github.com/streamr-dev/network/pull/2740, https://github.com/streamr-dev/network/pull/2741)
+
 #### Changed
+
+- Network-level changes
+  - Avoid routing through proxy connections (https://github.com/streamr-dev/network/pull/2801) 
+  - Internal record `StreamPartitionInfo` format changed (https://github.com/streamr-dev/network/pull/2738, https://github.com/streamr-dev/network/pull/2790)
 
 #### Deprecated
 
 #### Removed
 
+- Remove support for legacy encryption keys (https://github.com/streamr-dev/network/pull/2757)
+- Remove obsolete config options:
+  - `network.node.id` (https://github.com/streamr-dev/network/pull/2777)
+  - `network.controlLayer.webNewrtcConnectionTimeout` (https://github.com/streamr-dev/network/pull/2776)
+
 #### Fixed
 
-#### Security
+- Fix WebRTC connections in Firefox (https://github.com/streamr-dev/network/pull/2746)
+- Fix flag expiration time in `Operator#getExpiredFlags()` (https://github.com/streamr-dev/network/pull/2739)
+- Network-level fixes
+  - Fix node discover in small topologies (e.g. ~2 nodes) (https://github.com/streamr-dev/network/pull/2786)
+  - Fix to time-to-data spike scenarios (https://github.com/streamr-dev/network/pull/2802)
+  - Make network node stop faster (https://github.com/streamr-dev/network/pull/2736)
+  - Reject requests after disconnection events (https://github.com/streamr-dev/network/pull/2760)
+  - Fix geoip database file validation (https://github.com/streamr-dev/network/pull/2783)  
 
+#### Security
 
 ### @streamr/node
 
 #### Added
 
+- Add new operator plugin config options (for testing purposes) (https://github.com/streamr-dev/network/pull/2742)
+
 #### Changed
 
 #### Deprecated
@@ -35,8 +56,9 @@ Changes before Tatum release are not documented in this file.
 
 #### Fixed
 
-#### Security
+- Fix operator flag voting behavior when using custom gas estimation (https://github.com/streamr-dev/network/pull/2784)
 
+#### Security
 
 ### @streamr/cli-tools
 
@@ -51,6 +73,103 @@ Changes before Tatum release are not documented in this file.
 #### Fixed
 
 #### Security
+
+
+## [101.1.2] - 2024-09-04
+
+### @streamr/sdk
+
+#### Fixed
+
+- Fixed gas estimation in `Operator#voteOnFlag` (https://github.com/streamr-dev/network/pull/2734)
+
+
+## [101.1.1] - 2024-08-29
+
+### @streamr/sdk
+
+#### Changed
+
+- Numerous improvements to time-to-data (https://github.com/streamr-dev/network/pull/2723, https://github.com/streamr-dev/network/pull/2724, https://github.com/streamr-dev/network/pull/2726, https://github.com/streamr-dev/network/pull/2727)
+- Reduce message propagation cache TTL from 30 seconds to 10 seconds (https://github.com/streamr-dev/network/pull/2732)
+
+### @streamr/node
+
+### Changed
+
+- Optimize the "operator value breach" task to be less demanding on EVM RPCs (https://github.com/streamr-dev/network/pull/2721)
+
+#### Fixed
+
+- Add better checks to the "expired flag closing" task so that the likelihood of submitting reverting transactions to the blockchain is reduced (https://github.com/streamr-dev/network/pull/2725)
+
+
+## [101.1.0] - 2024-08-13
+
+### @streamr/sdk
+
+#### Added
+
+- Add method `findOperators` to client (https://github.com/streamr-dev/network/pull/2703)
+
+#### Fixed
+
+- Fix operator review request event parsing (https://github.com/streamr-dev/network/pull/2714)
+
+### @streamr/node
+
+#### Added
+
+- Operators now register external RPC endpoints for accelerated stream entrypoint discovery (https://github.com/streamr-dev/network/pull/2702)
+
+#### Fixed
+
+- Fix propagation buffer TTL issue (https://github.com/streamr-dev/network/pull/2682)
+- Fix operator review request event parsing (https://github.com/streamr-dev/network/pull/2714)
+
+
+## [101.0.1] - 2024-07-09
+
+### @streamr/sdk
+
+#### Changed
+
+- Set default RPC timeout to 30 seconds (https://github.com/streamr-dev/network/commit/131fb456d26486c12b2facd6e78bee47319c2533)
+
+
+## [101.0.0] - 2024-07-08
+
+### @streamr/sdk
+
+#### Changed
+
+- Update ethers.js library to v6 (https://github.com/streamr-dev/network/pull/2506)
+- Restructure `contracts` config section (https://github.com/streamr-dev/network/pull/2581)
+- Improve reliability of JSON RPC interactions by adding retry redundancy (https://github.com/streamr-dev/network/pull/2562, https://github.com/streamr-dev/network/pull/2601)
+- Rename events (https://github.com/streamr-dev/network/pull/2604, https://github.com/streamr-dev/network/pull/2605) as denoted below
+  - `createStream` => `streamCreated`
+  - `addToStorageNode` => `streamAddedToStorageNode`
+  - `removeFromStorageNode` => `streamRemovedFromFromStorageNode`
+  - `resendComplete` => `resendCompleted` (on instances of `Subscription`)
+
+#### Removed
+
+- Remove obsolete RPC provider options (https://github.com/streamr-dev/network/pull/2583)
+
+### @streamr/node
+
+#### Changed
+
+- Improve reliability of JSON RPC interactions by adding retry redundancy (https://github.com/streamr-dev/network/pull/2562, https://github.com/streamr-dev/network/pull/2601)
+
+#### Deprecated
+
+- Deprecate command `streamr-broker`. Use `streamr-node` instead. (https://github.com/streamr-dev/network/pull/2626)
+- Deprecate command `streamr-broker-init`. Use `streamr-node-init` instead. (https://github.com/streamr-dev/network/pull/2626)
+
+#### Fixed
+
+- Fix memory leak in SubscriberPlugin (https://github.com/streamr-dev/network/pull/2578)
 
 
 ## [100.2.4] - 2024-05-06
@@ -161,7 +280,12 @@ Changes before Tatum release are not documented in this file.
 - Change websocket client library implementation used in Node.js (https://github.com/streamr-dev/network/pull/2384)
 
 
-[Unreleased]: https://github.com/streamr-dev/network/compare/v100.2.4...HEAD
+[Unreleased]: https://github.com/streamr-dev/network/compare/v101.1.2...HEAD
+[101.1.2]: https://github.com/streamr-dev/network/compare/v101.1.1...v101.1.2
+[101.1.1]: https://github.com/streamr-dev/network/compare/v101.1.0...v101.1.1
+[101.1.0]: https://github.com/streamr-dev/network/compare/v101.0.1...v101.1.0
+[101.0.1]: https://github.com/streamr-dev/network/compare/v101.0.0...v101.0.1
+[101.0.0]: https://github.com/streamr-dev/network/compare/v100.2.4...v101.0.0
 [100.2.4]: https://github.com/streamr-dev/network/compare/v100.2.3...v100.2.4
 [100.2.3]: https://github.com/streamr-dev/network/compare/v100.2.2...v100.2.3
 [100.2.2]: https://github.com/streamr-dev/network/compare/v100.2.1...v100.2.2

@@ -1,5 +1,5 @@
 import { Multimap } from '@streamr/utils'
-import { DhtAddress, createRandomDhtAddress, getRawFromDhtAddress } from '../../src/identifiers'
+import { DhtAddress, randomDhtAddress, toDhtAddressRaw } from '../../src/identifiers'
 import { minBy, range, without } from 'lodash'
 import { SortedContactList } from '../../src/dht/contact/SortedContactList'
 import { getDistance } from '../../src/dht/PeerManager'
@@ -47,7 +47,7 @@ const getClosestNodes = (referenceId: DhtAddress, nodeIds: DhtAddress[], count: 
  */
 export const createTestTopology = (nodeCount: number, minNeighorCount: number): Multimap<DhtAddress, DhtAddress> => {
     const topology: Multimap<DhtAddress, DhtAddress> = new Multimap()
-    const nodeIds = range(nodeCount).map(() => createRandomDhtAddress())
+    const nodeIds = range(nodeCount).map(() => randomDhtAddress())
     for (const nodeId of nodeIds) {
         const closestNodes = getClosestNodes(nodeId, nodeIds, minNeighorCount, false)
         for (const closestNode of closestNodes) {
@@ -71,7 +71,7 @@ export const createTestTopology = (nodeCount: number, minNeighorCount: number): 
                 const closestNodedId = getClosestNodes(nodeId, otherNodes, 1, false)[0]
                 return [nodeId, closestNodedId]
             })
-            const mergePair = minBy(closestPairs, (pair) => getDistance(getRawFromDhtAddress(pair[0]), getRawFromDhtAddress(pair[1])))!
+            const mergePair = minBy(closestPairs, (pair) => getDistance(toDhtAddressRaw(pair[0]), toDhtAddressRaw(pair[1])))!
             topology.add(mergePair[0], mergePair[1])
             topology.add(mergePair[1], mergePair[0])
         }

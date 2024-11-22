@@ -1,8 +1,8 @@
 import { areEqualBinaries } from '@streamr/utils'
 import { printExpected, printReceived } from 'jest-matcher-utils'
 import { isEqual } from 'lodash'
-import { ConnectivityMethod, NodeType, PeerDescriptor } from '../../src/proto/packages/dht/protos/DhtRpc'
-import { getDhtAddressFromRaw } from '../../src/identifiers'
+import { ConnectivityMethod, NodeType, PeerDescriptor } from '../../generated/packages/dht/protos/DhtRpc'
+import { toDhtAddress } from '../../src/identifiers'
 
 // we could ES2015 module syntax (https://jestjs.io/docs/expect#expectextendmatchers),
 // but the IDE doesn't find custom matchers if we do that
@@ -25,7 +25,7 @@ const toEqualPeerDescriptor = (
 ): jest.CustomMatcherResult => {
     const messages: string[] = []
     if (!areEqualBinaries(expected.nodeId, actual.nodeId)) {
-        messages.push(formErrorMessage('nodeId', getDhtAddressFromRaw(expected.nodeId), getDhtAddressFromRaw(actual.nodeId)))
+        messages.push(formErrorMessage('nodeId', toDhtAddress(expected.nodeId), toDhtAddress(actual.nodeId)))
     }
     if (!isEqual(expected.type, actual.type)) {
         const typeNames = { [NodeType.NODEJS]: 'NODEJS', [NodeType.BROWSER]: 'BROWSER' }

@@ -1,3 +1,4 @@
+import { Cache } from './Cache'
 import { pTransaction } from './pTransaction'
 import { AbortError, asAbortable } from './asAbortable'
 import { setAbortableInterval, setAbortableTimeout } from './abortableTimers'
@@ -42,7 +43,7 @@ import { binaryToHex, binaryToUtf8, hexToBinary, utf8ToBinary, areEqualBinaries 
 import { filePathToNodeFormat } from './filePathToNodeFormat'
 import { retry } from './retry'
 import { toLengthPrefixedFrame, LengthPrefixedFrameDecoder } from './lengthPrefixedFrameUtils'
-import { verifySignature, createSignature, recoverAddress, hash } from './signingUtils'
+import { verifySignature, createSignature, recoverSignerUserId, hash } from './signingUtils'
 import { ipv4ToNumber, numberToIpv4 } from './ipv4ToNumber'
 import { MapWithTtl } from './MapWithTtl'
 
@@ -103,11 +104,12 @@ export {
     toLengthPrefixedFrame,
     createSignature,
     verifySignature,
-    recoverAddress,
+    recoverSignerUserId,
     ipv4ToNumber,
     numberToIpv4,
     hash,
-    MapWithTtl
+    MapWithTtl,
+    Cache
 }
 
 export {
@@ -119,3 +121,8 @@ export {
     MetricsReport,
     RateMetric
 }
+
+export { StreamID, toStreamID, StreamIDUtils } from './StreamID'
+export { MAX_PARTITION_COUNT, ensureValidStreamPartitionCount, ensureValidStreamPartitionIndex } from './partition'
+export { StreamPartID, toStreamPartID, StreamPartIDUtils } from './StreamPartID'
+export { UserID, toUserId, isValidUserId } from './UserID'

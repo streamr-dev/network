@@ -5,9 +5,11 @@ import {
     WebsocketClientConnection,
     ManagedConnection,
     RoutingRpcCommunicator,
-    createRandomDhtAddress,
-    getRawFromDhtAddress,
-    ConnectionType
+    randomDhtAddress,
+    toDhtAddressRaw,
+    PendingConnection,
+    IConnection,
+    createOutgoingHandshaker
 } from '@streamr/dht'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { Logger } from '@streamr/utils'
@@ -18,7 +20,7 @@ const logger = new Logger(module)
 // This is a dummy peer descriptor that is used to connect to the streamr websocket
 // To ensure that the autocertified subdomain is used for the Streamr Network
 const LOCAL_PEER_DESCRIPTOR: PeerDescriptor = {
-    nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
+    nodeId: toDhtAddressRaw(randomDhtAddress()),
     type: NodeType.NODEJS,
 }
 
@@ -30,7 +32,7 @@ export const runStreamrChallenge = (
 ): Promise<void> => {
     return new Promise((resolve, reject) => {
         const remotePeerDescriptor: PeerDescriptor = {
-            nodeId: getRawFromDhtAddress(createRandomDhtAddress()),
+            nodeId: toDhtAddressRaw(randomDhtAddress()),
             type: NodeType.NODEJS,
             websocket: {
                 host: streamrWebSocketIp,
@@ -42,23 +44,16 @@ export const runStreamrChallenge = (
         const address = 'wss://' + remotePeerDescriptor.websocket!.host + ':' +
         remotePeerDescriptor.websocket!.port
 
-        const managedConnection = new ManagedConnection(LOCAL_PEER_DESCRIPTOR,
-            ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
-        managedConnection.setRemotePeerDescriptor(remotePeerDescriptor)
-
-        const onDisconnected = () => {
-            reject(new FailedToConnectToStreamrWebSocket('Autocertifier failed to connect to '
-                + address + '. Please chack that the IP address is not behind a NAT.'))
-        }
-
-        socket.on('disconnected', onDisconnected)
-
-        managedConnection.on('handshakeCompleted', () => {
+        const pendingConnection = new PendingConnection(remotePeerDescriptor)
+        const handshaker = createOutgoingHandshaker(LOCAL_PEER_DESCRIPTOR, pendingConnection, socket)
+        pendingConnection.on('connected', (peerDescriptor: PeerDescriptor, connection: IConnection) => {   
+            const managedConnection = new ManagedConnection(peerDescriptor, connection)
+        
             socket.off('disconnected', onDisconnected)
             const communicator = new RoutingRpcCommunicator(SERVICE_ID,
-                (msg: Message): Promise<void> => {
+                async (msg: Message): Promise<void> => {
                     logger.info('sending message to peer')
-                    return managedConnection.send(Message.toBinary(msg), true)
+                    return managedConnection.send(Message.toBinary(msg))
                 })
             managedConnection.on('managedData', (msg: Uint8Array) => {
                 communicator.handleMessageFromPeer(Message.fromBinary(msg))
@@ -68,14 +63,24 @@ export const runStreamrChallenge = (
             rpcClient.hasSession({ sessionId }).then(() => {
                 resolve()
             }).catch((e) => {
+                // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
                 reject(e)
             }).finally(() => {
                 communicator.stop()
                 // close with leave flag true just in case 
                 // any info of the autocertifer is in the network
                 managedConnection.close(true)
+                pendingConnection.close(true)
+                handshaker.stop()
+
             })
         })
+        const onDisconnected = () => {
+            reject(new FailedToConnectToStreamrWebSocket('Autocertifier failed to connect to '
+                + address + '. Please chack that the IP address is not behind a NAT.'))
+        }
+
+        socket.on('disconnected', onDisconnected)
 
         // TODO: the 1st query by autocertifier-client will always be self-signed,
         // later queries may have a proper certificate

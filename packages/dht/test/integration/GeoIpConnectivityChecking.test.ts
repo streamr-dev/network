@@ -43,11 +43,12 @@ describe('ConnectivityChecking', () => {
                 transport: new MockTransport(),
                 geoIpDatabaseFolder: dbPath
             }),
-            metricsContext: new MetricsContext()
+            metricsContext: new MetricsContext(),
+            allowIncomingPrivateConnections: false
         })
         await server.start()
         mock = jest.spyOn(WebsocketServerConnection.prototype, 'getRemoteIpAddress').mockImplementation(() => testIp)
-    })
+    }, 15000)
 
     afterEach(async () => {
         await server.stop()
@@ -61,7 +62,7 @@ describe('ConnectivityChecking', () => {
             host: HOST,
             port: PORT,
             tls: false,
-            selfSigned: false
+            allowSelfSignedCertificate: false
         }
         const response = await sendConnectivityRequest(request, server.getLocalPeerDescriptor())
         expect(response.version).toEqual(LOCAL_PROTOCOL_VERSION)

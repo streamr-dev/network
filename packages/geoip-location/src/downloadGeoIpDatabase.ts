@@ -56,7 +56,7 @@ const downloadNewDb = async (
     } catch (e) {
         try {
             fs.rmSync(downloadFolder, { recursive: true })
-        } catch (e2) {
+        } catch {
             // ignore error when removing the temporary folder
         }
         throw e
@@ -67,7 +67,7 @@ const downloadNewDb = async (
     if (!isDbFileValid(dbFileInDownloadFolder, remoteHash)) {
         try {
             fs.rmSync(downloadFolder, { recursive: true })
-        } catch (e2) {
+        } catch {
             // ignore error when removing the temporary folder
         }
         throw new Error('Downloaded database hash does not match the expected hash')
@@ -81,7 +81,7 @@ const downloadNewDb = async (
     } finally {
         try {
             fs.rmSync(downloadFolder, { recursive: true })
-        } catch (e2) {
+        } catch {
             // ignore error when removing the temporary folder
         }
     }
@@ -118,7 +118,7 @@ const downloadRemoteHash = async (remoteHashUrl: string, abortSignal: AbortSigna
     return (await response.text()).trim()
 }
 
-const isDbFileValid = async (dbFile: string, remoteHash: string): Promise<boolean> => {
+const isDbFileValid = (dbFile: string, remoteHash: string): boolean => {
     // check if the local db exists and calculate its hash
 
     try {
@@ -131,7 +131,7 @@ const isDbFileValid = async (dbFile: string, remoteHash: string): Promise<boolea
         } else {
             return true
         }
-    } catch (e) {
+    } catch {
         // if the local db does not exist, or some other exception occurres db is not considered valid
         return false
     }
@@ -166,7 +166,7 @@ export const downloadGeoIpDatabase = async (
     const dbFileInDbFolder = dbFolder + DB_NAME + DB_SUFFIX
 
     const remoteHash = await downloadRemoteHash(remoteHashUrl, abortSignal)
-    const dbValid = await isDbFileValid(dbFileInDbFolder, remoteHash)
+    const dbValid = isDbFileValid(dbFileInDbFolder, remoteHash)
     if (dbValid === false) {
         await downloadNewDb(dbDownloadUrl, dbFolder, remoteHash, abortSignal)
         // return new reader if db was downloaded

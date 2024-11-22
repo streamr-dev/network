@@ -1,13 +1,13 @@
-import { DhtAddress, ListeningRpcCommunicator, getNodeIdFromPeerDescriptor } from '@streamr/dht'
+import { DhtAddress, ListeningRpcCommunicator, toNodeId } from '@streamr/dht'
+import { StreamPartIDUtils } from '@streamr/utils'
+import { range } from 'lodash'
+import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
+import { NodeList } from '../../src/logic/NodeList'
 import { NeighborFinder } from '../../src/logic/neighbor-discovery/NeighborFinder'
 import { NeighborUpdateRpcLocal } from '../../src/logic/neighbor-discovery/NeighborUpdateRpcLocal'
-import { createMockPeerDescriptor } from '../utils/utils'
-import { NodeList } from '../../src/logic/NodeList'
-import { StreamPartIDUtils } from '@streamr/protocol'
-import { MockTransport } from '../utils/mock/MockTransport'
 import { ContentDeliveryRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { ContentDeliveryRpcRemote } from '../../src/logic/ContentDeliveryRpcRemote'
-import { range } from 'lodash'
+import { MockTransport } from '../utils/mock/MockTransport'
+import { createMockPeerDescriptor } from '../utils/utils'
 
 describe('NeighborUpdateRpcLocal', () => {
 
@@ -35,8 +35,8 @@ describe('NeighborUpdateRpcLocal', () => {
 
     beforeEach(() => {
         rpcCommunicator = new ListeningRpcCommunicator('mock', new MockTransport())
-        neighbors = new NodeList(getNodeIdFromPeerDescriptor(localPeerDescriptor), neighborTargetCount + 1)
-        nearbyNodeView = new NodeList(getNodeIdFromPeerDescriptor(localPeerDescriptor), neighborTargetCount)
+        neighbors = new NodeList(toNodeId(localPeerDescriptor), neighborTargetCount + 1)
+        nearbyNodeView = new NodeList(toNodeId(localPeerDescriptor), neighborTargetCount)
         neighborFinder = {
             start: jest.fn()
         } as any
@@ -122,12 +122,12 @@ describe('NeighborUpdateRpcLocal', () => {
             removeMe: false
         }, { incomingSourceDescriptor: caller } as any)
         expect(res.removeMe).toEqual(true)
-        expect(neighbors.has(getNodeIdFromPeerDescriptor(caller))).toEqual(false)
+        expect(neighbors.has(toNodeId(caller))).toEqual(false)
     })
 
     it('does not ask to be removed if there is an ongoing handshake to the caller', async () => {
         const caller = createMockPeerDescriptor()
-        ongoingHandshakes.add(getNodeIdFromPeerDescriptor(caller))
+        ongoingHandshakes.add(toNodeId(caller))
         const res = await rpcLocal.neighborUpdate({
             streamPartId,
             neighborDescriptors: [localPeerDescriptor],

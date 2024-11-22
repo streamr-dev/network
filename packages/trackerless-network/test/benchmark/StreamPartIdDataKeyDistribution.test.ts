@@ -1,9 +1,9 @@
 /* eslint-disable no-console */
 
-import { groupBy, range } from 'lodash'
-import { streamPartIdToDataKey } from '../../src/logic/EntryPointDiscovery'
-import { StreamPartIDUtils } from '@streamr/protocol'
 import { DhtAddress } from '@streamr/dht'
+import { StreamPartIDUtils } from '@streamr/utils'
+import { groupBy, range } from 'lodash'
+import { streamPartIdToDataKey } from '../../src/logic/ContentDeliveryManager'
 
 describe('StreamPartIdDataKeyDistribution', () => {
 

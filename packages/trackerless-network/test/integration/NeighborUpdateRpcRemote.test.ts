@@ -5,12 +5,12 @@ import {
     Simulator,
     SimulatorTransport
 } from '@streamr/dht'
+import { StreamPartIDUtils } from '@streamr/utils'
 import { NeighborUpdateRpcRemote } from '../../src/logic/neighbor-discovery/NeighborUpdateRpcRemote'
 import { NeighborUpdate } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import {
     NeighborUpdateRpcClient,
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
-import { StreamPartIDUtils } from '@streamr/protocol'
 
 describe('NeighborUpdateRpcRemote', () => {
     let mockServerRpc: ListeningRpcCommunicator
