@@ -4,13 +4,13 @@ import LRU from '../../vendor/quick-lru'
 type KeyType = (string | number | symbol)[]
 
 interface Options<K extends KeyType, V> {
-    valueFactory: (...args: K) => Promise<V>
+    valueFactory: (...key: K) => Promise<V>
     maxSize: number
     maxAge?: number
 }
 
-// an wrapper object is used so that we can store undefined values
-interface ValueWrapper<V> {
+interface Item<K, V> {
+    key: K
     value: V
 }
 
@@ -21,49 +21,49 @@ interface ValueWrapper<V> {
  */
 export class Mapping<K extends KeyType, V> {
 
-    private readonly cache: LRU<string, ValueWrapper<V>>
+    private readonly cache: LRU<string, Item<K, V>>
     private readonly pendingPromises: Map<string, Promise<V>> = new Map()
     private readonly opts: Options<K, V>
 
     constructor(opts: Options<K, V>) {
-        this.cache = new LRU<string, ValueWrapper<V>>({
+        this.cache = new LRU<string, Item<K, V>>({
             maxSize: opts.maxSize,
             maxAge: opts.maxAge
         })
         this.opts = opts
     }
 
-    async get(...args: K): Promise<V> {
-        const key = formLookupKey(...args)
-        const pendingPromises = this.pendingPromises.get(key)
+    async get(...key: K): Promise<V> {
+        const lookupKey = formLookupKey(...key)
+        const pendingPromises = this.pendingPromises.get(lookupKey)
         if (pendingPromises !== undefined) {
             return await pendingPromises
         } else {
-            let valueWrapper = this.cache.get(key)
-            if (valueWrapper === undefined) {
-                const promise = this.opts.valueFactory(...args)
-                this.pendingPromises.set(key, promise)
+            let item = this.cache.get(lookupKey)
+            if (item === undefined) {
+                const promise = this.opts.valueFactory(...key)
+                this.pendingPromises.set(lookupKey, promise)
                 let value
                 try {
                     value = await promise
                 } finally {
-                    this.pendingPromises.delete(key)
+                    this.pendingPromises.delete(lookupKey)
                 }
-                valueWrapper = { value }
-                this.cache.set(key, valueWrapper)
+                item = { key, value }
+                this.cache.set(lookupKey, item)
             }
-            return valueWrapper.value
+            return item.value
         }
     }
 
-    set(args: K, value: V): void {
-        this.cache.set(formLookupKey(...args), { value })
+    set(key: K, value: V): void {
+        this.cache.set(formLookupKey(...key), { key, value })
     }
 
-    invalidate(predicate: (lookupKey: string) => boolean): void {
-        for (const key of this.cache.keys()) {
-            if (predicate(key)) {
-                this.cache.delete(key)
+    invalidate(predicate: (key: K) => boolean): void {
+        for (const [lookupKey, item] of this.cache.entries()) {
+            if (predicate(item.key)) {
+                this.cache.delete(lookupKey)
             }
         }
     }

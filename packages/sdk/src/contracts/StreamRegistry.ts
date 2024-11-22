@@ -103,8 +103,8 @@ const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: st
 }
 
 const invalidateCache = (cache: Mapping<[StreamID, ...args: any[]], any>, streamId: StreamID): void => {
-    const matchTarget = (s: string) => s.startsWith(streamId)
-    cache.invalidate(matchTarget)
+    const predicate = (key: [StreamID, ...args: any[]]) => key[0] === streamId
+    cache.invalidate(predicate)
 }
 
 @scoped(Lifecycle.ContainerScoped)
