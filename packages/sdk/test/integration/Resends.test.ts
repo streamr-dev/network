@@ -46,7 +46,8 @@ describe('Resends', () => {
             streamRegistry: createStreamRegistry(),
             groupKeyQueue: await createGroupKeyQueue(authentication, groupKey),
             signatureValidator: mock<SignatureValidator>(),
-            messageSigner: new MessageSigner(authentication)
+            messageSigner: new MessageSigner(authentication),
+            cacheMaxSize: 999999
         })
         // store the encryption key publisher's local group key store
         await publisher.updateEncryptionKey({

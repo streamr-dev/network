@@ -60,23 +60,27 @@ export class OrderMessages {
         getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>,
         onUnfillableGap: ((gap: Gap) => void),
         resends: Resends,
-        config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
+        // eslint-disable-next-line max-len
+        config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'> & { cache: { maxSize: number } }
     ) {
-        this.chains = new Mapping(async (publisherId: UserID, msgChainId: string) => {
-            const chain = createMessageChain(
-                {
-                    streamPartId, 
-                    publisherId, 
-                    msgChainId
-                },
-                getStorageNodes,
-                onUnfillableGap,
-                resends,
-                config,
-                this.abortController.signal
-            )
-            chain.on('orderedMessageAdded', (msg: StreamMessage) => this.onOrdered(msg))
-            return chain
+        this.chains = new Mapping({
+            valueFactory: async (publisherId: UserID, msgChainId: string) => {
+                const chain = createMessageChain(
+                    {
+                        streamPartId, 
+                        publisherId, 
+                        msgChainId
+                    },
+                    getStorageNodes,
+                    onUnfillableGap,
+                    resends,
+                    config,
+                    this.abortController.signal
+                )
+                chain.on('orderedMessageAdded', (msg: StreamMessage) => this.onOrdered(msg))
+                return chain
+            },
+            maxSize: config.cache.maxSize
         })
     }
 

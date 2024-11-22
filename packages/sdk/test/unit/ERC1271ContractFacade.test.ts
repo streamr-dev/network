@@ -36,7 +36,7 @@ describe('ERC1271ContractFacade', () => {
                     throw new Error('test: should not be here')
             }
         })
-        contractFacade = new ERC1271ContractFacade(contractFactory, rpcProviderSource)
+        contractFacade = new ERC1271ContractFacade(contractFactory, rpcProviderSource, { cache: { maxSize: 999999 } } as any)
     })
 
     it('isValidSignature delegates to isValidSignature', async () => {

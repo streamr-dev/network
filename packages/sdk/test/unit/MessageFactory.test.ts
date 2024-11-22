@@ -39,7 +39,8 @@ const createMessageFactory = async (opts?: {
                 }),
                 groupKeyQueue: await createGroupKeyQueue(authentication, GROUP_KEY),
                 signatureValidator: new SignatureValidator(opts?.erc1271ContractFacade ?? mock<ERC1271ContractFacade>()),
-                messageSigner: new MessageSigner(authentication)
+                messageSigner: new MessageSigner(authentication),
+                cacheMaxSize: 999999
             },
             opts
         )

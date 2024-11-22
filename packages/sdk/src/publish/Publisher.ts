@@ -15,6 +15,7 @@ import { StreamDefinition } from '../types'
 import { Mapping } from '../utils/Mapping'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { MessageFactory } from './MessageFactory'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 
 export interface PublishMetadata {
     timestamp?: string | number | Date
@@ -52,12 +53,14 @@ export class Publisher {
     private readonly authentication: Authentication
     private readonly signatureValidator: SignatureValidator
     private readonly messageSigner: MessageSigner
+    private readonly config: Pick<StrictStreamrClientConfig, 'cache'>
 
     constructor(
         node: NetworkNodeFacade,
         streamRegistry: StreamRegistry,
         groupKeyManager: GroupKeyManager,
         streamIdBuilder: StreamIDBuilder,
+        @inject(ConfigInjectionToken) config: Pick<StrictStreamrClientConfig, 'cache'>,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         signatureValidator: SignatureValidator,
         messageSigner: MessageSigner
@@ -68,11 +71,18 @@ export class Publisher {
         this.authentication = authentication
         this.signatureValidator = signatureValidator
         this.messageSigner = messageSigner
-        this.messageFactories = new Mapping(async (streamId: StreamID) => {
-            return this.createMessageFactory(streamId)
+        this.config = config
+        this.messageFactories = new Mapping({
+            valueFactory: async (streamId: StreamID) => {
+                return this.createMessageFactory(streamId)
+            },
+            maxSize: config.cache.maxSize
         })
-        this.groupKeyQueues = new Mapping(async (streamId: StreamID) => {
-            return GroupKeyQueue.createInstance(streamId, this.authentication, groupKeyManager)
+        this.groupKeyQueues = new Mapping({
+            valueFactory: async (streamId: StreamID) => {
+                return GroupKeyQueue.createInstance(streamId, this.authentication, groupKeyManager)
+            },
+            maxSize: config.cache.maxSize
         })
     }
 
@@ -130,7 +140,8 @@ export class Publisher {
             streamRegistry: this.streamRegistry,
             groupKeyQueue: await this.groupKeyQueues.get(streamId),
             signatureValidator: this.signatureValidator,
-            messageSigner: this.messageSigner
+            messageSigner: this.messageSigner,
+            cacheMaxSize: this.config.cache.maxSize
         })
     }
 }
