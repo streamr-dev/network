@@ -3,7 +3,7 @@ import './utils/PatchTsyringe'
 
 import { DhtAddress } from '@streamr/dht'
 import { ProxyDirection } from '@streamr/trackerless-network'
-import { DEFAULT_PARTITION_COUNT, EthereumAddress, HexString, StreamID, TheGraphClient, toEthereumAddress, toUserId } from '@streamr/utils'
+import { DEFAULT_PARTITION_COUNT, EthereumAddress, HexString, Logger, StreamID, TheGraphClient, toEthereumAddress, toUserId } from '@streamr/utils'
 import type { Overrides } from 'ethers'
 import EventEmitter from 'eventemitter3'
 import merge from 'lodash/merge'
@@ -52,6 +52,7 @@ import { LoggerFactory } from './utils/LoggerFactory'
 import { pOnce } from './utils/promises'
 import { convertPeerDescriptorToNetworkPeerDescriptor, createTheGraphClient } from './utils/utils'
 import { addStreamToStorageNode } from './utils/addStreamToStorageNode'
+import { map } from './utils/GeneratorUtils'
 
 // TODO: this type only exists to enable tsdoc to generate proper documentation
 export type SubscribeOptions = StreamDefinition & ExtraSubscribeOptions
@@ -72,6 +73,8 @@ export interface ExtraSubscribeOptions {
      */
     erc1271Contract?: HexString
 }
+
+const logger = new Logger(module)
 
 /**
  * The main API used to interact with Streamr.
@@ -357,8 +360,11 @@ export class StreamrClient {
      */
     async getStream(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        const metadata = await this.streamRegistry.getStreamMetadata(streamId)
-        return new Stream(streamId, metadata, this)
+        // Check if the stream exists by querying its metadata. Throws an error if no metadata is found,
+        // indicating the stream doesn't exist. As a side-effect this populates StreamRegistry's metadata
+        // cache for future use, such as stream.getPartitionCount() calls.
+        await this.streamRegistry.getStreamMetadata(streamId)
+        return new Stream(streamId, this)
     }
 
     /**
@@ -376,7 +382,7 @@ export class StreamrClient {
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
         const metadata = merge({ partitions: DEFAULT_PARTITION_COUNT }, omit(props, 'id') )
         await this.streamRegistry.createStream(streamId, metadata)
-        return new Stream(streamId, metadata, this)
+        return new Stream(streamId, this)
     }
 
     /**
@@ -397,6 +403,14 @@ export class StreamrClient {
             }
             throw err
         }
+    }
+
+    /**
+     * Returns the metadata of a stream.
+     */
+    async getStreamMetadata(streamIdOrPath: string): Promise<StreamMetadata> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        return this.streamRegistry.getStreamMetadata(streamId)
     }
 
     /**
@@ -426,12 +440,16 @@ export class StreamrClient {
         permissionFilter: SearchStreamsPermissionFilter | undefined,
         orderBy: SearchStreamsOrderBy = { field: 'id', direction: 'asc' }
     ): AsyncIterable<Stream> {
-        return this.streamRegistry.searchStreams(
+        logger.debug('Search for streams', { term, permissionFilter })
+        if ((term === undefined) && (permissionFilter === undefined)) {
+            throw new Error('Requires a search term or a permission filter')
+        }
+        const streamIds = this.streamRegistry.searchStreams(
             term,
             (permissionFilter !== undefined) ? toInternalSearchStreamsPermissionFilter(permissionFilter) : undefined,
-            orderBy,
-            this
+            orderBy
         )
+        return map(streamIds, (id) => new Stream(id, this))
     }
 
     // --------------------------------------------------------------------------------------------
@@ -564,8 +582,11 @@ export class StreamrClient {
      */
     async getStoredStreams(storageNodeAddress: HexString): Promise<{ streams: Stream[], blockNumber: number }> {
         const queryResult = await this.streamStorageRegistry.getStoredStreams(toEthereumAddress(storageNodeAddress))
+        for (const stream of queryResult.streams) {
+            this.streamRegistry.populateMetadataCache(stream.id, stream.metadata)
+        }
         return {
-            streams: queryResult.streams.map((item) => new Stream(item.id, item.metadata, this)),
+            streams: queryResult.streams.map((item) => new Stream(item.id, this)),
             blockNumber: queryResult.blockNumber
         }
     }

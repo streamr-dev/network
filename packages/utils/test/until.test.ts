@@ -40,7 +40,7 @@ describe('until', () => {
         it('resolves immediately if conditionFn returns (promisified) true from the get-go', async () => {
             const fn = jest.fn().mockResolvedValue(true)
             await until(fn)
-            expect(fn).toBeCalledTimes(1)
+            expect(fn).toHaveBeenCalledTimes(1)
         })
 
         it('resolves eventually when conditionFn returns (promisified) true', async () => {
@@ -48,7 +48,7 @@ describe('until', () => {
                 .mockResolvedValueOnce(false)
                 .mockResolvedValueOnce(true)
             await until(fn)
-            expect(fn).toBeCalledTimes(2)
+            expect(fn).toHaveBeenCalledTimes(2)
         })
 
         it('rejects if conditionFn keeps returning (promisified) false within timeout', async () => {

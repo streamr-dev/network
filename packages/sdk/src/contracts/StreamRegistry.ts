@@ -20,10 +20,8 @@ import { Lifecycle, inject, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { RpcProviderSource } from '../RpcProviderSource'
-import { Stream } from '../Stream'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamMetadata, parseMetadata } from '../StreamMetadata'
-import { StreamrClient } from '../StreamrClient'
 import { StreamrClientError } from '../StreamrClientError'
 import type { StreamRegistryV5 as StreamRegistryContract } from '../ethereumArtifacts/StreamRegistryV5'
 import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV5Abi.json'
@@ -295,19 +293,21 @@ export class StreamRegistry {
         return parseMetadata(metadata)
     }
 
-    searchStreams(
+    async* searchStreams(
         term: string | undefined,
         permissionFilter: InternalSearchStreamsPermissionFilter | undefined,
-        orderBy: SearchStreamsOrderBy,
-        client: StreamrClient
-    ): AsyncIterable<Stream> {
-        return _searchStreams(
+        orderBy: SearchStreamsOrderBy
+    ): AsyncGenerator<StreamID> {
+        const queryResult = _searchStreams(
             term,
             permissionFilter,
             orderBy,
-            this.theGraphClient,
-            this.logger,
-            client)
+            this.theGraphClient)
+        for await (const item of queryResult) {
+            const id = toStreamID(item.stream.id)
+            this.populateMetadataCache(id, parseMetadata(item.stream.metadata))
+            yield id
+        }
     }
 
     getStreamPublishers(streamIdOrPath: string): AsyncIterable<UserID> {
@@ -533,7 +533,7 @@ export class StreamRegistry {
         return this.publicSubscribePermissionCache.get(streamId)
     }
 
-    private populateMetadataCache(streamId: StreamID, metadata: StreamMetadata): void {
+    populateMetadataCache(streamId: StreamID, metadata: StreamMetadata): void {
         this.metadataCache.set([streamId], metadata)
     }
     

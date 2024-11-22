@@ -46,7 +46,7 @@ describe('ping', () => {
             client.ping(PAYLOAD)
             const pongMessage = await payloads.pop()
             expect(pongMessage).toBe(PAYLOAD)
-            expect(streamrClient.publish).not.toBeCalled()
+            expect(streamrClient.publish).not.toHaveBeenCalled()
         })
 
         it('application layer', async () => {
@@ -58,7 +58,7 @@ describe('ping', () => {
             client.send('ping')
             const pongMessage = await messages.pop()
             expect(pongMessage).toBe('pong')
-            expect(streamrClient.publish).not.toBeCalled()
+            expect(streamrClient.publish).not.toHaveBeenCalled()
         })
     })
 
@@ -135,7 +135,7 @@ describe('ping', () => {
             client.resume()
             // wait some time so that buffered events (e.g. 'close' are processed)
             await wait(10)
-            expect(onClose).toBeCalled()
+            expect(onClose).toHaveBeenCalled()
         })
 
         it('disable ping', async () => {
@@ -145,7 +145,7 @@ describe('ping', () => {
             const onPing = jest.fn()
             client.on('ping', onPing)
             await wait(100)
-            expect(onPing).not.toBeCalled()
+            expect(onPing).not.toHaveBeenCalled()
         })
 
         it('disable disconnect', async () => {
@@ -156,7 +156,7 @@ describe('ping', () => {
             client.on('close', onClose)
             client.pause()
             await wait(100)
-            expect(onClose).not.toBeCalled()
+            expect(onClose).not.toHaveBeenCalled()
         })
     })
 })

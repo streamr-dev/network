@@ -26,7 +26,7 @@ describe('client destroy', () => {
         const sub = await client.subscribe(stream.id)
         jest.spyOn(sub, 'unsubscribe')
         await client.destroy()
-        expect(sub.unsubscribe).toBeCalled()
+        expect(sub.unsubscribe).toHaveBeenCalled()
     })
 
     it('ongoing subscribe pipeline ends', async () => {
@@ -35,7 +35,7 @@ describe('client destroy', () => {
         sub.on('error', onError)
         const outputPromise = collect(sub)
         await client.destroy()
-        expect(onError).toBeCalledTimes(0)
+        expect(onError).toHaveBeenCalledTimes(0)
         expect(await outputPromise).toEqual([])
     })
 

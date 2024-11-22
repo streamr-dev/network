@@ -11,7 +11,7 @@ const otherClusterId = toEthereumAddress('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 describe(StorageEventListener, () => {
     let stubClient: Pick<StreamrClient, 'getStream' | 'on' | 'off'>
     const storageEventListeners: Map<keyof StreamrClientEvents, ((event: StorageNodeAssignmentEvent) => any)> = new Map()
-    let onEvent: jest.Mock<void, [stream: Stream, type: 'added' | 'removed', block: number]>
+    let onEvent: jest.Mock<Promise<void>, [stream: Stream, type: 'added' | 'removed', block: number]>
     let listener: StorageEventListener
 
     beforeEach(() => {
