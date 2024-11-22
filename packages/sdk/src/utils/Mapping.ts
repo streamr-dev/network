@@ -68,11 +68,9 @@ export class Mapping<K extends KeyType, V> {
         }
     }
 
-    values(): V[] {
-        const result: V[] = []
-        for (const wrapper of this.cache.values()) {
-            result.push(wrapper.value)
+    *values(): IterableIterator<V> {
+        for (const item of this.cache.values()) {
+            yield item.value
         }
-        return result
     }
 }

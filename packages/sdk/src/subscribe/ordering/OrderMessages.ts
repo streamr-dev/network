@@ -104,7 +104,7 @@ export class OrderMessages {
                 const chain = await this.chains.get(msg.getPublisherId(), msg.getMsgChainId())
                 chain.addMessage(msg)
             }
-            await Promise.all(this.chains.values().map((chain) => chain.waitUntilIdle()))
+            await Promise.all([...this.chains.values()].map((chain) => chain.waitUntilIdle()))
             this.outBuffer.endWrite()
         } catch (err) {
             this.outBuffer.endWrite(err)
