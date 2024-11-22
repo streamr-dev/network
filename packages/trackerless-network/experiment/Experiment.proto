@@ -20,6 +20,7 @@ message ExperimentServerMessage {
         RoutingExperiment routingExperiment = 6;
         PublishOnInterval publishOnInterval = 7;
         MeasureTimeToData MeasureTimeToData = 8;
+        PingExperiment pingExperiment = 9;
     }
 }
 
@@ -103,4 +104,8 @@ message PublishOnInterval {
 
 message MeasureTimeToData {
     string streamPartId = 1;
+}
+
+message PingExperiment {
+    repeated string ips = 1;
 }

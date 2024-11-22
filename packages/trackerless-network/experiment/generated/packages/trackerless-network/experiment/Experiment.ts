@@ -60,6 +60,12 @@ export interface ExperimentServerMessage {
          */
         measureTimeToData: MeasureTimeToData;
     } | {
+        oneofKind: "pingExperiment";
+        /**
+         * @generated from protobuf field: PingExperiment pingExperiment = 9;
+         */
+        pingExperiment: PingExperiment;
+    } | {
         oneofKind: undefined;
     };
 }
@@ -283,6 +289,15 @@ export interface MeasureTimeToData {
      */
     streamPartId: string;
 }
+/**
+ * @generated from protobuf message PingExperiment
+ */
+export interface PingExperiment {
+    /**
+     * @generated from protobuf field: repeated string ips = 1;
+     */
+    ips: string[];
+}
 // @generated message type with reflection information, may provide speed optimized methods
 class ExperimentServerMessage$Type extends MessageType<ExperimentServerMessage> {
     constructor() {
@@ -294,7 +309,8 @@ class ExperimentServerMessage$Type extends MessageType<ExperimentServerMessage> 
             { no: 5, name: "getPropagationResults", kind: "message", oneof: "instruction", T: () => GetPropagationResults },
             { no: 6, name: "routingExperiment", kind: "message", oneof: "instruction", T: () => RoutingExperiment },
             { no: 7, name: "publishOnInterval", kind: "message", oneof: "instruction", T: () => PublishOnInterval },
-            { no: 8, name: "MeasureTimeToData", kind: "message", jsonName: "MeasureTimeToData", oneof: "instruction", T: () => MeasureTimeToData }
+            { no: 8, name: "MeasureTimeToData", kind: "message", jsonName: "MeasureTimeToData", oneof: "instruction", T: () => MeasureTimeToData },
+            { no: 9, name: "pingExperiment", kind: "message", oneof: "instruction", T: () => PingExperiment }
         ]);
     }
 }
@@ -508,6 +524,18 @@ class MeasureTimeToData$Type extends MessageType<MeasureTimeToData> {
  * @generated MessageType for protobuf message MeasureTimeToData
  */
 export const MeasureTimeToData = new MeasureTimeToData$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class PingExperiment$Type extends MessageType<PingExperiment> {
+    constructor() {
+        super("PingExperiment", [
+            { no: 1, name: "ips", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message PingExperiment
+ */
+export const PingExperiment = new PingExperiment$Type();
 /**
  * @generated ServiceType for protobuf service RoutingExperimentRpc
  */

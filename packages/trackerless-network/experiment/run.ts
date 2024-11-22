@@ -7,7 +7,7 @@ import 'dotenv/config'
 import { joinResults, propagationResults, routingResults, timeToDataResults } from "./ResultCalculator"
 
 const envs = [ 'local', 'aws' ]
-const modes = [ 'propagation', 'join', 'routing', 'timetodata', 'scalingjoin' ]
+const modes = [ 'propagation', 'join', 'routing', 'timetodata', 'scalingjoin', 'pinging' ]
 const experiment = process.argv[2]
 const env = process.argv[3]
 const nodeCountPerRegion = parseInt(process.argv[4])
@@ -223,6 +223,9 @@ const run = async () => {
         await controller.startNodes(entryPointId, false)
         logger.info('all nodes started')
         await controller.runScalingJoinExperiment(entryPointId)
+    } else if (experiment === 'pinging') {
+        logger.info('Starting pinging experiment')
+        await controller.runPingingExperiment()
     } else {
         const entryPointId = await controller.startEntryPoint(true)
         logger.info('entry point started', { entryPointId })

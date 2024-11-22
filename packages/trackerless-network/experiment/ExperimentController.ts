@@ -300,6 +300,21 @@ export class ExperimentController {
         }
     }
 
+    async runPingingExperiment(): Promise<void> {
+        const nodes = Array.from(this.clients.values())
+        await this.runBatchedOperation(nodes, 2, async (node) => {
+            const message = ExperimentServerMessage.create({
+                instruction: {
+                    oneofKind: 'pingExperiment',
+                    pingExperiment: {
+                        ips: nodes.map((node) => node.ip!)
+                    }
+                }
+            })
+            node.socket.send(ExperimentServerMessage.toBinary(message))
+        }, (current) => current === this.resultsReceived.size)
+    }
+
     getIps(): Set<string> {
         return new Set(Array.from(this.clients.values()).map((node) => node.ip!))
     }

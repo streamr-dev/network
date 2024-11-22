@@ -9,6 +9,7 @@ import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../ge
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { RoutingExperimentRpcClient } from './generated/packages/trackerless-network/experiment/Experiment.client'
 import { chunk, now } from 'lodash'
+const ping = require('ping')
 
 const createStreamMessage = (streamPartId: StreamPartID, id: string, region: number) => {
     const message: StreamMessage = {
@@ -153,6 +154,9 @@ export class ExperimentNodeWrapper {
             } else if (message.instruction.oneofKind === 'measureTimeToData') {
                 const instruction = message.instruction.measureTimeToData
                 setImmediate(() => this.measureTimeToData(instruction.streamPartId))
+            } else if (message.instruction.oneofKind === 'pingExperiment') {
+                const instruction = message.instruction.pingExperiment
+                setImmediate(() => this.pingExperiment(instruction.ips))
             }
         })
     }
@@ -286,6 +290,31 @@ export class ExperimentNodeWrapper {
                 oneofKind: 'propagationResults',
                 propagationResults: {
                     results: results.map((res) => JSON.stringify(res))
+                }
+            }
+        }))
+    }
+
+    async pingExperiment(ips: string[]): Promise<void> {
+        logger.info('running ping experiment')
+        const results: any = []
+        for (const ip of ips) {
+            const started = now()
+            try {
+                console.log('pinging', ip)
+                const result = await ping.promise.probe(ip)
+                console.log(result)
+                results.push({ ip, time: Date.now() - started })
+            } catch (e) {
+                results.push({ ip, time: 10000 })
+            }
+        }
+        this.send(ExperimentClientMessage.create({
+            id: this.id,
+            payload: {
+                oneofKind: 'experimentResults',
+                experimentResults: {
+                    results: JSON.stringify(results)
                 }
             }
         }))
