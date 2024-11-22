@@ -24,7 +24,7 @@ describe('CachingMap', () => {
         const result2 = await cache.get('foo', 'bar')
         expect(result1).toBe('FOOBAR')
         expect(result2).toBe('FOOBAR')
-        expect(plainFn).toBeCalledTimes(1)
+        expect(plainFn).toHaveBeenCalledTimes(1)
     })
 
     it('miss', async () => {
@@ -32,7 +32,7 @@ describe('CachingMap', () => {
         const result2 = await cache.get('foo', 'y')
         expect(result1).toBe('FOOX')
         expect(result2).toBe('FOOY')
-        expect(plainFn).toBeCalledTimes(2)
+        expect(plainFn).toHaveBeenCalledTimes(2)
     })
 
     it('concurrency', async () => {
@@ -42,7 +42,7 @@ describe('CachingMap', () => {
         ])
         expect(result1).toBe('FOOBAR')
         expect(result2).toBe('FOOBAR')
-        expect(plainFn).toBeCalledTimes(1)
+        expect(plainFn).toHaveBeenCalledTimes(1)
     })
 
     it('rejections are not cached', async () => {
@@ -52,7 +52,7 @@ describe('CachingMap', () => {
         await expect(cache.get('foo', 'x')).rejects.toEqual(new Error('error foo-x'))
         await expect(cache.get('foo', 'x')).rejects.toEqual(new Error('error foo-x'))
 
-        expect(plainFn).toBeCalledTimes(2) // would be 1 if rejections were cached
+        expect(plainFn).toHaveBeenCalledTimes(2) // would be 1 if rejections were cached
     })
 
     it('throws are not cached', async () => {
@@ -62,6 +62,6 @@ describe('CachingMap', () => {
         await expect(cache.get('foo', 'x')).rejects.toEqual(new Error('error foo-x'))
         await expect(cache.get('foo', 'x')).rejects.toEqual(new Error('error foo-x'))
 
-        expect(plainFn).toBeCalledTimes(2) // would be 1 if throws were cached
+        expect(plainFn).toHaveBeenCalledTimes(2) // would be 1 if throws were cached
     })
 })

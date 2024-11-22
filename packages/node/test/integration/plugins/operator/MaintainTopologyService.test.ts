@@ -101,21 +101,21 @@ describe('MaintainTopologyService', () => {
         await maintainTopologyHelper.start()
 
         await until(async () => {
-            return containsAll(await getSubscribedStreamPartIds(client), stream1.getStreamParts())
+            return containsAll(await getSubscribedStreamPartIds(client), await stream1.getStreamParts())
         }, 10000, 1000)
 
         await stake(operatorContract, await sponsorship2.getAddress(), 10000)
         await until(async () => {
             return containsAll(await getSubscribedStreamPartIds(client), [
-                ...stream1.getStreamParts(),
-                ...stream2.getStreamParts()
+                ...await stream1.getStreamParts(),
+                ...await stream2.getStreamParts()
             ])
         }, 10000, 1000)
 
         await (await operatorContract.unstake(await sponsorship1.getAddress())).wait()
         await until(async () => {
             const state = await getSubscribedStreamPartIds(client)
-            return containsAll(state, stream2.getStreamParts()) && doesNotContainAny(state, stream1.getStreamParts())
+            return containsAll(state, await stream2.getStreamParts()) && doesNotContainAny(state, await stream1.getStreamParts())
         }, 10000, 1000)
     }, 120 * 1000)
 })

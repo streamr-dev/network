@@ -40,8 +40,8 @@ describe('resend with existing key', () => {
         storageNode.storeMessage(message)
     }
 
-    const resendRange = (fromTimestamp: number, toTimestamp: number) => {
-        return subscriber.resend(stream.getStreamParts()[0], {
+    const resendRange = async (fromTimestamp: number, toTimestamp: number) => {
+        return subscriber.resend((await stream.getStreamParts())[0], {
             from: {
                 timestamp: fromTimestamp
             },
@@ -56,7 +56,7 @@ describe('resend with existing key', () => {
         const onError = jest.fn()
         messageStream.onError.listen(onError)
         const messages = await collect(messageStream)
-        expect(onError).not.toBeCalled()
+        expect(onError).not.toHaveBeenCalled()
         const expectedTimestamps = allMessages.map((m) => m.timestamp).filter((ts) => ts >= fromTimestamp && ts <= toTimestamp)
         expect(messages.map((m) => m.timestamp)).toEqual(expectedTimestamps)
     }
@@ -66,7 +66,7 @@ describe('resend with existing key', () => {
         const onError = jest.fn()
         messageStream.onError.listen(onError)
         await collect(messageStream)
-        expect(onError).toBeCalled()
+        expect(onError).toHaveBeenCalled()
         const error = onError.mock.calls[0][0]
         expect(error).toBeInstanceOf(DecryptError)
     }

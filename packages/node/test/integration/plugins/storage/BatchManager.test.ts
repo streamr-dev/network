@@ -136,7 +136,7 @@ describe('BatchManager', () => {
 
         await until(() => batch.retries === 1)
 
-        expect(mockBatch).toBeCalledTimes(1)
+        expect(mockBatch).toHaveBeenCalledTimes(1)
         expect(batch.retries).toEqual(1)
 
         jest.restoreAllMocks()

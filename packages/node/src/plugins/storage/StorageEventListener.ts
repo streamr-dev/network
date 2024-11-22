@@ -10,14 +10,14 @@ const logger = new Logger(module)
 export class StorageEventListener {
     private readonly clusterId: EthereumAddress
     private readonly streamrClient: StreamrClient
-    private readonly onEvent: (stream: Stream, type: 'added' | 'removed', block: number) => void
+    private readonly onEvent: (stream: Stream, type: 'added' | 'removed', block: number) => Promise<void>
     private readonly onAddToStorageNode: (event: StorageNodeAssignmentEvent) => void
     private readonly onRemoveFromStorageNode: (event: StorageNodeAssignmentEvent) => void
 
     constructor(
         clusterId: EthereumAddress,
         streamrClient: StreamrClient,
-        onEvent: (stream: Stream, type: 'added' | 'removed', block: number) => void
+        onEvent: (stream: Stream, type: 'added' | 'removed', block: number) => Promise<void>
     ) {
         this.clusterId = clusterId
         this.streamrClient = streamrClient
@@ -26,14 +26,14 @@ export class StorageEventListener {
         this.onRemoveFromStorageNode = (event: StorageNodeAssignmentEvent) => this.handleEvent(event, 'removed')
     }
 
-    private async handleEvent(event: StorageNodeAssignmentEvent, type: 'added' | 'removed') {
+    private async handleEvent(event: StorageNodeAssignmentEvent, type: 'added' | 'removed'): Promise<void> {
         if (event.nodeAddress !== this.clusterId) {
             return
         }
         logger.info('Received StorageNodeAssignmentEvent', { type, event })
         try {
             const stream = await this.streamrClient.getStream(event.streamId)
-            this.onEvent(stream, type, event.blockNumber)
+            await this.onEvent(stream, type, event.blockNumber)
         } catch (err) {
             logger.warn('Encountered error handling StorageNodeAssignmentEvent', { err, event, type })
         }

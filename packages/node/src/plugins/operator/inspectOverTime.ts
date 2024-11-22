@@ -117,6 +117,7 @@ class InspectionOverTimeTask {
 
     destroy(): void {
         this.abortController.abort()
+        this.doneGate.open()
     }
 
     private async run(): Promise<void> {
