@@ -42,7 +42,8 @@
     "ws": "^8.18.0",
     "@aws-sdk/client-auto-scaling": "3.684.0",
     "@aws-sdk/client-ec2": "3.686.0",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "ping": "^0.4.4"
   },
   "devDependencies": {
     "@streamr/browser-test-runner": "^0.0.1",
