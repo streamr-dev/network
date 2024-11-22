@@ -23,9 +23,9 @@ export class Mapping<K extends (string | number)[], V> {
 
     async get(...args: K): Promise<V> {
         const key = formLookupKey(...args)
-        const pendingPromises = this.pendingPromises.get(key)
-        if (pendingPromises !== undefined) {
-            return await pendingPromises
+        const pendingPromise = this.pendingPromises.get(key)
+        if (pendingPromise !== undefined) {
+            return await pendingPromise
         } else {
             let valueWrapper = this.delegate.get(key)
             if (valueWrapper === undefined) {
