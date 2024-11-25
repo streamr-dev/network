@@ -79,9 +79,9 @@ const IMPORTED_PRIVATE_KEY =
 const OPERATOR_ADDRESS = '0x54d68882d5329397928787ec496da3ba8e45c48c'
 
 describe('Config wizard', () => {
-    let tempDir = mkdtempSync(path.join(os.tmpdir(), 'test-config-wizard'))
+    let tempDir: string
 
-    let storagePath = path.join(tempDir, 'config.json')
+    let storagePath: string
 
     const fakeBalance = jest.fn(() => '0.0')
 
