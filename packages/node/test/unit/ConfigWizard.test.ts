@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'fs'
+import { existsSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'fs'
 import os from 'os'
 import path from 'path'
 import { getNodeMnemonic, start } from '../../src/config/ConfigWizard'
@@ -77,6 +77,25 @@ const IMPORTED_PRIVATE_KEY =
     '0xb269c55ff525eac7633e80c01732d499015d5c22ce952e68272023c1d6c7f92f'
 
 const OPERATOR_ADDRESS = '0x54d68882d5329397928787ec496da3ba8e45c48c'
+
+const parseStoragePath = (summary: string): string | undefined => {
+    const match = summary.match(/streamr-node ([^\s]w+)/)
+    if (match !== null) {
+        return match[1]
+    } else {
+        return undefined
+    }
+}
+
+const expectPathsEqual = (actual: string | undefined, expected: string): void => {
+    if (actual !== undefined) {
+        const normalizedActual = path.normalize(realpathSync(actual))
+        const normaliszedExpected = path.normalize(realpathSync(expected))
+        expect(normalizedActual).toEqual(normaliszedExpected)
+    } else {
+        expect.fail('Path is undefined')
+    }
+}
 
 describe('Config wizard', () => {
     let tempDir: string
@@ -157,7 +176,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(parseStoragePath(summary), storagePath)
     })
 
     it('prints out the generated private key onto the screen if told to', async () => {
@@ -220,7 +239,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Flee Kit Stomach\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(parseStoragePath(summary), storagePath)
     })
 
     it('validates given private key', async () => {
@@ -299,7 +318,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(parseStoragePath(summary), storagePath)
     })
 
     it('validates the operator address', async () => {
@@ -387,7 +406,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(parseStoragePath(summary), storagePath)
     })
 
     it('enables websocket plugin on a custom port', async () => {
@@ -445,7 +464,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(parseStoragePath(summary), storagePath)
     })
 
     it('enables mqtt plugin on the default port', async () => {
@@ -507,7 +526,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(parseStoragePath(summary), storagePath)
     })
 
     it('enables mqtt plugin on a custom port', async () => {
@@ -569,7 +588,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(parseStoragePath(summary), storagePath)
     })
 
     it('enables http plugin on the default port', async () => {
@@ -632,7 +651,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(parseStoragePath(summary), storagePath)
     })
 
     it('enables http plugin on a custom port', async () => {
@@ -693,7 +712,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(parseStoragePath(summary), storagePath)
     })
 
     it('enables all pubsub plugins on default ports', async () => {
@@ -766,7 +785,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(parseStoragePath(summary), storagePath)
     })
 
     it('enables all pubsub plugins on custom ports', async () => {
@@ -837,7 +856,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(parseStoragePath(summary), storagePath)
     })
 
     it('validates port number values', async () => {
@@ -947,7 +966,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(parseStoragePath(summary), storagePath)
     })
 
     it('disallows taking default ports if they are inexplicitly used', async () => {
@@ -1024,7 +1043,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(parseStoragePath(summary), storagePath)
     })
 
     it('allows to uses a custom file path for the config file', async () => {
@@ -1234,7 +1253,7 @@ describe('Config wizard', () => {
 
         expect(summary).toInclude(`generated name is Mountain Until Gun\n`)
 
-        expect(summary).toInclude(`streamr-node ${storagePath}\n`)
+        expectPathsEqual(parseStoragePath(summary), storagePath)
     })
 
     it('tells the user to fund their node address if the balance is too low', async () => {
