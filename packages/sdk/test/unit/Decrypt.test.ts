@@ -32,7 +32,7 @@ describe('Decrypt', () => {
             encryptionType: EncryptionType.NONE,
             content: unencryptedContent
         }))
-        expect(groupKeyManager.fetchKey).toBeCalledWith(
+        expect(groupKeyManager.fetchKey).toHaveBeenCalledWith(
             encryptedMessage.getStreamPartID(),
             encryptedMessage.groupKeyId,
             encryptedMessage.getPublisherId()
