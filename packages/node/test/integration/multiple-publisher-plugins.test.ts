@@ -14,8 +14,8 @@ const mqttPort = 13611
 const wsPort = 13612
 const httpPort = 13613
 
-const sendPostRequest = (url: string, content: object): Promise<unknown> => {
-    return fetch(url, {
+const sendPostRequest = async (url: string, content: object): Promise<void> => {
+    await fetch(url, {
         method: 'POST',
         body: JSON.stringify(content),
         headers: { 'Content-Type': 'application/json' }
@@ -24,7 +24,7 @@ const sendPostRequest = (url: string, content: object): Promise<unknown> => {
 
 interface PluginPublisher {
     connect: (streamId: string) => Promise<void>
-    publish: (msg: object, streamId: string) => Promise<unknown>
+    publish: (msg: object, streamId: string) => Promise<void>
     close: () => Promise<void>
 }
 
@@ -33,7 +33,7 @@ class MqttPluginPublisher implements PluginPublisher {
     async connect(): Promise<void> {
         this.client = await mqtt.connectAsync(`mqtt://127.0.0.1:${mqttPort}`)
     }
-    publish(msg: object, streamId: string): Promise<unknown> {
+    publish(msg: object, streamId: string): Promise<void> {
         return this.client!.publish(streamId, JSON.stringify(msg))
     }
     close(): Promise<void> {
@@ -47,9 +47,8 @@ class WebsocketPluginPublisher implements PluginPublisher {
         this.client = new WebSocket(`ws://127.0.0.1:${wsPort}/streams/${encodeURIComponent(streamId)}/publish`)
         await waitForEvent(this.client, 'open')
     }
-    async publish(msg: object): Promise<unknown> {
+    async publish(msg: object): Promise<void> {
         this.client!.send(JSON.stringify(msg))
-        return
     }
     async close(): Promise<void> {
         this.client!.close()
@@ -60,7 +59,7 @@ class WebsocketPluginPublisher implements PluginPublisher {
 class HttpPluginPublisher implements PluginPublisher {
     async connect(): Promise<void> {
     }
-    async publish(msg: object, streamId: string): Promise<unknown> {
+    async publish(msg: object, streamId: string): Promise<void> {
         return sendPostRequest(`http://127.0.0.1:${httpPort}/streams/${encodeURIComponent(streamId)}`, msg)
     }
     async close(): Promise<void> {
