@@ -30,7 +30,7 @@
     ],
     "devDependencies": {
         "@eslint/js": "^9.15.0",
-        "@manypkg/cli": "^0.22.0",
+        "@manypkg/cli": "^0.23.0",
         "@protobuf-ts/plugin": "^2.9.3",
         "@stylistic/eslint-plugin": "^2.10.1",
         "@tsconfig/node18": "^18.2.4",
