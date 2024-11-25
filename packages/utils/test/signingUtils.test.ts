@@ -1,5 +1,4 @@
 /* eslint-disable max-len */
-import assert from 'assert'
 import { hexToBinary } from '../src/binaryUtils'
 import { createSignature, recoverSignerUserId, verifySignature } from '../src/signingUtils'
 import { toUserId, toUserIdRaw } from '../src/UserID'
@@ -20,7 +19,7 @@ describe('recoverAddress', () => {
         const payload = Buffer.from('ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
         const signature = hexToBinary('0xc97f1fbb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
         const recoveredUserId = recoverSignerUserId(signature, payload)
-        assert.strictEqual(toUserId(recoveredUserId), userId)
+        expect(toUserId(recoveredUserId)).toEqual(userId)
     })
 
     it('can handle missing 0x in signature', async () => {
@@ -28,7 +27,7 @@ describe('recoverAddress', () => {
         const payload = Buffer.from('ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
         const signature = hexToBinary('c97f1fbb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
         const recoveredUserId = recoverSignerUserId(signature, payload)
-        assert.strictEqual(toUserId(recoveredUserId), userId)
+        expect(toUserId(recoveredUserId)).toEqual(userId)
     })
 
     it('throws if the address can not be recovered (invalid signature)', async () => {
@@ -42,7 +41,7 @@ describe('recoverAddress', () => {
         const payload = Buffer.from('foo_ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
         const signature = hexToBinary('0xc97f1fbb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
         const recoveredUserId = recoverSignerUserId(signature, payload)
-        assert.notStrictEqual(toUserId(recoveredUserId), userId)
+        expect(toUserId(recoveredUserId)).not.toEqual(userId)
     })
 })
 
@@ -52,7 +51,7 @@ describe('verifySignature', () => {
         const payload = Buffer.from('ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
         const signature = hexToBinary('0xc97f1fbb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
         const isValid = verifySignature(toUserIdRaw(userId), payload, signature)
-        assert(isValid)
+        expect(isValid).toBe(true)
     })
 
     it('returns false on invalid signature', async () => {
@@ -60,7 +59,7 @@ describe('verifySignature', () => {
         const payload = Buffer.from('ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
         const signature = hexToBinary('0xf00f00bb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
         const isValid = verifySignature(toUserIdRaw(userId), payload, signature)
-        assert(!isValid)
+        expect(isValid).toBe(false)
     })
 
     it('returns false if the message is tampered', async () => {
@@ -68,6 +67,6 @@ describe('verifySignature', () => {
         const payload = Buffer.from('foo_ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
         const signature = hexToBinary('0xc97f1fbb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
         const isValid = verifySignature(toUserIdRaw(userId), payload, signature)
-        assert(!isValid)
+        expect(isValid).toBe(false)
     })
 })
