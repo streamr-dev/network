@@ -32,7 +32,7 @@ import { ProxyConnectionRpcLocal } from './proxy/ProxyConnectionRpcLocal'
 import { TemporaryConnectionRpcLocal } from './temporary-connection/TemporaryConnectionRpcLocal'
 import { markAndCheckDuplicate } from './utils'
 import { ContentDeliveryLayerNeighborInfo } from '../types'
-import { time } from 'console'
+import fs from 'fs'
 
 export interface Events {
     message: (message: StreamMessage) => void
@@ -81,7 +81,6 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
     private readonly contentDeliveryRpcLocal: ContentDeliveryRpcLocal
     private abortController: AbortController = new AbortController()
     private messagesPropagated = 0
-    private readonly storedMessages: unknown[] = []
 
     constructor(options: StrictContentDeliveryLayerNodeOptions) {
         super()
@@ -371,11 +370,11 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                     time: Date.now(),
                     region: this.options.localPeerDescriptor.region
                 })
-                this.storedMessages.push({
+                fs.appendFileSync(this.options.experimentId + '_messages.json', JSON.stringify({
                     id: this.options.experimentId,
                     hops: parsedMessage.route.length,
                     time: Date.now() - parsedMessage.route[0].time,
-                })
+                }) + '\n')
                 msg.body.contentMessage.content = utf8ToBinary(JSON.stringify(parsedMessage))
             }
         }
@@ -424,10 +423,6 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
 
     getNearbyNodeView(): NodeList {
         return this.options.nearbyNodeView
-    }
-
-    public getStoredMessages(): unknown[] {
-        return this.storedMessages
     }
 
     public getDiagnosticInfo(): Record<string, unknown> {

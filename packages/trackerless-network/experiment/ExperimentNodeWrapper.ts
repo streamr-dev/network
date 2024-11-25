@@ -76,7 +76,8 @@ export class ExperimentNodeWrapper {
             websocketServerEnableTls: false,
             peerDescriptor: configPeerDescriptor,
             webrtcAllowPrivateAddresses: true,
-            storeRoutingPaths
+            storeRoutingPaths,
+            networkConnectivityTimeout: 30000
         }
         const stack = new NetworkStack({
             layer0: layer0config,

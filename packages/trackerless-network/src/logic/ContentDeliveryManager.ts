@@ -15,7 +15,8 @@ import {
     MetricsDefinition,
     RateMetric, StreamID, StreamPartID, StreamPartIDUtils,
     UserID,
-    toStreamPartID
+    toStreamPartID,
+    waitForEvent
 } from '@streamr/utils'
 import { createHash } from 'crypto'
 import { EventEmitter } from 'eventemitter3'
@@ -31,6 +32,8 @@ import { createContentDeliveryLayerNode } from './createContentDeliveryLayerNode
 import { ProxyClient } from './proxy/ProxyClient'
 import { ConnectionManager } from '@streamr/dht/src/exports'
 import { StreamPartitionInfo } from '../types'
+import fs from 'fs'
+import readline from 'readline'
 
 type TimeToData = {
     streamJoinTimestamp: number
@@ -413,10 +416,28 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
         return Array.from(this.streamParts.keys()).map((id) => StreamPartIDUtils.parse(id))
     }
 
-    getPropagationResults(streamPartId: StreamPartID): string[] {
-        // @ts-expect-error private
-        const node = this.getStreamPartDelivery(streamPartId).node
-        return node.getStoredMessages()
+    async getPropagationResults(): Promise<string[]> {
+        const file = readline.createInterface({
+            input: fs.createReadStream(this.options.experimentId + '_messages.json'),
+            output: process.stdout,
+            terminal: false
+        })
+        let sumPropagationTime = 0
+        let sumHops = 0
+        let numOfLines = 0
+        file.on('line', (line: string) => {
+            const results = JSON.parse(line)
+            numOfLines += 1
+            sumPropagationTime += results.time
+            sumHops += results.hops
+        
+        })
+        await waitForEvent(file, 'close')
+        return [JSON.stringify({
+            time: sumPropagationTime / numOfLines,
+            hops: sumHops / numOfLines,
+            id: this.options.experimentId
+        })]
     }
 
     getTimeToDataMeasurements(streamPartId: StreamPartID): TimeToData {
