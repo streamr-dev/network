@@ -14,7 +14,7 @@ import {
 } from '../test-utils/utils'
 import { nextValue } from './../../src/utils/iterators'
 
-export const waitForTheGraphToHaveIndexed = async (streamId: StreamID, client: StreamrClient): Promise<void> => {
+const waitForTheGraphToHaveIndexed = async (streamId: StreamID, client: StreamrClient): Promise<void> => {
     await until(async () => {
         const streams = await collect(client.searchStreams(streamId, undefined))
         return streams.length > 0
