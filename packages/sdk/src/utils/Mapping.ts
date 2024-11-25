@@ -26,7 +26,7 @@ interface ValueWrapper<V> {
  */
 export class Mapping<K extends KeyType, V> {
 
-    private readonly cache: Map<string, ValueWrapper<V>>
+    private readonly delegate: Map<string, ValueWrapper<V>>
     private readonly pendingPromises: Map<string, Promise<V>> = new Map()
     private readonly opts: CacheMapOptions<K, V> | LazyMapOptions<K, V>
 
@@ -37,12 +37,12 @@ export class Mapping<K extends KeyType, V> {
      **/
     constructor(opts: CacheMapOptions<K, V> | LazyMapOptions<K, V>) {
         if ('maxSize' in opts) {
-            this.cache = new LRU<string, ValueWrapper<V>>({
+            this.delegate = new LRU<string, ValueWrapper<V>>({
                 maxSize: opts.maxSize,
                 maxAge: opts.maxAge
             })
         } else {
-            this.cache = new Map<string, ValueWrapper<V>>()
+            this.delegate = new Map<string, ValueWrapper<V>>()
         }
         this.opts = opts
     }
@@ -53,7 +53,7 @@ export class Mapping<K extends KeyType, V> {
         if (pendingPromises !== undefined) {
             return await pendingPromises
         } else {
-            let valueWrapper = this.cache.get(key)
+            let valueWrapper = this.delegate.get(key)
             if (valueWrapper === undefined) {
                 const promise = this.opts.valueFactory(...args)
                 this.pendingPromises.set(key, promise)
@@ -64,7 +64,7 @@ export class Mapping<K extends KeyType, V> {
                     this.pendingPromises.delete(key)
                 }
                 valueWrapper = { value }
-                this.cache.set(key, valueWrapper)
+                this.delegate.set(key, valueWrapper)
             }
             return valueWrapper.value
         }
@@ -72,7 +72,7 @@ export class Mapping<K extends KeyType, V> {
 
     values(): V[] {
         const result: V[] = []
-        for (const wrapper of this.cache.values()) {
+        for (const wrapper of this.delegate.values()) {
             result.push(wrapper.value)
         }
         return result
