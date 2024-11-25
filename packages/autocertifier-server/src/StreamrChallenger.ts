@@ -53,7 +53,7 @@ export const runStreamrChallenge = (
             const communicator = new RoutingRpcCommunicator(SERVICE_ID,
                 async (msg: Message): Promise<void> => {
                     logger.info('sending message to peer')
-                    return managedConnection.send(Message.toBinary(msg))
+                    managedConnection.send(Message.toBinary(msg))
                 })
             managedConnection.on('managedData', (msg: Uint8Array) => {
                 communicator.handleMessageFromPeer(Message.fromBinary(msg))

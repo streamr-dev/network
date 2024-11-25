@@ -48,10 +48,11 @@ class WebsocketPluginPublisher implements PluginPublisher {
         await waitForEvent(this.client, 'open')
     }
     async publish(msg: object): Promise<unknown> {
-        return this.client!.send(JSON.stringify(msg))
+        this.client!.send(JSON.stringify(msg))
+        return
     }
     async close(): Promise<void> {
-        return this.client!.close()
+        this.client!.close()
     }
 }
 

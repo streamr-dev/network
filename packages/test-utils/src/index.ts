@@ -167,11 +167,19 @@ export function isRunningInElectron(): boolean {
 }
 
 export function testOnlyInNodeJs(...args: Parameters<typeof it>): void {
-    return isRunningInElectron() ? it.skip(...args) : it(...args)
+    if (isRunningInElectron()) {
+        it.skip(...args)
+    } else {
+        it(...args)
+    }
 }
 
 export function describeOnlyInNodeJs(...args: Parameters<typeof describe>): void {
-    return isRunningInElectron() ? describe.skip(...args) : describe(...args)
+    if (isRunningInElectron()) {
+        describe.skip(...args)
+    } else {
+        describe(...args)
+    }
 }
 
 /**

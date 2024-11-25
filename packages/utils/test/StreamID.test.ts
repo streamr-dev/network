@@ -12,7 +12,7 @@ describe('toStreamID', () => {
 
     it('path-only format with no domain', () => {
         const path = '/foo/BAR'
-        return expect(() => {
+        expect(() => {
             toStreamID(path)
         }).toThrowError('path-only format "/foo/BAR" provided without domain')
     })
@@ -38,7 +38,7 @@ describe('toStreamID', () => {
     })
 
     it('empty string throws error', () => {
-        return expect(() => {
+        expect(() => {
             toStreamID('')
         }).toThrowError('stream id may not be empty')
     })
