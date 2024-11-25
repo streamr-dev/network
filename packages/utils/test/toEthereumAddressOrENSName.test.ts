@@ -11,6 +11,6 @@ describe('toEthereumAddressOrENSName', () => {
     })
 
     it('throws given invalid value', () => {
-        expect(() => toEthereumAddressOrENSName('invalid')).toThrowError()
+        expect(() => toEthereumAddressOrENSName('invalid')).toThrow()
     })
 })
