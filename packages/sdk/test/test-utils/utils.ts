@@ -142,8 +142,7 @@ export const createMockMessage = async (
         }),
         groupKeyQueue: await createGroupKeyQueue(authentication, opts.encryptionKey, opts.nextEncryptionKey),
         signatureValidator: mock<SignatureValidator>(),
-        messageSigner: new MessageSigner(authentication),
-        cacheMaxSize: 999999
+        messageSigner: new MessageSigner(authentication)
     })
     const DEFAULT_CONTENT = {}
     const plainContent = opts.content ?? DEFAULT_CONTENT

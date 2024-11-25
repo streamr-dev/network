@@ -60,8 +60,7 @@ describe('resend subscription', () => {
             }),
             groupKeyQueue: await createGroupKeyQueue(authentication),
             signatureValidator: mock<SignatureValidator>(),
-            messageSigner: new MessageSigner(authentication),
-            cacheMaxSize: 999999
+            messageSigner: new MessageSigner(authentication)
         })
     })
 

@@ -158,10 +158,7 @@ describe.skip('OrderMessages2', () => {
                 gapFillStrategy: 'full',
                 gapFillTimeout: PROPAGATION_TIMEOUT,
                 retryResendAfter: RESEND_TIMEOUT,
-                maxGapRequests: MAX_GAP_REQUESTS,
-                cache: {
-                    maxSize: 999999
-                }
+                maxGapRequests: MAX_GAP_REQUESTS
             }
         )
 

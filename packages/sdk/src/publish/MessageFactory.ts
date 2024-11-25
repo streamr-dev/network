@@ -30,7 +30,6 @@ export interface MessageFactoryOptions {
     groupKeyQueue: GroupKeyQueue
     signatureValidator: SignatureValidator
     messageSigner: MessageSigner
-    cacheMaxSize: number
 }
 
 export class MessageFactory {
@@ -57,8 +56,7 @@ export class MessageFactory {
         this.defaultMessageChainIds = new Mapping({
             valueFactory: async (_partition: number) => {
                 return createRandomMsgChainId()
-            },
-            maxSize: opts.cacheMaxSize
+            }
         })
     }
 

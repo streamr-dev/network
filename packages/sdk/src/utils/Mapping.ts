@@ -3,11 +3,16 @@ import LRU from '../../vendor/quick-lru'
 
 type KeyType = (string | number | symbol)[]
 
-interface Options<K extends KeyType, V> {
-    valueFactory: (...key: K) => Promise<V>
+interface BaseOptions<K extends KeyType, V> {
+    valueFactory: (...args: K) => Promise<V>
+}
+
+interface CacheMapOptions<K extends KeyType, V> extends BaseOptions<K, V> {
     maxSize: number
     maxAge?: number
 }
+
+type LazyMapOptions<K extends KeyType, V> = BaseOptions<K, V>
 
 interface Item<K, V> {
     key: K
@@ -21,15 +26,24 @@ interface Item<K, V> {
  */
 export class Mapping<K extends KeyType, V> {
 
-    private readonly cache: LRU<string, Item<K, V>>
+    private readonly cache: Map<string, Item<K, V>>
     private readonly pendingPromises: Map<string, Promise<V>> = new Map()
-    private readonly opts: Options<K, V>
+    private readonly opts: CacheMapOptions<K, V> | LazyMapOptions<K, V>
 
-    constructor(opts: Options<K, V>) {
-        this.cache = new LRU<string, Item<K, V>>({
-            maxSize: opts.maxSize,
-            maxAge: opts.maxAge
-        })
+    /**
+     * Prefer constructing the class via createCacheMap() and createLazyMap()
+     * 
+     * @internal 
+     **/
+    constructor(opts: CacheMapOptions<K, V> | LazyMapOptions<K, V>) {
+        if ('maxSize' in opts) {
+            this.cache = new LRU<string, Item<K, V>>({
+                maxSize: opts.maxSize,
+                maxAge: opts.maxAge
+            })
+        } else {
+            this.cache = new Map<string, Item<K, V>>()
+        }
         this.opts = opts
     }
 
@@ -73,4 +87,12 @@ export class Mapping<K extends KeyType, V> {
             yield item.value
         }
     }
+}
+
+export const createCacheMap = <K extends KeyType, V>(opts: CacheMapOptions<K, V>): Mapping<K, V> => {
+    return new Mapping<K, V>(opts)
+}
+
+export const createLazyMap = <K extends KeyType, V>(opts: LazyMapOptions<K, V>): Mapping<K, V> => {
+    return new Mapping<K, V>(opts)
 }
