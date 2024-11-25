@@ -20,10 +20,9 @@ describe('Publisher', () => {
             streamRegistry as any,
             createGroupKeyManager(undefined, authentication),
             streamIdBuilder,
-            { cache: { maxSize: 999999 } } as any,
             authentication,
             mock<SignatureValidator>(),
-            mock<MessageSigner>(),
+            mock<MessageSigner>()
         )
         const streamId = await streamIdBuilder.toStreamID('/test')
         await expect(async () => {

@@ -60,8 +60,7 @@ describe('resend subscription', () => {
             }),
             groupKeyQueue: await createGroupKeyQueue(authentication),
             signatureValidator: mock<SignatureValidator>(),
-            messageSigner: new MessageSigner(authentication),
-            cacheMaxSize: 999999
+            messageSigner: new MessageSigner(authentication)
         })
     })
 
@@ -116,10 +115,7 @@ describe('resend subscription', () => {
                 gapFill,
                 maxGapRequests: MAX_GAP_REQUESTS,
                 gapFillTimeout: 200,
-                retryResendAfterTimeout: 0,
-                cache: {
-                    maxSize: 999999
-                }
+                retryResendAfterTimeout: 0
             } as any,
             eventEmitter,
             mockLoggerFactory()

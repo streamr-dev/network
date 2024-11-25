@@ -60,8 +60,7 @@ export class OrderMessages {
         getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>,
         onUnfillableGap: ((gap: Gap) => void),
         resends: Resends,
-        // eslint-disable-next-line max-len
-        config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'> & { cache: { maxSize: number } }
+        config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
     ) {
         this.chains = new Mapping({
             valueFactory: async (publisherId: UserID, msgChainId: string) => {
@@ -79,8 +78,7 @@ export class OrderMessages {
                 )
                 chain.on('orderedMessageAdded', (msg: StreamMessage) => this.onOrdered(msg))
                 return chain
-            },
-            maxSize: config.cache.maxSize
+            }
         })
     }
 

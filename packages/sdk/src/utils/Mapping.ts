@@ -3,11 +3,15 @@ import LRU from '../../vendor/quick-lru'
 
 type KeyType = (string | number)[]
 
-interface Options<K extends KeyType, V> {
+type Options<K extends KeyType, V> = {
     valueFactory: (...args: K) => Promise<V>
+} & ({
     maxSize: number
     maxAge?: number
-}
+} | {
+    maxSize?: never
+    maxAge?: never
+})
 
 // an wrapper object is used so that we can store undefined values
 interface ValueWrapper<V> {
@@ -21,15 +25,19 @@ interface ValueWrapper<V> {
  */
 export class Mapping<K extends KeyType, V> {
 
-    private readonly cache: LRU<string, ValueWrapper<V>>
+    private readonly cache: Map<string, ValueWrapper<V>>
     private readonly pendingPromises: Map<string, Promise<V>> = new Map()
     private readonly opts: Options<K, V>
 
     constructor(opts: Options<K, V>) {
-        this.cache = new LRU<string, ValueWrapper<V>>({
-            maxSize: opts.maxSize,
-            maxAge: opts.maxAge
-        })
+        if (opts.maxSize !== undefined) {
+            this.cache = new LRU<string, ValueWrapper<V>>({
+                maxSize: opts.maxSize,
+                maxAge: opts.maxAge
+            })
+        } else {
+            this.cache = new Map<string, ValueWrapper<V>>()
+        }
         this.opts = opts
     }
 
