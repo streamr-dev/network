@@ -85,7 +85,7 @@
     "@babel/runtime": "^7.26.0",
     "@babel/runtime-corejs3": "^7.26.0",
     "@lit-protocol/core": "2.2.5",
-    "@lit-protocol/uint8arrays": "^6.11.2",
+    "@lit-protocol/uint8arrays": "^7.0.0",
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
     "@streamr/config": "^5.4.1",
