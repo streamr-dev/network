@@ -18,9 +18,8 @@ export class StreamrClientError extends Error {
 
     public readonly code: StreamrClientErrorCode
 
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    constructor(message: string, code: StreamrClientErrorCode, cause?: any) {
-        super(message, cause !== undefined ? { cause } : undefined)
+    constructor(message: string, code: StreamrClientErrorCode) {
+        super(message)
         this.code = code
         this.name = this.constructor.name
     }

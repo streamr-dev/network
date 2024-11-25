@@ -22,11 +22,11 @@ export const decrypt = async (
             streamMessage.groupKeyId,
             streamMessage.getPublisherId()
         )
-    } catch (e: any) {
+    } catch {
         if (destroySignal.isDestroyed()) {
             return streamMessage
         }
-        throw createDecryptError(`Could not get encryption key ${streamMessage.groupKeyId}`, streamMessage, e)
+        throw createDecryptError(`Could not get encryption key ${streamMessage.groupKeyId}`, streamMessage)
     }
     if (destroySignal.isDestroyed()) {
         return streamMessage
