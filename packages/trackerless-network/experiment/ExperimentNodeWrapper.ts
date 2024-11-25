@@ -58,6 +58,32 @@ export class ExperimentNodeWrapper {
 
     async startNode(entryPoints: PeerDescriptor[], asEntryPoint: boolean, join: boolean, storeRoutingPaths: boolean, storeMessagePaths: boolean, nodeId?: string) {
         logger.info('starting node', { storeRoutingPaths: storeRoutingPaths })
+        this.createNode(entryPoints, asEntryPoint, storeRoutingPaths, storeMessagePaths, nodeId)
+        await this.node!.start(join)
+        this.node!.registerExternalRoutingRpcMethod(GetRoutingPath, RoutingPath, 'getRoutingPath', async (request: GetRoutingPath, context: ServerCallContext): Promise<RoutingPath> => {
+            const source = (context as DhtCallContext).incomingSourceDescriptor
+            const { sendTime } = request 
+            return {
+                path: (this.node!.stack.getControlLayerNode() as DhtNode).getPathForMessage(toNodeId(source!)),
+                sendTime: Date.now(),
+                timeToReceiver: Date.now() - sendTime
+            }
+        })
+        const peerDescriptor = this.node!.getPeerDescriptor()
+        const message = ExperimentClientMessage.create({
+            id: this.id,
+            payload: {
+                oneofKind: 'started',
+                started: {
+                    peerDescriptor,
+                    timeToJoin: 0
+                }
+            }
+        })
+        this.send(message)
+    }
+
+    createNode(entryPoints: PeerDescriptor[], asEntryPoint: boolean, storeRoutingPaths: boolean, storeMessagePaths: boolean, nodeId?: string): void {
         let configPeerDescriptor: PeerDescriptor | undefined
         if (asEntryPoint) {
             configPeerDescriptor = {
@@ -87,28 +113,6 @@ export class ExperimentNodeWrapper {
             }
         })
         this.node = new NetworkNode(stack)
-        await this.node.start(join)
-        this.node.registerExternalRoutingRpcMethod(GetRoutingPath, RoutingPath, 'getRoutingPath', async (request: GetRoutingPath, context: ServerCallContext): Promise<RoutingPath> => {
-            const source = (context as DhtCallContext).incomingSourceDescriptor
-            const { sendTime } = request 
-            return {
-                path: (this.node!.stack.getControlLayerNode() as DhtNode).getPathForMessage(toNodeId(source!)),
-                sendTime: Date.now(),
-                timeToReceiver: Date.now() - sendTime
-            }
-        })
-        const peerDescriptor = this.node.getPeerDescriptor()
-        const message = ExperimentClientMessage.create({
-            id: this.id,
-            payload: {
-                oneofKind: 'started',
-                started: {
-                    peerDescriptor,
-                    timeToJoin: 0
-                }
-            }
-        })
-        this.send(message)
     }
 
     async connect() {
@@ -154,7 +158,7 @@ export class ExperimentNodeWrapper {
                 setImmediate(() => this.publishOnInterval(instruction.streamPartId, instruction.interval))
             } else if (message.instruction.oneofKind === 'measureTimeToData') {
                 const instruction = message.instruction.measureTimeToData
-                setImmediate(() => this.measureTimeToData(instruction.streamPartId))
+                setImmediate(() => this.measureTimeToData(instruction.streamPartId, instruction.entryPoints))
             } else if (message.instruction.oneofKind === 'pingExperiment') {
                 const instruction = message.instruction.pingExperiment
                 setImmediate(() => this.pingExperiment(instruction.ips))
@@ -256,8 +260,10 @@ export class ExperimentNodeWrapper {
         setInterval(() => this.publishMessage(streamPart), interval)
     }
 
-    async measureTimeToData(streamPartId: string): Promise<void> {
+    async measureTimeToData(streamPartId: string, entryPoints: PeerDescriptor[]): Promise<void> {
         logger.info('running time to data experiment')
+        this.createNode(entryPoints, false, false, false)
+        await this.node!.start()
         const streamPart = StreamPartIDUtils.parse(streamPartId)
         const startTime = Date.now()
         await this.node!.join(streamPart)

@@ -4,7 +4,7 @@ import WebSocket from 'ws'
 import { ExperimentClientMessage, ExperimentServerMessage, Hello, InstructionCompleted, JoinExperiment, RoutingExperiment } from './generated/packages/trackerless-network/experiment/Experiment'
 import { Logger, StreamPartID, StreamPartIDUtils, wait, waitForCondition } from '@streamr/utils'
 import { areEqualPeerDescriptors, PeerDescriptor } from '@streamr/dht'
-import { chunk, sample } from 'lodash'
+import { chunk, sample, sampleSize } from 'lodash'
 import fs from 'fs'
 
 interface ExperimentNode {
@@ -210,11 +210,16 @@ export class ExperimentController {
         const subsribers = Array.from(this.clients.keys()).filter((id) => id !== publisher)
         for (const subscriber of subsribers) {
             logger.info('Starting node for time to data measurement', { subscriber })
+            const pickedEntryPoint = sampleSize(Array.from(this.clients.keys()).filter((id) => !this.resultsReceived.has(id)), 2)!
             const message = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'measureTimeToData',
                     measureTimeToData: {
-                        streamPartId
+                        streamPartId,
+                        entryPoints: [
+                            ...pickedEntryPoint.map((entryPoint) => this.clients.get(entryPoint)!.peerDescriptor!),
+                            this.clients.get(entryPoint)!.peerDescriptor!
+                        ]
                     }
                 }
             })

@@ -104,6 +104,7 @@ message PublishOnInterval {
 
 message MeasureTimeToData {
     string streamPartId = 1;
+    repeated peerDescriptor.PeerDescriptor entryPoints = 2;
 }
 
 message PingExperiment {

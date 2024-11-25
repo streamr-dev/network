@@ -288,6 +288,10 @@ export interface MeasureTimeToData {
      * @generated from protobuf field: string streamPartId = 1;
      */
     streamPartId: string;
+    /**
+     * @generated from protobuf field: repeated peerDescriptor.PeerDescriptor entryPoints = 2;
+     */
+    entryPoints: PeerDescriptor[];
 }
 /**
  * @generated from protobuf message PingExperiment
@@ -516,7 +520,8 @@ export const PublishOnInterval = new PublishOnInterval$Type();
 class MeasureTimeToData$Type extends MessageType<MeasureTimeToData> {
     constructor() {
         super("MeasureTimeToData", [
-            { no: 1, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "streamPartId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "entryPoints", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
         ]);
     }
 }
