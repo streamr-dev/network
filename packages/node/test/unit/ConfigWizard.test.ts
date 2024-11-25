@@ -1482,7 +1482,8 @@ function act(
                 }
 
                 if (action === 'enter') {
-                    return void events.keypress('enter')
+                    events.keypress('enter')
+                    return
                 }
 
                 if ('find' in action) {
@@ -1506,7 +1507,8 @@ function act(
                 }
 
                 if ('type' in action) {
-                    return void events.type(action.type)
+                    events.type(action.type)
+                    return
                 }
 
                 events.keypress(action.keypress)
@@ -1643,7 +1645,7 @@ async function scenario(mocks: AnswerMock[]): Promise<Scenario> {
         jest.spyOn(process.stdout, 'clearLine').mockImplementation(() => true)
     }
 
-    void [checkbox, confirm, input, password, select].forEach((prompt) => {
+    [checkbox, confirm, input, password, select].forEach((prompt) => {
         prompt.mockImplementation(async (config: any) => {
             const inq = mocksCopy.find(
                 (inq) =>
