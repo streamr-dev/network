@@ -3,6 +3,7 @@ import { range, repeat, sum } from 'lodash'
 
 describe(weightedSample, () => {
     it('returns undefined on empty array', () => {
+        // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
         const result = weightedSample([], () => 1)
         expect(result).toBeUndefined()
     })
