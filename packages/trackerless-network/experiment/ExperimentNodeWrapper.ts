@@ -144,7 +144,7 @@ export class ExperimentNodeWrapper {
                 setImmediate(() => this.onPublishInstruction(instruction.streamPartId))
             } else if (message.instruction.oneofKind === 'getPropagationResults') {
                 const instruction = message.instruction.getPropagationResults
-                setImmediate(() => this.reportPropagationResults(instruction.streamPartId))
+                setImmediate(() => this.reportPropagationResults())
             } else if (message.instruction.oneofKind === 'routingExperiment') {
                 const instruction = message.instruction.routingExperiment
                 setImmediate(() => this.routingExperiment(instruction.routingTargets))
@@ -281,15 +281,14 @@ export class ExperimentNodeWrapper {
         this.send(results)
     }
 
-    reportPropagationResults(streamPart: string): void {
-        const streamPartId = StreamPartIDUtils.parse(streamPart)
-        const results = this.node!.stack.getContentDeliveryManager().getPropagationResults(streamPartId)
+    async reportPropagationResults(): Promise<void> {
+        const results = await this.node!.stack.getContentDeliveryManager().getPropagationResults()
         this.send(ExperimentClientMessage.create({
             id: this.id,
             payload: {
                 oneofKind: 'propagationResults',
                 propagationResults: {
-                    results: results.map((res) => JSON.stringify(res))
+                    results: results
                 }
             }
         }))
