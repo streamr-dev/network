@@ -2,13 +2,13 @@ import { toEthereumAddress } from '../src/EthereumAddress'
 
 describe('toEthereumAddress', () => {
     it('invalid addresses', () => {
-        expect(() => toEthereumAddress('')).toThrowError()
-        expect(() => toEthereumAddress('0x')).toThrowError()
-        expect(() => toEthereumAddress('0xabcabc')).toThrowError()
-        expect(() => toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')).toThrowError() // missing 1 char
-        expect(() => toEthereumAddress('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')).toThrowError()
-        expect(() => toEthereumAddress('0xhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh')).toThrowError()
-        expect(() => toEthereumAddress('hello.eth')).toThrowError()
+        expect(() => toEthereumAddress('')).toThrow()
+        expect(() => toEthereumAddress('0x')).toThrow()
+        expect(() => toEthereumAddress('0xabcabc')).toThrow()
+        expect(() => toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')).toThrow() // missing 1 char
+        expect(() => toEthereumAddress('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')).toThrow()
+        expect(() => toEthereumAddress('0xhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh')).toThrow()
+        expect(() => toEthereumAddress('hello.eth')).toThrow()
     })
 
     it('valid addresses are lowercased', () => {

@@ -191,7 +191,8 @@ export class Simulator {
 
         if (!target) {
             logger.error('Target connector not found when executing connect operation')
-            return operation.association.connectedCallback!('Target connector not found')
+            operation.association.connectedCallback!('Target connector not found')
+            return
         }
 
         target.handleIncomingConnection(operation.sourceConnection)

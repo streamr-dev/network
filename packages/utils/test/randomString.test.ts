@@ -1,7 +1,7 @@
 import { DEFAULT_CHARSET, randomString } from '../src/randomString'
 
 function assertStringConsistsOfCharset(actual: string, expectedCharset: string): void {
-    return actual.split('').forEach((char) => {
+    actual.split('').forEach((char) => {
         expect(char).toBeOneOf(expectedCharset.split(''))
     })
 }
