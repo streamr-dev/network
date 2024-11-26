@@ -141,7 +141,7 @@ describe('Iterator Utils', () => {
             expect(received).toEqual([])
         })
 
-        it('runs fn when iterator returns before iteration', async () => {
+        it('runs fn when iterator returns before iteration (explicit return)', async () => {
             const received: number[] = []
             const onStarted = jest.fn()
             const itr = iteratorFinally((async function* Test() {
