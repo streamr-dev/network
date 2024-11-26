@@ -104,6 +104,7 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.encryptionType, EncryptionType.NONE)
             assert.strictEqual(streamMessage.groupKeyId, undefined)
             assert.deepStrictEqual(streamMessage.content, new Uint8Array([1, 2, 3]))
+            assert.strictEqual(streamMessage.newGroupKey, undefined)
             assert.strictEqual(streamMessage.signature, signature)
         })
 
