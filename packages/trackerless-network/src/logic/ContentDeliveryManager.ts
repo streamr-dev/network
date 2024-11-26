@@ -34,6 +34,7 @@ import { ConnectionManager } from '@streamr/dht/src/exports'
 import { StreamPartitionInfo } from '../types'
 import fs from 'fs'
 import readline from 'readline'
+import path = require('path')
 
 type TimeToData = {
     streamJoinTimestamp: number
@@ -417,8 +418,10 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
     }
 
     async getPropagationResults(): Promise<string[]> {
+        const filePath = path.resolve(this.options.experimentId + '_messages.json')
+        console.log(filePath)
         const file = readline.createInterface({
-            input: fs.createReadStream(this.options.experimentId + '_messages.json'),
+            input: fs.createReadStream(filePath),
             output: process.stdout,
             terminal: false
         })
