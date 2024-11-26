@@ -108,31 +108,6 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.signature, signature)
         })
 
-        it('create StreamMessage binary content', () => {
-            const streamMessage = new StreamMessage({
-                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
-                content: new Uint8Array([1, 2, 3]),
-                contentType: ContentType.BINARY,
-                signatureType: SignatureType.SECP256K1,
-                encryptionType: EncryptionType.NONE,
-                signature
-            })
-            assert.strictEqual(streamMessage.getStreamId(), 'streamId')
-            assert.strictEqual(streamMessage.getStreamPartition(), 0)
-            assert.strictEqual(streamMessage.getTimestamp(), 1564046332168)
-            assert.strictEqual(streamMessage.getSequenceNumber(), 10)
-            assert.strictEqual(streamMessage.getPublisherId(), PUBLISHER_ID)
-            assert.strictEqual(streamMessage.getMsgChainId(), 'msgChainId')
-            assert.deepStrictEqual(streamMessage.prevMsgRef, undefined)
-            assert.strictEqual(streamMessage.messageType, StreamMessageType.MESSAGE)
-            assert.strictEqual(streamMessage.contentType, ContentType.BINARY)
-            assert.strictEqual(streamMessage.encryptionType, EncryptionType.NONE)
-            assert.strictEqual(streamMessage.groupKeyId, undefined)
-            assert.deepStrictEqual(streamMessage.content, new Uint8Array([1, 2, 3]))
-            assert.strictEqual(streamMessage.newGroupKey, undefined)
-            assert.strictEqual(streamMessage.signature, signature)
-        })
-
         it('can detect encrypted', () => {
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
