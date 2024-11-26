@@ -387,8 +387,7 @@ describe('nextValue', () => {
     })
 
     it('empty', async () => {
-        const generator = async function* () {}()
-        // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+        const generator: AsyncGenerator<number, any, any> = async function* () {}()
         expect(await nextValue(generator)).toBe(undefined)
     })
 })
