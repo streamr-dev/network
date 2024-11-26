@@ -96,19 +96,6 @@ describe('HandshakeRpcLocal', () => {
         expect(handshakeWithInterleaving).toHaveBeenCalledTimes(1)
     })
 
-    it('handshakeWithInterleaving success', async () => {
-        const req: InterleaveRequest = {
-            interleaveTargetDescriptor: {
-                nodeId: toDhtAddressRaw('0x2222' as DhtAddress),
-                type: NodeType.NODEJS
-            }
-        }
-        await rpcLocal.interleaveRequest(req, {
-            incomingSourceDescriptor: createMockPeerDescriptor()
-        } as any)
-        expect(handshakeWithInterleaving).toHaveBeenCalledTimes(1)
-    })
-
     it('rejects handshakes if interleaving to the requestor is ongoing', async () => {
         neighbors.add(createMockContentDeliveryRpcRemote())
         neighbors.add(createMockContentDeliveryRpcRemote())
