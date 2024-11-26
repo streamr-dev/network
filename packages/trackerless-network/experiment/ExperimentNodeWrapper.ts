@@ -9,6 +9,7 @@ import { ContentType, EncryptionType, SignatureType, StreamMessage } from '../ge
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { RoutingExperimentRpcClient } from './generated/packages/trackerless-network/experiment/Experiment.client'
 import { chunk, now } from 'lodash'
+import path from 'path'
 const ping = require('ping')
 
 const createStreamMessage = (streamPartId: StreamPartID, id: string, region: number) => {
@@ -109,7 +110,8 @@ export class ExperimentNodeWrapper {
             layer0: layer0config,
             networkNode: {
                 experimentId: this.id,
-                includeRouteToMessages: storeMessagePaths
+                includeRouteToMessages: storeMessagePaths,
+                propagationResultPath: path.resolve(path.resolve(__dirname), this.id + '_messages.json')
             }
         })
         this.node = new NetworkNode(stack)

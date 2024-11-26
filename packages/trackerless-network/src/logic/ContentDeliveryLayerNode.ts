@@ -68,6 +68,7 @@ export interface StrictContentDeliveryLayerNodeOptions {
 
     experimentId?: string
     includeRouteToMessages?: boolean
+    propagationResultPath?: string
 }
 
 const RANDOM_NODE_VIEW_SIZE = 20
@@ -371,9 +372,7 @@ export class ContentDeliveryLayerNode extends EventEmitter<Events> {
                     time: Date.now(),
                     region: this.options.localPeerDescriptor.region
                 })
-                const filePath = path.resolve(this.options.experimentId + '_messages.json')
-                console.log(filePath)
-                fs.appendFileSync(filePath, JSON.stringify({
+                fs.appendFileSync(this.options.propagationResultPath!, JSON.stringify({
                     id: this.options.experimentId,
                     hops: parsedMessage.route.length,
                     time: Date.now() - parsedMessage.route[0].time,

@@ -79,6 +79,7 @@ export interface ContentDeliveryManagerOptions {
     neighborUpdateInterval?: number
     experimentId?: string
     includeRouteToMessages?: boolean
+    propagationResultPath?: string
 }
 
 export const streamPartIdToDataKey = (streamPartId: StreamPartID): DhtAddress => {
@@ -298,7 +299,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
             neighborUpdateInterval: this.options.neighborUpdateInterval,
             isLocalNodeEntryPoint,
             experimentId: this.options.experimentId,
-            includeRouteToMessages: this.options.includeRouteToMessages
+            includeRouteToMessages: this.options.includeRouteToMessages,
+            propagationResultPath: this.options.propagationResultPath
         })
     }
 
@@ -418,10 +420,8 @@ export class ContentDeliveryManager extends EventEmitter<Events> {
     }
 
     async getPropagationResults(): Promise<string[]> {
-        const filePath = path.resolve(this.options.experimentId + '_messages.json')
-        console.log(filePath)
         const file = readline.createInterface({
-            input: fs.createReadStream(filePath),
+            input: fs.createReadStream(this.options.propagationResultPath!),
             output: process.stdout,
             terminal: false
         })
