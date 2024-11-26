@@ -38,7 +38,7 @@ describe('custom matchers', () => {
                 }).toThrow('Not an instance of StreamrClientError:\nReceived: "TestClass"')
             })
 
-            it('unexpected privitive', () => {
+            it('unexpected primitive', () => {
                 expect(() => {
                     // eslint-disable-next-line @typescript-eslint/only-throw-error
                     expect(() => { throw 'mock-error' }).toThrowStreamrClientError({
