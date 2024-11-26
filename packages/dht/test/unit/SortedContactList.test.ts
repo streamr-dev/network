@@ -38,7 +38,7 @@ describe('SortedContactList', () => {
         expect(list.getSize()).toEqual(3)
         expect(list.getClosestContacts()).toEqual([item1, item2, item3])
         expect(list.getContactIds()).toEqual([item1.getNodeId(), item2.getNodeId(), item3.getNodeId()])
-        expect(onContactRemoved).toBeCalledWith(item4)
+        expect(onContactRemoved).toHaveBeenCalledWith(item4)
         expect(list.getContact(item4.getNodeId())).toBeFalsy()
     })
 
@@ -106,9 +106,9 @@ describe('SortedContactList', () => {
         list.on('contactAdded', onContactAdded)
         list.addContact(item1)
         list.addContact(item2)
-        expect(onContactAdded).toBeCalledTimes(2)
+        expect(onContactAdded).toHaveBeenCalledTimes(2)
         list.addContact(item3)
-        expect(onContactAdded).toBeCalledTimes(2)
+        expect(onContactAdded).toHaveBeenCalledTimes(2)
         expect(list.getClosestContacts().length).toEqual(2)
     })
 

@@ -33,10 +33,10 @@ describe('NetworkNode', () => {
         contentDeliveryManager.emit('newMessage', msg2)
         expect(onMessage.mock.calls[0][0]).toEqual(msg1)
         expect(onMessage.mock.calls[1][0]).toEqual(msg2)
-        expect(onMessage).toBeCalledTimes(2)
+        expect(onMessage).toHaveBeenCalledTimes(2)
 
         node.removeMessageListener(onMessage)
         contentDeliveryManager.emit('newMessage', createMessage(3))
-        expect(onMessage).toBeCalledTimes(2)
+        expect(onMessage).toHaveBeenCalledTimes(2)
     })
 })

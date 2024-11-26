@@ -24,7 +24,7 @@ export class ERC1271ContractFacade {
 
     constructor(
         contractFactory: ContractFactory,
-        rpcProviderSource: RpcProviderSource,
+        rpcProviderSource: RpcProviderSource
     ) {
         this.contractsByAddress = createLazyMap<[EthereumAddress], ERC1271Contract>({
             valueFactory: async (address) => {

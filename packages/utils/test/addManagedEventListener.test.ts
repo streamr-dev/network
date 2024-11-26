@@ -20,12 +20,12 @@ describe('addManagedEventListener', () => {
         )
         emitter.emit('foo', 'abc', 111)
         emitter.emit('foo', 'abc', 222)
-        expect(listener).toBeCalledTimes(2)
+        expect(listener).toHaveBeenCalledTimes(2)
         expect(listener).toHaveBeenNthCalledWith(1, 'abc', 111)
         expect(listener).toHaveBeenNthCalledWith(2, 'abc', 222)
         abortController.abort()
         emitter.emit('foo', 'abc', 333)
-        expect(listener).toBeCalledTimes(2)
+        expect(listener).toHaveBeenCalledTimes(2)
     })
 
     it('already aborted', () => {
@@ -40,6 +40,6 @@ describe('addManagedEventListener', () => {
             abortController.signal
         )
         emitter.emit('foo', 'abc', 111)
-        expect(listener).not.toBeCalled()
+        expect(listener).not.toHaveBeenCalled()
     })
 })
