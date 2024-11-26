@@ -1,14 +1,41 @@
-# Welcome to the Streamr Docs repo!
+# Website
 
-Checkout the [Docs](https://docs.streamr.network)!
+This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
 
-## Community contributions
-Please feel very welcome to submit content suggestions!
+### Installation
 
-For ease of use, small changes can be suggested by editing the markdown file on GitHub. Every content page has an "Edit this page" link at the bottom- Simply edit the text contents and submit a pull request to have the change reviewed before it is implemented.
+```
+$ yarn
+```
 
-### Run it locally
-Simply, `npm ci` & `npm start`
+### Local Development
 
-## Streamr core devs
-Deployments are automatically made after every commit to `main`, therefore editing markdown files directly on `main` will be reflected in production within a minute or two.
+```
+$ yarn start
+```
+
+This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+
+### Build
+
+```
+$ yarn build
+```
+
+This command generates static content into the `build` directory and can be served using any static contents hosting service.
+
+### Deployment
+
+Using SSH:
+
+```
+$ USE_SSH=true yarn deploy
+```
+
+Not using SSH:
+
+```
+$ GIT_USER=<Your GitHub username> yarn deploy
+```
+
+If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.

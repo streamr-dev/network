@@ -1,8 +1,0 @@
-{
-  "label": "Help",
-  "position": 6,
-  "link": {
-    "slug": "/help",
-    "type": "generated-index"
-  }
-}
