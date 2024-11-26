@@ -88,8 +88,8 @@ describe('StreamMessage', () => {
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: new Uint8Array([1, 2, 3]),
                 contentType: ContentType.BINARY,
-                encryptionType: EncryptionType.NONE,
                 signatureType: SignatureType.SECP256K1,
+                encryptionType: EncryptionType.NONE,
                 signature
             })
             assert.strictEqual(streamMessage.getStreamId(), 'streamId')
