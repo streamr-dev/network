@@ -1,3 +1,5 @@
+import { MessageID } from './protocol/MessageID'
+
 export type StreamrClientErrorCode =
     'STREAM_NOT_FOUND' |
     'NODE_NOT_FOUND' |
@@ -8,6 +10,7 @@ export type StreamrClientErrorCode =
     'PIPELINE_ERROR' |
     'UNSUPPORTED_OPERATION' |
     'INVALID_STREAM_METADATA' |
+    'DECRYPT_ERROR' |
     'STORAGE_NODE_ERROR' |
     'UNKNOWN_ERROR'
 
@@ -20,4 +23,8 @@ export class StreamrClientError extends Error {
         this.code = code
         this.name = this.constructor.name
     }
+}
+
+export const formMessageIdDescription = (messageId: MessageID): string => {
+    return JSON.stringify(messageId)
 }

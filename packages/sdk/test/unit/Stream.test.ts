@@ -11,7 +11,7 @@ describe('Stream', () => {
                 getStreamMetadata: async () => ({ partitions: 150 })
             } as any
         )
-        await expect(() => stream.getPartitionCount()).rejects.toThrowStreamrError({
+        await expect(() => stream.getPartitionCount()).rejects.toThrowStreamrClientError({
             message: 'Invalid partition count: 150',
             code: 'INVALID_STREAM_METADATA'
         })
