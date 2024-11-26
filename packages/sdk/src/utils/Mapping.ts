@@ -26,7 +26,7 @@ interface Item<K, V> {
  */
 export class Mapping<K extends KeyType, V> {
 
-    private readonly cache: Map<string, Item<K, V>>
+    private readonly delegate: Map<string, Item<K, V>>
     private readonly pendingPromises: Map<string, Promise<V>> = new Map()
     private readonly opts: CacheMapOptions<K, V> | LazyMapOptions<K, V>
 
@@ -37,12 +37,12 @@ export class Mapping<K extends KeyType, V> {
      **/
     constructor(opts: CacheMapOptions<K, V> | LazyMapOptions<K, V>) {
         if ('maxSize' in opts) {
-            this.cache = new LRU<string, Item<K, V>>({
+            this.delegate = new LRU<string, Item<K, V>>({
                 maxSize: opts.maxSize,
                 maxAge: opts.maxAge
             })
         } else {
-            this.cache = new Map<string, Item<K, V>>()
+            this.delegate = new Map<string, Item<K, V>>()
         }
         this.opts = opts
     }
@@ -53,7 +53,7 @@ export class Mapping<K extends KeyType, V> {
         if (pendingPromises !== undefined) {
             return await pendingPromises
         } else {
-            let item = this.cache.get(lookupKey)
+            let item = this.delegate.get(lookupKey)
             if (item === undefined) {
                 const promise = this.opts.valueFactory(...key)
                 this.pendingPromises.set(lookupKey, promise)
@@ -64,26 +64,26 @@ export class Mapping<K extends KeyType, V> {
                     this.pendingPromises.delete(lookupKey)
                 }
                 item = { key, value }
-                this.cache.set(lookupKey, item)
+                this.delegate.set(lookupKey, item)
             }
             return item.value
         }
     }
 
     set(key: K, value: V): void {
-        this.cache.set(formLookupKey(...key), { key, value })
+        this.delegate.set(formLookupKey(...key), { key, value })
     }
 
     invalidate(predicate: (key: K) => boolean): void {
-        for (const [lookupKey, item] of this.cache.entries()) {
+        for (const [lookupKey, item] of this.delegate.entries()) {
             if (predicate(item.key)) {
-                this.cache.delete(lookupKey)
+                this.delegate.delete(lookupKey)
             }
         }
     }
 
     *values(): IterableIterator<V> {
-        for (const item of this.cache.values()) {
+        for (const item of this.delegate.values()) {
             yield item.value
         }
     }
