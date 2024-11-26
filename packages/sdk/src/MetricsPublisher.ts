@@ -71,7 +71,7 @@ export class MetricsPublisher {
             const metricsContext = await this.node.getMetricsContext()
             const nodeId = await this.node.getNodeId()
             this.config.periods.forEach((config) => {
-                return metricsContext.createReportProducer(async (report: MetricsReport) => {
+                metricsContext.createReportProducer(async (report: MetricsReport) => {
                     await this.publish(report, config.streamId, nodeId)
                 }, config.duration, this.destroySignal.abortSignal)
             })

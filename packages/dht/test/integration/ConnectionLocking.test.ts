@@ -61,6 +61,7 @@ describe('Connection Locking', () => {
         const nodeId2 = toNodeId(mockPeerDescriptor2)
         await Promise.all([
             until(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock')
         ])
         expect(connectionManager1.hasConnection(nodeId2)).toEqual(true)
@@ -73,10 +74,12 @@ describe('Connection Locking', () => {
         const nodeId2 = toNodeId(mockPeerDescriptor2)
         await Promise.all([
             until(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock1')
         ])
         await Promise.all([
             until(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock2')
         ])
         expect(connectionManager1.hasConnection(nodeId2)).toEqual(true)
@@ -89,6 +92,7 @@ describe('Connection Locking', () => {
         const nodeId2 = toNodeId(mockPeerDescriptor2)
         await Promise.all([
             until(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock')
         ])
         expect(connectionManager1.hasConnection(nodeId2)).toEqual(true)
@@ -106,10 +110,12 @@ describe('Connection Locking', () => {
         const nodeId2 = toNodeId(mockPeerDescriptor2)
         await Promise.all([
             until(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock1')
         ])
         await Promise.all([
             until(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock2')
         ])
 
@@ -130,7 +136,9 @@ describe('Connection Locking', () => {
         await Promise.all([
             until(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
             until(() => connectionManager1.hasRemoteLockedConnection(nodeId2)),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock1'),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             connectionManager2.lockConnection(mockPeerDescriptor1, 'testLock1')
         ])
 
@@ -155,7 +163,9 @@ describe('Connection Locking', () => {
         await Promise.all([
             until(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
             until(() => connectionManager1.hasRemoteLockedConnection(nodeId2)),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock1'),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             connectionManager2.lockConnection(mockPeerDescriptor1, 'testLock1')
         ])
         expect(connectionManager1.hasConnection(nodeId2)).toEqual(true)

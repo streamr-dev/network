@@ -28,7 +28,7 @@
         "packages/node",
         "packages/cli-tools"
     ],
-    "dependencies": {
+    "devDependencies": {
         "@eslint/js": "^9.15.0",
         "@manypkg/cli": "^0.23.0",
         "@protobuf-ts/plugin": "^2.9.3",
