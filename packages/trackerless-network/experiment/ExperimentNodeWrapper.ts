@@ -291,7 +291,9 @@ export class ExperimentNodeWrapper {
     }
 
     async reportPropagationResults(): Promise<void> {
+        logger.info('reporting propagation results')
         const results = await this.node!.stack.getContentDeliveryManager().getPropagationResults()
+        logger.info('propagation results reported')
         this.send(ExperimentClientMessage.create({
             id: this.id,
             payload: {
