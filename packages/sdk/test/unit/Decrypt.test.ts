@@ -55,7 +55,7 @@ describe('Decrypt', () => {
                 msg as StreamMessageAESEncrypted,
                 groupKeyManager,
                 destroySignal)
-        }).rejects.toThrowStreamrError({
+        }).rejects.toThrowStreamrClientError({
             code: 'DECRYPT_ERROR',
             message: `Could not get encryption key ${groupKey.id} (messageId=${formMessageIdDescription(msg.messageId)})`
         })

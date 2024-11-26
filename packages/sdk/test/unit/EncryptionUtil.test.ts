@@ -62,7 +62,7 @@ describe('EncryptionUtil', () => {
             ...msg,
             newGroupKey: new EncryptedGroupKey('mockId', hexToBinary('0x1234'))
         }) as StreamMessageAESEncrypted
-        expect(() => EncryptionUtil.decryptStreamMessage(msg2, key)).toThrowStreamrError({
+        expect(() => EncryptionUtil.decryptStreamMessage(msg2, key)).toThrowStreamrClientError({
             code: 'DECRYPT_ERROR',
             message: `Could not decrypt new encryption key (messageId=${formMessageIdDescription(msg2.messageId)})`
         })
