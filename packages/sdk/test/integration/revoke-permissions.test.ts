@@ -159,7 +159,7 @@ describe('revoke permissions', () => {
                         break
                     }
                 }
-            }).rejects.toThrow(/not a subscriber|Could not get GroupKey/)
+            }).rejects.toThrow(/not a subscriber|Could not get encryption key/)
         } finally {
             clearTimeout(t)
             // run in finally to ensure publish promise finishes before
