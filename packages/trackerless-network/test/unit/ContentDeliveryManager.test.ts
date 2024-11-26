@@ -23,7 +23,8 @@ describe('ContentDeliveryManager', () => {
     })
 
     it('PeerDescriptor is correct', () => {
-        expect(areEqualPeerDescriptors(peerDescriptor, manager.getPeerDescriptor()))
+        // TODO could use toEqualPeerDescriptor from dht package if we export that custom matcher
+        expect(areEqualPeerDescriptors(peerDescriptor, manager.getPeerDescriptor())).toBe(true)
     })
 
     describe('join and leave', () => {

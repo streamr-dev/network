@@ -286,25 +286,6 @@ describe.skip('PushBuffer', () => {
             expect(received).toEqual(expected.slice(0, 3))
         })
 
-        it('can defer error with endWrite', async () => {
-            const err = new Error(counterId('expected'))
-            const pushBuffer = new PushBuffer<number>()
-            await pushBuffer.push(expected[0])
-            await pushBuffer.push(expected[1])
-            await pushBuffer.push(expected[2])
-            pushBuffer.endWrite(err)
-            const ok = await pushBuffer.push(expected[3])
-            expect(ok).toEqual(false)
-            const received: number[] = []
-            await expect(async () => {
-                for await (const msg of pushBuffer) {
-                    received.push(msg)
-                }
-            }).rejects.toThrow(err)
-
-            expect(received).toEqual(expected.slice(0, 3))
-        })
-
         describe('pull', () => {
             it('pulls until buffer full', async () => {
                 const pushBuffer = new PushBuffer(3)

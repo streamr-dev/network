@@ -87,31 +87,6 @@ describe('StreamMessage', () => {
                 messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
                 content: new Uint8Array([1, 2, 3]),
                 contentType: ContentType.BINARY,
-                encryptionType: EncryptionType.NONE,
-                signatureType: SignatureType.SECP256K1,
-                signature
-            })
-            expect(streamMessage.getStreamId()).toEqual('streamId')
-            expect(streamMessage.getStreamPartition()).toEqual(0)
-            expect(streamMessage.getTimestamp()).toEqual(1564046332168)
-            expect(streamMessage.getSequenceNumber()).toEqual(10)
-            expect(streamMessage.getPublisherId()).toEqual(PUBLISHER_ID)
-            expect(streamMessage.getMsgChainId()).toEqual('msgChainId')
-            expect(streamMessage.prevMsgRef).toBeUndefined()
-            expect(streamMessage.messageType).toEqual(StreamMessageType.MESSAGE)
-            expect(streamMessage.contentType).toEqual(ContentType.BINARY)
-            expect(streamMessage.encryptionType).toEqual(EncryptionType.NONE)
-            expect(streamMessage.groupKeyId).toBeUndefined()
-            expect(streamMessage.content).toEqualBinary(new Uint8Array([1, 2, 3]))
-            expect(streamMessage.content).toEqualBinary(new Uint8Array([1, 2, 3]))
-            expect(streamMessage.signature).toEqualBinary(signature)
-        })
-
-        it('create StreamMessage binary content', () => {
-            const streamMessage = new StreamMessage({
-                messageId: new MessageID(toStreamID('streamId'), 0, 1564046332168, 10, PUBLISHER_ID, 'msgChainId'),
-                content: new Uint8Array([1, 2, 3]),
-                contentType: ContentType.BINARY,
                 signatureType: SignatureType.SECP256K1,
                 encryptionType: EncryptionType.NONE,
                 signature
