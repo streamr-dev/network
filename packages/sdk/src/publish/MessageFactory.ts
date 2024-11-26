@@ -53,8 +53,10 @@ export class MessageFactory {
         this.groupKeyQueue = opts.groupKeyQueue
         this.signatureValidator = opts.signatureValidator
         this.messageSigner = opts.messageSigner
-        this.defaultMessageChainIds = new Mapping(async () => {
-            return createRandomMsgChainId()
+        this.defaultMessageChainIds = new Mapping({
+            valueFactory: async () => {
+                return createRandomMsgChainId()
+            }
         })
     }
 

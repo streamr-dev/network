@@ -1,7 +1,7 @@
 import { EthereumAddress, StreamID, StreamPartID, StreamPartIDUtils, UserID, executeSafePromise } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../../Config'
 import { StreamMessage } from '../../protocol/StreamMessage'
-import { Mapping } from '../../utils/Mapping'
+import { createLazyMap, Mapping } from '../../utils/Mapping'
 import { PushBuffer } from '../../utils/PushBuffer'
 import { Resends } from '../Resends'
 import { GapFiller } from './GapFiller'
@@ -62,21 +62,23 @@ export class OrderMessages {
         resends: Resends,
         config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
     ) {
-        this.chains = new Mapping(async (publisherId: UserID, msgChainId: string) => {
-            const chain = createMessageChain(
-                {
-                    streamPartId, 
-                    publisherId, 
-                    msgChainId
-                },
-                getStorageNodes,
-                onUnfillableGap,
-                resends,
-                config,
-                this.abortController.signal
-            )
-            chain.on('orderedMessageAdded', (msg: StreamMessage) => this.onOrdered(msg))
-            return chain
+        this.chains = createLazyMap({
+            valueFactory: async (publisherId: UserID, msgChainId: string) => {
+                const chain = createMessageChain(
+                    {
+                        streamPartId, 
+                        publisherId, 
+                        msgChainId
+                    },
+                    getStorageNodes,
+                    onUnfillableGap,
+                    resends,
+                    config,
+                    this.abortController.signal
+                )
+                chain.on('orderedMessageAdded', (msg: StreamMessage) => this.onOrdered(msg))
+                return chain
+            }
         })
     }
 

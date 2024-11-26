@@ -1,4 +1,18 @@
 import { formLookupKey } from './utils'
+import LRU from '../../vendor/quick-lru'
+
+type KeyType = (string | number)[]
+
+interface BaseOptions<K extends KeyType, V> {
+    valueFactory: (...args: K) => Promise<V>
+}
+
+interface CacheMapOptions<K extends KeyType, V> extends BaseOptions<K, V> {
+    maxSize: number
+    maxAge?: number
+}
+
+type LazyMapOptions<K extends KeyType, V> = BaseOptions<K, V>
 
 // an wrapper object is used so that we can store undefined values
 interface ValueWrapper<V> {
@@ -6,19 +20,31 @@ interface ValueWrapper<V> {
 }
 
 /*
- * A map data structure which lazily evaluates values. A factory function
- * is called to create a value when when an item is queried for the first time.
- * The map stores the value and any subsequent call to get() returns
- * the same value.
+ * A map that lazily creates values. The factory function is called only when a key
+ * is accessed for the first time. Subsequent calls to `get()` return the cached value
+ * unless it has been evicted due to `maxSize` or `maxAge` limits.
  */
-export class Mapping<K extends (string | number)[], V> {
+export class Mapping<K extends KeyType, V> {
 
-    private readonly delegate: Map<string, ValueWrapper<V>> = new Map()
+    private readonly delegate: Map<string, ValueWrapper<V>>
     private readonly pendingPromises: Map<string, Promise<V>> = new Map()
-    private readonly valueFactory: (...args: K) => Promise<V>
+    private readonly opts: CacheMapOptions<K, V> | LazyMapOptions<K, V>
 
-    constructor(valueFactory: (...args: K) => Promise<V>) {
-        this.valueFactory = valueFactory
+    /**
+     * Prefer constructing the class via createCacheMap() and createLazyMap()
+     * 
+     * @internal 
+     **/
+    constructor(opts: CacheMapOptions<K, V> | LazyMapOptions<K, V>) {
+        if ('maxSize' in opts) {
+            this.delegate = new LRU<string, ValueWrapper<V>>({
+                maxSize: opts.maxSize,
+                maxAge: opts.maxAge
+            })
+        } else {
+            this.delegate = new Map<string, ValueWrapper<V>>()
+        }
+        this.opts = opts
     }
 
     async get(...args: K): Promise<V> {
@@ -29,7 +55,7 @@ export class Mapping<K extends (string | number)[], V> {
         } else {
             let valueWrapper = this.delegate.get(key)
             if (valueWrapper === undefined) {
-                const promise = this.valueFactory(...args)
+                const promise = this.opts.valueFactory(...args)
                 this.pendingPromises.set(key, promise)
                 let value
                 try {
@@ -51,4 +77,12 @@ export class Mapping<K extends (string | number)[], V> {
         }
         return result
     }
+}
+
+export const createCacheMap = <K extends KeyType, V>(opts: CacheMapOptions<K, V>): Mapping<K, V> => {
+    return new Mapping<K, V>(opts)
+}
+
+export const createLazyMap = <K extends KeyType, V>(opts: LazyMapOptions<K, V>): Mapping<K, V> => {
+    return new Mapping<K, V>(opts)
 }
