@@ -43,8 +43,8 @@ const parseTimestamp = (metadata?: PublishMetadata): number => {
 @scoped(Lifecycle.ContainerScoped)
 export class Publisher {
 
-    private readonly messageFactories: Mapping<[streamId: StreamID], MessageFactory>
-    private readonly groupKeyQueues: Mapping<[streamId: StreamID], GroupKeyQueue>
+    private readonly messageFactories: Mapping<[StreamID], MessageFactory>
+    private readonly groupKeyQueues: Mapping<[StreamID], GroupKeyQueue>
     private readonly concurrencyLimit = pLimit(1)
     private readonly node: NetworkNodeFacade
     private readonly streamRegistry: StreamRegistry

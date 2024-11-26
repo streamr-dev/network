@@ -37,7 +37,7 @@ export class MessageFactory {
     private readonly streamId: StreamID
     private readonly authentication: Authentication
     private defaultPartition: number | undefined
-    private readonly defaultMessageChainIds: Mapping<[partition: number], string>
+    private readonly defaultMessageChainIds: Mapping<[number], string>
     private readonly prevMsgRefs: Map<string, MessageRef> = new Map()
     // eslint-disable-next-line max-len
     private readonly streamRegistry: Pick<StreamRegistry, 'getStreamMetadata' | 'hasPublicSubscribePermission' | 'isStreamPublisher' | 'invalidatePermissionCaches'>
