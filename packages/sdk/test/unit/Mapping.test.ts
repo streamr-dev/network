@@ -70,7 +70,7 @@ describe('Mapping', () => {
         const result4 = await mapping.get('foo', 2)
         expect(result3).toBe('foo2')
         expect(result4).toBe('foo2')
-        expect(valueFactory).toHaveBeenCalledTimes(1 + 2)  // two additional calls as neither of the new calls were cached
+        expect(valueFactory).toHaveBeenCalledTimes(1 + 2)  // two additional calls as neither of the new calls was cached
     })
     
     it('concurrency', async () => {
