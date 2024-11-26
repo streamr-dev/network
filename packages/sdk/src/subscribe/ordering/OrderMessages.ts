@@ -1,7 +1,7 @@
 import { EthereumAddress, StreamID, StreamPartID, StreamPartIDUtils, UserID, executeSafePromise } from '@streamr/utils'
 import { StrictStreamrClientConfig } from '../../Config'
 import { StreamMessage } from '../../protocol/StreamMessage'
-import { Mapping } from '../../utils/Mapping'
+import { createLazyMap, Mapping } from '../../utils/Mapping'
 import { PushBuffer } from '../../utils/PushBuffer'
 import { Resends } from '../Resends'
 import { GapFiller } from './GapFiller'
@@ -60,10 +60,9 @@ export class OrderMessages {
         getStorageNodes: (streamId: StreamID) => Promise<EthereumAddress[]>,
         onUnfillableGap: ((gap: Gap) => void),
         resends: Resends,
-        // eslint-disable-next-line max-len
-        config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'> & { cache: { maxSize: number } }
+        config: Pick<StrictStreamrClientConfig, 'gapFillTimeout' | 'retryResendAfter' | 'maxGapRequests' | 'gapFill' | 'gapFillStrategy'>
     ) {
-        this.chains = new Mapping({
+        this.chains = createLazyMap({
             valueFactory: async (publisherId: UserID, msgChainId: string) => {
                 const chain = createMessageChain(
                     {
@@ -79,8 +78,7 @@ export class OrderMessages {
                 )
                 chain.on('orderedMessageAdded', (msg: StreamMessage) => this.onOrdered(msg))
                 return chain
-            },
-            maxSize: config.cache.maxSize
+            }
         })
     }
 

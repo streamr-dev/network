@@ -45,7 +45,7 @@ describe('Inspector', () => {
         }, 250)
         await inspector.inspect(inspectedDescriptor)
         expect(inspector.isInspected(toNodeId(inspectedDescriptor))).toBe(false)
-        expect(mockConnect).toBeCalledTimes(1)
+        expect(mockConnect).toHaveBeenCalledTimes(1)
     })
 
 })

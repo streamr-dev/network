@@ -4,12 +4,17 @@ import { MarkRequired } from 'ts-essentials'
 
 type KeyType = (string | number)[]
 
-interface Options<K extends KeyType, V> {
+interface BaseOptions<K extends KeyType, V> {
     valueFactory: (...args: K) => Promise<V>
     isCacheableValue?: (value: V) => boolean
+}
+
+interface CacheMapOptions<K extends KeyType, V> extends BaseOptions<K, V> {
     maxSize: number
     maxAge?: number
 }
+
+type LazyMapOptions<K extends KeyType, V> = BaseOptions<K, V>
 
 // an wrapper object is used so that we can store undefined values
 interface ValueWrapper<V> {
@@ -31,15 +36,24 @@ interface ValueWrapper<V> {
  */
 export class Mapping<K extends KeyType, V> {
 
-    private readonly cache: LRU<string, ValueWrapper<V>>
+    private readonly delegate: Map<string, ValueWrapper<V>>
     private readonly pendingPromises: Map<string, Promise<V>> = new Map()
-    private readonly opts: MarkRequired<Options<K, V>, 'isCacheableValue'>
+    private readonly opts: MarkRequired<CacheMapOptions<K, V> | LazyMapOptions<K, V>, 'isCacheableValue'>
 
-    constructor(opts: Options<K, V>) {
-        this.cache = new LRU<string, ValueWrapper<V>>({
-            maxSize: opts.maxSize,
-            maxAge: opts.maxAge
-        })
+    /**
+     * Prefer constructing the class via createCacheMap() and createLazyMap()
+     * 
+     * @internal 
+     **/
+    constructor(opts: CacheMapOptions<K, V> | LazyMapOptions<K, V>) {
+        if ('maxSize' in opts) {
+            this.delegate = new LRU<string, ValueWrapper<V>>({
+                maxSize: opts.maxSize,
+                maxAge: opts.maxAge
+            })
+        } else {
+            this.delegate = new Map<string, ValueWrapper<V>>()
+        }
         this.opts = {
             isCacheableValue: () => true,
             ...opts
@@ -48,11 +62,11 @@ export class Mapping<K extends KeyType, V> {
 
     async get(...args: K): Promise<V> {
         const key = formLookupKey(...args)
-        const pendingPromises = this.pendingPromises.get(key)
-        if (pendingPromises !== undefined) {
-            return await pendingPromises
+        const pendingPromise = this.pendingPromises.get(key)
+        if (pendingPromise !== undefined) {
+            return await pendingPromise
         } else {
-            let valueWrapper = this.cache.get(key)
+            let valueWrapper = this.delegate.get(key)
             if (valueWrapper === undefined) {
                 const promise = this.opts.valueFactory(...args)
                 this.pendingPromises.set(key, promise)
@@ -64,7 +78,7 @@ export class Mapping<K extends KeyType, V> {
                 }
                 valueWrapper = { value }
                 if (this.opts.isCacheableValue(value)) {
-                    this.cache.set(key, valueWrapper)
+                    this.delegate.set(key, valueWrapper)
                 }
             }
             return valueWrapper.value
@@ -73,9 +87,17 @@ export class Mapping<K extends KeyType, V> {
 
     values(): V[] {
         const result: V[] = []
-        for (const wrapper of this.cache.values()) {
+        for (const wrapper of this.delegate.values()) {
             result.push(wrapper.value)
         }
         return result
     }
+}
+
+export const createCacheMap = <K extends KeyType, V>(opts: CacheMapOptions<K, V>): Mapping<K, V> => {
+    return new Mapping<K, V>(opts)
+}
+
+export const createLazyMap = <K extends KeyType, V>(opts: LazyMapOptions<K, V>): Mapping<K, V> => {
+    return new Mapping<K, V>(opts)
 }
