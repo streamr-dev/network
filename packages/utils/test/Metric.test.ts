@@ -211,6 +211,6 @@ describe('metrics', () => {
         context.addMetrics('mockNamespace', metric)
         expect(() => {
             context.addMetrics('mockNamespace', metric)
-        }).toThrowError('Metrics "mockNamespace.foo" already created')
+        }).toThrow('Metrics "mockNamespace.foo" already created')
     })
 })

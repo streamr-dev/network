@@ -34,7 +34,7 @@ describe('recoverAddress', () => {
     it('throws if the address can not be recovered (invalid signature)', async () => {
         const payload = Buffer.from('ogzCJrTdQGuKQO7nkLd3Rw0156700333876720x752c8dcac0788759acb1b4bb7a9103596bee3e6ckxYyLiSUQO0SRvMx6gA115670033387671{"numero":86}')
         const signature = hexToBinary('0xf00f00bb4f506a53ecb838db59017f687892494a9073315f8a187846865bf8325333315b116f1142921a97e49e3881eced2b176c69f9d60666b98b7641ad11e01b')
-        expect(() => recoverSignerUserId(signature, payload)).toThrowError()
+        expect(() => recoverSignerUserId(signature, payload)).toThrow()
     })
 
     it('returns a different address if the content is tampered', async () => {
