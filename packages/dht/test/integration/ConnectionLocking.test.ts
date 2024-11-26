@@ -91,7 +91,7 @@ describe('Connection Locking', () => {
             until(() => connectionManager2.hasRemoteLockedConnection(nodeId1)),
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock')
         ])
-        expect(connectionManager1.hasConnection(nodeId2))
+        expect(connectionManager1.hasConnection(nodeId2)).toEqual(true)
         expect(connectionManager2.hasLocalLockedConnection(nodeId2)).toEqual(false)
         expect(connectionManager2.hasRemoteLockedConnection(nodeId1)).toEqual(true)
 
@@ -113,7 +113,7 @@ describe('Connection Locking', () => {
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock2')
         ])
 
-        expect(connectionManager1.hasConnection(nodeId2))
+        expect(connectionManager1.hasConnection(nodeId2)).toEqual(true)
         expect(connectionManager2.hasLocalLockedConnection(nodeId1)).toEqual(false)
 
         connectionManager1.unlockConnection(mockPeerDescriptor2, 'testLock1')
@@ -134,8 +134,8 @@ describe('Connection Locking', () => {
             connectionManager2.lockConnection(mockPeerDescriptor1, 'testLock1')
         ])
 
-        expect(connectionManager1.hasLocalLockedConnection(nodeId2))
-        expect(connectionManager2.hasLocalLockedConnection(nodeId1))
+        expect(connectionManager1.hasLocalLockedConnection(nodeId2)).toEqual(true)
+        expect(connectionManager2.hasLocalLockedConnection(nodeId1)).toEqual(true)
 
         connectionManager1.unlockConnection(mockPeerDescriptor2, 'testLock1')
         await until(() =>
@@ -158,7 +158,7 @@ describe('Connection Locking', () => {
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock1'),
             connectionManager2.lockConnection(mockPeerDescriptor1, 'testLock1')
         ])
-        expect(connectionManager1.hasConnection(nodeId2))
+        expect(connectionManager1.hasConnection(nodeId2)).toEqual(true)
         expect(connectionManager2.hasLocalLockedConnection(nodeId1)).toEqual(true)
         expect(connectionManager2.hasRemoteLockedConnection(nodeId1)).toEqual(true)
 
