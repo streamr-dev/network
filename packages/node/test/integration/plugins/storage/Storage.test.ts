@@ -26,6 +26,7 @@ const publisherOne = randomUserId()
 const publisherTwo = randomUserId()
 const publisherThree = randomUserId()
 
+// eslint-disable-next-line jest/no-export
 export function buildMsg({
     streamId,
     streamPartition,

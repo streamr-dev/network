@@ -148,7 +148,7 @@ describe('StreamRegistry', () => {
 
         it('get a non-existing Stream', async () => {
             const streamId = `${publicAddress}/StreamRegistry-nonexisting-${Date.now()}`
-            return expect(() => client.getStream(streamId)).rejects.toThrowStreamrError({
+            return expect(() => client.getStream(streamId)).rejects.toThrowStreamrClientError({
                 code: 'STREAM_NOT_FOUND'
             })
         }, TIMEOUT)
@@ -208,11 +208,11 @@ describe('StreamRegistry', () => {
         it('returns true for valid publishers', async () => {
             const userId = await client.getUserId()
             const valid = await client.isStreamPublisher(createdStream.id, userId)
-            return expect(valid).toBe(true)
+            expect(valid).toBe(true)
         }, TIMEOUT)
         it('returns false for invalid publishers', async () => {
             const valid = await client.isStreamPublisher(createdStream.id, randomUserId())
-            return expect(valid).toBe(false)
+            expect(valid).toBe(false)
         }, TIMEOUT)
     })
 
@@ -227,11 +227,11 @@ describe('StreamRegistry', () => {
         it('returns true for valid subscribers', async () => {
             const userId = await client.getUserId()
             const valid = await client.isStreamSubscriber(createdStream.id, userId)
-            return expect(valid).toBe(true)
+            expect(valid).toBe(true)
         }, TIMEOUT)
         it('returns false for invalid subscribers', async () => {
             const valid = await client.isStreamSubscriber(createdStream.id, randomUserId())
-            return expect(valid).toBe(false)
+            expect(valid).toBe(false)
         }, TIMEOUT)
     })
 

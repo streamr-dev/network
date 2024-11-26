@@ -52,7 +52,7 @@ class ProxyClient {
         if (this.hasError(query)) {
             resultCallback!(ProxyClient.ERROR, undefined)
         } else {
-            return this.realClient.eachRow(query, params, options, rowCallback, resultCallback)
+            this.realClient.eachRow(query, params, options, rowCallback, resultCallback)
         }
     }
 
