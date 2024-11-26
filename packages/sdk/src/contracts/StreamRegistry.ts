@@ -102,7 +102,7 @@ const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: st
     }
 }
 
-const invalidateCache = (cache: Mapping<[StreamID, ..._: any[]], any>, streamId: StreamID): void => {
+const invalidateCache = (cache: Mapping<[StreamID, ...any[]], any>, streamId: StreamID): void => {
     cache.invalidate(([key]) => key === streamId)
 }
 
