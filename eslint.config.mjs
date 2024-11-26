@@ -63,6 +63,9 @@ export default [
                 allowTemplateLiterals: true
             }],
             '@typescript-eslint/default-param-last': 'error',
+            '@typescript-eslint/no-confusing-void-expression': ['error', {
+                ignoreArrowShorthand: true
+            }],
             '@typescript-eslint/no-extraneous-class': 'error',
             '@typescript-eslint/no-inferrable-types': 'off',
             '@typescript-eslint/no-invalid-this': 'error',

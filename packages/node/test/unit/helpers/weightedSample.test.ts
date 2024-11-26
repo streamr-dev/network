@@ -3,7 +3,7 @@ import { range, repeat, sum } from 'lodash'
 
 describe(weightedSample, () => {
     it('returns undefined on empty array', () => {
-        const result = weightedSample([], () => 1)
+        const result = weightedSample<number>([], () => 1)
         expect(result).toBeUndefined()
     })
 

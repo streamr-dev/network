@@ -117,7 +117,8 @@ export function Scaffold(
                     collectErrors(err)
                 }
                 onDownSteps.push(onDownStep ?? (() => {}))
-                return await nextScaffoldStep() // return await gives us a better stack trace
+                await nextScaffoldStep() // return await gives us a better stack trace
+                return
             }
         } else if (onDownSteps.length) {
             isDone = false
@@ -129,7 +130,8 @@ export function Scaffold(
                 collectErrors(err)
             }
             nextSteps.push(prevSteps.pop()!)
-            return await nextScaffoldStep() // return await gives us a better stack trace
+            await nextScaffoldStep() // return await gives us a better stack trace
+            return
         } else if (error) {
             const err = error
             error = undefined

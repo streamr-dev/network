@@ -97,6 +97,7 @@ describe('ContentDeliveryManager', () => {
         await until(() => manager2.getNeighbors(STREAM_PART_ID).length === 1)
         await Promise.all([
             waitForEvent3<Events>(manager1, 'newMessage'),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             manager2.broadcast(msg)
         ])
     })
@@ -123,7 +124,9 @@ describe('ContentDeliveryManager', () => {
         await Promise.all([
             waitForEvent3<Events>(manager1, 'newMessage'),
             waitForEvent3<Events>(manager2, 'newMessage'),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             manager1.broadcast(msg2),
+            // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
             manager2.broadcast(msg)
         ])
     })
