@@ -195,7 +195,7 @@ describe('RpcCommunicator', () => {
         await until(() => errorCounter === 1)
     })
 
-    it('Error response on server timeout', async () => {
+    it('Error response on server error', async () => {
         let errorCounter = 0
         rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.throwPingError)
         rpcCommunicator.setOutgoingMessageListener(async (message: RpcMessage, _requestId: string, _ucallContext?: ProtoCallContext) => {
