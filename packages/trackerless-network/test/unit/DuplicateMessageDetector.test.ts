@@ -60,10 +60,10 @@ describe('gap handling', () => {
     })
 
     test('gap division', () => {
-        expect(detector.markAndCheck(new NumberPair(15, 0), new NumberPair(18, 0)))
+        expect(detector.markAndCheck(new NumberPair(15, 0), new NumberPair(18, 0))).toEqual(true)
         expect(detector.toString()).toEqual('(10|0, 15|0], (18|0, 20|0], (40|0, 80|10], (100|0, Infinity|Infinity]')
 
-        expect(detector.markAndCheck(new NumberPair(60, 0), new NumberPair(79, 5)))
+        expect(detector.markAndCheck(new NumberPair(60, 0), new NumberPair(79, 5))).toEqual(true)
         expect(detector.toString()).toEqual('(10|0, 15|0], (18|0, 20|0], (40|0, 60|0], (79|5, 80|10], (100|0, Infinity|Infinity]')
     })
 
@@ -84,10 +84,10 @@ describe('gap handling', () => {
     })
 
     test('full contraction', () => {
-        expect(detector.markAndCheck(new NumberPair(40, 0), new NumberPair(80, 10)))
+        expect(detector.markAndCheck(new NumberPair(40, 0), new NumberPair(80, 10))).toEqual(true)
         expect(detector.toString()).toEqual('(10|0, 20|0], (100|0, Infinity|Infinity]')
 
-        expect(detector.markAndCheck(new NumberPair(10, 0), new NumberPair(20, 0)))
+        expect(detector.markAndCheck(new NumberPair(10, 0), new NumberPair(20, 0))).toEqual(true)
         expect(detector.toString()).toEqual('(100|0, Infinity|Infinity]')
     })
 })
