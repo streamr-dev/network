@@ -211,7 +211,7 @@ export class ExperimentController {
         let expectedSubscribers = 1
         for (const subscriber of subsribers) {
             logger.info('Starting node for time to data measurement', { subscriber })
-            const pickedEntryPoint = sampleSize(Array.from(this.clients.keys()).filter((id) => !this.resultsReceived.has(id)), 2)!
+            const pickedEntryPoint = sampleSize(Array.from(this.clients.keys()).filter((id) => !this.resultsReceived.has(id) && this.clients.get(id)!.peerDescriptor!.websocket), 2)!
             const message = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'measureTimeToData',
