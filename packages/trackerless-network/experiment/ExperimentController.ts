@@ -226,9 +226,10 @@ export class ExperimentController {
                 }
             })
             this.clients.get(subscriber)!.socket.send(ExperimentServerMessage.toBinary(message))
-            await waitForCondition(() => this.resultsReceived.size === expectedSubscribers, 5 * 60 * 1000, 1000)
             expectedSubscribers += 1
+            await wait(2500)
         }
+        await waitForCondition(() => this.resultsReceived.size === expectedSubscribers, 5 * 60 * 1000, 1000)
     }
 
     async runScalingJoinExperiment(entryPoint: string): Promise<void> {

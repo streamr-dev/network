@@ -272,7 +272,7 @@ export class ExperimentNodeWrapper {
         await waitForCondition(() => 
             this.node!.stack.getContentDeliveryManager().getTimeToDataMeasurements(streamPart).messageReceivedTimestamp !== undefined
             && this.node!.stack.getContentDeliveryManager().getTimeToDataMeasurements(streamPart).layer1JoinTime !== undefined
-        , 30000, 1000)
+        , 60000, 1000)
         const measurements = this.node!.stack.getContentDeliveryManager().getTimeToDataMeasurements(streamPart)
         const payload = {
             ...measurements,
