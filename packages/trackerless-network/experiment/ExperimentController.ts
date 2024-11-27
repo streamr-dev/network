@@ -4,7 +4,7 @@ import WebSocket from 'ws'
 import { ExperimentClientMessage, ExperimentServerMessage, Hello, InstructionCompleted, JoinExperiment, RoutingExperiment } from './generated/packages/trackerless-network/experiment/Experiment'
 import { Logger, StreamPartID, StreamPartIDUtils, wait, waitForCondition } from '@streamr/utils'
 import { areEqualPeerDescriptors, PeerDescriptor } from '@streamr/dht'
-import { chunk, sample, sampleSize } from 'lodash'
+import { chunk, sample, sampleSize, shuffle } from 'lodash'
 import fs from 'fs'
 
 interface ExperimentNode {
@@ -208,8 +208,9 @@ export class ExperimentController {
         const publisher = sample(Array.from(this.clients.keys()).filter((id) => id !== entryPoint))!
         await this.startPublisher(publisher, streamPartId)
         const subsribers = Array.from(this.clients.keys()).filter((id) => id !== publisher)
+        const suffled = shuffle(subsribers)
         let expectedSubscribers = 1
-        for (const subscriber of subsribers) {
+        for (const subscriber of suffled) {
             logger.info('Starting node for time to data measurement', { subscriber })
             const pickedEntryPoint = sampleSize(Array.from(this.clients.keys()).filter((id) => !this.resultsReceived.has(id) && this.clients.get(id)!.peerDescriptor!.websocket), 2)!
             const message = ExperimentServerMessage.create({
