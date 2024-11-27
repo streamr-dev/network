@@ -269,13 +269,20 @@ export class ExperimentNodeWrapper {
         const streamPart = StreamPartIDUtils.parse(streamPartId)
         const startTime = Date.now()
         await this.node!.join(streamPart)
-        await waitForCondition(() => 
-            this.node!.stack.getContentDeliveryManager().getTimeToDataMeasurements(streamPart).messageReceivedTimestamp !== undefined
-            && this.node!.stack.getContentDeliveryManager().getTimeToDataMeasurements(streamPart).layer1JoinTime !== undefined
-        , 60000, 1000)
+        try {
+            await waitForCondition(() => 
+                this.node!.stack.getContentDeliveryManager().getTimeToDataMeasurements(streamPart).messageReceivedTimestamp !== undefined
+                && this.node!.stack.getContentDeliveryManager().getTimeToDataMeasurements(streamPart).layer1JoinTime !== undefined
+            , 60000, 1000)
+        } catch (err) {
+            logger.error('timeout waiting for time to data measurements')
+        }
+        
         const measurements = this.node!.stack.getContentDeliveryManager().getTimeToDataMeasurements(streamPart)
         const payload = {
-            ...measurements,
+            messageReceivedTimestamp: measurements.messageReceivedTimestamp ?? 60000,
+            layer1JoinTime: measurements.layer1JoinTime ?? 60000,
+            entryPointsFetch: measurements.entryPointsFetch ?? 60000,
             startTime
         } 
         const results = ExperimentClientMessage.create({
