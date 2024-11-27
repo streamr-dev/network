@@ -209,7 +209,7 @@ export class ExperimentController {
         await this.startPublisher(publisher, streamPartId)
         const subsribers = Array.from(this.clients.keys()).filter((id) => id !== publisher)
         const suffled = shuffle(subsribers)
-        let expectedSubscribers = 1
+        let expectedSubscribers = 0
         for (const subscriber of suffled) {
             logger.info('Starting node for time to data measurement', { subscriber })
             const pickedEntryPoint = sampleSize(Array.from(this.clients.keys()).filter((id) => !this.resultsReceived.has(id) && this.clients.get(id)!.peerDescriptor!.websocket), 2)!
@@ -226,9 +226,11 @@ export class ExperimentController {
                 }
             })
             this.clients.get(subscriber)!.socket.send(ExperimentServerMessage.toBinary(message))
-            await waitForCondition(() => this.resultsReceived.size === expectedSubscribers, 1 * 60 * 1000, 1000)
+            await wait(2500)
             expectedSubscribers += 1
         }
+        await waitForCondition(() => this.resultsReceived.size === expectedSubscribers, 1 * 60 * 1000, 1000)
+
     }
 
     async runScalingJoinExperiment(entryPoint: string): Promise<void> {
