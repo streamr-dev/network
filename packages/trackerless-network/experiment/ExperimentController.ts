@@ -171,7 +171,7 @@ export class ExperimentController {
     async joinStreamPart(streamPartId: StreamPartID): Promise<void> {
         this.instructionsCompleted = 0
         const nodes = Array.from(this.clients.values())
-        await this.runBatchedOperation(nodes, 16, async (node) => {
+        await this.runBatchedOperation(nodes, 4, async (node) => {
             const message = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'joinStreamPart',
