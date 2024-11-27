@@ -119,7 +119,7 @@ export class ExperimentController {
         const entryPointPeerDescriptor = this.clients.get(entryPoint)!.peerDescriptor!
         const nodes = Array.from(this.clients.entries()).filter(([id]) => id !== entryPoint).map(([_, value]) => value)
 
-        await this.runBatchedOperation(nodes, 24, async (node) => {
+        await this.runBatchedOperation(nodes, 12, async (node) => {
             const instruction = ExperimentServerMessage.create({
                 instruction: {
                     oneofKind: 'start',
