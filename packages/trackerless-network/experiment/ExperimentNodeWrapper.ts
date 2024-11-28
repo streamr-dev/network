@@ -289,7 +289,7 @@ export class ExperimentNodeWrapper {
             await waitForCondition(() => 
                 this.node!.stack.getContentDeliveryManager().getTimeToDataMeasurements(streamPart).messageReceivedTimestamp !== undefined
                 && this.node!.stack.getContentDeliveryManager().getTimeToDataMeasurements(streamPart).layer1JoinTime !== undefined
-            , 60000, 1000)
+            , 90000, 1000)
         } catch (err) {
             logger.error('timeout waiting for time to data measurements')
         }
