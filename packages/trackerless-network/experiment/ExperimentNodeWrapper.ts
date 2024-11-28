@@ -296,7 +296,7 @@ export class ExperimentNodeWrapper {
         
         const measurements = this.node!.stack.getContentDeliveryManager().getTimeToDataMeasurements(streamPart)
         const payload = {
-            messageReceivedTimestamp: measurements.messageReceivedTimestamp ?? 60000,
+            messageReceivedTimestamp: measurements.messageReceivedTimestamp ?? Date.now(),
             layer1JoinTime: measurements.layer1JoinTime ?? 60000,
             entryPointsFetch: measurements.entryPointsFetch ?? 60000,
             startTime
