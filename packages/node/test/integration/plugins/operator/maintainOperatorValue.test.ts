@@ -1,6 +1,6 @@
 import { _operatorContractUtils } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { Logger, toEthereumAddress, until } from '@streamr/utils'
+import { Logger, StreamID, toEthereumAddress, until } from '@streamr/utils'
 import { multiply } from '../../../../src/helpers/multiply'
 import { maintainOperatorValue } from '../../../../src/plugins/operator/maintainOperatorValue'
 import { createClient, createTestStream } from '../../../utils'
@@ -22,7 +22,7 @@ const SAFETY_FRACTION = 0.5  // 50%
 
 describe('maintainOperatorValue', () => {
 
-    let streamId: string
+    let streamId: StreamID
 
     beforeAll(async () => {
         logger.debug('Creating stream for the test')

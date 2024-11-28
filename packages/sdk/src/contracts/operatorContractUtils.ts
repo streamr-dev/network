@@ -1,5 +1,5 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { Logger, retry } from '@streamr/utils'
+import { Logger, retry, StreamID } from '@streamr/utils'
 import { Contract, EventLog, JsonRpcProvider, Provider, Signer, Wallet, ZeroAddress, parseEther } from 'ethers'
 import { range } from 'lodash'
 import type { Operator as OperatorContract } from '../ethereumArtifacts/Operator'
@@ -108,7 +108,7 @@ export async function deployTestOperatorContract(opts: DeployTestOperatorContrac
  * @hidden
  */
 export interface DeployTestSponsorshipContractOpts {
-    streamId: string
+    streamId: StreamID
     deployer: Signer
     earningsPerSecond?: bigint
 }

@@ -1,6 +1,6 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { Logger, TheGraphClient, toEthereumAddress, until } from '@streamr/utils'
+import { Logger, StreamID, TheGraphClient, toEthereumAddress, until } from '@streamr/utils'
 import { Contract, Wallet } from 'ethers'
 import fetch from 'node-fetch'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -38,7 +38,7 @@ const createTheGraphClient = (): TheGraphClient => {
     })
 }
 
-async function createStream(): Promise<string> {
+async function createStream(): Promise<StreamID> {
     const client = createClient(await fetchPrivateKeyWithGas())
     const streamId = (await client.createStream(`/${Date.now()}`)).id
     await client.destroy()
@@ -52,8 +52,8 @@ const getOperator = async (wallet: Wallet | undefined, operator: SetupOperatorCo
 }
 
 describe('Operator', () => {
-    let streamId1: string
-    let streamId2: string
+    let streamId1: StreamID
+    let streamId2: StreamID
     let sponsorship1: SponsorshipContract
     let sponsorship2: SponsorshipContract
     let deployedOperator: SetupOperatorContractReturnType

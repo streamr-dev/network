@@ -3,7 +3,7 @@ import {
     SetupTestOperatorContractOpts,
     _operatorContractUtils,
 } from '@streamr/sdk'
-import { Logger, toEthereumAddress, until } from '@streamr/utils'
+import { Logger, StreamID, toEthereumAddress, until } from '@streamr/utils'
 import { Contract } from 'ethers'
 import { checkOperatorValueBreach } from '../../../../src/plugins/operator/checkOperatorValueBreach'
 import { createClient, createTestStream } from '../../../utils'
@@ -30,7 +30,7 @@ const getEarnings = async (operatorContract: Operator): Promise<bigint> => {
 
 describe('checkOperatorValueBreach', () => {
 
-    let streamId: string
+    let streamId: StreamID
     let deployConfig: SetupTestOperatorContractOpts
 
     beforeAll(async () => {
