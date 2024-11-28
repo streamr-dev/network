@@ -37,7 +37,7 @@ import { OperatorPluginConfig } from './../../src/plugins/operator/OperatorPlugi
  */
 
 const {
-    setupOperatorContract,
+    setupTestOperatorContract,
     getProvider,
     createTestWallet,
     deploySponsorshipContract,
@@ -93,7 +93,7 @@ const createStream = async (): Promise<StreamID> => {
 const createOperator = async (
     pluginConfig: Partial<Omit<OperatorPluginConfig, 'operatorContractAddress'>>, sponsorshipAddress: string, isFreerider: boolean
 ): Promise<Operator> => {
-    const operator = await setupOperatorContract({
+    const operator = await setupTestOperatorContract({
         nodeCount: 1,
         operatorConfig: {
             metadata: JSON.stringify({ redundancyFactor: 1 })

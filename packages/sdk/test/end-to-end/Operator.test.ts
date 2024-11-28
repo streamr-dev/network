@@ -10,7 +10,7 @@ import {
     delegate,
     deploySponsorshipContract,
     getTestAdminWallet,
-    setupOperatorContract,
+    setupTestOperatorContract,
     sponsor,
     stake
 } from '../../src/contracts/operatorContractUtils'
@@ -62,7 +62,7 @@ describe('Operator', () => {
         const concurrentTasks = await Promise.all([
             createStream(),
             createStream(),
-            setupOperatorContract({ nodeCount: 1 })
+            setupTestOperatorContract({ nodeCount: 1 })
         ])
         streamId1 = concurrentTasks[0]
         streamId2 = concurrentTasks[1]
@@ -136,7 +136,7 @@ describe('Operator', () => {
 
     it('flag', async () => {
         const flagger = deployedOperator
-        const target = await setupOperatorContract()
+        const target = await setupTestOperatorContract()
 
         await sponsor(flagger.operatorWallet, await sponsorship2.getAddress(), 50000n)
 

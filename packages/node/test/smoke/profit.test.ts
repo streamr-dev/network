@@ -33,7 +33,7 @@ import { createClient, createTestStream, startBroker } from '../utils'
  */
 
 const {
-    setupOperatorContract,
+    setupTestOperatorContract,
     getProvider,
     createTestWallet,
     deploySponsorshipContract,
@@ -100,7 +100,7 @@ describe('profit', () => {
             operatorWallet,
             operatorContract,
             nodeWallets: [operatorNodeWallet]
-        } = await setupOperatorContract({
+        } = await setupTestOperatorContract({
             nodeCount: 1,
             operatorConfig: {
                 operatorsCutPercent: OPERATORS_CUT_PERCENTAGE

@@ -16,7 +16,7 @@ const {
     delegate,
     deploySponsorshipContract,
     createTestWallet,
-    setupOperatorContract,
+    setupTestOperatorContract,
     sponsor,
     stake
 } = _operatorContractUtils
@@ -31,7 +31,7 @@ describe('OperatorPlugin', () => {
     let operatorWallet: Wallet
 
     beforeAll(async () => {
-        const deployment = (await setupOperatorContract({
+        const deployment = (await setupTestOperatorContract({
             nodeCount: 1
         }))
         brokerWallet = deployment.nodeWallets[0]

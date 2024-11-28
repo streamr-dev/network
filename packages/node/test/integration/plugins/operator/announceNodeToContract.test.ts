@@ -10,7 +10,7 @@ describe('announceNodeToContract', () => {
     let operator: Operator
 
     beforeEach(async () => {
-        const { operatorContract, nodeWallets } = await _operatorContractUtils.setupOperatorContract({
+        const { operatorContract, nodeWallets } = await _operatorContractUtils.setupTestOperatorContract({
             nodeCount: 1
         })
         operator = createClient(nodeWallets[0].privateKey).getOperator(toEthereumAddress(await operatorContract.getAddress()))

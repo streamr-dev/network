@@ -21,7 +21,7 @@ const TEST_CHAIN_CONFIG = CHAIN_CONFIG.dev2
  * @deprecated
  * @hidden
  */
-export interface SetupOperatorContractOpts {
+export interface SetupTestOperatorContractOpts {
     nodeCount?: number
     chainConfig?: {
         contracts: {
@@ -50,8 +50,8 @@ export interface SetupOperatorContractReturnType {
 
 const logger = new Logger(module)
 
-export async function setupOperatorContract(
-    opts?: SetupOperatorContractOpts
+export async function setupTestOperatorContract(
+    opts?: SetupTestOperatorContractOpts
 ): Promise<SetupOperatorContractReturnType> {
     const operatorWallet = await createTestWallet()
     const operatorContract = await deployOperatorContract({

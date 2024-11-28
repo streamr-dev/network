@@ -9,7 +9,7 @@ const {
     delegate,
     deploySponsorshipContract,
     createTestWallet,
-    setupOperatorContract,
+    setupTestOperatorContract,
     sponsor,
     stake
 } = _operatorContractUtils
@@ -38,7 +38,7 @@ describe('maintainOperatorValue', () => {
      * in network-contracts), and the configured safe limit in this test is 50%, i.e. 2.5 tokens.
      */
     it('withdraws sponsorship earnings when earnings are above the safe threshold', async () => {
-        const { operatorWallet, operatorContract, nodeWallets } = await setupOperatorContract({
+        const { operatorWallet, operatorContract, nodeWallets } = await setupTestOperatorContract({
             nodeCount: 1,
             operatorConfig: {
                 operatorsCutPercent: 10
