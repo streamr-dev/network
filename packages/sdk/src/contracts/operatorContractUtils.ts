@@ -113,21 +113,12 @@ export interface DeployTestSponsorshipContractOpts {
     deployer: Wallet
     minOperatorCount?: number
     earningsPerSecond?: bigint
-    chainConfig?: {
-        contracts: {
-            SponsorshipFactory: string
-            SponsorshipStakeWeightedAllocationPolicy: string
-            SponsorshipDefaultLeavePolicy: string
-            SponsorshipVoteKickPolicy: string
-        }
-    }
 }
 
 export async function deployTestSponsorshipContract(opts: DeployTestSponsorshipContractOpts): Promise<SponsorshipContract> {
     logger.debug('Deploying SponsorshipContract')
-    const chainConfig = opts.chainConfig ?? CHAIN_CONFIG.dev2
     const sponsorshipFactory = new Contract(
-        chainConfig.contracts.SponsorshipFactory,
+        TEST_CHAIN_CONFIG.contracts.SponsorshipFactory,
         SponsorshipFactoryArtifact,
         opts.deployer
     ) as unknown as SponsorshipFactoryContract
@@ -136,9 +127,9 @@ export async function deployTestSponsorshipContract(opts: DeployTestSponsorshipC
         opts.streamId,
         '{}',
         [
-            chainConfig.contracts.SponsorshipStakeWeightedAllocationPolicy,
-            chainConfig.contracts.SponsorshipDefaultLeavePolicy,
-            chainConfig.contracts.SponsorshipVoteKickPolicy,
+            TEST_CHAIN_CONFIG.contracts.SponsorshipStakeWeightedAllocationPolicy,
+            TEST_CHAIN_CONFIG.contracts.SponsorshipDefaultLeavePolicy,
+            TEST_CHAIN_CONFIG.contracts.SponsorshipVoteKickPolicy,
         ], [
             parseEther((opts.earningsPerSecond ?? 1).toString()).toString(),
             '0',
