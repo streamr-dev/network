@@ -53,9 +53,7 @@ const logger = new Logger(module)
 export async function setupOperatorContract(
     opts?: SetupOperatorContractOpts
 ): Promise<SetupOperatorContractReturnType> {
-    const operatorWallet = await generateWalletWithGasAndTokens({
-        chainConfig: opts?.chainConfig
-    })
+    const operatorWallet = await createTestWallet()
     const operatorContract = await deployOperatorContract({
         chainConfig: opts?.chainConfig ?? TEST_CHAIN_CONFIG,
         deployer: operatorWallet,
@@ -65,9 +63,7 @@ export async function setupOperatorContract(
     const nodeWallets: (Wallet & SignerWithProvider)[] = []
     if ((opts?.nodeCount !== undefined) && (opts?.nodeCount > 0)) {
         for (const _ of range(opts.nodeCount)) {
-            nodeWallets.push(await generateWalletWithGasAndTokens({
-                chainConfig: opts?.chainConfig
-            }))
+            nodeWallets.push(await createTestWallet())
         }
         await (await operatorContract.setNodeAddresses(nodeWallets.map((w) => w.address))).wait()
     }
@@ -191,18 +187,12 @@ export const getTestAdminWallet = (adminKey?: string, provider?: Provider): Wall
     return new Wallet(adminKey ?? TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider ?? getProvider())
 }
 
-interface GenerateWalletWithGasAndTokensOpts {
-    chainConfig?: { contracts: { DATA: string } }
-}
-
-export async function generateWalletWithGasAndTokens(opts?: GenerateWalletWithGasAndTokensOpts): Promise<Wallet & SignerWithProvider> {
+export async function createTestWallet(): Promise<Wallet & SignerWithProvider> {
     const provider = getProvider()
     const privateKey = crypto.randomBytes(32).toString('hex')
     const newWallet = new Wallet(privateKey)
     const adminWallet = getTestAdminWallet()
-    const token = (opts?.chainConfig !== undefined)
-        ? new Contract(opts.chainConfig.contracts.DATA, TestTokenArtifact, adminWallet) as unknown as TestTokenContract
-        : getTestTokenContract().connect(adminWallet)
+    const token = getTestTokenContract().connect(adminWallet)
     await retry(
         async () => {
             await (await token.mint(newWallet.address, parseEther('1000000'))).wait()

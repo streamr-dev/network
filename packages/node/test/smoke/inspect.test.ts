@@ -39,7 +39,7 @@ import { OperatorPluginConfig } from './../../src/plugins/operator/OperatorPlugi
 const {
     setupOperatorContract,
     getProvider,
-    generateWalletWithGasAndTokens,
+    createTestWallet,
     deploySponsorshipContract,
     delegate,
     stake,
@@ -221,7 +221,7 @@ describe('inspect', () => {
         await streamrConfig.setSlashingFraction(parseEther(String(SLASHING_FRACTION)))
         logger.info('Setup sponsorship')
         const streamId = await createStream()
-        const sponsorer = await generateWalletWithGasAndTokens()
+        const sponsorer = await createTestWallet()
         const sponsorship = await deploySponsorshipContract({ earningsPerSecond: 0n, streamId, deployer: sponsorer })
         logger.info('Create operators')
         freeriderOperator = await createOperator({}, await sponsorship.getAddress(), true)

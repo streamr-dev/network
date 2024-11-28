@@ -35,7 +35,7 @@ import { createClient, createTestStream, startBroker } from '../utils'
 const {
     setupOperatorContract,
     getProvider,
-    generateWalletWithGasAndTokens,
+    createTestWallet,
     deploySponsorshipContract,
     sponsor,
     delegate,
@@ -111,8 +111,8 @@ describe('profit', () => {
             streamId,
             deployer: operatorWallet // could be any wallet with gas
         })
-        sponsorWallet = await generateWalletWithGasAndTokens()
-        delegatorWallet = await generateWalletWithGasAndTokens()
+        sponsorWallet = await createTestWallet()
+        delegatorWallet = await createTestWallet()
         const streamrConfig = new Contract(
             CHAIN_CONFIG.dev2.contracts.StreamrConfig,
             streamrConfigABI

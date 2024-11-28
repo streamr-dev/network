@@ -15,7 +15,7 @@ import { createClient, createTestStream, formConfig, startBroker } from '../../.
 const {
     delegate,
     deploySponsorshipContract,
-    generateWalletWithGasAndTokens,
+    createTestWallet,
     setupOperatorContract,
     sponsor,
     stake
@@ -54,7 +54,7 @@ describe('OperatorPlugin', () => {
         const subscriber = createClient(await fetchPrivateKeyWithGas())
         const stream = await createTestStream(subscriber, module)
 
-        const sponsorer = await generateWalletWithGasAndTokens()
+        const sponsorer = await createTestWallet()
         const sponsorship1 = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
         await sponsor(sponsorer, await sponsorship1.getAddress(), SPONSOR_AMOUNT)
         await delegate(operatorWallet, await operatorContract.getAddress(), SPONSOR_AMOUNT)
@@ -112,7 +112,7 @@ describe('OperatorPlugin', () => {
         const client = createClient(await fetchPrivateKeyWithGas())
         const stream = await createTestStream(client, module)
 
-        const sponsorer = await generateWalletWithGasAndTokens()
+        const sponsorer = await createTestWallet()
         const sponsorship1 = await deploySponsorshipContract({ streamId: stream.id, deployer: sponsorer })
         await sponsor(sponsorer, await sponsorship1.getAddress(), SPONSOR_AMOUNT)
         await delegate(operatorWallet, await operatorContract.getAddress(), SPONSOR_AMOUNT)

@@ -11,7 +11,7 @@ import { createClient, createTestStream } from '../../../utils'
 const {
     delegate,
     deploySponsorshipContract,
-    generateWalletWithGasAndTokens,
+    createTestWallet,
     getProvider,
     setupOperatorContract,
     sponsor,
@@ -48,7 +48,7 @@ describe('checkOperatorValueBreach', () => {
         // eslint-disable-next-line max-len
         const { operatorContract: watcherOperatorContract, nodeWallets: watcherWallets } = await setupOperatorContract({ nodeCount: 1, ...deployConfig })
         const { operatorWallet, operatorContract } = await setupOperatorContract(deployConfig)
-        const sponsorer = await generateWalletWithGasAndTokens()
+        const sponsorer = await createTestWallet()
         await delegate(operatorWallet, await operatorContract.getAddress(), 20000n)
         const sponsorship1 = await deploySponsorshipContract({ earningsPerSecond: 100n, streamId, deployer: operatorWallet })
         await sponsor(sponsorer, await sponsorship1.getAddress(), 25000n)
