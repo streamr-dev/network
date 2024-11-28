@@ -46,7 +46,6 @@ export async function setupTestOperatorContract(
 ): Promise<SetupOperatorContractReturnType> {
     const operatorWallet = await createTestWallet()
     const operatorContract = await deployTestOperatorContract({
-        chainConfig: TEST_CHAIN_CONFIG,
         deployer: operatorWallet,
         operatorsCutPercent: opts?.operatorConfig?.operatorsCutPercent,
         metadata: opts?.operatorConfig?.metadata
@@ -70,14 +69,6 @@ export interface DeployTestOperatorContractOpts {
     operatorsCutPercent?: number
     metadata?: string
     operatorTokenName?: string
-    chainConfig?: {
-        contracts: {
-            OperatorFactory: string
-            OperatorDefaultDelegationPolicy: string
-            OperatorDefaultExchangeRatePolicy: string
-            OperatorDefaultUndelegationPolicy: string
-        }
-    }
 }
 
 /**
@@ -87,8 +78,7 @@ export interface DeployTestOperatorContractOpts {
 export async function deployTestOperatorContract(opts: DeployTestOperatorContractOpts): Promise<OperatorContract> {
     logger.debug('Deploying OperatorContract')
     const abi = OperatorFactoryArtifact
-    const chainConfig = opts.chainConfig ?? CHAIN_CONFIG.dev2
-    const operatorFactory = new Contract(chainConfig.contracts.OperatorFactory, abi, opts.deployer) as unknown as OperatorFactoryContract
+    const operatorFactory = new Contract(TEST_CHAIN_CONFIG.contracts.OperatorFactory, abi, opts.deployer) as unknown as OperatorFactoryContract
     const contractAddress = await operatorFactory.operators(opts.deployer.address)
     if (contractAddress !== ZeroAddress) {
         throw new Error('Operator already has a contract')
@@ -98,9 +88,9 @@ export async function deployTestOperatorContract(opts: DeployTestOperatorContrac
         opts.operatorTokenName ?? `OperatorToken-${Date.now()}`,
         opts.metadata ?? '',
         [
-            chainConfig.contracts.OperatorDefaultDelegationPolicy,
-            chainConfig.contracts.OperatorDefaultExchangeRatePolicy,
-            chainConfig.contracts.OperatorDefaultUndelegationPolicy,
+            TEST_CHAIN_CONFIG.contracts.OperatorDefaultDelegationPolicy,
+            TEST_CHAIN_CONFIG.contracts.OperatorDefaultExchangeRatePolicy,
+            TEST_CHAIN_CONFIG.contracts.OperatorDefaultUndelegationPolicy,
         ], [
             0,
             0,
