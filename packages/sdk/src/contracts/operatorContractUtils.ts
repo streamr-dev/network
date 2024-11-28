@@ -210,7 +210,7 @@ export const sponsor = async (sponsorer: Signer, sponsorshipContractAddress: Eth
     await transferTokens(sponsorer, sponsorshipContractAddress, amountWei, undefined, token)
 }
 
-export const transferTokens = async (from: Signer, to: EthereumAddress, amountWei: bigint, data?: string, token?: TestTokenContract): Promise<void> => {
+const transferTokens = async (from: Signer, to: EthereumAddress, amountWei: bigint, data?: string, token?: TestTokenContract): Promise<void> => {
     const tx = await ((token ?? getTestTokenContract()).connect(from).transferAndCall(to, parseEther(amountWei.toString()), data ?? '0x'))
     await tx.wait()
 }
