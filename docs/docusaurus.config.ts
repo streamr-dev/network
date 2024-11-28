@@ -22,7 +22,7 @@ const config: Config = {
   organizationName: 'streamr-dev', // Usually your GitHub org/user name.
   projectName: 'documentation', // Usually your repo name.
 
-  onBrokenLinks: 'warn',
+  onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
 
   // Even if you don't use internationalization, you can use this field to set
@@ -90,7 +90,6 @@ const config: Config = {
   ],
 
   themeConfig: {
-    // Replace with your project's social card
     metadata: [
       { name: "robots", content: "index, follow" }
     ],
