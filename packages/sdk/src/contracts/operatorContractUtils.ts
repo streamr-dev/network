@@ -181,7 +181,12 @@ export async function createTestWallet(): Promise<Wallet & SignerWithProvider> {
     return newWallet.connect(provider) as (Wallet & SignerWithProvider)
 }
 
-export const delegate = async (delegator: Signer, operatorContractAddress: EthereumAddress, amountWei: bigint, token?: TestTokenContract): Promise<void> => {
+export const delegate = async (
+    delegator: Signer,
+    operatorContractAddress: EthereumAddress,
+    amountWei: bigint,
+    token?: TestTokenContract
+): Promise<void> => {
     logger.debug('Delegate', { amountWei })
     // onTokenTransfer: the tokens are delegated on behalf of the given data address
     // eslint-disable-next-line max-len
@@ -189,7 +194,8 @@ export const delegate = async (delegator: Signer, operatorContractAddress: Ether
     await transferTokens(delegator, operatorContractAddress, amountWei, await delegator.getAddress(), token)
 }
 
-export const undelegate = async (delegator: Signer, operatorContract: OperatorContract, amount: bigint): Promise<void> => {
+export const undelegate = async (delegator: Signer, operatorContract: OperatorContract, amount: bigint
+): Promise<void> => {
     await (await operatorContract.connect(delegator).undelegate(parseEther(amount.toString()))).wait()
 }
 
@@ -203,7 +209,12 @@ export const unstake = async (operatorContract: OperatorContract, sponsorshipCon
     await (await operatorContract.unstake(sponsorshipContractAddress)).wait()
 }
 
-export const sponsor = async (sponsorer: Signer, sponsorshipContractAddress: EthereumAddress, amountWei: bigint, token?: TestTokenContract): Promise<void> => {
+export const sponsor = async (
+    sponsorer: Signer,
+    sponsorshipContractAddress: EthereumAddress,
+    amountWei: bigint,
+    token?: TestTokenContract
+): Promise<void> => {
     logger.debug('Sponsor', { amountWei })
     // eslint-disable-next-line max-len
     // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Sponsorship.sol#L139

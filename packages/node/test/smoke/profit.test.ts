@@ -9,11 +9,11 @@ import { createClient, createTestStream, startBroker } from '../utils'
 
 /*
  * The test needs these dependencies:
- * - dev-chain in Docker: 
+ * - dev-chain in Docker:
  *   streamr-docker-dev start dev-chain-fast deploy-network-subgraphs-fastchain
  * - DHT entry point:
  *   <network-repo-root>/bin/run-entry-point.sh
- * 
+ *
  * Given:
  * - one sponsorship
  * - one operator who mines the sponsorship by running one node
@@ -58,7 +58,7 @@ const TOTAL_DELEGATED = OPERATOR_DELEGATED_AMOUNT + EXTERNAL_DELEGATED_AMOUNT
 const OPERATORS_CUT = BigInt(Number(TOTAL_PROFIT) * (OPERATORS_CUT_PERCENTAGE / 100))
 const OPERATOR_PROFIT_WHEN_NO_WITHDRAWALS = (TOTAL_PROFIT - OPERATORS_CUT) * OPERATOR_DELEGATED_AMOUNT / TOTAL_DELEGATED + OPERATORS_CUT
 const DELEGATOR_PROFIT_WHEN_NO_WITHDRAWALS = (TOTAL_PROFIT - OPERATORS_CUT) * EXTERNAL_DELEGATED_AMOUNT / TOTAL_DELEGATED
-// If the operator doesn't make any withdrawals during the sponsorship period, the profit is split between 
+// If the operator doesn't make any withdrawals during the sponsorship period, the profit is split between
 // the operator and the delegator based on their respective delegated amounts. However, if there are withdrawals,
 // the operator gets a larger share of the profit. This happens because the operator's delegated amount
 // grows by both their profit share and their cut of the total profit, while the external delegator's amount
@@ -126,8 +126,12 @@ describe('profit', () => {
         await sponsor(sponsorWallet, toEthereumAddress(await sponsorshipContract.getAddress()), SPONSOR_AMOUNT)
         await delegate(operatorWallet, toEthereumAddress(await operatorContract.getAddress()), OPERATOR_DELEGATED_AMOUNT)
         await delegate(delegatorWallet, toEthereumAddress(await operatorContract.getAddress()), EXTERNAL_DELEGATED_AMOUNT)
-        await stake(operatorContract, toEthereumAddress(await sponsorshipContract.getAddress()), OPERATOR_DELEGATED_AMOUNT + EXTERNAL_DELEGATED_AMOUNT)
- 
+        await stake(
+            operatorContract,
+            toEthereumAddress(await sponsorshipContract.getAddress()),
+            OPERATOR_DELEGATED_AMOUNT + EXTERNAL_DELEGATED_AMOUNT
+        )
+
         const broker = await startBroker({
             privateKey: operatorNodeWallet.privateKey,
             extraPlugins: {
