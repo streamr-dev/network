@@ -153,8 +153,8 @@ export function getTestTokenContract(): TestTokenContract {
     return new Contract(TEST_CHAIN_CONFIG.contracts.DATA, TestTokenArtifact) as unknown as TestTokenContract
 }
 
-export const getTestAdminWallet = (adminKey?: string, provider?: Provider): Wallet => {
-    return new Wallet(adminKey ?? TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider ?? getTestProvider())
+export const getTestAdminWallet = (): Wallet => {
+    return new Wallet(TEST_CHAIN_CONFIG.adminPrivateKey).connect(getTestProvider())
 }
 
 export async function createTestWallet(): Promise<Wallet & SignerWithProvider> {
