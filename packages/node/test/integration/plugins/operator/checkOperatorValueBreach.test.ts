@@ -12,7 +12,7 @@ const {
     delegate,
     deployTestSponsorshipContract,
     createTestWallet,
-    getProvider,
+    getTestProvider,
     setupTestOperatorContract,
     sponsor,
     stake
@@ -58,7 +58,7 @@ describe('checkOperatorValueBreach', () => {
         await stake(operatorContract, await sponsorship2.getAddress(), 10000n)
         const valueBeforeWithdraw = await operatorContract.valueWithoutEarnings()
         const streamrConfigAddress = await operatorContract.streamrConfig()
-        const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getProvider()) as unknown as StreamrConfig
+        const streamrConfig = new Contract(streamrConfigAddress, streamrConfigABI, getTestProvider()) as unknown as StreamrConfig
         const allowedDifference = valueBeforeWithdraw * (await streamrConfig.maxAllowedEarningsFraction()) / ONE_ETHER
         const client = createClient(watcherWallets[0].privateKey)
         const operator = client.getOperator(toEthereumAddress(await watcherOperatorContract.getAddress()))

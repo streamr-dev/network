@@ -34,7 +34,7 @@ import { createClient, createTestStream, startBroker } from '../utils'
 
 const {
     setupTestOperatorContract,
-    getProvider,
+    getTestProvider,
     createTestWallet,
     deployTestSponsorshipContract,
     sponsor,
@@ -81,7 +81,7 @@ describe('profit', () => {
         admin: bigint
         operatorContract: bigint
     }> => {
-        const dataToken = getTestTokenContract().connect(getProvider())
+        const dataToken = getTestTokenContract().connect(getTestProvider())
         const adminWallet = getTestAdminWallet()
         return {
             operator: BigInt(formatEther(await dataToken.balanceOf(operatorWallet.address))),

@@ -38,7 +38,7 @@ import { OperatorPluginConfig } from './../../src/plugins/operator/OperatorPlugi
 
 const {
     setupTestOperatorContract,
-    getProvider,
+    getTestProvider,
     createTestWallet,
     deployTestSponsorshipContract,
     delegate,
@@ -126,7 +126,7 @@ const createTheGraphClient = (): TheGraphClient => {
 const configureBlockchain = async (): Promise<void> => {
     const MINING_INTERVAL = 1100
     logger.info('Configure blockchain')
-    const provider = getProvider() as JsonRpcProvider
+    const provider = getTestProvider() as JsonRpcProvider
     await provider.send('evm_setAutomine', [true])
     await createStream()  // just some transaction
     await provider.send('evm_setAutomine', [false])
@@ -252,7 +252,7 @@ describe('inspect', () => {
         // select only offline nodes, but because of ETH-784 the reviewer set won't change).
         logger.info('Unstake pre-baked operators')
         for (const operator of PRE_BAKED_OPERATORS) {
-            const contract = getOperatorContract(operator.contractAddress).connect(new Wallet(operator.privateKey, getProvider())) as any
+            const contract = getOperatorContract(operator.contractAddress).connect(new Wallet(operator.privateKey, getTestProvider())) as any
             await (await contract.unstake(PRE_BAKED_SPONSORSHIP)).wait()
         }
 
@@ -272,7 +272,7 @@ describe('inspect', () => {
             await operator.node.stop()
         }
         // revert to dev-chain default mining interval
-        await (getProvider() as JsonRpcProvider).send('evm_setIntervalMining', [DEV_CHAIN_DEFAULT_MINING_INTERVAL])
+        await (getTestProvider() as JsonRpcProvider).send('evm_setIntervalMining', [DEV_CHAIN_DEFAULT_MINING_INTERVAL])
     })
 
     /*
@@ -312,7 +312,7 @@ describe('inspect', () => {
         }
 
         // assert slashing and rewards
-        const token = getTestTokenContract().connect(getProvider())
+        const token = getTestTokenContract().connect(getTestProvider())
         expect(await getTokenBalance(freeriderOperator.contractAddress, token)).toEqual(DELEGATE_WEI - SLASHING_WEI)
         expect(await getTokenBalance(flags[0].flagger, token)).toEqual(DELEGATE_WEI - STAKE_WEI + FLAGGER_REWARD_WEI)
         for (const voter of flags[0].votes.map((vote) => vote.voter)) {

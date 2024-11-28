@@ -144,7 +144,7 @@ export async function deployTestSponsorshipContract(opts: DeployTestSponsorshipC
     return newSponsorship
 }
 
-export function getProvider(): Provider {
+export function getTestProvider(): Provider {
     return new JsonRpcProvider(TEST_CHAIN_CONFIG.rpcEndpoints[0].url, undefined, {
         batchStallTime: 0,       // Don't batch requests, send them immediately
         cacheTimeout: -1         // Do not employ result caching
@@ -156,11 +156,11 @@ export function getTestTokenContract(): TestTokenContract {
 }
 
 export const getTestAdminWallet = (adminKey?: string, provider?: Provider): Wallet => {
-    return new Wallet(adminKey ?? TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider ?? getProvider())
+    return new Wallet(adminKey ?? TEST_CHAIN_CONFIG.adminPrivateKey).connect(provider ?? getTestProvider())
 }
 
 export async function createTestWallet(): Promise<Wallet & SignerWithProvider> {
-    const provider = getProvider()
+    const provider = getTestProvider()
     const privateKey = crypto.randomBytes(32).toString('hex')
     const newWallet = new Wallet(privateKey)
     const adminWallet = getTestAdminWallet()
