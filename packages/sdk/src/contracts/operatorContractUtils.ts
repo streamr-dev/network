@@ -110,7 +110,6 @@ export async function deployTestOperatorContract(opts: DeployTestOperatorContrac
 export interface DeployTestSponsorshipContractOpts {
     streamId: string
     deployer: Wallet
-    minOperatorCount?: number
     earningsPerSecond?: bigint
 }
 
@@ -122,7 +121,7 @@ export async function deployTestSponsorshipContract(opts: DeployTestSponsorshipC
         opts.deployer
     ) as unknown as SponsorshipFactoryContract
     const sponsorshipDeployTx = await sponsorshipFactory.deploySponsorship(
-        (opts.minOperatorCount ?? 1).toString(),
+        '1',
         opts.streamId,
         '{}',
         [
