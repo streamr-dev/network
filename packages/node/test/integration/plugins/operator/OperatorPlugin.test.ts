@@ -57,7 +57,7 @@ describe('OperatorPlugin', () => {
         const sponsorer = await createTestWallet()
         const sponsorship1 = await deployTestSponsorshipContract({ streamId: stream.id, deployer: sponsorer })
         await sponsor(sponsorer, await sponsorship1.getAddress(), SPONSOR_AMOUNT)
-        await delegate(operatorWallet, await operatorContract.getAddress(), SPONSOR_AMOUNT)
+        await delegate(operatorWallet, toEthereumAddress(await operatorContract.getAddress()), SPONSOR_AMOUNT)
         await stake(operatorContract, await sponsorship1.getAddress(), SPONSOR_AMOUNT)
 
         const publisher = createClient(fastPrivateKey())
@@ -115,7 +115,7 @@ describe('OperatorPlugin', () => {
         const sponsorer = await createTestWallet()
         const sponsorship1 = await deployTestSponsorshipContract({ streamId: stream.id, deployer: sponsorer })
         await sponsor(sponsorer, await sponsorship1.getAddress(), SPONSOR_AMOUNT)
-        await delegate(operatorWallet, await operatorContract.getAddress(), SPONSOR_AMOUNT)
+        await delegate(operatorWallet, toEthereumAddress(await operatorContract.getAddress()), SPONSOR_AMOUNT)
         await stake(operatorContract, await sponsorship1.getAddress(), SPONSOR_AMOUNT)
 
         const operatorContractAddress = await operatorContract.getAddress()

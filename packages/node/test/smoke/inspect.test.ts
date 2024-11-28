@@ -2,7 +2,7 @@ import { config as CHAIN_CONFIG } from '@streamr/config'
 import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { Logger, StreamID, TheGraphClient, wait, until } from '@streamr/utils'
+import { Logger, StreamID, TheGraphClient, wait, until, toEthereumAddress, EthereumAddress } from '@streamr/utils'
 import { Contract, formatEther, JsonRpcProvider, parseEther, Wallet } from 'ethers'
 import fetch from 'node-fetch'
 import { Broker, createBroker } from '../../src/broker'
@@ -71,10 +71,10 @@ const SLASHING_WEI = BigInt(SLASHING_FRACTION * Number(STAKE_WEI))
 
 // two operators and a sponsorship which have been created in dev-chain init
 const PRE_BAKED_OPERATORS = [{
-    contractAddress: '0x8ac1cee54b9133ab7fe5418c826be60a6353d95e',
+    contractAddress: toEthereumAddress('0x8ac1cee54b9133ab7fe5418c826be60a6353d95e'),
     privateKey: '0x4059de411f15511a85ce332e7a428f36492ab4e87c7830099dadbf130f1896ae'
 }, {
-    contractAddress: '0xb63c856cf861a88f4fa8587716fdc4e69cdf9ef1',
+    contractAddress: toEthereumAddress('0xb63c856cf861a88f4fa8587716fdc4e69cdf9ef1'),
     privateKey: '0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0'
 }]
 const PRE_BAKED_SPONSORSHIP = '0x5fb705aeb6f9a84499c202fc02c33d6f249dc26a'
@@ -91,7 +91,7 @@ const createStream = async (): Promise<StreamID> => {
 }
 
 const createOperator = async (
-    pluginConfig: Partial<Omit<OperatorPluginConfig, 'operatorContractAddress'>>, sponsorshipAddress: string, isFreerider: boolean
+    pluginConfig: Partial<Omit<OperatorPluginConfig, 'operatorContractAddress'>>, sponsorshipAddress: EthereumAddress, isFreerider: boolean
 ): Promise<Operator> => {
     const operator = await setupTestOperatorContract({
         nodeCount: 1,

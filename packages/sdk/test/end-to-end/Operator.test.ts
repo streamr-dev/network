@@ -80,8 +80,8 @@ describe('Operator', () => {
     }, 90 * 1000)
 
     it('getStakedOperators', async () => {
-        await delegate(deployedOperator.operatorWallet, await deployedOperator.operatorContract.getAddress(), 20000n)
-        await stake(deployedOperator.operatorContract, await sponsorship1.getAddress(), 10000n)
+        await delegate(deployedOperator.operatorWallet, toEthereumAddress(await deployedOperator.operatorContract.getAddress()), 20000n)
+        await stake(deployedOperator.operatorContract, toEthereumAddress(await sponsorship1.getAddress()), 10000n)
         const dummyOperator = await getOperator(deployedOperator.nodeWallets[0], deployedOperator)
         const randomOperatorAddress = sample(await dummyOperator.getStakedOperators())
         expect(randomOperatorAddress).toBeDefined()
@@ -106,8 +106,8 @@ describe('Operator', () => {
     it('getSponsorships, getOperatorsInSponsorship', async () => {
         const operatorContractAddress = toEthereumAddress(await deployedOperator.operatorContract.getAddress())
         await delegate(deployedOperator.operatorWallet, operatorContractAddress, 20000n)
-        await stake(deployedOperator.operatorContract, await sponsorship1.getAddress(), 10000n)
-        await stake(deployedOperator.operatorContract, await sponsorship2.getAddress(), 10000n)
+        await stake(deployedOperator.operatorContract, toEthereumAddress(await sponsorship1.getAddress()), 10000n)
+        await stake(deployedOperator.operatorContract, toEthereumAddress(await sponsorship2.getAddress()), 10000n)
 
         const operator = await getOperator(undefined, deployedOperator)
 
@@ -138,12 +138,12 @@ describe('Operator', () => {
         const flagger = deployedOperator
         const target = await setupTestOperatorContract()
 
-        await sponsor(flagger.operatorWallet, await sponsorship2.getAddress(), 50000n)
+        await sponsor(flagger.operatorWallet, toEthereumAddress(await sponsorship2.getAddress()), 50000n)
 
-        await delegate(flagger.operatorWallet, await flagger.operatorContract.getAddress(), 20000n)
-        await delegate(target.operatorWallet, await target.operatorContract.getAddress(), 30000n)
-        await stake(flagger.operatorContract, await sponsorship2.getAddress(), 15000n)
-        await stake(target.operatorContract, await sponsorship2.getAddress(), 25000n)
+        await delegate(flagger.operatorWallet, toEthereumAddress(await flagger.operatorContract.getAddress()), 20000n)
+        await delegate(target.operatorWallet, toEthereumAddress(await target.operatorContract.getAddress()), 30000n)
+        await stake(flagger.operatorContract, toEthereumAddress(await sponsorship2.getAddress()), 15000n)
+        await stake(target.operatorContract, toEthereumAddress( await sponsorship2.getAddress()), 25000n)
 
         const contractFacade = await getOperator(deployedOperator.nodeWallets[0], flagger)
         await contractFacade.flag(

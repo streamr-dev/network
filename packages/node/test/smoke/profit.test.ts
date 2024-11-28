@@ -3,7 +3,7 @@ import type { Operator, Sponsorship } from '@streamr/network-contracts'
 import { StreamrConfig, streamrConfigABI } from '@streamr/network-contracts'
 import { _operatorContractUtils } from '@streamr/sdk'
 import { fetchPrivateKeyWithGas } from '@streamr/test-utils'
-import { until } from '@streamr/utils'
+import { until, toEthereumAddress } from '@streamr/utils'
 import { Contract, Wallet, formatEther, parseEther } from 'ethers'
 import { createClient, createTestStream, startBroker } from '../utils'
 
@@ -123,10 +123,10 @@ describe('profit', () => {
 
     it('happy path', async () => {
         const beforeBalances = await getBalances()
-        await sponsor(sponsorWallet, await sponsorshipContract.getAddress(), SPONSOR_AMOUNT)
-        await delegate(operatorWallet, await operatorContract.getAddress(), OPERATOR_DELEGATED_AMOUNT)
-        await delegate(delegatorWallet, await operatorContract.getAddress(), EXTERNAL_DELEGATED_AMOUNT)
-        await stake(operatorContract, await sponsorshipContract.getAddress(), OPERATOR_DELEGATED_AMOUNT + EXTERNAL_DELEGATED_AMOUNT)
+        await sponsor(sponsorWallet, toEthereumAddress(await sponsorshipContract.getAddress()), SPONSOR_AMOUNT)
+        await delegate(operatorWallet, toEthereumAddress(await operatorContract.getAddress()), OPERATOR_DELEGATED_AMOUNT)
+        await delegate(delegatorWallet, toEthereumAddress(await operatorContract.getAddress()), EXTERNAL_DELEGATED_AMOUNT)
+        await stake(operatorContract, toEthereumAddress(await sponsorshipContract.getAddress()), OPERATOR_DELEGATED_AMOUNT + EXTERNAL_DELEGATED_AMOUNT)
  
         const broker = await startBroker({
             privateKey: operatorNodeWallet.privateKey,
@@ -152,7 +152,7 @@ describe('profit', () => {
         })
         await broker.stop()
 
-        await unstake(operatorContract, await sponsorshipContract.getAddress())
+        await unstake(operatorContract, toEthereumAddress(await sponsorshipContract.getAddress()))
         await undelegate(
             delegatorWallet,
             operatorContract,

@@ -1,5 +1,5 @@
 import { config as CHAIN_CONFIG } from '@streamr/config'
-import { Logger, retry, StreamID } from '@streamr/utils'
+import { EthereumAddress, Logger, retry, StreamID } from '@streamr/utils'
 import { Contract, EventLog, JsonRpcProvider, Provider, Signer, Wallet, ZeroAddress, parseEther } from 'ethers'
 import { range } from 'lodash'
 import type { Operator as OperatorContract } from '../ethereumArtifacts/Operator'
@@ -181,7 +181,7 @@ export async function createTestWallet(): Promise<Wallet & SignerWithProvider> {
     return newWallet.connect(provider) as (Wallet & SignerWithProvider)
 }
 
-export const delegate = async (delegator: Signer, operatorContractAddress: string, amountWei: bigint, token?: TestTokenContract): Promise<void> => {
+export const delegate = async (delegator: Signer, operatorContractAddress: EthereumAddress, amountWei: bigint, token?: TestTokenContract): Promise<void> => {
     logger.debug('Delegate', { amountWei })
     // onTokenTransfer: the tokens are delegated on behalf of the given data address
     // eslint-disable-next-line max-len
@@ -193,28 +193,28 @@ export const undelegate = async (delegator: Signer, operatorContract: OperatorCo
     await (await operatorContract.connect(delegator).undelegate(parseEther(amount.toString()))).wait()
 }
 
-export const stake = async (operatorContract: OperatorContract, sponsorshipContractAddress: string, amount: bigint): Promise<void> => {
+export const stake = async (operatorContract: OperatorContract, sponsorshipContractAddress: EthereumAddress, amount: bigint): Promise<void> => {
     logger.debug('Stake', { amount })
     await (await operatorContract.stake(sponsorshipContractAddress, parseEther(amount.toString()))).wait()
 }
 
-export const unstake = async (operatorContract: OperatorContract, sponsorshipContractAddress: string): Promise<void> => {
+export const unstake = async (operatorContract: OperatorContract, sponsorshipContractAddress: EthereumAddress): Promise<void> => {
     logger.debug('Unstake')
     await (await operatorContract.unstake(sponsorshipContractAddress)).wait()
 }
 
-export const sponsor = async (sponsorer: Signer, sponsorshipContractAddress: string, amountWei: bigint, token?: TestTokenContract): Promise<void> => {
+export const sponsor = async (sponsorer: Signer, sponsorshipContractAddress: EthereumAddress, amountWei: bigint, token?: TestTokenContract): Promise<void> => {
     logger.debug('Sponsor', { amountWei })
     // eslint-disable-next-line max-len
     // https://github.com/streamr-dev/network-contracts/blob/01ec980cfe576e25e8c9acc08a57e1e4769f3e10/packages/network-contracts/contracts/OperatorTokenomics/Sponsorship.sol#L139
     await transferTokens(sponsorer, sponsorshipContractAddress, amountWei, undefined, token)
 }
 
-export const transferTokens = async (from: Signer, to: string, amountWei: bigint, data?: string, token?: TestTokenContract): Promise<void> => {
+export const transferTokens = async (from: Signer, to: EthereumAddress, amountWei: bigint, data?: string, token?: TestTokenContract): Promise<void> => {
     const tx = await ((token ?? getTestTokenContract()).connect(from).transferAndCall(to, parseEther(amountWei.toString()), data ?? '0x'))
     await tx.wait()
 }
 
-export const getOperatorContract = (operatorAddress: string): OperatorContract => {
+export const getOperatorContract = (operatorAddress: EthereumAddress): OperatorContract => {
     return new Contract(operatorAddress, OperatorArtifact) as unknown as OperatorContract
 }
