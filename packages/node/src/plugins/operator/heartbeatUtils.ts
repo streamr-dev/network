@@ -1,5 +1,6 @@
-import { z } from 'zod'
 import { NetworkNodeType, NetworkPeerDescriptor } from '@streamr/sdk'
+import { z } from 'zod'
+import { version as applicationVersion } from '../../../package.json'
 
 export const HeartbeatMessageSchema = z.object({
     msgType: z.enum(['heartbeat']),
@@ -12,7 +13,8 @@ export const HeartbeatMessageSchema = z.object({
             tls: z.boolean()
         })),
         region: z.optional(z.number())
-    })
+    }),
+    version: z.optional(z.string())  // optional for backward compatibility (written from v102 onward)
 })
 
 export type HeartbeatMessage = z.infer<typeof HeartbeatMessageSchema>
@@ -20,6 +22,7 @@ export type HeartbeatMessage = z.infer<typeof HeartbeatMessageSchema>
 export function createHeartbeatMessage(peerDescriptor: NetworkPeerDescriptor): HeartbeatMessage {
     return {
         msgType: 'heartbeat',
-        peerDescriptor
+        peerDescriptor,
+        version: applicationVersion
     }
 }

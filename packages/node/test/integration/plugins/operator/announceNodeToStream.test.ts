@@ -1,6 +1,7 @@
 import { _operatorContractUtils } from '@streamr/sdk'
 import { fastPrivateKey } from '@streamr/test-utils'
 import { collect, toEthereumAddress } from '@streamr/utils'
+import { version as applicationVersion } from '../../../../package.json'
 import { announceNodeToStream } from '../../../../src/plugins/operator/announceNodeToStream'
 import { formCoordinationStreamId } from '../../../../src/plugins/operator/formCoordinationStreamId'
 import { createClient } from '../../../utils'
@@ -25,7 +26,8 @@ describe('announceNodeToStream', () => {
         const [{ content }] = await collect(subscription, 1)
         expect(content).toEqual({
             msgType: 'heartbeat',
-            peerDescriptor: await client.getPeerDescriptor()
+            peerDescriptor: await client.getPeerDescriptor(),
+            version: applicationVersion
         })
 
         await anonymousClient.destroy()
