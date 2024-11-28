@@ -12,7 +12,7 @@ import { createClient, createTestStream } from '../../../utils'
 
 const {
     delegate,
-    deployOperatorContract,
+    deployTestOperatorContract,
     deploySponsorshipContract,
     createTestWallet,
     stake
@@ -69,7 +69,7 @@ describe('MaintainTopologyService', () => {
         const [stream1, stream2] = await setUpStreams()
         const sponsorship1 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream1.id })
         const sponsorship2 = await deploySponsorshipContract({ deployer: operatorWallet, streamId: stream2.id })
-        const operatorContract = await deployOperatorContract({ deployer: operatorWallet })
+        const operatorContract = await deployTestOperatorContract({ deployer: operatorWallet })
         await delegate(operatorWallet, await operatorContract.getAddress(), 20000n)
         await stake(operatorContract, await sponsorship1.getAddress(), 10000n)
         

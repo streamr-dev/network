@@ -45,7 +45,7 @@ export async function setupTestOperatorContract(
     opts?: SetupTestOperatorContractOpts
 ): Promise<SetupOperatorContractReturnType> {
     const operatorWallet = await createTestWallet()
-    const operatorContract = await deployOperatorContract({
+    const operatorContract = await deployTestOperatorContract({
         chainConfig: TEST_CHAIN_CONFIG,
         deployer: operatorWallet,
         operatorsCutPercent: opts?.operatorConfig?.operatorsCutPercent,
@@ -65,7 +65,7 @@ export async function setupTestOperatorContract(
  * @deprecated
  * @hidden
  */
-export interface DeployOperatorContractOpts {
+export interface DeployTestOperatorContractOpts {
     deployer: Wallet
     operatorsCutPercent?: number
     metadata?: string
@@ -84,7 +84,7 @@ export interface DeployOperatorContractOpts {
  * @param opts.deployer should be the operator's Wallet
  * @returns Operator
  */
-export async function deployOperatorContract(opts: DeployOperatorContractOpts): Promise<OperatorContract> {
+export async function deployTestOperatorContract(opts: DeployTestOperatorContractOpts): Promise<OperatorContract> {
     logger.debug('Deploying OperatorContract')
     const abi = OperatorFactoryArtifact
     const chainConfig = opts.chainConfig ?? CHAIN_CONFIG.dev2
